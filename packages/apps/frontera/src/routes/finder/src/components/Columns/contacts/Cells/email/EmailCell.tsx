@@ -60,15 +60,14 @@ export const EmailCell = observer(
     return (
       <div
         ref={ref}
-        className='flex  cursor-pointer'
+        className='flex cursor-pointer'
         onDoubleClick={() => setIsEdit(true)}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        style={{ marginRight: isHovered ? '-20px' : '0px' }}
       >
         <Menu>
           <MenuButton className='text-ellipsis overflow-hidden whitespace-nowrap'>
-            <div className='flex items-center gap-2 '>
+            <div className='flex items-center gap-2'>
               {!isEdit && !email && (
                 <p className='text-gray-400 '>
                   {enrichingStatus
@@ -87,7 +86,7 @@ export const EmailCell = observer(
               <p>{email}</p>
             </div>
           </MenuButton>
-          <MenuList align='center' className='max-w-[600px] w-[250px]'>
+          <MenuList align='start' className='max-w-[600px] w-[250px]'>
             {orgActive && (
               <MenuItem
                 onClick={() => {
@@ -95,7 +94,7 @@ export const EmailCell = observer(
                   contactStore?.findEmail().finally(() => setIsLoading(false));
                 }}
               >
-                <div className='overflow-hidden text-ellipsis'>
+                <div className='overflow-hidden text-ellipsis w-[200px]'>
                   <Star06 className='mr-2 text-gray-500' />
                   {`Find email at ${orgActive}`}
                 </div>
@@ -139,27 +138,28 @@ export const EmailCell = observer(
                 Add new email
               </div>
             </MenuItem>
-            {contactStore?.value.emails.map((email) => (
-              <MenuItem
-                key={email.email}
-                onClick={() => {
-                  contactStore?.setPrimaryEmail(email.id);
-                }}
-              >
-                <div className='flex items-center overflow-hidden text-ellipsis justify-between w-full [&_svg]:size-4'>
-                  <div className='flex items-center gap-2 max-w-[100px] w-[100px]'>
-                    <EmailValidationMessage
-                      email={email.email || ''}
-                      validationDetails={email.emailValidationDetails}
-                    />
-                    {email.email}
+            {contactStore?.value.emails
+              .filter((e) => e.email !== '')
+              .map((email) => (
+                <MenuItem
+                  key={email.email}
+                  onClick={() => {
+                    contactStore?.setPrimaryEmail(email.id);
+                  }}
+                >
+                  <div className='flex items-center overflow-hidden text-ellipsis justify-between w-full [&_svg]:size-4'>
+                    <div className='flex items-center gap-2 max-w-[200px]'>
+                      <EmailValidationMessage
+                        email={email.email || ''}
+                        validationDetails={email.emailValidationDetails}
+                      />
+                      <p className='truncate'>{email.email}</p>
+                    </div>
+                    {contactStore.value.primaryEmail?.email ===
+                      email?.email && <Check className='text-primary-600' />}
                   </div>
-                  {contactStore.value.primaryEmail?.email === email?.email && (
-                    <Check className='text-primary-600' />
-                  )}
-                </div>
-              </MenuItem>
-            ))}
+                </MenuItem>
+              ))}
           </MenuList>
         </Menu>
         {isHovered &&
