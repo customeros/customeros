@@ -337,3 +337,72 @@
   pointer-events: unset;
 }
 
+.editor__listItemChecked,
+.editor__listItemUnchecked {
+  position: relative;
+  margin: 0 8px;
+  padding: 0 28px; /* Increased padding to better align text */
+  list-style: none;
+  outline: none;
+  font-size: 1rem;
+  color: #374151; /* Tailwind 'gray-700' for text */
+}
+
+.editor__listItemChecked {
+  text-decoration: line-through;
+  color: #6b7280; /* Tailwind 'gray-500' for lighter crossed-out text */
+}
+
+.editor__listItemUnchecked::before,
+.editor__listItemChecked::before {
+  content: '';
+  width: 16px;
+  height: 16px;
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  cursor: pointer;
+  border-radius: 3px; /* Slightly rounded corners */
+  transition: all 0.2s ease; /* Smooth transitions */
+}
+
+.editor__listItemUnchecked::before {
+  border: 1px solid #d0d5dd; /* Light gray border for unchecked */
+  background-color: transparent;
+}
+
+.editor__listItemChecked::before {
+  background-color: #717bbc; /* Tailwind 'indigo-500' for a nice blue fill */
+  border: 1px solid #717bbc; /* Border color matches background */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.editor__listItemChecked::after {
+  content: '';
+  width: 5px;
+  height: 8px;
+  border: solid #ffffff;
+  border-width: 0 1.5px 1.5px 0;
+  transform: rotate(45deg);
+  position: absolute;
+  top: 50%;
+  left: 5.5px;
+  transform: translateY(-60%) rotate(45deg);
+}
+
+.editor__listItemUnchecked:hover::before,
+.editor__listItemChecked:hover::before {
+  border-color: #363f72; /* Darker blue border on hover */
+}
+
+.editor__listItemUnchecked:focus::before,
+.editor__listItemChecked:focus::before {
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.4); /* Blue focus ring */
+}
+
+.editor__nestedListItem {
+  list-style: none;
+}

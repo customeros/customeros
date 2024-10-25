@@ -16,6 +16,16 @@ export default {
       sticky: ['var(--font-merriweather)'],
     },
     boxShadow: shadows,
+    listStyleType: {
+      disc: 'disc',
+      decimal: 'decimal',
+      square: 'square',
+      circle: 'circle',
+      upperroman: 'upper-roman',
+      upperalpha: 'upper-alpha',
+      lowerroman: 'lower-roman',
+      loweralpha: 'lower-alpha',
+    },
     colors: {
       ...colors,
       transparent: 'transparent',

@@ -44,7 +44,31 @@ import FloatingLinkEditorPlugin from './plugins/FloatingLinkEditorPlugin';
 import { FloatingMenuPlugin } from './plugins/FloatingTextFormatToolbarPlugin';
 
 const theme: EditorThemeClasses = {
-  paragraph: 'mt-0',
+  paragraph: 'my-3',
+  list: {
+    ulDepth: [
+      'p-0 m-0 list-outside',
+      'p-0 m-0 list-outside list-circle',
+      'p-0 m-0 list-outside list-square',
+      'p-0 m-0 list-outside list-disc',
+      'p-0 m-0 list-outside list-circle',
+    ],
+    nested: {
+      listitem: 'editor__nestedListItem',
+    },
+    ol: 'p-0 m-0 list-outside list-decimal',
+    ul: 'p-0 m-0 list-outside list-disc',
+    listitem: 'mx-8',
+    olDepth: [
+      'p-0 m-0 list-outside',
+      'p-0 m-0 list-outside list-upperalpha',
+      'p-0 m-0 list-outside list-loweralpha',
+      'p-0 m-0 list-outside list-upperroman',
+      'p-0 m-0 list-outside list-lowerroman',
+    ],
+    listitemChecked: 'editor__listItemChecked',
+    listitemUnchecked: 'editor__listItemUnchecked',
+  },
   text: {
     bold: 'editor-textBold',
     code: 'editor-textCode',
@@ -55,7 +79,7 @@ const theme: EditorThemeClasses = {
     underline: 'editor-textUnderline',
     underlineStrikethrough: 'editor-textUnderlineStrikethrough',
   },
-  quote: 'border-l-[2px] border-gray-300 pl-3',
+  quote: 'border-l-[2px] border-gray-300 pl-3 my-3',
 };
 
 const onError = (error: Error) => {
@@ -188,6 +212,7 @@ export const Editor = forwardRef<LexicalEditor | null, EditorProps>(
           <AutoLinkPlugin />
           <HistoryPlugin />
           <AutoFocusPlugin />
+          {/* Used for stripping styles of copy-pasted text */}
           <TextNodeTransformer />
           <ListPlugin />
 
