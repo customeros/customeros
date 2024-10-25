@@ -5,6 +5,7 @@ import {
   assertWithRetry,
   createRequestPromise,
   createResponsePromise,
+  clickLocatorThatIsVisible,
   clickLocatorsThatAreVisible,
   clickLocatorThatIsVisibleWithIndex,
   clickLocatorThatIsVisibleAndHasText,
@@ -59,10 +60,7 @@ export class OrganizationAccountPage {
       undefined,
     );
 
-    await clickLocatorsThatAreVisible(
-      this.page,
-      this.orgAccountEmptyAddContract,
-    );
+    await clickLocatorThatIsVisible(this.page, this.orgAccountEmptyAddContract);
     await Promise.all([responsePromise]);
 
     // await this.page.waitForResponse(

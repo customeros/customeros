@@ -1,6 +1,9 @@
 import { Page } from '@playwright/test';
 
-import { clickLocatorsThatAreVisible } from '../../helper';
+import {
+  ensureLocatorIsVisible,
+  clickLocatorsThatAreVisible,
+} from '../../helper';
 
 export class OrganizationSideNavPage {
   constructor(page: Page) {
@@ -21,6 +24,11 @@ export class OrganizationSideNavPage {
 
   async goToAbout() {
     await this.page.click(this.orgSideNavItemAbout);
+    await ensureLocatorIsVisible(
+      this.page,
+      `${this.orgSideNavItemAbout} div[aria-selected="true"]`,
+    );
+    // await this.page.waitForLoadState('networkidle');
   }
 
   async goToPeople() {

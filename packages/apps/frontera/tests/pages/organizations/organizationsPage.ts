@@ -1,11 +1,13 @@
 import { randomUUID } from 'crypto';
 import { Page, expect, TestInfo } from '@playwright/test';
 
+import { sideNavSelectors } from '../sideNavSelectors';
 import {
   retryOperation,
   assertWithRetry,
   createRequestPromise,
   createResponsePromise,
+  ensureLocatorIsVisible,
   clickLocatorThatIsVisible,
   clickLocatorsThatAreVisible,
 } from '../../helper';
@@ -13,7 +15,10 @@ import {
 export class OrganizationsPage {
   private page: Page;
 
-  private sideNavItemAllOrgs = 'div[data-test="side-nav-item-all-orgs"]';
+  private sideNavItemAllOrgs = sideNavSelectors.sideNavItemAllOrgs;
+  private sideNavItemCustomers = sideNavSelectors.sideNavItemCustomers;
+  private sideNavItemCustomersSelected =
+    sideNavSelectors.sideNavItemCustomersSelected;
   private finderTableOrganizations =
     'div[data-test="finder-table-ORGANIZATIONS"]';
   private allOrgsAddOrg = 'button[data-test="all-orgs-add-org"]';
@@ -43,7 +48,6 @@ export class OrganizationsPage {
     'p[data-test="organization-stage-in-all-orgs-table"]';
   private organizationLastTouchpointInAllOrgsTable =
     '[data-test="organization-last-touchpoint-in-all-orgs-table"]';
-  private sideNavItemCustomers = 'div[data-test="side-nav-item-Customers"]';
   private organizationRelationshipButtonInAllOrgsTable =
     'button[data-test="organization-relationship-button-in-all-orgs-table"]';
   private relationshipCustomer = 'div[data-test="relationship-CUSTOMER"]';
@@ -80,20 +84,8 @@ export class OrganizationsPage {
       organizationCreatorLocator,
       this.organizationsCreateNewOrgOrgName,
     );
-    // organizationsCreateNewOrgOrgName
-
-    const organizationsCreateNewOrgOrgNameLocator = this.page.locator(
-      this.organizationsCreateNewOrgOrgName,
-    );
 
     const organizationName = randomUUID();
-
-    process.stdout.write(
-      '\nIs organizationsCreateNewOrgOrgNameLocator visible so that we create org ' +
-        organizationName +
-        ' ? : ' +
-        (await organizationsCreateNewOrgOrgNameLocator.isVisible()),
-    );
 
     const requestPromise = createRequestPromise(
       this.page,
@@ -108,6 +100,7 @@ export class OrganizationsPage {
     );
 
     await this.page.keyboard.type(organizationName);
+    await this.page.waitForTimeout(300);
     await this.page.keyboard.press('Enter');
 
     await Promise.all([requestPromise, responsePromise]);
@@ -320,10 +313,14 @@ export class OrganizationsPage {
       maxAttempts,
       retryInterval,
     );
+
+    await this.page.waitForTimeout(2000);
   }
 
   async goToCustomersPage() {
     await clickLocatorsThatAreVisible(this.page, this.sideNavItemCustomers);
+
+    await ensureLocatorIsVisible(this.page, this.sideNavItemCustomersSelected);
   }
 
   async goToAllOrgsPage() {

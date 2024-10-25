@@ -39,7 +39,8 @@ test('Convert an Organization to Customer', async ({ page }, testInfo) => {
 
   // Go to Customers page and ensure no new org
   await organizationsPage.goToCustomersPage();
-  await customersPage.ensureNumberOfCustomersExist(0);
+  // await customersPage.ensureNumberOfCustomersExist(0);
+  await customersPage.ensureCustomerExists(organizationName, false);
 
   // Go back to All Orgs page
   await organizationsPage.goToAllOrgsPage();
@@ -49,7 +50,8 @@ test('Convert an Organization to Customer', async ({ page }, testInfo) => {
 
   // Go to Customers page and ensure we have a new customer
   await organizationsPage.goToCustomersPage();
-  await customersPage.ensureNumberOfCustomersExist(1);
+  // await customersPage.ensureNumberOfCustomersExist(1);
+  await customersPage.ensureCustomerExists(organizationName, true);
 });
 
 test('Add About information to an Organization', async ({ page }, testInfo) => {

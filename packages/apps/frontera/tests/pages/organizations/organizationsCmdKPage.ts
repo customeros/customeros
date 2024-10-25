@@ -2,12 +2,13 @@ import { Page, expect, TestInfo } from '@playwright/test';
 
 import { FlowsPage } from '../flows/flowsPage';
 import { TargetsPage } from '../targets/targetsPage';
+import { sideNavSelectors } from '../sideNavSelectors';
 import { SettingsPage } from '../settings/settingsPage';
 import { InvoicesPage } from '../invoices/invoicesPage';
 import { ContactsPage } from '../contacts/contactsPage';
 import { OrganizationsPage } from './organizationsPage';
 import { ContractsPage } from '../contracts/contractsPage';
-import { CustomersPage } from '../customers/customersPage';
+// import { CustomersPage } from '../customers/customersPage';
 import { CustomerMapPage } from '../customer-map/customerMapPage';
 import { SettingsAccountsPage } from '../settings/settingsAccounts';
 import {
@@ -23,6 +24,8 @@ export class OrganizationsCmdKPage {
     this.page = page;
   }
 
+  private sideNavItemCustomersSelected =
+    sideNavSelectors.sideNavItemCustomersSelected;
   private organizationsHub = 'div[data-test="organization-hub"]';
   private organizationsHubSpan = 'div[data-test="organization-hub"] span';
   private organizationHubInput = 'input[data-test="organization-hub-input"]';
@@ -292,12 +295,12 @@ export class OrganizationsCmdKPage {
   }
 
   async verifyNavigationToCustomers(page: Page) {
-    const customersPage = new CustomersPage(page);
+    // const customersPage = new CustomersPage(page);
     const organizationsPage = new OrganizationsPage(page);
 
     await this.verifyNavigationWithKeyboard(
       'KeyC',
-      customersPage.sideNavItemCustomersSelected,
+      this.sideNavItemCustomersSelected,
     );
 
     await this.page.goBack();
@@ -305,7 +308,7 @@ export class OrganizationsCmdKPage {
     await this.openCmdK();
     await this.verifyNavigationWithClick(
       this.organizationHubGc,
-      customersPage.sideNavItemCustomersSelected,
+      this.sideNavItemCustomersSelected,
     );
 
     await organizationsPage.goToAllOrgs();
