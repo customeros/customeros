@@ -148,6 +148,7 @@ func (r *contactReadRepository) GetContactsWithEmail(ctx context.Context, tenant
 	if err != nil {
 		return nil, err
 	}
+	span.LogFields(log.Int("result.count", len(result.([]*dbtype.Node))))
 	return result.([]*dbtype.Node), err
 }
 

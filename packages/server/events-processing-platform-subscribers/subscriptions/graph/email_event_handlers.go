@@ -4,7 +4,10 @@ import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event/email"
@@ -67,8 +70,33 @@ func (h *EmailEventHandler) OnEmailValidatedV2(ctx context.Context, evt eventsto
 	}
 
 	err := h.services.CommonServices.Neo4jRepositories.EmailWriteRepository.EmailValidated(ctx, eventData.Tenant, emailId, data)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "EmailValidated"))
+	}
 
-	return err
+	contactsDbNodes, err := h.services.CommonServices.Neo4jRepositories.ContactReadRepository.GetContactsWithEmail(ctx, eventData.Tenant, eventData.Email)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "GetContactsWithEmail"))
+	}
+	organizationDbNodes, err := h.services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsWithEmail(ctx, eventData.Tenant, eventData.Email)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "GetOrganizationsWithEmail"))
+	}
+
+	// TODO assign alternate email to contact and orgs
+
+	// notify linked contacts
+	for _, contact := range contactsDbNodes {
+		contactEntity := neo4jmapper.MapDbNodeToContactEntity(contact)
+		utils.EventCompleted(ctx, eventData.Tenant, model.CONTACT.String(), contactEntity.Id, h.grpcClients, utils.NewEventCompletedDetails().WithUpdate())
+	}
+	// notify linked organizations
+	for _, organization := range organizationDbNodes {
+		organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(organization)
+		utils.EventCompleted(ctx, eventData.Tenant, model.ORGANIZATION.String(), organizationEntity.ID, h.grpcClients, utils.NewEventCompletedDetails().WithUpdate())
+	}
+
+	return nil
 }
 
 func (h *EmailEventHandler) OnEmailDelete(ctx context.Context, evt eventstore.Event) error {

@@ -50,6 +50,7 @@ type OrganizationReadRepository interface {
 	GetOrganizationsForUpdateLastTouchpoint(ctx context.Context, limit, delayFromPreviousCheckMin int) ([]TenantAndOrganizationId, error)
 	GetLatestOrganizationWithJobRoleForContacts(ctx context.Context, tenant string, contactIds []string) ([]*utils.DbNodePairAndId, error)
 	GetHiddenOrganizationIds(ctx context.Context, tenant string, hiddenAfter time.Time) ([]string, error)
+	GetOrganizationsWithEmail(ctx context.Context, tenant, email string) ([]*dbtype.Node, error)
 }
 
 type organizationReadRepository struct {
@@ -1146,4 +1147,34 @@ func (r *organizationReadRepository) GetHiddenOrganizationIds(ctx context.Contex
 	}
 	span.LogFields(log.Int("result.count", len(result.([]string))))
 	return result.([]string), err
+}
+
+func (r *organizationReadRepository) GetOrganizationsWithEmail(ctx context.Context, tenant, email string) ([]*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactReadRepository.GetOrganizationsWithEmail")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		if queryResult, err := tx.Run(ctx, `
+			MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS]->(e:Email) 
+			WHERE e.email=$email OR e.rawEmail=$email
+			RETURN DISTINCT o`,
+			map[string]interface{}{
+				"email":  email,
+				"tenant": tenant,
+			}); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	span.LogFields(log.Int("result.count", len(result.([]*dbtype.Node))))
+	return result.([]*dbtype.Node), err
 }
