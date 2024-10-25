@@ -14,6 +14,7 @@ type TenantReadRepository interface {
 	GetAll(ctx context.Context) ([]*dbtype.Node, error)
 	TenantExists(ctx context.Context, name string) (bool, error)
 	GetTenantByName(ctx context.Context, tenant string) (*dbtype.Node, error)
+	GetTenantByNameIgnoreCase(ctx context.Context, tenant string) (*dbtype.Node, error)
 	GetTenantForWorkspaceProvider(ctx context.Context, workspaceName, workspaceProvider string) (*dbtype.Node, error)
 	GetTenantForUserEmail(ctx context.Context, email string) (*dbtype.Node, error)
 	GetTenantSettings(ctx context.Context, tenant string) (*dbtype.Node, error)
@@ -105,6 +106,40 @@ func (r *tenantReadRepository) GetTenantByName(ctx context.Context, tenant strin
 	tracing.TagTenant(span, tenant)
 
 	cypher := `MATCH (t:Tenant {name:$tenant}) RETURN t`
+	params := map[string]any{
+		"tenant": tenant,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		return utils.ExtractFirstRecordFirstValueAsDbNodePtr(ctx, queryResult, err)
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if result == nil {
+		span.LogFields(log.Bool("result.found", false))
+		return nil, nil
+	}
+
+	span.LogFields(log.Bool("result.found", true))
+	return result.(*dbtype.Node), nil
+}
+
+func (r *tenantReadRepository) GetTenantByNameIgnoreCase(ctx context.Context, tenant string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantReadRepository.GetTenantByNameIgnoreCase")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
+
+	cypher := `MATCH (t:Tenant) where lower(t.name) = lower($tenant)  RETURN t`
 	params := map[string]any{
 		"tenant": tenant,
 	}

@@ -108,7 +108,7 @@ func syncPostmarkInteractionEventHandler(services *service.Services, cfg *config
 			Tenant: tenantByName,
 		})
 
-		n, err := services.CommonServices.Neo4jRepositories.TenantReadRepository.GetTenantByName(ctx, tenantByName)
+		n, err := services.CommonServices.Neo4jRepositories.TenantReadRepository.GetTenantByNameIgnoreCase(ctx, tenantByName)
 		if err != nil {
 			span.LogFields(tracingLog.Bool("tenant.found", false))
 			tracing.TraceErr(span, err)
@@ -121,6 +121,9 @@ func syncPostmarkInteractionEventHandler(services *service.Services, cfg *config
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 			return
 		}
+
+		tenant := mapper.MapDbNodeToTenantEntity(n)
+		tenantByName = tenant.Name
 
 		span.LogFields(tracingLog.Bool("tenant.found", true))
 		span.LogFields(tracingLog.String("tenant.name", tenantByName))
