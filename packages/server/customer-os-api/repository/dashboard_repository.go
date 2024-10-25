@@ -45,6 +45,7 @@ const (
 	SearchSortParamRenewalCycle           = "RENEWAL_CYCLE"
 	SearchSortParamContractLengthInMonths = "CONTRACT_LENGTH_IN_MONTHS"
 	SearchParamExternalId                 = "EXTERNAL_ID"
+	SearchSortParamUpdatedAt              = "UPDATED_AT"
 )
 
 type DashboardRepository interface {
@@ -193,6 +194,8 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilter("lastTouchpointAt", *filter.Filter.Value.Time, utils.GTE))
 			} else if filter.Filter.Property == SearchSortParamLastTouchpointType && filter.Filter.Value.ArrayStr != nil {
 				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilterIn("lastTouchpointType", *filter.Filter.Value.ArrayStr))
+			} else if filter.Filter.Property == SearchSortParamUpdatedAt && filter.Filter.Value.Time != nil {
+				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilter("updatedAt", *filter.Filter.Value.Time, utils.GTE))
 			}
 		}
 
@@ -477,6 +480,9 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 		} else if sort.By == SearchSortParamLastTouchpointType {
 			cypherSort.NewSortRule("LAST_TOUCHPOINT_TYPE", sort.Direction.String(), false, reflect.TypeOf(neo4jentity.OrganizationEntity{}))
 			query += string(cypherSort.SortingCypherFragment("o"))
+		} else if sort.By == SearchSortParamUpdatedAt {
+			cypherSort.NewSortRule("UPDATED_AT", sort.Direction.String(), false, reflect.TypeOf(neo4jentity.OrganizationEntity{}))
+			query += string(cypherSort.SortingCypherFragment("o"))
 		}
 	} else {
 		cypherSort.NewSortRule("UPDATED_AT", string(model.SortingDirectionDesc), false, reflect.TypeOf(neo4jentity.OrganizationEntity{}))
@@ -619,6 +625,8 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilter("lastTouchpointAt", *filter.Filter.Value.Time, utils.GTE))
 			} else if filter.Filter.Property == SearchSortParamLastTouchpointType && filter.Filter.Value.ArrayStr != nil {
 				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilterIn("lastTouchpointType", *filter.Filter.Value.ArrayStr))
+			} else if filter.Filter.Property == SearchSortParamUpdatedAt && filter.Filter.Value.Time != nil {
+				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilter("updatedAt", *filter.Filter.Value.Time, utils.GTE))
 			} else if filter.Filter.Property == SearchSortParamRenewalCycle {
 				if filter.Filter.Value.Str != nil {
 					switch *filter.Filter.Value.Str {
@@ -886,6 +894,9 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 				query += string(cypherSort.SortingCypherFragment("o"))
 			} else if sort.By == SearchSortParamContractLengthInMonths {
 				query += " ORDER BY CONTRACT_LENGTH_FOR_SORTING " + string(sort.Direction)
+			} else if sort.By == SearchSortParamUpdatedAt {
+				cypherSort.NewSortRule("UPDATED_AT", sort.Direction.String(), false, reflect.TypeOf(neo4jentity.OrganizationEntity{}))
+				query += string(cypherSort.SortingCypherFragment("o"))
 			}
 		} else {
 			cypherSort.NewSortRule("UPDATED_AT", string(model.SortingDirectionDesc), false, reflect.TypeOf(neo4jentity.OrganizationEntity{}))
