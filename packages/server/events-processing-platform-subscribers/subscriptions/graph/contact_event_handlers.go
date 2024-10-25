@@ -270,6 +270,7 @@ func (h *ContactEventHandler) OnContactLinkToOrganization(ctx context.Context, e
 	}
 
 	utils.EventCompleted(ctx, eventData.Tenant, model.CONTACT.String(), contactId, h.grpcClients, utils.NewEventCompletedDetails().WithUpdate())
+	utils.EventCompleted(ctx, eventData.Tenant, model.ORGANIZATION.String(), eventData.OrganizationId, h.grpcClients, utils.NewEventCompletedDetails().WithUpdate())
 
 	return err
 }

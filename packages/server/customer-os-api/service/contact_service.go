@@ -429,6 +429,10 @@ func (s *contactService) RemoveOrganization(ctx context.Context, contactId, orga
 		return nil, err
 	}
 	s.services.OrganizationService.UpdateLastTouchpoint(ctx, organizationId)
+
+	utils.EventCompleted(ctx, common.GetTenantFromContext(ctx), commonModel.CONTACT.String(), contactId, s.grpcClients, utils.NewEventCompletedDetails().WithUpdate())
+	utils.EventCompleted(ctx, common.GetTenantFromContext(ctx), commonModel.ORGANIZATION.String(), organizationId, s.grpcClients, utils.NewEventCompletedDetails().WithUpdate())
+
 	return neo4jmapper.MapDbNodeToContactEntity(contactNodePtr), nil
 }
 
