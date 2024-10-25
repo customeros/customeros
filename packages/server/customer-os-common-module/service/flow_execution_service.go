@@ -24,6 +24,7 @@ const (
 )
 
 type FlowExecutionService interface {
+	GetFlowActionExecutionById(ctx context.Context, flowActionExecution string) (*entity.FlowActionExecutionEntity, error)
 	GetFlowRequirements(ctx context.Context, flowId string) (*FlowComputeParticipantsRequirementsInput, error)
 	UpdateParticipantFlowRequirements(ctx context.Context, tx *neo4j.ManagedTransaction, participant *entity.FlowParticipantEntity, requirements *FlowComputeParticipantsRequirementsInput) error
 	ScheduleFlow(ctx context.Context, tx *neo4j.ManagedTransaction, flowId string, flowParticipant *entity.FlowParticipantEntity) error
@@ -42,6 +43,22 @@ func NewFlowExecutionService(services *Services) FlowExecutionService {
 
 type FlowComputeParticipantsRequirementsInput struct {
 	PrimaryEmailRequired bool
+}
+
+func (s *flowExecutionService) GetFlowActionExecutionById(ctx context.Context, flowActionExecution string) (*entity.FlowActionExecutionEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.GetFlowActionExecutionById")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	span.LogFields(log.String("flowActionExecution", flowActionExecution))
+
+	node, err := s.services.Neo4jRepositories.FlowActionExecutionReadRepository.GetById(ctx, flowActionExecution)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return mapper.MapDbNodeToFlowActionExecutionEntity(node), nil
 }
 
 func (s *flowExecutionService) GetFlowRequirements(ctx context.Context, flowId string) (*FlowComputeParticipantsRequirementsInput, error) {

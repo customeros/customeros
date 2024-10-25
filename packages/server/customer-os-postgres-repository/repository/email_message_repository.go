@@ -12,6 +12,7 @@ import (
 )
 
 type EmailMessageRepository interface {
+	GetByProviderMessageId(ctx context.Context, tenant, providerMessageId string) (*entity.EmailMessage, error)
 	GetByProducer(ctx context.Context, tenant, producerId, producerType string) (*entity.EmailMessage, error)
 	GetForSending(ctx context.Context) ([]*entity.EmailMessage, error)
 	GetForProcessing(ctx context.Context) ([]*entity.EmailMessage, error)
@@ -24,6 +25,33 @@ type emailMessageRepositoryImpl struct {
 
 func NewEmailMessageRepository(gormDb *gorm.DB) EmailMessageRepository {
 	return &emailMessageRepositoryImpl{gormDb: gormDb}
+}
+
+func (repo *emailMessageRepositoryImpl) GetByProviderMessageId(ctx context.Context, tenant, providerMessageId string) (*entity.EmailMessage, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailMessageRepository.GetByProviderMessageId")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	span.LogFields(log.String("tenant", tenant), log.String("providerMessageId", providerMessageId))
+
+	if tenant == "" || providerMessageId == "" {
+		err := errors.New("params missing")
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	var e *entity.EmailMessage
+	err := repo.gormDb.Where("tenant = ? and provider_message_id = ?", tenant, providerMessageId).First(&e).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			span.LogFields(log.Bool("result.found", false))
+			return nil, nil
+		}
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return e, nil
 }
 
 func (repo *emailMessageRepositoryImpl) GetByProducer(ctx context.Context, tenant, producerId, producerType string) (*entity.EmailMessage, error) {

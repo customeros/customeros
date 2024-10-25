@@ -16,6 +16,7 @@ import (
 )
 
 type FlowActionExecutionReadRepository interface {
+	GetById(ctx context.Context, id string) (*dbtype.Node, error)
 	GetExecution(ctx context.Context, flowId, actionId, entityId string, entityType model.EntityType) (*dbtype.Node, error)
 	GetForEntity(ctx context.Context, tx *neo4j.ManagedTransaction, flowId, entityId string, entityType model.EntityType) ([]*dbtype.Node, error)
 	GetFirstSlotForMailbox(ctx context.Context, tx *neo4j.ManagedTransaction, mailbox string) (*time.Time, error)
@@ -33,6 +34,49 @@ type flowActionExecutionReadRepositoryImpl struct {
 
 func NewFlowActionExecutionReadRepository(driver *neo4j.DriverWithContext, database string) FlowActionExecutionReadRepository {
 	return &flowActionExecutionReadRepositoryImpl{driver: driver, database: database}
+}
+
+func (r flowActionExecutionReadRepositoryImpl) GetById(ctx context.Context, id string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionExecutionReadRepository.GetExecution")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	span.LogFields(log.String("id", id))
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(fae:FlowActionExecution_%s {id:$id}) RETURN fae`, tenant)
+	params := map[string]any{
+		"tenant": tenant,
+		"id":     id,
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+		}
+	})
+
+	if err != nil && err.Error() == "Result contains no more records" {
+		span.LogFields(log.Bool("result.found", false))
+		return nil, nil
+	}
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	span.LogFields(log.Bool("result.found", true))
+
+	return result.(*dbtype.Node), nil
 }
 
 func (r flowActionExecutionReadRepositoryImpl) GetExecution(ctx context.Context, flowId, actionId, entityId string, entityType model.EntityType) (*dbtype.Node, error) {

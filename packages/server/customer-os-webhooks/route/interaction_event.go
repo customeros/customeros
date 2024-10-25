@@ -179,7 +179,16 @@ func syncPostmarkInteractionEventHandler(services *service.Services, cfg *config
 			return
 		}
 
-		err = processEmailForFlows(ctx, services, tenantByName, postmarkEmailWebhookData.FromFull.Email, participants, postmarkEmailWebhookData.Subject)
+		//TODO remove this hack
+		err = processEmailForFlows(ctx, services, tenantByName, postmarkEmailWebhookData.FromFull.Email, participants, postmarkEmailWebhookData.Subject, postmarkEmailWebhookData)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			log.Errorf("(SyncInteractionEvent) error processing email for flows: %s", err.Error())
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+			return
+		}
+
+		err = processMailstackReply(ctx, services, tenantByName, postmarkEmailWebhookData)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			log.Errorf("(SyncInteractionEvent) error processing email for flows: %s", err.Error())
@@ -348,10 +357,12 @@ func mapPostmarkToEmailRawData(tenant string, pmData model.PostmarkEmailWebhookD
 	}, nil
 }
 
+//Deprecated
+
 // if the sender is a user in the system, it means that this is outbound communication
 // we mark the contacts that received this email as COMPLETED in the flows that they are in
 // this is a hack for now as we should identify the flow that the contact is in and mark the contact as COMPLETED only in that specific flow
-func processEmailForFlows(ctx context.Context, services *service.Services, tenant, fromEmailAddress string, participantsEmailAddresses []string, emailSubject string) error {
+func processEmailForFlows(ctx context.Context, services *service.Services, tenant, fromEmailAddress string, participantsEmailAddresses []string, emailSubject string, input model.PostmarkEmailWebhookData) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventService.processEmailForFlows")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -410,6 +421,55 @@ func processEmailForFlows(ctx context.Context, services *service.Services, tenan
 
 			}
 		}
+	}
+
+	return nil
+}
+
+// check if the email is a reply to an email sent by mailstack
+// if it is, mark the flow participant as GOAL_ACHIEVED
+func processMailstackReply(ctx context.Context, services *service.Services, tenant string, input model.PostmarkEmailWebhookData) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventService.processMailstackReply")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	inReplyTo, err := getInReplyTo(input)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	// if this email is a reply to a mailstack email
+	// and the sender of the email is the same as the recipient of the mailstack email
+	// mark the flow participant as GOAL_ACHIEVED
+	if inReplyTo != "" {
+		mailstackEmail, err := services.CommonServices.PostgresRepositories.EmailMessageRepository.GetByProviderMessageId(ctx, tenant, inReplyTo)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+
+		if mailstackEmail != nil && strings.Contains(mailstackEmail.ToString, input.FromFull.Email) && mailstackEmail.ProducerType == commonModel.NodeLabelFlowActionExecution {
+
+			flowActionExecution, err := services.CommonServices.FlowExecutionService.GetFlowActionExecutionById(ctx, mailstackEmail.ProducerId)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return err
+			}
+
+			flowParticipant, err := services.CommonServices.FlowService.FlowParticipantByEntity(ctx, flowActionExecution.FlowId, flowActionExecution.EntityId, flowActionExecution.EntityType)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return err
+			}
+
+			err = services.CommonServices.Neo4jRepositories.CommonWriteRepository.UpdateStringProperty(ctx, nil, tenant, commonModel.NodeLabelFlowParticipant, flowParticipant.Id, "status", string(neo4jentity.FlowParticipantStatusGoalAchieved))
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return err
+			}
+		}
+
 	}
 
 	return nil
