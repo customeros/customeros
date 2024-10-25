@@ -439,7 +439,7 @@
   ],
   "queries": [
     {
-      "name": "orphan_nodes",
+      "name": "Orphan nodes",
       "query": "MATCH (n) WHERE NOT (n)--() AND NOT n:Country AND NOT n:Domain AND NOT n:TechnicalNode AND NOT n:Attachment return count(n)"
     },
     {

@@ -478,5 +478,10 @@ func (s *organizationService) LinkWithDomain(ctx context.Context, tx *neo4j.Mana
 		return err
 	}
 
+	if tx == nil {
+		// if not in transaction, we need to create an action
+		utils.EventCompleted(ctx, tenant, commonModel.ORGANIZATION.String(), organizationId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
+	}
+
 	return nil
 }

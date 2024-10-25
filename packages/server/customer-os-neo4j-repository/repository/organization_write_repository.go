@@ -723,7 +723,8 @@ func (r *organizationWriteRepository) LinkWithDomain(ctx context.Context, tx *ne
 				OPTIONAL MATCH (d)<-[:HAS_DOMAIN]-(otherOrg:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(t)
 				WITH d, org, COUNT(otherOrg) AS existingOrgCount
 				WHERE existingOrgCount = 0
-				MERGE (org)-[rel:HAS_DOMAIN]->(d)`
+				MERGE (org)-[rel:HAS_DOMAIN]->(d)
+				SET org.updatedAt = datetime()`
 	params := map[string]any{
 		"tenant":         tenant,
 		"organizationId": organizationId,
