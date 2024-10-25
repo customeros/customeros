@@ -215,7 +215,8 @@ func (s *fileService) UploadSingleFile(ctx context.Context, userEmail, tenantNam
 		basePath = "/GLOBAL"
 	}
 
-	err = uploadFileToS3(ctx, s.cfg, session, tenantName, basePath, fileId+"."+fileType.Extension, multipartFileHeader)
+	extension := utils.FirstNotEmptyString(filepath.Ext(multipartFileHeader.Filename), fileType.Extension)
+	err = uploadFileToS3(ctx, s.cfg, session, tenantName, basePath, fileId+"."+extension, multipartFileHeader)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Error uploading file to s3"))
 		s.log.Fatal(err)
