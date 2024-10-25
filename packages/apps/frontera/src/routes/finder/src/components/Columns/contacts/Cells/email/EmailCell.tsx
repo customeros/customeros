@@ -2,7 +2,6 @@ import { useRef, useMemo, useState } from 'react';
 
 import { observer } from 'mobx-react-lite';
 
-import { cn } from '@ui/utils/cn';
 import { Check } from '@ui/media/icons/Check';
 import { Spinner } from '@ui/feedback/Spinner';
 import { Star06 } from '@ui/media/icons/Star06';
@@ -61,14 +60,14 @@ export const EmailCell = observer(
     return (
       <div
         ref={ref}
+        className='flex  cursor-pointer'
         onDoubleClick={() => setIsEdit(true)}
-        className={cn('flex  cursor-pointer')}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         style={{ marginRight: isHovered ? '-20px' : '0px' }}
       >
         <Menu>
-          <MenuButton className='truncate'>
+          <MenuButton className='text-ellipsis overflow-hidden whitespace-nowrap'>
             <div className='flex items-center gap-2 '>
               {!isEdit && !email && (
                 <p className='text-gray-400 '>
@@ -88,7 +87,7 @@ export const EmailCell = observer(
               <p>{email}</p>
             </div>
           </MenuButton>
-          <MenuList align='center' className={cn('max-w-[600px] w-[250px]')}>
+          <MenuList align='center' className='max-w-[600px] w-[250px]'>
             {orgActive && (
               <MenuItem
                 onClick={() => {
@@ -179,7 +178,7 @@ export const EmailCell = observer(
                 size='xxs'
                 variant='ghost'
                 icon={<Star06 />}
-                className={'ml-4 '}
+                className={'ml-2'}
                 aria-label='Find work email'
                 onClick={() => {
                   setIsLoading(true);
@@ -200,11 +199,8 @@ export const EmailCell = observer(
                   size='xxs'
                   variant='ghost'
                   aria-label='edit'
+                  className='rounded-[5px] ml-[2px] '
                   icon={<DotsVertical className='text-gray-500' />}
-                  className={cn(
-                    'rounded-[5px] ml-[2px] opacity-0',
-                    isHovered && 'opacity-100',
-                  )}
                 />
               </MenuButton>
 
