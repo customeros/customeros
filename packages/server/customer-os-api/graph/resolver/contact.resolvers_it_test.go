@@ -14,8 +14,10 @@ import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
+	eventcompletionpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/event_completion"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"testing"
 	"time"
 )
@@ -1001,6 +1003,13 @@ func TestMutationResolver_ContactRemoveOrganizationByID(t *testing.T) {
 		},
 	}
 	events_platform.SetOrganizationCallbacks(&organizationServiceCallbacks)
+
+	callbacks := events_platform.MockEventCompletionCallbacks{
+		NotifyEventProcessed: func(context context.Context, org *eventcompletionpb.NotifyEventProcessedRequest) (*emptypb.Empty, error) {
+			return &emptypb.Empty{}, nil
+		},
+	}
+	events_platform.SetEventCompletionServiceCallbacks(&callbacks)
 
 	rawResponse := callGraphQL(t, "contact/remove_organization_from_contact", map[string]interface{}{"contactId": contactId, "organizationId": orgId2})
 
