@@ -87,17 +87,22 @@ export const EmailCell = observer(
               </div>
             </MenuButton>
             <MenuList align='center' className='max-w-[600px] w-[250px]'>
-              <MenuItem
-                onClick={() => {
-                  setIsLoading(true);
-                  contactStore?.findEmail().finally(() => setIsLoading(false));
-                }}
-              >
-                <div className='overflow-hidden text-ellipsis'>
-                  <Star06 className='mr-2 text-gray-500' />
-                  {`Find email at ${orgActive}`}
-                </div>
-              </MenuItem>
+              {orgActive && (
+                <MenuItem
+                  onClick={() => {
+                    setIsLoading(true);
+                    contactStore
+                      ?.findEmail()
+                      .finally(() => setIsLoading(false));
+                  }}
+                >
+                  <div className='overflow-hidden text-ellipsis'>
+                    <Star06 className='mr-2 text-gray-500' />
+                    {`Find email at ${orgActive}`}
+                  </div>
+                </MenuItem>
+              )}
+
               <MenuItem
                 onClick={() => {
                   store.ui.setSelectionId(
@@ -156,6 +161,7 @@ export const EmailCell = observer(
             </MenuList>
           </Menu>
           {isHovered &&
+            orgActive &&
             (isLoading ? (
               <Tooltip label={`Finding email at ${orgActive} `}>
                 <Spinner
