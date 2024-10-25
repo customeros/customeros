@@ -8,7 +8,6 @@ import { MentionNode } from './MentionNode';
 import { HashtagNode } from './HashtagNode';
 import { VariableNode } from './VariableNode';
 import { ExtendedTextNode } from './ExtendedTextNode';
-import { ExtendedQuoteNode } from './ExtendedQuoteNode';
 
 export const nodes = [
   LinkNode,
@@ -22,17 +21,10 @@ export const nodes = [
   CodeNode,
   ListNode,
   ListItemNode,
-  ExtendedQuoteNode,
+  QuoteNode,
   {
     replace: TextNode,
     with: (node: TextNode) => new ExtendedTextNode(node.__text),
     withKlass: ExtendedTextNode,
-  },
-
-  // TODO remove it from usages - replace with default QuoteNode COS-5321
-  {
-    replace: QuoteNode,
-    with: () => new ExtendedQuoteNode(),
-    withKlass: ExtendedQuoteNode,
   },
 ];

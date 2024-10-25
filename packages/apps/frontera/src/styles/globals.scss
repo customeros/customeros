@@ -8,26 +8,25 @@
     @apply text-gray-700;
 
     @font-face {
-      font-family: "IBM Plex Sans";
-      src: url("../assets/fonts/IBMPlexSans-Regular.ttf");
+      font-family: 'IBM Plex Sans';
+      src: url('../assets/fonts/IBMPlexSans-Regular.ttf');
       font-weight: 400;
       font-style: normal;
     }
 
     @font-face {
-      font-family: "IBM Plex Sans";
-      src: url("../assets/fonts/IBMPlexSans-Medium.ttf");
+      font-family: 'IBM Plex Sans';
+      src: url('../assets/fonts/IBMPlexSans-Medium.ttf');
       font-weight: 500;
       font-style: normal;
     }
     @font-face {
-      font-family: "IBM Plex Sans";
-      src: url("../assets/fonts/IBMPlexSans-SemiBold.ttf");
+      font-family: 'IBM Plex Sans';
+      src: url('../assets/fonts/IBMPlexSans-SemiBold.ttf');
       font-weight: 600;
       font-style: normal;
     }
   }
-
 
   //blockquote,
   //dl,
@@ -80,7 +79,7 @@
     @apply relative pl-3 rounded-none align-text-bottom;
   }
   .block-text-renderer blockquote:before {
-    content: "";
+    content: '';
     @apply absolute top-0 left-0 w-[2px] h-full bg-gray-400;
   }
   .block-text-renderer blockquote p {
@@ -90,16 +89,16 @@
     @apply text-gray-700 font-medium;
   }
   .block-text-renderer blockquote .customeros-tag:before {
-    content: "#";
+    content: '#';
   }
 
   .block-text-renderer blockquote .customeros-mention {
     @apply text-gray-700 font-medium;
   }
   .block-text-renderer blockquote .customeros-mention:before {
-    content: "@";
+    content: '@';
   }
-  .block-text-renderer[aria-hidden="true"] {
+  .block-text-renderer[aria-hidden='true'] {
     @apply hidden;
   }
 
@@ -168,7 +167,7 @@
     @apply relative pl-0 rounded-none align-text-bottom;
   }
   .inline-text-renderer blockquote:before {
-    content: "";
+    content: '';
     @apply absolute top-0 left-0 w-0 h-full bg-gray-400;
   }
   .inline-text-renderer blockquote p {
@@ -187,7 +186,7 @@
   .inline-text-renderer blockquote .customeros-mention:before {
     content: '"@"';
   }
-  .inline-text-renderer[aria-hidden="true"] {
+  .inline-text-renderer[aria-hidden='true'] {
     @apply hidden;
   }
 
@@ -248,10 +247,10 @@
     @apply italic;
   }
 
-  input[type="time"]::-webkit-datetime-edit-hour-field:focus,
-  input[type="time"]::-webkit-datetime-edit-minute-field:focus,
-  input[type="time"]::-webkit-datetime-edit-second-field:focus,
-  input[type="time"]::-webkit-datetime-edit-ampm-field:focus {
+  input[type='time']::-webkit-datetime-edit-hour-field:focus,
+  input[type='time']::-webkit-datetime-edit-minute-field:focus,
+  input[type='time']::-webkit-datetime-edit-second-field:focus,
+  input[type='time']::-webkit-datetime-edit-ampm-field:focus {
     @apply bg-gray-500;
   }
 }
@@ -300,29 +299,26 @@
   }
 }
 .react-flow {
-  --xy-edge-stroke-default: #D0D5DD;
-
+  --xy-edge-stroke-default: #d0d5dd;
 }
 
 .react-flow__edge.react-flow__edge-baseEdge {
-  ----xy-edge-stroke-default: #D0D5DD;
-  --xy-edge-stroke-selected-default: #9E77ED;
+  ----xy-edge-stroke-default: #d0d5dd;
+  --xy-edge-stroke-selected-default: #9e77ed;
 
   path {
     transition: stroke 0.3s;
   }
 }
 
-
-.react-flow__node.selected > .border{
-    border-color: #7F56D9;
+.react-flow__node.selected > .border {
+  border-color: #7f56d9;
 }
 
 .react-flow__controls-button {
   border-right: 8px;
   padding: 8px;
 }
-
 
 .react-flow__controls {
   box-shadow: none;
@@ -332,7 +328,7 @@
   stroke-width: 1.5px !important;
 }
 
-.react-flow__controls-button svg{
+.react-flow__controls-button svg {
   fill: transparent;
   max-width: unset;
   max-height: unset;
@@ -341,9 +337,3 @@
   pointer-events: unset;
 }
 
-// inside editor we want to use default element styles to ensure user will get that they expect
-.email-editor {
-  p, ul, ol, a, h1{
-    all: revert;
-  }
-}

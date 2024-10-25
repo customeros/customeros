@@ -1,5 +1,5 @@
 import { useParams } from 'react-router-dom';
-import React, { useRef, useMemo, useState, useEffect } from 'react';
+import { useRef, useMemo, useState, useEffect } from 'react';
 
 import { observer } from 'mobx-react-lite';
 import { FlowActionType } from '@store/Flows/types.ts';
@@ -145,22 +145,19 @@ export const EmailEditorModal = observer(
 );
 
 const emailPrompts = [
-  "Write something they'll want to share with their boss",
-  'Craft an email that makes them say "Wow!"',
-  "Compose an email they'll quote in their presentation",
-  "Make them feel like they've discovered hidden treasure",
-  'Write an email that makes them rethink their strategy',
-  "Write something they can't get from a Google search",
-  'Compose the email that ends their decision paralysis',
-  "Write an email they can't ignore",
-  'Turn this blank canvas into a sales masterpiece',
-  'Write something that makes them feel stupid for not replying',
-  'Write something that makes them say, "Yes, this is what we need!"',
-  "Show them what they're missing—start typing...",
-  'Type an email that helps them win',
-  "Write something they'll remember",
-  'Make your email impossible to ignore',
-  'Start an email that stands out',
+  'Write something {{contact_first_name}} will want to share with their boss',
+  'Craft an email that makes {{contact_first_name}} say "Wow!"',
+  'Compose an email {{contact_first_name}} will quote in their presentation',
+  "Make {{contact_first_name}} feel like they've discovered a hidden treasure",
+  'Write an email that makes {{contact_first_name}} rethink their strategy',
+  "Write something {{contact_first_name}} can't get from a Google search",
+  'Compose the email that ends {{contact_first_name}}’s decision paralysis',
+  "Write an email {{contact_first_name}} can't ignore",
+  'Write something that makes {{contact_first_name}} feel stupid for not replying',
+  'Write something that makes {{contact_first_name}} say, “Yes, this is what we need!”',
+  'Show {{contact_first_name}} what they’re missing—start typing...',
+  'Type an email that helps {{contact_first_name}} win',
+  'Write something {{contact_first_name}} remember',
 ];
 
 function getRandomEmailPrompt(): string {

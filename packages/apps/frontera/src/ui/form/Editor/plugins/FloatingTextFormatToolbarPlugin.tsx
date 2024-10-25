@@ -1,9 +1,10 @@
-import * as React from 'react';
 import { createPortal } from 'react-dom';
 import { useRef, useState, useEffect, useCallback, KeyboardEvent } from 'react';
 
 import { computePosition } from '@floating-ui/dom';
+import { $setBlocksType } from '@lexical/selection';
 import { $isLinkNode, $toggleLink } from '@lexical/link';
+import { $isQuoteNode, $createQuoteNode } from '@lexical/rich-text';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import {
   $getSelection,
@@ -12,6 +13,7 @@ import {
   KEY_ESCAPE_COMMAND,
   FORMAT_TEXT_COMMAND,
   KEY_MODIFIER_COMMAND,
+  $createParagraphNode,
   COMMAND_PRIORITY_HIGH,
   $createRangeSelection,
   COMMAND_PRIORITY_NORMAL,
@@ -24,19 +26,15 @@ import { Link01 } from '@ui/media/icons/Link01';
 import { Italic01 } from '@ui/media/icons/Italic01';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { BlockQuote } from '@ui/media/icons/BlockQuote';
-import { BracketsPlus } from '@ui/media/icons/BracketsPlus';
 import { Strikethrough01 } from '@ui/media/icons/Strikethrough01';
 import { FloatingToolbarButton } from '@ui/form/Editor/components';
-import { getSelectedNode } from '@ui/form/Editor/utils/getSelectedNode.ts';
-import { $isExtendedQuoteNode } from '@ui/form/Editor/nodes/ExtendedQuoteNode';
+import { getSelectedNode } from '@ui/form/Editor/utils/getSelectedNode';
 
 import { usePointerInteractions } from './../utils/usePointerInteractions';
 import {
-  INSERT_VARIABLE_NODE,
   registerEnterQuoteCommand,
   TOGGLE_BLOCKQUOTE_COMMAND,
   registerToggleQuoteCommand,
-  registerInsertVariableNodeCommand,
 } from './../commands';
 
 const DEFAULT_DOM_ELEMENT = document.body;
@@ -53,10 +51,7 @@ export type FloatingMenuPluginProps = {
   variableOptions: string[];
 };
 
-export function FloatingMenu({
-  editor,
-  variableOptions,
-}: FloatingMenuComponentProps) {
+export function FloatingMenu({ editor }: FloatingMenuComponentProps) {
   const [isStrikethrough, setIsStrikethrough] = useState(false);
   const [isLink, setIsLink] = useState(false);
   const [isBlockquote, setIsBlockquote] = useState(false);
@@ -88,6 +83,18 @@ export function FloatingMenu({
     });
   }, [editor, isLink]);
 
+  const toggleBlockquote = useCallback(() => {
+    editor.update(() => {
+      const selection = $getSelection();
+
+      if (!isBlockquote) {
+        $setBlocksType(selection, $createQuoteNode);
+      } else {
+        $setBlocksType(selection, $createParagraphNode);
+      }
+    });
+  }, [editor, isBlockquote]);
+
   useEffect(() => {
     return editor.registerUpdateListener(({ editorState }) => {
       editorState.read(() => {
@@ -97,6 +104,11 @@ export function FloatingMenu({
           setIsStrikethrough(selection.hasFormat('strikethrough'));
           setIsBold(selection.hasFormat('bold'));
           setIsItalic(selection.hasFormat('italic'));
+          setIsBlockquote(
+            selection
+              .getNodes()
+              .some((n) => $isQuoteNode(n) || $isQuoteNode(n.getParent())),
+          );
 
           const node = getSelectedNode(selection);
 
@@ -108,15 +120,15 @@ export function FloatingMenu({
           } else {
             setIsLink(false);
           }
-          setIsBlockquote(
-            selection
-              .getNodes()
-              .some(
-                (node) =>
-                  $isExtendedQuoteNode(node) ||
-                  $isExtendedQuoteNode(node.getParent()),
-              ),
-          );
+          // setIsBlockquote(
+          //   selection
+          //     .getNodes()
+          //     .some(
+          //       (node) =>
+          //         $isExtendedQuoteNode(node) ||
+          //         $isExtendedQuoteNode(node.getParent()),
+          //     ),
+          // );
         }
       });
     });
@@ -178,26 +190,9 @@ export function FloatingMenu({
           <div>
             <FloatingToolbarButton
               active={isBlockquote}
+              onClick={toggleBlockquote}
               aria-label='Format text with block quote'
               icon={<BlockQuote className='text-inherit' />}
-              onClick={() => {
-                editor.dispatchCommand(TOGGLE_BLOCKQUOTE_COMMAND, undefined);
-              }}
-            />
-          </div>
-        </Tooltip>
-        <Tooltip label='Add variable: {'>
-          <div>
-            <FloatingToolbarButton
-              active={isBlockquote}
-              aria-label='Add variable'
-              icon={<BracketsPlus className='text-inherit' />}
-              onClick={() => {
-                editor.dispatchCommand(INSERT_VARIABLE_NODE, {
-                  label: variableOptions?.[0].toLowerCase(),
-                  value: variableOptions?.[0].toLowerCase(),
-                });
-              }}
             />
           </div>
         </Tooltip>
@@ -293,12 +288,6 @@ export function FloatingMenuPlugin({
   );
 
   useEffect(() => {
-    const unregisterInsertVariableCommand = registerInsertVariableNodeCommand(
-      editor,
-      () => {
-        setCoords(undefined);
-      },
-    );
     const unregisterCommand = editor.registerCommand(
       ON_SELECTION_CHANGE,
       $handleSelectionChange,
@@ -309,7 +298,6 @@ export function FloatingMenuPlugin({
 
     return () => {
       unregisterCommand();
-      unregisterInsertVariableCommand();
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [editor, $handleSelectionChange, handleClickOutside]);
