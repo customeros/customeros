@@ -2,13 +2,17 @@ package graph
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event/email"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event/email/event"
@@ -83,7 +87,54 @@ func (h *EmailEventHandler) OnEmailValidatedV2(ctx context.Context, evt eventsto
 		tracing.TraceErr(span, errors.Wrap(err, "GetOrganizationsWithEmail"))
 	}
 
-	// TODO assign alternate email to contact and orgs
+	// if alternate email is present, update the alternate email for the linked contacts and organizations
+	if eventData.AlternateEmail != "" && eventData.AlternateEmail != eventData.Email {
+		// add alternate email for linked contacts
+		for _, contactDbNode := range contactsDbNodes {
+			contactEntity := neo4jmapper.MapDbNodeToContactEntity(contactDbNode)
+			innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+				Tenant:    eventData.Tenant,
+				AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
+			})
+			_, err = h.services.CommonServices.EmailService.Merge(innerCtx, eventData.Tenant,
+				commonservice.EmailFields{
+					Email:     eventData.AlternateEmail,
+					Source:    neo4jentity.DataSourceOpenline,
+					AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
+					Primary:   true,
+				},
+				&commonservice.LinkWith{
+					Type: model.CONTACT,
+					Id:   contactEntity.Id,
+				})
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrapf(err, "Add email to contact %s", contactEntity.Id))
+			}
+		}
+
+		// add alternate email for linked organizations
+		for _, organizationDbNode := range contactsDbNodes {
+			organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
+			innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+				Tenant:    eventData.Tenant,
+				AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
+			})
+			_, err = h.services.CommonServices.EmailService.Merge(innerCtx, eventData.Tenant,
+				commonservice.EmailFields{
+					Email:     eventData.AlternateEmail,
+					Source:    neo4jentity.DataSourceOpenline,
+					AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
+					Primary:   true,
+				},
+				&commonservice.LinkWith{
+					Type: model.ORGANIZATION,
+					Id:   organizationEntity.ID,
+				})
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrapf(err, "Add email to organization %s", organizationEntity.ID))
+			}
+		}
+	}
 
 	// notify linked contacts
 	for _, contact := range contactsDbNodes {

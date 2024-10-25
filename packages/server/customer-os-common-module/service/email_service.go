@@ -31,13 +31,14 @@ type emailService struct {
 type EmailService interface {
 	Merge(ctx context.Context, tenant string, emailFields EmailFields, linkWith *LinkWith) (*string, error)
 	ReplaceEmail(ctx context.Context, previousEmail string, emailFields EmailFields, linkWith LinkWith) (*string, error)
-	LinkEmail(ctx context.Context, emailId, email, appSource string, primary bool, linkWith LinkWith) error
 	UnlinkEmail(ctx context.Context, email, appSource string, linkWith LinkWith) error
 	DeleteOrphanEmail(ctx context.Context, tenant, emailId, appSource string) error
 	GetAllEmailsForEntityIds(ctx context.Context, tenant string, entityType commonmodel.EntityType, entityIds []string) (*neo4jentity.EmailEntities, error)
 	SetPrimary(ctx context.Context, email string, forEntity LinkWith) error
 	GetPrimaryEmailForEntityId(ctx context.Context, entityType commonmodel.EntityType, entityId string) (*neo4jentity.EmailEntity, error)
 	GetPrimaryEmailsForEntityIds(ctx context.Context, entityType commonmodel.EntityType, entityIds []string) (*neo4jentity.EmailEntities, error)
+
+	linkEmail(ctx context.Context, emailId, email, appSource string, primary bool, linkWith LinkWith) error
 }
 
 func NewEmailService(services *Services) EmailService {
@@ -117,7 +118,7 @@ func (s *emailService) Merge(ctx context.Context, tenant string, emailFields Ema
 	}
 
 	if linkWith != nil && linkWith.Id != "" && linkWith.Type != "" {
-		err = s.LinkEmail(ctx, emailId, emailFields.Email, emailFields.AppSource, emailFields.Primary, *linkWith)
+		err = s.linkEmail(ctx, emailId, emailFields.Email, emailFields.AppSource, emailFields.Primary, *linkWith)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return &emailId, err
@@ -170,7 +171,7 @@ func (s *emailService) ReplaceEmail(ctx context.Context, previousEmail string, e
 	return s.Merge(ctx, tenant, emailFields, &linkWith)
 }
 
-func (s *emailService) LinkEmail(ctx context.Context, emailId, email, appSource string, primary bool, linkWith LinkWith) error {
+func (s *emailService) linkEmail(ctx context.Context, emailId, email, appSource string, primary bool, linkWith LinkWith) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.LinkEmail")
 	defer span.Finish()
 
