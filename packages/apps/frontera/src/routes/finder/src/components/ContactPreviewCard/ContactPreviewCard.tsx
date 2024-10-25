@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 
 import set from 'lodash/set';
 import { useKeyBindings } from 'rooks';
@@ -7,6 +7,7 @@ import cityTimezone from 'city-timezones';
 import { observer } from 'mobx-react-lite';
 
 import { cn } from '@ui/utils/cn';
+import { X } from '@ui/media/icons/X';
 import { Input } from '@ui/form/Input';
 import { flags } from '@ui/media/flags';
 import { Avatar } from '@ui/media/Avatar';
@@ -21,6 +22,7 @@ import { Tags } from '@organization/components/Tabs';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { getFormattedLink } from '@utils/getExternalLink';
 import { Tag, Social, TableViewType } from '@graphql/types';
+import { LinkExternal02 } from '@ui/media/icons/LinkExternal02';
 import { LinkedInSolid02 } from '@ui/media/icons/LinkedInSolid02';
 
 import { EmailsSection } from './components';
@@ -29,12 +31,13 @@ import { EnrichContactModal } from './components/EnrichContactModal';
 export const ContactPreviewCard = observer(() => {
   const store = useStore();
   const [searchParams] = useSearchParams();
+  const [isOpen, setIsOpen] = useState(false);
   const [isEditName, setIsEditName] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   const contactId = store.ui.focusRow;
   const preset = searchParams?.get('preset');
   const tableViewDef = store.tableViewDefs.getById(preset ?? '1');
   const tableType = tableViewDef?.value?.tableType;
-  const [isOpen, setIsOpen] = useState(false);
 
   if (tableType !== TableViewType.Contacts && !contactId) {
     store.ui.setContactPreviewCardOpen(false);
@@ -70,6 +73,9 @@ export const ContactPreviewCard = observer(() => {
     'https://www.',
     '',
   );
+  const href = fromatedUrl?.startsWith('http')
+    ? fromatedUrl
+    : `https://${fromatedUrl}`;
 
   const formatedFollowersCount = contact?.value?.socials?.[0]?.followersCount
     ?.toLocaleString()
@@ -151,26 +157,36 @@ export const ContactPreviewCard = observer(() => {
               variant='circle'
               src={src || undefined}
             />
-            {!userBeenEnriched && (
-              <Tooltip asChild label='Enrich this contact'>
-                {!requestedEnrichment ? (
-                  <IconButton
-                    size='xxs'
-                    icon={<Star06 />}
-                    onClick={() => setIsOpen(true)}
-                    aria-label='enrich this contact'
-                  />
-                ) : (
-                  <Spinner
-                    size='sm'
-                    label='enriching'
-                    className='text-gray-400 fill-gray-700'
-                  />
-                )}
-              </Tooltip>
-            )}
+            <div className='flex items-center gap-2'>
+              {userBeenEnriched && (
+                <Tooltip asChild label='Enrich this contact'>
+                  {requestedEnrichment ? (
+                    <IconButton
+                      size='xxs'
+                      variant='ghost'
+                      icon={<Star06 />}
+                      onClick={() => setIsOpen(true)}
+                      aria-label='enrich this contact'
+                    />
+                  ) : (
+                    <Spinner
+                      size='sm'
+                      label='enriching'
+                      className='text-gray-400 fill-gray-700'
+                    />
+                  )}
+                </Tooltip>
+              )}
+              <IconButton
+                size='xxs'
+                icon={<X />}
+                variant='ghost'
+                aria-label='close'
+                onClick={() => store.ui.setContactPreviewCardOpen(false)}
+              />
+            </div>
           </div>
-          <div className='flex items-center gap-1'>
+          <div className='flex items-center gap-1 w-full'>
             {isEditName ? (
               <Input
                 value={fullName}
@@ -188,24 +204,24 @@ export const ContactPreviewCard = observer(() => {
                 }}
               />
             ) : (
-              <>
+              <div className='flex items-center h-fit w-full'>
                 <span
                   onClick={() => setIsEditName(true)}
-                  className='font-medium mt-2 overflow-hidden text-ellipsis whitespace-nowrap'
+                  className='font-medium mt-2 w-full overflow-hidden'
                 >
                   {fullName}
                 </span>
                 {company ? (
-                  <>
-                    <span className='mt-2 text-gray-500'> at </span>
-                    <span className='font-medium overflow-hidden text-ellipsis whitespace-nowrap mt-2 '>
+                  <div className='flex items-center gap-1 w-full ml-[-40px]'>
+                    <span className='mt-2 text-gray-500 '>at</span>
+                    <span className='font-medium mt-2 line-clamp-1'>
                       {company || 'No org yet'}
                     </span>
-                  </>
+                  </div>
                 ) : (
                   <span className='mt-2'>(No org yet)</span>
                 )}
-              </>
+              </div>
             )}
           </div>
           <Input
@@ -274,18 +290,35 @@ export const ContactPreviewCard = observer(() => {
                 <LinkedInSolid02 className='mt-[1px] text-gray-500 ' />
                 LinkedIn
               </div>
-
-              <Input
-                size='xs'
-                variant='unstyled'
-                value={fromatedUrl}
-                className='text-ellipsis'
-                onFocus={(e) => e.target.select()}
-                placeholder='LinkedIn profile link'
-                onChange={(e) => {
-                  handleUpdateSocial(e.target.value);
-                }}
-              />
+              <div
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeave={() => setIsHovered(false)}
+                className='flex items-center gap-1 w-full'
+              >
+                <Input
+                  size='xs'
+                  variant='unstyled'
+                  value={fromatedUrl}
+                  className='text-ellipsis'
+                  onFocus={(e) => e.target.select()}
+                  placeholder='LinkedIn profile link'
+                  onChange={(e) => {
+                    handleUpdateSocial(e.target.value);
+                  }}
+                />
+                {fromatedUrl && isHovered && (
+                  <Link to={href} target='_blank'>
+                    <IconButton
+                      size='xxs'
+                      variant='ghost'
+                      colorScheme='gray'
+                      aria-label='social link'
+                      className='hover:bg-gray-200 '
+                      icon={<LinkExternal02 className='text-gray-500' />}
+                    />
+                  </Link>
+                )}
+              </div>
             </div>
             <div className='flex gap-1 w-full'>
               <div className='flex items-center gap-2 mr-[42px] text-sm text-gray-500 '>
