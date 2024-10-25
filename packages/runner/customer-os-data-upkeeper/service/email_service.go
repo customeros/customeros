@@ -251,7 +251,7 @@ func (s *emailService) ValidateEmailsFromBulkRequests() {
 						if dataObj.DomainData.IsCatchAll {
 							billableEvent = postgresentity.BillableEventEmailVerifiedCatchAll
 						}
-						_, err = s.commonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, record.Tenant, billableEvent, strconv.FormatUint(record.ID, 10), record.Email)
+						_, err = s.commonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, record.Tenant, billableEvent, "", strconv.FormatUint(record.ID, 10), record.Email)
 						if err != nil {
 							tracing.TraceErr(span, errors.Wrap(err, "failed to register billable event"))
 						}

@@ -900,14 +900,14 @@ func (s *contactService) EnrichWithWorkEmailFromBetterContact() {
 		}
 
 		if emailLinked {
-			_, err = s.commonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(innerCtx, record.Tenant, postgresentity.BillableEventEnrichPersonEmailFound, betterContactResponse.Id,
+			_, err = s.commonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(innerCtx, record.Tenant, postgresentity.BillableEventEnrichPersonEmailFound, "", betterContactResponse.Id,
 				fmt.Sprintf("Email: %s, LinkedIn: %s, FirstName: %s, LastName: %s", emailForBillableEvent, detailsBetterContact.ContactLinkedInUrl, detailsBetterContact.ContactFirstName, detailsBetterContact.ContactLastName))
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "failed to store billable event"))
 			}
 		}
 		if phoneLinked {
-			_, err = s.commonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(innerCtx, record.Tenant, postgresentity.BillableEventEnrichPersonPhoneFound, betterContactResponse.Id,
+			_, err = s.commonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(innerCtx, record.Tenant, postgresentity.BillableEventEnrichPersonPhoneFound, "", betterContactResponse.Id,
 				fmt.Sprintf("Phone: %s, LinkedIn: %s, FirstName: %s, LastName: %s", phoneNumberForBillableEvent, detailsBetterContact.ContactLinkedInUrl, detailsBetterContact.ContactFirstName, detailsBetterContact.ContactLastName))
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "failed to store billable event"))
@@ -994,13 +994,13 @@ func (s *contactService) checkBetterContactRequestsWithoutResponse(ctx context.C
 					}
 				}
 				if emailFound {
-					_, err = s.commonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, personEnrichmentRequest.Tenant, postgresentity.BillableEventEnrichPersonEmailFound, personEnrichmentRequest.BettercontactRecordId, "generated in upkeeper")
+					_, err = s.commonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, personEnrichmentRequest.Tenant, postgresentity.BillableEventEnrichPersonEmailFound, "", personEnrichmentRequest.BettercontactRecordId, "generated in upkeeper")
 					if err != nil {
 						tracing.TraceErr(span, errors.Wrap(err, "failed to store billable event"))
 					}
 				}
 				if phoneFound {
-					_, err = s.commonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, personEnrichmentRequest.Tenant, postgresentity.BillableEventEnrichPersonPhoneFound, personEnrichmentRequest.BettercontactRecordId, "generated in upkeeper")
+					_, err = s.commonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, personEnrichmentRequest.Tenant, postgresentity.BillableEventEnrichPersonPhoneFound, "", personEnrichmentRequest.BettercontactRecordId, "generated in upkeeper")
 					if err != nil {
 						tracing.TraceErr(span, errors.Wrap(err, "failed to store billable event"))
 					}

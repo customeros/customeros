@@ -207,13 +207,13 @@ func syncBetterContactResponse(cfg *config.Config, services *service.Services, l
 					}
 				}
 				if emailFound {
-					_, err = services.CommonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, personEnrichmentRequest.Tenant, entity.BillableEventEnrichPersonEmailFound, personEnrichmentRequest.BettercontactRecordId, "generated in webhooks")
+					_, err = services.CommonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, personEnrichmentRequest.Tenant, entity.BillableEventEnrichPersonEmailFound, "", personEnrichmentRequest.BettercontactRecordId, "generated in webhooks")
 					if err != nil {
 						tracing.TraceErr(span, pkgerrors.Wrap(err, "failed to store billable event"))
 					}
 				}
 				if phoneFound {
-					_, err = services.CommonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, personEnrichmentRequest.Tenant, entity.BillableEventEnrichPersonPhoneFound, personEnrichmentRequest.BettercontactRecordId, "generated in webhooks")
+					_, err = services.CommonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, personEnrichmentRequest.Tenant, entity.BillableEventEnrichPersonPhoneFound, "", personEnrichmentRequest.BettercontactRecordId, "generated in webhooks")
 					if err != nil {
 						tracing.TraceErr(span, pkgerrors.Wrap(err, "failed to store billable event"))
 					}

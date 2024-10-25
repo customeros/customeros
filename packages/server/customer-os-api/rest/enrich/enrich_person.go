@@ -297,14 +297,14 @@ func EnrichPerson(services *service.Services) gin.HandlerFunc {
 				}
 			}
 			if emailFound {
-				_, err = services.CommonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, tenant, postgresentity.BillableEventEnrichPersonEmailFound, betterContactResponseBody.Id,
+				_, err = services.CommonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, tenant, postgresentity.BillableEventEnrichPersonEmailFound, "", betterContactResponseBody.Id,
 					fmt.Sprintf("Email: %s, LinkedIn: %s, FirstName: %s, LastName: %s", email, linkedinUrl, firstName, lastName))
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "failed to store billable event"))
 				}
 			}
 			if phoneFound {
-				_, err = services.CommonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, tenant, postgresentity.BillableEventEnrichPersonPhoneFound, betterContactResponseBody.Id,
+				_, err = services.CommonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, tenant, postgresentity.BillableEventEnrichPersonPhoneFound, "", betterContactResponseBody.Id,
 					fmt.Sprintf("Email: %s, LinkedIn: %s, FirstName: %s, LastName: %s", email, linkedinUrl, firstName, lastName))
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "failed to store billable event"))

@@ -227,7 +227,7 @@ func EnrichOrganization(services *service.Services) gin.HandlerFunc {
 		}
 
 		if enrichOrganizationApiResponse.Success == true {
-			_, err = services.CommonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, tenant, postgresentity.BillableEventEnrichOrganizationSuccess, "",
+			_, err = services.CommonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, tenant, postgresentity.BillableEventEnrichOrganizationSuccess, "", "",
 				fmt.Sprintf("LinkedIn URL: %s, Domain: %s", linkedinUrl, domain))
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "failed to register billable event"))

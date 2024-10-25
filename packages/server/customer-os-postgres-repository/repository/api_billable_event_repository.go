@@ -11,7 +11,7 @@ import (
 )
 
 type ApiBillableEventRepository interface {
-	RegisterEvent(ctx context.Context, tenant string, event entity.BillableEvent, externalID, referenceData string) (*entity.ApiBillableEvent, error)
+	RegisterEvent(ctx context.Context, tenant string, event entity.BillableEvent, subtype, externalID, referenceData string) (*entity.ApiBillableEvent, error)
 }
 
 type apiBillableEventRepository struct {
@@ -23,7 +23,7 @@ func NewApiBillableEventRepository(db *gorm.DB) ApiBillableEventRepository {
 }
 
 // Register creates a new ApiBillableEvent and stores it in the database
-func (r *apiBillableEventRepository) RegisterEvent(ctx context.Context, tenant string, event entity.BillableEvent, externalID, referenceData string) (*entity.ApiBillableEvent, error) {
+func (r *apiBillableEventRepository) RegisterEvent(ctx context.Context, tenant string, event entity.BillableEvent, subtype, externalID, referenceData string) (*entity.ApiBillableEvent, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "BillableEventRepository.RegisterEvent")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -31,6 +31,7 @@ func (r *apiBillableEventRepository) RegisterEvent(ctx context.Context, tenant s
 	span.LogKV("event", event)
 	span.LogKV("externalID", externalID)
 	span.LogKV("referenceData", referenceData)
+	span.LogKV("subtype", subtype)
 
 	// Construct the ApiBillableEvent entity
 	billableEvent := entity.ApiBillableEvent{
@@ -39,6 +40,7 @@ func (r *apiBillableEventRepository) RegisterEvent(ctx context.Context, tenant s
 		CreatedAt:     utils.Now(),
 		ExternalID:    externalID,
 		ReferenceData: referenceData,
+		Subtype:       subtype,
 	}
 
 	err := r.gormDb.Create(&billableEvent).Error

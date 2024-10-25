@@ -225,7 +225,7 @@ func VerifyEmailAddress(services *service.Services) gin.HandlerFunc {
 			if emailVerificationResponse.IsCatchAll {
 				billableEvent = postgresentity.BillableEventEmailVerifiedCatchAll
 			}
-			_, err = services.CommonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, tenant, billableEvent, "", emailAddress)
+			_, err = services.CommonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, tenant, billableEvent, "", "", emailAddress)
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "failed to register billable event"))
 			}

@@ -239,7 +239,7 @@ func IpIntelligence(services *service.Services) gin.HandlerFunc {
 			}
 		}
 
-		_, err = services.CommonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, tenant, postgresentity.BillableEventIpVerificationSuccess, "", ipAddress)
+		_, err = services.CommonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, tenant, postgresentity.BillableEventIpVerificationSuccess, "", "", ipAddress)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to register billable event"))
 		}
