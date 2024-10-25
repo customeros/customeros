@@ -25,7 +25,7 @@ import { ContactAvatarHeader } from './Headers/Avatar';
 import { PersonaFilter } from './Filters/PersonaFilter';
 import { ConnectedUsers } from './Cells/connectedUsers';
 import { SocialsFilter } from '../shared/Filters/Socials';
-import { OrganizationCell } from '../shared/Cells/organization';
+import { OrganizationNameCell } from './Cells/organization';
 import { getColumnConfig } from '../shared/util/getColumnConfig';
 import { ContactFlowStatusFilter } from './Filters/FlowStatusFilter';
 import { SearchTextFilter } from '../shared/Filters/SearchTextFilter';
@@ -105,13 +105,24 @@ const columns: Record<string, Column> = {
     enableColumnFilter: true,
     enableSorting: true,
     cell: (props) => {
-      const lasOrganization =
+      const lasOrganizationId =
         props.row.original.value.latestOrganizationWithJobRole?.organization
           .metadata.id;
+      const contactId = props.row.original.value.metadata.id;
 
-      if (!lasOrganization) return '-';
+      const org =
+        props.row.original.value.latestOrganizationWithJobRole?.organization
+          .name;
 
-      return <OrganizationCell id={lasOrganization} />;
+      if (!lasOrganizationId || !org) return '-';
+
+      return (
+        <OrganizationNameCell
+          org={org}
+          contactId={contactId}
+          orgId={lasOrganizationId}
+        />
+      );
     },
     header: (props) => (
       <THead<HTMLInputElement>
