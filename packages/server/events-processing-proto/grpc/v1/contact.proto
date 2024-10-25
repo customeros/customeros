@@ -118,13 +118,6 @@ message ContactAddLocationGrpcRequest {
   google.protobuf.Timestamp  createdAt = 7;
 }
 
-message ContactIdGrpcRequest {
-  string tenant = 1;
-  string contactId = 2;
-  string loggedInUserId = 3;
-  string appSource = 4;
-}
-
 message ContactIdGrpcResponse {
   string id = 1;
 }
@@ -138,6 +131,4 @@ service contactGrpcService {
   rpc RemoveSocial(ContactRemoveSocialGrpcRequest) returns (ContactIdGrpcResponse);
   rpc EnrichContact(EnrichContactGrpcRequest) returns (ContactIdGrpcResponse);
   rpc AddLocation(ContactAddLocationGrpcRequest) returns (LocationIdGrpcResponse);
-  rpc HideContact(ContactIdGrpcRequest) returns (ContactIdGrpcResponse);
-  rpc ShowContact(ContactIdGrpcRequest) returns (ContactIdGrpcResponse);
 }

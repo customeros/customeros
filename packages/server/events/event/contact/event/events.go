@@ -26,8 +26,10 @@ const (
 	ContactRemoveTagV1     = "V1_CONTACT_REMOVE_TAG"
 	ContactRequestEnrichV1 = "V1_CONTACT_ENRICH"
 	ContactAddLocationV1   = "V1_CONTACT_ADD_LOCATION"
-	ContactShowV1          = "V1_CONTACT_SHOW"
-	ContactHideV1          = "V1_CONTACT_HIDE"
+	// Deprecated
+	ContactShowV1 = "V1_CONTACT_SHOW"
+	// Deprecated
+	ContactHideV1 = "V1_CONTACT_HIDE"
 )
 
 const (

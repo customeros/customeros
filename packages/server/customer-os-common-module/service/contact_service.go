@@ -22,6 +22,8 @@ import (
 
 type ContactService interface {
 	SaveContact(ctx context.Context, id *string, contactFields neo4jrepository.ContactFields, socialUrl string, externalSystem neo4jmodel.ExternalSystem) (string, error)
+	HideContact(ctx context.Context, contactId string) error
+	ShowContact(ctx context.Context, contactId string) error
 }
 
 type contactService struct {
@@ -172,4 +174,70 @@ func (s *contactService) SaveContact(ctx context.Context, id *string, contactFie
 
 	span.LogFields(log.Bool("response.contactCreated", true))
 	return contactId, nil
+}
+
+func (s *contactService) HideContact(ctx context.Context, contactId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.HideContact")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.TagEntity(span, contactId)
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+
+	err = s.services.Neo4jRepositories.ContactWriteRepository.UpdateAnyProperty(ctx, tenant, contactId, neo4jentity.ContactPropertyHide, true)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("error while hiding contact %s: %s", contactId, err.Error())
+	}
+	err = s.services.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, tenant, model.NodeLabelContact, contactId, string(neo4jentity.ContactPropertyHiddenAt), utils.NowPtr())
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("error while updating hidden at property for contact %s: %s", contactId, err.Error())
+	}
+
+	err = s.services.RabbitMQService.Publish(ctx, contactId, model.CONTACT, dto.HideContact{})
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message HideContact"))
+	}
+
+	utils.EventCompleted(ctx, tenant, model.CONTACT.String(), contactId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithDelete())
+
+	return nil
+}
+
+func (s *contactService) ShowContact(ctx context.Context, contactId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.ShowContact")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.TagEntity(span, contactId)
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+
+	err = s.services.Neo4jRepositories.ContactWriteRepository.UpdateAnyProperty(ctx, tenant, contactId, neo4jentity.ContactPropertyHide, false)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("error while showing contact %s: %s", contactId, err.Error())
+		return err
+	}
+
+	err = s.services.RabbitMQService.Publish(ctx, contactId, model.CONTACT, dto.ShowContact{})
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message ShowContact"))
+	}
+
+	utils.EventCompleted(ctx, tenant, model.CONTACT.String(), contactId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithCreate())
+
+	return nil
 }

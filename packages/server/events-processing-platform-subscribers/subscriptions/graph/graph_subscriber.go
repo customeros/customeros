@@ -215,6 +215,8 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		userevents.UserEmailUnlinkV1,
 		logentryevents.LogEntryAddTagV1,
 		logentryevents.LogEntryRemoveTagV1,
+		contactevent.ContactHideV1,
+		contactevent.ContactShowV1,
 		contactevent.ContactEmailLinkV1,
 		contactevent.ContactEmailUnlinkV1,
 		contactevent.ContactAddTagV1,
@@ -279,13 +281,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 	case contactevent.ContactAddLocationV1:
 		_ = s.contactEventHandler.OnLocationAddedToContact(ctx, evt)
 		return nil
-	case contactevent.ContactHideV1:
-		_ = s.contactEventHandler.OnContactHide(ctx, evt)
-		return nil
-	case contactevent.ContactShowV1:
-		_ = s.contactEventHandler.OnContactShow(ctx, evt)
-		return nil
-
 	case orgevents.OrganizationCreateV1:
 		_ = s.organizationEventHandler.OnOrganizationCreate(ctx, evt)
 		return nil

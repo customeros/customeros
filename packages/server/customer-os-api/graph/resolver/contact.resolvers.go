@@ -489,15 +489,7 @@ func (r *mutationResolver) ContactHide(ctx context.Context, contactID string) (*
 		return &model.ActionResponse{Accepted: false}, nil
 	}
 
-	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = utils.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
-		return r.Clients.ContactClient.HideContact(ctx, &contactpb.ContactIdGrpcRequest{
-			Tenant:         common.GetTenantFromContext(ctx),
-			LoggedInUserId: common.GetUserIdFromContext(ctx),
-			ContactId:      contactID,
-			AppSource:      constants.AppSourceCustomerOsApi,
-		})
-	})
+	err = r.Services.CommonServices.ContactService.HideContact(ctx, contactID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Error while hiding contact")

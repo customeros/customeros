@@ -189,7 +189,7 @@ func (s *contactService) hideContactsWithGroupEmail(ctx context.Context) {
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
 
-	limit := 500
+	limit := 100
 
 	for {
 		select {
@@ -214,13 +214,13 @@ func (s *contactService) hideContactsWithGroupEmail(ctx context.Context) {
 
 		//hide contact
 		for _, record := range records {
-			_, err = utils.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
-				return s.commonServices.GrpcClients.ContactClient.HideContact(ctx, &contactpb.ContactIdGrpcRequest{
-					Tenant:    record.Tenant,
-					ContactId: record.ContactId,
-					AppSource: constants.AppSourceDataUpkeeper,
-				})
+			// create new context from main one with custom context
+			innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+				Tenant:    record.Tenant,
+				AppSource: constants.AppSourceDataUpkeeper,
 			})
+
+			err = s.commonServices.ContactService.HideContact(innerCtx, record.ContactId)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error hiding contact {%s}: %s", record.ContactId, err.Error())
@@ -755,18 +755,18 @@ func (s *contactService) EnrichWithWorkEmailFromBetterContact() {
 
 	for _, record := range records {
 		// create new context from main one with custom context
-		ctx := common.WithCustomContext(ctx, &common.CustomContext{
+		innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
 			Tenant:    record.Tenant,
 			AppSource: constants.AppSourceDataUpkeeper,
 		})
 
 		// mark contact with update requested
-		err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, record.Tenant, model.NodeLabelContact, record.ContactId, string(neo4jentity.ContactPropertyUpdateWithWorkEmailRequestedAt), utils.NowPtr())
+		err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(innerCtx, record.Tenant, model.NodeLabelContact, record.ContactId, string(neo4jentity.ContactPropertyUpdateWithWorkEmailRequestedAt), utils.NowPtr())
 		if err != nil {
 			tracing.TraceErr(span, err)
 		}
 
-		detailsBetterContact, err := s.commonServices.PostgresRepositories.EnrichDetailsBetterContactRepository.GetByRequestId(ctx, record.FieldStr1)
+		detailsBetterContact, err := s.commonServices.PostgresRepositories.EnrichDetailsBetterContactRepository.GetByRequestId(innerCtx, record.FieldStr1)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return
@@ -775,7 +775,7 @@ func (s *contactService) EnrichWithWorkEmailFromBetterContact() {
 		if detailsBetterContact == nil {
 			tracing.TraceErr(span, errors.New("better contact details by request id not found"))
 
-			detailsBetterContact, err = s.commonServices.PostgresRepositories.EnrichDetailsBetterContactRepository.GetById(ctx, record.FieldStr1)
+			detailsBetterContact, err = s.commonServices.PostgresRepositories.EnrichDetailsBetterContactRepository.GetById(innerCtx, record.FieldStr1)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return
@@ -799,7 +799,7 @@ func (s *contactService) EnrichWithWorkEmailFromBetterContact() {
 
 		// current emails linked with contacts
 		var currentEmails []string
-		emailDbNodes, err := s.commonServices.Neo4jRepositories.EmailReadRepository.GetAllEmailNodesForLinkedEntityIds(ctx, record.Tenant, model.CONTACT, []string{record.ContactId})
+		emailDbNodes, err := s.commonServices.Neo4jRepositories.EmailReadRepository.GetAllEmailNodesForLinkedEntityIds(innerCtx, record.Tenant, model.CONTACT, []string{record.ContactId})
 		if err != nil {
 			tracing.TraceErr(span, err)
 		}
@@ -812,7 +812,7 @@ func (s *contactService) EnrichWithWorkEmailFromBetterContact() {
 
 		// current phone numbers linked with contacts
 		var currentPhones []string
-		phoneDbNodes, err := s.commonServices.Neo4jRepositories.PhoneNumberReadRepository.GetAllForLinkedEntityIds(ctx, record.Tenant, model.CONTACT, []string{record.ContactId})
+		phoneDbNodes, err := s.commonServices.Neo4jRepositories.PhoneNumberReadRepository.GetAllForLinkedEntityIds(innerCtx, record.Tenant, model.CONTACT, []string{record.ContactId})
 		if err != nil {
 			tracing.TraceErr(span, err)
 		}
@@ -832,7 +832,7 @@ func (s *contactService) EnrichWithWorkEmailFromBetterContact() {
 		if len(betterContactResponse.Data) > 0 {
 			for _, item := range betterContactResponse.Data {
 				if item.ContactEmailAddress != "" && !utils.Contains(currentEmails, item.ContactEmailAddress) {
-					_, err = s.commonServices.EmailService.Merge(ctx, record.Tenant,
+					_, err = s.commonServices.EmailService.Merge(innerCtx, record.Tenant,
 						commonService.EmailFields{
 							Email:     item.ContactEmailAddress,
 							AppSource: constants.AppSourceDataUpkeeper,
@@ -855,9 +855,9 @@ func (s *contactService) EnrichWithWorkEmailFromBetterContact() {
 					if phoneNumber != "" && !utils.Contains(currentPhones, phoneNumber) {
 						phoneLinked = true
 						// create phone number
-						ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+						eventCtx := tracing.InjectSpanContextIntoGrpcMetadata(innerCtx, span)
 						response, err := utils.CallEventsPlatformGRPCWithRetry[*phonenumberpb.PhoneNumberIdGrpcResponse](func() (*phonenumberpb.PhoneNumberIdGrpcResponse, error) {
-							return s.commonServices.GrpcClients.PhoneNumberClient.UpsertPhoneNumber(ctx, &phonenumberpb.UpsertPhoneNumberGrpcRequest{
+							return s.commonServices.GrpcClients.PhoneNumberClient.UpsertPhoneNumber(eventCtx, &phonenumberpb.UpsertPhoneNumberGrpcRequest{
 								Tenant:      record.Tenant,
 								PhoneNumber: phoneNumber,
 								SourceFields: &commonpb.SourceFields{
@@ -872,12 +872,12 @@ func (s *contactService) EnrichWithWorkEmailFromBetterContact() {
 							continue
 						}
 
-						neo4jrepository.WaitForNodeCreatedInNeo4j(ctx, s.commonServices.Neo4jRepositories, response.Id, model.NodeLabelPhoneNumber, span)
+						neo4jrepository.WaitForNodeCreatedInNeo4j(innerCtx, s.commonServices.Neo4jRepositories, response.Id, model.NodeLabelPhoneNumber, span)
 
 						// link with contact
 						if response.Id != "" {
 							_, err = utils.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
-								return s.commonServices.GrpcClients.ContactClient.LinkPhoneNumberToContact(ctx, &contactpb.LinkPhoneNumberToContactGrpcRequest{
+								return s.commonServices.GrpcClients.ContactClient.LinkPhoneNumberToContact(eventCtx, &contactpb.LinkPhoneNumberToContactGrpcRequest{
 									Tenant:        record.Tenant,
 									ContactId:     record.ContactId,
 									PhoneNumberId: response.Id,
@@ -900,21 +900,21 @@ func (s *contactService) EnrichWithWorkEmailFromBetterContact() {
 		}
 
 		if emailLinked {
-			_, err = s.commonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, record.Tenant, postgresentity.BillableEventEnrichPersonEmailFound, betterContactResponse.Id,
+			_, err = s.commonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(innerCtx, record.Tenant, postgresentity.BillableEventEnrichPersonEmailFound, betterContactResponse.Id,
 				fmt.Sprintf("Email: %s, LinkedIn: %s, FirstName: %s, LastName: %s", emailForBillableEvent, detailsBetterContact.ContactLinkedInUrl, detailsBetterContact.ContactFirstName, detailsBetterContact.ContactLastName))
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "failed to store billable event"))
 			}
 		}
 		if phoneLinked {
-			_, err = s.commonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, record.Tenant, postgresentity.BillableEventEnrichPersonPhoneFound, betterContactResponse.Id,
+			_, err = s.commonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(innerCtx, record.Tenant, postgresentity.BillableEventEnrichPersonPhoneFound, betterContactResponse.Id,
 				fmt.Sprintf("Phone: %s, LinkedIn: %s, FirstName: %s, LastName: %s", phoneNumberForBillableEvent, detailsBetterContact.ContactLinkedInUrl, detailsBetterContact.ContactFirstName, detailsBetterContact.ContactLastName))
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "failed to store billable event"))
 			}
 		}
 
-		err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, record.Tenant, model.NodeLabelContact, record.ContactId, string(neo4jentity.ContactPropertyFindWorkEmailWithBetterContactCompletedAt), utils.NowPtr())
+		err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(innerCtx, record.Tenant, model.NodeLabelContact, record.ContactId, string(neo4jentity.ContactPropertyFindWorkEmailWithBetterContactCompletedAt), utils.NowPtr())
 		if err != nil {
 			tracing.TraceErr(span, err)
 		}
