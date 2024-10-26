@@ -14,8 +14,6 @@ import (
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
-	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
-	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -108,42 +106,6 @@ func (s *contactService) SaveContact(ctx context.Context, id *string, contactFie
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return "", err
-	}
-
-	// TODO remove below block of sending events to event-store-db once fully deprecated
-	if createFlow {
-		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = utils.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
-			return s.services.GrpcClients.ContactClient.UpsertContact(ctx, &contactpb.UpsertContactGrpcRequest{
-				Id:              contactId,
-				Tenant:          tenant,
-				FirstName:       contactFields.FirstName,
-				LastName:        contactFields.LastName,
-				Name:            contactFields.Name,
-				Prefix:          contactFields.Prefix,
-				CreatedAt:       utils.ConvertTimeToTimestampPtr(&contactFields.CreatedAt),
-				Description:     contactFields.Description,
-				Timezone:        contactFields.Timezone,
-				ProfilePhotoUrl: contactFields.ProfilePhotoUrl,
-				SourceFields: &commonpb.SourceFields{
-					Source:    contactFields.SourceFields.GetSource(),
-					AppSource: contactFields.SourceFields.GetAppSource(),
-				},
-				LoggedInUserId: common.GetUserIdFromContext(ctx),
-				Username:       contactFields.Username,
-				ExternalSystemFields: &commonpb.ExternalSystemFields{
-					ExternalSystemId: externalSystem.ExternalSystemId,
-					ExternalUrl:      externalSystem.ExternalUrl,
-					ExternalId:       externalSystem.ExternalId,
-					ExternalSource:   externalSystem.ExternalSource,
-					ExternalIdSecond: externalSystem.ExternalIdSecond,
-					SyncDate:         utils.ConvertTimeToTimestampPtr(externalSystem.SyncDate),
-				},
-			})
-		})
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to create contact in events platform"))
-		}
 	}
 
 	if createFlow {
