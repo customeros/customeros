@@ -9,7 +9,9 @@ import (
 )
 
 const (
-	ContactCreateV1          = "V1_CONTACT_CREATE"
+	// Deprecated
+	ContactCreateV1 = "V1_CONTACT_CREATE"
+	// Deprecated
 	ContactUpdateV1          = "V1_CONTACT_UPDATE"
 	ContactPhoneNumberLinkV1 = "V1_CONTACT_PHONE_NUMBER_LINK"
 	// Deprecated
@@ -31,70 +33,6 @@ const (
 	// Deprecated
 	ContactHideV1 = "V1_CONTACT_HIDE"
 )
-
-const (
-	FieldMaskFirstName       = "firstName"
-	FieldMaskLastName        = "lastName"
-	FieldMaskName            = "name"
-	FieldMaskPrefix          = "prefix"
-	FieldMaskDescription     = "description"
-	FieldMaskTimezone        = "timezone"
-	FieldMaskProfilePhotoUrl = "profilePhotoUrl"
-	FieldMaskUsername        = "username"
-)
-
-type ContactCreateEvent struct {
-	Tenant          string                `json:"tenant" validate:"required"`
-	FirstName       string                `json:"firstName"`
-	LastName        string                `json:"lastName"`
-	Name            string                `json:"name"`
-	Prefix          string                `json:"prefix"`
-	Description     string                `json:"description"`
-	Timezone        string                `json:"timezone"`
-	ProfilePhotoUrl string                `json:"profilePhotoUrl"`
-	Username        string                `json:"username"`
-	SocialUrl       string                `json:"socialUrl"`
-	Source          string                `json:"source"`
-	SourceOfTruth   string                `json:"sourceOfTruth"`
-	AppSource       string                `json:"appSource"`
-	CreatedAt       time.Time             `json:"createdAt"`
-	UpdatedAt       time.Time             `json:"updatedAt"`
-	ExternalSystem  cmnmod.ExternalSystem `json:"externalSystem,omitempty"`
-}
-
-func NewContactCreateEvent(aggregate eventstore.Aggregate, dataFields ContactDataFields, sourceFields cmnmod.Source,
-	externalSystem cmnmod.ExternalSystem, createdAt, updatedAt time.Time) (eventstore.Event, error) {
-	eventData := ContactCreateEvent{
-		Tenant:          aggregate.GetTenant(),
-		FirstName:       dataFields.FirstName,
-		LastName:        dataFields.LastName,
-		Name:            dataFields.Name,
-		Prefix:          dataFields.Prefix,
-		Description:     dataFields.Description,
-		Timezone:        dataFields.Timezone,
-		ProfilePhotoUrl: dataFields.ProfilePhotoUrl,
-		Username:        dataFields.Username,
-		SocialUrl:       dataFields.SocialUrl,
-		Source:          sourceFields.Source,
-		SourceOfTruth:   sourceFields.SourceOfTruth,
-		AppSource:       sourceFields.AppSource,
-		CreatedAt:       createdAt,
-		UpdatedAt:       updatedAt,
-	}
-	if externalSystem.Available() {
-		eventData.ExternalSystem = externalSystem
-	}
-
-	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "failed to validate ContactCreateEvent")
-	}
-
-	event := eventstore.NewBaseEvent(aggregate, ContactCreateV1)
-	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "error setting json data for ContactCreateEvent")
-	}
-	return event, nil
-}
 
 type ContactLinkPhoneNumberEvent struct {
 	Tenant        string    `json:"tenant" validate:"required"`

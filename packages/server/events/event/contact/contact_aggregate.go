@@ -172,13 +172,11 @@ func (a *ContactAggregate) When(evt eventstore.Event) error {
 	case event.ContactAddTagV1,
 		event.ContactRemoveTagV1,
 		event.ContactEmailLinkV1,
-		event.ContactEmailUnlinkV1:
+		event.ContactEmailUnlinkV1,
+		event.ContactUpdateV1,
+		event.ContactCreateV1:
 		return nil
 
-	case event.ContactCreateV1:
-		return a.onContactCreate(evt)
-	case event.ContactUpdateV1:
-		return a.onContactUpdate(evt)
 	case event.ContactPhoneNumberLinkV1:
 		return a.onPhoneNumberLink(evt)
 	case event.ContactLocationLinkV1:
@@ -194,97 +192,6 @@ func (a *ContactAggregate) When(evt eventstore.Event) error {
 	default:
 		return nil
 	}
-}
-
-func (a *ContactAggregate) onContactCreate(evt eventstore.Event) error {
-	var eventData event.ContactCreateEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		return errors.Wrap(err, "GetJsonData")
-	}
-	a.Contact.FirstName = eventData.FirstName
-	a.Contact.LastName = eventData.LastName
-	a.Contact.Prefix = eventData.Prefix
-	a.Contact.Name = eventData.Name
-	a.Contact.Description = eventData.Description
-	a.Contact.Timezone = eventData.Timezone
-	a.Contact.ProfilePhotoUrl = eventData.ProfilePhotoUrl
-	a.Contact.Username = eventData.Username
-	a.Contact.Source = cmnmod.Source{
-		Source:        eventData.Source,
-		SourceOfTruth: eventData.SourceOfTruth,
-		AppSource:     eventData.AppSource,
-	}
-	a.Contact.CreatedAt = eventData.CreatedAt
-	a.Contact.UpdatedAt = eventData.UpdatedAt
-	if eventData.ExternalSystem.Available() {
-		a.Contact.ExternalSystems = []cmnmod.ExternalSystem{eventData.ExternalSystem}
-	}
-	return nil
-}
-
-func (a *ContactAggregate) onContactUpdate(evt eventstore.Event) error {
-	var eventData event.ContactUpdateEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		return errors.Wrap(err, "GetJsonData")
-	}
-
-	if eventData.Source != a.Contact.Source.SourceOfTruth && a.Contact.Source.SourceOfTruth == constants.SourceOpenline {
-		if a.Contact.Name == "" {
-			a.Contact.Name = eventData.Name
-		}
-		if a.Contact.FirstName == "" {
-			a.Contact.FirstName = eventData.FirstName
-		}
-		if a.Contact.LastName == "" {
-			a.Contact.LastName = eventData.LastName
-		}
-		if a.Contact.Timezone == "" {
-			a.Contact.Timezone = eventData.Timezone
-		}
-		if a.Contact.ProfilePhotoUrl == "" {
-			a.Contact.ProfilePhotoUrl = eventData.ProfilePhotoUrl
-		}
-		if a.Contact.Username == "" {
-			a.Contact.Username = eventData.Username
-		}
-		if a.Contact.Prefix == "" {
-			a.Contact.Prefix = eventData.Prefix
-		}
-	} else {
-		a.Contact.Name = eventData.Name
-		a.Contact.FirstName = eventData.FirstName
-		a.Contact.LastName = eventData.LastName
-		a.Contact.Prefix = eventData.Prefix
-		a.Contact.Description = eventData.Description
-		a.Contact.Timezone = eventData.Timezone
-		a.Contact.ProfilePhotoUrl = eventData.ProfilePhotoUrl
-		a.Contact.Username = eventData.Username
-	}
-	a.Contact.UpdatedAt = eventData.UpdatedAt
-	if eventData.Source == constants.SourceOpenline {
-		a.Contact.Source.SourceOfTruth = eventData.Source
-	}
-
-	if eventData.ExternalSystem.Available() {
-		found := false
-		for _, externalSystem := range a.Contact.ExternalSystems {
-			if externalSystem.ExternalSystemId == eventData.ExternalSystem.ExternalSystemId &&
-				externalSystem.ExternalId == eventData.ExternalSystem.ExternalId {
-				found = true
-				externalSystem.ExternalUrl = eventData.ExternalSystem.ExternalUrl
-				externalSystem.SyncDate = eventData.ExternalSystem.SyncDate
-				externalSystem.ExternalSource = eventData.ExternalSystem.ExternalSource
-				if eventData.ExternalSystem.ExternalIdSecond != "" {
-					externalSystem.ExternalIdSecond = eventData.ExternalSystem.ExternalIdSecond
-				}
-			}
-		}
-		if !found {
-			a.Contact.ExternalSystems = append(a.Contact.ExternalSystems, eventData.ExternalSystem)
-		}
-	}
-
-	return nil
 }
 
 func (a *ContactAggregate) onPhoneNumberLink(evt eventstore.Event) error {

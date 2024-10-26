@@ -24,7 +24,6 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ContactGrpcServiceClient interface {
-	UpsertContact(ctx context.Context, in *UpsertContactGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error)
 	LinkPhoneNumberToContact(ctx context.Context, in *LinkPhoneNumberToContactGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error)
 	LinkLocationToContact(ctx context.Context, in *LinkLocationToContactGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error)
 	LinkWithOrganization(ctx context.Context, in *LinkWithOrganizationGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error)
@@ -40,15 +39,6 @@ type contactGrpcServiceClient struct {
 
 func NewContactGrpcServiceClient(cc grpc.ClientConnInterface) ContactGrpcServiceClient {
 	return &contactGrpcServiceClient{cc}
-}
-
-func (c *contactGrpcServiceClient) UpsertContact(ctx context.Context, in *UpsertContactGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error) {
-	out := new(ContactIdGrpcResponse)
-	err := c.cc.Invoke(ctx, "/contactGrpcService/UpsertContact", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
 }
 
 func (c *contactGrpcServiceClient) LinkPhoneNumberToContact(ctx context.Context, in *LinkPhoneNumberToContactGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error) {
@@ -118,7 +108,6 @@ func (c *contactGrpcServiceClient) AddLocation(ctx context.Context, in *ContactA
 // All implementations should embed UnimplementedContactGrpcServiceServer
 // for forward compatibility
 type ContactGrpcServiceServer interface {
-	UpsertContact(context.Context, *UpsertContactGrpcRequest) (*ContactIdGrpcResponse, error)
 	LinkPhoneNumberToContact(context.Context, *LinkPhoneNumberToContactGrpcRequest) (*ContactIdGrpcResponse, error)
 	LinkLocationToContact(context.Context, *LinkLocationToContactGrpcRequest) (*ContactIdGrpcResponse, error)
 	LinkWithOrganization(context.Context, *LinkWithOrganizationGrpcRequest) (*ContactIdGrpcResponse, error)
@@ -132,9 +121,6 @@ type ContactGrpcServiceServer interface {
 type UnimplementedContactGrpcServiceServer struct {
 }
 
-func (UnimplementedContactGrpcServiceServer) UpsertContact(context.Context, *UpsertContactGrpcRequest) (*ContactIdGrpcResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpsertContact not implemented")
-}
 func (UnimplementedContactGrpcServiceServer) LinkPhoneNumberToContact(context.Context, *LinkPhoneNumberToContactGrpcRequest) (*ContactIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method LinkPhoneNumberToContact not implemented")
 }
@@ -166,24 +152,6 @@ type UnsafeContactGrpcServiceServer interface {
 
 func RegisterContactGrpcServiceServer(s grpc.ServiceRegistrar, srv ContactGrpcServiceServer) {
 	s.RegisterService(&ContactGrpcService_ServiceDesc, srv)
-}
-
-func _ContactGrpcService_UpsertContact_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpsertContactGrpcRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ContactGrpcServiceServer).UpsertContact(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/contactGrpcService/UpsertContact",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ContactGrpcServiceServer).UpsertContact(ctx, req.(*UpsertContactGrpcRequest))
-	}
-	return interceptor(ctx, in, info, handler)
 }
 
 func _ContactGrpcService_LinkPhoneNumberToContact_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -319,10 +287,6 @@ var ContactGrpcService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "contactGrpcService",
 	HandlerType: (*ContactGrpcServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "UpsertContact",
-			Handler:    _ContactGrpcService_UpsertContact_Handler,
-		},
 		{
 			MethodName: "LinkPhoneNumberToContact",
 			Handler:    _ContactGrpcService_LinkPhoneNumberToContact_Handler,

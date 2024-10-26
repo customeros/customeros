@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"github.com/forPelevin/gomoji"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
@@ -29,110 +28,6 @@ func NewContactService(log logger.Logger, services *Services) *contactService {
 		log:      log,
 		services: services,
 	}
-}
-
-func (s *contactService) UpsertContact(ctx context.Context, request *contactpb.UpsertContactGrpcRequest) (*contactpb.ContactIdGrpcResponse, error) {
-	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ContactService.UpsertContact")
-	defer span.Finish()
-	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	tracing.LogObjectAsJson(span, "request", request)
-
-	request.Timezone = normalizeTimezone(request.Timezone)
-
-	contactId := utils.NewUUIDIfEmpty(request.Id)
-
-	dataFields := event.ContactDataFields{
-		FirstName:       gomoji.RemoveEmojis(request.FirstName),
-		LastName:        gomoji.RemoveEmojis(request.LastName),
-		Name:            gomoji.RemoveEmojis(request.Name),
-		Description:     request.Description,
-		Prefix:          request.Prefix,
-		Timezone:        request.Timezone,
-		ProfilePhotoUrl: request.ProfilePhotoUrl,
-		SocialUrl:       request.SocialUrl,
-		Username:        request.Username,
-	}
-
-	sourceFields := commonmodel.Source{}
-	sourceFields.FromGrpc(request.SourceFields)
-	sourceFields.Source = utils.StringFirstNonEmpty(sourceFields.Source, request.Source)
-	sourceFields.AppSource = utils.StringFirstNonEmpty(sourceFields.AppSource, request.AppSource)
-	sourceFields.SetDefaultValues()
-
-	externalSystem := commonmodel.ExternalSystem{}
-	externalSystem.FromGrpc(request.ExternalSystemFields)
-
-	createdAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.CreatedAt), utils.Now())
-	updatedAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.UpdatedAt), createdAtNotNil)
-
-	var agg *contact.ContactAggregate
-	var err error
-	if request.Id == "" {
-		agg = contact.NewContactAggregateWithTenantAndID(request.Tenant, contactId)
-	} else {
-		agg, err = contact.LoadContactAggregate(ctx, s.services.es, request.Tenant, request.Id, *eventstore.NewLoadAggregateOptions())
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil, s.errResponse(err)
-		}
-	}
-
-	var evt eventstore.Event
-
-	if eventstore.IsAggregateNotFound(agg) {
-		evt, err = event.NewContactCreateEvent(agg, dataFields, sourceFields, externalSystem, createdAtNotNil, updatedAtNotNil)
-	} else {
-		fieldsMask := extractContactFieldsMask(request.FieldsMask)
-		evt, err = event.NewContactUpdateEvent(agg, sourceFields.Source, sourceFields.AppSource, dataFields, externalSystem, updatedAtNotNil, fieldsMask)
-	}
-
-	eventstore.EnrichEventWithMetadataExtended(&evt, span, eventstore.EventMetadata{
-		Tenant: request.Tenant,
-		UserId: request.LoggedInUserId,
-		App:    sourceFields.AppSource,
-	})
-
-	err = agg.Apply(evt)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, s.errResponse(err)
-	}
-
-	err = s.services.es.Save(ctx, agg)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, s.errResponse(err)
-	}
-
-	return &contactpb.ContactIdGrpcResponse{Id: contactId}, nil
-}
-
-func extractContactFieldsMask(fields []contactpb.ContactFieldMask) []string {
-	fieldsMask := make([]string, 0)
-	if len(fields) == 0 {
-		return fieldsMask
-	}
-	for _, field := range fields {
-		switch field {
-		case contactpb.ContactFieldMask_CONTACT_FIELD_FIRST_NAME:
-			fieldsMask = append(fieldsMask, event.FieldMaskFirstName)
-		case contactpb.ContactFieldMask_CONTACT_FIELD_LAST_NAME:
-			fieldsMask = append(fieldsMask, event.FieldMaskLastName)
-		case contactpb.ContactFieldMask_CONTACT_FIELD_NAME:
-			fieldsMask = append(fieldsMask, event.FieldMaskName)
-		case contactpb.ContactFieldMask_CONTACT_FIELD_PREFIX:
-			fieldsMask = append(fieldsMask, event.FieldMaskPrefix)
-		case contactpb.ContactFieldMask_CONTACT_FIELD_DESCRIPTION:
-			fieldsMask = append(fieldsMask, event.FieldMaskDescription)
-		case contactpb.ContactFieldMask_CONTACT_FIELD_TIMEZONE:
-			fieldsMask = append(fieldsMask, event.FieldMaskTimezone)
-		case contactpb.ContactFieldMask_CONTACT_FIELD_PROFILE_PHOTO_URL:
-			fieldsMask = append(fieldsMask, event.FieldMaskProfilePhotoUrl)
-		case contactpb.ContactFieldMask_CONTACT_FIELD_USERNAME:
-			fieldsMask = append(fieldsMask, event.FieldMaskUsername)
-		}
-	}
-	return utils.RemoveDuplicates(fieldsMask)
 }
 
 func (s *contactService) LinkPhoneNumberToContact(ctx context.Context, request *contactpb.LinkPhoneNumberToContactGrpcRequest) (*contactpb.ContactIdGrpcResponse, error) {
