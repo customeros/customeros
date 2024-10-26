@@ -138,7 +138,7 @@ function VariablesTypeaheadMenuItem({
 }) {
   return (
     <li
-      tabIndex={-1}
+      tabIndex={1}
       role='option'
       key={option.key}
       onClick={onClick}

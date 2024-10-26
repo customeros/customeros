@@ -10,12 +10,7 @@ import { Button } from '@ui/form/Button/Button';
 import { Editor } from '@ui/form/Editor/Editor';
 import { useStore } from '@shared/hooks/useStore';
 import { ChevronRight } from '@ui/media/icons/ChevronRight.tsx';
-import {
-  Modal,
-  ModalPortal,
-  ModalContent,
-  ModalOverlay,
-} from '@ui/overlay/Modal';
+import { Modal, ModalPortal, ModalContent } from '@ui/overlay/Modal';
 
 import { useUndoRedo } from '../hooks';
 
@@ -75,69 +70,67 @@ export const EmailEditorModal = observer(
     const variables = store.flowEmailVariables?.value.get('CONTACT')?.variables;
 
     return (
-      <Modal open={isEditorOpen}>
+      <Modal modal={false} open={isEditorOpen}>
         <ModalPortal>
-          <ModalOverlay className='z-50'>
-            <ModalContent
-              onKeyDown={(e) => e.stopPropagation()}
-              className='w-full h-full flex flex-col align-middle items-center max-w-full top-0 cursor-default overflow-y-auto '
-            >
-              <div className='flex justify-between bg-white pt-4 pb-2 mb-[60px] w-[570px] sticky top-0 z-[50]'>
-                <div className='flex items-center text-sm'>
-                  <span>{flow}</span>
-                  <ChevronRight className='size-3 mx-1 text-gray-400' />
-                  <span className='mr-2 cursor-default'>
-                    {data.action === FlowActionType.EMAIL_NEW
-                      ? 'Send Email'
-                      : 'Reply to Email'}
-                  </span>
-                </div>
-                <div className='flex items-center gap-2'>
-                  <Button
-                    size='xs'
-                    variant='ghost'
-                    onClick={() => {
-                      setSubject(data.subject);
-                      setBodyTemplate(data.bodyTemplate);
-                      handleCancel();
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    size='xs'
-                    variant='outline'
-                    leftIcon={<Check />}
-                    onClick={handleSave}
-                  >
-                    Done
-                  </Button>
-                </div>
+          <ModalContent
+            onKeyDown={(e) => e.stopPropagation()}
+            className='w-full h-full flex flex-col align-middle items-center max-w-full top-0 cursor-default overflow-y-auto '
+          >
+            <div className='flex justify-between bg-white pt-4 pb-2 mb-[60px] w-[570px] sticky top-0 z-[50]'>
+              <div className='flex items-center text-sm'>
+                <span>{flow}</span>
+                <ChevronRight className='size-3 mx-1 text-gray-400' />
+                <span className='mr-2 cursor-default'>
+                  {data.action === FlowActionType.EMAIL_NEW
+                    ? 'Send Email'
+                    : 'Reply to Email'}
+                </span>
               </div>
-              <div className='w-[570px] relative'>
-                <Input
-                  ref={inputRef}
-                  value={subject}
-                  variant='unstyled'
-                  placeholder='Subject'
-                  className='font-medium text-lg min-h-[auto]'
-                  onChange={(e) => setSubject(e.target.value)}
-                  disabled={data.action === FlowActionType.EMAIL_REPLY}
-                />
-                <div className='h-[60vh] mb-10'>
-                  <Editor
-                    placeholder={placeholder}
-                    variableOptions={variables}
-                    dataTest='flow-email-editor'
-                    namespace='flow-email-editor'
-                    defaultHtmlValue={bodyTemplate}
-                    onChange={(e) => setBodyTemplate(e)}
-                    className='text-base cursor-text email-editor h-full'
-                  ></Editor>
-                </div>
+              <div className='flex items-center gap-2'>
+                <Button
+                  size='xs'
+                  variant='ghost'
+                  onClick={() => {
+                    setSubject(data.subject);
+                    setBodyTemplate(data.bodyTemplate);
+                    handleCancel();
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  size='xs'
+                  variant='outline'
+                  leftIcon={<Check />}
+                  onClick={handleSave}
+                >
+                  Done
+                </Button>
               </div>
-            </ModalContent>
-          </ModalOverlay>
+            </div>
+            <div className='w-[570px] relative'>
+              <Input
+                ref={inputRef}
+                value={subject}
+                variant='unstyled'
+                placeholder='Subject'
+                className='font-medium text-lg min-h-[auto]'
+                onChange={(e) => setSubject(e.target.value)}
+                disabled={data.action === FlowActionType.EMAIL_REPLY}
+              />
+              <div className='h-[60vh] mb-10'>
+                <Editor
+                  placeholder={placeholder}
+                  variableOptions={variables}
+                  dataTest='flow-email-editor'
+                  namespace='flow-email-editor'
+                  defaultHtmlValue={bodyTemplate}
+                  onChange={(e) => setBodyTemplate(e)}
+                  className='text-base cursor-text email-editor h-full'
+                ></Editor>
+              </div>
+            </div>
+          </ModalContent>
         </ModalPortal>
       </Modal>
     );
