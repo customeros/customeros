@@ -911,7 +911,6 @@ func MapDbNodeToContactEntity(dbNode *dbtype.Node) *entity.ContactEntity {
 		CreatedAt:       utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:       utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		Source:          entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:   entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:       utils.GetStringPropOrEmpty(props, "appSource"),
 		EventStoreAggregate: entity.EventStoreAggregate{
 			AggregateVersion: utils.GetInt64PropOrNil(props, "aggregateVersion"),

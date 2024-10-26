@@ -9,7 +9,6 @@ mutation AddSocialToContact($contactId: ID!) {
     updatedAt
     appSource
     source
-    sourceOfTruth
     url
   }
 }

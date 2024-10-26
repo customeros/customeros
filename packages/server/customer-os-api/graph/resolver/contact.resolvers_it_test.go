@@ -1056,7 +1056,6 @@ func TestMutationResolver_ContactAddNewLocation(t *testing.T) {
 	require.NotNil(t, location.UpdatedAt)
 	require.Equal(t, constants.AppSourceCustomerOsApi, location.AppSource)
 	require.Equal(t, model.DataSourceOpenline, location.Source)
-	require.Equal(t, model.DataSourceOpenline, location.SourceOfTruth)
 
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Contact"))
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Location"))

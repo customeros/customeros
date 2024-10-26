@@ -31,7 +31,6 @@ message UpsertContactGrpcRequest {
   string prefix = 6;
   string appSource = 7 [deprecated = true];
   string source = 8 [deprecated = true];
-  string sourceOfTruth = 9 [deprecated = true];
   google.protobuf.Timestamp  createdAt = 10;
   google.protobuf.Timestamp  updatedAt = 11;
   string description = 12;

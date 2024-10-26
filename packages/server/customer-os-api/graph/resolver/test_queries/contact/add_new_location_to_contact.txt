@@ -5,6 +5,5 @@ mutation AddNewLocationToContact($contactId: ID!) {
     updatedAt
     appSource
     source
-    sourceOfTruth
   }
 }

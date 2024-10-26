@@ -110,7 +110,6 @@ type Contact implements MetadataInterface & Node {
     label: String @deprecated(reason: "Use `tags` instead")
 
     source: DataSource!
-    sourceOfTruth: DataSource!
     appSource: String
 
     tags: [Tag!] @goField(forceResolver: true)

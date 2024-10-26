@@ -55,7 +55,6 @@ type Email {
     primary: Boolean!
 
     source: DataSource!
-    sourceOfTruth: DataSource! @deprecated
     appSource: String! @deprecated
 
     createdAt: Time!

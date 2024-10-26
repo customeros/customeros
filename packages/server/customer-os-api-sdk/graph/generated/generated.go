@@ -224,7 +224,6 @@ type ComplexityRoot struct {
 		ProfilePhotoURL               func(childComplexity int) int
 		Socials                       func(childComplexity int) int
 		Source                        func(childComplexity int) int
-		SourceOfTruth                 func(childComplexity int) int
 		Tags                          func(childComplexity int) int
 		TimelineEvents                func(childComplexity int, from *time.Time, size int, timelineEventTypes []model.TimelineEventType) int
 		TimelineEventsTotalCount      func(childComplexity int, timelineEventTypes []model.TimelineEventType) int
@@ -477,7 +476,6 @@ type ComplexityRoot struct {
 		Primary                func(childComplexity int) int
 		RawEmail               func(childComplexity int) int
 		Source                 func(childComplexity int) int
-		SourceOfTruth          func(childComplexity int) int
 		UpdatedAt              func(childComplexity int) int
 		Users                  func(childComplexity int) int
 		Work                   func(childComplexity int) int
@@ -2832,13 +2830,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Contact.Source(childComplexity), true
 
-	case "Contact.sourceOfTruth":
-		if e.complexity.Contact.SourceOfTruth == nil {
-			break
-		}
-
-		return e.complexity.Contact.SourceOfTruth(childComplexity), true
-
 	case "Contact.tags":
 		if e.complexity.Contact.Tags == nil {
 			break
@@ -4003,13 +3994,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Email.Source(childComplexity), true
-
-	case "Email.sourceOfTruth":
-		if e.complexity.Email.SourceOfTruth == nil {
-			break
-		}
-
-		return e.complexity.Email.SourceOfTruth(childComplexity), true
 
 	case "Email.updatedAt":
 		if e.complexity.Email.UpdatedAt == nil {
@@ -11745,7 +11729,6 @@ type Contact implements MetadataInterface & Node {
     label: String @deprecated(reason: "Use ` + "`" + `tags` + "`" + ` instead")
 
     source: DataSource!
-    sourceOfTruth: DataSource!
     appSource: String
 
     tags: [Tag!] @goField(forceResolver: true)
@@ -12793,7 +12776,6 @@ type Email {
     primary: Boolean!
 
     source: DataSource!
-    sourceOfTruth: DataSource! @deprecated
     appSource: String! @deprecated
 
     createdAt: Time!
@@ -24606,50 +24588,6 @@ func (ec *executionContext) fieldContext_Contact_source(_ context.Context, field
 	return fc, nil
 }
 
-func (ec *executionContext) _Contact_sourceOfTruth(ctx context.Context, field graphql.CollectedField, obj *model.Contact) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Contact_sourceOfTruth(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.SourceOfTruth, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(model.DataSource)
-	fc.Result = res
-	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Contact_sourceOfTruth(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Contact",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type DataSource does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Contact_appSource(ctx context.Context, field graphql.CollectedField, obj *model.Contact) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Contact_appSource(ctx, field)
 	if err != nil {
@@ -25063,8 +25001,6 @@ func (ec *executionContext) fieldContext_Contact_emails(_ context.Context, field
 				return ec.fieldContext_Email_primary(ctx, field)
 			case "source":
 				return ec.fieldContext_Email_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_Email_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Email_appSource(ctx, field)
 			case "createdAt":
@@ -25136,8 +25072,6 @@ func (ec *executionContext) fieldContext_Contact_primaryEmail(_ context.Context,
 				return ec.fieldContext_Email_primary(ctx, field)
 			case "source":
 				return ec.fieldContext_Email_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_Email_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Email_appSource(ctx, field)
 			case "createdAt":
@@ -25851,8 +25785,6 @@ func (ec *executionContext) fieldContext_ContactParticipant_contactParticipant(_
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "source":
 				return ec.fieldContext_Contact_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_Contact_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Contact_appSource(ctx, field)
 			case "tags":
@@ -26006,8 +25938,6 @@ func (ec *executionContext) fieldContext_ContactsPage_content(_ context.Context,
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "source":
 				return ec.fieldContext_Contact_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_Contact_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Contact_appSource(ctx, field)
 			case "tags":
@@ -33425,50 +33355,6 @@ func (ec *executionContext) fieldContext_Email_source(_ context.Context, field g
 	return fc, nil
 }
 
-func (ec *executionContext) _Email_sourceOfTruth(ctx context.Context, field graphql.CollectedField, obj *model.Email) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Email_sourceOfTruth(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.SourceOfTruth, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(model.DataSource)
-	fc.Result = res
-	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Email_sourceOfTruth(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Email",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type DataSource does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Email_appSource(ctx context.Context, field graphql.CollectedField, obj *model.Email) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Email_appSource(ctx, field)
 	if err != nil {
@@ -33756,8 +33642,6 @@ func (ec *executionContext) fieldContext_Email_contacts(_ context.Context, field
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "source":
 				return ec.fieldContext_Contact_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_Contact_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Contact_appSource(ctx, field)
 			case "tags":
@@ -34044,8 +33928,6 @@ func (ec *executionContext) fieldContext_EmailParticipant_emailParticipant(_ con
 				return ec.fieldContext_Email_primary(ctx, field)
 			case "source":
 				return ec.fieldContext_Email_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_Email_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Email_appSource(ctx, field)
 			case "createdAt":
@@ -35981,8 +35863,6 @@ func (ec *executionContext) fieldContext_FlowContact_contact(_ context.Context, 
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "source":
 				return ec.fieldContext_Contact_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_Contact_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Contact_appSource(ctx, field)
 			case "tags":
@@ -44778,8 +44658,6 @@ func (ec *executionContext) fieldContext_JobRole_contact(_ context.Context, fiel
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "source":
 				return ec.fieldContext_Contact_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_Contact_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Contact_appSource(ctx, field)
 			case "tags":
@@ -50163,8 +50041,6 @@ func (ec *executionContext) fieldContext_Mutation_contact_CreateForOrganization(
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "source":
 				return ec.fieldContext_Contact_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_Contact_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Contact_appSource(ctx, field)
 			case "tags":
@@ -50349,8 +50225,6 @@ func (ec *executionContext) fieldContext_Mutation_contact_Update(ctx context.Con
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "source":
 				return ec.fieldContext_Contact_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_Contact_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Contact_appSource(ctx, field)
 			case "tags":
@@ -50651,8 +50525,6 @@ func (ec *executionContext) fieldContext_Mutation_contact_Merge(ctx context.Cont
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "source":
 				return ec.fieldContext_Contact_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_Contact_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Contact_appSource(ctx, field)
 			case "tags":
@@ -50865,8 +50737,6 @@ func (ec *executionContext) fieldContext_Mutation_contact_AddOrganizationById(ct
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "source":
 				return ec.fieldContext_Contact_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_Contact_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Contact_appSource(ctx, field)
 			case "tags":
@@ -50990,8 +50860,6 @@ func (ec *executionContext) fieldContext_Mutation_contact_RemoveOrganizationById
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "source":
 				return ec.fieldContext_Contact_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_Contact_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Contact_appSource(ctx, field)
 			case "tags":
@@ -51228,8 +51096,6 @@ func (ec *executionContext) fieldContext_Mutation_contact_RemoveLocation(ctx con
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "source":
 				return ec.fieldContext_Contact_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_Contact_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Contact_appSource(ctx, field)
 			case "tags":
@@ -52774,8 +52640,6 @@ func (ec *executionContext) fieldContext_Mutation_customFieldsMergeAndUpdateInCo
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "source":
 				return ec.fieldContext_Contact_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_Contact_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Contact_appSource(ctx, field)
 			case "tags":
@@ -53370,8 +53234,6 @@ func (ec *executionContext) fieldContext_Mutation_emailMergeToContact(ctx contex
 				return ec.fieldContext_Email_primary(ctx, field)
 			case "source":
 				return ec.fieldContext_Email_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_Email_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Email_appSource(ctx, field)
 			case "createdAt":
@@ -53576,8 +53438,6 @@ func (ec *executionContext) fieldContext_Mutation_emailReplaceForContact(ctx con
 				return ec.fieldContext_Email_primary(ctx, field)
 			case "source":
 				return ec.fieldContext_Email_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_Email_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Email_appSource(ctx, field)
 			case "createdAt":
@@ -53782,8 +53642,6 @@ func (ec *executionContext) fieldContext_Mutation_emailMergeToUser(ctx context.C
 				return ec.fieldContext_Email_primary(ctx, field)
 			case "source":
 				return ec.fieldContext_Email_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_Email_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Email_appSource(ctx, field)
 			case "createdAt":
@@ -53988,8 +53846,6 @@ func (ec *executionContext) fieldContext_Mutation_emailReplaceForUser(ctx contex
 				return ec.fieldContext_Email_primary(ctx, field)
 			case "source":
 				return ec.fieldContext_Email_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_Email_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Email_appSource(ctx, field)
 			case "createdAt":
@@ -54105,8 +53961,6 @@ func (ec *executionContext) fieldContext_Mutation_emailMergeToOrganization(ctx c
 				return ec.fieldContext_Email_primary(ctx, field)
 			case "source":
 				return ec.fieldContext_Email_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_Email_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Email_appSource(ctx, field)
 			case "createdAt":
@@ -54311,8 +54165,6 @@ func (ec *executionContext) fieldContext_Mutation_emailReplaceForOrganization(ct
 				return ec.fieldContext_Email_primary(ctx, field)
 			case "source":
 				return ec.fieldContext_Email_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_Email_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Email_appSource(ctx, field)
 			case "createdAt":
@@ -56307,8 +56159,6 @@ func (ec *executionContext) fieldContext_Mutation_location_RemoveFromContact(ctx
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "source":
 				return ec.fieldContext_Contact_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_Contact_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Contact_appSource(ctx, field)
 			case "tags":
@@ -72750,8 +72600,6 @@ func (ec *executionContext) fieldContext_Organization_emails(_ context.Context, 
 				return ec.fieldContext_Email_primary(ctx, field)
 			case "source":
 				return ec.fieldContext_Email_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_Email_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Email_appSource(ctx, field)
 			case "createdAt":
@@ -75932,8 +75780,6 @@ func (ec *executionContext) fieldContext_PhoneNumber_contacts(_ context.Context,
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "source":
 				return ec.fieldContext_Contact_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_Contact_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Contact_appSource(ctx, field)
 			case "tags":
@@ -76589,8 +76435,6 @@ func (ec *executionContext) fieldContext_Query_contact(ctx context.Context, fiel
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "source":
 				return ec.fieldContext_Contact_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_Contact_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Contact_appSource(ctx, field)
 			case "tags":
@@ -76777,8 +76621,6 @@ func (ec *executionContext) fieldContext_Query_contact_ByEmail(ctx context.Conte
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "source":
 				return ec.fieldContext_Contact_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_Contact_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Contact_appSource(ctx, field)
 			case "tags":
@@ -76902,8 +76744,6 @@ func (ec *executionContext) fieldContext_Query_contact_ByPhone(ctx context.Conte
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "source":
 				return ec.fieldContext_Contact_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_Contact_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Contact_appSource(ctx, field)
 			case "tags":
@@ -78078,8 +77918,6 @@ func (ec *executionContext) fieldContext_Query_email(ctx context.Context, field 
 				return ec.fieldContext_Email_primary(ctx, field)
 			case "source":
 				return ec.fieldContext_Email_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_Email_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Email_appSource(ctx, field)
 			case "createdAt":
@@ -89296,8 +89134,6 @@ func (ec *executionContext) fieldContext_User_emails(_ context.Context, field gr
 				return ec.fieldContext_Email_primary(ctx, field)
 			case "source":
 				return ec.fieldContext_Email_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_Email_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Email_appSource(ctx, field)
 			case "createdAt":
@@ -100180,11 +100016,6 @@ func (ec *executionContext) _Contact(ctx context.Context, sel ast.SelectionSet, 
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
-		case "sourceOfTruth":
-			out.Values[i] = ec._Contact_sourceOfTruth(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
 		case "appSource":
 			out.Values[i] = ec._Contact_appSource(ctx, field, obj)
 		case "tags":
@@ -102696,11 +102527,6 @@ func (ec *executionContext) _Email(ctx context.Context, sel ast.SelectionSet, ob
 			}
 		case "source":
 			out.Values[i] = ec._Email_source(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
-		case "sourceOfTruth":
-			out.Values[i] = ec._Email_sourceOfTruth(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}

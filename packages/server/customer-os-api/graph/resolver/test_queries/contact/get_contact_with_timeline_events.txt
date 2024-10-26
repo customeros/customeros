@@ -14,7 +14,6 @@ query GetContactById($contactId: ID!, $from: Time!, $size: Int!){
               orderInSession
               sessionId
               source
-              sourceOfTruth
               appSource
             }
             __typename

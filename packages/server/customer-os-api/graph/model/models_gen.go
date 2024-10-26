@@ -338,11 +338,10 @@ type Contact struct {
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
 	// Deprecated
-	Label         *string    `json:"label,omitempty"`
-	Source        DataSource `json:"source"`
-	SourceOfTruth DataSource `json:"sourceOfTruth"`
-	AppSource     *string    `json:"appSource,omitempty"`
-	Tags          []*Tag     `json:"tags,omitempty"`
+	Label     *string    `json:"label,omitempty"`
+	Source    DataSource `json:"source"`
+	AppSource *string    `json:"appSource,omitempty"`
+	Tags      []*Tag     `json:"tags,omitempty"`
 	// `organizationName` and `jobTitle` of the contact if it has been associated with an organization.
 	// **Required.  If no values it returns an empty array.**
 	JobRoles                      []*JobRole               `json:"jobRoles"`
@@ -937,7 +936,6 @@ type Email struct {
 	// **Required.**
 	Primary       bool            `json:"primary"`
 	Source        DataSource      `json:"source"`
-	SourceOfTruth DataSource      `json:"sourceOfTruth"`
 	AppSource     string          `json:"appSource"`
 	CreatedAt     time.Time       `json:"createdAt"`
 	UpdatedAt     time.Time       `json:"updatedAt"`

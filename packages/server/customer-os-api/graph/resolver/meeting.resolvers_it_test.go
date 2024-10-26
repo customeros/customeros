@@ -25,11 +25,10 @@ func TestMutationResolver_Meeting(t *testing.T) {
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jtest.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 	neo4jt.CreateContactWithId(ctx, driver, tenantName, testContactId, neo4jentity.ContactEntity{
-		Prefix:        "MR",
-		FirstName:     "first",
-		LastName:      "last",
-		Source:        neo4jentity.DataSourceHubspot,
-		SourceOfTruth: neo4jentity.DataSourceHubspot,
+		Prefix:    "MR",
+		FirstName: "first",
+		LastName:  "last",
+		Source:    neo4jentity.DataSourceHubspot,
 	})
 	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "test organization")
 	neo4jt.CreateCalComExternalSystem(ctx, driver, tenantName)
@@ -197,20 +196,18 @@ func TestMutationResolver_MergeContactsWithMeetings(t *testing.T) {
 	neo4jtest.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 	testContactId1 := "test_contact_id_1"
 	neo4jt.CreateContactWithId(ctx, driver, tenantName, testContactId1, neo4jentity.ContactEntity{
-		Prefix:        "MR",
-		FirstName:     "first",
-		LastName:      "last",
-		Source:        neo4jentity.DataSourceHubspot,
-		SourceOfTruth: neo4jentity.DataSourceHubspot,
+		Prefix:    "MR",
+		FirstName: "first",
+		LastName:  "last",
+		Source:    neo4jentity.DataSourceHubspot,
 	})
 
 	testContactId2 := "test_contact_id_2"
 	neo4jt.CreateContactWithId(ctx, driver, tenantName, testContactId2, neo4jentity.ContactEntity{
-		Prefix:        "MR",
-		FirstName:     "first",
-		LastName:      "last",
-		Source:        neo4jentity.DataSourceHubspot,
-		SourceOfTruth: neo4jentity.DataSourceHubspot,
+		Prefix:    "MR",
+		FirstName: "first",
+		LastName:  "last",
+		Source:    neo4jentity.DataSourceHubspot,
 	})
 
 	// create meeting
@@ -640,20 +637,18 @@ func TestMutationResolver_GetMeetings(t *testing.T) {
 	neo4jt.AddEmailTo(ctx, driver, commonModel.USER, tenantName, testUserId, "test-user-email", true, "MAIN")
 
 	neo4jt.CreateContactWithId(ctx, driver, tenantName, testContactId1, neo4jentity.ContactEntity{
-		Prefix:        "MR",
-		FirstName:     "first",
-		LastName:      "last",
-		Source:        neo4jentity.DataSourceHubspot,
-		SourceOfTruth: neo4jentity.DataSourceHubspot,
+		Prefix:    "MR",
+		FirstName: "first",
+		LastName:  "last",
+		Source:    neo4jentity.DataSourceHubspot,
 	})
 
 	testContactId2 := "test_contact_id_2"
 	neo4jt.CreateContactWithId(ctx, driver, tenantName, testContactId2, neo4jentity.ContactEntity{
-		Prefix:        "MR",
-		FirstName:     "first",
-		LastName:      "last",
-		Source:        neo4jentity.DataSourceHubspot,
-		SourceOfTruth: neo4jentity.DataSourceHubspot,
+		Prefix:    "MR",
+		FirstName: "first",
+		LastName:  "last",
+		Source:    neo4jentity.DataSourceHubspot,
 	})
 
 	// create meeting
@@ -728,20 +723,18 @@ func TestMutationResolver_GetMeetingsWithExternalId(t *testing.T) {
 	neo4jt.AddEmailTo(ctx, driver, commonModel.USER, tenantName, testUserId, "test-user-email", true, "MAIN")
 
 	neo4jt.CreateContactWithId(ctx, driver, tenantName, testContactId1, neo4jentity.ContactEntity{
-		Prefix:        "MR",
-		FirstName:     "first",
-		LastName:      "last",
-		Source:        neo4jentity.DataSourceHubspot,
-		SourceOfTruth: neo4jentity.DataSourceHubspot,
+		Prefix:    "MR",
+		FirstName: "first",
+		LastName:  "last",
+		Source:    neo4jentity.DataSourceHubspot,
 	})
 
 	testContactId2 := "test_contact_id_2"
 	neo4jt.CreateContactWithId(ctx, driver, tenantName, testContactId2, neo4jentity.ContactEntity{
-		Prefix:        "MR",
-		FirstName:     "first",
-		LastName:      "last",
-		Source:        neo4jentity.DataSourceHubspot,
-		SourceOfTruth: neo4jentity.DataSourceHubspot,
+		Prefix:    "MR",
+		FirstName: "first",
+		LastName:  "last",
+		Source:    neo4jentity.DataSourceHubspot,
 	})
 
 	// create meeting

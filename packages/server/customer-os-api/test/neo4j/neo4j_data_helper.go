@@ -141,7 +141,6 @@ func CreateContact(ctx context.Context, driver *neo4j.DriverWithContext, tenant 
 						c.username=$username,
 						c.appSource=$appSource, 
 						c.source=$source, 
-						c.sourceOfTruth=$sourceOfTruth, 
 						c.createdAt=datetime(), 
 		 				c:Contact_%s`
 
@@ -156,7 +155,6 @@ func CreateContact(ctx context.Context, driver *neo4j.DriverWithContext, tenant 
 		"profilePhotoUrl": contact.ProfilePhotoUrl,
 		"username":        contact.Username,
 		"source":          contact.Source,
-		"sourceOfTruth":   contact.SourceOfTruth,
 		"appSource":       utils.StringFirstNonEmpty(contact.AppSource, "test"),
 	})
 	return contactId

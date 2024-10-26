@@ -63,7 +63,6 @@ func MapContactInputToEntity(input model.ContactInput) *neo4jentity.ContactEntit
 		ProfilePhotoUrl: utils.IfNotNilString(input.ProfilePhotoURL),
 		Username:        utils.IfNotNilString(input.Username),
 		Source:          neo4jentity.DataSourceOpenline,
-		SourceOfTruth:   neo4jentity.DataSourceOpenline,
 		AppSource:       utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
 	}
 	return &contactEntity
@@ -71,16 +70,15 @@ func MapContactInputToEntity(input model.ContactInput) *neo4jentity.ContactEntit
 
 func MapCustomerContactInputToEntity(input model.CustomerContactInput) *neo4jentity.ContactEntity {
 	contactEntity := neo4jentity.ContactEntity{
-		CreatedAt:     utils.IfNotNilTimeWithDefault(input.CreatedAt, utils.Now()),
-		Name:          utils.IfNotNilString(input.Name),
-		FirstName:     utils.IfNotNilString(input.FirstName),
-		LastName:      utils.IfNotNilString(input.LastName),
-		Prefix:        utils.IfNotNilString(input.Prefix),
-		Description:   utils.IfNotNilString(input.Description),
-		Timezone:      utils.IfNotNilString(input.Timezone),
-		Source:        neo4jentity.DataSourceOpenline,
-		SourceOfTruth: neo4jentity.DataSourceOpenline,
-		AppSource:     utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
+		CreatedAt:   utils.IfNotNilTimeWithDefault(input.CreatedAt, utils.Now()),
+		Name:        utils.IfNotNilString(input.Name),
+		FirstName:   utils.IfNotNilString(input.FirstName),
+		LastName:    utils.IfNotNilString(input.LastName),
+		Prefix:      utils.IfNotNilString(input.Prefix),
+		Description: utils.IfNotNilString(input.Description),
+		Timezone:    utils.IfNotNilString(input.Timezone),
+		Source:      neo4jentity.DataSourceOpenline,
+		AppSource:   utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
 	}
 	return &contactEntity
 }
@@ -88,13 +86,12 @@ func MapCustomerContactInputToEntity(input model.CustomerContactInput) *neo4jent
 func MapEntityToContact(contact *neo4jentity.ContactEntity) *model.Contact {
 	return &model.Contact{
 		Metadata: &model.Metadata{
-			ID:            contact.Id,
-			Created:       contact.CreatedAt,
-			LastUpdated:   contact.UpdatedAt,
-			Source:        MapDataSourceToModel(contact.Source),
-			SourceOfTruth: MapDataSourceToModel(contact.SourceOfTruth),
-			AppSource:     contact.AppSource,
-			Version:       contact.AggregateVersion,
+			ID:          contact.Id,
+			Created:     contact.CreatedAt,
+			LastUpdated: contact.UpdatedAt,
+			Source:      MapDataSourceToModel(contact.Source),
+			AppSource:   contact.AppSource,
+			Version:     contact.AggregateVersion,
 		},
 		ID:              contact.Id,
 		Prefix:          utils.StringPtr(contact.Prefix),
@@ -109,7 +106,6 @@ func MapEntityToContact(contact *neo4jentity.ContactEntity) *model.Contact {
 		CreatedAt:       contact.CreatedAt,
 		UpdatedAt:       contact.UpdatedAt,
 		Source:          MapDataSourceToModel(contact.Source),
-		SourceOfTruth:   MapDataSourceToModel(contact.SourceOfTruth),
 		AppSource:       utils.StringPtr(contact.AppSource),
 		EnrichDetails:   prepareContactEnrichDetails(contact.EnrichDetails.EnrichRequestedAt, contact.EnrichDetails.EnrichedAt, contact.EnrichDetails.EnrichFailedAt),
 	}
