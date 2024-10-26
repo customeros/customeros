@@ -11,6 +11,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
@@ -24,6 +25,7 @@ type ContactService interface {
 	SaveContact(ctx context.Context, id *string, contactFields neo4jrepository.ContactFields, socialUrl string, externalSystem neo4jmodel.ExternalSystem) (string, error)
 	HideContact(ctx context.Context, contactId string) error
 	ShowContact(ctx context.Context, contactId string) error
+	GetContactById(ctx context.Context, contactId string) (*neo4jentity.ContactEntity, error)
 }
 
 type contactService struct {
@@ -240,4 +242,28 @@ func (s *contactService) ShowContact(ctx context.Context, contactId string) erro
 	utils.EventCompleted(ctx, tenant, model.CONTACT.String(), contactId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithCreate())
 
 	return nil
+}
+
+func (s *contactService) GetContactById(ctx context.Context, contactId string) (*neo4jentity.ContactEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.GetContactById")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.TagEntity(span, contactId)
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+
+	contactDbNode, err := s.services.Neo4jRepositories.ContactReadRepository.GetContact(ctx, tenant, contactId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("error while getting contact %s: %s", contactId, err.Error())
+		return nil, err
+	}
+
+	return neo4jmapper.MapDbNodeToContactEntity(contactDbNode), nil
 }

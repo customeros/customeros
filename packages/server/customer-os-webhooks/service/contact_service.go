@@ -222,37 +222,59 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 			contactInput.Id = contactId
 		} else {
 			// update contact
-			ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-			_, err = CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
-				return s.grpcClients.ContactClient.UpsertContact(ctx, &contactpb.UpsertContactGrpcRequest{
-					Tenant:          tenant,
-					Id:              contactId,
-					Name:            contactInput.Name,
-					FirstName:       contactInput.FirstName,
-					LastName:        contactInput.LastName,
-					Description:     contactInput.Description,
-					Timezone:        contactInput.Timezone,
-					ProfilePhotoUrl: contactInput.ProfilePhotoUrl,
-					CreatedAt:       utils.ConvertTimeToTimestampPtr(contactInput.CreatedAt),
-					UpdatedAt:       utils.ConvertTimeToTimestampPtr(contactInput.UpdatedAt),
-					SourceFields: &commonpb.SourceFields{
-						Source:    contactInput.ExternalSystem,
-						AppSource: appSource,
-					},
-					ExternalSystemFields: &commonpb.ExternalSystemFields{
-						ExternalSystemId: contactInput.ExternalSystem,
-						ExternalId:       contactInput.ExternalId,
-						ExternalUrl:      contactInput.ExternalUrl,
-						ExternalIdSecond: contactInput.ExternalIdSecond,
-						ExternalSource:   contactInput.ExternalSourceEntity,
-						SyncDate:         utils.ConvertTimeToTimestampPtr(&syncDate),
-					},
-				})
-			})
+			// fetch current contact data
+			contactEntity, err := s.services.CommonServices.ContactService.GetContactById(ctx, contactId)
 			if err != nil {
 				failedSync = true
-				tracing.TraceErr(span, err, log.String("grpcMethod", "UpsertContact"))
-				reason = fmt.Sprintf("failed sending event to upsert contact with external reference %s for tenant %s :%s", contactInput.ExternalId, tenant, err)
+				tracing.TraceErr(span, err)
+				reason = fmt.Sprintf("failed fetching contact with id %s for tenant %s :%s", contactId, tenant, err.Error())
+				s.log.Error(reason)
+			}
+			contactFields := neo4jrepo.ContactFields{
+				SourceFields: neo4jmodel.SourceFields{
+					Source:    contactInput.ExternalSystem,
+					AppSource: appSource,
+				},
+			}
+			if contactEntity.Name == "" && contactInput.Name != "" {
+				contactFields.Name = contactInput.Name
+				contactFields.UpdateName = true
+			}
+			if contactEntity.FirstName == "" && contactInput.FirstName != "" {
+				contactFields.FirstName = contactInput.FirstName
+				contactFields.UpdateFirstName = true
+			}
+			if contactEntity.LastName == "" && contactInput.LastName != "" {
+				contactFields.LastName = contactInput.LastName
+				contactFields.UpdateLastName = true
+			}
+			if contactEntity.Description == "" && contactInput.Description != "" {
+				contactFields.Description = contactInput.Description
+				contactFields.UpdateDescription = true
+			}
+			if contactEntity.Timezone == "" && contactInput.Timezone != "" {
+				contactFields.Timezone = contactInput.Timezone
+				contactFields.UpdateTimezone = true
+			}
+			if contactEntity.ProfilePhotoUrl == "" && contactInput.ProfilePhotoUrl != "" {
+				contactFields.ProfilePhotoUrl = contactInput.ProfilePhotoUrl
+				contactFields.UpdateProfilePhotoUrl = true
+			}
+			_, err = s.services.CommonServices.ContactService.SaveContact(ctx, &contactId,
+				contactFields,
+				"",
+				neo4jmodel.ExternalSystem{
+					ExternalSystemId: contactInput.ExternalSystem,
+					ExternalId:       contactInput.ExternalId,
+					ExternalUrl:      contactInput.ExternalUrl,
+					ExternalIdSecond: contactInput.ExternalIdSecond,
+					ExternalSource:   contactInput.ExternalSourceEntity,
+					SyncDate:         &syncDate,
+				})
+			if err != nil {
+				failedSync = true
+				tracing.TraceErr(span, err)
+				reason = fmt.Sprintf("failed updating contact with external reference %s for tenant %s :%s", contactInput.ExternalId, tenant, err.Error())
 				s.log.Error(reason)
 			}
 		}
