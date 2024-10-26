@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
-	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/constants"
@@ -25,7 +26,7 @@ type OrganizationService interface {
 	GetById(ctx context.Context, tenant, organizationId string) (*neo4jentity.OrganizationEntity, error)
 
 	Save(ctx context.Context, tx *neo4j.ManagedTransaction, tenant string, organizationId *string, input *repository.OrganizationSaveFields) (*string, error)
-	LinkWithDomain(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId, domain string) error
+	LinkWithDomain(ctx context.Context, tx *neo4j.ManagedTransaction, organizationId, domain string) error
 
 	Hide(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId string) error
 	Show(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId string) error
@@ -196,7 +197,7 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 			input.UpdateHide = true
 		}
 
-		generatedId, err := s.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, commonModel.NodeLabelOrganization)
+		generatedId, err := s.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelOrganization)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err
@@ -215,7 +216,7 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 		}
 
 		if existing == nil {
-			_, err = s.services.Neo4jRepositories.ActionWriteRepository.MergeByActionType(ctx, &tx, tenant, *organizationId, commonModel.ORGANIZATION, neo4jenum.ActionCreated, "", "", utils.Now(), input.SourceFields.AppSource)
+			_, err = s.services.Neo4jRepositories.ActionWriteRepository.MergeByActionType(ctx, &tx, tenant, *organizationId, model.ORGANIZATION, neo4jenum.ActionCreated, "", "", utils.Now(), input.SourceFields.AppSource)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return nil, err
@@ -226,7 +227,7 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 			input.Website = adjustedWebsite
 			if primaryDomainFromWebsite != "" {
 				newDomains = append(newDomains, primaryDomainFromWebsite)
-				err = s.LinkWithDomain(ctx, &tx, tenant, *organizationId, primaryDomainFromWebsite)
+				err = s.LinkWithDomain(ctx, &tx, *organizationId, primaryDomainFromWebsite)
 				if err != nil {
 					tracing.TraceErr(span, err)
 					return nil, err
@@ -236,7 +237,7 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 
 		if input.Domains != nil && len(input.Domains) > 0 {
 			for _, domain := range input.Domains {
-				err = s.LinkWithDomain(ctx, &tx, tenant, *organizationId, domain)
+				err = s.LinkWithDomain(ctx, &tx, *organizationId, domain)
 				if err != nil {
 					tracing.TraceErr(span, err)
 					return nil, err
@@ -254,7 +255,7 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 				ExternalSource:   input.ExternalSystem.ExternalSource,
 				SyncDate:         input.ExternalSystem.SyncDate,
 			}
-			err = s.services.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntityInTx(ctx, tx, tenant, *organizationId, commonModel.NodeLabelOrganization, externalSystemData)
+			err = s.services.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntityInTx(ctx, tx, tenant, *organizationId, model.NodeLabelOrganization, externalSystemData)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return nil, err
@@ -288,7 +289,7 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 			details.WithUpdate()
 		}
 
-		utils.EventCompleted(ctx, tenant, commonModel.ORGANIZATION.String(), *organizationId, s.services.GrpcClients, details)
+		utils.EventCompleted(ctx, tenant, model.ORGANIZATION.String(), *organizationId, s.services.GrpcClients, details)
 	}
 
 	// select primary domain from new domains
@@ -366,7 +367,7 @@ func (s *organizationService) Hide(ctx context.Context, tx *neo4j.ManagedTransac
 		return err
 	}
 
-	utils.EventCompleted(ctx, tenant, commonModel.ORGANIZATION.String(), organizationId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithDelete())
+	utils.EventCompleted(ctx, tenant, model.ORGANIZATION.String(), organizationId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithDelete())
 
 	return nil
 }
@@ -395,7 +396,7 @@ func (s *organizationService) Show(ctx context.Context, tx *neo4j.ManagedTransac
 		return err
 	}
 
-	utils.EventCompleted(ctx, tenant, commonModel.ORGANIZATION.String(), organizationId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithCreate())
+	utils.EventCompleted(ctx, tenant, model.ORGANIZATION.String(), organizationId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithCreate())
 
 	return nil
 }
@@ -423,7 +424,7 @@ func (s *organizationService) Archive(ctx context.Context, tx *neo4j.ManagedTran
 		return err
 	}
 
-	utils.EventCompleted(ctx, tenant, commonModel.ORGANIZATION.String(), organizationId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithDelete())
+	utils.EventCompleted(ctx, tenant, model.ORGANIZATION.String(), organizationId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithDelete())
 
 	return nil
 }
@@ -479,26 +480,54 @@ func (s *organizationService) GetLatestOrganizationsWithJobRolesForContacts(ctx 
 	return &orgWithJobRoleEntities, nil
 }
 
-func (s *organizationService) LinkWithDomain(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId, domain string) error {
+func (s *organizationService) LinkWithDomain(ctx context.Context, tx *neo4j.ManagedTransaction, organizationId, domain string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.LinkWithDomain")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	tracing.TagEntity(span, organizationId)
 	span.LogKV("domain", domain)
 
-	if !s.services.DomainService.AcceptedDomainForOrganization(ctx, domain) {
-		return nil
-	}
-
-	err := s.services.Neo4jRepositories.OrganizationWriteRepository.LinkWithDomain(ctx, tx, tenant, organizationId, domain)
+	// validate tenant
+	err := common.ValidateTenant(ctx)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
+	tenant := common.GetTenantFromContext(ctx)
 
-	if tx == nil {
-		// if not in transaction, we need to create an action
-		utils.EventCompleted(ctx, tenant, commonModel.ORGANIZATION.String(), organizationId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
+	if !s.services.DomainService.AcceptedDomainForOrganization(ctx, domain) {
+		return nil
+	}
+
+	domainLinkedToOrg, err := s.services.Neo4jRepositories.OrganizationWriteRepository.LinkWithDomain(ctx, tx, tenant, organizationId, domain)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to link domain in neo4j"))
+		return err
+	}
+
+	// execute only if not in transaction and domain was linked with org
+	if tx == nil && domainLinkedToOrg {
+		// send event to rabbitmq
+		err = s.services.RabbitMQService.Publish(ctx, organizationId, model.ORGANIZATION, dto.NewAddDomainEvent(domain))
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to publish event AddDomain"))
+		}
+
+		// send event to events platform
+		utils.EventCompleted(ctx, tenant, model.ORGANIZATION.String(), organizationId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
+
+		// send organization enrich request
+		_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+			return s.services.GrpcClients.OrganizationClient.EnrichOrganization(ctx, &organizationpb.EnrichOrganizationGrpcRequest{
+				Tenant:         tenant,
+				OrganizationId: organizationId,
+				Url:            domain,
+				AppSource:      common.GetAppSourceFromContext(ctx),
+			})
+		})
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to request enrich organization"))
+		}
 	}
 
 	return nil

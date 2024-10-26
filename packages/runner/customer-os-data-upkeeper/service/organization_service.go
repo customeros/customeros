@@ -5,6 +5,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/constants"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
@@ -212,22 +213,27 @@ func (s *organizationService) linkWithDomain(ctx context.Context) {
 
 		//process organizations
 		for _, record := range records {
-			organizationDbNode, err := s.commonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganization(ctx, record.Tenant, record.OrganizationId)
+			innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+				Tenant:    record.Tenant,
+				AppSource: constants.AppSourceDataUpkeeper,
+			})
+
+			organizationDbNode, err := s.commonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganization(innerCtx, record.Tenant, record.OrganizationId)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error getting organization {%s}: %s", record.OrganizationId, err.Error())
 			}
 			organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
 
-			primaryDomain, _ := s.commonServices.DomainService.GetPrimaryDomainForOrganizationWebsite(ctx, organizationEntity.Website)
+			primaryDomain, _ := s.commonServices.DomainService.GetPrimaryDomainForOrganizationWebsite(innerCtx, organizationEntity.Website)
 			if primaryDomain != "" {
-				err = s.commonServices.OrganizationService.LinkWithDomain(ctx, nil, record.Tenant, record.OrganizationId, primaryDomain)
+				err = s.commonServices.OrganizationService.LinkWithDomain(innerCtx, nil, record.OrganizationId, primaryDomain)
 				if err != nil {
 					tracing.TraceErr(span, err)
 					s.log.Errorf("Error linking with domain {%s}: %s", record.OrganizationId, err.Error())
 				}
 			}
-			err = s.commonServices.Neo4jRepositories.OrganizationWriteRepository.UpdateTimeProperty(ctx, record.Tenant, record.OrganizationId, string(neo4jentity.OrganizationPropertyDomainCheckedAt), utils.NowPtr())
+			err = s.commonServices.Neo4jRepositories.OrganizationWriteRepository.UpdateTimeProperty(innerCtx, record.Tenant, record.OrganizationId, string(neo4jentity.OrganizationPropertyDomainCheckedAt), utils.NowPtr())
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error updating domain checked at: %s", err.Error())

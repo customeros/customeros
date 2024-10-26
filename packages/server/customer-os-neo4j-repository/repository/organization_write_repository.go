@@ -187,7 +187,7 @@ type OrganizationWriteRepository interface {
 	CreateOrganizationInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, organizationId string, data OrganizationCreateFields) error
 	//Deprecated
 	UpdateOrganization(ctx context.Context, tenant, organizationId string, data OrganizationUpdateFields) error
-	LinkWithDomain(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId, domain string) error
+	LinkWithDomain(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId, domain string) (bool, error)
 	UnlinkFromDomain(ctx context.Context, tenant, organizationId, domain string) error
 	ReplaceOwner(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId, userId string) error
 	// Deprecated -> use Save with Hide property
@@ -708,7 +708,7 @@ func (r *organizationWriteRepository) Save(ctx context.Context, tx *neo4j.Manage
 	return err
 }
 
-func (r *organizationWriteRepository) LinkWithDomain(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId, domain string) error {
+func (r *organizationWriteRepository) LinkWithDomain(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId, domain string) (bool, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.MergeOrganizationDomain")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
@@ -724,7 +724,8 @@ func (r *organizationWriteRepository) LinkWithDomain(ctx context.Context, tx *ne
 				WITH d, org, COUNT(otherOrg) AS existingOrgCount
 				WHERE existingOrgCount = 0
 				MERGE (org)-[rel:HAS_DOMAIN]->(d)
-				SET org.updatedAt = datetime()`
+				SET org.updatedAt = datetime()
+				RETURN existingOrgCount = 0 AS linked`
 	params := map[string]any{
 		"tenant":         tenant,
 		"organizationId": organizationId,
@@ -733,17 +734,16 @@ func (r *organizationWriteRepository) LinkWithDomain(ctx context.Context, tx *ne
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
-		_, err := tx.Run(ctx, cypher, params)
-		return nil, err
+	result, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		resultWithContext, err := tx.Run(ctx, cypher, params)
+		return utils.ExtractSingleRecordFirstValueAsType[bool](ctx, resultWithContext, err)
 	})
-
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return err
+		return false, err
 	}
-
-	return nil
+	span.LogFields(log.Bool("result", result.(bool)))
+	return result.(bool), err
 }
 
 func (r *organizationWriteRepository) UnlinkFromDomain(ctx context.Context, tenant, organizationId, domain string) error {
