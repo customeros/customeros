@@ -9,17 +9,17 @@ import (
 )
 
 const (
-	KB         = 1024
-	cache100KB = 100 * KB
-	cache1MB   = 1 * 1024 * KB
-	cache10MB  = 10 * 1024 * KB
+	KB        = 1024
+	cache1MB  = 1 * 1024 * KB
+	cache10MB = 10 * 1024 * KB
+	cache20MB = 20 * 1024 * KB
 )
 
 const (
-	expire15Min    = 15 * 60 // 15 minutes
-	expire1Hour    = 1 * 60 * 60
-	expire24Hours  = 24 * 60 * 60 // 24 hours
-	expire9999Days = 9999 * 24 * 60 * 60
+	expire15Min    = 15 * 60             // 15 minutes
+	expire1Hour    = 60 * 60             // 1 hour
+	expire24Hours  = 24 * 60 * 60        // 24 hours
+	expire9999Days = 9999 * 24 * 60 * 60 // 9999 days
 )
 
 type UserDetail struct {
@@ -29,126 +29,96 @@ type UserDetail struct {
 }
 
 type Cache struct {
-	mu                                        sync.RWMutex
-	apiKeyCache                               *freecache.Cache
-	tenantApiKeyCache                         *freecache.Cache
-	tenantCache                               *freecache.Cache
-	userDetailCache                           *freecache.Cache
-	organizationWebsiteHostingUrlPattersCache *freecache.Cache
-	personalEmailProviderCache                *freecache.Cache
+	apiKeyCache                                *freecache.Cache
+	tenantApiKeyCache                          *freecache.Cache
+	tenantCache                                *freecache.Cache
+	userDetailCache                            *freecache.Cache
+	organizationWebsiteHostingUrlPatternsCache *freecache.Cache
+	personalEmailProviderCache                 *freecache.Cache
 }
 
 func NewCommonCache() *Cache {
 	return &Cache{
-		apiKeyCache:       freecache.NewCache(cache100KB),
+		apiKeyCache:       freecache.NewCache(cache1MB),
 		tenantApiKeyCache: freecache.NewCache(cache1MB),
 		tenantCache:       freecache.NewCache(cache1MB),
-		userDetailCache:   freecache.NewCache(cache10MB),
-		organizationWebsiteHostingUrlPattersCache: freecache.NewCache(cache10MB),
-		personalEmailProviderCache:                freecache.NewCache(cache10MB),
+		userDetailCache:   freecache.NewCache(cache20MB),
+		organizationWebsiteHostingUrlPatternsCache: freecache.NewCache(cache1MB),
+		personalEmailProviderCache:                 freecache.NewCache(cache10MB),
 	}
 }
 
-// SetApiKey Method to add an API key to the cache
+// SetApiKey adds an API key to the cache
 func (c *Cache) SetApiKey(app, apiKey string) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	keyBytes := []byte(app)      // Use app as the key
-	valueBytes := []byte(apiKey) // Store apiKey as the value
+	keyBytes := []byte(app)
+	valueBytes := []byte(apiKey)
 
 	_ = c.apiKeyCache.Set(keyBytes, valueBytes, expire24Hours)
 }
 
-// CheckApiKey Method to check if an API key is in the cache
+// CheckApiKey checks if an API key is in the cache
 func (c *Cache) CheckApiKey(app, apiKey string) bool {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-
 	keyBytes := []byte(app)
 	valueBytes, err := c.apiKeyCache.Get(keyBytes)
 	if err != nil {
-		return false // Key not found in cache
+		return false
 	}
-
-	return string(valueBytes) == apiKey // Check if the apiKey matches the one in the cache
-}
-
-func (c *Cache) CheckTenantApiKey(apiKey string) bool {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-
-	keyBytes := []byte(apiKey)
-	valueBytes, err := c.tenantApiKeyCache.Get(keyBytes)
-	if err != nil {
-		return false // Key not found in cache
-	}
-
 	return string(valueBytes) == apiKey
 }
 
-func (c *Cache) SetTenantApiKey(tenant, apiKey string) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
+// CheckTenantApiKey checks if a tenant API key exists in the cache
+func (c *Cache) CheckTenantApiKey(apiKey string) bool {
+	keyBytes := []byte(apiKey)
+	valueBytes, err := c.tenantApiKeyCache.Get(keyBytes)
+	if err != nil {
+		return false
+	}
+	return string(valueBytes) == apiKey
+}
 
+// SetTenantApiKey sets the tenant's API key in the cache
+func (c *Cache) SetTenantApiKey(tenant, apiKey string) {
 	keyBytes := []byte(apiKey)
 	valueBytes := []byte(tenant)
 
 	_ = c.tenantApiKeyCache.Set(keyBytes, valueBytes, expire24Hours)
 }
 
+// AddTenant adds a tenant to the cache
 func (c *Cache) AddTenant(tenant string) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	// Convert strings to []byte
 	keyBytes := []byte(tenant)
-	valueBytes := []byte("1") // A simple marker value
+	valueBytes := []byte("1")
 
 	_ = c.tenantCache.Set(keyBytes, valueBytes, expire1Hour)
 }
 
+// CheckTenant verifies if a tenant exists in the cache
 func (c *Cache) CheckTenant(tenant string) bool {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-
-	// Convert strings to []byte
 	keyBytes := []byte(tenant)
-
 	_, err := c.tenantCache.Get(keyBytes)
-	if err != nil {
-		return false // Key not found in cache
-	}
-
-	return true // Key found in cache
+	return err == nil
 }
 
+// GetUserDetailsFromCache retrieves user details from the cache
 func (c *Cache) GetUserDetailsFromCache(username string) (string, string, []string, bool) {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-
-	// Convert strings to []byte
 	keyBytes := []byte(username)
 
 	valueBytes, err := c.userDetailCache.Get(keyBytes)
 	if err != nil {
-		return "", "", []string{}, false // Key not found in cache
+		return "", "", []string{}, false
 	}
 
 	var userDetail UserDetail
 	err = json.Unmarshal(valueBytes, &userDetail)
 	if err != nil {
-		return "", "", []string{}, false // Key not found in cache
+		return "", "", []string{}, false
 	}
 
-	return userDetail.UserId, userDetail.Tenant, userDetail.Roles, true // Key found in cache
+	return userDetail.UserId, userDetail.Tenant, userDetail.Roles, true
 }
 
-func (c *Cache) AddUserDetailsToCache(username string, userId string, tenant string, roles []string) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	// Convert strings to []byte
+// AddUserDetailsToCache stores user details in the cache
+func (c *Cache) AddUserDetailsToCache(username, userId, tenant string, roles []string) {
 	keyBytes := []byte(username)
 
 	userDetail := UserDetail{
@@ -156,99 +126,66 @@ func (c *Cache) AddUserDetailsToCache(username string, userId string, tenant str
 		Tenant: tenant,
 		Roles:  roles,
 	}
-
 	valueBytes, _ := json.Marshal(userDetail)
 
 	_ = c.userDetailCache.Set(keyBytes, valueBytes, expire15Min)
 }
 
-func (c *Cache) GetOrganizationWebsiteHostingUrlPatters() []string {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
+var cachedPersonalEmailProviders []string
+var personalEmailProvidersMu sync.RWMutex
 
-	var urlPatterns []string
+// GetPersonalEmailProviders retrieves personal email providers from the cache with local caching
+func (c *Cache) GetPersonalEmailProviders() []string {
+	personalEmailProvidersMu.RLock()
+	if cachedPersonalEmailProviders != nil {
+		providers := cachedPersonalEmailProviders
+		personalEmailProvidersMu.RUnlock()
+		return providers
+	}
+	personalEmailProvidersMu.RUnlock()
+
+	personalEmailProvidersMu.Lock()
+	defer personalEmailProvidersMu.Unlock()
+
+	var allDomains []string
 	keyIndex := 1
 
 	for {
-		// Generate the key based on index
 		key := strconv.Itoa(keyIndex)
-
-		// Attempt to get the domains chunk from the cache
-		chunkBytes, err := c.organizationWebsiteHostingUrlPattersCache.Get([]byte(key))
+		domainChunkBytes, err := c.personalEmailProviderCache.Get([]byte(key))
 		if err != nil {
-			break // If a key is not found, assume no more chunks are available
-		}
-
-		var chunk []string
-		err = json.Unmarshal(chunkBytes, &chunk)
-		if err != nil {
-			// If there is an error unmarshalling, decide how to handle it
-			// For simplicity, we stop and return what we have so far
 			break
 		}
 
-		// Append this chunk of domains to the allDomains slice
-		urlPatterns = append(urlPatterns, chunk...)
+		var domainChunk []string
+		if err = json.Unmarshal(domainChunkBytes, &domainChunk); err != nil {
+			break
+		}
 
-		keyIndex++ // Increment key index for next iteration
+		allDomains = append(allDomains, domainChunk...)
+		keyIndex++
 	}
 
-	return urlPatterns
+	cachedPersonalEmailProviders = allDomains
+	return cachedPersonalEmailProviders
 }
 
-func (c *Cache) SetOrganizationWebsiteHostingUrlPatters(urlPatterns []string) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	const chunkSize = 100 // Size of each domain chunk
-	for i, j := 0, chunkSize; i < len(urlPatterns); i, j = i+chunkSize, j+chunkSize {
-		// This ensures we don't go past the end of the slice
-		if j > len(urlPatterns) {
-			j = len(urlPatterns)
-		}
-
-		// Get the current chunk and marshal it
-		chunk := urlPatterns[i:j]
-		chunkBytes, err := json.Marshal(chunk)
-		if err != nil {
-			c.organizationWebsiteHostingUrlPattersCache.Clear() // Clear the cache
-			return
-		}
-
-		// Generate a key based on the index
-		key := strconv.Itoa(i/chunkSize + 1) // Convert the integer to a string
-
-		// Store the chunk in the cache
-		err = c.organizationWebsiteHostingUrlPattersCache.Set([]byte(key), chunkBytes, expire1Hour)
-		if err != nil {
-			c.organizationWebsiteHostingUrlPattersCache.Clear()
-		}
-	}
-}
-
+// SetPersonalEmailProviders caches the list of personal email providers in chunks
 func (c *Cache) SetPersonalEmailProviders(domains []string) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	const chunkSize = 100 // Size of each domain chunk
+	const chunkSize = 100
 	for i, j := 0, chunkSize; i < len(domains); i, j = i+chunkSize, j+chunkSize {
-		// This ensures we don't go past the end of the slice
 		if j > len(domains) {
 			j = len(domains)
 		}
 
-		// Get the current chunk and marshal it
 		domainChunk := domains[i:j]
 		domainChunkBytes, err := json.Marshal(domainChunk)
 		if err != nil {
-			c.personalEmailProviderCache.Clear() // Clear the cache
+			c.personalEmailProviderCache.Clear()
 			return
 		}
 
-		// Generate a key based on the index
-		key := strconv.Itoa(i/chunkSize + 1) // Convert the integer to a string
-
-		// Store the chunk in the cache
+		key := strconv.Itoa(i/chunkSize + 1)
 		err = c.personalEmailProviderCache.Set([]byte(key), domainChunkBytes, expire9999Days)
 		if err != nil {
 			c.personalEmailProviderCache.Clear()
@@ -256,45 +193,75 @@ func (c *Cache) SetPersonalEmailProviders(domains []string) {
 	}
 }
 
-func (c *Cache) GetPersonalEmailProviders() []string {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-
-	var allDomains []string
-	keyIndex := 1
-
-	for {
-		// Generate the key based on index
-		key := strconv.Itoa(keyIndex)
-
-		// Attempt to get the domains chunk from the cache
-		domainChunkBytes, err := c.personalEmailProviderCache.Get([]byte(key))
-		if err != nil {
-			break // If a key is not found, assume no more chunks are available
-		}
-
-		var domainChunk []string
-		err = json.Unmarshal(domainChunkBytes, &domainChunk)
-		if err != nil {
-			// If there is an error unmarshalling, decide how to handle it
-			// For simplicity, we stop and return what we have so far
-			break
-		}
-
-		// Append this chunk of domains to the allDomains slice
-		allDomains = append(allDomains, domainChunk...)
-
-		keyIndex++ // Increment key index for next iteration
-	}
-
-	return allDomains // Return the combined list of all domains
-}
-
+// IsPersonalEmailProvider checks if a given domain is a personal email provider
 func (c *Cache) IsPersonalEmailProvider(domain string) bool {
+	domainLower := strings.ToLower(domain)
 	for _, v := range c.GetPersonalEmailProviders() {
-		if strings.ToLower(domain) == strings.ToLower(v) {
+		if domainLower == strings.ToLower(v) {
 			return true
 		}
 	}
 	return false
+}
+
+var cachedOrganizationUrlPatterns []string
+var organizationUrlPatternsMu sync.RWMutex
+
+// GetOrganizationWebsiteHostingUrlPatters retrieves organization URL patterns from the cache with local caching
+func (c *Cache) GetOrganizationWebsiteHostingUrlPatters() []string {
+	organizationUrlPatternsMu.RLock()
+	if cachedOrganizationUrlPatterns != nil {
+		patterns := cachedOrganizationUrlPatterns
+		organizationUrlPatternsMu.RUnlock()
+		return patterns
+	}
+	organizationUrlPatternsMu.RUnlock()
+
+	organizationUrlPatternsMu.Lock()
+	defer organizationUrlPatternsMu.Unlock()
+
+	var urlPatterns []string
+	keyIndex := 1
+
+	for {
+		key := strconv.Itoa(keyIndex)
+		chunkBytes, err := c.organizationWebsiteHostingUrlPatternsCache.Get([]byte(key))
+		if err != nil {
+			break
+		}
+
+		var chunk []string
+		if err = json.Unmarshal(chunkBytes, &chunk); err != nil {
+			break
+		}
+
+		urlPatterns = append(urlPatterns, chunk...)
+		keyIndex++
+	}
+
+	cachedOrganizationUrlPatterns = urlPatterns
+	return cachedOrganizationUrlPatterns
+}
+
+// SetOrganizationWebsiteHostingUrlPatters caches URL patterns in chunks
+func (c *Cache) SetOrganizationWebsiteHostingUrlPatters(urlPatterns []string) {
+	const chunkSize = 100
+	for i, j := 0, chunkSize; i < len(urlPatterns); i, j = i+chunkSize, j+chunkSize {
+		if j > len(urlPatterns) {
+			j = len(urlPatterns)
+		}
+
+		chunk := urlPatterns[i:j]
+		chunkBytes, err := json.Marshal(chunk)
+		if err != nil {
+			c.organizationWebsiteHostingUrlPatternsCache.Clear()
+			return
+		}
+
+		key := strconv.Itoa(i/chunkSize + 1)
+		err = c.organizationWebsiteHostingUrlPatternsCache.Set([]byte(key), chunkBytes, expire1Hour)
+		if err != nil {
+			c.organizationWebsiteHostingUrlPatternsCache.Clear()
+		}
+	}
 }
