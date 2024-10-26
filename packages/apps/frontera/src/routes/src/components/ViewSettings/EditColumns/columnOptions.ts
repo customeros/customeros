@@ -225,8 +225,9 @@ export const flowsMap: Record<string, string> = {
 };
 export const flowsHelperTextMap: Record<string, string> = {
   [ColumnViewType.FlowName]: 'E.g. Aerospace CTO',
-  [ColumnViewType.FlowActionName]: 'E.g. Education',
+  [ColumnViewType.FlowActionName]: 'E.g. Live',
   [ColumnViewType.FlowTotalCount]: 'E.g. 125',
+  [ColumnViewType.FlowOnHoldCount]: 'E.g. 21',
   [ColumnViewType.FlowReadyCount]: 'E.g. 12',
   [ColumnViewType.FlowScheduledCount]: 'E.g. 23',
   [ColumnViewType.FlowInProgressCount]: 'E.g. 34',
