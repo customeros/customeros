@@ -18,6 +18,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
+	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	enrichmentmodel "github.com/openline-ai/openline-customer-os/packages/server/enrichment-api/model"
@@ -242,7 +243,7 @@ func (s *contactService) updateContactNamesFromEmails(ctx context.Context) {
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
 
-	limit := 200
+	limit := 100
 
 	for {
 		select {
@@ -267,6 +268,12 @@ func (s *contactService) updateContactNamesFromEmails(ctx context.Context) {
 
 		// update contact names
 		for _, record := range records {
+			// create new context from main one with custom context
+			innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+				Tenant:    record.Tenant,
+				AppSource: constants.AppSourceDataUpkeeper,
+			})
+
 			firstName, lastName := neo4jentity.ContactEntity{}.GetNamesFromString(record.FieldStr1)
 			if firstName == "" && lastName == "" {
 				err = errors.New("cannot derive names from email")
@@ -275,28 +282,18 @@ func (s *contactService) updateContactNamesFromEmails(ctx context.Context) {
 				continue
 			}
 
-			upsertRequest := contactpb.UpsertContactGrpcRequest{
-				Tenant: record.Tenant,
-				Id:     record.ContactId,
-				SourceFields: &commonpb.SourceFields{
-					AppSource: constants.AppSourceDataUpkeeper,
-				},
-			}
-			var fieldsMask []contactpb.ContactFieldMask
+			contactFields := neo4jrepository.ContactFields{}
 			if firstName != "" {
-				upsertRequest.FirstName = firstName
-				fieldsMask = append(fieldsMask, contactpb.ContactFieldMask_CONTACT_FIELD_FIRST_NAME)
+				contactFields.FirstName = firstName
+				contactFields.UpdateFirstName = true
 			}
 			if lastName != "" {
-				upsertRequest.LastName = lastName
-				fieldsMask = append(fieldsMask, contactpb.ContactFieldMask_CONTACT_FIELD_LAST_NAME)
+				contactFields.LastName = lastName
+				contactFields.UpdateLastName = true
 			}
-			upsertRequest.FieldsMask = fieldsMask
-			_, err = utils.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
-				return s.commonServices.GrpcClients.ContactClient.UpsertContact(ctx, &upsertRequest)
-			})
+			_, err = s.commonServices.ContactService.SaveContact(innerCtx, &record.ContactId, contactFields, "", neo4jmodel.ExternalSystem{})
 			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "ContactClient.UpsertContact"))
+				tracing.TraceErr(span, errors.Wrap(err, "ContactService.SaveContact"))
 				s.log.Errorf("Error updating contact {%s}: %s", record.ContactId, err.Error())
 			}
 		}
