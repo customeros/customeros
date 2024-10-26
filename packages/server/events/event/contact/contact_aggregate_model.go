@@ -5,7 +5,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/constants"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/event/contact/event"
 	"reflect"
 	"time"
 )
@@ -63,42 +62,6 @@ func (c *Contact) HasPhoneNumber(phoneNumberId, label string, primary bool) bool
 	if email, ok := c.PhoneNumbers[phoneNumberId]; ok {
 		return email.Label == label && email.Primary == primary
 	}
-	return false
-}
-
-func (c *Contact) SameData(fields event.ContactDataFields, externalSystem cmnmod.ExternalSystem) bool {
-	if !externalSystem.Available() {
-		return false
-	}
-
-	if externalSystem.Available() && !c.HasExternalSystem(externalSystem) {
-		return false
-	}
-
-	if c.Source.SourceOfTruth == externalSystem.ExternalSystemId {
-		if c.Name == fields.Name &&
-			c.FirstName == fields.FirstName &&
-			c.LastName == fields.LastName &&
-			c.Prefix == fields.Prefix &&
-			c.Description == fields.Description &&
-			c.Timezone == fields.Timezone &&
-			c.ProfilePhotoUrl == fields.ProfilePhotoUrl &&
-			c.Username == fields.Username {
-			return true
-		}
-	} else {
-		if (c.Name != "" || c.Name == fields.Name) &&
-			(c.FirstName != "" || c.FirstName == fields.FirstName) &&
-			(c.LastName != "" || c.LastName == fields.LastName) &&
-			(c.Prefix != "" || c.Prefix == fields.Prefix) &&
-			(c.Description != "" || c.Description == fields.Description) &&
-			(c.Timezone != "" || c.Timezone == fields.Timezone) &&
-			(c.ProfilePhotoUrl != "" || c.ProfilePhotoUrl == fields.ProfilePhotoUrl) &&
-			(c.Username != "" || c.Username == fields.Username) {
-			return true
-		}
-	}
-
 	return false
 }
 
