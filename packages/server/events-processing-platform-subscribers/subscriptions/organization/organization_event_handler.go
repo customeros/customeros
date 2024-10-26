@@ -231,11 +231,8 @@ func (h *organizationEventHandler) callApiEnrichOrganization(ctx context.Context
 	span.LogFields(log.Int("response.statusCode", response.StatusCode))
 
 	if response.StatusCode != http.StatusOK {
-		if response.StatusCode != http.StatusNotFound {
-			tracing.TraceErr(span, errors.New("response status is not 200"))
-		}
 		h.log.Errorf("Enrich organization API response status is : %d", response.StatusCode)
-		return nil, errors.New("response status is not 200")
+		return nil, fmt.Errorf("Response status is %d", response.StatusCode)
 	}
 
 	body, err := io.ReadAll(response.Body)
