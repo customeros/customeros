@@ -98,8 +98,6 @@ func main() {
 	//testCreatePhoneNumber()
 	//testAddParentOrganization()
 	//testRemoveParentOrganization()
-	//testCreateContact()
-	//testUpdateContact()
 	//testContactLinkWithPhoneNumber()
 	//testContactLinkWithLocation()
 	//testOrganizationLinkWithEmail()
@@ -421,39 +419,6 @@ func testRemoveParentOrganization() {
 	if err != nil {
 		print(err)
 	}
-	print(result)
-}
-
-func testCreateContact() {
-	userId := "697563a8-171c-4950-a067-1aaaaf2de1d8"
-	name := "hubspot contact 3"
-
-	result, _ := clients.ContactClient.UpsertContact(context.Background(), &contactpb.UpsertContactGrpcRequest{
-		Tenant:         tenant,
-		LoggedInUserId: userId,
-		Name:           name,
-		ExternalSystemFields: &commonpb.ExternalSystemFields{
-			ExternalSystemId: "hubspot",
-			ExternalId:       "123",
-		},
-	})
-	print(result)
-}
-
-func testUpdateContact() {
-
-	contactId := "dd7bd45e-d6d3-405c-a7ba-cd4127479c20"
-	name := "hubspot contact 4"
-
-	result, _ := clients.ContactClient.UpsertContact(context.Background(), &contactpb.UpsertContactGrpcRequest{
-		Tenant: tenant,
-		Name:   name,
-		Id:     contactId,
-		ExternalSystemFields: &commonpb.ExternalSystemFields{
-			ExternalSystemId: "hubspot",
-			ExternalId:       "ABC",
-		},
-	})
 	print(result)
 }
 

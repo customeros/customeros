@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
@@ -253,32 +254,27 @@ func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.
 		return nil
 	}
 
-	// update contact
-	tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	upsertContactGrpcRequest := contactpb.UpsertContactGrpcRequest{
-		Id:     contact.Id,
-		Tenant: tenant,
-		SourceFields: &commonpb.SourceFields{
-			Source:    constants.SourceOpenline,
-			AppSource: constants.AppScrapin,
-		},
-	}
-	fieldsMask := make([]contactpb.ContactFieldMask, 0)
+	updateContact := false
+	contactFields := neo4jrepository.ContactFields{}
 	if strings.TrimSpace(contact.FirstName) == "" && scrapinContactResponse.Person.FirstName != "" {
-		upsertContactGrpcRequest.FirstName = scrapinContactResponse.Person.FirstName
-		fieldsMask = append(fieldsMask, contactpb.ContactFieldMask_CONTACT_FIELD_FIRST_NAME)
+		updateContact = true
+		contactFields.FirstName = scrapinContactResponse.Person.FirstName
+		contactFields.UpdateFirstName = true
 	}
 	if strings.TrimSpace(contact.LastName) == "" && scrapinContactResponse.Person.LastName != "" {
-		upsertContactGrpcRequest.LastName = scrapinContactResponse.Person.LastName
-		fieldsMask = append(fieldsMask, contactpb.ContactFieldMask_CONTACT_FIELD_LAST_NAME)
+		updateContact = true
+		contactFields.LastName = scrapinContactResponse.Person.LastName
+		contactFields.UpdateLastName = true
 	}
 	if strings.TrimSpace(contact.ProfilePhotoUrl) == "" && scrapinContactResponse.Person.PhotoUrl != "" {
-		upsertContactGrpcRequest.ProfilePhotoUrl = scrapinContactResponse.Person.PhotoUrl
-		fieldsMask = append(fieldsMask, contactpb.ContactFieldMask_CONTACT_FIELD_PROFILE_PHOTO_URL)
+		updateContact = true
+		contactFields.ProfilePhotoUrl = scrapinContactResponse.Person.PhotoUrl
+		contactFields.UpdateProfilePhotoUrl = true
 	}
 	if strings.TrimSpace(contact.Description) == "" && scrapinContactResponse.Person.Summary != "" {
-		upsertContactGrpcRequest.Description = scrapinContactResponse.Person.Summary
-		fieldsMask = append(fieldsMask, contactpb.ContactFieldMask_CONTACT_FIELD_DESCRIPTION)
+		updateContact = true
+		contactFields.Description = scrapinContactResponse.Person.Summary
+		contactFields.UpdateDescription = true
 	}
 
 	// add location
@@ -288,6 +284,7 @@ func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.
 			tracing.TraceErr(span, errors.Wrap(err, "ExtractAndEnrichLocation"))
 		}
 		if contactLocation != nil {
+			tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 			_, err := subscriptions.CallEventsPlatformGRPCWithRetry[*locationpb.LocationIdGrpcResponse](func() (*locationpb.LocationIdGrpcResponse, error) {
 				return h.grpcClients.ContactClient.AddLocation(ctx, &contactpb.ContactAddLocationGrpcRequest{
 					ContactId: contact.Id,
@@ -326,20 +323,21 @@ func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.
 			}
 			// update timezone on contact
 			if contact.Timezone != "" && contactLocation.TimeZone != "" {
-				upsertContactGrpcRequest.Timezone = contactLocation.TimeZone
-				fieldsMask = append(fieldsMask, contactpb.ContactFieldMask_CONTACT_FIELD_TIMEZONE)
+				updateContact = true
+				contactFields.Timezone = contactLocation.TimeZone
+				contactFields.UpdateTimezone = true
 			}
 		}
 	}
 
-	// update contact
-	if len(fieldsMask) > 0 {
-		upsertContactGrpcRequest.FieldsMask = fieldsMask
-		_, err := subscriptions.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
-			return h.grpcClients.ContactClient.UpsertContact(ctx, &upsertContactGrpcRequest)
+	if updateContact {
+		innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+			Tenant:    tenant,
+			AppSource: constants.AppScrapin,
 		})
+		_, err := h.services.CommonServices.ContactService.SaveContact(innerCtx, &contact.Id, contactFields, "", neo4jmodel.ExternalSystem{})
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "ContactClient.UpsertContact"))
+			tracing.TraceErr(span, errors.Wrap(err, "ContactService.SaveContact"))
 			h.log.Errorf("Error updating contact: %s", err.Error())
 		}
 	}

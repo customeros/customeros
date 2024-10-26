@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/eventstore"
 	eventstoret "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/eventstore"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
@@ -15,60 +14,6 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"testing"
 )
-
-func TestContactService_CreateContact(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx, testDatabase)(t)
-
-	aggregateStore := eventstore.NewTestAggregateStore()
-
-	grpcConnection, err := dialFactory.GetEventsProcessingPlatformConn(testDatabase.Repositories, aggregateStore)
-	if err != nil {
-		t.Fatalf("Failed to connect to emailEvents processing platform: %v", err)
-	}
-	contactClient := contactpb.NewContactGrpcServiceClient(grpcConnection)
-	timeNow := utils.Now()
-	response, err := contactClient.UpsertContact(ctx, &contactpb.UpsertContactGrpcRequest{
-		Tenant:          "ziggy",
-		FirstName:       "Bob",
-		LastName:        "Smith",
-		Prefix:          "Mr.",
-		Description:     "This is a contact description",
-		Timezone:        "America/Los_Angeles",
-		ProfilePhotoUrl: "https://www.google.com",
-		Username:        "bobsmith",
-		AppSource:       "event-processing-platform",
-		Source:          "N/A",
-		SourceOfTruth:   "N/A",
-		CreatedAt:       timestamppb.New(timeNow),
-	})
-	if err != nil {
-		t.Errorf("Failed to create contact: %v", err)
-	}
-	require.NotNil(t, response)
-	eventsMap := aggregateStore.GetEventMap()
-	require.Equal(t, 1, len(eventsMap))
-	eventList := eventsMap[contact.NewContactAggregateWithTenantAndID("ziggy", response.Id).ID]
-	require.Equal(t, 1, len(eventList))
-	require.Equal(t, contactevent.ContactCreateV1, eventList[0].GetEventType())
-	var eventData contactevent.ContactCreateEvent
-	if err := eventList[0].GetJsonData(&eventData); err != nil {
-		t.Errorf("Failed to unmarshal event data: %v", err)
-	}
-	require.Equal(t, "Bob", eventData.FirstName)
-	require.Equal(t, "Smith", eventData.LastName)
-	require.Equal(t, "Mr.", eventData.Prefix)
-	require.Equal(t, "America/Los_Angeles", eventData.Timezone)
-	require.Equal(t, "https://www.google.com", eventData.ProfilePhotoUrl)
-	require.Equal(t, "bobsmith", eventData.Username)
-	require.Equal(t, "event-processing-platform", eventData.AppSource)
-	require.Equal(t, "openline", eventData.Source)
-	require.Equal(t, "openline", eventData.SourceOfTruth)
-	require.Equal(t, timeNow, eventData.CreatedAt)
-	require.Equal(t, timeNow, eventData.UpdatedAt)
-	require.Equal(t, "ziggy", eventData.Tenant)
-
-}
 
 func TestContactService_AddSocial(t *testing.T) {
 	ctx := context.Background()
