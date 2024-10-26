@@ -143,8 +143,7 @@ func (s *contactService) LinkPhoneNumberToContact(ctx context.Context, request *
 
 	agg, err := contact.LoadContactAggregate(ctx, s.services.es, request.Tenant, request.ContactId, *eventstore.NewLoadAggregateOptions())
 	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, s.errResponse(err)
+		agg = contact.NewContactAggregateWithTenantAndID(request.Tenant, request.ContactId)
 	}
 
 	if eventstore.AllowCheckForNoChanges(request.AppSource, request.LoggedInUserId) {
@@ -185,8 +184,7 @@ func (s *contactService) LinkLocationToContact(ctx context.Context, request *con
 
 	agg, err := contact.LoadContactAggregate(ctx, s.services.es, request.Tenant, request.ContactId, *eventstore.NewLoadAggregateOptions())
 	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, s.errResponse(err)
+		agg = contact.NewContactAggregateWithTenantAndID(request.Tenant, request.ContactId)
 	}
 
 	if eventstore.AllowCheckForNoChanges(request.AppSource, request.LoggedInUserId) {
@@ -241,8 +239,7 @@ func (s *contactService) LinkWithOrganization(ctx context.Context, request *cont
 
 	agg, err := contact.LoadContactAggregate(ctx, s.services.es, request.Tenant, request.ContactId, *eventstore.NewLoadAggregateOptions())
 	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, s.errResponse(err)
+		agg = contact.NewContactAggregateWithTenantAndID(request.Tenant, request.ContactId)
 	}
 
 	if eventstore.AllowCheckForNoChanges(request.AppSource, request.LoggedInUserId) {
