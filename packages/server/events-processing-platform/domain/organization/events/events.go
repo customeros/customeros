@@ -23,6 +23,7 @@ const (
 	OrganizationEmailUnlinkV1 = "V1_ORGANIZATION_EMAIL_UNLINK"
 	//Deprecated
 	OrganizationLocationLinkV1 = "V1_ORGANIZATION_LOCATION_LINK"
+	//Deprecated
 	OrganizationLinkDomainV1   = "V1_ORGANIZATION_LINK_DOMAIN"
 	OrganizationUnlinkDomainV1 = "V1_ORGANIZATION_UNLINK_DOMAIN"
 	OrganizationAddSocialV1    = "V1_ORGANIZATION_ADD_SOCIAL"

@@ -84,7 +84,6 @@ func main() {
 	//testRequestGenerateSummaryRequest()
 	//testRequestGenerateActionItemsRequest()
 	//testCreateOrganization()
-	//testLinkDomainToOrganization()
 	//testEnrichOrganization()
 	//testEnrichContact()
 	//testAddSocialToContact()
@@ -125,21 +124,6 @@ func main() {
 	//testCreateReminder()
 	//testUpdateReminder()
 	//testAddBankAccount()
-}
-
-func testLinkDomainToOrganization() {
-	organizationId := "0eb841bb-e48f-4c89-8d3c-47644e521c8f"
-	domain := "openline.ai"
-
-	result, err := clients.OrganizationClient.LinkDomainToOrganization(context.Background(), &organizationpb.LinkDomainToOrganizationGrpcRequest{
-		Tenant:         tenant,
-		OrganizationId: organizationId,
-		Domain:         domain,
-	})
-	if err != nil {
-		log.Fatalf("Failed: %v", err.Error())
-	}
-	log.Printf("Result: %v", result.Id)
 }
 
 func testEnrichOrganization() {

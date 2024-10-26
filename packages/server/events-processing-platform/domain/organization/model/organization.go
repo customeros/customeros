@@ -83,7 +83,6 @@ type Organization struct {
 	PhoneNumbers      map[string]OrganizationPhoneNumber `json:"phoneNumbers"`
 	// Deprecated
 	LocationIds         []string                      `json:"locationIds,omitempty"`
-	Domains             []string                      `json:"domains,omitempty"`
 	Socials             map[string]common.Social      `json:"socials,omitempty"`
 	CustomFields        map[string]CustomField        `json:"customFields,omitempty"`
 	ExternalSystems     []common.ExternalSystem       `json:"externalSystems"`

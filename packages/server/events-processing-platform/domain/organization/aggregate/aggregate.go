@@ -216,9 +216,9 @@ func (a *OrganizationAggregate) When(event eventstore.Event) error {
 	case organizationEvents.OrganizationLocationLinkV1:
 		return a.onLocationLink(event)
 	case organizationEvents.OrganizationLinkDomainV1:
-		return a.onDomainLink(event)
+		return nil
 	case organizationEvents.OrganizationUnlinkDomainV1:
-		return a.onDomainUnlink(event)
+		return nil
 	case organizationEvents.OrganizationAddSocialV1:
 		return a.onAddSocial(event)
 	case organizationEvents.OrganizationRemoveSocialV1:
@@ -518,32 +518,6 @@ func (a *OrganizationAggregate) onPhoneNumberLink(event eventstore.Event) error 
 		Primary: eventData.Primary,
 	}
 	a.Organization.UpdatedAt = eventData.UpdatedAt
-	return nil
-}
-
-func (a *OrganizationAggregate) onDomainLink(event eventstore.Event) error {
-	var eventData organizationEvents.OrganizationLinkDomainEvent
-	if err := event.GetJsonData(&eventData); err != nil {
-		return errors.Wrap(err, "GetJsonData")
-	}
-	if a.Organization.Domains == nil {
-		a.Organization.Domains = []string{}
-	}
-	if !utils.Contains(a.Organization.Domains, strings.TrimSpace(eventData.Domain)) {
-		a.Organization.Domains = append(a.Organization.Domains, strings.TrimSpace(eventData.Domain))
-	}
-	return nil
-}
-
-func (a *OrganizationAggregate) onDomainUnlink(event eventstore.Event) error {
-	var eventData organizationEvents.OrganizationLinkDomainEvent
-	if err := event.GetJsonData(&eventData); err != nil {
-		return errors.Wrap(err, "GetJsonData")
-	}
-	if a.Organization.Domains == nil {
-		a.Organization.Domains = []string{}
-	}
-	utils.RemoveFromList(a.Organization.Domains, eventData.Domain)
 	return nil
 }
 

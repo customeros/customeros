@@ -191,6 +191,7 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		orgevents.OrganizationUpdateRenewalForecastV1,
 		orgevents.OrganizationUpdateBillingDetailsV1,
 		orgevents.OrganizationRequestScrapeByWebsiteV1,
+		orgevents.OrganizationLinkDomainV1,
 		orgevents.OrganizationAdjustIndustryV1,
 		orgevents.OrganizationRequestEnrichV1,
 		contractevent.ContractUpdateStatusV1,
@@ -288,9 +289,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return nil
 	case orgevents.OrganizationLocationLinkV1:
 		_ = s.organizationEventHandler.OnLocationLinkedToOrganization(ctx, evt)
-		return nil
-	case orgevents.OrganizationLinkDomainV1:
-		_ = s.organizationEventHandler.OnDomainLinkedToOrganization(ctx, evt)
 		return nil
 	case orgevents.OrganizationUnlinkDomainV1:
 		_ = s.organizationEventHandler.OnDomainUnlinkedFromOrganization(ctx, evt)

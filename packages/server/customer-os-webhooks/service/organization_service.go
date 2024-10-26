@@ -22,6 +22,7 @@ import (
 	socialpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/social"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+	pkgerrors "github.com/pkg/errors"
 	"strings"
 	"sync"
 	"time"
@@ -354,16 +355,9 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 				continue
 			}
 			if !domainInUse {
-				_, err = CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-					return s.grpcClients.OrganizationClient.LinkDomainToOrganization(ctx, &organizationpb.LinkDomainToOrganizationGrpcRequest{
-						Tenant:         common.GetTenantFromContext(ctx),
-						OrganizationId: organizationId,
-						Domain:         domain,
-						AppSource:      appSource,
-					})
-				})
+				err = s.services.CommonServices.OrganizationService.LinkWithDomain(ctx, nil, organizationId, domain)
 				if err != nil {
-					tracing.TraceErr(span, err, log.String("grpcFunction", "LinkDomainToOrganization"))
+					tracing.TraceErr(span, pkgerrors.Wrapf(err, "failed to link domain %s with organization %s", domain, organizationId))
 				}
 			}
 		}

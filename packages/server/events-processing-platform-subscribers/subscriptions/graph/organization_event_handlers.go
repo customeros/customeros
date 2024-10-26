@@ -31,7 +31,6 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-	"strings"
 	"time"
 )
 
@@ -168,7 +167,7 @@ func (h *OrganizationEventHandler) OnOrganizationCreate(ctx context.Context, evt
 	if eventData.Website != "" {
 		primaryDomain, _ := h.services.CommonServices.DomainService.GetPrimaryDomainForOrganizationWebsite(ctx, eventData.Website)
 		if primaryDomain != "" {
-			err = h.services.CommonServices.OrganizationService.LinkWithDomain(ctx, nil, eventData.Tenant, organizationId, primaryDomain)
+			err = h.services.CommonServices.OrganizationService.LinkWithDomain(ctx, nil, organizationId, primaryDomain)
 		}
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -383,7 +382,7 @@ func (h *OrganizationEventHandler) OnOrganizationUpdate(ctx context.Context, evt
 	if beforeOrganizationEntity.Website != afterOrganizationEntity.Website {
 		primaryDomain, _ := h.services.CommonServices.DomainService.GetPrimaryDomainForOrganizationWebsite(ctx, eventData.Website)
 		if primaryDomain != "" {
-			err = h.services.CommonServices.OrganizationService.LinkWithDomain(ctx, nil, eventData.Tenant, organizationId, primaryDomain)
+			err = h.services.CommonServices.OrganizationService.LinkWithDomain(ctx, nil, organizationId, primaryDomain)
 		}
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -444,42 +443,6 @@ func (h *OrganizationEventHandler) OnLocationLinkedToOrganization(ctx context.Co
 	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, h.grpcClients, utils.NewEventCompletedDetails().WithUpdate())
 
 	return err
-}
-
-func (h *OrganizationEventHandler) OnDomainLinkedToOrganization(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnDomainLinkedToOrganization")
-	defer span.Finish()
-	setEventSpanTagsAndLogFields(span, evt)
-
-	var eventData events.OrganizationLinkDomainEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "evt.GetJsonData")
-	}
-
-	if strings.TrimSpace(eventData.Domain) == "" {
-		return nil
-	}
-
-	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
-
-	if !utils.IsValidTLD(eventData.Domain) {
-		err := errors.New(fmt.Sprintf("Invalid domain: %s", eventData.Domain))
-		err = errors.Wrap(err, "IsValidTLD")
-		tracing.TraceErr(span, err)
-		h.log.Error("Not linked domain to organization %s : %s", organizationId, err.Error())
-		return nil
-	}
-
-	err := h.services.CommonServices.Neo4jRepositories.OrganizationWriteRepository.LinkWithDomain(ctx, nil, eventData.Tenant, organizationId, strings.TrimSpace(eventData.Domain))
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Error("Not linked domain to organization %s : %s", organizationId, err.Error())
-	}
-
-	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, h.grpcClients, utils.NewEventCompletedDetails().WithUpdate())
-
-	return nil
 }
 
 func (h *OrganizationEventHandler) OnDomainUnlinkedFromOrganization(ctx context.Context, evt eventstore.Event) error {

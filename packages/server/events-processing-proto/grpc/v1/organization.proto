@@ -189,15 +189,6 @@ message UnlinkLocationFromBillingProfileGrpcRequest {
   string appSource = 6;
 }
 
-message LinkDomainToOrganizationGrpcRequest {
-  string tenant = 1;
-  string organizationId = 2;
-  string domain = 3;
-  string userId = 4 [deprecated = true];
-  string loggedInUserId = 5;
-  string appSource = 6;
-}
-
 message UnLinkDomainFromOrganizationGrpcRequest {
   string tenant = 1;
   string organizationId = 2;
@@ -380,7 +371,6 @@ service organizationGrpcService {
   rpc EnrichOrganization(EnrichOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc LinkPhoneNumberToOrganization(LinkPhoneNumberToOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc LinkLocationToOrganization(LinkLocationToOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
-  rpc LinkDomainToOrganization(LinkDomainToOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc UnlinkDomainFromOrganization(UnLinkDomainFromOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc UpsertCustomFieldToOrganization(CustomFieldForOrganizationGrpcRequest) returns (CustomFieldIdGrpcResponse);
   rpc ShowOrganization(OrganizationIdGrpcRequest) returns (OrganizationIdGrpcResponse);

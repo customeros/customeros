@@ -134,8 +134,6 @@ func (s *OrganizationEnrichSubscriber) When(ctx context.Context, evt eventstore.
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()), log.String("EventType", evt.GetEventType()))
 
 	switch evt.GetEventType() {
-	case orgevts.OrganizationLinkDomainV1:
-		return s.organizationEventHandler.EnrichOrganizationByDomain(ctx, evt)
 	case orgevts.OrganizationRequestEnrichV1:
 		return s.organizationEventHandler.EnrichOrganizationByRequest(ctx, evt)
 	default:

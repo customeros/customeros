@@ -73,23 +73,6 @@ func NewOrganizationEventHandler(services *service.Services, log logger.Logger, 
 	}
 }
 
-func (h *organizationEventHandler) EnrichOrganizationByDomain(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.EnrichOrganizationByDomain")
-	defer span.Finish()
-	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
-
-	var eventData events.OrganizationLinkDomainEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "evt.GetJsonData")
-	}
-	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
-	span.SetTag(tracing.SpanTagEntityId, organizationId)
-	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
-
-	return h.enrichOrganization(ctx, eventData.Tenant, organizationId, eventData.Domain)
-}
-
 func (h *organizationEventHandler) EnrichOrganizationByRequest(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.EnrichOrganizationByRequest")
 	defer span.Finish()

@@ -127,27 +127,6 @@ func (s *organizationService) LinkLocationToOrganization(ctx context.Context, re
 	return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
 }
 
-func (s *organizationService) LinkDomainToOrganization(ctx context.Context, request *organizationpb.LinkDomainToOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
-	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.LinkDomainToOrganization")
-	defer span.Finish()
-	tracing.SetServiceSpanTags(ctx, span, request.Tenant, utils.StringFirstNonEmpty(request.LoggedInUserId, request.LoggedInUserId))
-	tracing.LogObjectAsJson(span, "request", request)
-
-	// handle deadlines
-	if err := ctx.Err(); err != nil {
-		return nil, status.Error(codes.Canceled, "Context canceled")
-	}
-
-	cmd := command.NewLinkDomainCommand(request.OrganizationId, request.Tenant, request.Domain, utils.StringFirstNonEmpty(request.LoggedInUserId, request.UserId), request.AppSource)
-	if err := s.organizationCommands.LinkDomainCommand.Handle(ctx, cmd); err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("Tenant:{%s}, organization ID: {%s}, err: {%v}", request.Tenant, request.OrganizationId, err)
-		return nil, s.errResponse(err)
-	}
-
-	return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
-}
-
 func (s *organizationService) UnlinkDomainFromOrganization(ctx context.Context, request *organizationpb.UnLinkDomainFromOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.UnlinkDomainFromOrganization")
 	defer span.Finish()

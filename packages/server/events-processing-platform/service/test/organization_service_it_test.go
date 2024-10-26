@@ -110,43 +110,6 @@ func TestOrganizationsService_UpsertOrganization_NewOrganization(t *testing.T) {
 	require.Equal(t, "Email", eventData.LeadSource)
 }
 
-func TestOrganizationsService_LinkDomain(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx, testDatabase)(t)
-
-	aggregateStore := eventstore.NewTestAggregateStore()
-	grpcConnection, err := dialFactory.GetEventsProcessingPlatformConn(testDatabase.Repositories, aggregateStore)
-	if err != nil {
-		t.Fatalf("Failed to connect to processing platform: %v", err)
-	}
-	organizationClient := organizationpb.NewOrganizationGrpcServiceClient(grpcConnection)
-	organizationId := uuid.New().String()
-	domain := "openline.ai"
-	tenant := "ziggy"
-	response, err := organizationClient.LinkDomainToOrganization(ctx, &organizationpb.LinkDomainToOrganizationGrpcRequest{
-		Tenant:         tenant,
-		OrganizationId: organizationId,
-		Domain:         domain,
-	})
-	if err != nil {
-		t.Errorf("Failed to link domain: %v", err)
-	}
-	require.NotNil(t, response)
-	eventsMap := aggregateStore.GetEventMap()
-	require.Equal(t, 1, len(eventsMap))
-	aggregate := orgaggregate.NewOrganizationAggregateWithTenantAndID(tenant, response.Id)
-	eventList := eventsMap[aggregate.ID]
-	require.Equal(t, 1, len(eventList))
-	require.Equal(t, orgevents.OrganizationLinkDomainV1, eventList[0].GetEventType())
-	require.Equal(t, string(orgaggregate.OrganizationAggregateType)+"-"+tenant+"-"+organizationId, eventList[0].GetAggregateID())
-	var eventData orgevents.OrganizationLinkDomainEvent
-	if err := eventList[0].GetJsonData(&eventData); err != nil {
-		t.Errorf("Failed to unmarshal event data: %v", err)
-	}
-	require.Equal(t, tenant, eventData.Tenant)
-	require.Equal(t, domain, eventData.Domain)
-}
-
 func TestOrganizationsService_UnlinkDomain(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)

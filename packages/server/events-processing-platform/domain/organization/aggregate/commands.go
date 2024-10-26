@@ -3,11 +3,9 @@ package aggregate
 import (
 	"context"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
+	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
-	"strings"
-
-	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command"
@@ -209,8 +207,6 @@ func (a *OrganizationAggregate) HandleCommand(ctx context.Context, cmd eventstor
 	defer span.Finish()
 
 	switch c := cmd.(type) {
-	case *command.LinkDomainCommand:
-		return a.linkDomain(ctx, c)
 	case *command.ShowOrganizationCommand:
 		return a.showOrganization(ctx, c)
 	case *command.UpsertCustomFieldCommand:
@@ -395,36 +391,6 @@ func (a *OrganizationAggregate) linkLocation(ctx context.Context, cmd *command.L
 	}
 
 	eventstore.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
-
-	return a.Apply(event)
-}
-
-func (a *OrganizationAggregate) linkDomain(ctx context.Context, cmd *command.LinkDomainCommand) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.linkDomain")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
-	tracing.LogObjectAsJson(span, "command", cmd)
-
-	if eventstore.AllowCheckForNoChanges(cmd.AppSource, cmd.LoggedInUserId) {
-		if utils.Contains(a.Organization.Domains, strings.TrimSpace(cmd.Domain)) {
-			span.SetTag(tracing.SpanTagRedundantEventSkipped, true)
-			return nil
-		}
-	}
-
-	event, err := organizationEvents.NewOrganizationLinkDomainEvent(a, cmd.Domain)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewOrganizationLinkDomainEvent")
-	}
-
-	eventstore.EnrichEventWithMetadataExtended(&event, span, eventstore.EventMetadata{
-		Tenant: a.GetTenant(),
-		UserId: cmd.LoggedInUserId,
-		App:    cmd.AppSource,
-	})
 
 	return a.Apply(event)
 }

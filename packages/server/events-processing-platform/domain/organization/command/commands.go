@@ -36,20 +36,6 @@ func NewLinkLocationCommand(organizationId, tenant, userId, locationId string) *
 	}
 }
 
-type LinkDomainCommand struct {
-	eventstore.BaseCommand
-	Domain    string
-	AppSource string
-}
-
-func NewLinkDomainCommand(objectID, tenant, domain, loggedInUserId, appSource string) *LinkDomainCommand {
-	return &LinkDomainCommand{
-		BaseCommand: eventstore.NewBaseCommand(objectID, tenant, loggedInUserId),
-		Domain:      domain,
-		AppSource:   appSource,
-	}
-}
-
 type ShowOrganizationCommand struct {
 	eventstore.BaseCommand
 }
