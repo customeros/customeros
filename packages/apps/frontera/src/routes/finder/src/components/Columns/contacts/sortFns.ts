@@ -12,9 +12,8 @@ export const getContactSortFn = (columnId: string) =>
     .with(
       ColumnViewType.ContactsOrganization,
       () => (row: ContactStore) =>
-        row.value?.organizations?.content?.[0]?.name
-          ?.trim()
-          .toLocaleLowerCase() || null,
+        row.value?.latestOrganizationWithJobRole?.organization?.name.toLowerCase() ||
+        null,
     )
     .with(
       ColumnViewType.ContactsCity,
