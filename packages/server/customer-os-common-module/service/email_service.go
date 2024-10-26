@@ -113,6 +113,11 @@ func (s *emailService) Merge(ctx context.Context, tenant string, emailFields Ema
 			tracing.TraceErr(span, errors.Wrap(err, "failed to upsert email"))
 		}
 
+		// send email event to rabbit mq
+		err = s.services.RabbitMQService.Publish(ctx, emailId, commonmodel.NodeLabelEmail, dto.NewRegisterEmailEvent(emailFields.Email, emailFields.Source.String()))
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "unable to publish message AddEmailEvent"))
+		}
 	} else {
 		span.LogFields(log.Bool("email.created", false))
 	}
@@ -197,16 +202,6 @@ func (s *emailService) linkEmail(ctx context.Context, emailId, email, appSource 
 		common.SetAppSourceInContext(ctx, appSource)
 	}
 
-	// check if email is already linked to entity, if so, skip linking
-	alreadyLinked, err := s.services.Neo4jRepositories.EmailReadRepository.IsLinkedToEntityByEmailAddress(ctx, tenant, emailId, linkWith.Id, linkWith.Type)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to check if email is already linked to entity"))
-	}
-	if alreadyLinked {
-		span.LogFields(log.Bool("email.alreadyLinked", true))
-		return nil
-	}
-
 	// check linked entity exists
 	exists, err := s.services.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, tenant, linkWith.Id, linkWith.Type.Neo4jLabel())
 	if err != nil {
@@ -219,8 +214,26 @@ func (s *emailService) linkEmail(ctx context.Context, emailId, email, appSource 
 		return err
 	}
 
+	// check if email is already linked to entity, if so, skip linking
+	alreadyLinked, err := s.services.Neo4jRepositories.EmailReadRepository.IsLinkedToEntityByEmailAddress(ctx, tenant, emailId, linkWith.Id, linkWith.Type)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to check if email is already linked to entity"))
+	}
+	if alreadyLinked {
+		span.LogFields(log.Bool("email.alreadyLinked", true))
+		return nil
+	}
+
 	switch linkWith.Type.String() {
 	case commonmodel.CONTACT.String():
+		// if contact has no emails yet, set this one as primary
+		dbResults, err := s.services.Neo4jRepositories.EmailReadRepository.GetAllEmailNodesForLinkedEntityIds(ctx, tenant, commonmodel.CONTACT, []string{linkWith.Id})
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to get all emails for contact"))
+		} else if len(dbResults) == 0 {
+			span.LogFields(log.Bool("firstEmailForContact", true))
+			primary = true
+		}
 		err = s.services.Neo4jRepositories.EmailWriteRepository.LinkWithContact(ctx, tenant, linkWith.Id, emailId, primary)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "EmailWriteRepository.LinkWithContact"))
@@ -244,7 +257,7 @@ func (s *emailService) linkEmail(ctx context.Context, emailId, email, appSource 
 	}
 
 	// publish event to rabbit mq
-	err = s.services.RabbitMQService.Publish(ctx, linkWith.Id, linkWith.Type, dto.NewAddEmailEvent(email))
+	err = s.services.RabbitMQService.Publish(ctx, linkWith.Id, linkWith.Type, dto.NewAddEmailEvent(email, primary))
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message AddEmailEvent"))
 	}

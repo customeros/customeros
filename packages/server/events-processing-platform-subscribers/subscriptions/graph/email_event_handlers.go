@@ -113,7 +113,7 @@ func (h *EmailEventHandler) OnEmailValidatedV2(ctx context.Context, evt eventsto
 		}
 
 		// add alternate email for linked organizations
-		for _, organizationDbNode := range contactsDbNodes {
+		for _, organizationDbNode := range organizationDbNodes {
 			organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
 			innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
 				Tenant:    eventData.Tenant,
