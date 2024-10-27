@@ -48,10 +48,10 @@ const theme: EditorThemeClasses = {
   list: {
     ulDepth: [
       'p-0 m-0 list-outside',
-      'p-0 m-0 list-outside list-circle',
+      'p-0 m-0 list-outside list-[circle]',
       'p-0 m-0 list-outside list-square',
       'p-0 m-0 list-outside list-disc',
-      'p-0 m-0 list-outside list-circle',
+      'p-0 m-0 list-outside list-[circle]',
     ],
     nested: {
       listitem: 'editor__nestedListItem',
