@@ -128,7 +128,7 @@ function HashtagsTypeaheadMenuItem({
       tabIndex={-1}
       role='option'
       key={option.key}
-      onClick={onClick}
+      onMouseDown={onClick}
       ref={option.setRefElement}
       aria-selected={isSelected}
       onMouseEnter={onMouseEnter}
@@ -225,10 +225,7 @@ export default function NewHashtagsPlugin({
       ) =>
         anchorElementRef.current
           ? ReactDOM.createPortal(
-              <div
-                data-side='bottom'
-                className='relative bg-white min-w-[250px] py-1.5 px-[6px] shadow-lg border rounded-md data-[side=top]:animate-slideDownAndFade data-[side=right]:animate-slideLeftAndFade data-[side=bottom]:animate-slideUpAndFade data-[side=left]:animate-slideRightAndFade z-50'
-              >
+              <div className='relative bg-white min-w-[250px] py-1.5 px-[6px] shadow-lg border rounded-md z-50'>
                 <ul>
                   {_options.map((option, i: number) => (
                     <HashtagsTypeaheadMenuItem
