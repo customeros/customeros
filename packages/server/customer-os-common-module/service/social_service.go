@@ -90,6 +90,14 @@ func (s *socialService) MergeSocialWithEntity(ctx context.Context, linkWith Link
 	}
 	tenant := common.GetTenantFromContext(ctx)
 
+	// validate social url
+	if socialEntity.Url == "" {
+		err = errors.New("social url is required")
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+
+	// get or generate social id
 	socialId := socialEntity.Id
 	if socialId == "" {
 		socialId, err = s.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelSocial)
