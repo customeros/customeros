@@ -310,9 +310,6 @@ export class OpportunitiesKanbanPage {
     expect(await this.page.isEnabled(this.winRateConfirm)).toBe(true);
     await this.page.locator(this.winRateConfirm).click();
     await this.page.waitForTimeout(3000);
-    // await this.page.dispatchEvent(this.winRateConfirm, 'click');
-
-    // await this.clickConfirm();
   }
 
   private async clickConfirm() {
@@ -349,6 +346,8 @@ export class OpportunitiesKanbanPage {
     const opportunityName = randomUUID();
 
     expect(1, 'opportunityName: ' + opportunityName).toBe(1);
+
+    await this.page.waitForTimeout(3000);
 
     const requestPromise = createRequestPromise(
       this.page,

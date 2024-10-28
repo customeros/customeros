@@ -66,6 +66,8 @@ export class OrganizationPeoplePage {
   }
 
   async addNameToContact() {
+    await this.page.waitForTimeout(3000);
+
     const orgPeopleContactNameInput = this.page.locator(
       this.orgPeopleContactName,
     );
@@ -80,7 +82,7 @@ export class OrganizationPeoplePage {
     );
 
     await orgPeopleContactNameInput.pressSequentially(contactName, {
-      delay: 500,
+      delay: 200,
     });
 
     const [_, response] = await Promise.all([requestPromise, responsePromise]);
