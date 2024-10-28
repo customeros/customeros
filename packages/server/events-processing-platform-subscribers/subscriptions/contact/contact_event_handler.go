@@ -8,6 +8,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -254,6 +255,11 @@ func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.
 		return nil
 	}
 
+	innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+		Tenant:    tenant,
+		AppSource: constants.AppScrapin,
+	})
+
 	updateContact := false
 	contactFields := neo4jrepository.ContactFields{}
 	if strings.TrimSpace(contact.FirstName) == "" && scrapinContactResponse.Person.FirstName != "" {
@@ -331,10 +337,6 @@ func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.
 	}
 
 	if updateContact {
-		innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
-			Tenant:    tenant,
-			AppSource: constants.AppScrapin,
-		})
 		_, err := h.services.CommonServices.ContactService.SaveContact(innerCtx, &contact.Id, contactFields, "", neo4jmodel.ExternalSystem{})
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "ContactService.SaveContact"))
@@ -383,7 +385,11 @@ func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.
 			}
 		}
 
-		_, err = h.services.CommonServices.SocialService.MergeSocialWithEntity(ctx, tenant, contact.Id, model.CONTACT,
+		_, err = h.services.CommonServices.SocialService.MergeSocialWithEntity(innerCtx,
+			commonService.LinkWith{
+				Id:   contact.Id,
+				Type: model.CONTACT,
+			},
 			neo4jentity.SocialEntity{
 				Id:             socialId,
 				Url:            url,

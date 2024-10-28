@@ -14,7 +14,7 @@ import (
 func Handle_FlowComputeParticipantsRequirements(ctx context.Context, services *service.Services, input any) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "Listeners.FlowComputeParticipantsRequirements")
 	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.SetDefaultListenerSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "input", input)
 
 	message := input.(*events.Event)

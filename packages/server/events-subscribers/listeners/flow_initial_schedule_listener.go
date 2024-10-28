@@ -15,7 +15,7 @@ import (
 func Handle_FlowInitialSchedule(ctx context.Context, services *service.Services, input any) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "Listeners.Handle_FlowInitialSchedule")
 	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.SetDefaultListenerSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "input", input)
 
 	message := input.(*events.Event)

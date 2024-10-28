@@ -153,6 +153,10 @@ func SetDefaultServiceSpanTags(ctx context.Context, span opentracing.Span) {
 	setDefaultSpanTags(ctx, span)
 	span.SetTag(SpanTagComponent, constants.ComponentService)
 }
+func SetDefaultListenerSpanTags(ctx context.Context, span opentracing.Span) {
+	setDefaultSpanTags(ctx, span)
+	span.SetTag(SpanTagComponent, constants.ComponentListener)
+}
 func SetDefaultNeo4jRepositorySpanTags(ctx context.Context, span opentracing.Span) {
 	setDefaultSpanTags(ctx, span)
 	TagComponentNeo4jRepository(span)

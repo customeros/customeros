@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -23,7 +24,7 @@ type SocialService interface {
 	Update(ctx context.Context, tenant string, entity neo4jentity.SocialEntity) (*neo4jentity.SocialEntity, error)
 	GetAllForEntities(ctx context.Context, tenant string, linkedEntityType model.EntityType, linkedEntityIds []string) (*neo4jentity.SocialEntities, error)
 	Remove(ctx context.Context, tenant, socialId string) error
-	MergeSocialWithEntity(ctx context.Context, tenant, linkedEntityId string, linkedEntityType model.EntityType, socialEntity neo4jentity.SocialEntity) (string, error)
+	MergeSocialWithEntity(ctx context.Context, linkWith LinkWith, socialEntity neo4jentity.SocialEntity) (string, error)
 }
 
 type socialService struct {
@@ -78,25 +79,40 @@ func (s *socialService) Remove(ctx context.Context, tenant string, socialId stri
 	return s.services.Neo4jRepositories.SocialWriteRepository.PermanentlyDelete(ctx, tenant, socialId)
 }
 
-func (s *socialService) MergeSocialWithEntity(ctx context.Context, tenant, linkedEntityId string, linkedEntityType model.EntityType, socialEntity neo4jentity.SocialEntity) (string, error) {
+func (s *socialService) MergeSocialWithEntity(ctx context.Context, linkWith LinkWith, socialEntity neo4jentity.SocialEntity) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialService.MergeSocialWithEntity")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("linkedEntityId", linkedEntityId), log.String("linkedEntityType", string(linkedEntityType)))
+	span.LogFields(log.String("linkWith.id", linkWith.Id), log.String("linkWith.type", string(linkWith.Type)))
 
-	if tenant == "" {
-		tenant = common.GetTenantFromContext(ctx)
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", err
 	}
+	tenant := common.GetTenantFromContext(ctx)
 
 	socialId := socialEntity.Id
 	if socialId == "" {
-		var err error
 		socialId, err = s.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelSocial)
 		if err != nil {
 			return "", err
 		}
 	}
 	tracing.TagEntity(span, socialId)
+
+	// validate linked entity exists
+	exists, err := s.services.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, tenant, linkWith.Id, linkWith.Type.Neo4jLabel())
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to check linked entity exists"))
+		return "", err
+	}
+	if !exists {
+		err = errors.Errorf("linked entity %s with id %s not found", linkWith.Type.String(), linkWith.Id)
+		tracing.TraceErr(span, err)
+		return "", err
+	}
 
 	// save social to neo4j
 	data := neo4jrepository.SocialFields{
@@ -111,19 +127,20 @@ func (s *socialService) MergeSocialWithEntity(ctx context.Context, tenant, linke
 			AppSource: neo4jmodel.GetAppSource(socialEntity.AppSource),
 		},
 	}
-	err := s.services.Neo4jRepositories.SocialWriteRepository.MergeSocialForEntity(ctx, tenant, linkedEntityId, linkedEntityType.Neo4jLabel(), data)
+	err = s.services.Neo4jRepositories.SocialWriteRepository.MergeSocialForEntity(ctx, tenant, linkWith.Id, linkWith.Type.Neo4jLabel(), data)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return "", err
 	}
 
 	// send event to event store
-	if linkedEntityType == model.CONTACT {
+	// TODO alexb remove the call
+	if linkWith.Type == model.CONTACT {
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 		_, err = utils.CallEventsPlatformGRPCWithRetry[*socialpb.SocialIdGrpcResponse](func() (*socialpb.SocialIdGrpcResponse, error) {
 			return s.services.GrpcClients.ContactClient.AddSocial(ctx, &contactpb.ContactAddSocialGrpcRequest{
 				Tenant:         tenant,
-				ContactId:      linkedEntityId,
+				ContactId:      linkWith.Id,
 				LoggedInUserId: common.GetUserIdFromContext(ctx),
 				SourceFields: &commonpb.SourceFields{
 					Source:    neo4jmodel.GetSource(socialEntity.Source.String()),
@@ -141,6 +158,29 @@ func (s *socialService) MergeSocialWithEntity(ctx context.Context, tenant, linke
 			tracing.TraceErr(span, errors.Wrap(err, "error while sending event"))
 			return socialId, err
 		}
+	}
+
+	switch linkWith.Type {
+	case model.CONTACT:
+		err = s.services.RabbitMQService.Publish(ctx, linkWith.Id, model.CONTACT, dto.AddSocialToContact{
+			SocialId: socialId,
+			Social:   socialEntity.Url,
+		})
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "unable to publish message AddSocialToContact"))
+		}
+
+		utils.EventCompleted(ctx, tenant, model.CONTACT.String(), linkWith.Id, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
+	case model.ORGANIZATION:
+		err = s.services.RabbitMQService.Publish(ctx, linkWith.Id, model.ORGANIZATION, dto.AddSocialToOrganization{
+			SocialId: socialId,
+			Social:   socialEntity.Url,
+		})
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "unable to publish message AddSocialToOrganization"))
+		}
+
+		utils.EventCompleted(ctx, tenant, model.ORGANIZATION.String(), linkWith.Id, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
 	}
 
 	return socialId, nil

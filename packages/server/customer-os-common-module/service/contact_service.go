@@ -125,7 +125,11 @@ func (s *contactService) SaveContact(ctx context.Context, id *string, contactFie
 	}
 
 	if createFlow && socialUrl != "" {
-		_, err := s.services.SocialService.MergeSocialWithEntity(ctx, tenant, contactId, model.CONTACT,
+		_, err := s.services.SocialService.MergeSocialWithEntity(ctx,
+			LinkWith{
+				Id:   contactId,
+				Type: model.CONTACT,
+			},
 			neo4jentity.SocialEntity{
 				Url:       socialUrl,
 				Source:    neo4jentity.DecodeDataSource(contactFields.SourceFields.Source),

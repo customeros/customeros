@@ -592,7 +592,10 @@ func (r *mutationResolver) ContactAddSocial(ctx context.Context, contactID strin
 	span.LogKV("request.contactID", contactID)
 	tracing.LogObjectAsJson(span, "request.input", input)
 
-	socialId, err := r.Services.CommonServices.SocialService.MergeSocialWithEntity(ctx, common.GetTenantFromContext(ctx), contactID, commonmodel.CONTACT,
+	socialId, err := r.Services.CommonServices.SocialService.MergeSocialWithEntity(ctx, commonService.LinkWith{
+		Id:   contactID,
+		Type: commonmodel.CONTACT,
+	},
 		neo4jentity.SocialEntity{
 			Url:       input.URL,
 			Source:    neo4jentity.DataSourceOpenline,
