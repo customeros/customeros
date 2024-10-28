@@ -8,6 +8,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	postgresrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	"strings"
 	"time"
 
@@ -839,15 +840,21 @@ func (r *mutationResolver) ContactFindWorkEmail(ctx context.Context, contactID s
 	}
 
 	if emailLinked {
-		_, err = r.Services.CommonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, common.GetTenantFromContext(ctx), postgresentity.BillableEventEnrichPersonEmailFound, "", enrichmentResponse.Data.Id,
-			fmt.Sprintf("Email: %s, LinkedIn: %s, FirstName: %s, LastName: %s", emailsToCreateAndLinkWithContact[0], linkedInUrl, firstName, lastName))
+		_, err = r.Services.CommonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, common.GetTenantFromContext(ctx), postgresentity.BillableEventEnrichPersonEmailFound,
+			postgresrepository.BillableEventDetails{
+				ExternalID:    enrichmentResponse.Data.Id,
+				ReferenceData: fmt.Sprintf("Email: %s, LinkedIn: %s, FirstName: %s, LastName: %s", emailsToCreateAndLinkWithContact[0], linkedInUrl, firstName, lastName),
+			})
 		if err != nil {
 			tracing.TraceErr(span, pkgerrors.Wrap(err, "failed to store billable event"))
 		}
 	}
 	if phoneLinked {
-		_, err = r.Services.CommonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, common.GetTenantFromContext(ctx), postgresentity.BillableEventEnrichPersonPhoneFound, "", enrichmentResponse.Data.Id,
-			fmt.Sprintf("Phone: %s, LinkedIn: %s, FirstName: %s, LastName: %s", phoneNumbers[0], linkedInUrl, firstName, lastName))
+		_, err = r.Services.CommonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, common.GetTenantFromContext(ctx), postgresentity.BillableEventEnrichPersonPhoneFound,
+			postgresrepository.BillableEventDetails{
+				ExternalID:    enrichmentResponse.Data.Id,
+				ReferenceData: fmt.Sprintf("Phone: %s, LinkedIn: %s, FirstName: %s, LastName: %s", phoneNumbers[0], linkedInUrl, firstName, lastName),
+			})
 		if err != nil {
 			tracing.TraceErr(span, pkgerrors.Wrap(err, "failed to store billable event"))
 		}

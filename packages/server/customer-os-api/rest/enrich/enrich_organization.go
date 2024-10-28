@@ -13,6 +13,7 @@ import (
 	commontracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	postgresrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	enrichmentmodel "github.com/openline-ai/openline-customer-os/packages/server/enrichment-api/model"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -227,8 +228,10 @@ func EnrichOrganization(services *service.Services) gin.HandlerFunc {
 		}
 
 		if enrichOrganizationApiResponse.Success == true {
-			_, err = services.CommonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, tenant, postgresentity.BillableEventEnrichOrganizationSuccess, "", "",
-				fmt.Sprintf("LinkedIn URL: %s, Domain: %s", linkedinUrl, domain))
+			_, err = services.CommonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, tenant, postgresentity.BillableEventEnrichOrganizationSuccess,
+				postgresrepository.BillableEventDetails{
+					ReferenceData: fmt.Sprintf("LinkedIn URL: %s, Domain: %s", linkedinUrl, domain),
+				})
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "failed to register billable event"))
 			}

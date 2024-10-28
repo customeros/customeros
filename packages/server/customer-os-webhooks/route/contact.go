@@ -11,6 +11,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	postgresrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/errors"
@@ -207,13 +208,21 @@ func syncBetterContactResponse(cfg *config.Config, services *service.Services, l
 					}
 				}
 				if emailFound {
-					_, err = services.CommonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, personEnrichmentRequest.Tenant, entity.BillableEventEnrichPersonEmailFound, "", personEnrichmentRequest.BettercontactRecordId, "generated in webhooks")
+					_, err = services.CommonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, personEnrichmentRequest.Tenant, entity.BillableEventEnrichPersonEmailFound,
+						postgresrepository.BillableEventDetails{
+							ExternalID:    personEnrichmentRequest.BettercontactRecordId,
+							ReferenceData: "generated in webhooks",
+						})
 					if err != nil {
 						tracing.TraceErr(span, pkgerrors.Wrap(err, "failed to store billable event"))
 					}
 				}
 				if phoneFound {
-					_, err = services.CommonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, personEnrichmentRequest.Tenant, entity.BillableEventEnrichPersonPhoneFound, "", personEnrichmentRequest.BettercontactRecordId, "generated in webhooks")
+					_, err = services.CommonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, personEnrichmentRequest.Tenant, entity.BillableEventEnrichPersonPhoneFound,
+						postgresrepository.BillableEventDetails{
+							ExternalID:    personEnrichmentRequest.BettercontactRecordId,
+							ReferenceData: "generated in webhooks",
+						})
 					if err != nil {
 						tracing.TraceErr(span, pkgerrors.Wrap(err, "failed to store billable event"))
 					}

@@ -21,6 +21,7 @@ import (
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	postgresrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	enrichmentmodel "github.com/openline-ai/openline-customer-os/packages/server/enrichment-api/model"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
@@ -897,15 +898,23 @@ func (s *contactService) EnrichWithWorkEmailFromBetterContact() {
 		}
 
 		if emailLinked {
-			_, err = s.commonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(innerCtx, record.Tenant, postgresentity.BillableEventEnrichPersonEmailFound, "", betterContactResponse.Id,
-				fmt.Sprintf("Email: %s, LinkedIn: %s, FirstName: %s, LastName: %s", emailForBillableEvent, detailsBetterContact.ContactLinkedInUrl, detailsBetterContact.ContactFirstName, detailsBetterContact.ContactLastName))
+			_, err = s.commonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(innerCtx, record.Tenant, postgresentity.BillableEventEnrichPersonEmailFound,
+				postgresrepository.BillableEventDetails{
+					ExternalID:    betterContactResponse.Id,
+					ReferenceData: fmt.Sprintf("Email: %s, LinkedIn: %s, FirstName: %s, LastName: %s", emailForBillableEvent, detailsBetterContact.ContactLinkedInUrl, detailsBetterContact.ContactFirstName, detailsBetterContact.ContactLastName),
+				},
+			)
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "failed to store billable event"))
 			}
 		}
 		if phoneLinked {
-			_, err = s.commonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(innerCtx, record.Tenant, postgresentity.BillableEventEnrichPersonPhoneFound, "", betterContactResponse.Id,
-				fmt.Sprintf("Phone: %s, LinkedIn: %s, FirstName: %s, LastName: %s", phoneNumberForBillableEvent, detailsBetterContact.ContactLinkedInUrl, detailsBetterContact.ContactFirstName, detailsBetterContact.ContactLastName))
+			_, err = s.commonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(innerCtx, record.Tenant, postgresentity.BillableEventEnrichPersonPhoneFound,
+				postgresrepository.BillableEventDetails{
+					ExternalID:    betterContactResponse.Id,
+					ReferenceData: fmt.Sprintf("Phone: %s, LinkedIn: %s, FirstName: %s, LastName: %s", phoneNumberForBillableEvent, detailsBetterContact.ContactLinkedInUrl, detailsBetterContact.ContactFirstName, detailsBetterContact.ContactLastName),
+				},
+			)
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "failed to store billable event"))
 			}
@@ -991,13 +1000,21 @@ func (s *contactService) checkBetterContactRequestsWithoutResponse(ctx context.C
 					}
 				}
 				if emailFound {
-					_, err = s.commonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, personEnrichmentRequest.Tenant, postgresentity.BillableEventEnrichPersonEmailFound, "", personEnrichmentRequest.BettercontactRecordId, "generated in upkeeper")
+					_, err = s.commonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, personEnrichmentRequest.Tenant, postgresentity.BillableEventEnrichPersonEmailFound,
+						postgresrepository.BillableEventDetails{
+							ExternalID:    personEnrichmentRequest.BettercontactRecordId,
+							ReferenceData: "generated in upkeeper",
+						})
 					if err != nil {
 						tracing.TraceErr(span, errors.Wrap(err, "failed to store billable event"))
 					}
 				}
 				if phoneFound {
-					_, err = s.commonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, personEnrichmentRequest.Tenant, postgresentity.BillableEventEnrichPersonPhoneFound, "", personEnrichmentRequest.BettercontactRecordId, "generated in upkeeper")
+					_, err = s.commonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, personEnrichmentRequest.Tenant, postgresentity.BillableEventEnrichPersonPhoneFound,
+						postgresrepository.BillableEventDetails{
+							ExternalID:    personEnrichmentRequest.BettercontactRecordId,
+							ReferenceData: "generated in upkeeper",
+						})
 					if err != nil {
 						tracing.TraceErr(span, errors.Wrap(err, "failed to store billable event"))
 					}

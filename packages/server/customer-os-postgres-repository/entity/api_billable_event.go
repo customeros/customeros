@@ -13,6 +13,7 @@ const (
 	BillableEventEnrichPersonPhoneFound    BillableEvent = "enrich_person_phone_found"
 	BillableEventEnrichOrganizationSuccess BillableEvent = "enrich_organization_success"
 	BillableEventIpVerificationSuccess     BillableEvent = "ip_verification_success"
+	BillableEventFlowActionExecuted        BillableEvent = "flow_action"
 )
 
 // ApiBillableEvent represents a chargeable event in your system
@@ -21,6 +22,7 @@ type ApiBillableEvent struct {
 	Tenant        string        `gorm:"column:tenant;type:varchar(255);NOT NULL" json:"tenant"`
 	Event         BillableEvent `gorm:"column:event;type:varchar(255);NOT NULL;index:idx_tenant_event" json:"event"`
 	Subtype       string        `gorm:"column:subtype;type:varchar(255)" json:"subtype,omitempty"`
+	Source        string        `gorm:"column:source;type:varchar(255)" json:"source,omitempty"`
 	ExternalID    string        `gorm:"column:external_id;type:varchar(255);index" json:"externalId"`
 	ReferenceData string        `gorm:"column:reference_data;type:text" json:"referenceData,omitempty"`
 	CreatedAt     time.Time     `gorm:"column:created_at;type:timestamp;DEFAULT:current_timestamp" json:"createdAt"`

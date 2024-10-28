@@ -14,6 +14,7 @@ import (
 	commontracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	postgresrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	enrichmentmodel "github.com/openline-ai/openline-customer-os/packages/server/enrichment-api/model"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -297,15 +298,21 @@ func EnrichPerson(services *service.Services) gin.HandlerFunc {
 				}
 			}
 			if emailFound {
-				_, err = services.CommonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, tenant, postgresentity.BillableEventEnrichPersonEmailFound, "", betterContactResponseBody.Id,
-					fmt.Sprintf("Email: %s, LinkedIn: %s, FirstName: %s, LastName: %s", email, linkedinUrl, firstName, lastName))
+				_, err = services.CommonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, tenant, postgresentity.BillableEventEnrichPersonEmailFound,
+					postgresrepository.BillableEventDetails{
+						ExternalID:    betterContactResponseBody.Id,
+						ReferenceData: fmt.Sprintf("Email: %s, LinkedIn: %s, FirstName: %s, LastName: %s", email, linkedinUrl, firstName, lastName),
+					})
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "failed to store billable event"))
 				}
 			}
 			if phoneFound {
-				_, err = services.CommonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, tenant, postgresentity.BillableEventEnrichPersonPhoneFound, "", betterContactResponseBody.Id,
-					fmt.Sprintf("Email: %s, LinkedIn: %s, FirstName: %s, LastName: %s", email, linkedinUrl, firstName, lastName))
+				_, err = services.CommonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, tenant, postgresentity.BillableEventEnrichPersonPhoneFound,
+					postgresrepository.BillableEventDetails{
+						ExternalID:    betterContactResponseBody.Id,
+						ReferenceData: fmt.Sprintf("Email: %s, LinkedIn: %s, FirstName: %s, LastName: %s", email, linkedinUrl, firstName, lastName),
+					})
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "failed to store billable event"))
 				}

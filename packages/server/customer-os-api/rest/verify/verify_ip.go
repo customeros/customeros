@@ -11,6 +11,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	postgresrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	validationmodel "github.com/openline-ai/openline-customer-os/packages/server/validation-api/model"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -239,7 +240,10 @@ func IpIntelligence(services *service.Services) gin.HandlerFunc {
 			}
 		}
 
-		_, err = services.CommonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, tenant, postgresentity.BillableEventIpVerificationSuccess, "", "", ipAddress)
+		_, err = services.CommonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, tenant, postgresentity.BillableEventIpVerificationSuccess,
+			postgresrepository.BillableEventDetails{
+				ReferenceData: ipAddress,
+			})
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to register billable event"))
 		}

@@ -15,6 +15,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	postgresrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	validationmodel "github.com/openline-ai/openline-customer-os/packages/server/validation-api/model"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -225,7 +226,10 @@ func VerifyEmailAddress(services *service.Services) gin.HandlerFunc {
 			if emailVerificationResponse.IsCatchAll {
 				billableEvent = postgresentity.BillableEventEmailVerifiedCatchAll
 			}
-			_, err = services.CommonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, tenant, billableEvent, "", "", emailAddress)
+			_, err = services.CommonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, tenant, billableEvent,
+				postgresrepository.BillableEventDetails{
+					ReferenceData: emailAddress,
+				})
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "failed to register billable event"))
 			}

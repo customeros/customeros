@@ -18,6 +18,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	postgresrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
 	validationcsv "github.com/openline-ai/openline-customer-os/packages/server/validation-api/csv"
 	validationmodel "github.com/openline-ai/openline-customer-os/packages/server/validation-api/model"
@@ -251,7 +252,11 @@ func (s *emailService) ValidateEmailsFromBulkRequests() {
 						if dataObj.DomainData.IsCatchAll {
 							billableEvent = postgresentity.BillableEventEmailVerifiedCatchAll
 						}
-						_, err = s.commonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, record.Tenant, billableEvent, "", strconv.FormatUint(record.ID, 10), record.Email)
+						_, err = s.commonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, record.Tenant, billableEvent,
+							postgresrepository.BillableEventDetails{
+								ExternalID:    strconv.FormatUint(record.ID, 10),
+								ReferenceData: record.Email,
+							})
 						if err != nil {
 							tracing.TraceErr(span, errors.Wrap(err, "failed to register billable event"))
 						}
