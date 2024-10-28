@@ -27,7 +27,8 @@ type Config struct {
 	EnrowCallbackApiKey         string `env:"ENROW_CALLBACK_API_KEY" validate:"required"`
 
 	Slack struct {
-		NotifyPostmarkEmail string `env:"SLACK_NOTIFY_POSTMARK_EMAIL"`
+		NotifyPostmarkEmail    string `env:"SLACK_NOTIFY_POSTMARK_EMAIL"`
+		NotifyFlowGoalAchieved string `env:"SLACK_NOTIFY_FLOW_GOAL_ACHIEVED"`
 	}
 }
 

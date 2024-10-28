@@ -188,7 +188,7 @@ func syncPostmarkInteractionEventHandler(services *service.Services, cfg *config
 			return
 		}
 
-		err = processMailstackReply(ctx, services, tenantByName, postmarkEmailWebhookData)
+		err = processMailstackReply(ctx, services, tenantByName, postmarkEmailWebhookData, cfg.Slack.NotifyFlowGoalAchieved)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			log.Errorf("(SyncInteractionEvent) error processing email for flows: %s", err.Error())
@@ -428,7 +428,7 @@ func processEmailForFlows(ctx context.Context, services *service.Services, tenan
 
 // check if the email is a reply to an email sent by mailstack
 // if it is, mark the flow participant as GOAL_ACHIEVED
-func processMailstackReply(ctx context.Context, services *service.Services, tenant string, input model.PostmarkEmailWebhookData) error {
+func processMailstackReply(ctx context.Context, services *service.Services, tenant string, input model.PostmarkEmailWebhookData, slackChannelUrl string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventService.processMailstackReply")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -467,6 +467,25 @@ func processMailstackReply(ctx context.Context, services *service.Services, tena
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return err
+			}
+
+			primaryEmailForParticipant, err := services.CommonServices.EmailService.GetPrimaryEmailForEntityId(ctx, flowParticipant.EntityType, flowParticipant.Id)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return err
+			}
+
+			if primaryEmailForParticipant == nil {
+				primaryEmailForParticipant = &neo4jentity.EmailEntity{
+					RawEmail: "primary email missing",
+				}
+			}
+
+			if slackChannelUrl != "" {
+				slackMessageText := "*Tenant:* " + tenant + "\n"
+				slackMessageText += "*Goal achieved for:* " + primaryEmailForParticipant.RawEmail + "\n"
+
+				utils.SendSlackMessage(ctx, slackChannelUrl, slackMessageText)
 			}
 		}
 
