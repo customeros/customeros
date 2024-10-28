@@ -58,7 +58,13 @@ func OnSocialAddedToContact(ctx context.Context, services *service.Services, inp
 	tracing.LogObjectAsJson(span, "input", input)
 
 	message := input.(*events.Event)
-	messageData := message.Event.Data.(dto.AddSocialToContact)
+	// check message data type before conversion
+	if message.Event.Data == nil {
+		err := errors.New("message data is nil")
+		tracing.TraceErr(span, err)
+		return nil
+	}
+	messageData := message.Event.Data.(*dto.AddSocialToContact)
 	socialUrl := messageData.Social
 	contactId := message.Event.EntityId
 
