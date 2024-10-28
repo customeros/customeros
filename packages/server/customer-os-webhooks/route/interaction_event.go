@@ -469,7 +469,7 @@ func processMailstackReply(ctx context.Context, services *service.Services, tena
 				return err
 			}
 
-			primaryEmailForParticipant, err := services.CommonServices.EmailService.GetPrimaryEmailForEntityId(ctx, flowParticipant.EntityType, flowParticipant.Id)
+			primaryEmailForParticipant, err := services.CommonServices.EmailService.GetPrimaryEmailForEntityId(ctx, flowParticipant.EntityType, flowParticipant.EntityId)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return err
