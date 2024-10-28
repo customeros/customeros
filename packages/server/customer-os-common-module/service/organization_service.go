@@ -94,6 +94,7 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 	if input.UpdateWebsite && input.Website != "" {
 		primaryDomainFromWebsite, adjustedWebsite = s.services.DomainService.GetPrimaryDomainForOrganizationWebsite(ctx, input.Website)
 		span.LogFields(log.String("primaryDomainFromWebsite", primaryDomainFromWebsite))
+		span.LogFields(log.String("adjustedWebsite", adjustedWebsite))
 	}
 
 	// prepare domains in advance
@@ -185,7 +186,13 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 				domain = input.Domains[0]
 			}
 			if domain != "" {
-				input.Name = utils.CapitalizeAllParts(utils.GetDomainPrefix(domain), []string{"-", "_"})
+				input.Name = utils.CapitalizeAllParts(utils.GetDomainWithoutTLD(domain), []string{"-", "_", "."})
+				input.UpdateName = true
+			}
+			// if still empty, extract from website
+			if input.Name == "" && input.Website != "" {
+				websiteDomain := utils.ExtractDomain(input.Website)
+				input.Name = utils.CapitalizeAllParts(utils.GetDomainWithoutTLD(websiteDomain), []string{"-", "_", "."})
 				input.UpdateName = true
 			}
 		}

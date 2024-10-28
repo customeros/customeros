@@ -49,11 +49,13 @@ func (s *domainService) GetPrimaryDomainForOrganizationWebsite(ctx context.Conte
 	}
 
 	if s.IsKnownCompanyHostingUrl(ctx, websiteUrl) {
+		span.LogFields(log.Bool("isKnownCompanyHostingUrl", true))
 		return "", returnedWebsiteUrl
 	}
 
 	domain := ""
 	isPrimary, primaryDomain := domaincheck.PrimaryDomainCheck(websiteUrl)
+	span.LogFields(log.Bool("isPrimary", isPrimary), log.String("primaryDomain", primaryDomain))
 	if isPrimary {
 		domain = utils.ExtractDomain(websiteUrl)
 	} else if primaryDomain != "" {
@@ -168,6 +170,7 @@ func (s *domainService) MergeDomain(ctx context.Context, domain string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "DomainService.MergeDomain")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogKV("domain", domain)
 
 	domain = strings.TrimSpace(domain)
 	domain = strings.ToLower(domain)

@@ -6,12 +6,14 @@ import (
 	"strings"
 )
 
-// GetDomainPrefix returns everything before the first dot in the domain
-func GetDomainPrefix(domain string) string {
+// GetDomainWithoutTLD returns everything before the last dot in the domain
+func GetDomainWithoutTLD(domain string) string {
 	// Split the domain by dots
 	parts := strings.Split(domain, ".")
-	// Return the first part
-	if len(parts) > 0 {
+	// Return all but last part
+	if len(parts) > 1 {
+		return strings.Join(parts[:len(parts)-1], ".")
+	} else if len(parts) == 1 {
 		return parts[0]
 	}
 	return domain

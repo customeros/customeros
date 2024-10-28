@@ -54,13 +54,15 @@ func main() {
 
 	// Events processing
 	var eventsProcessingGrpcClient *grpc_client.Clients
-	df := grpc_client.NewDialFactory(&cfg.GrpcClientConfig)
-	gRPCconn, err := df.GetEventsProcessingPlatformConn()
-	defer df.Close(gRPCconn)
-	if err != nil {
-		appLogger.Fatalf("Failed to connect: %v", err)
+	if cfg.GrpcClientConfig.EventsProcessingPlatformEnabled {
+		df := grpc_client.NewDialFactory(&cfg.GrpcClientConfig)
+		gRPCconn, err := df.GetEventsProcessingPlatformConn()
+		defer df.Close(gRPCconn)
+		if err != nil {
+			appLogger.Fatalf("Failed to connect: %v", err)
+		}
+		eventsProcessingGrpcClient = grpc_client.InitClients(gRPCconn)
 	}
-	eventsProcessingGrpcClient = grpc_client.InitClients(gRPCconn)
 
 	commonServices := commonService.InitServices(&commonConfig.GlobalConfig{
 		RabbitMQConfig: &cfg.RabbitMQ,

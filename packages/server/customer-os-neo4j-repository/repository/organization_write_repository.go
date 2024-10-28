@@ -589,7 +589,7 @@ func (r *organizationWriteRepository) Save(ctx context.Context, tx *neo4j.Manage
 			paramsUpdate["hide"] = data.Hide
 		}
 		if data.UpdateWebsite {
-			cypherUpdate += `org.website = org.website,`
+			cypherUpdate += `org.website = $website,`
 			paramsUpdate["website"] = data.Website
 		}
 		if data.UpdateIndustry {

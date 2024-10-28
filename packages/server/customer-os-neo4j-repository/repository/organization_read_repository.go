@@ -345,7 +345,7 @@ func (r *organizationReadRepository) GetOrganizationByInvoiceId(ctx context.Cont
 }
 
 func (r *organizationReadRepository) GetOrganizationByCustomerOsId(ctx context.Context, tenant, customerOsId string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganizationByInvoiceId")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganizationByCustomerOsId")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
 	tracing.TagTenant(span, tenant)
