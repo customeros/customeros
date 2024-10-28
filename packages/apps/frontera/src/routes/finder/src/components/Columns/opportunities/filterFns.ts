@@ -36,84 +36,60 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
         if (!filter.active) return true;
         const value = [row.value.externalStage, row.value.internalStage];
 
-        return filterTypeList(filter, value);
+        if (!value)
+          return (
+            filter.operation === ComparisonOperator.IsEmpty ||
+            filter.operation === ComparisonOperator.NotContains
+          );
 
-        // return (
-        //   filterValue.includes(row.value.externalStage) ||
-        //   filterValue.includes(row.value.internalStage)
-        // );
+        return filterTypeList(filter, value);
       },
     )
     .with(
       { property: ColumnViewType.OpportunitiesNextStep },
       (filter) => (row: OpportunityStore) => {
         if (!filter.active) return true;
-        const filterValue = filter?.value;
 
-        if (!filterValue && filter.active && !filter.includeEmpty) return true;
-        if (!row.value?.nextSteps?.length && filter.includeEmpty) return true;
-        if (!filterValue || !row.value?.nextSteps?.length) return false;
+        const value = row.value.nextSteps.toLowerCase();
 
-        return row.value.nextSteps
-          .toLowerCase()
-          .includes(filterValue.toLowerCase());
+        return filterTypeText(filter, value);
       },
     )
     .with(
       { property: ColumnViewType.OpportunitiesEstimatedArr },
       (filter) => (row: OpportunityStore) => {
         if (!filter.active) return true;
-        const filterValue = filter?.value;
-        const forecastValue = row.value?.maxAmount;
+        const value = row.value?.maxAmount;
 
-        if (!forecastValue) return false;
-
-        return (
-          forecastValue >= filterValue[0] && forecastValue <= filterValue[1]
-        );
+        return filterTypeNumber(filter, value);
       },
     )
     .with(
       { property: ColumnViewType.OpportunitiesTimeInStage },
       (filter) => (row: OpportunityStore) => {
         if (!filter.active) return true;
-        const filterValue = filter?.value;
 
-        const operator = filter.operation;
         const numberOfDays = DateTimeUtils.differenceInDays(
           new Date().toISOString(),
           row.value?.stageLastUpdated,
         );
 
-        if (operator === ComparisonOperator.Lt) {
-          return Number(numberOfDays) < Number(filterValue);
-        }
-
-        if (operator === ComparisonOperator.Gt) {
-          return Number(numberOfDays) > Number(filterValue);
-        }
-
-        if (operator === ComparisonOperator.Between) {
-          const filterValue = filter?.value?.map(Number) as number[];
-
-          return (
-            numberOfDays >= Number(filterValue[0]) &&
-            numberOfDays <= Number(filterValue[1])
-          );
-        }
+        return filterTypeNumber(filter, Number(numberOfDays) + 1);
       },
     )
     .with(
       { property: ColumnViewType.OpportunitiesOwner },
       (filter) => (row: OpportunityStore) => {
         if (!filter.active) return true;
-        const filterValue = filter?.value;
+        const value = row.value.owner?.id;
 
-        if (filterValue === '__EMPTY__' && !row.value.owner) {
-          return true;
-        }
+        if (!value)
+          return (
+            filter.operation === ComparisonOperator.IsEmpty ||
+            filter.operation === ComparisonOperator.NotContains
+          );
 
-        return filterValue.includes(row.value.owner?.id);
+        return filterTypeList(filter, [value || '']);
       },
     )
 
@@ -121,14 +97,11 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
       { property: ColumnViewType.OpportunitiesCreatedDate },
       (filter) => (row: OpportunityStore) => {
         if (!filter.active) return true;
-        const filterValue = filter?.value;
-        const createdAt = row.value?.metadata.created?.split('T')[0];
+        const value = row.value?.metadata.created?.split('T')[0];
 
-        if (!filterValue) return true;
-        if (filterValue?.[1] === null) return filterValue?.[0] <= createdAt;
-        if (filterValue?.[0] === null) return filterValue?.[1] >= createdAt;
+        if (!value) return false;
 
-        return filterValue[0] <= createdAt && filterValue[1] >= createdAt;
+        return filterTypeDate(filter, value);
       },
     )
 

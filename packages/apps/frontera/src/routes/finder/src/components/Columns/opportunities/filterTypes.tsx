@@ -1,5 +1,6 @@
 import { Building07 } from '@ui/media/icons/Building07';
 import {
+  InternalStage,
   ColumnViewType,
   ComparisonOperator,
 } from '@shared/types/__generated__/graphql.types';
@@ -25,14 +26,20 @@ import { Calculator } from '@ui/media/icons/Calculator';
 import { ArrowsRight } from '@ui/media/icons/ArrowsRight';
 import { CoinsStacked01 } from '@ui/media/icons/CoinsStacked01';
 
-import { makeStageLabels } from './Cells';
+export const getFilterTypes = (store?: RootStore) => {
+  const preset = store?.tableViewDefs.opportunitiesPreset;
+  const stageLabels = store?.tableViewDefs
+    .getById(preset ?? '1')
+    ?.value?.columns.reduce((acc, curr) => {
+      if (!curr.filter?.includes('STAGE')) return acc;
 
-export const getFilterTypes = (
-  store?: RootStore,
-  preset?: string | undefined | null,
-) => {
-  const stageLabels =
-    makeStageLabels(store || ({} as RootStore), preset || '0') ?? {};
+      return {
+        ...acc,
+        ['STAGE' + curr.filter.split('STAGE')[1][0]]: curr.name,
+        [InternalStage.ClosedLost]: 'Closed Lost',
+        [InternalStage.ClosedWon]: 'Closed Won',
+      };
+    }, {} as Record<string, string>);
 
   const filterTypes: Partial<Record<ColumnViewType, FilterType>> = {
     [ColumnViewType.OpportunitiesName]: {
@@ -72,9 +79,9 @@ export const getFilterTypes = (
         ComparisonOperator.IsNotEmpty,
       ],
       icon: <Columns03 className='group-hover:text-gray-700 text-gray-500' />,
-      options: Object.entries(stageLabels).map(([value, label]) => ({
-        id: value,
-        label,
+      options: Object.entries(stageLabels ?? {}).map(([key, value]) => ({
+        id: key,
+        label: value,
       })),
     },
 

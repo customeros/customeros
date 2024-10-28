@@ -23,6 +23,10 @@ export const FinderFilters = observer(
     const getFilterTypes = match(tableId)
       .with(TableIdType.Contacts, () => getFilterTypesForContacts)
       .with(TableIdType.Organizations, () => getFilterTypesForOrganizations)
+      .with(
+        TableIdType.OpportunitiesRecords,
+        () => getFilterTypesForOpportunities,
+      )
       .otherwise(() => getFilterTypesForOrganizations);
 
     const [searchParams] = useSearchParams();
@@ -36,10 +40,7 @@ export const FinderFilters = observer(
       )
       .otherwise(() => searchParams?.get('preset'));
 
-    const filterTypes =
-      tableId === TableIdType.OpportunitiesRecords
-        ? getFilterTypesForOpportunities(store, preset)
-        : getFilterTypes(store);
+    const filterTypes = getFilterTypes(store);
 
     const tableViewDef = store.tableViewDefs.getById(preset ?? '0');
 

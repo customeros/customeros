@@ -255,7 +255,10 @@ export const computeFinderData = (
         if (tableType !== TableViewType.Opportunities) return arr;
         arr = arr.filter((opp) => opp.value.internalType === 'NBO');
 
-        const filters = getOpportunityFilterFns(tableViewDef?.getFilters());
+        const filters = getOpportunityFilterFns(
+          tableViewDef?.getFilters(),
+          isFeatureEnabled,
+        );
 
         if (filters) {
           arr = arr.filter((v) => filters.every((fn) => fn(v)));
