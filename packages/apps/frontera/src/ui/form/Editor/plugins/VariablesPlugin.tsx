@@ -70,9 +70,6 @@ const VariableSignRegexAliasRegex = new RegExp(
     ')$',
 );
 
-// At most, 5 suggestions are shown in the popup.
-const SUGGESTION_LIST_LENGTH_LIMIT = 5;
-
 function checkForVariableSign(
   text: string,
   minMatchLength: number,
@@ -172,9 +169,7 @@ export default function VariablesPlugin({
   });
 
   const _options = useMemo(() => {
-    const res = options
-      .map((item) => new VariableTypeaheadOption(item))
-      .slice(0, SUGGESTION_LIST_LENGTH_LIMIT);
+    const res = options.map((item) => new VariableTypeaheadOption(item));
 
     if (queryString) {
       return res.filter((item) =>
