@@ -10,9 +10,9 @@ replace github.com/openline-ai/openline-customer-os/packages/server/events => ..
 
 replace github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform => ../events-processing-platform
 
-replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai => ../customer-os-common-ai
-
 replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module => ../customer-os-common-module
+
+replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai => ../customer-os-common-ai
 
 replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository => ../customer-os-postgres-repository
 
