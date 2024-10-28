@@ -126,6 +126,7 @@ func (s *EnrichSubscriber) When(ctx context.Context, evt eventstore.Event) error
 	case contactevent.ContactRequestEnrichV1:
 		_ = s.contactEventHandler.OnEnrichContactRequested(ctx, evt)
 	case contactevent.ContactAddSocialV1:
+		// TODO remove this and remove proto method
 		_ = s.contactEventHandler.OnSocialAddedToContact(ctx, evt)
 	case emailevent.EmailValidateV1:
 		_ = s.emailEventHandler.OnEmailValidate(ctx, evt)

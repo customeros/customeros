@@ -5,6 +5,7 @@ import (
 	"github.com/caarlos0/env/v6"
 	"github.com/joho/godotenv"
 	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto/events"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -50,11 +51,18 @@ func main() {
 	ctx := context.Background()
 	defer neo4jDriver.Close(ctx)
 
-	commonServices := commonService.InitServices(&commonConfig.GlobalConfig{RabbitMQConfig: &cfg.RabbitMQ}, db.GormDB, &neo4jDriver, cfg.Neo4j.Database, nil, appLogger)
+	commonServices := commonService.InitServices(&commonConfig.GlobalConfig{
+		RabbitMQConfig: &cfg.RabbitMQ,
+		InternalServices: commonConfig.InternalServices{
+			EnrichmentApiConfig: cfg.InternalServices.EnrichmentApi,
+			AiApiConfig:         cfg.InternalServices.AiApi,
+		},
+	}, db.GormDB, &neo4jDriver, cfg.Neo4j.Database, nil, appLogger)
 
 	//Register listeners
 	commonServices.RabbitMQService.RegisterHandler(events.FlowInitialSchedule{}, listeners.Handle_FlowInitialSchedule)
 	commonServices.RabbitMQService.RegisterHandler(events.FlowComputeParticipantsRequirements{}, listeners.Handle_FlowComputeParticipantsRequirements)
+	commonServices.RabbitMQService.RegisterHandler(dto.AddSocialToContact{}, listeners.OnSocialAddedToContact)
 
 	// Listen for messages
 	commonServices.RabbitMQService.Listen()

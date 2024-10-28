@@ -14,6 +14,7 @@ import (
 type Services struct {
 	GlobalConfig *config.GlobalConfig
 	Cache        *caches.Cache
+	Logger       logger.Logger
 
 	PostgresRepositories *postgresRepository.Repositories
 	Neo4jRepositories    *neo4jRepository.Repositories
@@ -36,6 +37,7 @@ type Services struct {
 	InvoiceService             InvoiceService
 	InteractionSessionService  InteractionSessionService
 	InteractionEventService    InteractionEventService
+	LocationService            LocationService
 	OpportunityService         OpportunityService
 	SlackChannelService        SlackChannelService
 	ServiceLineItemService     ServiceLineItemService
@@ -60,6 +62,7 @@ func InitServices(globalConfig *config.GlobalConfig, db *gorm.DB, driver *neo4j.
 	services := &Services{
 		GlobalConfig:         globalConfig,
 		Cache:                caches.NewCommonCache(),
+		Logger:               log,
 		GrpcClients:          grpcClients,
 		PostgresRepositories: postgresRepository.InitRepositories(db),
 		Neo4jRepositories:    neo4jRepository.InitNeo4jRepositories(driver, neo4jDatabase),
@@ -89,6 +92,7 @@ func InitServices(globalConfig *config.GlobalConfig, db *gorm.DB, driver *neo4j.
 	services.JobRoleService = NewJobRoleService(services)
 	services.InteractionSessionService = NewInteractionSessionService(services)
 	services.InteractionEventService = NewInteractionEventService(services)
+	services.LocationService = NewLocationService(log, services)
 	services.SocialService = NewSocialService(log, services)
 	services.OpportunityService = NewOpportunityService(log, services)
 	services.SocialService = NewSocialService(log, services)

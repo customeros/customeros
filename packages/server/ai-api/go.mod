@@ -19,7 +19,7 @@ require (
 	github.com/gin-contrib/cors v1.7.2
 	github.com/gin-gonic/gin v1.10.0
 	github.com/joho/godotenv v1.5.1
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai v0.0.0-20240708113141-4b18da1fd99c
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai v0.0.0-20241028063002-b2d4aaf8096f
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240925071556-618778a7336e
 	github.com/sirupsen/logrus v1.9.3
 	gorm.io/driver/postgres v1.5.9
