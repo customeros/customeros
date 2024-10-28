@@ -33,7 +33,6 @@ type UserService interface {
 	Update(ctx context.Context, userId, firstName, lastName string, name, timezone, profilePhotoURL *string) (*neo4jentity.UserEntity, error)
 	GetAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
 	GetById(ctx context.Context, userId string) (*neo4jentity.UserEntity, error)
-	FindUserByEmail(ctx context.Context, email string) (*neo4jentity.UserEntity, error)
 	IsOwner(ctx context.Context, id string) (*bool, error)
 	GetContactOwner(ctx context.Context, contactId string) (*neo4jentity.UserEntity, error)
 	GetNoteCreator(ctx context.Context, noteId string) (*neo4jentity.UserEntity, error)
@@ -424,23 +423,6 @@ func (s *userService) GetById(parentCtx context.Context, userId string) (*neo4je
 	} else {
 		return neo4jmapper.MapDbNodeToUserEntity(userDbNode), nil
 	}
-}
-
-func (s *userService) FindUserByEmail(parentCtx context.Context, email string) (*neo4jentity.UserEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.FindFirstUserWithRolesByEmail")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-
-	userDbNode, err := s.repositories.Neo4jRepositories.UserReadRepository.GetFirstUserByEmail(ctx, common.GetContext(ctx).Tenant, email)
-	if err != nil {
-		return nil, err
-	}
-
-	if userDbNode == nil {
-		return nil, nil
-	}
-
-	return neo4jmapper.MapDbNodeToUserEntity(userDbNode), nil
 }
 
 func (s *userService) GetUsersConnectedForContacts(ctx context.Context, contactIds []string) (*neo4jentity.UserEntities, error) {

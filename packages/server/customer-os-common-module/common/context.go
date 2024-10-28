@@ -7,13 +7,12 @@ import (
 )
 
 type CustomContext struct {
-	AppSource                string
-	Tenant                   string
-	UserId                   string
-	UserEmail                string
-	IdentityId               string
-	Roles                    []string
-	GraphqlRootOperationName string
+	AppSource  string
+	Tenant     string
+	UserId     string
+	UserEmail  string
+	IdentityId string
+	Roles      []string
 }
 
 var customContextKey = "CUSTOM_CONTEXT"

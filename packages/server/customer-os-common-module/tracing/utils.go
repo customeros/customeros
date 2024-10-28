@@ -1,6 +1,7 @@
 package tracing
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -12,6 +13,7 @@ import (
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/opentracing/opentracing-go/log"
 	"google.golang.org/grpc/metadata"
+	"io"
 	"net/http"
 )
 
@@ -32,6 +34,19 @@ const (
 	SpanTagComponentRest               = "rest"
 	SpanTagComponentCronJob            = "cronJob"
 )
+
+func GraphQlTracingEnhancer(ctx context.Context) func(c *gin.Context) {
+	return func(c *gin.Context) {
+		ctxWithSpan, span := StartHttpServerTracerSpanWithHeader(ctx, ExtractGraphQLMethodName(c.Request), c.Request.Header)
+		for k, v := range c.Request.Header {
+			span.LogFields(log.String("request.header.key", k), log.Object("request.header.value", v))
+		}
+		defer span.Finish()
+		TagComponentRest(span)
+		c.Request = c.Request.WithContext(ctxWithSpan)
+		c.Next()
+	}
+}
 
 func TracingEnhancer(ctx context.Context, endpoint string) func(c *gin.Context) {
 	return func(c *gin.Context) {
@@ -132,6 +147,34 @@ func InjectSpanContextIntoGraphQLRequest(req *graphql.Request, span opentracing.
 			req.Header.Set(k, v)
 		}
 	}
+}
+
+func ExtractGraphQLMethodName(req *http.Request) string {
+	// Read the request body
+	body, err := io.ReadAll(req.Body)
+	if err != nil {
+		// Handle error
+		return ""
+	}
+
+	// Restore the request body
+	req.Body = io.NopCloser(bytes.NewBuffer(body))
+
+	// Parse the request body as JSON
+	var requestBody map[string]interface{}
+	if err := json.Unmarshal(body, &requestBody); err != nil {
+		// Handle error
+		return ""
+	}
+
+	// Extract the method name from the GraphQL request
+	if operationName, ok := requestBody["operationName"].(string); ok {
+		return operationName
+	}
+
+	// If the method name is not found, you can add additional logic here to extract it from the request body or headers if applicable
+	// ...
+	return ""
 }
 
 func setDefaultSpanTags(ctx context.Context, span opentracing.Span) {

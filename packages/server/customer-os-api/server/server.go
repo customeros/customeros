@@ -144,12 +144,12 @@ func (server *server) Run(parentCtx context.Context) error {
 
 	// graphql routes
 	r.POST("/query",
-		tracing.TracingEnhancer(ctx, "/query"),
+		tracing.GraphQlTracingEnhancer(ctx),
 		apiKeyCheckerHTTPMiddleware(commonServices.PostgresRepositories.TenantWebhookApiKeyRepository, commonServices.PostgresRepositories.AppKeyRepository, security.CUSTOMER_OS_API, security.WithCache(commonCache)),
 		tenantUserContextEnhancerMiddleware(security.USERNAME_OR_TENANT, commonServices.Neo4jRepositories, security.WithCache(commonCache)),
 		server.graphqlHandler(grpcContainer, serviceContainer))
 	r.POST("/admin/query",
-		tracing.TracingEnhancer(ctx, "/admin/query"),
+		tracing.GraphQlTracingEnhancer(ctx),
 		adminApiHandler.GetAdminApiHandlerEnhancer(),
 		server.graphqlHandler(grpcContainer, serviceContainer))
 
@@ -305,9 +305,10 @@ func (server *server) graphqlHandler(grpcContainer *grpc_client.Clients, service
 
 		customCtx.AppSource = constants.AppSourceCustomerOsApi
 
-		graphqlOperationName := extractGraphQLMethodName(c.Request)
-		c.Request.Header.Set("X-GraphQL-Operation-Name", graphqlOperationName)
-		customCtx.GraphqlRootOperationName = graphqlOperationName
+		graphqlOperationName := tracing.ExtractGraphQLMethodName(c.Request)
+
+		jaegar := tracing.TracingEnhancer(c, graphqlOperationName)
+		jaegar(c)
 
 		logMiddleware := loggerMiddleware(customCtx, graphqlOperationName)
 		logMiddleware(c)
@@ -410,34 +411,6 @@ type bodyLogWriter struct {
 func (w bodyLogWriter) Write(b []byte) (int, error) {
 	w.body.Write(b)
 	return w.ResponseWriter.Write(b)
-}
-
-func extractGraphQLMethodName(req *http.Request) string {
-	// Read the request body
-	body, err := io.ReadAll(req.Body)
-	if err != nil {
-		// Handle error
-		return ""
-	}
-
-	// Restore the request body
-	req.Body = io.NopCloser(bytes.NewBuffer(body))
-
-	// Parse the request body as JSON
-	var requestBody map[string]interface{}
-	if err := json.Unmarshal(body, &requestBody); err != nil {
-		// Handle error
-		return ""
-	}
-
-	// Extract the method name from the GraphQL request
-	if operationName, ok := requestBody["operationName"].(string); ok {
-		return operationName
-	}
-
-	// If the method name is not found, you can add additional logic here to extract it from the request body or headers if applicable
-	// ...
-	return ""
 }
 
 func enrichContextMiddleware(appSource string) gin.HandlerFunc {

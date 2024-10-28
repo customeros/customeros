@@ -14,6 +14,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -311,6 +312,17 @@ func (s *flowExecutionService) scheduleEmailAction(ctx context.Context, tx *neo4
 			return errors.New("No mailbox available")
 		}
 
+		user, err := s.services.UserService.FindUserByEmail(ctx, fastestMailbox)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+
+		if user == nil {
+			tracing.TraceErr(span, errors.New("User not found"))
+			return errors.New("User not found")
+		}
+
 		id, err := s.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelFlowExecutionSettings)
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -322,7 +334,7 @@ func (s *flowExecutionService) scheduleEmailAction(ctx context.Context, tx *neo4
 			EntityId:   flowParticipant.EntityId,
 			EntityType: flowParticipant.EntityType.String(),
 			Mailbox:    &fastestMailbox,
-			UserId:     nil,
+			UserId:     &user.Id,
 		}
 
 		node, err := s.services.Neo4jRepositories.FlowExecutionSettingsWriteRepository.Merge(ctx, tx, flowExecutionSettings)
@@ -333,8 +345,18 @@ func (s *flowExecutionService) scheduleEmailAction(ctx context.Context, tx *neo4
 		flowExecutionSettings = mapper.MapDbNodeToFlowExecutionSettingsEntity(node)
 	}
 
+	workingSchedule, err := s.services.PostgresRepositories.UserWorkingScheduleRepository.GetForUser(ctx, tenant, *flowExecutionSettings.UserId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	if len(workingSchedule) == 0 {
+		return errors.New("User working schedule not found")
+	}
+
 	// 2. Schedule the email action
-	actualScheduleAt, err := s.getFirstAvailableSlotForMailbox(ctx, tx, tenant, *flowExecutionSettings.Mailbox, scheduleAt)
+	actualScheduleAt, err := s.getFirstAvailableSlotForMailbox(ctx, tx, tenant, *flowExecutionSettings.Mailbox, scheduleAt, workingSchedule)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -356,7 +378,7 @@ func (s *flowExecutionService) scheduleEmailAction(ctx context.Context, tx *neo4
 	return nil
 }
 
-func (s *flowExecutionService) getFirstAvailableSlotForMailbox(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, mailbox string, scheduleAt time.Time) (*time.Time, error) {
+func (s *flowExecutionService) getFirstAvailableSlotForMailbox(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, mailbox string, scheduleAt time.Time, workingSchedule []*postgresEntity.UserWorkingSchedule) (*time.Time, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.getFirstAvailableSlotForMailbox")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -402,13 +424,7 @@ func (s *flowExecutionService) getFirstAvailableSlotForMailbox(ctx context.Conte
 	}
 
 	// Ensure possibleScheduledAt is not in the past and within working hours
-	possibleScheduledAt = nextWorkingTime(maxTime(possibleScheduledAt, time.Now().UTC()))
-
-	randomMinutes := time.Duration(utils.GenerateRandomInt(mailboxEntity.MinMinutesBetweenEmails, mailboxEntity.MaxMinutesBetweenEmails)) * time.Minute
-	possibleScheduledAt = possibleScheduledAt.Add(randomMinutes)
-
-	// Ensure the scheduled time is within working hours
-	possibleScheduledAt = nextWorkingTime(possibleScheduledAt)
+	possibleScheduledAt = adjustToWorkingTimeWithRandom(maxTime(possibleScheduledAt, utils.Now()), workingSchedule, mailboxEntity)
 
 	//Add random seconds and miliseconds to not have 00:00:00 as the scheduled time
 	randomSeconds := time.Duration(utils.GenerateRandomInt(0, 60)) * time.Second
@@ -785,33 +801,108 @@ func (s *flowExecutionService) getEmailActionToReply(ctx context.Context, action
 func replacePlaceholders(input, variableName, value string) string {
 	return strings.Replace(input, "{{"+variableName+"}}", value, -1)
 }
+func adjustToWorkingTimeWithRandom(t time.Time, schedules []*postgresEntity.UserWorkingSchedule, mailbox *postgresEntity.TenantSettingsMailbox) time.Time {
+	for {
+		// Get working hours for the current day
+		start, end := getWorkingHoursForDay(t, schedules)
 
-func isWorkingDay(t time.Time) bool {
-	weekday := t.Weekday()
-	return weekday >= time.Monday && weekday <= time.Friday
-}
+		randomMinutes := time.Duration(utils.GenerateRandomInt(mailbox.MinMinutesBetweenEmails, mailbox.MaxMinutesBetweenEmails)) * time.Minute
+		t = t.Add(randomMinutes)
 
-func isWithinWorkingHours(t time.Time) bool {
-	if !isWorkingDay(t) {
-		return false
+		if !start.IsZero() && !end.IsZero() {
+			// Check if time is within working hours
+			if t.After(start) && t.Before(end) {
+				return t // It's within working hours
+			}
+			if t.Before(start) {
+				// Move to the start of today's working hours
+				return start
+			}
+		}
+
+		// Move to the next day's start time
+		t = time.Date(t.Year(), t.Month(), t.Day(), start.Hour(), start.Minute(), 0, 0, time.UTC).AddDate(0, 0, 1)
 	}
-	hour := t.UTC().Hour()
-	return hour >= workingDayStart && hour < workingDayEnd
 }
 
-func nextWorkingTime(t time.Time) time.Time {
-	t = t.UTC()
-	for !isWithinWorkingHours(t) {
-		if !isWorkingDay(t) {
-			// Move to next day at 9:00 UTC
-			t = time.Date(t.Year(), t.Month(), t.Day()+1, workingDayStart, 0, 0, 0, time.UTC)
-		} else if t.Hour() < workingDayStart {
-			// Move to 9:00 UTC same day
-			t = time.Date(t.Year(), t.Month(), t.Day(), workingDayStart, 0, 0, 0, time.UTC)
-		} else {
-			// Move to 9:00 UTC next day
-			t = time.Date(t.Year(), t.Month(), t.Day()+1, workingDayStart, 0, 0, 0, time.UTC)
+// Helper to get the start and end times for the current weekday based on schedules
+func getWorkingHoursForDay(day time.Time, schedules []*postgresEntity.UserWorkingSchedule) (time.Time, time.Time) {
+	dayStr := day.Weekday().String()[:3] // Get day abbreviation, e.g., "Mon"
+	for _, schedule := range schedules {
+		if IsDayInRange(dayStr, schedule.DayRange) {
+
+			startParts := strings.Split(schedule.StartHour, ":")
+			endParts := strings.Split(schedule.EndHour, ":")
+
+			startHour, err := strconv.Atoi(startParts[0])
+			if err != nil {
+				return time.Time{}, time.Time{}
+			}
+
+			startMinute, err := strconv.Atoi(startParts[1])
+			if err != nil {
+				return time.Time{}, time.Time{}
+			}
+
+			endHour, err := strconv.Atoi(endParts[0])
+			if err != nil {
+				return time.Time{}, time.Time{}
+			}
+
+			endMinute, err := strconv.Atoi(endParts[1])
+			if err != nil {
+				return time.Time{}, time.Time{}
+			}
+
+			start := time.Date(day.Year(), day.Month(), day.Day(), startHour, startMinute, 0, 0, time.UTC)
+			end := time.Date(day.Year(), day.Month(), day.Day(), endHour, endMinute, 0, 0, time.UTC)
+
+			if day.After(end) {
+				return time.Time{}, time.Time{} // No working hours for this day
+			}
+
+			return start, end
 		}
 	}
-	return t
+	return time.Time{}, time.Time{} // No working hours for this day
+}
+
+// Helper to get the earliest working start time of the next working day
+func startOfNextWorkingDay(t time.Time, schedules []*postgresEntity.UserWorkingSchedule) time.Time {
+	for {
+		start, _ := getWorkingHoursForDay(t, schedules)
+		if !start.IsZero() {
+			return start
+		}
+		t = t.AddDate(0, 0, 1) // Move to the next day
+	}
+}
+
+// Helper function to check if a day is within a day range like "Mon-Wed"
+func IsDayInRange(day, dayRange string) bool {
+	daysOfWeek := []string{"Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"}
+
+	if dayRange == day+"-"+day { // For single day entries like "Mon-Mon"
+		return true
+	}
+
+	rangeParts := strings.Split(dayRange, "-")
+	if len(rangeParts) != 2 {
+		return false
+	}
+
+	startIdx, endIdx := indexOf(daysOfWeek, rangeParts[0]), indexOf(daysOfWeek, rangeParts[1])
+	dayIdx := indexOf(daysOfWeek, day)
+
+	return dayIdx >= startIdx && dayIdx <= endIdx
+}
+
+// Helper to find the index of a day in the daysOfWeek slice
+func indexOf(slice []string, item string) int {
+	for i, v := range slice {
+		if v == item {
+			return i
+		}
+	}
+	return -1
 }

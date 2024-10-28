@@ -821,7 +821,6 @@ func (s *flowService) FlowParticipantAdd(ctx context.Context, flowId, entityId s
 				return nil, errors.Wrap(err, "failed to generate id")
 			}
 
-			//TODO use transaction
 			identified, err = s.services.Neo4jRepositories.FlowParticipantWriteRepository.Merge(ctx, &tx, &toStore)
 			if err != nil {
 				return nil, errors.Wrap(err, "failed to merge flow participant")

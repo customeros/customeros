@@ -219,7 +219,7 @@ func (r *queryResolver) UserByEmail(ctx context.Context, email string) (*model.U
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.email", email))
 
-	userEntity, err := r.Services.UserService.FindUserByEmail(ctx, email)
+	userEntity, err := r.Services.CommonServices.UserService.FindUserByEmail(ctx, email)
 	if err != nil || userEntity == nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "User with email %s not identified", email)

@@ -190,6 +190,7 @@ func MapDbNodeToInvoiceLineEntity(dbNode *dbtype.Node) *entity.InvoiceLineEntity
 	return &invoiceLineEntity
 }
 
+// TODO return nil
 func MapDbNodeToUserEntity(dbNode *dbtype.Node) *entity.UserEntity {
 	if dbNode == nil {
 		return &entity.UserEntity{}

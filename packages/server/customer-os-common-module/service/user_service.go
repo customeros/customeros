@@ -15,6 +15,7 @@ import (
 
 type UserService interface {
 	GetAllUsersForTenant(ctx context.Context, tenant string) ([]*neo4jentity.UserEntity, error)
+	FindUserByEmail(parentCtx context.Context, email string) (*neo4jentity.UserEntity, error)
 
 	Create(ctx context.Context, input UserCreateData) (*string, error)
 }
@@ -48,6 +49,25 @@ func (s *userService) GetAllUsersForTenant(ctx context.Context, tenant string) (
 	}
 
 	return users, nil
+}
+
+func (s *userService) FindUserByEmail(parentCtx context.Context, email string) (*neo4jentity.UserEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.FindFirstUserWithRolesByEmail")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	userDbNode, err := s.services.Neo4jRepositories.UserReadRepository.GetFirstUserByEmail(ctx, tenant, email)
+	if err != nil {
+		return nil, err
+	}
+
+	if userDbNode == nil {
+		return nil, nil
+	}
+
+	return mapper.MapDbNodeToUserEntity(userDbNode), nil
 }
 
 func (s *userService) Create(ctx context.Context, input UserCreateData) (*string, error) {

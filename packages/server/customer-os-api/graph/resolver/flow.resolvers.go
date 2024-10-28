@@ -7,6 +7,12 @@ package resolver
 import (
 	"context"
 	"fmt"
+	"github.com/google/uuid"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	"time"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
@@ -120,67 +126,12 @@ func (r *mutationResolver) FlowMerge(ctx context.Context, input model.FlowMergeI
 		return nil, err
 	}
 
-	//TODO this is correct and used in testing
-	//tenant := common.GetTenantFromContext(ctx)
-	//
-	//t := true
-	//
-	//for i := 1; i <= 100; i++ {
-	//	contactId, err := r.Services.ContactService.Create(ctx, &service.ContactCreateData{
-	//		ContactEntity: &neo4jentity.ContactEntity{
-	//			FirstName: "Test",
-	//			LastName:  fmt.Sprintf("%d", i),
-	//		},
-	//		EmailEntity: &neo4jentity.EmailEntity{
-	//			RawEmail: fmt.Sprintf("%d@test.com", i),
-	//			Work:     &t,
-	//		},
-	//	})
-	//
-	//	if err != nil {
-	//		tracing.TraceErr(span, err)
-	//		graphql.AddErrorf(ctx, "")
-	//		return nil, err
-	//	}
-	//
-	//	_, err = r.Services.CommonServices.FlowService.FlowParticipantAdd(ctx, flow.Id, contactId, commonModel.CONTACT)
-	//	if err != nil {
-	//		tracing.TraceErr(span, err)
-	//		graphql.AddErrorf(ctx, "")
-	//		return nil, err
-	//	}
-	//}
-	//
-	//userId := uuid.New().String()
-	//err = r.Services.CommonServices.Neo4jRepositories.UserWriteRepository.CreateUser(ctx, neo4jentity.UserEntity{Id: userId})
-	//
-	//for i := 1; i <= 10; i++ {
-	//	userEmail := fmt.Sprintf("mailbox%d@test.com%s", i, uuid.New().String())
-	//	mailboxdId := uuid.New().String()
-	//	r.Services.CommonServices.Neo4jRepositories.EmailWriteRepository.CreateEmail(ctx, tenant, mailboxdId, repository.EmailCreateFields{RawEmail: userEmail})
-	//	r.Services.CommonServices.Neo4jRepositories.EmailWriteRepository.LinkWithUser(ctx, tenant, userId, mailboxdId, false)
-	//	r.Services.CommonServices.PostgresRepositories.TenantSettingsMailboxRepository.Merge(ctx, tenant, &entity.TenantSettingsMailbox{
-	//		Tenant:                  tenant,
-	//		MailboxUsername:         userEmail,
-	//		Username:                userEmail,
-	//		RampUpCurrent:         2,
-	//		MinMinutesBetweenEmails: 5,
-	//		MaxMinutesBetweenEmails: 10,
-	//	})
-	//}
-	//
-	//r.FlowSenderMerge(ctx, flow.Id, model.FlowSenderMergeInput{
-	//	UserID: &userId,
-	//})
-	//
-	//entity, err := r.Services.CommonServices.FlowService.FlowChangeStatus(ctx, flow.Id, neo4jentity.FlowStatusActive)
-	//if err != nil || entity == nil {
-	//	tracing.TraceErr(span, err)
-	//	graphql.AddErrorf(ctx, "")
-	//	return nil, err
-	//}
-
 	return mapper.MapEntityToFlow(flow), nil
+}
+
+func parseTime(t string) time.Time {
+	parsedTime, _ := time.Parse("15:04", t)
+	return parsedTime
 }
 
 // FlowChangeStatus is the resolver for the flow_changeStatus field.
@@ -189,13 +140,121 @@ func (r *mutationResolver) FlowChangeStatus(ctx context.Context, id string, stat
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 
-	entity, err := r.Services.CommonServices.FlowService.FlowChangeStatus(ctx, id, status)
-	if err != nil || entity == nil {
+	e, err := r.Services.CommonServices.FlowService.FlowChangeStatus(ctx, id, status)
+	if err != nil || e == nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "")
 		return nil, err
 	}
-	return mapper.MapEntityToFlow(entity), nil
+
+	//TODO this is correct and used in testing
+	tenant := common.GetTenantFromContext(ctx)
+
+	t := true
+
+	for i := 1; i <= 500; i++ {
+		contactId, err := r.Services.ContactService.Create(ctx, &service.ContactCreateData{
+			ContactEntity: &neo4jentity.ContactEntity{
+				FirstName: "Test",
+				LastName:  fmt.Sprintf("%d", i),
+			},
+			EmailEntity: &neo4jentity.EmailEntity{
+				RawEmail: fmt.Sprintf("%d@test.com", i),
+				Work:     &t,
+			},
+		})
+
+		if err != nil {
+			tracing.TraceErr(span, err)
+			graphql.AddErrorf(ctx, "")
+			return nil, err
+		}
+
+		_, err = r.Services.CommonServices.FlowService.FlowParticipantAdd(ctx, e.Id, contactId, commonModel.CONTACT)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			graphql.AddErrorf(ctx, "")
+			return nil, err
+		}
+	}
+
+	userId := uuid.New().String()
+	err = r.Services.CommonServices.Neo4jRepositories.UserWriteRepository.CreateUser(ctx, neo4jentity.UserEntity{Id: userId})
+
+	for i := 1; i <= 5; i++ {
+		userEmail := fmt.Sprintf("mailbox%d@test.com%s", i, uuid.New().String())
+		mailboxdId := uuid.New().String()
+		r.Services.CommonServices.Neo4jRepositories.EmailWriteRepository.CreateEmail(ctx, tenant, mailboxdId, repository.EmailCreateFields{RawEmail: userEmail})
+		r.Services.CommonServices.Neo4jRepositories.EmailWriteRepository.LinkWithUser(ctx, tenant, userId, mailboxdId, false)
+		mailbox := entity.TenantSettingsMailbox{
+			Tenant:          tenant,
+			MailboxUsername: userEmail,
+			Username:        userEmail,
+		}
+		r.Services.CommonServices.PostgresRepositories.TenantSettingsMailboxRepository.Merge(ctx, tenant, &mailbox)
+		mailbox = entity.TenantSettingsMailbox{
+			Tenant:                  tenant,
+			MailboxUsername:         userEmail,
+			Username:                userEmail,
+			RampUpCurrent:           40,
+			RampUpMax:               40,
+			MinMinutesBetweenEmails: 10,
+			MaxMinutesBetweenEmails: 10,
+		}
+		r.Services.CommonServices.PostgresRepositories.TenantSettingsMailboxRepository.Merge(ctx, tenant, &mailbox)
+	}
+
+	r.FlowSenderMerge(ctx, e.Id, model.FlowSenderMergeInput{
+		UserID: &userId,
+	})
+
+	schedule1 := entity.UserWorkingSchedule{
+		UserId:    userId,
+		DayRange:  "Mon-Wed",
+		StartHour: "08:30",
+		EndHour:   "10:00",
+	}
+	err = r.Services.Repositories.PostgresRepositories.UserWorkingScheduleRepository.Store(ctx, tenant, &schedule1)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "")
+		return nil, err
+	}
+
+	schedule2 := entity.UserWorkingSchedule{
+		UserId:    userId,
+		DayRange:  "Thu-Thu",
+		StartHour: "10:00",
+		EndHour:   "14:00",
+	}
+	err = r.Services.Repositories.PostgresRepositories.UserWorkingScheduleRepository.Store(ctx, tenant, &schedule2)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "")
+		return nil, err
+	}
+
+	schedule3 := entity.UserWorkingSchedule{
+		UserId:    userId,
+		DayRange:  "Fri-Fri",
+		StartHour: "16:00",
+		EndHour:   "18:00",
+	}
+	err = r.Services.Repositories.PostgresRepositories.UserWorkingScheduleRepository.Store(ctx, tenant, &schedule3)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "")
+		return nil, err
+	}
+
+	e, err = r.Services.CommonServices.FlowService.FlowChangeStatus(ctx, e.Id, neo4jentity.FlowStatusActive)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "")
+		return nil, err
+	}
+
+	return mapper.MapEntityToFlow(e), nil
 }
 
 // FlowContactAdd is the resolver for the flowContact_Add field.

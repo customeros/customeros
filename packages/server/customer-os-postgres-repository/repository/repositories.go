@@ -61,6 +61,7 @@ type Repositories struct {
 	BrowserAutomationRunRepository              BrowserAutomationRunRepository
 	BrowserAutomationRunResultRepository        BrowserAutomationRunResultRepository
 	EmailMessageRepository                      EmailMessageRepository
+	UserWorkingScheduleRepository               UserWorkingScheduleRepository
 }
 
 func InitRepositories(db *gorm.DB) *Repositories {
@@ -120,6 +121,7 @@ func InitRepositories(db *gorm.DB) *Repositories {
 		BrowserAutomationRunRepository:              NewBrowserAutomationRunRepository(db),
 		BrowserAutomationRunResultRepository:        NewBrowserAutomationRunResultRepository(db),
 		EmailMessageRepository:                      NewEmailMessageRepository(db),
+		UserWorkingScheduleRepository:               NewUserWorkingScheduleRepository(db),
 	}
 
 	return repositories
@@ -184,7 +186,8 @@ func (r *Repositories) Migration(db *gorm.DB) {
 		&entity.EmailValidationRequestBulk{},
 		&entity.ApiBillableEvent{},
 		&entity.MailStackDomain{},
-		&entity.EmailMessage{})
+		&entity.EmailMessage{},
+		&entity.UserWorkingSchedule{})
 	if err != nil {
 		panic(err)
 	}
