@@ -215,7 +215,7 @@ export function FloatingMenu({ editor }: FloatingMenuComponentProps) {
             />
           </div>
         </Tooltip>
-        <Tooltip label='Strikethrough: ⌘ + Shift + S'>
+        <Tooltip label='Strikethrough: ⌘ + S'>
           <div>
             <FloatingToolbarButton
               active={isStrikethrough}
@@ -261,16 +261,14 @@ export function FloatingMenu({ editor }: FloatingMenuComponentProps) {
             />
           </div>
         </Tooltip>
-        <Tooltip label='Blockquote: ⌘ + Shift + >'>
-          <div>
-            <FloatingToolbarButton
-              active={isBlockquote}
-              onClick={toggleBlockquote}
-              aria-label='Format text with block quote'
-              icon={<BlockQuote className='text-inherit' />}
-            />
-          </div>
-        </Tooltip>
+        <div>
+          <FloatingToolbarButton
+            active={isBlockquote}
+            onClick={toggleBlockquote}
+            aria-label='Format text with block quote'
+            icon={<BlockQuote className='text-inherit' />}
+          />
+        </div>
       </>
     </div>
   );

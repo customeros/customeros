@@ -1,5 +1,5 @@
 import * as ReactDOM from 'react-dom';
-import { useMemo, useCallback } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 
 import { TextNode } from 'lexical';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
@@ -138,10 +138,10 @@ function VariablesTypeaheadMenuItem({
 }) {
   return (
     <li
-      tabIndex={1}
+      tabIndex={-1}
       role='option'
       key={option.key}
-      onClick={onClick}
+      onMouseDown={onClick}
       ref={option.setRefElement}
       aria-selected={isSelected}
       onMouseEnter={onMouseEnter}
@@ -152,33 +152,38 @@ function VariablesTypeaheadMenuItem({
         isSelected && 'bg-gray-50 text-gray-700',
       )}
     >
-      <span className='text'>{option.name}</span>
+      {option.name}
     </li>
   );
 }
 
 interface MentionsPluginProps {
   options: string[];
-  onSearch?: (query: string | null) => void;
 }
 
 export default function VariablesPlugin({
   options,
-  onSearch,
 }: MentionsPluginProps): JSX.Element | null {
   const [editor] = useLexicalComposerContext();
+  const [queryString, setQueryString] = useState<string | null>(null);
 
   const checkForSlashTriggerMatch = useBasicTypeaheadTriggerMatch('/', {
     minLength: 0,
   });
 
-  const _options = useMemo(
-    () =>
-      options
-        .map((item) => new VariableTypeaheadOption(item))
-        .slice(0, SUGGESTION_LIST_LENGTH_LIMIT),
-    [options],
-  );
+  const _options = useMemo(() => {
+    const res = options
+      .map((item) => new VariableTypeaheadOption(item))
+      .slice(0, SUGGESTION_LIST_LENGTH_LIMIT);
+
+    if (queryString) {
+      return res.filter((item) =>
+        item.name.toLowerCase()?.includes(queryString?.toLowerCase()),
+      );
+    }
+
+    return res;
+  }, [options, queryString]);
 
   const onSelectOption = useCallback(
     (
@@ -215,19 +220,16 @@ export default function VariablesPlugin({
   return (
     <LexicalTypeaheadMenuPlugin<VariableTypeaheadOption>
       options={_options}
+      onQueryChange={setQueryString}
       onSelectOption={onSelectOption}
       triggerFn={checkForMentionMatch}
-      onQueryChange={onSearch ?? (() => {})}
       menuRenderFn={(
         anchorElementRef,
         { selectedIndex, selectOptionAndCleanUp, setHighlightedIndex },
       ) =>
         anchorElementRef.current && _options.length
           ? ReactDOM.createPortal(
-              <div
-                data-side='bottom'
-                className='relative bg-white min-w-[250px] py-1.5 px-[6px] shadow-lg border rounded-md data-[side=top]:animate-slideDownAndFade data-[side=right]:animate-slideLeftAndFade data-[side=bottom]:animate-slideUpAndFade data-[side=left]:animate-slideRightAndFade z-50'
-              >
+              <div className='relative bg-white min-w-[250px] py-1.5 px-[6px] shadow-lg border rounded-md z-50'>
                 <ul>
                   {_options.map((option, i: number) => (
                     <VariablesTypeaheadMenuItem
