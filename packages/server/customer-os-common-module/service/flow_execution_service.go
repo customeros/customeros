@@ -649,6 +649,9 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 
 				user := mapper.MapDbNodeToUserEntity(userNode)
 
+				bodyTemplate = replacePlaceholders(bodyTemplate, "sender_first_name", user.FirstName)
+				bodyTemplate = replacePlaceholders(bodyTemplate, "sender_last_name", user.LastName)
+
 				shouldInsertEmailMessage = true
 				emailMessage = &postgresEntity.EmailMessage{
 					Status:       postgresEntity.EmailMessageStatusScheduled,

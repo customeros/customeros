@@ -7,21 +7,20 @@ package resolver
 import (
 	"context"
 	"fmt"
-	"github.com/google/uuid"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
-	"time"
 
 	"github.com/99designs/gqlgen/graphql"
+	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	opentracing "github.com/opentracing/opentracing-go"
 )
 
@@ -127,11 +126,6 @@ func (r *mutationResolver) FlowMerge(ctx context.Context, input model.FlowMergeI
 	}
 
 	return mapper.MapEntityToFlow(flow), nil
-}
-
-func parseTime(t string) time.Time {
-	parsedTime, _ := time.Parse("15:04", t)
-	return parsedTime
 }
 
 // FlowChangeStatus is the resolver for the flow_changeStatus field.
@@ -388,6 +382,8 @@ func (r *queryResolver) FlowEmailVariables(ctx context.Context) ([]*model.EmailV
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 
 	contactVariables := make([]model.EmailVariableName, 0)
+	contactVariables = append(contactVariables, model.EmailVariableNameSenderFirstName)
+	contactVariables = append(contactVariables, model.EmailVariableNameSenderLastName)
 	contactVariables = append(contactVariables, model.EmailVariableNameContactFirstName)
 	contactVariables = append(contactVariables, model.EmailVariableNameContactLastName)
 	contactVariables = append(contactVariables, model.EmailVariableNameContactEmail)
@@ -414,3 +410,16 @@ func (r *Resolver) FlowSender() generated.FlowSenderResolver { return &flowSende
 type flowResolver struct{ *Resolver }
 type flowContactResolver struct{ *Resolver }
 type flowSenderResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//    it when you're done.
+//  - You have helper methods in this file. Move them out to keep these resolver files clean.
+/*
+	func parseTime(t string) time.Time {
+	parsedTime, _ := time.Parse("15:04", t)
+	return parsedTime
+}
+*/

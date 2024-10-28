@@ -13153,6 +13153,9 @@ enum EmailVariableEntityType {
 }
 
 enum EmailVariableName {
+    SENDER_FIRST_NAME
+    SENDER_LAST_NAME
+
     CONTACT_FIRST_NAME
     CONTACT_LAST_NAME
     CONTACT_FULL_NAME

@@ -3920,6 +3920,8 @@ func (e EmailVariableEntityType) MarshalGQL(w io.Writer) {
 type EmailVariableName string
 
 const (
+	EmailVariableNameSenderFirstName  EmailVariableName = "SENDER_FIRST_NAME"
+	EmailVariableNameSenderLastName   EmailVariableName = "SENDER_LAST_NAME"
 	EmailVariableNameContactFirstName EmailVariableName = "CONTACT_FIRST_NAME"
 	EmailVariableNameContactLastName  EmailVariableName = "CONTACT_LAST_NAME"
 	EmailVariableNameContactFullName  EmailVariableName = "CONTACT_FULL_NAME"
@@ -3928,6 +3930,8 @@ const (
 )
 
 var AllEmailVariableName = []EmailVariableName{
+	EmailVariableNameSenderFirstName,
+	EmailVariableNameSenderLastName,
 	EmailVariableNameContactFirstName,
 	EmailVariableNameContactLastName,
 	EmailVariableNameContactFullName,
@@ -3937,7 +3941,7 @@ var AllEmailVariableName = []EmailVariableName{
 
 func (e EmailVariableName) IsValid() bool {
 	switch e {
-	case EmailVariableNameContactFirstName, EmailVariableNameContactLastName, EmailVariableNameContactFullName, EmailVariableNameContactEmail, EmailVariableNameOrganizationName:
+	case EmailVariableNameSenderFirstName, EmailVariableNameSenderLastName, EmailVariableNameContactFirstName, EmailVariableNameContactLastName, EmailVariableNameContactFullName, EmailVariableNameContactEmail, EmailVariableNameOrganizationName:
 		return true
 	}
 	return false
