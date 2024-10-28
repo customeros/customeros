@@ -42,7 +42,7 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
 
   const [sorting, setSorting] = useState<SortingState>([
     preset === contactsPreset
-      ? { id: ColumnViewType.ContactsUpdatedAt, desc: true }
+      ? { id: ColumnViewType.ContactsCreatedAt, desc: true }
       : { id: ColumnViewType.OrganizationsLastTouchpoint, desc: true },
   ]);
   const filtersV2 = useFeatureIsOn('filters-v2');

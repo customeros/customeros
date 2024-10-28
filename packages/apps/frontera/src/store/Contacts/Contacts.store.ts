@@ -536,6 +536,7 @@ const CONTACTS_QUERY = gql`
           appSource
         }
         updatedAt
+        createdAt
         organizations(pagination: { limit: 2, page: 0 }) {
           content {
             metadata {

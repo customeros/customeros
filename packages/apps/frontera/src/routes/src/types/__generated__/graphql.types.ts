@@ -308,6 +308,7 @@ export enum ColumnViewType {
   ContactsCity = 'CONTACTS_CITY',
   ContactsConnections = 'CONTACTS_CONNECTIONS',
   ContactsCountry = 'CONTACTS_COUNTRY',
+  ContactsCreatedAt = 'CONTACTS_CREATED_AT',
   ContactsEmails = 'CONTACTS_EMAILS',
   ContactsExperience = 'CONTACTS_EXPERIENCE',
   ContactsFlows = 'CONTACTS_FLOWS',
@@ -502,7 +503,6 @@ export type Contact = MetadataInterface &
     profilePhotoUrl?: Maybe<Scalars['String']['output']>;
     socials: Array<Social>;
     source: DataSource;
-    sourceOfTruth: DataSource;
     tags?: Maybe<Array<Tag>>;
     timelineEvents: Array<TimelineEvent>;
     timelineEventsTotalCount: Scalars['Int64']['output'];
@@ -1329,8 +1329,6 @@ export type Email = {
   primary: Scalars['Boolean']['output'];
   rawEmail?: Maybe<Scalars['String']['output']>;
   source: DataSource;
-  /** @deprecated No longer supported */
-  sourceOfTruth: DataSource;
   updatedAt: Scalars['Time']['output'];
   users: Array<User>;
   work?: Maybe<Scalars['Boolean']['output']>;
@@ -2380,22 +2378,26 @@ export type Mutation = {
   organization_AddNewLocation: Location;
   organization_AddSocial: Social;
   organization_AddSubsidiary: Organization;
+  /** @deprecated No longer supported */
   organization_AddTag: ActionResponse;
   organization_Archive?: Maybe<Result>;
   organization_ArchiveAll?: Maybe<Result>;
-  organization_Create: Organization;
   organization_Hide: Scalars['ID']['output'];
   organization_HideAll?: Maybe<Result>;
   organization_Merge: Organization;
   organization_RemoveSocial: ActionResponse;
   organization_RemoveSubsidiary: Organization;
+  /** @deprecated No longer supported */
   organization_RemoveTag: ActionResponse;
   organization_Save: Organization;
+  /** @deprecated No longer supported */
   organization_SetOwner: Organization;
   organization_Show: Scalars['ID']['output'];
   organization_ShowAll?: Maybe<Result>;
   organization_UnlinkAllDomains: Organization;
+  /** @deprecated No longer supported */
   organization_UnsetOwner: Organization;
+  /** @deprecated No longer supported */
   organization_Update: Organization;
   organization_UpdateOnboardingStatus: Organization;
   phoneNumberMergeToContact: PhoneNumber;
@@ -2953,10 +2955,6 @@ export type MutationOrganization_ArchiveArgs = {
 
 export type MutationOrganization_ArchiveAllArgs = {
   ids: Array<Scalars['ID']['input']>;
-};
-
-export type MutationOrganization_CreateArgs = {
-  input: OrganizationInput;
 };
 
 export type MutationOrganization_HideArgs = {
@@ -3938,6 +3936,7 @@ export type Query = {
   organization_CheckWebsite: WebsiteDetails;
   organization_DistinctOwners: Array<User>;
   organizations: OrganizationPage;
+  organizations_HiddenAfter: Array<Scalars['String']['output']>;
   phoneNumber: PhoneNumber;
   reminder: Reminder;
   remindersForOrganization: Array<Reminder>;
@@ -4112,6 +4111,10 @@ export type QueryOrganizationsArgs = {
   pagination?: InputMaybe<Pagination>;
   sort?: InputMaybe<Array<SortBy>>;
   where?: InputMaybe<Filter>;
+};
+
+export type QueryOrganizations_HiddenAfterArgs = {
+  date: Scalars['Time']['input'];
 };
 
 export type QueryPhoneNumberArgs = {
@@ -4847,7 +4850,6 @@ export type UserUpdateInput = {
 
 export type WebsiteDetails = {
   __typename?: 'WebsiteDetails';
-  alternativePrimaryDomain: Scalars['String']['output'];
   domain: Scalars['String']['output'];
   primary: Scalars['Boolean']['output'];
   website: Scalars['String']['output'];

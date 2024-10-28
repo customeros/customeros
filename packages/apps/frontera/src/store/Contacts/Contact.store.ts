@@ -536,7 +536,7 @@ const CONTACT_QUERY = gql`
       firstName
       lastName
       name
-
+      createdAt
       prefix
       description
       timezone
@@ -707,7 +707,6 @@ const getDefaultValue = (): Contact => ({
   socials: [],
   timezone: '',
   source: DataSource.Openline,
-  sourceOfTruth: DataSource.Openline,
   timelineEvents: [],
   timelineEventsTotalCount: 0,
   updatedAt: '',
