@@ -10,6 +10,8 @@ replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-
 
 replace github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto => ../events-processing-proto
 
+replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai => ../customer-os-common-ai
+
 require (
 	github.com/PuerkitoBio/goquery v1.9.2
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
