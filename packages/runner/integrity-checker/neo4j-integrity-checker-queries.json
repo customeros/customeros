@@ -220,11 +220,11 @@
           "query": "MATCH (t:Tenant {active:true})--(e:Email) WHERE e.rawEmail <> '' AND e.techValidatedAt IS NULL AND e.updatedAt < datetime() - duration({minutes:60}) RETURN count(e)"
         },
         {
-          "name": "Duplicate emails by clean email",
+          "name": "Duplicate emails by raw email",
           "query": "MATCH (t:Tenant)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email) where e.rawEmail <> '' AND e.rawEmail IS NOT NULL WITH t, e.rawEmail AS email, COUNT(e) AS emailCount WHERE emailCount > 1 RETURN count(email)"
         },
         {
-          "name": "Duplicate emails by raw email",
+          "name": "Duplicate emails by clean email",
           "query": "MATCH (t:Tenant)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email) where e.email <> '' AND e.email IS NOT NULL WITH t, e.email AS email, COUNT(e) AS emailCount WHERE emailCount > 1 RETURN count(email)"
         },
         {

@@ -140,7 +140,7 @@ func (s *emailService) ValidateEmails() {
 
 	limit := s.cfg.Limits.EmailsValidationLimit
 	delayFromLastUpdateInSeconds := 10
-	delayFromLastValidationAttemptInMinutes := 24 * 60 // 24 hours
+	delayFromLastValidationAttemptInMinutes := 30 // 30 minutes
 
 	for {
 		select {
