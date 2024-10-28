@@ -19,6 +19,7 @@ type Config struct {
 	Neo4j              config.Neo4jConfig
 	Postgres           config.PostgresConfig
 	Jaeger             tracing.JaegerConfig
+	RabbitMQConfig     config.RabbitMQConfig
 	Subscriptions      Subscriptions
 	Services           Services
 	EventNotifications EventNotifications

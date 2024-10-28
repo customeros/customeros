@@ -86,18 +86,6 @@ func (c *Contact) HasLocation(locationId string) bool {
 	return false
 }
 
-func (c *Contact) GetSocialIdForUrl(url string) string {
-	if c.Socials == nil {
-		return ""
-	}
-	for key, social := range c.Socials {
-		if social.Url == url {
-			return key
-		}
-	}
-	return ""
-}
-
 func (c *Contact) HasJobRoleInOrganization(organizationId string, jobRoleFields JobRole, sourceFields cmnmod.Source) bool {
 	if c.JobRolesByOrganization == nil {
 		return false
