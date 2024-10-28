@@ -58,9 +58,7 @@ func (a *ContactAggregate) removeSocial(ctx context.Context, request *contactpb.
 
 	socialId := request.SocialId
 	if socialId == "" {
-		if existingSocialId := a.Contact.GetSocialIdForUrl(request.Url); existingSocialId != "" {
-			socialId = existingSocialId
-		}
+		return errors.New("SocialId is required")
 	}
 
 	removeSocialEvent, err := event.NewContactRemoveSocialEvent(a, socialId, request.Url)
