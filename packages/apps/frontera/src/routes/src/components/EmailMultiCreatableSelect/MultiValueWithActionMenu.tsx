@@ -127,7 +127,6 @@ export const MultiValueWithActionMenu: FC<MultiValueWithActionMenuProps> =
                   organizations: [],
                   primary: false,
                   source: DataSource.Openline,
-                  sourceOfTruth: DataSource.Openline,
                   updatedAt: undefined,
                   users: [],
                 },

@@ -136,7 +136,6 @@ const getDefaultValue = (): FlowContact => ({
     socials: [],
     timezone: '',
     source: DataSource.Openline,
-    sourceOfTruth: DataSource.Openline,
     timelineEvents: [],
     timelineEventsTotalCount: 0,
     updatedAt: '',
