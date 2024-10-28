@@ -16,6 +16,7 @@ export const CommandsContainer = ({
 }) => {
   return (
     <Command
+      loop
       data-test={dataTest}
       filter={(value, search, keywords) => {
         const extendValue = value.replace(/\s/g, '') + keywords;

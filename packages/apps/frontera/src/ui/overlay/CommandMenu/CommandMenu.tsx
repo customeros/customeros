@@ -80,22 +80,36 @@ interface CommandItemProps extends React.HTMLAttributes<HTMLDivElement> {
   rightAccessory?: React.ReactNode;
 }
 
-export const CommandItem = ({
-  children,
-  dataTest,
-  disabled,
-  leftAccessory,
-  rightAccessory,
-  ...props
-}: CommandItemProps) => {
-  return (
-    <Command.Item data-test={dataTest} {...props}>
-      {leftAccessory}
-      {children}
-      <div className='flex gap-1 items-center ml-auto'>{rightAccessory}</div>
-    </Command.Item>
-  );
-};
+export const CommandItem = forwardRef<HTMLDivElement, CommandItemProps>(
+  (
+    {
+      children,
+      dataTest,
+      disabled = false,
+      leftAccessory,
+      rightAccessory,
+      ...props
+    }: CommandItemProps,
+    ref,
+  ) => {
+    return (
+      <Command.Item
+        ref={ref}
+        disabled={disabled}
+        data-test={dataTest}
+        {...props}
+      >
+        {leftAccessory && <span>{leftAccessory}</span>}
+        {children}
+        {rightAccessory && (
+          <div className='flex gap-1 items-center ml-auto'>
+            {rightAccessory}
+          </div>
+        )}
+      </Command.Item>
+    );
+  },
+);
 
 interface CommandSubItemProps extends Partial<CommandItemProps> {
   leftLabel: string;
