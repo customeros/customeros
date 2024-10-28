@@ -51,7 +51,7 @@ export const getFilterTypes = (
     },
     [ColumnViewType.OpportunitiesOrganization]: {
       filterType: 'text',
-      filterName: 'Organization',
+      filterName: 'Organization name',
       filterAccesor: ColumnViewType.OpportunitiesOrganization,
       filterOperators: [
         ComparisonOperator.Contains,
@@ -80,7 +80,7 @@ export const getFilterTypes = (
 
     [ColumnViewType.OpportunitiesNextStep]: {
       filterType: 'text',
-      filterName: 'Next Steps',
+      filterName: 'Next step',
       filterAccesor: ColumnViewType.OpportunitiesNextStep,
       filterOperators: [
         ComparisonOperator.Contains,
