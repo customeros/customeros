@@ -1,16 +1,19 @@
 import { useParams } from 'react-router-dom';
 import { useRef, useMemo, useState, useEffect } from 'react';
 
+import { LexicalEditor } from 'lexical';
 import { observer } from 'mobx-react-lite';
-import { FlowActionType } from '@store/Flows/types.ts';
+import { FlowActionType } from '@store/Flows/types';
 
-import { Input } from '@ui/form/Input';
+import { cn } from '@ui/utils/cn';
 import { Check } from '@ui/media/icons/Check';
 import { Button } from '@ui/form/Button/Button';
 import { Editor } from '@ui/form/Editor/Editor';
 import { useStore } from '@shared/hooks/useStore';
-import { ChevronRight } from '@ui/media/icons/ChevronRight.tsx';
+import { ChevronRight } from '@ui/media/icons/ChevronRight';
 import { Modal, ModalPortal, ModalContent } from '@ui/overlay/Modal';
+import { extractPlainText } from '@ui/form/Editor/utils/extractPlainText';
+import { convertPlainTextToHtml } from '@ui/form/Editor/utils/convertPlainTextToHtml';
 
 import { useUndoRedo } from '../hooks';
 
@@ -32,7 +35,7 @@ export const EmailEditorModal = observer(
     handleCancel,
   }: EmailEditorModalProps) => {
     const id = useParams().id as string;
-    const inputRef = useRef<HTMLInputElement>(null);
+    const inputRef = useRef<LexicalEditor>(null);
 
     const [subject, setSubject] = useState(data?.subject ?? '');
     const [bodyTemplate, setBodyTemplate] = useState(data?.bodyTemplate ?? '');
@@ -109,15 +112,25 @@ export const EmailEditorModal = observer(
               </div>
             </div>
             <div className='w-[570px] relative'>
-              <Input
-                ref={inputRef}
-                value={subject}
-                variant='unstyled'
-                placeholder='Subject'
-                className='font-medium text-lg min-h-[auto]'
-                onChange={(e) => setSubject(e.target.value)}
-                disabled={data.action === FlowActionType.EMAIL_REPLY}
-              />
+              <div>
+                <Editor
+                  size='md'
+                  usePlainText
+                  ref={inputRef}
+                  placeholder='Subject'
+                  namespace='flow-email-editor-subject'
+                  onChange={(html) => setSubject(extractPlainText(html))}
+                  defaultHtmlValue={convertPlainTextToHtml(subject ?? '')}
+                  placeholderClassName='text-lg font-medium h-auto cursor-text'
+                  className={cn(
+                    `text-lg font-medium h-auto cursor-text email-editor-subject`,
+                    {
+                      'pointer-events-none text-gray-400':
+                        data.action === FlowActionType.EMAIL_REPLY,
+                    },
+                  )}
+                />
+              </div>
               <div className='h-[60vh] mb-10'>
                 <Editor
                   placeholder={placeholder}

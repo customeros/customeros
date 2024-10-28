@@ -237,7 +237,7 @@ export const Editor = forwardRef<LexicalEditor | null, EditorProps>(
             />
           )}
 
-          {floatingAnchorElem && (
+          {floatingAnchorElem && !usePlainText && (
             <>
               <FloatingLinkEditorPlugin anchorElem={floatingAnchorElem} />
               <FloatingMenuPlugin
