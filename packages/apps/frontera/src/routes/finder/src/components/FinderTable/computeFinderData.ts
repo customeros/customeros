@@ -186,7 +186,10 @@ export const computeFinderData = (
     )
     .with(TableViewType.Invoices, () =>
       store.invoices.toComputedArray((arr) => {
-        const filters = getInvoiceFilterFns(tableViewDef?.getFilters());
+        const filters = getInvoiceFilterFns(
+          tableViewDef?.getFilters(),
+          isFeatureEnabled,
+        );
 
         if (filters) {
           arr = arr.filter((v) => filters.every((fn) => fn(v)));

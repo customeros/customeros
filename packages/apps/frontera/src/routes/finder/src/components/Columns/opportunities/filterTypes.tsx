@@ -120,7 +120,7 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.IsEmpty,
         ComparisonOperator.IsNotEmpty,
       ],
-      icon: <Key01 />,
+      icon: <Key01 className='grou-hover:text-gray-700 text-gray-500' />,
       options: store?.users.toArray().map((user) => ({
         id: user?.id,
         label: user?.name,

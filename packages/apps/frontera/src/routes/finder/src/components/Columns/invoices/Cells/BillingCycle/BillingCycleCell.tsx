@@ -29,9 +29,9 @@ const getBillingCycleLabel = (cycleInMonths: number) => {
 
 export const BillingCycleCell = observer(({ id }: { id: string }) => {
   const store = useStore();
-  const billingCycle =
-    store.invoices?.value?.get(id)?.contract?.billingDetails
-      ?.billingCycleInMonths;
+
+  const billingCycle = store.invoices?.toArray().find((i) => i.id === id)?.value
+    .contract.billingDetails?.billingCycleInMonths;
 
   return (
     <div className={cn(billingCycle ? 'text-gray-700' : 'text-gray-500')}>

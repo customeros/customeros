@@ -178,6 +178,7 @@ const INVOICES_QUERY = gql`
         metadata {
           id
         }
+        contractName
         billingDetails {
           canPayWithBankTransfer
           billingCycleInMonths

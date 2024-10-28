@@ -107,7 +107,7 @@ const columns: Record<string, Column> = {
     minSize: 160,
     maxSize: 600,
     enableResizing: true,
-    enableColumnFilter: false,
+    enableColumnFilter: true,
     enableSorting: true,
     header: (props) => (
       <THead

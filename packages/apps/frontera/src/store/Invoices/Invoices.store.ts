@@ -157,6 +157,7 @@ const INVOICES_QUERY = gql`
             billingCycleInMonths
             canPayWithBankTransfer
           }
+          contractName
         }
         provider {
           logoUrl

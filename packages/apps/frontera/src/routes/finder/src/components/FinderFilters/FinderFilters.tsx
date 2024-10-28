@@ -14,8 +14,10 @@ import {
 } from '@shared/types/__generated__/graphql.types';
 
 import { getFilterTypes as getFilterTypesForContacts } from '../Columns/contacts/filterTypes';
+import { getFilterTypes as getFilterTypesForUpcomingInvoices } from '../Columns/invoices/filterTypes';
 import { getFilterTypes as getFilterTypesForOrganizations } from '../Columns/organizations/filterTypes';
 import { getFilterTypes as getFilterTypesForOpportunities } from '../Columns/opportunities/filterTypes';
+import { getFilterTypes as getFilterTypesForPastInvoices } from '../Columns/invoices/filterTypesPastInvoices';
 
 export const FinderFilters = observer(
   ({ tableId, type }: { type: TableViewType; tableId: TableIdType }) => {
@@ -27,6 +29,11 @@ export const FinderFilters = observer(
         TableIdType.OpportunitiesRecords,
         () => getFilterTypesForOpportunities,
       )
+      .with(
+        TableIdType.UpcomingInvoices,
+        () => getFilterTypesForUpcomingInvoices,
+      )
+      .with(TableIdType.PastInvoices, () => getFilterTypesForPastInvoices)
       .otherwise(() => getFilterTypesForOrganizations);
 
     const [searchParams] = useSearchParams();
@@ -77,6 +84,13 @@ export const FinderFilters = observer(
           }
 
           if (
+            tableId === TableIdType.PastInvoices &&
+            filter.property === 'INVOICE_DRY_RUN'
+          ) {
+            return false;
+          }
+
+          if (
             (tableId === TableIdType.Targets &&
               filter.property === 'RELATIONSHIP') ||
             filter.property === 'STAGE'
@@ -86,6 +100,12 @@ export const FinderFilters = observer(
 
           return true;
         }) ?? [];
+
+    // tableViewDef?.setFilter({
+    //   property: 'INVOICE_DRY_RUN',
+    //   value: false,
+    //   active: true,
+    // });
 
     return (
       <Filters
