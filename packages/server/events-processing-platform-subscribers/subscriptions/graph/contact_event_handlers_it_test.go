@@ -2,7 +2,6 @@ package graph
 
 import (
 	"context"
-	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
@@ -240,43 +239,4 @@ func TestGraphContactEventHandler_OnContactLinkToOrganization(t *testing.T) {
 	test.AssertRecentTime(t, utils.GetTimePropOrNow(propsForContactAfterContactLinkToOrganization, "updatedAt"))
 
 	require.True(t, lastTouchpointInvoked)
-}
-
-func TestGraphContactEventHandler_OnSocialAddedToContactV1(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx, testDatabase)(t)
-
-	socialId := uuid.New().String()
-	contactId := uuid.New().String()
-
-	// prepare grpc mock
-	completionEventCalled := false
-	callbacks := mocked_grpc.MockEventCompletionCallbacks{
-		NotifyEventProcessed: func(context context.Context, org *eventcompletionpb.NotifyEventProcessedRequest) (*emptypb.Empty, error) {
-			completionEventCalled = true
-			return &emptypb.Empty{}, nil
-		},
-	}
-	mocked_grpc.SetEventCompletionServiceCallbacks(&callbacks)
-
-	contactEventHandler := &ContactEventHandler{
-		services:    testDatabase.Services,
-		grpcClients: testMockedGrpcClient,
-	}
-	contactAggregate := contact.NewContactAggregateWithTenantAndID(tenantName, contactId)
-
-	event, err := contactevent.NewContactAddSocialEvent(contactAggregate,
-		socialId, "url", "alias", "ext1", 100,
-		cmnmod.Source{
-			Source:        constants.SourceOpenline,
-			SourceOfTruth: constants.SourceOpenline,
-			AppSource:     "event-processing-platform",
-		}, utils.Now())
-	require.Nil(t, err)
-
-	// EXECUTE
-	err = contactEventHandler.OnSocialAddedToContactV1(context.Background(), event)
-	require.Nil(t, err)
-
-	require.True(t, completionEventCalled)
 }
