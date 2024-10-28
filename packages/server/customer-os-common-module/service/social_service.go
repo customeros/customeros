@@ -15,13 +15,14 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
+	"strings"
 )
 
 type SocialService interface {
-	Update(ctx context.Context, tenant string, entity neo4jentity.SocialEntity) (*neo4jentity.SocialEntity, error)
-	GetAllForEntities(ctx context.Context, tenant string, linkedEntityType model.EntityType, linkedEntityIds []string) (*neo4jentity.SocialEntities, error)
-	Remove(ctx context.Context, tenant, socialId string) error
 	MergeSocialWithEntity(ctx context.Context, linkWith LinkWith, socialEntity neo4jentity.SocialEntity) (string, error)
+	Update(ctx context.Context, tenant string, entity neo4jentity.SocialEntity) (*neo4jentity.SocialEntity, error)
+	Remove(ctx context.Context, tenant, socialId string) error
+	GetAllForEntities(ctx context.Context, tenant string, linkedEntityType model.EntityType, linkedEntityIds []string) (*neo4jentity.SocialEntities, error)
 }
 
 type socialService struct {
@@ -97,16 +98,6 @@ func (s *socialService) MergeSocialWithEntity(ctx context.Context, linkWith Link
 		return "", err
 	}
 
-	// get or generate social id
-	socialId := socialEntity.Id
-	if socialId == "" {
-		socialId, err = s.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelSocial)
-		if err != nil {
-			return "", err
-		}
-	}
-	tracing.TagEntity(span, socialId)
-
 	// validate linked entity exists
 	exists, err := s.services.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, tenant, linkWith.Id, linkWith.Type.Neo4jLabel())
 	if err != nil {
@@ -119,10 +110,33 @@ func (s *socialService) MergeSocialWithEntity(ctx context.Context, linkWith Link
 		return "", err
 	}
 
+	// get or generate social id
+	createSocialFlow := false
+	socialId := socialEntity.Id
+	if socialId == "" {
+		createSocialFlow = true
+		socialId, err = s.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelSocial)
+		if err != nil {
+			return "", err
+		}
+	}
+	tracing.TagEntity(span, socialId)
+
+	socialUrl := strings.TrimSpace(socialEntity.Url)
+
+	// adjust social url value
+	if strings.HasPrefix(socialUrl, "linkedin.com") {
+		socialUrl = "https://www." + socialUrl
+	}
+	if strings.Contains(socialUrl, "linkedin.com") && !strings.HasSuffix(socialUrl, "") {
+		socialUrl = socialUrl + "/"
+	}
+	span.LogFields(log.String("socialUrl", socialUrl))
+
 	// save social to neo4j
 	data := neo4jrepository.SocialFields{
 		SocialId:       socialId,
-		Url:            socialEntity.Url,
+		Url:            socialUrl,
 		Alias:          socialEntity.Alias,
 		ExternalId:     socialEntity.ExternalId,
 		FollowersCount: socialEntity.FollowersCount,
@@ -138,11 +152,23 @@ func (s *socialService) MergeSocialWithEntity(ctx context.Context, linkWith Link
 		return "", err
 	}
 
+	if createSocialFlow {
+		err = s.services.RabbitMQService.Publish(ctx, socialId, model.SOCIAL, dto.CreateSocial{
+			Url:           socialUrl,
+			Alias:         socialEntity.Alias,
+			ExtId:         socialEntity.ExternalId,
+			FollowerCount: socialEntity.FollowersCount,
+		})
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateSocial"))
+		}
+	}
+
 	switch linkWith.Type {
 	case model.CONTACT:
 		err = s.services.RabbitMQService.Publish(ctx, linkWith.Id, model.CONTACT, dto.AddSocialToContact{
 			SocialId: socialId,
-			Social:   socialEntity.Url,
+			Social:   socialUrl,
 		})
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "unable to publish message AddSocialToContact"))
@@ -152,7 +178,7 @@ func (s *socialService) MergeSocialWithEntity(ctx context.Context, linkWith Link
 	case model.ORGANIZATION:
 		err = s.services.RabbitMQService.Publish(ctx, linkWith.Id, model.ORGANIZATION, dto.AddSocialToOrganization{
 			SocialId: socialId,
-			Social:   socialEntity.Url,
+			Social:   socialUrl,
 		})
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "unable to publish message AddSocialToOrganization"))

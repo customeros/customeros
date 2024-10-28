@@ -28,6 +28,7 @@ const (
 	FLOW_SENDER           EntityType = "FLOW_SENDER"
 	CUSTOM_FIELD          EntityType = "CUSTOM_FIELD"
 	CUSTOM_FIELD_TEMPLATE EntityType = "CUSTOM_FIELD_TEMPLATE"
+	SOCIAL                EntityType = "SOCIAL"
 )
 
 func (entityType EntityType) String() string {
@@ -84,6 +85,8 @@ func (entityType EntityType) Neo4jLabel() string {
 		return NodeLabelCustomField
 	case CUSTOM_FIELD_TEMPLATE:
 		return NodeLabelCustomFieldTemplate
+	case SOCIAL:
+		return NodeLabelSocial
 	}
 	return "Unknown"
 }
