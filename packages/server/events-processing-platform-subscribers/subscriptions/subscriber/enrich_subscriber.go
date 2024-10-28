@@ -112,7 +112,6 @@ func (s *EnrichSubscriber) When(ctx context.Context, evt eventstore.Event) error
 
 	acceptedEventTypes := []string{
 		contactevent.ContactRequestEnrichV1,
-		contactevent.ContactAddSocialV1,
 		emailevent.EmailValidateV1,
 	}
 	if !utils.Contains(acceptedEventTypes, evt.GetEventType()) {
@@ -125,9 +124,6 @@ func (s *EnrichSubscriber) When(ctx context.Context, evt eventstore.Event) error
 	switch evt.GetEventType() {
 	case contactevent.ContactRequestEnrichV1:
 		_ = s.contactEventHandler.OnEnrichContactRequested(ctx, evt)
-	case contactevent.ContactAddSocialV1:
-		// TODO remove this and remove proto method
-		_ = s.contactEventHandler.OnSocialAddedToContact(ctx, evt)
 	case emailevent.EmailValidateV1:
 		_ = s.emailEventHandler.OnEmailValidate(ctx, evt)
 	}

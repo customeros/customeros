@@ -8,7 +8,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
 	locationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/location"
-	socialpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/social"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event/contact"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event/contact/event"
@@ -166,30 +165,6 @@ func (s *contactService) LinkWithOrganization(ctx context.Context, request *cont
 	}
 
 	return &contactpb.ContactIdGrpcResponse{Id: request.ContactId}, nil
-}
-
-func (s *contactService) AddSocial(ctx context.Context, request *contactpb.ContactAddSocialGrpcRequest) (*socialpb.SocialIdGrpcResponse, error) {
-	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ContactService.AddSocial")
-	defer span.Finish()
-	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	tracing.LogObjectAsJson(span, "request", request)
-	span.SetTag(tracing.SpanTagEntityId, request.ContactId)
-
-	initAggregateFunc := func() eventstore.Aggregate {
-		return contact.NewContactAggregateWithTenantAndID(request.Tenant, request.ContactId)
-	}
-
-	if request.SocialId == "" {
-		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("id"))
-	}
-	socialId, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("(AddSocial.HandleGRPCRequest) tenant:{%s}, contact ID: {%s}, err: %s", request.Tenant, request.ContactId, err.Error())
-		return nil, grpcerr.ErrResponse(err)
-	}
-
-	return &socialpb.SocialIdGrpcResponse{Id: socialId.(string)}, nil
 }
 
 func (s *contactService) RemoveSocial(ctx context.Context, request *contactpb.ContactRemoveSocialGrpcRequest) (*contactpb.ContactIdGrpcResponse, error) {

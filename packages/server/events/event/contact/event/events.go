@@ -20,8 +20,9 @@ const (
 	ContactEmailUnlinkV1      = "V1_CONTACT_EMAIL_UNLINK"
 	ContactLocationLinkV1     = "V1_CONTACT_LOCATION_LINK"
 	ContactOrganizationLinkV1 = "V1_CONTACT_ORGANIZATION_LINK"
-	ContactAddSocialV1        = "V1_CONTACT_ADD_SOCIAL"
-	ContactRemoveSocialV1     = "V1_CONTACT_REMOVE_SOCIAL"
+	// Deprecated
+	ContactAddSocialV1    = "V1_CONTACT_ADD_SOCIAL"
+	ContactRemoveSocialV1 = "V1_CONTACT_REMOVE_SOCIAL"
 	//Deprecated
 	ContactAddTagV1 = "V1_CONTACT_ADD_TAG"
 	//Deprecated

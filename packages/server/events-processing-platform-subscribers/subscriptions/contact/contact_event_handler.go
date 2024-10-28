@@ -81,27 +81,6 @@ func (h *ContactEventHandler) OnEnrichContactRequested(ctx context.Context, evt 
 	return h.enrichContact(ctx, eventData.Tenant, contactId, "")
 }
 
-func (h *ContactEventHandler) OnSocialAddedToContact(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactEventHandler.OnSocialAddedToContact")
-	defer span.Finish()
-	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
-
-	var eventData contactevent.ContactAddSocialEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "evt.GetJsonData"))
-		return errors.Wrap(err, "evt.GetJsonData")
-	}
-	contactId := contact.GetContactObjectID(evt.AggregateID, eventData.Tenant)
-	span.SetTag(tracing.SpanTagEntityId, contactId)
-	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
-
-	if strings.Contains(eventData.Url, "linkedin.com") {
-		return h.enrichContact(ctx, eventData.Tenant, contactId, eventData.Url)
-	}
-
-	return nil
-}
-
 func (h *ContactEventHandler) enrichContact(ctx context.Context, tenant, contactId, linkedInUrl string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactEventHandler.enrichContact")
 	defer span.Finish()

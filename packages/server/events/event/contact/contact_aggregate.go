@@ -38,8 +38,6 @@ func (a *ContactAggregate) HandleGRPCRequest(ctx context.Context, request any, p
 	defer span.Finish()
 
 	switch r := request.(type) {
-	case *contactpb.ContactAddSocialGrpcRequest:
-		return a.addSocial(ctx, r)
 	case *contactpb.ContactRemoveSocialGrpcRequest:
 		return nil, a.removeSocial(ctx, r)
 	case *contactpb.ContactAddLocationGrpcRequest:
@@ -48,34 +46,6 @@ func (a *ContactAggregate) HandleGRPCRequest(ctx context.Context, request any, p
 		tracing.TraceErr(span, eventstore.ErrInvalidRequestType)
 		return nil, eventstore.ErrInvalidRequestType
 	}
-}
-
-func (a *ContactAggregate) addSocial(ctx context.Context, request *contactpb.ContactAddSocialGrpcRequest) (string, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "ContactAggregate.addSocial")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
-	tracing.LogObjectAsJson(span, "request", request)
-
-	createdAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.CreatedAt), utils.Now())
-
-	sourceFields := cmnmod.Source{}
-	sourceFields.FromGrpc(request.SourceFields)
-	sourceFields.SetDefaultValues()
-
-	addSocialEvent, err := event.NewContactAddSocialEvent(a, request.SocialId, request.Url, request.Alias, request.ExternalId, request.FollowersCount, sourceFields, createdAtNotNil)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return "", errors.Wrap(err, "NewContactAddSocialEvent")
-	}
-	eventstore.EnrichEventWithMetadataExtended(&addSocialEvent, span, eventstore.EventMetadata{
-		Tenant: a.GetTenant(),
-		UserId: request.LoggedInUserId,
-		App:    sourceFields.AppSource,
-	})
-
-	return request.SocialId, a.Apply(addSocialEvent)
 }
 
 func (a *ContactAggregate) removeSocial(ctx context.Context, request *contactpb.ContactRemoveSocialGrpcRequest) error {
@@ -183,10 +153,6 @@ func (a *ContactAggregate) When(evt eventstore.Event) error {
 		return a.onLocationLink(evt)
 	case event.ContactOrganizationLinkV1:
 		return a.onOrganizationLink(evt)
-	case event.ContactAddSocialV1:
-		return a.onAddSocial(evt)
-	case event.ContactRemoveSocialV1:
-		return a.onRemoveSocial(evt)
 	case event.ContactAddLocationV1:
 		return a.onAddLocation(evt)
 	default:
@@ -266,35 +232,6 @@ func (a *ContactAggregate) onOrganizationLink(evt eventstore.Event) error {
 	}
 
 	a.Contact.UpdatedAt = eventData.UpdatedAt
-	return nil
-}
-
-func (a *ContactAggregate) onAddSocial(evt eventstore.Event) error {
-	var eventData event.ContactAddSocialEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		return errors.Wrap(err, "GetJsonData")
-	}
-	if a.Contact.Socials == nil {
-		a.Contact.Socials = make(map[string]cmnmod.Social)
-	}
-	a.Contact.Socials[eventData.SocialId] = cmnmod.Social{
-		Url:            eventData.Url,
-		Alias:          eventData.Alias,
-		ExternalId:     eventData.ExternalId,
-		FollowersCount: eventData.FollowersCount,
-	}
-	return nil
-}
-
-func (a *ContactAggregate) onRemoveSocial(evt eventstore.Event) error {
-	var eventData event.ContactAddSocialEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		return errors.Wrap(err, "GetJsonData")
-	}
-	if a.Contact.Socials == nil {
-		a.Contact.Socials = make(map[string]cmnmod.Social)
-	}
-	delete(a.Contact.Socials, eventData.SocialId)
 	return nil
 }
 

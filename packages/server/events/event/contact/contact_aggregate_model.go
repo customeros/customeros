@@ -23,7 +23,6 @@ type Contact struct {
 	CreatedAt       time.Time                     `json:"createdAt"`
 	UpdatedAt       time.Time                     `json:"updatedAt"`
 	PhoneNumbers    map[string]ContactPhoneNumber `json:"phoneNumbers"`
-	Socials         map[string]cmnmod.Social      `json:"socials,omitempty"`
 	// Deprecated
 	LocationIds            []string                   `json:"locationIds,omitempty"`
 	ExternalSystems        []cmnmod.ExternalSystem    `json:"externalSystems"`

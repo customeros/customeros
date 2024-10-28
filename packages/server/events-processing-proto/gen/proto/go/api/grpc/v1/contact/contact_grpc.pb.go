@@ -9,7 +9,6 @@ package contact_grpc_service
 import (
 	context "context"
 	location "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/location"
-	social "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/social"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -27,7 +26,6 @@ type ContactGrpcServiceClient interface {
 	LinkPhoneNumberToContact(ctx context.Context, in *LinkPhoneNumberToContactGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error)
 	LinkLocationToContact(ctx context.Context, in *LinkLocationToContactGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error)
 	LinkWithOrganization(ctx context.Context, in *LinkWithOrganizationGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error)
-	AddSocial(ctx context.Context, in *ContactAddSocialGrpcRequest, opts ...grpc.CallOption) (*social.SocialIdGrpcResponse, error)
 	RemoveSocial(ctx context.Context, in *ContactRemoveSocialGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error)
 	EnrichContact(ctx context.Context, in *EnrichContactGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error)
 	AddLocation(ctx context.Context, in *ContactAddLocationGrpcRequest, opts ...grpc.CallOption) (*location.LocationIdGrpcResponse, error)
@@ -68,15 +66,6 @@ func (c *contactGrpcServiceClient) LinkWithOrganization(ctx context.Context, in 
 	return out, nil
 }
 
-func (c *contactGrpcServiceClient) AddSocial(ctx context.Context, in *ContactAddSocialGrpcRequest, opts ...grpc.CallOption) (*social.SocialIdGrpcResponse, error) {
-	out := new(social.SocialIdGrpcResponse)
-	err := c.cc.Invoke(ctx, "/contactGrpcService/AddSocial", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *contactGrpcServiceClient) RemoveSocial(ctx context.Context, in *ContactRemoveSocialGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error) {
 	out := new(ContactIdGrpcResponse)
 	err := c.cc.Invoke(ctx, "/contactGrpcService/RemoveSocial", in, out, opts...)
@@ -111,7 +100,6 @@ type ContactGrpcServiceServer interface {
 	LinkPhoneNumberToContact(context.Context, *LinkPhoneNumberToContactGrpcRequest) (*ContactIdGrpcResponse, error)
 	LinkLocationToContact(context.Context, *LinkLocationToContactGrpcRequest) (*ContactIdGrpcResponse, error)
 	LinkWithOrganization(context.Context, *LinkWithOrganizationGrpcRequest) (*ContactIdGrpcResponse, error)
-	AddSocial(context.Context, *ContactAddSocialGrpcRequest) (*social.SocialIdGrpcResponse, error)
 	RemoveSocial(context.Context, *ContactRemoveSocialGrpcRequest) (*ContactIdGrpcResponse, error)
 	EnrichContact(context.Context, *EnrichContactGrpcRequest) (*ContactIdGrpcResponse, error)
 	AddLocation(context.Context, *ContactAddLocationGrpcRequest) (*location.LocationIdGrpcResponse, error)
@@ -129,9 +117,6 @@ func (UnimplementedContactGrpcServiceServer) LinkLocationToContact(context.Conte
 }
 func (UnimplementedContactGrpcServiceServer) LinkWithOrganization(context.Context, *LinkWithOrganizationGrpcRequest) (*ContactIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method LinkWithOrganization not implemented")
-}
-func (UnimplementedContactGrpcServiceServer) AddSocial(context.Context, *ContactAddSocialGrpcRequest) (*social.SocialIdGrpcResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AddSocial not implemented")
 }
 func (UnimplementedContactGrpcServiceServer) RemoveSocial(context.Context, *ContactRemoveSocialGrpcRequest) (*ContactIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RemoveSocial not implemented")
@@ -208,24 +193,6 @@ func _ContactGrpcService_LinkWithOrganization_Handler(srv interface{}, ctx conte
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ContactGrpcService_AddSocial_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ContactAddSocialGrpcRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ContactGrpcServiceServer).AddSocial(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/contactGrpcService/AddSocial",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ContactGrpcServiceServer).AddSocial(ctx, req.(*ContactAddSocialGrpcRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _ContactGrpcService_RemoveSocial_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ContactRemoveSocialGrpcRequest)
 	if err := dec(in); err != nil {
@@ -298,10 +265,6 @@ var ContactGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "LinkWithOrganization",
 			Handler:    _ContactGrpcService_LinkWithOrganization_Handler,
-		},
-		{
-			MethodName: "AddSocial",
-			Handler:    _ContactGrpcService_AddSocial_Handler,
 		},
 		{
 			MethodName: "RemoveSocial",

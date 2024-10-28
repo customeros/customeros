@@ -12,9 +12,6 @@ import (
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
-	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
-	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
-	socialpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/social"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -131,33 +128,6 @@ func (s *socialService) MergeSocialWithEntity(ctx context.Context, linkWith Link
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return "", err
-	}
-
-	// send event to event store
-	// TODO alexb remove the call
-	if linkWith.Type == model.CONTACT {
-		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = utils.CallEventsPlatformGRPCWithRetry[*socialpb.SocialIdGrpcResponse](func() (*socialpb.SocialIdGrpcResponse, error) {
-			return s.services.GrpcClients.ContactClient.AddSocial(ctx, &contactpb.ContactAddSocialGrpcRequest{
-				Tenant:         tenant,
-				ContactId:      linkWith.Id,
-				LoggedInUserId: common.GetUserIdFromContext(ctx),
-				SourceFields: &commonpb.SourceFields{
-					Source:    neo4jmodel.GetSource(socialEntity.Source.String()),
-					AppSource: neo4jmodel.GetAppSource(socialEntity.AppSource),
-				},
-				Url:            socialEntity.Url,
-				CreatedAt:      utils.ConvertTimeToTimestampPtr(utils.TimePtr(utils.TimeOrNow(socialEntity.CreatedAt))),
-				SocialId:       socialId,
-				Alias:          socialEntity.Alias,
-				ExternalId:     socialEntity.ExternalId,
-				FollowersCount: socialEntity.FollowersCount,
-			})
-		})
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "error while sending event"))
-			return socialId, err
-		}
 	}
 
 	switch linkWith.Type {
