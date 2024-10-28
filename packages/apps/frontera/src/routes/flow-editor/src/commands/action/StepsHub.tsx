@@ -14,7 +14,9 @@ import { RefreshCw01 } from '@ui/media/icons/RefreshCw01.tsx';
 import { ArrowIfPath } from '@ui/media/icons/ArrowIfPath.tsx';
 import { ClipboardCheck } from '@ui/media/icons/ClipboardCheck.tsx';
 import { LinkedinOutline } from '@ui/media/icons/LinkedinOutline.tsx';
+
 const MINUTES_PER_DAY = 1440;
+const DEFAULT_FIRST_EMAIL_WAIT = 30;
 
 import { keywords } from './keywords.ts';
 import { useUndoRedo } from '../../hooks';
@@ -72,13 +74,25 @@ export const StepsHub = observer(() => {
       nextStepId?: string;
       bodyTemplate?: string;
       waitDuration?: number;
+      // todo - prefix added to make it clear that this value is used by the FE only - should be adjusted after COS-5474
+      fe_waitDurationUnit?: 'days' | 'hours' | 'minutes';
     } = {};
 
     const isEmailNode =
       type === FlowActionType.EMAIL_NEW || type === FlowActionType.EMAIL_REPLY;
 
+    // Check if this is the first email node in the flow
+    const isFirstEmailNode =
+      type === FlowActionType.EMAIL_NEW &&
+      !nodes.some((node) => node.data.action === FlowActionType.EMAIL_NEW);
+
     if (type === 'WAIT') {
-      typeBasedContent = { waitDuration: MINUTES_PER_DAY };
+      typeBasedContent = {
+        waitDuration: isFirstEmailNode
+          ? DEFAULT_FIRST_EMAIL_WAIT
+          : MINUTES_PER_DAY,
+        fe_waitDurationUnit: isFirstEmailNode ? 'minutes' : 'days',
+      };
     } else if (type === FlowActionType.EMAIL_REPLY) {
       const prevEmailNode = findPreviousEmailNode(nodes, sourceNode.id);
       const prevSubject = prevEmailNode?.data?.subject || '';
@@ -93,7 +107,10 @@ export const StepsHub = observer(() => {
       typeBasedContent = {
         subject: '',
         bodyTemplate: '',
-        waitBefore: MINUTES_PER_DAY,
+        waitDuration: isFirstEmailNode
+          ? DEFAULT_FIRST_EMAIL_WAIT
+          : MINUTES_PER_DAY,
+        fe_waitDurationUnit: isFirstEmailNode ? 'minutes' : 'days',
       };
     }
 
@@ -123,7 +140,10 @@ export const StepsHub = observer(() => {
         },
         data: {
           action: 'WAIT',
-          waitDuration: MINUTES_PER_DAY,
+          waitDuration: isFirstEmailNode
+            ? DEFAULT_FIRST_EMAIL_WAIT
+            : MINUTES_PER_DAY,
+          fe_waitDurationUnit: isFirstEmailNode ? 'minutes' : 'days',
           nextStepId: newNode.id,
         },
       };
