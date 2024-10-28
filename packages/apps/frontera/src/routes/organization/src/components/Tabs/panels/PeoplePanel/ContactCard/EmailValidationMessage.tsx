@@ -102,6 +102,9 @@ function checkEmailStatus(emailData?: EmailValidationDetails, email?: string) {
     if (!emailData?.isRisky) return emailStatuses.DELIVERABLE_NO_RISK;
     if (emailData?.isFirewalled) return emailStatuses.DELIVERABLE_FIREWALL;
     if (emailData?.isFreeAccount) return emailStatuses.DELIVERABLE_FREE_ACCOUNT;
+
+    //todo: need to be reviewed
+    return emailStatuses.DELIVERABLE_NO_RISK;
   }
 
   if (
