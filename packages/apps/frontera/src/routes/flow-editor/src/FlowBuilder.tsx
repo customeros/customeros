@@ -33,11 +33,7 @@ import { nodeTypes } from './nodes';
 import { BasicEdge } from './edges';
 import { getHelperLines } from './utils';
 import { useUndoRedo, useKeyboardShortcuts } from './hooks';
-import {
-  HelperLines,
-  FlowSettingsPanel,
-  FlowBuilderToolbar,
-} from './components';
+import { HelperLines, FlowBuilderToolbar } from './components';
 
 import '@xyflow/react/dist/style.css';
 const edgeTypes = {
@@ -411,7 +407,6 @@ export const FlowBuilder = observer(
           <Background />
           <FlowBuilderToolbar />
         </ReactFlow>
-        {showSidePanel && <FlowSettingsPanel id={id} nodes={nodes} />}
       </>
     );
   },
