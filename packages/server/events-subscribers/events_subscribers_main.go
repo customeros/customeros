@@ -7,6 +7,7 @@ import (
 	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-subscribers/config"
@@ -51,13 +52,23 @@ func main() {
 	ctx := context.Background()
 	defer neo4jDriver.Close(ctx)
 
+	// Events processing
+	var eventsProcessingGrpcClient *grpc_client.Clients
+	df := grpc_client.NewDialFactory(&cfg.GrpcClientConfig)
+	gRPCconn, err := df.GetEventsProcessingPlatformConn()
+	defer df.Close(gRPCconn)
+	if err != nil {
+		appLogger.Fatalf("Failed to connect: %v", err)
+	}
+	eventsProcessingGrpcClient = grpc_client.InitClients(gRPCconn)
+
 	commonServices := commonService.InitServices(&commonConfig.GlobalConfig{
 		RabbitMQConfig: &cfg.RabbitMQ,
 		InternalServices: commonConfig.InternalServices{
 			EnrichmentApiConfig: cfg.InternalServices.EnrichmentApi,
 			AiApiConfig:         cfg.InternalServices.AiApi,
 		},
-	}, db.GormDB, &neo4jDriver, cfg.Neo4j.Database, nil, appLogger)
+	}, db.GormDB, &neo4jDriver, cfg.Neo4j.Database, eventsProcessingGrpcClient, appLogger)
 
 	//Register listeners
 	commonServices.RabbitMQService.RegisterHandler(events.FlowInitialSchedule{}, listeners.Handle_FlowInitialSchedule)
