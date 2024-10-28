@@ -13,7 +13,7 @@ const (
 	BillableEventEnrichPersonPhoneFound    BillableEvent = "enrich_person_phone_found"
 	BillableEventEnrichOrganizationSuccess BillableEvent = "enrich_organization_success"
 	BillableEventIpVerificationSuccess     BillableEvent = "ip_verification_success"
-	BillableEventFlowActionExecuted        BillableEvent = "flow_action"
+	BillableEventFlowActionExecuted        BillableEvent = "flow_action_executed"
 )
 
 // ApiBillableEvent represents a chargeable event in your system

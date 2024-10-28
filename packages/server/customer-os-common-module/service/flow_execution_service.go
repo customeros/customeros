@@ -10,7 +10,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
-	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	postgresrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -378,7 +379,7 @@ func (s *flowExecutionService) scheduleEmailAction(ctx context.Context, tx *neo4
 	return nil
 }
 
-func (s *flowExecutionService) getFirstAvailableSlotForMailbox(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, mailbox string, scheduleAt time.Time, workingSchedule []*postgresEntity.UserWorkingSchedule) (*time.Time, error) {
+func (s *flowExecutionService) getFirstAvailableSlotForMailbox(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, mailbox string, scheduleAt time.Time, workingSchedule []*postgresentity.UserWorkingSchedule) (*time.Time, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.getFirstAvailableSlotForMailbox")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -531,11 +532,12 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 	defer session.Close(ctx)
 
 	shouldInsertEmailMessage := false
-	var emailMessage *postgresEntity.EmailMessage
+	var emailMessage *postgresentity.EmailMessage
+	var currentAction *entity.FlowActionEntity
 
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-
-		currentAction, err := s.services.FlowService.FlowActionGetById(ctx, scheduledActionExecution.ActionId)
+		var err error
+		currentAction, err = s.services.FlowService.FlowActionGetById(ctx, scheduledActionExecution.ActionId)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to get action by id")
 		}
@@ -653,8 +655,8 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 				bodyTemplate = replacePlaceholders(bodyTemplate, "sender_last_name", user.LastName)
 
 				shouldInsertEmailMessage = true
-				emailMessage = &postgresEntity.EmailMessage{
-					Status:       postgresEntity.EmailMessageStatusScheduled,
+				emailMessage = &postgresentity.EmailMessage{
+					Status:       postgresentity.EmailMessageStatusScheduled,
 					ProducerId:   scheduledActionExecution.Id,
 					ProducerType: model.NodeLabelFlowActionExecution,
 					FromName:     user.FirstName + " " + user.LastName,
@@ -751,6 +753,16 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 		}
 	}
 
+	// save billable event
+	_, err = s.services.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, tenant, postgresentity.BillableEventFlowActionExecuted,
+		postgresrepository.BillableEventDetails{
+			Subtype:       string(currentAction.Data.Action),
+			ReferenceData: fmt.Sprintf("FlowActionExecutionId: %s, storedEmailMessage: %v", scheduledActionExecution.Id, shouldInsertEmailMessage),
+		})
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to store billable event"))
+	}
+
 	return nil
 }
 
@@ -804,7 +816,7 @@ func (s *flowExecutionService) getEmailActionToReply(ctx context.Context, action
 func replacePlaceholders(input, variableName, value string) string {
 	return strings.Replace(input, "{{"+variableName+"}}", value, -1)
 }
-func adjustToWorkingTimeWithRandom(t time.Time, schedules []*postgresEntity.UserWorkingSchedule, mailbox *postgresEntity.TenantSettingsMailbox) time.Time {
+func adjustToWorkingTimeWithRandom(t time.Time, schedules []*postgresentity.UserWorkingSchedule, mailbox *postgresentity.TenantSettingsMailbox) time.Time {
 	for {
 		// Get working hours for the current day
 		start, end := getWorkingHoursForDay(t, schedules)
@@ -829,7 +841,7 @@ func adjustToWorkingTimeWithRandom(t time.Time, schedules []*postgresEntity.User
 }
 
 // Helper to get the start and end times for the current weekday based on schedules
-func getWorkingHoursForDay(day time.Time, schedules []*postgresEntity.UserWorkingSchedule) (time.Time, time.Time) {
+func getWorkingHoursForDay(day time.Time, schedules []*postgresentity.UserWorkingSchedule) (time.Time, time.Time) {
 	dayStr := day.Weekday().String()[:3] // Get day abbreviation, e.g., "Mon"
 	for _, schedule := range schedules {
 		if IsDayInRange(dayStr, schedule.DayRange) {
@@ -871,7 +883,7 @@ func getWorkingHoursForDay(day time.Time, schedules []*postgresEntity.UserWorkin
 }
 
 // Helper to get the earliest working start time of the next working day
-func startOfNextWorkingDay(t time.Time, schedules []*postgresEntity.UserWorkingSchedule) time.Time {
+func startOfNextWorkingDay(t time.Time, schedules []*postgresentity.UserWorkingSchedule) time.Time {
 	for {
 		start, _ := getWorkingHoursForDay(t, schedules)
 		if !start.IsZero() {
