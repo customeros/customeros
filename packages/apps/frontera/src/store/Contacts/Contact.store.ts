@@ -241,6 +241,23 @@ export class ContactStore implements Store<Contact> {
     }
   }
 
+  async updateContactName() {
+    const name = this.value.name;
+
+    try {
+      await this.service.updateContact({
+        input: {
+          id: this.getId(),
+          name: name,
+        },
+      });
+    } catch (e) {
+      runInAction(() => {
+        this.error = (e as Error).message;
+      });
+    }
+  }
+
   async addJobRole() {
     try {
       const { jobRole_Create } = await this.service.addJobRole({

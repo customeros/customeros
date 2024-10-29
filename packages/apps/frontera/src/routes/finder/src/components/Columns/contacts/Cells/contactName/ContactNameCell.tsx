@@ -93,12 +93,8 @@ export const ContactNameCell = observer(
             value={contactStore?.name ?? ''}
             onFocus={(e) => e.target.select()}
             className={'font-medium placeholder-font-normal'}
-            onBlur={(e) => {
-              contactStore?.update((value) => {
-                value.name = e.target.value;
-
-                return value;
-              });
+            onBlur={() => {
+              contactStore?.updateContactName();
             }}
             onChange={(e) => {
               contactStore?.update(
