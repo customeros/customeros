@@ -90,7 +90,7 @@ func (s *socialService) Update(ctx context.Context, socialEntity neo4jentity.Soc
 		return nil, err
 	}
 
-	err = s.services.RabbitMQService.Publish(ctx, socialEntity.Id, model.SOCIAL, dto.UpdateSocial{
+	err = s.services.RabbitMQService.PublishEvent(ctx, socialEntity.Id, model.SOCIAL, dto.UpdateSocial{
 		Url: socialEntity.Url,
 	})
 
@@ -106,7 +106,7 @@ func (s *socialService) Update(ctx context.Context, socialEntity neo4jentity.Soc
 		id := utils.GetStringPropOrEmpty(props, "id")
 
 		if utils.Contains(labels, model.CONTACT.Neo4jLabel()) {
-			err = s.services.RabbitMQService.Publish(ctx, id, model.CONTACT, dto.UpdateSocialForContact{
+			err = s.services.RabbitMQService.PublishEvent(ctx, id, model.CONTACT, dto.UpdateSocialForContact{
 				SocialId:  socialEntity.Id,
 				SocialUrl: socialEntity.Url,
 			})
@@ -115,7 +115,7 @@ func (s *socialService) Update(ctx context.Context, socialEntity neo4jentity.Soc
 			}
 			utils.EventCompleted(ctx, tenant, model.CONTACT.String(), id, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
 		} else if utils.Contains(labels, model.ORGANIZATION.Neo4jLabel()) {
-			err = s.services.RabbitMQService.Publish(ctx, id, model.ORGANIZATION, dto.UpdateSocialForOrganization{
+			err = s.services.RabbitMQService.PublishEvent(ctx, id, model.ORGANIZATION, dto.UpdateSocialForOrganization{
 				SocialId:  socialEntity.Id,
 				SocialUrl: socialEntity.Url,
 			})
@@ -144,7 +144,7 @@ func (s *socialService) PermanentlyDelete(ctx context.Context, tenant string, so
 		return err
 	}
 
-	err = s.services.RabbitMQService.Publish(ctx, socialId, model.SOCIAL, dto.Delete{})
+	err = s.services.RabbitMQService.PublishEvent(ctx, socialId, model.SOCIAL, dto.Delete{})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message DeleteSocial"))
 	}
