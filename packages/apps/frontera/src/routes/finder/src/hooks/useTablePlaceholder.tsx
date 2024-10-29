@@ -24,6 +24,8 @@ export const useTablePlaceholder = (tableViewName?: string) => {
       case 'Past':
       case 'Upcoming':
         return { multi: 'invoices', single: 'invoice' };
+      case 'Flows':
+        return { multi: 'flows', single: 'flow' };
       default:
         return { multi: 'orgs', single: 'org' };
     }
