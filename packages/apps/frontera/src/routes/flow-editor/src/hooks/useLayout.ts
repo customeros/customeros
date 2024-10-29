@@ -133,7 +133,7 @@ export const getNodeWidth = (node: Node) => {
     case 'trigger':
       return { width: 300, height: 56 };
     case 'control':
-      return { width: 131, height: 56 };
+      return { width: 156, height: 56 };
     case 'wait':
       return { width: 156, height: 56 };
     case 'action':
