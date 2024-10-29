@@ -35,8 +35,14 @@ type EnrichOrganizationResponseData struct {
 	Logos            []string                               `json:"logos"`
 	Icons            []string                               `json:"icons"`
 	Industry         string                                 `json:"industry"`
-	Socials          []string                               `json:"socials"`
+	Socials          []EnrichOrganizationResponseSocial     `json:"socials"`
 	Location         EnrichOrganizationResponseDataLocation `json:"location"`
+}
+
+type EnrichOrganizationResponseSocial struct {
+	Url   string `json:"url"`
+	Alias string `json:"alias"`
+	Id    string `json:"id"`
 }
 
 type EnrichOrganizationResponseDataLocation struct {

@@ -441,9 +441,14 @@ func updateResponseWithScrapinData(d *model.EnrichOrganizationResponseData, scra
 	if d.Industry == "" {
 		d.Industry = scrapin.Company.Industry
 	}
-	d.Socials = append(d.Socials, scrapin.Company.LinkedInUrl)
-	d.Socials = utils.RemoveDuplicates(d.Socials)
-	d.Socials = utils.RemoveEmpties(d.Socials)
+	if scrapin.Company.LinkedInUrl != "" {
+		d.Socials = append(d.Socials, model.EnrichOrganizationResponseSocial{
+			Url:   scrapin.Company.LinkedInUrl,
+			Alias: scrapin.Company.UniversalName,
+			Id:    scrapin.Company.LinkedInId,
+		})
+	}
+
 	if !scrapin.Company.HeadquarterIsEmpty() {
 		d.Location.IsHeadquarter = utils.BoolPtr(true)
 		if d.Location.Country == "" {
@@ -530,10 +535,12 @@ func updateResponseWithBrandfetchData(d *model.EnrichOrganizationResponseData, b
 	}
 
 	for _, link := range brandfetch.Links {
-		d.Socials = append(d.Socials, link.Url)
+		if link.Url != "" {
+			d.Socials = append(d.Socials, model.EnrichOrganizationResponseSocial{
+				Url: link.Url,
+			})
+		}
 	}
-	d.Socials = utils.RemoveDuplicates(d.Socials)
-	d.Socials = utils.RemoveEmpties(d.Socials)
 
 	if !brandfetch.Company.LocationIsEmpty() {
 		if d.Location.CountryCodeA2 == "" && d.Location.Country == "" {

@@ -351,12 +351,12 @@ func (h *organizationEventHandler) updateOrganizationFromEnrichmentResponse(ctx 
 	}
 
 	//add socials
-	for _, link := range data.Socials {
-		h.addSocial(ctx, organizationEntity.ID, tenant, link, constants.AppEnrichment)
+	for _, social := range data.Socials {
+		h.addSocial(ctx, organizationEntity.ID, tenant, social.Url, social.Alias, social.Id, constants.AppEnrichment)
 	}
 }
 
-func (h *organizationEventHandler) addSocial(ctx context.Context, organizationId, tenant, url, appSource string) {
+func (h *organizationEventHandler) addSocial(ctx context.Context, organizationId, tenant, url, alias, externalId, appSource string) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.addSocial")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, tenant)
@@ -368,6 +368,8 @@ func (h *organizationEventHandler) addSocial(ctx context.Context, organizationId
 			Tenant:         tenant,
 			OrganizationId: organizationId,
 			Url:            url,
+			Alias:          alias,
+			ExternalId:     externalId,
 			SourceFields: &commonpb.SourceFields{
 				AppSource: appSource,
 				Source:    constants.SourceOpenline,

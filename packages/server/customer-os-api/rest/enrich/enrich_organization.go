@@ -196,6 +196,10 @@ func EnrichOrganization(services *service.Services) gin.HandlerFunc {
 			return
 		}
 		// Compose the response
+		socialUrls := make([]string, 0)
+		for _, social := range enrichOrganizationApiResponse.Data.Socials {
+			socialUrls = append(socialUrls, social.Url)
+		}
 		response := EnrichOrganizationResponse{
 			Status:  "success",
 			Message: "Enrichment completed",
@@ -213,7 +217,7 @@ func EnrichOrganization(services *service.Services) gin.HandlerFunc {
 				Industry: EnrichOrganizationIndustry{
 					Industry: enrichOrganizationApiResponse.Data.Industry,
 				},
-				Socials: enrichOrganizationApiResponse.Data.Socials,
+				Socials: socialUrls,
 				Location: EnrichOrganizationLocation{
 					IsHeadquarter: utils.BoolDefaultIfNil(enrichOrganizationApiResponse.Data.Location.IsHeadquarter, false),
 					Country:       enrichOrganizationApiResponse.Data.Location.Country,
