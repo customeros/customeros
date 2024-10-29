@@ -94,6 +94,39 @@ func OnSocialAddedToContact(ctx context.Context, services *service.Services, inp
 	return nil
 }
 
+func OnRequestedEnrichContact(ctx context.Context, services *service.Services, input any) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "Listeners.OnSocialAddedToContact")
+	defer span.Finish()
+	tracing.SetDefaultListenerSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "input", input)
+
+	message := input.(*events.Event)
+	contactId := message.Event.EntityId
+
+	span.SetTag(tracing.SpanTagEntityId, contactId)
+
+	if services.GlobalConfig.InternalServices.EnrichmentApiConfig.Url == "" || services.GlobalConfig.InternalServices.EnrichmentApiConfig.ApiKey == "" {
+		err := errors.New("enrichment api url or api key is not set")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	if services.GlobalConfig.InternalServices.AiApiConfig.Url == "" || services.GlobalConfig.InternalServices.AiApiConfig.ApiKey == "" {
+		err := errors.New("ai api url or api key is not set")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	c := NewContactListener(services, services.Logger)
+
+	err := c.enrichContact(ctx, contactId, "")
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "enrichContact"))
+	}
+
+	return nil
+}
+
 func (c *contactListenerImpl) enrichContact(ctx context.Context, contactId, linkedInUrl string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactListener.enrichContact")
 	defer span.Finish()

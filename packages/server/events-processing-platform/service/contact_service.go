@@ -12,7 +12,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event/contact"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event/contact/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
-	"strings"
 	"time"
 )
 
@@ -188,33 +187,6 @@ func (s *contactService) RemoveSocial(ctx context.Context, request *contactpb.Co
 
 func (s *contactService) errResponse(err error) error {
 	return grpcerr.ErrResponse(err)
-}
-
-func normalizeTimezone(timezone string) string {
-	if timezone == "" {
-		return ""
-	}
-	output := strings.Replace(timezone, "_slash_", "/", -1)
-	output = utils.CapitalizeAllParts(output, []string{"/", "_"})
-	return output
-}
-
-func (s *contactService) EnrichContact(ctx context.Context, request *contactpb.EnrichContactGrpcRequest) (*contactpb.ContactIdGrpcResponse, error) {
-	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ContactService.EnrichContact")
-	defer span.Finish()
-	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	tracing.LogObjectAsJson(span, "request", request)
-
-	initAggregateFunc := func() eventstore.Aggregate {
-		return contact.NewContactTempAggregateWithTenantAndID(request.Tenant, request.ContactId)
-	}
-	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{SkipLoadEvents: true}, request); err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("(EnrichContact.HandleGRPCRequest) tenant:{%s}, contact ID: {%s}, err: %s", request.Tenant, request.ContactId, err.Error())
-		return nil, grpcerr.ErrResponse(err)
-	}
-
-	return &contactpb.ContactIdGrpcResponse{Id: request.ContactId}, nil
 }
 
 func (s *contactService) AddLocation(ctx context.Context, request *contactpb.ContactAddLocationGrpcRequest) (*locationpb.LocationIdGrpcResponse, error) {

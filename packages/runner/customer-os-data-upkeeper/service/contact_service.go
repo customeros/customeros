@@ -11,6 +11,7 @@ import (
 	cosClient "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/client"
 	cosModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
@@ -1094,26 +1095,27 @@ func (s *contactService) enrichContacts(ctx context.Context) {
 		}
 
 		for _, record := range records {
-			_, err = utils.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
-				return s.commonServices.GrpcClients.ContactClient.EnrichContact(ctx, &contactpb.EnrichContactGrpcRequest{
-					Tenant:    record.Tenant,
-					ContactId: record.ContactId,
-					AppSource: constants.AppSourceDataUpkeeper,
-				})
+			// create new context from main one with custom context
+			innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+				Tenant:    record.Tenant,
+				AppSource: constants.AppSourceDataUpkeeper,
 			})
+
+			err = s.commonServices.RabbitMQService.Publish(innerCtx, record.ContactId, model.CONTACT, dto.RequestEnrichContact{})
 			if err != nil {
-				tracing.TraceErr(span, err)
-				s.log.Errorf("Error enriching contact {%s}: %s", record.ContactId, err.Error())
+				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message RequestEnrichContact"))
+				s.log.Errorf("Error requesting enrich contact {%s}: %s", record.ContactId, err.Error())
 			}
+
 			// mark contact with enrich requested
-			err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, record.Tenant, model.NodeLabelContact, record.ContactId, string(neo4jentity.ContactPropertyEnrichRequestedAt), utils.NowPtr())
+			err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(innerCtx, record.Tenant, model.NodeLabelContact, record.ContactId, string(neo4jentity.ContactPropertyEnrichRequestedAt), utils.NowPtr())
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error updating contact' enrich requested: %s", err.Error())
 			}
 
 			// increment enrich attempts
-			err = s.commonServices.Neo4jRepositories.CommonWriteRepository.IncrementProperty(ctx, record.Tenant, model.NodeLabelContact, record.ContactId, string(neo4jentity.ContactPropertyEnrichAttempts))
+			err = s.commonServices.Neo4jRepositories.CommonWriteRepository.IncrementProperty(innerCtx, record.Tenant, model.NodeLabelContact, record.ContactId, string(neo4jentity.ContactPropertyEnrichAttempts))
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error incrementing contact' enrich attempts: %s", err.Error())

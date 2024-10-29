@@ -27,7 +27,6 @@ type ContactGrpcServiceClient interface {
 	LinkLocationToContact(ctx context.Context, in *LinkLocationToContactGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error)
 	LinkWithOrganization(ctx context.Context, in *LinkWithOrganizationGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error)
 	RemoveSocial(ctx context.Context, in *ContactRemoveSocialGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error)
-	EnrichContact(ctx context.Context, in *EnrichContactGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error)
 	AddLocation(ctx context.Context, in *ContactAddLocationGrpcRequest, opts ...grpc.CallOption) (*location.LocationIdGrpcResponse, error)
 }
 
@@ -75,15 +74,6 @@ func (c *contactGrpcServiceClient) RemoveSocial(ctx context.Context, in *Contact
 	return out, nil
 }
 
-func (c *contactGrpcServiceClient) EnrichContact(ctx context.Context, in *EnrichContactGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error) {
-	out := new(ContactIdGrpcResponse)
-	err := c.cc.Invoke(ctx, "/contactGrpcService/EnrichContact", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *contactGrpcServiceClient) AddLocation(ctx context.Context, in *ContactAddLocationGrpcRequest, opts ...grpc.CallOption) (*location.LocationIdGrpcResponse, error) {
 	out := new(location.LocationIdGrpcResponse)
 	err := c.cc.Invoke(ctx, "/contactGrpcService/AddLocation", in, out, opts...)
@@ -101,7 +91,6 @@ type ContactGrpcServiceServer interface {
 	LinkLocationToContact(context.Context, *LinkLocationToContactGrpcRequest) (*ContactIdGrpcResponse, error)
 	LinkWithOrganization(context.Context, *LinkWithOrganizationGrpcRequest) (*ContactIdGrpcResponse, error)
 	RemoveSocial(context.Context, *ContactRemoveSocialGrpcRequest) (*ContactIdGrpcResponse, error)
-	EnrichContact(context.Context, *EnrichContactGrpcRequest) (*ContactIdGrpcResponse, error)
 	AddLocation(context.Context, *ContactAddLocationGrpcRequest) (*location.LocationIdGrpcResponse, error)
 }
 
@@ -120,9 +109,6 @@ func (UnimplementedContactGrpcServiceServer) LinkWithOrganization(context.Contex
 }
 func (UnimplementedContactGrpcServiceServer) RemoveSocial(context.Context, *ContactRemoveSocialGrpcRequest) (*ContactIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RemoveSocial not implemented")
-}
-func (UnimplementedContactGrpcServiceServer) EnrichContact(context.Context, *EnrichContactGrpcRequest) (*ContactIdGrpcResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method EnrichContact not implemented")
 }
 func (UnimplementedContactGrpcServiceServer) AddLocation(context.Context, *ContactAddLocationGrpcRequest) (*location.LocationIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddLocation not implemented")
@@ -211,24 +197,6 @@ func _ContactGrpcService_RemoveSocial_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ContactGrpcService_EnrichContact_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(EnrichContactGrpcRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ContactGrpcServiceServer).EnrichContact(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/contactGrpcService/EnrichContact",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ContactGrpcServiceServer).EnrichContact(ctx, req.(*EnrichContactGrpcRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _ContactGrpcService_AddLocation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ContactAddLocationGrpcRequest)
 	if err := dec(in); err != nil {
@@ -269,10 +237,6 @@ var ContactGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RemoveSocial",
 			Handler:    _ContactGrpcService_RemoveSocial_Handler,
-		},
-		{
-			MethodName: "EnrichContact",
-			Handler:    _ContactGrpcService_EnrichContact_Handler,
 		},
 		{
 			MethodName: "AddLocation",

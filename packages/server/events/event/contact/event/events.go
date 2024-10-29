@@ -26,7 +26,8 @@ const (
 	//Deprecated
 	ContactAddTagV1 = "V1_CONTACT_ADD_TAG"
 	//Deprecated
-	ContactRemoveTagV1     = "V1_CONTACT_REMOVE_TAG"
+	ContactRemoveTagV1 = "V1_CONTACT_REMOVE_TAG"
+	//Deprecated
 	ContactRequestEnrichV1 = "V1_CONTACT_ENRICH"
 	ContactAddLocationV1   = "V1_CONTACT_ADD_LOCATION"
 	// Deprecated

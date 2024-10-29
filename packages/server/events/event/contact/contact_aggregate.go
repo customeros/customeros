@@ -16,7 +16,6 @@ import (
 
 const (
 	ContactAggregateType eventstore.AggregateType = "contact"
-	PARAM_REQUEST        string                   = "request"
 )
 
 type ContactAggregate struct {
