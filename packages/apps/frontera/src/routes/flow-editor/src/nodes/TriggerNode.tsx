@@ -32,7 +32,7 @@ export const TriggerNode = (
       <div
         className={`h-[56px] w-[300px] bg-white border border-grayModern-300 p-4 rounded-lg group relative cursor-pointer flex items-center`}
       >
-        <div className='flex items-center justify-between '>
+        <div className='flex items-center justify-between w-full'>
           <div className='truncate text-sm flex items-center'>
             <div className='size-6 mr-2 bg-gray-50 border border-gray-100 rounded flex items-center justify-center'>
               {props.data.entity && props.data?.triggerType ? (

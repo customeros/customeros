@@ -111,7 +111,7 @@ export const ActionNode = ({
       <div
         className={`h-[56px] max-w-[300px] w-[300px] bg-white border border-grayModern-300 p-4 rounded-lg group cursor-pointer flex items-center`}
       >
-        <div className='text-sm flex items-center justify-between overflow-hidden '>
+        <div className='text-sm flex items-center justify-between overflow-hidden w-full'>
           <div className='truncate text-sm flex items-center'>
             <div
               className={cn(
