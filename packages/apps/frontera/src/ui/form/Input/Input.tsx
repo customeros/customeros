@@ -1,4 +1,4 @@
-import React, { forwardRef } from 'react';
+import { forwardRef, KeyboardEvent, InputHTMLAttributes } from 'react';
 
 import { twMerge } from 'tailwind-merge';
 import { cva, VariantProps } from 'class-variance-authority';
@@ -60,12 +60,12 @@ export const inputVariants = cva(
 
 export interface InputProps
   extends VariantProps<typeof inputVariants>,
-    Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'> {
+    Omit<InputHTMLAttributes<HTMLInputElement>, 'size'> {
   dataTest?: string;
   className?: string;
   placeholder?: string;
   allowKeyDownEventPropagation?: boolean;
-  onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+  onKeyDown?: (e: KeyboardEvent<HTMLInputElement>) => void;
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(

@@ -1,6 +1,14 @@
-import * as React from 'react';
 import { createPortal } from 'react-dom';
-import { useRef, useState, useEffect, useCallback } from 'react';
+import {
+  useRef,
+  useState,
+  Dispatch,
+  useEffect,
+  useCallback,
+  ReactPortal,
+  KeyboardEvent,
+  SetStateAction,
+} from 'react';
 
 import { offset, computePosition } from '@floating-ui/dom';
 import { mergeRegister, $findMatchingParent } from '@lexical/utils';
@@ -36,8 +44,8 @@ const DEFAULT_DOM_ELEMENT = document.body;
 
 type FloatingLinkEditorComponentProps = {
   isLink: boolean;
+  setIsLink: Dispatch<SetStateAction<boolean>>;
   editor: ReturnType<typeof useLexicalComposerContext>[0];
-  setIsLink: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 export function FloatingLinkEditor({
@@ -46,8 +54,8 @@ export function FloatingLinkEditor({
   setIsLink,
 }: FloatingLinkEditorComponentProps) {
   const [linkUrl, setLinkUrl] = useState('');
-  const inputRef = useRef<HTMLInputElement>(null);
-  const editorRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const editorRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     editor.getEditorState().read(() => {
@@ -122,7 +130,7 @@ export function FloatingLinkEditor({
     function handleClickOutside(event: MouseEvent) {
       if (
         editorRef.current &&
-        !editorRef.current.contains(event.target as Node)
+        !editorRef.current?.contains(event.target as Node)
       ) {
         // todo - this condition could be more sofisticated
         if (linkUrl.trim().length || linkUrl !== 'https://') {
@@ -140,9 +148,7 @@ export function FloatingLinkEditor({
     };
   }, [isLink, handleLinkSubmission]);
 
-  const monitorInputInteraction = (
-    event: React.KeyboardEvent<HTMLInputElement>,
-  ) => {
+  const monitorInputInteraction = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') {
       event.preventDefault();
       handleLinkSubmission();
@@ -156,7 +162,7 @@ export function FloatingLinkEditor({
   return (
     <div
       ref={editorRef}
-      className='bg-gray-700 flex items-center min-w-[auto] max-w-[800px] p-1 pl-3 shadow-lg rounded-md'
+      className='bg-gray-700 flex items-center min-w-[240px] max-w-[240px] p-1 pl-3 shadow-lg rounded-md'
     >
       <Input
         size='sm'
@@ -212,10 +218,10 @@ export function FloatingLinkEditorPlugin({
   anchorElem = DEFAULT_DOM_ELEMENT,
 }: {
   anchorElem?: HTMLElement;
-}): JSX.Element | null {
+}): ReactPortal | null {
   const [editor] = useLexicalComposerContext();
   const [isLink, setIsLink] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const ref = useRef<HTMLDivElement | null>(null);
   const [menuPosition, setMenuPosition] = useState<{
     top: number;
     left: number;

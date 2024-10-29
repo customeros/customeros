@@ -252,7 +252,7 @@ export function FloatingMenu({ editor }: FloatingMenuComponentProps) {
         {/*    icon={<CheckSquare className='text-inherit' />}*/}
         {/*  />*/}
         {/*</div>*/}
-        <Tooltip label='Insert or remove link: ⌘ + K'>
+        <Tooltip label='Link: ⌘ + K'>
           <div>
             <FloatingToolbarButton
               active={isLink}
