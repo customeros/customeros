@@ -31,19 +31,20 @@ func MapTableViewDefinitionToModel(entity postgresEntity.TableViewDefinition, sp
 		})
 	}
 	return &model.TableViewDef{
-		ID:        strconv.Itoa(int(entity.ID)),
-		Name:      entity.Name,
-		TableType: model.TableViewType(entity.TableType),
-		TableID:   model.TableIDType(entity.TableId),
-		Icon:      entity.Icon,
-		Order:     entity.Order,
-		Filters:   entity.Filters,
-		Sorting:   entity.Sorting,
-		IsPreset:  entity.IsPreset,
-		IsShared:  entity.IsShared,
-		CreatedAt: entity.CreatedAt,
-		UpdatedAt: entity.UpdatedAt,
-		Columns:   columns,
+		ID:             strconv.Itoa(int(entity.ID)),
+		Name:           entity.Name,
+		TableType:      model.TableViewType(entity.TableType),
+		TableID:        model.TableIDType(entity.TableId),
+		Icon:           entity.Icon,
+		Order:          entity.Order,
+		Filters:        entity.Filters,
+		DefaultFilters: entity.DefaultFilters,
+		Sorting:        entity.Sorting,
+		IsPreset:       entity.IsPreset,
+		IsShared:       entity.IsShared,
+		CreatedAt:      entity.CreatedAt,
+		UpdatedAt:      entity.UpdatedAt,
+		Columns:        columns,
 	}
 }
 

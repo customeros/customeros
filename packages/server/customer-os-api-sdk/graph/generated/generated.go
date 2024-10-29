@@ -1434,19 +1434,20 @@ type ComplexityRoot struct {
 	}
 
 	TableViewDef struct {
-		Columns   func(childComplexity int) int
-		CreatedAt func(childComplexity int) int
-		Filters   func(childComplexity int) int
-		ID        func(childComplexity int) int
-		Icon      func(childComplexity int) int
-		IsPreset  func(childComplexity int) int
-		IsShared  func(childComplexity int) int
-		Name      func(childComplexity int) int
-		Order     func(childComplexity int) int
-		Sorting   func(childComplexity int) int
-		TableID   func(childComplexity int) int
-		TableType func(childComplexity int) int
-		UpdatedAt func(childComplexity int) int
+		Columns        func(childComplexity int) int
+		CreatedAt      func(childComplexity int) int
+		DefaultFilters func(childComplexity int) int
+		Filters        func(childComplexity int) int
+		ID             func(childComplexity int) int
+		Icon           func(childComplexity int) int
+		IsPreset       func(childComplexity int) int
+		IsShared       func(childComplexity int) int
+		Name           func(childComplexity int) int
+		Order          func(childComplexity int) int
+		Sorting        func(childComplexity int) int
+		TableID        func(childComplexity int) int
+		TableType      func(childComplexity int) int
+		UpdatedAt      func(childComplexity int) int
 	}
 
 	Tag struct {
@@ -10519,6 +10520,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.TableViewDef.CreatedAt(childComplexity), true
 
+	case "TableViewDef.defaultFilters":
+		if e.complexity.TableViewDef.DefaultFilters == nil {
+			break
+		}
+
+		return e.complexity.TableViewDef.DefaultFilters(childComplexity), true
+
 	case "TableViewDef.filters":
 		if e.complexity.TableViewDef.Filters == nil {
 			break
@@ -15396,6 +15404,7 @@ type TableViewDef implements Node {
     icon: String!
     columns: [ColumnView!]!
     filters: String!
+    defaultFilters: String!
     sorting: String!
     isPreset: Boolean!
     isShared: Boolean!
@@ -67038,6 +67047,8 @@ func (ec *executionContext) fieldContext_Mutation_tableViewDef_Create(ctx contex
 				return ec.fieldContext_TableViewDef_columns(ctx, field)
 			case "filters":
 				return ec.fieldContext_TableViewDef_filters(ctx, field)
+			case "defaultFilters":
+				return ec.fieldContext_TableViewDef_defaultFilters(ctx, field)
 			case "sorting":
 				return ec.fieldContext_TableViewDef_sorting(ctx, field)
 			case "isPreset":
@@ -67151,6 +67162,8 @@ func (ec *executionContext) fieldContext_Mutation_tableViewDef_Update(ctx contex
 				return ec.fieldContext_TableViewDef_columns(ctx, field)
 			case "filters":
 				return ec.fieldContext_TableViewDef_filters(ctx, field)
+			case "defaultFilters":
+				return ec.fieldContext_TableViewDef_defaultFilters(ctx, field)
 			case "sorting":
 				return ec.fieldContext_TableViewDef_sorting(ctx, field)
 			case "isPreset":
@@ -67264,6 +67277,8 @@ func (ec *executionContext) fieldContext_Mutation_tableViewDef_UpdateShared(ctx 
 				return ec.fieldContext_TableViewDef_columns(ctx, field)
 			case "filters":
 				return ec.fieldContext_TableViewDef_filters(ctx, field)
+			case "defaultFilters":
+				return ec.fieldContext_TableViewDef_defaultFilters(ctx, field)
 			case "sorting":
 				return ec.fieldContext_TableViewDef_sorting(ctx, field)
 			case "isPreset":
@@ -82382,6 +82397,8 @@ func (ec *executionContext) fieldContext_Query_tableViewDefs(_ context.Context, 
 				return ec.fieldContext_TableViewDef_columns(ctx, field)
 			case "filters":
 				return ec.fieldContext_TableViewDef_filters(ctx, field)
+			case "defaultFilters":
+				return ec.fieldContext_TableViewDef_defaultFilters(ctx, field)
 			case "sorting":
 				return ec.fieldContext_TableViewDef_sorting(ctx, field)
 			case "isPreset":
@@ -86370,6 +86387,50 @@ func (ec *executionContext) _TableViewDef_filters(ctx context.Context, field gra
 }
 
 func (ec *executionContext) fieldContext_TableViewDef_filters(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TableViewDef",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TableViewDef_defaultFilters(ctx context.Context, field graphql.CollectedField, obj *model.TableViewDef) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TableViewDef_defaultFilters(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DefaultFilters, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TableViewDef_defaultFilters(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "TableViewDef",
 		Field:      field,
@@ -112199,6 +112260,11 @@ func (ec *executionContext) _TableViewDef(ctx context.Context, sel ast.Selection
 			}
 		case "filters":
 			out.Values[i] = ec._TableViewDef_filters(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "defaultFilters":
+			out.Values[i] = ec._TableViewDef_defaultFilters(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

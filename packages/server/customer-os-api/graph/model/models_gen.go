@@ -2473,19 +2473,20 @@ type SuggestedMergeOrganization struct {
 }
 
 type TableViewDef struct {
-	ID        string        `json:"id"`
-	Name      string        `json:"name"`
-	TableType TableViewType `json:"tableType"`
-	TableID   TableIDType   `json:"tableId"`
-	Order     int           `json:"order"`
-	Icon      string        `json:"icon"`
-	Columns   []*ColumnView `json:"columns"`
-	Filters   string        `json:"filters"`
-	Sorting   string        `json:"sorting"`
-	IsPreset  bool          `json:"isPreset"`
-	IsShared  bool          `json:"isShared"`
-	CreatedAt time.Time     `json:"createdAt"`
-	UpdatedAt time.Time     `json:"updatedAt"`
+	ID             string        `json:"id"`
+	Name           string        `json:"name"`
+	TableType      TableViewType `json:"tableType"`
+	TableID        TableIDType   `json:"tableId"`
+	Order          int           `json:"order"`
+	Icon           string        `json:"icon"`
+	Columns        []*ColumnView `json:"columns"`
+	Filters        string        `json:"filters"`
+	DefaultFilters string        `json:"defaultFilters"`
+	Sorting        string        `json:"sorting"`
+	IsPreset       bool          `json:"isPreset"`
+	IsShared       bool          `json:"isShared"`
+	CreatedAt      time.Time     `json:"createdAt"`
+	UpdatedAt      time.Time     `json:"updatedAt"`
 }
 
 func (TableViewDef) IsNode()            {}

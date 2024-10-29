@@ -26,6 +26,7 @@ type TableViewDef implements Node {
     icon: String!
     columns: [ColumnView!]!
     filters: String!
+    defaultFilters: String!
     sorting: String!
     isPreset: Boolean!
     isShared: Boolean!

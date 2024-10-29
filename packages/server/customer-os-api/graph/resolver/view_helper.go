@@ -12,7 +12,7 @@ import (
 )
 
 // ColumnView represents a column in a table view with type and width.
-func DefaultTableViewDefinitions(userId string, hasSharedPresets bool, span opentracing.Span) []postgresEntity.TableViewDefinition {
+func DefaultTableViewDefinitions(hasSharedPresets bool, span opentracing.Span) []postgresEntity.TableViewDefinition {
 	upcomingInvoicesTableViewDefinition, err := DefaultTableViewDefinitionUpcomingInvoices(span)
 	if err != nil {
 		fmt.Println("Error: ", err)
@@ -116,16 +116,17 @@ func DefaultTableViewDefinitionPastInvoices(span opentracing.Span) (postgresEnti
 	}
 
 	return postgresEntity.TableViewDefinition{
-		TableType:   model.TableViewTypeInvoices.String(),
-		TableId:     model.TableIDTypePastInvoices.String(),
-		Name:        "Past",
-		ColumnsJson: string(jsonData),
-		Order:       5,
-		Icon:        "InvoiceCheck",
-		Filters:     `{"AND":[{"filter":{"property":"INVOICE_DRY_RUN","value":false}}]}`,
-		Sorting:     ``,
-		IsPreset:    true,
-		IsShared:    false,
+		TableType:      model.TableViewTypeInvoices.String(),
+		TableId:        model.TableIDTypePastInvoices.String(),
+		Name:           "Past",
+		ColumnsJson:    string(jsonData),
+		Order:          5,
+		Icon:           "InvoiceCheck",
+		Filters:        `{"AND":[{"filter":{"property":"INVOICE_DRY_RUN","value":false}}]}`,
+		DefaultFilters: `{"AND":[{"filter":{"property":"INVOICE_DRY_RUN","value":false}}]}`,
+		Sorting:        ``,
+		IsPreset:       true,
+		IsShared:       false,
 	}, nil
 }
 
@@ -139,16 +140,17 @@ func DefaultTableViewDefinitionUpcomingInvoices(span opentracing.Span) (postgres
 	}
 
 	return postgresEntity.TableViewDefinition{
-		TableType:   model.TableViewTypeInvoices.String(),
-		TableId:     model.TableIDTypeUpcomingInvoices.String(),
-		Name:        "Upcoming",
-		ColumnsJson: string(jsonData),
-		Order:       4,
-		Icon:        "InvoiceUpcoming",
-		Filters:     `{"AND":[{"filter":{"property":"INVOICE_PREVIEW","value":true}}]}`,
-		Sorting:     ``,
-		IsPreset:    true,
-		IsShared:    false,
+		TableType:      model.TableViewTypeInvoices.String(),
+		TableId:        model.TableIDTypeUpcomingInvoices.String(),
+		Name:           "Upcoming",
+		ColumnsJson:    string(jsonData),
+		Order:          4,
+		Icon:           "InvoiceUpcoming",
+		Filters:        `{"AND":[{"filter":{"property":"INVOICE_PREVIEW","value":true}}]}`,
+		DefaultFilters: `{"AND":[{"filter":{"property":"INVOICE_PREVIEW","value":true}}]}`,
+		Sorting:        ``,
+		IsPreset:       true,
+		IsShared:       false,
 	}, nil
 }
 
@@ -162,16 +164,17 @@ func DefaultTableViewDefinitionOrganization(span opentracing.Span) (postgresEnti
 	}
 
 	return postgresEntity.TableViewDefinition{
-		TableType:   model.TableViewTypeOrganizations.String(),
-		TableId:     model.TableIDTypeOrganizations.String(),
-		Name:        "Organizations",
-		ColumnsJson: string(jsonData),
-		Order:       5,
-		Icon:        "Building07",
-		Filters:     ``,
-		Sorting:     `{"id": "ORGANIZATIONS_LAST_TOUCHPOINT", "desc": true}`,
-		IsPreset:    true,
-		IsShared:    false,
+		TableType:      model.TableViewTypeOrganizations.String(),
+		TableId:        model.TableIDTypeOrganizations.String(),
+		Name:           "Organizations",
+		ColumnsJson:    string(jsonData),
+		Order:          5,
+		Icon:           "Building07",
+		Filters:        ``,
+		DefaultFilters: ``,
+		Sorting:        `{"id": "ORGANIZATIONS_LAST_TOUCHPOINT", "desc": true}`,
+		IsPreset:       true,
+		IsShared:       false,
 	}, nil
 }
 
@@ -185,16 +188,17 @@ func DefaultTableViewDefinitionCustomers(span opentracing.Span) (postgresEntity.
 	}
 
 	return postgresEntity.TableViewDefinition{
-		TableType:   model.TableViewTypeOrganizations.String(),
-		TableId:     model.TableIDTypeCustomers.String(),
-		Name:        "Customers",
-		ColumnsJson: string(jsonData),
-		Order:       1,
-		Icon:        "CheckHeart",
-		Filters:     fmt.Sprintf(`{"AND":[{"filter":{"includeEmpty":false,"operation":"EQ","property":"RELATIONSHIP","value":["%s"]}}]}`, neo4jenum.Customer.String()),
-		Sorting:     `{"id": "ORGANIZATIONS_LAST_TOUCHPOINT", "desc": true}`,
-		IsPreset:    true,
-		IsShared:    false,
+		TableType:      model.TableViewTypeOrganizations.String(),
+		TableId:        model.TableIDTypeCustomers.String(),
+		Name:           "Customers",
+		ColumnsJson:    string(jsonData),
+		Order:          1,
+		Icon:           "CheckHeart",
+		Filters:        fmt.Sprintf(`{"AND":[{"filter":{"includeEmpty":false,"operation":"EQ","property":"RELATIONSHIP","value":["%s"]}}]}`, neo4jenum.Customer.String()),
+		DefaultFilters: fmt.Sprintf(`{"AND":[{"filter":{"includeEmpty":false,"operation":"EQ","property":"RELATIONSHIP","value":["%s"]}}]}`, neo4jenum.Customer.String()),
+		Sorting:        `{"id": "ORGANIZATIONS_LAST_TOUCHPOINT", "desc": true}`,
+		IsPreset:       true,
+		IsShared:       false,
 	}, nil
 }
 
@@ -208,16 +212,17 @@ func DefaultTableViewDefinitionTargets(span opentracing.Span) (postgresEntity.Ta
 	}
 
 	return postgresEntity.TableViewDefinition{
-		TableType:   model.TableViewTypeOrganizations.String(),
-		TableId:     model.TableIDTypeTargets.String(),
-		Name:        "Targets",
-		ColumnsJson: string(jsonData),
-		Order:       1,
-		Icon:        "Target05",
-		Filters:     fmt.Sprintf(`{"AND":[{"filter":{"includeEmpty":false,"operation":"EQ","property":"STAGE","value":["%s"]}},{"filter":{"includeEmpty":false,"operation":"EQ","property":"RELATIONSHIP","value":["%s"]}}]}`, neo4jenum.Target.String(), neo4jenum.Prospect.String()),
-		Sorting:     `{"id": "ORGANIZATIONS_LAST_TOUCHPOINT", "desc": true}`,
-		IsPreset:    true,
-		IsShared:    false,
+		TableType:      model.TableViewTypeOrganizations.String(),
+		TableId:        model.TableIDTypeTargets.String(),
+		Name:           "Targets",
+		ColumnsJson:    string(jsonData),
+		Order:          1,
+		Icon:           "Target05",
+		Filters:        fmt.Sprintf(`{"AND":[{"filter":{"includeEmpty":false,"operation":"EQ","property":"STAGE","value":["%s"]}},{"filter":{"includeEmpty":false,"operation":"EQ","property":"RELATIONSHIP","value":["%s"]}}]}`, neo4jenum.Target.String(), neo4jenum.Prospect.String()),
+		DefaultFilters: fmt.Sprintf(`{"AND":[{"filter":{"includeEmpty":false,"operation":"EQ","property":"STAGE","value":["%s"]}},{"filter":{"includeEmpty":false,"operation":"EQ","property":"RELATIONSHIP","value":["%s"]}}]}`, neo4jenum.Target.String(), neo4jenum.Prospect.String()),
+		Sorting:        `{"id": "ORGANIZATIONS_LAST_TOUCHPOINT", "desc": true}`,
+		IsPreset:       true,
+		IsShared:       false,
 	}, nil
 }
 
@@ -231,16 +236,17 @@ func DefaultTableViewDefinitionContacts(span opentracing.Span) (postgresEntity.T
 	}
 
 	return postgresEntity.TableViewDefinition{
-		TableType:   model.TableViewTypeContacts.String(),
-		TableId:     model.TableIDTypeContacts.String(),
-		Name:        "Contacts",
-		ColumnsJson: string(jsonData),
-		Order:       0,
-		Icon:        "Users01",
-		Filters:     ``,
-		Sorting:     `{"id": "CONTACTS_UPDATED_AT", "desc": true}`,
-		IsPreset:    true,
-		IsShared:    false,
+		TableType:      model.TableViewTypeContacts.String(),
+		TableId:        model.TableIDTypeContacts.String(),
+		Name:           "Contacts",
+		ColumnsJson:    string(jsonData),
+		Order:          0,
+		Icon:           "Users01",
+		Filters:        ``,
+		DefaultFilters: ``,
+		Sorting:        `{"id": "CONTACTS_UPDATED_AT", "desc": true}`,
+		IsPreset:       true,
+		IsShared:       false,
 	}, nil
 }
 
@@ -254,16 +260,17 @@ func DefaultTableViewDefinitionTargetOrganizationsContacts(span opentracing.Span
 	}
 
 	return postgresEntity.TableViewDefinition{
-		TableType:   model.TableViewTypeContacts.String(),
-		TableId:     model.TableIDTypeContactsForTargetOrganizations.String(),
-		Name:        "Contacts",
-		ColumnsJson: string(jsonData),
-		Order:       0,
-		Icon:        "HeartHand",
-		Filters:     fmt.Sprintf(`{"AND":[{"filter":{"includeEmpty":false,"operation":"EQ","property":"STAGE","value":["%s"]}},{"filter":{"includeEmpty":false,"operation":"EQ","property":"RELATIONSHIP","value":["%s"]}}]}`, neo4jenum.Target.String(), neo4jenum.Prospect.String()),
-		Sorting:     `{"id": "CONTACTS_UPDATED_AT", "desc": true}`,
-		IsPreset:    true,
-		IsShared:    false,
+		TableType:      model.TableViewTypeContacts.String(),
+		TableId:        model.TableIDTypeContactsForTargetOrganizations.String(),
+		Name:           "Contacts",
+		ColumnsJson:    string(jsonData),
+		Order:          0,
+		Icon:           "HeartHand",
+		Filters:        fmt.Sprintf(`{"AND":[{"filter":{"includeEmpty":false,"operation":"EQ","property":"STAGE","value":["%s"]}},{"filter":{"includeEmpty":false,"operation":"EQ","property":"RELATIONSHIP","value":["%s"]}}]}`, neo4jenum.Target.String(), neo4jenum.Prospect.String()),
+		DefaultFilters: fmt.Sprintf(`{"AND":[{"filter":{"includeEmpty":false,"operation":"EQ","property":"STAGE","value":["%s"]}},{"filter":{"includeEmpty":false,"operation":"EQ","property":"RELATIONSHIP","value":["%s"]}}]}`, neo4jenum.Target.String(), neo4jenum.Prospect.String()),
+		Sorting:        `{"id": "CONTACTS_UPDATED_AT", "desc": true}`,
+		IsPreset:       true,
+		IsShared:       false,
 	}, nil
 }
 
@@ -277,16 +284,17 @@ func DefaultTableViewDefinitionOpportunities(span opentracing.Span) (postgresEnt
 	}
 
 	return postgresEntity.TableViewDefinition{
-		TableType:   model.TableViewTypeOpportunities.String(),
-		TableId:     model.TableIDTypeOpportunities.String(),
-		Name:        "Opportunities",
-		ColumnsJson: string(jsonData),
-		Order:       6,
-		Icon:        "CoinsStacked01",
-		Filters:     ``,
-		Sorting:     ``,
-		IsPreset:    true,
-		IsShared:    true,
+		TableType:      model.TableViewTypeOpportunities.String(),
+		TableId:        model.TableIDTypeOpportunities.String(),
+		Name:           "Opportunities",
+		ColumnsJson:    string(jsonData),
+		Order:          6,
+		Icon:           "CoinsStacked01",
+		Filters:        ``,
+		DefaultFilters: ``,
+		Sorting:        ``,
+		IsPreset:       true,
+		IsShared:       true,
 	}, nil
 }
 
@@ -300,16 +308,17 @@ func DefaultTableViewDefinitionOpportunitiesRecords(span opentracing.Span) (post
 	}
 
 	return postgresEntity.TableViewDefinition{
-		TableType:   model.TableViewTypeOpportunities.String(),
-		TableId:     model.TableIDTypeOpportunitiesRecords.String(),
-		Name:        "Opportunities",
-		ColumnsJson: string(jsonData),
-		Order:       7,
-		Icon:        "CoinsStacked01",
-		Filters:     ``,
-		Sorting:     ``,
-		IsPreset:    true,
-		IsShared:    false,
+		TableType:      model.TableViewTypeOpportunities.String(),
+		TableId:        model.TableIDTypeOpportunitiesRecords.String(),
+		Name:           "Opportunities",
+		ColumnsJson:    string(jsonData),
+		Order:          7,
+		Icon:           "CoinsStacked01",
+		Filters:        ``,
+		DefaultFilters: ``,
+		Sorting:        ``,
+		IsPreset:       true,
+		IsShared:       false,
 	}, nil
 }
 
@@ -323,16 +332,17 @@ func DefaultTableViewDefinitionContracts(span opentracing.Span) (postgresEntity.
 	}
 
 	return postgresEntity.TableViewDefinition{
-		TableType:   model.TableViewTypeContracts.String(),
-		TableId:     model.TableIDTypeContracts.String(),
-		Name:        "Contracts",
-		ColumnsJson: string(jsonData),
-		Order:       8,
-		Icon:        "Signature",
-		Filters:     ``,
-		Sorting:     ``,
-		IsPreset:    true,
-		IsShared:    false,
+		TableType:      model.TableViewTypeContracts.String(),
+		TableId:        model.TableIDTypeContracts.String(),
+		Name:           "Contracts",
+		ColumnsJson:    string(jsonData),
+		Order:          8,
+		Icon:           "Signature",
+		Filters:        ``,
+		DefaultFilters: ``,
+		Sorting:        ``,
+		IsPreset:       true,
+		IsShared:       false,
 	}, nil
 }
 
@@ -346,16 +356,17 @@ func DefaultTableViewDefinitionFlows(span opentracing.Span) (postgresEntity.Tabl
 	}
 
 	return postgresEntity.TableViewDefinition{
-		TableType:   model.TableViewTypeFlow.String(),
-		TableId:     model.TableIDTypeFlowActions.String(),
-		Name:        "Flows",
-		ColumnsJson: string(jsonData),
-		Order:       9,
-		Icon:        "Shuffle01",
-		Filters:     ``,
-		Sorting:     ``,
-		IsPreset:    true,
-		IsShared:    false,
+		TableType:      model.TableViewTypeFlow.String(),
+		TableId:        model.TableIDTypeFlowActions.String(),
+		Name:           "Flows",
+		ColumnsJson:    string(jsonData),
+		Order:          9,
+		Icon:           "Shuffle01",
+		Filters:        ``,
+		DefaultFilters: ``,
+		Sorting:        ``,
+		IsPreset:       true,
+		IsShared:       false,
 	}, nil
 }
 
@@ -369,16 +380,17 @@ func DefaultTableViewDefinitionFlowContacts(span opentracing.Span) (postgresEnti
 	}
 
 	return postgresEntity.TableViewDefinition{
-		TableType:   model.TableViewTypeContacts.String(),
-		TableId:     model.TableIDTypeFlowContacts.String(),
-		Name:        "Contacts",
-		ColumnsJson: string(jsonData),
-		Order:       0,
-		Icon:        "Users01",
-		Filters:     ``,
-		Sorting:     `{"id": "CONTACTS_UPDATED_AT", "desc": true}`,
-		IsPreset:    true,
-		IsShared:    false,
+		TableType:      model.TableViewTypeContacts.String(),
+		TableId:        model.TableIDTypeFlowContacts.String(),
+		Name:           "Contacts",
+		ColumnsJson:    string(jsonData),
+		Order:          0,
+		Icon:           "Users01",
+		Filters:        ``,
+		DefaultFilters: ``,
+		Sorting:        `{"id": "CONTACTS_UPDATED_AT", "desc": true}`,
+		IsPreset:       true,
+		IsShared:       false,
 	}, nil
 }
 

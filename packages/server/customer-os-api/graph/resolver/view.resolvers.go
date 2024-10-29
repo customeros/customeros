@@ -257,7 +257,7 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 		// check if shared presets exist
 		hasSharedPreset := CheckSharedPresetsExist(tableViewDefinitions)
 
-		for _, def := range DefaultTableViewDefinitions(userId, hasSharedPreset, span) {
+		for _, def := range DefaultTableViewDefinitions(hasSharedPreset, span) {
 			def.Tenant = tenant
 			def.UserId = userId
 			r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.CreateTableViewDefinition(ctx, def)
