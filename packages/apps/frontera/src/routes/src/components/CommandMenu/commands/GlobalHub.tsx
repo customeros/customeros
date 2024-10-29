@@ -160,15 +160,15 @@ export const GlobalSharedCommands = observer(
         >
           Go to Settings
         </CommandItem>
-        {/* <CommandItem */}
-        {/*   dataTest={`${dataTest}-gd`} */}
-        {/*   leftAccessory={<ArrowNarrowRight />} */}
-        {/*   onSelect={() => handleGoTo('/customer-map')} */}
-        {/*   keywords={navigationKeywords.go_to_customer_map} */}
-        {/*   rightAccessory={<KeyboardShortcut shortcut='D' />} */}
-        {/* > */}
-        {/*   Go to Customer map */}
-        {/* </CommandItem> */}
+        <CommandItem
+          dataTest={`${dataTest}-gd`}
+          leftAccessory={<ArrowNarrowRight />}
+          onSelect={() => handleGoTo('/customer-map')}
+          keywords={navigationKeywords.go_to_customer_map}
+          rightAccessory={<KeyboardShortcut shortcut='D' />}
+        >
+          Go to Customer map
+        </CommandItem>
       </>
     );
   },
