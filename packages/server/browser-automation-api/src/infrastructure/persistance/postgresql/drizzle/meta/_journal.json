@@ -57,6 +57,13 @@
       "when": 1728289084395,
       "tag": "0007_narrow_namorita",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1730213215472,
+      "tag": "0008_daffy_norrin_radd",
+      "breakpoints": true
     }
   ]
 }

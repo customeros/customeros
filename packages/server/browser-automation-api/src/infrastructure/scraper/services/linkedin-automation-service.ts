@@ -7,6 +7,7 @@ import { setTimeout as setTimeoutSync } from "timers";
 import { Browser } from "../browser";
 import { logger } from "@/infrastructure";
 import { ErrorParser, StandardError } from "@/util/error";
+import { LinkedinService } from "@/application/services/linkedin/linkedin-service";
 
 const Selectors = {
   profileNameHeading: "h1.text-heading-xlarge",
@@ -297,6 +298,38 @@ export class LinkedinAutomationService {
       throw LinkedinAutomationService.handleError(err);
     } finally {
       await page.close();
+    }
+  }
+
+  async getMessages() {
+    const browser = await Browser.getFreshInstance(this.proxyConfig, {
+      debug: true,
+    });
+    const context = await browser.newContext({
+      userAgent: this.userAgent,
+    });
+
+    await context.addCookies(this.cookies);
+    const page = await context.newPage();
+
+    try {
+      await page.goto("https://linkedin.com", { timeout: 60 * 1000 });
+
+      const btn = page.locator("button.share-box-feed-entry__trigger");
+      await btn.waitFor({ timeout: 10000 });
+
+      await btn.click();
+
+      await setTimeout(2000);
+
+      return {
+        profileUrl: "123",
+        messages: ["hello", "world"],
+      };
+    } catch (err) {
+      throw LinkedinAutomationService.handleError(err);
+    } finally {
+      page.close();
     }
   }
 

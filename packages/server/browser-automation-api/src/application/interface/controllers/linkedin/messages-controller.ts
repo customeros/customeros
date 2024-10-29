@@ -13,6 +13,7 @@ export class MessagesController {
 
   constructor() {
     this.sendMessage = this.sendMessage.bind(this);
+    this.getMessages = this.getMessages.bind(this);
   }
 
   async sendMessage(req: Request, res: Response) {
@@ -59,6 +60,38 @@ export class MessagesController {
       res.status(500).send({
         success: false,
         message: "Failed to send message",
+        error: error.message,
+      });
+    }
+  }
+
+  async getMessages(req: Request, res: Response) {
+    try {
+      const newAutomationRun = await this.browserAutomationRunService.createRun(
+        {
+          browserConfigId: res.locals.browserConfig.id,
+          tenant: res.locals.tenantName,
+          type: "GET_MESSAGES",
+          userId: res.locals.user.id,
+          payload: JSON.stringify(req.body),
+        },
+      );
+
+      res.send({
+        success: true,
+        message: "Browser automation scheduled successfully",
+        data: newAutomationRun?.toDTO(),
+      });
+    } catch (err) {
+      const error = ErrorParser.parse(err);
+      logger.error("Error in MessagesController", {
+        error: error.message,
+        details: error.details,
+        source: "MessagesController",
+      });
+      res.status(500).send({
+        success: false,
+        message: "Failed to get messages",
         error: error.message,
       });
     }

@@ -53,6 +53,9 @@ export class AutomationRunnerService {
         case "SEND_MESSAGE":
           result = await linkedinService.sendMessage(payload);
           break;
+        case "GET_MESSAGES":
+          result = await linkedinService.getMessages();
+          break;
         default:
           throw new StandardError({
             code: "APPLICATION_ERROR",
