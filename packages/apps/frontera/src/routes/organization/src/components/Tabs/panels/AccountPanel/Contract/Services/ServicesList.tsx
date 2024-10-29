@@ -6,7 +6,6 @@ import { ContractStore } from '@store/Contracts/Contract.store.ts';
 import { useStore } from '@shared/hooks/useStore';
 import { BilledType, ServiceLineItem } from '@graphql/types';
 import { PauseCircle } from '@ui/media/icons/PauseCircle.tsx';
-import { formatCurrency } from '@utils/getFormattedCurrencyNumber';
 import { groupServicesByParentId } from '@organization/components/Tabs/panels/AccountPanel/Contract/Services/utils.ts';
 
 function getBilledTypeLabel(billedType: BilledType): string {
@@ -28,6 +27,15 @@ function getBilledTypeLabel(billedType: BilledType): string {
   }
 }
 
+function formatCurrency(amount: number, currency: string = 'USD'): string {
+  return Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount);
+}
+
 const ServiceItem = observer(
   ({
     onOpen,
@@ -42,9 +50,6 @@ const ServiceItem = observer(
   }) => {
     const store = useStore();
     const contractLineItem = store.contractLineItems?.value.get(id)?.value;
-
-    const allowedFractionDigits =
-      contractLineItem?.billingCycle === BilledType.Usage ? 4 : 2;
 
     return (
       <>
@@ -66,11 +71,7 @@ const ServiceItem = observer(
                 </>
               )}
 
-              {formatCurrency(
-                contractLineItem?.price ?? 0,
-                allowedFractionDigits,
-                currency || 'USD',
-              )}
+              {formatCurrency(contractLineItem?.price ?? 0, currency || 'USD')}
               {getBilledTypeLabel(contractLineItem?.billingCycle as BilledType)}
               {isPaused && (
                 <PauseCircle className='ml-2 text-gray-500 size-4' />
