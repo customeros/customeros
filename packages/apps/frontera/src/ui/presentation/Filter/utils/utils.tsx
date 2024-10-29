@@ -155,6 +155,9 @@ export const handlePropertyPlural = (property: string, selection: string[]) => {
     .with('Invoice status', () =>
       selection.length === 1 ? 'invoice status' : 'invoice statuses',
     )
+    .with('Status in flow', () =>
+      selection.length === 1 ? 'status' : 'statuses',
+    )
     .otherwise(() => 'unknown');
 };
 

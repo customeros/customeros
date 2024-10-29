@@ -168,12 +168,18 @@ export const getFilterTypes = (store?: RootStore) => {
         store?.contacts
           ?.toArray()
           .flatMap((contact) => contact?.value.locations?.[0])
+          .filter(
+            (l) =>
+              l?.locality !== null &&
+              l?.locality !== undefined &&
+              l?.locality !== '',
+          )
           .map((location) => ({
             id: location?.locality,
             label: location?.locality,
           }))
           .sort((a, b) => (a.label ?? '').localeCompare(b.label ?? '')),
-        'id',
+        ['id', 'label'],
       ),
     },
     [ColumnViewType.ContactsLinkedin]: {

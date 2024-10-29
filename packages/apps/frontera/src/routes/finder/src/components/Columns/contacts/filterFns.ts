@@ -58,7 +58,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
       { property: ColumnViewType.ContactsName },
       (filter) => (row: ContactStore) => {
         if (!filter.active) return true;
-        const values = row.value.name;
+        const values = row.name;
 
         if (!values)
           return (
@@ -91,24 +91,6 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
         const emails = row.value.primaryEmail?.email;
 
         return filterTypeText(filter, emails ?? undefined);
-      },
-    )
-
-    .with(
-      { property: ColumnViewType.ContactsPersonalEmails },
-      (filter) => (row: ContactStore) => {
-        const filterValues = filter?.value;
-
-        if (!filter.active) return true;
-
-        if (!filterValues) return true;
-        const emails = row.value?.emails
-          .filter((e) => !e.work)
-          .map((e) => e.email);
-
-        if (!emails) return false;
-
-        return filterTypeText(filter, emails?.join(' '));
       },
     )
 
@@ -149,9 +131,15 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
         if (!filter.active) return true;
         const cities = row.value.locations?.map((l) => l?.locality);
 
+        if (!cities)
+          return (
+            filter.operation === ComparisonOperator.IsEmpty ||
+            filter.operation === ComparisonOperator.NotContains
+          );
+
         return filterTypeList(
           filter,
-          cities?.filter((city) => city !== undefined) as string[],
+          cities?.some((j) => j) ? (cities as string[]) : [],
         );
       },
     )
@@ -203,9 +191,12 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
       { property: ColumnViewType.ContactsJobTitle },
       (filter) => (row: ContactStore) => {
         if (!filter.active) return true;
-        const jobTitles = row.value?.jobRoles?.map((j) => j.jobTitle) || [];
+        const jobTitles =
+          row.value?.latestOrganizationWithJobRole?.jobRole.jobTitle;
 
-        return filterTypeText(filter, jobTitles.join(' '));
+        if (!jobTitles) return false;
+
+        return filterTypeText(filter, jobTitles);
       },
     )
 
