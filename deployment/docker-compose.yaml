@@ -206,6 +206,7 @@ services:
       - EVENTS_PROCESSING_PLATFORM_URL=host.docker.internal:5001
       - VALIDATION_API_URL=http://host.docker.internal:10003
       - ENRICHMENT_API_URL=http://host.docker.internal:10007
+      - RABBITMQ_URL=amqp://host.docker.internal:5672
 
   events-processing-platform:
     image: ghcr.io/customeros/customeros/events-processing-platform:latest
@@ -223,6 +224,7 @@ services:
       - ENRICHMENT_API_URL=http://host.docker.internal:10007
       - FILE_STORE_API_URL=http://host.docker.internal:10001
       - EVENTS_PROCESSING_PLATFORM_URL=host.docker.internal:5001
+      - RABBITMQ_URL=amqp://host.docker.internal:5672
 
   events-processing-platform-subscribers:
     image: ghcr.io/customeros/customeros/events-processing-platform-subscribers:latest
@@ -236,6 +238,19 @@ services:
       - NEO4J_TARGET=neo4j://neo4j:7687
       - EVENTS_PROCESSING_PLATFORM_URL=host.docker.internal:5001
       - AI_API_PATH=http://host.docker.internal:10101
+      - RABBITMQ_URL=amqp://host.docker.internal:5672
+
+  events-subscribers:
+    image: ghcr.io/customeros/customeros/events-subscribers:latest
+    networks:
+      - openline
+    depends_on:
+      - customer-os-platform-admin-api
+    environment:
+      - POSTGRES_HOST=postgres
+      - NEO4J_TARGET=neo4j://neo4j:7687
+      - EVENTS_PROCESSING_PLATFORM_URL=host.docker.internal:5001
+      - RABBITMQ_URL=amqp://host.docker.internal:5672
 
   customer-os-webhooks:
     image: ghcr.io/customeros/customeros/customer-os-webhooks:latest
@@ -249,6 +264,7 @@ services:
       - POSTGRES_HOST=postgres
       - NEO4J_TARGET=neo4j://neo4j:7687
       - EVENTS_PROCESSING_PLATFORM_URL=host.docker.internal:5001
+      - RABBITMQ_URL=amqp://host.docker.internal:5672
 
   user-admin-api:
     image: ghcr.io/customeros/customeros/user-admin-api:latest
@@ -263,6 +279,7 @@ services:
       - NEO4J_TARGET=neo4j://neo4j:7687
       - EVENTS_PROCESSING_PLATFORM_URL=host.docker.internal:5001
       - CUSTOMER_OS_API=http://host.docker.internal:10000/admin/query
+      - RABBITMQ_URL=amqp://host.docker.internal:5672
 
   file-store-api:
     image: ghcr.io/customeros/customeros/file-store-api:latest
@@ -278,6 +295,7 @@ services:
       - CUSTOMER_OS_API=http://host.docker.internal:10000/query
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - RABBITMQ_URL=amqp://host.docker.internal:5672
 
   validation-api:
     image: ghcr.io/customeros/customeros/validation-api:latest
@@ -290,6 +308,7 @@ services:
     environment:
       - POSTGRES_HOST=postgres
       - NEO4J_TARGET=neo4j://neo4j:7687
+      - RABBITMQ_URL=amqp://host.docker.internal:5672
 
   enrichment-api:
     image: ghcr.io/customeros/customeros/enrichment-api:latest
@@ -302,6 +321,7 @@ services:
     environment:
       - POSTGRES_HOST=postgres
       - NEO4J_TARGET=neo4j://neo4j:7687
+      - RABBITMQ_URL=amqp://host.docker.internal:5672
 
   settings-api:
     image: ghcr.io/customeros/customeros/settings-api:latest
@@ -314,6 +334,7 @@ services:
     environment:
       - POSTGRES_HOST=postgres
       - NEO4J_TARGET=neo4j://neo4j:7687
+      - RABBITMQ_URL=amqp://host.docker.internal:5672
 
   ai-api:
     image: ghcr.io/customeros/customeros/ai-api:latest
@@ -326,4 +347,5 @@ services:
     environment:
       - POSTGRES_HOST=postgres
       - NEO4J_TARGET=neo4j://neo4j:7687
+      - RABBITMQ_URL=amqp://host.docker.internal:5672
 

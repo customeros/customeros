@@ -291,12 +291,12 @@ func StartCron(cont *container.Container) *cron.Cron {
 		cont.Log.Fatalf("Could not add cron job %s: %v", "flowExecution", err.Error())
 	}
 
-	err = c.AddFunc(cont.Cfg.Cron.CronScheduleSendEmails, func() {
-		lockAndRunJob(cont, sendEmailsGroup, sendEmails)
-	})
-	if err != nil {
-		cont.Log.Fatalf("Could not add cron job %s: %v", "sendEmails", err.Error())
-	}
+	//err = c.AddFunc(cont.Cfg.Cron.CronScheduleSendEmails, func() {
+	//	lockAndRunJob(cont, sendEmailsGroup, sendEmails)
+	//})
+	//if err != nil {
+	//	cont.Log.Fatalf("Could not add cron job %s: %v", "sendEmails", err.Error())
+	//}
 
 	err = c.AddFunc(cont.Cfg.Cron.CronScheduleProcessSentEmails, func() {
 		lockAndRunJob(cont, processSentEmailsGroup, processSentEmails)

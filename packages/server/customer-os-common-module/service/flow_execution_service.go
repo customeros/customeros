@@ -399,12 +399,11 @@ func (s *flowExecutionService) getFirstAvailableSlotForMailbox(ctx context.Conte
 		return nil, err
 	}
 
-	var possibleScheduledAt time.Time
+	possibleScheduledAt := scheduleAt
+
 	if lastScheduledExecutionNode != nil {
 		lastScheduledExecution := mapper.MapDbNodeToFlowActionExecutionEntity(lastScheduledExecutionNode)
-		possibleScheduledAt = lastScheduledExecution.ScheduledAt
-	} else {
-		possibleScheduledAt = scheduleAt
+		possibleScheduledAt = maxTime(possibleScheduledAt, lastScheduledExecution.ScheduledAt)
 	}
 
 	//check the number of emails scheduled for the day

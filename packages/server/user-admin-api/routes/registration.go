@@ -553,6 +553,19 @@ func initializeUser(c context.Context, services *service.Services, provider, pro
 			tracing.TraceErr(span, errors.Wrap(err, "unable to link user to email"))
 			return err
 		}
+
+		workSchedule := postgresEntity.UserWorkingSchedule{
+			UserId:    userId,
+			DayRange:  "Mon-Fri",
+			StartHour: "09:00",
+			EndHour:   "18:00",
+		}
+		err = services.CommonServices.PostgresRepositories.UserWorkingScheduleRepository.Store(ctx, tenant, &workSchedule)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+
 	} else {
 		err = addDefaultMissingRoles(ctx, services, tenant, userId)
 		if err != nil {

@@ -121,7 +121,7 @@ func (r flowActionExecutionReadRepositoryImpl) GetForEntity(ctx context.Context,
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(f:Flow_%s {id: $flowId})-[:HAS]->(fa:FlowAction_%s)-[:HAS_EXECUTION]->(fae:FlowActionExecution_%s {entityId: $entityId, entityType: $entityType}) RETURN fae order by fae.executedAt`, tenant, tenant, tenant)
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(f:Flow_%s {id: $flowId})-[:HAS]->(fa:FlowAction_%s)-[:HAS_EXECUTION]->(fae:FlowActionExecution_%s {entityId: $entityId, entityType: $entityType}) RETURN fae order by fae.executedAt, fae.scheduledAt`, tenant, tenant, tenant)
 	params := map[string]any{
 		"tenant":     tenant,
 		"flowId":     flowId,
