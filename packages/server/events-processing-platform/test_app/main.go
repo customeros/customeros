@@ -85,7 +85,6 @@ func main() {
 	//testRequestGenerateActionItemsRequest()
 	//testCreateOrganization()
 	//testEnrichOrganization()
-	//testEnrichContact()
 	//testUpdateWithUpsertOrganization()
 	//testUpdateOrganization()
 	//testHideOrganization()
@@ -133,19 +132,6 @@ func testEnrichOrganization() {
 		Tenant:         tenant,
 		OrganizationId: organizationId,
 		Url:            website,
-	})
-	if err != nil {
-		log.Fatalf("Failed: %v", err.Error())
-	}
-	log.Printf("Result: %v", result.Id)
-}
-
-func testEnrichContact() {
-	contactId := "b497a882-c3c2-46ad-85ac-0b451503cd16"
-
-	result, err := clients.ContactClient.EnrichContact(context.Background(), &contactpb.EnrichContactGrpcRequest{
-		Tenant:    tenant,
-		ContactId: contactId,
 	})
 	if err != nil {
 		log.Fatalf("Failed: %v", err.Error())
