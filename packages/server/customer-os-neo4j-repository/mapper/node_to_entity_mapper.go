@@ -909,6 +909,7 @@ func MapDbNodeToContactEntity(dbNode *dbtype.Node) *entity.ContactEntity {
 		Username:        utils.GetStringPropOrEmpty(props, string(entity.ContactPropertyUsername)),
 		Prefix:          utils.GetStringPropOrEmpty(props, string(entity.ContactPropertyPrefix)),
 		Hide:            utils.GetBoolPropOrFalse(props, string(entity.ContactPropertyHide)),
+		HiddenAt:        utils.GetTimePropOrNil(props, string(entity.ContactPropertyHiddenAt)),
 		CreatedAt:       utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:       utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		Source:          entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
@@ -916,12 +917,7 @@ func MapDbNodeToContactEntity(dbNode *dbtype.Node) *entity.ContactEntity {
 		EventStoreAggregate: entity.EventStoreAggregate{
 			AggregateVersion: utils.GetInt64PropOrNil(props, "aggregateVersion"),
 		},
-		ContactInternalFields: entity.ContactInternalFields{
-			FindWorkEmailWithBetterContactRequestedId: utils.GetStringPropOrNil(props, string(entity.ContactPropertyFindWorkEmailWithBetterContactRequestedId)),
-			FindWorkEmailWithBetterContactRequestedAt: utils.GetTimePropOrNil(props, string(entity.ContactPropertyFindWorkEmailWithBetterContactRequestedAt)),
-			FindWorkEmailWithBetterContactCompletedAt: utils.GetTimePropOrNil(props, string(entity.ContactPropertyFindWorkEmailWithBetterContactCompletedAt)),
-			HiddenAt: utils.GetTimePropOrNil(props, string(entity.ContactPropertyHiddenAt)),
-		},
+		ContactInternalFields: entity.ContactInternalFields{},
 		EnrichDetails: entity.ContactEnrichDetails{
 			EnrichRequestedAt:         utils.GetTimePropOrNil(props, string(entity.ContactPropertyEnrichRequestedAt)),
 			EnrichedAt:                utils.GetTimePropOrNil(props, string(entity.ContactPropertyEnrichedAt)),
@@ -929,6 +925,14 @@ func MapDbNodeToContactEntity(dbNode *dbtype.Node) *entity.ContactEntity {
 			EnrichAttempts:            utils.GetInt64PropOrZero(props, string(entity.ContactPropertyEnrichAttempts)),
 			BettercontactFoundEmailAt: utils.GetTimePropOrNil(props, string(entity.ContactPropertyBettercontactFoundEmailAt)),
 			EnrichedScrapinRecordId:   utils.GetStringPropOrEmpty(props, string(entity.ContactPropertyEnrichedScrapinRecordId)),
+			FindWorkEmailWithBetterContactRequestedId:   utils.GetStringPropOrNil(props, string(entity.ContactPropertyFindWorkEmailWithBetterContactRequestedId)),
+			FindWorkEmailWithBetterContactRequestedAt:   utils.GetTimePropOrNil(props, string(entity.ContactPropertyFindWorkEmailWithBetterContactRequestedAt)),
+			FindWorkEmailWithBetterContactCompletedAt:   utils.GetTimePropOrNil(props, string(entity.ContactPropertyFindWorkEmailWithBetterContactCompletedAt)),
+			FindWorkEmailWithBetterContactFound:         utils.GetBoolPropOrNil(props, string(entity.ContactPropertyFindWorkEmailWithBetterContactFound)),
+			FindMobilePhoneWithBetterContactRequestedId: utils.GetStringPropOrNil(props, string(entity.ContactPropertyFindMobilePhoneWithBetterContactRequestedId)),
+			FindMobilePhoneWithBetterContactRequestedAt: utils.GetTimePropOrNil(props, string(entity.ContactPropertyFindMobilePhoneWithBetterContactRequestedAt)),
+			FindMobilePhoneWithBetterContactCompletedAt: utils.GetTimePropOrNil(props, string(entity.ContactPropertyFindMobilePhoneWithBetterContactCompletedAt)),
+			FindMobilePhoneWithBetterContactFound:       utils.GetBoolPropOrNil(props, string(entity.ContactPropertyFindMobilePhoneWithBetterContactFound)),
 		},
 	}
 	return &contact

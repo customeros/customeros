@@ -173,9 +173,15 @@ type OrganizationWithJobRole {
 }
 
 type EnrichDetails {
-    requestedAt: Time
-    enrichedAt: Time
-    failedAt: Time
+    requestedAt:            Time
+    enrichedAt:             Time
+    failedAt:               Time
+    emailRequestedAt:       Time
+    emailEnrichedAt:        Time
+    emailFound:             Boolean
+    mobilePhoneRequestedAt: Time
+    mobilePhoneEnrichedAt:  Time
+    mobilePhoneFound:       Boolean
 }
 
 """

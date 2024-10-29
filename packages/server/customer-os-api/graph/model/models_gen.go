@@ -1015,9 +1015,15 @@ type EmailVariableEntity struct {
 }
 
 type EnrichDetails struct {
-	RequestedAt *time.Time `json:"requestedAt,omitempty"`
-	EnrichedAt  *time.Time `json:"enrichedAt,omitempty"`
-	FailedAt    *time.Time `json:"failedAt,omitempty"`
+	RequestedAt            *time.Time `json:"requestedAt,omitempty"`
+	EnrichedAt             *time.Time `json:"enrichedAt,omitempty"`
+	FailedAt               *time.Time `json:"failedAt,omitempty"`
+	EmailRequestedAt       *time.Time `json:"emailRequestedAt,omitempty"`
+	EmailEnrichedAt        *time.Time `json:"emailEnrichedAt,omitempty"`
+	EmailFound             *bool      `json:"emailFound,omitempty"`
+	MobilePhoneRequestedAt *time.Time `json:"mobilePhoneRequestedAt,omitempty"`
+	MobilePhoneEnrichedAt  *time.Time `json:"mobilePhoneEnrichedAt,omitempty"`
+	MobilePhoneFound       *bool      `json:"mobilePhoneFound,omitempty"`
 }
 
 type ExternalSystem struct {

@@ -14,7 +14,7 @@ type Config struct {
 	// Contacts
 	CronScheduleUpkeepContacts                            string `env:"CRON_SCHEDULE_UPKEEP_CONTACTS" envDefault:"0 */15 * * * *"`
 	CronScheduleAskForWorkEmailOnBetterContact            string `env:"CRON_SCHEDULE_ASK_FOR_WORK_EMAIL_ON_BETTER_CONTACT" envDefault:"30 */2 * * * *"`
-	CronScheduleEnrichWithWorkEmailFromBetterContact      string `env:"CRON_SCHEDULE_ENRICH_WITH_WORK_EMAIL_FROM_BETTER_CONTACT" envDefault:"0 */2 * * * *"`
+	CronScheduleEnrichWithWorkEmailFromBetterContact      string `env:"CRON_SCHEDULE_ENRICH_WITH_WORK_EMAIL_FROM_BETTER_CONTACT" envDefault:"0 */1 * * * *"`
 	CronScheduleCheckBetterContactRequestsWithoutResponse string `env:"CRON_SCHEDULE_CHECK_BETTER_CONTACT_REQUESTS_WITHOUT_RESPONSE" envDefault:"40 */5 * * * *"`
 	CronScheduleEnrichContacts                            string `env:"CRON_SCHEDULE_ENRICH_CONTACTS" envDefault:"0 */2 * * * *"`
 	CronScheduleAskForLinkedInConnections                 string `env:"CRON_SCHEDULE_ASK_FOR_LINKEDIN_CONNECTIONS" envDefault:"*/5 * * * * *"`

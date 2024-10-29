@@ -513,9 +513,15 @@ type ComplexityRoot struct {
 	}
 
 	EnrichDetails struct {
-		EnrichedAt  func(childComplexity int) int
-		FailedAt    func(childComplexity int) int
-		RequestedAt func(childComplexity int) int
+		EmailEnrichedAt        func(childComplexity int) int
+		EmailFound             func(childComplexity int) int
+		EmailRequestedAt       func(childComplexity int) int
+		EnrichedAt             func(childComplexity int) int
+		FailedAt               func(childComplexity int) int
+		MobilePhoneEnrichedAt  func(childComplexity int) int
+		MobilePhoneFound       func(childComplexity int) int
+		MobilePhoneRequestedAt func(childComplexity int) int
+		RequestedAt            func(childComplexity int) int
 	}
 
 	ExternalSystem struct {
@@ -4170,6 +4176,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.EmailVariableEntity.Variables(childComplexity), true
 
+	case "EnrichDetails.emailEnrichedAt":
+		if e.complexity.EnrichDetails.EmailEnrichedAt == nil {
+			break
+		}
+
+		return e.complexity.EnrichDetails.EmailEnrichedAt(childComplexity), true
+
+	case "EnrichDetails.emailFound":
+		if e.complexity.EnrichDetails.EmailFound == nil {
+			break
+		}
+
+		return e.complexity.EnrichDetails.EmailFound(childComplexity), true
+
+	case "EnrichDetails.emailRequestedAt":
+		if e.complexity.EnrichDetails.EmailRequestedAt == nil {
+			break
+		}
+
+		return e.complexity.EnrichDetails.EmailRequestedAt(childComplexity), true
+
 	case "EnrichDetails.enrichedAt":
 		if e.complexity.EnrichDetails.EnrichedAt == nil {
 			break
@@ -4183,6 +4210,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.EnrichDetails.FailedAt(childComplexity), true
+
+	case "EnrichDetails.mobilePhoneEnrichedAt":
+		if e.complexity.EnrichDetails.MobilePhoneEnrichedAt == nil {
+			break
+		}
+
+		return e.complexity.EnrichDetails.MobilePhoneEnrichedAt(childComplexity), true
+
+	case "EnrichDetails.mobilePhoneFound":
+		if e.complexity.EnrichDetails.MobilePhoneFound == nil {
+			break
+		}
+
+		return e.complexity.EnrichDetails.MobilePhoneFound(childComplexity), true
+
+	case "EnrichDetails.mobilePhoneRequestedAt":
+		if e.complexity.EnrichDetails.MobilePhoneRequestedAt == nil {
+			break
+		}
+
+		return e.complexity.EnrichDetails.MobilePhoneRequestedAt(childComplexity), true
 
 	case "EnrichDetails.requestedAt":
 		if e.complexity.EnrichDetails.RequestedAt == nil {
@@ -11792,9 +11840,15 @@ type OrganizationWithJobRole {
 }
 
 type EnrichDetails {
-    requestedAt: Time
-    enrichedAt: Time
-    failedAt: Time
+    requestedAt:            Time
+    enrichedAt:             Time
+    failedAt:               Time
+    emailRequestedAt:       Time
+    emailEnrichedAt:        Time
+    emailFound:             Boolean
+    mobilePhoneRequestedAt: Time
+    mobilePhoneEnrichedAt:  Time
+    mobilePhoneFound:       Boolean
 }
 
 """
@@ -25710,6 +25764,18 @@ func (ec *executionContext) fieldContext_Contact_enrichDetails(_ context.Context
 				return ec.fieldContext_EnrichDetails_enrichedAt(ctx, field)
 			case "failedAt":
 				return ec.fieldContext_EnrichDetails_failedAt(ctx, field)
+			case "emailRequestedAt":
+				return ec.fieldContext_EnrichDetails_emailRequestedAt(ctx, field)
+			case "emailEnrichedAt":
+				return ec.fieldContext_EnrichDetails_emailEnrichedAt(ctx, field)
+			case "emailFound":
+				return ec.fieldContext_EnrichDetails_emailFound(ctx, field)
+			case "mobilePhoneRequestedAt":
+				return ec.fieldContext_EnrichDetails_mobilePhoneRequestedAt(ctx, field)
+			case "mobilePhoneEnrichedAt":
+				return ec.fieldContext_EnrichDetails_mobilePhoneEnrichedAt(ctx, field)
+			case "mobilePhoneFound":
+				return ec.fieldContext_EnrichDetails_mobilePhoneFound(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type EnrichDetails", field.Name)
 		},
@@ -34941,6 +35007,252 @@ func (ec *executionContext) fieldContext_EnrichDetails_failedAt(_ context.Contex
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EnrichDetails_emailRequestedAt(ctx context.Context, field graphql.CollectedField, obj *model.EnrichDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EnrichDetails_emailRequestedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.EmailRequestedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EnrichDetails_emailRequestedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EnrichDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EnrichDetails_emailEnrichedAt(ctx context.Context, field graphql.CollectedField, obj *model.EnrichDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EnrichDetails_emailEnrichedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.EmailEnrichedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EnrichDetails_emailEnrichedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EnrichDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EnrichDetails_emailFound(ctx context.Context, field graphql.CollectedField, obj *model.EnrichDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EnrichDetails_emailFound(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.EmailFound, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EnrichDetails_emailFound(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EnrichDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EnrichDetails_mobilePhoneRequestedAt(ctx context.Context, field graphql.CollectedField, obj *model.EnrichDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EnrichDetails_mobilePhoneRequestedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.MobilePhoneRequestedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EnrichDetails_mobilePhoneRequestedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EnrichDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EnrichDetails_mobilePhoneEnrichedAt(ctx context.Context, field graphql.CollectedField, obj *model.EnrichDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EnrichDetails_mobilePhoneEnrichedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.MobilePhoneEnrichedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EnrichDetails_mobilePhoneEnrichedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EnrichDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EnrichDetails_mobilePhoneFound(ctx context.Context, field graphql.CollectedField, obj *model.EnrichDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EnrichDetails_mobilePhoneFound(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.MobilePhoneFound, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EnrichDetails_mobilePhoneFound(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EnrichDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -73088,6 +73400,18 @@ func (ec *executionContext) fieldContext_Organization_enrichDetails(_ context.Co
 				return ec.fieldContext_EnrichDetails_enrichedAt(ctx, field)
 			case "failedAt":
 				return ec.fieldContext_EnrichDetails_failedAt(ctx, field)
+			case "emailRequestedAt":
+				return ec.fieldContext_EnrichDetails_emailRequestedAt(ctx, field)
+			case "emailEnrichedAt":
+				return ec.fieldContext_EnrichDetails_emailEnrichedAt(ctx, field)
+			case "emailFound":
+				return ec.fieldContext_EnrichDetails_emailFound(ctx, field)
+			case "mobilePhoneRequestedAt":
+				return ec.fieldContext_EnrichDetails_mobilePhoneRequestedAt(ctx, field)
+			case "mobilePhoneEnrichedAt":
+				return ec.fieldContext_EnrichDetails_mobilePhoneEnrichedAt(ctx, field)
+			case "mobilePhoneFound":
+				return ec.fieldContext_EnrichDetails_mobilePhoneFound(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type EnrichDetails", field.Name)
 		},
@@ -102857,6 +103181,18 @@ func (ec *executionContext) _EnrichDetails(ctx context.Context, sel ast.Selectio
 			out.Values[i] = ec._EnrichDetails_enrichedAt(ctx, field, obj)
 		case "failedAt":
 			out.Values[i] = ec._EnrichDetails_failedAt(ctx, field, obj)
+		case "emailRequestedAt":
+			out.Values[i] = ec._EnrichDetails_emailRequestedAt(ctx, field, obj)
+		case "emailEnrichedAt":
+			out.Values[i] = ec._EnrichDetails_emailEnrichedAt(ctx, field, obj)
+		case "emailFound":
+			out.Values[i] = ec._EnrichDetails_emailFound(ctx, field, obj)
+		case "mobilePhoneRequestedAt":
+			out.Values[i] = ec._EnrichDetails_mobilePhoneRequestedAt(ctx, field, obj)
+		case "mobilePhoneEnrichedAt":
+			out.Values[i] = ec._EnrichDetails_mobilePhoneEnrichedAt(ctx, field, obj)
+		case "mobilePhoneFound":
+			out.Values[i] = ec._EnrichDetails_mobilePhoneFound(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

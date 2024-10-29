@@ -920,9 +920,40 @@ func (s *contactService) EnrichWithWorkEmailFromBetterContact() {
 			}
 		}
 
+		// mark contact enrich fields for email
 		err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(innerCtx, record.Tenant, model.NodeLabelContact, record.ContactId, string(neo4jentity.ContactPropertyFindWorkEmailWithBetterContactCompletedAt), utils.NowPtr())
 		if err != nil {
 			tracing.TraceErr(span, err)
+		}
+		if emailLinked {
+			err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateBoolProperty(innerCtx, record.Tenant, model.NodeLabelContact, record.ContactId, string(neo4jentity.ContactPropertyFindWorkEmailWithBetterContactFound), true)
+			if err != nil {
+				tracing.TraceErr(span, err)
+			}
+		} else {
+			err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateBoolProperty(innerCtx, record.Tenant, model.NodeLabelContact, record.ContactId, string(neo4jentity.ContactPropertyFindWorkEmailWithBetterContactFound), false)
+			if err != nil {
+				tracing.TraceErr(span, err)
+			}
+		}
+
+		// mark contact enrich fields for phone number
+		if detailsBetterContact.EnrichPhoneNumber {
+			err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(innerCtx, record.Tenant, model.NodeLabelContact, record.ContactId, string(neo4jentity.ContactPropertyFindMobilePhoneWithBetterContactCompletedAt), utils.NowPtr())
+			if err != nil {
+				tracing.TraceErr(span, err)
+			}
+			if phoneLinked {
+				err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateBoolProperty(innerCtx, record.Tenant, model.NodeLabelContact, record.ContactId, string(neo4jentity.ContactPropertyFindMobilePhoneWithBetterContactFound), true)
+				if err != nil {
+					tracing.TraceErr(span, err)
+				}
+			} else {
+				err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateBoolProperty(innerCtx, record.Tenant, model.NodeLabelContact, record.ContactId, string(neo4jentity.ContactPropertyFindMobilePhoneWithBetterContactFound), false)
+				if err != nil {
+					tracing.TraceErr(span, err)
+				}
+			}
 		}
 	}
 }

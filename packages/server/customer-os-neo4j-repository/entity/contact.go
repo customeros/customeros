@@ -11,26 +11,31 @@ import (
 type ContactProperty string
 
 const (
-	ContactPropertyEnrichedAt                                ContactProperty = "enrichedAt"
-	ContactPropertyEnrichFailedAt                            ContactProperty = "enrichFailedAt"
-	ContactPropertyEnrichRequestedAt                         ContactProperty = "techEnrichRequestedAt"
-	ContactPropertyEnrichAttempts                            ContactProperty = "techEnrichAttempts"
-	ContactPropertyEnrichedScrapinRecordId                   ContactProperty = "enrichedScrapinRecordId"
-	ContactPropertyBettercontactFoundEmailAt                 ContactProperty = "bettercontactFoundEmailAt"
-	ContactPropertyFindWorkEmailWithBetterContactRequestedId ContactProperty = "techFindWorkEmailWithBetterContactRequestId"
-	ContactPropertyFindWorkEmailWithBetterContactRequestedAt ContactProperty = "techFindWorkEmailWithBetterContactRequestedAt"
-	ContactPropertyFindWorkEmailWithBetterContactCompletedAt ContactProperty = "techFindWorkEmailWithBetterContactCompletedAt"
-	ContactPropertyUpdateWithWorkEmailRequestedAt            ContactProperty = "techUpdateWithWorkEmailRequestedAt"
-	ContactPropertyPrefix                                    ContactProperty = "prefix"
-	ContactPropertyName                                      ContactProperty = "name"
-	ContactPropertyFirstName                                 ContactProperty = "firstName"
-	ContactPropertyLastName                                  ContactProperty = "lastName"
-	ContactPropertyDescription                               ContactProperty = "description"
-	ContactPropertyTimezone                                  ContactProperty = "timezone"
-	ContactPropertyProfilePhotoUrl                           ContactProperty = "profilePhotoUrl"
-	ContactPropertyHide                                      ContactProperty = "hide"
-	ContactPropertyUsername                                  ContactProperty = "username"
-	ContactPropertyHiddenAt                                  ContactProperty = "hiddenAt"
+	ContactPropertyEnrichedAt                                  ContactProperty = "enrichedAt"
+	ContactPropertyEnrichFailedAt                              ContactProperty = "enrichFailedAt"
+	ContactPropertyEnrichRequestedAt                           ContactProperty = "techEnrichRequestedAt"
+	ContactPropertyEnrichAttempts                              ContactProperty = "techEnrichAttempts"
+	ContactPropertyEnrichedScrapinRecordId                     ContactProperty = "enrichedScrapinRecordId"
+	ContactPropertyBettercontactFoundEmailAt                   ContactProperty = "bettercontactFoundEmailAt"
+	ContactPropertyFindWorkEmailWithBetterContactRequestedId   ContactProperty = "techFindWorkEmailWithBetterContactRequestId"
+	ContactPropertyFindWorkEmailWithBetterContactRequestedAt   ContactProperty = "techFindWorkEmailWithBetterContactRequestedAt"
+	ContactPropertyFindWorkEmailWithBetterContactCompletedAt   ContactProperty = "techFindWorkEmailWithBetterContactCompletedAt"
+	ContactPropertyFindWorkEmailWithBetterContactFound         ContactProperty = "techFindWorkEmailWithBetterContactFound"
+	ContactPropertyFindMobilePhoneWithBetterContactRequestedId ContactProperty = "techFindMobilePhoneWithBetterContactRequestId"
+	ContactPropertyFindMobilePhoneWithBetterContactRequestedAt ContactProperty = "techFindMobilePhoneWithBetterContactRequestedAt"
+	ContactPropertyFindMobilePhoneWithBetterContactCompletedAt ContactProperty = "techFindMobilePhoneWithBetterContactCompletedAt"
+	ContactPropertyFindMobilePhoneWithBetterContactFound       ContactProperty = "techFindMobilePhoneWithBetterContactFound"
+	ContactPropertyUpdateWithWorkEmailRequestedAt              ContactProperty = "techUpdateWithWorkEmailRequestedAt"
+	ContactPropertyPrefix                                      ContactProperty = "prefix"
+	ContactPropertyName                                        ContactProperty = "name"
+	ContactPropertyFirstName                                   ContactProperty = "firstName"
+	ContactPropertyLastName                                    ContactProperty = "lastName"
+	ContactPropertyDescription                                 ContactProperty = "description"
+	ContactPropertyTimezone                                    ContactProperty = "timezone"
+	ContactPropertyProfilePhotoUrl                             ContactProperty = "profilePhotoUrl"
+	ContactPropertyHide                                        ContactProperty = "hide"
+	ContactPropertyUsername                                    ContactProperty = "username"
+	ContactPropertyHiddenAt                                    ContactProperty = "hiddenAt"
 )
 
 type ContactEntity struct {
@@ -51,6 +56,7 @@ type ContactEntity struct {
 	ProfilePhotoUrl string `neo4jDb:"property:profilePhotoUrl;lookupName:PROFILE_PHOTO_URL;supportCaseSensitive:true"`
 	Hide            bool   `neo4jDb:"property:hide;lookupName:HIDE;supportCaseSensitive:false"`
 	Username        string `neo4jDb:"property:username;lookupName:USERNAME;supportCaseSensitive:true"`
+	HiddenAt        *time.Time
 
 	InteractionEventParticipantDetails   InteractionEventParticipantDetails
 	InteractionSessionParticipantDetails InteractionSessionParticipantDetails
@@ -60,20 +66,25 @@ type ContactEntity struct {
 }
 
 type ContactInternalFields struct {
-	FindWorkEmailWithBetterContactRequestedId *string
-	FindWorkEmailWithBetterContactRequestedAt *time.Time
-	FindWorkEmailWithBetterContactCompletedAt *time.Time
-	UpdateWithWorkEmailRequestedAt            *time.Time
-	HiddenAt                                  *time.Time
+	UpdateWithWorkEmailRequestedAt *time.Time
+	HiddenAt                       *time.Time
 }
 
 type ContactEnrichDetails struct {
-	EnrichRequestedAt         *time.Time
-	EnrichedAt                *time.Time
-	EnrichFailedAt            *time.Time
-	EnrichAttempts            int64
-	BettercontactFoundEmailAt *time.Time
-	EnrichedScrapinRecordId   string
+	EnrichRequestedAt                           *time.Time
+	EnrichedAt                                  *time.Time
+	EnrichFailedAt                              *time.Time
+	EnrichAttempts                              int64
+	BettercontactFoundEmailAt                   *time.Time // TODO alexb check how it is used
+	EnrichedScrapinRecordId                     string
+	FindWorkEmailWithBetterContactRequestedId   *string
+	FindWorkEmailWithBetterContactRequestedAt   *time.Time
+	FindWorkEmailWithBetterContactCompletedAt   *time.Time
+	FindWorkEmailWithBetterContactFound         *bool
+	FindMobilePhoneWithBetterContactRequestedId *string
+	FindMobilePhoneWithBetterContactRequestedAt *time.Time
+	FindMobilePhoneWithBetterContactCompletedAt *time.Time
+	FindMobilePhoneWithBetterContactFound       *bool
 }
 
 type ContactEntities []ContactEntity

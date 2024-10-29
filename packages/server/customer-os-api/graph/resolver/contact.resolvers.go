@@ -8,7 +8,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	postgresrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	"strings"
 	"time"
 
@@ -30,6 +29,7 @@ import (
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	postgresrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -768,7 +768,7 @@ func (r *mutationResolver) ContactFindWorkEmail(ctx context.Context, contactID s
 		}
 	} else {
 		// mark contact as requested data from better contact
-		err = r.Services.Repositories.Neo4jRepositories.ContactWriteRepository.UpdateAnyProperty(ctx, common.GetTenantFromContext(ctx), contactID, neo4jentity.ContactPropertyFindWorkEmailWithBetterContactRequestedId, enrichmentResponse.BetterContactRequestId)
+		err = r.Services.Repositories.Neo4jRepositories.CommonWriteRepository.UpdateStringProperty(ctx, nil, common.GetTenantFromContext(ctx), commonmodel.NodeLabelContact, contactID, string(neo4jentity.ContactPropertyFindWorkEmailWithBetterContactRequestedId), enrichmentResponse.BetterContactRequestId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 		}
@@ -779,6 +779,28 @@ func (r *mutationResolver) ContactFindWorkEmail(ctx context.Context, contactID s
 		err = r.Services.Repositories.Neo4jRepositories.CommonWriteRepository.RemoveProperty(ctx, common.GetTenantFromContext(ctx), commonmodel.NodeLabelContact, contactID, string(neo4jentity.ContactPropertyFindWorkEmailWithBetterContactCompletedAt))
 		if err != nil {
 			tracing.TraceErr(span, err)
+		}
+		err = r.Services.Repositories.Neo4jRepositories.CommonWriteRepository.RemoveProperty(ctx, common.GetTenantFromContext(ctx), commonmodel.NodeLabelContact, contactID, string(neo4jentity.ContactPropertyFindWorkEmailWithBetterContactFound))
+		if err != nil {
+			tracing.TraceErr(span, err)
+		}
+		if utils.BoolDefaultIfNil(findMobileNumber, false) {
+			err = r.Services.Repositories.Neo4jRepositories.CommonWriteRepository.UpdateStringProperty(ctx, nil, common.GetTenantFromContext(ctx), commonmodel.NodeLabelContact, contactID, string(neo4jentity.ContactPropertyFindMobilePhoneWithBetterContactRequestedId), enrichmentResponse.BetterContactRequestId)
+			if err != nil {
+				tracing.TraceErr(span, err)
+			}
+			err = r.Services.Repositories.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, common.GetTenantFromContext(ctx), commonmodel.NodeLabelContact, contactID, string(neo4jentity.ContactPropertyFindMobilePhoneWithBetterContactRequestedAt), utils.NowPtr())
+			if err != nil {
+				tracing.TraceErr(span, err)
+			}
+			err = r.Services.Repositories.Neo4jRepositories.CommonWriteRepository.RemoveProperty(ctx, common.GetTenantFromContext(ctx), commonmodel.NodeLabelContact, contactID, string(neo4jentity.ContactPropertyFindMobilePhoneWithBetterContactCompletedAt))
+			if err != nil {
+				tracing.TraceErr(span, err)
+			}
+			err = r.Services.Repositories.Neo4jRepositories.CommonWriteRepository.RemoveProperty(ctx, common.GetTenantFromContext(ctx), commonmodel.NodeLabelContact, contactID, string(neo4jentity.ContactPropertyFindMobilePhoneWithBetterContactFound))
+			if err != nil {
+				tracing.TraceErr(span, err)
+			}
 		}
 		return &model.ActionResponse{Accepted: true}, nil
 	}
@@ -839,6 +861,7 @@ func (r *mutationResolver) ContactFindWorkEmail(ctx context.Context, contactID s
 		}
 	}
 
+	// create billable events
 	if emailLinked {
 		_, err = r.Services.CommonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, common.GetTenantFromContext(ctx), postgresentity.BillableEventEnrichPersonEmailFound,
 			postgresrepository.BillableEventDetails{
@@ -857,6 +880,42 @@ func (r *mutationResolver) ContactFindWorkEmail(ctx context.Context, contactID s
 			})
 		if err != nil {
 			tracing.TraceErr(span, pkgerrors.Wrap(err, "failed to store billable event"))
+		}
+	}
+
+	// update contact enrich properties for email
+	err = r.Services.CommonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, common.GetTenantFromContext(ctx), commonmodel.NodeLabelContact, contactID, string(neo4jentity.ContactPropertyFindWorkEmailWithBetterContactCompletedAt), utils.NowPtr())
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	if emailLinked {
+		err = r.Services.CommonServices.Neo4jRepositories.CommonWriteRepository.UpdateBoolProperty(ctx, common.GetTenantFromContext(ctx), commonmodel.NodeLabelContact, contactID, string(neo4jentity.ContactPropertyFindWorkEmailWithBetterContactFound), true)
+		if err != nil {
+			tracing.TraceErr(span, err)
+		}
+	} else {
+		err = r.Services.CommonServices.Neo4jRepositories.CommonWriteRepository.UpdateBoolProperty(ctx, common.GetTenantFromContext(ctx), commonmodel.NodeLabelContact, contactID, string(neo4jentity.ContactPropertyFindWorkEmailWithBetterContactFound), false)
+		if err != nil {
+			tracing.TraceErr(span, err)
+		}
+	}
+
+	// update contact enrich properties for phone
+	if utils.BoolDefaultIfNil(findMobileNumber, false) {
+		err = r.Services.CommonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, common.GetTenantFromContext(ctx), commonmodel.NodeLabelContact, contactID, string(neo4jentity.ContactPropertyFindMobilePhoneWithBetterContactCompletedAt), utils.NowPtr())
+		if err != nil {
+			tracing.TraceErr(span, err)
+		}
+		if phoneLinked {
+			err = r.Services.CommonServices.Neo4jRepositories.CommonWriteRepository.UpdateBoolProperty(ctx, common.GetTenantFromContext(ctx), commonmodel.NodeLabelContact, contactID, string(neo4jentity.ContactPropertyFindMobilePhoneWithBetterContactFound), true)
+			if err != nil {
+				tracing.TraceErr(span, err)
+			}
+		} else {
+			err = r.Services.CommonServices.Neo4jRepositories.CommonWriteRepository.UpdateBoolProperty(ctx, common.GetTenantFromContext(ctx), commonmodel.NodeLabelContact, contactID, string(neo4jentity.ContactPropertyFindMobilePhoneWithBetterContactFound), false)
+			if err != nil {
+				tracing.TraceErr(span, err)
+			}
 		}
 	}
 

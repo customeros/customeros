@@ -107,7 +107,7 @@ func MapEntityToContact(contact *neo4jentity.ContactEntity) *model.Contact {
 		UpdatedAt:       contact.UpdatedAt,
 		Source:          MapDataSourceToModel(contact.Source),
 		AppSource:       utils.StringPtr(contact.AppSource),
-		EnrichDetails:   prepareContactEnrichDetails(contact.EnrichDetails.EnrichRequestedAt, contact.EnrichDetails.EnrichedAt, contact.EnrichDetails.EnrichFailedAt),
+		EnrichDetails:   prepareContactEnrichDetails(contact.EnrichDetails),
 	}
 }
 
@@ -119,15 +119,23 @@ func MapEntitiesToContacts(contactEntities *neo4jentity.ContactEntities) []*mode
 	return contacts
 }
 
-func prepareContactEnrichDetails(requestedAt, enrichedAt, failedAt *time.Time) *model.EnrichDetails {
+func prepareContactEnrichDetails(enrichDetails neo4jentity.ContactEnrichDetails) *model.EnrichDetails {
 	output := model.EnrichDetails{
-		RequestedAt: requestedAt,
-		EnrichedAt:  enrichedAt,
-		FailedAt:    failedAt,
+		RequestedAt: enrichDetails.EnrichRequestedAt,
+		EnrichedAt:  enrichDetails.EnrichedAt,
+		FailedAt:    enrichDetails.EnrichFailedAt,
+
+		EmailRequestedAt: enrichDetails.FindWorkEmailWithBetterContactRequestedAt,
+		EmailEnrichedAt:  enrichDetails.FindWorkEmailWithBetterContactCompletedAt,
+		EmailFound:       enrichDetails.FindWorkEmailWithBetterContactFound,
+
+		MobilePhoneFound:       enrichDetails.FindMobilePhoneWithBetterContactFound,
+		MobilePhoneRequestedAt: enrichDetails.FindMobilePhoneWithBetterContactRequestedAt,
+		MobilePhoneEnrichedAt:  enrichDetails.FindMobilePhoneWithBetterContactCompletedAt,
 	}
-	if enrichedAt == nil && failedAt == nil && requestedAt != nil {
+	if enrichDetails.EnrichedAt == nil && enrichDetails.EnrichFailedAt == nil && enrichDetails.EnrichRequestedAt != nil {
 		// if requested is older than 1 min, remove it
-		if time.Since(*requestedAt) > time.Minute {
+		if time.Since(*enrichDetails.EnrichRequestedAt) > time.Minute {
 			output.RequestedAt = nil
 		}
 	}
