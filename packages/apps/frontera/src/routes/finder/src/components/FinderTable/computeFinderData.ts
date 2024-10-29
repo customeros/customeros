@@ -156,7 +156,10 @@ export const computeFinderData = (
     )
     .with(TableViewType.Contracts, () =>
       store.contracts?.toComputedArray((arr) => {
-        const filters = getContractFilterFns(tableViewDef?.getFilters());
+        const filters = getContractFilterFns(
+          tableViewDef?.getFilters(),
+          isFeatureEnabled,
+        );
 
         if (filters) {
           arr = arr.filter((v) => filters.every((fn) => fn(v)));
