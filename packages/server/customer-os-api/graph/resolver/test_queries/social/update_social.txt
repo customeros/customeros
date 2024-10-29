@@ -7,7 +7,6 @@ mutation UpdateSocial($socialId: ID!) {
   ) {
     id
     updatedAt
-    sourceOfTruth
     url
   }
 }

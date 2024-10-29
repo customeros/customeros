@@ -11,21 +11,19 @@ func MapSocialUpdateInputToEntity(input *model.SocialUpdateInput) *neo4jentity.S
 		return &neo4jentity.SocialEntity{}
 	}
 	return &neo4jentity.SocialEntity{
-		Id:            input.ID,
-		SourceOfTruth: neo4jentity.DataSourceOpenline,
-		Url:           utils.IfNotNilString(input.URL),
+		Id:  input.ID,
+		Url: utils.IfNotNilString(input.URL),
 	}
 }
 
 func MapEntityToSocial(entity *neo4jentity.SocialEntity) *model.Social {
 	return &model.Social{
 		Metadata: &model.Metadata{
-			ID:            entity.Id,
-			Created:       entity.CreatedAt,
-			LastUpdated:   entity.UpdatedAt,
-			Source:        MapDataSourceToModel(entity.Source),
-			SourceOfTruth: MapDataSourceToModel(entity.SourceOfTruth),
-			AppSource:     entity.AppSource,
+			ID:          entity.Id,
+			Created:     entity.CreatedAt,
+			LastUpdated: entity.UpdatedAt,
+			Source:      MapDataSourceToModel(entity.Source),
+			AppSource:   entity.AppSource,
 		},
 		ID:             entity.Id,
 		CreatedAt:      entity.CreatedAt,
@@ -35,7 +33,6 @@ func MapEntityToSocial(entity *neo4jentity.SocialEntity) *model.Social {
 		FollowersCount: entity.FollowersCount,
 		ExternalID:     entity.ExternalId,
 		Source:         MapDataSourceToModel(entity.Source),
-		SourceOfTruth:  MapDataSourceToModel(entity.SourceOfTruth),
 		AppSource:      entity.AppSource,
 	}
 }

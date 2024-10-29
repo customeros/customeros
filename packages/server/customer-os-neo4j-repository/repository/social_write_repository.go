@@ -178,7 +178,7 @@ func (r *socialWriteRepository) Update(ctx context.Context, tenant string, socia
 
 	query := `MATCH (soc:Social_%s {id:$id})
 			SET soc.updatedAt=datetime(),
-				soc.url=$url,
+				soc.url=$url
 			RETURN soc`
 
 	if result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {

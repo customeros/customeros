@@ -215,7 +215,6 @@ func TestGraphOrganizationEventHandler_OnSocialAddedToOrganization_New(t *testin
 	require.Equal(t, "ext-1", social.ExternalId)
 	require.Equal(t, int64(123), social.FollowersCount)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), social.Source)
-	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), social.SourceOfTruth)
 	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, social.AppSource)
 	require.Equal(t, now, social.CreatedAt)
 	test.AssertRecentTime(t, social.UpdatedAt)

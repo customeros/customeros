@@ -32,7 +32,6 @@ func TestMutationResolver_SocialUpdate(t *testing.T) {
 
 	require.Equal(t, socialId, updatedSocial.ID)
 	test.AssertRecentTime(t, updatedSocial.UpdatedAt)
-	require.Equal(t, model.DataSourceOpenline, updatedSocial.SourceOfTruth)
 	require.Equal(t, "new url", updatedSocial.URL)
 
 	// Check the number of nodes in the Neo4j database
