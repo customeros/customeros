@@ -14,11 +14,11 @@ import {
 } from '@shared/types/__generated__/graphql.types';
 
 import { getFilterTypes as getFilterTypesForContacts } from '../Columns/contacts/filterTypes';
+import { getFilterTypes as getFilterTypesForContracts } from '../Columns/contracts/filterTypes';
 import { getFilterTypes as getFilterTypesForUpcomingInvoices } from '../Columns/invoices/filterTypes';
 import { getFilterTypes as getFilterTypesForOrganizations } from '../Columns/organizations/filterTypes';
 import { getFilterTypes as getFilterTypesForOpportunities } from '../Columns/opportunities/filterTypes';
 import { getFilterTypes as getFilterTypesForPastInvoices } from '../Columns/invoices/filterTypesPastInvoices';
-
 export const FinderFilters = observer(
   ({ tableId, type }: { type: TableViewType; tableId: TableIdType }) => {
     const store = useStore();
@@ -34,6 +34,7 @@ export const FinderFilters = observer(
         () => getFilterTypesForUpcomingInvoices,
       )
       .with(TableIdType.PastInvoices, () => getFilterTypesForPastInvoices)
+      .with(TableIdType.Contracts, () => getFilterTypesForContracts)
       .otherwise(() => getFilterTypesForOrganizations);
 
     const [searchParams] = useSearchParams();

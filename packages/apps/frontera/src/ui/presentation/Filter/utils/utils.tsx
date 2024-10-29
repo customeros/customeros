@@ -141,6 +141,20 @@ export const handlePropertyPlural = (property: string, selection: string[]) => {
     )
     .with('Persona', () => (selection.length === 1 ? 'persona' : 'personas'))
     .with('Current flow', () => (selection.length === 1 ? 'flow' : 'flows'))
+    .with('Period', () => (selection.length === 1 ? 'period' : 'period'))
+    .with('Currency', () =>
+      selection.length === 1 ? 'currency' : 'currencies',
+    )
+    .with('Status', () => (selection.length === 1 ? 'status' : 'statuses'))
+    .with('Renewal', () =>
+      selection.length === 1 ? 'renewal' : 'renewal types',
+    )
+    .with('Biling cycle', () =>
+      selection.length === 1 ? 'billing cycle' : 'billing cycles',
+    )
+    .with('Invoice status', () =>
+      selection.length === 1 ? 'invoice status' : 'invoice statuses',
+    )
     .otherwise(() => 'unknown');
 };
 
