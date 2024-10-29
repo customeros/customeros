@@ -4,7 +4,7 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useUnmount } from 'usehooks-ts';
 import { observer } from 'mobx-react-lite';
 import { useReactFlow } from '@xyflow/react';
-import { FlowStore } from '@store/Flows/Flow.store.ts';
+import { FlowStore } from '@store/Flows/Flow.store';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
 
 import { cn } from '@ui/utils/cn';
@@ -13,7 +13,7 @@ import { Button } from '@ui/form/Button/Button';
 import { User01 } from '@ui/media/icons/User01';
 import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
-import { Settings03 } from '@ui/media/icons/Settings03.tsx';
+import { Settings03 } from '@ui/media/icons/Settings03';
 import { ChevronRight } from '@ui/media/icons/ChevronRight';
 import { ViewSettings } from '@shared/components/ViewSettings';
 import {
@@ -48,8 +48,7 @@ export const Header = observer(
     const contactsStore = store.contacts;
     const showFinder = searchParams.get('show') === 'finder';
     const flowContactsPreset = store.tableViewDefs.flowContactsPreset;
-    const canSave =
-      !showFinder && saveFlag && hasChanges && status === FlowStatus.Inactive;
+    const canSave = saveFlag && hasChanges && status === FlowStatus.Inactive;
 
     useEffect(() => {
       if (!store.ui.commandMenu.isOpen) {
@@ -147,8 +146,6 @@ export const Header = observer(
                   isLoading={contactsStore.isLoading || store.flows.isLoading}
                   onClick={() => {
                     navigate(`?show=finder&preset=${flowContactsPreset}`);
-
-                    if (saveFlag) handleSave();
                   }}
                   leftSpinner={
                     <Spinner
