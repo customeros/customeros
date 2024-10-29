@@ -427,7 +427,7 @@ func (s *flowService) FlowMerge(ctx context.Context, tx *neo4j.ManagedTransactio
 
 	e := flowEntity.(*neo4jentity.FlowEntity)
 
-	err = s.services.RabbitMQService.Publish(ctx, e.Id, model.FLOW, events.FlowComputeParticipantsRequirements{})
+	err = s.services.RabbitMQService.PublishEvent(ctx, e.Id, model.FLOW, events.FlowComputeParticipantsRequirements{})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -626,7 +626,7 @@ func (s *flowService) FlowChangeStatus(ctx context.Context, id string, status ne
 	})
 
 	if startInitialSchedule {
-		err := s.services.RabbitMQService.Publish(ctx, flow.Id, model.FLOW, events.FlowInitialSchedule{})
+		err := s.services.RabbitMQService.PublishEvent(ctx, flow.Id, model.FLOW, events.FlowInitialSchedule{})
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err

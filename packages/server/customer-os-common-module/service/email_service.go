@@ -114,7 +114,7 @@ func (s *emailService) Merge(ctx context.Context, tenant string, emailFields Ema
 		}
 
 		// send email event to rabbit mq
-		err = s.services.RabbitMQService.Publish(ctx, emailId, commonmodel.NodeLabelEmail, dto.NewRegisterEmailEvent(emailFields.Email, emailFields.Source.String()))
+		err = s.services.RabbitMQService.PublishEvent(ctx, emailId, commonmodel.NodeLabelEmail, dto.NewRegisterEmailEvent(emailFields.Email, emailFields.Source.String()))
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "unable to publish message AddEmailEvent"))
 		}
@@ -257,7 +257,7 @@ func (s *emailService) linkEmail(ctx context.Context, emailId, email, appSource 
 	}
 
 	// publish event to rabbit mq
-	err = s.services.RabbitMQService.Publish(ctx, linkWith.Id, linkWith.Type, dto.NewAddEmailEvent(email, primary))
+	err = s.services.RabbitMQService.PublishEvent(ctx, linkWith.Id, linkWith.Type, dto.NewAddEmailEvent(email, primary))
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message AddEmailEvent"))
 	}
@@ -331,7 +331,7 @@ func (s *emailService) UnlinkEmail(ctx context.Context, email, appSource string,
 		return errors.New("unsupported linkWith type " + linkWith.Type.String())
 	}
 	// publish event to rabbit mq
-	err = s.services.RabbitMQService.Publish(ctx, linkWith.Id, linkWith.Type, dto.NewRemoveEmailEvent(email))
+	err = s.services.RabbitMQService.PublishEvent(ctx, linkWith.Id, linkWith.Type, dto.NewRemoveEmailEvent(email))
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message RemoveEmailEvent"))
 	}

@@ -109,13 +109,13 @@ func (s *contactService) SaveContact(ctx context.Context, id *string, contactFie
 	}
 
 	if createFlow {
-		err = s.services.RabbitMQService.Publish(ctx, contactId, model.CONTACT, dto.New_CreateContact_From_ContactFields(contactFields, externalSystem))
+		err = s.services.RabbitMQService.PublishEvent(ctx, contactId, model.CONTACT, dto.New_CreateContact_From_ContactFields(contactFields, externalSystem))
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateContact"))
 		}
 		utils.EventCompleted(ctx, tenant, model.CONTACT.String(), contactId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithCreate())
 	} else {
-		err = s.services.RabbitMQService.Publish(ctx, contactId, model.CONTACT, dto.New_UpdateContact_From_ContactFields(contactFields, externalSystem))
+		err = s.services.RabbitMQService.PublishEvent(ctx, contactId, model.CONTACT, dto.New_UpdateContact_From_ContactFields(contactFields, externalSystem))
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateContact"))
 		}
@@ -169,7 +169,7 @@ func (s *contactService) HideContact(ctx context.Context, contactId string) erro
 		s.log.Errorf("error while updating hidden at property for contact %s: %s", contactId, err.Error())
 	}
 
-	err = s.services.RabbitMQService.Publish(ctx, contactId, model.CONTACT, dto.HideContact{})
+	err = s.services.RabbitMQService.PublishEvent(ctx, contactId, model.CONTACT, dto.HideContact{})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message HideContact"))
 	}
@@ -200,7 +200,7 @@ func (s *contactService) ShowContact(ctx context.Context, contactId string) erro
 		return err
 	}
 
-	err = s.services.RabbitMQService.Publish(ctx, contactId, model.CONTACT, dto.ShowContact{})
+	err = s.services.RabbitMQService.PublishEvent(ctx, contactId, model.CONTACT, dto.ShowContact{})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message ShowContact"))
 	}

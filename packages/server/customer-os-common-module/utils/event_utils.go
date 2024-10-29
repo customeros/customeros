@@ -34,6 +34,7 @@ func (ecd *EventCompletedDetails) WithDelete() *EventCompletedDetails {
 	return ecd
 }
 
+// deprecated
 func EventCompleted(ctx context.Context, tenant, entity, entityId string, grpcClients *grpc_client.Clients, details *EventCompletedDetails) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EventCompleted")
 	defer span.Finish()

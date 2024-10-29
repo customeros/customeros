@@ -45,13 +45,6 @@
   "policies": [],
   "queues": [
     {
-      "name": "events-dlq",
-      "vhost": "/",
-      "durable": true,
-      "auto_delete": false,
-      "arguments": {}
-    },
-    {
       "name": "events",
       "vhost": "/",
       "durable": true,
@@ -59,6 +52,29 @@
       "arguments": {
         "x-dead-letter-exchange": "dlq"
       }
+    },
+    {
+      "name": "events-dlq",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {}
+    },
+    {
+      "name": "notifications",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-dead-letter-exchange": "dlq"
+      }
+    },
+    {
+      "name": "notifications-dlq",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {}
     }
   ],
   "exchanges": [
@@ -79,6 +95,15 @@
       "auto_delete": false,
       "internal": false,
       "arguments": {}
+    },
+    {
+      "name": "notifications",
+      "vhost": "/",
+      "type": "fanout",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
     }
   ],
   "bindings": [
@@ -87,7 +112,15 @@
       "vhost": "/",
       "destination": "events",
       "destination_type": "queue",
-      "routing_key": "*",
+      "routing_key": "event",
+      "arguments": {}
+    },
+    {
+      "source": "notifications",
+      "vhost": "/",
+      "destination": "notifications",
+      "destination_type": "queue",
+      "routing_key": "notification",
       "arguments": {}
     },
     {
@@ -95,7 +128,15 @@
       "vhost": "/",
       "destination": "events-dlq",
       "destination_type": "queue",
-      "routing_key": "*",
+      "routing_key": "event",
+      "arguments": {}
+    },
+    {
+      "source": "dlq",
+      "vhost": "/",
+      "destination": "notifications-dlq",
+      "destination_type": "queue",
+      "routing_key": "notification",
       "arguments": {}
     }
   ]

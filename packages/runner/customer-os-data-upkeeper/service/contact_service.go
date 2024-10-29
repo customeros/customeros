@@ -1102,7 +1102,7 @@ func (s *contactService) enrichContacts(ctx context.Context) {
 				AppSource: constants.AppSourceDataUpkeeper,
 			})
 
-			err = s.commonServices.RabbitMQService.Publish(innerCtx, record.ContactId, model.CONTACT, dto.RequestEnrichContact{})
+			err = s.commonServices.RabbitMQService.PublishEvent(innerCtx, record.ContactId, model.CONTACT, dto.RequestEnrichContact{})
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message RequestEnrichContact"))
 				s.log.Errorf("Error requesting enrich contact {%s}: %s", record.ContactId, err.Error())

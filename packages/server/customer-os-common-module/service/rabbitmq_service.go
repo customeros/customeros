@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"github.com/mitchellh/mapstructure"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -19,8 +20,11 @@ import (
 )
 
 const (
+	NotificationsExchangeName = "notifications"
+	NotificationRoutingKey    = "notification"
+
 	EventsExchangeName        = "customeros"
-	EventsRoutingKey          = "events"
+	EventsRoutingKey          = "event"
 	EventsQueueName           = "events"
 	EventsOpensearchQueueName = "events-opensearch"
 )
@@ -125,13 +129,15 @@ func (r *RabbitMQService) reconnect() {
 	}
 }
 
-// Publish publishes a message to the given exchange and routing key with automatic reconnection
-func (r *RabbitMQService) Publish(ctx context.Context, entityId string, entityType model.EntityType, message interface{}) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "RabbitMQService.Publish")
+// PublishEvent publishes a message to the given exchange and routing key with automatic reconnection
+func (r *RabbitMQService) PublishEvent(ctx context.Context, entityId string, entityType model.EntityType, message interface{}) error {
+	return r.PublishEventOnQueue(ctx, entityId, entityType, message, EventsExchangeName, EventsRoutingKey)
+}
+
+func (r *RabbitMQService) PublishEventOnQueue(ctx context.Context, entityId string, entityType model.EntityType, message interface{}, exchange, routingKey string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "RabbitMQService.PublishOnQueue")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-
-	tracing.LogObjectAsJson(span, "message", message)
 
 	if r.conn == nil {
 		tracing.TraceErr(span, errors.New("RabbitMQ connection is nil"))
@@ -161,8 +167,26 @@ func (r *RabbitMQService) Publish(ctx context.Context, entityId string, entityTy
 		},
 	}
 
+	return r.PublishOnQueue(ctx, eventMessage, exchange, routingKey)
+}
+
+func (r *RabbitMQService) PublishOnQueue(ctx context.Context, message interface{}, exchange, routingKey string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "RabbitMQService.PublishOnQueue")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	tracing.LogObjectAsJson(span, "message", message)
+
+	if r.conn == nil {
+		tracing.TraceErr(span, errors.New("RabbitMQ connection is nil"))
+		return nil
+	}
+
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
 	// Convert the message to JSON
-	jsonBody, err := json.Marshal(eventMessage)
+	jsonBody, err := json.Marshal(message)
 	if err != nil {
 		return err
 	}
@@ -177,10 +201,10 @@ func (r *RabbitMQService) Publish(ctx context.Context, entityId string, entityTy
 
 		// Try publishing the message
 		err = r.channel.Publish(
-			EventsExchangeName, // Exchange name
-			EventsRoutingKey,   // Routing key
-			false,              // Mandatory
-			false,              // Immediate
+			exchange,   // Exchange name
+			routingKey, // Routing key
+			false,      // Mandatory
+			false,      // Immediate
 			amqp091.Publishing{
 				DeliveryMode: amqp091.Persistent,
 				ContentType:  "application/json",
@@ -197,6 +221,37 @@ func (r *RabbitMQService) Publish(ctx context.Context, entityId string, entityTy
 
 	log.Printf(" [x] Sent message to exchange %s with routing key %s", EventsExchangeName, EventsRoutingKey)
 	return nil
+}
+
+func (r *RabbitMQService) PublishEventCompleted(ctx context.Context, tenant string, entityId string, entityType model.EntityType, details *utils.EventCompletedDetails) {
+	r.PublishEventCompletedBulk(ctx, tenant, []string{entityId}, entityType, details)
+}
+
+func (r *RabbitMQService) PublishEventCompletedBulk(ctx context.Context, tenant string, entityIds []string, entityType model.EntityType, details *utils.EventCompletedDetails) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "RabbitMQService.PublishEventCompletedBulk")
+	defer span.Finish()
+	span.LogKV("tenant", tenant, "entityType", entityType, "entityIds", entityIds)
+
+	event := dto.EventCompleted{
+		Tenant:     tenant,
+		EntityType: entityType,
+		EntityIds:  entityIds,
+		Create:     false,
+		Update:     false,
+		Delete:     false,
+	}
+
+	if details != nil {
+		event.Create = details.Create
+		event.Update = details.Update
+		event.Delete = details.Delete
+	}
+
+	err := r.PublishOnQueue(ctx, event, NotificationsExchangeName, NotificationRoutingKey)
+
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
 }
 
 // RegisterHandler allows you to register a handler for a specific event type

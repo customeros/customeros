@@ -515,7 +515,7 @@ func (s *organizationService) LinkWithDomain(ctx context.Context, tx *neo4j.Mana
 	// execute only if not in transaction and domain was linked with org
 	if tx == nil && domainLinkedToOrg {
 		// send event to rabbitmq
-		err = s.services.RabbitMQService.Publish(ctx, organizationId, model.ORGANIZATION, dto.NewAddDomainEvent(domain))
+		err = s.services.RabbitMQService.PublishEvent(ctx, organizationId, model.ORGANIZATION, dto.NewAddDomainEvent(domain))
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to publish event AddDomain"))
 		}

@@ -131,7 +131,7 @@ func (s *opportunityService) Save(ctx context.Context, tx *neo4j.ManagedTransact
 	span.LogFields(log.Object("input", input))
 
 	var err error
-	var existingOpportunity *neo4jentity.OpportunityEntity
+	var existing *neo4jentity.OpportunityEntity
 
 	if organizationId == nil && opportunityId == nil {
 		err := fmt.Errorf("(OpportunityService.Save) organizationId and opportunityId are nil")
@@ -153,12 +153,12 @@ func (s *opportunityService) Save(ctx context.Context, tx *neo4j.ManagedTransact
 	}
 
 	if opportunityId != nil {
-		existingOpportunity, err = s.GetById(ctx, tenant, *opportunityId)
+		existing, err = s.GetById(ctx, tenant, *opportunityId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err
 		}
-		if existingOpportunity == nil {
+		if existing == nil {
 			err := fmt.Errorf("(OpportunityService.Save) opportunity with id {%s} not found", *opportunityId)
 			tracing.TraceErr(span, err)
 			return nil, err
@@ -191,7 +191,7 @@ func (s *opportunityService) Save(ctx context.Context, tx *neo4j.ManagedTransact
 	}
 
 	// Changing external stage should set internal stage back to OPEN
-	if existingOpportunity != nil && input.ExternalStage != "" && existingOpportunity.ExternalStage != input.ExternalStage && existingOpportunity.InternalStage != neo4jenum.OpportunityInternalStageOpen {
+	if existing != nil && input.ExternalStage != "" && existing.ExternalStage != input.ExternalStage && existing.InternalStage != neo4jenum.OpportunityInternalStageOpen {
 		input.InternalStage = neo4jenum.OpportunityInternalStageOpen.String()
 		input.UpdateInternalStage = true
 	}
@@ -226,7 +226,7 @@ func (s *opportunityService) Save(ctx context.Context, tx *neo4j.ManagedTransact
 					return nil, err
 				}
 			} else {
-				if existingOpportunity != nil {
+				if existing != nil {
 					err = s.services.Neo4jRepositories.OpportunityWriteRepository.RemoveOwner(ctx, &tx, tenant, *opportunityId)
 					if err != nil {
 						tracing.TraceErr(span, err)
@@ -253,7 +253,7 @@ func (s *opportunityService) Save(ctx context.Context, tx *neo4j.ManagedTransact
 		}
 
 		//TODO when we migrate the renewal opportunities to the new model, we will need to uncomment this
-		//if (input.UpdateAmount || input.UpdateMaxAmount) && existingOpportunity.InternalType == neo4jenum.OpportunityInternalTypeRenewal {
+		//if (input.UpdateAmount || input.UpdateMaxAmount) && existing.InternalType == neo4jenum.OpportunityInternalTypeRenewal {
 		//	// if amount changed, recalculate organization combined ARR forecast
 		//	organizationDbNode, err := s.services.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByOpportunityId(ctx, tenant, *opportunityId)
 		//	if err != nil {
@@ -288,6 +288,19 @@ func (s *opportunityService) Save(ctx context.Context, tx *neo4j.ManagedTransact
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
+
+	//TODO put back after we integrate
+	//if input.AppSource != constants.AppSourceCustomerOsApi {
+	details := utils.NewEventCompletedDetails()
+
+	if existing == nil {
+		details.WithCreate()
+	} else {
+		details.WithUpdate()
+	}
+
+	s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, *opportunityId, commonModel.OPPORTUNITY, details)
+	//}
 
 	return opportunityId, nil
 }
@@ -390,6 +403,7 @@ func (s *opportunityService) CloseWon(ctx context.Context, tx *neo4j.ManagedTran
 	})
 
 	utils.EventCompleted(ctx, tenant, commonModel.OPPORTUNITY.String(), opportunityId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
+	s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, opportunityId, commonModel.OPPORTUNITY, utils.NewEventCompletedDetails().WithUpdate())
 
 	return nil
 }
@@ -423,6 +437,7 @@ func (s *opportunityService) CloseLost(ctx context.Context, tx *neo4j.ManagedTra
 	}
 
 	utils.EventCompleted(ctx, tenant, commonModel.OPPORTUNITY.String(), opportunityId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
+	s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, opportunityId, commonModel.OPPORTUNITY, utils.NewEventCompletedDetails().WithUpdate())
 
 	return nil
 }
@@ -457,6 +472,7 @@ func (s *opportunityService) Archive(ctx context.Context, tenant, opportunityId 
 	}
 
 	utils.EventCompleted(ctx, tenant, commonModel.OPPORTUNITY.String(), opportunityId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithDelete())
+	s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, opportunityId, commonModel.OPPORTUNITY, utils.NewEventCompletedDetails().WithDelete())
 
 	return nil
 }

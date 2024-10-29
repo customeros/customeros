@@ -153,7 +153,7 @@ func (s *socialService) MergeSocialWithEntity(ctx context.Context, linkWith Link
 	}
 
 	if createSocialFlow {
-		err = s.services.RabbitMQService.Publish(ctx, socialId, model.SOCIAL, dto.CreateSocial{
+		err = s.services.RabbitMQService.PublishEvent(ctx, socialId, model.SOCIAL, dto.CreateSocial{
 			Url:           socialUrl,
 			Alias:         socialEntity.Alias,
 			ExtId:         socialEntity.ExternalId,
@@ -166,7 +166,7 @@ func (s *socialService) MergeSocialWithEntity(ctx context.Context, linkWith Link
 
 	switch linkWith.Type {
 	case model.CONTACT:
-		err = s.services.RabbitMQService.Publish(ctx, linkWith.Id, model.CONTACT, dto.AddSocialToContact{
+		err = s.services.RabbitMQService.PublishEvent(ctx, linkWith.Id, model.CONTACT, dto.AddSocialToContact{
 			SocialId: socialId,
 			Social:   socialUrl,
 		})
@@ -176,7 +176,7 @@ func (s *socialService) MergeSocialWithEntity(ctx context.Context, linkWith Link
 
 		utils.EventCompleted(ctx, tenant, model.CONTACT.String(), linkWith.Id, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
 	case model.ORGANIZATION:
-		err = s.services.RabbitMQService.Publish(ctx, linkWith.Id, model.ORGANIZATION, dto.AddSocialToOrganization{
+		err = s.services.RabbitMQService.PublishEvent(ctx, linkWith.Id, model.ORGANIZATION, dto.AddSocialToOrganization{
 			SocialId: socialId,
 			Social:   socialUrl,
 		})
