@@ -1,9 +1,9 @@
 import { createPortal } from 'react-dom';
 import { useRef, useState, useEffect, useCallback, KeyboardEvent } from 'react';
 
-import { computePosition } from '@floating-ui/dom';
 import { $setBlocksType } from '@lexical/selection';
 import { $isLinkNode, $toggleLink } from '@lexical/link';
+import { shift, offset, computePosition } from '@floating-ui/dom';
 import { $isQuoteNode, $createQuoteNode } from '@lexical/rich-text';
 import { $isListNode, $createListNode, $isListItemNode } from '@lexical/list';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
@@ -60,7 +60,7 @@ export function FloatingMenu({ editor }: FloatingMenuComponentProps) {
   const [isOrderedList, setIsOrderedList] = useState(false);
   const [isUnorderedList, setIsUnorderedList] = useState(false);
   const [isCheckList, setIsCheckList] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement | null>(null);
 
   const toggleLink = useCallback(() => {
     editor.update(() => {
@@ -278,7 +278,7 @@ export function FloatingMenuPlugin({
   element,
   variableOptions,
 }: FloatingMenuPluginProps) {
-  const ref = useRef<HTMLDivElement>(null);
+  const ref = useRef<HTMLDivElement | null>(null);
   const [coords, setCoords] = useState<FloatingMenuCoords>(undefined);
   const show = coords !== undefined;
 
@@ -292,9 +292,12 @@ export function FloatingMenuPlugin({
 
     if (!domRange || !ref.current || isPointerDown) return setCoords(undefined);
 
-    computePosition(domRange, ref.current, { placement: 'top' })
+    computePosition(domRange, ref.current, {
+      placement: 'top',
+      middleware: [offset(8), shift()],
+    })
       .then((pos) => {
-        setCoords({ x: pos.x, y: pos.y - 10 });
+        setCoords({ x: pos.x, y: pos.y });
       })
       .catch(() => {
         setCoords(undefined);
@@ -332,7 +335,7 @@ export function FloatingMenuPlugin({
 
   const handleClickOutside = useCallback(
     (event: MouseEvent) => {
-      if (ref.current && !ref.current.contains(event.target as Node)) {
+      if (ref.current && !ref.current?.contains(event.target as Node)) {
         editor.update(() => {
           setCoords(undefined);
 
