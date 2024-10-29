@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react';
+import { ReactNode } from 'react';
 
 import { observer } from 'mobx-react-lite';
 import { FlowSenderStore } from '@store/FlowSenders/FlowSender.store';
@@ -12,11 +12,15 @@ import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
 import { DotsVertical } from '@ui/media/icons/DotsVertical';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@ui/overlay/Popover/Popover.tsx';
 
 export const FlowSender = observer(
   ({ id, flowId }: { id: string; flowId: string }) => {
     const store = useStore();
-
     const flowSender = store.flowSenders.value.get(id) as FlowSenderStore;
     const userMailboxes = flowSender?.user?.value?.mailboxes;
 
@@ -34,15 +38,28 @@ export const FlowSender = observer(
           <span className='flex-1 text-sm'>{flowSender?.user?.name}</span>
         </div>
         <div className='flex'>
-          <Button
-            size='xxs'
-            isDisabled
-            variant='ghost'
-            leftIcon={<Mail01 className='text-inherit ' />}
-          >
-            {userMailboxes?.length ?? 0}{' '}
-            {userMailboxes?.length === 1 ? 'mailbox' : 'mailboxes'}
-          </Button>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                size='xxs'
+                variant='ghost'
+                leftIcon={<Mail01 className='text-inherit ' />}
+              >
+                {userMailboxes?.length ?? 0}{' '}
+                {userMailboxes?.length === 1 ? 'mailbox' : 'mailboxes'}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align='end' side='bottom' className={'px-6 py-4 '}>
+              <p className='text-sm font-medium mb-1'>Linked mailboxes</p>
+              <ul className='list-disc px-4'>
+                {userMailboxes?.map((mailbox) => (
+                  <li className='' key={`mailbox-item-${mailbox}`}>
+                    <span className='text-sm'>{mailbox}</span>
+                  </li>
+                ))}
+              </ul>
+            </PopoverContent>
+          </Popover>
 
           <FlowSenderMenu senderId={id} flowId={flowId}>
             <IconButton
