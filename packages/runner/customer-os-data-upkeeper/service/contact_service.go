@@ -956,6 +956,7 @@ func (s *contactService) EnrichWithWorkEmailFromBetterContact() {
 				}
 			}
 		}
+		utils.EventCompleted(ctx, record.Tenant, model.CONTACT.String(), record.ContactId, s.commonServices.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
 	}
 }
 
