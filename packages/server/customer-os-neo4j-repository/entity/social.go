@@ -1,6 +1,9 @@
 package entity
 
-import "time"
+import (
+	"strings"
+	"time"
+)
 
 type SocialProperty string
 
@@ -9,7 +12,6 @@ const (
 	SocialPropertyCreatedAt      SocialProperty = "createdAt"
 	SocialPropertyUpdatedAt      SocialProperty = "updatedAt"
 	SocialPropertySource         SocialProperty = "source"
-	SocialPropertySourceOfTruth  SocialProperty = "sourceOfTruth"
 	SocialPropertyAppSource      SocialProperty = "appSource"
 	SocialPropertyUrl            SocialProperty = "url"
 	SocialPropertyAlias          SocialProperty = "alias"
@@ -23,7 +25,6 @@ type SocialEntity struct {
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
 	Source         DataSource
-	SourceOfTruth  DataSource
 	AppSource      string
 	Url            string
 	Alias          string
@@ -32,3 +33,7 @@ type SocialEntity struct {
 }
 
 type SocialEntities []SocialEntity
+
+func (s SocialEntity) IsLinkedin() bool {
+	return strings.Contains(s.Url, "linkedin.com")
+}

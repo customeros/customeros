@@ -24,6 +24,7 @@ type CommonReadRepository interface {
 	ExistsByIdLinkedTo(ctx context.Context, tenant, id, label, linkedToId, linkedToLabel, linkRelationship string) (bool, error)
 	ExistsByIdLinkedFrom(ctx context.Context, tenant, id, label, linkedFromId, linkedFromLabel, linkRelationship string) (bool, error)
 	ExecuteIntegrityCheckerQuery(ctx context.Context, name, cypherQuery string) (int64, error)
+	GetDbNodesLinkedTo(ctx context.Context, tenant, linkToId, linkedToLabel, linkRelationship string) ([]*dbtype.Node, error)
 }
 
 type commonReadRepository struct {
@@ -273,4 +274,32 @@ func (r *commonReadRepository) ExecuteIntegrityCheckerQuery(ctx context.Context,
 	}
 	span.LogFields(log.Int64("output - records", countFoundRecords.(int64)))
 	return countFoundRecords.(int64), err
+}
+
+func (r *commonReadRepository) GetDbNodesLinkedTo(ctx context.Context, tenant, linkToId, linkedToLabel, linkRelationship string) ([]*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CommonReadRepository.GetDbNodesLinkedTo")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
+	span.LogFields(log.String("linkToId", linkToId), log.String("linkedToLabel", linkedToLabel), log.String("linkRelationship", linkRelationship))
+
+	cypher := fmt.Sprintf(`MATCH (to:%s_%s {id:$linkToId})<-[:%s]-(n) RETURN n`, linkedToLabel, tenant, linkRelationship)
+	params := map[string]any{
+		"linkToId": linkToId,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	return result.([]*dbtype.Node), nil
 }

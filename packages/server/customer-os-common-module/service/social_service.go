@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
+	commonerrors "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -19,9 +20,10 @@ import (
 )
 
 type SocialService interface {
+	GetById(ctx context.Context, socialId string) (*neo4jentity.SocialEntity, error)
 	MergeSocialWithEntity(ctx context.Context, linkWith LinkWith, socialEntity neo4jentity.SocialEntity) (string, error)
-	Update(ctx context.Context, tenant string, entity neo4jentity.SocialEntity) (*neo4jentity.SocialEntity, error)
-	Remove(ctx context.Context, tenant, socialId string) error
+	Update(ctx context.Context, entity neo4jentity.SocialEntity) (*neo4jentity.SocialEntity, error)
+	PermanentlyDelete(ctx context.Context, tenant, socialId string) error
 	GetAllForEntities(ctx context.Context, tenant string, linkedEntityType model.EntityType, linkedEntityIds []string) (*neo4jentity.SocialEntities, error)
 }
 
@@ -56,25 +58,98 @@ func (s *socialService) GetAllForEntities(ctx context.Context, tenant string, li
 	return &socialEntities, nil
 }
 
-func (s *socialService) Update(ctx context.Context, tenant string, socialEntity neo4jentity.SocialEntity) (*neo4jentity.SocialEntity, error) {
+func (s *socialService) Update(ctx context.Context, socialEntity neo4jentity.SocialEntity) (*neo4jentity.SocialEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialService.Update")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	updatedLocationNode, err := s.services.Neo4jRepositories.SocialWriteRepository.Update(ctx, tenant, socialEntity)
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+
+	// get current social entity
+	socialDbNode, err := s.services.Neo4jRepositories.SocialReadRepository.GetById(ctx, tenant, socialEntity.Id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	currentSocialEntity := neo4jmapper.MapDbNodeToSocialEntity(socialDbNode)
+	if currentSocialEntity.IsLinkedin() {
+		if currentSocialEntity.Alias != "" || currentSocialEntity.ExternalId != "" {
+			return currentSocialEntity, commonerrors.ErrOperationNotAllowed
+		}
+	}
+
+	// update social in DB
+	updatedSocialNode, err := s.services.Neo4jRepositories.SocialWriteRepository.Update(ctx, tenant, socialEntity)
 	if err != nil {
 		return nil, err
 	}
-	return neo4jmapper.MapDbNodeToSocialEntity(updatedLocationNode), nil
+
+	err = s.services.RabbitMQService.Publish(ctx, socialEntity.Id, model.SOCIAL, dto.UpdateSocial{
+		Url: socialEntity.Url,
+	})
+
+	// get linked entities
+	linkedEntities, err := s.services.Neo4jRepositories.CommonReadRepository.GetDbNodesLinkedTo(ctx, tenant, socialEntity.Id, model.SOCIAL.Neo4jLabel(), "HAS")
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	// notify linked entities updated.
+	for _, linkedEntity := range linkedEntities {
+		labels := linkedEntity.Labels
+		props := utils.GetPropsFromNode(*linkedEntity)
+		id := utils.GetStringPropOrEmpty(props, "id")
+
+		if utils.Contains(labels, model.CONTACT.Neo4jLabel()) {
+			err = s.services.RabbitMQService.Publish(ctx, id, model.CONTACT, dto.UpdateSocialForContact{
+				SocialId:  socialEntity.Id,
+				SocialUrl: socialEntity.Url,
+			})
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateSocialForContact"))
+			}
+			utils.EventCompleted(ctx, tenant, model.CONTACT.String(), id, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
+		} else if utils.Contains(labels, model.ORGANIZATION.Neo4jLabel()) {
+			err = s.services.RabbitMQService.Publish(ctx, id, model.ORGANIZATION, dto.UpdateSocialForOrganization{
+				SocialId:  socialEntity.Id,
+				SocialUrl: socialEntity.Url,
+			})
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateSocialForOrganization"))
+			}
+			utils.EventCompleted(ctx, tenant, model.ORGANIZATION.String(), id, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
+		}
+	}
+
+	return neo4jmapper.MapDbNodeToSocialEntity(updatedSocialNode), nil
 }
 
-func (s *socialService) Remove(ctx context.Context, tenant string, socialId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialService.Remove")
+func (s *socialService) PermanentlyDelete(ctx context.Context, tenant string, socialId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialService.PermanentlyDelete")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.SetTag(tracing.SpanTagEntityId, socialId)
+	tracing.TagEntity(span, socialId)
 
-	return s.services.Neo4jRepositories.SocialWriteRepository.PermanentlyDelete(ctx, tenant, socialId)
+	// get linked entities
+	// TODO get linked entities to send update events to rabbit and eventstore
+
+	err := s.services.Neo4jRepositories.SocialWriteRepository.PermanentlyDelete(ctx, tenant, socialId)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to permanently delete social"))
+		return err
+	}
+
+	err = s.services.RabbitMQService.Publish(ctx, socialId, model.SOCIAL, dto.Delete{})
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message DeleteSocial"))
+	}
+
+	return err
 }
 
 func (s *socialService) MergeSocialWithEntity(ctx context.Context, linkWith LinkWith, socialEntity neo4jentity.SocialEntity) (string, error) {
@@ -188,4 +263,25 @@ func (s *socialService) MergeSocialWithEntity(ctx context.Context, linkWith Link
 	}
 
 	return socialId, nil
+}
+
+func (s *socialService) GetById(ctx context.Context, socialId string) (*neo4jentity.SocialEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialService.GetById")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.TagEntity(span, socialId)
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+
+	socialNode, err := s.services.Neo4jRepositories.SocialReadRepository.GetById(ctx, tenant, socialId)
+	if err != nil {
+		return nil, err
+	}
+	return neo4jmapper.MapDbNodeToSocialEntity(socialNode), nil
 }

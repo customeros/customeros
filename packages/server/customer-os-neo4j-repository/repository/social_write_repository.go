@@ -59,7 +59,6 @@ func (r *socialWriteRepository) MergeSocialForEntity(ctx context.Context, tenant
 			soc.createdAt=$createdAt, 
 			soc.updatedAt=datetime(), 
 			soc.source=$source, 
-		  	soc.sourceOfTruth=$sourceOfTruth, 
 		  	soc.appSource=$appSource, 
 		  	soc.url=$url,
 			soc.alias=$alias,
@@ -80,7 +79,6 @@ func (r *socialWriteRepository) MergeSocialForEntity(ctx context.Context, tenant
 		"followersCount": data.FollowersCount,
 		"externalId":     data.ExternalId,
 		"source":         data.SourceFields.Source,
-		"sourceOfTruth":  utils.FirstNotEmptyString(data.SourceFields.SourceOfTruth, data.SourceFields.Source),
 		"appSource":      data.SourceFields.AppSource,
 	}
 	span.LogFields(log.String("cypher", cypher))
@@ -181,16 +179,13 @@ func (r *socialWriteRepository) Update(ctx context.Context, tenant string, socia
 	query := `MATCH (soc:Social_%s {id:$id})
 			SET soc.updatedAt=datetime(),
 				soc.url=$url,
-				soc.sourceOfTruth=$sourceOfTruth
 			RETURN soc`
 
 	if result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant),
 			map[string]any{
-				"now":           utils.Now(),
-				"id":            socialEntity.Id,
-				"url":           socialEntity.Url,
-				"sourceOfTruth": socialEntity.SourceOfTruth,
+				"id":  socialEntity.Id,
+				"url": socialEntity.Url,
 			})
 		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 	}); err != nil {

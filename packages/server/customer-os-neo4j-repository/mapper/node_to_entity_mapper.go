@@ -552,7 +552,6 @@ func MapDbNodeToSocialEntity(dbNode *dbtype.Node) *entity.SocialEntity {
 		UpdatedAt:      utils.GetTimePropOrEpochStart(props, string(entity.SocialPropertyUpdatedAt)),
 		AppSource:      utils.GetStringPropOrEmpty(props, string(entity.SocialPropertyAppSource)),
 		Source:         entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, string(entity.SocialPropertySource))),
-		SourceOfTruth:  entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, string(entity.SocialPropertySourceOfTruth))),
 	}
 	return &social
 }
