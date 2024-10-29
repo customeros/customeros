@@ -5,13 +5,13 @@ import { observer } from 'mobx-react-lite';
 import { cn } from '@ui/utils/cn.ts';
 import { FlowStatus } from '@graphql/types';
 import { Play } from '@ui/media/icons/Play';
+import { Spinner } from '@ui/feedback/Spinner';
 import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
 import { DotLive } from '@ui/media/icons/DotLive';
 import { StopCircle } from '@ui/media/icons/StopCircle';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip.tsx';
 import { Tag, TagLabel, TagLeftIcon } from '@ui/presentation/Tag';
-import { CircleProgress2 } from '@ui/media/icons/CircleProgress2.tsx';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
 
 interface FlowStatusMenuSelectProps {
@@ -37,20 +37,27 @@ export const FlowStatusMenu = observer(({ id }: FlowStatusMenuSelectProps) => {
           <Button
             size='xs'
             variant='outline'
+            leftIcon={<Play />}
             dataTest='start-flow'
+            loadingText='Scheduling...'
+            isLoading={status === FlowStatus.Scheduling}
             colorScheme={status === FlowStatus.Scheduling ? 'gray' : 'primary'}
             onClick={() => {
               store.ui.commandMenu.toggle('StartFlow');
             }}
-            leftIcon={
-              status === FlowStatus.Scheduling ? <CircleProgress2 /> : <Play />
-            }
             className={cn({
               'text-gray-500 pointer-events-none':
                 status === FlowStatus.Scheduling,
             })}
+            leftSpinner={
+              <Spinner
+                size='sm'
+                label='Scheduling'
+                className='text-gray-500 fill-gray-200'
+              />
+            }
           >
-            {status === FlowStatus.Scheduling ? 'Scheduling...' : 'Start flow'}
+            Start flow
           </Button>
         </div>
       </Tooltip>
