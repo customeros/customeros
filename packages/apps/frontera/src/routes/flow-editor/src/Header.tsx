@@ -183,6 +183,7 @@ export const Header = observer(
               icon={<Settings03 />}
               onClick={onToggleSidePanel}
               aria-label={'Toggle Settings'}
+              dataTest={'flow-toggle-settings'}
             />
           </div>
         </div>

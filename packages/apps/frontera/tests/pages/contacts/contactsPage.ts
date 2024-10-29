@@ -105,5 +105,7 @@ export class ContactsPage {
       contactFlowInContactsTable,
       `Expected to have flow ${flowName} allocated to contact ${contact.contactName}`,
     ).toHaveText(flowName);
+
+    await this.page.reload();
   }
 }

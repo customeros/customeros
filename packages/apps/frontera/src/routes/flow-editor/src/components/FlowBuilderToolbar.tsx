@@ -47,6 +47,7 @@ export const FlowBuilderToolbar = () => {
           <ControlButton
             disabled={!canZoomIn}
             onClick={handleZoomIn}
+            data-test='flow-zoom-in'
             className={`rounded-l-lg h-[36px] w-[36px] hover:bg-gray-50 focus:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed`}
           >
             <ZoomIn className='size-4 text-gray-500' />
@@ -58,6 +59,7 @@ export const FlowBuilderToolbar = () => {
           <ControlButton
             disabled={!canZoomOut}
             onClick={handleZoomOut}
+            data-test='flow-zoom-out'
             className={`h-[36px] w-[36px] hover:bg-gray-50 focus:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed`}
           >
             <ZoomOut className='size-4 text-gray-500' />
@@ -68,6 +70,7 @@ export const FlowBuilderToolbar = () => {
         <div>
           <ControlButton
             onClick={handleFitView}
+            data-test='flow-fit-to-view'
             className='h-[36px] w-[36px] hover:bg-gray-50 focus:bg-gray-50'
           >
             <Maximize02 className='size-4 text-gray-500' />

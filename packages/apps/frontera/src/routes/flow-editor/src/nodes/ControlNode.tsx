@@ -8,7 +8,9 @@ export const ControlNode = () => {
       <div className='size-6 mr-2 bg-gray-50 border border-gray-100 rounded flex items-center justify-center'>
         <XSquare className='text-gray-500' />
       </div>
-      <span className='text-sm'>End Flow</span>
+      <span className='text-sm' data-test={'flow-end-flow'}>
+        End Flow
+      </span>
       <Handle
         type='target'
         className={`h-2 w-2 bg-transparent border-transparent`}

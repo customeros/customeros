@@ -1,6 +1,7 @@
 import { randomUUID } from 'crypto';
 import { Page, expect } from '@playwright/test';
 
+import { FlowStatuses } from './flowsStatuses';
 import {
   createRequestPromise,
   createResponsePromise,
@@ -26,18 +27,24 @@ export class FlowsPage {
   confirmCreateNewFlow = 'button[data-test="confirm-create-new-flow"]';
 
   flowNameInFlowsTable = 'div[data-test="flow-name-in-flows-table"]';
-  flowEndedEarlyInFlowTable =
-    'div[data-test="flow-ended-early-in-flows-table"]';
-  flowNotStartedInFlowsTable =
-    'div[data-test="flow-not-started-in-flows-table"]';
   flowStatusTextInFlowsTable = 'p[data-test="flow-status-text-in-flows-table"]';
   flowStatusButtonInFlowsTable =
     'button[data-test="flow-status-button-in-flows-table"]';
+  flowOnHoldInFlowsTable = 'span[data-test="flow-on-hold-in-flows-table"]';
+  flowReadyInFlowsTable = 'span[data-test="flow-ready-in-flows-table"]';
+  flowScheduledInFlowsTable = 'span[data-test="flow-scheduled-in-flows-table"]';
   flowInProgressInFlowsTable =
     'span[data-test="flow-in-progress-in-flows-table"]';
   flowCompletedInFlowsTable = 'span[data-test="flow-completed-in-flows-table"]';
   flowGoalAchievedInFlowsTable =
     'span[data-test="flow-goal-achieved-in-flows-table"]';
+  // flowNotStartedInFlowsTable =
+  //   'div[data-test="flow-not-started-in-flows-table"]';
+  // flowInProgressInFlowsTable =
+  //   'span[data-test="flow-in-progress-in-flows-table"]';
+  // flowCompletedInFlowsTable = 'span[data-test="flow-completed-in-flows-table"]';
+  // flowGoalAchievedInFlowsTable =
+  //   'span[data-test="flow-goal-achieved-in-flows-table"]';
 
   private flowsActionsArchive = 'button[data-test="actions-archive"]';
   private orgActionsConfirmArchive =
@@ -86,7 +93,18 @@ export class FlowsPage {
     return flowName;
   }
 
-  async checkNewFlowEntry(expectedFlowName: string, notStarted: string) {
+  async checkNewFlowEntry(
+    expectedFlowName: string,
+    expectedFlow: {
+      ready: string;
+      onHold: string;
+      scheduled: string;
+      completed: string;
+      inProgress: string;
+      goalAchieved: string;
+      status: FlowStatuses;
+    },
+  ) {
     const flowNameInAllOrgsTable = this.page
       .locator(
         `${this.finderTableFlows} ${this.flowNameInFlowsTable}:has-text("${expectedFlowName}")`,
@@ -107,7 +125,19 @@ export class FlowsPage {
       .locator(this.flowStatusTextInFlowsTable)
       .innerText();
 
-    const actualflowInProgressInFlowsTable = await flowNameInAllOrgsTable
+    const actualFlowOnHoldInFlowsTable = await flowNameInAllOrgsTable
+      .locator(this.flowOnHoldInFlowsTable)
+      .innerText();
+
+    const actualFlowReadyInFlowsTable = await flowNameInAllOrgsTable
+      .locator(this.flowReadyInFlowsTable)
+      .innerText();
+
+    const actualFlowScheduledInFlowsTable = await flowNameInAllOrgsTable
+      .locator(this.flowScheduledInFlowsTable)
+      .innerText();
+
+    const actualFlowInProgressInFlowsTable = await flowNameInAllOrgsTable
       .locator(this.flowInProgressInFlowsTable)
       .innerText();
 
@@ -121,10 +151,17 @@ export class FlowsPage {
 
     await Promise.all([
       expect.soft(actualFlow).toBe(expectedFlowName),
-      expect.soft(actualFlowStatusInAllOrgsTable).toBe(notStarted),
-      expect.soft(actualflowInProgressInFlowsTable).toBe('0'),
-      expect.soft(actualFlowCompletedInFlowsTable).toBe('0'),
-      expect.soft(actualFlowGoalAchievedInFlowsTable).toBe('0'),
+      expect.soft(actualFlowStatusInAllOrgsTable).toBe(expectedFlow.status),
+      expect.soft(actualFlowOnHoldInFlowsTable).toBe(expectedFlow.onHold),
+      expect.soft(actualFlowReadyInFlowsTable).toBe(expectedFlow.ready),
+      expect.soft(actualFlowScheduledInFlowsTable).toBe(expectedFlow.scheduled),
+      expect
+        .soft(actualFlowInProgressInFlowsTable)
+        .toBe(expectedFlow.inProgress),
+      expect.soft(actualFlowCompletedInFlowsTable).toBe(expectedFlow.completed),
+      expect
+        .soft(actualFlowGoalAchievedInFlowsTable)
+        .toBe(expectedFlow.goalAchieved),
     ]);
   }
 

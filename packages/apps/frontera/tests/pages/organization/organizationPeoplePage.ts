@@ -19,6 +19,7 @@ export class OrganizationPeoplePage {
   private page: Page;
 
   private orgPeopleAddSomeone = 'button[data-test="org-people-add-someone"]';
+  private orgPeopleAddContact = 'button[data-test="org-people-add-contact"]';
   private orgPeopleContactName = 'input[data-test="org-people-contact-name"]';
   private orgPeopleContactTitle = 'input[data-test="org-people-contact-title"]';
   private orgPeopleContactJobRoles =
@@ -38,7 +39,7 @@ export class OrganizationPeoplePage {
   private orgPeopleContactTimezone =
     'div[data-test="org-people-contact-timezone"]';
 
-  async addContactEmpty() {
+  async addContact(contactCreation: string) {
     const createContactResponsePromise = createResponsePromise(
       this.page,
       'contact_CreateForOrganization?.id',
@@ -56,7 +57,7 @@ export class OrganizationPeoplePage {
       undefined,
     );
 
-    await clickLocatorsThatAreVisible(this.page, this.orgPeopleAddSomeone);
+    await clickLocatorsThatAreVisible(this.page, contactCreation);
 
     await Promise.all([
       createContactResponsePromise,
@@ -197,7 +198,19 @@ export class OrganizationPeoplePage {
   }
 
   async createContactFromEmpty() {
-    await this.addContactEmpty();
+    await this.addContact(this.orgPeopleAddSomeone);
+
+    const { contactName, contactId } = await this.addNameToContact();
+
+    await this.addTitleToContact();
+    await this.addJobRolesToContact();
+    await this.addDetailsToCustomer();
+
+    return { contactName, contactId };
+  }
+
+  async createNextContact() {
+    await this.addContact(this.orgPeopleAddContact);
 
     const { contactName, contactId } = await this.addNameToContact();
 

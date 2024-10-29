@@ -50,7 +50,11 @@ export const TriggerNode = (
                 added manually
               </span>
             ) : (
-              <span role={'button'} onClick={handleOpen}>
+              <span
+                role={'button'}
+                onClick={handleOpen}
+                data-test={'flow-trigger-block'}
+              >
                 What should trigger this flow?
               </span>
             )}

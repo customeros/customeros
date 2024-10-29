@@ -75,6 +75,7 @@ export const BasicEdge: React.FC<
             size='xxs'
             onClick={toggleOpen}
             aria-label='Add step or trigger'
+            dataTest={'flow-add-step-or-trigger'}
             icon={
               <Plus
                 strokeWidth={4}

@@ -56,11 +56,9 @@ export async function ensureLocatorIsVisible(
 ): Promise<Locator> {
   const locator = page.locator(selector);
 
-  // Wait for both attached and visible states
   await locator.waitFor({ state: 'attached', timeout: 15000 });
   await expect(locator).toBeVisible({ timeout: 15000 });
 
-  // Additional check for enabled state
   await expect(locator).toBeEnabled({ timeout: 5000 });
 
   return locator;
@@ -95,11 +93,28 @@ export async function clickLocatorsThatAreVisible(
   ...selectors: string[]
 ) {
   for (const selector of selectors) {
-    await page.locator(selector).waitFor({ state: 'attached', timeout: 30000 });
-    await ensureLocatorIsVisible(page, selector);
-    await page.locator(selector).scrollIntoViewIfNeeded({ timeout: 30000 });
+    await retryOperation(
+      page,
+      async () => {
+        const locator = await ensureLocatorIsVisible(page, selector);
 
-    await page.locator(selector).click({ force: true });
+        await page.waitForTimeout(300);
+
+        await locator.waitFor({ state: 'attached', timeout: 5000 });
+        await locator.scrollIntoViewIfNeeded({ timeout: 30000 });
+
+        await expect(locator).toBeVisible({ timeout: 5000 });
+
+        try {
+          await locator.click({ timeout: 5000 });
+        } catch (clickError) {
+          await page.waitForTimeout(500);
+          await locator.click({ force: true, timeout: 5000 });
+        }
+      },
+      3,
+      1500,
+    );
   }
 }
 

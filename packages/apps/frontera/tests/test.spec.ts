@@ -1,10 +1,10 @@
 // import { test } from '@playwright/test';
 import { test } from './videoFixture';
-import { organizations } from './test-data';
+import { flow, organizations } from './test-data';
 import { FlowPage } from './pages/flows/flowPage';
 import { FlowsPage } from './pages/flows/flowsPage';
 import { LoginPage } from './pages/loginPage/loginPage';
-import { FlowStatuses } from './pages/flows/flowsStatuses';
+import { ContactsPage } from './pages/contacts/contactsPage';
 // import { ContactsPage } from './pages/contacts/contactsPage';
 import { CustomersPage } from './pages/customers/customersPage';
 import { WinRatesFor } from './pages/opportunitiesKanban/winRates';
@@ -207,10 +207,10 @@ test('Assign contact to flow', async ({ page }, testInfo) => {
   const loginPage = new LoginPage(page);
   const flowsPage = new FlowsPage(page);
   const flowPage = new FlowPage(page);
-  // const organizationsPage = new OrganizationsPage(page);
-  // const organizationPeoplePage = new OrganizationPeoplePage(page);
-  // const organizationSideNavPage = new OrganizationSideNavPage(page);
-  // const contactsPage = new ContactsPage(page);
+  const organizationsPage = new OrganizationsPage(page);
+  const organizationPeoplePage = new OrganizationPeoplePage(page);
+  const organizationSideNavPage = new OrganizationSideNavPage(page);
+  const contactsPage = new ContactsPage(page);
 
   //
   await loginPage.login();
@@ -220,28 +220,29 @@ test('Assign contact to flow', async ({ page }, testInfo) => {
 
   await flowPage.checkNewFlowEntry(flowName);
   await flowPage.goToFlows();
-  await flowsPage.checkNewFlowEntry(flowName, FlowStatuses.NotStarted);
-  // await flowsPage.checkFlowStatuses(flowName, FlowStatuses.Live);
-  //
-  // await organizationsPage.goToAllOrgs();
-  //
-  // // Add organization and check new entry
-  // const organizationName = await organizationsPage.addNonInitialOrganization(
-  //   testInfo,
-  // );
-  //
-  // //Access newly created organization
-  // await new Promise((resolve) => setTimeout(resolve, 1500));
-  // await organizationsPage.goToOrganization(organizationName);
-  //
-  // // Go to People page
-  // await organizationSideNavPage.goToPeople();
-  //
-  // const contact = await organizationPeoplePage.createContactFromEmpty();
-  //
-  // await organizationSideNavPage.goBack();
-  // await contactsPage.waitForPageLoad();
-  // await contactsPage.updateContactFlow(contact, flowName);
+  await flowsPage.checkNewFlowEntry(flowName, flow.create);
+
+  await organizationsPage.goToAllOrgs();
+
+  // Add organization and check new entry
+  const organizationName = await organizationsPage.addNonInitialOrganization(
+    testInfo,
+  );
+
+  //Access newly created organization
+  await new Promise((resolve) => setTimeout(resolve, 1500));
+  await organizationsPage.goToOrganization(organizationName);
+
+  // Go to People page
+  await organizationSideNavPage.goToPeople();
+
+  const contact = await organizationPeoplePage.createContactFromEmpty();
+
+  await organizationSideNavPage.goBack();
+  await contactsPage.waitForPageLoad();
+  await contactsPage.updateContactFlow(contact, flowName);
+  await flowsPage.goToFlows();
+  // await flowsPage.checkNewFlowEntry(flowName, flow.update);
 });
 
 test('Create opportunities', async ({ page }, testInfo) => {

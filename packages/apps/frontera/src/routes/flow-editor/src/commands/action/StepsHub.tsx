@@ -226,6 +226,7 @@ export const StepsHub = observer(() => {
       <CommandItem
         leftAccessory={<Mail01 />}
         keywords={keywords.send_email}
+        dataTest={'flow-action-send-email'}
         onSelect={() => {
           updateSelectedNode(FlowActionType.EMAIL_NEW);
         }}
@@ -247,6 +248,7 @@ export const StepsHub = observer(() => {
       </CommandItem>
       <CommandItem
         keywords={keywords.wait}
+        dataTest={'flow-action-wait'}
         leftAccessory={<Hourglass02 />}
         onSelect={() => {
           updateSelectedNode('WAIT');
@@ -259,7 +261,12 @@ export const StepsHub = observer(() => {
         leftAccessory={<LinkedinOutline />}
         keywords={keywords.send_linkedin_message}
       >
-        <span className='text-gray-700'>Send LinkedIn message</span>
+        <span
+          className='text-gray-700'
+          data-test={'flow-send-linkedin-message'}
+        >
+          Send LinkedIn message
+        </span>
         <span className='text-gray-500'>(Coming soon)</span>
       </CommandItem>
       <CommandItem
@@ -267,7 +274,9 @@ export const StepsHub = observer(() => {
         leftAccessory={<PlusSquare />}
         keywords={keywords.create_record}
       >
-        <span className='text-gray-700'>Create record</span>
+        <span className='text-gray-700' data-test={'flow-create-record'}>
+          Create record
+        </span>
         <span className='text-gray-500'>(Coming soon)</span>
       </CommandItem>
       <CommandItem
@@ -275,7 +284,9 @@ export const StepsHub = observer(() => {
         leftAccessory={<RefreshCw01 />}
         keywords={keywords.update_record}
       >
-        <span className='text-gray-700'>Update record</span>
+        <span className='text-gray-700' data-test={'flow-update-record'}>
+          Update record
+        </span>
         <span className='text-gray-500'>(Coming soon)</span>
       </CommandItem>
       <CommandItem
@@ -283,7 +294,9 @@ export const StepsHub = observer(() => {
         leftAccessory={<Star06 />}
         keywords={keywords.enrich_record}
       >
-        <span className='text-gray-700'>Enrich record</span>
+        <span className='text-gray-700' data-test={'flow-enrich-record'}>
+          Enrich record
+        </span>
         <span className='text-gray-500'>(Coming soon)</span>
       </CommandItem>
       <CommandItem
@@ -291,7 +304,12 @@ export const StepsHub = observer(() => {
         leftAccessory={<Star06 />}
         keywords={keywords.verify_record_property}
       >
-        <span className='text-gray-700'>Verify record property</span>
+        <span
+          className='text-gray-700'
+          data-test={'flow-verify-record-property'}
+        >
+          Verify record property
+        </span>
         <span className='text-gray-500'>(Coming soon)</span>
       </CommandItem>
       <CommandItem
@@ -299,7 +317,9 @@ export const StepsHub = observer(() => {
         keywords={keywords.conditions}
         leftAccessory={<ArrowIfPath />}
       >
-        <span className='text-gray-700'>Conditions</span>
+        <span className='text-gray-700' data-test={'flow-conditions'}>
+          Conditions
+        </span>
         <span className='text-gray-500'>(Coming soon)</span>
       </CommandItem>
       <CommandItem
@@ -307,7 +327,9 @@ export const StepsHub = observer(() => {
         keywords={keywords.create_to_do}
         leftAccessory={<ClipboardCheck />}
       >
-        <span className='text-gray-700'>Create to-do</span>
+        <span className='text-gray-700' data-test={'flow-create-to-do'}>
+          Create to-do
+        </span>
         <span className='text-gray-500'>(Coming soon)</span>
       </CommandItem>
     </>

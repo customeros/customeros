@@ -1,3 +1,5 @@
+import { FlowStatuses } from './pages/flows/flowsStatuses';
+
 export const organizations = {
   create: {
     name: '',
@@ -30,5 +32,26 @@ export const organizations = {
     orgAboutNumberOfEmployeesRequest: 10001,
     orgAboutOwner: 'customeros.fe.testing',
     orgAboutSocialLinkEmpty: '/qweasdzxc123ads',
+  },
+};
+
+export const flow = {
+  create: {
+    status: FlowStatuses.NotStarted,
+    onHold: '0',
+    ready: '0',
+    scheduled: '0',
+    inProgress: '0',
+    completed: '0',
+    goalAchieved: '0',
+  },
+  update: {
+    status: FlowStatuses.NotStarted,
+    onHold: '0',
+    ready: '1',
+    scheduled: '0',
+    inProgress: '0',
+    completed: '0',
+    goalAchieved: '0',
   },
 };

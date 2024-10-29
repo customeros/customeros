@@ -93,6 +93,7 @@ export const SenderDropdown = observer(({ flowId }: SenderDropdownProps) => {
             variant='ghost'
             className='-ml-2'
             colorScheme='primary'
+            dataTest='flow-add-senders'
             onClick={() => setOpen(true)}
             leftIcon={<PlusCircle className='text-inherit' />}
           >

@@ -40,6 +40,7 @@ export const TriggersHub = observer(() => {
       <CommandItem
         leftAccessory={<PlusCircle />}
         keywords={keywords.record_added_manually}
+        dataTest={'flow-trigger-record-added-manually'}
         onSelect={() => {
           updateSelectedNode('RecordAddedManually');
         }}
@@ -53,7 +54,12 @@ export const TriggersHub = observer(() => {
         leftAccessory={<PlusSquare />}
         keywords={keywords.record_created}
       >
-        <span className='text-gray-700'>Record created</span>{' '}
+        <span
+          className='text-gray-700'
+          data-test={'flow-trigger-record-created'}
+        >
+          Record created
+        </span>{' '}
         <span className='text-gray-500'>(Coming soon)</span>
       </CommandItem>
       <CommandItem
@@ -61,7 +67,12 @@ export const TriggersHub = observer(() => {
         leftAccessory={<RefreshCw01 />}
         keywords={keywords.record_updated}
       >
-        <span className='text-gray-700'>Record updated</span>{' '}
+        <span
+          className='text-gray-700'
+          data-test={'flow-trigger-record-updated'}
+        >
+          Record updated
+        </span>{' '}
         <span className='text-gray-500'>(Coming soon)</span>
       </CommandItem>
       <CommandItem
@@ -69,7 +80,12 @@ export const TriggersHub = observer(() => {
         leftAccessory={<CheckCircleBroken />}
         keywords={keywords.record_matches_condition}
       >
-        <span className='text-gray-700'>Record matches condition</span>{' '}
+        <span
+          className='text-gray-700'
+          data-test={'flow-trigger-record-matches-condition'}
+        >
+          Record matches condition
+        </span>{' '}
         <span className='text-gray-500'>(Coming soon)</span>
       </CommandItem>
       <CommandItem
@@ -77,7 +93,9 @@ export const TriggersHub = observer(() => {
         leftAccessory={<Code01 />}
         keywords={keywords.webhook}
       >
-        <span className='text-gray-700'>Webhook</span>{' '}
+        <span className='text-gray-700' data-test={'flow-trigger-webhook'}>
+          Webhook
+        </span>{' '}
         <span className='text-gray-500'>(Coming soon)</span>
       </CommandItem>
     </>

@@ -52,6 +52,7 @@ export const PeoplePanel = observer(() => {
             aria-label='Add contact'
             className='text-gray-500'
             onClick={handleAddContact}
+            dataTest={'org-people-add-contact'}
             icon={<UsersPlus className='text-gray-500' />}
             spinner={
               <Spinner
