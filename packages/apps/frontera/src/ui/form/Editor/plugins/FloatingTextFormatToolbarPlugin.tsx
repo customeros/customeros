@@ -28,7 +28,6 @@ import { Link01 } from '@ui/media/icons/Link01';
 import { Italic01 } from '@ui/media/icons/Italic01';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { BlockQuote } from '@ui/media/icons/BlockQuote';
-import { CheckSquare } from '@ui/media/icons/CheckSquare';
 import { ListBulleted } from '@ui/media/icons/ListBulleted';
 import { ListNumbered } from '@ui/media/icons/ListNumbered';
 import { Strikethrough01 } from '@ui/media/icons/Strikethrough01';
@@ -59,7 +58,8 @@ export function FloatingMenu({ editor }: FloatingMenuComponentProps) {
   const [isItalic, setIsItalic] = useState(false);
   const [isOrderedList, setIsOrderedList] = useState(false);
   const [isUnorderedList, setIsUnorderedList] = useState(false);
-  const [isCheckList, setIsCheckList] = useState(false);
+  // todo: implement check list when support is added for displaying it in the email clients COS-5500
+  // const [isCheckList, setIsCheckList] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
 
   const toggleLink = useCallback(() => {
@@ -100,17 +100,17 @@ export function FloatingMenu({ editor }: FloatingMenuComponentProps) {
     });
   }, [editor, isOrderedList]);
 
-  const toggleCheckList = useCallback(() => {
-    editor.update(() => {
-      const selection = $getSelection();
-
-      if (!isCheckList) {
-        $setBlocksType(selection, () => $createListNode('check'));
-      } else {
-        $setBlocksType(selection, $createParagraphNode);
-      }
-    });
-  }, [editor, isCheckList]);
+  // const toggleCheckList = useCallback(() => {
+  //   editor.update(() => {
+  //     const selection = $getSelection();
+  //
+  //     if (!isCheckList) {
+  //       $setBlocksType(selection, () => $createListNode('check'));
+  //     } else {
+  //       $setBlocksType(selection, $createParagraphNode);
+  //     }
+  //   });
+  // }, [editor, isCheckList]);
 
   const toggleUnorderedList = useCallback(() => {
     editor.update(() => {
@@ -141,7 +141,7 @@ export function FloatingMenu({ editor }: FloatingMenuComponentProps) {
 
           let isUnordered = false;
           let isOrdered = false;
-          let isCheck = false;
+          // const isCheck = false;
 
           selection.getNodes().forEach((node) => {
             let currentNode: LexicalNode | null = node;
@@ -155,9 +155,10 @@ export function FloatingMenu({ editor }: FloatingMenuComponentProps) {
                     isUnordered = true;
                   } else if (parent.getListType() === 'number') {
                     isOrdered = true;
-                  } else if (parent.getListType() === 'check') {
-                    isCheck = true;
                   }
+                  // else if (parent.getListType() === 'check') {
+                  //   isCheck = true;
+                  // }
                 }
               }
 
@@ -168,7 +169,7 @@ export function FloatingMenu({ editor }: FloatingMenuComponentProps) {
 
           setIsUnorderedList(isUnordered);
           setIsOrderedList(isOrdered);
-          setIsCheckList(isCheck);
+          // setIsCheckList(isCheck);
 
           const node = getSelectedNode(selection);
 
@@ -243,14 +244,14 @@ export function FloatingMenu({ editor }: FloatingMenuComponentProps) {
             icon={<ListNumbered className='text-inherit' />}
           />
         </div>
-        <div>
-          <FloatingToolbarButton
-            active={isCheckList}
-            onClick={toggleCheckList}
-            aria-label='Format text as a check list'
-            icon={<CheckSquare className='text-inherit' />}
-          />
-        </div>
+        {/*<div>*/}
+        {/*  <FloatingToolbarButton*/}
+        {/*    active={isCheckList}*/}
+        {/*    onClick={toggleCheckList}*/}
+        {/*    aria-label='Format text as a check list'*/}
+        {/*    icon={<CheckSquare className='text-inherit' />}*/}
+        {/*  />*/}
+        {/*</div>*/}
         <Tooltip label='Insert or remove link: ⌘ + K'>
           <div>
             <FloatingToolbarButton
