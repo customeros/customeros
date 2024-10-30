@@ -197,7 +197,7 @@ export const EmailsInputGroup = observer(
             options={organizationContacts}
             autofocus={focusedItemIndex === 0}
             onChange={(value: SelectOption<string>[]) =>
-              handleUpdateBillingEmailData('billingEmail', value)
+              handleUpdateBillingEmailData('billingEmail', value?.[0])
             }
           />
         ) : (
