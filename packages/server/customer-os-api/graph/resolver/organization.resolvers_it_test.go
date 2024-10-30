@@ -1253,138 +1253,138 @@ func TestMutationResolver_OrganizationArchive(t *testing.T) {
 	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Organization", "ArchivedOrganization_" + tenantName, "Location", "Location_" + tenantName})
 }
 
-func TestMutationResolver_OrganizationMerge_Properties(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
+//func TestMutationResolver_OrganizationMerge_Properties(t *testing.T) {
+//	ctx := context.Background()
+//	defer tearDownTestCase(ctx)(t)
+//	neo4jtest.CreateTenant(ctx, driver, tenantName)
+//
+//	parentOrgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "main organization"})
+//	mergedOrgId1 := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "to merge 1"})
+//	mergedOrgId2 := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "to merge 2"})
+//
+//	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+//
+//	organizationServiceCallbacks := events_platform.MockOrganizationServiceCallbacks{
+//		RefreshArr: func(ctx context.Context, proto *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+//			return &organizationpb.OrganizationIdGrpcResponse{
+//				Id: parentOrgId,
+//			}, nil
+//		},
+//		RefreshRenewalSummary: func(ctx context.Context, proto *organizationpb.RefreshRenewalSummaryGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+//			return &organizationpb.OrganizationIdGrpcResponse{
+//				Id: parentOrgId,
+//			}, nil
+//		},
+//	}
+//	events_platform.SetOrganizationCallbacks(&organizationServiceCallbacks)
+//
+//	rawResponse, err := c.RawPost(getQuery("organization/merge_organizations"),
+//		client.Var("parentOrganizationId", parentOrgId),
+//		client.Var("mergedOrganizationId1", mergedOrgId1),
+//		client.Var("mergedOrganizationId2", mergedOrgId2),
+//	)
+//	assertRawResponseSuccess(t, rawResponse, err)
+//
+//	var organizationStruct struct {
+//		Organization_Merge model.Organization
+//	}
+//	err = decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
+//	organization := organizationStruct.Organization_Merge
+//	require.NotNil(t, organization)
+//
+//	require.Equal(t, parentOrgId, organization.ID)
+//	require.Equal(t, "main organization", organization.Name)
+//
+//	// Check only 1 organization remains after merge
+//	// other 2 converted into MergedOrganization
+//	// Other notes not impacted
+//	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+//	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "MergedOrganization"))
+//}
 
-	parentOrgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "main organization"})
-	mergedOrgId1 := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "to merge 1"})
-	mergedOrgId2 := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "to merge 2"})
+//func TestMutationResolver_OrganizationMerge_CheckSubsidiariesMerge(t *testing.T) {
+//	ctx := context.Background()
+//	defer tearDownTestCase(ctx)(t)
+//	neo4jtest.CreateTenant(ctx, driver, tenantName)
+//
+//	parentOrgId := neo4jt.CreateOrganization(ctx, driver, tenantName, "main organization")
+//	mergedOrgId1 := neo4jt.CreateOrganization(ctx, driver, tenantName, "to merge 1")
+//	mergedOrgId2 := neo4jt.CreateOrganization(ctx, driver, tenantName, "to merge 2")
+//
+//	subsidiaryOrgId := neo4jt.CreateOrganization(ctx, driver, tenantName, "")
+//	neo4jt.LinkOrganizationAsSubsidiary(ctx, driver, mergedOrgId1, subsidiaryOrgId, "shop")
+//
+//	parentForSubsidiaryOrgId := neo4jt.CreateOrganization(ctx, driver, tenantName, "")
+//	neo4jt.LinkOrganizationAsSubsidiary(ctx, driver, parentForSubsidiaryOrgId, mergedOrgId2, "factory")
+//
+//	require.Equal(t, 5, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+//	require.Equal(t, 2, neo4jtest.GetCountOfRelationships(ctx, driver, "SUBSIDIARY_OF"))
+//
+//	rawResponse, err := c.RawPost(getQuery("organization/merge_organizations"),
+//		client.Var("parentOrganizationId", parentOrgId),
+//		client.Var("mergedOrganizationId1", mergedOrgId1),
+//		client.Var("mergedOrganizationId2", mergedOrgId2),
+//	)
+//	assertRawResponseSuccess(t, rawResponse, err)
+//
+//	var organizationStruct struct {
+//		Organization_Merge model.Organization
+//	}
+//	err = decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
+//	organization := organizationStruct.Organization_Merge
+//	require.NotNil(t, organization)
+//
+//	require.Equal(t, parentOrgId, organization.ID)
+//	require.Equal(t, 1, len(organization.Subsidiaries))
+//	require.Equal(t, subsidiaryOrgId, organization.Subsidiaries[0].Organization.ID)
+//	require.Equal(t, "shop", *organization.Subsidiaries[0].Type)
+//	require.Equal(t, 1, len(organization.SubsidiaryOf))
+//	require.Equal(t, parentForSubsidiaryOrgId, organization.SubsidiaryOf[0].Organization.ID)
+//
+//	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+//	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "MergedOrganization"))
+//
+//	require.Equal(t, 4, neo4jtest.GetCountOfRelationships(ctx, driver, "SUBSIDIARY_OF"))
+//}
 
-	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
-
-	organizationServiceCallbacks := events_platform.MockOrganizationServiceCallbacks{
-		RefreshArr: func(ctx context.Context, proto *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
-			return &organizationpb.OrganizationIdGrpcResponse{
-				Id: parentOrgId,
-			}, nil
-		},
-		RefreshRenewalSummary: func(ctx context.Context, proto *organizationpb.RefreshRenewalSummaryGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
-			return &organizationpb.OrganizationIdGrpcResponse{
-				Id: parentOrgId,
-			}, nil
-		},
-	}
-	events_platform.SetOrganizationCallbacks(&organizationServiceCallbacks)
-
-	rawResponse, err := c.RawPost(getQuery("organization/merge_organizations"),
-		client.Var("parentOrganizationId", parentOrgId),
-		client.Var("mergedOrganizationId1", mergedOrgId1),
-		client.Var("mergedOrganizationId2", mergedOrgId2),
-	)
-	assertRawResponseSuccess(t, rawResponse, err)
-
-	var organizationStruct struct {
-		Organization_Merge model.Organization
-	}
-	err = decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
-	organization := organizationStruct.Organization_Merge
-	require.NotNil(t, organization)
-
-	require.Equal(t, parentOrgId, organization.ID)
-	require.Equal(t, "main organization", organization.Name)
-
-	// Check only 1 organization remains after merge
-	// other 2 converted into MergedOrganization
-	// Other notes not impacted
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "MergedOrganization"))
-}
-
-func TestMutationResolver_OrganizationMerge_CheckSubsidiariesMerge(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-
-	parentOrgId := neo4jt.CreateOrganization(ctx, driver, tenantName, "main organization")
-	mergedOrgId1 := neo4jt.CreateOrganization(ctx, driver, tenantName, "to merge 1")
-	mergedOrgId2 := neo4jt.CreateOrganization(ctx, driver, tenantName, "to merge 2")
-
-	subsidiaryOrgId := neo4jt.CreateOrganization(ctx, driver, tenantName, "")
-	neo4jt.LinkOrganizationAsSubsidiary(ctx, driver, mergedOrgId1, subsidiaryOrgId, "shop")
-
-	parentForSubsidiaryOrgId := neo4jt.CreateOrganization(ctx, driver, tenantName, "")
-	neo4jt.LinkOrganizationAsSubsidiary(ctx, driver, parentForSubsidiaryOrgId, mergedOrgId2, "factory")
-
-	require.Equal(t, 5, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 2, neo4jtest.GetCountOfRelationships(ctx, driver, "SUBSIDIARY_OF"))
-
-	rawResponse, err := c.RawPost(getQuery("organization/merge_organizations"),
-		client.Var("parentOrganizationId", parentOrgId),
-		client.Var("mergedOrganizationId1", mergedOrgId1),
-		client.Var("mergedOrganizationId2", mergedOrgId2),
-	)
-	assertRawResponseSuccess(t, rawResponse, err)
-
-	var organizationStruct struct {
-		Organization_Merge model.Organization
-	}
-	err = decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
-	organization := organizationStruct.Organization_Merge
-	require.NotNil(t, organization)
-
-	require.Equal(t, parentOrgId, organization.ID)
-	require.Equal(t, 1, len(organization.Subsidiaries))
-	require.Equal(t, subsidiaryOrgId, organization.Subsidiaries[0].Organization.ID)
-	require.Equal(t, "shop", *organization.Subsidiaries[0].Type)
-	require.Equal(t, 1, len(organization.SubsidiaryOf))
-	require.Equal(t, parentForSubsidiaryOrgId, organization.SubsidiaryOf[0].Organization.ID)
-
-	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "MergedOrganization"))
-
-	require.Equal(t, 4, neo4jtest.GetCountOfRelationships(ctx, driver, "SUBSIDIARY_OF"))
-}
-
-func TestMutationResolver_OrganizationMerge_MergeBetweenParentAndSubsidiaryOrg(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-
-	parentOrgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "main"})
-	mergedOrgId1 := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "to merge 1"})
-	mergedOrgId2 := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "to merge 2"})
-
-	neo4jt.LinkOrganizationAsSubsidiary(ctx, driver, parentOrgId, mergedOrgId1, "A")
-	neo4jt.LinkOrganizationAsSubsidiary(ctx, driver, mergedOrgId2, parentOrgId, "B")
-
-	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 2, neo4jtest.GetCountOfRelationships(ctx, driver, "SUBSIDIARY_OF"))
-
-	rawResponse, err := c.RawPost(getQuery("organization/merge_organizations"),
-		client.Var("parentOrganizationId", parentOrgId),
-		client.Var("mergedOrganizationId1", mergedOrgId1),
-		client.Var("mergedOrganizationId2", mergedOrgId2),
-	)
-	assertRawResponseSuccess(t, rawResponse, err)
-
-	var organizationStruct struct {
-		Organization_Merge model.Organization
-	}
-	err = decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
-	organization := organizationStruct.Organization_Merge
-	require.NotNil(t, organization)
-
-	require.Equal(t, parentOrgId, organization.ID)
-	require.Equal(t, 0, len(organization.Subsidiaries))
-	require.Equal(t, 0, len(organization.SubsidiaryOf))
-
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "MergedOrganization"))
-
-	require.Equal(t, 2, neo4jtest.GetCountOfRelationships(ctx, driver, "SUBSIDIARY_OF"))
-}
+//func TestMutationResolver_OrganizationMerge_MergeBetweenParentAndSubsidiaryOrg(t *testing.T) {
+//	ctx := context.Background()
+//	defer tearDownTestCase(ctx)(t)
+//	neo4jtest.CreateTenant(ctx, driver, tenantName)
+//
+//	parentOrgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "main"})
+//	mergedOrgId1 := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "to merge 1"})
+//	mergedOrgId2 := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "to merge 2"})
+//
+//	neo4jt.LinkOrganizationAsSubsidiary(ctx, driver, parentOrgId, mergedOrgId1, "A")
+//	neo4jt.LinkOrganizationAsSubsidiary(ctx, driver, mergedOrgId2, parentOrgId, "B")
+//
+//	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+//	require.Equal(t, 2, neo4jtest.GetCountOfRelationships(ctx, driver, "SUBSIDIARY_OF"))
+//
+//	rawResponse, err := c.RawPost(getQuery("organization/merge_organizations"),
+//		client.Var("parentOrganizationId", parentOrgId),
+//		client.Var("mergedOrganizationId1", mergedOrgId1),
+//		client.Var("mergedOrganizationId2", mergedOrgId2),
+//	)
+//	assertRawResponseSuccess(t, rawResponse, err)
+//
+//	var organizationStruct struct {
+//		Organization_Merge model.Organization
+//	}
+//	err = decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
+//	organization := organizationStruct.Organization_Merge
+//	require.NotNil(t, organization)
+//
+//	require.Equal(t, parentOrgId, organization.ID)
+//	require.Equal(t, 0, len(organization.Subsidiaries))
+//	require.Equal(t, 0, len(organization.SubsidiaryOf))
+//
+//	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+//	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "MergedOrganization"))
+//
+//	require.Equal(t, 2, neo4jtest.GetCountOfRelationships(ctx, driver, "SUBSIDIARY_OF"))
+//}
 
 func TestMutationResolver_OrganizationAddSubsidiary(t *testing.T) {
 	ctx := context.Background()

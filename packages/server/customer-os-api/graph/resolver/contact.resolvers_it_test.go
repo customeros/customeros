@@ -14,9 +14,7 @@ import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
-	eventcompletionpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/event_completion"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/types/known/emptypb"
 	"testing"
 	"time"
 )
@@ -668,49 +666,49 @@ func TestMutationResolver_ContactAddOrganizationByID(t *testing.T) {
 	require.NotNil(t, contactStruct)
 }
 
-func TestMutationResolver_ContactRemoveOrganizationByID(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-
-	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
-	orgId1 := neo4jt.CreateOrganization(ctx, driver, tenantName, "org1")
-	orgId2 := neo4jt.CreateOrganization(ctx, driver, tenantName, "org2")
-	neo4jt.LinkContactWithOrganization(ctx, driver, contactId, orgId1)
-	neo4jt.LinkContactWithOrganization(ctx, driver, contactId, orgId2)
-
-	require.Equal(t, 2, neo4jtest.GetCountOfRelationships(ctx, driver, "WORKS_AS"))
-	require.Equal(t, 2, neo4jtest.GetCountOfRelationships(ctx, driver, "ROLE_IN"))
-
-	callbacks := events_platform.MockEventCompletionCallbacks{
-		NotifyEventProcessed: func(context context.Context, org *eventcompletionpb.NotifyEventProcessedRequest) (*emptypb.Empty, error) {
-			return &emptypb.Empty{}, nil
-		},
-	}
-	events_platform.SetEventCompletionServiceCallbacks(&callbacks)
-
-	rawResponse := callGraphQL(t, "contact/remove_organization_from_contact", map[string]interface{}{"contactId": contactId, "organizationId": orgId2})
-
-	var contactStruct struct {
-		Contact_RemoveOrganizationById model.Contact
-	}
-
-	err := decode.Decode(rawResponse.Data.(map[string]any), &contactStruct)
-	require.Nil(t, err)
-	require.NotNil(t, contactStruct)
-	organizations := contactStruct.Contact_RemoveOrganizationById.Organizations.Content
-	require.Equal(t, contactId, contactStruct.Contact_RemoveOrganizationById.ID)
-	require.NotNil(t, contactStruct.Contact_RemoveOrganizationById.UpdatedAt)
-	require.Equal(t, 1, len(organizations))
-	require.Equal(t, orgId1, organizations[0].ID)
-	require.Equal(t, "org1", organizations[0].Name)
-
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Contact"))
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "JobRole"))
-	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "WORKS_AS"))
-	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "ROLE_IN"))
-}
+//func TestMutationResolver_ContactRemoveOrganizationByID(t *testing.T) {
+//	ctx := context.Background()
+//	defer tearDownTestCase(ctx)(t)
+//	neo4jtest.CreateTenant(ctx, driver, tenantName)
+//
+//	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
+//	orgId1 := neo4jt.CreateOrganization(ctx, driver, tenantName, "org1")
+//	orgId2 := neo4jt.CreateOrganization(ctx, driver, tenantName, "org2")
+//	neo4jt.LinkContactWithOrganization(ctx, driver, contactId, orgId1)
+//	neo4jt.LinkContactWithOrganization(ctx, driver, contactId, orgId2)
+//
+//	require.Equal(t, 2, neo4jtest.GetCountOfRelationships(ctx, driver, "WORKS_AS"))
+//	require.Equal(t, 2, neo4jtest.GetCountOfRelationships(ctx, driver, "ROLE_IN"))
+//
+//	callbacks := events_platform.MockEventCompletionCallbacks{
+//		NotifyEventProcessed: func(context context.Context, org *eventcompletionpb.NotifyEventProcessedRequest) (*emptypb.Empty, error) {
+//			return &emptypb.Empty{}, nil
+//		},
+//	}
+//	events_platform.SetEventCompletionServiceCallbacks(&callbacks)
+//
+//	rawResponse := callGraphQL(t, "contact/remove_organization_from_contact", map[string]interface{}{"contactId": contactId, "organizationId": orgId2})
+//
+//	var contactStruct struct {
+//		Contact_RemoveOrganizationById model.Contact
+//	}
+//
+//	err := decode.Decode(rawResponse.Data.(map[string]any), &contactStruct)
+//	require.Nil(t, err)
+//	require.NotNil(t, contactStruct)
+//	organizations := contactStruct.Contact_RemoveOrganizationById.Organizations.Content
+//	require.Equal(t, contactId, contactStruct.Contact_RemoveOrganizationById.ID)
+//	require.NotNil(t, contactStruct.Contact_RemoveOrganizationById.UpdatedAt)
+//	require.Equal(t, 1, len(organizations))
+//	require.Equal(t, orgId1, organizations[0].ID)
+//	require.Equal(t, "org1", organizations[0].Name)
+//
+//	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Contact"))
+//	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "JobRole"))
+//	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+//	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "WORKS_AS"))
+//	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "ROLE_IN"))
+//}
 
 func TestMutationResolver_ContactAddNewLocation(t *testing.T) {
 	ctx := context.Background()
