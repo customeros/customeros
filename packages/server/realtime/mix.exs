@@ -48,7 +48,8 @@ defmodule Realtime.MixProject do
       {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
       {:delta, "~> 0.2.0"},
       {:spear, "~> 1.4.0"},
-      {:castore, "~> 1.0"}
+      {:castore, "~> 1.0"},
+      {:amqp, "~> 3.3.2"}
     ]
   end
 
