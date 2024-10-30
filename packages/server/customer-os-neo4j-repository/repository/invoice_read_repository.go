@@ -784,9 +784,6 @@ func (r *invoiceReadRepository) GetReadyInvoicesForFinalizedEvent(ctx context.Co
 		"acceptedStatuses": []string{
 			neo4jenum.InvoiceStatusDue.String(),
 			neo4jenum.InvoiceStatusOverdue.String(),
-			neo4jenum.InvoiceStatusOnHold.String(),
-			neo4jenum.InvoiceStatusPaid.String(),
-			neo4jenum.InvoiceStatusVoid.String(),
 		},
 	}
 	span.LogFields(log.String("query", cypher))
