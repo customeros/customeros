@@ -380,6 +380,7 @@ func (r *emailWriteRepository) UnlinkFromOrganization(ctx context.Context, tenan
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization {id:$organizationId})-[rel:HAS]->(e:Email)
 				WHERE e.email = $email OR e.rawEmail = $email
+				SET o.updatedAt = datetime()
 				DELETE rel`
 	params := map[string]any{
 		"tenant":         tenant,

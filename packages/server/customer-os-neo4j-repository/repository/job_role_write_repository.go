@@ -138,7 +138,8 @@ func (r *jobRoleWriteRepository) LinkContactWithOrganization(ctx context.Context
 						jr.createdAt=$createdAt, 
 						jr.updatedAt=datetime(), 
 						jr:JobRole_%s,
-						c.updatedAt = datetime()
+						c.updatedAt = datetime(),
+						org.updatedAt = datetime()
 		 ON MATCH SET 	jr.jobTitle = CASE WHEN jr.sourceOfTruth=$source OR $overwrite=true  OR jr.jobTitle is null OR jr.jobTitle = '' THEN $jobTitle ELSE jr.jobTitle END,
 						jr.description = CASE WHEN jr.sourceOfTruth=$source OR $overwrite=true  OR jr.description is null OR jr.description = '' THEN $description ELSE jr.description END,
 						jr.primary = CASE WHEN jr.sourceOfTruth=$source OR $overwrite=true THEN $primary ELSE jr.primary END,
@@ -146,7 +147,8 @@ func (r *jobRoleWriteRepository) LinkContactWithOrganization(ctx context.Context
 						jr.endedAt = CASE WHEN jr.sourceOfTruth=$source OR $overwrite=true THEN $endedAt ELSE jr.endedAt END,
 						jr.sourceOfTruth = case WHEN $overwrite=true THEN $source ELSE jr.sourceOfTruth END,
 						jr.updatedAt = datetime(),
-						c.updatedAt = datetime()`, tenant)
+						c.updatedAt = datetime(),
+						org.updatedAt = datetime()`, tenant)
 	params := map[string]interface{}{
 		"tenant":         tenant,
 		"contactId":      contactId,
@@ -299,7 +301,7 @@ func (r *jobRoleWriteRepository) LinkWithOrganization(ctx context.Context, tx ne
 			DELETE rel
 			WITH r, org
 			MERGE (r)-[:ROLE_IN]->(org)
-			`,
+			SET r.updatedAt=datetime()`,
 		map[string]interface{}{
 			"tenant":         tenant,
 			"roleId":         roleId,

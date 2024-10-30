@@ -174,7 +174,8 @@ func (r *contractWriteRepository) CreateForOrganization(ctx context.Context, ten
 								ct.country=$country,
 								ct.dueDays=$dueDays,
 								ct.lengthInMonths=$lengthInMonths,
-								ct.approved=$approved
+								ct.approved=$approved,
+								org.updatedAt=datetime()
 							WITH ct, t
 							OPTIONAL MATCH (t)<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$createdByUserId}) 
 							WHERE $createdByUserId <> ""

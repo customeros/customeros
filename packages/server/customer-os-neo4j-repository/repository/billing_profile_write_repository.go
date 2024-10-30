@@ -61,6 +61,7 @@ func (r *billingProfileWriteRepository) Create(ctx context.Context, tenant, bill
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$orgId})
 							MERGE (bp:BillingProfile {id:$billingProfileId})<-[:HAS_BILLING_PROFILE]-(org)
 							ON CREATE SET 
+								org.updatedAt=datetime(),
 								bp:BillingProfile_%s,
 								bp.createdAt=$createdAt,
 								bp.updatedAt=datetime(),
@@ -98,8 +99,8 @@ func (r *billingProfileWriteRepository) Update(ctx context.Context, tenant, bill
 	span.SetTag(tracing.SpanTagEntityId, billingProfileId)
 	tracing.LogObjectAsJson(span, "data", data)
 
-	cypher := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(:Organization {id:$orgId})-[:HAS_BILLING_PROFILE]->(bp:BillingProfile {id:$billingProfileId})
-							SET bp.updatedAt=datetime()
+	cypher := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$orgId})-[:HAS_BILLING_PROFILE]->(bp:BillingProfile {id:$billingProfileId})
+							SET bp.updatedAt=datetime(), org.updatedAt=datetime()
 								`
 	params := map[string]any{
 		"tenant":           tenant,

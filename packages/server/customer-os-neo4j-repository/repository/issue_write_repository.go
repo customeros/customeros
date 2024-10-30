@@ -341,9 +341,10 @@ func (r *issueWriteRepository) LinkUnthreadIssuesToOrganizationByGroupId(ctx con
 
 	cypher := `match (t:Tenant)<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem{id:"unthread"})<-[:IS_LINKED_WITH]-(i:Issue)
 			   with t, i
-			   match (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization{slackChannelId: i.groupId})
+			   match (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization {slackChannelId: i.groupId})
 			   where not (i)-[:REPORTED_BY]->(o)
-			   MERGE (i)-[:REPORTED_BY]->(o)`
+			   MERGE (i)-[:REPORTED_BY]->(o)
+				SET o.updatedAt = datetime()`
 	params := map[string]any{}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

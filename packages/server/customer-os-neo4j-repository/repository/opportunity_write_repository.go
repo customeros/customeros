@@ -177,7 +177,8 @@ func (r *opportunityWriteRepository) CreateForOrganization(ctx context.Context, 
 								op.generalNotes=$generalNotes,
 								op.nextSteps=$nextSteps,
 								op.currency=$currency,
-								op.likelihoodRate=$likelihoodRate
+								op.likelihoodRate=$likelihoodRate,
+								org.updatedAt=datetime()
 							WITH op, t
 							OPTIONAL MATCH (t)<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$createdByUserId}) 
 							WHERE $createdByUserId <> ""

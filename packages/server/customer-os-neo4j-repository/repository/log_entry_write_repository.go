@@ -71,7 +71,8 @@ func (r *logEntryWriteRepository) Create(ctx context.Context, tenant, logEntryId
 								l.appSource=$appSource,
 								l.content=$content,
 								l.contentType=$contentType,
-								l.aggregateVersion=$aggregateVersion
+								l.aggregateVersion=$aggregateVersion,
+								o.updatedAt=datetime()
 							WITH l, t
 							OPTIONAL MATCH (t)<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$authorUserId}) 
 							WHERE $authorUserId <> ""
@@ -123,7 +124,8 @@ func (r *logEntryWriteRepository) Update(ctx context.Context, tenant, logEntryId
 							OPTIONAL MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$orgId}) 
 							WHERE $orgId <> ""
 							FOREACH (ignore IN CASE WHEN org IS NOT NULL THEN [1] ELSE [] END |
-    							MERGE (l)<-[:LOGGED]-(org))`, tenant)
+    							MERGE (l)<-[:LOGGED]-(org))
+								SET org.updatedAt=datetime()`, tenant)
 	params := map[string]any{
 		"tenant":           tenant,
 		"logEntryId":       logEntryId,

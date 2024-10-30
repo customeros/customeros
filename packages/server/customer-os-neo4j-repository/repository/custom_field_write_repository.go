@@ -55,6 +55,7 @@ func (r *customFieldWriteRepository) AddCustomFieldToOrganization(ctx context.Co
 		MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
 		MERGE (org)-[:HAS_PROPERTY]->(cf:CustomField:CustomField_%s {id:$customFieldId})
 		ON CREATE SET
+		    org.updatedAt = datetime(),
 			cf.source=$source,
 			cf.sourceOfTruth=$sourceOfTruth,
 			cf.appSource=$appSource,

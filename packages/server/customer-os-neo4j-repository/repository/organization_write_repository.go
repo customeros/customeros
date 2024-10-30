@@ -755,6 +755,7 @@ func (r *organizationWriteRepository) UnlinkFromDomain(ctx context.Context, tena
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
 		 MATCH (org)-[rel:HAS_DOMAIN]->(d:Domain {domain:$domain})
+		 SET org.updatedAt = datetime()
 		 DELETE rel`
 	params := map[string]any{
 		"tenant":         tenant,
@@ -884,7 +885,8 @@ func (r *organizationWriteRepository) SetCustomerOsIdIfMissing(ctx context.Conte
 	span.LogFields(log.String("customerOsId", customerOsId))
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
-		 SET org.customerOsId = CASE WHEN (org.customerOsId IS NULL OR org.customerOsId = '') AND $customerOsId <> '' THEN $customerOsId ELSE org.customerOsId END`
+		 SET org.customerOsId = CASE WHEN (org.customerOsId IS NULL OR org.customerOsId = '') AND $customerOsId <> '' THEN $customerOsId ELSE org.customerOsId END,
+			org.updatedAt = datetime()`
 	params := map[string]any{
 		"tenant":         tenant,
 		"organizationId": organizationId,
@@ -912,7 +914,9 @@ func (r *organizationWriteRepository) LinkWithParentOrganization(ctx context.Con
 		 			(t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(sub:Organization {id:$subOrganizationId}) 
 		 	MERGE (sub)-[rel:SUBSIDIARY_OF]->(parent) 
 		 		ON CREATE SET rel.type=$type 
-		 		ON MATCH SET rel.type=$type`
+		 		ON MATCH SET rel.type=$type
+				SET sub.updatedAt = datetime(),
+					parent.updatedAt = datetime()`
 	params := map[string]any{
 		"tenant":               tenant,
 		"subOrganizationId":    organizationId,
@@ -938,7 +942,9 @@ func (r *organizationWriteRepository) UnlinkParentOrganization(ctx context.Conte
 	span.LogFields(log.String("parentOrganizationId", parentOrganizationId))
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(parent:Organization {id:$parentOrganizationId})<-[rel:SUBSIDIARY_OF]-(sub:Organization {id:$subOrganizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t)
-		 		DELETE rel`
+		 		DELETE rel
+				SET sub.updatedAt = datetime(),
+					parent.updatedAt = datetime()`
 	params := map[string]any{
 		"tenant":               tenant,
 		"subOrganizationId":    organizationId,
@@ -1160,7 +1166,7 @@ func (r *organizationWriteRepository) Archive(ctx context.Context, tx *neo4j.Man
 
 	cypher := fmt.Sprintf(`MATCH (org:Organization {id:$organizationId})-[currentRel:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})
 			MERGE (org)-[newRel:ARCHIVED]->(t)
-			SET org.archived=true, org.archivedAt=$now, org:ArchivedOrganization_%s
+			SET org.archived=true, org.archivedAt=$now, org.updatedAt=datetime(), org:ArchivedOrganization_%s
             DELETE currentRel
 			REMOVE org:Organization_%s`, tenant, tenant)
 	params := map[string]any{
