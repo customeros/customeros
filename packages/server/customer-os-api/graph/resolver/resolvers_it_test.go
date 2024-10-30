@@ -66,6 +66,13 @@ func TestMain(m *testing.M) {
 		neo4jt.TerminatePostgres(postgresContainer, ctx)
 	}(postgresContainer, context.Background())
 
+	// Start RabbitMQ container
+	_, cleanup, err := neo4jt.SetupRabbitMQTestContainer()
+	if err != nil {
+		log.Fatalf("Failed to setup RabbitMQ test container: %v", err)
+	}
+	defer cleanup()
+
 	prepareClient()
 
 	os.Exit(m.Run())

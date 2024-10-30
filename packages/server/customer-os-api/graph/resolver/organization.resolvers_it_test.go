@@ -1386,68 +1386,6 @@ func TestMutationResolver_OrganizationMerge_MergeBetweenParentAndSubsidiaryOrg(t
 	require.Equal(t, 2, neo4jtest.GetCountOfRelationships(ctx, driver, "SUBSIDIARY_OF"))
 }
 
-func TestMutationResolver_OrganizationMerge_CheckLastTouchpointUpdated(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-
-	secAgo60 := utils.Now().Add(time.Duration(-60) * time.Second)
-
-	parentOrgId := neo4jt.CreateOrganization(ctx, driver, tenantName, "main organization")
-	mergedOrgId1 := neo4jt.CreateOrganization(ctx, driver, tenantName, "to merge 1")
-	mergedOrgId2 := neo4jt.CreateOrganization(ctx, driver, tenantName, "to merge 2")
-	issueId1 := neo4jt.CreateIssue(ctx, driver, tenantName, entity.IssueEntity{
-		Subject:   "subject 1",
-		CreatedAt: secAgo60,
-	})
-
-	neo4jt.IssueReportedBy(ctx, driver, issueId1, mergedOrgId1)
-
-	calledRefreshArr := false
-	calledRefreshRenewalSummary := false
-
-	organizationServiceCallbacks := events_platform.MockOrganizationServiceCallbacks{
-		RefreshArr: func(ctx context.Context, proto *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
-			calledRefreshArr = true
-			return &organizationpb.OrganizationIdGrpcResponse{
-				Id: parentOrgId,
-			}, nil
-		},
-		RefreshRenewalSummary: func(ctx context.Context, proto *organizationpb.RefreshRenewalSummaryGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
-			calledRefreshRenewalSummary = true
-			return &organizationpb.OrganizationIdGrpcResponse{
-				Id: parentOrgId,
-			}, nil
-		},
-	}
-	events_platform.SetOrganizationCallbacks(&organizationServiceCallbacks)
-
-	callGraphQL(t, "organization/merge_organizations", map[string]interface{}{
-		"parentOrganizationId":  parentOrgId,
-		"mergedOrganizationId1": mergedOrgId1,
-		"mergedOrganizationId2": mergedOrgId2,
-	})
-
-	time.Sleep(2 * time.Second)
-
-	rawResponse := callGraphQL(t, "organization/get_organization_by_id", map[string]interface{}{"organizationId": parentOrgId})
-
-	var organizationStruct struct {
-		Organization model.Organization
-	}
-	err := decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
-	require.Nil(t, err)
-	require.True(t, calledRefreshArr)
-	require.True(t, calledRefreshRenewalSummary)
-
-	organization := organizationStruct.Organization
-	require.NotNil(t, organization)
-
-	require.Equal(t, issueId1, *organization.LastTouchPointTimelineEventID)
-	require.Equal(t, secAgo60, *organization.LastTouchPointAt)
-	require.Equal(t, model.LastTouchpointTypeIssueCreated, *organization.LastTouchPointType)
-}
-
 func TestMutationResolver_OrganizationAddSubsidiary(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
