@@ -8,6 +8,14 @@ defmodule Realtime.RabbitMQConsumer do
   @moduledoc false
 
   @queue_name "notifications"
+  @entityToChannelMap %{
+    "ORGANIZATION" => "Organizations",
+    "CONTACT" => "Contacts",
+    "CONTRACT" => "Contracts",
+    "OPPORTUNITY" => "Opportunities",
+    "SERVICE_LINE_ITEM" => "ContractLineItems",
+    "FLOW" => "Flows"
+  }
 
   def start_link(_) do
     GenServer.start_link(__MODULE__, %{}, name: __MODULE__)
@@ -40,26 +48,16 @@ defmodule Realtime.RabbitMQConsumer do
           "delete" => delete
         } = parsed
 
+        channel_topic_prefix = Map.get(@entityToChannelMap, entity_type, :unknown)
+
         channel_topic =
-          case entity_type do
-            "ORGANIZATION" ->
-              "Organizations:#{tenant}"
-
-            "CONTACT" ->
-              "Contacts:#{tenant}"
-
-            "CONTRACT" ->
-              "Contracts:#{tenant}"
-
-            "OPPORTUNITY" ->
-              "Opportunities:#{tenant}"
-
-            "SERVICE_LINE_ITEM" ->
-              "ContractLineItems:#{tenant}"
-
-            _ ->
+          case channel_topic_prefix do
+            :unknown ->
               Logger.warning("Unknown entity: #{entity_type}")
               nil
+
+            value ->
+              "#{value}:#{tenant}"
           end
 
         action_type =
