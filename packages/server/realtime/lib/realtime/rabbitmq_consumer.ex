@@ -2,7 +2,7 @@ defmodule Realtime.RabbitMQConsumer do
   use GenServer
   require Logger
   require Jason
-  alias AMQP.{Connection, Channel, Queue}
+  alias AMQP.{Connection, Channel}
   alias RealtimeWeb.Endpoint
 
   @moduledoc false
@@ -17,8 +17,6 @@ defmodule Realtime.RabbitMQConsumer do
     rabbitmq_url = System.get_env("RABBITMQ_URL")
     {:ok, conn} = Connection.open(rabbitmq_url)
     {:ok, channel} = Channel.open(conn)
-
-    Queue.declare(channel, @queue_name, durable: true)
 
     case AMQP.Basic.consume(channel, "notifications") do
       {:ok, _} -> Logger.info("Consuming queue: #{@queue_name}")
