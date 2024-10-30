@@ -28,7 +28,8 @@ defmodule Realtime.Application do
         children ++
           [
             Realtime.EventStoreClient,
-            Realtime.OrganizationEventSubscriber
+            Realtime.OrganizationEventSubscriber,
+            Realtime.RabbitMQConsumer
           ]
       else
         children
