@@ -77,7 +77,7 @@ func main() {
 	commonServices.RabbitMQService.RegisterHandler(events.FlowComputeParticipantsRequirements{}, listeners.Handle_FlowComputeParticipantsRequirements)
 	commonServices.RabbitMQService.RegisterHandler(dto.AddSocialToContact{}, listeners.OnSocialAddedToContact)
 	commonServices.RabbitMQService.RegisterHandler(dto.RequestEnrichContact{}, listeners.OnRequestedEnrichContact)
-	commonServices.RabbitMQService.RegisterHandler(dto.RequestLastTouchpointRefresh{}, listeners.OnRequestLastTouchpointRefresh)
+	commonServices.RabbitMQService.RegisterHandler(dto.RequestRefreshLastTouchpoint{}, listeners.OnRequestLastTouchpointRefresh)
 
 	// Listen for messages
 	commonServices.RabbitMQService.Listen()

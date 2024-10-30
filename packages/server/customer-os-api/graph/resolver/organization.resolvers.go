@@ -187,17 +187,9 @@ func (r *mutationResolver) OrganizationShow(ctx context.Context, id string) (str
 		graphql.AddErrorf(ctx, "Failed to hide organization %s", id)
 		return response.Id, nil
 	}
-	_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-		return r.Clients.OrganizationClient.RefreshLastTouchpoint(ctx, &organizationpb.OrganizationIdGrpcRequest{
-			Tenant:         common.GetTenantFromContext(ctx),
-			OrganizationId: id,
-			LoggedInUserId: common.GetUserIdFromContext(ctx),
-		})
-	})
+	err = r.Services.CommonServices.OrganizationService.RequestRefreshLastTouchpoint(ctx, id)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to refresh the last touchpoint %s", id)
-		return response.Id, nil
 	}
 
 	return response.Id, nil

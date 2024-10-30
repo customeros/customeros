@@ -2,6 +2,7 @@ package route
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	commontracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"net/http"
 	"sync"
@@ -14,7 +15,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-platform-admin-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-platform-admin-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-platform-admin-api/tracing"
-	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 )
 
 func AddOrganizationRoutes(ctx context.Context, route *gin.Engine, services *service.Services, log logger.Logger, cache *commoncaches.Cache) {
@@ -73,12 +73,12 @@ func refreshLastTouchpointHandler(services *service.Services, log logger.Logger)
 						}
 
 						for _, orgId := range orgs {
-							_, err := services.GrpcClients.OrganizationClient.RefreshLastTouchpoint(ctx, &organizationpb.OrganizationIdGrpcRequest{
-								Tenant:         tenantName,
-								OrganizationId: orgId,
-								AppSource:      constants.AppSourceCustomerOsPlatformAdminApi,
-								LoggedInUserId: userId,
+							innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+								Tenant:    tenantName,
+								UserId:    userId,
+								AppSource: constants.AppSourceCustomerOsPlatformAdminApi,
 							})
+							err = services.CommonServices.OrganizationService.RequestRefreshLastTouchpoint(innerCtx, orgId)
 							if err != nil {
 								log.Error(ctx, err)
 								return

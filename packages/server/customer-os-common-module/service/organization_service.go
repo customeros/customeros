@@ -37,7 +37,7 @@ type OrganizationService interface {
 	GetLatestOrganizationsWithJobRolesForContacts(ctx context.Context, contactIds []string) (*neo4jentity.OrganizationWithJobRoleEntities, error)
 
 	GetHiddenOrganizationIds(ctx context.Context, hiddenAfter time.Time) ([]string, error)
-	RequestLastTouchpointRefresh(ctx context.Context, organizationId string) error
+	RequestRefreshLastTouchpoint(ctx context.Context, organizationId string) error
 	RefreshLastTouchpoint(ctx context.Context, organizationId string) error
 }
 
@@ -321,15 +321,7 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 
 	// request last touchpoint refresh for new organizations
 	if createFlow {
-		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-			return s.services.GrpcClients.OrganizationClient.RefreshLastTouchpoint(ctx, &organizationpb.OrganizationIdGrpcRequest{
-				Tenant:         tenant,
-				OrganizationId: *organizationId,
-				LoggedInUserId: common.GetUserIdFromContext(ctx),
-				AppSource:      input.SourceFields.AppSource,
-			})
-		})
+		err = s.RequestRefreshLastTouchpoint(ctx, *organizationId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 		}
@@ -543,8 +535,8 @@ func (s *organizationService) GetHiddenOrganizationIds(ctx context.Context, hidd
 	return organizationIds, nil
 }
 
-func (s *organizationService) RequestLastTouchpointRefresh(ctx context.Context, organizationId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.RequestLastTouchpointRefresh")
+func (s *organizationService) RequestRefreshLastTouchpoint(ctx context.Context, organizationId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.RequestRefreshLastTouchpoint")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	tracing.TagEntity(span, organizationId)
@@ -556,9 +548,9 @@ func (s *organizationService) RequestLastTouchpointRefresh(ctx context.Context, 
 		return err
 	}
 
-	err = s.services.RabbitMQService.PublishEvent(ctx, organizationId, model.ORGANIZATION, dto.RequestLastTouchpointRefresh{})
+	err = s.services.RabbitMQService.PublishEvent(ctx, organizationId, model.ORGANIZATION, dto.RequestRefreshLastTouchpoint{})
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to publish event RequestLastTouchpointRefresh"))
+		tracing.TraceErr(span, errors.Wrap(err, "failed to publish event RequestRefreshLastTouchpoint"))
 		return err
 	}
 

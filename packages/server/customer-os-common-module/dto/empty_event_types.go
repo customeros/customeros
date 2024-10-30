@@ -8,4 +8,4 @@ type ShowContact struct{}
 
 type RequestEnrichContact struct{}
 
-type RequestLastTouchpointRefresh struct{}
+type RequestRefreshLastTouchpoint struct{}

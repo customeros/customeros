@@ -79,19 +79,18 @@ func (s *organizationService) RefreshLastTouchpoint() {
 
 		//process organizations
 		for _, record := range records {
-			_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-				return s.eventsProcessingClient.OrganizationClient.RefreshLastTouchpoint(ctx, &organizationpb.OrganizationIdGrpcRequest{
-					Tenant:         record.Tenant,
-					OrganizationId: record.OrganizationId,
-					AppSource:      constants.AppSourceDataUpkeeper,
-				})
+			innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+				Tenant:    record.Tenant,
+				AppSource: constants.AppSourceDataUpkeeper,
 			})
+
+			err = s.commonServices.OrganizationService.RequestRefreshLastTouchpoint(innerCtx, record.OrganizationId)
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "error refreshing last touchpoint"))
 				s.log.Errorf("Error refreshing last touchpoint for organization {%s}: %s", record.OrganizationId, err.Error())
 			}
 
-			err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, record.Tenant, model.NodeLabelOrganization, record.OrganizationId, string(neo4jentity.OrganizationPropertyLastTouchpointRequestedAt), utils.NowPtr())
+			err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(innerCtx, record.Tenant, model.NodeLabelOrganization, record.OrganizationId, string(neo4jentity.OrganizationPropertyLastTouchpointRequestedAt), utils.NowPtr())
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "error updating last touchpoint requested at"))
 				s.log.Errorf("Error updating refresh last touchpoint requested at: %s", err.Error())

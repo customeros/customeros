@@ -581,7 +581,7 @@ func (s *organizationService) UpdateLastTouchpoint(ctx context.Context, organiza
 	if organizationID == "" {
 		return
 	}
-	s.updateLastTouchpoint(ctx, organizationID)
+	_ = s.services.CommonServices.OrganizationService.RequestRefreshLastTouchpoint(ctx, organizationID)
 }
 
 func (s *organizationService) UpdateLastTouchpointByContactId(ctx context.Context, contactID string) {
@@ -660,7 +660,7 @@ func (s *organizationService) updateLastTouchpointByContactId(ctx context.Contex
 		props := utils.GetPropsFromNode(*dbNode)
 		orgID := utils.GetStringPropOrEmpty(props, "id")
 		if orgID != "" {
-			s.updateLastTouchpoint(ctx, orgID)
+			_ = s.services.CommonServices.OrganizationService.RequestRefreshLastTouchpoint(ctx, orgID)
 		}
 	}
 }
@@ -695,7 +695,7 @@ func (s *organizationService) updateLastTouchpointByEmailId(ctx context.Context,
 		props := utils.GetPropsFromNode(*dbNode.Node)
 		orgID := utils.GetStringPropOrEmpty(props, "id")
 		if orgID != "" {
-			s.updateLastTouchpoint(ctx, orgID)
+			_ = s.services.CommonServices.OrganizationService.RequestRefreshLastTouchpoint(ctx, orgID)
 		}
 	}
 }
@@ -749,7 +749,7 @@ func (s *organizationService) updateLastTouchpointByPhoneNumberId(ctx context.Co
 		props := utils.GetPropsFromNode(*dbNode.Node)
 		orgID := utils.GetStringPropOrEmpty(props, "id")
 		if orgID != "" {
-			s.updateLastTouchpoint(ctx, orgID)
+			_ = s.services.CommonServices.OrganizationService.RequestRefreshLastTouchpoint(ctx, orgID)
 		}
 	}
 }
@@ -770,27 +770,6 @@ func (s *organizationService) updateLastTouchpointByPhoneNumber(ctx context.Cont
 	phoneNumberID := utils.GetStringPropOrEmpty(props, "id")
 	if phoneNumberID != "" {
 		s.updateLastTouchpointByPhoneNumberId(ctx, phoneNumberID)
-	}
-}
-
-func (s *organizationService) updateLastTouchpoint(ctx context.Context, organizationID string) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.updateLastTouchpoint")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("organizationID", organizationID))
-
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err := utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-		return s.grpcClients.OrganizationClient.RefreshLastTouchpoint(ctx, &organizationpb.OrganizationIdGrpcRequest{
-			Tenant:         common.GetTenantFromContext(ctx),
-			OrganizationId: organizationID,
-			LoggedInUserId: common.GetUserIdFromContext(ctx),
-			AppSource:      constants.AppSourceCustomerOsApi,
-		})
-	})
-	if err != nil {
-		s.log.Errorf("error sending event to events-platform: {%v}", err.Error())
-		tracing.TraceErr(span, err, log.String("grpcMethod", "RefreshLastTouchpoint"))
 	}
 }
 

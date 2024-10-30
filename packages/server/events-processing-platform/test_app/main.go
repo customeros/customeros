@@ -112,7 +112,6 @@ func main() {
 	//testArchiveOpportunity()
 	//testUpdateOnboardingStatus()
 	//testUpdateOrgOwner()
-	//testRefreshLastTouchpoint()
 	//testRefreshRenewalSummary()
 	//testAddTenantBillingProfile()
 	//PaidInvoiceNotification()
@@ -675,17 +674,6 @@ func testUpdateOrgOwner() {
 		LoggedInUserId: actorId,
 		OwnerUserId:    userId,
 		AppSource:      appSource,
-	})
-	if err != nil {
-		log.Fatalf("Failed: %v", err.Error())
-	}
-	log.Printf("Result: %v", result.Id)
-}
-
-func testRefreshLastTouchpoint() {
-	result, err := clients.OrganizationClient.RefreshLastTouchpoint(context.Background(), &organizationpb.OrganizationIdGrpcRequest{
-		Tenant:         tenant,
-		OrganizationId: orgId,
 	})
 	if err != nil {
 		log.Fatalf("Failed: %v", err.Error())
