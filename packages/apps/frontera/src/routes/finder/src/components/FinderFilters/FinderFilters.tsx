@@ -74,39 +74,7 @@ export const FinderFilters = observer(
     }
 
     const flattenedFilters: FilterItem[] =
-      filters
-        ?.map((f: FilterItem[]) => ({ ...f.filter }))
-        .filter((filter: FilterItem) => {
-          if (
-            tableId === TableIdType.Customers &&
-            filter.property === 'RELATIONSHIP'
-          ) {
-            return false;
-          }
-
-          if (
-            tableId === TableIdType.PastInvoices &&
-            filter.property === 'INVOICE_DRY_RUN'
-          ) {
-            return false;
-          }
-
-          if (
-            (tableId === TableIdType.Targets &&
-              filter.property === 'RELATIONSHIP') ||
-            filter.property === 'STAGE'
-          ) {
-            return false;
-          }
-
-          return true;
-        }) ?? [];
-
-    // tableViewDef?.setFilter({
-    //   property: 'INVOICE_DRY_RUN',
-    //   value: false,
-    //   active: true,
-    // });
+      filters?.map((f: FilterItem[]) => ({ ...f.filter })) ?? [];
 
     return (
       <Filters

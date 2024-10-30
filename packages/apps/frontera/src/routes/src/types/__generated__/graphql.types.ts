@@ -1447,8 +1447,14 @@ export enum EmailVariableName {
 
 export type EnrichDetails = {
   __typename?: 'EnrichDetails';
+  emailEnrichedAt?: Maybe<Scalars['Time']['output']>;
+  emailFound?: Maybe<Scalars['Boolean']['output']>;
+  emailRequestedAt?: Maybe<Scalars['Time']['output']>;
   enrichedAt?: Maybe<Scalars['Time']['output']>;
   failedAt?: Maybe<Scalars['Time']['output']>;
+  mobilePhoneEnrichedAt?: Maybe<Scalars['Time']['output']>;
+  mobilePhoneFound?: Maybe<Scalars['Boolean']['output']>;
+  mobilePhoneRequestedAt?: Maybe<Scalars['Time']['output']>;
   requestedAt?: Maybe<Scalars['Time']['output']>;
 };
 
@@ -4421,6 +4427,7 @@ export type TableViewDef = Node & {
   __typename?: 'TableViewDef';
   columns: Array<ColumnView>;
   createdAt: Scalars['Time']['output'];
+  defaultFilters: Scalars['String']['output'];
   filters: Scalars['String']['output'];
   icon: Scalars['String']['output'];
   id: Scalars['ID']['output'];

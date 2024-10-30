@@ -305,6 +305,21 @@ const filterTypeDate = (filter: FilterItem, value: string | undefined) => {
     .otherwise(() => true);
 };
 
+export const getInvoiceDefaultFilterFns = (
+  filters: Filter | null,
+  isFeatureEnabled: boolean,
+) => {
+  if (!filters || !filters.AND) return [];
+
+  const data = filters?.AND;
+
+  if (isFeatureEnabled) {
+    return data.map(({ filter }) => getFilterV2Fn(filter));
+  }
+
+  return data.map(({ filter }) => getFilterFn(filter));
+};
+
 export const getInvoiceFilterFns = (
   filters: Filter | null,
   isFeatureEnabled: boolean,

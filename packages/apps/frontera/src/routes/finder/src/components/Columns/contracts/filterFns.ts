@@ -383,6 +383,20 @@ const filterTypeDate = (filter: FilterItem, value: string | undefined) => {
     .otherwise(() => true);
 };
 
+export const getContractDefaultFilters = (
+  defaultFilters: Filter | null,
+  isFeatureEnabled: boolean,
+) => {
+  if (!defaultFilters || !defaultFilters.AND) return [];
+  const data = defaultFilters?.AND;
+
+  if (isFeatureEnabled) {
+    return data.map(({ filter }) => getFilterV2Fn(filter));
+  }
+
+  return data.map(({ filter }) => getFilterFn(filter));
+};
+
 export const getContractFilterFns = (
   filters: Filter | null,
   isFeatureEnabled: boolean,

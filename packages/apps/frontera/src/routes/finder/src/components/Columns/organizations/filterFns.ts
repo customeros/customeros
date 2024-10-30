@@ -907,6 +907,21 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
     .otherwise(() => noop);
 };
 
+export const getOrganizationDefaultFilterFns = (
+  filters: Filter | null,
+  isFeatureEnabled: boolean,
+) => {
+  if (!filters || !filters.AND) return [];
+
+  const data = filters?.AND;
+
+  if (isFeatureEnabled) {
+    return data.map(({ filter }) => getFilterV2Fn(filter));
+  }
+
+  return data.map(({ filter }) => getFilterFn(filter));
+};
+
 export const getOrganizationFilterFns = (
   filters: Filter | null,
   isFeatureEnabled: boolean,

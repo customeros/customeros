@@ -38,6 +38,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
 
       return hasOrgWithMatchingStage;
     })
+
     .with({ property: 'RELATIONSHIP' }, (filter) => (row: ContactStore) => {
       const filterValues = filter?.value;
 
@@ -54,6 +55,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
 
       return hasOrgWithMatchingRelationship;
     })
+
     .with(
       { property: ColumnViewType.ContactsName },
       (filter) => (row: ContactStore) => {
@@ -69,6 +71,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
         return filterTypeText(filter, values);
       },
     )
+
     .with(
       { property: ColumnViewType.ContactsOrganization },
       (filter) => (row: ContactStore) => {
@@ -80,6 +83,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
         return filterTypeText(filter, orgs?.join(' '));
       },
     )
+
     .with(
       { property: ColumnViewType.ContactsPrimaryEmail },
       (filter) => (row: ContactStore) => {
@@ -125,6 +129,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
         return filterTypeText(filter, linkedInUrl);
       },
     )
+
     .with(
       { property: ColumnViewType.ContactsCity },
       (filter) => (row: ContactStore) => {
@@ -143,6 +148,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
         );
       },
     )
+
     .with(
       { property: ColumnViewType.ContactsPersona },
       (filter) => (row: ContactStore) => {
@@ -158,6 +164,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
         return filterTypeList(filter, tags);
       },
     )
+
     .with(
       { property: ColumnViewType.ContactsConnections },
       (filter) => (row: ContactStore) => {
@@ -175,6 +182,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
         return filterTypeList(filter, users as string[]);
       },
     )
+
     .with(
       { property: ColumnViewType.ContactsLinkedinFollowerCount },
       (filter) => (row: ContactStore) => {
@@ -187,6 +195,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
         return filterTypeNumber(filter, followers);
       },
     )
+
     .with(
       { property: ColumnViewType.ContactsJobTitle },
       (filter) => (row: ContactStore) => {
@@ -436,6 +445,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
 
       return hasOrgWithMatchingStage;
     })
+
     .with({ property: 'RELATIONSHIP' }, (filter) => (row: ContactStore) => {
       const filterValues = filter?.value;
 
@@ -452,6 +462,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
 
       return hasOrgWithMatchingRelationship;
     })
+
     .with(
       { property: ColumnViewType.ContactsName },
       (filter) => (row: ContactStore) => {
@@ -467,6 +478,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
           .includes(filterValue?.toLowerCase());
       },
     )
+
     .with(
       { property: ColumnViewType.ContactsOrganization },
       (filter) => (row: ContactStore) => {
@@ -488,6 +500,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         return orgs?.some((e) => e.includes(filterValues));
       },
     )
+
     .with(
       { property: ColumnViewType.ContactsPrimaryEmail },
       (filter) => (row: ContactStore) => {
@@ -538,6 +551,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         return linkedInUrl.includes(filterValue);
       },
     )
+
     .with(
       { property: ColumnViewType.ContactsCity },
       (filter) => (row: ContactStore) => {
@@ -559,6 +573,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         );
       },
     )
+
     .with(
       { property: ColumnViewType.ContactsPersona },
       (filter) => (row: ContactStore) => {
@@ -572,6 +587,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         return filter.value.some((f: string) => tags.includes(f));
       },
     )
+
     .with(
       { property: ColumnViewType.ContactsConnections },
       (filter) => (row: ContactStore) => {
@@ -587,6 +603,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         return filter.value.some((f: string) => users.includes(f));
       },
     )
+
     .with(
       { property: ColumnViewType.ContactsLinkedinFollowerCount },
       (filter) => (row: ContactStore) => {
@@ -616,6 +633,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         }
       },
     )
+
     .with(
       { property: ColumnViewType.ContactsJobTitle },
       (filter) => (row: ContactStore) => {
@@ -655,6 +673,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         );
       },
     )
+
     .with({ property: ColumnViewType.ContactsRegion }, (filter) => {
       // Early exit if filter is not active
       if (!filter.active) return () => true;
@@ -701,6 +720,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         return filterValue.includes(flow.value.name);
       };
     })
+
     .with(
       { property: 'EMAIL_VERIFICATION' },
       (filter) => (row: ContactStore) => {
@@ -786,6 +806,20 @@ function isDeliverable(
 
   return statuses.some((status) => statusChecks[status]?.() ?? false);
 }
+
+export const getContactDefaultFilterFns = (
+  filters: Filter | null,
+  isFeatureEnabled: boolean,
+) => {
+  if (!filters || !filters.AND) return [];
+  const data = filters?.AND;
+
+  if (isFeatureEnabled) {
+    return data.map(({ filter }) => getFilterV2Fn(filter));
+  }
+
+  return data.map(({ filter }) => getFilterFn(filter));
+};
 
 export const getContactFilterFns = (
   filters: Filter | null,

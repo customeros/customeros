@@ -324,6 +324,7 @@ const TABLE_VIEW_DEFS_QUERY = gql`
       tableId
       order
       icon
+      defaultFilters
       filters
       sorting
       columns {

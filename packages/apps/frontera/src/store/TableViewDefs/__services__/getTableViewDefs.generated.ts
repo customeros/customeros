@@ -17,6 +17,7 @@ export type TableViewDefsQuery = {
     isPreset: boolean;
     isShared: boolean;
     createdAt: any;
+    defaultFilters: string;
     updatedAt: any;
     columns: Array<{
       __typename?: 'ColumnView';

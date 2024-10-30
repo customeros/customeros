@@ -157,6 +157,42 @@ export class TableViewDefStore implements Store<TableViewDef> {
     }
   }
 
+  getDefaultFilters() {
+    try {
+      return match(this.value.defaultFilters)
+        .with(P.string.includes('AND'), (data) => JSON.parse(data))
+        .otherwise(() => null);
+    } catch (err) {
+      console.error('Error parsing default filters', err);
+
+      return null;
+    }
+  }
+
+  setDefaultFilters(filter: FilterItem) {
+    this.update((value) => {
+      const draft = this.getDefaultFilters();
+
+      if (!draft) {
+        this.appendDefaultFilter({ ...filter, active: true });
+
+        return value;
+      }
+      const foundIndex = (draft.AND as Filter[])?.findIndex(
+        (f) => f.filter?.property === filter.property,
+      );
+
+      if (foundIndex !== -1) {
+        draft.AND[foundIndex].filter = filter;
+        value.filters = JSON.stringify(draft);
+      } else {
+        this.appendDefaultFilter({ ...filter, active: true });
+      }
+
+      return value;
+    });
+  }
+
   hasFilters() {
     return this.getFilters()?.AND?.length > 0;
   }
@@ -171,6 +207,22 @@ export class TableViewDefStore implements Store<TableViewDef> {
   appendFilter(filter: FilterItem) {
     this.update((value) => {
       let draft = this.getFilters() as Filter;
+
+      if (draft) {
+        (draft as Filter).AND?.push({ filter });
+      } else {
+        draft = { AND: [{ filter }] };
+      }
+
+      value.filters = JSON.stringify(draft);
+
+      return value;
+    });
+  }
+
+  appendDefaultFilter(filter: FilterItem) {
+    this.update((value) => {
+      let draft = this.getDefaultFilters() as Filter;
 
       if (draft) {
         (draft as Filter).AND?.push({ filter });
@@ -342,6 +394,7 @@ export const getDefaultValue = (): TableViewDef => ({
   id: '',
   name: '',
   order: 0,
+  defaultFilters: '',
   sorting: '',
   updatedAt: '',
   isPreset: false,

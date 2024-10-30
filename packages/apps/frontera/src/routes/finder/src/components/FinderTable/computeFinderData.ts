@@ -11,16 +11,29 @@ import { TableIdType, WorkflowType, TableViewType } from '@graphql/types';
 
 import { getFlowFilterFns } from '../Columns/organizations/flowFilters';
 import { getFlowsFilterFns, getFlowsColumnSortFn } from '../Columns/flows';
-import { getContactSortFn, getContactFilterFns } from '../Columns/contacts';
-import { getInvoicesSortFn, getInvoiceFilterFns } from '../Columns/invoices';
-import { getContractSortFn, getContractFilterFns } from '../Columns/contracts';
 import {
   getOpportunitiesSortFn,
   getOpportunityFilterFns,
 } from '../Columns/opportunities';
 import {
+  getContactSortFn,
+  getContactFilterFns,
+  getContactDefaultFilterFns,
+} from '../Columns/contacts';
+import {
+  getInvoicesSortFn,
+  getInvoiceFilterFns,
+  getInvoiceDefaultFilterFns,
+} from '../Columns/invoices';
+import {
+  getContractSortFn,
+  getContractFilterFns,
+  getContractDefaultFilters,
+} from '../Columns/contracts';
+import {
   getOrganizationSortFn,
   getOrganizationFilterFns,
+  getOrganizationDefaultFilterFns,
 } from '../Columns/organizations';
 
 interface ComputeFinderDataOptions {
@@ -52,11 +65,19 @@ export const computeFinderData = (
   return match(tableType)
     .with(TableViewType.Organizations, () =>
       store.organizations?.toComputedArray((arr) => {
+        const defaultFilters = getOrganizationDefaultFilterFns(
+          tableViewDef?.getDefaultFilters(),
+          isFeatureEnabled,
+        );
         const filters = getOrganizationFilterFns(
           tableViewDef?.getFilters(),
           isFeatureEnabled,
         );
         const flowFilters = getFlowFilterFns(workFlow?.getFilters());
+
+        if (defaultFilters) {
+          arr = arr.filter((v) => defaultFilters.every((fn) => fn(v)));
+        }
 
         if (flowFilters.length && store.ui.isFilteringICP) {
           arr = arr.filter((v) => !flowFilters.every((fn) => fn(v)));
@@ -113,10 +134,19 @@ export const computeFinderData = (
           );
         }
 
+        const defaultFilters = getContactDefaultFilterFns(
+          tableViewDef?.getDefaultFilters(),
+          isFeatureEnabled,
+        );
+
         const filters = getContactFilterFns(
           tableViewDef?.getFilters(),
           isFeatureEnabled,
         );
+
+        if (defaultFilters) {
+          arr = arr.filter((v) => defaultFilters.every((fn) => fn(v)));
+        }
 
         if (filters) {
           arr = arr.filter((v) => filters.every((fn) => fn(v)));
@@ -156,10 +186,19 @@ export const computeFinderData = (
     )
     .with(TableViewType.Contracts, () =>
       store.contracts?.toComputedArray((arr) => {
+        const defaultFilters = getContractDefaultFilters(
+          tableViewDef?.getDefaultFilters(),
+          isFeatureEnabled,
+        );
+
         const filters = getContractFilterFns(
           tableViewDef?.getFilters(),
           isFeatureEnabled,
         );
+
+        if (defaultFilters) {
+          arr = arr.filter((v) => defaultFilters.every((fn) => fn(v)));
+        }
 
         if (filters) {
           arr = arr.filter((v) => filters.every((fn) => fn(v)));
@@ -189,10 +228,18 @@ export const computeFinderData = (
     )
     .with(TableViewType.Invoices, () =>
       store.invoices.toComputedArray((arr) => {
+        const defaultFilters = getInvoiceDefaultFilterFns(
+          tableViewDef?.getDefaultFilters(),
+          isFeatureEnabled,
+        );
         const filters = getInvoiceFilterFns(
           tableViewDef?.getFilters(),
           isFeatureEnabled,
         );
+
+        if (defaultFilters) {
+          arr = arr.filter((v) => defaultFilters.every((fn) => fn(v)));
+        }
 
         if (filters) {
           arr = arr.filter((v) => filters.every((fn) => fn(v)));
