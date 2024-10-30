@@ -67,11 +67,11 @@ func TestMain(m *testing.M) {
 	}(postgresContainer, context.Background())
 
 	// Start RabbitMQ container
-	_, cleanup, err := neo4jt.SetupRabbitMQTestContainer()
-	if err != nil {
-		log.Fatalf("Failed to setup RabbitMQ test container: %v", err)
-	}
-	defer cleanup()
+	//_, cleanup, err := neo4jt.SetupRabbitMQTestContainer()
+	//if err != nil {
+	//	log.Fatalf("Failed to setup RabbitMQ test container: %v", err)
+	//}
+	//defer cleanup()
 
 	prepareClient()
 
@@ -95,11 +95,7 @@ func prepareClient() {
 	gRPCconn, _ := testDialFactory.GetEventsProcessingPlatformConn()
 
 	grpcClient := grpc_client.InitClients(gRPCconn)
-	commonServices := commonService.InitServices(&commonConfig.GlobalConfig{
-		RabbitMQConfig: &commonConfig.RabbitMQConfig{
-			Url: "amqp://guest:guest@localhost:5672", // Replace with test RabbitMQ URL or env variable if necessary
-		},
-	}, postgresGormDB, driver, "neo4j", grpcClient, appLogger)
+	commonServices := commonService.InitServices(&commonConfig.GlobalConfig{}, postgresGormDB, driver, "neo4j", grpcClient, appLogger)
 	customerOsApiServices = service.InitServices(appLogger, driver, &config.Config{}, commonServices, grpcClient, postgresGormDB)
 	graphResolver := NewResolver(appLogger, customerOsApiServices, customerOsApiServices.CommonServices.GrpcClients, &config.Config{})
 	loader := dataloader.NewDataLoader(customerOsApiServices)
