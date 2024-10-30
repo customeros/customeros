@@ -487,6 +487,8 @@ func processMailstackReply(ctx context.Context, services *service.Services, tena
 
 				utils.SendSlackMessage(ctx, slackChannelUrl, slackMessageText)
 			}
+
+			services.CommonServices.RabbitMQService.PublishEventCompleted(ctx, tenant, flowParticipant.EntityId, flowParticipant.EntityType, utils.NewEventCompletedDetails().WithUpdate())
 		}
 
 	}

@@ -2,7 +2,6 @@ package service
 
 import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	fsc "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/file_store_client"
@@ -17,8 +16,6 @@ type Services struct {
 	Log          logger.Logger
 	Cache        CacheService // todo move this to cache
 	Repositories *repository.Repositories
-
-	Caches *caches.Cache
 
 	CommonServices      *commonService.Services
 	FileStoreApiService fsc.FileStoreApiService
@@ -61,11 +58,10 @@ type Services struct {
 	OpensrsService             OpensrsService
 }
 
-func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, cfg *config.Config, commonServices *commonService.Services, grpcClients *grpc_client.Clients, gormDb *gorm.DB, caches *caches.Cache) *Services {
+func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, cfg *config.Config, commonServices *commonService.Services, grpcClients *grpc_client.Clients, gormDb *gorm.DB) *Services {
 	repositories := repository.InitRepos(driver, cfg.Neo4j.Database, gormDb)
 
 	services := Services{
-		Caches:                     caches,
 		CommonServices:             commonServices,
 		BankAccountService:         NewBankAccountService(log, repositories, grpcClients),
 		CustomFieldService:         NewCustomFieldService(log, repositories),

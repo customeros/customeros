@@ -15,7 +15,7 @@ import (
 
 type FlowParticipantWriteRepository interface {
 	Merge(ctx context.Context, tx *neo4j.ManagedTransaction, entity *entity.FlowParticipantEntity) (*dbtype.Node, error)
-	Delete(ctx context.Context, id string) error
+	Delete(ctx context.Context, tx *neo4j.ManagedTransaction, id string) error
 }
 
 type flowParticipantWriteRepositoryImpl struct {
@@ -61,34 +61,22 @@ func (r *flowParticipantWriteRepositoryImpl) Merge(ctx context.Context, tx *neo4
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	if tx == nil {
-		session := utils.NewNeo4jWriteSession(ctx, *r.driver)
-		defer session.Close(ctx)
-
-		queryResult, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-			qr, err := tx.Run(ctx, cypher, params)
-			if err != nil {
-				return nil, err
-			}
-			return utils.ExtractSingleRecordFirstValueAsNode(ctx, qr, err)
-		})
+	queryResult, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		qr, err := tx.Run(ctx, cypher, params)
 		if err != nil {
-			tracing.TraceErr(span, err)
 			return nil, err
 		}
-
-		return queryResult.(*neo4j.Node), nil
-	} else {
-		queryResult, err := (*tx).Run(ctx, cypher, params)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil, err
-		}
-		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+		return utils.ExtractSingleRecordFirstValueAsNode(ctx, qr, err)
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
 	}
+
+	return queryResult.(*neo4j.Node), nil
 }
 
-func (r *flowParticipantWriteRepositoryImpl) Delete(ctx context.Context, id string) error {
+func (r *flowParticipantWriteRepositoryImpl) Delete(ctx context.Context, tx *neo4j.ManagedTransaction, id string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CommonWriteRepository.Delete")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
@@ -107,10 +95,7 @@ func (r *flowParticipantWriteRepositoryImpl) Delete(ctx context.Context, id stri
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, cypher, params)
 		if err != nil {
 			return nil, err

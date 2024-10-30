@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/caches"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/cron"
 	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
@@ -123,10 +121,9 @@ func (server *server) Run(parentCtx context.Context) error {
 	postgresDb, _ := InitDB(server.cfg, server.log)
 	defer postgresDb.SqlDB.Close()
 
-	appCache := caches.NewCache()
 	commonCache := commonCaches.NewCommonCache()
 
-	serviceContainer := service.InitServices(server.log, &neo4jDriver, server.cfg, commonServices, grpcContainer, postgresDb.GormDB, appCache)
+	serviceContainer := service.InitServices(server.log, &neo4jDriver, server.cfg, commonServices, grpcContainer, postgresDb.GormDB)
 	r.Use(cors.New(corsConfig))
 	r.Use(ginzap.GinzapWithConfig(server.log.Logger(), &ginzap.Config{
 		TimeFormat: time.RFC3339,
@@ -176,14 +173,9 @@ func (server *server) Run(parentCtx context.Context) error {
 		}()
 	}
 
-	cronJobs := cron.StartCronJobs(server.cfg, serviceContainer)
-	defer cronJobs.Stop()
-
 	r.Run(":" + server.cfg.ApiPort)
 
 	<-server.doneCh
-
-	cronJobs.Stop()
 
 	server.log.Infof("Application %s exited properly", constants.ServiceName)
 	return nil

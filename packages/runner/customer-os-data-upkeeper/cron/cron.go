@@ -21,7 +21,6 @@ const (
 	contactBettercontactGroup       = "contactEnrichWithBettercontact"
 	askForLinkedInConnectionsGroup  = "askForLinkedInConnectionsGroup"
 	processLinkedInConnectionsGroup = "processLinkedInConnectionsGroup"
-	apiCacheGroup                   = "api_cache"
 	workflowGroup                   = "workflow"
 	emailGroup                      = "email"
 	emailBulkValidationGroup        = "emailBulkValidation"
@@ -50,7 +49,6 @@ var jobLocks = struct {
 		refreshLastTouchpointGroup:      {},
 		currencyGroup:                   {},
 		linkUnthreadIssuesGroup:         {},
-		apiCacheGroup:                   {},
 		workflowGroup:                   {},
 		emailGroup:                      {},
 		emailBulkValidationGroup:        {},
@@ -221,13 +219,6 @@ func StartCron(cont *container.Container) *cron.Cron {
 		cont.Log.Fatalf("Could not add cron job %s: %v", "linkOrphanContactsToOrganizationBaseOnLinkedinScrapIn", err.Error())
 	}
 
-	err = c.AddFunc(cont.Cfg.Cron.CronScheduleRefreshApiCache, func() {
-		lockAndRunJob(cont, apiCacheGroup, refreshApiCache)
-	})
-	if err != nil {
-		cont.Log.Fatalf("Could not add cron job %s: %v", "refreshApiCache", err.Error())
-	}
-
 	err = c.AddFunc(cont.Cfg.Cron.CronScheduleExecuteWorkflow, func() {
 		lockAndRunJob(cont, workflowGroup, executeWorkflows)
 	})
@@ -291,12 +282,12 @@ func StartCron(cont *container.Container) *cron.Cron {
 		cont.Log.Fatalf("Could not add cron job %s: %v", "flowExecution", err.Error())
 	}
 
-	//err = c.AddFunc(cont.Cfg.Cron.CronScheduleSendEmails, func() {
-	//	lockAndRunJob(cont, sendEmailsGroup, sendEmails)
-	//})
-	//if err != nil {
-	//	cont.Log.Fatalf("Could not add cron job %s: %v", "sendEmails", err.Error())
-	//}
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleSendEmails, func() {
+		lockAndRunJob(cont, sendEmailsGroup, sendEmails)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "sendEmails", err.Error())
+	}
 
 	err = c.AddFunc(cont.Cfg.Cron.CronScheduleProcessSentEmails, func() {
 		lockAndRunJob(cont, processSentEmailsGroup, processSentEmails)
@@ -417,10 +408,6 @@ func getCurrencyRatesECB(cont *container.Container) {
 
 func linkUnthreadIssues(cont *container.Container) {
 	service.NewIssueService(cont.Cfg, cont.Log, cont.Repositories).LinkUnthreadIssues()
-}
-
-func refreshApiCache(cont *container.Container) {
-	service.NewApiCacheService(cont.Cfg, cont.Log, cont.Repositories, cont.CommonServices).RefreshApiCache()
 }
 
 func executeWorkflows(cont *container.Container) {

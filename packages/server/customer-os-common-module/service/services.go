@@ -54,8 +54,6 @@ type Services struct {
 	AzureService   AzureService
 	OpenSrsService OpenSrsService
 	MailService    MailService
-
-	ApiCacheService ApiCacheService
 }
 
 func InitServices(globalConfig *config.GlobalConfig, db *gorm.DB, driver *neo4j.DriverWithContext, neo4jDatabase string, grpcClients *grpc_client.Clients, log logger.Logger) *Services {
@@ -73,7 +71,6 @@ func InitServices(globalConfig *config.GlobalConfig, db *gorm.DB, driver *neo4j.
 	}
 
 	services.CommonService = NewCommonService(services)
-	services.ApiCacheService = NewApiCacheService(services.Neo4jRepositories, services)
 
 	services.AttachmentService = NewAttachmentService(services)
 	services.AzureService = NewAzureService(globalConfig.AzureOAuthConfig, services.PostgresRepositories, services)

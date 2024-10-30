@@ -139,21 +139,13 @@ func (r *RabbitMQService) PublishEventOnQueue(ctx context.Context, entityId stri
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	if r.conn == nil {
-		tracing.TraceErr(span, errors.New("RabbitMQ connection is nil"))
-		return nil
-	}
-
-	r.mu.Lock()
-	defer r.mu.Unlock()
-
 	tracingData := tracing.ExtractTextMapCarrier((span).Context())
 
 	eventMessage := events.Event{
 		Event: events.EventDetails{
 			Id:         utils.GenerateRandomString(32),
 			EntityId:   entityId,
-			EntityType: entityType.String(),
+			EntityType: entityType,
 			Tenant:     common.GetTenantFromContext(ctx),
 			EventType:  reflect.TypeOf(message).Name(),
 			Data:       message,

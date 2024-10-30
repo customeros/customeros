@@ -1,17 +1,19 @@
 package events
 
+import "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+
 type Event struct {
 	Event    EventDetails  `json:"event"`
 	Metadata EventMetadata `json:"metadata"`
 }
 
 type EventDetails struct {
-	Id         string      `json:"id"`
-	Tenant     string      `json:"tenant"`
-	EntityId   string      `json:"entityId"`
-	EntityType string      `json:"entityType"`
-	EventType  string      `json:"eventType"`
-	Data       interface{} `json:"data"`
+	Id         string           `json:"id"`
+	Tenant     string           `json:"tenant"`
+	EntityId   string           `json:"entityId"`
+	EntityType model.EntityType `json:"entityType"`
+	EventType  string           `json:"eventType"`
+	Data       interface{}      `json:"data"`
 }
 
 type EventMetadata struct {

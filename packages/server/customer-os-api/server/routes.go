@@ -31,7 +31,6 @@ const (
 
 func RegisterRestRoutes(ctx context.Context, r *gin.Engine, grpcClients *grpc_client.Clients, services *service.Services, cache *commoncaches.Cache) {
 	registerPublicRoutes(ctx, r, services)
-	registerStreamRoutes(ctx, r, services, cache)
 	registerOutreachRoutes(ctx, r, services, cache)
 	registerCustomerBaseRoutes(ctx, r, services, grpcClients, cache)
 	registerVerifyRoutes(ctx, r, services, cache)
@@ -103,17 +102,4 @@ func setupRestRoute(ctx context.Context, r *gin.Engine, method, path string, ser
 		enrichContextMiddleware(constants.AppSourceCustomerOsApiRest),
 		cosHandler.StatsSuccessHandler(method+":"+path, services),
 		handler)
-}
-
-func registerStreamRoutes(ctx context.Context, r *gin.Engine, serviceContainer *service.Services, cache *commoncaches.Cache) {
-	r.GET("/stream/organizations-cache",
-		tracing.TracingEnhancer(ctx, "GET:/stream/organizations-cache"),
-		apiKeyCheckerHTTPMiddleware(serviceContainer.Repositories.PostgresRepositories.TenantWebhookApiKeyRepository, serviceContainer.Repositories.PostgresRepositories.AppKeyRepository, security.CUSTOMER_OS_API, security.WithCache(cache)),
-		tenantUserContextEnhancerMiddleware(security.USERNAME_OR_TENANT, serviceContainer.Repositories.Neo4jRepositories, security.WithCache(cache)),
-		rest.OrganizationsCacheHandler(serviceContainer))
-	r.GET("/stream/organizations-cache-diff",
-		tracing.TracingEnhancer(ctx, "GET:/stream/organizations-cache-diff"),
-		apiKeyCheckerHTTPMiddleware(serviceContainer.Repositories.PostgresRepositories.TenantWebhookApiKeyRepository, serviceContainer.Repositories.PostgresRepositories.AppKeyRepository, security.CUSTOMER_OS_API, security.WithCache(cache)),
-		tenantUserContextEnhancerMiddleware(security.USERNAME_OR_TENANT, serviceContainer.Repositories.Neo4jRepositories, security.WithCache(cache)),
-		rest.OrganizationsPatchesCacheHandler(serviceContainer))
 }

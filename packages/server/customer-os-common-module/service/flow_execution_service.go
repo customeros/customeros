@@ -28,7 +28,7 @@ const (
 type FlowExecutionService interface {
 	GetFlowActionExecutionById(ctx context.Context, flowActionExecution string) (*entity.FlowActionExecutionEntity, error)
 	GetFlowRequirements(ctx context.Context, flowId string) (*FlowComputeParticipantsRequirementsInput, error)
-	UpdateParticipantFlowRequirements(ctx context.Context, tx *neo4j.ManagedTransaction, participant *entity.FlowParticipantEntity, requirements *FlowComputeParticipantsRequirementsInput) error
+	UpdateParticipantFlowRequirements(ctx context.Context, tx *neo4j.ManagedTransaction, participant *entity.FlowParticipantEntity, requirements *FlowComputeParticipantsRequirementsInput) (bool, error)
 	ScheduleFlow(ctx context.Context, tx *neo4j.ManagedTransaction, flowId string, flowParticipant *entity.FlowParticipantEntity) error
 	ProcessActionExecution(ctx context.Context, scheduledActionExecution *entity.FlowActionExecutionEntity) error
 }
@@ -89,7 +89,7 @@ func (s *flowExecutionService) GetFlowRequirements(ctx context.Context, flowId s
 	return &requirements, nil
 }
 
-func (s *flowExecutionService) UpdateParticipantFlowRequirements(ctx context.Context, tx *neo4j.ManagedTransaction, participant *entity.FlowParticipantEntity, requirements *FlowComputeParticipantsRequirementsInput) error {
+func (s *flowExecutionService) UpdateParticipantFlowRequirements(ctx context.Context, tx *neo4j.ManagedTransaction, participant *entity.FlowParticipantEntity, requirements *FlowComputeParticipantsRequirementsInput) (bool, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.UpdateParticipantFlowRequirements")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -102,7 +102,7 @@ func (s *flowExecutionService) UpdateParticipantFlowRequirements(ctx context.Con
 		//identify the primary email
 		primaryEmail, err := s.services.EmailService.GetPrimaryEmailForEntityId(ctx, participant.EntityType, participant.EntityId)
 		if err != nil {
-			return errors.Wrap(err, "failed to get primary email for entity id")
+			return false, errors.Wrap(err, "failed to get primary email for entity id")
 		}
 
 		if primaryEmail == nil {
@@ -110,14 +110,18 @@ func (s *flowExecutionService) UpdateParticipantFlowRequirements(ctx context.Con
 		}
 	}
 
+	if participant.Status == status {
+		return false, nil
+	}
+
 	err := s.services.Neo4jRepositories.CommonWriteRepository.UpdateStringProperty(ctx, tx, tenant, model.NodeLabelFlowParticipant, participant.Id, "status", string(status))
 	if err != nil {
-		return errors.Wrap(err, "failed to update string property")
+		return false, errors.Wrap(err, "failed to update string property")
 	}
 
 	participant.Status = status
 
-	return nil
+	return true, nil
 }
 
 func (s *flowExecutionService) ScheduleFlow(ctx context.Context, tx *neo4j.ManagedTransaction, flowId string, flowParticipant *entity.FlowParticipantEntity) error {
@@ -531,6 +535,7 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 	defer session.Close(ctx)
 
 	shouldInsertEmailMessage := false
+	participantUpdated := false
 	var emailMessage *postgresentity.EmailMessage
 	var currentAction *entity.FlowActionEntity
 
@@ -561,7 +566,7 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 			return nil, errors.New("participant not found")
 		}
 
-		err = s.UpdateParticipantFlowRequirements(ctx, &tx, participant, flowRequirements)
+		participantUpdated, err = s.UpdateParticipantFlowRequirements(ctx, &tx, participant, flowRequirements)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to update participant flow requirements")
 		}
@@ -750,6 +755,10 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 			tracing.TraceErr(span, err)
 			return errors.Wrap(err, "failed to store email message")
 		}
+	}
+
+	if participantUpdated {
+		s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, scheduledActionExecution.EntityId, scheduledActionExecution.EntityType, utils.NewEventCompletedDetails().WithUpdate())
 	}
 
 	// save billable event
