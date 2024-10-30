@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
@@ -36,25 +37,12 @@ type OrganizationService interface {
 	GetLatestOrganizationsWithJobRolesForContacts(ctx context.Context, contactIds []string) (*neo4jentity.OrganizationWithJobRoleEntities, error)
 
 	GetHiddenOrganizationIds(ctx context.Context, hiddenAfter time.Time) ([]string, error)
+	RequestLastTouchpointRefresh(ctx context.Context, organizationId string) error
+	RefreshLastTouchpoint(ctx context.Context, organizationId string) error
 }
 
 type organizationService struct {
 	services *Services
-}
-
-func (s *organizationService) GetHiddenOrganizationIds(ctx context.Context, hiddenAfter time.Time) ([]string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.GetHiddenOrganizationIds")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("hiddenAfter", hiddenAfter))
-
-	organizationIds, err := s.services.Neo4jRepositories.OrganizationReadRepository.GetHiddenOrganizationIds(ctx, common.GetTenantFromContext(ctx), hiddenAfter)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	return organizationIds, nil
 }
 
 func NewOrganizationService(services *Services) OrganizationService {
@@ -536,6 +524,185 @@ func (s *organizationService) LinkWithDomain(ctx context.Context, tx *neo4j.Mana
 			tracing.TraceErr(span, errors.Wrap(err, "failed to request enrich organization"))
 		}
 	}
+
+	return nil
+}
+
+func (s *organizationService) GetHiddenOrganizationIds(ctx context.Context, hiddenAfter time.Time) ([]string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.GetHiddenOrganizationIds")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("hiddenAfter", hiddenAfter))
+
+	organizationIds, err := s.services.Neo4jRepositories.OrganizationReadRepository.GetHiddenOrganizationIds(ctx, common.GetTenantFromContext(ctx), hiddenAfter)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return organizationIds, nil
+}
+
+func (s *organizationService) RequestLastTouchpointRefresh(ctx context.Context, organizationId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.RequestLastTouchpointRefresh")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.TagEntity(span, organizationId)
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	err = s.services.RabbitMQService.PublishEvent(ctx, organizationId, model.ORGANIZATION, dto.RequestLastTouchpointRefresh{})
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to publish event RequestLastTouchpointRefresh"))
+		return err
+	}
+
+	return nil
+}
+
+func (s *organizationService) RefreshLastTouchpoint(ctx context.Context, organizationId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.RefreshLastTouchpoint")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.TagEntity(span, organizationId)
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+
+	//fetch the real touchpoint
+	//if it doesn't exist, check for the Created Action
+	var lastTouchpointId string
+	var lastTouchpointAt *time.Time
+	var timelineEventNode *dbtype.Node
+
+	// get current last touchpoint
+	organizationEntity, err := s.GetById(ctx, tenant, organizationId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	currentLastTouchpointId := utils.IfNotNilString(organizationEntity.LastTouchpointId)
+	span.LogFields(log.String("currentLastTouchpointId", currentLastTouchpointId))
+
+	lastTouchpointAt, lastTouchpointId, err = s.services.Neo4jRepositories.TimelineEventReadRepository.CalculateAndGetLastTouchPoint(ctx, tenant, organizationId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.services.Logger.Errorf("Failed to calculate last touchpoint: %v", err.Error())
+		span.LogFields(log.Bool("last touchpoint failed", true))
+		return nil
+	}
+
+	if lastTouchpointAt == nil {
+		timelineEventNode, err = s.services.Neo4jRepositories.ActionReadRepository.GetLastAction(ctx, tenant, organizationId, model.ORGANIZATION, neo4jenum.ActionCreated)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.services.Logger.Errorf("Failed to get created action: %v", err.Error())
+			return nil
+		}
+		if timelineEventNode != nil {
+			propsFromNode := utils.GetPropsFromNode(*timelineEventNode)
+			lastTouchpointId = utils.GetStringPropOrEmpty(propsFromNode, "id")
+			lastTouchpointAt = utils.GetTimePropOrNil(propsFromNode, "createdAt")
+		}
+	} else {
+		timelineEventNode, err = s.services.Neo4jRepositories.TimelineEventReadRepository.GetTimelineEvent(ctx, tenant, lastTouchpointId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.services.Logger.Errorf("Failed to get last touchpoint: %v", err.Error())
+			return nil
+		}
+	}
+
+	if timelineEventNode == nil {
+		s.services.Logger.Infof("Last touchpoint not available for organization: %s", organizationId)
+		span.LogFields(log.Bool("last touchpoint not found", true))
+		return nil
+	}
+
+	span.LogFields(log.String("lastTouchpointId", lastTouchpointId))
+	// last touchpoint not changed, skip
+	if lastTouchpointId == currentLastTouchpointId {
+		span.LogFields(log.Bool("last touchpoint changed", false))
+		s.services.Logger.Infof("Last touchpoint not changed for organization: %s", organizationId)
+		return nil
+	} else {
+		span.LogFields(log.Bool("last touchpoint changed", true))
+	}
+
+	timelineEvent := neo4jmapper.MapDbNodeToTimelineEvent(timelineEventNode)
+	if timelineEvent == nil {
+		s.services.Logger.Infof("Last touchpoint not available for organization: %s", organizationId)
+		span.LogFields(log.Bool("last touchpoint not found", true))
+		return nil
+	}
+
+	var timelineEventType string
+	switch timelineEvent.TimelineEventLabel() {
+	case model.NodeLabelPageView:
+		timelineEventType = neo4jenum.TouchpointTypePageView.String()
+	case model.NodeLabelInteractionSession:
+		timelineEventType = neo4jenum.TouchpointTypeInteractionSession.String()
+	case model.NodeLabelNote:
+		timelineEventType = neo4jenum.TouchpointTypeNote.String()
+	case model.NodeLabelInteractionEvent:
+		timelineEventInteractionEvent := timelineEvent.(*neo4jentity.InteractionEventEntity)
+		if timelineEventInteractionEvent.Channel == "EMAIL" {
+			interactionEventSentByUser, err := s.services.Neo4jRepositories.InteractionEventReadRepository.InteractionEventSentByUser(ctx, tenant, timelineEventInteractionEvent.Id)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.services.Logger.Errorf("Failed to check if interaction event was sent by user: %v", err.Error())
+			}
+			if interactionEventSentByUser {
+				timelineEventType = neo4jenum.TouchpointTypeInteractionEventEmailSent.String()
+			} else {
+				timelineEventType = neo4jenum.TouchpointTypeInteractionEventEmailReceived.String()
+			}
+		} else if timelineEventInteractionEvent.Channel == "VOICE" {
+			timelineEventType = neo4jenum.TouchpointTypeInteractionEventPhoneCall.String()
+		} else if timelineEventInteractionEvent.Channel == "CHAT" {
+			timelineEventType = neo4jenum.TouchpointTypeInteractionEventChat.String()
+		} else if timelineEventInteractionEvent.EventType == "meeting" {
+			timelineEventType = neo4jenum.TouchpointTypeMeeting.String()
+		}
+	case model.NodeLabelMeeting:
+		timelineEventType = neo4jenum.TouchpointTypeMeeting.String()
+	case model.NodeLabelAction:
+		timelineEventAction := timelineEvent.(*neo4jentity.ActionEntity)
+		if timelineEventAction.Type == neo4jenum.ActionCreated {
+			timelineEventType = neo4jenum.TouchpointTypeActionCreated.String()
+		} else {
+			timelineEventType = neo4jenum.TouchpointTypeAction.String()
+		}
+	case model.NodeLabelLogEntry:
+		timelineEventType = neo4jenum.TouchpointTypeAction.String()
+	case model.NodeLabelIssue:
+		timelineEventIssue := timelineEvent.(*neo4jentity.IssueEntity)
+		if timelineEventIssue.CreatedAt.Equal(timelineEventIssue.UpdatedAt) {
+			timelineEventType = neo4jenum.TouchpointTypeIssueCreated.String()
+		} else {
+			timelineEventType = neo4jenum.TouchpointTypeIssueUpdated.String()
+		}
+	default:
+		s.services.Logger.Infof("Last touchpoint not available for organization: %s", organizationId)
+	}
+
+	if err = s.services.Neo4jRepositories.OrganizationWriteRepository.UpdateLastTouchpoint(ctx, tenant, organizationId, lastTouchpointAt, lastTouchpointId, timelineEventType); err != nil {
+		tracing.TraceErr(span, err)
+		s.services.Logger.Errorf("Failed to update last touchpoint for tenant %s, organization %s: %s", tenant, organizationId, err.Error())
+		return err
+	}
+
+	utils.EventCompleted(ctx, tenant, model.ORGANIZATION.String(), organizationId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
 
 	return nil
 }
