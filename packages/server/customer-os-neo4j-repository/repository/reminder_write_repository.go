@@ -65,7 +65,7 @@ func (r *reminderWriteRepository) CreateReminder(ctx context.Context, tenant, id
 
 				WITH t, r
 				MATCH (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization {id:$organizationId})
-				MERGE (o)<-[:REMINDER_BELONGS_TO_ORGANIZATION]-(r),
+				MERGE (o)<-[:REMINDER_BELONGS_TO_ORGANIZATION]-(r)
 				SET o.updatedAt=datetime()`, tenant)
 	params := map[string]interface{}{
 		"tenant":         tenant,
