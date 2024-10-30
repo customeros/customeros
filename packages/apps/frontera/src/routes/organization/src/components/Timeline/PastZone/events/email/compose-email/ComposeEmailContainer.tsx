@@ -1,5 +1,6 @@
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
+import { observer } from 'mobx-react-lite';
+
+import { useStore } from '@shared/hooks/useStore';
 import { KeymapperClose } from '@ui/form/RichTextEditor/components/keyboardShortcuts/KeymapperClose';
 import { MissingPermissionsPrompt } from '@organization/components/Timeline/shared/EmailPermissionsPrompt/EmailPermissionsPrompt';
 import {
@@ -11,30 +12,27 @@ interface ComposeEmailContainerProps extends ComposeEmailProps {
   onClose: () => void;
 }
 
-export const ComposeEmailContainer = ({
-  onClose,
-  ...composeEmailProps
-}: ComposeEmailContainerProps) => {
-  const client = getGraphQLClient();
-  const { data: globalCache } = useGlobalCacheQuery(client);
+export const ComposeEmailContainer = observer(
+  ({ onClose, ...composeEmailProps }: ComposeEmailContainerProps) => {
+    const store = useStore();
+    const allowSendingEmail =
+      (store.globalCache?.value?.activeEmailTokens &&
+        store.globalCache?.value?.activeEmailTokens?.length > 0) ||
+      (store.globalCache?.value?.mailboxes &&
+        store.globalCache?.value?.mailboxes?.length > 0);
 
-  const allowSendingEmail =
-    (globalCache?.global_Cache?.activeEmailTokens &&
-      globalCache?.global_Cache?.activeEmailTokens?.length > 0) ||
-    (globalCache?.global_Cache?.mailboxes &&
-      globalCache?.global_Cache?.mailboxes?.length > 0);
+    if (allowSendingEmail) {
+      return (
+        <ComposeEmail {...composeEmailProps}>
+          <KeymapperClose onClose={onClose} />
+        </ComposeEmail>
+      );
+    }
 
-  if (allowSendingEmail) {
-    return (
-      <ComposeEmail {...composeEmailProps}>
-        <KeymapperClose onClose={onClose} />
-      </ComposeEmail>
-    );
-  }
+    if (!allowSendingEmail) {
+      return <MissingPermissionsPrompt modal={composeEmailProps.modal} />;
+    }
 
-  if (!allowSendingEmail) {
-    return <MissingPermissionsPrompt modal={composeEmailProps.modal} />;
-  }
-
-  return null;
-};
+    return null;
+  },
+);
