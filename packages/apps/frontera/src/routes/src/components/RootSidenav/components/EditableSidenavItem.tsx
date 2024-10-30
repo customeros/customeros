@@ -65,7 +65,7 @@ export const EditableSideNavItem = observer(
         </div>
         <div
           className={cn(
-            'w-full text-justify overflow-hidden overflow-ellipsis',
+            'w-full text-justify whitespace-nowrap overflow-hidden overflow-ellipsis',
           )}
         >
           {label}
