@@ -5,6 +5,8 @@ defmodule Realtime.RabbitMQConsumer do
   alias AMQP.{Connection, Channel, Queue}
   alias RealtimeWeb.Endpoint
 
+  @moduledoc false
+
   @queue_name "notifications"
 
   def start_link(_) do
