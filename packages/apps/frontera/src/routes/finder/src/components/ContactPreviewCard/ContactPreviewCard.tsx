@@ -186,44 +186,42 @@ export const ContactPreviewCard = observer(() => {
               />
             </div>
           </div>
-          <div className='flex items-center gap-1 w-full'>
-            {isEditName ? (
-              <Input
-                value={fullName}
-                variant='unstyled'
-                placeholder='Unknown'
-                className='mb-[-8px]'
-                onFocus={(e) => e.target.select()}
-                onBlur={() => setIsEditName(false)}
-                onChange={(e) => {
-                  contact?.update((value) => {
-                    set(value, 'name', e.target.value);
+          {isEditName ? (
+            <Input
+              value={fullName}
+              variant='unstyled'
+              placeholder='Unknown'
+              className='mb-[-8px]'
+              onFocus={(e) => e.target.select()}
+              onBlur={() => setIsEditName(false)}
+              onChange={(e) => {
+                contact?.update((value) => {
+                  set(value, 'name', e.target.value);
 
-                    return value;
-                  });
-                }}
-              />
-            ) : (
-              <div className='flex items-center h-fit w-full'>
-                <span
-                  onClick={() => setIsEditName(true)}
-                  className='font-medium mt-2 w-full overflow-hidden'
-                >
-                  {fullName}
-                </span>
-                {company ? (
-                  <div className='flex items-center gap-1 w-full ml-[-40px]'>
-                    <span className='mt-2 text-gray-500 '>at</span>
-                    <span className='font-medium mt-2 line-clamp-1'>
-                      {company || 'No org yet'}
-                    </span>
-                  </div>
-                ) : (
-                  <span className='mt-2'>(No org yet)</span>
-                )}
-              </div>
-            )}
-          </div>
+                  return value;
+                });
+              }}
+            />
+          ) : (
+            <div className='flex h-fit w-full'>
+              <p
+                onClick={() => setIsEditName(true)}
+                className='font-medium mt-2 w-fit  '
+              >
+                {fullName}
+              </p>
+              {company ? (
+                <div className='flex flex-2 items-center gap-1 w-full'>
+                  <p className='mt-2 text-gray-500 ml-1'>at</p>
+                  <p className='font-medium mt-2 line-clamp-1'>
+                    {company || 'No org yet'}
+                  </p>
+                </div>
+              ) : (
+                <span className='mt-2'>(No org yet)</span>
+              )}
+            </div>
+          )}
           <Input
             size='xs'
             variant='unstyled'

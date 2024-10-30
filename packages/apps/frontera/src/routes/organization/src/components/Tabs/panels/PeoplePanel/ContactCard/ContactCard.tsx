@@ -230,6 +230,11 @@ export const ContactCard = observer(
       enrichedContact?.requestedAt &&
       !enrichedContact?.failedAt;
 
+    const enrichedEmailStatus =
+      !enrichedContact?.emailEnrichedAt &&
+      enrichedContact?.emailRequestedAt &&
+      !enrichedContact?.emailFound;
+
     return (
       <>
         <Card
@@ -358,7 +363,7 @@ export const ContactCard = observer(
                 <LeftElement>
                   <Tooltip hasArrow label='Click to autopopulate'>
                     <span>
-                      {contactStore?.isLoading ? (
+                      {enrichedEmailStatus ? (
                         <Spinner
                           size='sm'
                           label='Finding email'

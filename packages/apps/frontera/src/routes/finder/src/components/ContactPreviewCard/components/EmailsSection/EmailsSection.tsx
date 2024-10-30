@@ -1,4 +1,4 @@
-import { Fragment, useState } from 'react';
+import { Fragment } from 'react';
 
 import { uniqBy } from 'lodash';
 import { observer } from 'mobx-react-lite';
@@ -26,7 +26,6 @@ interface EmailsSectionProps {
 
 export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
   const store = useStore();
-  const [isLoading, setIsLoading] = useState(false);
   const [_, copyToClipboard] = useCopyToClipboard();
 
   const contactStore = store.contacts.value.get(String(contactId));
@@ -49,6 +48,11 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
       : [],
     'id',
   );
+  const enrichedContact = contactStore?.value.enrichDetails;
+  const enrichedEmailStatus =
+    !enrichedContact?.emailEnrichedAt &&
+    enrichedContact?.emailRequestedAt &&
+    !isPrimaryEmail;
 
   return (
     <>
@@ -82,10 +86,7 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
                 <MenuItem
                   className='group/find-email '
                   onClick={() => {
-                    setIsLoading(true);
-                    contactStore
-                      ?.findEmail()
-                      .finally(() => setIsLoading(false));
+                    contactStore?.findEmail();
                   }}
                 >
                   <div className='flex items-center gap-1'>
@@ -130,13 +131,15 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
               </MenuItem>
             </MenuList>
           </Menu>
-          {isLoading && (
+          {enrichedEmailStatus && (
             <Tooltip label={`Finding email at ${company} `}>
-              <Spinner
-                size='sm'
-                label='finding email'
-                className='text-gray-400 fill-gray-700'
-              />
+              <div>
+                <Spinner
+                  size='sm'
+                  label='finding email'
+                  className='text-gray-400 fill-gray-700'
+                />
+              </div>
             </Tooltip>
           )}
         </div>

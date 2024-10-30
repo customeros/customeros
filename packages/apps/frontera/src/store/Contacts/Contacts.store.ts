@@ -652,6 +652,9 @@ const CONTACTS_QUERY = gql`
           enrichedAt
           failedAt
           requestedAt
+          emailEnrichedAt
+          emailFound
+          emailRequestedAt
         }
         connectedUsers {
           id

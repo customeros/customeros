@@ -455,10 +455,6 @@ export class ContactStore implements Store<Contact> {
       });
     } finally {
       this.isLoading = false;
-      setTimeout(() => {
-        this.root.contacts.value.get(this.getId())?.invalidate();
-        isLoading?.(this.isLoading);
-      }, 60000);
     }
   }
 
@@ -697,6 +693,9 @@ const CONTACT_QUERY = gql`
         enrichedAt
         failedAt
         requestedAt
+        emailEnrichedAt
+        emailFound
+        emailRequestedAt
       }
       profilePhotoUrl
     }

@@ -24,7 +24,7 @@ interface EmailCellProps {
 export const EmailCell = observer(
   ({ validationDetails, contactId }: EmailCellProps) => {
     const store = useStore();
-    const [isLoading, setIsLoading] = useState(false);
+
     const [isHovered, setIsHovered] = useState(false);
 
     const contactStore = store.contacts.value.get(contactId);
@@ -47,6 +47,11 @@ export const EmailCell = observer(
 
     const email = contactStore?.value?.primaryEmail?.email;
 
+    const enrichedEmailStatus =
+      !enrichedContact?.emailEnrichedAt &&
+      enrichedContact?.emailRequestedAt &&
+      !email;
+
     return (
       <div
         ref={ref}
@@ -61,7 +66,7 @@ export const EmailCell = observer(
                 <p className='text-gray-400 '>
                   {enrichingStatus
                     ? 'Enriching...'
-                    : isLoading
+                    : enrichedEmailStatus
                     ? 'Finding email...'
                     : 'Not set'}
                 </p>
@@ -79,8 +84,7 @@ export const EmailCell = observer(
             {orgActive && (
               <MenuItem
                 onClick={() => {
-                  setIsLoading(true);
-                  contactStore?.findEmail().finally(() => setIsLoading(false));
+                  contactStore?.findEmail();
                 }}
               >
                 <div className='overflow-hidden text-ellipsis w-[200px]'>
@@ -153,7 +157,7 @@ export const EmailCell = observer(
         </Menu>
         {isHovered &&
           orgActive &&
-          (isLoading ? (
+          (enrichedEmailStatus ? (
             <Tooltip label={`Finding email at ${orgActive} `}>
               <Spinner
                 size='sm'
@@ -170,12 +174,7 @@ export const EmailCell = observer(
                 className={'ml-2'}
                 aria-label='Find work email'
                 onClick={() => {
-                  setIsLoading(true);
-                  contactStore
-                    ?.findEmail()
-                    .finally(() =>
-                      setTimeout(() => setIsLoading(false), 60000),
-                    );
+                  contactStore?.findEmail();
                 }}
               />
             </Tooltip>
