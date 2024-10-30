@@ -49,11 +49,7 @@ func SetupTestDatabase() (TestDatabase, func()) {
 	grpcConn, _ := testDialFactory.GetEventsProcessingPlatformConn()
 	testDBs.GrpcClients = grpc_client.InitClients(grpcConn)
 
-	testDBs.CommonServices = commonService.InitServices(&commonConfig.GlobalConfig{
-		RabbitMQConfig: &commonConfig.RabbitMQConfig{
-			Url: "amqp://guest:guest@localhost:5672/",
-		},
-	}, postgresGormDB, testDBs.Driver, "neo4j", testDBs.GrpcClients, SetupTestLogger())
+	testDBs.CommonServices = commonService.InitServices(&commonConfig.GlobalConfig{}, postgresGormDB, testDBs.Driver, "neo4j", testDBs.GrpcClients, SetupTestLogger())
 	testDBs.Services = &service.Services{
 		CommonServices: testDBs.CommonServices,
 	}
