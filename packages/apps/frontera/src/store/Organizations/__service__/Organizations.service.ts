@@ -30,6 +30,7 @@ import HideOrganizationsDocument from './hideOrganizations.graphql';
 import MergeOrganizationsDocument from './mergeOrganizations.graphql';
 import UpdateOrganizationDocument from './updateOrganization.graphql';
 import UpdateOnboardingStatusDocument from './updateOnboardingStatus.graphql';
+import GetArchivedOrganizationsAfterDocument from './getArchivedOrganizations.graphql';
 import UpdateAllOpportunityRenewalsDocument from './updateAllOpportunityRenewals.graphql';
 import {
   AddSocialMutation,
@@ -92,6 +93,10 @@ import {
   AddSubsidiaryToOrganizationMutationVariables,
 } from './addSubsidiary.generated';
 import {
+  GetArchivedOrganizationsAfterQuery,
+  GetArchivedOrganizationsAfterQueryVariables,
+} from './getArchivedOrganizations.generated';
+import {
   RemoveSubsidiaryToOrganizationMutation,
   RemoveSubsidiaryToOrganizationMutationVariables,
 } from './removeSubsidiary.generated';
@@ -128,6 +133,15 @@ export class OrganizationsService {
       GetOrganizationsQuery,
       GetOrganizationsQueryVariables
     >(GetOrganizationsDocument, payload);
+  }
+
+  async getArchivedOrganizationsAfter(
+    payload: GetArchivedOrganizationsAfterQueryVariables,
+  ) {
+    return this.transport.graphql.request<
+      GetArchivedOrganizationsAfterQuery,
+      GetArchivedOrganizationsAfterQueryVariables
+    >(GetArchivedOrganizationsAfterDocument, payload);
   }
 
   async saveOrganization(payload: SaveOrganizationMutationVariables) {

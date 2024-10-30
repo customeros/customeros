@@ -1,5 +1,6 @@
 import set from 'lodash/set';
 import merge from 'lodash/merge';
+import { match } from 'ts-pattern';
 import { RootStore } from '@store/root';
 import { Transport } from '@store/transport';
 import { SyncableGroup } from '@store/syncable-group';
@@ -126,17 +127,34 @@ export class OrganizationsStore extends SyncableGroup<
     try {
       const canHydrate = await this.checkIfCanHydrate();
 
-      if (canHydrate) {
-        await this.hydrate();
-
-        return;
-      }
-
       const lastActiveAtUTC = this.root.windowManager
         .getLastActiveAtUTC()
         .toISOString();
 
+      if (canHydrate) {
+        const { organizations_HiddenAfter: archivedIds } =
+          await this.service.getArchivedOrganizationsAfter({
+            date: lastActiveAtUTC,
+          });
+
+        await this.hydrate(archivedIds);
+      }
+
       this.isLoading = true;
+
+      const where = match(canHydrate)
+        .with(true, () => ({
+          AND: [
+            {
+              filter: {
+                property: 'UPDATED_AT',
+                value: lastActiveAtUTC,
+                operation: ComparisonOperator.Gte,
+              },
+            },
+          ],
+        }))
+        .otherwise(() => undefined);
 
       const { dashboardView_Organizations } =
         await this.service.getOrganizations({
@@ -146,17 +164,7 @@ export class OrganizationsStore extends SyncableGroup<
             caseSensitive: false,
             direction: SortingDirection.Desc,
           },
-          where: {
-            AND: [
-              {
-                filter: {
-                  property: 'UPDATED_AT',
-                  value: lastActiveAtUTC,
-                  operation: ComparisonOperator.Gte,
-                },
-              },
-            ],
-          },
+          where,
         });
 
       this.load(dashboardView_Organizations?.content as Organization[], {

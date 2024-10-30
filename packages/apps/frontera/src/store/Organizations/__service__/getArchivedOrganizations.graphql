@@ -1,0 +1,3 @@
+query getArchivedOrganizationsAfter($date: Time!) {
+  organizations_HiddenAfter(date: $date)
+}

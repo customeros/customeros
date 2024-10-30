@@ -119,7 +119,17 @@ export class SyncableGroup<T extends object, TSyncable extends Syncable<T>> {
     this.isBootstrapped = true;
   }
 
-  public async hydrate() {
+  public async hydrate(removedIds: string[] = []) {
+    const removedIdsMap = new Map();
+    const toBeRemoved: Promise<void>[] = [];
+
+    removedIds.forEach((id) => {
+      removedIdsMap.set(id, true);
+
+      if (!this.persister) return;
+      toBeRemoved.push(this.persister.removeItem(id));
+    });
+
     try {
       const stores: [string, TSyncable][] = [];
 
@@ -131,12 +141,16 @@ export class SyncableGroup<T extends object, TSyncable extends Syncable<T>> {
           this.channel,
         );
 
-        stores.push([id, syncableItem as TSyncable]);
+        if (!removedIdsMap.has(id)) {
+          stores.push([id, syncableItem as TSyncable]);
+        }
       });
 
       runInAction(() => {
         this.value = new Map<string, TSyncable>(stores);
       });
+
+      await Promise.all(toBeRemoved);
     } catch (e) {
       console.error('Failed to hydrate group', e);
     }
