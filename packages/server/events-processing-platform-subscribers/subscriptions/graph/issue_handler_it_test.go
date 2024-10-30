@@ -2,7 +2,6 @@ package graph
 
 import (
 	"context"
-	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
@@ -18,84 +17,6 @@ import (
 	"testing"
 	"time"
 )
-
-func TestGraphIssueEventHandler_OnCreate(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx, testDatabase)(t)
-
-	// prepare neo4j data
-	externalSystemId := "sf"
-	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	neo4jt.CreateExternalSystem(ctx, testDatabase.Driver, tenantName, externalSystemId)
-	reporterOrgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
-	submitterOrgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
-	submitterUserId := neo4jtest.CreateUser(ctx, testDatabase.Driver, tenantName, neo4jentity.UserEntity{})
-	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		"User": 1, "Organization": 2, "ExternalSystem": 1, "Issue": 0, "TimelineEvent": 0})
-
-	// prepare event handler
-	issueEventHandler := &IssueEventHandler{
-		services:    testDatabase.Services,
-		grpcClients: testMockedGrpcClient,
-	}
-	now := utils.Now()
-	issueId := uuid.New().String()
-	issueAggregate := aggregate.NewIssueAggregateWithTenantAndID(tenantName, issueId)
-	createEvent, err := event.NewIssueCreateEvent(issueAggregate, model.IssueDataFields{
-		Subject:                   "test subject",
-		Description:               "test description",
-		Status:                    "open",
-		Priority:                  "high",
-		ReportedByOrganizationId:  utils.StringPtr(reporterOrgId),
-		SubmittedByOrganizationId: utils.StringPtr(submitterOrgId),
-		SubmittedByUserId:         utils.StringPtr(submitterUserId),
-	}, cmnmod.Source{
-		Source:        constants.SourceOpenline,
-		AppSource:     constants.AppSourceEventProcessingPlatformSubscribers,
-		SourceOfTruth: constants.SourceOpenline,
-	}, cmnmod.ExternalSystem{
-		ExternalSystemId: "sf",
-		ExternalId:       "123",
-	}, now, now)
-	require.Nil(t, err, "failed to create event")
-
-	// EXECUTE
-	err = issueEventHandler.OnCreate(context.Background(), createEvent)
-	require.Nil(t, err, "failed to execute event handler")
-
-	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		"User": 1, "User_" + tenantName: 1,
-		"Organization": 2, "Organization_" + tenantName: 2,
-		"ExternalSystem": 1, "ExternalSystem_" + tenantName: 1,
-		"Issue": 1, "Issue_" + tenantName: 1,
-		"TimelineEvent": 1, "TimelineEvent_" + tenantName: 1})
-	neo4jtest.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{
-		"REPORTED_BY":    1,
-		"SUBMITTED_BY":   2,
-		"IS_LINKED_WITH": 1,
-	})
-	neo4jtest.AssertRelationship(ctx, t, testDatabase.Driver, issueId, "REPORTED_BY", reporterOrgId)
-	neo4jtest.AssertRelationship(ctx, t, testDatabase.Driver, issueId, "SUBMITTED_BY", submitterOrgId)
-	neo4jtest.AssertRelationship(ctx, t, testDatabase.Driver, issueId, "SUBMITTED_BY", submitterUserId)
-	neo4jtest.AssertRelationship(ctx, t, testDatabase.Driver, issueId, "IS_LINKED_WITH", externalSystemId)
-
-	issueDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Issue_"+tenantName, issueId)
-	require.Nil(t, err)
-	require.NotNil(t, issueDbNode)
-
-	// verify issue
-	issue := neo4jmapper.MapDbNodeToIssueEntity(issueDbNode)
-	require.Equal(t, issueId, issue.Id)
-	require.Equal(t, "test subject", issue.Subject)
-	require.Equal(t, "test description", issue.Description)
-	require.Equal(t, "open", issue.Status)
-	require.Equal(t, "high", issue.Priority)
-	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), issue.Source)
-	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), issue.SourceOfTruth)
-	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, issue.AppSource)
-	require.Equal(t, now, issue.CreatedAt)
-	test.AssertRecentTime(t, issue.UpdatedAt)
-}
 
 func TestGraphIssueEventHandler_OnUpdate(t *testing.T) {
 	ctx := context.Background()

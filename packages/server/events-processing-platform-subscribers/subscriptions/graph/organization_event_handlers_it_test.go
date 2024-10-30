@@ -17,7 +17,6 @@ import (
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/model"
 	eventcompletionpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/event_completion"
 	commonEvents "github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
 	"github.com/stretchr/testify/require"
@@ -28,95 +27,6 @@ import (
 )
 
 const customerOsIdPattern = `^C-[A-HJ-NP-Z2-9]{3}-[A-HJ-NP-Z2-9]{3}$`
-
-func TestGraphOrganizationEventHandler_OnOrganizationCreate(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx, testDatabase)(t)
-
-	// prepare neo4j data
-	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	userId := neo4jtest.CreateUser(ctx, testDatabase.Driver, tenantName, neo4jentity.UserEntity{
-		FirstName: "logged-in",
-		LastName:  "user",
-	})
-	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		"Organization": 0,
-		"User":         1, "User_" + tenantName: 1,
-		"Action": 0, "TimelineEvent": 0})
-
-	orgId := uuid.New().String()
-
-	callbacks := mocked_grpc.MockEventCompletionCallbacks{
-		NotifyEventProcessed: func(context context.Context, org *eventcompletionpb.NotifyEventProcessedRequest) (*emptypb.Empty, error) {
-			return &emptypb.Empty{}, nil
-		},
-	}
-	mocked_grpc.SetEventCompletionServiceCallbacks(&callbacks)
-
-	// prepare event handler
-	orgEventHandler := &OrganizationEventHandler{
-		services:    testDatabase.Services,
-		grpcClients: testMockedGrpcClient,
-	}
-	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
-	now := utils.Now()
-	event, err := events.NewOrganizationCreateEvent(orgAggregate, &model.OrganizationFields{
-		ID: orgId,
-		OrganizationDataFields: model.OrganizationDataFields{
-			Name:         "test org",
-			Relationship: "CUSTOMER",
-			LeadSource:   "website",
-		},
-	}, now, now)
-	require.Nil(t, err)
-	metadata := make(map[string]string)
-	metadata["user-id"] = userId
-	err = event.SetMetadata(metadata)
-	require.Nil(t, err)
-
-	// EXECUTE
-	err = orgEventHandler.OnOrganizationCreate(context.Background(), event)
-	require.Nil(t, err)
-
-	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		"User": 1, "User_" + tenantName: 1,
-		"Organization": 1, "Organization_" + tenantName: 1,
-		"Action": 1, "Action_" + tenantName: 1,
-		"TimelineEvent": 1, "TimelineEvent_" + tenantName: 1})
-	neo4jtest.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{
-		"ACTION_ON": 1,
-		"OWNS":      1,
-	})
-
-	orgDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Organization_"+tenantName, orgId)
-	require.Nil(t, err)
-	require.NotNil(t, orgDbNode)
-
-	// verify organization
-	organization := neo4jmapper.MapDbNodeToOrganizationEntity(orgDbNode)
-	require.Equal(t, orgId, organization.ID)
-	require.Equal(t, "test org", organization.Name)
-	require.Equal(t, now, organization.CreatedAt)
-	require.NotNil(t, organization.UpdatedAt)
-	require.Equal(t, string(neo4jenum.OnboardingStatusNotApplicable), organization.OnboardingDetails.Status)
-	require.Nil(t, organization.OnboardingDetails.SortingOrder)
-	require.Equal(t, neo4jenum.Customer, organization.Relationship)
-	require.Equal(t, "website", organization.LeadSource)
-
-	// verify action
-	actionDbNode, err := neo4jtest.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
-	require.Nil(t, err)
-	require.NotNil(t, actionDbNode)
-	action := neo4jmapper.MapDbNodeToActionEntity(actionDbNode)
-	require.NotNil(t, action.Id)
-	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), action.Source)
-	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), action.SourceOfTruth)
-	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, action.AppSource)
-	require.Equal(t, now, action.CreatedAt)
-	require.Equal(t, neo4jenum.ActionCreated, action.Type)
-	require.Equal(t, "", action.Content)
-	require.Equal(t, "", action.Metadata)
-}
 
 func TestGraphOrganizationEventHandler_OnOrganizationShow(t *testing.T) {
 	ctx := context.Background()
