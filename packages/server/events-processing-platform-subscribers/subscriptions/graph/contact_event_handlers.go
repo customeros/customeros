@@ -2,6 +2,7 @@ package graph
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -98,7 +99,11 @@ func (h *ContactEventHandler) OnContactLinkToOrganization(ctx context.Context, e
 	err := h.services.CommonServices.Neo4jRepositories.JobRoleWriteRepository.LinkContactWithOrganization(ctx, eventData.Tenant, contactId, eventData.OrganizationId, data)
 
 	// Request last touch point update
-	err = h.services.CommonServices.OrganizationService.RequestRefreshLastTouchpoint(ctx, eventData.OrganizationId)
+	innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+		Tenant:    eventData.Tenant,
+		AppSource: helper.GetAppSource(eventData.SourceFields.AppSource),
+	})
+	err = h.services.CommonServices.OrganizationService.RequestRefreshLastTouchpoint(innerCtx, eventData.OrganizationId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while refreshing last touchpoint for organization %s: %s", eventData.OrganizationId, err.Error())

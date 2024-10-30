@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -175,7 +176,11 @@ func (h *OrganizationEventHandler) OnOrganizationCreate(ctx context.Context, evt
 	}
 
 	// Request last touch point update
-	err = h.services.CommonServices.OrganizationService.RequestRefreshLastTouchpoint(ctx, organizationId)
+	innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+		Tenant:    eventData.Tenant,
+		AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
+	})
+	err = h.services.CommonServices.OrganizationService.RequestRefreshLastTouchpoint(innerCtx, organizationId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while refreshing last touchpoint for organization %s: %s", organizationId, err.Error())
