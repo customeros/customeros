@@ -161,6 +161,7 @@ export class OpportunitiesKanbanPage {
     await responseMutationPromise;
     await queryResponsePromise1;
     await queryResponsePromise2;
+    await this.page.waitForTimeout(1500);
   }
 
   async moveOpportunityCard(

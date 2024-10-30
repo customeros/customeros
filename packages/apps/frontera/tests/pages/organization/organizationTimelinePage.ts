@@ -3,6 +3,7 @@ import { Page, expect, Locator } from '@playwright/test';
 import { SettingsAccountsPage } from '../settings/settingsAccounts';
 import {
   createRequestPromise,
+  createResponsePromise,
   ensureLocatorIsVisible,
   clickLocatorThatIsVisible,
   clickLocatorsThatAreVisible,
@@ -68,30 +69,18 @@ export class OrganizationTimelinePage {
       delay: 500,
     });
 
+    const responsePromise = createResponsePromise(
+      this.page,
+      'organization?.timelineEventsTotalCount',
+      undefined,
+    );
+
     await clickLocatorsThatAreVisible(
       this.page,
       this.timelineLogConfirmationButton,
     );
 
-    await this.page.waitForResponse(async (response) => {
-      if (response.url().includes('customer-os-api')) {
-        try {
-          const body = await response.json();
-
-          return (
-            body.data &&
-            body.data.organization &&
-            body.data.organization.timelineEventsTotalCount !== 0
-          );
-        } catch (e) {
-          console.error('Error parsing JSON response:', e);
-
-          return false;
-        }
-      }
-
-      return false;
-    });
+    await Promise.all([responsePromise]);
   }
 
   async ensureLogEntryCanBeAdded() {

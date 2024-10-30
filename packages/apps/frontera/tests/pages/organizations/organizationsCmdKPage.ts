@@ -165,6 +165,10 @@ export class OrganizationsCmdKPage {
     const organizationHubGsText = await organizationHubGs.textContent();
     const navigationItemTextNine = await navigationItems[8].textContent();
 
+    const organizationHubGd = this.page.locator(this.organizationHubGd);
+    const organizationHubGdText = await organizationHubGd.textContent();
+    const navigationItemTextTen = await navigationItems[9].textContent();
+
     await Promise.all([
       expect.soft(organizationsHubText.trim()).toBe('Organizations'),
       expect
@@ -173,7 +177,7 @@ export class OrganizationsCmdKPage {
       expect
         .soft(organizationHubAddNewOrgsText.trim())
         .toBe('Add new organizations...'),
-      expect.soft(navigationItems).toHaveLength(9),
+      expect.soft(navigationItems).toHaveLength(10),
       expect
         .soft(organizationHubGtText.trim())
         .toBe(navigationItemTextOne.trim()),
@@ -201,6 +205,9 @@ export class OrganizationsCmdKPage {
       expect
         .soft(organizationHubGsText.trim())
         .toBe(navigationItemTextNine.trim()),
+      expect
+        .soft(organizationHubGdText.trim())
+        .toBe(navigationItemTextTen.trim()),
     ]);
 
     await this.page.keyboard.press('Escape');
@@ -233,7 +240,7 @@ export class OrganizationsCmdKPage {
     const navigationItemTextOne = await navigationItems[0].textContent();
 
     await Promise.all([
-      expect.soft(navigationItems).toHaveLength(1),
+      expect.soft(navigationItems).toHaveLength(2),
       expect
         .soft(organizationHubGcText.trim())
         .toBe(navigationItemTextOne.trim()),

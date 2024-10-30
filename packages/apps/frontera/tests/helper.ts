@@ -277,7 +277,7 @@ export function createResponsePromise(
           const actualValue = getNestedProperty(responseBody.data, expectedKey);
 
           if (actualValue !== expectedValue) {
-            resolve(response); // Now using Playwright's Response type
+            resolve(response);
 
             return true;
           }
