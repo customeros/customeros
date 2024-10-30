@@ -11,7 +11,6 @@ type MockOrganizationServiceCallbacks struct {
 	AddParent                        func(context.Context, *organizationpb.AddParentOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
 	RemoveParent                     func(context.Context, *organizationpb.RemoveParentOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
 	LinkPhoneNumberToOrganization    func(context context.Context, proto *organizationpb.LinkPhoneNumberToOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
-	RefreshLastTouchpoint            func(ctx context.Context, proto *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
 	RefreshArr                       func(ctx context.Context, proto *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
 	RefreshRenewalSummary            func(ctx context.Context, proto *organizationpb.RefreshRenewalSummaryGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
 	UpdateOnboardingStatus           func(ctx context.Context, proto *organizationpb.UpdateOnboardingStatusGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
@@ -46,13 +45,6 @@ func (MockOrganizationService) LinkPhoneNumberToOrganization(context context.Con
 		panic("organizationCallbacks.LinkPhoneNumberToOrganization is not set")
 	}
 	return organizationCallbacks.LinkPhoneNumberToOrganization(context, proto)
-}
-
-func (MockOrganizationService) RefreshLastTouchpoint(context context.Context, proto *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
-	if organizationCallbacks.RefreshLastTouchpoint == nil {
-		panic("organizationCallbacks.RefreshLastTouchpoint is not set")
-	}
-	return organizationCallbacks.RefreshLastTouchpoint(context, proto)
 }
 
 func (MockOrganizationService) AddParentOrganization(context context.Context, proto *organizationpb.AddParentOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {

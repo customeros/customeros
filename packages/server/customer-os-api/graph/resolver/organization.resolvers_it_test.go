@@ -1265,11 +1265,6 @@ func TestMutationResolver_OrganizationMerge_Properties(t *testing.T) {
 	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
 
 	organizationServiceCallbacks := events_platform.MockOrganizationServiceCallbacks{
-		RefreshLastTouchpoint: func(context context.Context, org *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
-			return &organizationpb.OrganizationIdGrpcResponse{
-				Id: parentOrgId,
-			}, nil
-		},
 		RefreshArr: func(ctx context.Context, proto *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 			return &organizationpb.OrganizationIdGrpcResponse{
 				Id: parentOrgId,
@@ -1408,22 +1403,10 @@ func TestMutationResolver_OrganizationMerge_CheckLastTouchpointUpdated(t *testin
 
 	neo4jt.IssueReportedBy(ctx, driver, issueId1, mergedOrgId1)
 
-	calledRefreshLastTouchpoint := false
 	calledRefreshArr := false
 	calledRefreshRenewalSummary := false
 
 	organizationServiceCallbacks := events_platform.MockOrganizationServiceCallbacks{
-		RefreshLastTouchpoint: func(context context.Context, org *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
-			require.Equal(t, parentOrgId, org.OrganizationId)
-			require.Equal(t, tenantName, org.Tenant)
-			require.Equal(t, constants.AppSourceCustomerOsApi, org.AppSource)
-			require.Equal(t, testUserId, org.LoggedInUserId)
-			calledRefreshLastTouchpoint = true
-			neo4jt.RefreshLastTouchpoint(ctx, driver, parentOrgId, issueId1, secAgo60, model.LastTouchpointTypeIssueCreated)
-			return &organizationpb.OrganizationIdGrpcResponse{
-				Id: parentOrgId,
-			}, nil
-		},
 		RefreshArr: func(ctx context.Context, proto *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 			calledRefreshArr = true
 			return &organizationpb.OrganizationIdGrpcResponse{
@@ -1454,7 +1437,6 @@ func TestMutationResolver_OrganizationMerge_CheckLastTouchpointUpdated(t *testin
 	}
 	err := decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
 	require.Nil(t, err)
-	require.True(t, calledRefreshLastTouchpoint)
 	require.True(t, calledRefreshArr)
 	require.True(t, calledRefreshRenewalSummary)
 
