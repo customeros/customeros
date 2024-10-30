@@ -26,6 +26,7 @@ import {
   $isLineBreakNode,
   $isRangeSelection,
   COMMAND_PRIORITY_LOW,
+  COMMAND_PRIORITY_HIGH,
   SELECTION_CHANGE_COMMAND,
 } from 'lexical';
 
@@ -335,7 +336,7 @@ export function FloatingLinkEditorPlugin({
           });
 
         if (!badNode) {
-          setIsLink(true);
+          $handleSelectionChange();
         } else {
           setIsLink(false);
         }
@@ -363,11 +364,25 @@ export function FloatingLinkEditorPlugin({
 
               return true;
             }
+
+            if ($isLinkNode(linkNode) && !menuPosition) {
+              const element = editor.getElementByKey(
+                linkNode.getKey(),
+              ) as HTMLElement;
+
+              if (element) {
+                anchorRef.current = element;
+                requestAnimationFrame(updateMenuPosition);
+              }
+              setIsLink(true);
+
+              return true;
+            }
           }
 
-          return false;
+          return true;
         },
-        COMMAND_PRIORITY_LOW,
+        COMMAND_PRIORITY_HIGH,
       ),
     );
   }, [editor]);
@@ -385,7 +400,7 @@ export function FloatingLinkEditorPlugin({
         pointerEvents: 'all',
       }}
     >
-      {isLink && menuPosition && (
+      {isLink && (
         <FloatingLinkEditor
           isLink={isLink}
           editor={editor}
