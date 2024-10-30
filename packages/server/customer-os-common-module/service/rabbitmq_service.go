@@ -108,22 +108,30 @@ func (r *RabbitMQService) connect() {
 		err := <-notifyClose                                         // Wait for the error
 		if err != nil {
 			log.Printf("RabbitMQ connection closed: %v", err)
-			r.reconnect()
+			r.reconnect(context.Background())
 		}
 	}()
 }
 
 // reconnect attempts to reconnect to RabbitMQ in case of connection loss
-func (r *RabbitMQService) reconnect() {
-	for {
-		log.Println("Attempting to reconnect to RabbitMQ...")
+func (r *RabbitMQService) reconnect(ctx context.Context) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "RabbitMQService.reconnect")
+	defer span.Finish()
 
+	retryCount := 0
+	for {
 		// Try reconnecting every 1 seconds
-		time.Sleep(1 * time.Second)
+		time.Sleep(250 * time.Millisecond)
 
 		r.connect() // Re-establish connection
 		if r.conn != nil && r.conn.IsClosed() == false {
-			log.Println("Reconnected to RabbitMQ")
+			return
+		}
+
+		retryCount++
+
+		if retryCount > 5 {
+			tracing.TraceErr(span, errors.New("Failed to reconnect to RabbitMQ"))
 			return
 		}
 	}
@@ -169,49 +177,41 @@ func (r *RabbitMQService) PublishOnQueue(ctx context.Context, message interface{
 
 	tracing.LogObjectAsJson(span, "message", message)
 
-	if r.conn == nil {
-		tracing.TraceErr(span, errors.New("RabbitMQ connection is nil"))
-		return nil
-	}
-
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
 	// Convert the message to JSON
 	jsonBody, err := json.Marshal(message)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		return err
 	}
 
-	// Retry logic in case the connection is closed
-	for {
-		// Ensure the connection and channel are open
-		if r.conn.IsClosed() {
-			tracing.TraceErr(span, errors.New("RabbitMQ connection is closed"))
-			r.reconnect()
-		}
-
-		// Try publishing the message
-		err = r.channel.Publish(
-			exchange,   // Exchange name
-			routingKey, // Routing key
-			false,      // Mandatory
-			false,      // Immediate
-			amqp091.Publishing{
-				DeliveryMode: amqp091.Persistent,
-				ContentType:  "application/json",
-				Body:         jsonBody,
-			})
-
-		if err != nil {
-			tracing.TraceErr(span, err)
-			r.reconnect()
-		} else {
-			break // Message sent successfully, exit retry loop
-		}
+	// Ensure the connection and channel are open
+	if r.conn.IsClosed() {
+		r.reconnect(ctx)
 	}
 
-	log.Printf(" [x] Sent message to exchange %s with routing key %s", EventsExchangeName, EventsRoutingKey)
+	if r.conn.IsClosed() {
+		tracing.TraceErr(span, errors.New("RabbitMQ connection is closed"))
+		return nil
+	}
+
+	// Try publishing the message
+	err = r.channel.Publish(
+		exchange,   // Exchange name
+		routingKey, // Routing key
+		false,      // Mandatory
+		false,      // Immediate
+		amqp091.Publishing{
+			DeliveryMode: amqp091.Persistent,
+			ContentType:  "application/json",
+			Body:         jsonBody,
+		})
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+
 	return nil
 }
 
