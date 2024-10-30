@@ -88,7 +88,8 @@ func (r *tagWriteRepository) LinkTagByIdToEntity(ctx context.Context, tx *neo4j.
 			(t:Tenant {name:$tenant})<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag {id:$id})
 		MERGE (e)-[rel:TAGGED]->(tag)
 		ON CREATE SET
-			rel.taggedAt=$taggedAt `, entityType.Neo4jLabel()+"_"+tenant)
+			rel.taggedAt=$taggedAt,
+			e.updatedAt=datetime()`, entityType.Neo4jLabel()+"_"+tenant)
 	params := map[string]any{
 		"tenant":   tenant,
 		"id":       tagId,
@@ -124,7 +125,8 @@ func (r *tagWriteRepository) UnlinkTagByIdFromEntity(ctx context.Context, tx *ne
 
 	cypher := fmt.Sprintf(`
 		MATCH (t:Tenant {name:$tenant})<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag {id:$id})<-[rel:TAGGED]-(e:%s {id:$entityId})
-		DELETE rel`, entityType.Neo4jLabel()+"_"+tenant)
+		DELETE rel
+		SET e.updatedAt=datetime()`, entityType.Neo4jLabel()+"_"+tenant)
 	params := map[string]any{
 		"tenant":   tenant,
 		"id":       tagId,
