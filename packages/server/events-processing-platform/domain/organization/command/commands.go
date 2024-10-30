@@ -46,18 +46,6 @@ func NewShowOrganizationCommand(tenant, orgId, userId string) *ShowOrganizationC
 	}
 }
 
-type RefreshLastTouchpointCommand struct {
-	eventstore.BaseCommand
-	AppSource string
-}
-
-func NewRefreshLastTouchpointCommand(tenant, orgId, userId, appSource string) *RefreshLastTouchpointCommand {
-	return &RefreshLastTouchpointCommand{
-		BaseCommand: eventstore.NewBaseCommand(orgId, tenant, userId),
-		AppSource:   appSource,
-	}
-}
-
 type UpsertCustomFieldCommand struct {
 	eventstore.BaseCommand
 	Source          common.Source

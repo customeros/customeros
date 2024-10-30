@@ -41,8 +41,9 @@ const (
 	//Deprecated
 	OrganizationRequestScrapeByWebsiteV1 = "V1_ORGANIZATION_SCRAPE_BY_WEBSITE_REQUEST"
 	//Deprecated
-	OrganizationHideV1                             = "V1_ORGANIZATION_HIDE"
-	OrganizationShowV1                             = "V1_ORGANIZATION_SHOW"
+	OrganizationHideV1 = "V1_ORGANIZATION_HIDE"
+	OrganizationShowV1 = "V1_ORGANIZATION_SHOW"
+	//Deprecated
 	OrganizationRefreshLastTouchpointV1            = "V1_ORGANIZATION_REFRESH_LAST_TOUCHPOINT"
 	OrganizationUpsertCustomFieldV1                = "V1_ORGANIZATION_UPSERT_CUSTOM_FIELD"
 	OrganizationAddParentV1                        = "V1_ORGANIZATION_ADD_PARENT"
@@ -160,26 +161,6 @@ func NewShowOrganizationEventEvent(aggregate eventstore.Aggregate) (eventstore.E
 	event := eventstore.NewBaseEvent(aggregate, OrganizationShowV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, errors.Wrap(err, "error setting json data for ShowOrganizationEvent")
-	}
-	return event, nil
-}
-
-type OrganizationRefreshLastTouchpointEvent struct {
-	Tenant string `json:"tenant" validate:"required"`
-}
-
-func NewOrganizationRefreshLastTouchpointEvent(aggregate eventstore.Aggregate) (eventstore.Event, error) {
-	eventData := OrganizationRefreshLastTouchpointEvent{
-		Tenant: aggregate.GetTenant(),
-	}
-
-	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "failed to validate OrganizationRefreshLastTouchpointEvent")
-	}
-
-	event := eventstore.NewBaseEvent(aggregate, OrganizationRefreshLastTouchpointV1)
-	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationRefreshLastTouchpointEvent")
 	}
 	return event, nil
 }

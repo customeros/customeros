@@ -28,7 +28,6 @@ type Config struct {
 
 type Subscriptions struct {
 	GraphSubscription                 GraphSubscription
-	GraphLowPrioritySubscription      GraphLowPrioritySubscription
 	PhoneNumberValidationSubscription PhoneNumberValidationSubscription
 	LocationValidationSubscription    LocationValidationSubscription
 	OrganizationSubscription          OrganizationSubscription
@@ -47,14 +46,6 @@ type GraphSubscription struct {
 	PoolSize             int    `env:"EVENT_STORE_SUBSCRIPTIONS_GRAPH_POOL_SIZE" envDefault:"10" validate:"required,gte=0"`
 	BufferSizeClient     uint32 `env:"EVENT_STORE_SUBSCRIPTIONS_GRAPH_CLIENT_BUFFER_SIZE" envDefault:"10" validate:"required,gte=0"`
 	CheckpointLowerBound int32  `env:"EVENT_STORE_SUBSCRIPTIONS_GRAPH_CHECKPOINT_LOWER_BOUND" envDefault:"10" validate:"required,gte=0"`
-}
-
-type GraphLowPrioritySubscription struct {
-	Enabled          bool     `env:"EVENT_STORE_SUBSCRIPTIONS_GRAPH_LOW_PRIO_V2_ENABLED" envDefault:"true"`
-	GroupName        string   `env:"EVENT_STORE_SUBSCRIPTIONS_GRAPH_LOW_PRIO_V2_GROUP_NAME" envDefault:"graph-low-prio-v2" validate:"required"`
-	PoolSize         int      `env:"EVENT_STORE_SUBSCRIPTIONS_GRAPH_LOW_PRIO_V2_POOL_SIZE" envDefault:"5" validate:"required,gte=0"`
-	BufferSizeClient uint32   `env:"EVENT_STORE_SUBSCRIPTIONS_GRAPH_LOW_PRIO_V2_CLIENT_BUFFER_SIZE" envDefault:"10" validate:"required,gte=0"`
-	Prefixes         []string `env:"EVENT_STORE_SUBSCRIPTIONS_GRAPH_LOW_PRIO_V2_PREFIXES" envDefault:"organization-" validate:"required"`
 }
 
 type PhoneNumberValidationSubscription struct {
