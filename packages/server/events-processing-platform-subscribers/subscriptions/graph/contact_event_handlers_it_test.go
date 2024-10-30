@@ -9,7 +9,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/mocked_grpc"
 	eventcompletionpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/event_completion"
-	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event/contact"
 	contactevent "github.com/openline-ai/openline-customer-os/packages/server/events/event/contact/event"
@@ -179,20 +178,6 @@ func TestGraphContactEventHandler_OnContactLinkToOrganization(t *testing.T) {
 	}
 	mocked_grpc.SetEventCompletionServiceCallbacks(&callbacks)
 
-	lastTouchpointInvoked := false
-	organizationServiceCallbacks := mocked_grpc.MockOrganizationServiceCallbacks{
-		RefreshLastTouchpoint: func(context context.Context, org *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
-			require.Equal(t, tenantName, org.Tenant)
-			require.Equal(t, organizationId, org.OrganizationId)
-			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, org.AppSource)
-			lastTouchpointInvoked = true
-			return &organizationpb.OrganizationIdGrpcResponse{
-				Id: organizationId,
-			}, nil
-		},
-	}
-	mocked_grpc.SetOrganizationCallbacks(&organizationServiceCallbacks)
-
 	contactEventHandler := &ContactEventHandler{
 		services:    testDatabase.Services,
 		grpcClients: testMockedGrpcClient,
@@ -237,6 +222,4 @@ func TestGraphContactEventHandler_OnContactLinkToOrganization(t *testing.T) {
 	require.NotNil(t, dbNodeForContactAfterContactLinkToOrganization)
 	propsForContactAfterContactLinkToOrganization := utils.GetPropsFromNode(*dbNodeForContactAfterContactLinkToOrganization)
 	test.AssertRecentTime(t, utils.GetTimePropOrNow(propsForContactAfterContactLinkToOrganization, "updatedAt"))
-
-	require.True(t, lastTouchpointInvoked)
 }

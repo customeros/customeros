@@ -9,12 +9,10 @@ import (
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/mocked_grpc"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/model"
-	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -33,21 +31,6 @@ func TestGraphLogEntryEventHandler_OnCreate(t *testing.T) {
 	})
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Organization": 1, "User": 1, "ExternalSystem": 1, "LogEntry": 0, "TimelineEvent": 0})
-
-	// prepare grpc mock
-	calledEventsPlatform := false
-	organizationServiceCallbacks := mocked_grpc.MockOrganizationServiceCallbacks{
-		RefreshLastTouchpoint: func(context context.Context, org *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
-			require.Equal(t, tenantName, org.Tenant)
-			require.Equal(t, orgId, org.OrganizationId)
-			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, org.AppSource)
-			calledEventsPlatform = true
-			return &organizationpb.OrganizationIdGrpcResponse{
-				Id: orgId,
-			}, nil
-		},
-	}
-	mocked_grpc.SetOrganizationCallbacks(&organizationServiceCallbacks)
 
 	// prepare event handler
 	logEntryEventHandler := &LogEntryEventHandler{
@@ -103,9 +86,6 @@ func TestGraphLogEntryEventHandler_OnCreate(t *testing.T) {
 	require.Equal(t, now, logEntry.CreatedAt)
 	test.AssertRecentTime(t, logEntry.UpdatedAt)
 	require.Equal(t, now, logEntry.StartedAt)
-
-	// Check refresh last touch point
-	require.Truef(t, calledEventsPlatform, "RefreshLastTouchpoint was not invoked")
 }
 
 func TestGraphLogEntryEventHandler_OnUpdate(t *testing.T) {

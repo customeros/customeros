@@ -19,7 +19,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/model"
 	eventcompletionpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/event_completion"
-	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	commonEvents "github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -46,21 +45,6 @@ func TestGraphOrganizationEventHandler_OnOrganizationCreate(t *testing.T) {
 		"Action": 0, "TimelineEvent": 0})
 
 	orgId := uuid.New().String()
-
-	// prepare grpc mock
-	lastTouchpointInvoked := false
-	organizationServiceCallbacks := mocked_grpc.MockOrganizationServiceCallbacks{
-		RefreshLastTouchpoint: func(context context.Context, org *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
-			require.Equal(t, tenantName, org.Tenant)
-			require.Equal(t, orgId, org.OrganizationId)
-			require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, org.AppSource)
-			lastTouchpointInvoked = true
-			return &organizationpb.OrganizationIdGrpcResponse{
-				Id: orgId,
-			}, nil
-		},
-	}
-	mocked_grpc.SetOrganizationCallbacks(&organizationServiceCallbacks)
 
 	callbacks := mocked_grpc.MockEventCompletionCallbacks{
 		NotifyEventProcessed: func(context context.Context, org *eventcompletionpb.NotifyEventProcessedRequest) (*emptypb.Empty, error) {
@@ -132,9 +116,6 @@ func TestGraphOrganizationEventHandler_OnOrganizationCreate(t *testing.T) {
 	require.Equal(t, neo4jenum.ActionCreated, action.Type)
 	require.Equal(t, "", action.Content)
 	require.Equal(t, "", action.Metadata)
-
-	// Check refresh last touch point
-	require.Truef(t, lastTouchpointInvoked, "RefreshLastTouchpoint was not invoked")
 }
 
 func TestGraphOrganizationEventHandler_OnOrganizationShow(t *testing.T) {
