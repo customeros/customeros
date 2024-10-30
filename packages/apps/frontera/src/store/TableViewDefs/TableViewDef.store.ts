@@ -132,6 +132,7 @@ export class TableViewDefStore implements Store<TableViewDef> {
         'tableId',
         'isPreset',
         'isShared',
+        'defaultFilters',
       ),
     };
 
