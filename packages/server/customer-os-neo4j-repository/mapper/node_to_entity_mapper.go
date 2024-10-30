@@ -346,6 +346,7 @@ func MapDbNodeToTenantSettingsEntity(dbNode *dbtype.Node) *entity.TenantSettings
 		BaseCurrency:             enum.DecodeCurrency(utils.GetStringPropOrEmpty(props, string(entity.TenantSettingsPropertyBaseCurrency))),
 		EnrichContacts:           utils.GetBoolPropOrFalse(props, string(entity.TenantSettingsPropertyEnrichContacts)),
 		StripeCustomerPortalLink: utils.GetStringPropOrEmpty(props, string(entity.TenantSettingsPropertyStripeCustomerPortalLink)),
+		SharedSlackChannelUrl:    utils.GetStringPropOrEmpty(props, string(entity.TenantSettingsPropertySlackChannelUrl)),
 	}
 	return &tenantSettingsEntity
 }

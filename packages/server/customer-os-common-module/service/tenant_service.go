@@ -21,6 +21,7 @@ type TenantService interface {
 	GetTenantForWorkspace(ctx context.Context, workspaceEntity neo4jentity.WorkspaceEntity) (*neo4jentity.TenantEntity, error)
 	GetTenantForUserEmail(ctx context.Context, email string) (*neo4jentity.TenantEntity, error)
 	GetTenantSettings(ctx context.Context) (*neo4jentity.TenantSettingsEntity, error)
+	GetTenantSettingsForTenant(ctx context.Context, tenant string) (*neo4jentity.TenantSettingsEntity, error)
 	GetTenantBillingProfiles(ctx context.Context) (*neo4jentity.TenantBillingProfileEntities, error)
 	GetTenantBillingProfile(ctx context.Context, id string) (*neo4jentity.TenantBillingProfileEntity, error)
 	GetDefaultTenantBillingProfile(ctx context.Context) (*neo4jentity.TenantBillingProfileEntity, error)
@@ -98,6 +99,21 @@ func (s *tenantService) GetTenantSettings(ctx context.Context) (*neo4jentity.Ten
 	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
 
 	dbNode, err := s.services.Neo4jRepositories.TenantReadRepository.GetTenantSettings(ctx, common.GetTenantFromContext(ctx))
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return neo4jmapper.MapDbNodeToTenantSettingsEntity(dbNode), nil
+}
+
+func (s *tenantService) GetTenantSettingsForTenant(ctx context.Context, tenant string) (*neo4jentity.TenantSettingsEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantService.GetTenantSettings")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
+	tracing.TagTenant(span, tenant)
+
+	dbNode, err := s.services.Neo4jRepositories.TenantReadRepository.GetTenantSettings(ctx, tenant)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err

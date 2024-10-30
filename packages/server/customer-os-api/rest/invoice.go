@@ -11,6 +11,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -71,6 +72,7 @@ func RedirectToPayInvoice(services *service.Services) gin.HandlerFunc {
 		}
 
 		if paymentLink == "" {
+			notifyOnSlackPaymentFailed(ctx, services, tenant, invoiceID, invoice.Number)
 			tracing.TraceErr(span, errors.New("Payment link not found"))
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Please try again later"})
 			return
@@ -192,4 +194,36 @@ func callIntegrationAppWithApiRequestForNewPaymentLink(ctx context.Context, key,
 		return err
 	}
 	return nil
+}
+
+func notifyOnSlackPaymentFailed(ctx context.Context, services *service.Services, tenant, invoiceId, invoiceNumber string) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "notifyOnSlackPaymentFailed")
+	defer span.Finish()
+
+	tenantSettings, err := services.CommonServices.TenantService.GetTenantSettingsForTenant(ctx, tenant)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Error fetching tenant settings"))
+	}
+	if tenantSettings == nil || tenantSettings.SharedSlackChannelUrl == "" {
+		span.LogKV("msg", "Notification slack channel URL not set")
+		return
+	}
+
+	organizationDbNode, err := services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByInvoiceId(ctx, tenant, invoiceId)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Error fetching organization"))
+		return
+	}
+	if organizationDbNode == nil {
+		span.LogKV("msg", "Organization not found")
+		return
+	}
+	organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
+
+	slackMessageText := fmt.Sprintf("Customer %s encountered an error trying to pay invoice %s", organizationEntity.Name, invoiceNumber)
+
+	err = utils.SendSlackMessage(ctx, tenantSettings.SharedSlackChannelUrl, slackMessageText)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Error sending slack message"))
+	}
 }

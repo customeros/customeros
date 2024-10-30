@@ -17,6 +17,7 @@ const (
 	TenantSettingsPropertyWorkspaceName            TenantSettingsProperty = "workspaceName"
 	TenantSettingsPropertyEnrichContacts           TenantSettingsProperty = "enrichContacts"
 	TenantSettingsPropertyStripeCustomerPortalLink TenantSettingsProperty = "stripeCustomerPortalLink"
+	TenantSettingsPropertySlackChannelUrl          TenantSettingsProperty = "slackChannelUrl"
 )
 
 type TenantSettingsEntity struct {
@@ -31,4 +32,5 @@ type TenantSettingsEntity struct {
 	UpdatedAt                time.Time
 	EnrichContacts           bool
 	StripeCustomerPortalLink string
+	SharedSlackChannelUrl    string
 }
