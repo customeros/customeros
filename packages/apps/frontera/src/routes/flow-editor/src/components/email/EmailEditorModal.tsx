@@ -3,6 +3,7 @@ import { useRef, useMemo, useState, useEffect } from 'react';
 
 import { LexicalEditor } from 'lexical';
 import { observer } from 'mobx-react-lite';
+import { render } from '@react-email/render';
 import { FlowActionType } from '@store/Flows/types';
 
 import { cn } from '@ui/utils/cn';
@@ -15,7 +16,8 @@ import { Modal, ModalPortal, ModalContent } from '@ui/overlay/Modal';
 import { extractPlainText } from '@ui/form/Editor/utils/extractPlainText';
 import { convertPlainTextToHtml } from '@ui/form/Editor/utils/convertPlainTextToHtml';
 
-import { useUndoRedo } from '../hooks';
+import { useUndoRedo } from '../../hooks';
+import { EmailTemplate } from './EmailTemplate';
 
 interface EmailEditorModalProps {
   isEditorOpen: boolean;
@@ -36,6 +38,7 @@ export const EmailEditorModal = observer(
   }: EmailEditorModalProps) => {
     const id = useParams().id as string;
     const inputRef = useRef<LexicalEditor>(null);
+    const store = useStore();
 
     const [subject, setSubject] = useState(data?.subject ?? '');
     const [bodyTemplate, setBodyTemplate] = useState(data?.bodyTemplate ?? '');
@@ -55,29 +58,55 @@ export const EmailEditorModal = observer(
           }, 0);
         }
       }
-    }, [isEditorOpen]);
-
-    const store = useStore();
+    }, [isEditorOpen, data]);
 
     const flow = store.flows.value.get(id)?.value?.name;
     const placeholder = useMemo(() => getRandomEmailPrompt(), [isEditorOpen]);
+    const variables = store.flowEmailVariables?.value.get('CONTACT')?.variables;
 
-    const handleSave = () => {
-      handleEmailDataChange({ subject, bodyTemplate });
+    const prepareEmailContent = async (bodyHtml: string) => {
+      try {
+        const emailHtml = await render(<EmailTemplate bodyHtml={bodyHtml} />, {
+          pretty: true,
+        });
 
-      setTimeout(() => {
-        takeSnapshot();
-      }, 0);
+        return {
+          html: emailHtml,
+        };
+      } catch (error) {
+        store.ui.toastError(
+          'Unable to process email content',
+          'email-content-parsing-error',
+        );
+      }
     };
 
-    const variables = store.flowEmailVariables?.value.get('CONTACT')?.variables;
+    const handleSave = async () => {
+      try {
+        const emailContent = await prepareEmailContent(bodyTemplate);
+
+        if (emailContent?.html) {
+          handleEmailDataChange({
+            subject: subject,
+            bodyTemplate: emailContent.html,
+          });
+        }
+
+        setTimeout(() => {
+          takeSnapshot();
+        }, 0);
+      } catch (error) {
+        console.error('Error saving email:', error);
+        store.ui.toastError('Error saving email', 'email-save-error');
+      }
+    };
 
     return (
       <Modal modal={false} open={isEditorOpen}>
         <ModalPortal>
           <ModalContent
             onKeyDown={(e) => e.stopPropagation()}
-            className='w-full h-full flex flex-col align-middle items-center max-w-full top-0 cursor-default overflow-y-auto '
+            className='w-full h-full flex flex-col align-middle items-center max-w-full top-0 cursor-default overflow-y-auto'
           >
             <div className='flex justify-between bg-white pt-4 pb-2 mb-[60px] w-[570px] sticky top-0 z-[50]'>
               <div className='flex items-center text-sm'>
@@ -140,7 +169,7 @@ export const EmailEditorModal = observer(
                   defaultHtmlValue={bodyTemplate}
                   onChange={(e) => setBodyTemplate(e)}
                   className='text-base cursor-text email-editor h-full'
-                ></Editor>
+                />
               </div>
             </div>
           </ModalContent>

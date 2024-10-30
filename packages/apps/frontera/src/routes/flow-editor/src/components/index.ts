@@ -1,5 +1,5 @@
 export { Handle } from './Handle';
-export { EmailEditorModal } from './EmailEditorModal';
+export { EmailEditorModal } from './email';
 export { FlowStatusMenu } from './FlowStatusMenu';
 export { FlowBuilderToolbar } from './FlowBuilderToolbar';
 export { HelperLines } from './HelperLines';
