@@ -7,18 +7,17 @@ import (
 
 type JobRoleEntity struct {
 	DataLoaderKey
-	Id            string
-	JobTitle      string
-	Primary       bool
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
-	StartedAt     *time.Time
-	EndedAt       *time.Time
-	Source        DataSource
-	SourceOfTruth DataSource
-	AppSource     string
-	Description   *string
-	Company       *string
+	Id          string
+	JobTitle    string
+	Primary     bool
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	StartedAt   *time.Time
+	EndedAt     *time.Time
+	Source      DataSource
+	AppSource   string
+	Description *string
+	Company     *string
 
 	InteractionEventParticipantDetails   InteractionEventParticipantDetails
 	InteractionSessionParticipantDetails InteractionSessionParticipantDetails

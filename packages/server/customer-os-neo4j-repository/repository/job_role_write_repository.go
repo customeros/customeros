@@ -21,7 +21,6 @@ type JobRoleFields struct {
 	StartedAt    *time.Time         `json:"startedAt"`
 	EndedAt      *time.Time         `json:"endedAt"`
 	SourceFields model.SourceFields `json:"sourceFields"`
-	CreatedAt    time.Time          `json:"createdAt"`
 	Primary      bool               `json:"primary"`
 }
 
@@ -61,24 +60,21 @@ func (r *jobRoleWriteRepository) CreateJobRole(ctx context.Context, tenant, jobR
 				MERGE (jr:JobRole:JobRole_%s {id:$id}) 
 				SET 	jr.jobTitle = $jobTitle,
 						jr.description = $description,
-						jr.createdAt = $createdAt,
+						jr.createdAt = datetime(),
 						jr.updatedAt = datetime(),
 						jr.startedAt = $startedAt,
  						jr.endedAt = $endedAt,
-						jr.sourceOfTruth = $sourceOfTruth,
 						jr.source = $source,
 						jr.appSource = $appSource`, tenant)
 	params := map[string]any{
-		"id":            jobRoleId,
-		"jobTitle":      data.JobTitle,
-		"description":   data.Description,
-		"tenant":        tenant,
-		"startedAt":     utils.TimePtrAsAny(data.StartedAt),
-		"endedAt":       utils.TimePtrAsAny(data.EndedAt),
-		"sourceOfTruth": data.SourceFields.SourceOfTruth,
-		"source":        data.SourceFields.Source,
-		"appSource":     data.SourceFields.AppSource,
-		"createdAt":     data.CreatedAt,
+		"id":          jobRoleId,
+		"jobTitle":    data.JobTitle,
+		"description": data.Description,
+		"tenant":      tenant,
+		"startedAt":   utils.TimePtrAsAny(data.StartedAt),
+		"endedAt":     utils.TimePtrAsAny(data.EndedAt),
+		"source":      data.SourceFields.Source,
+		"appSource":   data.SourceFields.AppSource,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -128,24 +124,22 @@ func (r *jobRoleWriteRepository) LinkContactWithOrganization(ctx context.Context
 		 MERGE (c)-[:WORKS_AS]->(jr:JobRole)-[:ROLE_IN]->(org) 
 		 ON CREATE SET 	jr.id=randomUUID(), 
 						jr.source=$source, 
-						jr.sourceOfTruth=$sourceOfTruth, 
 						jr.appSource=$appSource, 
 						jr.jobTitle=$jobTitle, 
 						jr.description=$description,
 						jr.startedAt=$startedAt,	
 						jr.endedAt=$endedAt,
 						jr.primary=$primary,
-						jr.createdAt=$createdAt, 
+						jr.createdAt=datetime(), 
 						jr.updatedAt=datetime(), 
 						jr:JobRole_%s,
 						c.updatedAt = datetime(),
 						org.updatedAt = datetime()
-		 ON MATCH SET 	jr.jobTitle = CASE WHEN jr.sourceOfTruth=$source OR $overwrite=true  OR jr.jobTitle is null OR jr.jobTitle = '' THEN $jobTitle ELSE jr.jobTitle END,
-						jr.description = CASE WHEN jr.sourceOfTruth=$source OR $overwrite=true  OR jr.description is null OR jr.description = '' THEN $description ELSE jr.description END,
-						jr.primary = CASE WHEN jr.sourceOfTruth=$source OR $overwrite=true THEN $primary ELSE jr.primary END,
-						jr.startedAt = CASE WHEN jr.sourceOfTruth=$source OR $overwrite=true THEN $startedAt ELSE jr.startedAt END,
-						jr.endedAt = CASE WHEN jr.sourceOfTruth=$source OR $overwrite=true THEN $endedAt ELSE jr.endedAt END,
-						jr.sourceOfTruth = case WHEN $overwrite=true THEN $source ELSE jr.sourceOfTruth END,
+		 ON MATCH SET 	jr.jobTitle = CASE WHEN $overwrite=true OR jr.jobTitle is null OR jr.jobTitle = '' THEN $jobTitle ELSE jr.jobTitle END,
+						jr.description = CASE WHEN $overwrite=true OR jr.description is null OR jr.description = '' THEN $description ELSE jr.description END,
+						jr.primary = CASE WHEN OR $overwrite=true THEN $primary ELSE jr.primary END,
+						jr.startedAt = CASE WHEN OR $overwrite=true THEN $startedAt ELSE jr.startedAt END,
+						jr.endedAt = CASE WHEN OR $overwrite=true THEN $endedAt ELSE jr.endedAt END,
 						jr.updatedAt = datetime(),
 						c.updatedAt = datetime(),
 						org.updatedAt = datetime()`, tenant)
@@ -154,11 +148,9 @@ func (r *jobRoleWriteRepository) LinkContactWithOrganization(ctx context.Context
 		"contactId":      contactId,
 		"organizationId": organizationId,
 		"source":         data.SourceFields.Source,
-		"sourceOfTruth":  data.SourceFields.SourceOfTruth,
 		"appSource":      data.SourceFields.AppSource,
 		"jobTitle":       data.JobTitle,
 		"description":    data.Description,
-		"createdAt":      data.CreatedAt,
 		"startedAt":      utils.TimePtrAsAny(data.StartedAt),
 		"endedAt":        utils.TimePtrAsAny(data.EndedAt),
 		"primary":        data.Primary,
@@ -186,7 +178,6 @@ func (r *jobRoleWriteRepository) CreateJobRoleInTx(ctx context.Context, tx neo4j
 		"				r.description=$description, " +
 		"				r.company=$company, " +
 		"				r.source=$source, " +
-		"				r.sourceOfTruth=$sourceOfTruth, " +
 		"				r.appSource=$appSource, " +
 		"				r.createdAt=$now, " +
 		"				r.updatedAt=datetime(), " +
@@ -197,18 +188,17 @@ func (r *jobRoleWriteRepository) CreateJobRoleInTx(ctx context.Context, tx neo4j
 
 	if queryResult, err := tx.Run(ctx, fmt.Sprintf(query, "JobRole_"+tenant),
 		map[string]interface{}{
-			"tenant":        tenant,
-			"contactId":     contactId,
-			"jobTitle":      input.JobTitle,
-			"description":   input.Description,
-			"company":       input.Company,
-			"primary":       input.Primary,
-			"source":        input.Source,
-			"sourceOfTruth": input.SourceOfTruth,
-			"appSource":     input.AppSource,
-			"startedAt":     utils.TimePtrAsAny(input.StartedAt, utils.TimePtr(utils.Now())),
-			"endedAt":       utils.TimePtrAsAny(input.EndedAt),
-			"now":           utils.Now(),
+			"tenant":      tenant,
+			"contactId":   contactId,
+			"jobTitle":    input.JobTitle,
+			"description": input.Description,
+			"company":     input.Company,
+			"primary":     input.Primary,
+			"source":      input.Source,
+			"appSource":   input.AppSource,
+			"startedAt":   utils.TimePtrAsAny(input.StartedAt, utils.TimePtr(utils.Now())),
+			"endedAt":     utils.TimePtrAsAny(input.EndedAt),
+			"now":         utils.Now(),
 		}); err != nil {
 		return nil, err
 	} else {
@@ -228,23 +218,21 @@ func (r *jobRoleWriteRepository) UpdateJobRoleDetails(ctx context.Context, tx ne
 				r.primary=$primary,
 				r.description=$description,
 				r.company=$company,
-				r.sourceOfTruth=$sourceOfTruth,
 				r.startedAt=$startedAt,
 				r.endedAt=$endedAt,
 				r.updatedAt=datetime()
 			RETURN r`,
 		map[string]interface{}{
-			"tenant":        tenant,
-			"contactId":     contactId,
-			"roleId":        roleId,
-			"jobTitle":      input.JobTitle,
-			"description":   input.Description,
-			"company":       input.Company,
-			"primary":       input.Primary,
-			"sourceOfTruth": input.SourceOfTruth,
-			"now":           utils.Now(),
-			"startedAt":     utils.TimePtrAsAny(input.StartedAt),
-			"endedAt":       utils.TimePtrAsAny(input.EndedAt),
+			"tenant":      tenant,
+			"contactId":   contactId,
+			"roleId":      roleId,
+			"jobTitle":    input.JobTitle,
+			"description": input.Description,
+			"company":     input.Company,
+			"primary":     input.Primary,
+			"now":         utils.Now(),
+			"startedAt":   utils.TimePtrAsAny(input.StartedAt),
+			"endedAt":     utils.TimePtrAsAny(input.EndedAt),
 		}); err != nil {
 		return nil, err
 	} else {

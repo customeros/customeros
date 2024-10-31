@@ -17,6 +17,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
+	"time"
 )
 
 type ContactService interface {
@@ -24,6 +25,7 @@ type ContactService interface {
 	HideContact(ctx context.Context, contactId string) error
 	ShowContact(ctx context.Context, contactId string) error
 	GetContactById(ctx context.Context, contactId string) (*neo4jentity.ContactEntity, error)
+	LinkContactToOrganization(ctx context.Context, contactId, organizationId, jobTitle, description, source string, primary bool, startedAt, endedAt *time.Time) error
 }
 
 type contactService struct {
@@ -63,7 +65,6 @@ func (s *contactService) SaveContact(ctx context.Context, id *string, contactFie
 	contactId := ""
 
 	// TODO add here any dedup logic
-
 	if id == nil || *id == "" {
 		createFlow = true
 		span.LogKV("flow", "create")
@@ -232,4 +233,84 @@ func (s *contactService) GetContactById(ctx context.Context, contactId string) (
 	}
 
 	return neo4jmapper.MapDbNodeToContactEntity(contactDbNode), nil
+}
+
+func (s *contactService) LinkContactToOrganization(ctx context.Context, contactId, organizationId, jobTitle, description, source string, primary bool, startedAt, endedAt *time.Time) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.LinkContactToOrganization")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.TagEntity(span, contactId)
+	span.LogFields(log.String("organizationId", organizationId), log.String("jobTitle", jobTitle), log.String("description", description), log.Bool("primary", primary))
+	if startedAt != nil {
+		span.LogFields(log.Object("startedAt", startedAt))
+	}
+	if endedAt != nil {
+		span.LogFields(log.Object("endedAt", endedAt))
+	}
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+
+	// validate contact exists
+	exists, err := s.services.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, tenant, contactId, model.NodeLabelContact)
+	if err != nil || !exists {
+		err = errors.New("contact not found")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	// validate organization exists
+	exists, err = s.services.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, tenant, organizationId, model.NodeLabelOrganization)
+	if err != nil || !exists {
+		err = errors.New("organization not found")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	jobRoleData := neo4jrepository.JobRoleFields{
+		Description: description,
+		JobTitle:    jobTitle,
+		Primary:     primary,
+		StartedAt:   startedAt,
+		EndedAt:     endedAt,
+		SourceFields: neo4jmodel.SourceFields{
+			Source:    neo4jmodel.GetSource(source),
+			AppSource: common.GetAppSourceFromContext(ctx),
+		},
+	}
+
+	err = s.services.Neo4jRepositories.JobRoleWriteRepository.LinkContactWithOrganization(ctx, tenant, contactId, organizationId, jobRoleData)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "unable to link contact with organization"))
+		return err
+	}
+
+	utils.EventCompleted(ctx, tenant, model.CONTACT.String(), contactId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
+	utils.EventCompleted(ctx, tenant, model.ORGANIZATION.String(), organizationId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
+
+	// send 2 events, for contact another for organization
+	dtoData := dto.AddContactToOrganization{
+		ContactId:      contactId,
+		OrganizationId: organizationId,
+		JobTitle:       jobTitle,
+		Description:    description,
+		Primary:        primary,
+		StartedAt:      startedAt,
+		EndedAt:        endedAt,
+	}
+	err = s.services.RabbitMQService.PublishEvent(ctx, contactId, model.CONTACT, dtoData)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message AddContactToOrganization for contact"))
+	}
+	err = s.services.RabbitMQService.PublishEvent(ctx, organizationId, model.ORGANIZATION, dtoData)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message AddContactToOrganization for organization"))
+	}
+
+	return nil
 }
