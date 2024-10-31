@@ -54,21 +54,42 @@ export class FlowStore implements Store<Flow> {
     this.value.metadata.id = id;
   }
 
+  async saveStatus() {
+    this.isLoading = true;
+
+    try {
+      await this.service.changeStatus({
+        id: this.id,
+        status: this.value.status as FlowStatus,
+      });
+
+      // we need to send Active status to start the flow but the actual status immediately after activation is always scheduling
+      if (this.value.status === FlowStatus.Active) {
+        this.value.status = FlowStatus.Scheduling;
+      }
+
+      runInAction(() => {
+        setTimeout(() => {
+          this.invalidate();
+        }, 1000);
+      });
+    } catch (error) {
+      this.root.ui.toastError(
+        "We couldn't update the flow",
+        'update-flow-error',
+      );
+    } finally {
+      this.isLoading = false;
+    }
+  }
+
   private async save(operation: Operation) {
     const diff = operation.diff?.[0];
     const path = diff?.path;
 
     match(path)
       .with(['status', ...P.array()], () => {
-        this.service.changeStatus({
-          id: this.id,
-          status: this.value.status as FlowStatus,
-        });
-
-        // we need to send Active status to start the flow but the actual status immediately after activation is always scheduling
-        if (this.value.status === FlowStatus.Active) {
-          this.value.status = FlowStatus.Scheduling;
-        }
+        this.saveStatus();
       })
       .with(['name', ...P.array()], () => {
         // todo COS-5311 - use another mutation to not update nodes and edges when updating the name
