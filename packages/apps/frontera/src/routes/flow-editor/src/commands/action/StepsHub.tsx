@@ -1,24 +1,24 @@
 import { observer } from 'mobx-react-lite';
-import { FlowActionType } from '@store/Flows/types.ts';
+import { FlowActionType } from '@store/Flows/types';
 import { Node, MarkerType, useReactFlow } from '@xyflow/react';
 
-import { cn } from '@ui/utils/cn.ts';
+import { cn } from '@ui/utils/cn';
+import { Mail01 } from '@ui/media/icons/Mail01';
+import { Star06 } from '@ui/media/icons/Star06';
 import { useStore } from '@shared/hooks/useStore';
-import { Mail01 } from '@ui/media/icons/Mail01.tsx';
-import { Star06 } from '@ui/media/icons/Star06.tsx';
 import { CommandItem } from '@ui/overlay/CommandMenu';
-import { MailReply } from '@ui/media/icons/MailReply.tsx';
-import { PlusSquare } from '@ui/media/icons/PlusSquare.tsx';
-import { Hourglass02 } from '@ui/media/icons/Hourglass02.tsx';
-import { RefreshCw01 } from '@ui/media/icons/RefreshCw01.tsx';
-import { ArrowIfPath } from '@ui/media/icons/ArrowIfPath.tsx';
-import { ClipboardCheck } from '@ui/media/icons/ClipboardCheck.tsx';
-import { LinkedinOutline } from '@ui/media/icons/LinkedinOutline.tsx';
+import { MailReply } from '@ui/media/icons/MailReply';
+import { PlusSquare } from '@ui/media/icons/PlusSquare';
+import { Hourglass02 } from '@ui/media/icons/Hourglass02';
+import { RefreshCw01 } from '@ui/media/icons/RefreshCw01';
+import { ArrowIfPath } from '@ui/media/icons/ArrowIfPath';
+import { ClipboardCheck } from '@ui/media/icons/ClipboardCheck';
+import { LinkedinOutline } from '@ui/media/icons/LinkedinOutline';
 
 const MINUTES_PER_DAY = 1440;
 const DEFAULT_FIRST_EMAIL_WAIT = 30;
 
-import { keywords } from './keywords.ts';
+import { keywords } from './keywords';
 import { useUndoRedo } from '../../hooks';
 
 export const StepsHub = observer(() => {
@@ -275,6 +275,20 @@ export const StepsHub = observer(() => {
         }}
       >
         Wait
+      </CommandItem>
+      <CommandItem
+        leftAccessory={<LinkedinOutline />}
+        keywords={keywords.send_connection_request}
+        onSelect={() => {
+          updateSelectedNode(FlowActionType.SEND_CONNECTION_REQUEST);
+        }}
+      >
+        <span
+          className='text-gray-700'
+          data-test={'flow-send-linkedin-message'}
+        >
+          Send connection request
+        </span>
       </CommandItem>
       <CommandItem
         disabled
