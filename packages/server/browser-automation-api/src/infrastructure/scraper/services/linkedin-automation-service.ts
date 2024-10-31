@@ -302,9 +302,7 @@ export class LinkedinAutomationService {
   }
 
   async retrieveMessages(profileUrl: string) {
-    const browser = await Browser.getFreshInstance(this.proxyConfig, {
-      debug: true,
-    });
+    const browser = await Browser.getFreshInstance(this.proxyConfig );
     const context = await browser.newContext({
       userAgent: this.userAgent,
     });
@@ -340,6 +338,8 @@ export class LinkedinAutomationService {
       const messages = [];
       let lastValidName = '';
       let lastValidTime = '';
+      let currentTime = '';
+      let timeIndex = 1;
 
       const messageElements = await page.locator('li.msg-s-message-list__event').all();
       logger.info(`Found ${messageElements.length} message elements`, { source: "LinkedinService" });
@@ -378,14 +378,22 @@ export class LinkedinAutomationService {
             continue;
           }
 
+          // Reset timeIndex if time changes
+          if (finalTime !== currentTime) {
+            currentTime = finalTime;
+            timeIndex = 1;
+          }
+
           messages.push({
             name: finalName,
             time: finalTime,
+            timeIndex,
             message: finalMessage
           });
 
           lastValidName = finalName;
           lastValidTime = finalTime;
+          timeIndex++; // Increment for next message with same timestamp
 
         } catch (err) {
           logger.error(`Error processing message element: ${err}`, { source: "LinkedinService" });
