@@ -301,7 +301,7 @@ export class LinkedinAutomationService {
     }
   }
 
-  async getMessages() {
+  async retrieveMessages(profileUrl: string) {
     const browser = await Browser.getFreshInstance(this.proxyConfig, {
       debug: true,
     });
@@ -313,25 +313,94 @@ export class LinkedinAutomationService {
     const page = await context.newPage();
 
     try {
-      await page.goto("https://linkedin.com", { timeout: 60 * 1000 });
+      await page.goto("https://linkedin.com" + profileUrl, { timeout: 60 * 1000 });
 
-      const btn = page.locator("button.share-box-feed-entry__trigger");
+      const btn = page.locator('button[aria-label^="Message"].pvs-profile-actions__action');
       await btn.waitFor({ timeout: 10000 });
-
       await btn.click();
 
-      await setTimeout(2000);
+      // Wait for messages container
+      await page.waitForSelector('.msg-s-message-list', { timeout: 10000 });
 
-      return {
-        profileUrl: "123",
-        messages: ["hello", "world"],
-      };
+      await page.evaluate(() => {
+        const messageList = document.querySelector('.msg-s-message-list');
+        if (messageList) {
+          messageList.scrollTop = 0;
+        }
+      });
+      await page.waitForTimeout(1000);
+
+      await page.evaluate(() => {
+        const messageList = document.querySelector('.msg-s-message-list');
+        if (messageList) {
+          messageList.scrollTop = messageList.scrollHeight;
+        }
+      });
+      await page.waitForTimeout(2000);
+
+      const messages = [];
+      let lastValidName = '';
+      let lastValidTime = '';
+
+      const messageElements = await page.locator('li.msg-s-message-list__event').all();
+      logger.info(`Found ${messageElements.length} message elements`, { source: "LinkedinService" });
+
+      for (const element of messageElements) {
+        try {
+          const elementInfo = await element.evaluate((el) => {
+            const nameEl = el.querySelector('.msg-s-message-group__name');
+            const timeEl = el.querySelector('time.msg-s-message-group__timestamp');
+            const msgEl = el.querySelector('p.msg-s-event-listitem__body');
+
+            return {
+              name: nameEl?.textContent?.trim() || '',
+              time: timeEl?.textContent?.trim() || '',
+              message: msgEl?.textContent?.trim().replace(/<!---->|<.*?>/g, '') || '',
+              altName: el.querySelector('.msg-s-message-group__profile-link')?.textContent?.trim() || '',
+              altMessage: el.querySelector('.msg-s-event-listitem__content-preview-container')?.textContent?.trim() || ''
+            };
+          });
+
+          const finalName = elementInfo.name || elementInfo.altName || lastValidName;
+          const finalTime = elementInfo.time || lastValidTime;
+          const finalMessage = elementInfo.message || elementInfo.altMessage;
+
+          if (!finalMessage) {
+            continue;
+          }
+
+          messages.push({
+            name: finalName,
+            time: finalTime,
+            message: finalMessage
+          });
+          lastValidName = finalName;
+          lastValidTime = finalTime;
+
+        } catch (err) {
+          logger.error(`Error processing message element: ${err}`, { source: "LinkedinService" });
+        }
+      }
+
+
+      logger.info(`Summary:`, {
+        source: "LinkedinService",
+        details: JSON.stringify({
+          totalFound: messages.length,
+          messages
+        }, null, 2)
+      });
+
+      return messages;
+
     } catch (err) {
       throw LinkedinAutomationService.handleError(err);
     } finally {
-      page.close();
+      await browser.close();
     }
   }
+
+
 
   async getConnectionsNew(): Promise<
     [results: string[], error: StandardError | null]

@@ -187,6 +187,7 @@ services:
       - postgres-sidecar
       - neo4j-sidecar
       - eventstore
+      - rabbitmq
     environment:
       - POSTGRES_HOST=postgres
       - NEO4J_TARGET=neo4j://neo4j:7687

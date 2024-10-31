@@ -13,7 +13,7 @@ export class MessagesController {
 
   constructor() {
     this.sendMessage = this.sendMessage.bind(this);
-    this.getMessages = this.getMessages.bind(this);
+    this.retrieveMessages = this.retrieveMessages.bind(this);
   }
 
   async sendMessage(req: Request, res: Response) {
@@ -65,7 +65,7 @@ export class MessagesController {
     }
   }
 
-  async getMessages(req: Request, res: Response) {
+  async retrieveMessages(req: Request, res: Response) {
     try {
       const newAutomationRun = await this.browserAutomationRunService.createRun(
         {

@@ -144,21 +144,24 @@ export class LinkedinService {
     }
   }
 
-  async getMessages() {
+  async retrieveMessages(payload: unknown) {
+    const { profileUrl } = payload as {
+      profileUrl: string;
+    };
+
     try {
       logger.info("Getting messages", {
         source: "LinkedinService",
       });
 
-      const result = await this.linkedinAutomationService.getMessages();
+      const messages = await this.linkedinAutomationService.retrieveMessages(profileUrl);
 
       logger.info("Messages retrieved", {
         source: "LinkedinService",
       });
-
-      return result;
+      return { profileUrl, messages };
     } catch (err) {
-      logger.info("Failed to get messages", {
+      logger.info("Failed to get chat", {
         source: "LinkedinService",
       });
       throw LinkedinService.handleError(err);
