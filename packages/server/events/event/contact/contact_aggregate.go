@@ -4,7 +4,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/constants"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event/contact/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
@@ -136,20 +135,10 @@ func (a *ContactAggregate) addLocation(ctx context.Context, request *contactpb.C
 
 func (a *ContactAggregate) When(evt eventstore.Event) error {
 	switch evt.GetEventType() {
-	case event.ContactAddTagV1,
-		event.ContactRemoveTagV1,
-		event.ContactEmailLinkV1,
-		event.ContactEmailUnlinkV1,
-		event.ContactUpdateV1,
-		event.ContactCreateV1:
-		return nil
-
 	case event.ContactPhoneNumberLinkV1:
 		return a.onPhoneNumberLink(evt)
 	case event.ContactLocationLinkV1:
 		return a.onLocationLink(evt)
-	case event.ContactOrganizationLinkV1:
-		return a.onOrganizationLink(evt)
 	case event.ContactAddLocationV1:
 		return a.onAddLocation(evt)
 	default:
@@ -179,56 +168,6 @@ func (a *ContactAggregate) onLocationLink(evt eventstore.Event) error {
 		return errors.Wrap(err, "GetJsonData")
 	}
 	a.Contact.LocationIds = utils.AddToListIfNotExists(a.Contact.LocationIds, eventData.LocationId)
-	return nil
-}
-
-func (a *ContactAggregate) onOrganizationLink(evt eventstore.Event) error {
-	var eventData event.ContactLinkWithOrganizationEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		return errors.Wrap(err, "GetJsonData")
-	}
-	if a.Contact.JobRolesByOrganization == nil {
-		a.Contact.JobRolesByOrganization = make(map[string]JobRole)
-	}
-	jobRole, found := a.Contact.JobRolesByOrganization[eventData.OrganizationId]
-	if !found {
-		a.Contact.JobRolesByOrganization[eventData.OrganizationId] = JobRole{
-			JobTitle:    eventData.JobTitle,
-			Primary:     eventData.Primary,
-			Description: eventData.Description,
-			StartedAt:   eventData.StartedAt,
-			EndedAt:     eventData.EndedAt,
-			Source: cmnmod.Source{
-				Source:        eventData.SourceFields.Source,
-				SourceOfTruth: eventData.SourceFields.SourceOfTruth,
-				AppSource:     eventData.SourceFields.AppSource,
-			},
-			CreatedAt: eventData.CreatedAt,
-		}
-	} else {
-		if eventData.SourceFields.Source != jobRole.Source.SourceOfTruth && jobRole.Source.SourceOfTruth == constants.SourceOpenline {
-			if jobRole.JobTitle == "" {
-				jobRole.JobTitle = eventData.JobTitle
-			}
-			if jobRole.Description == "" {
-				jobRole.Description = eventData.Description
-			}
-			if jobRole.StartedAt == nil {
-				jobRole.StartedAt = eventData.StartedAt
-			}
-			if jobRole.EndedAt == nil {
-				jobRole.EndedAt = eventData.EndedAt
-			}
-		} else {
-			jobRole.JobTitle = eventData.JobTitle
-			jobRole.Primary = eventData.Primary
-			jobRole.Description = eventData.Description
-			jobRole.StartedAt = eventData.StartedAt
-			jobRole.EndedAt = eventData.EndedAt
-		}
-	}
-
-	a.Contact.UpdatedAt = eventData.UpdatedAt
 	return nil
 }
 

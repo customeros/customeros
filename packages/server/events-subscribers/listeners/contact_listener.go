@@ -574,19 +574,11 @@ func (c *contactListenerImpl) enrichContactWithScrapInEnrichDetails(ctx context.
 				}
 				organizationId := utils.GetStringPropOrEmpty(orgByLinkedinUrlNode.Props, "id")
 				// link contact with organization
-				_, err = utils.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
-					return c.services.GrpcClients.ContactClient.LinkWithOrganization(ctx, &contactpb.LinkWithOrganizationGrpcRequest{
-						Tenant:         tenant,
-						ContactId:      contact.Id,
-						OrganizationId: organizationId,
-						JobTitle:       positionName,
-						StartedAt:      utils.ConvertTimeToTimestampPtr(positionStartedAt),
-						EndedAt:        utils.ConvertTimeToTimestampPtr(positionEndedAt),
-					})
-				})
+				err = c.services.ContactService.LinkContactWithOrganization(ctx, contact.Id, organizationId, positionName, "",
+					neo4jentity.DataSourceOpenline.String(), false, positionStartedAt, positionEndedAt)
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "ContactClient.LinkWithOrganization"))
-					c.log.Errorf("Error upserting organization: %s", err.Error())
+					c.log.Errorf("Error linking contact with organization: %s", err.Error())
 					return err
 				}
 			}

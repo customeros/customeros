@@ -17,7 +17,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/repository"
-	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -341,22 +340,11 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 	if !failedSync {
 		for orgId, referencedOrganization := range identifiedOrganizations {
 			// Link contact to organization
-			_, err = CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
-				return s.grpcClients.ContactClient.LinkWithOrganization(ctx, &contactpb.LinkWithOrganizationGrpcRequest{
-					Tenant:         common.GetTenantFromContext(ctx),
-					ContactId:      contactId,
-					OrganizationId: orgId,
-					JobTitle:       referencedOrganization.JobTitle,
-					Description:    referencedOrganization.JobDescription,
-					SourceFields: &commonpb.SourceFields{
-						Source:    contactInput.ExternalSystem,
-						AppSource: appSource,
-					},
-				})
-			})
+			err = s.services.CommonServices.ContactService.LinkContactWithOrganization(ctx, contactId, orgId, referencedOrganization.JobTitle, referencedOrganization.JobDescription,
+				contactInput.ExternalSystem, false, nil, nil)
 			if err != nil {
+				tracing.TraceErr(span, err)
 				failedSync = true
-				tracing.TraceErr(span, err, log.String("grpcMethod", "LinkWithOrganization"))
 				reason = fmt.Sprintf("Failed to link contact %s with organization %s: %s", contactId, orgId, err.Error())
 				s.log.Error(reason)
 			}

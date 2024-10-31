@@ -25,7 +25,7 @@ type ContactService interface {
 	HideContact(ctx context.Context, contactId string) error
 	ShowContact(ctx context.Context, contactId string) error
 	GetContactById(ctx context.Context, contactId string) (*neo4jentity.ContactEntity, error)
-	LinkContactToOrganization(ctx context.Context, contactId, organizationId, jobTitle, description, source string, primary bool, startedAt, endedAt *time.Time) error
+	LinkContactWithOrganization(ctx context.Context, contactId, organizationId, jobTitle, description, source string, primary bool, startedAt, endedAt *time.Time) error
 }
 
 type contactService struct {
@@ -235,8 +235,8 @@ func (s *contactService) GetContactById(ctx context.Context, contactId string) (
 	return neo4jmapper.MapDbNodeToContactEntity(contactDbNode), nil
 }
 
-func (s *contactService) LinkContactToOrganization(ctx context.Context, contactId, organizationId, jobTitle, description, source string, primary bool, startedAt, endedAt *time.Time) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.LinkContactToOrganization")
+func (s *contactService) LinkContactWithOrganization(ctx context.Context, contactId, organizationId, jobTitle, description, source string, primary bool, startedAt, endedAt *time.Time) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.LinkContactWithOrganization")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	tracing.TagEntity(span, contactId)

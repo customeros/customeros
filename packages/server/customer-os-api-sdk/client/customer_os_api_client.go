@@ -90,7 +90,7 @@ func (s *customerOSApiClient) CreateContact(tenant, username string, contactInpu
 
 func (s *customerOSApiClient) LinkContactToOrganization(tenant, contactId, organizationId string) (string, error) {
 	graphqlRequest := graphql.NewRequest(
-		`mutation LinkContactToOrganization($input: ContactOrganizationInput!) {
+		`mutation LinkContactWithOrganization($input: ContactOrganizationInput!) {
 				contact_AddOrganizationById(input: $input) {
 					id
 				}

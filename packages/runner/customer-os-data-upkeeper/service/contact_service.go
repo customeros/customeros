@@ -558,6 +558,11 @@ func (s *contactService) linkOrphanContactsToOrganizationBaseOnLinkedinScrapIn(c
 	span.LogFields(log.Int("orphanContactsCount", len(orphanContacts)))
 
 	for _, orpanContact := range orphanContacts {
+		innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+			Tenant:    orpanContact.Tenant,
+			AppSource: constants.AppSourceDataUpkeeper,
+		})
+
 		tenant := orpanContact.Tenant
 
 		select {
@@ -609,21 +614,13 @@ func (s *contactService) linkOrphanContactsToOrganizationBaseOnLinkedinScrapIn(c
 					}
 				}
 
-				_, err = utils.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
-					return s.commonServices.GrpcClients.ContactClient.LinkWithOrganization(ctx, &contactpb.LinkWithOrganizationGrpcRequest{
-						Tenant:         tenant,
-						ContactId:      orpanContact.ContactId,
-						OrganizationId: organizationId,
-						JobTitle:       positionName,
-					})
-				})
+				err = s.commonServices.ContactService.LinkContactWithOrganization(innerCtx, orpanContact.ContactId, organizationId, positionName, "",
+					neo4jentity.DataSourceOpenline.String(), false, nil, nil)
 				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "ContactClient.LinkWithOrganization"))
-					return
+					tracing.TraceErr(span, errors.Wrap(err, "ContactService.LinkContactWithOrganization"))
 				}
 			}
 		}
-
 	}
 }
 

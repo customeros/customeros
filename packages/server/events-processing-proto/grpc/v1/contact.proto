@@ -27,22 +27,6 @@ message LinkLocationToContactGrpcRequest {
   string appSource = 5;
 }
 
-message LinkWithOrganizationGrpcRequest {
-  string tenant = 1;
-  string contactId = 2;
-  string organizationId = 3;
-  string loggedInUserId = 4;
-  SourceFields sourceFields = 5;
-  google.protobuf.Timestamp startedAt = 6;
-  google.protobuf.Timestamp endedAt = 7;
-  string jobTitle = 8;
-  bool primary = 9;
-  string description = 10;
-  google.protobuf.Timestamp createdAt = 11;
-  google.protobuf.Timestamp updatedAt = 12;
-  string appSource = 13;
-}
-
 message ContactRemoveSocialGrpcRequest {
   string tenant = 1;
   string contactId = 2;
@@ -69,7 +53,6 @@ message ContactIdGrpcResponse {
 service contactGrpcService {
   rpc LinkPhoneNumberToContact(LinkPhoneNumberToContactGrpcRequest) returns (ContactIdGrpcResponse);
   rpc LinkLocationToContact(LinkLocationToContactGrpcRequest) returns (ContactIdGrpcResponse);
-  rpc LinkWithOrganization(LinkWithOrganizationGrpcRequest) returns (ContactIdGrpcResponse);
   rpc RemoveSocial(ContactRemoveSocialGrpcRequest) returns (ContactIdGrpcResponse);
   rpc AddLocation(ContactAddLocationGrpcRequest) returns (LocationIdGrpcResponse);
 }

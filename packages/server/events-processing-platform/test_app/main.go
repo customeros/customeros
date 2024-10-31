@@ -100,7 +100,6 @@ func main() {
 	//testOrganizationLinkWithEmail()
 	//testOrganizationLinkWithPhoneNumber()
 	//testOrganizationLinkWithLocation()
-	//testContactLinkWithOrganization()
 	//testCreateIssue()
 	//testUpdateIssue()
 	//testCreateComment()
@@ -429,26 +428,6 @@ func testOrganizationLinkWithPhoneNumber() {
 		PhoneNumberId:  phoneNumberId,
 		Primary:        true,
 		Label:          "work",
-	})
-	print(result)
-}
-
-func testContactLinkWithOrganization() {
-	contactId := "2f7660a8-a40b-4f21-b81f-1b73f025f79c"
-	orgId := "cfaaf31f-ec3b-44d1-836e-4e50834632ae"
-	jobRole := "CTO"
-
-	result, _ := clients.ContactClient.LinkWithOrganization(context.Background(), &contactpb.LinkWithOrganizationGrpcRequest{
-		Tenant:         tenant,
-		ContactId:      contactId,
-		OrganizationId: orgId,
-		JobTitle:       jobRole,
-		Primary:        true,
-		Description:    "CEO of the company",
-		SourceFields: &commonpb.SourceFields{
-			AppSource: "integration.app",
-			Source:    "hubspot",
-		},
 	})
 	print(result)
 }

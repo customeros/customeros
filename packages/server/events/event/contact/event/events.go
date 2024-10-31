@@ -2,7 +2,6 @@ package event
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
-	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/pkg/errors"
 	"time"
@@ -17,8 +16,9 @@ const (
 	// Deprecated
 	ContactEmailLinkV1 = "V1_CONTACT_EMAIL_LINK"
 	// Deprecated
-	ContactEmailUnlinkV1      = "V1_CONTACT_EMAIL_UNLINK"
-	ContactLocationLinkV1     = "V1_CONTACT_LOCATION_LINK"
+	ContactEmailUnlinkV1  = "V1_CONTACT_EMAIL_UNLINK"
+	ContactLocationLinkV1 = "V1_CONTACT_LOCATION_LINK"
+	// Deprecated
 	ContactOrganizationLinkV1 = "V1_CONTACT_ORGANIZATION_LINK"
 	// Deprecated
 	ContactAddSocialV1    = "V1_CONTACT_ADD_SOCIAL"
@@ -84,45 +84,6 @@ func NewContactLinkLocationEvent(aggregate eventstore.Aggregate, locationId stri
 	event := eventstore.NewBaseEvent(aggregate, ContactLocationLinkV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, errors.Wrap(err, "error setting json data for ContactLinkLocationEvent")
-	}
-	return event, nil
-}
-
-type ContactLinkWithOrganizationEvent struct {
-	Tenant         string        `json:"tenant" validate:"required"`
-	OrganizationId string        `json:"organizationId" validate:"required"`
-	CreatedAt      time.Time     `json:"createdAt"`
-	UpdatedAt      time.Time     `json:"updatedAt"`
-	StartedAt      *time.Time    `json:"startedAt,omitempty"`
-	EndedAt        *time.Time    `json:"endedAt,omitempty"`
-	JobTitle       string        `json:"jobTitle"`
-	Description    string        `json:"description"`
-	Primary        bool          `json:"primary"`
-	SourceFields   cmnmod.Source `json:"sourceFields"`
-}
-
-func NewContactLinkWithOrganizationEvent(aggregate eventstore.Aggregate, organizationId, jobTile, description string, primary bool,
-	sourceFields cmnmod.Source, createdAt, updatedAt time.Time, startedAt, endedAt *time.Time) (eventstore.Event, error) {
-	eventData := ContactLinkWithOrganizationEvent{
-		Tenant:         aggregate.GetTenant(),
-		OrganizationId: organizationId,
-		SourceFields:   sourceFields,
-		CreatedAt:      createdAt,
-		UpdatedAt:      updatedAt,
-		StartedAt:      startedAt,
-		EndedAt:        endedAt,
-		JobTitle:       jobTile,
-		Description:    description,
-		Primary:        primary,
-	}
-
-	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "failed to validate ContactLinkWithOrganizationEvent")
-	}
-
-	event := eventstore.NewBaseEvent(aggregate, ContactOrganizationLinkV1)
-	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "error setting json data for ContactLinkWithOrganizationEvent")
 	}
 	return event, nil
 }

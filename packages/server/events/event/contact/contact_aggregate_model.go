@@ -2,8 +2,6 @@ package contact
 
 import (
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/constants"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
 	"reflect"
 	"time"
@@ -24,11 +22,10 @@ type Contact struct {
 	UpdatedAt       time.Time                     `json:"updatedAt"`
 	PhoneNumbers    map[string]ContactPhoneNumber `json:"phoneNumbers"`
 	// Deprecated
-	LocationIds            []string                   `json:"locationIds,omitempty"`
-	ExternalSystems        []cmnmod.ExternalSystem    `json:"externalSystems"`
-	JobRolesByOrganization map[string]JobRole         `json:"jobRoles,omitempty"`
-	TagIds                 []string                   `json:"tagIds,omitempty"`
-	Locations              map[string]cmnmod.Location `json:"locations,omitempty"`
+	LocationIds     []string                   `json:"locationIds,omitempty"`
+	ExternalSystems []cmnmod.ExternalSystem    `json:"externalSystems"`
+	TagIds          []string                   `json:"tagIds,omitempty"`
+	Locations       map[string]cmnmod.Location `json:"locations,omitempty"`
 }
 
 type JobRole struct {
@@ -81,29 +78,6 @@ func (c *Contact) HasLocation(locationId string) bool {
 	for _, location := range c.LocationIds {
 		if location == locationId {
 			return true
-		}
-	}
-	return false
-}
-
-func (c *Contact) HasJobRoleInOrganization(organizationId string, jobRoleFields JobRole, sourceFields cmnmod.Source) bool {
-	if c.JobRolesByOrganization == nil {
-		return false
-	}
-	if jobRole, ok := c.JobRolesByOrganization[organizationId]; ok {
-		found := jobRole.JobTitle == jobRoleFields.JobTitle &&
-			jobRole.Description == jobRoleFields.Description &&
-			jobRole.Primary == jobRoleFields.Primary &&
-			(utils.IsEqualTimePtr(jobRole.StartedAt, jobRoleFields.StartedAt) || jobRoleFields.StartedAt == nil) &&
-			(utils.IsEqualTimePtr(jobRole.EndedAt, jobRoleFields.EndedAt) || jobRoleFields.EndedAt == nil)
-		if found {
-			return true
-		}
-		if sourceFields.Source != jobRole.Source.SourceOfTruth && jobRole.Source.SourceOfTruth == constants.SourceOpenline {
-			return !(jobRole.JobTitle == "" && jobRoleFields.JobTitle != "") &&
-				!(jobRole.Description == "" && jobRoleFields.Description != "") &&
-				!(jobRole.StartedAt == nil && jobRoleFields.StartedAt != nil) &&
-				!(jobRole.EndedAt == nil && jobRoleFields.EndedAt != nil)
 		}
 	}
 	return false

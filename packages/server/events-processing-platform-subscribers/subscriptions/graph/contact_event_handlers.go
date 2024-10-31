@@ -2,7 +2,6 @@ package graph
 
 import (
 	"context"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -67,49 +66,6 @@ func (h *ContactEventHandler) OnLocationLinkToContact(ctx context.Context, evt e
 	err := h.services.CommonServices.Neo4jRepositories.LocationWriteRepository.LinkWithContact(ctx, eventData.Tenant, contactId, eventData.LocationId)
 
 	utils.EventCompleted(ctx, eventData.Tenant, model.CONTACT.String(), contactId, h.grpcClients, utils.NewEventCompletedDetails().WithUpdate())
-
-	return err
-}
-
-func (h *ContactEventHandler) OnContactLinkToOrganization(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactEventHandler.OnContactLinkToOrganization")
-	defer span.Finish()
-	setEventSpanTagsAndLogFields(span, evt)
-
-	var eventData event.ContactLinkWithOrganizationEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "evt.GetJsonData")
-	}
-
-	contactId := contact.GetContactObjectID(evt.AggregateID, eventData.Tenant)
-	data := neo4jrepository.JobRoleFields{
-		Description: eventData.Description,
-		JobTitle:    eventData.JobTitle,
-		Primary:     eventData.Primary,
-		StartedAt:   eventData.StartedAt,
-		EndedAt:     eventData.EndedAt,
-		SourceFields: neo4jmodel.SourceFields{
-			Source:        helper.GetSource(eventData.SourceFields.Source),
-			SourceOfTruth: helper.GetSourceOfTruth(eventData.SourceFields.SourceOfTruth),
-			AppSource:     helper.GetAppSource(eventData.SourceFields.AppSource),
-		},
-	}
-	err := h.services.CommonServices.Neo4jRepositories.JobRoleWriteRepository.LinkContactWithOrganization(ctx, eventData.Tenant, contactId, eventData.OrganizationId, data)
-
-	// Request last touch point update
-	innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
-		Tenant:    eventData.Tenant,
-		AppSource: helper.GetAppSource(eventData.SourceFields.AppSource),
-	})
-	err = h.services.CommonServices.OrganizationService.RequestRefreshLastTouchpoint(innerCtx, eventData.OrganizationId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Error while refreshing last touchpoint for organization %s: %s", eventData.OrganizationId, err.Error())
-	}
-
-	utils.EventCompleted(ctx, eventData.Tenant, model.CONTACT.String(), contactId, h.grpcClients, utils.NewEventCompletedDetails().WithUpdate())
-	utils.EventCompleted(ctx, eventData.Tenant, model.ORGANIZATION.String(), eventData.OrganizationId, h.grpcClients, utils.NewEventCompletedDetails().WithUpdate())
 
 	return err
 }

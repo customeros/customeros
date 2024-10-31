@@ -2,13 +2,11 @@ package service
 
 import (
 	"context"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
 	locationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/location"
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event/contact"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event/contact/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
@@ -88,62 +86,6 @@ func (s *contactService) LinkLocationToContact(ctx context.Context, request *con
 	}
 
 	evt, err := event.NewContactLinkLocationEvent(agg, request.LocationId, time.Now())
-
-	eventstore.EnrichEventWithMetadataExtended(&evt, span, eventstore.EventMetadata{
-		Tenant: request.Tenant,
-		UserId: request.LoggedInUserId,
-		App:    request.AppSource,
-	})
-
-	err = agg.Apply(evt)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, s.errResponse(err)
-	}
-
-	err = s.services.es.Save(ctx, agg)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, s.errResponse(err)
-	}
-
-	return &contactpb.ContactIdGrpcResponse{Id: request.ContactId}, nil
-}
-
-func (s *contactService) LinkWithOrganization(ctx context.Context, request *contactpb.LinkWithOrganizationGrpcRequest) (*contactpb.ContactIdGrpcResponse, error) {
-	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ContactService.LinkWithOrganization")
-	defer span.Finish()
-	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	tracing.LogObjectAsJson(span, "request", request)
-
-	sourceFields := commonmodel.Source{}
-	sourceFields.FromGrpc(request.SourceFields)
-
-	jobRoleFields := contact.JobRole{
-		JobTitle:    request.JobTitle,
-		Description: request.Description,
-		Primary:     request.Primary,
-		StartedAt:   utils.TimestampProtoToTimePtr(request.StartedAt),
-		EndedAt:     utils.TimestampProtoToTimePtr(request.EndedAt),
-	}
-
-	createdAtNotNil := utils.IfNotNilTimeWithDefault(request.CreatedAt, utils.Now())
-	updatedAtNotNil := utils.IfNotNilTimeWithDefault(request.UpdatedAt, utils.Now())
-
-	agg, err := contact.LoadContactAggregate(ctx, s.services.es, request.Tenant, request.ContactId, *eventstore.NewLoadAggregateOptions())
-	if err != nil {
-		agg = contact.NewContactAggregateWithTenantAndID(request.Tenant, request.ContactId)
-	}
-
-	if eventstore.AllowCheckForNoChanges(request.AppSource, request.LoggedInUserId) {
-		if agg.Contact.HasJobRoleInOrganization(request.OrganizationId, jobRoleFields, sourceFields) {
-			span.SetTag(tracing.SpanTagRedundantEventSkipped, true)
-			return &contactpb.ContactIdGrpcResponse{Id: request.ContactId}, nil
-		}
-	}
-
-	evt, err := event.NewContactLinkWithOrganizationEvent(agg, request.OrganizationId, request.JobTitle, request.Description,
-		request.Primary, sourceFields, createdAtNotNil, updatedAtNotNil, utils.TimestampProtoToTimePtr(request.StartedAt), utils.TimestampProtoToTimePtr(request.EndedAt))
 
 	eventstore.EnrichEventWithMetadataExtended(&evt, span, eventstore.EventMetadata{
 		Tenant: request.Tenant,

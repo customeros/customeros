@@ -27,7 +27,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
-	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	postgresrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
@@ -339,9 +338,8 @@ func (r *mutationResolver) ContactCreateForOrganization(ctx context.Context, inp
 
 	// Link contact to organization
 	if contactId != "" {
-		neo4jrepository.WaitForNodeCreatedInNeo4j(ctx, r.Services.Repositories.Neo4jRepositories, contactId, commonmodel.NodeLabelContact, span)
-
-		err = r.Services.ContactService.LinkToOrganization(ctx, contactId, organizationID, constants.AppSourceCustomerOsApi)
+		err = r.Services.CommonServices.ContactService.LinkContactWithOrganization(ctx, contactId, organizationID, "", "",
+			neo4jentity.DataSourceOpenline.String(), false, nil, nil)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			graphql.AddErrorf(ctx, "Failed to add organization %s to contact %s", organizationID, contactId)
@@ -507,12 +505,15 @@ func (r *mutationResolver) ContactAddOrganizationByID(ctx context.Context, input
 	span.LogFields(log.String("request.contactID", input.ContactID), log.String("request.organizationID", input.OrganizationID))
 	tracing.LogObjectAsJson(span, "request.input", input)
 
-	err := r.Services.ContactService.LinkToOrganization(ctx, input.ContactID, input.OrganizationID, constants.AppSourceCustomerOsApi)
+	err := r.Services.CommonServices.ContactService.LinkContactWithOrganization(ctx, input.ContactID, input.OrganizationID, "", "",
+		neo4jentity.DataSourceOpenline.String(), false, nil, nil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to add organization %s to contact %s", input.OrganizationID, input.ContactID)
 		return nil, err
 	}
+
+	//err := r.Services.ContactService.LinkToOrganization(ctx, input.ContactID, input.OrganizationID, constants.AppSourceCustomerOsApi)
 	contactEntity, err := r.Services.ContactService.GetById(ctx, input.ContactID)
 	if err != nil || contactEntity == nil {
 		if err == nil {
