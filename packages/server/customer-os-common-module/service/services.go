@@ -50,10 +50,12 @@ type Services struct {
 	OrganizationService        OrganizationService
 	TagService                 TagService
 
-	GoogleService  GoogleService
-	AzureService   AzureService
-	OpenSrsService OpenSrsService
-	MailService    MailService
+	GoogleService   GoogleService
+	AzureService    AzureService
+	OpenSrsService  OpenSrsService
+	MailService     MailService
+	PostmarkService PostmarkService
+	NovuService     NovuService
 }
 
 func InitServices(globalConfig *config.GlobalConfig, db *gorm.DB, driver *neo4j.DriverWithContext, neo4jDatabase string, grpcClients *grpc_client.Clients, log logger.Logger) *Services {
@@ -94,6 +96,8 @@ func InitServices(globalConfig *config.GlobalConfig, db *gorm.DB, driver *neo4j.
 	services.OpportunityService = NewOpportunityService(log, services)
 	services.SocialService = NewSocialService(log, services)
 	services.MailService = NewMailService(services)
+	services.PostmarkService = NewPostmarkService(services)
+	services.NovuService = NewNovuService(services)
 	services.OrganizationService = NewOrganizationService(services)
 	services.OpenSrsService = NewOpenSRSService(services)
 	services.SlackChannelService = NewSlackChannelService(services.PostgresRepositories)

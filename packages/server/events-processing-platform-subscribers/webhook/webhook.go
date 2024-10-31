@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository/helper"
@@ -14,7 +15,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/notifications"
 	temporal_client "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/temporal/client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/temporal/workflows"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
@@ -80,7 +80,7 @@ func DispatchWebhook(ctx context.Context, tenant string, event WebhookEvent, pay
 		TaskQueue:                workflows.WEBHOOK_CALLS_TASK_QUEUE, // "webhook-calls",
 	}
 
-	var notification *notifications.NovuNotification
+	var notification *commonService.NovuNotification
 	if cfg.Temporal.NotifyOnFailure {
 		notification = populateNotification(tenant, event.String(), wh)
 	}
@@ -122,8 +122,8 @@ func mapResultToWebhook(result helper.QueryResult) *postgresEntity.TenantWebhook
 	return webhook
 }
 
-func populateNotification(tenant, webhookName string, wh *postgresEntity.TenantWebhook) *notifications.NovuNotification {
-	subject := fmt.Sprintf(notifications.WorkflowFailedWebhookSubject, webhookName)
+func populateNotification(tenant, webhookName string, wh *postgresEntity.TenantWebhook) *commonService.NovuNotification {
+	subject := fmt.Sprintf(commonService.WorkflowFailedWebhookSubject, webhookName)
 	payload := map[string]interface{}{
 		"subject":       subject,
 		"email":         wh.UserEmail,
@@ -132,14 +132,14 @@ func populateNotification(tenant, webhookName string, wh *postgresEntity.TenantW
 		"webhookUrl":    wh.WebhookUrl,
 	}
 
-	notification := &notifications.NovuNotification{
-		WorkflowId: notifications.WorkflowFailedWebhook,
+	notification := &commonService.NovuNotification{
+		WorkflowId: commonService.WorkflowFailedWebhook,
 		TemplateData: map[string]string{
 			"{{userFirstName}}": wh.UserFirstName,
 			"{{webhookName}}":   webhookName,
 			"{{webhookUrl}}":    wh.WebhookUrl,
 		},
-		To: &notifications.NotifiableUser{
+		To: &commonService.NotifiableUser{
 			FirstName:    wh.UserFirstName,
 			LastName:     wh.UserLastName,
 			Email:        wh.UserEmail,

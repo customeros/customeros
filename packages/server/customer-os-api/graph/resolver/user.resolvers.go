@@ -60,7 +60,7 @@ func (r *mutationResolver) UserCreate(ctx context.Context, input model.UserInput
 		}
 	}
 
-	createdUserEntity, err := r.Services.UserService.GetById(ctx, userId)
+	createdUserEntity, err := r.Services.CommonServices.UserService.GetById(ctx, userId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "User details not yet available. User id: %s", userId)
@@ -203,7 +203,7 @@ func (r *queryResolver) User(ctx context.Context, id string) (*model.User, error
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.userID", id))
 
-	userEntity, err := r.Services.UserService.GetById(ctx, id)
+	userEntity, err := r.Services.CommonServices.UserService.GetById(ctx, id)
 	if err != nil || userEntity == nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "User with id %s not found", id)

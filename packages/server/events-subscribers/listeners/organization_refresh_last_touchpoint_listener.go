@@ -1,7 +1,7 @@
 package listeners
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/opentracing/opentracing-go"
@@ -14,7 +14,7 @@ func OnRequestLastTouchpointRefresh(ctx context.Context, services *service.Servi
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "input", input)
 
-	message := input.(*events.Event)
+	message := input.(*dto.Event)
 	organizationId := message.Event.EntityId
 	span.SetTag(tracing.SpanTagEntityId, organizationId)
 

@@ -6,7 +6,6 @@ import (
 	"github.com/mitchellh/mapstructure"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -149,8 +148,8 @@ func (r *RabbitMQService) PublishEventOnQueue(ctx context.Context, entityId stri
 
 	tracingData := tracing.ExtractTextMapCarrier((span).Context())
 
-	eventMessage := events.Event{
-		Event: events.EventDetails{
+	eventMessage := dto.Event{
+		Event: dto.EventDetails{
 			Id:         utils.GenerateRandomString(32),
 			EntityId:   entityId,
 			EntityType: entityType,
@@ -158,7 +157,7 @@ func (r *RabbitMQService) PublishEventOnQueue(ctx context.Context, entityId stri
 			EventType:  reflect.TypeOf(message).Name(),
 			Data:       message,
 		},
-		Metadata: events.EventMetadata{
+		Metadata: dto.EventMetadata{
 			UberTraceId: tracingData["uber-trace-id"],
 			AppSource:   common.GetAppSourceFromContext(ctx),
 			UserId:      common.GetUserIdFromContext(ctx),
@@ -293,7 +292,7 @@ func (r *RabbitMQService) Listen() {
 func (r *RabbitMQService) ProcessMessage(d amqp091.Delivery) {
 	ctx := context.Background()
 
-	var event events.Event
+	var event dto.Event
 	if err := json.Unmarshal(d.Body, &event); err != nil {
 		log.Printf("Failed to unmarshal message: %s", err)
 		return

@@ -161,9 +161,7 @@ type Services struct {
 		EmailActionsItemsPrompt  string `env:"ANTHROPIC_EMAIL_ACTIONS_ITEMS_PROMPT,required" envDefault:"Give me the action points to be taken for the email. The criticality for the action points should be at least medium severity. return response in jSON format, key - \"items\", value - array of strings. The email is: %v"`
 		LocationEnrichmentPrompt string `env:"ANTHROPIC_LOCATION_ENRICHMENT_PROMPT,required" envDefault:"Given the address '%s', please provide a JSON representation of the Location object with all available information. Use the following structure, filling in as many fields as possible based on the given address. If a field cannot be determined, omit it from the JSON output. Strictly return only the JSON.\n\n{\n    \"country\": \"string\",\n    \"countryCodeA2\": \"string\",\n    \"countryCodeA3\": \"string\",\n    \"region\": \"string\",\n    \"locality\": \"string\",\n    \"address\": \"string\",\n    \"address2\": \"string\",\n    \"zip\": \"string\",\n    \"addressType\": \"string\",\n    \"houseNumber\": \"string\",\n    \"postalCode\": \"string\",\n    \"plusFour\": \"string\",\n    \"commercial\": boolean,\n    \"predirection\": \"string\",\n    \"district\": \"string\",\n    \"street\": \"string\",\n    \"latitude\": number,\n    \"longitude\": number,\n    \"timeZone\": \"string\",\n    \"utcOffset\": number\n}"`
 	}
-	Novu struct {
-		ApiKey string `env:"NOVU_API_KEY,required" envDefault:"N/A"`
-	}
+	Novu               config.NovuConfig
 	FileStoreApiConfig fsc.FileStoreApiConfig
 	CustomerOsApi      struct {
 		ApiUrl string `env:"CUSTOMER_OS_API_URL" envDefault:"https://api.customeros.ai" validate:"required"`

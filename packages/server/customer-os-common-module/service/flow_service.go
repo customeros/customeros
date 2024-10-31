@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -427,7 +427,7 @@ func (s *flowService) FlowMerge(ctx context.Context, tx *neo4j.ManagedTransactio
 
 	e := flowEntity.(*neo4jentity.FlowEntity)
 
-	err = s.services.RabbitMQService.PublishEvent(ctx, e.Id, model.FLOW, events.FlowComputeParticipantsRequirements{})
+	err = s.services.RabbitMQService.PublishEvent(ctx, e.Id, model.FLOW, dto.FlowComputeParticipantsRequirements{})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -626,7 +626,7 @@ func (s *flowService) FlowChangeStatus(ctx context.Context, id string, status ne
 	})
 
 	if startInitialSchedule {
-		err := s.services.RabbitMQService.PublishEvent(ctx, flow.Id, model.FLOW, events.FlowInitialSchedule{})
+		err := s.services.RabbitMQService.PublishEvent(ctx, flow.Id, model.FLOW, dto.FlowInitialSchedule{})
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err

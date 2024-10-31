@@ -14,6 +14,7 @@ import (
 )
 
 type UserService interface {
+	GetById(ctx context.Context, userId string) (*neo4jentity.UserEntity, error)
 	GetAllUsersForTenant(ctx context.Context, tenant string) ([]*neo4jentity.UserEntity, error)
 	FindUserByEmail(parentCtx context.Context, email string) (*neo4jentity.UserEntity, error)
 
@@ -34,6 +35,20 @@ type UserCreateData struct {
 	UserInput   neo4jentity.UserEntity
 	EmailInput  neo4jentity.EmailEntity
 	PlayerInput neo4jentity.PlayerEntity
+}
+
+func (s *userService) GetById(parentCtx context.Context, userId string) (*neo4jentity.UserEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.GetById")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	node, err := s.services.Neo4jRepositories.UserReadRepository.GetUserById(ctx, common.GetContext(ctx).Tenant, userId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return mapper.MapDbNodeToUserEntity(node), nil
 }
 
 func (s *userService) GetAllUsersForTenant(ctx context.Context, tenant string) ([]*neo4jentity.UserEntity, error) {

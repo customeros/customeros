@@ -32,7 +32,7 @@ type UserService interface {
 	Create(ctx context.Context, UserEntity neo4jentity.UserEntity) (string, error)
 	Update(ctx context.Context, userId, firstName, lastName string, name, timezone, profilePhotoURL *string) (*neo4jentity.UserEntity, error)
 	GetAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
-	GetById(ctx context.Context, userId string) (*neo4jentity.UserEntity, error)
+
 	IsOwner(ctx context.Context, id string) (*bool, error)
 	GetContactOwner(ctx context.Context, contactId string) (*neo4jentity.UserEntity, error)
 	GetNoteCreator(ctx context.Context, noteId string) (*neo4jentity.UserEntity, error)
@@ -68,6 +68,7 @@ type userService struct {
 	log          logger.Logger
 	repositories *repository.Repositories
 	grpcClients  *grpc_client.Clients
+	services     *Services
 }
 
 type CustomerAddJobRoleData struct {
@@ -75,11 +76,12 @@ type CustomerAddJobRoleData struct {
 	JobRoleEntity *neo4jentity.JobRoleEntity
 }
 
-func NewUserService(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients) UserService {
+func NewUserService(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients, services *Services) UserService {
 	return &userService{
 		log:          log,
 		repositories: repositories,
 		grpcClients:  grpcClients,
+		services:     services,
 	}
 }
 
@@ -120,7 +122,7 @@ func (s *userService) Update(ctx context.Context, userId, firstName, lastName st
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
-	return s.GetById(ctx, userId)
+	return s.services.CommonServices.UserService.GetById(ctx, userId)
 }
 
 func (s *userService) ContainsRole(parentCtx context.Context, allowedRoles []model.Role) bool {
@@ -183,7 +185,7 @@ func (s *userService) AddRole(parentCtx context.Context, userId string, role mod
 		return nil, err
 	}
 
-	return s.GetById(ctx, userId)
+	return s.services.CommonServices.UserService.GetById(ctx, userId)
 }
 
 func (s *userService) CustomerAddJobRole(ctx context.Context, entity *CustomerAddJobRoleData) (*model.CustomerUser, error) {
@@ -255,7 +257,7 @@ func (s *userService) AddRoleInTenant(parentCtx context.Context, userId, tenant 
 		return nil, err
 	}
 
-	return s.GetById(ctx, userId)
+	return s.services.CommonServices.UserService.GetById(ctx, userId)
 }
 
 func (s *userService) RemoveRole(parentCtx context.Context, userId string, role model.Role) (*neo4jentity.UserEntity, error) {
@@ -282,7 +284,7 @@ func (s *userService) RemoveRole(parentCtx context.Context, userId string, role 
 		return nil, err
 	}
 
-	return s.GetById(ctx, userId)
+	return s.services.CommonServices.UserService.GetById(ctx, userId)
 }
 
 func (s *userService) RemoveRoleInTenant(parentCtx context.Context, userId string, tenant string, role model.Role) (*neo4jentity.UserEntity, error) {
@@ -309,7 +311,7 @@ func (s *userService) RemoveRoleInTenant(parentCtx context.Context, userId strin
 		return nil, err
 	}
 
-	return s.GetById(ctx, userId)
+	return s.services.CommonServices.UserService.GetById(ctx, userId)
 }
 
 func (s *userService) GetAll(parentCtx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error) {
@@ -409,18 +411,6 @@ func (s *userService) GetNoteCreator(parentCtx context.Context, noteId string) (
 		return nil, nil
 	} else {
 		return neo4jmapper.MapDbNodeToUserEntity(userDbNode.(*dbtype.Node)), nil
-	}
-}
-
-func (s *userService) GetById(parentCtx context.Context, userId string) (*neo4jentity.UserEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.GetById")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-
-	if userDbNode, err := s.repositories.Neo4jRepositories.UserReadRepository.GetUserById(ctx, common.GetContext(ctx).Tenant, userId); err != nil {
-		return nil, err
-	} else {
-		return neo4jmapper.MapDbNodeToUserEntity(userDbNode), nil
 	}
 }
 

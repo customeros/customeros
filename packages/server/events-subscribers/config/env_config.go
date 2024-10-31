@@ -12,6 +12,7 @@ type Config struct {
 	Neo4j            config.Neo4jConfig
 	Jaeger           tracing.JaegerConfig
 	RabbitMQ         config.RabbitMQConfig
+	NovuConfig       config.NovuConfig
 	GrpcClientConfig config.GrpcClientConfig
 	InternalServices InternalServices
 }

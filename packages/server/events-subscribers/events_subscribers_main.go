@@ -6,7 +6,6 @@ import (
 	"github.com/joho/godotenv"
 	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -66,6 +65,7 @@ func main() {
 
 	commonServices := commonService.InitServices(&commonConfig.GlobalConfig{
 		RabbitMQConfig: &cfg.RabbitMQ,
+		NovuConfig:     &cfg.NovuConfig,
 		InternalServices: commonConfig.InternalServices{
 			EnrichmentApiConfig: cfg.InternalServices.EnrichmentApi,
 			AiApiConfig:         cfg.InternalServices.AiApi,
@@ -73,8 +73,9 @@ func main() {
 	}, db.GormDB, &neo4jDriver, cfg.Neo4j.Database, eventsProcessingGrpcClient, appLogger)
 
 	//Register listeners
-	commonServices.RabbitMQService.RegisterHandler(events.FlowInitialSchedule{}, listeners.Handle_FlowInitialSchedule)
-	commonServices.RabbitMQService.RegisterHandler(events.FlowComputeParticipantsRequirements{}, listeners.Handle_FlowComputeParticipantsRequirements)
+	commonServices.RabbitMQService.RegisterHandler(dto.FlowInitialSchedule{}, listeners.Handle_FlowInitialSchedule)
+	commonServices.RabbitMQService.RegisterHandler(dto.FlowComputeParticipantsRequirements{}, listeners.Handle_FlowComputeParticipantsRequirements)
+	commonServices.RabbitMQService.RegisterHandler(dto.FlowParticipantGoalAchieved{}, listeners.Handle_FlowParticipantGoalAchieved)
 	commonServices.RabbitMQService.RegisterHandler(dto.AddSocialToContact{}, listeners.OnSocialAddedToContact)
 	commonServices.RabbitMQService.RegisterHandler(dto.RequestEnrichContact{}, listeners.OnRequestedEnrichContact)
 	commonServices.RabbitMQService.RegisterHandler(dto.RequestRefreshLastTouchpoint{}, listeners.OnRequestLastTouchpointRefresh)

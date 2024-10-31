@@ -3,13 +3,11 @@ package notifications
 import (
 	"context"
 	"fmt"
+	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event/reminder/event"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/aws_client"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/notifications"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
@@ -21,19 +19,16 @@ import (
 )
 
 type ReminderEventHandler struct {
-	services             *service.Services
-	log                  logger.Logger
-	notificationProvider notifications.NotificationProvider
-	cfg                  *config.Config
+	services *service.Services
+	log      logger.Logger
+	cfg      *config.Config
 }
 
 func NewReminderEventHandler(log logger.Logger, services *service.Services, cfg *config.Config) *ReminderEventHandler {
-	s3 := aws_client.NewS3Client(&aws.Config{Region: aws.String("eu-west-1")})
 	return &ReminderEventHandler{
-		services:             services,
-		log:                  log,
-		notificationProvider: notifications.NewNovuNotificationProvider(log, cfg.Services.Novu.ApiKey, s3),
-		cfg:                  cfg,
+		services: services,
+		log:      log,
+		cfg:      cfg,
 	}
 }
 
@@ -51,7 +46,7 @@ func (h *ReminderEventHandler) OnReminderNotification(ctx context.Context, evt e
 	err := h.notificationProviderSendEmail(
 		ctx,
 		span,
-		notifications.WorkflowReminderNotificationEmail,
+		commonService.WorkflowReminderNotificationEmail,
 		eventData.UserId,
 		eventData.Content,
 		eventData.OrganizationId,
@@ -66,7 +61,7 @@ func (h *ReminderEventHandler) OnReminderNotification(ctx context.Context, evt e
 	err = h.notificationProviderSendInAppNotification(
 		ctx,
 		span,
-		notifications.WorkflowReminderInAppNotification,
+		commonService.WorkflowReminderInAppNotification,
 		eventData.UserId,
 		eventData.Content,
 		eventData.OrganizationId,
@@ -138,7 +133,7 @@ func (h *ReminderEventHandler) notificationProviderSendEmail(
 	if orgName == "" {
 		orgName = "Unnamed"
 	}
-	subject := fmt.Sprintf(notifications.WorkflowReminderNotificationSubject, orgName)
+	subject := fmt.Sprintf(commonService.WorkflowReminderNotificationSubject, orgName)
 	payload := map[string]interface{}{
 		"subject": subject,
 		"email":   email.Email,
@@ -146,7 +141,7 @@ func (h *ReminderEventHandler) notificationProviderSendEmail(
 		"orgLink": fmt.Sprintf("%s/organization/%s", h.cfg.Subscriptions.NotificationsSubscription.RedirectUrl, organizationId),
 	}
 
-	notification := &notifications.NovuNotification{
+	notification := &commonService.NovuNotification{
 		WorkflowId: workflowId,
 		TemplateData: map[string]string{
 			"{{reminderContent}}":   content,
@@ -154,7 +149,7 @@ func (h *ReminderEventHandler) notificationProviderSendEmail(
 			"{{orgName}}":           orgName,
 			"{{orgLink}}":           fmt.Sprintf("%s/organization/%s", h.cfg.Subscriptions.NotificationsSubscription.RedirectUrl, organizationId),
 		},
-		To: &notifications.NotifiableUser{
+		To: &commonService.NotifiableUser{
 			FirstName:    user.FirstName,
 			LastName:     user.LastName,
 			Email:        email.Email,
@@ -165,7 +160,7 @@ func (h *ReminderEventHandler) notificationProviderSendEmail(
 	}
 
 	// call notification service
-	err = h.notificationProvider.SendNotification(ctx, notification, span)
+	err = h.services.CommonServices.NovuService.SendNotification(ctx, notification)
 
 	return err
 }
@@ -226,16 +221,16 @@ func (h *ReminderEventHandler) notificationProviderSendInAppNotification(
 	if orgName == "" {
 		orgName = "Unnamed"
 	}
-	subject := fmt.Sprintf(notifications.WorkflowReminderNotificationSubject, orgName)
+	subject := fmt.Sprintf(commonService.WorkflowReminderNotificationSubject, orgName)
 	payload := map[string]interface{}{
 		"notificationText": fmt.Sprintf("%s: %s", subject, content),
 		"orgId":            organizationId,
 	}
 
-	notification := &notifications.NovuNotification{
+	notification := &commonService.NovuNotification{
 		WorkflowId:   workflowId,
 		TemplateData: map[string]string{},
-		To: &notifications.NotifiableUser{
+		To: &commonService.NotifiableUser{
 			FirstName:    user.FirstName,
 			LastName:     user.LastName,
 			Email:        email.Email,
@@ -246,7 +241,7 @@ func (h *ReminderEventHandler) notificationProviderSendInAppNotification(
 	}
 
 	// call notification service
-	err = h.notificationProvider.SendNotification(ctx, notification, span)
+	err = h.services.CommonServices.NovuService.SendNotification(ctx, notification)
 
 	return err
 }

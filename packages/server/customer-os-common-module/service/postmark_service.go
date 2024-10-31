@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/pkg/errors"
 	"strings"
 
@@ -12,15 +13,30 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/mrz1836/postmark"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/notifications"
 	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	"github.com/opentracing/opentracing-go"
 )
 
 const (
 	PostmarkMessageStreamInvoice = "invoices"
+)
+
+const (
+	WorkflowIdTestFlow                   = "test-workflow"
+	WorkflowInvoicePaid                  = "invoice-paid"
+	WorkflowInvoicePaymentReceived       = "invoice-payment-received"
+	WorkflowInvoiceReadyWithPaymentLink  = "invoice-ready"
+	WorkflowInvoiceReadyNoPaymentLink    = "invoice-ready-nolink"
+	WorkflowInvoiceVoided                = "invoice-voided"
+	WorkflowFailedWebhook                = "failed-webhook"
+	WorkflowInvoiceRemindWithPaymentLink = "invoice-remind"
+	WorkflowInvoiceRemindNoPaymentLink   = "invoice-remind-nolink"
+
+	WorkflowInvoiceVoidedSubject          = "Voided Invoice %s"
+	WorkflowInvoicePaidSubject            = "Paid Invoice %s from %s"
+	WorkflowInvoicePaymentReceivedSubject = "Payment Received for Invoice %s from %s"
+	WorkflowInvoiceReadySubject           = "New invoice %s"
+	WorkflowInvoiceRemindSubject          = "Follow-Up: Overdue Invoice %s"
 )
 
 type PostmarkEmail struct {
@@ -42,23 +58,25 @@ type PostmarkEmailAttachment struct {
 	ContentID      string
 }
 
-type PostmarkProvider struct {
-	log      logger.Logger
+type PostmarkService interface {
+	SendNotification(ctx context.Context, postmarkEmail PostmarkEmail, tenant string) error
+}
+
+type postmarkService struct {
 	services *Services
 }
 
-func NewPostmarkProvider(log logger.Logger, services *Services) *PostmarkProvider {
-	return &PostmarkProvider{
-		log:      log,
+func NewPostmarkService(services *Services) PostmarkService {
+	return &postmarkService{
 		services: services,
 	}
 }
 
-func (np *PostmarkProvider) getPostmarkClient(ctx context.Context, tenant string) (*postmark.Client, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "PostmarkProvider.getPostmarkClient")
+func (np *postmarkService) getPostmarkClient(ctx context.Context, tenant string) (*postmark.Client, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PostmarkService.getPostmarkClient")
 	defer span.Finish()
 
-	p := np.services.CommonServices.PostgresRepositories.PostmarkApiKeyRepository.GetPostmarkApiKey(ctx, tenant)
+	p := np.services.PostgresRepositories.PostmarkApiKeyRepository.GetPostmarkApiKey(ctx, tenant)
 	if p.Error != nil {
 		tracing.TraceErr(span, p.Error)
 		return nil, p.Error
@@ -75,42 +93,39 @@ func (np *PostmarkProvider) getPostmarkClient(ctx context.Context, tenant string
 	return postmark.NewClient(serverToken, ""), nil
 }
 
-func (np *PostmarkProvider) SendNotification(ctx context.Context, postmarkEmail PostmarkEmail, tenant string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "PostmarkProvider.SendNotification")
+func (np *postmarkService) SendNotification(ctx context.Context, postmarkEmail PostmarkEmail, tenant string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PostmarkService.SendNotification")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, tenant)
 	tracing.LogObjectAsJson(span, "postmarkEmail", postmarkEmail)
 
 	if postmarkEmail.From == "" {
-		np.log.Warnf("(PostmarkProvider.SendNotification) missing from email address")
-		return errors.New("missing from email address")
+		err := errors.New("missing from email address")
+		tracing.TraceErr(span, err)
+		return err
 	}
 
 	postmarkClient, err := np.getPostmarkClient(ctx, tenant)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		np.log.Errorf("(PostmarkProvider.SendNotification) error: %s", err.Error())
 		return err
 	}
 
 	htmlContent, err := np.LoadEmailContent(ctx, postmarkEmail.WorkflowId, "mjml", postmarkEmail.TemplateData)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		np.log.Errorf("(PostmarkProvider.SendNotification.LoadEmailContent) error: %s", err.Error())
 		return err
 	}
 
 	htmlContent, err = np.ConvertMjmlToHtml(ctx, htmlContent)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		np.log.Errorf("(PostmarkProvider.SendNotification. ConvertMjmlToHtml) error: %s", err.Error())
 		return err
 	}
 
 	textContent, err := np.LoadEmailContent(ctx, postmarkEmail.WorkflowId, "txt", postmarkEmail.TemplateData)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		np.log.Errorf("(PostmarkProvider.SendNotification.LoadEmailContent) error: %s", err.Error())
 		return err
 	}
 
@@ -145,15 +160,14 @@ func (np *PostmarkProvider) SendNotification(ctx context.Context, postmarkEmail 
 	if err != nil {
 		wrappedError := fmt.Errorf("(postmarkClient.SendEmail) error: %s", err.Error())
 		tracing.TraceErr(span, wrappedError)
-		np.log.Errorf("(PostmarkProvider.SendNotification) error: %s", err.Error())
 		return err
 	}
 
 	return nil
 }
 
-func (np *PostmarkProvider) LoadEmailContent(ctx context.Context, workflowId, fileExtension string, templateData map[string]string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "PostmarkProvider.LoadEmailContent")
+func (np *postmarkService) LoadEmailContent(ctx context.Context, workflowId, fileExtension string, templateData map[string]string) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PostmarkService.LoadEmailContent")
 	defer span.Finish()
 
 	rawEmailTemplate, err := np.LoadEmailBody(ctx, workflowId, fileExtension)
@@ -167,29 +181,29 @@ func (np *PostmarkProvider) LoadEmailContent(ctx context.Context, workflowId, fi
 	return emailTemplate, nil
 }
 
-func (np *PostmarkProvider) GetFileName(workflowId, fileExtension string) string {
+func (np *postmarkService) GetFileName(workflowId, fileExtension string) string {
 	var fileName string
 	switch workflowId {
-	case notifications.WorkflowInvoicePaid:
+	case WorkflowInvoicePaid:
 		fileName = "invoice.paid." + fileExtension
-	case notifications.WorkflowInvoicePaymentReceived:
+	case WorkflowInvoicePaymentReceived:
 		fileName = "invoice.payment.received." + fileExtension
-	case notifications.WorkflowInvoiceReadyWithPaymentLink:
+	case WorkflowInvoiceReadyWithPaymentLink:
 		fileName = "invoice.ready." + fileExtension
-	case notifications.WorkflowInvoiceReadyNoPaymentLink:
+	case WorkflowInvoiceReadyNoPaymentLink:
 		fileName = "invoice.ready.nolink." + fileExtension
-	case notifications.WorkflowInvoiceVoided:
+	case WorkflowInvoiceVoided:
 		fileName = "invoice.voided." + fileExtension
-	case notifications.WorkflowInvoiceRemindWithPaymentLink:
+	case WorkflowInvoiceRemindWithPaymentLink:
 		fileName = "invoice.remind." + fileExtension
-	case notifications.WorkflowInvoiceRemindNoPaymentLink:
+	case WorkflowInvoiceRemindNoPaymentLink:
 		fileName = "invoice.remind.nolink." + fileExtension
 	}
 	return fileName
 }
 
-func (np *PostmarkProvider) LoadEmailBody(ctx context.Context, workflowId, fileExtension string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "PostmarkProvider.LoadEmailBody")
+func (np *postmarkService) LoadEmailBody(ctx context.Context, workflowId, fileExtension string) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PostmarkService.LoadEmailBody")
 	defer span.Finish()
 
 	fileName := np.GetFileName(workflowId, fileExtension)
@@ -213,7 +227,7 @@ func (np *PostmarkProvider) LoadEmailBody(ctx context.Context, workflowId, fileE
 	return string(buffer.Bytes()), nil
 }
 
-func (np *PostmarkProvider) FillTemplate(template string, replace map[string]string) string {
+func (np *postmarkService) FillTemplate(template string, replace map[string]string) string {
 	filledTemplate := template
 	for k, v := range replace {
 		filledTemplate = strings.Replace(filledTemplate, k, v, -1)
@@ -222,15 +236,15 @@ func (np *PostmarkProvider) FillTemplate(template string, replace map[string]str
 	return filledTemplate
 }
 
-func (np *PostmarkProvider) ConvertMjmlToHtml(ctx context.Context, filledTemplate string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "PostmarkProvider.ConvertMjmlToHtml")
+func (np *postmarkService) ConvertMjmlToHtml(ctx context.Context, filledTemplate string) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PostmarkService.ConvertMjmlToHtml")
 	defer span.Finish()
 
 	html, err := mjml.ToHTML(ctx, filledTemplate)
 	var mjmlError mjml.Error
 	if errors.As(err, &mjmlError) {
 		tracing.TraceErr(span, err)
-		return "", fmt.Errorf("(PostmarkProvider.Template) error: %s", mjmlError.Message)
+		return "", fmt.Errorf("(PostmarkService.Template) error: %s", mjmlError.Message)
 	}
 
 	return html, err

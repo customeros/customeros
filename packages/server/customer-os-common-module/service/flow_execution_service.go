@@ -20,13 +20,9 @@ import (
 	"time"
 )
 
-const (
-	workingDayStart = 6
-	workingDayEnd   = 18
-)
-
 type FlowExecutionService interface {
 	GetFlowActionExecutionById(ctx context.Context, flowActionExecution string) (*entity.FlowActionExecutionEntity, error)
+	GetFlowExecutionSettingsForEntity(ctx context.Context, flowId, entityId string, entityType model.EntityType) (*entity.FlowExecutionSettingsEntity, error)
 	GetFlowRequirements(ctx context.Context, flowId string) (*FlowComputeParticipantsRequirementsInput, error)
 	UpdateParticipantFlowRequirements(ctx context.Context, tx *neo4j.ManagedTransaction, participant *entity.FlowParticipantEntity, requirements *FlowComputeParticipantsRequirementsInput) (bool, error)
 	ScheduleFlow(ctx context.Context, tx *neo4j.ManagedTransaction, flowId string, flowParticipant *entity.FlowParticipantEntity) error
@@ -61,6 +57,20 @@ func (s *flowExecutionService) GetFlowActionExecutionById(ctx context.Context, f
 	}
 
 	return mapper.MapDbNodeToFlowActionExecutionEntity(node), nil
+}
+
+func (s *flowExecutionService) GetFlowExecutionSettingsForEntity(ctx context.Context, flowId, entityId string, entityType model.EntityType) (*entity.FlowExecutionSettingsEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.GetFlowExecutionSettingsForEntity")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	node, err := s.services.Neo4jRepositories.FlowExecutionSettingsReadRepository.GetForEntity(ctx, flowId, entityId, entityType.String())
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return mapper.MapDbNodeToFlowExecutionSettingsEntity(node), nil
 }
 
 func (s *flowExecutionService) GetFlowRequirements(ctx context.Context, flowId string) (*FlowComputeParticipantsRequirementsInput, error) {
@@ -256,7 +266,7 @@ func (s *flowExecutionService) scheduleEmailAction(ctx context.Context, tx *neo4
 	tenant := common.GetTenantFromContext(ctx)
 
 	// 1. Get the mailbox for contact or associate the best available mailbox
-	flowExecutionSettings, err := s.getFlowExecutionSettings(ctx, flowId, flowParticipant.EntityId, flowParticipant.EntityType)
+	flowExecutionSettings, err := s.GetFlowExecutionSettingsForEntity(ctx, flowId, flowParticipant.EntityId, flowParticipant.EntityType)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -474,20 +484,6 @@ func maxTime(a, b time.Time) time.Time {
 		return a
 	}
 	return b
-}
-
-func (s *flowExecutionService) getFlowExecutionSettings(ctx context.Context, flowId, entityId string, entityType model.EntityType) (*entity.FlowExecutionSettingsEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.getFlowExecutionSettings")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-
-	node, err := s.services.Neo4jRepositories.FlowExecutionSettingsReadRepository.GetByEntityId(ctx, flowId, entityId, entityType.String())
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	return mapper.MapDbNodeToFlowExecutionSettingsEntity(node), nil
 }
 
 func (s *flowExecutionService) storeNextActionExecutionEntity(ctx context.Context, tx *neo4j.ManagedTransaction, flowId, actionId string, flowParticipant *entity.FlowParticipantEntity, mailbox *string, executionTime *time.Time) error {

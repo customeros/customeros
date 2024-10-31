@@ -124,11 +124,12 @@ func (r *userReadRepository) GetUserById(ctx context.Context, tenant, userId str
 		queryResult, err := tx.Run(ctx, cypher, params)
 		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 	})
+	if err != nil && err.Error() == "Result contains no more records" {
+		return nil, nil
+	}
 	if err != nil {
-		tracing.TraceErr(span, err)
 		return nil, err
 	}
-	span.LogFields(log.Bool("result.found", result != nil))
 	return result.(*dbtype.Node), nil
 }
 

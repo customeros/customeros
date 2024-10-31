@@ -6,7 +6,6 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
@@ -57,7 +56,7 @@ func OnSocialAddedToContact(ctx context.Context, services *service.Services, inp
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "input", input)
 
-	message := input.(*events.Event)
+	message := input.(*dto.Event)
 	// check message data type before conversion
 	if message.Event.Data == nil {
 		err := errors.New("message data is nil")
@@ -100,7 +99,7 @@ func OnRequestedEnrichContact(ctx context.Context, services *service.Services, i
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "input", input)
 
-	message := input.(*events.Event)
+	message := input.(*dto.Event)
 	contactId := message.Event.EntityId
 
 	span.SetTag(tracing.SpanTagEntityId, contactId)

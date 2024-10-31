@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	commoncaches "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
@@ -451,6 +452,9 @@ func processMailstackReply(ctx context.Context, services *service.Services, tena
 
 		if mailstackEmail != nil && strings.Contains(mailstackEmail.ToString, input.FromFull.Email) && mailstackEmail.ProducerType == commonModel.NodeLabelFlowActionExecution {
 
+			//TODO check that it isn't an automatic reply
+			//header: Subject: Automatic reply: First restaurant killed by DoorDash reviews?
+
 			flowActionExecution, err := services.CommonServices.FlowExecutionService.GetFlowActionExecutionById(ctx, mailstackEmail.ProducerId)
 			if err != nil {
 				tracing.TraceErr(span, err)
@@ -485,7 +489,18 @@ func processMailstackReply(ctx context.Context, services *service.Services, tena
 				slackMessageText := "*Tenant:* " + tenant + "\n"
 				slackMessageText += "*Goal achieved for:* " + primaryEmailForParticipant.RawEmail + "\n"
 
-				utils.SendSlackMessage(ctx, slackChannelUrl, slackMessageText)
+				err := utils.SendSlackMessage(ctx, slackChannelUrl, slackMessageText)
+				if err != nil {
+					tracing.TraceErr(span, err)
+				}
+			}
+
+			err = services.CommonServices.RabbitMQService.PublishEvent(ctx, flowActionExecution.FlowId, commonModel.FLOW, dto.FlowParticipantGoalAchieved{
+				ParticipantId:   flowParticipant.EntityId,
+				ParticipantType: flowParticipant.EntityType,
+			})
+			if err != nil {
+				tracing.TraceErr(span, err)
 			}
 
 			services.CommonServices.RabbitMQService.PublishEventCompleted(ctx, tenant, flowParticipant.EntityId, flowParticipant.EntityType, utils.NewEventCompletedDetails().WithUpdate())

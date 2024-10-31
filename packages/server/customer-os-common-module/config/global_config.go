@@ -8,6 +8,7 @@ type GlobalConfig struct {
 	GrpcClientConfig  *GrpcClientConfig
 	TemporalConfig    *TemporalConfig
 	RabbitMQConfig    *RabbitMQConfig
+	NovuConfig        *NovuConfig
 
 	// Customer OS
 	InternalServices InternalServices

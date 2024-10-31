@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -19,7 +19,7 @@ func Handle_FlowInitialSchedule(ctx context.Context, services *service.Services,
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "input", input)
 
-	message := input.(*events.Event)
+	message := input.(*dto.Event)
 
 	flow, err := services.FlowService.FlowGetById(ctx, message.Event.EntityId)
 	if err != nil {

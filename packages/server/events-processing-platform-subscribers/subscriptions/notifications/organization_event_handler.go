@@ -3,9 +3,7 @@ package notifications
 import (
 	"context"
 	"fmt"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/aws_client"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/notifications"
+	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
@@ -19,19 +17,16 @@ import (
 )
 
 type OrganizationEventHandler struct {
-	services             *service.Services
-	log                  logger.Logger
-	notificationProvider notifications.NotificationProvider
-	cfg                  *config.Config
+	services *service.Services
+	log      logger.Logger
+	cfg      *config.Config
 }
 
 func NewOrganizationEventHandler(log logger.Logger, services *service.Services, cfg *config.Config) *OrganizationEventHandler {
-	s3 := aws_client.NewS3Client(&aws.Config{Region: aws.String("eu-west-1")})
 	return &OrganizationEventHandler{
-		services:             services,
-		log:                  log,
-		notificationProvider: notifications.NewNovuNotificationProvider(log, cfg.Services.Novu.ApiKey, s3),
-		cfg:                  cfg,
+		services: services,
+		log:      log,
+		cfg:      cfg,
 	}
 }
 
@@ -55,7 +50,7 @@ func (h *OrganizationEventHandler) OnOrganizationUpdateOwner(ctx context.Context
 	err := h.notificationProviderSendEmail(
 		ctx,
 		span,
-		notifications.WorkflowIdOrgOwnerUpdateEmail,
+		commonService.WorkflowIdOrgOwnerUpdateEmail,
 		eventData.OwnerUserId,
 		eventData.ActorUserId,
 		eventData.OrganizationId,
@@ -69,7 +64,7 @@ func (h *OrganizationEventHandler) OnOrganizationUpdateOwner(ctx context.Context
 	err = h.notificationProviderSendInAppNotification(
 		ctx,
 		span,
-		notifications.WorkflowIdOrgOwnerUpdateAppNotification,
+		commonService.WorkflowIdOrgOwnerUpdateAppNotification,
 		eventData.OwnerUserId,
 		eventData.ActorUserId,
 		eventData.OrganizationId,
@@ -158,7 +153,7 @@ func (h *OrganizationEventHandler) notificationProviderSendEmail(ctx context.Con
 	if orgName == "" {
 		orgName = "Unnamed"
 	}
-	subject := fmt.Sprintf(notifications.WorkflowIdOrgOwnerUpdateEmailSubject, actor.FirstName, actor.LastName)
+	subject := fmt.Sprintf(commonService.WorkflowIdOrgOwnerUpdateEmailSubject, actor.FirstName, actor.LastName)
 	payload := map[string]interface{}{
 		// "html":           html, fill during send notification call
 		"subject":        subject,
@@ -177,7 +172,7 @@ func (h *OrganizationEventHandler) notificationProviderSendEmail(ctx context.Con
 	}
 	payload["overrides"] = overrides
 
-	notification := &notifications.NovuNotification{
+	notification := &commonService.NovuNotification{
 		WorkflowId: workflowId,
 		TemplateData: map[string]string{
 			"{{userFirstName}}":  user.FirstName,
@@ -186,7 +181,7 @@ func (h *OrganizationEventHandler) notificationProviderSendEmail(ctx context.Con
 			"{{orgName}}":        orgName,
 			"{{orgLink}}":        fmt.Sprintf("%s/organization/%s", h.cfg.Subscriptions.NotificationsSubscription.RedirectUrl, orgId),
 		},
-		To: &notifications.NotifiableUser{
+		To: &commonService.NotifiableUser{
 			FirstName:    user.FirstName,
 			LastName:     user.LastName,
 			Email:        email.Email,
@@ -197,7 +192,7 @@ func (h *OrganizationEventHandler) notificationProviderSendEmail(ctx context.Con
 	}
 
 	// call notification service
-	err = h.notificationProvider.SendNotification(ctx, notification, span)
+	err = h.services.CommonServices.NovuService.SendNotification(ctx, notification)
 
 	return err
 }
@@ -256,11 +251,11 @@ func (h *OrganizationEventHandler) notificationProviderSendInAppNotification(ctx
 		org = *neo4jmapper.MapDbNodeToOrganizationEntity(orgDbNode)
 	}
 	/////////////////////////////////// Notification Provider Payload And Call ///////////////////////////////////
-	subject := fmt.Sprintf(notifications.WorkflowIdOrgOwnerUpdateAppNotificationSubject, actor.FirstName, actor.LastName)
-	notification := &notifications.NovuNotification{
+	subject := fmt.Sprintf(commonService.WorkflowIdOrgOwnerUpdateAppNotificationSubject, actor.FirstName, actor.LastName)
+	notification := &commonService.NovuNotification{
 		WorkflowId:   workflowId,
 		TemplateData: map[string]string{},
-		To: &notifications.NotifiableUser{
+		To: &commonService.NotifiableUser{
 			FirstName:    user.FirstName,
 			LastName:     user.LastName,
 			Email:        email.Email,
@@ -275,7 +270,7 @@ func (h *OrganizationEventHandler) notificationProviderSendInAppNotification(ctx
 	}
 
 	// call notification service
-	err = h.notificationProvider.SendNotification(ctx, notification, span)
+	err = h.services.CommonServices.NovuService.SendNotification(ctx, notification)
 
 	return err
 }

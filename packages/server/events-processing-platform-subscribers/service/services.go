@@ -20,7 +20,6 @@ type Services struct {
 
 	EventBufferStoreService *eventbuffer.EventBufferStoreService
 	FileStoreApiService     fsc.FileStoreApiService
-	PostmarkProvider        *PostmarkProvider
 }
 
 func InitServices(cfg *config.Config, es eventstore.AggregateStore, log logger.Logger, grpcClients *grpc_client.Clients, db *gorm.DB, driver *neo4j.DriverWithContext) *Services {
@@ -34,7 +33,6 @@ func InitServices(cfg *config.Config, es eventstore.AggregateStore, log logger.L
 
 	services.EventBufferStoreService = eventbuffer.NewEventBufferStoreService(services.CommonServices.PostgresRepositories.EventBufferRepository, log)
 	services.FileStoreApiService = fsc.NewFileStoreApiService(&cfg.Services.FileStoreApiConfig)
-	services.PostmarkProvider = NewPostmarkProvider(log, &services)
 
 	return &services
 }

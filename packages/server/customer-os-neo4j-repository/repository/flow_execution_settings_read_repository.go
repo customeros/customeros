@@ -13,7 +13,7 @@ import (
 )
 
 type FlowExecutionSettingsReadRepository interface {
-	GetByEntityId(ctx context.Context, flowId, entityId, entityType string) (*dbtype.Node, error)
+	GetForEntity(ctx context.Context, flowId, entityId, entityType string) (*dbtype.Node, error)
 }
 
 type flowExecutionSettingsReadRepositoryImpl struct {
@@ -25,8 +25,8 @@ func NewFlowExecutionSettingsReadRepository(driver *neo4j.DriverWithContext, dat
 	return &flowExecutionSettingsReadRepositoryImpl{driver: driver, database: database}
 }
 
-func (r flowExecutionSettingsReadRepositoryImpl) GetByEntityId(ctx context.Context, flowId, entityId, entityType string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowReadRepository.GetByEntityId")
+func (r flowExecutionSettingsReadRepositoryImpl) GetForEntity(ctx context.Context, flowId, entityId, entityType string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowReadRepository.GetForEntity")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 

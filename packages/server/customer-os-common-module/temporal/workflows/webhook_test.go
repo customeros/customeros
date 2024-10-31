@@ -4,9 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"testing"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/notifications"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/temporal/activity"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
@@ -99,12 +99,12 @@ func (s *UnitTestSuite) Test_WebhookWorkflow_ActivityParamCorrect() {
 	s.NoError(s.env.GetWorkflowError())
 }
 func (s *UnitTestSuite) Test_WebhookWorkflow_NotifyUserActivityCalled() {
-	notifBytes, _ := json.Marshal(&notifications.NovuNotification{
+	notifBytes, _ := json.Marshal(&commonService.NovuNotification{
 		WorkflowId: "test_workflow_id",
 		TemplateData: map[string]string{
 			"test_key": "test_value",
 		},
-		To: &notifications.NotifiableUser{
+		To: &commonService.NotifiableUser{
 			FirstName:    "test_first_name",
 			LastName:     "test_last_name",
 			Email:        "test_email",

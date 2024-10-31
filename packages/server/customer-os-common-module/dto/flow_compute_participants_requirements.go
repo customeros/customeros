@@ -1,3 +1,3 @@
-package events
+package dto
 
 type FlowComputeParticipantsRequirements struct{}
