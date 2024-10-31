@@ -21,74 +21,6 @@ import (
 	"time"
 )
 
-const retryCountFetchFreshData = 60
-
-// Deprecated
-func RedirectToPayInvoiceV1(services *service.Services) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "RedirectToPayInvoice", c.Request.Header)
-		defer span.Finish()
-		tracing.TagComponentRest(span)
-
-		// Get invoice ID from path parameter
-		invoiceID := c.Param("invoiceId")
-		span.LogKV("invoiceId", invoiceID)
-
-		// Fetch invoice by ID
-		invoice, tenant, err := services.CommonServices.InvoiceService.GetByIdAcrossAllTenants(ctx, invoiceID)
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "Error fetching invoice"))
-		}
-		if invoice == nil || invoice.DryRun {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Invoice not found"})
-			return
-		}
-		tracing.TagTenant(span, tenant)
-		span.LogKV(log.String("invoiceStatus", invoice.Status.String()))
-
-		// Check invoice status
-		switch invoice.Status {
-		case neo4jenum.InvoiceStatusPaid:
-			// Handle scenario: Invoice already paid
-			c.Redirect(http.StatusSeeOther, services.Cfg.AppConfig.InvoicePaidRedirectUrl)
-			return
-		case neo4jenum.InvoiceStatusVoid:
-			// Handle scenario: Invoice voided
-			c.JSON(http.StatusGone, gin.H{"error": "Invoice is voided"})
-			return
-		case neo4jenum.InvoiceStatusOnHold:
-			// Handle scenario: Invoice voided
-			c.JSON(http.StatusGone, gin.H{"error": "Invoice is on hold"})
-			return
-		}
-
-		paymentLink := invoice.PaymentDetails.PaymentLink
-		validUntil := invoice.PaymentDetails.PaymentLinkValidUntil
-		span.LogFields(log.String("initial.paymentLink", paymentLink), log.Object("initial.validUntil", validUntil), log.Object("now", utils.Now()))
-		generateNewLink := false
-		if paymentLink == "" {
-			generateNewLink = true
-		} else if validUntil != nil && validUntil.Before(utils.Now()) {
-			generateNewLink = true
-		}
-		span.LogFields(log.Bool("generateNewLink", generateNewLink))
-
-		if generateNewLink {
-			paymentLink, err = generateAndGetNewStripeCheckoutSession(ctx, services, invoice, tenant)
-		}
-
-		if paymentLink == "" {
-			notifyOnSlackPaymentFailed(ctx, services, tenant, invoiceID, invoice.Number)
-			tracing.TraceErr(span, errors.New("Payment link not found"))
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Preparing payment link, please try again in 1 minute"})
-			return
-		}
-
-		// If all good, redirect to payment link
-		c.Redirect(http.StatusFound, paymentLink)
-	}
-}
-
 func RedirectToPayInvoice(services *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "RedirectToPayInvoice", c.Request.Header)
@@ -205,49 +137,6 @@ func GetInvoicePaymentLink(services *service.Services) gin.HandlerFunc {
 			return
 		}
 	}
-}
-
-// Deprecated
-func generateAndGetNewStripeCheckoutSession(ctx context.Context, services *service.Services, invoice *neo4jentity.InvoiceEntity, tenant string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "generateAndGetNewStripeCheckoutSession")
-	defer span.Finish()
-	tracing.TagTenant(span, tenant)
-	previousPaymentLink := invoice.PaymentDetails.PaymentLink
-	span.LogKV("previousPaymentLink", previousPaymentLink)
-
-	// Call integration app to create new payment link
-	err := callIntegrationAppWithApiRequestForNewPaymentLink(ctx, services.Cfg.ExternalServices.IntegrationApp.WorkspaceKey, services.Cfg.ExternalServices.IntegrationApp.WorkspaceSecret, tenant, services.Cfg.ExternalServices.IntegrationApp.ApiTriggerUrlCreatePaymentLinks, invoice)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error calling integration app"))
-		return "", err
-	}
-
-	// Wait for payment link to be generated
-	for i := 0; i < retryCountFetchFreshData; i++ {
-		// Fetch invoice again to get updated payment link
-		freshInvoice, _, err := services.CommonServices.InvoiceService.GetByIdAcrossAllTenants(ctx, invoice.Id)
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "Error fetching invoice"))
-			return "", err
-		}
-		linkValidByExpiration := freshInvoice.PaymentDetails.PaymentLinkValidUntil == nil ||
-			(freshInvoice.PaymentDetails.PaymentLinkValidUntil != nil && freshInvoice.PaymentDetails.PaymentLinkValidUntil.After(utils.Now()))
-		if linkValidByExpiration {
-			span.LogFields(log.Bool("linkValid", linkValidByExpiration))
-		}
-		if freshInvoice.PaymentDetails.PaymentLink != "" &&
-			freshInvoice.PaymentDetails.PaymentLink != previousPaymentLink &&
-			linkValidByExpiration {
-			span.LogKV("result.paymentLink", freshInvoice.PaymentDetails.PaymentLink)
-			span.LogFields(log.Int("retryCount", i))
-			return freshInvoice.PaymentDetails.PaymentLink, nil
-		}
-		// sleep for 1 second
-		time.Sleep(time.Second)
-	}
-
-	span.LogKV("result.paymentLink", "")
-	return "", nil
 }
 
 type ApiRequestCreatePaymentLinks struct {

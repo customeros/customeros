@@ -43,9 +43,6 @@ func registerPublicRoutes(ctx context.Context, r *gin.Engine, services *service.
 	// Redirect to pay invoice link
 	r.GET("/invoice/:invoiceId/pay",
 		tracing.TracingEnhancer(ctx, "GET:/invoice/:invoiceId/pay"),
-		rest.RedirectToPayInvoiceV1(services))
-	r.GET("/invoice/:invoiceId/pay/v2",
-		tracing.TracingEnhancer(ctx, "GET:/invoice/:invoiceId/pay/v2"),
 		rest.RedirectToPayInvoice(services))
 	r.GET("/invoice/:invoiceId/paymentLink",
 		tracing.TracingEnhancer(ctx, "GET:/invoice/:invoiceId/paymentLink"),
