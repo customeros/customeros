@@ -21,7 +21,6 @@ mutation CreateJobRole($contactId: ID!, $organizationId: ID!) {
     company
     primary
     source
-    sourceOfTruth
     appSource
     createdAt
     updatedAt

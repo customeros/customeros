@@ -137,9 +137,9 @@ func (r *jobRoleWriteRepository) LinkContactWithOrganization(ctx context.Context
 						org.updatedAt = datetime()
 		 ON MATCH SET 	jr.jobTitle = CASE WHEN $overwrite=true OR jr.jobTitle is null OR jr.jobTitle = '' THEN $jobTitle ELSE jr.jobTitle END,
 						jr.description = CASE WHEN $overwrite=true OR jr.description is null OR jr.description = '' THEN $description ELSE jr.description END,
-						jr.primary = CASE WHEN OR $overwrite=true THEN $primary ELSE jr.primary END,
-						jr.startedAt = CASE WHEN OR $overwrite=true THEN $startedAt ELSE jr.startedAt END,
-						jr.endedAt = CASE WHEN OR $overwrite=true THEN $endedAt ELSE jr.endedAt END,
+						jr.primary = CASE WHEN $overwrite=true THEN $primary ELSE jr.primary END,
+						jr.startedAt = CASE WHEN $overwrite=true THEN $startedAt ELSE jr.startedAt END,
+						jr.endedAt = CASE WHEN  $overwrite=true THEN $endedAt ELSE jr.endedAt END,
 						jr.updatedAt = datetime(),
 						c.updatedAt = datetime(),
 						org.updatedAt = datetime()`, tenant)

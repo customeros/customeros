@@ -13,8 +13,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
-	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
+	eventcompletionpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/event_completion"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"testing"
 	"time"
 )
@@ -644,16 +645,13 @@ func TestMutationResolver_ContactAddOrganizationByID(t *testing.T) {
 	orgId2 := neo4jt.CreateOrganization(ctx, driver, tenantName, "org2")
 	neo4jt.LinkContactWithOrganization(ctx, driver, contactId, orgId1)
 
-	contactServiceCallbacks := events_platform.MockContactServiceCallbacks{
-		LinkWithOrganization: func(context context.Context, request *contactpb.LinkWithOrganizationGrpcRequest) (*contactpb.ContactIdGrpcResponse, error) {
-			require.Equal(t, contactId, request.ContactId)
-			require.Equal(t, orgId2, request.OrganizationId)
-			return &contactpb.ContactIdGrpcResponse{
-				Id: contactId,
-			}, nil
+	// prepare grpc mock
+	callbacks := events_platform.MockEventCompletionCallbacks{
+		NotifyEventProcessed: func(context context.Context, org *eventcompletionpb.NotifyEventProcessedRequest) (*emptypb.Empty, error) {
+			return &emptypb.Empty{}, nil
 		},
 	}
-	events_platform.SetContactCallbacks(&contactServiceCallbacks)
+	events_platform.SetEventCompletionServiceCallbacks(&callbacks)
 
 	rawResponse := callGraphQL(t, "contact/add_organization_to_contact", map[string]interface{}{"contactId": contactId, "organizationId": orgId2})
 

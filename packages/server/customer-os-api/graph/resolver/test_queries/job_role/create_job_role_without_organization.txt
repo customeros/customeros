@@ -9,7 +9,6 @@ mutation CreateJobRole($contactId: ID!) {
     jobTitle
     primary
     source
-    sourceOfTruth
     appSource
     createdAt
     updatedAt

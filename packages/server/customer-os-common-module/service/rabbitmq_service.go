@@ -187,7 +187,12 @@ func (r *RabbitMQService) PublishOnQueue(ctx context.Context, message interface{
 		return err
 	}
 
-	// Ensure the connection and channel are open
+	// Ensure the connection is not nil
+	if r.conn == nil {
+		tracing.TraceErr(span, errors.New("RabbitMQ connection is nil"))
+		return nil
+	}
+
 	if r.conn.IsClosed() {
 		r.reconnect(ctx)
 	}

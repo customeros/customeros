@@ -48,7 +48,6 @@ func TestMutationResolver_JobRoleCreate_WithOrganization(t *testing.T) {
 	require.Equal(t, "Acme Inc.", *createdRole.Company)
 	require.Equal(t, true, createdRole.Primary)
 	require.Equal(t, model.DataSourceOpenline, createdRole.Source)
-	require.Equal(t, model.DataSourceOpenline, createdRole.SourceOfTruth)
 	require.Equal(t, "Hubspot", createdRole.AppSource)
 
 	// Check the number of nodes and relationships in the Neo4j database
@@ -91,7 +90,6 @@ func TestMutationResolver_JobRoleCreate_WithoutOrganization(t *testing.T) {
 	require.Equal(t, "CEO", *createdRole.JobTitle)
 	require.Equal(t, true, createdRole.Primary)
 	require.Equal(t, model.DataSourceOpenline, createdRole.Source)
-	require.Equal(t, model.DataSourceOpenline, createdRole.SourceOfTruth)
 	require.Equal(t, "customer-os-api", createdRole.AppSource)
 
 	// Check the number of nodes and relationships in the Neo4j database
@@ -141,7 +139,6 @@ func TestMutationResolver_JobRoleUpdate(t *testing.T) {
 	require.Equal(t, "CEO of Apple", *updatedRole.Description)
 	require.Equal(t, "Apple", *updatedRole.Company)
 	require.Equal(t, organizationId, updatedRole.Organization.ID)
-	require.Equal(t, model.DataSourceOpenline, updatedRole.SourceOfTruth)
 
 	// Check the labels on the nodes in the Neo4j database
 	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName,
@@ -177,7 +174,6 @@ func TestMutationResolver_JobRoleUpdate_ChangeOrganization(t *testing.T) {
 	require.Equal(t, true, updatedRole.Primary)
 	require.Equal(t, "CEO", *updatedRole.JobTitle)
 	require.Equal(t, newOrganizationId, updatedRole.Organization.ID)
-	require.Equal(t, model.DataSourceOpenline, updatedRole.SourceOfTruth)
 
 	// Check the number of nodes and relationships in the Neo4j database
 	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "WORKS_AS"))

@@ -17,7 +17,6 @@ mutation JobRoleUpdate($contactId: ID!, $roleId: ID!){
         description
         company
         primary
-        sourceOfTruth
         startedAt
         endedAt
       }
