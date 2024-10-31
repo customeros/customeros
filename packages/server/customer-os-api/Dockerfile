@@ -18,6 +18,7 @@ FROM alpine:3.14
 
 COPY --chown=65534:65534 --from=builder /go/bin/app .
 COPY --chown=65534:65534 --from=builder /app/customer-os-api/.env .env
+COPY --chown=65534:65534 --from=builder /app/customer-os-api/static/* /static/
 USER 65534
 
 ENTRYPOINT [ "./app" ]

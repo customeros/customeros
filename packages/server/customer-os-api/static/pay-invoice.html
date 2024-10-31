@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Processing</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin-top: 20vh; }
+        #progress-container { width: 80%; height: 20px; background: #ddd; margin: 20px auto; border-radius: 10px; overflow: hidden; }
+        #progress-bar { width: 0%; height: 100%; background: #4CAF50; animation: load 60s linear forwards; }
+        #timer { font-size: 1.2em; margin: 10px; }
+        #message { font-size: 1.1em; margin: 20px; }
+
+        @keyframes load {
+            from { width: 0%; }
+            to { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+<h2>This might take up to a minute. Please be patient!</h2>
+<div id="progress-container">
+    <div id="progress-bar"></div>
+</div>
+<div id="timer">Elapsed Time: 0s</div>
+<div id="message">Initializing payment processing...</div>
+
+<script>
+    const messages = [
+        "Initializing payment processing...",
+        "Authenticating user credentials...",
+        "Loading payment gateway...",
+        "Communicating with the bank server...",
+        "Validating payment details...",
+        "Preparing secure connection...",
+        "Double-checking encryption keys...",
+        "Fetching third-party API data...",
+        "Hmm, seems like this is taking longer than expected...",
+        "Double-checking the double-checks...",
+        "Our developers insist this is faster than before...",
+        "Maybe we’re being overly cautious... just a bit.",
+        "Seriously, you wouldn’t believe how safe we’re trying to be.",
+        "Are we sure about this third-party API?",
+        "Considering alternative options... nah, we'll wait.",
+        "Meanwhile, let’s reflect on how far we've come...",
+        "Just one more second... or maybe two.",
+        "We’re pretty sure this is the last check. Probably.",
+        "Fetching data from the deepest recesses of the server...",
+        "Attempting to align the stars...",
+        "Contacting the ancient Order of the Payment Guild...",
+        "A small sacrifice to the server gods should speed this up...",
+        "We’re at 99.9%! Just… almost… there...",
+        "Summoning our mystical payment wizards...",
+        "An alchemist has joined the process. Results… pending...",
+        "The payment wizard raises a single eyebrow, waiting...",
+        "We're on a hero's journey, and the villain? Time.",
+        "Ah, here comes a whisper of success... wait, nope.",
+        "While we’re here, how’s your day going?",
+        "Did you know... coffee improves patience? Just a thought!",
+        "Do you think payment pages dream of electric bills?",
+        "Feel free to stretch! This is prime time for a little break.",
+        "What’s the weirdest thing you’ve paid for online?",
+        "Ever wonder what programmers do in their spare time? (Spoiler: it’s this).",
+        "You’re probably super patient. Are you?",
+        "So... any interesting plans after this?",
+        "Let us know if you want a playlist for the wait!",
+        "Oh, you’re still here? Excellent patience level.",
+        "In another life, you might have been a customer support wizard.",
+        "When was the last time you read the terms of service? Don’t worry, we didn’t either.",
+        "A young programmer enters the forest, looking for the Sacred Payment API...",
+        "With bravery (and a bit of caffeine), they journey onward...",
+        "They encounter the Firewall Beast, but the programmer is undeterred...",
+        "Through the Misty Data Streams, they continue on...",
+        "At last, they find the Golden API Token of Trust...",
+        "But wait! The API returns an error! The programmer must debug...",
+        "A sage advises: 'Try again in 10 seconds. It might just work.'",
+        "The programmer enters a trance, chanting the sacred Retry Invocation...",
+        "At last, the API responds! The forest opens, revealing the path to the gateway...",
+        "The programmer has succeeded, yet rumors of another error whisper through the trees...",
+        "O mighty Server, why dost thou wait,",
+        "The payment sits in latency’s gate.",
+        "From depths of code, we call on thee,",
+        "Bring forth our payment, make it be.",
+        "O user, fair, with patience wide,",
+        "Through time’s own flow, you shall abide.",
+        "In lands of byte and fields of code,",
+        "The data flows, by light bestowed.",
+        "Now rise, O server, swift and true,",
+        "Fulfill thy quest, come into view!",
+        "A sigh of hope, a whisper near,",
+        "Our payment looms, the end is clear!",
+        "Contacting intergalactic payment processors...",
+        "Calculating interdimensional fee conversions...",
+        "Wondering what payments look like in the fourth dimension...",
+        "Synchronizing with lunar cycles for optimal efficiency...",
+        "Using arcane algorithms known only to ancient civilizations...",
+        "Are we all just data in the grand program of life?",
+        "Some say waiting builds character. This must be *really* good for you.",
+        "Is patience just another form of courage?",
+        "If a payment happens in a forest, and no one’s there to see it...",
+        "What is a payment, truly, in the cosmic scheme of things?",
+        "The server sees the light at the end of the tunnel...",
+        "Your payment is in the final lap...",
+        "A dramatic swell of music plays in the background...",
+        "The pixels align, the code falls into place...",
+        "Hold your breath… this is the grand finale...",
+        "Just a few last epic moments remain...",
+        "And… success is within reach!",
+        "You are moments away from glory!"
+    ];
+
+    let elapsedTime = 0;
+    let messageIndex = 0;
+    let timerInterval, messageInterval;
+
+    // Update the timer every second
+    timerInterval = setInterval(() => {
+        elapsedTime++;
+        document.getElementById("timer").innerText = `Elapsed Time: ${elapsedTime}s`;
+    }, 1000);
+
+    // Cycle through messages every 3 seconds
+    messageInterval = setInterval(() => {
+        if (messageIndex < messages.length) {
+            document.getElementById("message").innerText = messages[messageIndex++];
+        }
+    }, 3000);
+
+    // Poll an API initially after 5 seconds, then every 2 seconds for 2 minutes
+    setTimeout(() => {
+        const pollingInterval = setInterval(() => {
+            const pathParts = window.location.pathname.split('/');
+            const invoiceId = pathParts[pathParts.indexOf('invoice') + 1];
+            const apiUrl = `https://api.customeros.ai/invoice/${invoiceId}/paymentLink`;
+            fetch(apiUrl)
+                .then(response => {
+                    if (response.ok) {
+                        return response.text();
+                    } else if (response.status === 404) {
+                        clearInterval(pollingInterval);
+                        clearInterval(timerInterval);
+                        clearInterval(messageInterval);
+                        document.getElementById("message").innerText = "Invoice not found. Please check the invoice ID.";
+                        throw new Error('Invoice not found');
+                    } else if (response.status === 409) {
+                        clearInterval(pollingInterval);
+                        clearInterval(timerInterval);
+                        clearInterval(messageInterval);
+                        document.getElementById("message").innerText = "Payment conflict detected. Please contact support.";
+                        throw new Error('Payment conflict');
+                    } else {
+                        throw new Error('API error');
+                    }
+                })
+                .then(data => {
+                    if (data.trim().length > 0) {
+                        clearInterval(pollingInterval);
+                        clearInterval(timerInterval);
+                        clearInterval(messageInterval);
+                        window.location.href = data;
+                    }
+                })
+                .catch(error => console.error('API Error:', error));
+        }, 2000);
+
+        // Stop polling after 2 minutes
+        setTimeout(() => {
+            clearInterval(pollingInterval);
+        }, 120000);
+    }, 5000);
+</script>
+</body>
+</html>
