@@ -78,6 +78,9 @@ func (s *namecheapService) CheckDomainAvailability(ctx context.Context, domain s
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to read Namecheap response"))
 		s.log.Error("failed to read Namecheap response", err)
+		if string(responseBody) == "error code: 522" {
+			return false, false, coserrors.ErrConnectionTimeout
+		}
 		return false, false, err
 	}
 

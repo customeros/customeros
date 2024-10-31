@@ -8,6 +8,7 @@ var (
 	ErrAccessDenied      = errors.New("Access denied")
 	ErrInvalidEntityType = errors.New("Invalid entity type")
 	ErrNotSupported      = errors.New("Not supported")
+	ErrConnectionTimeout = errors.New("Connection timeout")
 
 	ErrDomainUnavailable         = errors.New("domain unavailable")
 	ErrDomainPremium             = errors.New("domain is premium")

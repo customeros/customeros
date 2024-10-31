@@ -118,6 +118,13 @@ func RegisterNewDomain(services *service.Services) gin.HandlerFunc {
 						Message: "Error configuring domain, please contact support",
 					})
 				return
+			} else if errors.Is(err, coserrors.ErrConnectionTimeout) {
+				c.JSON(http.StatusInternalServerError,
+					rest.ErrorResponse{
+						Status:  "error",
+						Message: "Connection timeout, please try again",
+					})
+				return
 			} else {
 				c.JSON(http.StatusInternalServerError,
 					rest.ErrorResponse{
