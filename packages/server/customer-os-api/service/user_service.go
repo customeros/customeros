@@ -190,16 +190,15 @@ func (s *userService) CustomerAddJobRole(ctx context.Context, entity *CustomerAd
 	result := &model.CustomerUser{}
 
 	jobRoleCreate := &jobrolepb.CreateJobRoleGrpcRequest{
-		Tenant:        common.GetTenantFromContext(ctx),
-		JobTitle:      entity.JobRoleEntity.JobTitle,
-		Description:   entity.JobRoleEntity.Description,
-		Primary:       &entity.JobRoleEntity.Primary,
-		StartedAt:     timestamppb.New(utils.IfNotNilTimeWithDefault(entity.JobRoleEntity.StartedAt, utils.Now())),
-		EndedAt:       timestamppb.New(utils.IfNotNilTimeWithDefault(entity.JobRoleEntity.EndedAt, utils.Now())),
-		AppSource:     entity.JobRoleEntity.AppSource,
-		Source:        string(entity.JobRoleEntity.Source),
-		SourceOfTruth: string(entity.JobRoleEntity.SourceOfTruth),
-		CreatedAt:     timestamppb.New(entity.JobRoleEntity.CreatedAt),
+		Tenant:      common.GetTenantFromContext(ctx),
+		JobTitle:    entity.JobRoleEntity.JobTitle,
+		Description: entity.JobRoleEntity.Description,
+		Primary:     &entity.JobRoleEntity.Primary,
+		StartedAt:   timestamppb.New(utils.IfNotNilTimeWithDefault(entity.JobRoleEntity.StartedAt, utils.Now())),
+		EndedAt:     timestamppb.New(utils.IfNotNilTimeWithDefault(entity.JobRoleEntity.EndedAt, utils.Now())),
+		AppSource:   entity.JobRoleEntity.AppSource,
+		Source:      string(entity.JobRoleEntity.Source),
+		CreatedAt:   timestamppb.New(entity.JobRoleEntity.CreatedAt),
 	}
 
 	contextWithTimeout, cancel := utils.GetLongLivedContext(ctx)

@@ -12,15 +12,14 @@ func MapJobRoleInputToEntity(input *model.JobRoleInput) *neo4jentity.JobRoleEnti
 		return nil
 	}
 	jobRoleEntity := neo4jentity.JobRoleEntity{
-		JobTitle:      utils.IfNotNilString(input.JobTitle),
-		Primary:       utils.IfNotNilBool(input.Primary),
-		Description:   input.Description,
-		Company:       input.Company,
-		StartedAt:     input.StartedAt,
-		EndedAt:       input.EndedAt,
-		Source:        neo4jentity.DataSourceOpenline,
-		SourceOfTruth: neo4jentity.DataSourceOpenline,
-		AppSource:     utils.IfNotNilString(input.AppSource),
+		JobTitle:    utils.IfNotNilString(input.JobTitle),
+		Primary:     utils.IfNotNilBool(input.Primary),
+		Description: input.Description,
+		Company:     input.Company,
+		StartedAt:   input.StartedAt,
+		EndedAt:     input.EndedAt,
+		Source:      neo4jentity.DataSourceOpenline,
+		AppSource:   utils.IfNotNilString(input.AppSource),
 	}
 	if len(jobRoleEntity.AppSource) == 0 {
 		jobRoleEntity.AppSource = constants.AppSourceCustomerOsApi
@@ -33,31 +32,29 @@ func MapJobRoleUpdateInputToEntity(input *model.JobRoleUpdateInput) *neo4jentity
 		return nil
 	}
 	jobRoleEntity := neo4jentity.JobRoleEntity{
-		Id:            input.ID,
-		StartedAt:     input.StartedAt,
-		EndedAt:       input.EndedAt,
-		JobTitle:      utils.IfNotNilString(input.JobTitle),
-		Primary:       utils.IfNotNilBool(input.Primary),
-		SourceOfTruth: neo4jentity.DataSourceOpenline,
-		Description:   input.Description,
-		Company:       input.Company,
+		Id:          input.ID,
+		StartedAt:   input.StartedAt,
+		EndedAt:     input.EndedAt,
+		JobTitle:    utils.IfNotNilString(input.JobTitle),
+		Primary:     utils.IfNotNilBool(input.Primary),
+		Description: input.Description,
+		Company:     input.Company,
 	}
 	return &jobRoleEntity
 }
 
 func MapEntityToJobRole(entity *neo4jentity.JobRoleEntity) *model.JobRole {
 	jobRole := model.JobRole{
-		ID:            entity.Id,
-		Primary:       entity.Primary,
-		Source:        MapDataSourceToModel(entity.Source),
-		SourceOfTruth: MapDataSourceToModel(entity.SourceOfTruth),
-		Description:   entity.Description,
-		Company:       entity.Company,
-		AppSource:     entity.AppSource,
-		CreatedAt:     entity.CreatedAt,
-		UpdatedAt:     entity.UpdatedAt,
-		StartedAt:     entity.StartedAt,
-		EndedAt:       entity.EndedAt,
+		ID:          entity.Id,
+		Primary:     entity.Primary,
+		Source:      MapDataSourceToModel(entity.Source),
+		Description: entity.Description,
+		Company:     entity.Company,
+		AppSource:   entity.AppSource,
+		CreatedAt:   entity.CreatedAt,
+		UpdatedAt:   entity.UpdatedAt,
+		StartedAt:   entity.StartedAt,
+		EndedAt:     entity.EndedAt,
 	}
 	if len(entity.JobTitle) > 0 {
 		jobRole.JobTitle = utils.StringPtr(entity.JobTitle)

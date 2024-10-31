@@ -781,20 +781,19 @@ type ComplexityRoot struct {
 	}
 
 	JobRole struct {
-		AppSource     func(childComplexity int) int
-		Company       func(childComplexity int) int
-		Contact       func(childComplexity int) int
-		CreatedAt     func(childComplexity int) int
-		Description   func(childComplexity int) int
-		EndedAt       func(childComplexity int) int
-		ID            func(childComplexity int) int
-		JobTitle      func(childComplexity int) int
-		Organization  func(childComplexity int) int
-		Primary       func(childComplexity int) int
-		Source        func(childComplexity int) int
-		SourceOfTruth func(childComplexity int) int
-		StartedAt     func(childComplexity int) int
-		UpdatedAt     func(childComplexity int) int
+		AppSource    func(childComplexity int) int
+		Company      func(childComplexity int) int
+		Contact      func(childComplexity int) int
+		CreatedAt    func(childComplexity int) int
+		Description  func(childComplexity int) int
+		EndedAt      func(childComplexity int) int
+		ID           func(childComplexity int) int
+		JobTitle     func(childComplexity int) int
+		Organization func(childComplexity int) int
+		Primary      func(childComplexity int) int
+		Source       func(childComplexity int) int
+		StartedAt    func(childComplexity int) int
+		UpdatedAt    func(childComplexity int) int
 	}
 
 	JobRoleParticipant struct {
@@ -5646,13 +5645,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.JobRole.Source(childComplexity), true
-
-	case "JobRole.sourceOfTruth":
-		if e.complexity.JobRole.SourceOfTruth == nil {
-			break
-		}
-
-		return e.complexity.JobRole.SourceOfTruth(childComplexity), true
 
 	case "JobRole.startedAt":
 		if e.complexity.JobRole.StartedAt == nil {
@@ -13590,7 +13582,6 @@ type JobRole {
     endedAt: Time
 
     source: DataSource!
-    sourceOfTruth: DataSource!
     appSource: String!
 }
 
@@ -24815,8 +24806,6 @@ func (ec *executionContext) fieldContext_Contact_jobRoles(_ context.Context, fie
 				return ec.fieldContext_JobRole_endedAt(ctx, field)
 			case "source":
 				return ec.fieldContext_JobRole_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_JobRole_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_JobRole_appSource(ctx, field)
 			}
@@ -45316,50 +45305,6 @@ func (ec *executionContext) fieldContext_JobRole_source(_ context.Context, field
 	return fc, nil
 }
 
-func (ec *executionContext) _JobRole_sourceOfTruth(ctx context.Context, field graphql.CollectedField, obj *model.JobRole) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_JobRole_sourceOfTruth(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.SourceOfTruth, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(model.DataSource)
-	fc.Result = res
-	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_JobRole_sourceOfTruth(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "JobRole",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type DataSource does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _JobRole_appSource(ctx context.Context, field graphql.CollectedField, obj *model.JobRole) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_JobRole_appSource(ctx, field)
 	if err != nil {
@@ -45467,8 +45412,6 @@ func (ec *executionContext) fieldContext_JobRoleParticipant_jobRoleParticipant(_
 				return ec.fieldContext_JobRole_endedAt(ctx, field)
 			case "source":
 				return ec.fieldContext_JobRole_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_JobRole_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_JobRole_appSource(ctx, field)
 			}
@@ -56275,8 +56218,6 @@ func (ec *executionContext) fieldContext_Mutation_jobRole_Create(ctx context.Con
 				return ec.fieldContext_JobRole_endedAt(ctx, field)
 			case "source":
 				return ec.fieldContext_JobRole_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_JobRole_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_JobRole_appSource(ctx, field)
 			}
@@ -56360,8 +56301,6 @@ func (ec *executionContext) fieldContext_Mutation_jobRole_Update(ctx context.Con
 				return ec.fieldContext_JobRole_endedAt(ctx, field)
 			case "source":
 				return ec.fieldContext_JobRole_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_JobRole_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_JobRole_appSource(ctx, field)
 			}
@@ -72864,8 +72803,6 @@ func (ec *executionContext) fieldContext_Organization_jobRoles(_ context.Context
 				return ec.fieldContext_JobRole_endedAt(ctx, field)
 			case "source":
 				return ec.fieldContext_JobRole_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_JobRole_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_JobRole_appSource(ctx, field)
 			}
@@ -74950,8 +74887,6 @@ func (ec *executionContext) fieldContext_OrganizationWithJobRole_jobRole(_ conte
 				return ec.fieldContext_JobRole_endedAt(ctx, field)
 			case "source":
 				return ec.fieldContext_JobRole_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_JobRole_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_JobRole_appSource(ctx, field)
 			}
@@ -89810,8 +89745,6 @@ func (ec *executionContext) fieldContext_User_jobRoles(_ context.Context, field 
 				return ec.fieldContext_JobRole_endedAt(ctx, field)
 			case "source":
 				return ec.fieldContext_JobRole_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_JobRole_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_JobRole_appSource(ctx, field)
 			}
@@ -105821,11 +105754,6 @@ func (ec *executionContext) _JobRole(ctx context.Context, sel ast.SelectionSet, 
 			out.Values[i] = ec._JobRole_endedAt(ctx, field, obj)
 		case "source":
 			out.Values[i] = ec._JobRole_source(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
-		case "sourceOfTruth":
-			out.Values[i] = ec._JobRole_sourceOfTruth(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}

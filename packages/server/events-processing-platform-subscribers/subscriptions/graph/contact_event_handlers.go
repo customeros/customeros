@@ -87,7 +87,6 @@ func (h *ContactEventHandler) OnContactLinkToOrganization(ctx context.Context, e
 		Description: eventData.Description,
 		JobTitle:    eventData.JobTitle,
 		Primary:     eventData.Primary,
-		CreatedAt:   eventData.CreatedAt,
 		StartedAt:   eventData.StartedAt,
 		EndedAt:     eventData.EndedAt,
 		SourceFields: neo4jmodel.SourceFields{

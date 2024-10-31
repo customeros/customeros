@@ -16,18 +16,17 @@ func MapDbNodeToJobRoleEntity(dbNode *dbtype.Node) *entity.JobRoleEntity {
 	}
 	props := utils.GetPropsFromNode(*dbNode)
 	result := entity.JobRoleEntity{
-		Id:            utils.GetStringPropOrEmpty(props, "id"),
-		JobTitle:      utils.GetStringPropOrEmpty(props, "jobTitle"),
-		Description:   utils.GetStringPropOrNil(props, "description"),
-		Company:       utils.GetStringPropOrNil(props, "company"),
-		Primary:       utils.GetBoolPropOrFalse(props, "primary"),
-		Source:        entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
-		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		StartedAt:     utils.GetTimePropOrNil(props, "startedAt"),
-		EndedAt:       utils.GetTimePropOrNil(props, "endedAt"),
+		Id:          utils.GetStringPropOrEmpty(props, "id"),
+		JobTitle:    utils.GetStringPropOrEmpty(props, "jobTitle"),
+		Description: utils.GetStringPropOrNil(props, "description"),
+		Company:     utils.GetStringPropOrNil(props, "company"),
+		Primary:     utils.GetBoolPropOrFalse(props, "primary"),
+		Source:      entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		AppSource:   utils.GetStringPropOrEmpty(props, "appSource"),
+		CreatedAt:   utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:   utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		StartedAt:   utils.GetTimePropOrNil(props, "startedAt"),
+		EndedAt:     utils.GetTimePropOrNil(props, "endedAt"),
 	}
 	return &result
 }

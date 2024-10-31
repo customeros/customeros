@@ -33,7 +33,6 @@ type JobRole {
     endedAt: Time
 
     source: DataSource!
-    sourceOfTruth: DataSource!
     appSource: String!
 }
 

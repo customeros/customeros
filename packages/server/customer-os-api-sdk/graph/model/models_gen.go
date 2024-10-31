@@ -1430,15 +1430,14 @@ type JobRole struct {
 	Organization *Organization `json:"organization,omitempty"`
 	Contact      *Contact      `json:"contact,omitempty"`
 	// The Contact's job title.
-	JobTitle      *string    `json:"jobTitle,omitempty"`
-	Primary       bool       `json:"primary"`
-	Description   *string    `json:"description,omitempty"`
-	Company       *string    `json:"company,omitempty"`
-	StartedAt     *time.Time `json:"startedAt,omitempty"`
-	EndedAt       *time.Time `json:"endedAt,omitempty"`
-	Source        DataSource `json:"source"`
-	SourceOfTruth DataSource `json:"sourceOfTruth"`
-	AppSource     string     `json:"appSource"`
+	JobTitle    *string    `json:"jobTitle,omitempty"`
+	Primary     bool       `json:"primary"`
+	Description *string    `json:"description,omitempty"`
+	Company     *string    `json:"company,omitempty"`
+	StartedAt   *time.Time `json:"startedAt,omitempty"`
+	EndedAt     *time.Time `json:"endedAt,omitempty"`
+	Source      DataSource `json:"source"`
+	AppSource   string     `json:"appSource"`
 }
 
 // Describes the relationship a Contact has with an Organization.
