@@ -10,6 +10,7 @@ import { FinderFilters } from '@finder/components/FinderFilters/FinderFilters';
 
 import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
+import { Divider } from '@ui/presentation/Divider';
 import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
 import { ViewSettings } from '@shared/components/ViewSettings';
 import {
@@ -52,6 +53,7 @@ export const FinderPage = observer(() => {
 
   const tableType = tableViewDef?.value?.tableType;
   const flag = useFeatureIsOn('filters-v2');
+  const isPreset = tableViewDef?.value?.isPreset;
 
   return (
     <div className='flex w-full items-start'>
@@ -74,7 +76,22 @@ export const FinderPage = observer(() => {
                   Clear
                 </Button>
               )}
-
+              {isPreset && (
+                <Button
+                  size='xs'
+                  onClick={() => {
+                    store.ui.commandMenu.setContext({
+                      ids: [preset || ''],
+                      entity: 'TableViewDef',
+                    });
+                    store.ui.commandMenu.setType('DeleteConfirmationModal');
+                    store.ui.commandMenu.setOpen(true);
+                  }}
+                >
+                  Save to...
+                </Button>
+              )}
+              <Divider className='rotate-90 w-5 mx-[-6px]' />
               {tableViewType && (
                 <ViewSettings tableId={tableId} type={tableViewType} />
               )}

@@ -2,6 +2,7 @@ import { MouseEventHandler } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
+import { useFeatureIsOn } from '@growthbook/growthbook-react';
 import { useDownloadCsv } from '@finder/components/TableViewMenu/useDownloadTableViewAsCSV.ts';
 
 import { TableViewType } from '@graphql/types';
@@ -21,6 +22,7 @@ export const TableViewMenu = observer(() => {
   const { downloadCSV } = useDownloadCsv();
   const [searchParams] = useSearchParams();
   const preset = searchParams.get('preset') ?? '1';
+  const flag = useFeatureIsOn('filters-v2');
 
   const store = useStore();
   const tableViewDef = store.tableViewDefs.getById(preset);
@@ -46,7 +48,16 @@ export const TableViewMenu = observer(() => {
     });
   };
 
-  return (
+  if (
+    !isPreset ||
+    (tableType &&
+      [TableViewType.Invoices, TableViewType.Flow].includes(tableType))
+  )
+    return <div className='ml-2'></div>;
+
+  return flag ? (
+    <Download02 onClick={downloadCSV} className='text=gray-500 mr-3.5 ml-2' />
+  ) : (
     <Menu>
       <MenuButton className='w-6 h-6 mr-2 outline-none focus:outline-none text-gray-400 hover:text-gray-500'>
         <DotsVertical />
