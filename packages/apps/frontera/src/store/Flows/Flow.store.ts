@@ -151,9 +151,22 @@ export class FlowStore implements Store<Flow> {
     }
   }
 
-  invalidate() {
-    // todo COS-4820
-    return Promise.resolve();
+  async invalidate() {
+    try {
+      this.isLoading = true;
+
+      const { flow } = await this.service.getFlow(this.id);
+
+      this.init(flow);
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error)?.message;
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+      });
+    }
   }
 
   init(data: Flow) {
@@ -237,9 +250,9 @@ export class FlowStore implements Store<Flow> {
           'link-contact-to-flows-success',
         );
         contactStore?.invalidate();
-
-        // TODO Refactor https://linear.app/customer-os/issue/COS-4820/handle-single-flow-load-invalidate-singular-flow
-        // Invalidate singular flow when this issue is merged https://linear.app/customer-os/issue/COS-4823/create-getflowbyididid-query
+        setTimeout(() => {
+          this.invalidate();
+        }, 1000);
       });
     } catch (e) {
       runInAction(() => {
@@ -250,9 +263,6 @@ export class FlowStore implements Store<Flow> {
       });
     } finally {
       runInAction(() => {
-        setTimeout(() => {
-          this.root.flows.invalidate();
-        }, 6000);
         this.isLoading = false;
       });
     }

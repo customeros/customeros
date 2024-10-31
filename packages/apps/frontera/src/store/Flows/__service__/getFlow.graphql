@@ -1,0 +1,48 @@
+query getFlow($id: ID!) {
+  flow(id: $id) {
+    metadata {
+      id
+    }
+    name
+    edges
+    nodes
+    status
+    senders {
+        metadata {
+            id
+        }
+        user {
+           id
+
+        }
+      flow {
+        metadata {
+            id
+        }
+      }
+    }
+    statistics {
+      total
+      onHold
+      ready
+      scheduled
+      inProgress
+      completed
+      goalAchieved
+    }
+    contacts {
+      status
+      scheduledAction
+      scheduledAt
+      metadata {
+        id
+      }
+
+      contact {
+        metadata {
+          id
+        }
+      }
+    }
+  }
+}

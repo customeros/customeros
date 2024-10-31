@@ -19,6 +19,7 @@ import {
 
 import { Flow } from '@graphql/types';
 
+import GetFlowDocument from './getFlow.graphql';
 import GetFlowsDocument from './getFlows.graphql';
 import MergeFlowDocument from './flowMerge.graphql';
 import AddContactDocument from './flowContactAdd.graphql';
@@ -43,6 +44,15 @@ class FlowService {
 
   async getFlows() {
     return this.transport.graphql.request<{ flows: Flow[] }>(GetFlowsDocument);
+  }
+
+  async getFlow(id: string) {
+    return this.transport.graphql.request<{ flow: Flow }, { id: string }>(
+      GetFlowDocument,
+      {
+        id,
+      },
+    );
   }
 
   async mergeFlow(payload: FlowMergeMutationVariables) {

@@ -13,11 +13,11 @@ export type TableViewDefsQuery = {
     order: number;
     icon: string;
     filters: string;
+    defaultFilters: string;
     sorting: string;
     isPreset: boolean;
     isShared: boolean;
     createdAt: any;
-    defaultFilters: string;
     updatedAt: any;
     columns: Array<{
       __typename?: 'ColumnView';

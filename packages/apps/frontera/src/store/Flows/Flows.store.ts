@@ -103,6 +103,8 @@ export class FlowsStore implements GroupStore<Flow> {
     name: string,
     options?: { onSuccess?: (serverId: string) => void },
   ) {
+    this.isLoading = true;
+
     const newFlow = new FlowStore(this.root, this.transport);
     const tempId = newFlow.value.metadata?.id;
 
@@ -136,6 +138,16 @@ export class FlowsStore implements GroupStore<Flow> {
         this.value.delete(tempId);
 
         this.sync({ action: 'APPEND', ids: [serverId] });
+        serverId && options?.onSuccess?.(serverId);
+        setTimeout(() => {
+          if (serverId) {
+            this.root.flows.bootstrap();
+            this.sync({
+              action: 'APPEND',
+              ids: [serverId],
+            });
+          }
+        }, 1000);
       });
     } catch (e) {
       runInAction(() => {
@@ -143,16 +155,7 @@ export class FlowsStore implements GroupStore<Flow> {
         this.value.delete(tempId);
       });
     } finally {
-      serverId && options?.onSuccess?.(serverId);
-      setTimeout(() => {
-        if (serverId) {
-          this.root.flows.bootstrap();
-          this.sync({
-            action: 'APPEND',
-            ids: [serverId],
-          });
-        }
-      }, 1000);
+      this.isLoading = false;
     }
   }
 
@@ -231,6 +234,7 @@ export class FlowsStore implements GroupStore<Flow> {
             `${successfulIds.length} flows archived`,
             'archive-flows-success',
           );
+          options?.onSuccess?.();
         }
       });
     } catch (err) {
@@ -241,7 +245,6 @@ export class FlowsStore implements GroupStore<Flow> {
       );
     } finally {
       this.isLoading = false;
-      options?.onSuccess?.();
     }
   };
 }

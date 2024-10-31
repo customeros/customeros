@@ -61,8 +61,8 @@ export class FlowContactStore implements Store<FlowContact> {
     this.isLoading = true;
 
     const contactStore = this.contact;
-
     const flowName = this.contact?.flow?.value.name;
+    const flowId = this.contact?.flow?.value.metadata.id ?? '';
 
     try {
       await this.removeFlowContact();
@@ -85,7 +85,10 @@ export class FlowContactStore implements Store<FlowContact> {
           ids: [this.contactId],
         });
 
-        this.root.flows.invalidate();
+        this.root.flows.sync({
+          action: 'INVALIDATE',
+          ids: [flowId],
+        });
       });
     } catch (e) {
       runInAction(() => {
