@@ -216,6 +216,10 @@ func (s *fileService) UploadSingleFile(ctx context.Context, userEmail, tenantNam
 	}
 
 	extension := utils.FirstNotEmptyString(filepath.Ext(multipartFileHeader.Filename), fileType.Extension)
+	// remove starting dot if exists
+	if strings.HasPrefix(extension, ".") {
+		extension = extension[1:]
+	}
 	err = uploadFileToS3(ctx, s.cfg, session, tenantName, basePath, fileId+"."+extension, multipartFileHeader)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Error uploading file to s3"))
