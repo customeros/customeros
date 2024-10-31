@@ -7,7 +7,6 @@ import { setTimeout as setTimeoutSync } from "timers";
 import { Browser } from "../browser";
 import { logger } from "@/infrastructure";
 import { ErrorParser, StandardError } from "@/util/error";
-import { LinkedinService } from "@/application/services/linkedin/linkedin-service";
 
 const Selectors = {
   profileNameHeading: "h1.text-heading-xlarge",
