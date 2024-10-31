@@ -21,7 +21,7 @@ import (
 	"time"
 )
 
-const retryCountFetchFreshData = 20
+const retryCountFetchFreshData = 60
 
 func RedirectToPayInvoice(services *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -74,7 +74,7 @@ func RedirectToPayInvoice(services *service.Services) gin.HandlerFunc {
 		if paymentLink == "" {
 			notifyOnSlackPaymentFailed(ctx, services, tenant, invoiceID, invoice.Number)
 			tracing.TraceErr(span, errors.New("Payment link not found"))
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Please try again later"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Preparing payment link, please try again in 1 minute"})
 			return
 		}
 
