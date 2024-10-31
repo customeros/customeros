@@ -139,5 +139,19 @@ func prepareContactEnrichDetails(enrichDetails neo4jentity.ContactEnrichDetails)
 			output.RequestedAt = nil
 		}
 	}
+	if output.EmailEnrichedAt == nil && output.EmailFound == nil && output.EmailRequestedAt != nil {
+		// if requested is older than 10 min, set found to false
+		if time.Since(*output.EmailRequestedAt) > 10*time.Minute {
+			output.EmailRequestedAt = nil
+			output.EmailFound = utils.BoolPtr(false)
+		}
+	}
+	if output.MobilePhoneEnrichedAt == nil && output.MobilePhoneFound == nil && output.MobilePhoneRequestedAt != nil {
+		// if requested is older than 10 min, set found to false
+		if time.Since(*output.MobilePhoneRequestedAt) > 10*time.Minute {
+			output.MobilePhoneRequestedAt = nil
+			output.MobilePhoneFound = utils.BoolPtr(false)
+		}
+	}
 	return &output
 }
