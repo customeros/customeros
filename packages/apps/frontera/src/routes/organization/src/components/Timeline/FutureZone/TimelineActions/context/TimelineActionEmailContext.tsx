@@ -9,12 +9,12 @@ import {
 } from 'react';
 
 import { observer } from 'mobx-react-lite';
-import { useRemirror } from '@remirror/react';
+import { render } from '@react-email/render';
 
 import { useStore } from '@shared/hooks/useStore';
 import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
 import { useTimelineMeta } from '@organization/components/Timeline/state';
-import { basicEditorExtensions } from '@ui/form/RichTextEditor/extensions';
+import { EmailTemplate } from '@shared/components/EmailTemplate/EmailTemplate.tsx';
 import { useInfiniteGetTimelineQuery } from '@organization/graphql/getTimeline.generated';
 import { useTimelineRefContext } from '@organization/components/Timeline/context/TimelineRefContext';
 import { useUpdateCacheWithNewEvent } from '@organization/components/Timeline/PastZone/hooks/updateCacheWithNewEvent';
@@ -32,8 +32,6 @@ interface TimelineActionEmailContextContextMethods {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   state: any;
   formId: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  remirrorProps: any;
   isSending: boolean;
   showConfirmationDialog: boolean;
   checkCanExitSafely: () => boolean;
@@ -48,7 +46,6 @@ const TimelineActionEmailContextContext =
     onCreateEmail: noop,
     handleExitEditorAndCleanData: noop,
     closeConfirmationDialog: noop,
-    remirrorProps: null,
     isSending: false,
     showConfirmationDialog: false,
     formId: '',
@@ -72,9 +69,6 @@ export const TimelineActionEmailContextContextProvider = observer(
     const store = useStore();
 
     const [isSending, setIsSending] = useState(false);
-    const remirrorProps = useRemirror({
-      extensions: basicEditorExtensions,
-    });
     const { closeEditor } = useTimelineActionContext();
     const [timelineMeta] = useTimelineMeta();
 
@@ -105,12 +99,6 @@ export const TimelineActionEmailContextContextProvider = observer(
 
     const handleResetEditor = () => {
       setDefaultValues(defaultValues);
-
-      const context = remirrorProps.getContext();
-
-      if (context) {
-        context.commands.resetContent();
-      }
       reset();
     };
 
@@ -127,7 +115,24 @@ export const TimelineActionEmailContextContextProvider = observer(
       setIsSending(false);
     };
 
-    const onCreateEmail = (handleSuccess = () => {}) => {
+    const prepareEmailContent = async (bodyHtml: string) => {
+      try {
+        const emailHtml = await render(<EmailTemplate bodyHtml={bodyHtml} />, {
+          pretty: true,
+        });
+
+        return {
+          html: emailHtml,
+        };
+      } catch (error) {
+        store.ui.toastError(
+          'Unable to process email content',
+          'email-content-parsing-error',
+        );
+      }
+    };
+
+    const onCreateEmail = async (handleSuccess = () => {}) => {
       const from = state.values.from?.value ?? '';
       const fromProvider = state.values.from?.provider ?? '';
       const to = [...state.values.to].map(({ value }) => value);
@@ -144,22 +149,31 @@ export const TimelineActionEmailContextContextProvider = observer(
         handleSuccess?.();
       };
 
-      store.mail.send(
-        {
-          from,
-          fromProvider,
-          to,
-          cc,
-          bcc,
-          replyTo: id,
-          content: state.values.content,
-          subject: state.values.subject,
-        },
-        {
-          onSuccess: (r) => handleSendSuccess(r),
-          onError: handleEmailSendError,
-        },
-      );
+      try {
+        const emailContent = await prepareEmailContent(state.values.content);
+
+        if (emailContent?.html) {
+          store.mail.send(
+            {
+              from,
+              fromProvider,
+              to,
+              cc,
+              bcc,
+              replyTo: id,
+              content: emailContent.html,
+              subject: state.values.subject,
+            },
+            {
+              onSuccess: (r) => handleSendSuccess(r),
+              onError: handleEmailSendError,
+            },
+          );
+        }
+      } catch (error) {
+        console.error('Error saving email:', error);
+        store.ui.toastError('Error saving email', 'email-save-error');
+      }
     };
 
     const handleExitEditorAndCleanData = () => {
@@ -219,7 +233,6 @@ export const TimelineActionEmailContextContextProvider = observer(
           handleExitEditorAndCleanData,
           closeConfirmationDialog: onClose,
           onCreateEmail,
-          remirrorProps,
           isSending,
           showConfirmationDialog: isOpen,
           formId,

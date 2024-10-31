@@ -11,9 +11,9 @@ import { FlowService } from '@store/Flows/__service__';
 import { Store, makeAutoSyncable } from '@store/store';
 import { runInAction, makeAutoObservable } from 'mobx';
 import { makeAutoSyncableGroup } from '@store/group-store';
-import { FlowContactStore } from '@store/FlowContacts/FlowContact.store.ts';
+import { FlowContactStore } from '@store/FlowContacts/FlowContact.store';
 
-import { uuidv4 } from '@utils/generateUuid.ts';
+import { uuidv4 } from '@utils/generateUuid';
 import {
   Flow,
   Contact,

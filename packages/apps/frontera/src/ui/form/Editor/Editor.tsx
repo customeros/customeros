@@ -32,6 +32,7 @@ import {
 import { cn } from '@ui/utils/cn';
 import { SelectOption } from '@ui/utils/types';
 import { LinkPastePlugin } from '@ui/form/Editor/plugins/PastePlugin';
+import ToolbarPlugin from '@ui/form/Editor/plugins/ToolbarPlugin.tsx';
 import TextNodeTransformer from '@ui/form/Editor/nodes/TextTransformar.ts';
 
 import { nodes } from './nodes/nodes';
@@ -111,6 +112,7 @@ interface EditorProps extends VariantProps<typeof contentEditableVariants> {
   mentionsOptions?: string[];
   variableOptions?: string[];
   children?: React.ReactNode;
+  showToolbarBottom?: boolean;
   placeholderClassName?: string;
   hashtagsOptions?: SelectOption[];
   onChange?: (html: string) => void;
@@ -144,6 +146,7 @@ export const Editor = forwardRef<LexicalEditor | null, EditorProps>(
       placeholderClassName,
       onKeyDown,
       placeholder = 'Type something',
+      showToolbarBottom = false,
     },
     ref,
   ) => {
@@ -279,7 +282,14 @@ export const Editor = forwardRef<LexicalEditor | null, EditorProps>(
               </div>
             }
           />
-          {children}
+
+          {showToolbarBottom && (
+            <div className='w-full flex justify-between items-center mt-2'>
+              <ToolbarPlugin />
+
+              {children}
+            </div>
+          )}
         </LexicalComposer>
       </div>
     );

@@ -3,14 +3,10 @@ import { useForm } from 'react-inverted-form';
 import { VirtuosoHandle } from 'react-virtuoso';
 import { useSearchParams } from 'react-router-dom';
 
-import { useRemirror } from '@remirror/react';
-import { htmlToProsemirrorNode } from 'remirror';
-
 import { useStore } from '@shared/hooks/useStore';
 import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
 import { EmailParticipant, InteractionEvent } from '@graphql/types';
 import { useTimelineMeta } from '@organization/components/Timeline/state';
-import { basicEditorExtensions } from '@ui/form/RichTextEditor/extensions';
 import { getEmailParticipantsNameAndEmail } from '@utils/getParticipantsName';
 import { useInfiniteGetTimelineQuery } from '@organization/graphql/getTimeline.generated';
 import { HtmlContentRenderer } from '@ui/presentation/HtmlContentRenderer/HtmlContentRenderer';
@@ -74,11 +70,6 @@ export const EmailPreviewModal = ({
 
   const event = modalContent as InteractionEvent;
   const subject = event?.interactionSession?.name || '';
-  const remirrorProps = useRemirror({
-    extensions: basicEditorExtensions,
-    stringHandler: htmlToProsemirrorNode,
-    content: '',
-  });
 
   const updateTimelineCache = useUpdateCacheWithNewEvent(virtuosoRef);
   const [searchParams] = useSearchParams();
@@ -208,13 +199,6 @@ export const EmailPreviewModal = ({
         subject: `Re: ${subject}`,
         content: `${state.values.content}${event.content}`,
       });
-
-      const prosemirrorNodeValue = htmlToProsemirrorNode({
-        schema: remirrorProps.state.schema,
-        content: `<p>${state.values.content} ${event.content}</p>`,
-      });
-
-      remirrorProps.getContext()?.setContent(prosemirrorNodeValue);
     }
     setMode(newMode);
     setDefaultValues(newDefaultValues);
@@ -335,7 +319,6 @@ export const EmailPreviewModal = ({
           isSending={isSending}
           onSubmit={handleSubmit}
           onClose={handleClosePreview}
-          remirrorProps={remirrorProps}
           onModeChange={handleModeChange}
         />
 

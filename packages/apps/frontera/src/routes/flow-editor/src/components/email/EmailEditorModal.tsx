@@ -14,10 +14,10 @@ import { useStore } from '@shared/hooks/useStore';
 import { ChevronRight } from '@ui/media/icons/ChevronRight';
 import { Modal, ModalPortal, ModalContent } from '@ui/overlay/Modal';
 import { extractPlainText } from '@ui/form/Editor/utils/extractPlainText';
+import { EmailTemplate } from '@shared/components/EmailTemplate/EmailTemplate.tsx';
 import { convertPlainTextToHtml } from '@ui/form/Editor/utils/convertPlainTextToHtml';
 
 import { useUndoRedo } from '../../hooks';
-import { EmailTemplate } from './EmailTemplate';
 
 interface EmailEditorModalProps {
   isEditorOpen: boolean;

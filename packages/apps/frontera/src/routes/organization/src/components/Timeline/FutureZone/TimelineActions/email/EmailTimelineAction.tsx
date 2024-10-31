@@ -7,14 +7,8 @@ import { useTimelineActionContext } from '@organization/components/Timeline/Futu
 import { useTimelineActionEmailContext } from '@organization/components/Timeline/FutureZone/TimelineActions/context/TimelineActionEmailContext';
 
 export const EmailTimelineAction = () => {
-  const {
-    remirrorProps,
-    isSending,
-    onCreateEmail,
-    formId,
-    state,
-    checkCanExitSafely,
-  } = useTimelineActionEmailContext();
+  const { isSending, onCreateEmail, formId, state, checkCanExitSafely } =
+    useTimelineActionEmailContext();
   const { virtuosoRef } = useTimelineRefContext();
   const { closeEditor } = useTimelineActionContext();
 
@@ -42,7 +36,6 @@ export const EmailTimelineAction = () => {
         isSending={isSending}
         bcc={state.values.bcc}
         onSubmit={onCreateEmail}
-        remirrorProps={remirrorProps}
       >
         <KeymapperClose onClose={handleClose} />
       </ComposeEmailContainer>

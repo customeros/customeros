@@ -1,13 +1,9 @@
+import { useField } from 'react-inverted-form';
 import { FC, useRef, PropsWithChildren } from 'react';
 
 import { cn } from '@ui/utils/cn';
-import { RichTextEditor } from '@ui/form/RichTextEditor/RichTextEditor';
-import { BasicEditorToolbar } from '@ui/form/RichTextEditor/menu/BasicEditorToolbar';
-import {
-  RemirrorProps,
-  BasicEditorExtentions,
-} from '@ui/form/RichTextEditor/types';
-import { KeymapperCreate } from '@ui/form/RichTextEditor/components/keyboardShortcuts/KeymapperCreate';
+import { Button } from '@ui/form/Button/Button.tsx';
+import { Editor } from '@ui/form/Editor/Editor.tsx';
 import { ParticipantsSelectGroup } from '@organization/components/Timeline/PastZone/events/email/compose-email/ParticipantsSelectGroup';
 import { ModeChangeButtons } from '@organization/components/Timeline/PastZone/events/email/compose-email/EmailResponseModeChangeButtons';
 
@@ -20,7 +16,6 @@ export interface ComposeEmailProps extends PropsWithChildren {
   to: Array<{ label: string; value: string }>;
   cc: Array<{ label: string; value: string }>;
   bcc: Array<{ label: string; value: string }>;
-  remirrorProps: RemirrorProps<BasicEditorExtentions>;
   onModeChange?: (status: 'reply' | 'reply-all' | 'forward') => void;
 }
 
@@ -34,12 +29,16 @@ export const ComposeEmail: FC<ComposeEmailProps> = ({
   to,
   cc,
   bcc,
-  remirrorProps,
-  children,
 }) => {
   const myRef = useRef<HTMLDivElement>(null);
   const height =
     modal && (myRef?.current?.getBoundingClientRect()?.height || 0) + 96;
+  const {
+    getInputProps,
+    state: { value },
+  } = useField('content', formId);
+
+  const { onChange } = getInputProps();
 
   return (
     <form
@@ -69,21 +68,29 @@ export const ComposeEmail: FC<ComposeEmailProps> = ({
         />
       </div>
       <div
-        className='w-full'
+        className='w-full mt-2'
         style={{
           maxHeight: modal ? `calc(50vh - ${height}px) !important` : 'auto',
         }}
       >
-        <RichTextEditor
-          {...remirrorProps}
-          showToolbar
-          name='content'
-          formId={formId}
+        <Editor
+          placeholder={''}
+          showToolbarBottom
+          defaultHtmlValue={value}
+          onChange={(e) => onChange(e)}
+          dataTest='timeline-email-editor'
+          namespace='timeline-email-editor'
+          className='text-base cursor-text email-editor h-full'
         >
-          {children}
-          <KeymapperCreate onCreate={onSubmit} />
-          <BasicEditorToolbar onSubmit={onSubmit} isSending={isSending} />
-        </RichTextEditor>
+          <Button
+            size='xs'
+            onClick={onSubmit}
+            isLoading={isSending}
+            loadingText='Sending...'
+          >
+            Send
+          </Button>
+        </Editor>
       </div>
     </form>
   );

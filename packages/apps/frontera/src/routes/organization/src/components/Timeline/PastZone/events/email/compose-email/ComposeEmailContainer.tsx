@@ -1,7 +1,6 @@
 import { observer } from 'mobx-react-lite';
 
 import { useStore } from '@shared/hooks/useStore';
-import { KeymapperClose } from '@ui/form/RichTextEditor/components/keyboardShortcuts/KeymapperClose';
 import { MissingPermissionsPrompt } from '@organization/components/Timeline/shared/EmailPermissionsPrompt/EmailPermissionsPrompt';
 import {
   ComposeEmail,
@@ -22,11 +21,7 @@ export const ComposeEmailContainer = observer(
         store.globalCache?.value?.mailboxes?.length > 0);
 
     if (allowSendingEmail) {
-      return (
-        <ComposeEmail {...composeEmailProps}>
-          <KeymapperClose onClose={onClose} />
-        </ComposeEmail>
-      );
+      return <ComposeEmail {...composeEmailProps} />;
     }
 
     if (!allowSendingEmail) {
