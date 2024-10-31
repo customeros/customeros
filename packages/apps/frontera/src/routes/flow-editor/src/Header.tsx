@@ -49,6 +49,7 @@ export const Header = observer(
     const showFinder = searchParams.get('show') === 'finder';
     const flowContactsPreset = store.tableViewDefs.flowContactsPreset;
     const canSave = saveFlag && hasChanges && status === FlowStatus.Inactive;
+    const flag = useFeatureIsOn('filters-v2');
 
     useEffect(() => {
       if (!store.ui.commandMenu.isOpen) {
@@ -100,7 +101,12 @@ export const Header = observer(
 
     return (
       <div>
-        <div className='bg-white px-4 pl-2 h-[41px] border-b flex items-center text-base font-bold justify-between'>
+        <div
+          className={cn(
+            'bg-white px-4 pl-2 h-[41px]  flex items-center text-base font-bold justify-between',
+            !flag && 'border-b',
+          )}
+        >
           <div className='flex items-center'>
             <div className='flex items-center gap-1 font-medium'>
               <span

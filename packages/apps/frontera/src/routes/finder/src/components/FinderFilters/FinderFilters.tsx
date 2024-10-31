@@ -10,18 +10,20 @@ import { TableViewType } from '@shared/types/tableDef';
 import {
   FilterItem,
   TableIdType,
-  ColumnViewType,
 } from '@shared/types/__generated__/graphql.types';
 
+import { getFilterTypes as getFilterTypeForFlows } from '../Columns/flows/filterTypes';
 import { getFilterTypes as getFilterTypesForContacts } from '../Columns/contacts/filterTypes';
 import { getFilterTypes as getFilterTypesForContracts } from '../Columns/contracts/filterTypes';
 import { getFilterTypes as getFilterTypesForUpcomingInvoices } from '../Columns/invoices/filterTypes';
 import { getFilterTypes as getFilterTypesForOrganizations } from '../Columns/organizations/filterTypes';
 import { getFilterTypes as getFilterTypesForOpportunities } from '../Columns/opportunities/filterTypes';
 import { getFilterTypes as getFilterTypesForPastInvoices } from '../Columns/invoices/filterTypesPastInvoices';
+
 export const FinderFilters = observer(
   ({ tableId, type }: { type: TableViewType; tableId: TableIdType }) => {
     const store = useStore();
+
     const getFilterTypes = match(tableId)
       .with(TableIdType.Contacts, () => getFilterTypesForContacts)
       .with(TableIdType.Organizations, () => getFilterTypesForOrganizations)
@@ -35,6 +37,8 @@ export const FinderFilters = observer(
       )
       .with(TableIdType.PastInvoices, () => getFilterTypesForPastInvoices)
       .with(TableIdType.Contracts, () => getFilterTypesForContracts)
+      .with(TableIdType.FlowActions, () => getFilterTypeForFlows)
+      .with(TableIdType.FlowContacts, () => getFilterTypesForContacts)
       .otherwise(() => getFilterTypesForOrganizations);
 
     const [searchParams] = useSearchParams();
@@ -53,13 +57,11 @@ export const FinderFilters = observer(
     const tableViewDef = store.tableViewDefs.getById(preset ?? '0');
 
     const columns =
-      tableViewDef?.value?.columns
-        .filter((c) => ![ColumnViewType.FlowName].includes(c.columnType))
-        .map((c) => ({
-          ...c,
-          label: optionsMap[c.columnType],
-          helperText: helperTextMap[c.columnType],
-        })) ?? [];
+      tableViewDef?.value?.columns.map((c) => ({
+        ...c,
+        label: optionsMap[c.columnType],
+        helperText: helperTextMap[c.columnType],
+      })) ?? [];
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const filters = tableViewDef?.getFilters()?.AND as any | undefined;

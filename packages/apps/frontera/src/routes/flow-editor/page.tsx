@@ -1,11 +1,17 @@
 import React, { useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 
+import { observer } from 'mobx-react-lite';
 import { FinderTable } from '@finder/components/FinderTable';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
 import { useReactFlow, ReactFlowProvider } from '@xyflow/react';
+import { FinderFilters } from '@finder/components/FinderFilters/FinderFilters';
 
 import { cn } from '@ui/utils/cn';
+import { Button } from '@ui/form/Button/Button';
+import { useStore } from '@shared/hooks/useStore';
+import { TableViewType } from '@shared/types/tableDef';
+import { TableIdType } from '@shared/types/__generated__/graphql.types';
 
 import { Header } from './src/Header';
 import { FlowBuilder } from './src/FlowBuilder';
@@ -40,36 +46,69 @@ export const FlowEditor = () => {
   );
 };
 
-const FlowContent = ({
-  showSidePanel,
-  setHasNewChanges,
-}: {
-  showSidePanel: boolean;
-  setHasNewChanges: (data: boolean) => void;
-}) => {
-  const [searchParams] = useSearchParams();
-  const [isSidePanelOpen, setIsSidePanelOpen] = useState<boolean>(false);
-  const { getNodes } = useReactFlow();
-  const id = useParams().id as string;
+const FlowContent = observer(
+  ({
+    showSidePanel,
+    setHasNewChanges,
+  }: {
+    showSidePanel: boolean;
+    setHasNewChanges: (data: boolean) => void;
+  }) => {
+    const store = useStore();
 
-  const showFinder = searchParams.get('show') === 'finder';
+    const [searchParams] = useSearchParams();
+    const [isSidePanelOpen, setIsSidePanelOpen] = useState<boolean>(false);
+    const { getNodes } = useReactFlow();
+    const id = useParams().id as string;
+    const preset = searchParams.get('preset');
+    const showFinder = searchParams.get('show') === 'finder';
+    const tableViewDef = store.tableViewDefs.getById(preset || '');
+    const tableId = tableViewDef?.value.tableId;
 
-  return (
-    <>
-      {showFinder && <FinderTable isSidePanelOpen={false} />}
-      <div
-        className={cn('flex h-full flex-col', {
-          hidden: showFinder,
-        })}
-      >
-        <FlowBuilder
-          showSidePanel={isSidePanelOpen}
-          onToggleSidePanel={setIsSidePanelOpen}
-          onHasNewChanges={() => setHasNewChanges(true)}
-        />
-      </div>
+    const tableType = tableViewDef?.value?.tableType;
+    const flag = useFeatureIsOn('filters-v2');
 
-      {showSidePanel && <FlowSettingsPanel id={id} nodes={getNodes()} />}
-    </>
-  );
-};
+    return (
+      <>
+        {showFinder && (
+          <div className='flex justify-start flex-col bg-white'>
+            {flag && (
+              <div className='mt-1 mb-2 bg-white ml-1 flex items-center justify-between'>
+                <FinderFilters
+                  tableId={tableId || TableIdType.Organizations}
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  type={tableType || (TableViewType.Organizations as any)}
+                />
+                {tableViewDef?.hasFilters() && (
+                  <Button
+                    size='xs'
+                    variant='ghost'
+                    className='mr-4'
+                    onClick={() => tableViewDef?.removeFilters()}
+                  >
+                    Clear
+                  </Button>
+                )}
+              </div>
+            )}
+
+            <FinderTable isSidePanelOpen={false} />
+          </div>
+        )}
+        <div
+          className={cn('flex h-full flex-col', {
+            hidden: showFinder,
+          })}
+        >
+          <FlowBuilder
+            showSidePanel={isSidePanelOpen}
+            onToggleSidePanel={setIsSidePanelOpen}
+            onHasNewChanges={() => setHasNewChanges(true)}
+          />
+        </div>
+
+        {showSidePanel && <FlowSettingsPanel id={id} nodes={getNodes()} />}
+      </>
+    );
+  },
+);

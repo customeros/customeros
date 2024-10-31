@@ -273,7 +273,10 @@ export const computeFinderData = (
       store.flows.toComputedArray((arr) => {
         if (tableType !== TableViewType.Flow) return arr;
 
-        const filters = getFlowsFilterFns(tableViewDef?.getFilters());
+        const filters = getFlowsFilterFns(
+          tableViewDef?.getFilters(),
+          isFeatureEnabled,
+        );
 
         if (filters) {
           arr = arr.filter((v) => filters.every((fn) => fn(v)));
