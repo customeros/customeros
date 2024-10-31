@@ -262,6 +262,7 @@ func (s *fileService) DownloadSingleFile(ctx context.Context, userEmail, tenantN
 		tracing.TraceErr(span, errors.Wrap(err, "Error getting attachment by id"))
 		return nil, err
 	}
+	tracing.LogObjectAsJson(span, "attachment", attachment)
 
 	session, err := awsSes.NewSession(&aws.Config{Region: aws.String(s.cfg.AWS.Region)})
 	if err != nil {
@@ -276,6 +277,7 @@ func (s *fileService) DownloadSingleFile(ctx context.Context, userEmail, tenantN
 
 	extension := filepath.Ext(attachment.FileName)
 	if extension == "" {
+		tracing.TraceErr(span, errors.New("No file extension found"))
 		fmt.Println("No file extension found.")
 	} else {
 		extension = extension[1:]
@@ -283,9 +285,12 @@ func (s *fileService) DownloadSingleFile(ctx context.Context, userEmail, tenantN
 	}
 
 	// Get the object metadata to determine the file size and ETag
+	bucket := s.cfg.AWS.Bucket
+	key := tenantName + byId.BasePath + "/" + attachment.ID + "." + extension
+	span.LogFields(log.String("bucket", bucket), log.String("key", key))
 	respHead, err := svc.HeadObject(&s3.HeadObjectInput{
-		Bucket: aws.String(s.cfg.AWS.Bucket),
-		Key:    aws.String(tenantName + byId.BasePath + "/" + attachment.ID + "." + extension),
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
 	})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Error getting object metadata"))
