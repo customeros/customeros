@@ -311,7 +311,7 @@ export class LinkedinAutomationService {
     const page = await context.newPage();
 
     try {
-      await page.goto("https://linkedin.com" + profileUrl, { timeout: 60 * 1000 });
+      await page.goto(profileUrl, { timeout: 60 * 1000 });
 
       const btn = page.locator('button.pvs-profile-actions__action', { hasText: 'Message' });
       await btn.waitFor({ timeout: 10000 });

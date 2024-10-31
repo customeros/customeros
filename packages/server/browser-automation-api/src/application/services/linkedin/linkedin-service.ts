@@ -153,7 +153,6 @@ export class LinkedinService {
       logger.info("Getting messages", {
         source: "LinkedinService",
       });
-
       const messages = await this.linkedinAutomationService.retrieveMessages(profileUrl);
 
       logger.info("Messages retrieved", {
