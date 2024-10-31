@@ -10,7 +10,6 @@ query {
           startedAt
           endedAt
           source
-          sourceOfTruth
           appSource
       }
     }
