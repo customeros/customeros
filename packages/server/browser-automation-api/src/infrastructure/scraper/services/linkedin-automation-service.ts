@@ -302,7 +302,7 @@ export class LinkedinAutomationService {
   }
 
   async retrieveMessages(profileUrl: string) {
-    const browser = await Browser.getFreshInstance(this.proxyConfig );
+    const browser = await Browser.getFreshInstance(this.proxyConfig);
     const context = await browser.newContext({
       userAgent: this.userAgent,
     });
