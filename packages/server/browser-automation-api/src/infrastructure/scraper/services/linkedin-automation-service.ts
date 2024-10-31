@@ -315,11 +315,10 @@ export class LinkedinAutomationService {
     try {
       await page.goto("https://linkedin.com" + profileUrl, { timeout: 60 * 1000 });
 
-      const btn = page.locator('button[aria-label^="Message"].pvs-profile-actions__action');
+      const btn = page.locator('button.pvs-profile-actions__action', { hasText: 'Message' });
       await btn.waitFor({ timeout: 10000 });
       await btn.click();
 
-      // Wait for messages container
       await page.waitForSelector('.msg-s-message-list', { timeout: 10000 });
 
       await page.evaluate(() => {
@@ -351,19 +350,29 @@ export class LinkedinAutomationService {
             const nameEl = el.querySelector('.msg-s-message-group__name');
             const timeEl = el.querySelector('time.msg-s-message-group__timestamp');
             const msgEl = el.querySelector('p.msg-s-event-listitem__body');
+            const linkPreviewEl = el.querySelector('.msg-s-event-listitem__content-preview-container');
 
             return {
               name: nameEl?.textContent?.trim() || '',
               time: timeEl?.textContent?.trim() || '',
               message: msgEl?.textContent?.trim().replace(/<!---->|<.*?>/g, '') || '',
               altName: el.querySelector('.msg-s-message-group__profile-link')?.textContent?.trim() || '',
-              altMessage: el.querySelector('.msg-s-event-listitem__content-preview-container')?.textContent?.trim() || ''
+              altMessage: el.querySelector('.msg-s-event-listitem__content-preview-container')?.textContent?.trim() || '',
+              hasLinkPreview: !!linkPreviewEl
             };
           });
 
           const finalName = elementInfo.name || elementInfo.altName || lastValidName;
           const finalTime = elementInfo.time || lastValidTime;
-          const finalMessage = elementInfo.message || elementInfo.altMessage;
+
+          let finalMessage;
+          if (elementInfo.message) {
+            finalMessage = elementInfo.message;
+          } else if (elementInfo.hasLinkPreview) {
+            finalMessage = "External link";
+          } else {
+            finalMessage = elementInfo.altMessage || "Unable to parse message";
+          }
 
           if (!finalMessage) {
             continue;
@@ -374,6 +383,7 @@ export class LinkedinAutomationService {
             time: finalTime,
             message: finalMessage
           });
+
           lastValidName = finalName;
           lastValidTime = finalTime;
 
@@ -382,14 +392,7 @@ export class LinkedinAutomationService {
         }
       }
 
-
-      logger.info(`Summary:`, {
-        source: "LinkedinService",
-        details: JSON.stringify({
-          totalFound: messages.length,
-          messages
-        }, null, 2)
-      });
+      logger.info(`Found ${messages.length} messages`, { source: "LinkedinService" });
 
       return messages;
 
@@ -399,8 +402,6 @@ export class LinkedinAutomationService {
       await browser.close();
     }
   }
-
-
 
   async getConnectionsNew(): Promise<
     [results: string[], error: StandardError | null]
