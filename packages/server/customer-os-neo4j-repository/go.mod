@@ -10,7 +10,7 @@ replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-
 
 require (
 	github.com/cenkalti/backoff/v4 v4.3.0
-	github.com/cucumber/godog v0.14.1
+	github.com/cucumber/godog v0.15.0
 	github.com/docker/docker v27.3.1+incompatible
 	github.com/forPelevin/gomoji v1.2.0
 	github.com/google/uuid v1.6.0
