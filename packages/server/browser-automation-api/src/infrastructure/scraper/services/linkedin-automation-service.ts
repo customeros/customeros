@@ -37,12 +37,20 @@ export type Cookies = ReadonlyArray<{
   sameSite?: "Strict" | "Lax" | "None";
 }>;
 
+interface MessageDate {
+  year: number;
+  month?: number;
+  day?: number;
+  time: string;
+}
+
 export class LinkedinAutomationService {
   constructor(
     private cookies: Cookies,
     private userAgent: string,
     private proxyConfig: string,
   ) {}
+  private lastKnownTime: string | null = null;  // Add this as class property
 
   async sendConenctionInvite(
     profileUrl: string,
@@ -339,6 +347,9 @@ export class LinkedinAutomationService {
       let lastValidTime = '';
       let currentTime = '';
       let timeIndex = 1;
+      let currentYear: number | null = null;
+      let currentDate: Date | null = null;
+      this.lastKnownTime = null;  // Reset at start of each retrieval
 
       const messageElements = await page.locator('li.msg-s-message-list__event').all();
       logger.info(`Found ${messageElements.length} message elements`, { source: "LinkedinService" });
@@ -350,27 +361,37 @@ export class LinkedinAutomationService {
             const timeEl = el.querySelector('time.msg-s-message-group__timestamp');
             const msgEl = el.querySelector('p.msg-s-event-listitem__body');
             const linkPreviewEl = el.querySelector('.msg-s-event-listitem__content-preview-container');
+            const dateHeadingEl = el.querySelector('.msg-s-message-list__time-heading');
 
             return {
               name: nameEl?.textContent?.trim() || '',
               time: timeEl?.textContent?.trim() || '',
-              message: (() => {
-                let sanitizedMessage = msgEl?.textContent?.trim() || '';
-                let previous;
-                do {
-                  previous = sanitizedMessage;
-                  sanitizedMessage = sanitizedMessage.replace(/<!---->|<.*?>/g, '');
-                } while (sanitizedMessage !== previous);
-                return sanitizedMessage;
-              })() || '',
+              message: msgEl?.textContent?.trim().replace(/<!---->|<.*?>/g, '') || '',
               altName: el.querySelector('.msg-s-message-group__profile-link')?.textContent?.trim() || '',
               altMessage: el.querySelector('.msg-s-event-listitem__content-preview-container')?.textContent?.trim() || '',
-              hasLinkPreview: !!linkPreviewEl
+              hasLinkPreview: !!linkPreviewEl,
+              dateHeading: dateHeadingEl?.textContent?.trim() || ''
             };
           });
 
+          if (elementInfo.dateHeading) {
+            const parsedDate = this.parseDateHeading(elementInfo.dateHeading, currentYear);
+            if (parsedDate) {
+              currentYear = parsedDate.year;
+              currentDate = this.createDate(parsedDate);
+            }
+          }
+
           const finalName = elementInfo.name || elementInfo.altName || lastValidName;
-          const finalTime = elementInfo.time || lastValidTime;
+
+// Use last known time if current time is empty, fallback to empty string if both are null
+          const timeToConvert = elementInfo.time || this.lastKnownTime || '';
+          const finalTime = this.convertToZuluTime(timeToConvert, currentDate);
+
+// Update last known time only if we have a non-empty time
+          if (elementInfo.time) {
+            this.lastKnownTime = elementInfo.time;
+          }
 
           let finalMessage;
           if (elementInfo.message) {
@@ -400,22 +421,102 @@ export class LinkedinAutomationService {
 
           lastValidName = finalName;
           lastValidTime = finalTime;
-          timeIndex++; // Increment for next message with same timestamp
+          timeIndex++;
 
         } catch (err) {
           logger.error(`Error processing message element: ${err}`, { source: "LinkedinService" });
         }
       }
 
-      logger.info(`Found ${messages.length} messages`, { source: "LinkedinService" });
-
       return messages;
-
     } catch (err) {
       throw LinkedinAutomationService.handleError(err);
     } finally {
       await browser.close();
     }
+  }
+
+  private parseDateHeading(heading: string, currentYear: number | null): MessageDate | null {
+    // Full date format: "Jul 23, 2023"
+    const fullDateMatch = heading.match(/([A-Za-z]+)\s+(\d{1,2}),\s+(\d{4})/);
+    if (fullDateMatch) {
+      return {
+        year: parseInt(fullDateMatch[3]),
+        month: this.getMonthNumber(fullDateMatch[1]),
+        day: parseInt(fullDateMatch[2]),
+        time: ''
+      };
+    }
+
+    // Month and day format: "Mar 22"
+    const monthDayMatch = heading.match(/([A-Za-z]+)\s+(\d{1,2})/);
+    if (monthDayMatch && currentYear) {
+      return {
+        year: currentYear,
+        month: this.getMonthNumber(monthDayMatch[1]),
+        day: parseInt(monthDayMatch[2]),
+        time: ''
+      };
+    }
+
+    // Day of week format: "Wednesday"
+    if (heading.match(/^(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)$/)) {
+      const today = new Date();
+      const dayOfWeek = heading.toLowerCase();
+      const daysOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+      const targetDay = daysOfWeek.indexOf(dayOfWeek);
+      const currentDay = today.getDay();
+      let daysAgo = currentDay - targetDay;
+      if (daysAgo <= 0) daysAgo += 7;
+
+      const targetDate = new Date(today);
+      targetDate.setDate(today.getDate() - daysAgo);
+
+      return {
+        year: targetDate.getFullYear(),
+        month: targetDate.getMonth() + 1,
+        day: targetDate.getDate(),
+        time: ''
+      };
+    }
+
+    return null;
+  }
+
+  private getMonthNumber(monthStr: string): number {
+    const months: Record<string, number> = {
+      'jan': 1, 'feb': 2, 'mar': 3, 'apr': 4, 'may': 5, 'jun': 6,
+      'jul': 7, 'aug': 8, 'sep': 9, 'oct': 10, 'nov': 11, 'dec': 12
+    };
+    return months[monthStr.toLowerCase()];
+  }
+
+  private createDate(messageDate: MessageDate): Date {
+    const date = new Date();
+    date.setFullYear(messageDate.year);
+    if (messageDate.month) date.setMonth(messageDate.month - 1);
+    if (messageDate.day) date.setDate(messageDate.day);
+    return date;
+  }
+
+  private convertToZuluTime(timeStr: string, currentDate: Date | null): string {
+    if (!currentDate || !timeStr) return timeStr;
+
+    // Parse time string (e.g., "3:07 PM")
+    const [time, period] = timeStr.split(' ');
+    const [hours, minutes] = time.split(':').map(num => parseInt(num));
+
+    // Convert to 24-hour format
+    let hour24 = hours;
+    if (period === 'PM' && hours !== 12) hour24 += 12;
+    if (period === 'AM' && hours === 12) hour24 = 0;
+
+    // Create new date with the time
+    const dateWithTime = new Date(currentDate);
+    dateWithTime.setHours(hour24, minutes, 0, 0);
+
+    // Convert to ISO string (Zulu time)
+    return dateWithTime.toISOString();
   }
 
   async getConnectionsNew(): Promise<
