@@ -131,7 +131,6 @@ func syncPostmarkInteractionEventHandler(services *service.Services, cfg *config
 		span.SetTag(tracing.SpanTagTenant, tenantByName)
 
 		emailExclusion := services.CommonServices.Cache.GetEmailExclusion(tenantByName)
-		span.LogFields(tracingLog.Object("emailExclusion", emailExclusion))
 		for _, exclusion := range emailExclusion {
 			if exclusion.ExcludeSubject != nil {
 				if strings.Contains(postmarkEmailWebhookData.Subject, *exclusion.ExcludeSubject) {

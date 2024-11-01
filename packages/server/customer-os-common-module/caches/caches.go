@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/coocood/freecache"
 	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	"log"
 	"strconv"
 	"strings"
 	"sync"
@@ -46,7 +47,7 @@ func NewCommonCache() *Cache {
 		tenantCache:       freecache.NewCache(cache1MB),
 		userDetailCache:   freecache.NewCache(cache20MB),
 		organizationWebsiteHostingUrlPatternsCache: freecache.NewCache(cache1MB),
-		emailExclusionCache:                        freecache.NewCache(cache1MB),
+		emailExclusionCache:                        freecache.NewCache(cache10MB),
 		personalEmailProviderCache:                 freecache.NewCache(cache10MB),
 	}
 }
@@ -286,13 +287,14 @@ func (c *Cache) SetEmailExclusion(emailExclusionList []postgresEntity.TenantSett
 		for tenant, emailExclusions := range byTenant {
 			domainChunkBytes, err := json.Marshal(emailExclusions)
 			if err != nil {
-				c.emailExclusionCache.Clear() // Clear the cache
+				log.Fatalf("Error marshalling email exclusion cache: %s", err.Error())
 				return
 			}
 
 			err = c.emailExclusionCache.Set([]byte(tenant), domainChunkBytes, expire9999Days)
 			if err != nil {
-				c.emailExclusionCache.Clear()
+				log.Fatalf("Error setting email exclusion cache: %s", err.Error())
+				return
 			}
 		}
 	}
