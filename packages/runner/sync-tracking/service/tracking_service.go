@@ -7,13 +7,14 @@ import (
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-tracking/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-tracking/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
+	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
+	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
-	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
-	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	validationmodel "github.com/openline-ai/openline-customer-os/packages/server/validation-api/model"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -142,7 +143,12 @@ func (s *trackingService) CreateOrganizationsFromTrackedData(ctx context.Context
 
 	for _, r := range identifiedRecords {
 
-		record, err := s.services.CommonServices.PostgresRepositories.TrackingRepository.GetById(ctx, r.ID)
+		innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+			Tenant:    r.Tenant,
+			AppSource: constants.AppTracking,
+		})
+
+		record, err := s.services.CommonServices.PostgresRepositories.TrackingRepository.GetById(innerCtx, r.ID)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
@@ -153,7 +159,7 @@ func (s *trackingService) CreateOrganizationsFromTrackedData(ctx context.Context
 			continue
 		}
 
-		snitcherData, err := s.services.CommonServices.PostgresRepositories.EnrichDetailsTrackingRepository.GetByIP(ctx, record.IP)
+		snitcherData, err := s.services.CommonServices.PostgresRepositories.EnrichDetailsTrackingRepository.GetByIP(innerCtx, record.IP)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
@@ -168,8 +174,10 @@ func (s *trackingService) CreateOrganizationsFromTrackedData(ctx context.Context
 			tracing.TraceErr(span, errors.New("company domain is empty"))
 			continue
 		}
+		span.LogFields(log.String("company_domain", *snitcherData.CompanyDomain))
+		span.LogFields(log.String("company_website", utils.StringOrEmpty(snitcherData.CompanyWebsite)))
 
-		organizationByDomainNode, err := s.services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByDomain(ctx, record.Tenant, *snitcherData.CompanyDomain)
+		organizationByDomainNode, err := s.services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByDomain(innerCtx, record.Tenant, *snitcherData.CompanyDomain)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
@@ -177,39 +185,41 @@ func (s *trackingService) CreateOrganizationsFromTrackedData(ctx context.Context
 
 		if organizationByDomainNode == nil {
 
-			if snitcherData.CompanyWebsite == nil || *snitcherData.CompanyWebsite == "" {
-				span.LogFields(log.String("skip", "no website"))
-				continue
-			}
-
-			upsertOrganizationRequest := organizationpb.UpsertOrganizationGrpcRequest{
-				Tenant:       record.Tenant,
-				Name:         utils.StringOrEmpty(snitcherData.CompanyName),
-				Website:      *snitcherData.CompanyWebsite,
-				Relationship: neo4jenum.Prospect.String(),
-				Stage:        neo4jenum.Lead.String(),
-				LeadSource:   "Reveal AI",
-				SourceFields: &commonpb.SourceFields{
+			// Save organization
+			organizationFields := neo4jrepository.OrganizationSaveFields{
+				Name:               utils.StringOrEmpty(snitcherData.CompanyName),
+				Website:            utils.StringOrEmpty(snitcherData.CompanyWebsite),
+				LeadSource:         "Reveal AI",
+				Relationship:       neo4jenum.Prospect,
+				Stage:              neo4jenum.Lead,
+				Domains:            []string{*snitcherData.CompanyDomain},
+				UpdateName:         true,
+				UpdateWebsite:      true,
+				UpdateLeadSource:   true,
+				UpdateRelationship: true,
+				UpdateStage:        true,
+				SourceFields: neo4jmodel.SourceFields{
 					Source:    constants.SourceOpenline,
 					AppSource: constants.AppTracking,
 				},
 			}
+			orgIdPtr, err := s.services.CommonServices.OrganizationService.Save(innerCtx, nil, record.Tenant, nil, &organizationFields)
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "failed to save organization"))
+				return err
+			}
+			if orgIdPtr == nil {
+				tracing.TraceErr(span, errors.New("organization id is nil"))
+				return nil
+			}
 
-			organizationResponse, err := utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-				return s.services.GrpcClient.OrganizationClient.UpsertOrganization(ctx, &upsertOrganizationRequest)
-			})
+			err = s.services.CommonServices.PostgresRepositories.TrackingRepository.MarkAsOrganizationCreated(innerCtx, record.ID, *orgIdPtr, snitcherData.CompanyName, snitcherData.CompanyDomain, snitcherData.CompanyWebsite)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return err
 			}
 
-			err = s.services.CommonServices.PostgresRepositories.TrackingRepository.MarkAsOrganizationCreated(ctx, record.ID, organizationResponse.Id, snitcherData.CompanyName, snitcherData.CompanyDomain, snitcherData.CompanyWebsite)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				return err
-			}
-
-			err = s.services.CommonServices.PostgresRepositories.TrackingRepository.MarkAllExcludeIdWithState(ctx, record.ID, record.IP, entity.TrackingIdentificationStateOrganizationExists)
+			err = s.services.CommonServices.PostgresRepositories.TrackingRepository.MarkAllExcludeIdWithState(innerCtx, record.ID, record.IP, entity.TrackingIdentificationStateOrganizationExists)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return err
@@ -217,19 +227,18 @@ func (s *trackingService) CreateOrganizationsFromTrackedData(ctx context.Context
 		} else {
 			organizationId := utils.GetStringPropOrEmpty(organizationByDomainNode.Props, "id")
 
-			err = s.services.CommonServices.PostgresRepositories.TrackingRepository.MarkAsOrganizationCreated(ctx, record.ID, organizationId, snitcherData.CompanyName, snitcherData.CompanyDomain, snitcherData.CompanyWebsite)
+			err = s.services.CommonServices.PostgresRepositories.TrackingRepository.MarkAsOrganizationCreated(innerCtx, record.ID, organizationId, snitcherData.CompanyName, snitcherData.CompanyDomain, snitcherData.CompanyWebsite)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return err
 			}
 
-			err = s.services.CommonServices.PostgresRepositories.TrackingRepository.MarkAllWithState(ctx, record.IP, entity.TrackingIdentificationStateOrganizationExists)
+			err = s.services.CommonServices.PostgresRepositories.TrackingRepository.MarkAllWithState(innerCtx, record.IP, entity.TrackingIdentificationStateOrganizationExists)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return err
 			}
 		}
-
 	}
 
 	return nil
