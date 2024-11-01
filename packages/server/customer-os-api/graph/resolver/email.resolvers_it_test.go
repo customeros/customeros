@@ -20,11 +20,11 @@ func TestQueryResolver_GetEmail_WithParentOwners(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	contactId1 := neo4jt.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{
+	contactId1 := neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{
 		FirstName: "a",
 		LastName:  "b",
 	})
-	contactId2 := neo4jt.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{
+	contactId2 := neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{
 		FirstName: "c",
 		LastName:  "d",
 	})

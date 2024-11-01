@@ -119,51 +119,18 @@ func CreateAttachment(ctx context.Context, driver *neo4j.DriverWithContext, tena
 
 // Deprecated
 func CreateDefaultContact(ctx context.Context, driver *neo4j.DriverWithContext, tenant string) string {
-	return CreateContact(ctx, driver, tenant, neo4jentity.ContactEntity{Prefix: "MR", FirstName: "first", LastName: "last"})
+	return neo4jtest.CreateContact(ctx, driver, tenant, neo4jentity.ContactEntity{Prefix: "MR", FirstName: "first", LastName: "last"})
 }
 
 // Deprecated
 func CreateContactWith(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, firstName string, lastName string) string {
-	return CreateContact(ctx, driver, tenant, neo4jentity.ContactEntity{Prefix: "MR", FirstName: firstName, LastName: lastName})
-}
-
-// Deprecated
-func CreateContact(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, contact neo4jentity.ContactEntity) string {
-	contactId := utils.NewUUIDIfEmpty(contact.Id)
-	query := `MATCH (t:Tenant {name: $tenant}) 
-		 		MERGE (c:Contact {id: $contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t) 
-			 	ON CREATE SET c.prefix=$prefix, 
-						c.firstName=$firstName, 
-						c.lastName=$lastName, 
-						c.name=$name, 
-						c.description=$description,
-						c.profilePhotoUrl=$profilePhotoUrl,
-						c.username=$username,
-						c.appSource=$appSource, 
-						c.source=$source, 
-						c.createdAt=datetime(), 
-		 				c:Contact_%s`
-
-	neo4jtest.ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant), map[string]any{
-		"tenant":          tenant,
-		"contactId":       contactId,
-		"prefix":          contact.Prefix,
-		"firstName":       contact.FirstName,
-		"lastName":        contact.LastName,
-		"name":            contact.Name,
-		"description":     contact.Description,
-		"profilePhotoUrl": contact.ProfilePhotoUrl,
-		"username":        contact.Username,
-		"source":          contact.Source,
-		"appSource":       utils.StringFirstNonEmpty(contact.AppSource, "test"),
-	})
-	return contactId
+	return neo4jtest.CreateContact(ctx, driver, tenant, neo4jentity.ContactEntity{Prefix: "MR", FirstName: firstName, LastName: lastName})
 }
 
 // Deprecated
 func CreateContactWithId(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, contactId string, contact neo4jentity.ContactEntity) string {
 	contact.Id = contactId
-	return CreateContact(ctx, driver, tenant, contact)
+	return neo4jtest.CreateContact(ctx, driver, tenant, contact)
 }
 
 // Deprecated, use CreateEmailForEntity
@@ -870,30 +837,6 @@ func CreateState(ctx context.Context, driver *neo4j.DriverWithContext, countryCo
 		"name":          name,
 		"code":          code,
 	})
-}
-
-// Deprecated
-func CreateSocial(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, social neo4jentity.SocialEntity) string {
-	var socialId, _ = uuid.NewRandom()
-	query := " MERGE (s:Social {id:$id}) " +
-		" ON CREATE SET " +
-		"				s.url=$url, " +
-		"				s.source=$source, " +
-		"				s.sourceOfTruth=$source, " +
-		"				s.appSource=$appSource, " +
-		"				s.createdAt=$now, " +
-		"				s.updatedAt=$now, " +
-		"				s:Social_%s"
-
-	neo4jtest.ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant), map[string]any{
-		"tenant":    tenant,
-		"id":        socialId.String(),
-		"source":    neo4jentity.DataSourceOpenline,
-		"appSource": "test",
-		"url":       social.Url,
-		"now":       utils.Now(),
-	})
-	return socialId.String()
 }
 
 // Deprecated

@@ -309,22 +309,22 @@ func TestQueryResolver_Contacts_SortByTitleAscFirstNameAscLastNameDesc(t *testin
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	contact1 := neo4jt.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{
+	contact1 := neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{
 		Prefix:    "MR",
 		FirstName: "contact",
 		LastName:  "1",
 	})
-	contact2 := neo4jt.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{
+	contact2 := neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{
 		Prefix:    "DR",
 		FirstName: "contact",
 		LastName:  "9",
 	})
-	contact3 := neo4jt.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{
+	contact3 := neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{
 		Prefix:    "",
 		FirstName: "contact",
 		LastName:  "222",
 	})
-	contact4 := neo4jt.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{
+	contact4 := neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{
 		Prefix:    "MR",
 		FirstName: "other contact",
 		LastName:  "A",
@@ -354,18 +354,18 @@ func TestQueryResolver_Contact_BasicFilters_FindContactWithLetterAInName(t *test
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	contactFoundByFirstName := neo4jt.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{
+	contactFoundByFirstName := neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{
 		Prefix:    "MR",
 		Name:      "contact1",
 		FirstName: "aa",
 		LastName:  "bb",
 	})
-	contactFoundByLastName := neo4jt.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{
+	contactFoundByLastName := neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{
 		Prefix:    "MR",
 		FirstName: "bb",
 		LastName:  "AA",
 	})
-	contactFilteredOut := neo4jt.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{
+	contactFilteredOut := neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{
 		Prefix:    "MR",
 		FirstName: "bb",
 		LastName:  "BB",
@@ -744,10 +744,10 @@ func TestQueryResolver_Contact_WithSocials(t *testing.T) {
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 
-	socialId1 := neo4jt.CreateSocial(ctx, driver, tenantName, neo4jentity.SocialEntity{
+	socialId1 := neo4jtest.CreateSocial(ctx, driver, tenantName, neo4jentity.SocialEntity{
 		Url: "url1",
 	})
-	socialId2 := neo4jt.CreateSocial(ctx, driver, tenantName, neo4jentity.SocialEntity{
+	socialId2 := neo4jtest.CreateSocial(ctx, driver, tenantName, neo4jentity.SocialEntity{
 		Url: "url2",
 	})
 	neo4jt.LinkSocialWithEntity(ctx, driver, contactId, socialId1)
@@ -774,11 +774,9 @@ func TestQueryResolver_Contact_WithSocials(t *testing.T) {
 	require.Equal(t, "url1", contact.Socials[0].URL)
 	require.NotNil(t, contact.Socials[0].CreatedAt)
 	require.NotNil(t, contact.Socials[0].UpdatedAt)
-	require.Equal(t, "test", contact.Socials[0].AppSource)
 
 	require.Equal(t, socialId2, contact.Socials[1].ID)
 	require.Equal(t, "url2", contact.Socials[1].URL)
 	require.NotNil(t, contact.Socials[1].CreatedAt)
 	require.NotNil(t, contact.Socials[1].UpdatedAt)
-	require.Equal(t, "test", contact.Socials[1].AppSource)
 }
