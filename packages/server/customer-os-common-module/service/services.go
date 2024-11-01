@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
@@ -119,6 +120,12 @@ func InitServices(globalConfig *config.GlobalConfig, db *gorm.DB, driver *neo4j.
 		personalEmailProviders = append(personalEmailProviders, personalEmailProvider.ProviderDomain)
 	}
 	services.Cache.SetPersonalEmailProviders(personalEmailProviders)
+
+	emailExclusionEntities, err := services.PostgresRepositories.TenantSettingsEmailExclusionRepository.GetExclusionList(context.Background())
+	if err != nil {
+		log.Fatalf("Error getting email exclusion list: %s", err.Error())
+	}
+	services.Cache.SetEmailExclusion(emailExclusionEntities)
 
 	return services
 }

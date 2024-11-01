@@ -3,6 +3,7 @@ package caches
 import (
 	"encoding/json"
 	"github.com/coocood/freecache"
+	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"strconv"
 	"strings"
 	"sync"
@@ -34,6 +35,7 @@ type Cache struct {
 	tenantCache                                *freecache.Cache
 	userDetailCache                            *freecache.Cache
 	organizationWebsiteHostingUrlPatternsCache *freecache.Cache
+	emailExclusionCache                        *freecache.Cache
 	personalEmailProviderCache                 *freecache.Cache
 }
 
@@ -44,6 +46,7 @@ func NewCommonCache() *Cache {
 		tenantCache:       freecache.NewCache(cache1MB),
 		userDetailCache:   freecache.NewCache(cache20MB),
 		organizationWebsiteHostingUrlPatternsCache: freecache.NewCache(cache1MB),
+		emailExclusionCache:                        freecache.NewCache(cache1MB),
 		personalEmailProviderCache:                 freecache.NewCache(cache10MB),
 	}
 }
@@ -264,4 +267,48 @@ func (c *Cache) SetOrganizationWebsiteHostingUrlPatters(urlPatterns []string) {
 			c.organizationWebsiteHostingUrlPatternsCache.Clear()
 		}
 	}
+}
+
+func (c *Cache) SetEmailExclusion(emailExclusionList []postgresEntity.TenantSettingsEmailExclusion) {
+	const chunkSize = 100 // Size of each domain chunk
+	for i, j := 0, chunkSize; i < len(emailExclusionList); i, j = i+chunkSize, j+chunkSize {
+		// This ensures we don't go past the end of the slice
+		if j > len(emailExclusionList) {
+			j = len(emailExclusionList)
+		}
+
+		byTenant := map[string][]postgresEntity.TenantSettingsEmailExclusion{}
+		for _, emailExclusion := range emailExclusionList[i:j] {
+			byTenant[emailExclusion.Tenant] = append(byTenant[emailExclusion.Tenant], emailExclusion)
+		}
+
+		// Get the current chunk and marshal it
+		for tenant, emailExclusions := range byTenant {
+			domainChunkBytes, err := json.Marshal(emailExclusions)
+			if err != nil {
+				c.emailExclusionCache.Clear() // Clear the cache
+				return
+			}
+
+			err = c.emailExclusionCache.Set([]byte(tenant), domainChunkBytes, expire9999Days)
+			if err != nil {
+				c.emailExclusionCache.Clear()
+			}
+		}
+	}
+}
+
+func (c *Cache) GetEmailExclusion(tenant string) []postgresEntity.TenantSettingsEmailExclusion {
+	chunkBytes, err := c.emailExclusionCache.Get([]byte(tenant))
+	if err != nil {
+		return nil
+	}
+
+	var all []postgresEntity.TenantSettingsEmailExclusion
+	err = json.Unmarshal(chunkBytes, &all)
+	if err != nil {
+		return nil
+	}
+
+	return all
 }

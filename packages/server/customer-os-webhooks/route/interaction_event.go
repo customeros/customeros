@@ -130,6 +130,26 @@ func syncPostmarkInteractionEventHandler(services *service.Services, cfg *config
 		span.LogFields(tracingLog.String("tenant.name", tenantByName))
 		span.SetTag(tracing.SpanTagTenant, tenantByName)
 
+		emailExclusion := services.CommonServices.Cache.GetEmailExclusion(tenantByName)
+		for _, exclusion := range emailExclusion {
+			if exclusion.ExcludeSubject != nil {
+				if strings.Contains(postmarkEmailWebhookData.Subject, *exclusion.ExcludeSubject) {
+					span.LogFields(tracingLog.String("reason", "excluded by subject"))
+					return
+				}
+			}
+			if exclusion.ExcludeBody != nil {
+				if strings.Contains(postmarkEmailWebhookData.HtmlBody, *exclusion.ExcludeBody) {
+					span.LogFields(tracingLog.String("reason", "excluded by html body"))
+					return
+				}
+				if strings.Contains(postmarkEmailWebhookData.TextBody, *exclusion.ExcludeBody) {
+					span.LogFields(tracingLog.String("reason", "excluded by text body"))
+					return
+				}
+			}
+		}
+
 		externalSystem := "mailstack"
 
 		participants := make([]string, 0)
