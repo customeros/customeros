@@ -50,6 +50,7 @@ type OrganizationReadRepository interface {
 	GetOrganizationsForUpdateLastTouchpoint(ctx context.Context, limit, delayFromPreviousCheckMin int) ([]TenantAndOrganizationId, error)
 	GetLatestOrganizationWithJobRoleForContacts(ctx context.Context, tenant string, contactIds []string) ([]*utils.DbNodePairAndId, error)
 	GetHiddenOrganizationIds(ctx context.Context, tenant string, hiddenAfter time.Time) ([]string, error)
+	GetMergedOrganizationIds(ctx context.Context, tenant string, mergedAfter time.Time) ([]string, error)
 	GetOrganizationsWithEmail(ctx context.Context, tenant, email string) ([]*dbtype.Node, error)
 }
 
@@ -1127,6 +1128,41 @@ func (r *organizationReadRepository) GetHiddenOrganizationIds(ctx context.Contex
 	params := map[string]any{
 		"tenant":      tenant,
 		"hiddenAfter": hiddenAfter,
+	}
+	span.LogFields(log.String("query", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsAsString(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	span.LogFields(log.Int("result.count", len(result.([]string))))
+	return result.([]string), err
+}
+
+func (r *organizationReadRepository) GetMergedOrganizationIds(ctx context.Context, tenant string, mergedAfter time.Time) ([]string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetMergedOrganizationIds")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
+	span.LogFields(log.String("mergedAfter", mergedAfter.String()))
+
+	cypher := `MATCH (org:MergedOrganization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) 
+				WHERE org.updatedAt >= $mergedAfter
+				RETURN org.id ORDER BY org.updatedAt DESC`
+	params := map[string]any{
+		"tenant":      tenant,
+		"mergedAfter": mergedAfter,
 	}
 	span.LogFields(log.String("query", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

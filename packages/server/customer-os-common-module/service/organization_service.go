@@ -37,6 +37,7 @@ type OrganizationService interface {
 	GetLatestOrganizationsWithJobRolesForContacts(ctx context.Context, contactIds []string) (*neo4jentity.OrganizationWithJobRoleEntities, error)
 
 	GetHiddenOrganizationIds(ctx context.Context, hiddenAfter time.Time) ([]string, error)
+	GetMergedOrganizationIds(ctx context.Context, mergedAfter time.Time) ([]string, error)
 	RequestRefreshLastTouchpoint(ctx context.Context, organizationId string) error
 	RefreshLastTouchpoint(ctx context.Context, organizationId string) error
 }
@@ -527,6 +528,21 @@ func (s *organizationService) GetHiddenOrganizationIds(ctx context.Context, hidd
 	span.LogFields(log.Object("hiddenAfter", hiddenAfter))
 
 	organizationIds, err := s.services.Neo4jRepositories.OrganizationReadRepository.GetHiddenOrganizationIds(ctx, common.GetTenantFromContext(ctx), hiddenAfter)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return organizationIds, nil
+}
+
+func (s *organizationService) GetMergedOrganizationIds(ctx context.Context, mergedAfter time.Time) ([]string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.GetMergedOrganizationIds")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("mergedAfter", mergedAfter))
+
+	organizationIds, err := s.services.Neo4jRepositories.OrganizationReadRepository.GetMergedOrganizationIds(ctx, common.GetTenantFromContext(ctx), mergedAfter)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err

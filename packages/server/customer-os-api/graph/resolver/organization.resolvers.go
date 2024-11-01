@@ -1331,6 +1331,13 @@ func (r *queryResolver) OrganizationsHiddenAfter(ctx context.Context, date time.
 		graphql.AddErrorf(ctx, "Error fetching organizations hidden after %s", date.String())
 		return nil, nil
 	}
+	mergedOrganizationIDs, err := r.Services.CommonServices.OrganizationService.GetMergedOrganizationIds(ctx, date)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Error fetching organizations hidden after %s", date.String())
+		return nil, nil
+	}
+	organizationIDs = append(organizationIDs, mergedOrganizationIDs...)
 	return organizationIDs, nil
 }
 
