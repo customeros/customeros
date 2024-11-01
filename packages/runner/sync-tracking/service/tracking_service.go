@@ -611,12 +611,15 @@ func (s *trackingService) notifyOnSlack(c context.Context, r *entity.Tracking) e
 
 	var organizationName, organizationLocation, organizationWebsiteUrl, organizationLinkedIn, referrer string
 
-	if record.OrganizationName != nil {
+	if record.OrganizationName != nil && *record.OrganizationName != "" {
 		organizationName = *record.OrganizationName
 	} else if snitcherDataResponse.Company.Name != "" {
 		organizationName = snitcherDataResponse.Company.Name
+	} else if snitcherDataResponse.Company.Domain != "" {
+		organizationName = utils.CapitalizeAllParts(utils.GetDomainWithoutTLD(snitcherDataResponse.Company.Domain), []string{"-", "_", "."})
 	} else {
-		organizationName = "Unknown"
+		// organization name is unknown
+		return nil
 	}
 
 	organizationLocation = snitcherDataResponse.LocationToString()
@@ -640,6 +643,11 @@ func (s *trackingService) notifyOnSlack(c context.Context, r *entity.Tracking) e
 		referrer = record.Referrer
 	} else {
 		referrer = "Direct"
+	}
+
+	if organizationWebsiteUrl == "Unknown" && organizationLinkedIn == "Unknown" && organizationLocation == "Unknown" {
+		// do not notify if there is no information to show
+		return nil
 	}
 
 	slackBlock := `
