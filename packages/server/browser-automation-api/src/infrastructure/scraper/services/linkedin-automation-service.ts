@@ -366,7 +366,15 @@ export class LinkedinAutomationService {
             return {
               name: nameEl?.textContent?.trim() || '',
               time: timeEl?.textContent?.trim() || '',
-              message: msgEl?.textContent?.trim().replace(/<!---->|<.*?>/g, '') || '',
+              message: (() => {
+                let sanitizedMessage = msgEl?.textContent?.trim() || '';
+                let previous;
+                do {
+                  previous = sanitizedMessage;
+                  sanitizedMessage = sanitizedMessage.replace(/<!---->|<.*?>/g, '');
+                } while (sanitizedMessage !== previous);
+                return sanitizedMessage;
+              })() || '',
               altName: el.querySelector('.msg-s-message-group__profile-link')?.textContent?.trim() || '',
               altMessage: el.querySelector('.msg-s-event-listitem__content-preview-container')?.textContent?.trim() || '',
               hasLinkPreview: !!linkPreviewEl,
