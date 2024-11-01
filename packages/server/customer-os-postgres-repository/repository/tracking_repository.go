@@ -9,6 +9,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"gorm.io/gorm"
+	"time"
 )
 
 type TrackingRepository interface {
@@ -28,6 +29,7 @@ type TrackingRepository interface {
 	MarkAllWithState(ctx context.Context, ip string, state entity.TrackingIdentificationState) error
 	MarkAllExcludeIdWithState(ctx context.Context, excludeId, ip string, state entity.TrackingIdentificationState) error
 	IncrementNotificationTry(ctx context.Context, id string) error
+	WasNotifiedRecently(ctx context.Context, organizationDomain string, lookBackWindowHours int) (bool, error)
 }
 
 type trackingRepositoryImpl struct {
@@ -316,4 +318,28 @@ func (r *trackingRepositoryImpl) IncrementNotificationTry(ctx context.Context, i
 	}
 
 	return err
+}
+
+func (r *trackingRepositoryImpl) WasNotifiedRecently(ctx context.Context, organizationDomain string, lookBackWindowHours int) (bool, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "TrackingRepository.WasNotifiedRecently")
+	defer span.Finish()
+	span.LogFields(tracingLog.String("organizationDomain", organizationDomain), tracingLog.Int("lookBackWindowHours", lookBackWindowHours))
+
+	var count int64
+	err := r.gormDb.
+		Model(&entity.Tracking{}).
+		Where("organization_domain = ?", organizationDomain).
+		Where("notified = true").
+		Where("created_at > ?", utils.Now().Add(-time.Duration(lookBackWindowHours)*time.Hour)).
+		Count(&count).
+		Error
+
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return false, err
+	}
+
+	span.LogFields(tracingLog.Int("result.count", int(count)))
+
+	return count > 0, nil
 }

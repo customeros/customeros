@@ -650,6 +650,19 @@ func (s *trackingService) notifyOnSlack(c context.Context, r *entity.Tracking) e
 		return nil
 	}
 
+	// check no notification was sent past 24 hours for same organization
+	if record.OrganizationDomain != nil && *record.OrganizationDomain != "" {
+		notificationSent, err := s.services.CommonServices.PostgresRepositories.TrackingRepository.WasNotifiedRecently(ctx, *record.OrganizationDomain, 24)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+		if notificationSent {
+			// do not notify if notification was sent in the past 24 hours
+			return nil
+		}
+	}
+
 	slackBlock := `
 						[
 							{
