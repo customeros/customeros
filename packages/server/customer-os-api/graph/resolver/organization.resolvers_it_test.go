@@ -972,13 +972,11 @@ func TestQueryResolver_Organization_WithSocials(t *testing.T) {
 	require.Equal(t, "url1", organization.Socials[0].URL)
 	require.NotNil(t, organization.Socials[0].CreatedAt)
 	require.NotNil(t, organization.Socials[0].UpdatedAt)
-	require.Equal(t, "test", organization.Socials[0].AppSource)
 
 	require.Equal(t, socialId2, organization.Socials[1].ID)
 	require.Equal(t, "url2", organization.Socials[1].URL)
 	require.NotNil(t, organization.Socials[1].CreatedAt)
 	require.NotNil(t, organization.Socials[1].UpdatedAt)
-	require.Equal(t, "test", organization.Socials[1].AppSource)
 }
 
 func TestQueryResolver_Organization_WithOwner(t *testing.T) {

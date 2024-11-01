@@ -1134,6 +1134,14 @@ func CreateExternalSystem(ctx context.Context, driver *neo4j.DriverWithContext, 
 
 func CreateContact(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, contact entity.ContactEntity) string {
 	contactId := utils.NewUUIDIfEmpty(contact.Id)
+	createdAt := contact.CreatedAt
+	if createdAt.IsZero() {
+		createdAt = utils.Now()
+	}
+	updatedAt := contact.UpdatedAt
+	if updatedAt.IsZero() {
+		updatedAt = utils.Now()
+	}
 	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})
 				MERGE (t)<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id:$contactId})
 				ON CREATE SET
@@ -1151,8 +1159,8 @@ func CreateContact(ctx context.Context, driver *neo4j.DriverWithContext, tenant 
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"tenant":    tenant,
 		"contactId": contactId,
-		"createdAt": contact.CreatedAt,
-		"updatedAt": contact.UpdatedAt,
+		"createdAt": createdAt,
+		"updatedAt": updatedAt,
 		"source":    contact.Source,
 		"appSource": contact.AppSource,
 		"firstName": contact.FirstName,
