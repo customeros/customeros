@@ -56,7 +56,7 @@
         },
         {
           "name": "Invoice finalized event not sent",
-          "query": "MATCH (i:Invoice {dryRun:false}) WHERE date(i.createdAt) > date('2024-06-02') AND NOT i.status IN ['INITIALIZED','EMPTY'] AND i.updatedAt < datetime() - duration({minutes:10}) AND i.techInvoiceFinalizedSentAt IS NULL return count(i)"
+          "query": "MATCH (i:Invoice {dryRun:false}) WHERE date(i.createdAt) > date('2024-06-02') AND NOT i.status IN ['INITIALIZED','EMPTY','PAID'] AND i.updatedAt < datetime() - duration({minutes:10}) AND i.techInvoiceFinalizedSentAt IS NULL return count(i)"
         }
       ]
     },
