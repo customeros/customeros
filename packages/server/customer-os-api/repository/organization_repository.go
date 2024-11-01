@@ -219,7 +219,8 @@ func (r *organizationRepository) MergeOrganizationPropertiesInTx(ctx context.Con
 				primary.leadSource = CASE WHEN primary.leadSource is null OR primary.leadSource = '' THEN merged.leadSource ELSE primary.leadSource END,
 				primary.icpFit = CASE WHEN primary.icpFit is null OR primary.leadSource = false THEN merged.icpFit ELSE primary.icpFit END,
 				primary.sourceOfTruth=$sourceOfTruth,
-				primary.updatedAt = datetime()
+				primary.updatedAt = datetime(),
+				merged.updatedAt = datetime()
 			`,
 		map[string]any{
 			"tenant":                tenant,

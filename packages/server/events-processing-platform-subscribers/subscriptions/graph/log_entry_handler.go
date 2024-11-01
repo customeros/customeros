@@ -2,6 +2,7 @@ package graph
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
@@ -81,7 +82,11 @@ func (h *LogEntryEventHandler) OnCreate(ctx context.Context, evt eventstore.Even
 		}
 	}
 
-	err = h.services.CommonServices.OrganizationService.RequestRefreshLastTouchpoint(ctx, eventData.LoggedOrganizationId)
+	innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+		Tenant:    eventData.Tenant,
+		AppSource: helper.GetAppSource(eventData.AppSource),
+	})
+	err = h.services.CommonServices.OrganizationService.RequestRefreshLastTouchpoint(innerCtx, eventData.LoggedOrganizationId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while refreshing last touchpoint for organization %s: %s", eventData.LoggedOrganizationId, err.Error())

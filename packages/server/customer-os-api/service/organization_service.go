@@ -3,7 +3,8 @@ package service
 import (
 	"context"
 	"fmt"
-	model2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
+	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"reflect"
@@ -91,7 +92,7 @@ func (s *organizationService) ExistsById(ctx context.Context, organizationId str
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("organizationId", organizationId))
 
-	return s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), organizationId, model2.NodeLabelOrganization)
+	return s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), organizationId, commonmodel.NodeLabelOrganization)
 }
 
 func (s *organizationService) FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error) {
@@ -257,6 +258,16 @@ func (s *organizationService) Merge(ctx context.Context, primaryOrganizationId, 
 		return nil, nil
 	})
 
+	// Send events to opensearch
+	err = s.services.CommonServices.RabbitMQService.PublishEvent(ctx, primaryOrganizationId, commonmodel.ORGANIZATION,
+		dto.MergeOrganizations{
+			SourceOrgId: mergedOrganizationId,
+			TargetOrgId: primaryOrganizationId,
+		})
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to publish event to RabbitMQ"))
+	}
+
 	// Update last touchpoint
 	s.UpdateLastTouchpoint(ctx, primaryOrganizationId)
 
@@ -357,7 +368,7 @@ func (s *organizationService) AddSubsidiary(ctx context.Context, parentOrganizat
 		log.String("subsidiaryType", subsidiaryType),
 		log.Bool("removeExisting", removeExisting))
 
-	parentExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), parentOrganizationId, model2.NodeLabelOrganization)
+	parentExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), parentOrganizationId, commonmodel.NodeLabelOrganization)
 	if err != nil {
 		s.log.Errorf("error checking if parent organization exists: {%v}", err.Error())
 		tracing.TraceErr(span, err)
@@ -370,7 +381,7 @@ func (s *organizationService) AddSubsidiary(ctx context.Context, parentOrganizat
 		return err
 	}
 
-	subExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), subsidiaryOrganizationId, model2.NodeLabelOrganization)
+	subExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), subsidiaryOrganizationId, commonmodel.NodeLabelOrganization)
 	if err != nil {
 		s.log.Errorf("error checking if sub organization exists: {%v}", err.Error())
 		tracing.TraceErr(span, err)
@@ -426,7 +437,7 @@ func (s *organizationService) RemoveSubsidiary(ctx context.Context, parentOrgani
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("parentOrganizationId", parentOrganizationId), log.String("subsidiaryOrganizationId", subsidiaryOrganizationId))
 
-	parentExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), parentOrganizationId, model2.NodeLabelOrganization)
+	parentExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), parentOrganizationId, commonmodel.NodeLabelOrganization)
 	if err != nil {
 		s.log.Errorf("error checking if parent organization exists: {%v}", err.Error())
 		tracing.TraceErr(span, err)
@@ -439,7 +450,7 @@ func (s *organizationService) RemoveSubsidiary(ctx context.Context, parentOrgani
 		return err
 	}
 
-	subExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), subsidiaryOrganizationId, model2.NodeLabelOrganization)
+	subExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), subsidiaryOrganizationId, commonmodel.NodeLabelOrganization)
 	if err != nil {
 		s.log.Errorf("error checking if sub organization exists: {%v}", err.Error())
 		tracing.TraceErr(span, err)

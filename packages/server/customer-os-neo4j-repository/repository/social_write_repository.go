@@ -64,9 +64,11 @@ func (r *socialWriteRepository) MergeSocialForEntity(ctx context.Context, tenant
 			soc.alias=$alias,
 			soc.externalId=$externalId,
 			soc.followersCount=$followersCount,
-		  	soc:Social_%s
+		  	soc:Social_%s,
+			e.updatedAt=datetime()
 		ON MATCH SET
 			soc.updatedAt=datetime(),
+			e.updatedAt=datetime(),
 			soc.alias = CASE WHEN $alias <> '' THEN $alias ELSE soc.alias END,
 			soc.externalId = CASE WHEN $externalId <> '' THEN $externalId ELSE soc.externalId END,
 			soc.followersCount = CASE WHEN $followersCount <> 0 THEN $followersCount ELSE soc.followersCount END`, linkedEntityNodeLabel+"_"+tenant, tenant)
@@ -96,8 +98,12 @@ func (r *socialWriteRepository) PermanentlyDelete(ctx context.Context, tenant, s
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
 	tracing.TagTenant(span, tenant)
+	tracing.TagEntity(span, socialId)
 
-	cypher := fmt.Sprintf(`MATCH (soc:Social_%s {id:$socialId}) DETACH DELETE soc`, tenant)
+	cypher := fmt.Sprintf(
+		`MATCH (soc:Social_%s {id:$socialId})<-[r:HAS]-(n:Organization|Contact)
+				SET n.updatedAt=datetime()
+				DELETE r, soc`, tenant)
 	params := map[string]any{
 		"socialId": socialId,
 	}
@@ -177,9 +183,12 @@ func (r *socialWriteRepository) Update(ctx context.Context, tenant string, socia
 	defer session.Close(ctx)
 
 	query := `MATCH (soc:Social_%s {id:$id})
-			SET soc.updatedAt=datetime(),
-				soc.url=$url
-			RETURN soc`
+				SET soc.updatedAt=datetime(),
+					soc.url=$url
+			WITH soc
+			OPTIONAL MATCH (n:Contact|Organization)-[:HAS]->(soc)
+				SET n.updatedAt = datetime()
+			RETURN DISTINCT soc`
 
 	if result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant),
