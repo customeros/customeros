@@ -3,7 +3,7 @@ import { Writable } from "stream";
 import { FrameLocator } from "playwright";
 import { setTimeout } from "timers/promises";
 import { setTimeout as setTimeoutSync } from "timers";
-
+import { TimeUtils } from '@/util/utilities';
 import { Browser } from "../browser";
 import { logger } from "@/infrastructure";
 import { ErrorParser, StandardError } from "@/util/error";
@@ -49,8 +49,7 @@ export class LinkedinAutomationService {
     private cookies: Cookies,
     private userAgent: string,
     private proxyConfig: string,
-  ) {}
-  private lastKnownTime: string | null = null;  // Add this as class property
+  ) {}  // Add this as class property
 
   async sendConenctionInvite(
     profileUrl: string,
@@ -314,6 +313,7 @@ export class LinkedinAutomationService {
       userAgent: this.userAgent,
     });
 
+    let lastKnownTime: string | null = null;
     await context.addCookies(this.cookies);
     const page = await context.newPage();
 
@@ -347,9 +347,9 @@ export class LinkedinAutomationService {
       let lastValidTime = '';
       let currentTime = '';
       let timeIndex = 1;
-      let currentYear: number | null = null;
+      const thisYear = new Date().getFullYear();  // Current year
+      let currentYear = thisYear;  // Default to current year
       let currentDate: Date | null = null;
-      this.lastKnownTime = null;  // Reset at start of each retrieval
 
       const messageElements = await page.locator('li.msg-s-message-list__event').all();
       logger.info(`Found ${messageElements.length} message elements`, { source: "LinkedinService" });
@@ -374,23 +374,32 @@ export class LinkedinAutomationService {
             };
           });
 
+          // Parse the date heading and update current date context
           if (elementInfo.dateHeading) {
+            // Check if this heading contains a full date with year
+            const hasExplicitYear = elementInfo.dateHeading.match(/\d{4}/);
+
             const parsedDate = this.parseDateHeading(elementInfo.dateHeading, currentYear);
             if (parsedDate) {
-              currentYear = parsedDate.year;
+              if (hasExplicitYear) {
+                // If the date has an explicit year, use it
+                currentYear = parsedDate.year;
+              } else {
+                // If no explicit year, use current year
+                parsedDate.year = thisYear;
+              }
               currentDate = this.createDate(parsedDate);
             }
           }
 
           const finalName = elementInfo.name || elementInfo.altName || lastValidName;
 
-// Use last known time if current time is empty, fallback to empty string if both are null
-          const timeToConvert = elementInfo.time || this.lastKnownTime || '';
-          const finalTime = this.convertToZuluTime(timeToConvert, currentDate);
+          const timeToConvert = elementInfo.time || lastKnownTime || '';
+          const finalTime = TimeUtils.convertToZuluTime(timeToConvert, currentDate);
 
 // Update last known time only if we have a non-empty time
           if (elementInfo.time) {
-            this.lastKnownTime = elementInfo.time;
+            lastKnownTime = elementInfo.time;
           }
 
           let finalMessage;
@@ -437,6 +446,8 @@ export class LinkedinAutomationService {
   }
 
   private parseDateHeading(heading: string, currentYear: number | null): MessageDate | null {
+    const thisYear = new Date().getFullYear();  // Get current year
+
     // Full date format: "Jul 23, 2023"
     const fullDateMatch = heading.match(/([A-Za-z]+)\s+(\d{1,2}),\s+(\d{4})/);
     if (fullDateMatch) {
@@ -450,9 +461,9 @@ export class LinkedinAutomationService {
 
     // Month and day format: "Mar 22"
     const monthDayMatch = heading.match(/([A-Za-z]+)\s+(\d{1,2})/);
-    if (monthDayMatch && currentYear) {
+    if (monthDayMatch) {
       return {
-        year: currentYear,
+        year: currentYear || thisYear, // Use currentYear if available, otherwise use current year
         month: this.getMonthNumber(monthDayMatch[1]),
         day: parseInt(monthDayMatch[2]),
         time: ''
@@ -499,25 +510,7 @@ export class LinkedinAutomationService {
     return date;
   }
 
-  private convertToZuluTime(timeStr: string, currentDate: Date | null): string {
-    if (!currentDate || !timeStr) return timeStr;
 
-    // Parse time string (e.g., "3:07 PM")
-    const [time, period] = timeStr.split(' ');
-    const [hours, minutes] = time.split(':').map(num => parseInt(num));
-
-    // Convert to 24-hour format
-    let hour24 = hours;
-    if (period === 'PM' && hours !== 12) hour24 += 12;
-    if (period === 'AM' && hours === 12) hour24 = 0;
-
-    // Create new date with the time
-    const dateWithTime = new Date(currentDate);
-    dateWithTime.setHours(hour24, minutes, 0, 0);
-
-    // Convert to ISO string (Zulu time)
-    return dateWithTime.toISOString();
-  }
 
   async getConnectionsNew(): Promise<
     [results: string[], error: StandardError | null]
