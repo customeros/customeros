@@ -21,8 +21,6 @@ type NoteService interface {
 	GetById(ctx context.Context, id string) (*entity.NoteEntity, error)
 	GetNotesForMeetings(ctx context.Context, ids []string) (*entity.NoteEntities, error)
 
-	CreateNoteForContact(ctx context.Context, contactId string, entity *entity.NoteEntity) (*entity.NoteEntity, error)
-	CreateNoteForOrganization(ctx context.Context, organizationId string, entity *entity.NoteEntity) (*entity.NoteEntity, error)
 	CreateNoteForMeeting(ctx context.Context, meetingId string, entity *entity.NoteEntity) (*entity.NoteEntity, error)
 
 	UpdateNote(ctx context.Context, entity *entity.NoteEntity) (*entity.NoteEntity, error)
@@ -113,44 +111,6 @@ func (s *noteService) NoteUnlinkAttachment(ctx context.Context, noteID string, a
 	}
 
 	return nil
-}
-
-func (s *noteService) CreateNoteForContact(ctx context.Context, contactId string, entity *entity.NoteEntity) (*entity.NoteEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteService.CreateNoteForContact")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("contactId", contactId))
-
-	dbNodePtr, err := s.repositories.NoteRepository.CreateNoteForContact(ctx, common.GetContext(ctx).Tenant, contactId, *entity)
-	if err != nil {
-		return nil, err
-	}
-	// set note creator
-	if len(common.GetUserIdFromContext(ctx)) > 0 {
-		props := utils.GetPropsFromNode(*dbNodePtr)
-		noteId := utils.GetStringPropOrEmpty(props, "id")
-		_ = s.repositories.NoteRepository.SetNoteCreator(ctx, common.GetTenantFromContext(ctx), common.GetUserIdFromContext(ctx), noteId)
-	}
-	return s.mapDbNodeToNoteEntity(*dbNodePtr), nil
-}
-
-func (s *noteService) CreateNoteForOrganization(ctx context.Context, organization string, entity *entity.NoteEntity) (*entity.NoteEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteService.CreateNoteForOrganization")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("organization", organization))
-
-	dbNodePtr, err := s.repositories.NoteRepository.CreateNoteForOrganization(ctx, common.GetContext(ctx).Tenant, organization, *entity)
-	if err != nil {
-		return nil, err
-	}
-	// set note creator
-	if len(common.GetUserIdFromContext(ctx)) > 0 {
-		props := utils.GetPropsFromNode(*dbNodePtr)
-		noteId := utils.GetStringPropOrEmpty(props, "id")
-		_ = s.repositories.NoteRepository.SetNoteCreator(ctx, common.GetTenantFromContext(ctx), common.GetUserIdFromContext(ctx), noteId)
-	}
-	return s.mapDbNodeToNoteEntity(*dbNodePtr), nil
 }
 
 func (s *noteService) UpdateNote(ctx context.Context, entity *entity.NoteEntity) (*entity.NoteEntity, error) {

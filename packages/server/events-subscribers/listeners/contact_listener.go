@@ -28,6 +28,7 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -289,10 +290,18 @@ func (c *contactListenerImpl) callApiEnrichPerson(ctx context.Context, tenant, l
 	defer response.Body.Close()
 	span.LogFields(log.Int("response.statusCode", response.StatusCode))
 
-	var enrichPersonApiResponse enrichmentmodel.EnrichPersonScrapinResponse
-	err = json.NewDecoder(response.Body).Decode(&enrichPersonApiResponse)
+	body, err := io.ReadAll(response.Body)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to decode enrich person response"))
+		span.LogFields(log.String("response.body", string(body)))
+		tracing.TraceErr(span, errors.Wrap(err, "failed to read response body"))
+		return nil, err
+	}
+
+	var enrichPersonApiResponse enrichmentmodel.EnrichPersonScrapinResponse
+	err = json.Unmarshal(body, &enrichPersonApiResponse)
+	if err != nil {
+		span.LogFields(log.String("response.body", string(body)))
+		tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal enrich person response"))
 		return nil, err
 	}
 	return &enrichPersonApiResponse, nil
