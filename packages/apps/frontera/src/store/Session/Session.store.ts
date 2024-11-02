@@ -198,6 +198,7 @@ export class SessionStore {
       this.sessionToken = null;
       this.value = defaultSession;
       this.removeSessionFromWindow();
+      this.root.windowManager.clearPersisterKey();
 
       await this.persister?.clear();
     } catch (e) {

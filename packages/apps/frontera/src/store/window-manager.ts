@@ -1,18 +1,27 @@
 import { fromZonedTime } from 'date-fns-tz';
 import { Persister } from '@store/persister';
-import { runInAction, makeAutoObservable } from 'mobx';
+import { when, runInAction, makeAutoObservable } from 'mobx';
+
+import type { RootStore } from './root';
 
 type NetworkStatus = 'offline' | 'online';
 
 export class WindowManager {
   lastActiveAt: Date | null = null;
   networkStatus: NetworkStatus = navigator?.onLine ? 'online' : 'offline';
-  private persister = Persister.getSharedInstance('Session');
+  private persisterKey: string = '';
+  private persister = Persister.getSharedInstance('Meta');
 
-  constructor() {
+  constructor(private root: RootStore) {
     makeAutoObservable(this);
 
-    this.hydrateLastActiveAt();
+    when(
+      () => !!this.root.session?.value?.tenant,
+      () => {
+        this.persisterKey = `lastActiveAt-${this.root.session?.value?.tenant}`;
+        this.hydrateLastActiveAt(this.persisterKey);
+      },
+    );
 
     window.addEventListener('blur', () => {
       this.persistLastActiveAt();
@@ -42,11 +51,13 @@ export class WindowManager {
         );
   }
 
-  private async hydrateLastActiveAt() {
+  public clearPersisterKey() {
+    this.persisterKey = '';
+  }
+
+  private async hydrateLastActiveAt(idbKey: string) {
     try {
-      const loadedTimestamp = await this.persister?.getItem<number>(
-        'lastActiveAt',
-      );
+      const loadedTimestamp = await this.persister?.getItem<number>(idbKey);
 
       if (loadedTimestamp) {
         this.lastActiveAt = new Date(loadedTimestamp);
@@ -57,6 +68,7 @@ export class WindowManager {
   }
 
   private async persistLastActiveAt() {
+    if (!this.persisterKey) return;
     if (this.networkStatus === 'offline') return;
 
     runInAction(() => {
@@ -66,7 +78,7 @@ export class WindowManager {
     try {
       if (this.lastActiveAt) {
         await this.persister?.setItem(
-          'lastActiveAt',
+          this.persisterKey,
           this.lastActiveAt.valueOf(),
         );
       }

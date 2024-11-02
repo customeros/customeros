@@ -4,6 +4,7 @@ export type PersisterInstance = LocalForage;
 
 export class Persister {
   static DB_NAME = 'customerDB';
+  private static version = 2.7;
   private static instances: Map<string, PersisterInstance> = new Map();
   private static sharedInstances: Map<string, PersisterInstance> = new Map();
 
@@ -39,5 +40,34 @@ export class Persister {
 
   public static setTenant(tenant: string) {
     Persister.DB_NAME = `customerDB_${tenant}`;
+  }
+
+  public static async attemptPurge() {
+    try {
+      const instance = Persister.getSharedInstance('Meta');
+      const version = await instance?.getItem('version');
+
+      if (!version) {
+        await instance?.setItem('version', Persister.version);
+
+        return;
+      }
+
+      if (version !== Persister.version) {
+        const dbs = await indexedDB.databases();
+        const dbNames = dbs
+          .map((db) => db.name)
+          .filter(
+            (n) => n?.startsWith('customerDB_') && !n?.includes('shared'),
+          );
+
+        const drops = dbNames.map((name) => LocalForage.dropInstance({ name }));
+
+        await Promise.all(drops);
+        await instance?.setItem('version', Persister.version);
+      }
+    } catch (err) {
+      console.error('Failed to attempt purging indexedDB', err);
+    }
   }
 }

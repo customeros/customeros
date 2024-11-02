@@ -3,6 +3,7 @@ import { FlowSendersStore } from '@store/FlowSenders/FlowSenders.store.ts';
 
 import type { Transport } from './transport';
 
+import { Persister } from './persister';
 import { UIStore } from './UI/UI.store';
 import { MailStore } from './Mail/Mail.store';
 import { TagsStore } from './Tags/Tags.store';
@@ -64,7 +65,7 @@ export class RootStore {
     this.transactions = new TransactionService(this, this.transport);
 
     this.ui = new UIStore();
-    this.windowManager = new WindowManager();
+    this.windowManager = new WindowManager(this);
     this.mail = new MailStore(this, this.transport);
     this.tags = new TagsStore(this, this.transport);
     this.files = new FilesStore(this, this.transport);
@@ -103,6 +104,7 @@ export class RootStore {
     when(
       () => this.isAuthenticated && !this.isHydrated,
       async () => {
+        await Persister.attemptPurge();
         await this.bootstrap();
       },
     );
@@ -120,16 +122,16 @@ export class RootStore {
       this.settings.bootstrap(),
       // this.organizations.bootstrapStream(),
       this.organizations.bootstrap(),
-      // this.tags.bootstrap(),
-      // this.opportunities.bootstrap(),
+      this.tags.bootstrap(),
+      this.opportunities.bootstrap(),
       this.invoices.bootstrap(),
-      // this.contracts.bootstrap(),
-      // this.externalSystemInstances.bootstrap(),
-      // this.users.bootstrap(),
-      // this.contacts.bootstrap(),
-      // this.workFlows.bootstrap(),
-      // this.flows.bootstrap(),
-      // this.flowEmailVariables.bootstrap(),
+      this.contracts.bootstrap(),
+      this.externalSystemInstances.bootstrap(),
+      this.users.bootstrap(),
+      this.contacts.bootstrap(),
+      this.workFlows.bootstrap(),
+      this.flows.bootstrap(),
+      this.flowEmailVariables.bootstrap(),
     ]);
   }
 

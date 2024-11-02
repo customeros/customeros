@@ -21,10 +21,6 @@ type SyncableUpdateOptions = {
   syncMutate?: boolean;
 };
 
-type LoadOptions = {
-  fromPersisted?: boolean;
-};
-
 export class Syncable<T extends object> {
   value: T;
   snapshot: T;
@@ -94,12 +90,11 @@ export class Syncable<T extends object> {
     return '';
   }
 
-  public async load(data: T, opts?: LoadOptions) {
+  public async load(data: T) {
     requestIdleCallback(() => {
       runInAction(() => {
         Object.assign(this.value, data);
         Object.assign(this.snapshot, data);
-        !opts?.fromPersisted && this.persist();
       });
     });
   }
@@ -213,7 +208,11 @@ export class Syncable<T extends object> {
 
   private async persist() {
     try {
-      await this.persister?.setItem(this.getId(), toJS(this.snapshot));
+      const persistedData = await this.persister?.getItem<Map<string, T>>(
+        'data',
+      );
+
+      persistedData?.set(this.getId(), toJS(this.snapshot));
     } catch (e) {
       console.error('Failed to persist', e);
     }

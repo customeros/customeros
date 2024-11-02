@@ -23,7 +23,6 @@ export class SyncableGroup<T extends object, TSyncable extends Syncable<T>> {
   isLoading = false;
   isHydrated = false;
   isBootstrapped = false;
-  canBypassBootstrap = false;
   error: string | null = null;
   persister?: PersisterInstance;
   history: GroupOperation[] = [];
@@ -59,7 +58,6 @@ export class SyncableGroup<T extends object, TSyncable extends Syncable<T>> {
       isBootstrapped: observable,
       applyGroupOperation: action,
       initChannelConnection: action,
-      canBypassBootstrap: observable,
     });
 
     when(
@@ -83,6 +81,13 @@ export class SyncableGroup<T extends object, TSyncable extends Syncable<T>> {
         } catch (e) {
           console.error(e);
         }
+      },
+    );
+
+    when(
+      () => this.isBootstrapped,
+      () => {
+        this.persister?.setItem('isBootstrapped', true);
       },
     );
   }
@@ -116,14 +121,31 @@ export class SyncableGroup<T extends object, TSyncable extends Syncable<T>> {
       this.value.set(id, syncableItem as TSyncable);
     });
 
-    this.isBootstrapped = true;
+    this.persister?.getItem<Map<string, T>>('data', (err, value) => {
+      if (err) {
+        console.error('Failed to get persisted data', err);
+
+        return;
+      }
+
+      const persistedMap = value ?? new Map();
+
+      for (let i = 0; i < data.length; i++) {
+        persistedMap.set(options.getId(data[i]), data[i]);
+      }
+
+      this.persister?.setItem('data', persistedMap);
+    });
   }
 
-  public async hydrate(removedIds: string[] = []) {
+  public async hydrate(options: {
+    idsToDrop: string[];
+    getId: (data: T) => string;
+  }) {
     const removedIdsMap = new Map();
     const toBeRemoved: Promise<void>[] = [];
 
-    removedIds.forEach((id) => {
+    (options?.idsToDrop ?? []).forEach((id) => {
       removedIdsMap.set(id, true);
 
       if (!this.persister) return;
@@ -133,7 +155,10 @@ export class SyncableGroup<T extends object, TSyncable extends Syncable<T>> {
     try {
       const stores: [string, TSyncable][] = [];
 
-      await this.persister?.iterate<T, void>((data, id) => {
+      const persistedData = await this.persister?.getItem<T[]>('data');
+
+      persistedData?.forEach((data) => {
+        const id = options.getId(data);
         const syncableItem = new this.SyncableStore(
           this.root,
           this.transport,
@@ -247,15 +272,15 @@ export class SyncableGroup<T extends object, TSyncable extends Syncable<T>> {
 
   public async checkIfCanHydrate() {
     try {
-      const idsCount = await this.persister?.length();
-      const canBypass = typeof idsCount !== 'undefined' && idsCount > 0;
+      const isBootstrapped = await this.persister?.getItem<boolean>(
+        'isBootstrapped',
+      );
 
       runInAction(() => {
-        this.canBypassBootstrap = canBypass;
-        this.isBootstrapped = true;
+        this.isBootstrapped = isBootstrapped ?? false;
       });
 
-      return canBypass;
+      return isBootstrapped;
     } catch (e) {
       console.error('Failed to get persisted ids length', e);
     }

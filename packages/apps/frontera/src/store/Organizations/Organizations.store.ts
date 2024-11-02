@@ -5,7 +5,6 @@ import { RootStore } from '@store/root';
 import { Transport } from '@store/transport';
 import { SyncableGroup } from '@store/syncable-group';
 import {
-  when,
   action,
   computed,
   override,
@@ -55,14 +54,6 @@ export class OrganizationsStore extends SyncableGroup<
       updateStage: action.bound,
       totalElements: observable,
     });
-
-    when(
-      () =>
-        this.isBootstrapped && this.totalElements > 0 && !this.root.demoMode,
-      async () => {
-        await this.bootstrapRest();
-      },
-    );
   }
 
   get channelName() {
@@ -110,51 +101,36 @@ export class OrganizationsStore extends SyncableGroup<
     }
   }
 
-  async bootstrap() {
-    if (this.root.demoMode) {
-      this.load(
-        mock.data.dashboardView_Organizations
-          .content as unknown as Organization[],
-        { getId: (data) => data.metadata.id },
-      );
-      this.totalElements = mock.data.dashboardView_Organizations.totalElements;
-
-      return;
-    }
-
-    if (this.isBootstrapped || this.isLoading) return;
+  async getRecentChanges(): Promise<[Organization[], number, string[]]> {
+    let result: [Organization[], number, string[]] = [[], 0, []];
 
     try {
-      const canHydrate = await this.checkIfCanHydrate();
+      if (this.root.demoMode) {
+        return result;
+      }
+
+      this.isLoading = true;
 
       const lastActiveAtUTC = this.root.windowManager
         .getLastActiveAtUTC()
         .toISOString();
 
-      if (canHydrate) {
-        const { organizations_HiddenAfter: archivedIds } =
-          await this.service.getArchivedOrganizationsAfter({
-            date: lastActiveAtUTC,
-          });
-
-        await this.hydrate(archivedIds);
-      }
-
-      this.isLoading = true;
-
-      const where = match(canHydrate)
-        .with(true, () => ({
-          AND: [
-            {
-              filter: {
-                property: 'UPDATED_AT',
-                value: lastActiveAtUTC,
-                operation: ComparisonOperator.Gte,
-              },
+      const where = {
+        AND: [
+          {
+            filter: {
+              property: 'UPDATED_AT',
+              value: lastActiveAtUTC,
+              operation: ComparisonOperator.Gte,
             },
-          ],
-        }))
-        .otherwise(() => undefined);
+          },
+        ],
+      };
+
+      const { organizations_HiddenAfter: idsToDrop } =
+        await this.service.getArchivedOrganizationsAfter({
+          date: lastActiveAtUTC,
+        });
 
       const { dashboardView_Organizations } =
         await this.service.getOrganizations({
@@ -167,13 +143,83 @@ export class OrganizationsStore extends SyncableGroup<
           where,
         });
 
-      this.load(dashboardView_Organizations?.content as Organization[], {
-        getId: (data) => data.metadata.id,
+      result = [
+        (dashboardView_Organizations?.content as Organization[]) ?? [],
+        dashboardView_Organizations?.totalElements,
+        idsToDrop,
+      ];
+    } catch (e) {
+      //
+    }
+
+    return result;
+  }
+
+  async getAllData(): Promise<[Organization[], number, string[]]> {
+    let result: [Organization[], number, string[]] = [[], 0, []];
+
+    try {
+      const { dashboardView_Organizations: data } =
+        await this.service.getOrganizations({
+          pagination: { limit: 1000, page: 0 },
+          sort: {
+            by: 'LAST_TOUCHPOINT',
+            caseSensitive: false,
+            direction: SortingDirection.Desc,
+          },
+        });
+
+      result = [
+        (data?.content as Organization[]) ?? [],
+        data?.totalElements ?? 0,
+        [],
+      ];
+    } catch (e) {
+      //
+    }
+
+    return result;
+  }
+
+  async bootstrap() {
+    if (this.root.demoMode) {
+      this.load(
+        mock.data.dashboardView_Organizations
+          .content as unknown as Organization[],
+        { getId: (data) => data.metadata.id },
+      );
+      this.totalElements = mock.data.dashboardView_Organizations.totalElements;
+
+      return;
+    }
+
+    if (this.isLoading) return;
+
+    try {
+      const canHydrate = await this.checkIfCanHydrate();
+
+      const [data, totalElements, idsToDrop] = await match(canHydrate)
+        .returnType<Promise<[Organization[], number, string[]]>>()
+        .with(true, async () => await this.getRecentChanges())
+        .otherwise(async () => await this.getAllData());
+
+      if (canHydrate) {
+        await this.hydrate({
+          idsToDrop,
+          getId: (data) => data.metadata.id,
+        });
+      }
+
+      this.isLoading = true;
+
+      this.load(data, {
+        getId: (item) => item.metadata.id,
       });
       runInAction(() => {
-        this.isBootstrapped = true;
-        this.totalElements = dashboardView_Organizations?.totalElements;
+        this.totalElements = totalElements;
       });
+
+      await this.bootstrapRest();
     } catch (e) {
       runInAction(() => {
         this.error = (e as Error)?.message;
@@ -213,6 +259,8 @@ export class OrganizationsStore extends SyncableGroup<
         break;
       }
     }
+
+    this.isBootstrapped = this.totalElements === this.value.size;
   }
 
   toArray() {
