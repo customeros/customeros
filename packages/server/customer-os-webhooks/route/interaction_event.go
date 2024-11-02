@@ -130,6 +130,8 @@ func syncPostmarkInteractionEventHandler(services *service.Services, cfg *config
 		span.LogFields(tracingLog.String("tenant.name", tenantByName))
 		span.SetTag(tracing.SpanTagTenant, tenantByName)
 
+		htmlData := strings.ReplaceAll(postmarkEmailWebhookData.HtmlBody, "&amp;", "&")
+		textData := strings.ReplaceAll(postmarkEmailWebhookData.TextBody, "&amp;", "&")
 		emailExclusion := services.CommonServices.Cache.GetEmailExclusion(tenantByName)
 		for _, exclusion := range emailExclusion {
 			if exclusion.ExcludeSubject != nil {
@@ -139,11 +141,12 @@ func syncPostmarkInteractionEventHandler(services *service.Services, cfg *config
 				}
 			}
 			if exclusion.ExcludeBody != nil {
-				if strings.Contains(postmarkEmailWebhookData.HtmlBody, *exclusion.ExcludeBody) {
+				if strings.Index(htmlData, *exclusion.ExcludeBody) >= 0 {
 					span.LogFields(tracingLog.String("reason", "excluded by html body"))
 					return
 				}
-				if strings.Contains(postmarkEmailWebhookData.TextBody, *exclusion.ExcludeBody) {
+				postmarkEmailWebhookData.HtmlBody = strings.ReplaceAll(postmarkEmailWebhookData.TextBody, "&amp;", "&")
+				if strings.Index(textData, *exclusion.ExcludeBody) >= 0 {
 					span.LogFields(tracingLog.String("reason", "excluded by text body"))
 					return
 				}
