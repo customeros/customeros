@@ -9,7 +9,7 @@ import { logger } from "@/infrastructure";
 import { ErrorParser, StandardError } from "@/util/error";
 
 const Selectors = {
-  profileNameHeading: "h1.text-heading-xlarge",
+  profileNameHeading: "h1.inline.t-24.v-align-middle.break-words",
   connectButton: (profileNameText: string) =>
     `button[aria-label="Invite ${profileNameText} to connect"]`,
   connectDiv: (profileNameText: string) =>
@@ -62,6 +62,8 @@ export class LinkedinAutomationService {
       const profileName = page.locator(Selectors.profileNameHeading);
       await profileName.waitFor({ timeout: 10000 });
       const profileNameText = await profileName.textContent();
+
+      await setTimeout(10 * 1000);
 
       const connectButtons = await page.$$(
         Selectors.connectButton(profileNameText ?? ""),
