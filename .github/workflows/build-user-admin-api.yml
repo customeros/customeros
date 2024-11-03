@@ -68,7 +68,7 @@ jobs:
           gotestsum --junitfile unit-tests.xml -- -coverprofile=cover.out -coverpkg=${{ steps.test-folders.outputs.test_folders }} ./...
 
       - name: Test Report
-        uses: mikepenz/action-junit-report@v4
+        uses: mikepenz/action-junit-report@v5
         if: success() || failure()    # run this step even if previous step failed
         with:
           report_paths: packages/server/user-admin-api/unit-tests.xml    # Path to test results
