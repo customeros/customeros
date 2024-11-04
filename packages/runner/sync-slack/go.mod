@@ -8,7 +8,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/joho/godotenv v1.5.1
 	github.com/machinebox/graphql v0.2.2
-	github.com/neo4j/neo4j-go-driver/v5 v5.25.0
+	github.com/neo4j/neo4j-go-driver/v5 v5.26.0
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240220064825-20118a9bac6a
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pkg/errors v0.9.1
