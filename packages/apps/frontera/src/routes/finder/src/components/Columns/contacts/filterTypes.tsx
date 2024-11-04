@@ -328,7 +328,7 @@ export const getFilterTypes = (store?: RootStore) => {
     },
     [ColumnViewType.ContactsFlows]: {
       filterType: 'list',
-      filterName: 'Current flow',
+      filterName: 'Current flows',
       filterAccesor: ColumnViewType.ContactsFlows,
       filterOperators: [
         ComparisonOperator.Contains,

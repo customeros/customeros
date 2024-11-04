@@ -681,7 +681,7 @@ const columns: Record<string, Column> = {
     },
     header: (props) => (
       <THead<HTMLInputElement>
-        title='Current Flow'
+        title='Current Flows'
         filterWidth='17.5rem'
         id={ColumnViewType.ContactsFlows}
         renderFilter={(initialFocusRef) => (

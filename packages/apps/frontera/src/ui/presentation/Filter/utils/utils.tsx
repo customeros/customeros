@@ -140,7 +140,7 @@ export const handlePropertyPlural = (property: string, selection: string[]) => {
       selection.length === 1 ? 'connection' : 'connections',
     )
     .with('Persona', () => (selection.length === 1 ? 'persona' : 'personas'))
-    .with('Current flow', () => (selection.length === 1 ? 'flow' : 'flows'))
+    .with('Current flows', () => (selection.length === 1 ? 'flow' : 'flows'))
     .with('Period', () => (selection.length === 1 ? 'period' : 'period'))
     .with('Currency', () =>
       selection.length === 1 ? 'currency' : 'currencies',

@@ -44,7 +44,7 @@ export const contactsOptionsMap: Record<InvoicesColumnType | string, string> = {
   [ColumnViewType.ContactsLinkedinFollowerCount]: 'Linkedin Followers',
   [ColumnViewType.ContactsConnections]: 'LinkedIn Connections',
   [ColumnViewType.ContactsRegion]: 'Region',
-  [ColumnViewType.ContactsFlows]: 'Current Flow',
+  [ColumnViewType.ContactsFlows]: 'Current Flows',
   [ColumnViewType.ContactsPrimaryEmail]: 'Primary Email',
   [ColumnViewType.ContactsFlowStatus]: 'Status in Flow',
 };
