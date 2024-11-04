@@ -27,7 +27,7 @@ require (
 	github.com/machinebox/graphql v0.2.2
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/mrz1836/postmark v1.6.5
-	github.com/neo4j/neo4j-go-driver/v5 v5.25.0
+	github.com/neo4j/neo4j-go-driver/v5 v5.26.0
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai v0.0.0-20241028063002-b2d4aaf8096f
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository v0.0.0-20240410144729-44cbe53c019c
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository v0.0.0-20240410144729-44cbe53c019c
