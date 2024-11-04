@@ -837,26 +837,6 @@ func TestMutationResolver_InvoiceUpdate(t *testing.T) {
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{})
 	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{})
 
-	calledUpdateInvoice := false
-
-	invoiceServiceCallbacks := events_platform.MockInvoiceServiceCallbacks{
-		UpdateInvoice: func(context context.Context, invoice *invoicepb.UpdateInvoiceRequest) (*invoicepb.InvoiceIdResponse, error) {
-			require.Equal(t, tenantName, invoice.Tenant)
-			require.Equal(t, invoiceId, invoice.InvoiceId)
-			require.Equal(t, testUserId, invoice.LoggedInUserId)
-			require.Equal(t, constants.AppSourceCustomerOsApi, invoice.AppSource)
-			require.Equal(t, invoicepb.InvoiceStatus_INVOICE_STATUS_PAID, invoice.Status)
-			require.Equal(t, 1, len(invoice.FieldsMask))
-			require.ElementsMatch(t, []invoicepb.InvoiceFieldMask{invoicepb.InvoiceFieldMask_INVOICE_FIELD_STATUS},
-				invoice.FieldsMask)
-			calledUpdateInvoice = true
-			return &invoicepb.InvoiceIdResponse{
-				Id: invoiceId,
-			}, nil
-		},
-	}
-	events_platform.SetInvoiceCallbacks(&invoiceServiceCallbacks)
-
 	rawResponse := callGraphQL(t, "invoice/update_invoice", map[string]interface{}{
 		"invoiceId": invoiceId,
 	})
@@ -870,8 +850,6 @@ func TestMutationResolver_InvoiceUpdate(t *testing.T) {
 	require.Nil(t, err)
 	invoice := invoiceStruct.Invoice_Update
 	require.Equal(t, invoiceId, invoice.Metadata.ID)
-
-	require.True(t, calledUpdateInvoice)
 }
 
 func TestMutationResolver_InvoicePay(t *testing.T) {
@@ -886,25 +864,6 @@ func TestMutationResolver_InvoicePay(t *testing.T) {
 		Status: neo4jenum.InvoiceStatusDue,
 	})
 
-	calledPayInvoice := false
-
-	invoiceServiceCallbacks := events_platform.MockInvoiceServiceCallbacks{
-		UpdateInvoice: func(context context.Context, invoice *invoicepb.UpdateInvoiceRequest) (*invoicepb.InvoiceIdResponse, error) {
-			require.Equal(t, tenantName, invoice.Tenant)
-			require.Equal(t, invoiceId, invoice.InvoiceId)
-			require.Equal(t, testUserId, invoice.LoggedInUserId)
-			require.Equal(t, constants.AppSourceCustomerOsApi, invoice.AppSource)
-			require.Equal(t, invoicepb.InvoiceStatus_INVOICE_STATUS_PAID, invoice.Status)
-			require.ElementsMatch(t, []invoicepb.InvoiceFieldMask{invoicepb.InvoiceFieldMask_INVOICE_FIELD_STATUS}, invoice.FieldsMask)
-
-			calledPayInvoice = true
-			return &invoicepb.InvoiceIdResponse{
-				Id: invoiceId,
-			}, nil
-		},
-	}
-	events_platform.SetInvoiceCallbacks(&invoiceServiceCallbacks)
-
 	rawResponse := callGraphQL(t, "invoice/pay_invoice", map[string]interface{}{
 		"invoiceId": invoiceId,
 	})
@@ -918,8 +877,6 @@ func TestMutationResolver_InvoicePay(t *testing.T) {
 	require.Nil(t, err)
 	invoice := invoiceStruct.Invoice_Pay
 	require.Equal(t, invoiceId, invoice.Metadata.ID)
-
-	require.True(t, calledPayInvoice)
 }
 
 func TestMutationResolver_InvoiceVoid(t *testing.T) {

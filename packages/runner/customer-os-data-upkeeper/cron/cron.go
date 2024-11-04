@@ -363,39 +363,39 @@ func linkOrphanContactsToOrganizationBaseOnLinkedinScrapIn(cont *container.Conta
 }
 
 func generateCycleInvoices(cont *container.Container) {
-	service.NewInvoiceService(cont.Cfg, cont.Log, cont.Repositories, cont.EventProcessingServicesClient).GenerateCycleInvoices()
+	service.NewInvoiceService(cont.Cfg, cont.Log, cont.CommonServices, cont.Repositories, cont.EventProcessingServicesClient).GenerateCycleInvoices()
 }
 
 func generateOffCycleInvoices(cont *container.Container) {
-	service.NewInvoiceService(cont.Cfg, cont.Log, cont.Repositories, cont.EventProcessingServicesClient).GenerateOffCycleInvoices()
+	service.NewInvoiceService(cont.Cfg, cont.Log, cont.CommonServices, cont.Repositories, cont.EventProcessingServicesClient).GenerateOffCycleInvoices()
 }
 
 func generateNextPreviewInvoices(cont *container.Container) {
-	service.NewInvoiceService(cont.Cfg, cont.Log, cont.Repositories, cont.EventProcessingServicesClient).GenerateNextPreviewInvoices()
+	service.NewInvoiceService(cont.Cfg, cont.Log, cont.CommonServices, cont.Repositories, cont.EventProcessingServicesClient).GenerateNextPreviewInvoices()
 }
 
 func generateInvoicePaymentLinks(cont *container.Container) {
-	service.NewInvoiceService(cont.Cfg, cont.Log, cont.Repositories, cont.EventProcessingServicesClient).GenerateInvoicePaymentLinks()
+	service.NewInvoiceService(cont.Cfg, cont.Log, cont.CommonServices, cont.Repositories, cont.EventProcessingServicesClient).GenerateInvoicePaymentLinks()
 }
 
 func sendInvoiceFinalizedEvents(cont *container.Container) {
-	service.NewInvoiceService(cont.Cfg, cont.Log, cont.Repositories, cont.EventProcessingServicesClient).SendInvoiceFinalizedEvent()
+	service.NewInvoiceService(cont.Cfg, cont.Log, cont.CommonServices, cont.Repositories, cont.EventProcessingServicesClient).SendInvoiceFinalizedEvent()
 }
 
 func cleanupInvoices(cont *container.Container) {
-	service.NewInvoiceService(cont.Cfg, cont.Log, cont.Repositories, cont.EventProcessingServicesClient).CleanupInvoices()
+	service.NewInvoiceService(cont.Cfg, cont.Log, cont.CommonServices, cont.Repositories, cont.EventProcessingServicesClient).CleanupInvoices()
 }
 
 func adjustInvoiceStatus(cont *container.Container) {
-	service.NewInvoiceService(cont.Cfg, cont.Log, cont.Repositories, cont.EventProcessingServicesClient).AdjustInvoiceStatus()
+	service.NewInvoiceService(cont.Cfg, cont.Log, cont.CommonServices, cont.Repositories, cont.EventProcessingServicesClient).AdjustInvoiceStatus()
 }
 
 func sendPayInvoiceNotifications(cont *container.Container) {
-	service.NewInvoiceService(cont.Cfg, cont.Log, cont.Repositories, cont.EventProcessingServicesClient).SendPayNotifications()
+	service.NewInvoiceService(cont.Cfg, cont.Log, cont.CommonServices, cont.Repositories, cont.EventProcessingServicesClient).SendPayNotifications()
 }
 
 func sendRemindInvoiceNotifications(cont *container.Container) {
-	service.NewInvoiceService(cont.Cfg, cont.Log, cont.Repositories, cont.EventProcessingServicesClient).SendRemindNotifications()
+	service.NewInvoiceService(cont.Cfg, cont.Log, cont.CommonServices, cont.Repositories, cont.EventProcessingServicesClient).SendRemindNotifications()
 }
 
 func refreshLastTouchpoint(cont *container.Container) {
