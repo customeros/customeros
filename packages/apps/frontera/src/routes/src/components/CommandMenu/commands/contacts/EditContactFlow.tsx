@@ -95,7 +95,7 @@ export const EditContactFlow = observer(() => {
         label={label}
         value={search}
         onValueChange={setSearch}
-        placeholder='Move to flow...'
+        placeholder='Add to flow...'
         onKeyDownCapture={(e) => {
           if (e.key === ' ') {
             e.stopPropagation();
@@ -105,8 +105,7 @@ export const EditContactFlow = observer(() => {
 
       <Command.List>
         {filteredOptions.map((flowFlow) => {
-          const isSelected =
-            context.ids?.length === 1 && contact?.flow?.id === flowFlow.id;
+          const isSelected = contact?.flows?.find((e) => e.id === flowFlow.id);
 
           return (
             <CommandItem

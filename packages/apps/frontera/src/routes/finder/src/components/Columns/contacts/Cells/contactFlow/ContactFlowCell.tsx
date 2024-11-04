@@ -1,19 +1,32 @@
 import { useRef, useState } from 'react';
 
 import { observer } from 'mobx-react-lite';
-import { FlowStore } from '@store/Flows/Flow.store.ts';
 
-import { cn } from '@ui/utils/cn.ts';
+import { cn } from '@ui/utils/cn';
+import { Edit03 } from '@ui/media/icons/Edit03';
 import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
-import { Edit03 } from '@ui/media/icons/Edit03.tsx';
+import { Trophy01 } from '@ui/media/icons/Trophy01';
+import { Rocket02 } from '@ui/media/icons/Rocket02';
+import { FlowParticipantStatus } from '@graphql/types';
 import { TableCellTooltip } from '@ui/presentation/Table';
-import { SelectOption } from '@shared/types/SelectOptions.ts';
-import { Select, getContainerClassNames } from '@ui/form/Select';
+import { CheckCircle } from '@ui/media/icons/CheckCircle';
+import { Hourglass02 } from '@ui/media/icons/Hourglass02';
+import { SlashCircle01 } from '@ui/media/icons/SlashCircle01';
+import { CalendarCheck01 } from '@ui/media/icons/CalendarCheck01';
 
 interface ContactNameCellProps {
   contactId: string;
 }
+
+const icons = {
+  [FlowParticipantStatus.OnHold]: <SlashCircle01 className='size-3' />,
+  [FlowParticipantStatus.Ready]: <Rocket02 className='size-3' />,
+  [FlowParticipantStatus.Scheduled]: <CalendarCheck01 className='size-3' />,
+  [FlowParticipantStatus.InProgress]: <Hourglass02 className='size-3' />,
+  [FlowParticipantStatus.Completed]: <CheckCircle className='size-3' />,
+  [FlowParticipantStatus.GoalAchieved]: <Trophy01 className='size-3' />,
+};
 
 export const ContactFlowCell = observer(
   ({ contactId }: ContactNameCellProps) => {
@@ -21,26 +34,17 @@ export const ContactFlowCell = observer(
     const [isEditing, setIsEditing] = useState(false);
 
     const contactStore = store.contacts.value.get(contactId);
-    const flowName = contactStore?.flow?.value?.name;
-    const flowId = contactStore?.flow?.id;
     const itemRef = useRef<HTMLDivElement>(null);
-    const flowOptions = store.flows.toComputedArray((arr) => arr);
 
-    const [value, setValue] = useState(() =>
-      flowName ? { label: flowName, value: flowId } : null,
-    );
-
-    const close = () => {
-      setIsEditing(false);
-      store.ui.setIsEditingTableCell(false);
-    };
+    const contactFlows = contactStore?.flows;
 
     const open = () => {
       setIsEditing(true);
-      store.ui.setIsEditingTableCell(true);
+      store.ui.commandMenu.setType('EditContactFlow');
+      store.ui.commandMenu.setOpen(true);
     };
 
-    if (!flowName && !isEditing)
+    if (!contactFlows?.length && !isEditing) {
       return (
         <div
           onDoubleClick={open}
@@ -61,85 +65,66 @@ export const ContactFlowCell = observer(
           />
         </div>
       );
-
-    if (!isEditing) {
-      return (
-        <TableCellTooltip
-          hasArrow
-          align='start'
-          side='bottom'
-          label={flowName}
-          targetRef={itemRef}
-        >
-          <div
-            onDoubleClick={open}
-            className={cn(
-              'cursor-default overflow-hidden overflow-ellipsis flex gap-1  [&_.edit-button]:hover:opacity-100',
-            )}
-          >
-            <div ref={itemRef} className='flex overflow-hidden'>
-              <div
-                data-test='flow-name'
-                className=' overflow-x-hidden overflow-ellipsis'
-              >
-                {flowName}
-              </div>
-            </div>
-            <IconButton
-              size='xxs'
-              onClick={open}
-              variant='ghost'
-              id='edit-button'
-              aria-label='edit owner'
-              className='edit-button opacity-0'
-              icon={<Edit03 className='text-gray-500 size-3' />}
-            />
-          </div>
-        </TableCellTooltip>
-      );
     }
 
-    const handleSelect = (option: SelectOption) => {
-      const targetFlow = store.flows.value.get(option?.value) as FlowStore;
-
-      setValue(option);
-      targetFlow.linkContact(contactId);
-    };
-    const filteredOptions = flowOptions
-      ?.filter((flow) => flow.value.name)
-      .map((flow) => ({
-        value: flow.id,
-        label: flow.value.name,
-      }));
+    const status = contactFlows?.[0]?.value.contacts.find(
+      (e) => e.contact.metadata.id === contactId,
+    )?.status;
 
     return (
-      <Select
-        size='xs'
-        autoFocus
-        isClearable
-        value={value}
-        onBlur={close}
-        defaultMenuIsOpen
-        placeholder='Flow'
-        dataTest='flow-name'
-        backspaceRemovesValue
-        openMenuOnClick={false}
-        onChange={handleSelect}
-        options={filteredOptions}
-        menuPortalTarget={document.body}
-        onKeyDown={(e) => {
-          if (e.key === 'Escape') {
-            close();
-          }
-        }}
-        classNames={{
-          container: ({ isFocused }) =>
-            getContainerClassNames('border-0 w-[164px]', undefined, {
-              isFocused,
-              size: 'xs',
-            }),
-        }}
-      />
+      <TableCellTooltip
+        hasArrow
+        align='start'
+        side='bottom'
+        targetRef={itemRef}
+        label={
+          <div>
+            {contactFlows?.map((flow) => (
+              <div className='flex gap-1' key={flow.value.metadata.id}>
+                <div>
+                  {flow.value.name} •{' '}
+                  <span className='capitalize'>
+                    {flow.value.contacts
+                      .find((e) => e.contact.metadata.id === contactId)
+                      ?.status?.toLowerCase()}{' '}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        }
+      >
+        <div
+          onDoubleClick={open}
+          className={cn(
+            'cursor-default overflow-hidden overflow-ellipsis flex gap-1  [&_.edit-button]:hover:opacity-100',
+          )}
+        >
+          <div ref={itemRef} className='flex overflow-hidden'>
+            <div
+              data-test='flow-name'
+              className='flex items-center overflow-x-hidden gap-2 overflow-ellipsis bg-gray-100 rounded-md px-1.5 truncate'
+            >
+              {status && icons?.[status]}
+              <div className='truncate'>{contactFlows?.[0]?.value.name}</div>
+            </div>{' '}
+            {!!contactFlows?.length && contactFlows.length > 1 && (
+              <div className='rounded-md w-fit px-1.5 ml-1 text-gray-500 '>
+                +{contactFlows?.length - 1}
+              </div>
+            )}
+          </div>
+          <IconButton
+            size='xxs'
+            onClick={open}
+            variant='ghost'
+            id='edit-button'
+            aria-label='edit owner'
+            className='edit-button opacity-0'
+            icon={<Edit03 className='text-gray-500 size-3' />}
+          />
+        </div>
+      </TableCellTooltip>
     );
   },
 );

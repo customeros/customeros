@@ -200,8 +200,9 @@ export class FlowStore implements Store<Flow> {
         return;
       }
 
-      return this.root.flowContacts.value.get(item.metadata.id)?.value;
+      return this.root.flowContacts.value.get(item.contact.metadata.id)?.value;
     });
+
     const flowSenders = data.senders?.map((item) => {
       this.root.flowSenders.load([item]);
 
@@ -220,10 +221,6 @@ export class FlowStore implements Store<Flow> {
     try {
       const contactStore = this.root.contacts.value.get(contactId);
 
-      if (contactStore?.flow) {
-        await contactStore.deleteFlowContact();
-      }
-
       const { flowContact_Add } = await this.service.addContact({
         contactId,
         flowId: this.id,
@@ -232,7 +229,7 @@ export class FlowStore implements Store<Flow> {
       runInAction(() => {
         contactStore?.update(
           (c) => {
-            c.flows = [{ ...this.value }];
+            c.flows = [...(c.flows ?? []), { ...this.value }];
 
             return c;
           },
@@ -297,11 +294,6 @@ export class FlowStore implements Store<Flow> {
         return this.root.contacts.value.get(e);
       });
 
-      await Promise.all(
-        contactStores
-          .filter((e): e is NonNullable<typeof e> => !!e && !!e.flowContact)
-          .map((e) => e?.flowContact?.deleteFlowContact()),
-      );
       await this.service.addContactBulk({
         contactId: contactIds,
         flowId: this.id,
@@ -311,7 +303,7 @@ export class FlowStore implements Store<Flow> {
         contactStores.map((e) => {
           e?.update(
             (c) => {
-              c.flows = [{ ...this.value }];
+              c.flows = [...(c.flows ?? []), { ...this.value }];
 
               return c;
             },

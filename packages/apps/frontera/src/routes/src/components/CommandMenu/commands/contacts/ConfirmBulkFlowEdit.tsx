@@ -60,7 +60,7 @@ export const ConfirmBulkFlowEdit = observer(() => {
           </div>
         </div>
         <p className='mt-1 text-sm'>
-          Would you like to move them into '{selectedFlow?.value?.name}'?
+          Would you like to add them into '{selectedFlow?.value?.name}' as well?
         </p>
 
         <div className='flex justify-between gap-3 mt-6'>

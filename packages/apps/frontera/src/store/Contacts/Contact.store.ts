@@ -80,12 +80,21 @@ export class ContactStore implements Store<Contact> {
     return this.value.flows?.length > 0;
   }
 
+  // todo remove
   get flow(): FlowStore | undefined {
     if (!this.value.flows?.length) return undefined;
 
     return this.root.flows?.value.get(
       this.value.flows[0]?.metadata.id,
     ) as FlowStore;
+  }
+
+  get flows(): FlowStore[] | undefined {
+    if (!this.value.flows?.length) return undefined;
+
+    return this.value.flows.map((flow) => {
+      return this.root.flows?.value.get(flow.metadata.id) as FlowStore;
+    });
   }
 
   get flowContact(): FlowContactStore | undefined {

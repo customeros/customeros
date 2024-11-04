@@ -63,7 +63,7 @@ export const ContactCommands = observer(() => {
             </>
           }
         >
-          Move to flow...
+          Add to flow...
         </CommandItem>
         <AddContactFlowSubItemGroup />
 
