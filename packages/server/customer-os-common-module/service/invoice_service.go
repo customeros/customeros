@@ -34,7 +34,7 @@ type InvoiceService interface {
 	GetNonDryRunInvoicesForOrganization(ctx context.Context, tenant, organizationId string) (*neo4jentity.InvoiceEntities, error)
 	SimulateInvoice(ctx context.Context, invoiceData *SimulateInvoiceRequestData) ([]*SimulateInvoiceResponseData, error)
 	NextInvoiceDryRun(ctx context.Context, contractId, appSource string) (string, error)
-	PayInvoice(ctx context.Context, invoiceId, appSource string) error
+	PayInvoice(ctx context.Context, invoiceId string) error
 	VoidInvoice(ctx context.Context, invoiceId, appSource string) error
 	UpdateInvoice(ctx context.Context, invoiceId string, data neo4jrepository.InvoiceUpdateFields) error
 

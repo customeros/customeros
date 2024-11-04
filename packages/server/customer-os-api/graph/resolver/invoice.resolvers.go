@@ -157,7 +157,7 @@ func (r *mutationResolver) InvoicePay(ctx context.Context, id string) (*model.In
 		}}, nil
 	}
 
-	err = r.Services.CommonServices.InvoiceService.PayInvoice(ctx, id, constants.AppSourceCustomerOsApi)
+	err = r.Services.CommonServices.InvoiceService.PayInvoice(ctx, id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to pay invoice %s", id)
