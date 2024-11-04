@@ -28,7 +28,7 @@ type syncService struct {
 }
 
 type SyncService interface {
-	GetEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, email string, now time.Time, source string) (string, error)
+	GetEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTransaction, tenant, email string, now time.Time, source string) (string, error)
 	BuildEmailsListExcludingPersonalEmails(usernameSource, from string, to []string, cc []string, bcc []string) ([]string, error)
 	ConvertToUTC(datetimeStr string) (time.Time, error)
 	IsValidEmailSyntax(email string) bool
@@ -106,6 +106,9 @@ func (s *syncService) GetEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTr
 	span.LogKV("email", email)
 
 	if email == "" {
+		return "", nil
+	}
+	if !strings.Contains(email, "@") {
 		return "", nil
 	}
 
