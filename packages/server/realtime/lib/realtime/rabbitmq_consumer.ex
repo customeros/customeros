@@ -14,7 +14,8 @@ defmodule Realtime.RabbitMQConsumer do
     "CONTRACT" => "Contracts",
     "OPPORTUNITY" => "Opportunities",
     "SERVICE_LINE_ITEM" => "ContractLineItems",
-    "FLOW" => "Flows"
+    "FLOW" => "Flows",
+    "FLOW_PARTICIPANT" => "FlowContacts"
   }
 
   def start_link(_) do
