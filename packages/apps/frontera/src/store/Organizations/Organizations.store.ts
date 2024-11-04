@@ -1,6 +1,5 @@
 import set from 'lodash/set';
 import merge from 'lodash/merge';
-import { match } from 'ts-pattern';
 import { RootStore } from '@store/root';
 import { Transport } from '@store/transport';
 import { SyncableGroup } from '@store/syncable-group';
@@ -53,6 +52,7 @@ export class OrganizationsStore extends SyncableGroup<
       isFullyLoaded: computed,
       updateStage: action.bound,
       totalElements: observable,
+      getRecentChanges: override,
     });
   }
 
@@ -101,12 +101,10 @@ export class OrganizationsStore extends SyncableGroup<
     }
   }
 
-  async getRecentChanges(): Promise<[Organization[], number, string[]]> {
-    let result: [Organization[], number, string[]] = [[], 0, []];
-
+  async getRecentChanges() {
     try {
       if (this.root.demoMode) {
-        return result;
+        return;
       }
 
       this.isLoading = true;
@@ -143,23 +141,35 @@ export class OrganizationsStore extends SyncableGroup<
           where,
         });
 
-      result = [
-        (dashboardView_Organizations?.content as Organization[]) ?? [],
-        dashboardView_Organizations?.totalElements,
+      await this.hydrate({
         idsToDrop,
-      ];
-    } catch (e) {
-      //
-    }
+        getId: (data) => data.metadata.id,
+      });
 
-    return result;
+      const data =
+        (dashboardView_Organizations?.content as Organization[]) ?? [];
+      const totalElements = dashboardView_Organizations?.totalElements;
+
+      this.load(data, {
+        getId: (item) => item.metadata.id,
+      });
+      runInAction(() => {
+        this.totalElements = totalElements;
+      });
+    } catch (e) {
+      runInAction(() => {
+        this.error = (e as Error)?.message;
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+      });
+    }
   }
 
-  async getAllData(): Promise<[Organization[], number, string[]]> {
-    let result: [Organization[], number, string[]] = [[], 0, []];
-
+  async getAllData() {
     try {
-      const { dashboardView_Organizations: data } =
+      const { dashboardView_Organizations } =
         await this.service.getOrganizations({
           pagination: { limit: 1000, page: 0 },
           sort: {
@@ -169,16 +179,26 @@ export class OrganizationsStore extends SyncableGroup<
           },
         });
 
-      result = [
-        (data?.content as Organization[]) ?? [],
-        data?.totalElements ?? 0,
-        [],
-      ];
-    } catch (e) {
-      //
-    }
+      const data =
+        (dashboardView_Organizations?.content as Organization[]) ?? [];
+      const totalElements = dashboardView_Organizations?.totalElements;
 
-    return result;
+      this.load(data, {
+        getId: (item) => item.metadata.id,
+      });
+      runInAction(() => {
+        this.totalElements = totalElements;
+      });
+      await this.bootstrapRest();
+    } catch (e) {
+      runInAction(() => {
+        this.error = (e as Error)?.message;
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+      });
+    }
   }
 
   async bootstrap() {
@@ -198,35 +218,14 @@ export class OrganizationsStore extends SyncableGroup<
     try {
       const canHydrate = await this.checkIfCanHydrate();
 
-      const [data, totalElements, idsToDrop] = await match(canHydrate)
-        .returnType<Promise<[Organization[], number, string[]]>>()
-        .with(true, async () => await this.getRecentChanges())
-        .otherwise(async () => await this.getAllData());
-
       if (canHydrate) {
-        await this.hydrate({
-          idsToDrop,
-          getId: (data) => data.metadata.id,
-        });
+        this.getRecentChanges();
+      } else {
+        this.getAllData();
       }
-
-      this.isLoading = true;
-
-      this.load(data, {
-        getId: (item) => item.metadata.id,
-      });
-      runInAction(() => {
-        this.totalElements = totalElements;
-      });
-
-      await this.bootstrapRest();
     } catch (e) {
       runInAction(() => {
         this.error = (e as Error)?.message;
-      });
-    } finally {
-      runInAction(() => {
-        this.isLoading = false;
       });
     }
   }

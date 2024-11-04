@@ -50,10 +50,11 @@ export class SyncableGroup<T extends object, TSyncable extends Syncable<T>> {
       version: observable,
       channel: observable,
       history: observable,
-      isHydrated: observable,
       isLoading: observable,
       channelName: computed,
       initPersister: action,
+      isHydrated: observable,
+      getRecentChanges: action,
       checkIfCanHydrate: action,
       isBootstrapped: observable,
       applyGroupOperation: action,
@@ -90,6 +91,10 @@ export class SyncableGroup<T extends object, TSyncable extends Syncable<T>> {
         this.persister?.setItem('isBootstrapped', true);
       },
     );
+
+    window.addEventListener('focus', async () => {
+      await this.getRecentChanges();
+    });
   }
 
   get channelName() {
@@ -285,6 +290,8 @@ export class SyncableGroup<T extends object, TSyncable extends Syncable<T>> {
       console.error('Failed to get persisted ids length', e);
     }
   }
+
+  public async getRecentChanges() {}
 
   static SyncableStore = Syncable;
 }
