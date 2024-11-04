@@ -630,31 +630,21 @@ func (s *invoiceService) NextInvoiceDryRun(ctx context.Context, contractId, appS
 	return response.Id, nil
 }
 
-func (s *invoiceService) PayInvoice(ctx context.Context, invoiceId, appSource string) error {
+func (s *invoiceService) PayInvoice(ctx context.Context, invoiceId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.PayInvoice")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("invoiceId", invoiceId))
 
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := utils.CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
-		return s.services.GrpcClients.InvoiceClient.UpdateInvoice(ctx, &invoicepb.UpdateInvoiceRequest{
-			Tenant:         common.GetTenantFromContext(ctx),
-			InvoiceId:      invoiceId,
-			LoggedInUserId: common.GetUserIdFromContext(ctx),
-			AppSource:      appSource,
-			Status:         invoicepb.InvoiceStatus_INVOICE_STATUS_PAID,
-			FieldsMask:     []invoicepb.InvoiceFieldMask{invoicepb.InvoiceFieldMask_INVOICE_FIELD_STATUS},
-		})
+	err := s.UpdateInvoice(ctx, invoiceId, neo4jrepository.InvoiceUpdateFields{
+		Status:       neo4jenum.InvoiceStatusPaid,
+		UpdateStatus: true,
 	})
-
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error from events processing: %s", err.Error())
 		return err
 	}
-
-	span.LogFields(log.String("output - payInvoiceId", response.Id))
 	return nil
 }
 

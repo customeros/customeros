@@ -383,67 +383,6 @@ func TestInvoiceService_PayInvoiceNotification(t *testing.T) {
 	require.Equal(t, tenant, eventData.Tenant)
 }
 
-func TestInvoiceService_UpdateInvoice(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx, testDatabase)(t)
-
-	// setup test environment
-	tenant := "ziggy"
-	invoiceId := "invoice-id"
-	now := utils.Now()
-
-	aggregateStore := eventstoret.NewTestAggregateStore()
-	invoiceAggregate := invoice.NewInvoiceAggregateWithTenantAndID(tenant, invoiceId)
-
-	newEvent, _ := invoice.NewInvoiceForContractCreateEvent(invoiceAggregate, common.Source{}, "contract-1", "USD", "test note", 1, false, false, false, false, now, now, now)
-	invoiceAggregate.UncommittedEvents = append(invoiceAggregate.UncommittedEvents, newEvent)
-	aggregateStore.Save(ctx, invoiceAggregate)
-
-	// prepare connection to grpc server
-	grpcConnection, err := dialFactory.GetEventsProcessingPlatformConn(testDatabase.Repositories, aggregateStore)
-	require.Nil(t, err)
-	invoiceClient := invoicepb.NewInvoiceGrpcServiceClient(grpcConnection)
-
-	// Execute the command
-	response, err := invoiceClient.UpdateInvoice(ctx, &invoicepb.UpdateInvoiceRequest{
-		Tenant:         tenant,
-		LoggedInUserId: "user-id",
-		InvoiceId:      invoiceId,
-		AppSource:      "test",
-		Status:         invoicepb.InvoiceStatus_INVOICE_STATUS_PAID,
-		PaymentLink:    "payment-link",
-		FieldsMask: []invoicepb.InvoiceFieldMask{
-			invoicepb.InvoiceFieldMask_INVOICE_FIELD_STATUS,
-			invoicepb.InvoiceFieldMask_INVOICE_FIELD_PAYMENT_LINK},
-	})
-	require.Nil(t, err)
-	require.NotNil(t, response)
-
-	// verify
-	require.Equal(t, invoiceId, response.Id)
-
-	eventsMap := aggregateStore.GetEventMap()
-	require.Equal(t, 1, len(eventsMap))
-
-	eventList := eventsMap[invoiceAggregate.ID]
-	require.Equal(t, 3, len(eventList))
-
-	require.Equal(t, invoice.InvoiceCreateForContractV1, eventList[0].GetEventType())
-	require.Equal(t, invoice.InvoiceUpdateV1, eventList[1].GetEventType())
-	require.Equal(t, invoice.InvoicePaidV1, eventList[2].GetEventType())
-	require.Equal(t, string(invoice.InvoiceAggregateType)+"-"+tenant+"-"+invoiceId, eventList[1].GetAggregateID())
-
-	var eventData invoice.InvoiceUpdateEvent
-	err = eventList[1].GetJsonData(&eventData)
-	require.Nil(t, err, "Failed to unmarshal event data")
-
-	require.Equal(t, tenant, eventData.Tenant)
-	require.Equal(t, neo4jenum.InvoiceStatusPaid.String(), eventData.Status)
-	require.Equal(t, "payment-link", eventData.PaymentLink)
-	require.Equal(t, 2, len(eventData.FieldsMask))
-	require.Equal(t, []string{invoice.FieldMaskStatus, invoice.FieldMaskPaymentLink}, eventData.FieldsMask)
-}
-
 func TestInvoiceService_RequestFillInvoice(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)

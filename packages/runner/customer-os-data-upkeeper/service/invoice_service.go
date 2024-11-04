@@ -9,14 +9,17 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/constants"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/logger"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
+	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
 	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
@@ -68,14 +71,16 @@ type InvoiceService interface {
 type invoiceService struct {
 	cfg                    *config.Config
 	log                    logger.Logger
+	commonServices         *commonService.Services
 	repositories           *repository.Repositories
 	eventsProcessingClient *grpc_client.Clients
 }
 
-func NewInvoiceService(cfg *config.Config, log logger.Logger, repositories *repository.Repositories, client *grpc_client.Clients) InvoiceService {
+func NewInvoiceService(cfg *config.Config, log logger.Logger, commonServices *commonService.Services, repositories *repository.Repositories, client *grpc_client.Clients) InvoiceService {
 	return &invoiceService{
 		cfg:                    cfg,
 		log:                    log,
+		commonServices:         commonServices,
 		repositories:           repositories,
 		eventsProcessingClient: client,
 	}
@@ -766,14 +771,14 @@ func (s *invoiceService) AdjustInvoiceStatus() {
 			invoice := neo4jmapper.MapDbNodeToInvoiceEntity(record.Node)
 			tenant := record.Tenant
 
-			_, err = utils.CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
-				return s.eventsProcessingClient.InvoiceClient.UpdateInvoice(ctx, &invoicepb.UpdateInvoiceRequest{
-					Tenant:     tenant,
-					InvoiceId:  invoice.Id,
-					AppSource:  constants.AppSourceDataUpkeeper,
-					Status:     invoicepb.InvoiceStatus_INVOICE_STATUS_OVERDUE,
-					FieldsMask: []invoicepb.InvoiceFieldMask{invoicepb.InvoiceFieldMask_INVOICE_FIELD_STATUS},
-				})
+			innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+				Tenant:    tenant,
+				AppSource: constants.AppSourceDataUpkeeper,
+			})
+
+			err = s.commonServices.InvoiceService.UpdateInvoice(innerCtx, invoice.Id, neo4jrepository.InvoiceUpdateFields{
+				Status:       neo4jenum.InvoiceStatusOverdue,
+				UpdateStatus: true,
 			})
 			if err != nil {
 				tracing.TraceErr(span, err)
@@ -793,14 +798,14 @@ func (s *invoiceService) AdjustInvoiceStatus() {
 			invoice := neo4jmapper.MapDbNodeToInvoiceEntity(record.Node)
 			tenant := record.Tenant
 
-			_, err = utils.CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
-				return s.eventsProcessingClient.InvoiceClient.UpdateInvoice(ctx, &invoicepb.UpdateInvoiceRequest{
-					Tenant:     tenant,
-					InvoiceId:  invoice.Id,
-					AppSource:  constants.AppSourceDataUpkeeper,
-					Status:     invoicepb.InvoiceStatus_INVOICE_STATUS_ON_HOLD,
-					FieldsMask: []invoicepb.InvoiceFieldMask{invoicepb.InvoiceFieldMask_INVOICE_FIELD_STATUS},
-				})
+			innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+				Tenant:    tenant,
+				AppSource: constants.AppSourceDataUpkeeper,
+			})
+
+			err = s.commonServices.InvoiceService.UpdateInvoice(innerCtx, invoice.Id, neo4jrepository.InvoiceUpdateFields{
+				Status:       neo4jenum.InvoiceStatusOnHold,
+				UpdateStatus: true,
 			})
 			if err != nil {
 				tracing.TraceErr(span, err)
@@ -820,14 +825,14 @@ func (s *invoiceService) AdjustInvoiceStatus() {
 			invoice := neo4jmapper.MapDbNodeToInvoiceEntity(record.Node)
 			tenant := record.Tenant
 
-			_, err = utils.CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
-				return s.eventsProcessingClient.InvoiceClient.UpdateInvoice(ctx, &invoicepb.UpdateInvoiceRequest{
-					Tenant:     tenant,
-					InvoiceId:  invoice.Id,
-					AppSource:  constants.AppSourceDataUpkeeper,
-					Status:     invoicepb.InvoiceStatus_INVOICE_STATUS_SCHEDULED,
-					FieldsMask: []invoicepb.InvoiceFieldMask{invoicepb.InvoiceFieldMask_INVOICE_FIELD_STATUS},
-				})
+			innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+				Tenant:    tenant,
+				AppSource: constants.AppSourceDataUpkeeper,
+			})
+
+			err = s.commonServices.InvoiceService.UpdateInvoice(innerCtx, invoice.Id, neo4jrepository.InvoiceUpdateFields{
+				Status:       neo4jenum.InvoiceStatusScheduled,
+				UpdateStatus: true,
 			})
 			if err != nil {
 				tracing.TraceErr(span, err)

@@ -270,65 +270,6 @@ func (h *InvoiceEventHandler) callNextPreviewOnCycleInvoiceGRPC(ctx context.Cont
 	return nil
 }
 
-func (h *InvoiceEventHandler) OnInvoiceUpdateV1(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceEventHandler.OnInvoiceUpdateV1")
-	defer span.Finish()
-	setEventSpanTagsAndLogFields(span, evt)
-
-	var eventData invoice.InvoiceUpdateEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "evt.GetJsonData")
-	}
-
-	invoiceId := invoice.GetInvoiceObjectID(evt.GetAggregateID(), eventData.Tenant)
-	span.SetTag(tracing.SpanTagEntityId, invoiceId)
-	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
-
-	invoiceEntityBeforeUpdate, err := h.getInvoice(ctx, eventData.Tenant, invoiceId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Error while getting invoice %s: %s", invoiceId, err.Error())
-		return err
-	}
-
-	data := neo4jrepository.InvoiceUpdateFields{
-		Status:                neo4jenum.DecodeInvoiceStatus(eventData.Status),
-		PaymentLink:           eventData.PaymentLink,
-		PaymentLinkValidUntil: eventData.PaymentLinkValidUntil,
-		UpdateStatus:          eventData.UpdateStatus(),
-		UpdatePaymentLink:     eventData.UpdatePaymentLink(),
-	}
-	err = h.services.CommonServices.Neo4jRepositories.InvoiceWriteRepository.UpdateInvoice(ctx, eventData.Tenant, invoiceId, data)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Error while updating invoice %s: %s", invoiceId, err.Error())
-		return err
-	}
-
-	invoiceEntityAfterUpdate, err := h.getInvoice(ctx, eventData.Tenant, invoiceId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Error while getting invoice %s: %s", invoiceId, err.Error())
-		return err
-	}
-
-	h.createInvoiceAction(ctx, eventData.Tenant, invoiceEntityBeforeUpdate.Status, *invoiceEntityAfterUpdate)
-
-	// status changed
-	if invoiceEntityBeforeUpdate.Status != invoiceEntityAfterUpdate.Status {
-		if invoiceEntityAfterUpdate.Status == neo4jenum.InvoiceStatusVoid {
-			err = h.services.CommonServices.InvoiceService.VoidInvoice(ctx, invoiceId, constants.AppSourceEventProcessingPlatformSubscribers)
-			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "h.services.CommonServices.InvoiceService.VoidInvoice"))
-				h.log.Errorf("Error while voiding invoice %s: %s", invoiceId, err.Error())
-			}
-		}
-	}
-
-	return nil
-}
-
 func (h *InvoiceEventHandler) OnInvoicePdfGenerated(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceEventHandler.OnInvoicePdfGenerated")
 	defer span.Finish()

@@ -10,11 +10,11 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/constants"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
+	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/repository"
-	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"strconv"
@@ -181,26 +181,22 @@ func (s *invoiceService) syncInvoice(ctx context.Context, syncMutex *sync.Mutex,
 
 	if invoiceInput.UpdateOnly || matchingInvoiceExists {
 		// Update invoice
-		invoiceGrpcRequest := invoicepb.UpdateInvoiceRequest{
-			Tenant:    tenant,
-			InvoiceId: invoiceId,
-			AppSource: utils.StringFirstNonEmpty(invoiceInput.AppSource, constants.AppSourceCustomerOsWebhooks),
-		}
-		fieldsMask := []invoicepb.InvoiceFieldMask{}
+		invoiceUpdateFields := neo4jrepository.InvoiceUpdateFields{}
+
 		if invoiceInput.Status != "" {
 			switch strings.ToLower(invoiceInput.Status) {
 			case "draft":
-				invoiceGrpcRequest.Status = invoicepb.InvoiceStatus_INVOICE_STATUS_INITIALIZED
+				invoiceUpdateFields.Status = neo4jenum.InvoiceStatusInitialized
 			case "paid":
-				invoiceGrpcRequest.Status = invoicepb.InvoiceStatus_INVOICE_STATUS_PAID
+				invoiceUpdateFields.Status = neo4jenum.InvoiceStatusPaid
 			case "due":
-				invoiceGrpcRequest.Status = invoicepb.InvoiceStatus_INVOICE_STATUS_DUE
+				invoiceUpdateFields.Status = neo4jenum.InvoiceStatusDue
 			}
-			fieldsMask = append(invoiceGrpcRequest.FieldsMask, invoicepb.InvoiceFieldMask_INVOICE_FIELD_STATUS)
+			invoiceUpdateFields.UpdateStatus = true
 		}
 		if invoiceInput.PaymentLink != "" {
-			invoiceGrpcRequest.PaymentLink = invoiceInput.PaymentLink
-			fieldsMask = append(invoiceGrpcRequest.FieldsMask, invoicepb.InvoiceFieldMask_INVOICE_FIELD_PAYMENT_LINK)
+			invoiceUpdateFields.PaymentLink = invoiceInput.PaymentLink
+			invoiceUpdateFields.UpdatePaymentLink = true
 
 			if invoiceInput.PaymentLinkValidHours != "" {
 				paymentLinkValidHours, err := strconv.Atoi(invoiceInput.PaymentLinkValidHours)
@@ -211,24 +207,20 @@ func (s *invoiceService) syncInvoice(ctx context.Context, syncMutex *sync.Mutex,
 				if paymentLinkValidHours > 1 {
 					// reduce 30 minutes from the valid until time to make sure the payment link is still valid
 					validUntil := utils.Now().Add(time.Minute * time.Duration(paymentLinkValidHours*60-30))
-					invoiceGrpcRequest.PaymentLinkValidUntil = utils.ConvertTimeToTimestampPtr(&validUntil)
+					invoiceUpdateFields.PaymentLinkValidUntil = &validUntil
 				} else if paymentLinkValidHours == 1 {
 					// reduce 15 minutes from the valid until time to make sure the payment link is still valid
 					validUntil := utils.Now().Add(time.Minute * 45)
-					invoiceGrpcRequest.PaymentLinkValidUntil = utils.ConvertTimeToTimestampPtr(&validUntil)
+					invoiceUpdateFields.PaymentLinkValidUntil = &validUntil
 				}
 			}
 		}
-		invoiceGrpcRequest.FieldsMask = fieldsMask
 
-		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
-			return s.grpcClients.InvoiceClient.UpdateInvoice(ctx, &invoiceGrpcRequest)
-		})
+		err = s.services.CommonServices.InvoiceService.UpdateInvoice(ctx, invoiceId, invoiceUpdateFields)
 		if err != nil {
 			failedSync = true
-			tracing.TraceErr(span, err, log.String("grpcMethod", "UpdateInvoice"))
-			reason = fmt.Sprintf("failed sending event to update invoice with id %s for tenant %s :%s", invoiceId, tenant, err)
+			tracing.TraceErr(span, err)
+			reason = fmt.Sprintf("failed updating invoice with id %s for tenant %s :%s", invoiceId, tenant, err)
 			s.log.Error(reason)
 		}
 	}

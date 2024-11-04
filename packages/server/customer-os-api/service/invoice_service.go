@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
@@ -15,7 +14,7 @@ import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
-	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
+	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"reflect"
@@ -337,51 +336,41 @@ func (s *invoiceService) UpdateInvoice(ctx context.Context, input model.InvoiceU
 		return err
 	}
 
-	fieldMask := []invoicepb.InvoiceFieldMask{}
-	invoiceUpdateRequest := invoicepb.UpdateInvoiceRequest{
-		Tenant:         common.GetTenantFromContext(ctx),
-		InvoiceId:      input.ID,
-		LoggedInUserId: common.GetUserIdFromContext(ctx),
-		AppSource:      constants.AppSourceCustomerOsApi,
-	}
+	data := neo4jrepository.InvoiceUpdateFields{}
+
 	// prepare invoice status
 	if input.Status != nil {
 		switch *input.Status {
 		case model.InvoiceStatusInitialized:
-			invoiceUpdateRequest.Status = invoicepb.InvoiceStatus_INVOICE_STATUS_INITIALIZED
+			data.Status = neo4jenum.InvoiceStatusInitialized
 		case model.InvoiceStatusEmpty:
-			invoiceUpdateRequest.Status = invoicepb.InvoiceStatus_INVOICE_STATUS_EMPTY
+			data.Status = neo4jenum.InvoiceStatusEmpty
 		case model.InvoiceStatusDraft:
-			invoiceUpdateRequest.Status = invoicepb.InvoiceStatus_INVOICE_STATUS_INITIALIZED
+			data.Status = neo4jenum.InvoiceStatusInitialized
 		case model.InvoiceStatusDue:
-			invoiceUpdateRequest.Status = invoicepb.InvoiceStatus_INVOICE_STATUS_DUE
+			data.Status = neo4jenum.InvoiceStatusDue
 		case model.InvoiceStatusPaid:
-			invoiceUpdateRequest.Status = invoicepb.InvoiceStatus_INVOICE_STATUS_PAID
+			data.Status = neo4jenum.InvoiceStatusPaid
 		case model.InvoiceStatusVoid:
-			invoiceUpdateRequest.Status = invoicepb.InvoiceStatus_INVOICE_STATUS_VOID
+			data.Status = neo4jenum.InvoiceStatusVoid
 		default:
-			invoiceUpdateRequest.Status = invoicepb.InvoiceStatus_INVOICE_STATUS_NONE
+			data.Status = neo4jenum.InvoiceStatusNone
 		}
 	}
 
 	if input.Patch {
 		if input.Status != nil {
-			fieldMask = append(fieldMask, invoicepb.InvoiceFieldMask_INVOICE_FIELD_STATUS)
-		}
-		invoiceUpdateRequest.FieldsMask = fieldMask
-		if len(fieldMask) == 0 {
+			data.UpdateStatus = true
+		} else {
 			span.LogFields(log.String("result", "No fields to update"))
 			return nil
 		}
 	}
 
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err := utils.CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
-		return s.grpcClients.InvoiceClient.UpdateInvoice(ctx, &invoiceUpdateRequest)
-	})
+	err := s.services.CommonServices.InvoiceService.UpdateInvoice(ctx, input.ID, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("Error from events processing: %s", err.Error())
+		s.log.Error(err.Error())
 		return err
 	}
 

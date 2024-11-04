@@ -114,18 +114,6 @@ message PdfGeneratedInvoiceRequest {
   string appSource = 6;
 }
 
-message UpdateInvoiceRequest {
-  string tenant = 1;
-  string loggedInUserId = 2;
-  string invoiceId = 3;
-  google.protobuf.Timestamp updatedAt = 4;
-  string appSource = 5;
-  InvoiceStatus status = 6;
-  repeated InvoiceFieldMask fieldsMask = 7;
-  string paymentLink = 8;
-  google.protobuf.Timestamp paymentLinkValidUntil = 9;
-}
-
 message PayInvoiceNotificationRequest {
   string tenant = 1;
   string invoiceId = 2;
@@ -179,7 +167,6 @@ service InvoiceGrpcService {
   rpc FillInvoice(FillInvoiceRequest) returns (InvoiceIdResponse);
   rpc GenerateInvoicePdf(GenerateInvoicePdfRequest) returns (InvoiceIdResponse);
   rpc PdfGeneratedInvoice(PdfGeneratedInvoiceRequest) returns (InvoiceIdResponse);
-  rpc UpdateInvoice(UpdateInvoiceRequest) returns (InvoiceIdResponse);
   rpc PayInvoiceNotification(PayInvoiceNotificationRequest) returns (InvoiceIdResponse);
   rpc RequestFillInvoice(RequestFillInvoiceRequest) returns (InvoiceIdResponse);
   rpc PermanentlyDeleteInitializedInvoice(PermanentlyDeleteInitializedInvoiceRequest) returns (InvoiceIdResponse);

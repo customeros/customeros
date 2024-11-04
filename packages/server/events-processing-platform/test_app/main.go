@@ -113,7 +113,6 @@ func main() {
 	//testUpdateOrgOwner()
 	//testRefreshRenewalSummary()
 	//testAddTenantBillingProfile()
-	//PaidInvoiceNotification()
 	//PleasePayInvoiceNotification()
 	//testCreateInvoice()
 	//testTenantSettingsUpdate()
@@ -158,18 +157,6 @@ func testCreateInvoice() {
 		log.Fatalf("Failed: %v", err.Error())
 	}
 	print(result.Id)
-}
-
-func PaidInvoiceNotification() {
-	_, err := clients.InvoiceClient.UpdateInvoice(context.Background(), &invoicepb.UpdateInvoiceRequest{
-		Tenant:    tenant,
-		InvoiceId: "5b052bf0-1027-4425-ba1e-4aa940754423",
-		Status:    invoicepb.InvoiceStatus_INVOICE_STATUS_PAID,
-	})
-
-	if err != nil {
-		log.Fatalf("Failed: %v", err.Error())
-	}
 }
 
 func PleasePayInvoiceNotification() {

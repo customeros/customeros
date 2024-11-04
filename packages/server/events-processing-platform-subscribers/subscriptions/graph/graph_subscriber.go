@@ -216,6 +216,7 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		userevents.UserEmailUnlinkV1,
 		logentryevents.LogEntryAddTagV1,
 		logentryevents.LogEntryRemoveTagV1,
+		invoiceevents.InvoiceUpdateV1,
 		contactevent.ContactAddSocialV1,
 		contactevent.ContactCreateV1,
 		contactevent.ContactUpdateV1,
@@ -474,9 +475,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return nil
 	case invoiceevents.InvoicePdfGeneratedV1:
 		_ = s.invoiceEventHandler.OnInvoicePdfGenerated(ctx, evt)
-		return nil
-	case invoiceevents.InvoiceUpdateV1:
-		_ = s.invoiceEventHandler.OnInvoiceUpdateV1(ctx, evt)
 		return nil
 	case invoiceevents.InvoiceVoidV1:
 		_ = s.invoiceEventHandler.OnInvoiceVoidV1(ctx, evt)

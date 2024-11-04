@@ -275,28 +275,6 @@ func (s *invoiceService) PdfGeneratedInvoice(ctx context.Context, request *invoi
 	return &invoicepb.InvoiceIdResponse{Id: request.InvoiceId}, nil
 }
 
-func (s *invoiceService) UpdateInvoice(ctx context.Context, request *invoicepb.UpdateInvoiceRequest) (*invoicepb.InvoiceIdResponse, error) {
-	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "InvoiceService.UpdateInvoice")
-	defer span.Finish()
-	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	tracing.LogObjectAsJson(span, "request", request)
-
-	if request.InvoiceId == "" {
-		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("invoiceId"))
-	}
-
-	initAggregateFunc := func() eventstore.Aggregate {
-		return invoice.NewInvoiceAggregateWithTenantAndID(request.Tenant, request.InvoiceId)
-	}
-	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, *eventstore.NewLoadAggregateOptionsWithRequired(), request); err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("(UpdateInvoice) tenant:{%v}, err: %v", request.Tenant, err.Error())
-		return nil, grpcerr.ErrResponse(err)
-	}
-
-	return &invoicepb.InvoiceIdResponse{Id: request.InvoiceId}, nil
-}
-
 func (s *invoiceService) PayInvoiceNotification(ctx context.Context, request *invoicepb.PayInvoiceNotificationRequest) (*invoicepb.InvoiceIdResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "InvoiceService.PayInvoiceNotification")
 	defer span.Finish()

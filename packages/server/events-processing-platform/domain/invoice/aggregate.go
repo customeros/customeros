@@ -14,7 +14,6 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-	"strings"
 	"time"
 )
 
@@ -75,8 +74,6 @@ func (a *InvoiceAggregate) HandleGRPCRequest(ctx context.Context, request any, p
 		return nil, a.CreatePdfRequestedEvent(ctx, r)
 	case *invoicepb.PdfGeneratedInvoiceRequest:
 		return nil, a.CreatePdfGeneratedEvent(ctx, r)
-	case *invoicepb.UpdateInvoiceRequest:
-		return nil, a.UpdateInvoice(ctx, r)
 	case *invoicepb.PayInvoiceNotificationRequest:
 		return nil, a.CreatePayInvoiceNotificationEvent(ctx, r)
 	case *invoicepb.RemindInvoiceNotificationRequest:
@@ -302,50 +299,6 @@ func (a *InvoiceAggregate) CreateRemindInvoiceNotificationEvent(ctx context.Cont
 	return a.Apply(event)
 }
 
-func (a *InvoiceAggregate) UpdateInvoice(ctx context.Context, r *invoicepb.UpdateInvoiceRequest) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "InvoiceAggregate.UpdateInvoice")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("AggregateVersion", a.GetVersion()))
-
-	updatedAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(r.UpdatedAt), utils.Now())
-	fieldsMask := extractFieldsMask(r.FieldsMask)
-	status := InvoiceStatus(r.Status).String()
-
-	events := []eventstore.Event{}
-	updateEvent, err := NewInvoiceUpdateEvent(a, updatedAtNotNil, fieldsMask, status, r.PaymentLink, utils.TimestampProtoToTimePtr(r.PaymentLinkValidUntil))
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewUpdateInvoiceEvent")
-	}
-	eventstore.EnrichEventWithMetadataExtended(&updateEvent, span, eventstore.EventMetadata{
-		Tenant: r.Tenant,
-		UserId: r.LoggedInUserId,
-		App:    r.AppSource,
-	})
-	events = append(events, updateEvent)
-
-	// if status updated, and set from non-paid to paid
-	if utils.Contains(fieldsMask, FieldMaskStatus) &&
-		a.Invoice.Status != neo4jenum.InvoiceStatusPaid.String() &&
-		status == neo4jenum.InvoiceStatusPaid.String() {
-		paidEvent, err := NewInvoicePaidEvent(a)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return errors.Wrap(err, "NewInvoicePaidEvent")
-		}
-		eventstore.EnrichEventWithMetadataExtended(&paidEvent, span, eventstore.EventMetadata{
-			Tenant: r.Tenant,
-			UserId: r.LoggedInUserId,
-			App:    r.AppSource,
-		})
-		events = append(events, paidEvent)
-	}
-
-	return a.ApplyAll(events)
-}
-
 func (a *InvoiceAggregate) PermanentlyDeleteInitializedInvoice(ctx context.Context, request *invoicepb.PermanentlyDeleteInitializedInvoiceRequest) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "InvoiceAggregate.PermanentlyDeleteInitializedInvoice")
 	defer span.Finish()
@@ -429,9 +382,8 @@ func (a *InvoiceAggregate) When(evt eventstore.Event) error {
 		return a.onFillInvoice(evt)
 	case InvoicePdfGeneratedV1:
 		return a.onPdfGeneratedInvoice(evt)
-	case InvoiceUpdateV1:
-		return a.onUpdateInvoice(evt)
-	case InvoicePayV1,
+	case InvoiceUpdateV1,
+		InvoicePayV1,
 		InvoicePdfRequestedV1,
 		InvoiceFillRequestedV1,
 		InvoicePaidV1,
@@ -441,12 +393,7 @@ func (a *InvoiceAggregate) When(evt eventstore.Event) error {
 		InvoiceVoidV1:
 		return nil
 	default:
-		if strings.HasPrefix(evt.GetEventType(), events2.EsInternalStreamPrefix) {
-			return nil
-		}
-		err := eventstore.ErrInvalidEventType
-		err.EventType = evt.GetEventType()
-		return err
+		return nil
 	}
 }
 
@@ -527,23 +474,6 @@ func (a *InvoiceAggregate) onPdfGeneratedInvoice(evt eventstore.Event) error {
 	}
 
 	a.Invoice.RepositoryFileId = eventData.RepositoryFileId
-
-	return nil
-}
-
-func (a *InvoiceAggregate) onUpdateInvoice(evt eventstore.Event) error {
-	var eventData InvoiceUpdateEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		return errors.Wrap(err, "GetJsonData")
-	}
-
-	if eventData.UpdateStatus() {
-		a.Invoice.Status = eventData.Status
-	}
-	if eventData.UpdatePaymentLink() {
-		a.Invoice.PaymentLink = eventData.PaymentLink
-		a.Invoice.PaymentLinkValidUntil = eventData.PaymentLinkValidUntil
-	}
 
 	return nil
 }

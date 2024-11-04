@@ -27,7 +27,6 @@ type InvoiceGrpcServiceClient interface {
 	FillInvoice(ctx context.Context, in *FillInvoiceRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
 	GenerateInvoicePdf(ctx context.Context, in *GenerateInvoicePdfRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
 	PdfGeneratedInvoice(ctx context.Context, in *PdfGeneratedInvoiceRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
-	UpdateInvoice(ctx context.Context, in *UpdateInvoiceRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
 	PayInvoiceNotification(ctx context.Context, in *PayInvoiceNotificationRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
 	RequestFillInvoice(ctx context.Context, in *RequestFillInvoiceRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
 	PermanentlyDeleteInitializedInvoice(ctx context.Context, in *PermanentlyDeleteInitializedInvoiceRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
@@ -88,15 +87,6 @@ func (c *invoiceGrpcServiceClient) PdfGeneratedInvoice(ctx context.Context, in *
 	return out, nil
 }
 
-func (c *invoiceGrpcServiceClient) UpdateInvoice(ctx context.Context, in *UpdateInvoiceRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error) {
-	out := new(InvoiceIdResponse)
-	err := c.cc.Invoke(ctx, "/InvoiceGrpcService/UpdateInvoice", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *invoiceGrpcServiceClient) PayInvoiceNotification(ctx context.Context, in *PayInvoiceNotificationRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error) {
 	out := new(InvoiceIdResponse)
 	err := c.cc.Invoke(ctx, "/InvoiceGrpcService/PayInvoiceNotification", in, out, opts...)
@@ -151,7 +141,6 @@ type InvoiceGrpcServiceServer interface {
 	FillInvoice(context.Context, *FillInvoiceRequest) (*InvoiceIdResponse, error)
 	GenerateInvoicePdf(context.Context, *GenerateInvoicePdfRequest) (*InvoiceIdResponse, error)
 	PdfGeneratedInvoice(context.Context, *PdfGeneratedInvoiceRequest) (*InvoiceIdResponse, error)
-	UpdateInvoice(context.Context, *UpdateInvoiceRequest) (*InvoiceIdResponse, error)
 	PayInvoiceNotification(context.Context, *PayInvoiceNotificationRequest) (*InvoiceIdResponse, error)
 	RequestFillInvoice(context.Context, *RequestFillInvoiceRequest) (*InvoiceIdResponse, error)
 	PermanentlyDeleteInitializedInvoice(context.Context, *PermanentlyDeleteInitializedInvoiceRequest) (*InvoiceIdResponse, error)
@@ -177,9 +166,6 @@ func (UnimplementedInvoiceGrpcServiceServer) GenerateInvoicePdf(context.Context,
 }
 func (UnimplementedInvoiceGrpcServiceServer) PdfGeneratedInvoice(context.Context, *PdfGeneratedInvoiceRequest) (*InvoiceIdResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PdfGeneratedInvoice not implemented")
-}
-func (UnimplementedInvoiceGrpcServiceServer) UpdateInvoice(context.Context, *UpdateInvoiceRequest) (*InvoiceIdResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateInvoice not implemented")
 }
 func (UnimplementedInvoiceGrpcServiceServer) PayInvoiceNotification(context.Context, *PayInvoiceNotificationRequest) (*InvoiceIdResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PayInvoiceNotification not implemented")
@@ -294,24 +280,6 @@ func _InvoiceGrpcService_PdfGeneratedInvoice_Handler(srv interface{}, ctx contex
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(InvoiceGrpcServiceServer).PdfGeneratedInvoice(ctx, req.(*PdfGeneratedInvoiceRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _InvoiceGrpcService_UpdateInvoice_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateInvoiceRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(InvoiceGrpcServiceServer).UpdateInvoice(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/InvoiceGrpcService/UpdateInvoice",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(InvoiceGrpcServiceServer).UpdateInvoice(ctx, req.(*UpdateInvoiceRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -432,10 +400,6 @@ var InvoiceGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "PdfGeneratedInvoice",
 			Handler:    _InvoiceGrpcService_PdfGeneratedInvoice_Handler,
-		},
-		{
-			MethodName: "UpdateInvoice",
-			Handler:    _InvoiceGrpcService_UpdateInvoice_Handler,
 		},
 		{
 			MethodName: "PayInvoiceNotification",
