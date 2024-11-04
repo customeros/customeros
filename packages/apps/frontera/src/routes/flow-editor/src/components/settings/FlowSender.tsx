@@ -49,12 +49,12 @@ export const FlowSender = observer(
                 {userMailboxes?.length === 1 ? 'mailbox' : 'mailboxes'}
               </Button>
             </PopoverTrigger>
-            <PopoverContent align='end' side='bottom' className={'px-6 py-4 '}>
+            <PopoverContent align='end' side='bottom' className={'px-4 py-3 '}>
               <p className='text-sm font-medium mb-1'>Linked mailboxes</p>
-              <ul className='list-disc px-4'>
+              <ul className='list-disc px-4 text-sm'>
                 {userMailboxes?.map((mailbox) => (
                   <li className='' key={`mailbox-item-${mailbox}`}>
-                    <span className='text-sm'>{mailbox}</span>
+                    {mailbox}
                   </li>
                 ))}
               </ul>
