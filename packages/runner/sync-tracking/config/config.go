@@ -16,6 +16,7 @@ type Config struct {
 	GrpcClientConfig config.GrpcClientConfig
 	Logger           logger.Config
 	Jaeger           tracing.JaegerConfig
+	RabbitMQConfig   config.RabbitMQConfig
 
 	Cron cronconf.Config
 
