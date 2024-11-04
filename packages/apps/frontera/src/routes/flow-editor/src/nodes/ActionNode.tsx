@@ -24,7 +24,7 @@ export const ActionNode = (
         {[FlowActionType.EMAIL_NEW, FlowActionType.EMAIL_REPLY].includes(
           action,
         ) && <EmailActionNode {...props} />}
-        {FlowActionType.SEND_CONNECTION_REQUEST === action && (
+        {FlowActionType.LINKEDIN_CONNECTION_REQUEST === action && (
           <SendConnectionRequestActionNode />
         )}
 

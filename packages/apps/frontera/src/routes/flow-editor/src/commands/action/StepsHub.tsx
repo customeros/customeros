@@ -1,4 +1,5 @@
 import { observer } from 'mobx-react-lite';
+import { UIStore } from '@store/UI/UI.store.ts';
 import { FlowActionType } from '@store/Flows/types';
 import { Node, MarkerType, useReactFlow } from '@xyflow/react';
 
@@ -15,16 +16,74 @@ import { ArrowIfPath } from '@ui/media/icons/ArrowIfPath';
 import { ClipboardCheck } from '@ui/media/icons/ClipboardCheck';
 import { LinkedinOutline } from '@ui/media/icons/LinkedinOutline';
 
-const MINUTES_PER_DAY = 1440;
-const DEFAULT_FIRST_EMAIL_WAIT = 30;
-
 import { keywords } from './keywords';
 import { useUndoRedo } from '../../hooks';
 
-export const StepsHub = observer(() => {
-  const { ui } = useStore();
-  const { takeSnapshot } = useUndoRedo();
+const MINUTES_PER_DAY = 1440;
+const DEFAULT_FIRST_EMAIL_WAIT = 30;
 
+type WaitDurationUnit = 'days' | 'hours' | 'minutes';
+
+interface NodeData {
+  subject?: string;
+  replyTo?: string;
+  waitBefore?: number;
+  waitStepId?: string;
+  nextStepId?: string;
+  bodyTemplate?: string;
+  waitDuration?: number;
+  messageTemplate?: string;
+  action: FlowActionType | 'WAIT';
+  fe_waitDurationUnit?: WaitDurationUnit;
+}
+
+interface BaseContent {
+  action: FlowActionType | 'WAIT';
+}
+
+interface WaitContent extends BaseContent {
+  nextStepId?: string;
+  waitDuration: number;
+  fe_waitDurationUnit: WaitDurationUnit;
+}
+
+interface FlowEdge {
+  id: string;
+  source: string;
+  target: string;
+  type: 'baseEdge';
+  markerEnd: {
+    width: number;
+    height: number;
+    type: MarkerType;
+  };
+}
+
+const createEdge = (source: string, target: string): FlowEdge => ({
+  id: `e${source}-${target}`,
+  source,
+  target,
+  type: 'baseEdge',
+  markerEnd: {
+    type: MarkerType.Arrow,
+    width: 20,
+    height: 20,
+  },
+});
+
+const createNode = (
+  type: FlowActionType | 'WAIT',
+  position: { x: number; y: number },
+  data: Partial<NodeData> & BaseContent,
+): Node => ({
+  id: `${type}-${crypto.randomUUID()}`,
+  type: type === 'WAIT' ? 'wait' : 'action',
+  position,
+  data: { ...data, action: type },
+});
+
+const useFlowNodeManagement = (ui: UIStore) => {
+  const { takeSnapshot } = useUndoRedo();
   const { setEdges, setNodes, getNodes, getEdges } = useReactFlow();
 
   const findPreviousEmailNode = (
@@ -44,11 +103,63 @@ export const StepsHub = observer(() => {
     return null;
   };
 
-  const hasEmailNodeBeforeCurrent = (
+  const getTypeBasedContent = (
+    type: FlowActionType | 'WAIT',
+    isFirstEmailNode: boolean,
     nodes: Node[],
-    currentNodeId: string,
-  ): boolean => {
-    return findPreviousEmailNode(nodes, currentNodeId) !== null;
+    sourceNodeId: string,
+  ): Partial<NodeData> & BaseContent => {
+    const defaultWaitConfig: WaitContent = {
+      action: 'WAIT',
+      waitDuration: isFirstEmailNode
+        ? DEFAULT_FIRST_EMAIL_WAIT
+        : MINUTES_PER_DAY,
+      fe_waitDurationUnit: isFirstEmailNode ? 'minutes' : 'days',
+    };
+
+    switch (type) {
+      case 'WAIT':
+        return defaultWaitConfig;
+
+      case FlowActionType.EMAIL_REPLY: {
+        const prevEmailNode = findPreviousEmailNode(nodes, sourceNodeId);
+
+        return {
+          action: type,
+          replyTo: prevEmailNode?.id,
+          subject: prevEmailNode?.data?.subject
+            ? `RE: ${prevEmailNode.data.subject}`
+            : '',
+          bodyTemplate: '',
+          waitBefore: MINUTES_PER_DAY,
+        };
+      }
+
+      case FlowActionType.EMAIL_NEW: {
+        return {
+          action: type,
+          subject: '',
+          bodyTemplate: '',
+          waitDuration: isFirstEmailNode
+            ? DEFAULT_FIRST_EMAIL_WAIT
+            : MINUTES_PER_DAY,
+          fe_waitDurationUnit: isFirstEmailNode ? 'minutes' : 'days',
+        };
+      }
+
+      case FlowActionType.LINKEDIN_CONNECTION_REQUEST:
+
+      case FlowActionType.LINKEDIN_MESSAGE: {
+        return {
+          action: type,
+          waitBefore: MINUTES_PER_DAY,
+          messageTemplate: '',
+        };
+      }
+
+      default:
+        return { action: type };
+    }
   };
 
   const handleAddNode = async (type: FlowActionType | 'WAIT') => {
@@ -56,89 +167,50 @@ export const StepsHub = observer(() => {
 
     const nodes = getNodes();
     const edges = getEdges();
+    const { source, target } = ui.flowCommandMenu.context.meta ?? {};
 
-    const sourceNode = nodes.find(
-      (node) => node.id === ui.flowCommandMenu.context.meta?.source,
-    );
-    const targetNode = nodes.find(
-      (node) => node.id === ui.flowCommandMenu.context.meta?.target,
-    );
+    if (!source || !target) return;
 
-    if (!sourceNode || !targetNode) return;
+    const sourceNode = nodes.find((node) => node.id === source);
 
-    let typeBasedContent: {
-      subject?: string;
-      replyTo?: string;
-      waitBefore?: number;
-      waitStepId?: string;
-      nextStepId?: string;
-      bodyTemplate?: string;
-      waitDuration?: number;
-      // todo - prefix added to make it clear that this value is used by the FE only - should be adjusted after COS-5474
-      fe_waitDurationUnit?: 'days' | 'hours' | 'minutes';
-    } = {};
+    if (!sourceNode) return;
 
-    const isEmailNode =
-      type === FlowActionType.EMAIL_NEW || type === FlowActionType.EMAIL_REPLY;
-
-    // Check if this is the first email node in the flow
     const isFirstEmailNode =
       type === FlowActionType.EMAIL_NEW &&
       !nodes.some((node) => node.data.action === FlowActionType.EMAIL_NEW);
 
-    if (type === 'WAIT') {
-      typeBasedContent = {
-        waitDuration: isFirstEmailNode
-          ? DEFAULT_FIRST_EMAIL_WAIT
-          : MINUTES_PER_DAY,
-        fe_waitDurationUnit: isFirstEmailNode ? 'minutes' : 'days',
-      };
-    } else if (type === FlowActionType.EMAIL_REPLY) {
-      const prevEmailNode = findPreviousEmailNode(nodes, sourceNode.id);
-      const prevSubject = prevEmailNode?.data?.subject || '';
+    const isEmailNode = [
+      FlowActionType.EMAIL_NEW,
+      FlowActionType.EMAIL_REPLY,
+    ].includes(type as FlowActionType);
+    const isLinkedInNode = [
+      FlowActionType.LINKEDIN_CONNECTION_REQUEST,
+      FlowActionType.LINKEDIN_MESSAGE,
+    ].includes(type as FlowActionType);
 
-      typeBasedContent = {
-        replyTo: prevEmailNode?.id,
-        subject: `RE: ${prevSubject}`,
-        bodyTemplate: '',
-        waitBefore: MINUTES_PER_DAY,
-      };
-    } else if (type === FlowActionType.EMAIL_NEW) {
-      typeBasedContent = {
-        subject: '',
-        bodyTemplate: '',
-        waitDuration: isFirstEmailNode
-          ? DEFAULT_FIRST_EMAIL_WAIT
-          : MINUTES_PER_DAY,
-        fe_waitDurationUnit: isFirstEmailNode ? 'minutes' : 'days',
-      };
-    }
-
-    const newNode = {
-      id: `${type}-${crypto.randomUUID()}`,
-      type: type === 'WAIT' ? 'wait' : 'action',
-      position: {
+    const typeBasedContent = getTypeBasedContent(
+      type,
+      isFirstEmailNode,
+      nodes,
+      source,
+    );
+    const newNode = createNode(
+      type,
+      {
         x: type === 'WAIT' ? 96.5 : 12,
         y: sourceNode.position.y + 56,
       },
-      data: {
-        action: type,
-        ...typeBasedContent,
-      },
-    };
+      typeBasedContent,
+    );
 
-    let updatedNodes = [...nodes, newNode];
-    let newEdges = [];
-
-    if (isEmailNode) {
-      const waitNode = {
-        id: `WAIT-${crypto.randomUUID()}`,
-        type: 'wait',
-        position: {
+    if (isEmailNode || isLinkedInNode) {
+      const waitNode = createNode(
+        'WAIT',
+        {
           x: 96.5,
           y: sourceNode.position.y + 56,
         },
-        data: {
+        {
           action: 'WAIT',
           waitDuration: isFirstEmailNode
             ? DEFAULT_FIRST_EMAIL_WAIT
@@ -146,88 +218,83 @@ export const StepsHub = observer(() => {
           fe_waitDurationUnit: isFirstEmailNode ? 'minutes' : 'days',
           nextStepId: newNode.id,
         },
-      };
+      );
 
       newNode.data.waitStepId = waitNode.id;
 
-      updatedNodes = [...nodes, waitNode, newNode];
+      const newEdges = [
+        createEdge(source, waitNode.id),
+        createEdge(waitNode.id, newNode.id),
+        createEdge(newNode.id, target),
+      ];
 
-      const edgeToWaitNode = {
-        id: `e${ui.flowCommandMenu.context.meta?.source}-${waitNode.id}`,
-        source: ui.flowCommandMenu.context.meta?.source,
-        target: waitNode.id,
-        type: 'baseEdge',
-        markerEnd: {
-          type: MarkerType.Arrow,
-          width: 20,
-          height: 20,
-        },
-      };
+      const updatedEdges = edges.filter(
+        (e) => !(e.source === source && e.target === target),
+      );
 
-      const edgeWaitToNewNode = {
-        id: `e${waitNode.id}-${newNode.id}`,
-        source: waitNode.id,
-        target: newNode.id,
-        type: 'baseEdge',
-        markerEnd: {
-          type: MarkerType.Arrow,
-          width: 20,
-          height: 20,
-        },
-      };
-
-      const edgeFromNewNode = {
-        id: `e${newNode.id}-${ui.flowCommandMenu.context.meta?.target}`,
-        source: newNode.id,
-        target: ui.flowCommandMenu.context.meta?.target,
-        type: 'baseEdge',
-        markerEnd: {
-          type: MarkerType.Arrow,
-          width: 20,
-          height: 20,
-        },
-      };
-
-      newEdges = [edgeToWaitNode, edgeWaitToNewNode, edgeFromNewNode];
+      setNodes([...nodes, waitNode, newNode]);
+      setEdges([...updatedEdges, ...newEdges]);
     } else {
-      const edgeToNewNode = {
-        id: `e${ui.flowCommandMenu.context.meta?.source}-${newNode.id}`,
-        source: ui.flowCommandMenu.context.meta?.source,
-        target: newNode.id,
-        type: 'baseEdge',
-        markerEnd: {
-          type: MarkerType.Arrow,
-          width: 20,
-          height: 20,
-        },
-      };
+      const newEdges = [
+        createEdge(source, newNode.id),
+        createEdge(newNode.id, target),
+      ];
 
-      const edgeFromNewNode = {
-        id: `e${newNode.id}-${ui.flowCommandMenu.context.meta?.target}`,
-        source: newNode.id,
-        target: ui.flowCommandMenu.context.meta?.target,
-        type: 'baseEdge',
-        markerEnd: {
-          type: MarkerType.Arrow,
-          width: 20,
-          height: 20,
-        },
-      };
+      const updatedEdges = edges.filter(
+        (e) => !(e.source === source && e.target === target),
+      );
 
-      newEdges = [edgeToNewNode, edgeFromNewNode];
+      setNodes([...nodes, newNode]);
+      setEdges([...updatedEdges, ...newEdges]);
     }
-
-    const updatedEdges = edges.filter(
-      (e) =>
-        !(
-          e.source === ui.flowCommandMenu.context.meta?.source &&
-          e.target === ui.flowCommandMenu.context.meta?.target
-        ),
-    );
-
-    setNodes(updatedNodes);
-    setEdges([...updatedEdges, ...newEdges]);
   };
+
+  return {
+    handleAddNode,
+    findPreviousEmailNode,
+    hasEmailNodeBeforeCurrent: (nodes: Node[], currentNodeId: string) =>
+      findPreviousEmailNode(nodes, currentNodeId) !== null,
+  };
+};
+
+// Command Item Component
+interface CommandItemProps {
+  dataTest?: string;
+  disabled?: boolean;
+  keywords: string[];
+  className?: string;
+  onSelect?: () => void;
+  children: React.ReactNode;
+  leftAccessory: React.ReactNode;
+}
+
+const FlowCommandItem: React.FC<CommandItemProps> = ({
+  disabled = false,
+  keywords,
+  leftAccessory,
+  dataTest,
+  className,
+  onSelect,
+  children,
+}) => (
+  <CommandItem
+    disabled={disabled}
+    keywords={keywords}
+    dataTest={dataTest}
+    onSelect={onSelect}
+    className={className}
+    leftAccessory={leftAccessory}
+  >
+    {children}
+  </CommandItem>
+);
+
+// Main Component
+export const StepsHub = observer(() => {
+  const { ui } = useStore();
+  const { getNodes } = useReactFlow();
+  const { handleAddNode, hasEmailNodeBeforeCurrent } =
+    useFlowNodeManagement(ui);
 
   const updateSelectedNode = (type: FlowActionType | 'WAIT') => {
     handleAddNode(type);
@@ -236,136 +303,128 @@ export const StepsHub = observer(() => {
   };
 
   const currentNodeId = ui.flowCommandMenu.context.meta?.source;
-
   const canReplyToEmail = currentNodeId
     ? hasEmailNodeBeforeCurrent(getNodes(), currentNodeId)
     : false;
 
   return (
     <>
-      <CommandItem
+      <FlowCommandItem
         leftAccessory={<Mail01 />}
         keywords={keywords.send_email}
-        dataTest={'flow-action-send-email'}
-        onSelect={() => {
-          updateSelectedNode(FlowActionType.EMAIL_NEW);
-        }}
+        dataTest='flow-action-send-email'
+        onSelect={() => updateSelectedNode(FlowActionType.EMAIL_NEW)}
       >
         Send email
-      </CommandItem>
-      <CommandItem
+      </FlowCommandItem>
+
+      <FlowCommandItem
         disabled={!canReplyToEmail}
         leftAccessory={<MailReply />}
         keywords={keywords.reply_to_previous_email}
-        className={cn({
-          hidden: !canReplyToEmail,
-        })}
-        onSelect={() => {
-          updateSelectedNode(FlowActionType.EMAIL_REPLY);
-        }}
+        className={cn({ hidden: !canReplyToEmail })}
+        onSelect={() => updateSelectedNode(FlowActionType.EMAIL_REPLY)}
       >
         Reply to previous email
-      </CommandItem>
-      <CommandItem
+      </FlowCommandItem>
+
+      <FlowCommandItem
         keywords={keywords.wait}
-        dataTest={'flow-action-wait'}
+        dataTest='flow-action-wait'
         leftAccessory={<Hourglass02 />}
-        onSelect={() => {
-          updateSelectedNode('WAIT');
-        }}
+        onSelect={() => updateSelectedNode('WAIT')}
       >
         Wait
-      </CommandItem>
-      <CommandItem
+      </FlowCommandItem>
+
+      <FlowCommandItem
         leftAccessory={<LinkedinOutline />}
         keywords={keywords.send_connection_request}
-        onSelect={() => {
-          updateSelectedNode(FlowActionType.SEND_CONNECTION_REQUEST);
-        }}
+        onSelect={() =>
+          updateSelectedNode(FlowActionType.LINKEDIN_CONNECTION_REQUEST)
+        }
       >
-        <span
-          className='text-gray-700'
-          data-test={'flow-send-linkedin-message'}
-        >
+        <span className='text-gray-700' data-test='flow-send-linkedin-message'>
           Send connection request
         </span>
-      </CommandItem>
-      <CommandItem
+      </FlowCommandItem>
+
+      <FlowCommandItem
         disabled
         leftAccessory={<LinkedinOutline />}
         keywords={keywords.send_linkedin_message}
       >
-        <span
-          className='text-gray-700'
-          data-test={'flow-send-linkedin-message'}
-        >
+        <span className='text-gray-700' data-test='flow-send-linkedin-message'>
           Send LinkedIn message
         </span>
         <span className='text-gray-500'>(Coming soon)</span>
-      </CommandItem>
-      <CommandItem
+      </FlowCommandItem>
+
+      <FlowCommandItem
         disabled
         leftAccessory={<PlusSquare />}
         keywords={keywords.create_record}
       >
-        <span className='text-gray-700' data-test={'flow-create-record'}>
+        <span className='text-gray-700' data-test='flow-create-record'>
           Create record
         </span>
         <span className='text-gray-500'>(Coming soon)</span>
-      </CommandItem>
-      <CommandItem
+      </FlowCommandItem>
+
+      <FlowCommandItem
         disabled
         leftAccessory={<RefreshCw01 />}
         keywords={keywords.update_record}
       >
-        <span className='text-gray-700' data-test={'flow-update-record'}>
+        <span className='text-gray-700' data-test='flow-update-record'>
           Update record
         </span>
         <span className='text-gray-500'>(Coming soon)</span>
-      </CommandItem>
-      <CommandItem
+      </FlowCommandItem>
+
+      <FlowCommandItem
         disabled
         leftAccessory={<Star06 />}
         keywords={keywords.enrich_record}
       >
-        <span className='text-gray-700' data-test={'flow-enrich-record'}>
+        <span className='text-gray-700' data-test='flow-enrich-record'>
           Enrich record
         </span>
         <span className='text-gray-500'>(Coming soon)</span>
-      </CommandItem>
-      <CommandItem
+      </FlowCommandItem>
+
+      <FlowCommandItem
         disabled
         leftAccessory={<Star06 />}
         keywords={keywords.verify_record_property}
       >
-        <span
-          className='text-gray-700'
-          data-test={'flow-verify-record-property'}
-        >
+        <span className='text-gray-700' data-test='flow-verify-record-property'>
           Verify record property
         </span>
         <span className='text-gray-500'>(Coming soon)</span>
-      </CommandItem>
-      <CommandItem
+      </FlowCommandItem>
+
+      <FlowCommandItem
         disabled
         keywords={keywords.conditions}
         leftAccessory={<ArrowIfPath />}
       >
-        <span className='text-gray-700' data-test={'flow-conditions'}>
+        <span className='text-gray-700' data-test='flow-conditions'>
           Conditions
         </span>
         <span className='text-gray-500'>(Coming soon)</span>
-      </CommandItem>
-      <CommandItem
+      </FlowCommandItem>
+
+      <FlowCommandItem
         disabled
         keywords={keywords.create_to_do}
         leftAccessory={<ClipboardCheck />}
       >
-        <span className='text-gray-700' data-test={'flow-create-to-do'}>
+        <span className='text-gray-700' data-test='flow-create-to-do'>
           Create to-do
         </span>
         <span className='text-gray-500'>(Coming soon)</span>
-      </CommandItem>
+      </FlowCommandItem>
     </>
   );
 });
