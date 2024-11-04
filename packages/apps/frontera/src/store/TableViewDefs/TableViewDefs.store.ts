@@ -231,7 +231,13 @@ export class TableViewDefsStore implements GroupStore<TableViewDef> {
       isShared,
     };
 
-    const { id: _id, createdAt, updatedAt, ...payload } = newTableViewDef.value;
+    const {
+      id: _id,
+      createdAt,
+      updatedAt,
+      defaultFilters,
+      ...payload
+    } = newTableViewDef.value;
 
     const tempId = newTableViewDef.id;
     let serverId = '';
