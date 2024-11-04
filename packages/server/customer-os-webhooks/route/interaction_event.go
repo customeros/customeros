@@ -145,7 +145,6 @@ func syncPostmarkInteractionEventHandler(services *service.Services, cfg *config
 					span.LogFields(tracingLog.String("reason", "excluded by html body"))
 					return
 				}
-				postmarkEmailWebhookData.HtmlBody = strings.ReplaceAll(postmarkEmailWebhookData.TextBody, "&amp;", "&")
 				if strings.Index(textData, *exclusion.ExcludeBody) >= 0 {
 					span.LogFields(tracingLog.String("reason", "excluded by text body"))
 					return
