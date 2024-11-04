@@ -54,6 +54,7 @@ export const browserAutomationRunType = pgEnum("browser_automation_run_type", [
   "FIND_COMPANY_PEOPLE",
   "DOWNLOAD_CONNECTIONS",
   "GET_MESSAGES",
+  "CHECK_CONNECTION_STATUS",
 ]);
 export const browserConfigSessionStatus = pgEnum(
   "browser_config_session_status",

@@ -4,7 +4,12 @@ import { CompanyController } from "../controllers/linkedin/company-controller";
 import { ConnectController } from "../controllers/linkedin/connect-controller";
 import { MessagesController } from "../controllers/linkedin/messages-controller";
 import { ConnectionsController } from "../controllers/linkedin/connections-controller";
-import { connectValidators, sendMessageValidators } from "../validators";
+import {
+  connectionStatusValidators,
+  connectValidators,
+  messagesRetrievalValidators,
+  sendMessageValidators
+} from "../validators";
 
 export class LinkedinRouter {
   public router = new Router().instance;
@@ -36,6 +41,13 @@ export class LinkedinRouter {
       ...connectValidators,
       this.connectController.sendConnectionInvite,
     );
-    this.router.post("/messages", this.messagesController.retrieveMessages);
+    this.router.post(
+        "/messages",
+        ...messagesRetrievalValidators,
+        this.messagesController.retrieveMessages);
+    this.router.post(
+      "/connection-status",
+      ...connectionStatusValidators,
+      this.connectionsController.checkConnectionStatus);
   }
 }

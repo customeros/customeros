@@ -446,6 +446,83 @@ export class LinkedinAutomationService {
     }
   }
 
+  async checkConnectionStatus(profileUrl: string): Promise<string> {
+    const browser = await Browser.getFreshInstance(this.proxyConfig);
+    const context = await browser.newContext({
+      userAgent: this.userAgent,
+    });
+
+    await context.addCookies(this.cookies);
+    const page = await context.newPage();
+
+    try {
+      await page.goto(profileUrl, {timeout: 60 * 1000});
+
+      const pendingButtonSelector = 'button.artdeco-button.artdeco-button--muted.artdeco-button--2.artdeco-button--secondary.ember-view.pvs-profile-actions__action';
+
+      try {
+        await page.waitForSelector(pendingButtonSelector, { timeout: 2000, state: 'attached' });
+        const pendingButtonText = await page.$eval(
+            `${pendingButtonSelector} span.artdeco-button__text`,
+            (span) => span.textContent?.trim()
+        );
+        if (pendingButtonText === 'Pending') {
+          return 'Pending';
+        }
+      } catch (pendingError) {
+      }
+
+      const connectButtonSelector = 'button.artdeco-button.artdeco-button--2.artdeco-button--secondary.ember-view.pvs-profile-actions__action';
+
+      try {
+        await page.waitForSelector(connectButtonSelector, { timeout: 2000, state: 'attached' });
+        const connectButtonText = await page.$eval(
+            `${connectButtonSelector} span.artdeco-button__text`,
+            (span) => span.textContent?.trim()
+        );
+
+        if (connectButtonText === 'Connect') {
+          return 'Not Sent';
+        }
+      } catch (connectError) {
+      }
+
+      const followButtonSelector = 'button.artdeco-button.artdeco-button--2.artdeco-button--secondary.ember-view.pvs-profile-actions__action';
+
+      try {
+        await page.waitForSelector(followButtonSelector, { timeout: 2000, state: 'attached' });
+        const followButtonText = await page.$eval(
+            `${followButtonSelector} span.artdeco-button__text`,
+            (span) => span.textContent?.trim()
+        );
+
+        if (followButtonText === 'Follow') {
+          const moreButtonSelector = 'button.artdeco-dropdown__trigger';
+          await page.click(moreButtonSelector);
+
+          await page.waitForSelector('div.artdeco-dropdown__content-inner', { timeout: 2000 });
+
+          const connectOptionExists = await page.evaluate(() => {
+            const dropdownItems = Array.from(document.querySelectorAll('.artdeco-dropdown__item span.display-flex'));
+            return dropdownItems.some(item => item.textContent?.trim() === 'Connect');
+          });
+
+          if (connectOptionExists) {
+            return 'Not Sent';
+          }
+        }
+      } catch (followError) {
+      }
+
+      return 'Accepted';
+
+    } catch (err) {
+      throw LinkedinAutomationService.handleError(err);
+    } finally {
+      await browser.close();
+    }
+  }
+
   async getConnectionsNew(): Promise<
     [results: string[], error: StandardError | null]
   > {

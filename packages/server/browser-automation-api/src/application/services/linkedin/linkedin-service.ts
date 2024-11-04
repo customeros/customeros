@@ -144,6 +144,29 @@ export class LinkedinService {
     }
   }
 
+  async checkConnectionStatus(payload: unknown) {
+    const { profileUrl } = payload as {
+      profileUrl: string;
+    };
+
+    try {
+      logger.info("Getting connection status", {
+        source: "LinkedinService",
+      });
+      const connectionStatus = await this.linkedinAutomationService.checkConnectionStatus(profileUrl);
+
+      logger.info("Connection status retrieved", {
+        source: "LinkedinService",
+      });
+      return { profileUrl, connectionStatus };
+    } catch (err) {
+      logger.info("Failed to get connection status", {
+        source: "LinkedinService",
+      });
+      throw LinkedinService.handleError(err);
+    }
+  }
+
   async retrieveMessages(payload: unknown) {
     const { profileUrl } = payload as {
       profileUrl: string;

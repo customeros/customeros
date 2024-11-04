@@ -38,3 +38,23 @@ export const sendMessageValidators = [
     .isBoolean()
     .withMessage("dryRun field must be a boolean"),
 ];
+
+export const connectionStatusValidators = [
+  body("profileUrl")
+    .notEmpty()
+    .withMessage("profileUrl field is required")
+    .isString()
+    .withMessage("profileUrl field must be a string")
+    .isURL()
+    .withMessage("Invalid URL"),
+];
+
+export const messagesRetrievalValidators = [
+  body("profileUrl")
+    .notEmpty()
+    .withMessage("profileUrl field is required")
+    .isString()
+    .withMessage("profileUrl field must be a string")
+    .isURL()
+    .withMessage("Invalid URL"),
+];
