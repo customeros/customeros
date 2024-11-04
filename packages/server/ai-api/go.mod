@@ -78,7 +78,7 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/mrz1836/postmark v1.6.5 // indirect
-	github.com/neo4j/neo4j-go-driver/v5 v5.25.0 // indirect
+	github.com/neo4j/neo4j-go-driver/v5 v5.26.0 // indirect
 	github.com/novuhq/go-novu v0.1.2 // indirect
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository v0.0.0-20240410144729-44cbe53c019c // indirect
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository v0.0.0-20240410144729-44cbe53c019c // indirect

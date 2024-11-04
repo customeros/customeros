@@ -14,7 +14,7 @@ require (
 	github.com/docker/docker v27.3.1+incompatible
 	github.com/forPelevin/gomoji v1.2.0
 	github.com/google/uuid v1.6.0
-	github.com/neo4j/neo4j-go-driver/v5 v5.25.0
+	github.com/neo4j/neo4j-go-driver/v5 v5.26.0
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240925071556-618778a7336e
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pkg/errors v0.9.1
