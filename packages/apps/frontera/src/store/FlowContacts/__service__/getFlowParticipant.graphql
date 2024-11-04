@@ -1,0 +1,10 @@
+query getFlowParticipant($id: ID!) {
+  flowParticipant(id: $id) {
+    contact {
+      metadata {
+        id
+      }
+    }
+    status
+  }
+}
