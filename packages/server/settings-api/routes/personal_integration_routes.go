@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
 	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 
 	"github.com/gin-gonic/gin"
@@ -13,7 +12,7 @@ import (
 func InitPersonalIntegrationRoutes(r *gin.Engine, services *service.Services) {
 	r.GET("/personal_integrations/:integrationName",
 		security.TenantUserContextEnhancer(security.USERNAME, services.CommonServices.Neo4jRepositories),
-		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.SETTINGS_API, security.WithCache(caches.NewCommonCache())),
+		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.SETTINGS_API, security.WithCache(services.CommonServices.Cache)),
 		func(c *gin.Context) {
 			tenantName := c.Keys["TenantName"].(string)
 			userMail := c.Keys["UserEmail"].(string)
@@ -34,7 +33,7 @@ func InitPersonalIntegrationRoutes(r *gin.Engine, services *service.Services) {
 
 	r.GET("/personal_integrations/",
 		security.TenantUserContextEnhancer(security.USERNAME, services.CommonServices.Neo4jRepositories),
-		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.SETTINGS_API, security.WithCache(caches.NewCommonCache())),
+		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.SETTINGS_API, security.WithCache(services.CommonServices.Cache)),
 		func(c *gin.Context) {
 			tenantName := c.Keys["TenantName"].(string)
 			userMail := c.Keys["UserEmail"].(string)
@@ -58,7 +57,7 @@ func InitPersonalIntegrationRoutes(r *gin.Engine, services *service.Services) {
 
 	r.POST("/personal_integrations",
 		security.TenantUserContextEnhancer(security.USERNAME, services.CommonServices.Neo4jRepositories),
-		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.SETTINGS_API, security.WithCache(caches.NewCommonCache())),
+		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.SETTINGS_API, security.WithCache(services.CommonServices.Cache)),
 		func(c *gin.Context) {
 			var request map[string]interface{}
 

@@ -2,8 +2,6 @@ package routes
 
 import (
 	"context"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
-
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	commonUtils "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -13,7 +11,7 @@ import (
 func InitUserSettingsRoutes(r *gin.Engine, services *service.Services) {
 	r.GET("/user/settings/oauth/:tenant",
 		security.TenantUserContextEnhancer(security.USERNAME, services.CommonServices.Neo4jRepositories),
-		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.SETTINGS_API, security.WithCache(caches.NewCommonCache())),
+		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.SETTINGS_API, security.WithCache(services.CommonServices.Cache)),
 
 		func(c *gin.Context) {
 			contextWithTimeout, cancel := commonUtils.GetLongLivedContext(context.Background())
@@ -31,7 +29,7 @@ func InitUserSettingsRoutes(r *gin.Engine, services *service.Services) {
 
 	r.GET("/user/settings/slack",
 		security.TenantUserContextEnhancer(security.USERNAME, services.CommonServices.Neo4jRepositories),
-		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.SETTINGS_API, security.WithCache(caches.NewCommonCache())),
+		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.SETTINGS_API, security.WithCache(services.CommonServices.Cache)),
 
 		func(c *gin.Context) {
 			tenant, _ := c.Get(security.KEY_TENANT_NAME)

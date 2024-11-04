@@ -3,7 +3,6 @@ package routes
 import (
 	"context"
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	commonUtils "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
@@ -21,7 +20,7 @@ func InitTenantSettingsRoutes(ctx context.Context, r *gin.Engine, services *serv
 	r.POST("/tenant/settings/organizationStage/:id",
 		tracing.TracingEnhancer(ctx, "/enrichPerson"),
 		security.TenantUserContextEnhancer(security.USERNAME, services.CommonServices.Neo4jRepositories),
-		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.SETTINGS_API, security.WithCache(caches.NewCommonCache())),
+		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.SETTINGS_API, security.WithCache(services.CommonServices.Cache)),
 		func(ginContext *gin.Context) {
 			c, cancel := commonUtils.GetContextWithTimeout(context.Background(), 30*time.Second)
 			defer cancel()
@@ -70,7 +69,7 @@ func InitTenantSettingsRoutes(ctx context.Context, r *gin.Engine, services *serv
 	r.GET("/tenant/settings/apiKey",
 		tracing.TracingEnhancer(ctx, "GET /tenant/settings/apiKey"),
 		security.TenantUserContextEnhancer(security.USERNAME, services.CommonServices.Neo4jRepositories),
-		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.SETTINGS_API, security.WithCache(caches.NewCommonCache())),
+		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.SETTINGS_API, security.WithCache(services.CommonServices.Cache)),
 		func(c *gin.Context) {
 			span, ctx := opentracing.StartSpanFromContext(c.Request.Context(), "GetApiKey")
 			defer span.Finish()

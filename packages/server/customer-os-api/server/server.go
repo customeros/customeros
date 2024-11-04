@@ -33,7 +33,6 @@ import (
 	cosHandler "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/metrics"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
-	commonCaches "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
@@ -121,8 +120,6 @@ func (server *server) Run(parentCtx context.Context) error {
 	postgresDb, _ := InitDB(server.cfg, server.log)
 	defer postgresDb.SqlDB.Close()
 
-	commonCache := commonCaches.NewCommonCache()
-
 	serviceContainer := service.InitServices(server.log, &neo4jDriver, server.cfg, commonServices, grpcContainer, postgresDb.GormDB)
 	r.Use(cors.New(corsConfig))
 	r.Use(ginzap.GinzapWithConfig(server.log.Logger(), &ginzap.Config{
@@ -142,8 +139,8 @@ func (server *server) Run(parentCtx context.Context) error {
 	// graphql routes
 	r.POST("/query",
 		tracing.GraphQlTracingEnhancer(ctx),
-		apiKeyCheckerHTTPMiddleware(commonServices.PostgresRepositories.TenantWebhookApiKeyRepository, commonServices.PostgresRepositories.AppKeyRepository, security.CUSTOMER_OS_API, security.WithCache(commonCache)),
-		tenantUserContextEnhancerMiddleware(security.USERNAME_OR_TENANT, commonServices.Neo4jRepositories, security.WithCache(commonCache)),
+		apiKeyCheckerHTTPMiddleware(commonServices.PostgresRepositories.TenantWebhookApiKeyRepository, commonServices.PostgresRepositories.AppKeyRepository, security.CUSTOMER_OS_API, security.WithCache(commonServices.Cache)),
+		tenantUserContextEnhancerMiddleware(security.USERNAME_OR_TENANT, commonServices.Neo4jRepositories, security.WithCache(commonServices.Cache)),
 		server.graphqlHandler(grpcContainer, serviceContainer))
 	r.POST("/admin/query",
 		tracing.GraphQlTracingEnhancer(ctx),
@@ -159,7 +156,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	}
 
 	// rest routes
-	RegisterRestRoutes(ctx, r, grpcContainer, serviceContainer, commonCache)
+	RegisterRestRoutes(ctx, r, grpcContainer, serviceContainer, commonServices.Cache)
 
 	if server.cfg.ApiPort == server.cfg.MetricsPort {
 		r.GET(server.cfg.Metrics.PrometheusPath, metricsHandler)

@@ -8,7 +8,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/ai-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/ai-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai/dto"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	"github.com/sirupsen/logrus"
@@ -41,7 +40,7 @@ func main() {
 	r.Use(cors.New(corsConfig))
 
 	r.POST("/ask-openai",
-		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.AI_API, security.WithCache(caches.NewCommonCache())),
+		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.AI_API, security.WithCache(services.CommonServices.Cache)),
 		func(c *gin.Context) {
 			var request dto.OpenAiApiRequest
 
@@ -71,7 +70,7 @@ func main() {
 		})
 
 	r.POST("/ask-anthropic",
-		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.AI_API, security.WithCache(caches.NewCommonCache())),
+		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.AI_API, security.WithCache(services.CommonServices.Cache)),
 		func(c *gin.Context) {
 			var request dto.AnthropicApiRequest
 

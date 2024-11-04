@@ -2,7 +2,6 @@ package routes
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/service"
@@ -11,7 +10,7 @@ import (
 func InitIntegrationRoutes(r *gin.Engine, services *service.Services) {
 	r.GET("/integrations",
 		security.TenantUserContextEnhancer(security.USERNAME, services.CommonServices.Neo4jRepositories),
-		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.SETTINGS_API, security.WithCache(caches.NewCommonCache())),
+		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.SETTINGS_API, security.WithCache(services.CommonServices.Cache)),
 		func(c *gin.Context) {
 			tenantName := c.Keys["TenantName"].(string)
 
@@ -27,7 +26,7 @@ func InitIntegrationRoutes(r *gin.Engine, services *service.Services) {
 
 	r.POST("/integration",
 		security.TenantUserContextEnhancer(security.USERNAME, services.CommonServices.Neo4jRepositories),
-		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.SETTINGS_API, security.WithCache(caches.NewCommonCache())),
+		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.SETTINGS_API, security.WithCache(services.CommonServices.Cache)),
 		func(c *gin.Context) {
 			var request map[string]interface{}
 
@@ -50,7 +49,7 @@ func InitIntegrationRoutes(r *gin.Engine, services *service.Services) {
 
 	r.DELETE("/integration/:identifier",
 		security.TenantUserContextEnhancer(security.USERNAME, services.CommonServices.Neo4jRepositories),
-		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.SETTINGS_API, security.WithCache(caches.NewCommonCache())),
+		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.SETTINGS_API, security.WithCache(services.CommonServices.Cache)),
 		func(c *gin.Context) {
 			identifier := c.Param("identifier")
 			if identifier == "" {

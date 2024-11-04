@@ -6,7 +6,6 @@ import (
 	"github.com/gin-contrib/cors"
 	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
-	commoncaches "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
 	commonconf "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
@@ -97,9 +96,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	// Setting up services
 	serviceContainer := service.InitServices(&neo4jDriver, postgresDb.GormDB, server.cfg, grpcContainer, server.log)
 
-	commonCache := commoncaches.NewCommonCache()
-
-	route.AddOrganizationRoutes(ctx, r, serviceContainer, server.log, commonCache)
+	route.AddOrganizationRoutes(ctx, r, serviceContainer, server.log, serviceContainer.CommonServices.Cache)
 
 	r.GET("/health", HealthCheckHandler)
 	r.GET("/readiness", ReadinessHandler)

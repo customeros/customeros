@@ -6,7 +6,6 @@ import (
 	"github.com/gin-contrib/cors"
 	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
-	commoncaches "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
 	commonconf "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
@@ -103,18 +102,16 @@ func (server *server) Run(parentCtx context.Context) error {
 	// Setting up services
 	serviceContainer := service.InitServices(server.log, &neo4jDriver, postgresDb.GormDB, server.cfg, commonServices, grpcContainer, appCache)
 
-	commonCache := commoncaches.NewCommonCache()
-
-	route.AddExternalSystemRoutes(ctx, r, serviceContainer, server.log, commonCache)
-	route.AddUserRoutes(ctx, r, serviceContainer, server.log, commonCache)
-	route.AddOrganizationRoutes(ctx, r, serviceContainer, server.log, commonCache)
-	route.AddLogEntryRoutes(ctx, r, serviceContainer, server.log, commonCache)
-	route.AddContactRoutes(ctx, r, server.cfg, serviceContainer, server.log, commonCache)
-	route.AddIssueRoutes(ctx, r, serviceContainer, server.log, commonCache)
-	route.AddInteractionEventRoutes(ctx, r, serviceContainer, server.cfg, server.log, commonCache)
-	route.AddCommentRoutes(ctx, r, serviceContainer, server.log, commonCache)
-	route.AddInvoiceRoutes(ctx, r, serviceContainer, server.log, commonCache)
-	route.AddSlackRoutes(ctx, r, serviceContainer, server.log, commonCache)
+	route.AddExternalSystemRoutes(ctx, r, serviceContainer, server.log, serviceContainer.CommonServices.Cache)
+	route.AddUserRoutes(ctx, r, serviceContainer, server.log, serviceContainer.CommonServices.Cache)
+	route.AddOrganizationRoutes(ctx, r, serviceContainer, server.log, serviceContainer.CommonServices.Cache)
+	route.AddLogEntryRoutes(ctx, r, serviceContainer, server.log, serviceContainer.CommonServices.Cache)
+	route.AddContactRoutes(ctx, r, server.cfg, serviceContainer, server.log, serviceContainer.CommonServices.Cache)
+	route.AddIssueRoutes(ctx, r, serviceContainer, server.log, serviceContainer.CommonServices.Cache)
+	route.AddInteractionEventRoutes(ctx, r, serviceContainer, server.cfg, server.log, serviceContainer.CommonServices.Cache)
+	route.AddCommentRoutes(ctx, r, serviceContainer, server.log, serviceContainer.CommonServices.Cache)
+	route.AddInvoiceRoutes(ctx, r, serviceContainer, server.log, serviceContainer.CommonServices.Cache)
+	route.AddSlackRoutes(ctx, r, serviceContainer, server.log, serviceContainer.CommonServices.Cache)
 	route.AddEmailRoutes(ctx, r, server.cfg, serviceContainer)
 
 	r.GET("/health", HealthCheckHandler)

@@ -2,7 +2,6 @@ package routes
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	_ "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
@@ -13,7 +12,7 @@ func InitMailboxesRoutes(r *gin.Engine, services *service.Services) {
 
 	r.GET("/mailboxes",
 		security.TenantUserContextEnhancer(security.TENANT, services.CommonServices.Neo4jRepositories),
-		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.SETTINGS_API, security.WithCache(caches.NewCommonCache())),
+		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.SETTINGS_API, security.WithCache(services.CommonServices.Cache)),
 		getMailboxesHandler(services))
 
 }

@@ -8,7 +8,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/machinebox/graphql"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
 	commonconf "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	fsc "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/file_store_client"
 	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
@@ -96,13 +95,11 @@ func main() {
 
 	r.Use(cors.New(corsConfig))
 
-	commonCache := caches.NewCommonCache()
-
 	r.POST("/file",
 		tracing.TracingEnhancer(ctx, "POST /file"),
 		jwtTennantUserService.GetJWTTenantUserEnhancer(),
-		security.TenantUserContextEnhancer(security.USERNAME_OR_TENANT, commonServices.Neo4jRepositories, security.WithCache(commonCache)),
-		security.ApiKeyCheckerHTTP(commonServices.PostgresRepositories.TenantWebhookApiKeyRepository, commonServices.PostgresRepositories.AppKeyRepository, security.FILE_STORE_API, security.WithCache(commonCache)),
+		security.TenantUserContextEnhancer(security.USERNAME_OR_TENANT, commonServices.Neo4jRepositories, security.WithCache(commonServices.Cache)),
+		security.ApiKeyCheckerHTTP(commonServices.PostgresRepositories.TenantWebhookApiKeyRepository, commonServices.PostgresRepositories.AppKeyRepository, security.FILE_STORE_API, security.WithCache(commonServices.Cache)),
 		func(ctx *gin.Context) {
 			tenantName, _ := ctx.Keys["TenantName"].(string)
 			userEmail, _ := ctx.Keys["UserEmail"].(string)
@@ -128,8 +125,8 @@ func main() {
 	r.GET("/file/:id",
 		tracing.TracingEnhancer(ctx, "GET /file/:id"),
 		jwtTennantUserService.GetJWTTenantUserEnhancer(),
-		security.TenantUserContextEnhancer(security.USERNAME_OR_TENANT, commonServices.Neo4jRepositories, security.WithCache(commonCache)),
-		security.ApiKeyCheckerHTTP(commonServices.PostgresRepositories.TenantWebhookApiKeyRepository, commonServices.PostgresRepositories.AppKeyRepository, security.FILE_STORE_API, security.WithCache(commonCache)),
+		security.TenantUserContextEnhancer(security.USERNAME_OR_TENANT, commonServices.Neo4jRepositories, security.WithCache(commonServices.Cache)),
+		security.ApiKeyCheckerHTTP(commonServices.PostgresRepositories.TenantWebhookApiKeyRepository, commonServices.PostgresRepositories.AppKeyRepository, security.FILE_STORE_API, security.WithCache(commonServices.Cache)),
 		func(ctx *gin.Context) {
 			tenantName, _ := ctx.Keys["TenantName"].(string)
 			userEmail, _ := ctx.Keys["UserEmail"].(string)
@@ -149,8 +146,8 @@ func main() {
 	r.GET("/file/:id/download",
 		tracing.TracingEnhancer(ctx, "GET /file/:id/download"),
 		jwtTennantUserService.GetJWTTenantUserEnhancer(),
-		security.TenantUserContextEnhancer(security.USERNAME_OR_TENANT, commonServices.Neo4jRepositories, security.WithCache(commonCache)),
-		security.ApiKeyCheckerHTTP(commonServices.PostgresRepositories.TenantWebhookApiKeyRepository, commonServices.PostgresRepositories.AppKeyRepository, security.FILE_STORE_API, security.WithCache(commonCache)),
+		security.TenantUserContextEnhancer(security.USERNAME_OR_TENANT, commonServices.Neo4jRepositories, security.WithCache(commonServices.Cache)),
+		security.ApiKeyCheckerHTTP(commonServices.PostgresRepositories.TenantWebhookApiKeyRepository, commonServices.PostgresRepositories.AppKeyRepository, security.FILE_STORE_API, security.WithCache(commonServices.Cache)),
 		func(c *gin.Context) {
 			tenantName, _ := c.Keys["TenantName"].(string)
 			userEmail, _ := c.Keys["UserEmail"].(string)
@@ -167,8 +164,8 @@ func main() {
 	r.GET("/file/:id/base64",
 		tracing.TracingEnhancer(ctx, "GET /file/:id/base64"),
 		jwtTennantUserService.GetJWTTenantUserEnhancer(),
-		security.TenantUserContextEnhancer(security.USERNAME_OR_TENANT, commonServices.Neo4jRepositories, security.WithCache(commonCache)),
-		security.ApiKeyCheckerHTTP(commonServices.PostgresRepositories.TenantWebhookApiKeyRepository, commonServices.PostgresRepositories.AppKeyRepository, security.FILE_STORE_API, security.WithCache(commonCache)),
+		security.TenantUserContextEnhancer(security.USERNAME_OR_TENANT, commonServices.Neo4jRepositories, security.WithCache(commonServices.Cache)),
+		security.ApiKeyCheckerHTTP(commonServices.PostgresRepositories.TenantWebhookApiKeyRepository, commonServices.PostgresRepositories.AppKeyRepository, security.FILE_STORE_API, security.WithCache(commonServices.Cache)),
 		func(ctx *gin.Context) {
 			tenantName, _ := ctx.Keys["TenantName"].(string)
 			userEmail, _ := ctx.Keys["UserEmail"].(string)
@@ -189,8 +186,8 @@ func main() {
 	r.GET("/file/:id/public-url",
 		tracing.TracingEnhancer(ctx, "GET /file/:id/public-url"),
 		jwtTennantUserService.GetJWTTenantUserEnhancer(),
-		security.TenantUserContextEnhancer(security.USERNAME_OR_TENANT, commonServices.Neo4jRepositories, security.WithCache(commonCache)),
-		security.ApiKeyCheckerHTTP(commonServices.PostgresRepositories.TenantWebhookApiKeyRepository, commonServices.PostgresRepositories.AppKeyRepository, security.FILE_STORE_API, security.WithCache(commonCache)),
+		security.TenantUserContextEnhancer(security.USERNAME_OR_TENANT, commonServices.Neo4jRepositories, security.WithCache(commonServices.Cache)),
+		security.ApiKeyCheckerHTTP(commonServices.PostgresRepositories.TenantWebhookApiKeyRepository, commonServices.PostgresRepositories.AppKeyRepository, security.FILE_STORE_API, security.WithCache(commonServices.Cache)),
 		func(ctx *gin.Context) {
 			tenantName, _ := ctx.Keys["TenantName"].(string)
 
@@ -213,8 +210,8 @@ func main() {
 
 	r.GET("/jwt",
 		tracing.TracingEnhancer(ctx, "GET /jwt"),
-		security.TenantUserContextEnhancer(security.USERNAME, commonServices.Neo4jRepositories, security.WithCache(commonCache)),
-		security.ApiKeyCheckerHTTP(commonServices.PostgresRepositories.TenantWebhookApiKeyRepository, commonServices.PostgresRepositories.AppKeyRepository, security.FILE_STORE_API, security.WithCache(commonCache)),
+		security.TenantUserContextEnhancer(security.USERNAME, commonServices.Neo4jRepositories, security.WithCache(commonServices.Cache)),
+		security.ApiKeyCheckerHTTP(commonServices.PostgresRepositories.TenantWebhookApiKeyRepository, commonServices.PostgresRepositories.AppKeyRepository, security.FILE_STORE_API, security.WithCache(commonServices.Cache)),
 		func(ctx *gin.Context) {
 			jwtTennantUserService.MakeJWT(ctx)
 		})
