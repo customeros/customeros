@@ -6,12 +6,14 @@ import (
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
+	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
 	"github.com/opentracing/opentracing-go"
@@ -34,6 +36,7 @@ type InvoiceService interface {
 	NextInvoiceDryRun(ctx context.Context, contractId, appSource string) (string, error)
 	PayInvoice(ctx context.Context, invoiceId, appSource string) error
 	VoidInvoice(ctx context.Context, invoiceId, appSource string) error
+	UpdateInvoice(ctx context.Context, invoiceId string, data neo4jrepository.InvoiceUpdateFields) error
 
 	FillCycleInvoice(ctx context.Context, invoiceEntity *neo4jentity.InvoiceEntity, sliEntities neo4jentity.ServiceLineItemEntities) (*neo4jentity.InvoiceEntity, []*invoicepb.InvoiceLine, error)
 	// Deprecated: Method should be re-worked. DO NOT ENABLE IN PROD
@@ -48,6 +51,14 @@ func NewInvoiceService(services *Services) InvoiceService {
 	return &invoiceService{
 		services: services,
 	}
+}
+
+type InvoiceActionMetadata struct {
+	Status        string  `json:"status"`
+	Currency      string  `json:"currency"`
+	Amount        float64 `json:"amount"`
+	InvoiceNumber string  `json:"number"`
+	InvoiceId     string  `json:"id"`
 }
 
 type SimulateInvoiceRequestData struct {
@@ -1044,4 +1055,112 @@ func (s *invoiceService) GetNonDryRunInvoicesForOrganization(ctx context.Context
 		invoiceEntities = append(invoiceEntities, *invoiceEntity)
 	}
 	return &invoiceEntities, nil
+}
+
+func (s *invoiceService) UpdateInvoice(ctx context.Context, invoiceId string, data neo4jrepository.InvoiceUpdateFields) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.UpdateInvoice")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.TagEntity(span, invoiceId)
+	span.LogFields(log.String("invoiceId", invoiceId))
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+
+	invoiceEntityBeforeUpdate, err := s.GetById(ctx, invoiceId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error while getting invoice %s: %s", invoiceId, err.Error())
+		return err
+	}
+
+	err = s.services.Neo4jRepositories.InvoiceWriteRepository.UpdateInvoice(ctx, tenant, invoiceId, data)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	invoiceEntityAfterUpdate, err := s.GetById(ctx, invoiceId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error while getting invoice %s: %s", invoiceId, err.Error())
+		return err
+	}
+
+	s.createInvoiceAction(ctx, tenant, invoiceEntityBeforeUpdate.Status, *invoiceEntityAfterUpdate)
+
+	// status changed
+	if invoiceEntityBeforeUpdate.Status != invoiceEntityAfterUpdate.Status {
+		if invoiceEntityAfterUpdate.Status == neo4jenum.InvoiceStatusVoid {
+			err = s.VoidInvoice(ctx, invoiceId, common.GetAppSourceFromContext(ctx))
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "void invoice"))
+				s.log.Errorf("Error while voiding invoice %s: %s", invoiceId, err.Error())
+			}
+		}
+	}
+
+	return nil
+}
+
+func (s *invoiceService) createInvoiceAction(ctx context.Context, tenant string, previousStatus neo4jenum.InvoiceStatus, invoiceEntity neo4jentity.InvoiceEntity) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceEventHandler.createInvoiceAction")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, tenant)
+	span.LogFields(log.String("invoiceId", invoiceEntity.Id))
+	span.LogFields(log.String("previousStatus", previousStatus.String()))
+	span.LogFields(log.String("newStatus", invoiceEntity.Status.String()))
+	span.LogFields(log.Bool("dryRun", invoiceEntity.DryRun))
+	span.LogFields(log.Float64("totalAmount", invoiceEntity.TotalAmount))
+
+	if previousStatus == invoiceEntity.Status {
+		return
+	}
+	if invoiceEntity.DryRun || invoiceEntity.TotalAmount == float64(0) {
+		span.LogFields(log.String("result", "dry run or total amount is 0"))
+		return
+	}
+
+	metadata, err := utils.ToJson(InvoiceActionMetadata{
+		Status:        invoiceEntity.Status.String(),
+		Currency:      invoiceEntity.Currency.String(),
+		Amount:        invoiceEntity.TotalAmount,
+		InvoiceNumber: invoiceEntity.Number,
+		InvoiceId:     invoiceEntity.Id,
+	})
+
+	actionType := neo4jenum.ActionNA
+	message := ""
+	switch invoiceEntity.Status {
+	case neo4jenum.InvoiceStatusDue:
+		message = "Invoice N° " + invoiceEntity.Number + " issued with an amount of " + invoiceEntity.Currency.Symbol() + utils.FormatAmount(invoiceEntity.TotalAmount, 2)
+		actionType = neo4jenum.ActionInvoiceIssued
+	case neo4jenum.InvoiceStatusPaid:
+		message = "Invoice N° " + invoiceEntity.Number + " paid in full: " + invoiceEntity.Currency.Symbol() + utils.FormatAmount(invoiceEntity.TotalAmount, 2)
+		actionType = neo4jenum.ActionInvoicePaid
+	case neo4jenum.InvoiceStatusVoid:
+		message = "Invoice N° " + invoiceEntity.Number + " voided"
+		actionType = neo4jenum.ActionInvoiceVoided
+	case neo4jenum.InvoiceStatusOverdue:
+		message = "Invoice N° " + invoiceEntity.Number + " overdue"
+		actionType = neo4jenum.ActionInvoiceOverdue
+	}
+	if actionType == neo4jenum.ActionNA {
+		span.LogFields(log.String("result", "status not supported"))
+		return
+	}
+	if invoiceEntity.Status == neo4jenum.InvoiceStatusDue {
+		_, err = s.services.Neo4jRepositories.ActionWriteRepository.MergeByActionType(ctx, nil, tenant, invoiceEntity.Id, model.INVOICE, actionType, message, metadata, utils.Now(), common.GetAppSourceFromContext(ctx))
+	} else {
+		_, err = s.services.Neo4jRepositories.ActionWriteRepository.Create(ctx, tenant, invoiceEntity.Id, model.INVOICE, actionType, message, metadata, utils.Now(), common.GetAppSourceFromContext(ctx))
+	}
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Failed creating invoice action for invoice %s: %s", invoiceEntity.Id, err.Error())
+	}
 }

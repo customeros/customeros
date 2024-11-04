@@ -10,6 +10,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
+	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"time"
@@ -139,7 +140,7 @@ func (r *actionWriteRepository) MergeByActionType(ctx context.Context, tx *neo4j
 		"metadata":      metadata,
 		"source":        constants.SourceOpenline,
 		"sourceOfTruth": constants.SourceOpenline,
-		"appSource":     appSource,
+		"appSource":     neo4jmodel.GetAppSource(appSource),
 		"createdAt":     createdAt,
 	}
 	span.LogFields(log.String("cypher", cypher))
