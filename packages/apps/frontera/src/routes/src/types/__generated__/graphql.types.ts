@@ -1986,7 +1986,6 @@ export type JobRole = {
   organization?: Maybe<Organization>;
   primary: Scalars['Boolean']['output'];
   source: DataSource;
-  sourceOfTruth: DataSource;
   startedAt?: Maybe<Scalars['Time']['output']>;
   updatedAt: Scalars['Time']['output'];
 };
@@ -3925,6 +3924,7 @@ export type Query = {
   externalMeetings: MeetingsPage;
   externalSystemInstances: Array<ExternalSystemInstance>;
   flow: Flow;
+  flowParticipant: FlowContact;
   flow_emailVariables: Array<EmailVariableEntity>;
   flows: Array<Flow>;
   gcli_Search: Array<GCliItem>;
@@ -4052,6 +4052,10 @@ export type QueryExternalMeetingsArgs = {
 };
 
 export type QueryFlowArgs = {
+  id: Scalars['ID']['input'];
+};
+
+export type QueryFlowParticipantArgs = {
   id: Scalars['ID']['input'];
 };
 

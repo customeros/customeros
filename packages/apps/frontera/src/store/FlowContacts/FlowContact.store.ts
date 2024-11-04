@@ -49,7 +49,21 @@ export class FlowContactStore implements Store<FlowContact> {
     this.value.metadata.id = id;
   }
 
-  async invalidate() {}
+  async invalidate() {
+    try {
+      const { flowParticipant } = await this.service.getFlowParticipant({
+        id: this.id,
+      });
+
+      runInAction(() => {
+        this.value = flowParticipant as FlowContact;
+      });
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error)?.message;
+      });
+    }
+  }
 
   public removeFlowContact = async () => {
     return this.service.deleteFlowContact({

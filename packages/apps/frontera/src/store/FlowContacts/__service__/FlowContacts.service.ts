@@ -6,6 +6,11 @@ import {
 } from '@store/FlowContacts/__service__/flowContactDelete.generated';
 
 import DeleteContactDocument from './flowContactDelete.graphql';
+import GetFlowParticipantDocument from './getFlowParticipant.graphql';
+import {
+  GetFlowParticipantQuery,
+  GetFlowParticipantQueryVariables,
+} from './getFlowParticipant.generated';
 
 class FlowContactsService {
   private static instance: FlowContactsService | null = null;
@@ -21,6 +26,13 @@ class FlowContactsService {
     }
 
     return FlowContactsService.instance;
+  }
+
+  async getFlowParticipant(payload: GetFlowParticipantQueryVariables) {
+    return this.transport.graphql.request<
+      GetFlowParticipantQuery,
+      GetFlowParticipantQueryVariables
+    >(GetFlowParticipantDocument, payload);
   }
 
   async deleteFlowContact(payload: FlowContactDeleteMutationVariables) {
