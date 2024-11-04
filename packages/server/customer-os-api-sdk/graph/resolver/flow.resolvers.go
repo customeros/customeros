@@ -87,6 +87,11 @@ func (r *queryResolver) Flows(ctx context.Context) ([]*model.Flow, error) {
 	panic(fmt.Errorf("not implemented: Flows - flows"))
 }
 
+// FlowParticipant is the resolver for the flowParticipant field.
+func (r *queryResolver) FlowParticipant(ctx context.Context, id string) (*model.FlowContact, error) {
+	panic(fmt.Errorf("not implemented: FlowParticipant - flowParticipant"))
+}
+
 // FlowEmailVariables is the resolver for the flow_emailVariables field.
 func (r *queryResolver) FlowEmailVariables(ctx context.Context) ([]*model.EmailVariableEntity, error) {
 	panic(fmt.Errorf("not implemented: FlowEmailVariables - flow_emailVariables"))
@@ -104,3 +109,13 @@ func (r *Resolver) FlowSender() generated.FlowSenderResolver { return &flowSende
 type flowResolver struct{ *Resolver }
 type flowContactResolver struct{ *Resolver }
 type flowSenderResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//     it when you're done.
+//   - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *queryResolver) FlowContact(ctx context.Context, id string) (*model.FlowContact, error) {
+	panic(fmt.Errorf("not implemented: FlowContact - flowContact"))
+}

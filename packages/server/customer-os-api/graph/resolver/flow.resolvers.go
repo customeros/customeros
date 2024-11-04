@@ -370,6 +370,21 @@ func (r *queryResolver) Flows(ctx context.Context) ([]*model.Flow, error) {
 	return mapper.MapEntitiesToFlows(entities), nil
 }
 
+// FlowParticipant is the resolver for the flowParticipant field.
+func (r *queryResolver) FlowParticipant(ctx context.Context, id string) (*model.FlowContact, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.FlowParticipant", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	entity, err := r.Services.CommonServices.FlowService.FlowParticipantById(ctx, id)
+	if err != nil || entity == nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "")
+		return nil, err
+	}
+	return mapper.MapEntityToFlowContact(entity), nil
+}
+
 // FlowEmailVariables is the resolver for the flow_emailVariables field.
 func (r *queryResolver) FlowEmailVariables(ctx context.Context) ([]*model.EmailVariableEntity, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.EmailVariables", graphql.GetOperationContext(ctx))

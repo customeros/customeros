@@ -5,6 +5,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -164,15 +165,22 @@ func (s *flowExecutionService) ComputeFlowStatistics() {
 				Tenant: tenant.Name,
 			})
 
+			flowChanged := false
+
 			onHold, err := s.commonServices.Neo4jRepositories.FlowParticipantReadRepository.CountWithStatus(ctx, flow.Id, neo4jEntity.FlowParticipantStatusOnHold)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return
 			}
-			err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateInt64Property(ctx, tenant.Name, model.NodeLabelFlow, flow.Id, "onHold", onHold)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				return
+
+			if flow.OnHold != onHold {
+				flowChanged = true
+
+				err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateInt64Property(ctx, tenant.Name, model.NodeLabelFlow, flow.Id, "onHold", onHold)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					return
+				}
 			}
 
 			ready, err := s.commonServices.Neo4jRepositories.FlowParticipantReadRepository.CountWithStatus(ctx, flow.Id, neo4jEntity.FlowParticipantStatusReady)
@@ -180,10 +188,15 @@ func (s *flowExecutionService) ComputeFlowStatistics() {
 				tracing.TraceErr(span, err)
 				return
 			}
-			err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateInt64Property(ctx, tenant.Name, model.NodeLabelFlow, flow.Id, "ready", ready)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				return
+
+			if flow.Ready != ready {
+				flowChanged = true
+
+				err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateInt64Property(ctx, tenant.Name, model.NodeLabelFlow, flow.Id, "ready", ready)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					return
+				}
 			}
 
 			scheduled, err := s.commonServices.Neo4jRepositories.FlowParticipantReadRepository.CountWithStatus(ctx, flow.Id, neo4jEntity.FlowParticipantStatusScheduled)
@@ -191,10 +204,15 @@ func (s *flowExecutionService) ComputeFlowStatistics() {
 				tracing.TraceErr(span, err)
 				return
 			}
-			err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateInt64Property(ctx, tenant.Name, model.NodeLabelFlow, flow.Id, "scheduled", scheduled)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				return
+
+			if flow.Scheduled != scheduled {
+				flowChanged = true
+
+				err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateInt64Property(ctx, tenant.Name, model.NodeLabelFlow, flow.Id, "scheduled", scheduled)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					return
+				}
 			}
 
 			inProgress, err := s.commonServices.Neo4jRepositories.FlowParticipantReadRepository.CountWithStatus(ctx, flow.Id, neo4jEntity.FlowParticipantStatusInProgress)
@@ -202,10 +220,15 @@ func (s *flowExecutionService) ComputeFlowStatistics() {
 				tracing.TraceErr(span, err)
 				return
 			}
-			err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateInt64Property(ctx, tenant.Name, model.NodeLabelFlow, flow.Id, "inProgress", inProgress)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				return
+
+			if flow.InProgress != inProgress {
+				flowChanged = true
+
+				err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateInt64Property(ctx, tenant.Name, model.NodeLabelFlow, flow.Id, "inProgress", inProgress)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					return
+				}
 			}
 
 			completed, err := s.commonServices.Neo4jRepositories.FlowParticipantReadRepository.CountWithStatus(ctx, flow.Id, neo4jEntity.FlowParticipantStatusCompleted)
@@ -213,10 +236,15 @@ func (s *flowExecutionService) ComputeFlowStatistics() {
 				tracing.TraceErr(span, err)
 				return
 			}
-			err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateInt64Property(ctx, tenant.Name, model.NodeLabelFlow, flow.Id, "completed", completed)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				return
+
+			if flow.Completed != completed {
+				flowChanged = true
+
+				err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateInt64Property(ctx, tenant.Name, model.NodeLabelFlow, flow.Id, "completed", completed)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					return
+				}
 			}
 
 			goalAchieved, err := s.commonServices.Neo4jRepositories.FlowParticipantReadRepository.CountWithStatus(ctx, flow.Id, neo4jEntity.FlowParticipantStatusGoalAchieved)
@@ -224,13 +252,28 @@ func (s *flowExecutionService) ComputeFlowStatistics() {
 				tracing.TraceErr(span, err)
 				return
 			}
-			err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateInt64Property(ctx, tenant.Name, model.NodeLabelFlow, flow.Id, "goalAchieved", goalAchieved)
+
+			if flow.GoalAchieved != goalAchieved {
+				flowChanged = true
+
+				err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateInt64Property(ctx, tenant.Name, model.NodeLabelFlow, flow.Id, "goalAchieved", goalAchieved)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					return
+				}
+			}
+
+			if !flowChanged {
+				continue
+			}
+
+			err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateInt64Property(ctx, tenant.Name, model.NodeLabelFlow, flow.Id, "total", onHold+ready+inProgress+completed+goalAchieved)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return
 			}
 
-			err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateInt64Property(ctx, tenant.Name, model.NodeLabelFlow, flow.Id, "total", onHold+ready+inProgress+completed+goalAchieved)
+			err = s.commonServices.RabbitMQService.PublishEvent(ctx, flow.Id, model.FLOW, dto.FlowComputeParticipantsRequirements{})
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return

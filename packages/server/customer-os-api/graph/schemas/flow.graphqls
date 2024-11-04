@@ -1,6 +1,8 @@
 extend type Query {
     flow(id: ID!): Flow! @hasRole(roles: [ADMIN, USER]) @hasTenant
     flows: [Flow!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+
+    flowParticipant(id: ID!): FlowContact! @hasRole(roles: [ADMIN, USER]) @hasTenant
     flow_emailVariables: [EmailVariableEntity!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 

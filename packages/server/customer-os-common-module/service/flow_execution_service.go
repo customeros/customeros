@@ -252,6 +252,8 @@ func (s *flowExecutionService) scheduleNextAction(ctx context.Context, tx *neo4j
 	switch nextAction.Data.Action {
 	case entity.FlowActionTypeEmailNew, entity.FlowActionTypeEmailReply:
 		return s.scheduleEmailAction(ctx, tx, flowId, flowParticipant, scheduleAt, nextAction)
+	//case entity.FlowActionTypeLinkedinConnectionRequest:
+	//	return s.scheduleEmailAction(ctx, tx, flowId, flowParticipant, scheduleAt, nextAction)
 	default:
 		tracing.TraceErr(span, fmt.Errorf("Unsupported action type %s", nextAction.Data.Action))
 		return errors.New("Unsupported action type")
