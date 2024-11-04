@@ -199,7 +199,9 @@ export const FlowBuilder = observer(
         deleted.forEach((node) => {
           if (
             node.data.action === FlowActionType.EMAIL_NEW ||
-            node.data.action === FlowActionType.EMAIL_REPLY
+            node.data.action === FlowActionType.EMAIL_REPLY ||
+            node.data.action === FlowActionType.LINKEDIN_MESSAGE ||
+            node.data.action === FlowActionType.LINKEDIN_CONNECTION_REQUEST
           ) {
             const incomers = getIncomers(node, nodes, edges);
             const precedingWaitNode = incomers.find((n) => n.type === 'wait');

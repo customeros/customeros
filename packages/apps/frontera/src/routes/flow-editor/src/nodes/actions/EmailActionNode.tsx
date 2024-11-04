@@ -20,7 +20,6 @@ const iconMap: Record<string, ReactElement> = {
 const colorMap: Record<string, string> = {
   [FlowActionType.EMAIL_NEW]: 'blue',
   [FlowActionType.EMAIL_REPLY]: 'blue',
-  [FlowActionType.SEND_CONNECTION_REQUEST]: 'blue',
 };
 
 export const EmailActionNode = ({
