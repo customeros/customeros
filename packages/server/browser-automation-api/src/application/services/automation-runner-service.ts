@@ -60,7 +60,7 @@ export class AutomationRunnerService {
           result = await linkedinService.checkConnectionStatus(payload);
           break;
         case "GET_RECENT_POSTS":
-          result = await linkedinService.getRecentPosts(payload);
+          result = await linkedinService.retrieveRecentPosts(payload);
           break;
         default:
           throw new StandardError({

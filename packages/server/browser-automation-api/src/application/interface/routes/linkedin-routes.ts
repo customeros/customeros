@@ -52,6 +52,6 @@ export class LinkedinRouter {
     this.router.post(
       "/get-recent-posts",
       ...recentPostsValidators,
-      this.connectionsController.getRecentPosts);
+      this.connectionsController.retrieveRecentPosts);
   }
 }

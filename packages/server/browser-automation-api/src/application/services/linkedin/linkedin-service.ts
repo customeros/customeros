@@ -167,7 +167,7 @@ export class LinkedinService {
     }
   }
 
-  async getRecentPosts(payload: unknown) {
+  async retrieveRecentPosts(payload: unknown) {
     const { profileUrl } = payload as {
       profileUrl: string;
     };
@@ -176,7 +176,7 @@ export class LinkedinService {
       logger.info("Retrieving recent posts", {
         source: "LinkedinService",
       });
-      const recentPosts = await this.linkedinAutomationService.getRecentPosts(profileUrl);
+      const recentPosts = await this.linkedinAutomationService.retrieveRecentPosts(profileUrl);
 
       logger.info("Recent posts retrieved", {
         source: "LinkedinService",

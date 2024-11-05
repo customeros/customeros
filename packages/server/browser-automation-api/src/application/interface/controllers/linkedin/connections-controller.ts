@@ -15,7 +15,7 @@ export class ConnectionsController {
     this.scrapeConnections = this.scrapeConnections.bind(this);
     this.downloadAllConnections = this.downloadAllConnections.bind(this);
     this.checkConnectionStatus = this.checkConnectionStatus.bind(this);
-    this.getRecentPosts = this.getRecentPosts.bind(this);
+    this.retrieveRecentPosts = this.retrieveRecentPosts.bind(this);
   }
 
   async checkConnectionStatus(req:Request, res:Response){
@@ -67,7 +67,7 @@ export class ConnectionsController {
     }
   }
 
-  async getRecentPosts(req:Request, res:Response){
+  async retrieveRecentPosts(req:Request, res:Response){
     const validationErrors = validationResult(req);
 
     if (!validationErrors.isEmpty()) {

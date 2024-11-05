@@ -525,7 +525,7 @@ export class LinkedinAutomationService {
     }
   }
 
-  async getRecentPosts(profileUrl: string): Promise<string[]> {
+  async retrieveRecentPosts(profileUrl: string): Promise<string[]> {
     const browser = await Browser.getFreshInstance(this.proxyConfig);
     const context = await browser.newContext({
       userAgent: this.userAgent,
@@ -536,6 +536,7 @@ export class LinkedinAutomationService {
 
     try {
       await page.goto(profileUrl, {timeout: 60 * 1000});
+      await page.waitForTimeout(3000)
 
       // First check if the "no posts" message exists
       const noPostsExists = await page.getByText("hasn't posted yet").isVisible();
