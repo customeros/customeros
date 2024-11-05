@@ -1466,13 +1466,13 @@ var file_contract_proto_depIdxs = []int32{
 	0,  // 14: UpdateContractGrpcRequest.fieldsMask:type_name -> ContractFieldMask
 	8,  // 15: UpdateContractGrpcRequest.nextInvoiceDate:type_name -> google.protobuf.Timestamp
 	1,  // 16: ContractGrpcService.CreateContract:input_type -> CreateContractGrpcRequest
-	2,  // 17: ContractGrpcService.UpdateContract:input_type -> UpdateContractGrpcRequest
+	2,  // 17: ContractGrpcService.UpdateContractOld:input_type -> UpdateContractGrpcRequest
 	3,  // 18: ContractGrpcService.RolloutRenewalOpportunityOnExpiration:input_type -> RolloutRenewalOpportunityOnExpirationGrpcRequest
 	4,  // 19: ContractGrpcService.RefreshContractStatus:input_type -> RefreshContractStatusGrpcRequest
 	5,  // 20: ContractGrpcService.RefreshContractLtv:input_type -> RefreshContractLtvGrpcRequest
 	6,  // 21: ContractGrpcService.SoftDeleteContract:input_type -> SoftDeleteContractGrpcRequest
 	7,  // 22: ContractGrpcService.CreateContract:output_type -> ContractIdGrpcResponse
-	7,  // 23: ContractGrpcService.UpdateContract:output_type -> ContractIdGrpcResponse
+	7,  // 23: ContractGrpcService.UpdateContractOld:output_type -> ContractIdGrpcResponse
 	7,  // 24: ContractGrpcService.RolloutRenewalOpportunityOnExpiration:output_type -> ContractIdGrpcResponse
 	7,  // 25: ContractGrpcService.RefreshContractStatus:output_type -> ContractIdGrpcResponse
 	7,  // 26: ContractGrpcService.RefreshContractLtv:output_type -> ContractIdGrpcResponse

@@ -93,7 +93,7 @@ func (h *ContractEventHandler) OnCreate(ctx context.Context, evt eventstore.Even
 			SourceOfTruth: helper.GetSourceOfTruth(eventData.Source.Source),
 		},
 	}
-	err := h.services.CommonServices.Neo4jRepositories.ContractWriteRepository.CreateForOrganization(ctx, eventData.Tenant, contractId, data)
+	err := h.services.CommonServices.Neo4jRepositories.ContractWriteRepository.CreateForOrganizationOld(ctx, eventData.Tenant, contractId, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while saving contract %s: %s", contractId, err.Error())
@@ -233,7 +233,7 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 		UpdateDueDays:                eventData.UpdateDueDays(),
 		UpdateApproved:               eventData.UpdateApproved(),
 	}
-	err = h.services.CommonServices.Neo4jRepositories.ContractWriteRepository.UpdateContract(ctx, eventData.Tenant, contractId, data)
+	err = h.services.CommonServices.Neo4jRepositories.ContractWriteRepository.UpdateContractOld(ctx, eventData.Tenant, contractId, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while updating contract %s: %s", contractId, err.Error())

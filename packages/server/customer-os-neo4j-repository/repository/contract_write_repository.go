@@ -114,9 +114,11 @@ type ContractUpdateFields struct {
 }
 
 type ContractWriteRepository interface {
-	CreateForOrganization(ctx context.Context, tenant, contractId string, data ContractCreateFields) error
-	CreateForOrganizationNew(ctx context.Context, tenant, contractId string, data data_fields.ContractSaveFields) error
-	UpdateContract(ctx context.Context, tenant, contractId string, data ContractUpdateFields) error
+	// Deprecated
+	CreateForOrganizationOld(ctx context.Context, tenant, contractId string, data ContractCreateFields) error
+	CreateForOrganization(ctx context.Context, tenant, contractId string, data data_fields.ContractSaveFields) error
+	// Deprecated
+	UpdateContractOld(ctx context.Context, tenant, contractId string, data ContractUpdateFields) error
 	UpdateStatus(ctx context.Context, tenant, contractId, status string) error
 	SuspendActiveRenewalOpportunity(ctx context.Context, tenant, contractId string) error
 	ActivateSuspendedRenewalOpportunity(ctx context.Context, tenant, contractId string) error
@@ -142,8 +144,8 @@ func NewContractWriteRepository(driver *neo4j.DriverWithContext, database string
 	}
 }
 
-func (r *contractWriteRepository) CreateForOrganization(ctx context.Context, tenant, contractId string, data ContractCreateFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractWriteRepository.CreateForOrganization")
+func (r *contractWriteRepository) CreateForOrganizationOld(ctx context.Context, tenant, contractId string, data ContractCreateFields) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractWriteRepository.CreateForOrganizationOld")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
 	tracing.TagTenant(span, tenant)
@@ -227,8 +229,96 @@ func (r *contractWriteRepository) CreateForOrganization(ctx context.Context, ten
 	return err
 }
 
-func (r *contractWriteRepository) UpdateContract(ctx context.Context, tenant, contractId string, data ContractUpdateFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractWriteRepository.UpdateContract")
+func (r *contractWriteRepository) CreateForOrganization(ctx context.Context, tenant, contractId string, data data_fields.ContractSaveFields) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractWriteRepository.CreateForOrganization")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
+	span.SetTag(tracing.SpanTagEntityId, contractId)
+	tracing.LogObjectAsJson(span, "data", data)
+
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$orgId})
+							MERGE (t)<-[:CONTRACT_BELONGS_TO_TENANT]-(ct:Contract {id:$contractId})<-[:HAS_CONTRACT]-(org)
+							ON CREATE SET 
+								ct:Contract_%s,
+								ct.createdAt=$createdAt,
+								ct.updatedAt=datetime(),
+								ct.source=$source,
+								ct.sourceOfTruth=$sourceOfTruth,
+								ct.appSource=$appSource,
+								ct.name=$name,
+								ct.contractUrl=$contractUrl,
+								ct.status=$status,
+								ct.signedAt=$signedAt,
+								ct.serviceStartedAt=$serviceStartedAt,
+								ct.currency=$currency,
+								ct.billingCycleInMonths=$billingCycleInMonths,
+								ct.invoicingStartDate=$invoicingStartDate,
+								ct.invoicingEnabled=$invoicingEnabled,
+								ct.payOnline=$payOnline,
+								ct.payAutomatically=$payAutomatically,
+								ct.canPayWithCard=$canPayWithCard,
+								ct.canPayWithDirectDebit=$canPayWithDirectDebit,
+								ct.canPayWithBankTransfer=$canPayWithBankTransfer,
+								ct.autoRenew=$autoRenew,
+								ct.check=$check,
+								ct.country=$country,
+								ct.dueDays=$dueDays,
+								ct.lengthInMonths=$lengthInMonths,
+								ct.approved=$approved,
+								org.updatedAt=datetime()
+							WITH ct, t
+							OPTIONAL MATCH (t)<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$createdByUserId}) 
+							WHERE $createdByUserId <> ""
+							FOREACH (ignore IN CASE WHEN u IS NOT NULL THEN [1] ELSE [] END |
+    							MERGE (ct)-[:CREATED_BY]->(u))
+							`, tenant)
+	currency := neo4jenum.CurrencyUSD.String()
+	if data.Currency != nil {
+		currency = data.Currency.String()
+	}
+	params := map[string]any{
+		"tenant":                 tenant,
+		"contractId":             contractId,
+		"orgId":                  data.GetOrganizationId(),
+		"createdAt":              utils.IfNotNilTimeWithDefault(data.CreatedAt, utils.Now()),
+		"source":                 data.Source,
+		"appSource":              data.AppSource,
+		"name":                   utils.IfNotNilString(data.Name),
+		"contractUrl":            utils.IfNotNilString(data.ContractUrl),
+		"status":                 utils.IfNotNilString(data.Status),
+		"signedAt":               utils.ToDateAsAny(data.SignedAt),
+		"serviceStartedAt":       utils.ToDateAsAny(data.ServiceStartedAt),
+		"createdByUserId":        data.GetCreatedByUserId(),
+		"currency":               currency,
+		"billingCycleInMonths":   utils.IfNotNilInt64(data.BillingCycleInMonths),
+		"invoicingStartDate":     utils.ToNeo4jDateAsAny(data.InvoicingStartDate),
+		"invoicingEnabled":       utils.IfNotNilBool(data.InvoicingEnabled),
+		"payOnline":              utils.IfNotNilBool(data.PayOnline),
+		"payAutomatically":       utils.IfNotNilBool(data.PayAutomatically),
+		"canPayWithCard":         utils.IfNotNilBool(data.CanPayWithCard),
+		"canPayWithDirectDebit":  utils.IfNotNilBool(data.CanPayWithDirectDebit),
+		"canPayWithBankTransfer": utils.IfNotNilBool(data.CanPayWithBankTransfer),
+		"autoRenew":              utils.IfNotNilBool(data.AutoRenew),
+		"check":                  utils.IfNotNilBool(data.Check),
+		"dueDays":                utils.IfNotNilInt64(data.DueDays),
+		"country":                utils.IfNotNilString(data.Country),
+		"lengthInMonths":         utils.IfNotNilInt64(data.LengthInMonths),
+		"approved":               utils.IfNotNilBool(data.Approved),
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *contractWriteRepository) UpdateContractOld(ctx context.Context, tenant, contractId string, data ContractUpdateFields) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractWriteRepository.UpdateContractOld")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
 	tracing.TagTenant(span, tenant)

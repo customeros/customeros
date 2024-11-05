@@ -102,12 +102,13 @@ func (s *contractService) Save(ctx context.Context, id *string, dataFields data_
 	tracing.TagEntity(span, contractId)
 
 	if createFlow {
-		err := s.services.Neo4jRepositories.ContractWriteRepository.CreateForOrganizationNew(ctx, tenant, contractId, dataFields)
+		err := s.services.Neo4jRepositories.ContractWriteRepository.CreateForOrganization(ctx, tenant, contractId, dataFields)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return "", err
 		}
 	} else {
+		// TODO alexb implement update
 		//err := s.services.Neo4jRepositories.ContractWriteRepository.UpdateNew(ctx, &tx, tenant, contractId, dataFields)
 		//if err != nil {
 		//	tracing.TraceErr(span, err)
@@ -124,7 +125,7 @@ func (s *contractService) Save(ctx context.Context, id *string, dataFields data_
 	} else {
 		err = s.services.RabbitMQService.PublishEvent(ctx, contractId, model.CONTRACT, dto.UpdateContract{dataFields})
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateContract"))
+			tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateContractOld"))
 		}
 		if dataFields.AppSource == nil || *dataFields.AppSource != constants.AppSourceCustomerOsApi {
 			utils.EventCompleted(ctx, tenant, model.CONTRACT.String(), contractId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())

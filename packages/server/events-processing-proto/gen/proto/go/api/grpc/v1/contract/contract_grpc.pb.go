@@ -50,7 +50,7 @@ func (c *contractGrpcServiceClient) CreateContract(ctx context.Context, in *Crea
 
 func (c *contractGrpcServiceClient) UpdateContract(ctx context.Context, in *UpdateContractGrpcRequest, opts ...grpc.CallOption) (*ContractIdGrpcResponse, error) {
 	out := new(ContractIdGrpcResponse)
-	err := c.cc.Invoke(ctx, "/ContractGrpcService/UpdateContract", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/ContractGrpcService/UpdateContractOld", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +113,7 @@ func (UnimplementedContractGrpcServiceServer) CreateContract(context.Context, *C
 	return nil, status.Errorf(codes.Unimplemented, "method CreateContract not implemented")
 }
 func (UnimplementedContractGrpcServiceServer) UpdateContract(context.Context, *UpdateContractGrpcRequest) (*ContractIdGrpcResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateContract not implemented")
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateContractOld not implemented")
 }
 func (UnimplementedContractGrpcServiceServer) RolloutRenewalOpportunityOnExpiration(context.Context, *RolloutRenewalOpportunityOnExpirationGrpcRequest) (*ContractIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RolloutRenewalOpportunityOnExpiration not implemented")
@@ -167,7 +167,7 @@ func _ContractGrpcService_UpdateContract_Handler(srv interface{}, ctx context.Co
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/ContractGrpcService/UpdateContract",
+		FullMethod: "/ContractGrpcService/UpdateContractOld",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ContractGrpcServiceServer).UpdateContract(ctx, req.(*UpdateContractGrpcRequest))
@@ -259,7 +259,7 @@ var ContractGrpcService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _ContractGrpcService_CreateContract_Handler,
 		},
 		{
-			MethodName: "UpdateContract",
+			MethodName: "UpdateContractOld",
 			Handler:    _ContractGrpcService_UpdateContract_Handler,
 		},
 		{

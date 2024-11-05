@@ -32,7 +32,7 @@ func (MockContractService) CreateContract(context context.Context, proto *contra
 
 func (MockContractService) UpdateContract(context context.Context, proto *contractpb.UpdateContractGrpcRequest) (*contractpb.ContractIdGrpcResponse, error) {
 	if contractCallbacks.UpdateContract == nil {
-		panic("contractCallbacks.UpdateContract is not set")
+		panic("contractCallbacks.UpdateContractOld is not set")
 	}
 	return contractCallbacks.UpdateContract(context, proto)
 }

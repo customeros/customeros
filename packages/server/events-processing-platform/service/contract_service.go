@@ -54,7 +54,7 @@ func (s *contractService) CreateContract(ctx context.Context, request *contractp
 }
 
 func (s *contractService) UpdateContract(ctx context.Context, request *contractpb.UpdateContractGrpcRequest) (*contractpb.ContractIdGrpcResponse, error) {
-	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ContractService.UpdateContract")
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ContractService.UpdateContractOld")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
 	tracing.LogObjectAsJson(span, "request", request)
@@ -69,7 +69,7 @@ func (s *contractService) UpdateContract(ctx context.Context, request *contractp
 	}
 	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request); err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("(UpdateContract.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
+		s.log.Errorf("(UpdateContractOld.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
 		return nil, grpcerr.ErrResponse(err)
 	}
 
