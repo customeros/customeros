@@ -103,7 +103,6 @@ func main() {
 	//testCreateIssue()
 	//testUpdateIssue()
 	//testCreateComment()
-	//testCreateContract()
 	//testUpdateContract()
 	//testAddContractService()
 	//testCloseLooseOpportunity()
@@ -503,27 +502,6 @@ func testCreateComment() {
 		log.Fatalf("Failed: %v", err.Error())
 	}
 	log.Printf("Created comment id: %v", result.Id)
-}
-
-func testCreateContract() {
-	userId := "05f382ba-0fa9-4828-940c-efb4e2e6b84c"
-	organizationId := "0f4114c4-c010-4303-a42a-460cf66ac598"
-	now := utils.Now()
-	aYearAgo := now.AddDate(-1, 0, 0)
-
-	result, err := clients.ContractClient.CreateContract(context.Background(), &contractpb.CreateContractGrpcRequest{
-		Tenant:           tenant,
-		OrganizationId:   organizationId,
-		LoggedInUserId:   userId,
-		LengthInMonths:   1,
-		ServiceStartedAt: utils.ConvertTimeToTimestampPtr(&aYearAgo),
-		Name:             "year ago contract",
-		AutoRenew:        false,
-	})
-	if err != nil {
-		log.Fatalf("Failed: %v", err.Error())
-	}
-	log.Printf("Result: %v", result.Id)
 }
 
 func testUpdateContract() {

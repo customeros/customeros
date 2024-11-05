@@ -8,6 +8,7 @@ import (
 	mapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	model2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
@@ -69,10 +70,45 @@ func (s *contractService) Create(ctx context.Context, contractDetails *ContractC
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "contractDetails", contractDetails)
 
-	contractId, err := s.createContractWithEvents(ctx, contractDetails)
+	contractDataFields := data_fields.ContractSaveFields{
+		OrganizationId:         &contractDetails.Input.OrganizationID,
+		Name:                   contractDetails.Input.ContractName,
+		ContractUrl:            contractDetails.Input.ContractURL,
+		InvoicingEnabled:       contractDetails.Input.BillingEnabled,
+		Source:                 utils.StringPtr(contractDetails.Source.String()),
+		AppSource:              utils.StringPtr(contractDetails.AppSource),
+		PayOnline:              utils.BoolPtr(true),
+		PayAutomatically:       utils.BoolPtr(true),
+		CanPayWithCard:         utils.BoolPtr(true),
+		CanPayWithDirectDebit:  utils.BoolPtr(true),
+		CanPayWithBankTransfer: utils.BoolPtr(true),
+		Check:                  utils.BoolPtr(true),
+		AutoRenew:              contractDetails.Input.AutoRenew,
+		BillingCycleInMonths:   utils.Int64Ptr(1),
+		DueDays:                contractDetails.Input.DueDays,
+		Approved:               contractDetails.Input.Approved,
+	}
+	if common.GetUserIdFromContext(ctx) != "" {
+		contractDataFields.CreatedByUserId = utils.StringPtr(common.GetUserIdFromContext(ctx))
+	}
+	if contractDetails.Input.ContractSigned != nil {
+		contractDataFields.SignedAt = contractDetails.Input.ContractSigned
+	} else if contractDetails.Input.SignedAt != nil {
+		contractDataFields.SignedAt = contractDetails.Input.SignedAt
+	}
+	if contractDetails.Input.ServiceStarted != nil {
+		contractDataFields.ServiceStartedAt = contractDetails.Input.ServiceStarted
+	} else if contractDetails.Input.ServiceStartedAt != nil {
+		contractDataFields.ServiceStartedAt = contractDetails.Input.ServiceStartedAt
+	}
+	if contractDetails.Input.InvoicingStartDate != nil {
+		contractDataFields.InvoicingStartDate = contractDetails.Input.InvoicingStartDate
+	}
+
+	contractId, err := s.services.CommonServices.ContractService.Save(ctx, nil, contractDataFields)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("Error from events processing: %s", err.Error())
+		s.log.Errorf("Error from create contract %s", err.Error())
 		return "", err
 	}
 
@@ -84,44 +120,6 @@ func (s *contractService) createContractWithEvents(ctx context.Context, contract
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.createContractWithEvents")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-
-	createContractRequest := contractpb.CreateContractGrpcRequest{
-		Tenant:           common.GetTenantFromContext(ctx),
-		OrganizationId:   contractDetails.Input.OrganizationID,
-		Name:             utils.IfNotNilString(contractDetails.Input.Name),
-		ContractUrl:      utils.IfNotNilString(contractDetails.Input.ContractURL),
-		InvoicingEnabled: utils.IfNotNilBool(contractDetails.Input.BillingEnabled),
-		LoggedInUserId:   common.GetUserIdFromContext(ctx),
-		SourceFields: &commonpb.SourceFields{
-			Source:    string(contractDetails.Source),
-			AppSource: contractDetails.AppSource,
-		},
-		PayOnline:              true,
-		PayAutomatically:       true,
-		CanPayWithCard:         true,
-		CanPayWithDirectDebit:  true,
-		CanPayWithBankTransfer: true,
-		Check:                  true,
-		AutoRenew:              utils.IfNotNilBool(contractDetails.Input.AutoRenew),
-		DueDays:                utils.IfNotNilInt64(contractDetails.Input.DueDays),
-		Approved:               utils.IfNotNilBool(contractDetails.Input.Approved),
-		BillingCycleInMonths:   1,
-	}
-
-	if contractDetails.Input.ContractSigned != nil {
-		createContractRequest.SignedAt = utils.ConvertTimeToTimestampPtr(contractDetails.Input.ContractSigned)
-	} else if contractDetails.Input.SignedAt != nil {
-		createContractRequest.SignedAt = utils.ConvertTimeToTimestampPtr(contractDetails.Input.SignedAt)
-	}
-	if contractDetails.Input.ServiceStarted != nil {
-		createContractRequest.ServiceStartedAt = utils.ConvertTimeToTimestampPtr(contractDetails.Input.ServiceStarted)
-	} else if contractDetails.Input.ServiceStartedAt != nil {
-		createContractRequest.ServiceStartedAt = utils.ConvertTimeToTimestampPtr(contractDetails.Input.ServiceStartedAt)
-	}
-
-	if contractDetails.Input.InvoicingStartDate != nil {
-		createContractRequest.InvoicingStartDate = utils.ConvertTimeToTimestampPtr(contractDetails.Input.InvoicingStartDate)
-	}
 
 	if contractDetails.Input.CommittedPeriodInMonths != nil {
 		createContractRequest.LengthInMonths = *contractDetails.Input.CommittedPeriodInMonths
