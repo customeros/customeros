@@ -44,37 +44,6 @@ enum ContractFieldMask {
   CONTRACT_FIELD_BILLING_CYCLE_IN_MONTHS = 35;
 }
 
-// CreateContract request message
-message CreateContractGrpcRequest {
-  string tenant = 1;
-  string loggedInUserId = 2;
-  string organizationId = 3;
-  string name = 4;
-  string createdByUserId = 5;
-  google.protobuf.Timestamp createdAt = 6;
-  google.protobuf.Timestamp updatedAt = 7;
-  google.protobuf.Timestamp serviceStartedAt = 8;
-  google.protobuf.Timestamp signedAt = 9;
-  SourceFields sourceFields = 12;
-  ExternalSystemFields externalSystemFields = 13;
-  string contractUrl = 14;
-  google.protobuf.Timestamp invoicingStartDate = 17;
-  string currency = 18;
-  bool invoicingEnabled = 19;
-  bool payOnline = 20;
-  bool payAutomatically = 21;
-  bool canPayWithCard = 22;
-  bool canPayWithDirectDebit = 23;
-  bool canPayWithBankTransfer = 24;
-  bool autoRenew = 25;
-  bool check = 26;
-  int64 dueDays = 27;
-  string country = 28;
-  int64 lengthInMonths = 29;
-  bool approved = 30;
-  int64 billingCycleInMonths = 31;
-}
-
 message UpdateContractGrpcRequest {
   string id = 1;
   string tenant = 2;
@@ -152,7 +121,6 @@ message ContractIdGrpcResponse {
 
 // Service definition
 service ContractGrpcService {
-  rpc CreateContract(CreateContractGrpcRequest) returns (ContractIdGrpcResponse);
   rpc UpdateContract(UpdateContractGrpcRequest) returns (ContractIdGrpcResponse);
   rpc RolloutRenewalOpportunityOnExpiration(RolloutRenewalOpportunityOnExpirationGrpcRequest) returns (ContractIdGrpcResponse);
   rpc RefreshContractStatus(RefreshContractStatusGrpcRequest) returns (ContractIdGrpcResponse);

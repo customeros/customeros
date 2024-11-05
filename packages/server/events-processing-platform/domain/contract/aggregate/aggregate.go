@@ -13,7 +13,6 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
-	"strings"
 	"time"
 )
 
@@ -45,8 +44,6 @@ func (a *ContractAggregate) HandleGRPCRequest(ctx context.Context, request any, 
 	defer span.Finish()
 
 	switch r := request.(type) {
-	case *contractpb.CreateContractGrpcRequest:
-		return nil, a.createContract(ctx, r)
 	case *contractpb.UpdateContractGrpcRequest:
 		return nil, a.updateContract(ctx, r)
 	case *contractpb.SoftDeleteContractGrpcRequest:
@@ -57,64 +54,6 @@ func (a *ContractAggregate) HandleGRPCRequest(ctx context.Context, request any, 
 		tracing.TraceErr(span, eventstore.ErrInvalidRequestType)
 		return nil, eventstore.ErrInvalidRequestType
 	}
-}
-
-func (a *ContractAggregate) createContract(ctx context.Context, request *contractpb.CreateContractGrpcRequest) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "ContractAggregate.createContract")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
-	tracing.LogObjectAsJson(span, "request", request)
-
-	// Assuming you have a utility function to get the current time if the passed time is nil
-	createdAtNotNil := utils.IfNotNilTimeWithDefault(request.CreatedAt, utils.Now())
-	updatedAtNotNil := utils.IfNotNilTimeWithDefault(request.UpdatedAt, createdAtNotNil)
-
-	externalSystem := commonmodel.ExternalSystem{}
-	externalSystem.FromGrpc(request.ExternalSystemFields)
-
-	sourceFields := commonmodel.Source{}
-	sourceFields.FromGrpc(request.SourceFields)
-	sourceFields.SetDefaultValues()
-
-	dataFields := model.ContractDataFields{
-		OrganizationId:         request.OrganizationId,
-		Name:                   request.Name,
-		ContractUrl:            request.ContractUrl,
-		CreatedByUserId:        utils.StringFirstNonEmpty(request.CreatedByUserId, request.LoggedInUserId),
-		ServiceStartedAt:       utils.TimestampProtoToTimePtr(request.ServiceStartedAt),
-		SignedAt:               utils.TimestampProtoToTimePtr(request.SignedAt),
-		Currency:               request.Currency,
-		BillingCycleInMonths:   request.BillingCycleInMonths,
-		InvoicingStartDate:     utils.TimestampProtoToTimePtr(request.InvoicingStartDate),
-		InvoicingEnabled:       request.InvoicingEnabled,
-		PayOnline:              request.PayOnline,
-		PayAutomatically:       request.PayAutomatically,
-		CanPayWithCard:         request.CanPayWithCard,
-		CanPayWithDirectDebit:  request.CanPayWithDirectDebit,
-		CanPayWithBankTransfer: request.CanPayWithBankTransfer,
-		AutoRenew:              request.AutoRenew,
-		Check:                  request.Check,
-		DueDays:                request.DueDays,
-		Country:                request.Country,
-		LengthInMonths:         request.LengthInMonths,
-		Approved:               request.Approved,
-	}
-
-	// Determine contract status based start and end dates
-	createEvent, err := event.NewContractCreateEvent(a, dataFields, sourceFields, externalSystem, createdAtNotNil, updatedAtNotNil)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewContractCreateEvent")
-	}
-	eventstore.EnrichEventWithMetadataExtended(&createEvent, span, eventstore.EventMetadata{
-		Tenant: a.Tenant,
-		UserId: request.LoggedInUserId,
-		App:    sourceFields.AppSource,
-	})
-
-	return a.Apply(createEvent)
 }
 
 func (a *ContractAggregate) updateContract(ctx context.Context, request *contractpb.UpdateContractGrpcRequest) error {
@@ -356,8 +295,6 @@ func (a *ContractAggregate) softDeleteContract(ctx context.Context, r *contractp
 
 func (a *ContractAggregate) When(evt eventstore.Event) error {
 	switch evt.GetEventType() {
-	case event.ContractCreateV1:
-		return a.onContractCreate(evt)
 	case event.ContractUpdateV1:
 		return a.onContractUpdate(evt)
 	case event.ContractUpdateStatusV1:
@@ -367,61 +304,8 @@ func (a *ContractAggregate) When(evt eventstore.Event) error {
 	case event.ContractDeleteV1:
 		return a.onContractDelete(evt)
 	default:
-		if strings.HasPrefix(evt.GetEventType(), events2.EsInternalStreamPrefix) {
-			return nil
-		}
-		err := eventstore.ErrInvalidEventType
-		err.EventType = evt.GetEventType()
-		return err
+		return nil
 	}
-}
-
-func (a *ContractAggregate) onContractCreate(evt eventstore.Event) error {
-	var eventData event.ContractCreateEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		return errors.Wrap(err, "GetJsonData")
-	}
-
-	a.Contract.ID = a.ID
-	a.Contract.Tenant = a.Tenant
-	a.Contract.OrganizationId = eventData.OrganizationId
-	a.Contract.Name = eventData.Name
-	a.Contract.ContractUrl = eventData.ContractUrl
-	a.Contract.CreatedByUserId = eventData.CreatedByUserId
-	a.Contract.ServiceStartedAt = eventData.ServiceStartedAt
-	a.Contract.SignedAt = eventData.SignedAt
-	a.Contract.LengthInMonths = eventData.LengthInMonths
-	a.Contract.Status = eventData.Status
-	a.Contract.Currency = eventData.Currency
-	a.Contract.BillingCycleInMonths = eventData.BillingCycleInMonths
-	a.Contract.InvoicingStartDate = eventData.InvoicingStartDate
-	a.Contract.CreatedAt = eventData.CreatedAt
-	a.Contract.UpdatedAt = eventData.UpdatedAt
-	a.Contract.Source = eventData.Source
-	a.Contract.InvoicingEnabled = eventData.InvoicingEnabled
-	if eventData.ExternalSystem.Available() {
-		a.Contract.ExternalSystems = []commonmodel.ExternalSystem{eventData.ExternalSystem}
-	}
-	a.Contract.PayOnline = eventData.PayOnline
-	a.Contract.PayAutomatically = eventData.PayAutomatically
-	a.Contract.CanPayWithCard = eventData.CanPayWithCard
-	a.Contract.CanPayWithDirectDebit = eventData.CanPayWithDirectDebit
-	a.Contract.CanPayWithBankTransfer = eventData.CanPayWithBankTransfer
-	a.Contract.AutoRenew = eventData.AutoRenew
-	a.Contract.Check = eventData.Check
-	a.Contract.DueDays = eventData.DueDays
-	a.Contract.Country = eventData.Country
-	if eventData.BillingCycle != "" {
-		switch eventData.BillingCycle {
-		case "MONTHLY":
-			a.Contract.BillingCycleInMonths = 1
-		case "QUARTERLY":
-			a.Contract.BillingCycleInMonths = 3
-		case "ANNUALLY":
-			a.Contract.BillingCycleInMonths = 12
-		}
-	}
-	return nil
 }
 
 func (a *ContractAggregate) onContractUpdate(evt eventstore.Event) error {

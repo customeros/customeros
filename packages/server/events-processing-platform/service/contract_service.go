@@ -1,7 +1,6 @@
 package service
 
 import (
-	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/aggregate"
 	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
@@ -25,32 +24,6 @@ func NewContractService(log logger.Logger, aggregateStore eventstore.AggregateSt
 		log:            log,
 		aggregateStore: aggregateStore,
 	}
-}
-
-func (s *contractService) CreateContract(ctx context.Context, request *contractpb.CreateContractGrpcRequest) (*contractpb.ContractIdGrpcResponse, error) {
-	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ContractService.CreateContract")
-	defer span.Finish()
-	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	tracing.LogObjectAsJson(span, "request", request)
-
-	// Validate organization ID
-	if request.OrganizationId == "" {
-		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("organizationId"))
-	}
-
-	contractId := uuid.New().String()
-
-	initAggregateFunc := func() eventstore.Aggregate {
-		return aggregate.NewContractAggregateWithTenantAndID(request.Tenant, contractId)
-	}
-	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request); err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("(CreateContract) tenant:{%v}, err: %v", request.Tenant, err.Error())
-		return nil, grpcerr.ErrResponse(err)
-	}
-
-	// Return the ID of the newly created contract
-	return &contractpb.ContractIdGrpcResponse{Id: contractId}, nil
 }
 
 func (s *contractService) UpdateContract(ctx context.Context, request *contractpb.UpdateContractGrpcRequest) (*contractpb.ContractIdGrpcResponse, error) {

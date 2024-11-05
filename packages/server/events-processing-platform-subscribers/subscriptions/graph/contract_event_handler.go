@@ -20,8 +20,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/event"
-	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
-	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
@@ -49,104 +47,6 @@ func NewContractEventHandler(log logger.Logger, services *service.Services, grpc
 		services:    services,
 		grpcClients: grpcClients,
 	}
-}
-
-func (h *ContractEventHandler) OnCreate(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractEventHandler.OnCreate")
-	defer span.Finish()
-	setEventSpanTagsAndLogFields(span, evt)
-
-	var eventData event.ContractCreateEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "evt.GetJsonData")
-	}
-
-	contractId := aggregate.GetContractObjectID(evt.GetAggregateID(), eventData.Tenant)
-	data := neo4jrepository.ContractCreateFields{
-		OrganizationId:         eventData.OrganizationId,
-		Name:                   eventData.Name,
-		ContractUrl:            eventData.ContractUrl,
-		CreatedByUserId:        eventData.CreatedByUserId,
-		ServiceStartedAt:       eventData.ServiceStartedAt,
-		SignedAt:               eventData.SignedAt,
-		LengthInMonths:         eventData.LengthInMonths,
-		Status:                 eventData.Status,
-		CreatedAt:              eventData.CreatedAt,
-		BillingCycleInMonths:   eventData.BillingCycleInMonths,
-		Currency:               neo4jenum.DecodeCurrency(eventData.Currency),
-		InvoicingStartDate:     eventData.InvoicingStartDate,
-		InvoicingEnabled:       eventData.InvoicingEnabled,
-		PayOnline:              eventData.PayOnline,
-		PayAutomatically:       eventData.PayAutomatically,
-		AutoRenew:              eventData.AutoRenew,
-		CanPayWithCard:         eventData.CanPayWithCard,
-		CanPayWithDirectDebit:  eventData.CanPayWithDirectDebit,
-		CanPayWithBankTransfer: eventData.CanPayWithBankTransfer,
-		Check:                  eventData.Check,
-		DueDays:                eventData.DueDays,
-		Country:                eventData.Country,
-		Approved:               eventData.Approved,
-		SourceFields: neo4jmodel.SourceFields{
-			Source:        helper.GetSource(eventData.Source.Source),
-			AppSource:     helper.GetAppSource(eventData.Source.AppSource),
-			SourceOfTruth: helper.GetSourceOfTruth(eventData.Source.Source),
-		},
-	}
-	err := h.services.CommonServices.Neo4jRepositories.ContractWriteRepository.CreateForOrganizationOld(ctx, eventData.Tenant, contractId, data)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Error while saving contract %s: %s", contractId, err.Error())
-		return err
-	}
-
-	if eventData.ExternalSystem.Available() {
-		externalSystemData := neo4jmodel.ExternalSystem{
-			ExternalSystemId: eventData.ExternalSystem.ExternalSystemId,
-			ExternalUrl:      eventData.ExternalSystem.ExternalUrl,
-			ExternalId:       eventData.ExternalSystem.ExternalId,
-			ExternalIdSecond: eventData.ExternalSystem.ExternalIdSecond,
-			ExternalSource:   eventData.ExternalSystem.ExternalSource,
-			SyncDate:         eventData.ExternalSystem.SyncDate,
-		}
-		err = h.services.CommonServices.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntity(ctx, eventData.Tenant, contractId, model.NodeLabelContract, externalSystemData)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			h.log.Errorf("Error while linking contract %s with external system %s: %s", contractId, eventData.ExternalSystem.ExternalSystemId, err.Error())
-			return err
-		}
-	}
-
-	_, _, err = h.updateStatus(ctx, eventData.Tenant, contractId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Error while updating contract %s status: %s", contractId, err.Error())
-		return err
-	}
-
-	if eventData.LengthInMonths > 0 {
-		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
-			return h.grpcClients.OpportunityClient.CreateRenewalOpportunity(ctx, &opportunitypb.CreateRenewalOpportunityGrpcRequest{
-				Tenant:     eventData.Tenant,
-				ContractId: contractId,
-				SourceFields: &commonpb.SourceFields{
-					Source:    eventData.Source.Source,
-					AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
-				},
-			})
-		})
-		if err != nil {
-			tracing.TraceErr(span, err)
-			h.log.Errorf("CreateRenewalOpportunity failed: %s", err.Error())
-		}
-	}
-
-	h.startOnboardingIfEligible(ctx, eventData.Tenant, contractId, span)
-
-	utils.EventCompleted(ctx, eventData.Tenant, model.CONTRACT.String(), contractId, h.grpcClients, utils.NewEventCompletedDetails().WithCreate())
-
-	return nil
 }
 
 func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Event) error {
