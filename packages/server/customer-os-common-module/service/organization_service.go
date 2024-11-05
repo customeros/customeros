@@ -275,17 +275,20 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 	}
 
 	// create events section
-	// completion event
-	if input.SourceFields.AppSource != constants.AppSourceCustomerOsApi {
-		details := utils.NewEventCompletedDetails()
-
-		if existing == nil {
-			details.WithCreate()
-		} else {
-			details.WithUpdate()
+	if createFlow {
+		err = s.services.RabbitMQService.PublishEvent(ctx, *organizationId, model.ORGANIZATION, dto.New_CreateOrganization_From_OrganizationFields(*input))
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateOrganization"))
 		}
-
-		utils.EventCompleted(ctx, tenant, model.ORGANIZATION.String(), *organizationId, s.services.GrpcClients, details)
+		utils.EventCompleted(ctx, tenant, model.ORGANIZATION.String(), *organizationId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithCreate())
+	} else {
+		err = s.services.RabbitMQService.PublishEvent(ctx, *organizationId, model.ORGANIZATION, dto.New_UpdateOrganization_From_OrganizationFields(*input))
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateOrganization"))
+		}
+		if input.SourceFields.AppSource != constants.AppSourceCustomerOsApi {
+			utils.EventCompleted(ctx, tenant, model.ORGANIZATION.String(), *organizationId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
+		}
 	}
 
 	// select primary domain from new domains
