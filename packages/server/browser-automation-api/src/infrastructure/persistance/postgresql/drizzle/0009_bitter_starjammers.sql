@@ -1,0 +1,1 @@
+ALTER TYPE "browser_automation_run_type" ADD VALUE 'CHECK_CONNECTION_STATUS';

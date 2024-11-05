@@ -7,7 +7,7 @@ import { ConnectionsController } from "../controllers/linkedin/connections-contr
 import {
   connectionStatusValidators,
   connectValidators,
-  messagesRetrievalValidators,
+  messagesRetrievalValidators, recentPostsValidators,
   sendMessageValidators
 } from "../validators";
 
@@ -49,5 +49,9 @@ export class LinkedinRouter {
       "/connection-status",
       ...connectionStatusValidators,
       this.connectionsController.checkConnectionStatus);
+    this.router.post(
+      "/get-recent-posts",
+      ...recentPostsValidators,
+      this.connectionsController.getRecentPosts);
   }
 }

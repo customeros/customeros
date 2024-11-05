@@ -59,6 +59,9 @@ export class AutomationRunnerService {
         case "CHECK_CONNECTION_STATUS":
           result = await linkedinService.checkConnectionStatus(payload);
           break;
+        case "GET_RECENT_POSTS":
+          result = await linkedinService.getRecentPosts(payload);
+          break;
         default:
           throw new StandardError({
             code: "APPLICATION_ERROR",

@@ -58,3 +58,13 @@ export const messagesRetrievalValidators = [
     .isURL()
     .withMessage("Invalid URL"),
 ];
+
+export const recentPostsValidators = [
+  body("profileUrl")
+    .notEmpty()
+    .withMessage("profileUrl field is required")
+    .isString()
+    .withMessage("profileUrl field must be a string")
+    .isURL()
+    .withMessage("Invalid URL"),
+];

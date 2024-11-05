@@ -1,12 +1,12 @@
 import AdmZip from "adm-zip";
-import { Writable } from "stream";
-import { FrameLocator } from "playwright";
-import { setTimeout } from "timers/promises";
-import { setTimeout as setTimeoutSync } from "timers";
-import { TimeUtils } from '@/util/utilities';
-import { Browser } from "../browser";
-import { logger } from "@/infrastructure";
-import { ErrorParser, StandardError } from "@/util/error";
+import {Writable} from "stream";
+import {FrameLocator} from "playwright";
+import {setTimeout} from "timers/promises";
+import {setTimeout as setTimeoutSync} from "timers";
+import {TimeUtils} from '@/util/utilities';
+import {Browser} from "../browser";
+import {logger} from "@/infrastructure";
+import {ErrorParser, StandardError} from "@/util/error";
 
 const Selectors = {
   profileNameHeading: "h1.inline.t-24.v-align-middle.break-words",
@@ -517,6 +517,53 @@ export class LinkedinAutomationService {
       }
 
       return 'Accepted';
+
+    } catch (err) {
+      throw LinkedinAutomationService.handleError(err);
+    } finally {
+      await browser.close();
+    }
+  }
+
+  async getRecentPosts(profileUrl: string): Promise<string[]> {
+    const browser = await Browser.getFreshInstance(this.proxyConfig);
+    const context = await browser.newContext({
+      userAgent: this.userAgent,
+    });
+
+    await context.addCookies(this.cookies);
+    const page = await context.newPage();
+
+    try {
+      await page.goto(profileUrl, {timeout: 60 * 1000});
+
+      // First check if the "no posts" message exists
+      const noPostsExists = await page.getByText("hasn't posted yet").isVisible();
+      if (noPostsExists) {
+        return []; // Return empty array if user hasn't posted
+      }
+
+      // Check if the posts container exists without waiting
+      const postsContainer = page.locator('ul.display-flex.flex-wrap.list-style-none.justify-space-between').first();
+      const isContainerVisible = await postsContainer.isVisible().catch(() => false);
+
+      if (!isContainerVisible) {
+        return []; // Return empty array if container doesn't exist
+      }
+
+      // If we get here, we know there are posts, so we can safely get the links
+      return await page
+          .locator('ul.display-flex.flex-wrap.list-style-none.justify-space-between li .app-aware-link')
+          .evaluateAll((elements: Element[]) => {
+            const uniqueLinks = new Set<string>();
+            elements.forEach(element => {
+              const href = element.getAttribute('href');
+              if (href && href.includes('/feed/update/')) {
+                uniqueLinks.add(href);
+              }
+            });
+            return Array.from(uniqueLinks);
+          });
 
     } catch (err) {
       throw LinkedinAutomationService.handleError(err);
