@@ -1,12 +1,8 @@
 package dto
 
-type SocialFields struct {
+type CreateSocial struct {
 	Url           string `json:"url"`
 	Alias         string `json:"alias"`
-	ExternalId    string `json:"externalId"`
-	FollowerCount int    `json:"followerCount"`
-}
-
-type CreateSocial struct {
-	SocialFields
+	ExtId         string `json:"externalId"`
+	FollowerCount int64  `json:"followerCount"`
 }
