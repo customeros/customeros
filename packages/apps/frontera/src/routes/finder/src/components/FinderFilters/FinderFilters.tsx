@@ -78,6 +78,8 @@ export const FinderFilters = observer(
     const flattenedFilters: FilterItem[] =
       filters?.map((f: FilterItem[]) => ({ ...f.filter })) ?? [];
 
+    // tableViewDef?.removeFilters();
+
     return (
       <Filters
         columns={columns}

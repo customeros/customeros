@@ -240,7 +240,7 @@ export const getContainerClassNames = (
     variant: variant || 'flushed',
     size: props?.size,
     className: cn(
-      'flex items-center cursor-pointer overflow-visible',
+      'flex items-center cursor-pointer overflow-visible outline-0',
       props?.isReadOnly && 'pointer-events-none',
       props?.isFocused && 'border-primary-500',
     ),
