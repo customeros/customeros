@@ -14,6 +14,7 @@ import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
+	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
@@ -110,6 +111,23 @@ func (s *contractService) Save(ctx context.Context, id *string, dataFields data_
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return "", err
+		}
+
+		if dataFields.ExternalSystem != nil && dataFields.ExternalSystem.Available() {
+			externalSystemData := neo4jmodel.ExternalSystem{
+				ExternalSystemId: dataFields.ExternalSystem.ExternalSystemId,
+				ExternalUrl:      dataFields.ExternalSystem.ExternalUrl,
+				ExternalId:       dataFields.ExternalSystem.ExternalId,
+				ExternalIdSecond: dataFields.ExternalSystem.ExternalIdSecond,
+				ExternalSource:   dataFields.ExternalSystem.ExternalSource,
+				SyncDate:         dataFields.ExternalSystem.SyncDate,
+			}
+			err = s.services.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntity(ctx, tenant, contractId, model.NodeLabelContract, externalSystemData)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("Error while linking contract %s with external system %s: %s", contractId, dataFields.ExternalSystem.ExternalSystemId, err.Error())
+				return "", err
+			}
 		}
 	} else {
 		err := s.services.Neo4jRepositories.ContractWriteRepository.UpdateContract(ctx, tenant, contractId, dataFields)

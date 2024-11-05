@@ -17,6 +17,7 @@ import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
+	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
@@ -105,24 +106,8 @@ func (s *contractService) Create(ctx context.Context, contractDetails *ContractC
 		contractDataFields.InvoicingStartDate = contractDetails.Input.InvoicingStartDate
 	}
 
-	contractId, err := s.services.CommonServices.ContractService.Save(ctx, nil, contractDataFields)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("Error from create contract %s", err.Error())
-		return "", err
-	}
-
-	span.LogFields(log.String("output - createdContractId", contractId))
-	return contractId, nil
-}
-
-func (s *contractService) createContractWithEvents(ctx context.Context, contractDetails *ContractCreateData) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.createContractWithEvents")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-
 	if contractDetails.Input.CommittedPeriodInMonths != nil {
-		createContractRequest.LengthInMonths = *contractDetails.Input.CommittedPeriodInMonths
+		contractDataFields.LengthInMonths = contractDetails.Input.CommittedPeriodInMonths
 	} else {
 		renewalCycle := ""
 		if contractDetails.Input.ContractRenewalCycle != nil {
@@ -132,30 +117,27 @@ func (s *contractService) createContractWithEvents(ctx context.Context, contract
 		}
 		switch renewalCycle {
 		case model.ContractRenewalCycleMonthlyRenewal.String():
-			createContractRequest.LengthInMonths = 1
+			contractDataFields.LengthInMonths = utils.Int64Ptr(1)
 		case model.ContractRenewalCycleQuarterlyRenewal.String():
-			createContractRequest.LengthInMonths = 3
+			contractDataFields.LengthInMonths = utils.Int64Ptr(3)
 		case model.ContractRenewalCycleAnnualRenewal.String():
-			createContractRequest.LengthInMonths = 12
+			contractDataFields.LengthInMonths = utils.Int64Ptr(12)
 		default:
-			createContractRequest.LengthInMonths = 0
+			contractDataFields.LengthInMonths = utils.Int64Ptr(0)
 		}
-		if createContractRequest.LengthInMonths == 12 {
+		if *contractDataFields.LengthInMonths == 12 {
 			if contractDetails.Input.CommittedPeriods != nil && *contractDetails.Input.CommittedPeriods > 1 {
-				createContractRequest.LengthInMonths *= *contractDetails.Input.CommittedPeriods
+				contractDataFields.LengthInMonths = utils.Int64Ptr(*contractDataFields.LengthInMonths * *contractDetails.Input.CommittedPeriods)
 			} else if contractDetails.Input.RenewalPeriods != nil && *contractDetails.Input.RenewalPeriods > 1 {
-				createContractRequest.LengthInMonths *= *contractDetails.Input.RenewalPeriods
+				contractDataFields.LengthInMonths = utils.Int64Ptr(*contractDataFields.LengthInMonths * *contractDetails.Input.RenewalPeriods)
 			}
 		}
-	}
-	if contractDetails.Input.ContractName != nil {
-		createContractRequest.Name = *contractDetails.Input.ContractName
 	}
 
 	// set default fields
 	// set currency
 	if contractDetails.Input.Currency != nil && contractDetails.Input.Currency.String() != "" {
-		createContractRequest.Currency = contractDetails.Input.Currency.String()
+		contractDataFields.Currency = utils.ToPtr(neo4jenum.DecodeCurrency(contractDetails.Input.Currency.String()))
 	} else {
 		// if not provided, get default currency from tenant settings
 		tenantSettingsEntity, err := s.services.CommonServices.TenantService.GetTenantSettings(ctx)
@@ -164,7 +146,7 @@ func (s *contractService) createContractWithEvents(ctx context.Context, contract
 			return "", err
 		}
 		if tenantSettingsEntity.BaseCurrency.String() != "" {
-			createContractRequest.Currency = tenantSettingsEntity.BaseCurrency.String()
+			contractDataFields.Currency = &tenantSettingsEntity.BaseCurrency
 		}
 	}
 
@@ -175,12 +157,12 @@ func (s *contractService) createContractWithEvents(ctx context.Context, contract
 	}
 	if tenantBillingProfileEntity != nil {
 		// set country
-		createContractRequest.Country = tenantBillingProfileEntity.Country
+		contractDataFields.Country = &tenantBillingProfileEntity.Country
 	}
 
 	// prepare external system fields
 	if contractDetails.ExternalReference != nil && contractDetails.ExternalReference.ExternalSystemId != "" {
-		createContractRequest.ExternalSystemFields = &commonpb.ExternalSystemFields{
+		contractDataFields.ExternalSystem = &neo4jmodel.ExternalSystem{
 			ExternalSystemId: string(contractDetails.ExternalReference.ExternalSystemId),
 			ExternalId:       contractDetails.ExternalReference.Relationship.ExternalId,
 			ExternalUrl:      utils.IfNotNilString(contractDetails.ExternalReference.Relationship.ExternalUrl),
@@ -188,13 +170,15 @@ func (s *contractService) createContractWithEvents(ctx context.Context, contract
 		}
 	}
 
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := utils.CallEventsPlatformGRPCWithRetry[*contractpb.ContractIdGrpcResponse](func() (*contractpb.ContractIdGrpcResponse, error) {
-		return s.grpcClients.ContractClient.CreateContract(ctx, &createContractRequest)
-	})
+	contractId, err := s.services.CommonServices.ContractService.Save(ctx, nil, contractDataFields)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error from create contract %s", err.Error())
+		return "", err
+	}
 
-	neo4jrepository.WaitForNodeCreatedInNeo4j(ctx, s.repositories.Neo4jRepositories, response.Id, model2.NodeLabelContact, span)
-	return response.Id, err
+	span.LogFields(log.String("output - createdContractId", contractId))
+	return contractId, nil
 }
 
 func (s *contractService) Update(ctx context.Context, input model.ContractUpdateInput) error {
