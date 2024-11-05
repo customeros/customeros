@@ -109,7 +109,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
 };
 
 const filterTypeText = (filter: FilterItem, value: string | undefined) => {
-  const filterValue = filter?.value.toLowerCase();
+  const filterValue = filter?.value?.toLowerCase();
   const filterOperator = filter?.operation;
   const valueLower = value?.toLowerCase();
 
