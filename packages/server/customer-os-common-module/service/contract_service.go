@@ -108,12 +108,11 @@ func (s *contractService) Save(ctx context.Context, id *string, dataFields data_
 			return "", err
 		}
 	} else {
-		// TODO alexb implement update
-		//err := s.services.Neo4jRepositories.ContractWriteRepository.UpdateNew(ctx, &tx, tenant, contractId, dataFields)
-		//if err != nil {
-		//	tracing.TraceErr(span, err)
-		//	return contractId, err
-		//}
+		err := s.services.Neo4jRepositories.ContractWriteRepository.UpdateContract(ctx, tenant, contractId, dataFields)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return "", err
+		}
 	}
 
 	if createFlow {

@@ -119,6 +119,7 @@ type ContractWriteRepository interface {
 	CreateForOrganization(ctx context.Context, tenant, contractId string, data data_fields.ContractSaveFields) error
 	// Deprecated
 	UpdateContractOld(ctx context.Context, tenant, contractId string, data ContractUpdateFields) error
+	UpdateContract(ctx context.Context, tenant, contractId string, data data_fields.ContractSaveFields) error
 	UpdateStatus(ctx context.Context, tenant, contractId, status string) error
 	SuspendActiveRenewalOpportunity(ctx context.Context, tenant, contractId string) error
 	ActivateSuspendedRenewalOpportunity(ctx context.Context, tenant, contractId string) error
@@ -464,6 +465,161 @@ func (r *contractWriteRepository) UpdateContractOld(ctx context.Context, tenant,
 	if data.UpdateApproved {
 		cypher += `, ct.approved=$approved `
 		params["approved"] = data.Approved
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *contractWriteRepository) UpdateContract(ctx context.Context, tenant, contractId string, data data_fields.ContractSaveFields) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractWriteRepository.UpdateContract")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
+	span.SetTag(tracing.SpanTagEntityId, contractId)
+	tracing.LogObjectAsJson(span, "data", data)
+
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(ct:Contract {id:$contractId})
+				SET 
+				ct.updatedAt = datetime()
+				`
+	params := map[string]any{
+		"tenant":     tenant,
+		"contractId": contractId,
+	}
+	if data.Name != nil {
+		cypher += `, ct.name =  $name `
+		params["name"] = *data.Name
+	}
+	if data.ContractUrl != nil {
+		cypher += `, ct.contractUrl = $contractUrl`
+		params["contractUrl"] = *data.ContractUrl
+	}
+	if data.Status != nil {
+		cypher += `, ct.status = $status`
+		params["status"] = *data.Status
+	}
+	if data.ServiceStartedAt != nil {
+		cypher += `, ct.serviceStartedAt = $serviceStartedAt`
+		params["serviceStartedAt"] = utils.ToDateAsAny(data.ServiceStartedAt)
+	}
+	if data.SignedAt != nil {
+		cypher += `, ct.signedAt = $signedAt`
+		params["signedAt"] = utils.ToDateAsAny(data.SignedAt)
+	}
+	if data.EndedAt != nil {
+		cypher += `, ct.endedAt = $endedAt`
+		params["endedAt"] = utils.ToDateAsAny(data.EndedAt)
+	}
+	if data.BillingCycleInMonths != nil {
+		cypher += `, ct.billingCycleInMonths = $billingCycleInMonths`
+		params["billingCycleInMonths"] = utils.IfNotNilInt64(data.BillingCycleInMonths)
+	}
+	if data.Currency != nil {
+		cypher += `, ct.currency = $currency`
+		params["currency"] = data.Currency.String()
+	}
+	if data.InvoicingStartDate != nil {
+		cypher += `, ct.invoicingStartDate = $invoicingStartDate`
+		params["invoicingStartDate"] = utils.ToNeo4jDateAsAny(data.InvoicingStartDate)
+	}
+	if data.AddressLine1 != nil {
+		cypher += `, ct.addressLine1 = $addressLine1`
+		params["addressLine1"] = *data.AddressLine1
+	}
+	if data.AddressLine2 != nil {
+		cypher += `, ct.addressLine2 = $addressLine2`
+		params["addressLine2"] = *data.AddressLine2
+	}
+	if data.Locality != nil {
+		cypher += `, ct.locality = $locality`
+		params["locality"] = *data.Locality
+	}
+	if data.Country != nil {
+		cypher += `, ct.country = $country`
+		params["country"] = *data.Country
+	}
+	if data.Region != nil {
+		cypher += `, ct.region = $region`
+		params["region"] = *data.Region
+	}
+	if data.Zip != nil {
+		cypher += `, ct.zip = $zip`
+		params["zip"] = *data.Zip
+	}
+	if data.OrganizationLegalName != nil {
+		cypher += `, ct.organizationLegalName = $organizationLegalName`
+		params["organizationLegalName"] = *data.OrganizationLegalName
+	}
+	if data.InvoiceEmail != nil {
+		cypher += `, ct.invoiceEmail = $invoiceEmail`
+		params["invoiceEmail"] = *data.InvoiceEmail
+	}
+	if data.InvoiceEmailCC != nil {
+		cypher += `, ct.invoiceEmailCC = $invoiceEmailCC`
+		params["invoiceEmailCC"] = *data.InvoiceEmailCC
+	}
+	if data.InvoiceEmailBCC != nil {
+		cypher += `, ct.invoiceEmailBCC = $invoiceEmailBCC`
+		params["invoiceEmailBCC"] = *data.InvoiceEmailBCC
+	}
+	if data.InvoiceNote != nil {
+		cypher += `, ct.invoiceNote = $invoiceNote`
+		params["invoiceNote"] = *data.InvoiceNote
+	}
+	if data.NextInvoiceDate != nil {
+		cypher += `, ct.nextInvoiceDate=$nextInvoiceDate `
+		params["nextInvoiceDate"] = utils.ToNeo4jDateAsAny(data.NextInvoiceDate)
+	}
+	if data.CanPayWithCard != nil {
+		cypher += `, ct.canPayWithCard=$canPayWithCard `
+		params["canPayWithCard"] = *data.CanPayWithCard
+	}
+	if data.CanPayWithDirectDebit != nil {
+		cypher += `, ct.canPayWithDirectDebit=$canPayWithDirectDebit `
+		params["canPayWithDirectDebit"] = *data.CanPayWithDirectDebit
+	}
+	if data.CanPayWithBankTransfer != nil {
+		cypher += `, ct.canPayWithBankTransfer=$canPayWithBankTransfer `
+		params["canPayWithBankTransfer"] = *data.CanPayWithBankTransfer
+	}
+	if data.InvoicingEnabled != nil {
+		cypher += `, ct.invoicingEnabled=$invoicingEnabled `
+		params["invoicingEnabled"] = *data.InvoicingEnabled
+	}
+	if data.PayOnline != nil {
+		cypher += `, ct.payOnline=$payOnline `
+		params["payOnline"] = *data.PayOnline
+	}
+	if data.PayAutomatically != nil {
+		cypher += `, ct.payAutomatically=$payAutomatically `
+		params["payAutomatically"] = *data.PayAutomatically
+	}
+	if data.AutoRenew != nil {
+		cypher += `, ct.autoRenew=$autoRenew `
+		params["autoRenew"] = *data.AutoRenew
+	}
+	if data.Check != nil {
+		cypher += `, ct.check=$check `
+		params["check"] = data.Check
+	}
+	if data.DueDays != nil {
+		cypher += `, ct.dueDays=$dueDays `
+		params["dueDays"] = *data.DueDays
+	}
+	if data.LengthInMonths != nil {
+		cypher += `, ct.lengthInMonths=$lengthInMonths `
+		params["lengthInMonths"] = *data.LengthInMonths
+	}
+	if data.Approved != nil {
+		cypher += `, ct.approved=$approved `
+		params["approved"] = *data.Approved
 	}
 
 	span.LogFields(log.String("cypher", cypher))
