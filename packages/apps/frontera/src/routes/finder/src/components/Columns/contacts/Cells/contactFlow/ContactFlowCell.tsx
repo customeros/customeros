@@ -87,8 +87,8 @@ export const ContactFlowCell = observer(
                     {flow.value.contacts
                       .find((e) => e.contact.metadata.id === contactId)
                       ?.status?.toLowerCase()
-                      .split('_')
-                      .join(' ')}{' '}
+                      ?.split('_')
+                      ?.join(' ')}{' '}
                   </span>
                 </div>
               </div>
