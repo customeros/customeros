@@ -52,7 +52,7 @@ func (r *interactionSessionWriteRepository) CreateInTx(ctx context.Context, tx n
 	params := map[string]any{
 		"tenant":               tenant,
 		"interactionSessionId": interactionSessionId,
-		"createdAt":            utils.TimeOrNow(data.CreatedAt),
+		"createdAt":            utils.NowIfZero(data.CreatedAt),
 		"source":               data.Source,
 		"sourceOfTruth":        data.Source,
 		"appSource":            data.AppSource,

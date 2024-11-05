@@ -92,7 +92,7 @@ func (r *emailWriteRepository) CreateEmail(ctx context.Context, tenant, emailId 
 		"rawEmail":  data.RawEmail,
 		"tenant":    tenant,
 		"source":    utils.StringFirstNonEmpty(data.Source.String(), constants.SourceOpenline),
-		"createdAt": utils.TimeOrNow(data.CreatedAt),
+		"createdAt": utils.NowIfZero(data.CreatedAt),
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

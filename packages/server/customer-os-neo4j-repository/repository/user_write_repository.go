@@ -139,7 +139,7 @@ func (r *userWriteRepository) CreateUserInTx(c context.Context, tx neo4j.Managed
 		"source":          input.Source,
 		"sourceOfTruth":   input.SourceOfTruth,
 		"appSource":       input.AppSource,
-		"createdAt":       utils.TimeOrNow(input.CreatedAt),
+		"createdAt":       utils.NowIfZero(input.CreatedAt),
 		"overwrite":       input.SourceOfTruth == constants.SourceOpenline,
 	}
 	span.LogFields(log.String("cypher", cypher))

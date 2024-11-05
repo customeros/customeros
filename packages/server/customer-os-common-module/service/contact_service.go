@@ -74,7 +74,7 @@ func (s *contactService) SaveContact(ctx context.Context, id *string, contactFie
 			return "", err
 		}
 		// if createdAt missing, set it to now
-		contactFields.CreatedAt = utils.TimeOrNow(contactFields.CreatedAt)
+		contactFields.CreatedAt = utils.NowIfZero(contactFields.CreatedAt)
 	} else {
 		span.LogKV("flow", "update")
 		contactId = *id

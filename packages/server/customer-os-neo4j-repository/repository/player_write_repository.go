@@ -71,7 +71,7 @@ func (r *playerWriteRepository) Merge(c context.Context, userId string, data ent
 		"authId":        data.AuthId,
 		"provider":      data.Provider,
 		"identityId":    data.IdentityId,
-		"createdAt":     utils.TimeOrNow(data.CreatedAt),
+		"createdAt":     utils.NowIfZero(data.CreatedAt),
 		"appSource":     data.AppSource,
 		"source":        utils.StringFirstNonEmpty(data.Source, constants.SourceOpenline),
 		"sourceOfTruth": utils.StringFirstNonEmpty(data.SourceOfTruth, constants.SourceOpenline),

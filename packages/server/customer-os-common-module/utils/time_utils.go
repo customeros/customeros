@@ -32,7 +32,7 @@ func Now() time.Time {
 	return time.Now().UTC()
 }
 
-func TimeOrNow(t time.Time) time.Time {
+func NowIfZero(t time.Time) time.Time {
 	if t.IsZero() {
 		return Now()
 	}

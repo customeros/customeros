@@ -45,8 +45,8 @@ func (r *flowSenderWriteRepositoryImpl) Merge(ctx context.Context, entity *entit
 		"tenant":    common.GetTenantFromContext(ctx),
 		"id":        entity.Id,
 		"userId":    entity.UserId,
-		"createdAt": utils.TimeOrNow(entity.CreatedAt),
-		"updatedAt": utils.TimeOrNow(entity.UpdatedAt),
+		"createdAt": utils.NowIfZero(entity.CreatedAt),
+		"updatedAt": utils.NowIfZero(entity.UpdatedAt),
 	}
 
 	span.LogFields(log.String("cypher", cypher))

@@ -51,8 +51,8 @@ func (r *flowExecutionSettingsWriteRepository) Merge(ctx context.Context, tx *ne
 	params := map[string]any{
 		"tenant":    tenant,
 		"id":        entity.Id,
-		"createdAt": utils.TimeOrNow(entity.CreatedAt),
-		"updatedAt": utils.TimeOrNow(entity.UpdatedAt),
+		"createdAt": utils.NowIfZero(entity.CreatedAt),
+		"updatedAt": utils.NowIfZero(entity.UpdatedAt),
 
 		"flowId": entity.FlowId,
 

@@ -51,8 +51,8 @@ func (r *flowParticipantWriteRepositoryImpl) Merge(ctx context.Context, tx *neo4
 	params := map[string]any{
 		"tenant":     common.GetTenantFromContext(ctx),
 		"id":         entity.Id,
-		"createdAt":  utils.TimeOrNow(entity.CreatedAt),
-		"updatedAt":  utils.TimeOrNow(entity.UpdatedAt),
+		"createdAt":  utils.NowIfZero(entity.CreatedAt),
+		"updatedAt":  utils.NowIfZero(entity.UpdatedAt),
 		"entityId":   entity.EntityId,
 		"entityType": entity.EntityType.String(),
 		"status":     entity.Status,

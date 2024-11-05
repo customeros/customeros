@@ -94,7 +94,7 @@ func (r *interactionEventWriteRepository) CreateInTx(ctx context.Context, tx neo
 	params := map[string]any{
 		"tenant":             tenant,
 		"interactionEventId": interactionEventId,
-		"createdAt":          utils.TimeOrNow(data.CreatedAt),
+		"createdAt":          utils.NowIfZero(data.CreatedAt),
 		"updatedAt":          utils.Now(),
 		"source":             data.Source,
 		"sourceOfTruth":      data.Source,

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	model2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -15,6 +16,7 @@ import (
 	"time"
 )
 
+// Deprecated
 type ContractCreateFields struct {
 	OrganizationId         string             `json:"organizationId"`
 	Name                   string             `json:"name"`
@@ -42,6 +44,7 @@ type ContractCreateFields struct {
 	Approved               bool               `json:"approved"`
 }
 
+// Deprecated
 type ContractUpdateFields struct {
 	Name                         string             `json:"name"`
 	ContractUrl                  string             `json:"contractUrl"`
@@ -112,6 +115,7 @@ type ContractUpdateFields struct {
 
 type ContractWriteRepository interface {
 	CreateForOrganization(ctx context.Context, tenant, contractId string, data ContractCreateFields) error
+	CreateForOrganizationNew(ctx context.Context, tenant, contractId string, data data_fields.ContractSaveFields) error
 	UpdateContract(ctx context.Context, tenant, contractId string, data ContractUpdateFields) error
 	UpdateStatus(ctx context.Context, tenant, contractId, status string) error
 	SuspendActiveRenewalOpportunity(ctx context.Context, tenant, contractId string) error
