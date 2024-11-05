@@ -173,17 +173,17 @@ export class LinkedinService {
     };
 
     try {
-      logger.info("Getting connection status", {
+      logger.info("Retrieving recent posts", {
         source: "LinkedinService",
       });
       const recentPosts = await this.linkedinAutomationService.getRecentPosts(profileUrl);
 
-      logger.info("Connection status retrieved", {
+      logger.info("Recent posts retrieved", {
         source: "LinkedinService",
       });
       return { profileUrl, recentPosts };
     } catch (err) {
-      logger.info("Failed to get connection status", {
+      logger.info("Failed to get retrieve recent posts", {
         source: "LinkedinService",
       });
       throw LinkedinService.handleError(err);
