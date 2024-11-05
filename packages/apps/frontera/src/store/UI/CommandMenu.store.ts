@@ -48,6 +48,7 @@ export type CommandMenuType =
   | 'EditContactFlow'
   | 'UnlinkContactFromFlow'
   | 'ConfirmBulkFlowEdit'
+  | 'ConfirmSingleFlowEdit'
   | 'ContactBulkCommands';
 
 export type Context = {

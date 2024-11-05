@@ -1,8 +1,7 @@
 import { useState } from 'react';
 
 import { observer } from 'mobx-react-lite';
-import { FlowStore } from '@store/Flows/Flow.store.ts';
-import { ContactStore } from '@store/Contacts/Contact.store';
+import { FlowStore } from '@store/Flows/Flow.store';
 
 import { Plus } from '@ui/media/icons/Plus';
 import { Check } from '@ui/media/icons/Check';
@@ -24,8 +23,11 @@ export const EditContactFlow = observer(() => {
       ? `Contact - ${contact?.name}`
       : `${selectedIds?.length} contacts`;
 
-  const handleOpenConfirmDialog = (id: string) => {
-    ui.commandMenu.toggle('ConfirmBulkFlowEdit');
+  const handleOpenConfirmDialog = (
+    id: string,
+    type: 'ConfirmBulkFlowEdit' | 'ConfirmSingleFlowEdit',
+  ) => {
+    ui.commandMenu.toggle(type);
     ui.commandMenu.setContext({
       ...ui.commandMenu.context,
       property: id,
@@ -45,28 +47,12 @@ export const EditContactFlow = observer(() => {
         return;
       }
 
-      opt.linkContact(contact.id);
+      handleOpenConfirmDialog(opt.id, 'ConfirmSingleFlowEdit');
     }
 
     if (selectedIds.length > 1) {
-      const selectedContacts = selectedIds
-        .map((id) => contacts.value.get(id))
-        .filter((contact): contact is ContactStore => contact !== null);
-
-      const hasConflictingFlow = selectedContacts.some(
-        (ct) => !!ct.flow?.id && ct.flow.id !== opt.id,
-      );
-
-      if (hasConflictingFlow) {
-        handleOpenConfirmDialog(opt.id);
-
-        return;
-      } else {
-        opt.linkContacts(selectedIds);
-      }
+      handleOpenConfirmDialog(opt.id, 'ConfirmBulkFlowEdit');
     }
-
-    ui.commandMenu.setOpen(false);
   };
 
   useModKey('Enter', () => {
@@ -90,7 +76,7 @@ export const EditContactFlow = observer(() => {
   );
 
   return (
-    <Command shouldFilter={false} label='Move to flow...'>
+    <Command shouldFilter={false} label='Add to flow...'>
       <CommandInput
         label={label}
         value={search}

@@ -4,8 +4,13 @@ import {
   FlowContactDeleteMutation,
   FlowContactDeleteMutationVariables,
 } from '@store/FlowContacts/__service__/flowContactDelete.generated';
+import {
+  FlowContactDeleteBulkMutation,
+  FlowContactDeleteBulkMutationVariables,
+} from '@store/FlowContacts/__service__/flowContactDeleteBulk.generated';
 
 import DeleteContactDocument from './flowContactDelete.graphql';
+import DeleteContactsDocument from './flowContactDeleteBulk.graphql';
 import GetFlowParticipantDocument from './getFlowParticipant.graphql';
 import {
   GetFlowParticipantQuery,
@@ -40,6 +45,13 @@ class FlowContactsService {
       FlowContactDeleteMutation,
       FlowContactDeleteMutationVariables
     >(DeleteContactDocument, payload);
+  }
+
+  async deleteFlowContacts(payload: FlowContactDeleteBulkMutationVariables) {
+    return this.transport.graphql.request<
+      FlowContactDeleteBulkMutation,
+      FlowContactDeleteBulkMutationVariables
+    >(DeleteContactsDocument, payload);
   }
 }
 

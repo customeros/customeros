@@ -86,7 +86,9 @@ export const ContactFlowCell = observer(
                   <span className='capitalize'>
                     {flow.value.contacts
                       .find((e) => e.contact.metadata.id === contactId)
-                      ?.status?.toLowerCase()}{' '}
+                      ?.status?.toLowerCase()
+                      .split('_')
+                      .join(' ')}{' '}
                   </span>
                 </div>
               </div>

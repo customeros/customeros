@@ -15,15 +15,27 @@ export const AddContactFlowSubItemGroup = observer(() => {
   const contact = contacts.value.get(context.ids?.[0] as string);
   const selectedIds = context.ids;
 
+  const handleOpenConfirmDialog = (
+    id: string,
+    type: 'ConfirmBulkFlowEdit' | 'ConfirmSingleFlowEdit',
+  ) => {
+    ui.commandMenu.toggle(type);
+    ui.commandMenu.setContext({
+      ...ui.commandMenu.context,
+      property: id,
+    });
+    ui.commandMenu.setOpen(true);
+  };
+
   const handleSelect = (opt: FlowStore) => {
     if (!context.ids?.[0] || !contact) return;
 
     if (selectedIds?.length === 1) {
-      opt.linkContact(contact.id);
+      handleOpenConfirmDialog(opt.id, 'ConfirmSingleFlowEdit');
     }
 
     if (selectedIds?.length > 1) {
-      opt.linkContacts(selectedIds);
+      handleOpenConfirmDialog(opt.id, 'ConfirmBulkFlowEdit');
     }
 
     ui.commandMenu.setOpen(false);
@@ -45,7 +57,7 @@ export const AddContactFlowSubItemGroup = observer(() => {
           <CommandSubItem
             icon={<Shuffle01 />}
             key={flowSequence.id}
-            leftLabel='Move to flow'
+            leftLabel='Add to flow'
             rightLabel={flowSequence.value.name ?? 'Unnamed'}
             rightAccessory={isSelected ? <Check /> : undefined}
             onSelectAction={() => {

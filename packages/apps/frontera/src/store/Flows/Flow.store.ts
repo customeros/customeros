@@ -264,7 +264,7 @@ export class FlowStore implements Store<Flow> {
         );
 
         this.root.ui.toastSuccess(
-          `Contact added to '${this.value.name}'`,
+          `Contact added to flow`,
           'link-contact-to-flows-success',
         );
         contactStore?.invalidate();
@@ -342,7 +342,7 @@ export class FlowStore implements Store<Flow> {
         ] as FlowContact[];
 
         this.root.ui.toastSuccess(
-          `${contactIds.length} contacts added to '${this.value.name}'`,
+          `${contactIds.length} contacts added to flow`,
           'link-contacts-to-flows-success',
         );
         this.root.contacts.sync({ action: 'INVALIDATE', ids: contactIds });

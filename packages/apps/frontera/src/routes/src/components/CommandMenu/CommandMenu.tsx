@@ -58,6 +58,7 @@ import {
   RenameOpportunityName,
   ChangeBulkArrEstimate,
   UnlinkContactFromFlow,
+  ConfirmSingleFlowEdit,
   ChooseOpportunityStage,
   MergeConfirmationModal,
   SetOpportunityNextSteps,
@@ -97,6 +98,7 @@ const Commands: Record<CommandMenuType, ReactElement> = {
   ContactEmailVerificationInfoModal: <ContactEmailVerificationInfoModal />,
   UnlinkContactFromFlow: <UnlinkContactFromFlow />,
   ConfirmBulkFlowEdit: <ConfirmBulkFlowEdit />,
+  ConfirmSingleFlowEdit: <ConfirmSingleFlowEdit />,
 
   // Opportunity
   OpportunityHub: <OpportunityHub />,

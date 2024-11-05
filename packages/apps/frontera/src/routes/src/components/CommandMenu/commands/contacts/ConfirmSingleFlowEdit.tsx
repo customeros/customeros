@@ -1,10 +1,10 @@
 import React, { useRef } from 'react';
 
 import { observer } from 'mobx-react-lite';
-import { FlowStore } from '@store/Flows/Flow.store.ts';
+import { FlowStore } from '@store/Flows/Flow.store';
 
+import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
-import { Button } from '@ui/form/Button/Button.tsx';
 import { useModKey } from '@shared/hooks/useModKey';
 import {
   Command,
@@ -12,7 +12,7 @@ import {
   CommandCancelIconButton,
 } from '@ui/overlay/CommandMenu';
 
-export const ConfirmBulkFlowEdit = observer(() => {
+export const ConfirmSingleFlowEdit = observer(() => {
   const { contacts, ui, flows } = useStore();
 
   const context = ui.commandMenu.context;
@@ -26,14 +26,13 @@ export const ConfirmBulkFlowEdit = observer(() => {
     ? (flows.value.get(context.property) as FlowStore)
     : null;
 
-  const contactsInFlows = selectedIds
-    .map((e) => contacts.value.get(e)?.flow?.value?.name)
-    .filter((name) => name !== undefined);
+  const contact = contacts.value.get(selectedIds[0]);
+  const contactsInFlows = contact?.flows?.length ?? 0;
 
   const handleConfirm = () => {
     if (!context.ids?.length || !context.property) return;
 
-    selectedFlow?.linkContacts(selectedIds);
+    selectedFlow?.linkContact(selectedIds[0]);
 
     ui.commandMenu.setOpen(false);
   };
@@ -43,7 +42,7 @@ export const ConfirmBulkFlowEdit = observer(() => {
   });
 
   const handleClose = () => {
-    ui.commandMenu.toggle('ConfirmBulkFlowEdit');
+    ui.commandMenu.toggle('ConfirmSingleFlowEdit');
     ui.commandMenu.clearCallback();
   };
 
@@ -52,9 +51,9 @@ export const ConfirmBulkFlowEdit = observer(() => {
       <article className='relative w-full p-6 flex flex-col border-b border-b-gray-100 cursor-default'>
         <div className='flex justify-between'>
           <h1 className='text-base font-semibold'>
-            {contactsInFlows?.length > 1
-              ? `${contactsInFlows?.length} selected contacts are already in other flows`
-              : `Add ${selectedIds?.length} contacts to flow?`}{' '}
+            {contactsInFlows > 0
+              ? `${contact?.name} is already in other flows`
+              : `Add ${contact?.name} to flow?`}
           </h1>
           <div>
             <CommandCancelIconButton onClose={handleClose} />
@@ -82,7 +81,7 @@ export const ConfirmBulkFlowEdit = observer(() => {
               }
             }}
           >
-            Add contacts
+            Add contact
           </Button>
         </div>
       </article>
