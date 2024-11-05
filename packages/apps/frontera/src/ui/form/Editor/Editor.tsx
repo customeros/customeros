@@ -71,6 +71,7 @@ const theme: EditorThemeClasses = {
     listitemChecked: 'editor__listItemChecked',
     listitemUnchecked: 'editor__listItemUnchecked',
   },
+  link: 'editor-link',
   text: {
     bold: 'editor-textBold',
     code: 'editor-textCode',
