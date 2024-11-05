@@ -38,6 +38,7 @@ export const EmailEditorModal = observer(
   }: EmailEditorModalProps) => {
     const id = useParams().id as string;
     const inputRef = useRef<LexicalEditor>(null);
+    const editorRef = useRef<LexicalEditor>(null);
     const store = useStore();
 
     const [subject, setSubject] = useState(data?.subject ?? '');
@@ -151,6 +152,12 @@ export const EmailEditorModal = observer(
                   onChange={(html) => setSubject(extractPlainText(html))}
                   defaultHtmlValue={convertPlainTextToHtml(subject ?? '')}
                   placeholderClassName='text-lg font-medium h-auto cursor-text'
+                  onKeyDown={(e) => {
+                    if (e.key === 'Tab') {
+                      e.preventDefault();
+                      editorRef.current?.focus();
+                    }
+                  }}
                   className={cn(
                     `text-lg font-medium h-auto cursor-text email-editor-subject`,
                     {
@@ -162,6 +169,7 @@ export const EmailEditorModal = observer(
               </div>
               <div className='h-[60vh] mb-10'>
                 <Editor
+                  ref={editorRef}
                   placeholder={placeholder}
                   variableOptions={variables}
                   dataTest='flow-email-editor'
