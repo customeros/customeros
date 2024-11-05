@@ -47,16 +47,7 @@ export const ActionNode = ({ data, ...flowProps }: ActionNodeProps) => {
       isLinkedInData(data) &&
       data.action === FlowActionType.LINKEDIN_CONNECTION_REQUEST
     ) {
-      return (
-        <SendConnectionRequestActionNode
-          {...flowProps}
-          data={{
-            isEditing: data.isEditing,
-            messageTemplate: data.messageTemplate,
-            action: data.action,
-          }}
-        />
-      );
+      return <SendConnectionRequestActionNode />;
     }
 
     return null;

@@ -1,76 +1,7 @@
-import { FlowActionType } from '@store/Flows/types.ts';
-import { NodeProps, useReactFlow } from '@xyflow/react';
-
 import { cn } from '@ui/utils/cn';
-import { IconButton } from '@ui/form/IconButton';
-import { Edit03 } from '@ui/media/icons/Edit03.tsx';
 import { LinkedinOutline } from '@ui/media/icons/LinkedinOutline';
 
-import { LinkedInMessageEditorModal } from '../../components/email';
-
-export const SendConnectionRequestActionNode = ({
-  id,
-  data,
-}: NodeProps & {
-  data: {
-    isEditing?: boolean;
-    action: FlowActionType;
-    messageTemplate: string;
-  };
-}) => {
-  const { setNodes } = useReactFlow();
-
-  const handleEmailDataChange = ({
-    messageTemplate,
-  }: {
-    messageTemplate: string;
-  }) => {
-    setNodes((nds) =>
-      nds.map((node) => {
-        if (node.id === id) {
-          return {
-            ...node,
-            data: {
-              ...node.data,
-              messageTemplate,
-              isEditing: false,
-            },
-          };
-        }
-
-        return node;
-      }),
-    );
-  };
-
-  const handleCancel = () => {
-    setNodes((nds) =>
-      nds.map((node) => {
-        if (node.id === id) {
-          return {
-            ...node,
-            data: {
-              ...node.data,
-              isEditing: false,
-            },
-          };
-        }
-
-        return node;
-      }),
-    );
-  };
-
-  const toggleEditing = () => {
-    setNodes((nds) =>
-      nds.map((node) =>
-        node.id === id
-          ? { ...node, data: { ...node.data, isEditing: true } }
-          : node,
-      ),
-    );
-  };
-
+export const SendConnectionRequestActionNode = () => {
   return (
     <>
       <div className='text-sm flex items-center justify-between overflow-hidden w-full'>
@@ -83,27 +14,9 @@ export const SendConnectionRequestActionNode = ({
             <LinkedinOutline className='size-4 text-blue-500' />
           </div>
 
-          <span className='truncate'>
-            {data?.messageTemplate
-              ? data.messageTemplate
-              : 'Send connection request'}
-          </span>
+          <span className='truncate'>Send connection request</span>
         </div>
-        <IconButton
-          size='xxs'
-          variant='ghost'
-          aria-label='Edit'
-          icon={<Edit03 />}
-          onClick={toggleEditing}
-          className='ml-2 opacity-0 group-hover:opacity-100 pointer-events-all'
-        />
       </div>
-      <LinkedInMessageEditorModal
-        data={data}
-        handleCancel={handleCancel}
-        isEditorOpen={data?.isEditing || false}
-        handleEmailDataChange={handleEmailDataChange}
-      />
     </>
   );
 };
