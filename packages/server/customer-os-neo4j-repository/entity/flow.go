@@ -140,7 +140,7 @@ type FlowExecutionSettingsEntity struct {
 
 	FlowId     string
 	EntityId   string
-	EntityType string
+	EntityType model.EntityType
 
 	Mailbox *string
 	UserId  *string
@@ -163,8 +163,9 @@ type FlowActionExecutionEntity struct {
 	Status          FlowActionExecutionStatus
 
 	//Config
-	Mailbox *string
-	UserId  *string
+	Mailbox   *string
+	UserId    *string
+	SocialUrl *string
 
 	// Additional metadata
 	Error *string // If execution fails, store the error message
@@ -174,6 +175,8 @@ type FlowActionExecutionStatus string
 
 const (
 	FlowActionExecutionStatusScheduled     FlowActionExecutionStatus = "SCHEDULED"
+	FlowActionExecutionStatusInProgress    FlowActionExecutionStatus = "IN_PROGRESS"
+	FlowActionExecutionStatusSkipped       FlowActionExecutionStatus = "SKIPPED"
 	FlowActionExecutionStatusSuccess       FlowActionExecutionStatus = "SUCCESS"
 	FlowActionExecutionStatusTechError     FlowActionExecutionStatus = "TECH_ERROR"
 	FlowActionExecutionStatusBusinessError FlowActionExecutionStatus = "BUSINESS_ERROR"

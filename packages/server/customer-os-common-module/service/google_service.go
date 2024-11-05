@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/araddon/dateparse"
 	mimemail "github.com/emersion/go-message/mail"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -51,7 +52,7 @@ type GoogleService interface {
 
 	ReadEmails(ctx context.Context, batchSize int64, importState *postgresEntity.UserEmailImportState) ([]*postgresEntity.EmailRawData, string, error)
 
-	SendEmail(ctx context.Context, tenant string, request *postgresEntity.EmailMessage) error
+	SendEmail(ctx context.Context, request *postgresEntity.EmailMessage) error
 }
 
 func NewGoogleService(cfg *config.GoogleOAuthConfig, postgresRepositories *postgresRepository.Repositories, services *Services) GoogleService {
@@ -496,9 +497,11 @@ func (s *googleService) ReadEmailFromGoogle(gmailService *gmail.Service, usernam
 	return rawEmailData, nil
 }
 
-func (s *googleService) SendEmail(ctx context.Context, tenant string, request *postgresEntity.EmailMessage) error {
+func (s *googleService) SendEmail(ctx context.Context, request *postgresEntity.EmailMessage) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "GoogleService.SendEmail")
 	defer span.Finish()
+
+	tenant := common.GetTenantFromContext(ctx)
 
 	gSrv, err := s.GetGmailService(ctx, request.From, tenant)
 	if err != nil {

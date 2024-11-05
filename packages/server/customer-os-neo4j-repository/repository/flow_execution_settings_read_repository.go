@@ -13,7 +13,7 @@ import (
 )
 
 type FlowExecutionSettingsReadRepository interface {
-	GetForEntity(ctx context.Context, flowId, entityId, entityType string) (*dbtype.Node, error)
+	GetForEntity(ctx context.Context, tx *neo4j.ManagedTransaction, flowId, entityId, entityType string) (*dbtype.Node, error)
 }
 
 type flowExecutionSettingsReadRepositoryImpl struct {
@@ -25,7 +25,7 @@ func NewFlowExecutionSettingsReadRepository(driver *neo4j.DriverWithContext, dat
 	return &flowExecutionSettingsReadRepositoryImpl{driver: driver, database: database}
 }
 
-func (r flowExecutionSettingsReadRepositoryImpl) GetForEntity(ctx context.Context, flowId, entityId, entityType string) (*dbtype.Node, error) {
+func (r flowExecutionSettingsReadRepositoryImpl) GetForEntity(ctx context.Context, tx *neo4j.ManagedTransaction, flowId, entityId, entityType string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowReadRepository.GetForEntity")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
@@ -45,15 +45,12 @@ func (r flowExecutionSettingsReadRepositoryImpl) GetForEntity(ctx context.Contex
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
-	defer session.Close(ctx)
-
-	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+	result, err := utils.ExecuteReadInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		if err != nil {
 			return nil, err
-		} else {
-			return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 		}
+		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 	})
 	if err != nil && err.Error() == "Result contains no more records" {
 		return nil, nil
@@ -61,5 +58,6 @@ func (r flowExecutionSettingsReadRepositoryImpl) GetForEntity(ctx context.Contex
 	if err != nil {
 		return nil, err
 	}
+
 	return result.(*dbtype.Node), nil
 }

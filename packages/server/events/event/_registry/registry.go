@@ -6,7 +6,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event/contact"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/event/generic"
 	opportunityevent "github.com/openline-ai/openline-customer-os/packages/server/events/event/opportunity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event/reminder"
 	reminderevent "github.com/openline-ai/openline-customer-os/packages/server/events/event/reminder/event"
@@ -27,8 +26,6 @@ func InitAggregate(request event.BaseEvent) eventstore.Aggregate {
 }
 
 var eventsRegistry = map[string]reflect.Type{
-	generic.LinkEntityWithEntityV1: reflect.TypeOf(generic.LinkEntityWithEntity{}),
-
 	reminderevent.ReminderCreateV1:       reflect.TypeOf(reminderevent.ReminderCreateEvent{}),
 	reminderevent.ReminderUpdateV1:       reflect.TypeOf(reminderevent.ReminderUpdateEvent{}),
 	reminderevent.ReminderNotificationV1: reflect.TypeOf(reminderevent.ReminderNotificationEvent{}),

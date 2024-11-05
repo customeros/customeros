@@ -206,7 +206,7 @@ func SetDefaultNeo4jRepositorySpanTags(ctx context.Context, span opentracing.Spa
 }
 func SetDefaultPostgresRepositorySpanTags(ctx context.Context, span opentracing.Span) {
 	setDefaultSpanTags(ctx, span)
-	TagComponentNeo4jRepository(span)
+	TagComponentPostgresRepository(span)
 }
 
 func TraceErr(span opentracing.Span, err error, fields ...log.Field) {

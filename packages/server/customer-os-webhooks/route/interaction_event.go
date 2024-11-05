@@ -525,7 +525,7 @@ func processMailstackReply(ctx context.Context, services *service.Services, tena
 				tracing.TraceErr(span, err)
 			}
 
-			services.CommonServices.RabbitMQService.PublishEventCompleted(ctx, tenant, flowParticipant.EntityId, commonModel.FLOW_PARTICIPANT, utils.NewEventCompletedDetails().WithUpdate())
+			services.CommonServices.RabbitMQService.PublishEventCompleted(ctx, tenant, flowParticipant.Id, commonModel.FLOW_PARTICIPANT, utils.NewEventCompletedDetails().WithUpdate())
 		}
 
 	}

@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
@@ -16,25 +17,25 @@ type tenantSettingsMailboxRepository struct {
 }
 
 type TenantSettingsMailboxRepository interface {
-	GetAll(ctx context.Context, tenant string) ([]*entity.TenantSettingsMailbox, error)
+	GetAll(ctx context.Context) ([]*entity.TenantSettingsMailbox, error)
 	GetForRampUp(ctx context.Context) ([]*entity.TenantSettingsMailbox, error)
-	GetByMailbox(ctx context.Context, tenant, mailbox string) (*entity.TenantSettingsMailbox, error)
-	GetById(ctx context.Context, tenant, id string) (*entity.TenantSettingsMailbox, error)
-	GetAllByDomain(ctx context.Context, tenant, domain string) ([]entity.TenantSettingsMailbox, error)
-	GetAllByUsername(ctx context.Context, tenant, username string) ([]entity.TenantSettingsMailbox, error)
+	GetByMailbox(ctx context.Context, mailbox string) (*entity.TenantSettingsMailbox, error)
+	GetAllByDomain(ctx context.Context, domain string) ([]entity.TenantSettingsMailbox, error)
+	GetAllByUsername(ctx context.Context, username string) ([]entity.TenantSettingsMailbox, error)
 
-	Merge(ctx context.Context, tenant string, mailbox *entity.TenantSettingsMailbox) error
+	Merge(ctx context.Context, mailbox *entity.TenantSettingsMailbox) error
 }
 
 func NewTenantSettingsMailboxRepository(db *gorm.DB) TenantSettingsMailboxRepository {
 	return &tenantSettingsMailboxRepository{gormDb: db}
 }
 
-func (r *tenantSettingsMailboxRepository) GetAll(c context.Context, tenant string) ([]*entity.TenantSettingsMailbox, error) {
-	span, _ := opentracing.StartSpanFromContext(c, "TenantSettingsMailboxRepository.GetAll")
+func (r *tenantSettingsMailboxRepository) GetAll(ctx context.Context) ([]*entity.TenantSettingsMailbox, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantSettingsMailboxRepository.GetAll")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	tracing.TagTenant(span, tenant)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+
+	tenant := common.GetTenantFromContext(ctx)
 
 	var result []*entity.TenantSettingsMailbox
 	err := r.gormDb.
@@ -53,7 +54,7 @@ func (r *tenantSettingsMailboxRepository) GetAll(c context.Context, tenant strin
 func (r *tenantSettingsMailboxRepository) GetForRampUp(ctx context.Context) ([]*entity.TenantSettingsMailbox, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "TenantSettingsMailboxRepository.GetForRampUp")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	var result []*entity.TenantSettingsMailbox
 	err := r.gormDb.
@@ -69,11 +70,12 @@ func (r *tenantSettingsMailboxRepository) GetForRampUp(ctx context.Context) ([]*
 	return result, nil
 }
 
-func (r *tenantSettingsMailboxRepository) GetByMailbox(ctx context.Context, tenant, mailbox string) (*entity.TenantSettingsMailbox, error) {
+func (r *tenantSettingsMailboxRepository) GetByMailbox(ctx context.Context, mailbox string) (*entity.TenantSettingsMailbox, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "TenantSettingsMailboxRepository.GetByMailbox")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	tracing.TagTenant(span, tenant)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+
+	tenant := common.GetTenantFromContext(ctx)
 
 	span.LogFields(tracingLog.String("mailbox", mailbox))
 
@@ -97,39 +99,13 @@ func (r *tenantSettingsMailboxRepository) GetByMailbox(ctx context.Context, tena
 	return &result, nil
 }
 
-func (r *tenantSettingsMailboxRepository) GetById(ctx context.Context, tenant, id string) (*entity.TenantSettingsMailbox, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "TenantSettingsMailboxRepository.GetById")
-	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	tracing.TagTenant(span, tenant)
-
-	span.LogFields(tracingLog.String("id", id))
-
-	var result entity.TenantSettingsMailbox
-	err := r.gormDb.
-		Where("id = ?", id).
-		First(&result).
-		Error
-
-	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			span.LogFields(tracingLog.Bool("result.found", false))
-			return nil, nil
-		}
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	span.LogFields(tracingLog.Bool("result.found", true))
-
-	return &result, nil
-}
-
-func (r *tenantSettingsMailboxRepository) GetAllByDomain(ctx context.Context, tenant, domain string) ([]entity.TenantSettingsMailbox, error) {
+func (r *tenantSettingsMailboxRepository) GetAllByDomain(ctx context.Context, domain string) ([]entity.TenantSettingsMailbox, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "TenantSettingsMailboxRepository.GetAllByDomain")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	tracing.TagTenant(span, tenant)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+
+	tenant := common.GetTenantFromContext(ctx)
+
 	span.LogKV("domain", domain)
 
 	var result []entity.TenantSettingsMailbox
@@ -146,11 +122,13 @@ func (r *tenantSettingsMailboxRepository) GetAllByDomain(ctx context.Context, te
 	return result, nil
 }
 
-func (r *tenantSettingsMailboxRepository) GetAllByUsername(ctx context.Context, tenant, username string) ([]entity.TenantSettingsMailbox, error) {
+func (r *tenantSettingsMailboxRepository) GetAllByUsername(ctx context.Context, username string) ([]entity.TenantSettingsMailbox, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "TenantSettingsMailboxRepository.GetAllByUsername")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	tracing.TagTenant(span, tenant)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+
+	tenant := common.GetTenantFromContext(ctx)
+
 	span.LogKV("username", username)
 
 	var result []entity.TenantSettingsMailbox
@@ -167,11 +145,12 @@ func (r *tenantSettingsMailboxRepository) GetAllByUsername(ctx context.Context, 
 	return result, nil
 }
 
-func (r *tenantSettingsMailboxRepository) Merge(ctx context.Context, tenant string, input *entity.TenantSettingsMailbox) error {
+func (r *tenantSettingsMailboxRepository) Merge(ctx context.Context, input *entity.TenantSettingsMailbox) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "TenantSettingsMailboxRepository.Merge")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	tracing.TagTenant(span, tenant)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+
+	tenant := common.GetTenantFromContext(ctx)
 
 	span.LogFields(tracingLog.Object("mailbox", input))
 

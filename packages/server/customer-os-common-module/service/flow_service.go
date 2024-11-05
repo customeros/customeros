@@ -876,7 +876,9 @@ func (s *flowService) FlowParticipantAdd(ctx context.Context, flowId, entityId s
 			return nil, err
 		}
 
-		s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, entityId, entityType, utils.NewEventCompletedDetails().WithUpdate())
+		flowParticipant := e.(*neo4jentity.FlowParticipantEntity)
+
+		s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, flowParticipant.Id, model.FLOW_PARTICIPANT, utils.NewEventCompletedDetails().WithCreate())
 
 		return e.(*neo4jentity.FlowParticipantEntity), nil
 	} else {
@@ -949,7 +951,7 @@ func (s *flowService) FlowParticipantDelete(ctx context.Context, flowParticipant
 		return nil, nil
 	})
 
-	s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, entity.EntityId, entity.EntityType, utils.NewEventCompletedDetails().WithUpdate())
+	s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, entity.Id, model.FLOW_PARTICIPANT, utils.NewEventCompletedDetails().WithDelete())
 
 	return nil
 }

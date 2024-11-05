@@ -22,7 +22,7 @@ import (
 
 type FlowExecutionService interface {
 	GetFlowActionExecutionById(ctx context.Context, flowActionExecution string) (*entity.FlowActionExecutionEntity, error)
-	GetFlowExecutionSettingsForEntity(ctx context.Context, flowId, entityId string, entityType model.EntityType) (*entity.FlowExecutionSettingsEntity, error)
+	GetFlowExecutionSettingsForEntity(ctx context.Context, tx *neo4j.ManagedTransaction, flowId, entityId string, entityType model.EntityType) (*entity.FlowExecutionSettingsEntity, error)
 	GetFlowRequirements(ctx context.Context, flowId string) (*FlowComputeParticipantsRequirementsInput, error)
 	UpdateParticipantFlowRequirements(ctx context.Context, tx *neo4j.ManagedTransaction, participant *entity.FlowParticipantEntity, requirements *FlowComputeParticipantsRequirementsInput) (bool, error)
 	ScheduleFlow(ctx context.Context, tx *neo4j.ManagedTransaction, flowId string, flowParticipant *entity.FlowParticipantEntity) error
@@ -59,12 +59,12 @@ func (s *flowExecutionService) GetFlowActionExecutionById(ctx context.Context, f
 	return mapper.MapDbNodeToFlowActionExecutionEntity(node), nil
 }
 
-func (s *flowExecutionService) GetFlowExecutionSettingsForEntity(ctx context.Context, flowId, entityId string, entityType model.EntityType) (*entity.FlowExecutionSettingsEntity, error) {
+func (s *flowExecutionService) GetFlowExecutionSettingsForEntity(ctx context.Context, tx *neo4j.ManagedTransaction, flowId, entityId string, entityType model.EntityType) (*entity.FlowExecutionSettingsEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.GetFlowExecutionSettingsForEntity")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	node, err := s.services.Neo4jRepositories.FlowExecutionSettingsReadRepository.GetForEntity(ctx, flowId, entityId, entityType.String())
+	node, err := s.services.Neo4jRepositories.FlowExecutionSettingsReadRepository.GetForEntity(ctx, tx, flowId, entityId, entityType.String())
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -252,8 +252,8 @@ func (s *flowExecutionService) scheduleNextAction(ctx context.Context, tx *neo4j
 	switch nextAction.Data.Action {
 	case entity.FlowActionTypeEmailNew, entity.FlowActionTypeEmailReply:
 		return s.scheduleEmailAction(ctx, tx, flowId, flowParticipant, scheduleAt, nextAction)
-	//case entity.FlowActionTypeLinkedinConnectionRequest:
-	//	return s.scheduleEmailAction(ctx, tx, flowId, flowParticipant, scheduleAt, nextAction)
+	case entity.FlowActionTypeLinkedinConnectionRequest:
+		return s.scheduleSendLinkedInConnection(ctx, tx, flowId, flowParticipant, scheduleAt, nextAction)
 	default:
 		tracing.TraceErr(span, fmt.Errorf("Unsupported action type %s", nextAction.Data.Action))
 		return errors.New("Unsupported action type")
@@ -268,7 +268,7 @@ func (s *flowExecutionService) scheduleEmailAction(ctx context.Context, tx *neo4
 	tenant := common.GetTenantFromContext(ctx)
 
 	// 1. Get the mailbox for contact or associate the best available mailbox
-	flowExecutionSettings, err := s.GetFlowExecutionSettingsForEntity(ctx, flowId, flowParticipant.EntityId, flowParticipant.EntityType)
+	flowExecutionSettings, err := s.GetFlowExecutionSettingsForEntity(ctx, tx, flowId, flowParticipant.EntityId, flowParticipant.EntityType)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -296,7 +296,7 @@ func (s *flowExecutionService) scheduleEmailAction(ctx context.Context, tx *neo4
 			}
 
 			for _, emailEntity := range *emailEntitites {
-				mailboxes, err := s.services.PostgresRepositories.TenantSettingsMailboxRepository.GetAllByUsername(ctx, tenant, emailEntity.RawEmail)
+				mailboxes, err := s.services.PostgresRepositories.TenantSettingsMailboxRepository.GetAllByUsername(ctx, emailEntity.RawEmail)
 				if err != nil {
 					tracing.TraceErr(span, err)
 					return err
@@ -340,26 +340,11 @@ func (s *flowExecutionService) scheduleEmailAction(ctx context.Context, tx *neo4
 			return errors.New("User not found")
 		}
 
-		id, err := s.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelFlowExecutionSettings)
+		flowExecutionSettings, err = s.upsertFlowExecutionSettings(ctx, tx, tenant, flowId, flowParticipant, &fastestMailbox, &user.Id)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
 		}
-		flowExecutionSettings = &entity.FlowExecutionSettingsEntity{
-			Id:         id,
-			FlowId:     flowId,
-			EntityId:   flowParticipant.EntityId,
-			EntityType: flowParticipant.EntityType.String(),
-			Mailbox:    &fastestMailbox,
-			UserId:     &user.Id,
-		}
-
-		node, err := s.services.Neo4jRepositories.FlowExecutionSettingsWriteRepository.Merge(ctx, tx, flowExecutionSettings)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
-		flowExecutionSettings = mapper.MapDbNodeToFlowExecutionSettingsEntity(node)
 	}
 
 	workingSchedule, err := s.services.PostgresRepositories.UserWorkingScheduleRepository.GetForUser(ctx, tenant, *flowExecutionSettings.UserId)
@@ -373,7 +358,7 @@ func (s *flowExecutionService) scheduleEmailAction(ctx context.Context, tx *neo4
 	}
 
 	// 2. Schedule the email action
-	actualScheduleAt, err := s.getFirstAvailableSlotForMailbox(ctx, tx, tenant, *flowExecutionSettings.Mailbox, scheduleAt, workingSchedule)
+	actualScheduleAt, err := s.getFirstAvailableSlotForMailbox(ctx, tx, *flowExecutionSettings.Mailbox, scheduleAt, workingSchedule)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -395,18 +380,274 @@ func (s *flowExecutionService) scheduleEmailAction(ctx context.Context, tx *neo4
 	return nil
 }
 
-func (s *flowExecutionService) getFirstAvailableSlotForMailbox(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, mailbox string, scheduleAt time.Time, workingSchedule []*postgresentity.UserWorkingSchedule) (*time.Time, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.getFirstAvailableSlotForMailbox")
+func (s *flowExecutionService) scheduleSendLinkedInConnection(ctx context.Context, tx *neo4j.ManagedTransaction, flowId string, flowParticipant *entity.FlowParticipantEntity, scheduleAt time.Time, nextAction entity.FlowActionEntity) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.scheduleSendLinkedInConnection")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	mailboxEntity, err := s.services.PostgresRepositories.TenantSettingsMailboxRepository.GetByMailbox(ctx, tenant, mailbox)
+	tenant := common.GetTenantFromContext(ctx)
+
+	if flowParticipant.EntityType != model.CONTACT {
+		return errors.New("Only contacts are supported for LinkedIn connection requests")
+	}
+
+	flowSenders, err := s.services.FlowService.FlowSenderGetList(ctx, []string{flowId})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	senderIds := make([]string, 0)
+	for _, flowSender := range *flowSenders {
+		if flowSender.UserId == nil {
+			continue
+		}
+
+		activeLinkedinToken, err := s.services.PostgresRepositories.BrowserConfigRepository.GetForUser(ctx, *flowSender.UserId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+
+		if activeLinkedinToken != nil {
+			senderIds = append(senderIds, *flowSender.UserId)
+		}
+	}
+
+	span.LogFields(log.String("senderIds", strings.Join(senderIds, ",")))
+
+	if len(senderIds) == 0 {
+		return errors.New("No LinkedIn sender available")
+	}
+
+	// 1 - Sender is already connected with the contact
+	// - create the scheduled execution as EXECUTED
+	// - set the UserId as the user to be used in the flow
+	// - schedule the next action
+
+	for _, senderId := range senderIds {
+		isLinkedWith, err := s.services.Neo4jRepositories.CommonReadRepository.IsLinkedWith(ctx, tenant, flowParticipant.EntityId, model.CONTACT, model.CONNECTED_WITH.String(), senderId, model.USER)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "CommonReadRepository.IsLinkedWith"))
+			return err
+		}
+
+		if isLinkedWith {
+			span.LogFields(log.String("process", senderId+" is already connected with the contact"))
+			id, err := s.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelFlowActionExecution)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return err
+			}
+
+			now := utils.Now()
+			_, err = s.services.Neo4jRepositories.FlowActionExecutionWriteRepository.Merge(ctx, tx, &entity.FlowActionExecutionEntity{
+				Id:              id,
+				FlowId:          flowId,
+				ActionId:        nextAction.Id,
+				EntityId:        flowParticipant.EntityId,
+				EntityType:      flowParticipant.EntityType,
+				UserId:          &senderId,
+				ExecutedAt:      &now,
+				ScheduledAt:     now,
+				StatusUpdatedAt: now,
+				Status:          entity.FlowActionExecutionStatusSkipped,
+			})
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return err
+			}
+
+			_, err = s.upsertFlowExecutionSettings(ctx, tx, tenant, flowId, flowParticipant, nil, &senderId)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return err
+			}
+
+			err = s.ScheduleFlow(ctx, tx, flowId, flowParticipant)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return err
+			}
+
+			return nil
+		}
+	}
+
+	// 2 - No flow sender is connected with the contact
+	// - identify the fastest user to connect with
+	// - store flow execution settings
+	// - create the scheduled execution as SCHEDULED
+
+	// - check LinkedinConnectionRequest if there is already a request scheduled in the last 30 days. if there is one, associate it with the flow action execution
+	for _, senderId := range senderIds {
+		socialUrl := ""
+		requestSentAlready := false
+
+		//pick a linkedin social for contact
+		socials, err := s.services.SocialService.GetAllForEntities(ctx, tenant, model.CONTACT, []string{flowParticipant.EntityId})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+		for _, social := range *socials {
+			if strings.Contains(social.Url, "linkedin.com") {
+				requestSent, err := s.services.Neo4jRepositories.LinkedinConnectionRequestReadRepository.GetPendingRequestByUserForSocialUrl(ctx, tx, tenant, senderId, social.Url)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					return err
+				}
+
+				if requestSent != nil {
+					socialUrl = social.Url
+					requestSentAlready = true
+					break
+				}
+			}
+		}
+
+		//if there is a linkedin request sent already to one of the socials for the contact
+		if requestSentAlready {
+			span.LogFields(log.String("process", "linkedin request sent already by user "+senderId+" to: "+socialUrl))
+			id, err := s.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelFlowActionExecution)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return err
+			}
+
+			now := utils.Now()
+			_, err = s.services.Neo4jRepositories.FlowActionExecutionWriteRepository.Merge(ctx, tx, &entity.FlowActionExecutionEntity{
+				Id:              id,
+				FlowId:          flowId,
+				ActionId:        nextAction.Id,
+				EntityId:        flowParticipant.EntityId,
+				EntityType:      flowParticipant.EntityType,
+				UserId:          &senderId,
+				SocialUrl:       &socialUrl,
+				ExecutedAt:      &now,
+				ScheduledAt:     now,
+				StatusUpdatedAt: now,
+				Status:          entity.FlowActionExecutionStatusInProgress,
+			})
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return err
+			}
+
+			_, err = s.upsertFlowExecutionSettings(ctx, tx, tenant, flowId, flowParticipant, nil, &senderId)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return err
+			}
+
+			return nil
+		}
+	}
+
+	//if there is no linkedin request sent already to one of the socials for the contact
+	span.LogFields(log.String("process", "no linkedin request sent already"))
+	fastestUserId, err := s.services.Neo4jRepositories.LinkedinConnectionRequestReadRepository.GetFastestUser(ctx, tx, senderIds)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	if fastestUserId == "" {
+		return errors.New("No fastest user found")
+	}
+
+	flowExecutionSettings, err := s.upsertFlowExecutionSettings(ctx, tx, tenant, flowId, flowParticipant, nil, &fastestUserId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	workingSchedule, err := s.services.PostgresRepositories.UserWorkingScheduleRepository.GetForUser(ctx, tenant, fastestUserId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	if len(workingSchedule) == 0 {
+		return errors.New("User working schedule not found")
+	}
+
+	// 2. Schedule the email action
+	actualScheduleAt, err := s.getFirstAvailableSlotForLinkedinConnection(ctx, tx, fastestUserId, scheduleAt, workingSchedule)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	err = s.storeNextActionExecutionEntity(ctx, tx, flowId, nextAction.Id, flowParticipant, flowExecutionSettings.Mailbox, actualScheduleAt)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	flowParticipant.Status = entity.FlowParticipantStatusScheduled
+	_, err = s.services.Neo4jRepositories.FlowParticipantWriteRepository.Merge(ctx, tx, flowParticipant)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	return nil
+}
+
+func (s *flowExecutionService) upsertFlowExecutionSettings(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, flowId string, participant *entity.FlowParticipantEntity, mailbox, userId *string) (*entity.FlowExecutionSettingsEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.upsertFlowExecutionSettings")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	flowExecutionSettings, err := s.GetFlowExecutionSettingsForEntity(ctx, tx, flowId, participant.EntityId, participant.EntityType)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
-	//minTimeBetweenEmails := time.Duration(mailboxEntity.MinMinutesBetweenEmails) * time.Minute
+	if flowExecutionSettings == nil {
+		id, err := s.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelFlowExecutionSettings)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+		flowExecutionSettings = &entity.FlowExecutionSettingsEntity{
+			Id:         id,
+			FlowId:     flowId,
+			EntityId:   participant.EntityId,
+			EntityType: participant.EntityType,
+			Mailbox:    mailbox,
+			UserId:     userId,
+		}
+	}
+
+	if mailbox != nil {
+		flowExecutionSettings.Mailbox = mailbox
+	}
+	if userId != nil {
+		flowExecutionSettings.UserId = userId
+	}
+
+	node, err := s.services.Neo4jRepositories.FlowExecutionSettingsWriteRepository.Merge(ctx, tx, flowExecutionSettings)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return mapper.MapDbNodeToFlowExecutionSettingsEntity(node), nil
+}
+
+func (s *flowExecutionService) getFirstAvailableSlotForMailbox(ctx context.Context, tx *neo4j.ManagedTransaction, mailbox string, scheduleAt time.Time, workingSchedule []*postgresentity.UserWorkingSchedule) (*time.Time, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.getFirstAvailableSlotForMailbox")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	mailboxEntity, err := s.services.PostgresRepositories.TenantSettingsMailboxRepository.GetByMailbox(ctx, mailbox)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
 
 	// Get the last scheduled execution for this mailbox
 	lastScheduledExecutionNode, err := s.services.Neo4jRepositories.FlowActionExecutionReadRepository.GetLastScheduledForMailbox(ctx, tx, mailbox)
@@ -440,7 +681,7 @@ func (s *flowExecutionService) getFirstAvailableSlotForMailbox(ctx context.Conte
 	}
 
 	// Ensure possibleScheduledAt is not in the past and within working hours
-	possibleScheduledAt = adjustToWorkingTimeWithRandom(maxTime(possibleScheduledAt, utils.Now()), workingSchedule, mailboxEntity)
+	possibleScheduledAt = adjustToWorkingTimeWithRandom(maxTime(possibleScheduledAt, utils.Now()), workingSchedule, mailboxEntity.MinMinutesBetweenEmails, mailboxEntity.MaxMinutesBetweenEmails)
 
 	//Add random seconds and miliseconds to not have 00:00:00 as the scheduled time
 	randomSeconds := time.Duration(utils.GenerateRandomInt(0, 60)) * time.Second
@@ -449,36 +690,54 @@ func (s *flowExecutionService) getFirstAvailableSlotForMailbox(ctx context.Conte
 	possibleScheduledAt = possibleScheduledAt.Add(randomSeconds).Add(randomMiliseconds).Add(randomMicroseconds)
 
 	return &possibleScheduledAt, nil
+}
 
-	//TODO V2
-	//for {
-	//	endTime := possibleScheduledAt.Add(minTimeBetweenEmails)
-	//
-	//	// Check if there's any scheduled execution within the interval
-	//	ee, err := s.services.Neo4jRepositories.FlowActionExecutionReadRepository.GetByMailboxAndTimeInterval(ctx, tx, mailbox, possibleScheduledAt, endTime)
-	//	if err != nil {
-	//		tracing.TraceErr(span, err)
-	//		return nil, err
-	//	}
-	//
-	//	existingExecution := mapper.MapDbNodeToFlowActionExecutionEntity(ee)
-	//
-	//	if existingExecution == nil {
-	//		// No execution found in the interval, so this slot is available
-	//		// Add a random duration within the min-max range
-	//		randomDuration := time.Duration(utils.GenerateRandomInt(mailboxEntity.MinMinutesBetweenEmails, mailboxEntity.MaxMinutesBetweenEmails)) * time.Minute
-	//		scheduledTime := possibleScheduledAt.Add(randomDuration)
-	//
-	//		// Ensure the scheduled time is within working hours
-	//		scheduledTime = nextWorkingTime(scheduledTime)
-	//
-	//		return &scheduledTime, nil
-	//	}
-	//
-	//	// Move the start time to just after the found execution
-	//	possibleScheduledAt = possibleScheduledAt.Add(time.Minute)
-	//	possibleScheduledAt = nextWorkingTime(possibleScheduledAt)
-	//}
+func (s *flowExecutionService) getFirstAvailableSlotForLinkedinConnection(ctx context.Context, tx *neo4j.ManagedTransaction, userId string, scheduleAt time.Time, workingSchedule []*postgresentity.UserWorkingSchedule) (*time.Time, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.getFirstAvailableSlotForLinkedinConnection")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	// Get the last scheduled execution for this mailbox
+	lastScheduledNode, err := s.services.Neo4jRepositories.LinkedinConnectionRequestReadRepository.GetLastScheduledForUser(ctx, tx, userId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	possibleScheduledAt := scheduleAt
+
+	if lastScheduledNode != nil {
+		lastScheduledExecution := mapper.MapDbNodeToFlowActionExecutionEntity(lastScheduledNode)
+		possibleScheduledAt = maxTime(possibleScheduledAt, lastScheduledExecution.ScheduledAt)
+	}
+
+	//check the number of requests scheduled for the day
+	for {
+		requestsScheduledInDay, err := s.services.Neo4jRepositories.LinkedinConnectionRequestReadRepository.CountRequestsPerUserPerDay(ctx, tx, userId, utils.StartOfDayInUTC(possibleScheduledAt), utils.EndOfDayInUTC(possibleScheduledAt))
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+
+		if requestsScheduledInDay >= 20 {
+			possibleScheduledAt = possibleScheduledAt.AddDate(0, 0, 1)
+			possibleScheduledAt = time.Date(possibleScheduledAt.Year(), possibleScheduledAt.Month(), possibleScheduledAt.Day(), 0, 0, 0, 0, time.UTC)
+			continue
+		} else {
+			break
+		}
+	}
+
+	// Ensure possibleScheduledAt is not in the past and within working hours
+	possibleScheduledAt = adjustToWorkingTimeWithRandom(maxTime(possibleScheduledAt, utils.Now()), workingSchedule, 5, 10)
+
+	//Add random seconds and miliseconds to not have 00:00:00 as the scheduled time
+	randomSeconds := time.Duration(utils.GenerateRandomInt(0, 60)) * time.Second
+	randomMiliseconds := time.Duration(utils.GenerateRandomInt(0, 1000)) * time.Millisecond
+	randomMicroseconds := time.Duration(utils.GenerateRandomInt(0, 1000)) * time.Microsecond
+	possibleScheduledAt = possibleScheduledAt.Add(randomSeconds).Add(randomMiliseconds).Add(randomMicroseconds)
+
+	return &possibleScheduledAt, nil
 }
 
 func maxTime(a, b time.Time) time.Time {
@@ -537,7 +796,16 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 	var emailMessage *postgresentity.EmailMessage
 	var currentAction *entity.FlowActionEntity
 
-	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+	participant, err := s.services.FlowService.FlowParticipantByEntity(ctx, scheduledActionExecution.FlowId, scheduledActionExecution.EntityId, scheduledActionExecution.EntityType)
+	if err != nil {
+		return errors.Wrap(err, "failed to get flow participant by entity")
+	}
+
+	if participant == nil {
+		return errors.New("participant not found")
+	}
+
+	_, err = session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		var err error
 		currentAction, err = s.services.FlowService.FlowActionGetById(ctx, scheduledActionExecution.ActionId)
 		if err != nil {
@@ -553,15 +821,6 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err
-		}
-
-		participant, err := s.services.FlowService.FlowParticipantByEntity(ctx, scheduledActionExecution.FlowId, scheduledActionExecution.EntityId, scheduledActionExecution.EntityType)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to get flow participant by entity")
-		}
-
-		if participant == nil {
-			return nil, errors.New("participant not found")
 		}
 
 		participantUpdated, err = s.UpdateParticipantFlowRequirements(ctx, &tx, participant, flowRequirements)
@@ -594,7 +853,7 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 
 			if existingEmail == nil {
 
-				mailbox, err := s.services.PostgresRepositories.TenantSettingsMailboxRepository.GetByMailbox(ctx, common.GetTenantFromContext(ctx), *scheduledActionExecution.Mailbox)
+				mailbox, err := s.services.PostgresRepositories.TenantSettingsMailboxRepository.GetByMailbox(ctx, *scheduledActionExecution.Mailbox)
 				if err != nil {
 					return nil, errors.Wrap(err, "failed to get mailbox by mailbox")
 				}
@@ -756,7 +1015,7 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 	}
 
 	if participantUpdated {
-		s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, scheduledActionExecution.EntityId, scheduledActionExecution.EntityType, utils.NewEventCompletedDetails().WithUpdate())
+		s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, participant.Id, model.FLOW_PARTICIPANT, utils.NewEventCompletedDetails().WithUpdate())
 	}
 
 	// save billable event
@@ -822,12 +1081,12 @@ func (s *flowExecutionService) getEmailActionToReply(ctx context.Context, action
 func replacePlaceholders(input, variableName, value string) string {
 	return strings.Replace(input, "{{"+variableName+"}}", value, -1)
 }
-func adjustToWorkingTimeWithRandom(t time.Time, schedules []*postgresentity.UserWorkingSchedule, mailbox *postgresentity.TenantSettingsMailbox) time.Time {
+func adjustToWorkingTimeWithRandom(t time.Time, schedules []*postgresentity.UserWorkingSchedule, minRandom, maxRandom int) time.Time {
 	for {
 		// Get working hours for the current day
 		start, end := getWorkingHoursForDay(t, schedules)
 
-		randomMinutes := time.Duration(utils.GenerateRandomInt(mailbox.MinMinutesBetweenEmails, mailbox.MaxMinutesBetweenEmails)) * time.Minute
+		randomMinutes := time.Duration(utils.GenerateRandomInt(minRandom, maxRandom)) * time.Minute
 		t = t.Add(randomMinutes)
 
 		if !start.IsZero() && !end.IsZero() {

@@ -8,7 +8,6 @@ import (
 	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	orgaggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
 	orgevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/event/generic"
 	reminder "github.com/openline-ai/openline-customer-os/packages/server/events/event/reminder/event"
 	"github.com/pkg/errors"
 	"os"
@@ -143,8 +142,7 @@ func (eb *EventBufferWatcher) handleEvent(ctx context.Context, evt eventstore.Ev
 			return err
 		}
 		return err
-	case reminder.ReminderNotificationV1,
-		generic.LinkEntityWithEntityV1:
+	case reminder.ReminderNotificationV1:
 		// TODO: implement the logic for the reminder and generic events
 		return nil
 	default:

@@ -1133,8 +1133,28 @@ func MapDbNodeToFlowActionExecutionEntity(node *dbtype.Node) *entity.FlowActionE
 		Status:          entity.GetFlowActionExecutionStatus(utils.GetStringPropOrEmpty(props, "status")),
 		Error:           utils.GetStringPropOrNil(props, "error"),
 
-		Mailbox: utils.GetStringPropOrNil(props, "mailbox"),
-		UserId:  utils.GetStringPropOrNil(props, "userId"),
+		Mailbox:   utils.GetStringPropOrNil(props, "mailbox"),
+		UserId:    utils.GetStringPropOrNil(props, "userId"),
+		SocialUrl: utils.GetStringPropOrNil(props, "socialUrl"),
+	}
+	return &e
+}
+
+func MapDbNodeToLinkedinConnectionRequestEntity(node *dbtype.Node) *entity.LinkedinConnectionRequest {
+	if node == nil {
+		return nil
+	}
+	props := utils.GetPropsFromNode(*node)
+	e := entity.LinkedinConnectionRequest{
+		Id:           utils.GetStringPropOrEmpty(props, "id"),
+		CreatedAt:    utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:    utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		ProducerId:   utils.GetStringPropOrEmpty(props, "producerId"),
+		ProducerType: utils.GetStringPropOrEmpty(props, "producerType"),
+		ScheduledAt:  utils.GetTimePropOrNow(props, "scheduledAt"),
+		SocialUrl:    utils.GetStringPropOrEmpty(props, "socialUrl"),
+		UserId:       utils.GetStringPropOrEmpty(props, "userId"),
+		Status:       entity.GetLinkedinConnectionRequestStatus(utils.GetStringPropOrEmpty(props, "status")),
 	}
 	return &e
 }

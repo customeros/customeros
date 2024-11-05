@@ -1337,7 +1337,6 @@ type ComplexityRoot struct {
 		User                               func(childComplexity int, id string) int
 		UserByEmail                        func(childComplexity int, email string) int
 		Users                              func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
-		UsersWithMailboxes                 func(childComplexity int) int
 		WorkflowByType                     func(childComplexity int, workflowType model.WorkflowType) int
 		Workflows                          func(childComplexity int) int
 	}
@@ -1524,25 +1523,26 @@ type ComplexityRoot struct {
 	}
 
 	User struct {
-		AppSource       func(childComplexity int) int
-		Bot             func(childComplexity int) int
-		Calendars       func(childComplexity int) int
-		CreatedAt       func(childComplexity int) int
-		Emails          func(childComplexity int) int
-		FirstName       func(childComplexity int) int
-		ID              func(childComplexity int) int
-		Internal        func(childComplexity int) int
-		JobRoles        func(childComplexity int) int
-		LastName        func(childComplexity int) int
-		Mailboxes       func(childComplexity int) int
-		Name            func(childComplexity int) int
-		PhoneNumbers    func(childComplexity int) int
-		ProfilePhotoURL func(childComplexity int) int
-		Roles           func(childComplexity int) int
-		Source          func(childComplexity int) int
-		SourceOfTruth   func(childComplexity int) int
-		Timezone        func(childComplexity int) int
-		UpdatedAt       func(childComplexity int) int
+		AppSource        func(childComplexity int) int
+		Bot              func(childComplexity int) int
+		Calendars        func(childComplexity int) int
+		CreatedAt        func(childComplexity int) int
+		Emails           func(childComplexity int) int
+		FirstName        func(childComplexity int) int
+		HasLinkedInToken func(childComplexity int) int
+		ID               func(childComplexity int) int
+		Internal         func(childComplexity int) int
+		JobRoles         func(childComplexity int) int
+		LastName         func(childComplexity int) int
+		Mailboxes        func(childComplexity int) int
+		Name             func(childComplexity int) int
+		PhoneNumbers     func(childComplexity int) int
+		ProfilePhotoURL  func(childComplexity int) int
+		Roles            func(childComplexity int) int
+		Source           func(childComplexity int) int
+		SourceOfTruth    func(childComplexity int) int
+		Timezone         func(childComplexity int) int
+		UpdatedAt        func(childComplexity int) int
 	}
 
 	UserPage struct {
@@ -1977,7 +1977,6 @@ type QueryResolver interface {
 	Users(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.UserPage, error)
 	User(ctx context.Context, id string) (*model.User, error)
 	UserByEmail(ctx context.Context, email string) (*model.User, error)
-	UsersWithMailboxes(ctx context.Context) ([]*model.User, error)
 	TableViewDefs(ctx context.Context) ([]*model.TableViewDef, error)
 	WorkflowByType(ctx context.Context, workflowType model.WorkflowType) (*model.Workflow, error)
 	Workflows(ctx context.Context) ([]*model.Workflow, error)
@@ -1997,6 +1996,7 @@ type UserResolver interface {
 	Emails(ctx context.Context, obj *model.User) ([]*model.Email, error)
 	PhoneNumbers(ctx context.Context, obj *model.User) ([]*model.PhoneNumber, error)
 	Mailboxes(ctx context.Context, obj *model.User) ([]string, error)
+	HasLinkedInToken(ctx context.Context, obj *model.User) (bool, error)
 
 	JobRoles(ctx context.Context, obj *model.User) ([]*model.JobRole, error)
 	Calendars(ctx context.Context, obj *model.User) ([]*model.Calendar, error)
@@ -10080,13 +10080,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Users(childComplexity, args["pagination"].(*model.Pagination), args["where"].(*model.Filter), args["sort"].([]*model.SortBy)), true
 
-	case "Query.users_WithMailboxes":
-		if e.complexity.Query.UsersWithMailboxes == nil {
-			break
-		}
-
-		return e.complexity.Query.UsersWithMailboxes(childComplexity), true
-
 	case "Query.workflow_ByType":
 		if e.complexity.Query.WorkflowByType == nil {
 			break
@@ -11036,6 +11029,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.User.FirstName(childComplexity), true
+
+	case "User.hasLinkedInToken":
+		if e.complexity.User.HasLinkedInToken == nil {
+			break
+		}
+
+		return e.complexity.User.HasLinkedInToken(childComplexity), true
 
 	case "User.id":
 		if e.complexity.User.ID == nil {
@@ -15222,8 +15222,6 @@ type ActionResponse {
     user(id: ID!): User!
 
     user_ByEmail(email: String!) :User! @hasRole(roles: [ADMIN, PLATFORM_OWNER, OWNER, USER]) @hasTenant
-
-    users_WithMailboxes: [User!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 extend type Mutation {
@@ -15277,6 +15275,7 @@ type User {
     emails: [Email!] @goField(forceResolver: true)
     phoneNumbers: [PhoneNumber!]! @goField(forceResolver: true)
     mailboxes: [String!]! @goField(forceResolver: true)
+    hasLinkedInToken: Boolean! @goField(forceResolver: true)
 
     """
     Timestamp of user creation.
@@ -20309,6 +20308,8 @@ func (ec *executionContext) fieldContext_Action_createdBy(_ context.Context, fie
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "hasLinkedInToken":
+				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -23780,6 +23781,8 @@ func (ec *executionContext) fieldContext_Comment_createdBy(_ context.Context, fi
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "hasLinkedInToken":
+				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -25410,6 +25413,8 @@ func (ec *executionContext) fieldContext_Contact_connectedUsers(_ context.Contex
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "hasLinkedInToken":
+				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -25553,6 +25558,8 @@ func (ec *executionContext) fieldContext_Contact_owner(_ context.Context, field 
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "hasLinkedInToken":
+				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -26692,6 +26699,8 @@ func (ec *executionContext) fieldContext_Contract_createdBy(_ context.Context, f
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "hasLinkedInToken":
+				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -26978,6 +26987,8 @@ func (ec *executionContext) fieldContext_Contract_owner(_ context.Context, field
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "hasLinkedInToken":
+				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -33648,6 +33659,8 @@ func (ec *executionContext) fieldContext_Email_users(_ context.Context, field gr
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "hasLinkedInToken":
+				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -36555,6 +36568,8 @@ func (ec *executionContext) fieldContext_FlowSender_user(_ context.Context, fiel
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "hasLinkedInToken":
+				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -37257,6 +37272,8 @@ func (ec *executionContext) fieldContext_GlobalCache_user(_ context.Context, fie
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "hasLinkedInToken":
+				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -47372,6 +47389,8 @@ func (ec *executionContext) fieldContext_LogEntry_createdBy(_ context.Context, f
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "hasLinkedInToken":
+				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -66034,6 +66053,8 @@ func (ec *executionContext) fieldContext_Mutation_user_Create(ctx context.Contex
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "hasLinkedInToken":
+				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -66149,6 +66170,8 @@ func (ec *executionContext) fieldContext_Mutation_user_Update(ctx context.Contex
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "hasLinkedInToken":
+				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -66274,6 +66297,8 @@ func (ec *executionContext) fieldContext_Mutation_user_AddRole(ctx context.Conte
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "hasLinkedInToken":
+				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -66399,6 +66424,8 @@ func (ec *executionContext) fieldContext_Mutation_user_RemoveRole(ctx context.Co
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "hasLinkedInToken":
+				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -66518,6 +66545,8 @@ func (ec *executionContext) fieldContext_Mutation_user_AddRoleInTenant(ctx conte
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "hasLinkedInToken":
+				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -66637,6 +66666,8 @@ func (ec *executionContext) fieldContext_Mutation_user_RemoveRoleInTenant(ctx co
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "hasLinkedInToken":
+				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -67828,6 +67859,8 @@ func (ec *executionContext) fieldContext_Note_createdBy(_ context.Context, field
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "hasLinkedInToken":
+				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -69559,6 +69592,8 @@ func (ec *executionContext) fieldContext_Opportunity_createdBy(_ context.Context
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "hasLinkedInToken":
+				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -69670,6 +69705,8 @@ func (ec *executionContext) fieldContext_Opportunity_owner(_ context.Context, fi
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "hasLinkedInToken":
+				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -71909,6 +71946,8 @@ func (ec *executionContext) fieldContext_Organization_owner(_ context.Context, f
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "hasLinkedInToken":
+				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -75996,6 +76035,8 @@ func (ec *executionContext) fieldContext_PhoneNumber_users(_ context.Context, fi
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "hasLinkedInToken":
+				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -80623,6 +80664,8 @@ func (ec *executionContext) fieldContext_Query_organization_DistinctOwners(_ con
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "hasLinkedInToken":
+				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -82104,6 +82147,8 @@ func (ec *executionContext) fieldContext_Query_user(ctx context.Context, field g
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "hasLinkedInToken":
+				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -82229,6 +82274,8 @@ func (ec *executionContext) fieldContext_Query_user_ByEmail(ctx context.Context,
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "hasLinkedInToken":
+				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -82257,120 +82304,6 @@ func (ec *executionContext) fieldContext_Query_user_ByEmail(ctx context.Context,
 	if fc.Args, err = ec.field_Query_user_ByEmail_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Query_users_WithMailboxes(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_users_WithMailboxes(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().UsersWithMailboxes(rctx)
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasRole == nil {
-				return nil, errors.New("directive hasRole is not implemented")
-			}
-			return ec.directives.HasRole(ctx, nil, directive0, roles)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.HasTenant == nil {
-				return nil, errors.New("directive hasTenant is not implemented")
-			}
-			return ec.directives.HasTenant(ctx, nil, directive1)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.([]*model.User); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model.User`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*model.User)
-	fc.Result = res
-	return ec.marshalNUser2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐUserᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Query_users_WithMailboxes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_User_id(ctx, field)
-			case "firstName":
-				return ec.fieldContext_User_firstName(ctx, field)
-			case "lastName":
-				return ec.fieldContext_User_lastName(ctx, field)
-			case "name":
-				return ec.fieldContext_User_name(ctx, field)
-			case "internal":
-				return ec.fieldContext_User_internal(ctx, field)
-			case "bot":
-				return ec.fieldContext_User_bot(ctx, field)
-			case "timezone":
-				return ec.fieldContext_User_timezone(ctx, field)
-			case "profilePhotoUrl":
-				return ec.fieldContext_User_profilePhotoUrl(ctx, field)
-			case "roles":
-				return ec.fieldContext_User_roles(ctx, field)
-			case "emails":
-				return ec.fieldContext_User_emails(ctx, field)
-			case "phoneNumbers":
-				return ec.fieldContext_User_phoneNumbers(ctx, field)
-			case "mailboxes":
-				return ec.fieldContext_User_mailboxes(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_User_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_User_updatedAt(ctx, field)
-			case "jobRoles":
-				return ec.fieldContext_User_jobRoles(ctx, field)
-			case "calendars":
-				return ec.fieldContext_User_calendars(ctx, field)
-			case "source":
-				return ec.fieldContext_User_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_User_sourceOfTruth(ctx, field)
-			case "appSource":
-				return ec.fieldContext_User_appSource(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
-		},
 	}
 	return fc, nil
 }
@@ -82956,6 +82889,8 @@ func (ec *executionContext) fieldContext_Reminder_owner(_ context.Context, field
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "hasLinkedInToken":
+				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -84409,6 +84344,8 @@ func (ec *executionContext) fieldContext_ServiceLineItem_createdBy(_ context.Con
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "hasLinkedInToken":
+				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -89722,6 +89659,50 @@ func (ec *executionContext) fieldContext_User_mailboxes(_ context.Context, field
 	return fc, nil
 }
 
+func (ec *executionContext) _User_hasLinkedInToken(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_User_hasLinkedInToken(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.User().HasLinkedInToken(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_User_hasLinkedInToken(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _User_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_User_createdAt(ctx, field)
 	if err != nil {
@@ -90141,6 +90122,8 @@ func (ec *executionContext) fieldContext_UserPage_content(_ context.Context, fie
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "hasLinkedInToken":
+				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -90313,6 +90296,8 @@ func (ec *executionContext) fieldContext_UserParticipant_userParticipant(_ conte
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "hasLinkedInToken":
+				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -111428,28 +111413,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "users_WithMailboxes":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_users_WithMailboxes(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
-				return res
-			}
-
-			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx,
-					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "tableViewDefs":
 			field := field
 
@@ -113000,6 +112963,42 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 					}
 				}()
 				res = ec._User_mailboxes(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "hasLinkedInToken":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._User_hasLinkedInToken(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}

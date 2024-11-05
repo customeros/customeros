@@ -81,7 +81,7 @@ func (r *queryResolver) GlobalCache(ctx context.Context) (*model.GlobalCache, er
 		}
 	}
 
-	mailboxes, err := r.Services.CommonServices.PostgresRepositories.TenantSettingsMailboxRepository.GetAll(ctx, tenantName)
+	mailboxes, err := r.Services.CommonServices.PostgresRepositories.TenantSettingsMailboxRepository.GetAll(ctx)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed GlobalCache - get tenant mailboxes")

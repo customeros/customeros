@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -31,7 +32,7 @@ type azureService struct {
 type AzureService interface {
 	ReadEmailsFromAzureAd(ctx context.Context, importState *postgresEntity.UserEmailImportState) ([]*postgresEntity.EmailRawData, string, error)
 
-	SendEmail(ctx context.Context, tenant string, request *postgresEntity.EmailMessage) error
+	SendEmail(ctx context.Context, request *postgresEntity.EmailMessage) error
 }
 
 func (s *azureService) ReadEmailsFromAzureAd(ctx context.Context, importState *postgresEntity.UserEmailImportState) ([]*postgresEntity.EmailRawData, string, error) {
@@ -112,9 +113,11 @@ func (s *azureService) ReadEmailsFromAzureAd(ctx context.Context, importState *p
 	return nil, "", fmt.Errorf("failed to fetch emails: %v", resp.Status)
 }
 
-func (s *azureService) SendEmail(ctx context.Context, tenant string, request *postgresEntity.EmailMessage) error {
+func (s *azureService) SendEmail(ctx context.Context, request *postgresEntity.EmailMessage) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "AzureService.SendEmail")
 	defer span.Finish()
+
+	tenant := common.GetTenantFromContext(ctx)
 
 	var err error
 

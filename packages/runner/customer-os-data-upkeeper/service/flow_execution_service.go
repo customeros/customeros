@@ -54,6 +54,10 @@ func (s *flowExecutionService) RampUpMailboxes() {
 	span.LogFields(log.Int("mailboxes.count", len(mailboxes)))
 
 	for _, mailbox := range mailboxes {
+		ctx = common.WithCustomContext(ctx, &common.CustomContext{
+			Tenant: mailbox.Tenant,
+		})
+
 		err := s.rampUpMailbox(ctx, mailbox)
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -83,7 +87,7 @@ func (s *flowExecutionService) rampUpMailbox(ctx context.Context, mailbox *entit
 
 		mailbox.LastRampUpAt = mailbox.LastRampUpAt.AddDate(0, 0, 1)
 
-		err := s.commonServices.PostgresRepositories.TenantSettingsMailboxRepository.Merge(ctx, mailbox.Tenant, mailbox)
+		err := s.commonServices.PostgresRepositories.TenantSettingsMailboxRepository.Merge(ctx, mailbox)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err

@@ -20,10 +20,10 @@ type openSRSService struct {
 }
 
 type OpenSrsService interface {
-	SendEmail(ctx context.Context, tenant string, request *entity.EmailMessage) error
+	SendEmail(ctx context.Context, request *entity.EmailMessage) error
 }
 
-func (s *openSRSService) SendEmail(ctx context.Context, tenant string, request *entity.EmailMessage) error {
+func (s *openSRSService) SendEmail(ctx context.Context, request *entity.EmailMessage) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "OpenSrsService.Reply")
 	defer span.Finish()
 
@@ -31,7 +31,7 @@ func (s *openSRSService) SendEmail(ctx context.Context, tenant string, request *
 	smtpHost := "mail.hostedemail.com"
 	smtpPort := "587"
 
-	mailbox, err := s.services.PostgresRepositories.TenantSettingsMailboxRepository.GetByMailbox(ctx, tenant, request.From)
+	mailbox, err := s.services.PostgresRepositories.TenantSettingsMailboxRepository.GetByMailbox(ctx, request.From)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err

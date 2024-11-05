@@ -569,7 +569,7 @@ func (s *userService) GetUsersWithMailboxes(ctx context.Context) (*neo4jentity.U
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	mailboxes, err := s.repositories.PostgresRepositories.TenantSettingsMailboxRepository.GetAll(ctx, tenant)
+	mailboxes, err := s.repositories.PostgresRepositories.TenantSettingsMailboxRepository.GetAll(ctx)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err

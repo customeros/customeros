@@ -119,7 +119,7 @@ func RegisterNewMailbox(services *service.Services) gin.HandlerFunc {
 		additionalForwardingTo := fmt.Sprintf("bcc@%s.customeros.ai", strings.ToLower(tenant))
 		forwardingTo = append(forwardingTo, additionalForwardingTo)
 
-		response, err := addMailbox(ctx, tenant, domain, username, password, forwardingEnabled, mailboxRequest.WebmailEnabled, forwardingTo, services)
+		response, err := addMailbox(ctx, domain, username, password, forwardingEnabled, mailboxRequest.WebmailEnabled, forwardingTo, services)
 		if err != nil {
 			if errors.Is(err, coserrors.ErrDomainNotFound) {
 				c.JSON(http.StatusNotFound,
@@ -157,9 +157,11 @@ func RegisterNewMailbox(services *service.Services) gin.HandlerFunc {
 	}
 }
 
-func addMailbox(ctx context.Context, tenant, domain string, username, password string, forwardingEnabled, webmailEnabled bool, forwardingTo []string, services *service.Services) (MailboxResponse, error) {
+func addMailbox(ctx context.Context, domain string, username, password string, forwardingEnabled, webmailEnabled bool, forwardingTo []string, services *service.Services) (MailboxResponse, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "addMailbox")
 	defer span.Finish()
+
+	tenant := common.GetTenantFromContext(ctx)
 
 	mailboxResponse := MailboxResponse{
 		Email: username + "@" + domain,
@@ -176,7 +178,7 @@ func addMailbox(ctx context.Context, tenant, domain string, username, password s
 	}
 
 	// Check mailbox doesn't already exist
-	mailboxRecord, err := services.CommonServices.PostgresRepositories.TenantSettingsMailboxRepository.GetByMailbox(ctx, tenant, mailboxResponse.Email)
+	mailboxRecord, err := services.CommonServices.PostgresRepositories.TenantSettingsMailboxRepository.GetByMailbox(ctx, mailboxResponse.Email)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Error checking mailbox"))
 		return mailboxResponse, err
@@ -192,7 +194,7 @@ func addMailbox(ctx context.Context, tenant, domain string, username, password s
 	}
 
 	// Save mailbox details in postgres
-	err = services.CommonServices.PostgresRepositories.TenantSettingsMailboxRepository.Merge(ctx, tenant, &entity.TenantSettingsMailbox{
+	err = services.CommonServices.PostgresRepositories.TenantSettingsMailboxRepository.Merge(ctx, &entity.TenantSettingsMailbox{
 		Domain: domain, MailboxUsername: username + "@" + domain, Tenant: tenant, MailboxPassword: password, MinMinutesBetweenEmails: 5, MaxMinutesBetweenEmails: 10,
 	})
 
@@ -264,7 +266,7 @@ func GetMailboxes(services *service.Services) gin.HandlerFunc {
 		}
 
 		// get mailboxes for domain from postgres
-		mailboxRecords, err := services.CommonServices.PostgresRepositories.TenantSettingsMailboxRepository.GetAllByDomain(ctx, tenant, domain)
+		mailboxRecords, err := services.CommonServices.PostgresRepositories.TenantSettingsMailboxRepository.GetAllByDomain(ctx, domain)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "Error retrieving mailboxes"))
 			span.LogFields(tracingLog.String("result", "Error retrieving mailboxes"))

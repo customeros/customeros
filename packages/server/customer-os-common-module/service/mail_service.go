@@ -116,7 +116,7 @@ func (s *mailService) SendMail(ctx context.Context, emailMessage *entity.EmailMe
 	emailMessage.FromName = user.FirstName + " " + user.LastName
 
 	if oauthToken == nil {
-		mailbox, err := s.services.PostgresRepositories.TenantSettingsMailboxRepository.GetByMailbox(ctx, tenant, emailMessage.From)
+		mailbox, err := s.services.PostgresRepositories.TenantSettingsMailboxRepository.GetByMailbox(ctx, emailMessage.From)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
@@ -126,7 +126,7 @@ func (s *mailService) SendMail(ctx context.Context, emailMessage *entity.EmailMe
 			return fmt.Errorf("mailbox not found for %s", emailMessage.From)
 		}
 
-		err = s.services.OpenSrsService.SendEmail(ctx, tenant, emailMessage)
+		err = s.services.OpenSrsService.SendEmail(ctx, emailMessage)
 	} else {
 		if oauthToken.NeedsManualRefresh {
 			tracing.TraceErr(span, errors.New("oauth token needs manual refresh"))
@@ -134,9 +134,9 @@ func (s *mailService) SendMail(ctx context.Context, emailMessage *entity.EmailMe
 		}
 
 		if oauthToken.Provider == "google" {
-			err = s.services.GoogleService.SendEmail(ctx, tenant, emailMessage)
+			err = s.services.GoogleService.SendEmail(ctx, emailMessage)
 		} else if oauthToken.Provider == "azure-ad" {
-			err = s.services.AzureService.SendEmail(ctx, tenant, emailMessage)
+			err = s.services.AzureService.SendEmail(ctx, emailMessage)
 		} else {
 			return fmt.Errorf("provider %s not supported", oauthToken.Provider)
 		}

@@ -44,11 +44,11 @@ func Handle_FlowInitialSchedule(ctx context.Context, services *service.Services,
 	}
 
 	//support multiple entity types as participants
-	flowParticipantsMap := make(map[model.EntityType][]string)
+	flowParticipantsIds := make([]string, 0)
 
 	_, err = utils.ExecuteWriteInTransaction(ctx, services.Neo4jRepositories.Neo4jDriver, services.Neo4jRepositories.Database, nil, func(tx neo4j.ManagedTransaction) (any, error) {
 		for _, v := range *flowParticipants {
-			flowParticipantsMap[v.EntityType] = append(flowParticipantsMap[v.EntityType], v.Id)
+			flowParticipantsIds = append(flowParticipantsIds, v.Id)
 
 			err := services.FlowExecutionService.ScheduleFlow(ctx, &tx, flow.Id, &v)
 			if err != nil {
@@ -71,10 +71,7 @@ func Handle_FlowInitialSchedule(ctx context.Context, services *service.Services,
 	}
 
 	services.RabbitMQService.PublishEventCompleted(ctx, message.Event.Tenant, message.Event.EntityId, message.Event.EntityType, utils.NewEventCompletedDetails().WithUpdate())
-
-	for entityType, flowParticipantsIds := range flowParticipantsMap {
-		services.RabbitMQService.PublishEventCompletedBulk(ctx, message.Event.Tenant, flowParticipantsIds, entityType, utils.NewEventCompletedDetails().WithUpdate())
-	}
+	services.RabbitMQService.PublishEventCompletedBulk(ctx, message.Event.Tenant, flowParticipantsIds, model.FLOW_PARTICIPANT, utils.NewEventCompletedDetails().WithUpdate())
 
 	return nil
 }

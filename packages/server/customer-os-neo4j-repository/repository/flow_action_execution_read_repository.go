@@ -36,7 +36,7 @@ func NewFlowActionExecutionReadRepository(driver *neo4j.DriverWithContext, datab
 	return &flowActionExecutionReadRepositoryImpl{driver: driver, database: database}
 }
 
-func (r flowActionExecutionReadRepositoryImpl) GetById(ctx context.Context, id string) (*dbtype.Node, error) {
+func (r *flowActionExecutionReadRepositoryImpl) GetById(ctx context.Context, id string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionExecutionReadRepository.GetExecution")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
@@ -79,7 +79,7 @@ func (r flowActionExecutionReadRepositoryImpl) GetById(ctx context.Context, id s
 	return result.(*dbtype.Node), nil
 }
 
-func (r flowActionExecutionReadRepositoryImpl) GetExecution(ctx context.Context, flowId, actionId, entityId string, entityType model.EntityType) (*dbtype.Node, error) {
+func (r *flowActionExecutionReadRepositoryImpl) GetExecution(ctx context.Context, flowId, actionId, entityId string, entityType model.EntityType) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionExecutionReadRepository.GetExecution")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
@@ -114,7 +114,7 @@ func (r flowActionExecutionReadRepositoryImpl) GetExecution(ctx context.Context,
 	return result.(*dbtype.Node), nil
 }
 
-func (r flowActionExecutionReadRepositoryImpl) GetForEntity(ctx context.Context, tx *neo4j.ManagedTransaction, flowId, entityId string, entityType model.EntityType) ([]*dbtype.Node, error) {
+func (r *flowActionExecutionReadRepositoryImpl) GetForEntity(ctx context.Context, tx *neo4j.ManagedTransaction, flowId, entityId string, entityType model.EntityType) ([]*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionExecutionReadRepository.GetForEntity")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
@@ -151,7 +151,7 @@ func (r flowActionExecutionReadRepositoryImpl) GetForEntity(ctx context.Context,
 	return result.([]*dbtype.Node), nil
 }
 
-func (r flowActionExecutionReadRepositoryImpl) GetScheduledBefore(ctx context.Context, before time.Time) ([]*dbtype.Node, error) {
+func (r *flowActionExecutionReadRepositoryImpl) GetScheduledBefore(ctx context.Context, before time.Time) ([]*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionExecutionReadRepository.GetScheduledBefore")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
@@ -180,7 +180,7 @@ func (r flowActionExecutionReadRepositoryImpl) GetScheduledBefore(ctx context.Co
 	return result.([]*dbtype.Node), nil
 }
 
-func (r flowActionExecutionReadRepositoryImpl) GetByMailboxAndTimeInterval(ctx context.Context, tx *neo4j.ManagedTransaction, mailbox string, startTime, endTime time.Time) (*dbtype.Node, error) {
+func (r *flowActionExecutionReadRepositoryImpl) GetByMailboxAndTimeInterval(ctx context.Context, tx *neo4j.ManagedTransaction, mailbox string, startTime, endTime time.Time) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionExecutionReadRepository.GetByMailboxAndTimeInterval")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
@@ -222,7 +222,7 @@ func (r flowActionExecutionReadRepositoryImpl) GetByMailboxAndTimeInterval(ctx c
 	return result.(*dbtype.Node), nil
 }
 
-func (r flowActionExecutionReadRepositoryImpl) GetFirstSlotForMailbox(ctx context.Context, tx *neo4j.ManagedTransaction, mailbox string) (*time.Time, error) {
+func (r *flowActionExecutionReadRepositoryImpl) GetFirstSlotForMailbox(ctx context.Context, tx *neo4j.ManagedTransaction, mailbox string) (*time.Time, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionExecutionReadRepository.GetFirstSlotForMailbox")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
@@ -275,7 +275,7 @@ func (r flowActionExecutionReadRepositoryImpl) GetFirstSlotForMailbox(ctx contex
 	}
 }
 
-func (r flowActionExecutionReadRepositoryImpl) GetLastScheduledForMailbox(ctx context.Context, tx *neo4j.ManagedTransaction, mailbox string) (*dbtype.Node, error) {
+func (r *flowActionExecutionReadRepositoryImpl) GetLastScheduledForMailbox(ctx context.Context, tx *neo4j.ManagedTransaction, mailbox string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionExecutionReadRepository.GetLastScheduledForMailbox")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
@@ -328,7 +328,7 @@ func (r flowActionExecutionReadRepositoryImpl) GetLastScheduledForMailbox(ctx co
 	}
 }
 
-func (r flowActionExecutionReadRepositoryImpl) CountEmailsPerMailboxPerDay(ctx context.Context, tx *neo4j.ManagedTransaction, mailbox string, startDate, endDate time.Time) (int64, error) {
+func (r *flowActionExecutionReadRepositoryImpl) CountEmailsPerMailboxPerDay(ctx context.Context, tx *neo4j.ManagedTransaction, mailbox string, startDate, endDate time.Time) (int64, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionExecutionReadRepository.CountEmailsPerMailboxPerDay")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)

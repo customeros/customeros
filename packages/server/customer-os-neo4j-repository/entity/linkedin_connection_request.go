@@ -12,6 +12,9 @@ type LinkedinConnectionRequest struct {
 	ProducerId   string
 	ProducerType string
 
+	SocialUrl string
+	UserId    string
+
 	ScheduledAt time.Time
 	Status      LinkedinConnectionRequestStatus
 }
@@ -23,3 +26,7 @@ const (
 	LinkedinConnectionRequestStatusAccepted LinkedinConnectionRequestStatus = "ACCEPTED"
 	LinkedinConnectionRequestStatusDeclined LinkedinConnectionRequestStatus = "DECLINED"
 )
+
+func GetLinkedinConnectionRequestStatus(s string) LinkedinConnectionRequestStatus {
+	return LinkedinConnectionRequestStatus(s)
+}

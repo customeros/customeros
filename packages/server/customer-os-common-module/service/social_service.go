@@ -49,7 +49,7 @@ func (s *socialService) GetAllForEntities(ctx context.Context, tenant string, li
 	if err != nil {
 		return nil, err
 	}
-	socialEntities := make(neo4jentity.SocialEntities, 0, len(socials))
+	socialEntities := make(neo4jentity.SocialEntities, 0)
 	for _, v := range socials {
 		socialEntity := neo4jmapper.MapDbNodeToSocialEntity(v.Node)
 		socialEntity.DataloaderKey = v.LinkedNodeId

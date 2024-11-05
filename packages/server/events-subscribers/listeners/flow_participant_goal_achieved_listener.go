@@ -39,7 +39,7 @@ func Handle_FlowParticipantGoalAchieved(ctx context.Context, services *service.S
 		return err
 	}
 
-	executionSettings, err := services.FlowExecutionService.GetFlowExecutionSettingsForEntity(ctx, flow.Id, flowParticipant.EntityId, flowParticipant.EntityType)
+	executionSettings, err := services.FlowExecutionService.GetFlowExecutionSettingsForEntity(ctx, nil, flow.Id, flowParticipant.EntityId, flowParticipant.EntityType)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err

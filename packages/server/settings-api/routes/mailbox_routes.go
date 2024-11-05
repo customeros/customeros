@@ -2,6 +2,7 @@ package routes
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	_ "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
@@ -31,9 +32,13 @@ func getMailboxesHandler(services *service.Services) gin.HandlerFunc {
 
 		tenant := c.Keys["TenantName"].(string)
 
+		ctx = common.WithCustomContext(ctx, &common.CustomContext{
+			Tenant: tenant,
+		})
+
 		span.SetTag(tracing.SpanTagTenant, tenant)
 
-		mailboxes, err := services.CommonServices.PostgresRepositories.TenantSettingsMailboxRepository.GetAll(ctx, tenant)
+		mailboxes, err := services.CommonServices.PostgresRepositories.TenantSettingsMailboxRepository.GetAll(ctx)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			c.Status(500)

@@ -72,11 +72,6 @@ func (r *queryResolver) UserByEmail(ctx context.Context, email string) (*model.U
 	panic(fmt.Errorf("not implemented: UserByEmail - user_ByEmail"))
 }
 
-// UsersWithMailboxes is the resolver for the users_WithMailboxes field.
-func (r *queryResolver) UsersWithMailboxes(ctx context.Context) ([]*model.User, error) {
-	panic(fmt.Errorf("not implemented: UsersWithMailboxes - users_WithMailboxes"))
-}
-
 // Roles is the resolver for the roles field.
 func (r *userResolver) Roles(ctx context.Context, obj *model.User) ([]model.Role, error) {
 	panic(fmt.Errorf("not implemented: Roles - roles"))
@@ -97,6 +92,11 @@ func (r *userResolver) Mailboxes(ctx context.Context, obj *model.User) ([]string
 	panic(fmt.Errorf("not implemented: Mailboxes - mailboxes"))
 }
 
+// HasLinkedInToken is the resolver for the hasLinkedInToken field.
+func (r *userResolver) HasLinkedInToken(ctx context.Context, obj *model.User) (bool, error) {
+	panic(fmt.Errorf("not implemented: HasLinkedInToken - hasLinkedInToken"))
+}
+
 // JobRoles is the resolver for the jobRoles field.
 func (r *userResolver) JobRoles(ctx context.Context, obj *model.User) ([]*model.JobRole, error) {
 	panic(fmt.Errorf("not implemented: JobRoles - jobRoles"))
@@ -111,3 +111,13 @@ func (r *userResolver) Calendars(ctx context.Context, obj *model.User) ([]*model
 func (r *Resolver) User() generated.UserResolver { return &userResolver{r} }
 
 type userResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//     it when you're done.
+//   - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *queryResolver) UsersWithMailboxes(ctx context.Context) ([]*model.User, error) {
+	panic(fmt.Errorf("not implemented: UsersWithMailboxes - users_WithMailboxes"))
+}

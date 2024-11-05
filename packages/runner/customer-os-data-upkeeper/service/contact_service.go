@@ -27,15 +27,12 @@ import (
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
 	phonenumberpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/phone_number"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/event"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/event/generic"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventbuffer"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"io"
 	"net/http"
-	"time"
 )
 
 type ContactService interface {
@@ -510,31 +507,22 @@ func (s *contactService) processLinkedInUrl(ctx context.Context, tenant, linkedi
 	if userId != "" {
 		for _, cid := range contactIds {
 
-			isLinkedWith, err := s.commonServices.Neo4jRepositories.CommonReadRepository.IsLinkedWith(ctx, tenant, cid, model.CONTACT, "CONNECTED_WITH", userId, model.USER)
+			isLinkedWith, err := s.commonServices.Neo4jRepositories.CommonReadRepository.IsLinkedWith(ctx, tenant, cid, model.CONTACT, model.CONNECTED_WITH.String(), userId, model.USER)
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "CommonReadRepository.IsLinkedWith"))
 				return err
 			}
 
 			if !isLinkedWith {
-				evt := generic.LinkEntityWithEntity{
-					BaseEvent: event.BaseEvent{
-						EventName:  generic.LinkEntityWithEntityV1,
-						Tenant:     tenant,
-						CreatedAt:  utils.Now(),
-						AppSource:  constants.AppSourceDataUpkeeper,
-						Source:     "WECONNECT",
-						EntityId:   cid,
-						EntityType: model.CONTACT,
-					},
-					WithEntityId:   userId,
-					WithEntityType: model.USER,
-					Relationship:   "CONNECTED_WITH",
-				}
-
-				err = s.eventBufferService.ParkBaseEvent(ctx, &evt, tenant, utils.Now().Add(time.Minute*1))
+				err = s.commonServices.Neo4jRepositories.CommonWriteRepository.Link(ctx, nil, tenant, neo4jrepository.LinkDetails{
+					FromEntityId:   cid,
+					FromEntityType: model.CONTACT,
+					Relationship:   model.CONNECTED_WITH,
+					ToEntityId:     userId,
+					ToEntityType:   model.USER,
+				})
 				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "ParkBaseEvent"))
+					tracing.TraceErr(span, errors.Wrap(err, "CommonWriteRepository.Link"))
 					return err
 				}
 			}

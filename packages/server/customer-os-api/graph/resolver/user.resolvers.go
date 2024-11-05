@@ -228,21 +228,6 @@ func (r *queryResolver) UserByEmail(ctx context.Context, email string) (*model.U
 	return mapper.MapEntityToUser(userEntity), nil
 }
 
-// UsersWithMailboxes is the resolver for the users_WithMailboxes field.
-func (r *queryResolver) UsersWithMailboxes(ctx context.Context) ([]*model.User, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.UsersWithMailboxes", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-
-	entities, err := r.Services.UserService.GetUsersWithMailboxes(ctx)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to get users with mailboxes")
-		return nil, err
-	}
-	return mapper.MapEntitiesToUsers(entities), nil
-}
-
 // Roles is the resolver for the roles field.
 func (r *userResolver) Roles(ctx context.Context, obj *model.User) ([]model.Role, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "UserResolver.Roles", graphql.GetOperationContext(ctx))
@@ -296,7 +281,7 @@ func (r *userResolver) Mailboxes(ctx context.Context, obj *model.User) ([]string
 
 	if emailEntities != nil {
 		for _, email := range *emailEntities {
-			mb, err := r.Services.Repositories.PostgresRepositories.TenantSettingsMailboxRepository.GetAllByUsername(ctx, common.GetTenantFromContext(ctx), email.RawEmail)
+			mb, err := r.Services.Repositories.PostgresRepositories.TenantSettingsMailboxRepository.GetAllByUsername(ctx, email.RawEmail)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				graphql.AddErrorf(ctx, "Failed to get mailboxes for user %s", obj.ID)
@@ -310,6 +295,23 @@ func (r *userResolver) Mailboxes(ctx context.Context, obj *model.User) ([]string
 	}
 
 	return mailboxes, nil
+}
+
+// HasLinkedInToken is the resolver for the hasLinkedInToken field.
+func (r *userResolver) HasLinkedInToken(ctx context.Context, obj *model.User) (bool, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "UserResolver.HasLinkedInToken", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.user", obj.ID))
+
+	activeLinkedinToken, err := r.Services.CommonServices.PostgresRepositories.BrowserConfigRepository.GetForUser(ctx, obj.ID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get linkedin token for user %s", obj.ID)
+		return false, err
+	}
+
+	return activeLinkedinToken != nil, nil
 }
 
 // JobRoles is the resolver for the jobRoles field.

@@ -2740,9 +2740,10 @@ type User struct {
 	Roles           []Role  `json:"roles"`
 	// All email addresses associated with a user in customerOS.
 	// **Required.  If no values it returns an empty array.**
-	Emails       []*Email       `json:"emails,omitempty"`
-	PhoneNumbers []*PhoneNumber `json:"phoneNumbers"`
-	Mailboxes    []string       `json:"mailboxes"`
+	Emails           []*Email       `json:"emails,omitempty"`
+	PhoneNumbers     []*PhoneNumber `json:"phoneNumbers"`
+	Mailboxes        []string       `json:"mailboxes"`
+	HasLinkedInToken bool           `json:"hasLinkedInToken"`
 	// Timestamp of user creation.
 	// **Required**
 	CreatedAt     time.Time   `json:"createdAt"`
