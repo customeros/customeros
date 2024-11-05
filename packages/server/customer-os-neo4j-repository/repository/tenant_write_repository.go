@@ -412,7 +412,7 @@ func (r *tenantWriteRepository) HardDeleteTenant(ctx context.Context, tenant str
 
 	//drop nodes with NodeLabel_Tenant
 	for _, nodeLabel := range nodeWithTenantSuffix {
-		err := utils.ExecuteWriteQuery(ctx, *r.driver, fmt.Sprintf(`MATCH (n:%s_%s) DETACH DELETE n;`, nodeLabel, tenant), nil)
+		err := utils.ExecuteWriteQuery(ctx, *r.driver, fmt.Sprintf(`MATCH (n:%s_%s) DETACH DELETE n`, nodeLabel, tenant), nil)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err

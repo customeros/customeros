@@ -11,10 +11,23 @@ import (
 
 type TenantRepository interface {
 	Create(ctx context.Context, tenantEntity entity.Tenant) (*entity.Tenant, error)
+	PermanentlyDelete(ctx context.Context, tenant string) error
 }
 
 type tenantRepository struct {
 	gormDb *gorm.DB
+}
+
+func (e tenantRepository) PermanentlyDelete(ctx context.Context, tenant string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantRepository.PermanentlyDelete")
+	defer span.Finish()
+
+	err := e.gormDb.Where("name = ?", tenant).Delete(&entity.Tenant{}).Error
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "failed to delete tenant")
+	}
+	return nil
 }
 
 func NewTenantRepository(gormDb *gorm.DB) TenantRepository {

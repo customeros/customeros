@@ -249,9 +249,20 @@ func (s *tenantService) HardDelete(ctx context.Context, tenant string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantService.HardDelete")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "tenant", tenant)
 
 	err := s.services.Neo4jRepositories.TenantWriteRepository.HardDeleteTenant(ctx, tenant)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	err = s.services.PostgresRepositories.CommonRepository.PermanentlyDelete(ctx, tenant)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	err = s.services.PostgresRepositories.TenantRepository.PermanentlyDelete(ctx, tenant)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err

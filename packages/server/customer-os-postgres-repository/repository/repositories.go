@@ -6,6 +6,7 @@ import (
 )
 
 type Repositories struct {
+	CommonRepository                            CommonRepository
 	AiLocationMappingRepository                 AiLocationMappingRepository
 	AiPromptLogRepository                       AiPromptLogRepository
 	AppKeyRepository                            AppKeyRepository
@@ -65,6 +66,7 @@ type Repositories struct {
 
 func InitRepositories(db *gorm.DB) *Repositories {
 	repositories := &Repositories{
+		CommonRepository:                            NewCommonRepository(db),
 		AiLocationMappingRepository:                 NewAiLocationMappingRepository(db),
 		AiPromptLogRepository:                       NewAiPromptLogRepository(db),
 		AppKeyRepository:                            NewAppKeyRepo(db),
