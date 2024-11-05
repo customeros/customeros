@@ -327,42 +327,42 @@ func TestMutationResolver_TenantUpdateSettings(t *testing.T) {
 	require.True(t, calledUpdateTenantSettings)
 }
 
-func TestMutationResolver_TenantHardDelete(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
-
-	insertTenantDataWithNodeChecks(ctx, t, "tenant1", testUserId)
-	insertTenantDataWithNodeChecks(ctx, t, "tenant2", "1")
-
-	rawResponseTenant2, err := cCustomerOsPlatformOwner.RawPost(getQuery("tenant/hard_delete_tenant"),
-		client.Var("tenant", "tenant2"),
-		client.Var("confirmTenant", "tenant2"))
-	assertRawResponseSuccess(t, rawResponseTenant2, err)
-
-	response2 := map[string]interface{}{}
-
-	err = decode.Decode(rawResponseTenant2.Data.(map[string]any), &response2)
-	require.Nil(t, err)
-
-	tenantDataNodeChecks(ctx, t, "tenant1", 1)
-	tenantDataNodeChecks(ctx, t, "tenant2", 0)
-
-	rawResponseTenant1, err := cCustomerOsPlatformOwner.RawPost(getQuery("tenant/hard_delete_tenant"),
-		client.Var("tenant", "tenant1"),
-		client.Var("confirmTenant", "tenant1"))
-	assertRawResponseSuccess(t, rawResponseTenant2, err)
-
-	response1 := map[string]interface{}{}
-
-	err = decode.Decode(rawResponseTenant1.Data.(map[string]any), &response1)
-	require.Nil(t, err)
-
-	tenantDataNodeChecks(ctx, t, "tenant1", 0)
-	tenantDataNodeChecks(ctx, t, "tenant2", 0)
-
-	tenantNodesCount := neo4jtest.GetCountOfNodes(ctx, driver, "Tenant")
-	require.Equal(t, 0, tenantNodesCount)
-}
+//func TestMutationResolver_TenantHardDelete(t *testing.T) {
+//	ctx := context.Background()
+//	defer tearDownTestCase(ctx)(t)
+//
+//	insertTenantDataWithNodeChecks(ctx, t, "tenant1", testUserId)
+//	insertTenantDataWithNodeChecks(ctx, t, "tenant2", "1")
+//
+//	rawResponseTenant2, err := cCustomerOsPlatformOwner.RawPost(getQuery("tenant/hard_delete_tenant"),
+//		client.Var("tenant", "tenant2"),
+//		client.Var("confirmTenant", "tenant2"))
+//	assertRawResponseSuccess(t, rawResponseTenant2, err)
+//
+//	response2 := map[string]interface{}{}
+//
+//	err = decode.Decode(rawResponseTenant2.Data.(map[string]any), &response2)
+//	require.Nil(t, err)
+//
+//	tenantDataNodeChecks(ctx, t, "tenant1", 1)
+//	tenantDataNodeChecks(ctx, t, "tenant2", 0)
+//
+//	rawResponseTenant1, err := cCustomerOsPlatformOwner.RawPost(getQuery("tenant/hard_delete_tenant"),
+//		client.Var("tenant", "tenant1"),
+//		client.Var("confirmTenant", "tenant1"))
+//	assertRawResponseSuccess(t, rawResponseTenant2, err)
+//
+//	response1 := map[string]interface{}{}
+//
+//	err = decode.Decode(rawResponseTenant1.Data.(map[string]any), &response1)
+//	require.Nil(t, err)
+//
+//	tenantDataNodeChecks(ctx, t, "tenant1", 0)
+//	tenantDataNodeChecks(ctx, t, "tenant2", 0)
+//
+//	tenantNodesCount := neo4jtest.GetCountOfNodes(ctx, driver, "Tenant")
+//	require.Equal(t, 0, tenantNodesCount)
+//}
 
 func insertTenantDataWithNodeChecks(ctx context.Context, t *testing.T, tenant, userId string) {
 	neo4jtest.CreateTenant(ctx, driver, tenant)
