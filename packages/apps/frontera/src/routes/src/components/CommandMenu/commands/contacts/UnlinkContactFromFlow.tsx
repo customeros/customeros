@@ -3,6 +3,7 @@ import React, { useRef, useEffect } from 'react';
 import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
 import { ContactStore } from '@store/Contacts/Contact.store';
+import { FlowContactStore } from '@store/FlowContacts/FlowContact.store.ts';
 
 import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
@@ -29,33 +30,53 @@ export const UnlinkContactFromFlow = observer(() => {
     store.ui.commandMenu.clearCallback();
   };
 
+  const getContactFlowIds = (contactId: string) => {
+    const contact = store.contacts.value.get(contactId);
+
+    if (!contact?.flows) return [];
+
+    return contact.flows
+      .map((flow) => {
+        const matchingContact = flow.value.contacts.find(
+          (c) => c.contact.metadata.id === contactId,
+        );
+
+        return matchingContact?.metadata.id;
+      })
+      .filter((id): id is string => typeof id === 'string');
+  };
+  const flowContactIds: string[] = [
+    ...new Set(context.ids.flatMap((id) => getContactFlowIds(id))),
+  ];
+  const flowContact = store.flowContacts.value.get(
+    flowContactIds[0],
+  ) as FlowContactStore;
+
   const handleConfirm = () => {
     if (!context.ids?.length) return;
 
-    if (context.ids?.length > 1) {
-      store.contacts.deleteFlowContacts(context.ids);
+    if (flowContactIds.length > 1) {
+      store.flowContacts.deleteFlowContacts(flowContactIds);
       handleClose();
 
       return;
     }
 
-    store.contacts.value.get(context.ids[0])?.deleteFlowContact();
+    flowContact.deleteFlowContact();
     handleClose();
   };
 
   const title =
-    context.ids?.length > 1
-      ? `Remove ${context.ids?.length} contacts from their flows?`
+    flowContactIds?.length > 1 || context.ids?.length > 1
+      ? `Remove ${context.ids?.length} contacts from all flows?`
       : `Remove ${(entity as ContactStore)?.name} from ${
           (entity as ContactStore)?.flow?.value?.name
         }?`;
 
   const description =
     context.ids?.length > 1
-      ? `Removing ${context.ids?.length} contacts will end their flows`
-      : `Removing ${
-          (entity as ContactStore)?.value?.name
-        } will end the flow for them`;
+      ? `This will remove ${context.ids?.length} contacts from their flows and immediately stop any remaining actions`
+      : `This will remove ${flowContact.contact?.name} from their flows and immediately stop any remaining actions`;
 
   useEffect(() => {
     closeButtonRef.current?.focus();

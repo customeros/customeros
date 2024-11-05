@@ -200,7 +200,7 @@ export class FlowStore implements Store<Flow> {
         return;
       }
 
-      return this.root.flowContacts.value.get(item.contact.metadata.id)?.value;
+      return this.root.flowContacts.value.get(item.metadata.id)?.value;
     });
 
     const flowSenders = data.senders?.map((item) => {
