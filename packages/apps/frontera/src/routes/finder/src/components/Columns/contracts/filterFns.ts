@@ -235,7 +235,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
       (filter) => (row: ContractStore) => {
         if (!filter.active) return true;
         const value =
-          row.value?.autoRenew === true ? 'Auido-renews' : 'Not auto-renewing';
+          row.value?.autoRenew === true ? 'Auto-renews' : 'Not auto-renewing';
 
         if (!value)
           return (
@@ -252,7 +252,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
         if (!filter.active) return true;
         const value = row.value?.ltv;
 
-        if (value !== undefined || value !== null) return false;
+        if (value === undefined || value === null) return false;
 
         return filterTypeNumber(filter, value);
       },
@@ -276,15 +276,17 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
       { property: ColumnViewType.ContractsHealth },
       (filter) => (row: ContractStore) => {
         if (!filter.active) return true;
-        const value = row?.openOpportunity?.renewalLikelihood;
+        const value = row?.value.opportunities?.find(
+          (opp) => opp,
+        )?.renewalLikelihood;
 
-        if (!value)
+        if (value?.[0] === null || value?.[0] === undefined)
           return (
             filter.operation === ComparisonOperator.IsEmpty ||
             filter.operation === ComparisonOperator.NotContains
           );
 
-        return filterTypeList(filter, [value]);
+        return filterTypeList(filter, [String(value)]);
       },
     )
     .with(
@@ -292,8 +294,6 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
       (filter) => (row: ContractStore) => {
         if (!filter.active) return true;
         const value = row?.openOpportunity?.amount;
-
-        if (value !== undefined || value !== null) return false;
 
         return filterTypeNumber(filter, value);
       },
@@ -310,7 +310,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
             filter.operation === ComparisonOperator.NotContains
           );
 
-        return filterTypeList(filter, [value]);
+        return filterTypeList(filter, [String(value)]);
       },
     )
     .otherwise(() => noop);
@@ -336,13 +336,13 @@ const filterTypeNumber = (filter: FilterItem, value: number | undefined) => {
   const filterValue = filter?.value;
   const filterOperator = filter?.operation;
 
-  if (value === undefined || value === null) return false;
+  const val = value ?? 0;
 
   return match(filterOperator)
-    .with(ComparisonOperator.Lt, () => value < Number(filterValue))
-    .with(ComparisonOperator.Gt, () => value > Number(filterValue))
-    .with(ComparisonOperator.Eq, () => value === Number(filterValue))
-    .with(ComparisonOperator.NotEqual, () => value !== Number(filterValue))
+    .with(ComparisonOperator.Lt, () => val < Number(filterValue))
+    .with(ComparisonOperator.Gt, () => val > Number(filterValue))
+    .with(ComparisonOperator.Eq, () => val === Number(filterValue))
+    .with(ComparisonOperator.NotEqual, () => val !== Number(filterValue))
     .otherwise(() => true);
 };
 

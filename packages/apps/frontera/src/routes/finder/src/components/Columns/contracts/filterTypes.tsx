@@ -105,7 +105,6 @@ export const getFilterTypes = (store?: RootStore) => {
         { label: 'Live', id: ContractStatus.Live },
         { label: 'Out of Contract', id: ContractStatus.OutOfContract },
         { label: 'Scheduled', id: ContractStatus.Scheduled },
-        { label: 'Undefined', id: ContractStatus.Undefined },
       ],
     },
     [ColumnViewType.ContractsRenewal]: {
@@ -120,8 +119,8 @@ export const getFilterTypes = (store?: RootStore) => {
       ],
       icon: <Calendar className='grou-hover:text-gray-700 text-gray-500' />,
       options: [
-        { label: 'Auto-renews', id: true },
-        { label: 'Not auto-renewing', id: false },
+        { label: 'Auto-renews', id: 'Auto-renews' },
+        { label: 'Not auto-renewing', id: 'Not auto-renewing' },
       ],
     },
     [ColumnViewType.ContractsLtv]: {
