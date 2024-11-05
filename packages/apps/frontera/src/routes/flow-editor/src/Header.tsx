@@ -41,14 +41,12 @@ export const Header = observer(
     const navigate = useNavigate();
     const { getNodes, getEdges } = useReactFlow();
 
-    const saveFlag = useFeatureIsOn('flow-editor-save-button_1');
-
     const flow = store.flows.value.get(id) as FlowStore;
     const status = flow?.value?.status;
     const contactsStore = store.contacts;
     const showFinder = searchParams.get('show') === 'finder';
     const flowContactsPreset = store.tableViewDefs.flowContactsPreset;
-    const canSave = saveFlag && hasChanges && status === FlowStatus.Inactive;
+    const canSave = hasChanges && status === FlowStatus.Inactive;
     const flag = useFeatureIsOn('filters-v2');
 
     useEffect(() => {

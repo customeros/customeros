@@ -23,12 +23,6 @@ export const FlowEditor = () => {
   const [hasNewChanges, setHasNewChanges] = useState(false);
   const [isSidePanelOpen, setIsSidePanelOpen] = useState<boolean>(false);
 
-  const allowExploration = useFeatureIsOn('flow-editor-poc');
-
-  if (!allowExploration) {
-    return null;
-  }
-
   return (
     <ReactFlowProvider>
       <div className='flex h-full flex-col'>
