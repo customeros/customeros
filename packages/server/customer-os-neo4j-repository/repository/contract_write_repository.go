@@ -10,39 +10,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/constants"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"time"
 )
-
-// Deprecated
-type ContractCreateFields struct {
-	OrganizationId         string             `json:"organizationId"`
-	Name                   string             `json:"name"`
-	ContractUrl            string             `json:"contractUrl"`
-	CreatedByUserId        string             `json:"createdByUserId"`
-	ServiceStartedAt       *time.Time         `json:"serviceStartedAt,omitempty"`
-	SignedAt               *time.Time         `json:"signedAt,omitempty"`
-	LengthInMonths         int64              `json:"lengthInMonths"`
-	Status                 string             `json:"status"`
-	CreatedAt              time.Time          `json:"createdAt"`
-	SourceFields           model.SourceFields `json:"sourceFields"`
-	BillingCycleInMonths   int64              `json:"billingCycleInMonths"`
-	Currency               neo4jenum.Currency `json:"currency"`
-	InvoicingStartDate     *time.Time         `json:"invoicingStartDate,omitempty"`
-	InvoicingEnabled       bool               `json:"invoicingEnabled"`
-	PayOnline              bool               `json:"payOnline"`
-	PayAutomatically       bool               `json:"payAutomatically"`
-	CanPayWithCard         bool               `json:"canPayWithCard"`
-	CanPayWithDirectDebit  bool               `json:"canPayWithDirectDebit"`
-	CanPayWithBankTransfer bool               `json:"canPayWithBankTransfer"`
-	AutoRenew              bool               `json:"autoRenew"`
-	Check                  bool               `json:"check"`
-	DueDays                int64              `json:"dueDays"`
-	Country                string             `json:"country"`
-	Approved               bool               `json:"approved"`
-}
 
 // Deprecated
 type ContractUpdateFields struct {
@@ -114,8 +85,6 @@ type ContractUpdateFields struct {
 }
 
 type ContractWriteRepository interface {
-	// Deprecated
-	CreateForOrganizationOld(ctx context.Context, tenant, contractId string, data ContractCreateFields) error
 	CreateForOrganization(ctx context.Context, tenant, contractId string, data data_fields.ContractSaveFields) error
 	// Deprecated
 	UpdateContractOld(ctx context.Context, tenant, contractId string, data ContractUpdateFields) error
@@ -143,91 +112,6 @@ func NewContractWriteRepository(driver *neo4j.DriverWithContext, database string
 		driver:   driver,
 		database: database,
 	}
-}
-
-func (r *contractWriteRepository) CreateForOrganizationOld(ctx context.Context, tenant, contractId string, data ContractCreateFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractWriteRepository.CreateForOrganizationOld")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, contractId)
-	tracing.LogObjectAsJson(span, "data", data)
-
-	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$orgId})
-							MERGE (t)<-[:CONTRACT_BELONGS_TO_TENANT]-(ct:Contract {id:$contractId})<-[:HAS_CONTRACT]-(org)
-							ON CREATE SET 
-								ct:Contract_%s,
-								ct.createdAt=$createdAt,
-								ct.updatedAt=datetime(),
-								ct.source=$source,
-								ct.sourceOfTruth=$sourceOfTruth,
-								ct.appSource=$appSource,
-								ct.name=$name,
-								ct.contractUrl=$contractUrl,
-								ct.status=$status,
-								ct.signedAt=$signedAt,
-								ct.serviceStartedAt=$serviceStartedAt,
-								ct.currency=$currency,
-								ct.billingCycleInMonths=$billingCycleInMonths,
-								ct.invoicingStartDate=$invoicingStartDate,
-								ct.invoicingEnabled=$invoicingEnabled,
-								ct.payOnline=$payOnline,
-								ct.payAutomatically=$payAutomatically,
-								ct.canPayWithCard=$canPayWithCard,
-								ct.canPayWithDirectDebit=$canPayWithDirectDebit,
-								ct.canPayWithBankTransfer=$canPayWithBankTransfer,
-								ct.autoRenew=$autoRenew,
-								ct.check=$check,
-								ct.country=$country,
-								ct.dueDays=$dueDays,
-								ct.lengthInMonths=$lengthInMonths,
-								ct.approved=$approved,
-								org.updatedAt=datetime()
-							WITH ct, t
-							OPTIONAL MATCH (t)<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$createdByUserId}) 
-							WHERE $createdByUserId <> ""
-							FOREACH (ignore IN CASE WHEN u IS NOT NULL THEN [1] ELSE [] END |
-    							MERGE (ct)-[:CREATED_BY]->(u))
-							`, tenant)
-	params := map[string]any{
-		"tenant":                 tenant,
-		"contractId":             contractId,
-		"orgId":                  data.OrganizationId,
-		"createdAt":              data.CreatedAt,
-		"source":                 data.SourceFields.Source,
-		"sourceOfTruth":          data.SourceFields.Source,
-		"appSource":              data.SourceFields.AppSource,
-		"name":                   data.Name,
-		"contractUrl":            data.ContractUrl,
-		"status":                 data.Status,
-		"signedAt":               utils.ToDateAsAny(data.SignedAt),
-		"serviceStartedAt":       utils.ToDateAsAny(data.ServiceStartedAt),
-		"createdByUserId":        data.CreatedByUserId,
-		"currency":               data.Currency.String(),
-		"billingCycleInMonths":   data.BillingCycleInMonths,
-		"invoicingStartDate":     utils.ToNeo4jDateAsAny(data.InvoicingStartDate),
-		"invoicingEnabled":       data.InvoicingEnabled,
-		"payOnline":              data.PayOnline,
-		"payAutomatically":       data.PayAutomatically,
-		"canPayWithCard":         data.CanPayWithCard,
-		"canPayWithDirectDebit":  data.CanPayWithDirectDebit,
-		"canPayWithBankTransfer": data.CanPayWithBankTransfer,
-		"autoRenew":              data.AutoRenew,
-		"check":                  data.Check,
-		"dueDays":                data.DueDays,
-		"country":                data.Country,
-		"lengthInMonths":         data.LengthInMonths,
-		"approved":               data.Approved,
-	}
-
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
-
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
-	if err != nil {
-		tracing.TraceErr(span, err)
-	}
-	return err
 }
 
 func (r *contractWriteRepository) CreateForOrganization(ctx context.Context, tenant, contractId string, data data_fields.ContractSaveFields) error {
@@ -607,7 +491,7 @@ func (r *contractWriteRepository) UpdateContract(ctx context.Context, tenant, co
 	}
 	if data.Check != nil {
 		cypher += `, ct.check=$check `
-		params["check"] = data.Check
+		params["check"] = *data.Check
 	}
 	if data.DueDays != nil {
 		cypher += `, ct.dueDays=$dueDays `
