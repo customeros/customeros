@@ -70,7 +70,7 @@ export const Header = ({
           Custom field
         </Button>
       </div>
-      <h2>{subTitle}</h2>
+      <h2 className='text-sm'>{subTitle}</h2>
       <div className='flex flex-col gap-4 mt-4'>
         <ButtonGroup>
           <Button

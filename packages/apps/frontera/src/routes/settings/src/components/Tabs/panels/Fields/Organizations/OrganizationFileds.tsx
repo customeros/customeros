@@ -35,7 +35,11 @@ export const OrganizationFields = observer(() => {
     );
   });
 
-  const customFields = customFieldStore.map((f) => toJS(f.value));
+  const customFields = customFieldStore
+    .filter((f) => f.value.name.toLowerCase().includes(search.toLowerCase()))
+    .map((f) => toJS(f.value));
+
+  const filteredCustomFields = activeTab('custom') ? customFields : [];
 
   return (
     <Layout>
@@ -61,7 +65,7 @@ export const OrganizationFields = observer(() => {
         ))
       ) : (
         <>
-          {customFields.map((field) => (
+          {filteredCustomFields.map((field) => (
             <div key={field.id} className='flex justify-between items-center'>
               <CustomFieldItem field={field} store={store} isEditable={true} />
             </div>

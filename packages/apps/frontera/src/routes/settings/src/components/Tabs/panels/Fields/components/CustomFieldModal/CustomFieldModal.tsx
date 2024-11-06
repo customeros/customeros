@@ -325,6 +325,7 @@ export const CustomFieldModal = observer(
                 onClick={() => {
                   if (isEdit) {
                     customField?.commit();
+                    onOpenChange(false);
                   } else {
                     store.customFields.save({
                       name: name,
@@ -336,6 +337,7 @@ export const CustomFieldModal = observer(
                           ? newOption.map((option) => option.value)
                           : null,
                     });
+                    onOpenChange(false);
                   }
                 }}
               >

@@ -61,11 +61,11 @@ export const CustomFieldItem = ({
     <>
       <div className='flex justify-between items-center py-2 w-full px-2'>
         <div className='flex justify-between w-full'>
-          <div className='flex items-center gap-2 flex-2'>
+          <div className='flex items-center gap-2 flex-2 text-sm'>
             {fieldIcon}
             {fieldName}
           </div>
-          <div className='flex items-center justify-between flex-1'>
+          <div className='flex items-center justify-between flex-1 text-sm'>
             {fieldType}
             <Menu>
               <MenuButton asChild disabled={!isEditable}>
