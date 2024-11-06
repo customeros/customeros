@@ -11,6 +11,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
@@ -21,7 +22,6 @@ import (
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
-	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
 	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -186,19 +186,15 @@ func (s *invoiceService) GenerateCycleInvoices() {
 				}
 
 				if !dryRun && err == nil {
-					nextInvoiceDate := utils.ToPtr(invoicePeriodEnd.AddDate(0, 0, 1))
-					_, err = utils.CallEventsPlatformGRPCWithRetry[*contractpb.ContractIdGrpcResponse](func() (*contractpb.ContractIdGrpcResponse, error) {
-						return s.eventsProcessingClient.ContractClient.UpdateContract(ctx, &contractpb.UpdateContractGrpcRequest{
-							Tenant: tenant,
-							Id:     contract.Id,
-							SourceFields: &commonpb.SourceFields{
-								AppSource: constants.AppSourceDataUpkeeper,
-							},
-							NextInvoiceDate: utils.ConvertTimeToTimestampPtr(nextInvoiceDate),
-							FieldsMask: []contractpb.ContractFieldMask{
-								contractpb.ContractFieldMask_CONTRACT_FIELD_NEXT_INVOICE_DATE},
-						})
+					nextInvoiceDate := invoicePeriodEnd.AddDate(0, 0, 1)
+					contractDataFields := data_fields.ContractSaveFields{
+						NextInvoiceDate: utils.ToPtr(nextInvoiceDate),
+					}
+					innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+						Tenant:    tenant,
+						AppSource: constants.AppSourceDataUpkeeper,
 					})
+					_, err = s.commonServices.ContractService.Save(innerCtx, &contract.Id, contractDataFields)
 					if err != nil {
 						tracing.TraceErr(span, err)
 						s.log.Errorf("Error updating contract %s: %s", contract.Id, err.Error())
