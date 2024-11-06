@@ -70,7 +70,6 @@ export const getDefaultValue = (): FlowSender => ({
     sourceOfTruth: DataSource.Openline,
   },
   user: {
-    hasLinkedInToken: false,
     id: '',
     name: '',
     firstName: '',
