@@ -619,7 +619,7 @@ func TestGraphUserEventHandler_OnRemoveRole(t *testing.T) {
 	require.Nil(t, err)
 
 	propsAfterAddRole := utils.GetPropsFromNode(*user)
-	require.Equal(t, 12, len(propsAfterAddRole))
+	require.Equal(t, 13, len(propsAfterAddRole))
 	require.Equal(t, 1, len(utils.GetListStringPropOrEmpty(propsAfterAddRole, "roles")))
 	require.Equal(t, "OWNER", utils.GetListStringPropOrEmpty(propsAfterAddRole, "roles")[0])
 	require.Less(t, userCreateTime, utils.GetTimePropOrNow(propsAfterAddRole, "updatedAt"))
