@@ -108,8 +108,9 @@ func (r flowReadRepositoryImpl) GetListWithParticipant(ctx context.Context, enti
 	tenant := common.GetTenantFromContext(ctx)
 
 	params := map[string]any{
-		"tenant":    tenant,
-		"entityIds": entityIds,
+		"tenant":     tenant,
+		"entityIds":  entityIds,
+		"entityType": entityType.String(),
 	}
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(f:Flow_%s)-[:HAS]->(fc:FlowParticipant_%s { entityId: $entityId, entityType: $entityType}) RETURN f, fc.id`, tenant, tenant)
