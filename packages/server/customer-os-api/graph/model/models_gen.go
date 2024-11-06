@@ -2735,6 +2735,7 @@ type User struct {
 	Name            *string `json:"name,omitempty"`
 	Internal        bool    `json:"internal"`
 	Bot             bool    `json:"bot"`
+	Test            bool    `json:"test"`
 	Timezone        *string `json:"timezone,omitempty"`
 	ProfilePhotoURL *string `json:"profilePhotoUrl,omitempty"`
 	Roles           []Role  `json:"roles"`

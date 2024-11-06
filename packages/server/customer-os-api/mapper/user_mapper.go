@@ -39,6 +39,7 @@ func MapEntityToUser(userEntity *neo4jentity.UserEntity) *model.User {
 		AppSource:       userEntity.AppSource,
 		Internal:        userEntity.Internal,
 		Bot:             userEntity.Bot,
+		Test:            userEntity.Test,
 		ProfilePhotoURL: utils.StringPtr(userEntity.ProfilePhotoUrl),
 	}
 }

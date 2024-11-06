@@ -44,6 +44,7 @@ type User {
     name: String
     internal: Boolean!
     bot: Boolean!
+    test: Boolean!
     timezone: String
     profilePhotoUrl: String
 
