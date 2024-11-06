@@ -10,19 +10,50 @@ import { Mail01 } from '@ui/media/icons/Mail01';
 import { Button } from '@ui/form/Button/Button';
 import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
+import { useChannel } from '@shared/hooks/useChannel';
 import { DotsVertical } from '@ui/media/icons/DotsVertical';
+import { LinkedinBlue } from '@ui/media/logos/LinkedinBlue';
+import { LinkedinOutline } from '@ui/media/icons/LinkedinOutline';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@ui/overlay/Popover/Popover.tsx';
+} from '@ui/overlay/Popover/Popover';
 
 export const FlowSender = observer(
-  ({ id, flowId }: { id: string; flowId: string }) => {
+  ({
+    id,
+    flowId,
+    hasEmailNodes,
+    hasLinkedInNodes,
+  }: {
+    id: string;
+    flowId: string;
+    hasEmailNodes: boolean;
+    hasLinkedInNodes: boolean;
+  }) => {
     const store = useStore();
     const flowSender = store.flowSenders.value.get(id) as FlowSenderStore;
     const userMailboxes = flowSender?.user?.value?.mailboxes;
+    const hasLinkedInToken = flowSender?.user?.value?.hasLinkedInToken;
+    const { username } = useChannel(`finder:${store.session.value.tenant}`);
+
+    const isCurrentUser = username === flowSender?.user?.name;
+
+    const handleSetUpLinkedInSender = () => {
+      if (isCurrentUser) {
+        store.ui.commandMenu.toggle('InstallLinkedInExtension');
+
+        return;
+      }
+
+      store.ui.commandMenu.setContext({
+        ...store.ui.commandMenu.context,
+        ids: [flowSender.user?.id ?? ''],
+      });
+      store.ui.commandMenu.toggle('GetBrowserExtensionLink');
+    };
 
     return (
       <div className='flex justify-between'>
@@ -35,31 +66,61 @@ export const FlowSender = observer(
             src={flowSender?.user?.value?.profilePhotoUrl ?? ''}
             className={'w-5 h-5 min-w-5 mr-2 border border-gray-200'}
           />
-          <span className='flex-1 text-sm'>{flowSender?.user?.name}</span>
+          <span className='flex-1 text-sm'>
+            {flowSender?.user?.name ?? 'Unnamed'}
+          </span>
         </div>
-        <div className='flex'>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                size='xxs'
-                variant='ghost'
-                leftIcon={<Mail01 className='text-inherit ' />}
-              >
-                {userMailboxes?.length ?? 0}{' '}
-                {userMailboxes?.length === 1 ? 'mailbox' : 'mailboxes'}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent align='end' side='bottom' className={'px-4 py-3 '}>
-              <p className='text-sm font-medium mb-1'>Linked mailboxes</p>
-              <ul className='list-disc px-4 text-sm'>
-                {userMailboxes?.map((mailbox) => (
-                  <li className='' key={`mailbox-item-${mailbox}`}>
-                    {mailbox}
-                  </li>
-                ))}
-              </ul>
-            </PopoverContent>
-          </Popover>
+        <div className='flex items-center'>
+          {hasLinkedInNodes && (
+            <>
+              {!hasLinkedInToken && (
+                <Button
+                  size='xxs'
+                  variant='ghost'
+                  className='gap-1'
+                  onClick={handleSetUpLinkedInSender}
+                  leftIcon={<LinkedinOutline className='text-inherit ' />}
+                >
+                  Set up
+                </Button>
+              )}
+
+              {hasLinkedInToken && <LinkedinBlue />}
+              <div className='h-[10px] w-[1px] bg-gray-300 mx-1' />
+            </>
+          )}
+
+          {hasEmailNodes && (
+            <div>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    size='xxs'
+                    variant='ghost'
+                    className='gap-1'
+                    leftIcon={<Mail01 className='text-inherit ' />}
+                  >
+                    {userMailboxes?.length ?? 0}{' '}
+                    {userMailboxes?.length === 1 ? 'mailbox' : 'mailboxes'}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent
+                  align='end'
+                  side='bottom'
+                  className={'px-4 py-3 '}
+                >
+                  <p className='text-sm font-medium mb-1'>Linked mailboxes</p>
+                  <ul className='list-disc px-4 text-sm'>
+                    {userMailboxes?.map((mailbox) => (
+                      <li className='' key={`mailbox-item-${mailbox}`}>
+                        {mailbox}
+                      </li>
+                    ))}
+                  </ul>
+                </PopoverContent>
+              </Popover>
+            </div>
+          )}
 
           <FlowSenderMenu senderId={id} flowId={flowId}>
             <IconButton

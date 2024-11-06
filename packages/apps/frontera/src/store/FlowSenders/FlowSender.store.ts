@@ -86,6 +86,7 @@ export const getDefaultValue = (): FlowSender => ({
     phoneNumbers: [],
     source: DataSource.Openline,
     sourceOfTruth: DataSource.Openline,
+    hasLinkedInToken: false,
     profilePhotoUrl: '',
     timezone: '',
     mailboxes: [],

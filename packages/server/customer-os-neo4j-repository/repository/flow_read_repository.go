@@ -113,7 +113,7 @@ func (r flowReadRepositoryImpl) GetListWithParticipant(ctx context.Context, enti
 		"entityType": entityType.String(),
 	}
 
-	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(f:Flow_%s)-[:HAS]->(fc:FlowParticipant_%s) where fc.entityType = $entityType and fc.entityId in $entityIds RETURN f, fc.id`, tenant, tenant)
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(f:Flow_%s)-[:HAS]->(fc:FlowParticipant_%s) where fc.entityType = $entityType and fc.entityId in $entityIds RETURN f, fc.entityId`, tenant, tenant)
 
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

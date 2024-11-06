@@ -3960,7 +3960,6 @@ export type Query = {
   user: User;
   user_ByEmail: User;
   users: UserPage;
-  users_WithMailboxes: Array<User>;
   workflow_ByType: Workflow;
   workflows: Array<Workflow>;
 };
@@ -4757,6 +4756,7 @@ export type User = {
    * **Required**
    */
   firstName: Scalars['String']['output'];
+  hasLinkedInToken: Scalars['Boolean']['output'];
   /**
    * The unique ID associated with the customerOS user.
    * **Required**

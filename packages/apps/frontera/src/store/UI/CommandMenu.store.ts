@@ -49,6 +49,8 @@ export type CommandMenuType =
   | 'UnlinkContactFromFlow'
   | 'ConfirmBulkFlowEdit'
   | 'ConfirmSingleFlowEdit'
+  | 'GetBrowserExtensionLink'
+  | 'InstallLinkedInExtension'
   | 'ContactBulkCommands';
 
 export type Context = {
