@@ -5,6 +5,7 @@ import {
   OnboardingStatus,
   OrganizationStage,
   LastTouchpointType,
+  CustomFieldTemplateType,
   OrganizationRelationship,
   OpportunityRenewalLikelihood,
 } from '@shared/types/__generated__/graphql.types';
@@ -15,7 +16,7 @@ export type fieldType = {
   icon: JSX.Element;
   fieldName: string;
   columnAccesor: ColumnViewType;
-  fieldType: 'text' | 'date' | 'number' | 'single-select' | 'multi-select';
+  fieldType: CustomFieldTemplateType | 'multi-select' | 'date';
   groupOptions?: { label: string; options: { id: string; label: string }[] };
   fieldTypeName: 'Text' | 'Number' | 'Date' | 'Single Select' | 'Multi Select';
 };
@@ -27,24 +28,24 @@ import { Type01 } from '@ui/media/icons/Type01';
 import { RadioButton } from '@ui/media/icons/RadioButton';
 import { ListBulleted } from '@ui/media/icons/ListBulleted';
 
-export const getFieldTypes = (store?: RootStore) => {
+export const getDefaultFieldTypes = (store?: RootStore) => {
   const filterTypes: Partial<Record<ColumnViewType, fieldType>> = {
     [ColumnViewType.OrganizationsName]: {
-      fieldType: 'text',
+      fieldType: CustomFieldTemplateType.FreeText,
       fieldTypeName: 'Text',
       fieldName: 'Organization name',
       columnAccesor: ColumnViewType.OrganizationsName,
       icon: <Type01 className='mb-0.5' />,
     },
     [ColumnViewType.OrganizationsWebsite]: {
-      fieldType: 'text',
+      fieldType: CustomFieldTemplateType.FreeText,
       fieldTypeName: 'Text',
       fieldName: 'Website',
       columnAccesor: ColumnViewType.OrganizationsWebsite,
       icon: <Type01 className='mb-0.5' />,
     },
     [ColumnViewType.OrganizationsRelationship]: {
-      fieldType: 'single-select',
+      fieldType: CustomFieldTemplateType.SingleSelect,
       fieldTypeName: 'Single Select',
       fieldName: 'Relationship',
       columnAccesor: ColumnViewType.OrganizationsRelationship,
@@ -69,7 +70,7 @@ export const getFieldTypes = (store?: RootStore) => {
       ],
     },
     [ColumnViewType.OrganizationsRenewalLikelihood]: {
-      fieldType: 'single-select',
+      fieldType: CustomFieldTemplateType.SingleSelect,
       fieldTypeName: 'Single Select',
       fieldName: 'Health',
       columnAccesor: ColumnViewType.OrganizationsRenewalLikelihood,
@@ -82,7 +83,7 @@ export const getFieldTypes = (store?: RootStore) => {
       ],
     },
     [ColumnViewType.OrganizationsOnboardingStatus]: {
-      fieldType: 'single-select',
+      fieldType: CustomFieldTemplateType.SingleSelect,
       fieldTypeName: 'Single Select',
       fieldName: 'Onboarding status',
       columnAccesor: ColumnViewType.OrganizationsOnboardingStatus,
@@ -126,7 +127,7 @@ export const getFieldTypes = (store?: RootStore) => {
       icon: <Calendar />,
     },
     [ColumnViewType.OrganizationsForecastArr]: {
-      fieldType: 'number',
+      fieldType: CustomFieldTemplateType.Number,
       fieldTypeName: 'Number',
       fieldName: 'ARR forecast',
       columnAccesor: ColumnViewType.OrganizationsForecastArr,
@@ -134,7 +135,7 @@ export const getFieldTypes = (store?: RootStore) => {
       icon: <Hash02 />,
     },
     [ColumnViewType.OrganizationsOwner]: {
-      fieldType: 'single-select',
+      fieldType: CustomFieldTemplateType.SingleSelect,
       fieldTypeName: 'Single Select',
       fieldName: 'Owner',
       columnAccesor: ColumnViewType.OrganizationsOwner,
@@ -146,7 +147,7 @@ export const getFieldTypes = (store?: RootStore) => {
       })),
     },
     [ColumnViewType.OrganizationsLeadSource]: {
-      fieldType: 'text',
+      fieldType: CustomFieldTemplateType.FreeText,
       fieldTypeName: 'Text',
       fieldName: 'Source',
       columnAccesor: ColumnViewType.OrganizationsLeadSource,
@@ -161,28 +162,28 @@ export const getFieldTypes = (store?: RootStore) => {
       icon: <Calendar />,
     },
     [ColumnViewType.OrganizationsYearFounded]: {
-      fieldType: 'number',
+      fieldType: CustomFieldTemplateType.Number,
       fieldTypeName: 'Number',
       fieldName: 'Founded',
       columnAccesor: ColumnViewType.OrganizationsYearFounded,
       icon: <Hash02 />,
     },
     [ColumnViewType.OrganizationsEmployeeCount]: {
-      fieldType: 'number',
+      fieldType: CustomFieldTemplateType.Number,
       fieldTypeName: 'Number',
       fieldName: 'Employees',
       columnAccesor: ColumnViewType.OrganizationsEmployeeCount,
       icon: <Hash02 />,
     },
     [ColumnViewType.OrganizationsSocials]: {
-      fieldType: 'text',
+      fieldType: CustomFieldTemplateType.FreeText,
       fieldTypeName: 'Text',
       fieldName: 'LinkedIn URL',
       columnAccesor: ColumnViewType.OrganizationsSocials,
       icon: <Type01 />,
     },
     [ColumnViewType.OrganizationsLastTouchpoint]: {
-      fieldType: 'single-select',
+      fieldType: CustomFieldTemplateType.SingleSelect,
       fieldTypeName: 'Single Select',
       fieldName: 'Last touchpoint',
       columnAccesor: ColumnViewType.OrganizationsLastTouchpoint,
@@ -221,14 +222,14 @@ export const getFieldTypes = (store?: RootStore) => {
       icon: <Calendar className='mb-0.5' />,
     },
     [ColumnViewType.OrganizationsLtv]: {
-      fieldType: 'number',
+      fieldType: CustomFieldTemplateType.Number,
       fieldTypeName: 'Number',
       fieldName: 'LTV',
       columnAccesor: ColumnViewType.OrganizationsLtv,
       icon: <Hash02 />,
     },
     [ColumnViewType.OrganizationsIndustry]: {
-      fieldType: 'single-select',
+      fieldType: CustomFieldTemplateType.SingleSelect,
       fieldTypeName: 'Single Select',
       fieldName: 'Industry',
       columnAccesor: ColumnViewType.OrganizationsIndustry,
@@ -243,7 +244,7 @@ export const getFieldTypes = (store?: RootStore) => {
         })),
     },
     [ColumnViewType.OrganizationsContactCount]: {
-      fieldType: 'number',
+      fieldType: CustomFieldTemplateType.Number,
       fieldTypeName: 'Number',
       fieldName: 'Contact count',
       columnAccesor: ColumnViewType.OrganizationsContactCount,
@@ -261,7 +262,7 @@ export const getFieldTypes = (store?: RootStore) => {
       })),
     },
     [ColumnViewType.OrganizationsHeadquarters]: {
-      fieldType: 'single-select',
+      fieldType: CustomFieldTemplateType.SingleSelect,
       fieldTypeName: 'Single Select',
       fieldName: 'Country',
       columnAccesor: ColumnViewType.OrganizationsHeadquarters,
@@ -275,7 +276,7 @@ export const getFieldTypes = (store?: RootStore) => {
       ),
     },
     [ColumnViewType.OrganizationsIsPublic]: {
-      fieldType: 'single-select',
+      fieldType: CustomFieldTemplateType.SingleSelect,
       fieldTypeName: 'Single Select',
       fieldName: 'Ownership type',
       columnAccesor: ColumnViewType.OrganizationsIsPublic,
@@ -286,7 +287,7 @@ export const getFieldTypes = (store?: RootStore) => {
       ],
     },
     [ColumnViewType.OrganizationsStage]: {
-      fieldType: 'single-select',
+      fieldType: CustomFieldTemplateType.SingleSelect,
       fieldTypeName: 'Single Select',
       fieldName: 'Stage',
       columnAccesor: ColumnViewType.OrganizationsStage,
@@ -315,7 +316,7 @@ export const getFieldTypes = (store?: RootStore) => {
       ],
     },
     [ColumnViewType.OrganizationsParentOrganization]: {
-      fieldType: 'text',
+      fieldType: CustomFieldTemplateType.FreeText,
       fieldTypeName: 'Text',
       fieldName: 'Parent org',
       columnAccesor: ColumnViewType.OrganizationsParentOrganization,
@@ -324,4 +325,34 @@ export const getFieldTypes = (store?: RootStore) => {
   };
 
   return filterTypes;
+};
+
+export interface customFieldType {
+  [key: string]: {
+    icon: JSX.Element;
+    fieldTypeName: string;
+    fieldType: CustomFieldTemplateType;
+  };
+}
+
+export const getCustomFieldTypes = () => {
+  const customFieldTypes: customFieldType = {
+    [CustomFieldTemplateType.FreeText]: {
+      fieldType: CustomFieldTemplateType.FreeText,
+      fieldTypeName: 'Text',
+      icon: <Type01 />,
+    },
+    [CustomFieldTemplateType.Number]: {
+      fieldType: CustomFieldTemplateType.Number,
+      fieldTypeName: 'Number',
+      icon: <Hash02 />,
+    },
+    [CustomFieldTemplateType.SingleSelect]: {
+      fieldType: CustomFieldTemplateType.SingleSelect,
+      fieldTypeName: 'Single Select',
+      icon: <RadioButton />,
+    },
+  };
+
+  return customFieldTypes;
 };

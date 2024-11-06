@@ -19,6 +19,7 @@ import { ContactsStore } from './Contacts/Contacts.store';
 import { ContractsStore } from './Contracts/Contracts.store';
 import { RemindersStore } from './Reminders/Reminders.store';
 import { WorkFlowsStore } from './WorkFlows/WorkFlows.store';
+import { CustomFieldsStore } from './Settings/CustomFields.store';
 import { GlobalCacheStore } from './GlobalCache/GlobalCache.store';
 import { FlowContactsStore } from './FlowContacts/FlowContacts.store';
 import { TableViewDefsStore } from './TableViewDefs/TableViewDefs.store';
@@ -50,6 +51,7 @@ export class RootStore {
   windowManager: WindowManager;
   globalCache: GlobalCacheStore;
   flowContacts: FlowContactsStore;
+  customFields: CustomFieldsStore;
   tableViewDefs: TableViewDefsStore;
   organizations: OrganizationsStore;
   opportunities: OpportunitiesStore;
@@ -79,6 +81,7 @@ export class RootStore {
     this.contracts = new ContractsStore(this, this.transport);
     this.reminders = new RemindersStore(this, this.transport);
     this.workFlows = new WorkFlowsStore(this, this.transport);
+    this.customFields = new CustomFieldsStore(this, this.transport);
     this.globalCache = new GlobalCacheStore(this, this.transport);
     this.flowSenders = new FlowSendersStore(this, this.transport);
     this.flowContacts = new FlowContactsStore(this, this.transport);
@@ -120,6 +123,7 @@ export class RootStore {
       this.tableViewDefs.bootstrap(),
       this.globalCache.bootstrap(),
       this.settings.bootstrap(),
+      this.customFields.bootstrap(),
       // this.organizations.bootstrapStream(),
       this.organizations.bootstrap(),
       this.tags.bootstrap(),

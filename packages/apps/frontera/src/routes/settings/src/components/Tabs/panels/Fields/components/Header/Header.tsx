@@ -9,7 +9,7 @@ import { SearchSm } from '@ui/media/icons/SearchSm';
 import { InputGroup, LeftElement } from '@ui/form/InputGroup';
 import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
 
-import { NewCustomFieldModal } from '../NewCustomFieldModal';
+import { CustomFieldModal } from '../CustomFieldModal';
 
 interface HeaderProps {
   title: string;
@@ -100,11 +100,7 @@ export const Header = ({
           />
         </InputGroup>
       </div>
-      <NewCustomFieldModal
-        isOpen={open}
-        onOpenChange={onToggle}
-        title='New organization custom field'
-      />
+      {open && <CustomFieldModal isOpen={open} onOpenChange={onToggle} />}
     </>
   );
 };

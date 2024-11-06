@@ -5,14 +5,17 @@ import type { Transport } from './transport';
 
 import { RootStore } from './root';
 import { OrganizationsService } from './Organizations/__service__/Organizations.service';
+import { CustomFieldsService } from './Settings/__service__/customFields/CustomFields.service';
 
 export class GraphqlService {
   private organizationsService: OrganizationsService;
+  private customFieldsService: CustomFieldsService;
 
   constructor(private root: RootStore, private transport: Transport) {
     this.organizationsService = OrganizationsService.getInstance(
       this.transport,
     );
+    this.customFieldsService = CustomFieldsService.getInstance(this.transport);
     this.getStore = this.getStore.bind(this);
   }
 
@@ -33,6 +36,13 @@ export class GraphqlService {
           operation,
           store,
         );
+      })
+      .with('customFields', async () => {
+        const store = this.getStore(operation, 'customFields');
+
+        if (!store) return;
+
+        return await this.customFieldsService.mutateOperation(operation, store);
       })
       .otherwise(() => {});
   }

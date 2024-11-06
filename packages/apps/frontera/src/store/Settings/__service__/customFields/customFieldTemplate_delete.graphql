@@ -1,0 +1,3 @@
+mutation DeleteCustomFieldTemplate($id: ID!) {
+  customFieldTemplate_Delete(id: $id)
+}

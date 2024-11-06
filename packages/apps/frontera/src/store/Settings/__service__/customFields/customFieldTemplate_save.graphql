@@ -1,0 +1,9 @@
+mutation SaveCustomFieldTemplate($input: CustomFieldTemplateInput!) {
+  customFieldTemplate_Save(input: $input) {
+    id
+    name
+    type
+    createdAt
+    updatedAt
+  }
+}

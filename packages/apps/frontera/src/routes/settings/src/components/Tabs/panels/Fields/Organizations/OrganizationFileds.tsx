@@ -1,27 +1,30 @@
 import { useSearchParams } from 'react-router-dom';
 
+import { toJS } from 'mobx';
 import { observer } from 'mobx-react-lite';
 
 import { useStore } from '@shared/hooks/useStore';
-import { RadioButton } from '@ui/media/icons/RadioButton';
 import { ColumnViewType } from '@shared/types/__generated__/graphql.types';
 
 import { Layout } from '../components';
-import { getFieldTypes } from './filedTypes';
 import { Header } from '../components/Header';
+import { getDefaultFieldTypes } from './filedTypes';
 import { CustomFieldItem } from '../components/CustomFieldItem';
 
 export const OrganizationFields = observer(() => {
   const store = useStore();
   const [searchParams] = useSearchParams();
 
+  const customFieldStore = store.customFields.toArray();
+
   const orgPreset = store.tableViewDefs.organizationsPreset;
+
   const coreFields =
     store.tableViewDefs.getById(orgPreset || '')?.value.columns || [];
   const search = searchParams?.get('search') || '';
 
   const activeTab = (tab: string) => searchParams?.get('view') === tab;
-  const customFieldTypes = getFieldTypes(store);
+  const customFieldTypes = getDefaultFieldTypes(store);
 
   const filteredFields = coreFields.filter((field) => {
     const fieldName = customFieldTypes[field.columnType]?.fieldName || '';
@@ -32,11 +35,13 @@ export const OrganizationFields = observer(() => {
     );
   });
 
+  const customFields = customFieldStore.map((f) => toJS(f.value));
+
   return (
     <Layout>
       <Header
-        numberOfCustomFields={0}
         title='Organization Fields'
+        numberOfCustomFields={customFields.length}
         numberOfCoreFields={filteredFields.length}
         subTitle='Create and manage custom fields for organizations'
       />
@@ -55,10 +60,13 @@ export const OrganizationFields = observer(() => {
           </div>
         ))
       ) : (
-        <div className='flex items-center'>
-          mariana
-          <RadioButton />
-        </div>
+        <>
+          {customFields.map((field) => (
+            <div key={field.id} className='flex justify-between items-center'>
+              <CustomFieldItem field={field} store={store} isEditable={true} />
+            </div>
+          ))}
+        </>
       )}
     </Layout>
   );

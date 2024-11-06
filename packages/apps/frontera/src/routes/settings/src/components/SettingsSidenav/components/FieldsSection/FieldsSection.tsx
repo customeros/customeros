@@ -25,11 +25,11 @@ export const FieldsSection = ({
           isActive={checkIsActive('organizations')}
           onClick={handleItemClick('organizations')}
         />
-        <SidenavItem
+        {/* <SidenavItem
           label='Contacts'
           isActive={checkIsActive('contacts')}
           onClick={handleItemClick('contacts')}
-        />
+        /> */}
       </div>
     </div>
   );

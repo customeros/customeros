@@ -1,0 +1,16 @@
+query GetCustomFieldTemplates {
+  customFieldTemplate_List {
+    id
+    name
+    type
+    createdAt
+    updatedAt
+    entityType
+    validValues
+    order
+    required
+    length
+    min
+    max
+  }
+}
