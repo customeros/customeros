@@ -2,8 +2,9 @@ package service
 
 import (
 	"context"
-	"fmt"
-	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/opentracing/opentracing-go"
 )
 
 type RegistrationService interface {
@@ -20,11 +21,21 @@ func NewRegistrationService(services *Services) RegistrationService {
 	}
 }
 
-func (s *registrationService) MergeToTenant(ctx context.Context, registrationEntity neo4jentity.RegistrationEntity, tenant string) (bool, error) {
-	_, err := s.services.Neo4jRepositories.RegistrationWriteRepository.Merge(ctx, registrationEntity)
+func (r registrationService) PrepareDefaultTenantSetup(ctx context.Context, loggedInUserEmail string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialService.GetAllForEntities")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogKV("loggedInUserEmail", loggedInUserEmail)
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
 	if err != nil {
-		return false, fmt.Errorf("MergeToTenant: %w", err)
+		tracing.TraceErr(span, err)
+		return err
 	}
-	result, err := s.services.Neo4jRepositories.TenantWriteRepository.LinkWithRegistration(ctx, tenant, registrationEntity)
-	return result, err
+	//tenant := common.GetTenantFromContext(ctx)
+
+	// Step 1 - Create default user
+
+	return nil
 }

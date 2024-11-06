@@ -322,7 +322,7 @@ func getTenant(c context.Context, services *service.Services, personalEmailProvi
 		playerNode, err := services.CommonServices.Neo4jRepositories.PlayerReadRepository.GetPlayerByAuthIdProvider(ctx, signInRequest.LoggedInEmail, signInRequest.Provider)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			return nil, false, isPersonalEmail, err
+			return nil, false, err
 		}
 		if playerNode != nil {
 			span.LogFields(tracingLog.Object("playerIdentified", true))
@@ -332,12 +332,12 @@ func getTenant(c context.Context, services *service.Services, personalEmailProvi
 			usersDb, err := services.CommonServices.Neo4jRepositories.PlayerReadRepository.GetUsersForPlayer(ctx, []string{playerId})
 			if err != nil {
 				tracing.TraceErr(span, err)
-				return nil, false, isPersonalEmail, err
+				return nil, false, err
 			}
 
 			if usersDb == nil || len(usersDb) == 0 {
 				tracing.TraceErr(span, fmt.Errorf("users not found"))
-				return nil, false, isPersonalEmail, fmt.Errorf("users not found")
+				return nil, false, fmt.Errorf("users not found")
 			}
 
 			tenantFromLabel := commonModel.GetTenantFromLabels(usersDb[0].Node.Labels, commonModel.NodeLabelUser)
@@ -348,7 +348,7 @@ func getTenant(c context.Context, services *service.Services, personalEmailProvi
 			}
 
 			span.LogFields(tracingLog.String("tenantIdentifiedFromPlayer", tenantFromLabel))
-			return &tenantFromLabel, false, isPersonalEmail, nil
+			return &tenantFromLabel, false, nil
 		} else {
 			span.LogFields(tracingLog.Object("playerIdentified", false))
 		}
@@ -356,12 +356,12 @@ func getTenant(c context.Context, services *service.Services, personalEmailProvi
 		tenantNode, err := services.CommonServices.Neo4jRepositories.TenantReadRepository.GetTenantForWorkspaceProvider(ctx, domain, signInRequest.Provider)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			return nil, false, isPersonalEmail, err
+			return nil, false, err
 		}
 		if tenantNode != nil {
 			tenant := neo4jmapper.MapDbNodeToTenantEntity(tenantNode)
 			span.LogFields(tracingLog.String("tenantIdentifiedSameWorkspace", tenant.Name))
-			return &tenant.Name, false, isPersonalEmail, nil
+			return &tenant.Name, false, nil
 		}
 
 		//tenant not found by the requested login info, try to find it by another workspace with the same domain
@@ -374,7 +374,7 @@ func getTenant(c context.Context, services *service.Services, personalEmailProvi
 		tenantNode, err = services.CommonServices.Neo4jRepositories.TenantReadRepository.GetTenantForWorkspaceProvider(ctx, domain, provider)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			return nil, false, isPersonalEmail, err
+			return nil, false, err
 		}
 
 		if tenantNode != nil {
@@ -387,10 +387,10 @@ func getTenant(c context.Context, services *service.Services, personalEmailProvi
 			}, tenant.Name)
 			if err != nil {
 				tracing.TraceErr(span, err)
-				return nil, false, isPersonalEmail, err
+				return nil, false, err
 			}
 
-			return &tenant.Name, false, isPersonalEmail, nil
+			return &tenant.Name, false, nil
 		}
 	}
 
@@ -547,25 +547,18 @@ func initializeUser(c context.Context, services *service.Services, provider, pro
 	}
 
 	if userId == "" {
-		userId, err = services.CommonServices.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, commonModel.NodeLabelUser)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
-
-		err = services.CommonServices.Neo4jRepositories.UserWriteRepository.CreateUser(ctx, neo4jentity.UserEntity{
-			Id:        userId,
+		innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+			Tenant:    tenant,
+			AppSource: appSource,
+		})
+		userId, err = services.CommonServices.UserService.CreateUser(innerCtx, neo4jentity.UserEntity{
 			FirstName: *firstName,
 			LastName:  *lastName,
 			Roles:     []string{"USER", "OWNER"},
 			AppSource: appSource,
 		})
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
 
-		_, err := services.CommonServices.EmailService.Merge(ctx, tenant, commonservice.EmailFields{
+		_, err = services.CommonServices.EmailService.Merge(innerCtx, tenant, commonservice.EmailFields{
 			Primary:   true,
 			Email:     email,
 			Source:    neo4jentity.DataSourceOpenline,
@@ -585,7 +578,7 @@ func initializeUser(c context.Context, services *service.Services, provider, pro
 			StartHour: "09:00",
 			EndHour:   "18:00",
 		}
-		err = services.CommonServices.PostgresRepositories.UserWorkingScheduleRepository.Store(ctx, tenant, &workSchedule)
+		err = services.CommonServices.PostgresRepositories.UserWorkingScheduleRepository.Store(innerCtx, tenant, &workSchedule)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err

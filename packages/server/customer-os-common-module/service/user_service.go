@@ -6,19 +6,17 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 type UserService interface {
 	GetById(ctx context.Context, userId string) (*neo4jentity.UserEntity, error)
 	GetAllUsersForTenant(ctx context.Context, tenant string) ([]*neo4jentity.UserEntity, error)
 	FindUserByEmail(parentCtx context.Context, email string) (*neo4jentity.UserEntity, error)
-
-	Create(ctx context.Context, input UserCreateData) (*string, error)
+	CreateUser(ctx context.Context, userEntity neo4jentity.UserEntity) (string, error)
+	CreateTestUser(ctx context.Context, firstName, lastName string) (string, error)
 }
 
 type userService struct {
@@ -29,12 +27,6 @@ func NewUserService(service *Services) UserService {
 	return &userService{
 		services: service,
 	}
-}
-
-type UserCreateData struct {
-	UserInput   neo4jentity.UserEntity
-	EmailInput  neo4jentity.EmailEntity
-	PlayerInput neo4jentity.PlayerEntity
 }
 
 func (s *userService) GetById(parentCtx context.Context, userId string) (*neo4jentity.UserEntity, error) {
@@ -85,54 +77,39 @@ func (s *userService) FindUserByEmail(parentCtx context.Context, email string) (
 	return mapper.MapDbNodeToUserEntity(userDbNode), nil
 }
 
-func (s *userService) Create(ctx context.Context, input UserCreateData) (*string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserService.Create")
+func (s *userService) CreateUser(ctx context.Context, userEntity neo4jentity.UserEntity) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserService.CreateUser")
 	defer span.Finish()
-
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-
-	span.LogFields(log.Object("input", input))
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	var err error
-
-	session := utils.NewNeo4jWriteSession(ctx, *s.services.Neo4jRepositories.Neo4jDriver)
-	defer session.Close(ctx)
-
-	input.UserInput.Id, err = s.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, commonModel.NodeLabelUser)
+	userId, err := s.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, commonModel.NodeLabelUser)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return nil, err
+		return "", err
 	}
 
-	err = s.services.Neo4jRepositories.UserWriteRepository.CreateUser(ctx, input.UserInput)
+	userEntity.Id = userId
+	if userEntity.AppSource == "" {
+		userEntity.AppSource = common.GetAppSourceFromContext(ctx)
+	}
+	err = s.services.Neo4jRepositories.UserWriteRepository.CreateUser(ctx, userEntity)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return nil, err
+		return "", err
 	}
 
-	_, err = s.services.EmailService.Merge(ctx, tenant,
-		EmailFields{
-			Email:     input.EmailInput.Email,
-			AppSource: input.UserInput.AppSource,
-		},
-		&LinkWith{
-			Type:         commonModel.USER,
-			Id:           input.UserInput.Id,
-			Relationship: "HAS",
-		})
+	return userId, nil
+}
 
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
+func (s *userService) CreateTestUser(ctx context.Context, firstName, lastName string) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserService.CreateTestUser")
+	defer span.Finish()
+	span.LogKV("firstName", firstName, "lastName", lastName)
 
-	err = s.services.Neo4jRepositories.PlayerWriteRepository.Merge(ctx, input.UserInput.Id, input.PlayerInput)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	return &input.UserInput.Id, nil
+	return s.CreateUser(ctx, neo4jentity.UserEntity{
+		FirstName: firstName,
+		LastName:  lastName,
+		Test:      true,
+	})
 }
