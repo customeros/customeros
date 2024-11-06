@@ -3,12 +3,15 @@ package restmailstack
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	coserrors "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
@@ -197,10 +200,19 @@ func addMailbox(ctx context.Context, domain string, username, password string, f
 	err = services.CommonServices.PostgresRepositories.TenantSettingsMailboxRepository.Merge(ctx, &entity.TenantSettingsMailbox{
 		Domain: domain, MailboxUsername: username + "@" + domain, Tenant: tenant, MailboxPassword: password, MinMinutesBetweenEmails: 5, MaxMinutesBetweenEmails: 10,
 	})
-
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Error saving mailbox"))
 		return mailboxResponse, err
+	}
+
+	// create email node in neo4j
+	_, err = services.CommonServices.EmailService.Merge(ctx, tenant, commonservice.EmailFields{
+		Email:     username + "@" + domain,
+		Source:    neo4jentity.DataSourceOpenline,
+		AppSource: constants.AppSourceCustomerOsApiRest,
+	}, nil)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Error creating email node for mailbox"))
 	}
 
 	mailboxResponse.WebmailEnabled = webmailEnabled

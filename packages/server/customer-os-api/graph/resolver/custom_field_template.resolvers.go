@@ -17,7 +17,7 @@ import (
 
 // CustomFieldTemplateSave is the resolver for the customFieldTemplate_Save field.
 func (r *mutationResolver) CustomFieldTemplateSave(ctx context.Context, input model.CustomFieldTemplateInput) (*model.CustomFieldTemplate, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.CustomFieldTemplateSave", graphql.GetOperationContext(ctx))
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.CustomFieldTemplateSave", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "request.input", input)
