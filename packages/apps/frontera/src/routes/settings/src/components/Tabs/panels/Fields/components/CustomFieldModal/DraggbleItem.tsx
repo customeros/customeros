@@ -64,7 +64,7 @@ export const DraggableItem = ({
               icon={<X />}
               variant='ghost'
               aria-label='delete option'
-              className='absolute right-2 transform translate-y-1/3'
+              className='absolute right-2 transform translate-y-[45%]'
               onClick={() => {
                 newOption.splice(index, 1);
                 setnewOptions([...newOption]);
