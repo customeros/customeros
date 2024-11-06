@@ -114,13 +114,11 @@ const columns: Record<string, Column> = {
         props.row.original.value.latestOrganizationWithJobRole?.organization
           .name;
 
-      if (!lasOrganizationId || !org) return '-';
-
       return (
         <OrganizationNameCell
-          org={org}
+          org={org || ''}
           contactId={contactId}
-          orgId={lasOrganizationId}
+          orgId={lasOrganizationId || ''}
         />
       );
     },

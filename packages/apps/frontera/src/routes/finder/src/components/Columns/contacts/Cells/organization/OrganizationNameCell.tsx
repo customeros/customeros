@@ -49,13 +49,17 @@ export const OrganizationNameCell = observer(
         onMouseLeave={() => setIsHoverd(false)}
       >
         <span className='inline truncate'>
-          <Link
-            to={href}
-            ref={linkRef}
-            className='inline text-gray-700 no-underline hover:no-underline font-normal'
-          >
-            {org}
-          </Link>
+          {org.length ? (
+            <Link
+              to={href}
+              ref={linkRef}
+              className='inline text-gray-700 no-underline hover:no-underline font-normal'
+            >
+              {org}
+            </Link>
+          ) : (
+            <span className='text-gray-400'>None</span>
+          )}
         </span>
         <Popover>
           <PopoverTrigger asChild>
