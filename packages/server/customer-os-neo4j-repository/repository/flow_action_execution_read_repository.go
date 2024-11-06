@@ -235,7 +235,7 @@ func (r *flowActionExecutionReadRepositoryImpl) GetForEntityWithActionType(ctx c
 
 	cypher := fmt.Sprintf(`
 		MATCH (f:FlowActionExecution_%s)-[:HAS_EXECUTION]->(fa:FlowAction_%s)
-		WHERE f.entityId = $entityId AND f.entityType = $entityType AND f.entityType = $entityType AND fa.action = $actionType and f.status in ['SCHEDULED', 'IN_PROGRESS']
+		WHERE f.entityId = $entityId AND f.entityType = $entityType AND fa.action = $actionType and f.status in ['SCHEDULED', 'IN_PROGRESS']
 		RETURN f`, tenant, tenant)
 	params := map[string]interface{}{
 		"entityId":   entityId,
