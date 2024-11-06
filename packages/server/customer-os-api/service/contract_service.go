@@ -187,191 +187,111 @@ func (s *contractService) Update(ctx context.Context, input model.ContractUpdate
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "input", input)
 
-	if err := s.validateContractExists(ctx, input.ContractID, span); err != nil {
-		return err
-	}
-
-	var fieldMask []contractpb.ContractFieldMask
-	contractUpdateRequest := contractpb.UpdateContractGrpcRequest{
-		Tenant:         common.GetTenantFromContext(ctx),
-		Id:             input.ContractID,
-		LoggedInUserId: common.GetUserIdFromContext(ctx),
-		Name:           utils.IfNotNilString(input.Name),
-		ContractUrl:    utils.IfNotNilString(input.ContractURL),
-		SourceFields: &commonpb.SourceFields{
-			Source:    neo4jentity.DataSourceOpenline.String(),
-			AppSource: utils.StringFirstNonEmpty(utils.IfNotNilString(input.AppSource), constants.AppSourceCustomerOsApi),
-		},
-		AddressLine1:          utils.IfNotNilString(input.AddressLine1),
-		AddressLine2:          utils.IfNotNilString(input.AddressLine2),
-		Locality:              utils.IfNotNilString(input.Locality),
-		Country:               utils.IfNotNilString(input.Country),
-		Zip:                   utils.IfNotNilString(input.Zip),
-		OrganizationLegalName: utils.IfNotNilString(input.OrganizationLegalName),
-		InvoiceEmailTo:        utils.IfNotNilString(input.InvoiceEmail),
-		InvoiceNote:           utils.IfNotNilString(input.InvoiceNote),
-		InvoicingEnabled:      utils.IfNotNilBool(input.BillingEnabled),
-	}
+	contractDataFields := data_fields.ContractSaveFields{}
+	contractDataFields.Name = input.Name
+	contractDataFields.ContractUrl = input.ContractURL
+	contractDataFields.Source = utils.StringPtr(neo4jentity.DataSourceOpenline.String())
+	contractDataFields.AppSource = utils.StringPtr(utils.StringFirstNonEmpty(utils.IfNotNilString(input.AppSource), constants.AppSourceCustomerOsApi))
+	contractDataFields.AddressLine1 = input.AddressLine1
+	contractDataFields.AddressLine2 = input.AddressLine2
+	contractDataFields.Locality = input.Locality
+	contractDataFields.Country = input.Country
+	contractDataFields.Zip = input.Zip
+	contractDataFields.OrganizationLegalName = input.OrganizationLegalName
+	contractDataFields.InvoiceEmail = input.InvoiceEmail
+	contractDataFields.InvoiceNote = input.InvoiceNote
+	contractDataFields.InvoicingEnabled = input.BillingEnabled
 	if input.Currency != nil {
-		contractUpdateRequest.Currency = mapper.MapCurrencyFromModel(*input.Currency).String()
+		contractDataFields.Currency = utils.ToPtr(mapper.MapCurrencyFromModel(*input.Currency))
 	}
 	if input.BillingDetails != nil {
-		if input.BillingDetails.CanPayWithCard != nil {
-			contractUpdateRequest.CanPayWithCard = *input.BillingDetails.CanPayWithCard
-		}
-		if input.BillingDetails.CanPayWithDirectDebit != nil {
-			contractUpdateRequest.CanPayWithDirectDebit = *input.BillingDetails.CanPayWithDirectDebit
-		}
-		if input.BillingDetails.CanPayWithBankTransfer != nil {
-			contractUpdateRequest.CanPayWithBankTransfer = *input.BillingDetails.CanPayWithBankTransfer
-		}
-		if input.BillingDetails.Check != nil {
-			contractUpdateRequest.Check = *input.BillingDetails.Check
-		}
-		if input.BillingDetails.AddressLine1 != nil {
-			contractUpdateRequest.AddressLine1 = *input.BillingDetails.AddressLine1
-		}
-		if input.BillingDetails.AddressLine2 != nil {
-			contractUpdateRequest.AddressLine2 = *input.BillingDetails.AddressLine2
-		}
-		if input.BillingDetails.Locality != nil {
-			contractUpdateRequest.Locality = *input.BillingDetails.Locality
-		}
-		if input.BillingDetails.Country != nil {
-			contractUpdateRequest.Country = *input.BillingDetails.Country
-		}
-		if input.BillingDetails.Region != nil {
-			contractUpdateRequest.Region = *input.BillingDetails.Region
-		}
-		if input.BillingDetails.PostalCode != nil {
-			contractUpdateRequest.Zip = *input.BillingDetails.PostalCode
-		}
-		if input.BillingDetails.OrganizationLegalName != nil {
-			contractUpdateRequest.OrganizationLegalName = *input.BillingDetails.OrganizationLegalName
-		}
-		if input.BillingDetails.BillingEmail != nil {
-			contractUpdateRequest.InvoiceEmailTo = *input.BillingDetails.BillingEmail
-		}
+		contractDataFields.CanPayWithCard = input.BillingDetails.CanPayWithCard
+		contractDataFields.CanPayWithDirectDebit = input.BillingDetails.CanPayWithDirectDebit
+		contractDataFields.CanPayWithBankTransfer = input.BillingDetails.CanPayWithBankTransfer
+		contractDataFields.Check = input.BillingDetails.Check
+		contractDataFields.AddressLine1 = input.BillingDetails.AddressLine1
+		contractDataFields.AddressLine2 = input.BillingDetails.AddressLine2
+		contractDataFields.Locality = input.BillingDetails.Locality
+		contractDataFields.Country = input.BillingDetails.Country
+		contractDataFields.Region = input.BillingDetails.Region
+		contractDataFields.Zip = input.BillingDetails.PostalCode
+		contractDataFields.OrganizationLegalName = input.BillingDetails.OrganizationLegalName
+		contractDataFields.InvoiceEmail = input.BillingDetails.BillingEmail
 		if input.BillingDetails.BillingEmailCc != nil {
-			contractUpdateRequest.InvoiceEmailCc = input.BillingDetails.BillingEmailCc
-			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_INVOICE_EMAIL_CC)
+			contractDataFields.InvoiceEmailCC = utils.ToPtr(input.BillingDetails.BillingEmailCc)
 		}
 		if input.BillingDetails.BillingEmailBcc != nil {
-			contractUpdateRequest.InvoiceEmailBcc = input.BillingDetails.BillingEmailBcc
-			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_INVOICE_EMAIL_BCC)
+			contractDataFields.InvoiceEmailBCC = utils.ToPtr(input.BillingDetails.BillingEmailBcc)
 		}
-		if input.BillingDetails.InvoiceNote != nil {
-			contractUpdateRequest.InvoiceNote = *input.BillingDetails.InvoiceNote
-		}
-		if input.BillingDetails.BillingCycleInMonths != nil {
-			contractUpdateRequest.BillingCycleInMonths = *input.BillingDetails.BillingCycleInMonths
-			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_BILLING_CYCLE_IN_MONTHS)
-		}
-		contractUpdateRequest.PayOnline = utils.IfNotNilBool(input.BillingDetails.PayOnline)
-		contractUpdateRequest.PayAutomatically = utils.IfNotNilBool(input.BillingDetails.PayAutomatically)
+		contractDataFields.InvoiceNote = input.BillingDetails.InvoiceNote
+		contractDataFields.BillingCycleInMonths = input.BillingDetails.BillingCycleInMonths
+		contractDataFields.PayOnline = input.BillingDetails.PayOnline
+		contractDataFields.PayAutomatically = input.BillingDetails.PayAutomatically
+		contractDataFields.DueDays = input.BillingDetails.DueDays
 	}
 
-	if input.Approved != nil {
-		contractUpdateRequest.Approved = *input.Approved
-		fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_APPROVED)
-	}
+	contractDataFields.Approved = input.Approved
 
 	if input.ContractName != nil {
-		contractUpdateRequest.Name = *input.ContractName
+		contractDataFields.Name = input.ContractName
 	}
 
-	nullTime := time.Time{}
+	zeroTime := time.Time{}
 
-	if input.SignedAt != nil {
-		if *input.SignedAt != nullTime {
-			contractUpdateRequest.SignedAt = utils.ConvertTimeToTimestampPtr(input.SignedAt)
-		} else {
-			contractUpdateRequest.SignedAt = nil
-		}
+	if input.SignedAt != nil && *input.SignedAt != zeroTime {
+		contractDataFields.SignedAt = input.SignedAt
 	}
-	if input.ContractSigned != nil {
-		if *input.ContractSigned != nullTime {
-			contractUpdateRequest.SignedAt = utils.ConvertTimeToTimestampPtr(input.ContractSigned)
-		} else {
-			contractUpdateRequest.SignedAt = nil
-		}
+	if input.ContractSigned != nil && *input.ContractSigned != zeroTime {
+		contractDataFields.SignedAt = input.ContractSigned
 	}
-
-	if input.ServiceStartedAt != nil {
-		if *input.ServiceStartedAt != nullTime {
-			contractUpdateRequest.ServiceStartedAt = utils.ConvertTimeToTimestampPtr(input.ServiceStartedAt)
-		} else {
-			contractUpdateRequest.ServiceStartedAt = nil
-		}
+	if input.ServiceStartedAt != nil && *input.ServiceStartedAt != zeroTime {
+		contractDataFields.SignedAt = input.ServiceStartedAt
 	}
-	if input.ServiceStarted != nil {
-		if *input.ServiceStarted != nullTime {
-			contractUpdateRequest.ServiceStartedAt = utils.ConvertTimeToTimestampPtr(input.ServiceStarted)
-		} else {
-			contractUpdateRequest.ServiceStartedAt = nil
-		}
+	if input.ServiceStarted != nil && *input.ServiceStarted != zeroTime {
+		contractDataFields.SignedAt = input.ServiceStarted
 	}
-
-	if input.EndedAt != nil {
-		if *input.EndedAt != nullTime {
-			contractUpdateRequest.EndedAt = utils.ConvertTimeToTimestampPtr(input.EndedAt)
-		} else {
-			contractUpdateRequest.EndedAt = nil
-		}
+	if input.EndedAt != nil && *input.EndedAt != zeroTime {
+		contractDataFields.SignedAt = input.EndedAt
 	}
-	if input.ContractEnded != nil {
-		if *input.ContractEnded != nullTime {
-			contractUpdateRequest.EndedAt = utils.ConvertTimeToTimestampPtr(input.ContractEnded)
-		} else {
-			contractUpdateRequest.EndedAt = nil
-		}
+	if input.ContractEnded != nil && *input.ContractEnded != zeroTime {
+		contractDataFields.SignedAt = input.ContractEnded
 	}
-
-	if input.InvoicingStartDate != nil {
-		if *input.InvoicingStartDate != nullTime {
-			contractUpdateRequest.InvoicingStartDate = utils.ConvertTimeToTimestampPtr(input.InvoicingStartDate)
-		} else {
-			contractUpdateRequest.InvoicingStartDate = nil
-		}
+	if input.InvoicingStartDate != nil && *input.InvoicingStartDate != zeroTime {
+		contractDataFields.SignedAt = input.InvoicingStartDate
 	}
 	if input.BillingDetails != nil && input.BillingDetails.InvoicingStarted != nil {
-		if *input.BillingDetails.InvoicingStarted != nullTime {
-			contractUpdateRequest.InvoicingStartDate = utils.ConvertTimeToTimestampPtr(input.BillingDetails.InvoicingStarted)
-		} else {
-			contractUpdateRequest.InvoicingStartDate = nil
+		if *input.BillingDetails.InvoicingStarted != zeroTime {
+			contractDataFields.InvoicingStartDate = input.BillingDetails.InvoicingStarted
 		}
 	}
 
 	if input.CommittedPeriodInMonths != nil {
-		contractUpdateRequest.LengthInMonths = *input.CommittedPeriodInMonths
-		fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_LENGTH_IN_MONTHS)
+		contractDataFields.LengthInMonths = input.CommittedPeriodInMonths
 	} else {
 		// prepare length in months from renewal cycle and periods
 		renewalCycle := ""
 		if input.ContractRenewalCycle != nil {
 			renewalCycleEnum := *input.ContractRenewalCycle
 			renewalCycle = renewalCycleEnum.String()
-			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_LENGTH_IN_MONTHS)
 		} else if input.RenewalCycle != nil {
 			renewalCycleEnum := *input.RenewalCycle
 			renewalCycle = renewalCycleEnum.String()
-			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_LENGTH_IN_MONTHS)
 		}
 		switch renewalCycle {
 		case model.ContractRenewalCycleMonthlyRenewal.String():
-			contractUpdateRequest.LengthInMonths = 1
+			contractDataFields.LengthInMonths = utils.Int64Ptr(1)
 		case model.ContractRenewalCycleQuarterlyRenewal.String():
-			contractUpdateRequest.LengthInMonths = 3
+			contractDataFields.LengthInMonths = utils.Int64Ptr(3)
 		case model.ContractRenewalCycleAnnualRenewal.String():
-			contractUpdateRequest.LengthInMonths = 12
+			contractDataFields.LengthInMonths = utils.Int64Ptr(12)
 		default:
-			contractUpdateRequest.LengthInMonths = 0
+			contractDataFields.LengthInMonths = utils.Int64Ptr(0)
 		}
-		if contractUpdateRequest.LengthInMonths == 12 {
+		if *contractDataFields.LengthInMonths == 12 {
 			if input.CommittedPeriods != nil && *input.CommittedPeriods > 1 {
-				contractUpdateRequest.LengthInMonths *= *input.CommittedPeriods
+				contractDataFields.LengthInMonths = utils.Int64Ptr(*contractDataFields.LengthInMonths * *input.CommittedPeriods)
 			} else if input.RenewalPeriods != nil && *input.RenewalPeriods > 1 {
-				contractUpdateRequest.LengthInMonths *= *input.RenewalPeriods
+				contractDataFields.LengthInMonths = utils.Int64Ptr(*contractDataFields.LengthInMonths * *input.RenewalPeriods)
 			}
 		}
 	}
@@ -380,119 +300,30 @@ func (s *contractService) Update(ctx context.Context, input model.ContractUpdate
 		if input.BillingDetails != nil && input.BillingDetails.BillingCycle != nil {
 			switch *input.BillingDetails.BillingCycle {
 			case model.ContractBillingCycleMonthlyBilling:
-				contractUpdateRequest.BillingCycleInMonths = 1
+				contractDataFields.BillingCycleInMonths = utils.Int64Ptr(1)
 			case model.ContractBillingCycleQuarterlyBilling:
-				contractUpdateRequest.BillingCycleInMonths = 3
+				contractDataFields.BillingCycleInMonths = utils.Int64Ptr(3)
 			case model.ContractBillingCycleAnnualBilling:
-				contractUpdateRequest.BillingCycleInMonths = 12
+				contractDataFields.BillingCycleInMonths = utils.Int64Ptr(12)
 			default:
-				contractUpdateRequest.BillingCycleInMonths = 0
+				contractDataFields.BillingCycleInMonths = utils.Int64Ptr(0)
 			}
-			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_BILLING_CYCLE_IN_MONTHS)
 		} else if input.BillingCycle != nil {
 			switch *input.BillingCycle {
 			case model.ContractBillingCycleMonthlyBilling:
-				contractUpdateRequest.BillingCycleInMonths = 1
+				contractDataFields.BillingCycleInMonths = utils.Int64Ptr(1)
 			case model.ContractBillingCycleQuarterlyBilling:
-				contractUpdateRequest.BillingCycleInMonths = 3
+				contractDataFields.BillingCycleInMonths = utils.Int64Ptr(3)
 			case model.ContractBillingCycleAnnualBilling:
-				contractUpdateRequest.BillingCycleInMonths = 12
+				contractDataFields.BillingCycleInMonths = utils.Int64Ptr(12)
 			default:
-				contractUpdateRequest.BillingCycleInMonths = 0
+				contractDataFields.BillingCycleInMonths = utils.Int64Ptr(0)
 			}
-			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_BILLING_CYCLE_IN_MONTHS)
 		}
 	}
+	contractDataFields.AutoRenew = input.AutoRenew
 
-	if input.Patch != nil && *input.Patch {
-		if input.Name != nil || input.ContractName != nil {
-			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_NAME)
-		}
-		if input.ContractURL != nil {
-			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_CONTRACT_URL)
-		}
-		if input.ServiceStartedAt != nil || input.ServiceStarted != nil {
-			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_SERVICE_STARTED_AT)
-		}
-		if input.SignedAt != nil || input.ContractSigned != nil {
-			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_SIGNED_AT)
-		}
-		if input.EndedAt != nil || input.ContractEnded != nil {
-			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_ENDED_AT)
-		}
-		if input.InvoicingStartDate != nil || (input.BillingDetails != nil && input.BillingDetails.InvoicingStarted != nil) {
-			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_INVOICING_START_DATE)
-		}
-		if input.Currency != nil {
-			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_CURRENCY)
-		}
-		if input.AddressLine1 != nil || (input.BillingDetails != nil && input.BillingDetails.AddressLine1 != nil) {
-			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_ADDRESS_LINE_1)
-		}
-		if input.AddressLine2 != nil || (input.BillingDetails != nil && input.BillingDetails.AddressLine2 != nil) {
-			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_ADDRESS_LINE_2)
-		}
-		if input.Locality != nil || (input.BillingDetails != nil && input.BillingDetails.Locality != nil) {
-			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_LOCALITY)
-		}
-		if input.Country != nil || (input.BillingDetails != nil && input.BillingDetails.Country != nil) {
-			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_COUNTRY)
-		}
-		if input.BillingDetails != nil && input.BillingDetails.Region != nil {
-			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_REGION)
-		}
-		if input.Zip != nil || (input.BillingDetails != nil && input.BillingDetails.PostalCode != nil) {
-			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_ZIP)
-		}
-		if input.OrganizationLegalName != nil || (input.BillingDetails != nil && input.BillingDetails.OrganizationLegalName != nil) {
-			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_ORGANIZATION_LEGAL_NAME)
-		}
-		if input.InvoiceEmail != nil || (input.BillingDetails != nil && input.BillingDetails.BillingEmail != nil) {
-			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_INVOICE_EMAIL_TO)
-		}
-		if input.InvoiceNote != nil || (input.BillingDetails != nil && input.BillingDetails.InvoiceNote != nil) {
-			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_INVOICE_NOTE)
-		}
-		if input.BillingDetails != nil && input.BillingDetails.CanPayWithCard != nil {
-			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_CAN_PAY_WITH_CARD)
-		}
-		if input.BillingDetails != nil && input.BillingDetails.CanPayWithDirectDebit != nil {
-			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_CAN_PAY_WITH_DIRECT_DEBIT)
-		}
-		if input.BillingDetails != nil && input.BillingDetails.CanPayWithBankTransfer != nil {
-			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_CAN_PAY_WITH_BANK_TRANSFER)
-		}
-		if input.BillingDetails != nil && input.BillingDetails.Check != nil {
-			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_CHECK)
-		}
-		if input.BillingDetails != nil && input.BillingDetails.PayOnline != nil {
-			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_PAY_ONLINE)
-		}
-		if input.BillingDetails != nil && input.BillingDetails.PayAutomatically != nil {
-			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_PAY_AUTOMATICALLY)
-		}
-		if input.BillingEnabled != nil {
-			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_INVOICING_ENABLED)
-		}
-		if input.AutoRenew != nil {
-			contractUpdateRequest.AutoRenew = *input.AutoRenew
-			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_AUTO_RENEW)
-		}
-		if input.BillingDetails != nil && input.BillingDetails.DueDays != nil {
-			contractUpdateRequest.DueDays = *input.BillingDetails.DueDays
-			fieldMask = append(fieldMask, contractpb.ContractFieldMask_CONTRACT_FIELD_DUE_DAYS)
-		}
-		contractUpdateRequest.FieldsMask = fieldMask
-		if len(fieldMask) == 0 {
-			span.LogFields(log.String("result", "No fields to update"))
-			return nil
-		}
-	}
-
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err := utils.CallEventsPlatformGRPCWithRetry[*contractpb.ContractIdGrpcResponse](func() (*contractpb.ContractIdGrpcResponse, error) {
-		return s.grpcClients.ContractClient.UpdateContract(ctx, &contractUpdateRequest)
-	})
+	_, err := s.services.CommonServices.ContractService.Save(ctx, &input.ContractID, contractDataFields)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error from events processing: %s", err.Error())
