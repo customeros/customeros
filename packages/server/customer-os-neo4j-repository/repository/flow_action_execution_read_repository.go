@@ -10,6 +10,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"time"
@@ -23,6 +24,7 @@ type FlowActionExecutionReadRepository interface {
 	GetLastScheduledForMailbox(ctx context.Context, tx *neo4j.ManagedTransaction, mailbox string) (*dbtype.Node, error)
 	GetScheduledBefore(ctx context.Context, before time.Time) ([]*dbtype.Node, error)
 	GetByMailboxAndTimeInterval(ctx context.Context, tx *neo4j.ManagedTransaction, mailbox string, startTime, endTime time.Time) (*dbtype.Node, error)
+	GetForEntityWithActionType(ctx context.Context, entityId string, entityType model.EntityType, actionType neo4jentity.FlowActionType) ([]*dbtype.Node, error)
 
 	CountEmailsPerMailboxPerDay(ctx context.Context, tx *neo4j.ManagedTransaction, mailbox string, startDate, endDate time.Time) (int64, error)
 }
@@ -220,6 +222,45 @@ func (r *flowActionExecutionReadRepositoryImpl) GetByMailboxAndTimeInterval(ctx 
 	span.LogFields(log.Bool("result.found", result != nil))
 
 	return result.(*dbtype.Node), nil
+}
+
+func (r *flowActionExecutionReadRepositoryImpl) GetForEntityWithActionType(ctx context.Context, entityId string, entityType model.EntityType, actionType neo4jentity.FlowActionType) ([]*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionExecutionReadRepository.GetForEntityWithActionType")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	span.LogFields(log.String("entityId", entityId), log.Object("entityType", entityType), log.Object("actionType", actionType))
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	cypher := fmt.Sprintf(`
+		MATCH (f:FlowActionExecution_%s)-[:HAS_EXECUTION]->(fa:FlowAction_%s)
+		WHERE f.entityId = $entityId AND f.entityType = $entityType AND f.entityType = $entityType AND fa.action = $actionType and f.status in ['SCHEDULED', 'IN_PROGRESS']
+		RETURN f`, tenant, tenant)
+	params := map[string]interface{}{
+		"entityId":   entityId,
+		"entityType": entityType.String(),
+		"actionType": actionType,
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	result, err := utils.ExecuteReadInTransaction(ctx, r.driver, r.database, nil, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	span.LogFields(log.Int("result.count", len(result.([]*dbtype.Node))))
+
+	return result.([]*dbtype.Node), nil
 }
 
 func (r *flowActionExecutionReadRepositoryImpl) GetFirstSlotForMailbox(ctx context.Context, tx *neo4j.ManagedTransaction, mailbox string) (*time.Time, error) {

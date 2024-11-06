@@ -16,7 +16,6 @@ import (
 
 type LinkedinConnectionRequestReadRepository interface {
 	GetPendingRequestByUserForSocialUrl(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, userId, socialUrl string) (*dbtype.Node, error)
-	GetFastestUser(ctx context.Context, tx *neo4j.ManagedTransaction, userIds []string) (string, error)
 	GetLastScheduledForUser(ctx context.Context, tx *neo4j.ManagedTransaction, userId string) (*dbtype.Node, error)
 
 	CountRequestsPerUserPerDay(ctx context.Context, tx *neo4j.ManagedTransaction, userId string, startDate, endDate time.Time) (int64, error)
@@ -71,41 +70,6 @@ func (r *linkedinConnectionRequestReadRepository) GetPendingRequestByUserForSoci
 	return result.(*dbtype.Node), nil
 }
 
-func (r *linkedinConnectionRequestReadRepository) GetFastestUser(ctx context.Context, tx *neo4j.ManagedTransaction, userIds []string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionExecutionReadRepository.GetFastestUser")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	span.LogFields(log.Object("userIds", userIds))
-
-	tenant := common.GetTenantFromContext(ctx)
-
-	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(l:LinkedinConnectionRequest_%s) where l.status = 'PENDING' and l.userId in $userIds RETURN l.userId order by l.scheduledAt ASC limit 1`, tenant)
-	params := map[string]any{
-		"tenant":  tenant,
-		"userIds": userIds,
-	}
-
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
-
-	result, err := utils.ExecuteReadInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, cypher, params)
-		if err != nil {
-			return nil, err
-		}
-		return utils.ExtractSingleRecordFirstValueAsString(ctx, queryResult, err)
-	})
-	if err != nil && err.Error() == "Result contains no more records" {
-		return "", nil
-	}
-	if err != nil {
-		return "", err
-	}
-
-	return result.(string), nil
-}
-
 func (r *linkedinConnectionRequestReadRepository) GetLastScheduledForUser(ctx context.Context, tx *neo4j.ManagedTransaction, userId string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionExecutionReadRepository.GetLastScheduledForUser")
 	defer span.Finish()
@@ -115,7 +79,7 @@ func (r *linkedinConnectionRequestReadRepository) GetLastScheduledForUser(ctx co
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(l:LinkedinConnectionRequest_%s) where l.status = 'PENDING' and l.userId in $userIds RETURN l.userId order by l.scheduledAt DESC limit 1`, tenant)
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(l:LinkedinConnectionRequest_%s) where l.userId = $userId RETURN l order by l.scheduledAt DESC limit 1`, tenant)
 	params := map[string]any{
 		"tenant": tenant,
 		"userId": userId,

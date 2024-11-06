@@ -6,6 +6,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
@@ -14,7 +15,8 @@ import (
 
 type FlowReadRepository interface {
 	GetList(ctx context.Context) ([]*dbtype.Node, error)
-	GetListWithContact(ctx context.Context, contactIds []string) ([]*utils.DbNodeAndId, error)
+	GetWithParticipant(ctx context.Context, flowParticipantId string) (*dbtype.Node, error)
+	GetListWithParticipant(ctx context.Context, entityIds []string, entityType model.EntityType) ([]*utils.DbNodeAndId, error)
 	GetListWithSender(ctx context.Context, senderIds []string) ([]*utils.DbNodeAndId, error)
 	GetById(ctx context.Context, id string) (*dbtype.Node, error)
 }
@@ -57,22 +59,60 @@ func (r flowReadRepositoryImpl) GetList(ctx context.Context) ([]*dbtype.Node, er
 	return result.([]*dbtype.Node), nil
 }
 
-func (r flowReadRepositoryImpl) GetListWithContact(ctx context.Context, contactIds []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowReadRepository.GetListWithContact")
+func (r flowReadRepositoryImpl) GetWithParticipant(ctx context.Context, flowParticipantId string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowReadRepository.GetWithParticipant")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	span.LogFields(log.Object("contactIds", contactIds))
+	span.LogFields(log.Object("flowParticipantId", flowParticipantId))
 
 	tenant := common.GetTenantFromContext(ctx)
 
 	params := map[string]any{
-		"tenant":     tenant,
-		"contactIds": contactIds,
+		"tenant":        tenant,
+		"participantId": flowParticipantId,
 	}
 
-	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(f:Flow_%s)-[:HAS]->(fc:FlowParticipant_%s)-[:HAS]->(c:Contact_%s) `, tenant, tenant, tenant)
-	cypher += "where c.id in $contactIds RETURN f, c.id"
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(f:Flow_%s)-[:HAS]->(fc:FlowParticipant_%s { id: $participantId }) RETURN f`, tenant, tenant)
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+		}
+	})
+	if err != nil && err.Error() == "Result contains no more records" {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return result.(*dbtype.Node), nil
+}
+
+func (r flowReadRepositoryImpl) GetListWithParticipant(ctx context.Context, entityIds []string, entityType model.EntityType) ([]*utils.DbNodeAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowReadRepository.GetListWithParticipant")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	span.LogFields(log.Object("entityIds", entityIds), log.Object("entityType", entityType))
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	params := map[string]any{
+		"tenant":    tenant,
+		"entityIds": entityIds,
+	}
+
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(f:Flow_%s)-[:HAS]->(fc:FlowParticipant_%s { entityId: $entityId, entityType: $entityType}) RETURN f, fc.id`, tenant, tenant)
 
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -92,9 +132,6 @@ func (r flowReadRepositoryImpl) GetListWithContact(ctx context.Context, contactI
 		return nil, err
 	}
 	span.LogFields(log.Int("result.count", len(result.([]*utils.DbNodeAndId))))
-	if len(result.([]*utils.DbNodeAndId)) == 0 {
-		return nil, nil
-	}
 	return result.([]*utils.DbNodeAndId), err
 }
 
@@ -133,9 +170,6 @@ func (r flowReadRepositoryImpl) GetListWithSender(ctx context.Context, senderIds
 		return nil, err
 	}
 	span.LogFields(log.Int("result.count", len(result.([]*utils.DbNodeAndId))))
-	if len(result.([]*utils.DbNodeAndId)) == 0 {
-		return nil, nil
-	}
 	return result.([]*utils.DbNodeAndId), err
 }
 

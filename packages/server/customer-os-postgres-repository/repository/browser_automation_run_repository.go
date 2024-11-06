@@ -10,7 +10,7 @@ import (
 
 type BrowserAutomationRunRepository interface {
 	Get(ctx context.Context, automationType, status string) ([]entity.BrowserAutomationsRun, error)
-	Add(ctx context.Context, input entity.BrowserAutomationsRun) error
+	Add(ctx context.Context, input *entity.BrowserAutomationsRun) error
 	MarkAsProcessed(ctx context.Context, id int) error
 }
 
@@ -38,12 +38,12 @@ func (repo *browserAutomationRunRepositoryImpl) Get(ctx context.Context, automat
 	return result, nil
 }
 
-func (repo browserAutomationRunRepositoryImpl) Add(ctx context.Context, input entity.BrowserAutomationsRun) error {
+func (repo browserAutomationRunRepositoryImpl) Add(ctx context.Context, input *entity.BrowserAutomationsRun) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "BrowserAutomationRunRepository.Add")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	err := repo.gormDb.Create(&input).Error
+	err := repo.gormDb.Create(input).Error
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err

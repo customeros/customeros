@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/constants"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/logger"
@@ -376,7 +377,7 @@ func (s *contactService) askForLinkedInConnections(c context.Context) {
 
 	for _, linkedinToken := range linkedinTokens {
 		//todo check if there is already a scheduled job for this token today
-		err := s.commonServices.PostgresRepositories.BrowserAutomationRunRepository.Add(ctx, postgresentity.BrowserAutomationsRun{
+		err := s.commonServices.PostgresRepositories.BrowserAutomationRunRepository.Add(ctx, &postgresentity.BrowserAutomationsRun{
 			BrowserConfigId: linkedinToken.Id,
 			UserId:          linkedinToken.UserId,
 			Tenant:          linkedinToken.Tenant,
@@ -524,6 +525,52 @@ func (s *contactService) processLinkedInUrl(ctx context.Context, tenant, linkedi
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "CommonWriteRepository.Link"))
 					return err
+				}
+			}
+		}
+	}
+
+	pendingLinkedinRequests, err := s.commonServices.Neo4jRepositories.LinkedinConnectionRequestReadRepository.GetPendingRequestByUserForSocialUrl(ctx, nil, tenant, userId, linkedinProfileUrl)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "LinkedinConnectionRequestReadRepository.GetPendingRequestByUserForSocialUrl"))
+		return err
+	}
+
+	if pendingLinkedinRequests != nil {
+		for _, cid := range contactIds {
+			flowActionExecutions, err := s.commonServices.FlowExecutionService.GetFlowActionExecutionForParticipantWithActionType(ctx, cid, model.CONTACT, neo4jentity.FlowActionTypeLinkedinConnectionRequest)
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "FlowService.FlowGetByParticipant"))
+				return err
+			}
+
+			if flowActionExecutions != nil && len(flowActionExecutions) > 0 {
+				for _, flowActionExecution := range flowActionExecutions {
+
+					_, err := utils.ExecuteWriteInTransaction(ctx, s.commonServices.Neo4jRepositories.Neo4jDriver, s.commonServices.Neo4jRepositories.Database, nil, func(tx neo4j.ManagedTransaction) (any, error) {
+
+						err := s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateStringProperty(ctx, nil, tenant, model.NodeLabelFlowActionExecution, flowActionExecution.Id, "status", string(neo4jentity.FlowActionExecutionStatusSuccess))
+						if err != nil {
+							return nil, errors.Wrap(err, "CommonWriteRepository.UpdateStringProperty")
+						}
+
+						flowParticipant, err := s.commonServices.FlowService.FlowParticipantByEntity(ctx, flowActionExecution.FlowId, flowActionExecution.EntityId, flowActionExecution.EntityType)
+						if err != nil {
+							return nil, errors.Wrap(err, "FlowService.FlowParticipantByEntity")
+						}
+
+						err = s.commonServices.FlowExecutionService.ScheduleFlow(ctx, nil, flowActionExecution.FlowId, flowParticipant)
+						if err != nil {
+							return nil, errors.Wrap(err, "FlowService.ScheduleFlow")
+						}
+
+						return nil, nil
+					})
+
+					if err != nil {
+						tracing.TraceErr(span, errors.Wrap(err, "ExecuteWriteInTransaction"))
+						return err
+					}
 				}
 			}
 		}

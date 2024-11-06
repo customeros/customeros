@@ -412,7 +412,7 @@ func processEmailForFlows(ctx context.Context, services *service.Services, tenan
 			for _, contactNode := range contactsWithEmailNodes {
 				contactEntity := mapper.MapDbNodeToContactEntity(contactNode)
 
-				flowsWithContact, err := services.CommonServices.FlowService.FlowsGetListWithContact(ctx, []string{contactEntity.Id})
+				flowsWithContact, err := services.CommonServices.FlowService.FlowsGetListWithParticipant(ctx, []string{contactEntity.Id}, commonModel.CONTACT)
 				if err != nil {
 					tracing.TraceErr(span, err)
 					return err

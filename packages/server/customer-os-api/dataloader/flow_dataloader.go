@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/graph-gophers/dataloader"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/opentracing/opentracing-go"
@@ -216,7 +217,7 @@ func (b *flowBatcher) getFlowsWithContact(ctx context.Context, keys dataloader.K
 
 	ids, keyOrder := sortKeys(keys)
 
-	flowSequenceEntitiesPtr, err := b.flowService.FlowsGetListWithContact(ctx, ids)
+	flowSequenceEntitiesPtr, err := b.flowService.FlowsGetListWithParticipant(ctx, ids, model.CONTACT)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred
