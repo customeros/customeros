@@ -2,7 +2,8 @@ package event
 
 const (
 	// Deprecated
-	ContractCreateV1                    = "V1_CONTRACT_CREATE"
+	ContractCreateV1 = "V1_CONTRACT_CREATE"
+	// Deprecated
 	ContractUpdateV1                    = "V1_CONTRACT_UPDATE"
 	ContractUpdateStatusV1              = "V1_CONTRACT_UPDATE_STATUS"
 	ContractRefreshStatusV1             = "V1_CONTRACT_REFRESH_STATUS"

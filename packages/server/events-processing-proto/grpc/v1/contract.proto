@@ -8,83 +8,6 @@ import "common/billing_cycle.proto";
 
 option go_package = "api/grpc/v1/contract;contract_grpc_service";
 
-enum ContractFieldMask {
-  CONTRACT_FIELD_NONE = 0; // No property, ignored by the server
-  CONTRACT_FIELD_NAME = 1;
-  CONTRACT_FIELD_SERVICE_STARTED_AT = 2;
-  CONTRACT_FIELD_SIGNED_AT = 3;
-  CONTRACT_FIELD_ENDED_AT = 4;
-  CONTRACT_FIELD_CONTRACT_URL = 6;
-  CONTRACT_FIELD_BILLING_CYCLE = 8 [deprecated = true];
-  CONTRACT_FIELD_INVOICING_START_DATE = 9;
-  CONTRACT_FIELD_CURRENCY = 10;
-  CONTRACT_FIELD_ADDRESS_LINE_1 = 11;
-  CONTRACT_FIELD_ADDRESS_LINE_2 = 12;
-  CONTRACT_FIELD_LOCALITY = 13;
-  CONTRACT_FIELD_COUNTRY = 14;
-  CONTRACT_FIELD_ZIP = 15;
-  CONTRACT_FIELD_ORGANIZATION_LEGAL_NAME = 16;
-  CONTRACT_FIELD_INVOICE_NOTE = 18;
-  CONTRACT_FIELD_NEXT_INVOICE_DATE = 19; // to update next invoice date field mask must be specified explicitly
-  CONTRACT_FIELD_CAN_PAY_WITH_CARD = 20;
-  CONTRACT_FIELD_CAN_PAY_WITH_DIRECT_DEBIT = 21;
-  CONTRACT_FIELD_CAN_PAY_WITH_BANK_TRANSFER = 22;
-  CONTRACT_FIELD_INVOICING_ENABLED = 23;
-  CONTRACT_FIELD_PAY_ONLINE = 24;
-  CONTRACT_FIELD_PAY_AUTOMATICALLY = 25;
-  CONTRACT_FIELD_AUTO_RENEW = 26;
-  CONTRACT_FIELD_REGION = 27;
-  CONTRACT_FIELD_CHECK = 28;
-  CONTRACT_FIELD_DUE_DAYS = 29;
-  CONTRACT_FIELD_INVOICE_EMAIL_CC = 30;
-  CONTRACT_FIELD_INVOICE_EMAIL_BCC = 31;
-  CONTRACT_FIELD_INVOICE_EMAIL_TO = 32;
-  CONTRACT_FIELD_LENGTH_IN_MONTHS = 33;
-  CONTRACT_FIELD_APPROVED = 34;
-  CONTRACT_FIELD_BILLING_CYCLE_IN_MONTHS = 35;
-}
-
-message UpdateContractGrpcRequest {
-  string id = 1;
-  string tenant = 2;
-  string loggedInUserId = 3;
-  string name = 4;
-  google.protobuf.Timestamp updatedAt = 5;
-  google.protobuf.Timestamp serviceStartedAt = 6;
-  google.protobuf.Timestamp signedAt = 7;
-  google.protobuf.Timestamp endedAt = 8;
-  SourceFields sourceFields = 10;
-  ExternalSystemFields externalSystemFields = 11;
-  string contractUrl = 12;
-  google.protobuf.Timestamp invoicingStartDate = 15;
-  string currency = 16;
-  string addressLine1 = 17;
-  string addressLine2 = 18;
-  string locality = 19;
-  string country = 20;
-  string zip = 21;
-  string organizationLegalName = 22;
-  repeated ContractFieldMask fieldsMask = 24;
-  string invoiceNote = 25;
-  google.protobuf.Timestamp nextInvoiceDate = 26;
-  bool canPayWithCard = 27;
-  bool canPayWithDirectDebit = 28;
-  bool canPayWithBankTransfer = 29;
-  bool invoicingEnabled = 30;
-  bool payOnline = 31;
-  bool payAutomatically = 32;
-  bool autoRenew = 33;
-  string region = 34;
-  bool check = 35;
-  int64 dueDays = 36;
-  string invoiceEmailTo = 37;
-  repeated string invoiceEmailCc = 38;
-  repeated string invoiceEmailBcc = 39;
-  int64 lengthInMonths = 40;
-  bool approved = 41;
-  int64 billingCycleInMonths = 42;
-}
-
 message RolloutRenewalOpportunityOnExpirationGrpcRequest {
   string id = 1;
   string tenant = 2;
@@ -121,7 +44,6 @@ message ContractIdGrpcResponse {
 
 // Service definition
 service ContractGrpcService {
-  rpc UpdateContract(UpdateContractGrpcRequest) returns (ContractIdGrpcResponse);
   rpc RolloutRenewalOpportunityOnExpiration(RolloutRenewalOpportunityOnExpirationGrpcRequest) returns (ContractIdGrpcResponse);
   rpc RefreshContractStatus(RefreshContractStatusGrpcRequest) returns (ContractIdGrpcResponse);
   rpc RefreshContractLtv(RefreshContractLtvGrpcRequest) returns (ContractIdGrpcResponse);

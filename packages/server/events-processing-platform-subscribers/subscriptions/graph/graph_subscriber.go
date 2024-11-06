@@ -224,6 +224,7 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		contactevent.ContactAddTagV1,
 		contactevent.ContactOrganizationLinkV1,
 		contractevent.ContractCreateV1,
+		contractevent.ContractUpdateV1,
 		contactevent.ContactRemoveTagV1:
 
 		return nil
@@ -424,9 +425,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		_ = s.opportunityEventHandler.OnCloseLost(ctx, evt)
 		return nil
 
-	case contractevent.ContractUpdateV1:
-		_ = s.contractEventHandler.OnUpdate(ctx, evt)
-		return nil
 	case contractevent.ContractRolloutRenewalOpportunityV1:
 		_ = s.contractEventHandler.OnRolloutRenewalOpportunity(ctx, evt)
 		return nil
