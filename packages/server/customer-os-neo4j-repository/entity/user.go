@@ -20,6 +20,7 @@ type UserEntity struct {
 	Timezone        string     `neo4jDb:"property:timezone;lookupName:TIMEZONE;supportCaseSensitive:true"`
 	ProfilePhotoUrl string     `neo4jDb:"property:profilePhotoUrl;lookupName:PROFILE_PHOTO_URL;supportCaseSensitive:true"`
 	Internal        bool
+	Test            bool
 	Bot             bool
 
 	InteractionEventParticipantDetails   InteractionEventParticipantDetails

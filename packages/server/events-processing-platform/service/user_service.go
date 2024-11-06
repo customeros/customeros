@@ -49,6 +49,7 @@ func (s *userService) UpsertUser(ctx context.Context, request *userpb.UpsertUser
 		LastName:        request.LastName,
 		Internal:        request.Internal,
 		Bot:             request.Bot,
+		Test:            request.Test,
 		ProfilePhotoUrl: request.ProfilePhotoUrl,
 		Timezone:        request.Timezone,
 	}

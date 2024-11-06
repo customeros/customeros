@@ -6,6 +6,7 @@ type UserDataFields struct {
 	LastName        string
 	Internal        bool
 	Bot             bool
+	Test            bool
 	ProfilePhotoUrl string
 	Timezone        string
 }

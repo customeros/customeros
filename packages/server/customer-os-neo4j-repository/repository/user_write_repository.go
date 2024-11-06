@@ -8,33 +8,16 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/constants"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
-	"time"
 )
-
-type UserCreateFields struct {
-	Name            string             `json:"name"`
-	FirstName       string             `json:"firstName"`
-	LastName        string             `json:"lastName"`
-	SourceFields    model.SourceFields `json:"sourceFields"`
-	CreatedAt       time.Time          `json:"createdAt"`
-	UpdatedAt       time.Time          `json:"updatedAt"`
-	Internal        bool               `json:"internal"`
-	Bot             bool               `json:"bot"`
-	ProfilePhotoUrl string             `json:"profilePhotoUrl"`
-	Timezone        string             `json:"timezone"`
-}
 
 type UserUpdateFields struct {
 	Name            string `json:"name"`
 	FirstName       string `json:"firstName"`
 	LastName        string `json:"lastName"`
 	Source          string `json:"source"`
-	Internal        bool   `json:"internal"`
-	Bot             bool   `json:"bot"`
 	ProfilePhotoUrl string `json:"profilePhotoUrl"`
 	Timezone        string `json:"timezone"`
 }
@@ -111,6 +94,7 @@ func (r *userWriteRepository) CreateUserInTx(c context.Context, tx neo4j.Managed
 						u.createdAt = $createdAt,
 						u.updatedAt = datetime(),
 						u.internal = $internal,
+						u.test = $test,
 						u.roles = $roles,
 						u.bot = $bot,
 						u.profilePhotoUrl = $profilePhotoUrl,
@@ -132,6 +116,7 @@ func (r *userWriteRepository) CreateUserInTx(c context.Context, tx neo4j.Managed
 		"firstName":       input.FirstName,
 		"lastName":        input.LastName,
 		"internal":        input.Internal,
+		"test":            input.Test,
 		"roles":           input.Roles,
 		"bot":             input.Bot,
 		"profilePhotoUrl": input.ProfilePhotoUrl,
@@ -174,8 +159,6 @@ func (r *userWriteRepository) UpdateUser(c context.Context, tenant, userId strin
 		"firstName":       data.FirstName,
 		"lastName":        data.LastName,
 		"sourceOfTruth":   data.Source,
-		"internal":        data.Internal,
-		"bot":             data.Bot,
 		"profilePhotoUrl": data.ProfilePhotoUrl,
 		"timezone":        data.Timezone,
 		"overwrite":       data.Source == constants.SourceOpenline,

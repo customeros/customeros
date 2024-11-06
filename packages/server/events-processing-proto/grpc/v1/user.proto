@@ -24,6 +24,7 @@ message UpsertUserGrpcRequest {
   ExternalSystemFields externalSystemFields = 15;
   string loggedInUserId = 16;
   bool bot = 17;
+  bool test = 18;
 }
 
 message LinkJobRoleToUserGrpcRequest {

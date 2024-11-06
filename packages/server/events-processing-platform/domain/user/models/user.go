@@ -13,6 +13,7 @@ type User struct {
 	LastName        string                       `json:"lastName"`
 	Internal        bool                         `json:"internal"`
 	Bot             bool                         `json:"bot"`
+	Test            bool                         `json:"test"`
 	ProfilePhotoUrl string                       `json:"profilePhotoUrl"`
 	Timezone        string                       `json:"timezone"`
 	CreatedAt       time.Time                    `json:"createdAt"`
@@ -58,6 +59,7 @@ func (u *User) SameUserData(fields UserDataFields, externalSystem commonmodel.Ex
 			u.LastName == fields.LastName &&
 			u.Internal == fields.Internal &&
 			u.Bot == fields.Bot &&
+			u.Test == fields.Test &&
 			u.Timezone == fields.Timezone &&
 			u.ProfilePhotoUrl == fields.ProfilePhotoUrl {
 			return true
@@ -68,6 +70,7 @@ func (u *User) SameUserData(fields UserDataFields, externalSystem commonmodel.Ex
 			(u.LastName != "" || u.LastName == fields.LastName) &&
 			(u.Internal != false || u.Internal == fields.Internal) &&
 			(u.Bot != false || u.Bot == fields.Bot) &&
+			(u.Test != false || u.Test == fields.Test) &&
 			(u.Timezone != "" || u.Timezone == fields.Timezone) &&
 			(u.ProfilePhotoUrl != "" || u.ProfilePhotoUrl == fields.ProfilePhotoUrl) {
 			return true

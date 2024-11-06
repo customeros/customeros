@@ -59,6 +59,7 @@ func (h *UserEventHandler) OnUserCreate(ctx context.Context, evt eventstore.Even
 			CreatedAt:       eventData.CreatedAt,
 			UpdatedAt:       eventData.UpdatedAt,
 			Internal:        eventData.Internal,
+			Test:            eventData.Test,
 			Bot:             eventData.Bot,
 			ProfilePhotoUrl: eventData.ProfilePhotoUrl,
 			Timezone:        eventData.Timezone,
@@ -112,8 +113,6 @@ func (h *UserEventHandler) OnUserUpdate(ctx context.Context, evt eventstore.Even
 		Source:          helper.GetSource(eventData.Source),
 		FirstName:       eventData.FirstName,
 		LastName:        eventData.LastName,
-		Internal:        eventData.Internal,
-		Bot:             eventData.Bot,
 		ProfilePhotoUrl: eventData.ProfilePhotoUrl,
 		Timezone:        eventData.Timezone,
 	}
