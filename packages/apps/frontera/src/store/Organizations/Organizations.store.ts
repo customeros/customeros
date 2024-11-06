@@ -103,7 +103,7 @@ export class OrganizationsStore extends SyncableGroup<
 
   async getRecentChanges() {
     try {
-      if (this.root.demoMode) {
+      if (this.root.demoMode || this.isBootstrapping) {
         return;
       }
 
@@ -141,10 +141,14 @@ export class OrganizationsStore extends SyncableGroup<
           where,
         });
 
-      await this.hydrate({
-        idsToDrop,
-        getId: (data) => data.metadata.id,
-      });
+      if (this.isHydrated) {
+        await this.drop(idsToDrop);
+      } else {
+        await this.hydrate({
+          idsToDrop,
+          getId: (data) => data.metadata.id,
+        });
+      }
 
       const data =
         (dashboardView_Organizations?.content as Organization[]) ?? [];
@@ -168,6 +172,8 @@ export class OrganizationsStore extends SyncableGroup<
   }
 
   async getAllData() {
+    this.isBootstrapping = true;
+
     try {
       const { dashboardView_Organizations } =
         await this.service.getOrganizations({
@@ -260,6 +266,7 @@ export class OrganizationsStore extends SyncableGroup<
     }
 
     this.isBootstrapped = this.totalElements === this.value.size;
+    this.isBootstrapping = false;
   }
 
   toArray() {

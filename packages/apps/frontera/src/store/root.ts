@@ -64,7 +64,7 @@ export class RootStore {
     this.demoMode = demoMode;
     this.transactions = new TransactionService(this, this.transport);
 
-    this.ui = new UIStore();
+    this.ui = new UIStore(this, this.transport);
     this.windowManager = new WindowManager(this);
     this.mail = new MailStore(this, this.transport);
     this.tags = new TagsStore(this, this.transport);
@@ -167,9 +167,16 @@ export class RootStore {
     if (this.demoMode) return false;
 
     return (
+      this.organizations.isBootstrapping ||
       this.tableViewDefs.isLoading ||
       this.settings.isBootstrapping ||
       this.globalCache.isLoading
     );
+  }
+
+  get isSyncing() {
+    if (this.demoMode) return false;
+
+    return this.organizations.isLoading;
   }
 }

@@ -75,6 +75,7 @@ export const computeFinderData = (
         );
         const flowFilters = getFlowFilterFns(workFlow?.getFilters());
 
+        // TODO: Should filter only once for both defaultFilters and filters
         if (defaultFilters) {
           arr = arr.filter((v) => defaultFilters.every((fn) => fn(v)));
         }

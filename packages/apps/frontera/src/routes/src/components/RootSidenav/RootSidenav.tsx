@@ -13,6 +13,8 @@ import {
   NavigationSections,
 } from '@shared/components/RootSidenav/components/sections';
 
+import { SystemUpdateNotification } from './components/SystemUpdateNotification';
+
 export const RootSidenav = observer(() => {
   const { preferences, togglePreference } = usePreferencesManager();
   const { handleItemClick, checkIsActive } = useNavigationManager();
@@ -51,6 +53,7 @@ export const RootSidenav = observer(() => {
         togglePreference={togglePreference}
       />
       {/* <UserActionSection /> */}
+      <SystemUpdateNotification />
     </div>
   );
 });

@@ -35,6 +35,10 @@ export type GroupSyncPacket = {
   action: 'APPEND' | 'DELETE' | 'INVALIDATE';
 };
 
+export type SystemSyncPacket = {
+  action: 'NEW_VERSION_AVAILABLE';
+};
+
 export type LatestDiff = {
   version: number;
   entity_id: string;

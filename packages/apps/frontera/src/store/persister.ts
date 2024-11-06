@@ -42,7 +42,7 @@ export class Persister {
     Persister.DB_NAME = `customerDB_${tenant}`;
   }
 
-  public static async attemptPurge() {
+  public static async attemptPurge(opt?: { force?: boolean }) {
     try {
       const instance = Persister.getSharedInstance('Meta');
       const version = await instance?.getItem('version');
@@ -53,7 +53,7 @@ export class Persister {
         return;
       }
 
-      if (version !== Persister.version) {
+      if (opt?.force || version !== Persister.version) {
         const dbs = await indexedDB.databases();
         const dbNames = dbs
           .map((db) => db.name)

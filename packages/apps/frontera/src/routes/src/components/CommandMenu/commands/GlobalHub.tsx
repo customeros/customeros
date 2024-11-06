@@ -52,6 +52,11 @@ export const GlobalSharedCommands = observer(
     const contractsPreset = store.tableViewDefs.contractsPreset;
     const flowsPreset = store.tableViewDefs.flowsPreset;
 
+    const handleResync = () => {
+      store.ui.purgeLocalData();
+      store.ui.commandMenu.setOpen(false);
+    };
+
     const handleGoTo = (path: string, preset?: string) => {
       navigate(path + (preset ? `?preset=${preset}` : ''));
       store.ui.commandMenu.setOpen(false);
@@ -169,6 +174,13 @@ export const GlobalSharedCommands = observer(
         >
           Go to Customer map
         </CommandItem>
+        <CommandItem
+          onSelect={handleResync}
+          keywords={resyncKeywords}
+          leftAccessory={<ArrowNarrowRight />}
+        >
+          Re-sync entire data collection
+        </CommandItem>
       </>
     );
   },
@@ -218,3 +230,5 @@ const navigationKeywords = {
   ],
   go_to_customer_map: ['go to', 'customer', 'map', 'navigate', 'dashboard'],
 };
+
+const resyncKeywords = ['re-sync', 're sync', 'sync', 'reset'];

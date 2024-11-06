@@ -290,7 +290,6 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
 
   const checkIfLoading = () => {
     return match(tableType)
-      .with(TableViewType.Organizations, () => store.organizations?.isLoading)
       .with(TableViewType.Contacts, () => store.contacts?.isLoading)
       .with(TableViewType.Invoices, () => store.invoices?.isLoading)
       .with(TableViewType.Contracts, () => store.contracts?.isLoading)

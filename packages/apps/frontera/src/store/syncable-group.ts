@@ -23,6 +23,7 @@ export class SyncableGroup<T extends object, TSyncable extends Syncable<T>> {
   isLoading = false;
   isHydrated = false;
   isBootstrapped = false;
+  isBootstrapping = false;
   error: string | null = null;
   persister?: PersisterInstance;
   history: GroupOperation[] = [];
@@ -43,6 +44,7 @@ export class SyncableGroup<T extends object, TSyncable extends Syncable<T>> {
     >(this, {
       load: action,
       sync: action,
+      drop: action,
       hydrate: action,
       subscribe: action,
       error: observable,
@@ -57,6 +59,7 @@ export class SyncableGroup<T extends object, TSyncable extends Syncable<T>> {
       getRecentChanges: action,
       checkIfCanHydrate: action,
       isBootstrapped: observable,
+      isBootstrapping: observable,
       applyGroupOperation: action,
       initChannelConnection: action,
     });
@@ -143,19 +146,38 @@ export class SyncableGroup<T extends object, TSyncable extends Syncable<T>> {
     });
   }
 
-  public async hydrate(options: {
+  public drop = async (ids: string[]) => {
+    const removedIdsMap = new Map();
+
+    if (!ids.length) return removedIdsMap;
+
+    try {
+      const items = await this.persister?.getItem<Map<string, T>>('data');
+
+      ids.forEach((id) => {
+        removedIdsMap.set(id, true);
+
+        this.value?.delete(id);
+        items?.delete(id);
+      });
+
+      await this.persister?.setItem('data', items);
+
+      return removedIdsMap;
+    } catch (e) {
+      runInAction(() => {
+        this.error = (e as Error)?.message;
+      });
+    }
+
+    return removedIdsMap;
+  };
+
+  public hydrate = async (options: {
     idsToDrop: string[];
     getId: (data: T) => string;
-  }) {
-    const removedIdsMap = new Map();
-    const toBeRemoved: Promise<void>[] = [];
-
-    (options?.idsToDrop ?? []).forEach((id) => {
-      removedIdsMap.set(id, true);
-
-      if (!this.persister) return;
-      toBeRemoved.push(this.persister.removeItem(id));
-    });
+  }) => {
+    const removedIdsMap = await this.drop(options?.idsToDrop ?? []);
 
     try {
       const stores: [string, TSyncable][] = [];
@@ -179,15 +201,13 @@ export class SyncableGroup<T extends object, TSyncable extends Syncable<T>> {
       runInAction(() => {
         this.value = new Map<string, TSyncable>(stores);
       });
-
-      await Promise.all(toBeRemoved);
     } catch (e) {
       console.error('Failed to hydrate group', e);
     }
     runInAction(() => {
       this.isHydrated = true;
     });
-  }
+  };
 
   public sync(operation: GroupOperation) {
     const op = {

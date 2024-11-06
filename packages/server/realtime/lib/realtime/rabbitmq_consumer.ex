@@ -15,7 +15,8 @@ defmodule Realtime.RabbitMQConsumer do
     "OPPORTUNITY" => "Opportunities",
     "SERVICE_LINE_ITEM" => "ContractLineItems",
     "FLOW" => "Flows",
-    "FLOW_PARTICIPANT" => "FlowContacts"
+    "FLOW_PARTICIPANT" => "FlowContacts",
+    "SYSTEM" => "System"
   }
 
   def start_link(_) do
@@ -49,6 +50,7 @@ defmodule Realtime.RabbitMQConsumer do
           "delete" => delete
         } = parsed
 
+        message = Map.get(parsed, "message")
         channel_topic_prefix = Map.get(@entityToChannelMap, entity_type, :unknown)
 
         channel_topic =
@@ -66,6 +68,7 @@ defmodule Realtime.RabbitMQConsumer do
             create -> "APPEND"
             update -> "INVALIDATE"
             delete -> "DELETE"
+            true -> message
           end
 
         case channel_topic do
