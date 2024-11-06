@@ -377,7 +377,7 @@ func TestGraphUserEventHandler_OnUserUpdate(t *testing.T) {
 	require.Nil(t, err)
 
 	userProps := utils.GetPropsFromNode(*user)
-	require.Equal(t, 14, len(userProps))
+	require.Equal(t, 15, len(userProps))
 
 	userId = utils.GetStringPropOrEmpty(userProps, "id")
 	require.NotNil(t, userId)
@@ -568,7 +568,7 @@ func TestGraphUserEventHandler_OnAddRole(t *testing.T) {
 	require.Nil(t, err)
 
 	propsAfterAddRole := utils.GetPropsFromNode(*user)
-	require.Equal(t, 12, len(propsAfterAddRole))
+	require.Equal(t, 13, len(propsAfterAddRole))
 	require.Equal(t, 3, len(utils.GetListStringPropOrEmpty(propsAfterAddRole, "roles")))
 	require.Equal(t, "CUSTOMER_OS_PLATFORM_OWNER", utils.GetListStringPropOrEmpty(propsAfterAddRole, "roles")[2])
 	require.Less(t, userCreateTime, utils.GetTimePropOrNow(propsAfterAddRole, "updatedAt"))
