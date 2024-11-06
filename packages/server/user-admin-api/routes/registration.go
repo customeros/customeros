@@ -120,7 +120,7 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 						}
 					}
 
-					if !isPersonalEmail {
+					if !isPersonalEmail || isPersonalEmail { // TODO alexb temporary add for all users until mailboxes implemented
 						go func() {
 							innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
 								Tenant:    *tenantName,
