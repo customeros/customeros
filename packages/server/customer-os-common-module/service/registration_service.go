@@ -21,7 +21,7 @@ func NewRegistrationService(services *Services) RegistrationService {
 	}
 }
 
-func (r registrationService) PrepareDefaultTenantSetup(ctx context.Context, loggedInUserEmail string) error {
+func (s *registrationService) PrepareDefaultTenantSetup(ctx context.Context, loggedInUserEmail string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialService.GetAllForEntities")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -36,6 +36,11 @@ func (r registrationService) PrepareDefaultTenantSetup(ctx context.Context, logg
 	//tenant := common.GetTenantFromContext(ctx)
 
 	// Step 1 - Create default user
+	_, err = s.services.UserService.CreateTestUser(ctx, "Test", "Sender")
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
 
 	return nil
 }
