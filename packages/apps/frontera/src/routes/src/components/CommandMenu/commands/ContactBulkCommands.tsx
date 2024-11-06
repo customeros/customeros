@@ -75,7 +75,7 @@ export const ContactBulkCommands = observer(() => {
           Edit time zone...
         </CommandItem>
 
-        {contactStores.some((contact) => contact?.flow !== undefined) && (
+        {contactStores.some((contact) => !!contact?.flows?.length) && (
           <CommandItem
             leftAccessory={<Shuffle01 />}
             keywords={contactKeywords.remove_from_flow}

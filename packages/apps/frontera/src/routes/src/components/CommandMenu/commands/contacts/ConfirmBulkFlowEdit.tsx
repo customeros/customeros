@@ -27,8 +27,8 @@ export const ConfirmBulkFlowEdit = observer(() => {
     : null;
 
   const contactsInFlows = selectedIds
-    .map((e) => contacts.value.get(e)?.flow?.value?.name)
-    .filter((name) => name !== undefined);
+    .map((e) => contacts.value.get(e)?.flowsIds)
+    .filter((id) => id !== undefined);
 
   const handleConfirm = () => {
     if (!context.ids?.length || !context.property) return;

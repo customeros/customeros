@@ -246,15 +246,15 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
       if (!filter.active) return () => true;
 
       return (row: ContactStore) => {
-        const flow = row.flow?.value.metadata.id;
-
-        if (!flow)
+        if (!row.hasFlows)
           return (
             filter.operation === ComparisonOperator.IsEmpty ||
             filter.operation === ComparisonOperator.NotContains
           );
 
-        return filterTypeList(filter, flow?.split(' ') as string[]);
+        return row.flows?.some((e) =>
+          filterTypeList(filter, e.value.name?.split(' ') as string[]),
+        );
       };
     })
 
@@ -340,15 +340,15 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
       (filter) => (row: ContactStore) => {
         if (!filter.active) return true;
 
-        const currentFlowStatus = row.flowContact?.value?.status;
-
-        if (!currentFlowStatus)
+        if (!row.hasFlows)
           return (
             filter.operation === ComparisonOperator.IsEmpty ||
             filter.operation === ComparisonOperator.NotContains
           );
 
-        return filterTypeList(filter, [currentFlowStatus]);
+        return row.flows?.some((e) =>
+          filterTypeList(filter, [e?.value?.status]),
+        );
       },
     )
 
@@ -707,9 +707,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
       const includeEmpty = filter.includeEmpty;
 
       return (row: ContactStore) => {
-        const flow = row.flow;
-
-        if (!flow) {
+        if (!row.hasFlows) {
           return includeEmpty;
         }
 
@@ -717,7 +715,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
           return !includeEmpty;
         }
 
-        return filterValue.includes(flow.value.name);
+        return row.flows?.some((e) => filterValue.includes(e.value.name));
       };
     })
 

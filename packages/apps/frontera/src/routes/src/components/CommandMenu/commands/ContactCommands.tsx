@@ -167,7 +167,7 @@ export const ContactCommands = observer(() => {
           Edit time zone...
         </CommandItem>
 
-        {contact?.flow?.value?.name !== undefined && (
+        {contact?.hasFlows && (
           <CommandItem
             leftAccessory={<Shuffle01 />}
             keywords={contactKeywords.remove_from_flow}

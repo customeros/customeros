@@ -12,7 +12,6 @@ import { FlowStore } from '@store/Flows/Flow.store';
 import { Store, makeAutoSyncable } from '@store/store';
 import { runInAction, makeAutoObservable } from 'mobx';
 import { countryMap } from '@assets/countries/countriesMap';
-import { FlowContactStore } from '@store/FlowContacts/FlowContact.store.ts';
 
 import { Tag, Contact, DataSource, ContactUpdateInput } from '@graphql/types';
 
@@ -80,15 +79,6 @@ export class ContactStore implements Store<Contact> {
     return this.value.flows?.length > 0;
   }
 
-  // todo remove
-  get flow(): FlowStore | undefined {
-    if (!this.value.flows?.length) return undefined;
-
-    return this.root.flows?.value.get(
-      this.value.flows[0]?.metadata.id,
-    ) as FlowStore;
-  }
-
   get flows(): FlowStore[] | undefined {
     if (!this.value.flows?.length) return undefined;
 
@@ -97,8 +87,12 @@ export class ContactStore implements Store<Contact> {
     });
   }
 
-  get flowContact(): FlowContactStore | undefined {
-    return this.root.flowContacts.value.get(this.id) as FlowContactStore;
+  get flowsIds(): string[] | undefined {
+    if (!this.flows?.length) return undefined;
+
+    return this.flows.map((flow) => {
+      return flow?.id;
+    });
   }
 
   get name() {
@@ -542,10 +536,6 @@ export class ContactStore implements Store<Contact> {
         this.error = (e as Error).message;
       });
     }
-  }
-
-  async deleteFlowContact() {
-    return this.flowContact?.deleteFlowContact();
   }
 }
 

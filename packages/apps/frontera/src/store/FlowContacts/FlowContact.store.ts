@@ -71,12 +71,13 @@ export class FlowContactStore implements Store<FlowContact> {
     });
   };
 
+  // this is triggered only if one contact is selected and it has exactly 1 flow - otherwise bulk operation is performed
   public deleteFlowContact = async () => {
     this.isLoading = true;
 
     const contactStore = this.contact;
-    const flowName = this.contact?.flow?.value.name;
-    const flowId = this.contact?.flow?.value.metadata.id ?? '';
+    const flowName = this.contact?.flows?.[0]?.value.name;
+    const flowId = this.contact?.flows?.[0]?.value.metadata.id ?? '';
 
     try {
       await this.removeFlowContact();

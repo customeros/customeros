@@ -41,7 +41,7 @@ export const EditContactFlow = observer(() => {
     if (selectedIds.length === 0) return;
 
     if (selectedIds.length === 1) {
-      if (contact?.flow?.id === opt.id || !contact) {
+      if (contact?.flowsIds?.includes(opt.id) || !contact) {
         ui.commandMenu.setOpen(false);
 
         return;

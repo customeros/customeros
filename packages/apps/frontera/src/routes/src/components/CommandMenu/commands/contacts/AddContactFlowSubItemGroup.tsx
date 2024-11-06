@@ -51,7 +51,8 @@ export const AddContactFlowSubItemGroup = observer(() => {
     <>
       {sequenceOptions.map((flowSequence) => {
         const isSelected =
-          context.ids?.length === 1 && contact?.flow?.id === flowSequence.id;
+          context.ids?.length === 1 &&
+          contact?.flowsIds?.includes(flowSequence.id);
 
         return (
           <CommandSubItem

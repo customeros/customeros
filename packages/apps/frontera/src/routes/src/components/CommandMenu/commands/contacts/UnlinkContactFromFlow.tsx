@@ -70,7 +70,7 @@ export const UnlinkContactFromFlow = observer(() => {
     flowContactIds?.length > 1 || context.ids?.length > 1
       ? `Remove ${context.ids?.length} contacts from all flows?`
       : `Remove ${(entity as ContactStore)?.name} from ${
-          (entity as ContactStore)?.flow?.value?.name
+          (entity as ContactStore)?.flows?.[0]?.value?.name
         }?`;
 
   const description =
