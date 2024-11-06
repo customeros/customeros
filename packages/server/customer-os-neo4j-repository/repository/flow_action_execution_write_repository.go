@@ -57,7 +57,8 @@ func (r *flowActionExecutionWriteRepositoryImpl) Merge(ctx context.Context, tx *
 				fae.status = $status,
 
 				fae.mailbox = $mailbox,
-				fae.userId = $userId
+				fae.userId = $userId,
+				fae.socialUrl = $socialUrl
 			
 			WITH f, fa, fae
 			MERGE (fa)-[:HAS_EXECUTION]->(fae)
@@ -78,6 +79,7 @@ func (r *flowActionExecutionWriteRepositoryImpl) Merge(ctx context.Context, tx *
 		"status":          entity.Status,
 		"mailbox":         entity.Mailbox,
 		"userId":          entity.UserId,
+		"socialUrl":       entity.SocialUrl,
 		"error":           entity.Error,
 	}
 

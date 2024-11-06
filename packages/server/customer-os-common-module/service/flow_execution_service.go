@@ -425,7 +425,18 @@ func (s *flowExecutionService) scheduleEmailAction(ctx context.Context, tx *neo4
 		return err
 	}
 
-	_, err = s.storeNextActionExecutionEntity(ctx, tx, flowId, nextAction.Id, flowParticipant, flowExecutionSettings.Mailbox, actualScheduleAt)
+	_, err = s.storeNextActionExecutionEntity(ctx, tx, &entity.FlowActionExecutionEntity{
+		FlowId:          flowId,
+		ActionId:        nextAction.Id,
+		EntityId:        flowParticipant.EntityId,
+		EntityType:      flowParticipant.EntityType,
+		Mailbox:         flowExecutionSettings.Mailbox,
+		UserId:          flowExecutionSettings.UserId,
+		ScheduledAt:     *actualScheduleAt,
+		StatusUpdatedAt: utils.Now(),
+		Status:          entity.FlowActionExecutionStatusScheduled,
+	})
+
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -644,7 +655,7 @@ func (s *flowExecutionService) scheduleSendLinkedInConnection(ctx context.Contex
 		return errors.New("No fastest user found")
 	}
 
-	flowExecutionSettings, err := s.upsertFlowExecutionSettings(ctx, tx, tenant, flowId, flowParticipant, nil, &fastestUserId)
+	_, err = s.upsertFlowExecutionSettings(ctx, tx, tenant, flowId, flowParticipant, nil, &fastestUserId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -667,7 +678,18 @@ func (s *flowExecutionService) scheduleSendLinkedInConnection(ctx context.Contex
 		return err
 	}
 
-	flowActionExecutionId, err := s.storeNextActionExecutionEntity(ctx, tx, flowId, nextAction.Id, flowParticipant, flowExecutionSettings.Mailbox, actualScheduleAt)
+	flowActionExecutionId, err := s.storeNextActionExecutionEntity(ctx, tx, &entity.FlowActionExecutionEntity{
+		FlowId:          flowId,
+		ActionId:        nextAction.Id,
+		EntityId:        flowParticipant.EntityId,
+		EntityType:      flowParticipant.EntityType,
+		UserId:          &fastestUserId,
+		SocialUrl:       &socialUrl,
+		ScheduledAt:     *actualScheduleAt,
+		StatusUpdatedAt: utils.Now(),
+		Status:          entity.FlowActionExecutionStatusScheduled,
+	})
+
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -854,7 +876,7 @@ func maxTime(a, b time.Time) time.Time {
 	return b
 }
 
-func (s *flowExecutionService) storeNextActionExecutionEntity(ctx context.Context, tx *neo4j.ManagedTransaction, flowId, actionId string, flowParticipant *entity.FlowParticipantEntity, mailbox *string, executionTime *time.Time) (string, error) {
+func (s *flowExecutionService) storeNextActionExecutionEntity(ctx context.Context, tx *neo4j.ManagedTransaction, input *entity.FlowActionExecutionEntity) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.storeNextActionExecutionEntity")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -867,17 +889,9 @@ func (s *flowExecutionService) storeNextActionExecutionEntity(ctx context.Contex
 		return "", err
 	}
 
-	_, err = s.services.Neo4jRepositories.FlowActionExecutionWriteRepository.Merge(ctx, tx, &entity.FlowActionExecutionEntity{
-		Id:              id,
-		FlowId:          flowId,
-		ActionId:        actionId,
-		EntityId:        flowParticipant.EntityId,
-		EntityType:      flowParticipant.EntityType,
-		Mailbox:         mailbox,
-		ScheduledAt:     *executionTime,
-		StatusUpdatedAt: utils.Now(),
-		Status:          entity.FlowActionExecutionStatusScheduled,
-	})
+	input.Id = id
+
+	_, err = s.services.Neo4jRepositories.FlowActionExecutionWriteRepository.Merge(ctx, tx, input)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return "", err
@@ -1097,7 +1111,7 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 				return nil, errors.New("linkedin tokens not found")
 			}
 
-			payload := []map[string]interface{}{{"url": *scheduledActionExecution.SocialUrl}}
+			payload := map[string]interface{}{"profileUrl": *scheduledActionExecution.SocialUrl}
 			payloadBytes, err := json.Marshal(payload)
 			if err != nil {
 				return nil, errors.Wrap(err, "failed to marshal payload")
