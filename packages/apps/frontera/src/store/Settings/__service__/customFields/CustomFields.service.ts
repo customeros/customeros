@@ -56,7 +56,10 @@ export class CustomFieldsService {
     >(DeleteCustomFieldTemplateDocument, { id });
   }
 
-  public async mutateOperation(operation: Operation, store: CustomFieldsStore) {
+  public async mutateOperation(
+    operation: Operation,
+    _store: CustomFieldsStore,
+  ) {
     const diff = operation.diff?.[0];
     const path = diff?.path;
     const customFieldId = operation?.entityId;

@@ -62,6 +62,7 @@ const defaultValue: User = {
   firstName: '',
   lastName: '',
   emails: [],
+  hasLinkedInToken: false,
   appSource: '',
   createdAt: '',
   updatedAt: '',
