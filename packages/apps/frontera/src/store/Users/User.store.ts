@@ -70,6 +70,7 @@ const defaultValue: User = {
   roles: [],
   internal: false,
   jobRoles: [],
+  hasLinkedInToken: false,
   phoneNumbers: [],
   source: DataSource.Openline,
   sourceOfTruth: DataSource.Openline,

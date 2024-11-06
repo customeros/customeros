@@ -63,8 +63,10 @@ import {
   MergeConfirmationModal,
   SetOpportunityNextSteps,
   DeleteConfirmationModal,
+  GetBrowserExtensionLink,
   AddContactViaLinkedInUrl,
   OrganizationBulkCommands,
+  InstallLinkedInExtension,
   RenameOrganizationProperty,
   ChooseOpportunityOrganization,
   ContactEmailVerificationInfoModal,
@@ -129,6 +131,8 @@ const Commands: Record<CommandMenuType, ReactElement> = {
   RenameFlow: <RenameFlow />,
   ChangeFlowStatus: <ChangeFlowStatus />,
   EditContactFlow: <EditContactFlow />,
+  GetBrowserExtensionLink: <GetBrowserExtensionLink />,
+  InstallLinkedInExtension: <InstallLinkedInExtension />,
 
   //TableViewDef
   RenameTableViewDef: <RenameTableViewDef />,

@@ -68,15 +68,7 @@ export const SenderDropdown = observer(({ flowId }: SenderDropdownProps) => {
               icon={<User01 className='text-gray-500 size-3' />}
               className={'w-5 h-5 min-w-5 mr-2 border border-gray-200'}
             />
-            <div className='flex-1 text-sm'>
-              {children}
-              <span className='text-gray-500 ml-2'>
-                {_user?.value?.mailboxes?.length ?? 0}{' '}
-                {_user?.value?.mailboxes?.length === 1
-                  ? 'mailbox'
-                  : 'mailboxes'}
-              </span>
-            </div>
+            <div className='flex-1 text-sm'>{children}</div>
           </div>
         </components.Option>
       );

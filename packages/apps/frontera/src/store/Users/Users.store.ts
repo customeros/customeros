@@ -108,6 +108,7 @@ const USERS_QUERY = gql`
         mailboxes
         bot
         timezone
+        hasLinkedInToken
         emails {
           email
         }
