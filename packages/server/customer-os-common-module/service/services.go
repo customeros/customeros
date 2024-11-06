@@ -50,6 +50,7 @@ type Services struct {
 	DomainService              DomainService
 	OrganizationService        OrganizationService
 	TagService                 TagService
+	RegistrationService        RegistrationService
 
 	GoogleService   GoogleService
 	AzureService    AzureService
@@ -108,6 +109,7 @@ func InitServices(globalConfig *config.GlobalConfig, db *gorm.DB, driver *neo4j.
 	services.UserService = NewUserService(services)
 	services.WorkflowService = NewWorkflowService(services)
 	services.WorkspaceService = NewWorkspaceService(services)
+	services.RegistrationService = NewRegistrationService(services)
 
 	//init app cache
 	personalEmailProviderEntities, err := services.PostgresRepositories.PersonalEmailProviderRepository.GetPersonalEmailProviders()

@@ -84,7 +84,7 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 			if signInRequest.Tenant == "" {
 				span.LogFields(tracingLog.String("flow", "authentication"))
 
-				tn, isNewTenant, err := getTenant(ctx, services, personalEmailProviders, signInRequest, ginContext, config)
+				tn, isNewTenant, err := getTenant(ctx, services, personalEmailProviders, signInRequest, config)
 				if err != nil {
 					tracing.TraceErr(span, err)
 					ginContext.JSON(http.StatusInternalServerError, gin.H{
@@ -108,6 +108,31 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 				}
 
 				if isNewTenant {
+					domain := commonUtils.ExtractDomain(signInRequest.LoggedInEmail)
+					isPersonalEmail := false
+					//check if the user is using a personal email provider
+					for _, personalEmailProviderItem := range personalEmailProviders {
+						domainLowercase := strings.ToLower(strings.TrimSpace(domain))
+						personalEmailProviderDomainLowercase := strings.ToLower(strings.TrimSpace(personalEmailProviderItem.ProviderDomain))
+						if domainLowercase == personalEmailProviderDomainLowercase {
+							isPersonalEmail = true
+							break
+						}
+					}
+
+					if !isPersonalEmail {
+						go func() {
+							innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+								Tenant:    *tenantName,
+								AppSource: APP_SOURCE,
+							})
+							err = services.CommonServices.RegistrationService.PrepareDefaultTenantSetup(innerCtx, signInRequest.LoggedInEmail)
+							if err != nil {
+								tracing.TraceErr(span, err)
+							}
+						}()
+					}
+
 					go func() {
 						c, cancelFunc := context.WithTimeout(context.Background(), 300*time.Second)
 						defer cancelFunc()
@@ -273,7 +298,7 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 		})
 }
 
-func getTenant(c context.Context, services *service.Services, personalEmailProvider []postgresEntity.PersonalEmailProvider, signInRequest model.SignInRequest, ginContext *gin.Context, config *config.Config) (*string, bool, error) {
+func getTenant(c context.Context, services *service.Services, personalEmailProvider []postgresEntity.PersonalEmailProvider, signInRequest model.SignInRequest, config *config.Config) (*string, bool, error) {
 	span, ctx := opentracing.StartSpanFromContext(c, "getTenant")
 	defer span.Finish()
 
@@ -297,7 +322,7 @@ func getTenant(c context.Context, services *service.Services, personalEmailProvi
 		playerNode, err := services.CommonServices.Neo4jRepositories.PlayerReadRepository.GetPlayerByAuthIdProvider(ctx, signInRequest.LoggedInEmail, signInRequest.Provider)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			return nil, false, err
+			return nil, false, isPersonalEmail, err
 		}
 		if playerNode != nil {
 			span.LogFields(tracingLog.Object("playerIdentified", true))
@@ -307,12 +332,12 @@ func getTenant(c context.Context, services *service.Services, personalEmailProvi
 			usersDb, err := services.CommonServices.Neo4jRepositories.PlayerReadRepository.GetUsersForPlayer(ctx, []string{playerId})
 			if err != nil {
 				tracing.TraceErr(span, err)
-				return nil, false, err
+				return nil, false, isPersonalEmail, err
 			}
 
 			if usersDb == nil || len(usersDb) == 0 {
 				tracing.TraceErr(span, fmt.Errorf("users not found"))
-				return nil, false, fmt.Errorf("users not found")
+				return nil, false, isPersonalEmail, fmt.Errorf("users not found")
 			}
 
 			tenantFromLabel := commonModel.GetTenantFromLabels(usersDb[0].Node.Labels, commonModel.NodeLabelUser)
@@ -323,7 +348,7 @@ func getTenant(c context.Context, services *service.Services, personalEmailProvi
 			}
 
 			span.LogFields(tracingLog.String("tenantIdentifiedFromPlayer", tenantFromLabel))
-			return &tenantFromLabel, false, nil
+			return &tenantFromLabel, false, isPersonalEmail, nil
 		} else {
 			span.LogFields(tracingLog.Object("playerIdentified", false))
 		}
@@ -331,12 +356,12 @@ func getTenant(c context.Context, services *service.Services, personalEmailProvi
 		tenantNode, err := services.CommonServices.Neo4jRepositories.TenantReadRepository.GetTenantForWorkspaceProvider(ctx, domain, signInRequest.Provider)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			return nil, false, err
+			return nil, false, isPersonalEmail, err
 		}
 		if tenantNode != nil {
 			tenant := neo4jmapper.MapDbNodeToTenantEntity(tenantNode)
 			span.LogFields(tracingLog.String("tenantIdentifiedSameWorkspace", tenant.Name))
-			return &tenant.Name, false, nil
+			return &tenant.Name, false, isPersonalEmail, nil
 		}
 
 		//tenant not found by the requested login info, try to find it by another workspace with the same domain
@@ -349,7 +374,7 @@ func getTenant(c context.Context, services *service.Services, personalEmailProvi
 		tenantNode, err = services.CommonServices.Neo4jRepositories.TenantReadRepository.GetTenantForWorkspaceProvider(ctx, domain, provider)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			return nil, false, err
+			return nil, false, isPersonalEmail, err
 		}
 
 		if tenantNode != nil {
@@ -362,10 +387,10 @@ func getTenant(c context.Context, services *service.Services, personalEmailProvi
 			}, tenant.Name)
 			if err != nil {
 				tracing.TraceErr(span, err)
-				return nil, false, err
+				return nil, false, isPersonalEmail, err
 			}
 
-			return &tenant.Name, false, nil
+			return &tenant.Name, false, isPersonalEmail, nil
 		}
 	}
 
