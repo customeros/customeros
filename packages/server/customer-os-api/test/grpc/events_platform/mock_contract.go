@@ -7,7 +7,6 @@ import (
 )
 
 type MockContractServiceCallbacks struct {
-	UpdateContract                        func(context.Context, *contractpb.UpdateContractGrpcRequest) (*contractpb.ContractIdGrpcResponse, error)
 	SoftDeleteContract                    func(context.Context, *contractpb.SoftDeleteContractGrpcRequest) (*emptypb.Empty, error)
 	RolloutRenewalOpportunityOnExpiration func(context.Context, *contractpb.RolloutRenewalOpportunityOnExpirationGrpcRequest) (*contractpb.ContractIdGrpcResponse, error)
 }
@@ -20,13 +19,6 @@ func SetContractCallbacks(callbacks *MockContractServiceCallbacks) {
 
 type MockContractService struct {
 	contractpb.UnimplementedContractGrpcServiceServer
-}
-
-func (MockContractService) UpdateContract(context context.Context, proto *contractpb.UpdateContractGrpcRequest) (*contractpb.ContractIdGrpcResponse, error) {
-	if contractCallbacks.UpdateContract == nil {
-		panic("contractCallbacks.UpdateContractOld is not set")
-	}
-	return contractCallbacks.UpdateContract(context, proto)
 }
 
 func (MockContractService) SoftDeleteContract(context context.Context, proto *contractpb.SoftDeleteContractGrpcRequest) (*emptypb.Empty, error) {
