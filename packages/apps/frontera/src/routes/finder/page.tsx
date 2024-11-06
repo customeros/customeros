@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useEffect, MouseEventHandler } from 'react';
 
 import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
@@ -55,6 +55,24 @@ export const FinderPage = observer(() => {
   const flag = useFeatureIsOn('filters-v2');
   const isPreset = tableViewDef?.value?.isPreset;
 
+  const handleAddToMyViews: MouseEventHandler<HTMLButtonElement> = (e) => {
+    e.stopPropagation();
+
+    if (!preset) {
+      store.ui.toastError(
+        `We were unable to add this view to favorites`,
+        'dup-view-error',
+      );
+
+      return;
+    }
+    store.ui.commandMenu.toggle('DuplicateView');
+    store.ui.commandMenu.setContext({
+      ids: [preset],
+      entity: 'TableViewDef',
+    });
+  };
+
   return (
     <div className='flex w-full items-start'>
       <div className='w-[100%] bg-white'>
@@ -77,17 +95,7 @@ export const FinderPage = observer(() => {
                 </Button>
               )}
               {isPreset && (
-                <Button
-                  size='xs'
-                  onClick={() => {
-                    store.ui.commandMenu.setContext({
-                      ids: [preset || ''],
-                      entity: 'TableViewDef',
-                    });
-                    store.ui.commandMenu.setType('DeleteConfirmationModal');
-                    store.ui.commandMenu.setOpen(true);
-                  }}
-                >
+                <Button size='xs' onClick={handleAddToMyViews}>
                   Save to...
                 </Button>
               )}
