@@ -35,6 +35,7 @@ export class FlowContactsStore implements GroupStore<FlowContact> {
   }
 
   public deleteFlowContacts = async (ids: string[]) => {
+    if (!ids.length) return;
     this.isLoading = true;
 
     const flowContacts = ids.map(
