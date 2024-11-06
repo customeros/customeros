@@ -132,7 +132,7 @@ func (r *userRepository) GetPaginatedCustomerUsers(parentCtx context.Context, se
 		}
 		utils.MergeMapToMap(filterParams, countParams)
 		queryResult, err := tx.Run(ctx, fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User) 
-											WHERE (u.internal=false OR u.internal is null) AND (u.bot=false OR u.bot is null)
+											WHERE (u.internal=false OR u.internal is null) AND (u.test=false OR u.test is null) AND (u.bot=false OR u.bot is null)
 											WITH u
 											%s RETURN count(u) as count`, filterCypherStr),
 			countParams)
@@ -151,7 +151,7 @@ func (r *userRepository) GetPaginatedCustomerUsers(parentCtx context.Context, se
 
 		queryResult, err = tx.Run(ctx, fmt.Sprintf(
 			`MATCH (:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User) 
-					WHERE (u.internal=false OR u.internal is null) AND (u.bot=false OR u.bot is null)
+					WHERE (u.internal=false OR u.internal is null) AND (u.test=false OR u.test is null) AND (u.bot=false OR u.bot is null)
 					WITH u
 					%s
 					RETURN u 
