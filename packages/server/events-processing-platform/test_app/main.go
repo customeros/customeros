@@ -103,7 +103,6 @@ func main() {
 	//testCreateIssue()
 	//testUpdateIssue()
 	//testCreateComment()
-	//testUpdateContract()
 	//testAddContractService()
 	//testCloseLooseOpportunity()
 	//testCreateRenewalOpportunity()
@@ -502,32 +501,6 @@ func testCreateComment() {
 		log.Fatalf("Failed: %v", err.Error())
 	}
 	log.Printf("Created comment id: %v", result.Id)
-}
-
-func testUpdateContract() {
-
-	userId := "05f382ba-0fa9-4828-940c-efb4e2e6b84c"
-	contractId := "c5486341-c7d8-47eb-b75a-4016b8e3d6d5"
-	in10Days := utils.Now().AddDate(0, 0, 10)
-	yesterday := utils.Now().AddDate(0, 0, -1)
-	in1year := utils.Now().AddDate(1, 0, 0)
-
-	result, err := clients.ContractClient.UpdateContract(context.Background(), &contractpb.UpdateContractGrpcRequest{
-		Tenant:           tenant,
-		LoggedInUserId:   userId,
-		Id:               contractId,
-		Name:             "Saturday contract 1",
-		SignedAt:         utils.ConvertTimeToTimestampPtr(&yesterday),
-		ServiceStartedAt: utils.ConvertTimeToTimestampPtr(&in10Days),
-		EndedAt:          utils.ConvertTimeToTimestampPtr(&in1year),
-		SourceFields: &commonpb.SourceFields{
-			AppSource: "test_app",
-		},
-	})
-	if err != nil {
-		log.Fatalf("Failed: %v", err.Error())
-	}
-	log.Printf("Result: %v", result.Id)
 }
 
 func testAddContractService() {

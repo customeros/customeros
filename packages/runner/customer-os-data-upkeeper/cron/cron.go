@@ -323,7 +323,7 @@ func StopCron(log logger.Logger, cron *cron.Cron) error {
 }
 
 func updateContractsStatusAndRenewal(cont *container.Container) {
-	service.NewContractService(cont.Cfg, cont.Log, cont.Repositories, cont.EventProcessingServicesClient).UpkeepContracts()
+	service.NewContractService(cont.Cfg, cont.Log, cont.Repositories, cont.EventProcessingServicesClient, cont.CommonServices).UpkeepContracts()
 }
 
 func updateOrganizations(cont *container.Container) {

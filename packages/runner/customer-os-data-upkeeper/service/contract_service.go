@@ -6,9 +6,13 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/constants"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/logger"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
@@ -27,14 +31,16 @@ type contractService struct {
 	log                    logger.Logger
 	repositories           *repository.Repositories
 	eventsProcessingClient *grpc_client.Clients
+	services               *service.Services
 }
 
-func NewContractService(cfg *config.Config, log logger.Logger, repositories *repository.Repositories, client *grpc_client.Clients) ContractService {
+func NewContractService(cfg *config.Config, log logger.Logger, repositories *repository.Repositories, client *grpc_client.Clients, services *service.Services) ContractService {
 	return &contractService{
 		cfg:                    cfg,
 		log:                    log,
 		repositories:           repositories,
 		eventsProcessingClient: client,
+		services:               services,
 	}
 }
 
@@ -304,27 +310,27 @@ func (s *contractService) resyncContract(ctx context.Context, tenant, contractId
 
 	props := utils.GetPropsFromNode(*contractDbNode)
 
-	request := contractpb.UpdateContractGrpcRequest{
-		Tenant:               tenant,
-		Id:                   contractId,
-		Name:                 utils.GetStringPropOrEmpty(props, "name"),
-		ContractUrl:          utils.GetStringPropOrEmpty(props, "contractUrl"),
-		ServiceStartedAt:     utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(props, "serviceStartedAt")),
-		SignedAt:             utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(props, "signedAt")),
-		EndedAt:              utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(props, "endedAt")),
-		Currency:             utils.GetStringPropOrEmpty(props, "currency"),
-		InvoicingStartDate:   utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(props, "invoicingStartDate")),
-		LengthInMonths:       utils.GetInt64PropOrZero(props, "lengthInMonths"),
-		BillingCycleInMonths: utils.GetInt64PropOrZero(props, "billingCycleInMonths"),
-		SourceFields: &commonpb.SourceFields{
-			Source:    utils.GetStringPropOrEmpty(props, "sourceOfTruth"),
-			AppSource: constants.AppSourceDataUpkeeper,
-		},
+	innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+		Tenant:    tenant,
+		AppSource: constants.AppSourceDataUpkeeper,
+	})
+
+	contractDataFields := data_fields.ContractSaveFields{
+		Name:                 utils.StringPtr(utils.GetStringPropOrEmpty(props, "name")),
+		ContractUrl:          utils.StringPtr(utils.GetStringPropOrEmpty(props, "contractUrl")),
+		ServiceStartedAt:     utils.GetTimePropOrNil(props, "serviceStartedAt"),
+		SignedAt:             utils.GetTimePropOrNil(props, "signedAt"),
+		EndedAt:              utils.GetTimePropOrNil(props, "endedAt"),
+		InvoicingStartDate:   utils.GetTimePropOrNil(props, "invoicingStartDate"),
+		LengthInMonths:       utils.Int64Ptr(utils.GetInt64PropOrZero(props, "lengthInMonths")),
+		BillingCycleInMonths: utils.Int64Ptr(utils.GetInt64PropOrZero(props, "billingCycleInMonths")),
+	}
+	currency := utils.GetStringPropOrEmpty(props, "currency")
+	if currency != "" {
+		contractDataFields.Currency = utils.ToPtr(neo4jenum.DecodeCurrency(currency))
 	}
 
-	_, err = utils.CallEventsPlatformGRPCWithRetry[*contractpb.ContractIdGrpcResponse](func() (*contractpb.ContractIdGrpcResponse, error) {
-		return s.eventsProcessingClient.ContractClient.UpdateContract(ctx, &request)
-	})
+	_, err = s.services.ContractService.Save(innerCtx, &contractId, contractDataFields)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error re-syncing contract {%s}: %s", contractId, err.Error())
