@@ -59,7 +59,7 @@ export const EmailEditorModal = observer(
           }, 0);
         }
       }
-    }, [isEditorOpen, data.subject, data.bodyTemplate]);
+    }, [isEditorOpen, data.subject, data.bodyTemplate, data.action]);
 
     const flow = store.flows.value.get(id)?.value?.name;
     const placeholder = useMemo(() => getRandomEmailPrompt(), [isEditorOpen]);
