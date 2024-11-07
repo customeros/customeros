@@ -785,7 +785,7 @@ func (r *organizationWriteRepository) ReplaceOwner(ctx context.Context, tx *neo4
 			DELETE rel
 			WITH org, t
 			MATCH (t)<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$userId})
-			WHERE (u.internal=false OR u.internal is null) AND (u.bot=false OR u.bot is null)
+			WHERE (u.internal=false OR u.internal is null) AND (u.bot=false OR u.bot is null) AND (u.test=false OR u.test is null)
 			MERGE (u)-[:OWNS]->(org)
 			SET org.updatedAt=datetime(), org.sourceOfTruth=$source`
 
