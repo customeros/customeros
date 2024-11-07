@@ -3,7 +3,6 @@ import { Transport } from '@store/transport';
 import GetOpportunityDocument from './getOpportunity.graphql';
 import SaveOpportunityDocument from './saveOpportunity.graphql';
 import GetOpportunitiesDocument from './getOpportunities.graphql';
-import CreateOpportunityDocument from './createOpportunity.graphql';
 import ArchiveOpportunityDocument from './archiveOpportunity.graphql';
 import UpdateOpportunityOwnerDocument from './updateOpportunityOwner.graphql';
 import UpdateOpportunityRenewalDocument from './updateOpportunityRenewal.graphql';
@@ -19,10 +18,6 @@ import {
   SaveOpportunityMutation,
   SaveOpportunityMutationVariables,
 } from './saveOpportunity.generated';
-import {
-  CreateOpportunityMutation,
-  CreateOpportunityMutationVariables,
-} from './createOpportunity.generated';
 import {
   ArchiveOpportunityMutation,
   ArchiveOpportunityMutationVariables,
@@ -77,15 +72,6 @@ export class OpportunitiesService {
       SaveOpportunityMutation,
       SaveOpportunityMutationVariables
     >(SaveOpportunityDocument, variables);
-  }
-
-  async createOpportunity(
-    variables: CreateOpportunityMutationVariables,
-  ): Promise<CreateOpportunityMutation> {
-    return this.transport.graphql.request<
-      CreateOpportunityMutation,
-      CreateOpportunityMutationVariables
-    >(CreateOpportunityDocument, variables);
   }
 
   async updateOpportunityRenewal(

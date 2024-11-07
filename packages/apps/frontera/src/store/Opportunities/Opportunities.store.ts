@@ -143,12 +143,12 @@ export class OpportunitiesStore implements GroupStore<Opportunity> {
         externalStage: draft.value.externalStage,
       };
 
-      const { opportunity_Create } = await this.service.createOpportunity({
+      const { opportunity_Save } = await this.service.saveOpportunity({
         input: payload,
       });
 
       runInAction(() => {
-        serverId = opportunity_Create?.metadata.id;
+        serverId = opportunity_Save?.metadata.id;
 
         const store = this.value.get(tempId);
 
@@ -177,10 +177,6 @@ export class OpportunitiesStore implements GroupStore<Opportunity> {
         `Opportunity created for ${opportunity?.organization?.value.name}`,
         'create-opportunity-success',
       );
-
-      setTimeout(() => {
-        opportunity?.invalidate();
-      }, 1000);
     }
   }
 
