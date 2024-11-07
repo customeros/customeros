@@ -90,6 +90,7 @@ func validateEmailV2(ctx context.Context, r *gin.Engine, services *service.Servi
 						if enrowResponseStr != "" {
 							if enrowResponseStr == "valid" {
 								emailValidationData.EmailData.Deliverable = string(model.EmailDeliverableStatusDeliverable)
+								emailValidationData.EmailData.RetryValidation = false
 							} else if enrowResponseStr == "invalid" {
 								// accept invalid response only if it's not catch-all
 								if !emailValidationData.DomainData.IsCatchAll {
