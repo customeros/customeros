@@ -272,6 +272,13 @@ func (s *contactService) LinkContactWithOrganization(ctx context.Context, contac
 		return err
 	}
 
+	if startedAt != nil && startedAt.Before(time.Date(1900, 1, 1, 0, 0, 0, 0, time.UTC)) {
+		startedAt = nil
+	}
+	if endedAt != nil && endedAt.Before(time.Date(1900, 1, 1, 0, 0, 0, 0, time.UTC)) {
+		endedAt = nil
+	}
+
 	jobRoleData := neo4jrepository.JobRoleFields{
 		Description: description,
 		JobTitle:    jobTitle,
