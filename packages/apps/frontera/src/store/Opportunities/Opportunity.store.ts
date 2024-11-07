@@ -212,9 +212,11 @@ export class OpportunityStore implements Store<Opportunity> {
   private async updateOpportunityOwner(userId: string) {
     try {
       this.isLoading = true;
-      await this.service.updateOpportunityOwner({
-        opportunityId: this.id,
-        userID: userId,
+      await this.service.saveOpportunity({
+        input: {
+          opportunityId: this.id,
+          ownerId: userId,
+        },
       });
     } catch (err) {
       runInAction(() => {

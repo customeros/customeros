@@ -1,5 +1,0 @@
-mutation updateOpportunityOwner($opportunityId: ID!, $userID: ID!) {
-  opportunity_SetOwner(opportunityId: $opportunityId, userId: $userID) {
-    accepted
-  }
-}
