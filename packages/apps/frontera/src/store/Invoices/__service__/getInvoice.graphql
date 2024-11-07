@@ -1,0 +1,77 @@
+query Invoice($number: String!) {
+  invoice_ByNumber(number: $number) {
+    issued
+    metadata {
+      id
+      created
+    }
+    organization {
+      metadata {
+        id
+      }
+    }
+    customer {
+      name
+      email
+      addressLine1
+      addressLine2
+      addressZip
+      addressLocality
+      addressCountry
+      addressRegion
+    }
+    provider {
+      logoUrl
+      logoRepositoryFileId
+      name
+      addressLine1
+      addressLine2
+      addressZip
+      addressLocality
+      addressCountry
+      addressRegion
+    }
+    contract {
+      metadata {
+        id
+      }
+      contractName
+      billingDetails {
+        canPayWithBankTransfer
+        billingCycleInMonths
+      }
+    }
+    invoiceUrl
+    invoiceNumber
+    invoicePeriodStart
+    invoicePeriodEnd
+    due
+    issued
+    amountDue
+    currency
+    dryRun
+    status
+    subtotal
+    invoiceLineItems {
+      metadata {
+        id
+        created
+        lastUpdated
+        source
+        sourceOfTruth
+        appSource
+      }
+      contractLineItem {
+        serviceStarted
+        price
+        billingCycle
+      }
+      quantity
+      subtotal
+      taxDue
+      total
+      price
+      description
+    }
+  }
+}

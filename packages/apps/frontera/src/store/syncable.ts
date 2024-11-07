@@ -197,7 +197,7 @@ export class Syncable<T extends object> {
     const operation: Operation = {
       id: 0,
       diff,
-      entityId: this.getId(),
+      entityId: this.id || this.getId(),
       ref: this.transport.refId,
       tenant: this.root.session.value.tenant,
       entity: this.getChannelName().split(':')[0],

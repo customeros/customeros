@@ -1,0 +1,7 @@
+mutation UpdateInvoiceStatus($input: InvoiceUpdateInput!) {
+  invoice_Update(input: $input) {
+    metadata {
+      id
+    }
+  }
+}

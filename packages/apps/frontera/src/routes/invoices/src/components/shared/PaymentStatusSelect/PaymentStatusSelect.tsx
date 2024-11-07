@@ -1,4 +1,4 @@
-import { MouseEvent, cloneElement } from 'react';
+import { cloneElement } from 'react';
 
 import { observer } from 'mobx-react-lite';
 
@@ -29,17 +29,7 @@ export const PaymentStatusSelect = observer(
     const Status = renderStatusNode(invoiceStatus) ?? <>{invoiceStatus}</>;
     const isPaid = invoiceStatus === InvoiceStatus.Paid;
 
-    const handleClick = (
-      e: MouseEvent<HTMLDivElement>,
-      status: InvoiceStatus,
-    ) => {
-      e.stopPropagation();
-      invoice?.update((invoiceData) => {
-        invoiceData.status = status;
-
-        return invoiceData;
-      });
-    };
+    if (!invoice) return;
 
     return (
       <Menu>
@@ -65,7 +55,10 @@ export const PaymentStatusSelect = observer(
           {invoiceStatus !== InvoiceStatus.Void && (
             <MenuItem
               disabled={isPaid}
-              onClick={(e) => handleClick(e, InvoiceStatus.Void)}
+              onClick={() => {
+                invoice.value.status = InvoiceStatus.Void;
+                invoice?.commit();
+              }}
             >
               <div className='flex gap-2 items-center'>
                 <SlashCircle01
@@ -76,7 +69,12 @@ export const PaymentStatusSelect = observer(
             </MenuItem>
           )}
           {invoiceStatus !== InvoiceStatus.Paid && (
-            <MenuItem onClick={(e) => handleClick(e, InvoiceStatus.Paid)}>
+            <MenuItem
+              onClick={() => {
+                invoice.value.status = InvoiceStatus.Paid;
+                invoice?.commit();
+              }}
+            >
               <div className='flex gap-2 items-center'>
                 <CheckCircle className='text-gray-500' />
                 <span>Paid</span>
@@ -84,7 +82,12 @@ export const PaymentStatusSelect = observer(
             </MenuItem>
           )}
           {invoiceStatus !== InvoiceStatus.Due && (
-            <MenuItem onClick={(e) => handleClick(e, InvoiceStatus.Due)}>
+            <MenuItem
+              onClick={() => {
+                invoice.value.status = InvoiceStatus.Due;
+                invoice?.commit();
+              }}
+            >
               <div className='flex gap-2 items-center'>
                 <Clock className='text-gray-500' />
                 <span>Due</span>

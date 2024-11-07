@@ -1,15 +1,16 @@
-import { gql } from 'graphql-request';
 import { RootStore } from '@store/root.ts';
 import { Transport } from '@store/transport.ts';
 import { SyncableGroup } from '@store/syncable-group.ts';
-import { when, observable, runInAction, makeObservable } from 'mobx';
+import { when, override, observable, runInAction, makeObservable } from 'mobx';
 
-import { Filter, SortBy, Invoice, Pagination } from '@graphql/types';
+import { Invoice } from '@graphql/types';
 
 import mock from './mock.json';
 import { InvoiceStore } from './Invoice.store.ts';
+import { InvoicesService } from './__service__/Invoices.service.ts';
 
 export class InvoicesStore extends SyncableGroup<Invoice, InvoiceStore> {
+  private service: InvoicesService;
   totalElements = 0;
 
   get channelName() {
@@ -22,9 +23,11 @@ export class InvoicesStore extends SyncableGroup<Invoice, InvoiceStore> {
 
   constructor(public root: RootStore, public transport: Transport) {
     super(root, transport, InvoiceStore);
+    this.service = InvoicesService.getInstance(transport);
 
-    makeObservable(this, {
+    makeObservable<InvoicesStore>(this, {
       totalElements: observable,
+      channelName: override,
     });
 
     when(
@@ -64,15 +67,11 @@ export class InvoicesStore extends SyncableGroup<Invoice, InvoiceStore> {
     try {
       this.isLoading = true;
 
-      const { invoices } = await this.transport.graphql.request<
-        INVOICES_QUERY_RESPONSE,
-        INVOICES_QUERY_PAYLOAD
-      >(INVOICES_QUERY, {
-        pagination: { limit: 1000, page: 0 },
-        sort: [],
+      const { invoices } = await this.service.getInvoices({
+        pagination: { limit: 1000, page: 1 },
       });
 
-      this.load(invoices.content, {
+      this.load(invoices.content as Invoice[], {
         getId: (data) => data.invoiceNumber, // this change is intentional, preview id changes between updates and number stays stable
       });
       runInAction(() => {
@@ -95,17 +94,13 @@ export class InvoicesStore extends SyncableGroup<Invoice, InvoiceStore> {
 
     while (this.totalElements > this.value.size) {
       try {
-        const { invoices } = await this.transport.graphql.request<
-          INVOICES_QUERY_RESPONSE,
-          INVOICES_QUERY_PAYLOAD
-        >(INVOICES_QUERY, {
+        const { invoices } = await this.service.getInvoices({
           pagination: { limit: 1000, page },
-          sort: [],
         });
 
         runInAction(() => {
           page++;
-          this.load(invoices.content, {
+          this.load(invoices.content as Invoice[], {
             getId: (data) => data.invoiceNumber,
           });
         });
@@ -118,109 +113,3 @@ export class InvoicesStore extends SyncableGroup<Invoice, InvoiceStore> {
     }
   }
 }
-
-type INVOICES_QUERY_PAYLOAD = {
-  where?: Filter;
-  sort?: SortBy[];
-  pagination: Pagination;
-};
-type INVOICES_QUERY_RESPONSE = {
-  invoices: {
-    content: Invoice[];
-    totalElements: number;
-    totalAvailable: number;
-  };
-};
-const INVOICES_QUERY = gql`
-  query getInvoices(
-    $pagination: Pagination!
-    $where: Filter
-    $sort: [SortBy!]
-  ) {
-    invoices(pagination: $pagination, where: $where, sort: $sort) {
-      content {
-        issued
-        metadata {
-          id
-          created
-        }
-        organization {
-          metadata {
-            id
-          }
-        }
-        customer {
-          name
-          email
-        }
-        contract {
-          metadata {
-            id
-          }
-          billingDetails {
-            billingCycleInMonths
-            canPayWithBankTransfer
-          }
-          contractName
-        }
-        provider {
-          logoUrl
-          logoRepositoryFileId
-          name
-          addressLine1
-          addressLine2
-          addressZip
-          addressLocality
-          addressCountry
-          addressRegion
-        }
-        customer {
-          name
-          email
-          addressLine1
-          addressLine2
-          addressZip
-          addressLocality
-          addressCountry
-          addressRegion
-        }
-        invoiceUrl
-        invoiceNumber
-        invoicePeriodStart
-        invoicePeriodEnd
-        due
-        issued
-        amountDue
-        currency
-        dryRun
-        status
-        preview
-        subtotal
-        taxDue
-        invoiceLineItems {
-          metadata {
-            id
-            created
-            lastUpdated
-            source
-            sourceOfTruth
-            appSource
-          }
-          contractLineItem {
-            serviceStarted
-            price
-            billingCycle
-          }
-          quantity
-          subtotal
-          taxDue
-          total
-          price
-          description
-        }
-      }
-      totalElements
-      totalAvailable
-    }
-  }
-`;

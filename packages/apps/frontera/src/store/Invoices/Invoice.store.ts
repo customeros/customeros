@@ -1,10 +1,6 @@
 import type { RootStore } from '@store/root';
 
 import merge from 'lodash/merge';
-import { match } from 'ts-pattern';
-import { gql } from 'graphql-request';
-import { Operation } from '@store/types';
-import { makePayload } from '@store/util';
 import { Transport } from '@store/transport';
 import { Syncable } from '@store/syncable.ts';
 import { action, override, computed, runInAction, makeObservable } from 'mobx';
@@ -17,31 +13,38 @@ import {
   DataSource,
   Organization,
   InvoiceStatus,
-  InvoiceUpdateInput,
 } from '@graphql/types';
 
+import { InvoicesService } from './__service__/Invoices.service';
+
 export class InvoiceStore extends Syncable<Invoice> {
+  private service: InvoicesService;
+
   constructor(
     public root: RootStore,
     public transport: Transport,
     data: Invoice,
   ) {
     super(root, transport, data ?? getDefaultValue());
-    makeObservable<InvoiceStore, 'updateInvoiceStatus' | 'contract'>(this, {
+    this.service = InvoicesService.getInstance(transport);
+    makeObservable<InvoiceStore>(this, {
       id: override,
+      save: override,
       getId: override,
       setId: override,
       invalidate: action,
-      updateInvoiceStatus: action,
       contract: computed,
+      getChannelName: override,
       provider: computed,
       bankAccounts: computed,
       number: computed,
+      updateInvoiceStatus: action,
+      getInvoiceStatus: action,
     });
   }
 
   get id() {
-    return this.value.metadata?.id;
+    return this.value.invoiceNumber;
   }
 
   get number() {
@@ -77,12 +80,9 @@ export class InvoiceStore extends Syncable<Invoice> {
     try {
       this.isLoading = true;
 
-      const { invoice } = await this.transport.graphql.request<
-        INVOICE_QUERY_RESULT,
-        { number: string }
-      >(INVOICES_QUERY, { number: this.number });
+      const { invoice } = await this.service.getInvoice(this.number);
 
-      await this.load(invoice);
+      await this.load(invoice as Invoice);
     } catch (err) {
       runInAction(() => {
         this.error = (err as Error)?.message;
@@ -94,151 +94,87 @@ export class InvoiceStore extends Syncable<Invoice> {
     }
   }
 
-  private async updateInvoiceStatus(payload: InvoiceUpdateInput) {
-    try {
-      this.isLoading = true;
-      await this.transport.graphql.request<UPDATE_INVOICE_STATUS_MUTATION_PAYLOAD>(
-        UPDATE_INVOICE_STATUS_MUTATION,
-        {
-          input: {
-            ...payload,
-            id: this.id,
-            patch: true,
-          },
-        },
-      );
-
-      runInAction(() => {
-        this.invalidate();
-      });
-    } catch (err) {
-      runInAction(() => {
-        this.error = (err as Error)?.message;
-      });
-    } finally {
-      runInAction(() => {
-        this.isLoading = false;
-      });
-    }
-  }
-
-  async save(operation: Operation) {
-    const diff = operation.diff?.[0];
-    const path = diff?.path;
-
-    match(path)
-      .with(['status'], () => {
-        const payload = makePayload<InvoiceUpdateInput>(operation);
-
-        this.updateInvoiceStatus(payload);
-      })
-
-      .otherwise(() => {});
+  getInvoiceStatus() {
+    return this.value.status;
   }
 
   init(data: Invoice) {
     return merge(this.value, data);
   }
+
+  updateInvoiceStatus(status: InvoiceStatus) {
+    this.value.status = status;
+  }
+
+  static getDefaultValue(): Invoice {
+    return {
+      metadata: {
+        id: crypto.randomUUID(),
+        created: new Date().toISOString(),
+        lastUpdated: new Date().toISOString(),
+        appSource: DataSource.Openline,
+        source: DataSource.Openline,
+        sourceOfTruth: DataSource.Openline,
+      },
+      organization: {
+        metadata: {
+          id: crypto.randomUUID(),
+        } as Metadata,
+      } as Organization,
+      contract: {
+        metadata: {
+          id: crypto.randomUUID(),
+        } as Metadata,
+      } as Contract,
+      issued: new Date().toISOString(),
+      invoiceNumber: '',
+      billingCycleInMonths: 1,
+      invoicePeriodStart: new Date().toISOString(),
+      invoicePeriodEnd: new Date().toISOString(),
+      due: new Date().toISOString(),
+      amountDue: 0,
+      currency: Currency.Usd,
+      dryRun: false,
+      status: InvoiceStatus.Due,
+      invoiceLineItems: [],
+      paid: false,
+      subtotal: 0,
+      taxDue: 0,
+      paymentLink: '',
+      repositoryFileId: '',
+      note: '',
+      amountPaid: 0,
+      amountRemaining: 0,
+      preview: false,
+      offCycle: false,
+      postpaid: false,
+      invoiceUrl: '',
+      customer: {
+        name: '',
+        email: '',
+        addressLine1: '',
+        addressLine2: '',
+        addressZip: '',
+        addressLocality: '',
+        addressCountry: '',
+        addressRegion: '',
+      },
+      provider: {
+        logoUrl: '',
+        logoRepositoryFileId: '',
+        name: '',
+        addressLine1: '',
+        addressLine2: '',
+        addressZip: '',
+        addressLocality: '',
+        addressCountry: '',
+        addressRegion: '',
+      },
+    };
+  }
 }
 
-type INVOICE_QUERY_RESULT = {
-  invoice: Invoice;
-};
-const INVOICES_QUERY = gql`
-  query Invoice($number: String!) {
-    invoice_ByNumber(number: $number) {
-      issued
-      metadata {
-        id
-        created
-      }
-      organization {
-        metadata {
-          id
-        }
-      }
-      customer {
-        name
-        email
-        addressLine1
-        addressLine2
-        addressZip
-        addressLocality
-        addressCountry
-        addressRegion
-      }
-      provider {
-        logoUrl
-        logoRepositoryFileId
-        name
-        addressLine1
-        addressLine2
-        addressZip
-        addressLocality
-        addressCountry
-        addressRegion
-      }
-      contract {
-        metadata {
-          id
-        }
-        contractName
-        billingDetails {
-          canPayWithBankTransfer
-          billingCycleInMonths
-        }
-      }
-      invoiceUrl
-      invoiceNumber
-      invoicePeriodStart
-      invoicePeriodEnd
-      due
-      issued
-      amountDue
-      currency
-      dryRun
-      status
-      subtotal
-      invoiceLineItems {
-        metadata {
-          id
-          created
-          lastUpdated
-          source
-          sourceOfTruth
-          appSource
-        }
-        contractLineItem {
-          serviceStarted
-          price
-          billingCycle
-        }
-        quantity
-        subtotal
-        taxDue
-        total
-        price
-        description
-      }
-    }
-  }
-`;
-
-type UPDATE_INVOICE_STATUS_MUTATION_PAYLOAD = {
-  input: InvoiceUpdateInput;
-};
-
-const UPDATE_INVOICE_STATUS_MUTATION = gql`
-  mutation UpdateInvoiceStatus($input: InvoiceUpdateInput!) {
-    invoice_Update(input: $input) {
-      metadata {
-        id
-      }
-    }
-  }
-`;
-
-const getDefaultValue = (): Invoice => ({
+export const getDefaultValue = (): Invoice => ({
   metadata: {
     id: crypto.randomUUID(),
     created: new Date().toISOString(),

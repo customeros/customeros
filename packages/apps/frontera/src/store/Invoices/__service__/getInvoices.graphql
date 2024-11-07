@@ -1,0 +1,87 @@
+query getInvoices($pagination: Pagination!, $where: Filter, $sort: [SortBy!]) {
+  invoices(pagination: $pagination, where: $where, sort: $sort) {
+    content {
+      issued
+      metadata {
+        id
+        created
+      }
+      organization {
+        metadata {
+          id
+        }
+      }
+      customer {
+        name
+        email
+      }
+      contract {
+        metadata {
+          id
+        }
+        billingDetails {
+          billingCycleInMonths
+          canPayWithBankTransfer
+        }
+        contractName
+      }
+      provider {
+        logoUrl
+        logoRepositoryFileId
+        name
+        addressLine1
+        addressLine2
+        addressZip
+        addressLocality
+        addressCountry
+        addressRegion
+      }
+      customer {
+        name
+        email
+        addressLine1
+        addressLine2
+        addressZip
+        addressLocality
+        addressCountry
+        addressRegion
+      }
+      invoiceUrl
+      invoiceNumber
+      invoicePeriodStart
+      invoicePeriodEnd
+      due
+      issued
+      amountDue
+      currency
+      dryRun
+      status
+      preview
+      subtotal
+      taxDue
+      invoiceLineItems {
+        metadata {
+          id
+          created
+          lastUpdated
+          source
+          sourceOfTruth
+          appSource
+        }
+        contractLineItem {
+          serviceStarted
+          price
+          billingCycle
+        }
+        quantity
+        subtotal
+        taxDue
+        total
+        price
+        description
+      }
+    }
+    totalElements
+    totalAvailable
+  }
+}
