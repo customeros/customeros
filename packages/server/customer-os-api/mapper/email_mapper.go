@@ -38,6 +38,7 @@ func MapEntityToEmail(entity *neo4jentity.EmailEntity) *model.Email {
 			IsValidSyntax:     entity.IsValidSyntax,
 			IsCatchAll:        entity.IsCatchAll,
 			IsRoleAccount:     entity.IsRoleAccount,
+			IsSystemGenerated: entity.IsSystemGenerated,
 			IsRisky:           entity.IsRisky,
 			IsFirewalled:      entity.IsFirewalled,
 			Provider:          entity.Provider,

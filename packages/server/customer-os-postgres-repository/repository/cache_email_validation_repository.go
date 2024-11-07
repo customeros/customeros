@@ -75,6 +75,7 @@ func (r cacheEmailValidationRepository) Save(ctx context.Context, cacheEmailVali
 			"deliverable":           cacheEmailValidation.Deliverable,
 			"is_mailbox_full":       cacheEmailValidation.IsMailboxFull,
 			"is_role_account":       cacheEmailValidation.IsRoleAccount,
+			"is_system_generated":   cacheEmailValidation.IsSystemGenerated,
 			"is_free_account":       cacheEmailValidation.IsFreeAccount,
 			"smtp_success":          cacheEmailValidation.SmtpSuccess,
 			"response_code":         cacheEmailValidation.ResponseCode,

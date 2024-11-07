@@ -77,7 +77,12 @@ func validateEmailV2(ctx context.Context, r *gin.Engine, services *service.Servi
 				return
 			}
 
-			if emailValidationData != nil && emailValidationData.Syntax.IsValid && !emailValidationData.EmailData.IsRoleAccount && (emailValidationData.EmailData.Deliverable == string(model.EmailDeliverableStatusUnknown)) {
+			if emailValidationData != nil &&
+				emailValidationData.Syntax.IsValid &&
+				!emailValidationData.EmailData.IsRoleAccount &&
+				!emailValidationData.EmailData.IsSystemGenerated &&
+				(emailValidationData.EmailData.Deliverable == string(model.EmailDeliverableStatusUnknown)) {
+
 				if request.Options.VerifyCatchAll || emailValidationData.EmailData.RetryValidation == true {
 					// Step 1 - try Enrow
 					enrowResponseStr := ""
@@ -88,14 +93,12 @@ func validateEmailV2(ctx context.Context, r *gin.Engine, services *service.Servi
 							l.Errorf("Error on calling Enrow : %s", err.Error())
 						}
 						if enrowResponseStr != "" {
+							span.LogFields(log.String("enrowResponse", enrowResponseStr))
 							if enrowResponseStr == "valid" {
 								emailValidationData.EmailData.Deliverable = string(model.EmailDeliverableStatusDeliverable)
 								emailValidationData.EmailData.RetryValidation = false
 							} else if enrowResponseStr == "invalid" {
-								// accept invalid response only if it's not catch-all
-								if !emailValidationData.DomainData.IsCatchAll {
-									emailValidationData.EmailData.Deliverable = string(model.EmailDeliverableStatusUndeliverable)
-								}
+								// do nothing
 							} else {
 								err = fmt.Errorf("Unexpected: Enrow response: {%s}" + enrowResponseStr)
 								tracing.TraceErr(span, err)

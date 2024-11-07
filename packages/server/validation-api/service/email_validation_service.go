@@ -87,6 +87,7 @@ func (s *emailValidationService) ValidateEmailWithMailSherpa(ctx context.Context
 	result.Syntax.CleanEmail = syntaxValidation.CleanEmail
 	result.EmailData.IsFreeAccount = syntaxValidation.IsFreeAccount
 	result.EmailData.IsRoleAccount = syntaxValidation.IsRoleAccount
+	result.EmailData.IsSystemGenerated = syntaxValidation.IsSystemGenerated
 
 	// if syntax is not valid, return
 	if !syntaxValidation.IsValid {
@@ -345,6 +346,7 @@ func (s *emailValidationService) getEmailValidation(ctx context.Context, email s
 			Username:            syntaxValidation.User,
 			NormalizedEmail:     syntaxValidation.CleanEmail,
 			Domain:              syntaxValidation.Domain,
+			IsSystemGenerated:   syntaxValidation.IsSystemGenerated,
 			AlternateEmail:      emailValidation.AlternateEmail.Email,
 		}
 		cachedEmail, err = s.Services.CommonServices.PostgresRepositories.CacheEmailValidationRepository.Save(ctx, cacheEmailValidationEntity)

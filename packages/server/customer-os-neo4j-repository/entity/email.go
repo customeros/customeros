@@ -11,6 +11,7 @@ const (
 	EmailPropertyEmail                 EmailProperty = "email"
 	EmailPropertyRawEmail              EmailProperty = "rawEmail"
 	EmailPropertyIsRoleAccount         EmailProperty = "isRoleAccount"
+	EmailPropertyIsSystemGenerated     EmailProperty = "isSystemGenerated"
 	EmailPropertyIsValidSyntax         EmailProperty = "isValidSyntax"
 	EmailPropertyIsCatchAll            EmailProperty = "isCatchAll"
 	EmailPropertyDeliverable           EmailProperty = "deliverable"
@@ -45,25 +46,26 @@ type EmailEntity struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 
-	IsValidSyntax   *bool
-	Username        *string
-	IsRisky         *bool
-	IsFirewalled    *bool
-	Provider        *string
-	Firewall        *string
-	IsCatchAll      *bool
-	Deliverable     *string
-	IsMailboxFull   *bool
-	IsRoleAccount   *bool
-	IsFreeAccount   *bool
-	SmtpSuccess     *bool
-	ResponseCode    *string
-	ErrorCode       *string
-	Description     *string
-	IsPrimaryDomain *bool
-	PrimaryDomain   *string
-	AlternateEmail  *string
-	RetryValidation *bool
+	IsValidSyntax     *bool
+	Username          *string
+	IsRisky           *bool
+	IsFirewalled      *bool
+	Provider          *string
+	Firewall          *string
+	IsCatchAll        *bool
+	Deliverable       *string
+	IsMailboxFull     *bool
+	IsRoleAccount     *bool
+	IsSystemGenerated *bool
+	IsFreeAccount     *bool
+	SmtpSuccess       *bool
+	ResponseCode      *string
+	ErrorCode         *string
+	Description       *string
+	IsPrimaryDomain   *bool
+	PrimaryDomain     *string
+	AlternateEmail    *string
+	RetryValidation   *bool
 
 	EmailInternalFields EmailInternalFields
 

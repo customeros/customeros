@@ -73,6 +73,7 @@ func (a *EmailAggregate) emailValidatedV2(ctx context.Context, request *emailpb.
 		request.IsCatchAll,
 		request.IsMailboxFull,
 		request.IsRoleAccount,
+		request.IsSystemGenerated,
 		request.IsFreeAccount,
 		request.SmtpSuccess,
 		request.ResponseCode,

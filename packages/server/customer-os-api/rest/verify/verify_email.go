@@ -76,6 +76,9 @@ type EmailVerificationRisk struct {
 	// IsRoleMailbox indicates if the email belongs to a role (e.g., info@, support@)
 	IsRoleMailbox bool `json:"isRoleMailbox" example:"false"`
 
+	// IsSystemGenerated indicates if the email is system-generated
+	IsSystemGenerated bool `json:"isSystemGenerated" example:"false"`
+
 	// IsFreeProvider indicates if the email uses a free provider like Gmail or Yahoo
 	IsFreeProvider bool `json:"isFreeProvider" example:"true"`
 
@@ -203,6 +206,7 @@ func VerifyEmailAddress(services *service.Services) gin.HandlerFunc {
 			IsCatchAll:            result.Data.DomainData.IsCatchAll,
 			IsRisky: result.Data.DomainData.IsFirewalled ||
 				result.Data.EmailData.IsRoleAccount ||
+				result.Data.EmailData.IsSystemGenerated ||
 				result.Data.EmailData.IsFreeAccount ||
 				result.Data.EmailData.IsMailboxFull ||
 				!result.Data.DomainData.IsPrimaryDomain,
@@ -212,11 +216,12 @@ func VerifyEmailAddress(services *service.Services) gin.HandlerFunc {
 				User:    syntaxValidation.User,
 			},
 			Risk: EmailVerificationRisk{
-				IsFirewalled:    result.Data.DomainData.IsFirewalled,
-				IsRoleMailbox:   result.Data.EmailData.IsRoleAccount,
-				IsFreeProvider:  result.Data.EmailData.IsFreeAccount,
-				IsMailboxFull:   result.Data.EmailData.IsMailboxFull,
-				IsPrimaryDomain: result.Data.DomainData.IsPrimaryDomain,
+				IsFirewalled:      result.Data.DomainData.IsFirewalled,
+				IsRoleMailbox:     result.Data.EmailData.IsRoleAccount,
+				IsSystemGenerated: result.Data.EmailData.IsSystemGenerated,
+				IsFreeProvider:    result.Data.EmailData.IsFreeAccount,
+				IsMailboxFull:     result.Data.EmailData.IsMailboxFull,
+				IsPrimaryDomain:   result.Data.DomainData.IsPrimaryDomain,
 			},
 			AlternateEmail: result.Data.EmailData.AlternateEmail,
 		}

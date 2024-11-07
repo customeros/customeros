@@ -187,7 +187,7 @@ func (s *contactService) hideContactsWithGroupEmail(ctx context.Context) {
 			// continue as normal
 		}
 
-		records, err := s.commonServices.Neo4jRepositories.ContactReadRepository.GetContactsWithGroupEmail(ctx, limit)
+		records, err := s.commonServices.Neo4jRepositories.ContactReadRepository.GetContactsWithGroupOrSystemGeneratedEmail(ctx, limit)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error getting contacts: %v", err)

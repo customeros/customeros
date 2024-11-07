@@ -79,8 +79,6 @@ github.com/cucumber/godog v0.15.0 h1:51AL8lBXF3f0cyA5CV4TnJFCTHpgiy+1x1Hb3TtZUmo
 github.com/cucumber/godog v0.15.0/go.mod h1:FX3rzIDybWABU4kuIXLZ/qtqEe1Ac5RdXmqvACJOces=
 github.com/cucumber/messages/go/v21 v21.0.1 h1:wzA0LxwjlWQYZd32VTlAVDTkW6inOFmSM+RuOwHZiMI=
 github.com/cucumber/messages/go/v21 v21.0.1/go.mod h1:zheH/2HS9JLVFukdrsPWoPdmUtmYQAQPLk7w5vWsk5s=
-github.com/customeros/mailsherpa v0.2.17 h1:PosoVBuDYqbWli1ntUZAzLmU+oH+5TmcWzwF8T+odn4=
-github.com/customeros/mailsherpa v0.2.17/go.mod h1:q04Xk7+i6M7XTxrY9tS3uYN68urvgrswbCw8Vi6Zbjw=
 github.com/customeros/mailsherpa v0.2.18 h1:/XSo5i3LSCQjEtPnwhrN+e7jNXU6k8qje6Mvf/mGnMk=
 github.com/customeros/mailsherpa v0.2.18/go.mod h1:q04Xk7+i6M7XTxrY9tS3uYN68urvgrswbCw8Vi6Zbjw=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

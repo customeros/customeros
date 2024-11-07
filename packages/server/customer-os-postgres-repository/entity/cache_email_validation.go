@@ -12,6 +12,7 @@ type CacheEmailValidation struct {
 	Domain              string    `gorm:"column:domain;type:varchar(255)" json:"domain"`
 	IsMailboxFull       bool      `gorm:"column:is_mailbox_full;type:boolean" json:"isMailboxFull"`
 	IsRoleAccount       bool      `gorm:"column:is_role_account;type:boolean" json:"isRoleAccount"`
+	IsSystemGenerated   bool      `gorm:"column:is_system_generated;type:boolean" json:"isSystemGenerated"`
 	IsFreeAccount       bool      `gorm:"column:is_free_account;type:boolean" json:"isFreeAccount"`
 	SmtpSuccess         bool      `gorm:"column:smtp_success;type:boolean" json:"smtpSuccess"`
 	ResponseCode        string    `gorm:"column:response_code;type:varchar(255)" json:"responseCode"`

@@ -1000,6 +1000,7 @@ type EmailValidationDetails struct {
 	CanConnectSMTP    *bool             `json:"canConnectSmtp,omitempty"`
 	IsMailboxFull     *bool             `json:"isMailboxFull,omitempty"`
 	IsRoleAccount     *bool             `json:"isRoleAccount,omitempty"`
+	IsSystemGenerated *bool             `json:"isSystemGenerated,omitempty"`
 	IsFreeAccount     *bool             `json:"isFreeAccount,omitempty"`
 	SMTPSuccess       *bool             `json:"smtpSuccess,omitempty"`
 	Deliverable       *EmailDeliverable `json:"deliverable,omitempty"`

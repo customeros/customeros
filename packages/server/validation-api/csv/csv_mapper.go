@@ -11,8 +11,8 @@ func GenerateCSVRow(data model.ValidateEmailMailSherpaData) (header []string, ro
 		"Email", "SyntaxIsValid", "User", "Domain", "CleanEmail",
 		"IsFirewalled", "Provider", "SecureGatewayProvider", "IsCatchAll", "CanConnectSMTP",
 		"HasMXRecord", "HasSPFRecord", "TLSRequired", "IsPrimaryDomain", "PrimaryDomain",
-		"SkippedValidation", "Deliverable", "IsMailboxFull", "IsRoleAccount", "IsFreeAccount",
-		"SmtpSuccess", "RetryValidation", "TLSRequired", "AlternateEmail",
+		"SkippedValidation", "Deliverable", "IsMailboxFull", "IsRoleAccount", "IsSystemGenerated",
+		"IsFreeAccount", "SmtpSuccess", "RetryValidation", "TLSRequired", "AlternateEmail",
 	}
 
 	// Create the corresponding row for the given data
@@ -36,6 +36,7 @@ func GenerateCSVRow(data model.ValidateEmailMailSherpaData) (header []string, ro
 		data.EmailData.Deliverable,
 		fmt.Sprintf("%v", data.EmailData.IsMailboxFull),
 		fmt.Sprintf("%v", data.EmailData.IsRoleAccount),
+		fmt.Sprintf("%v", data.EmailData.IsSystemGenerated),
 		fmt.Sprintf("%v", data.EmailData.IsFreeAccount),
 		fmt.Sprintf("%v", data.EmailData.SmtpSuccess),
 		fmt.Sprintf("%v", data.EmailData.RetryValidation),

@@ -39,7 +39,7 @@ type ContactReadRepository interface {
 	GetContactsToEnrichWithEmailFromBetterContact(ctx context.Context, limit int) ([]TenantAndContactId, error)
 	GetContactsToEnrich(ctx context.Context, minutesFromLastContactUpdate, minutesFromLastEnrichAttempt, minutesFromLastFailure, limit int) ([]TenantAndContactId, error)
 	GetLinkedOrgDomains(ctx context.Context, tenant, contactId string) ([]string, error)
-	GetContactsWithGroupEmail(ctx context.Context, limit int) ([]TenantAndContactId, error)
+	GetContactsWithGroupOrSystemGeneratedEmail(ctx context.Context, limit int) ([]TenantAndContactId, error)
 	GetContactsWithEmailForNameUpdate(ctx context.Context, limit int) ([]TenantAndContactId, error)
 }
 
@@ -465,6 +465,7 @@ func (r *contactReadRepository) GetContactsToEnrich(ctx context.Context, minutes
 				OPTIONAL MATCH (c)-[:HAS]->(e:Email)
 				WHERE
 					e.isRoleAccount = false AND
+					e.isSystemGenerated = false AND 
 					(e.isPrimaryDomain = true OR e.isPrimaryDomain IS NULL)
 				WITH t,c,e
 				OPTIONAL MATCH (c)--(j:JobRole)--(o:Organization)
@@ -513,8 +514,8 @@ func (r *contactReadRepository) GetContactsToEnrich(ctx context.Context, minutes
 	return output, nil
 }
 
-func (r *contactReadRepository) GetContactsWithGroupEmail(ctx context.Context, limit int) ([]TenantAndContactId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactReadRepository.GetContactsWithGroupEmail")
+func (r *contactReadRepository) GetContactsWithGroupOrSystemGeneratedEmail(ctx context.Context, limit int) ([]TenantAndContactId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactReadRepository.GetContactsWithGroupOrSystemGeneratedEmail")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
 	span.LogFields(log.Int("limit", limit))
@@ -522,7 +523,8 @@ func (r *contactReadRepository) GetContactsWithGroupEmail(ctx context.Context, l
 	cypher := `MATCH (t:Tenant)<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)-[:HAS]->(e:Email)
 				WHERE
 					(c.hide IS NULL OR c.hide = false) AND
-					e.isRoleAccount = true
+					e.isRoleAccount = true AND
+					e.isSystemGenerated = true 
 				RETURN DISTINCT t.name, c.id LIMIT $limit`
 	params := map[string]any{
 		"limit": limit,
@@ -569,6 +571,7 @@ func (r *contactReadRepository) GetContactsWithEmailForNameUpdate(ctx context.Co
 					(c.lastName IS NULL OR c.lastName = '') AND
 					(c.name IS NULL OR c.name = '') AND
 					e.isRoleAccount = false AND
+					e.isSystemGenerated = false AND
 					(e.username IS NOT NULL AND e.username <> '') AND
 					c.updatedAt < datetime() - duration({minutes: 1})
 				RETURN DISTINCT t.name, c.id, e.username LIMIT $limit`

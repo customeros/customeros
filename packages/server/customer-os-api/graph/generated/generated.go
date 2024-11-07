@@ -499,6 +499,7 @@ type ComplexityRoot struct {
 		IsPrimaryDomain   func(childComplexity int) int
 		IsRisky           func(childComplexity int) int
 		IsRoleAccount     func(childComplexity int) int
+		IsSystemGenerated func(childComplexity int) int
 		IsValidSyntax     func(childComplexity int) int
 		PrimaryDomain     func(childComplexity int) int
 		Provider          func(childComplexity int) int
@@ -4102,6 +4103,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.EmailValidationDetails.IsRoleAccount(childComplexity), true
+
+	case "EmailValidationDetails.isSystemGenerated":
+		if e.complexity.EmailValidationDetails.IsSystemGenerated == nil {
+			break
+		}
+
+		return e.complexity.EmailValidationDetails.IsSystemGenerated(childComplexity), true
 
 	case "EmailValidationDetails.isValidSyntax":
 		if e.complexity.EmailValidationDetails.IsValidSyntax == nil {
@@ -12731,6 +12739,7 @@ type EmailValidationDetails {
     canConnectSmtp:     Boolean
     isMailboxFull:      Boolean
     isRoleAccount:      Boolean
+    isSystemGenerated:  Boolean
     isFreeAccount:      Boolean
     smtpSuccess:        Boolean
     deliverable:        EmailDeliverable
@@ -38615,6 +38624,8 @@ func (ec *executionContext) fieldContext_Email_emailValidationDetails(_ context.
 				return ec.fieldContext_EmailValidationDetails_isMailboxFull(ctx, field)
 			case "isRoleAccount":
 				return ec.fieldContext_EmailValidationDetails_isRoleAccount(ctx, field)
+			case "isSystemGenerated":
+				return ec.fieldContext_EmailValidationDetails_isSystemGenerated(ctx, field)
 			case "isFreeAccount":
 				return ec.fieldContext_EmailValidationDetails_isFreeAccount(ctx, field)
 			case "smtpSuccess":
@@ -39888,6 +39899,47 @@ func (ec *executionContext) _EmailValidationDetails_isRoleAccount(ctx context.Co
 }
 
 func (ec *executionContext) fieldContext_EmailValidationDetails_isRoleAccount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EmailValidationDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EmailValidationDetails_isSystemGenerated(ctx context.Context, field graphql.CollectedField, obj *model.EmailValidationDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EmailValidationDetails_isSystemGenerated(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IsSystemGenerated, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EmailValidationDetails_isSystemGenerated(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "EmailValidationDetails",
 		Field:      field,
@@ -108206,6 +108258,8 @@ func (ec *executionContext) _EmailValidationDetails(ctx context.Context, sel ast
 			out.Values[i] = ec._EmailValidationDetails_isMailboxFull(ctx, field, obj)
 		case "isRoleAccount":
 			out.Values[i] = ec._EmailValidationDetails_isRoleAccount(ctx, field, obj)
+		case "isSystemGenerated":
+			out.Values[i] = ec._EmailValidationDetails_isSystemGenerated(ctx, field, obj)
 		case "isFreeAccount":
 			out.Values[i] = ec._EmailValidationDetails_isFreeAccount(ctx, field, obj)
 		case "smtpSuccess":

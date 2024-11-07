@@ -22,28 +22,29 @@ type EmailCreateFields struct {
 }
 
 type EmailValidatedFields struct {
-	EmailAddress    string    `json:"emailAddress"`
-	Domain          string    `json:"domain"`
-	IsCatchAll      bool      `json:"isCatchAll"`
-	Deliverable     string    `json:"deliverable"`
-	IsValidSyntax   bool      `json:"isValidSyntax"`
-	Username        string    `json:"username"`
-	ValidatedAt     time.Time `json:"validatedAt"`
-	IsRoleAccount   bool      `json:"isRoleAccount"`
-	IsRisky         bool      `json:"isRisky"`
-	IsFirewalled    bool      `json:"isFirewalled"`
-	Provider        string    `json:"provider"`
-	Firewall        string    `json:"firewall"`
-	IsMailboxFull   bool      `json:"isMailboxFull"`
-	IsFreeAccount   bool      `json:"isFreeAccount"`
-	SmtpSuccess     bool      `json:"smtpSuccess"`
-	ResponseCode    string    `json:"responseCode"`
-	ErrorCode       string    `json:"errorCode"`
-	Description     string    `json:"description"`
-	IsPrimaryDomain bool      `json:"isPrimaryDomain"`
-	PrimaryDomain   string    `json:"primaryDomain"`
-	AlternateEmail  string    `json:"alternateEmail"`
-	RetryValidation bool      `json:"retryValidation"`
+	EmailAddress      string    `json:"emailAddress"`
+	Domain            string    `json:"domain"`
+	IsCatchAll        bool      `json:"isCatchAll"`
+	Deliverable       string    `json:"deliverable"`
+	IsValidSyntax     bool      `json:"isValidSyntax"`
+	Username          string    `json:"username"`
+	ValidatedAt       time.Time `json:"validatedAt"`
+	IsRoleAccount     bool      `json:"isRoleAccount"`
+	IsSystemGenerated bool      `json:"isSystemGenerated"`
+	IsRisky           bool      `json:"isRisky"`
+	IsFirewalled      bool      `json:"isFirewalled"`
+	Provider          string    `json:"provider"`
+	Firewall          string    `json:"firewall"`
+	IsMailboxFull     bool      `json:"isMailboxFull"`
+	IsFreeAccount     bool      `json:"isFreeAccount"`
+	SmtpSuccess       bool      `json:"smtpSuccess"`
+	ResponseCode      string    `json:"responseCode"`
+	ErrorCode         string    `json:"errorCode"`
+	Description       string    `json:"description"`
+	IsPrimaryDomain   bool      `json:"isPrimaryDomain"`
+	PrimaryDomain     string    `json:"primaryDomain"`
+	AlternateEmail    string    `json:"alternateEmail"`
+	RetryValidation   bool      `json:"retryValidation"`
 }
 
 type EmailWriteRepository interface {
@@ -120,6 +121,7 @@ func (r *emailWriteRepository) EmailValidated(ctx context.Context, tenant, email
 					e.username = $username,
 					e.updatedAt = datetime(),
 					e.isRoleAccount = $isRoleAccount,
+					e.isSystemGenerated = $isSystemGenerated,
 					e.techValidatedAt = $validatedAt,
 					e.isRisky = $isRisky,
 					e.isFirewalled = $isFirewalled,
@@ -156,6 +158,7 @@ func (r *emailWriteRepository) EmailValidated(ctx context.Context, tenant, email
 		"username":           data.Username,
 		"validatedAt":        data.ValidatedAt,
 		"isRoleAccount":      data.IsRoleAccount,
+		"isSystemGenerated":  data.IsSystemGenerated,
 		"isRisky":            data.IsRisky,
 		"isFirewalled":       data.IsFirewalled,
 		"provider":           data.Provider,
@@ -285,6 +288,7 @@ func (r *emailWriteRepository) CleanEmailValidation(ctx context.Context, tenant,
 					e.isValidSyntax = null,
 					e.username = null,
 					e.isRoleAccount = null,
+					e.isSystemGenerated = null,
 					e.techValidatedAt = null,
 					e.isRisky = null,
 					e.isFirewalled = null,

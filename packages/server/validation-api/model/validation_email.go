@@ -59,6 +59,7 @@ type ValidateEmailMailSherpaData struct {
 		Deliverable       string `json:"deliverable"`
 		IsMailboxFull     bool   `json:"isMailboxFull"`
 		IsRoleAccount     bool   `json:"isRoleAccount"`
+		IsSystemGenerated bool   `json:"isSystemGenerated"`
 		IsFreeAccount     bool   `json:"isFreeAccount"`
 		SmtpSuccess       bool   `json:"smtpSuccess"`
 		ResponseCode      string `json:"responseCode"`

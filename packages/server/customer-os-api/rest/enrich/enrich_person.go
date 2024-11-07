@@ -336,6 +336,7 @@ func EnrichPerson(services *service.Services) gin.HandlerFunc {
 				emailRecord.IsRisky = utils.BoolPtr(
 					emailValidationResult.Data.DomainData.IsFirewalled ||
 						emailValidationResult.Data.EmailData.IsRoleAccount ||
+						emailValidationResult.Data.EmailData.IsSystemGenerated ||
 						emailValidationResult.Data.EmailData.IsFreeAccount ||
 						emailValidationResult.Data.EmailData.IsMailboxFull ||
 						!emailValidationResult.Data.DomainData.IsPrimaryDomain)
@@ -526,6 +527,7 @@ func EnrichPersonCallback(services *service.Services) gin.HandlerFunc {
 				email.IsRisky = utils.BoolPtr(
 					emailValidationResult.Data.DomainData.IsFirewalled ||
 						emailValidationResult.Data.EmailData.IsRoleAccount ||
+						emailValidationResult.Data.EmailData.IsSystemGenerated ||
 						emailValidationResult.Data.EmailData.IsFreeAccount ||
 						emailValidationResult.Data.EmailData.IsMailboxFull ||
 						!emailValidationResult.Data.DomainData.IsPrimaryDomain)
