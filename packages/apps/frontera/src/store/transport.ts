@@ -10,6 +10,14 @@ export interface TransportOptions {
   sessionToken: string;
 }
 
+const isTestMode = import.meta.env.MODE === 'test';
+const defaultGraphqlHeaders: Record<string, string> = isTestMode
+  ? {
+      'X-OPENLINE-API-KEY': import.meta.env.VITE_TEST_API_KEY as string,
+      'X-OPENLINE-USERNAME': import.meta.env.VITE_TEST_USERNAME as string,
+    }
+  : {};
+
 export class Transport {
   http: AxiosInstance;
   graphql: GraphQLClient;
@@ -22,7 +30,7 @@ export class Transport {
   constructor() {
     this.http = createHttpClient({});
     this.stream = createStreamClient({});
-    this.graphql = createGraphqlClient({});
+    this.graphql = createGraphqlClient(defaultGraphqlHeaders);
 
     this.socket = new Socket(
       `${import.meta.env.VITE_REALTIME_WS_PATH}/socket`,
@@ -120,12 +128,13 @@ function createHttpClient(headers?: Record<string, string>) {
 }
 
 function createGraphqlClient(headers?: Record<string, string>) {
-  return new GraphQLClient(
-    `${import.meta.env.VITE_MIDDLEWARE_API_URL}/customer-os-api`,
-    {
-      headers,
-    },
-  );
+  const url = isTestMode
+    ? import.meta.env.VITE_TEST_API_URL
+    : `${import.meta.env.VITE_MIDDLEWARE_API_URL}/customer-os-api`;
+
+  return new GraphQLClient(url, {
+    headers,
+  });
 }
 
 function createStreamClient(headers?: Record<string, string>) {

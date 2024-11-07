@@ -16,7 +16,8 @@
     "codegen:icons": "node scripts/codegen-icons.js",
     "codegen:logos": "node scripts/codegen-logos.js",
     "codegen:gql": "graphql-codegen --require dotenv/config --config scripts/codegen-graphql-stores.ts",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:integration": "npx vitest"
   },
   "dependencies": {
     "@date-fns/utc": "^1.2.0",
@@ -148,6 +149,7 @@
     "glob": "^10.3.10",
     "is-ci": "^3.0.1",
     "js-cookie": "^3.0.5",
+    "jsdom": "^25.0.1",
     "lint-staged": "^13.1.1",
     "postcss": "^8.4.35",
     "prettier": "^2.8.8",
@@ -160,7 +162,8 @@
     "tsx": "^4.10.4",
     "typescript": "^5.2.2",
     "vite": "^5.2.0",
-    "vite-plugin-graphql-loader": "^4.0.2"
+    "vite-plugin-graphql-loader": "^4.0.2",
+    "vitest": "^2.1.4"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
