@@ -26,6 +26,7 @@ interface ParticipantSelectGroupGroupProps extends InputProps {
   bcc: Array<{ label: string; value: string }>;
 }
 
+// TODO drop this type of query
 export const ParticipantsSelectGroup = ({
   attendees = [],
   cc = [],
@@ -166,7 +167,13 @@ export const ParticipantsSelectGroup = ({
   }, [fromValue, fromOptions]);
 
   return (
-    <div ref={ref} className='flex justify-between mt-3'>
+    <div
+      ref={ref}
+      className='flex justify-between mt-3'
+      onMouseDown={(e) => {
+        e.stopPropagation();
+      }}
+    >
       <div className='w-[100%]'>
         <div className='flex items-baseline mb-[-1px] mt-0 flex-1 overflow-visible'>
           <span className='text-gray-700 font-semibold mr-1'>From:</span>

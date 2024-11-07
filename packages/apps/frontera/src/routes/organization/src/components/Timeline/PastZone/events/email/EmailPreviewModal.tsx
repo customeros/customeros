@@ -151,6 +151,10 @@ export const EmailPreviewModal = ({
         ]
       : from;
 
+    const reSubject = subject.toLowerCase().includes('re:')
+      ? subject
+      : `Re: ${subject}`;
+
     if (newMode === REPLY_MODE) {
       newDefaultValues = new ComposeEmailDto({
         from: '',
@@ -158,7 +162,7 @@ export const EmailPreviewModal = ({
         to: newTo,
         cc: [],
         bcc: [],
-        subject: `Re: ${subject}`,
+        subject: reSubject,
         content: mode === FORWARD_MODE ? '' : state.values.content,
       });
     }
@@ -184,7 +188,7 @@ export const EmailPreviewModal = ({
         to: [...newTo],
         cc: removeDuplicates(newTo, newCC),
         bcc: newBCC,
-        subject: `Re: ${subject}`,
+        subject: reSubject,
         content: mode === FORWARD_MODE ? '' : state.values.content,
       });
     }
@@ -196,7 +200,7 @@ export const EmailPreviewModal = ({
         to: [],
         cc: [],
         bcc: [],
-        subject: `Re: ${subject}`,
+        subject: reSubject,
         content: `${state.values.content}${event.content}`,
       });
     }
@@ -237,7 +241,10 @@ export const EmailPreviewModal = ({
   };
 
   const handleSubmit = () => {
-    const from = state.values.from?.value ?? '';
+    const from = Array.isArray(state.values?.from)
+      ? state.values?.from?.[0]?.value
+      : state.values?.from?.value;
+
     const fromProvider = state.values.from?.provider ?? '';
     const to = [...state.values.to].map(({ value }) => value);
     const cc = [...state.values.cc].map(({ value }) => value);
