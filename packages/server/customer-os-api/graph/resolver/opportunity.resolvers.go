@@ -143,32 +143,6 @@ func (r *mutationResolver) OpportunityCreate(ctx context.Context, input model.Op
 	return mapper.MapEntityToOpportunity(opportunityEntity), nil
 }
 
-// OpportunityUpdate is the resolver for the opportunityUpdate field.
-func (r *mutationResolver) OpportunityUpdate(ctx context.Context, input model.OpportunityUpdateInput) (*model.Opportunity, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OpportunityUpdate", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.input", input)
-
-	err := r.Services.OpportunityService.Update(ctx, input)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to update opportunity %s", input.OpportunityID)
-		return &model.Opportunity{Metadata: &model.Metadata{ID: input.OpportunityID}}, nil
-	}
-
-	tenant := common.GetTenantFromContext(ctx)
-
-	opportunityEntity, err := r.Services.CommonServices.OpportunityService.GetById(ctx, tenant, input.OpportunityID)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed fetching opportunity details. Opportunity id: %s", input.OpportunityID)
-		return &model.Opportunity{Metadata: &model.Metadata{ID: input.OpportunityID}}, nil
-	}
-
-	return mapper.MapEntityToOpportunity(opportunityEntity), nil
-}
-
 // OpportunitySetOwner is the resolver for the opportunity_SetOwner field.
 func (r *mutationResolver) OpportunitySetOwner(ctx context.Context, opportunityID string, userID string) (*model.ActionResponse, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OpportunitySetOwner", graphql.GetOperationContext(ctx))
@@ -180,22 +154,6 @@ func (r *mutationResolver) OpportunitySetOwner(ctx context.Context, opportunityI
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to set owner %s for opportunity %s", userID, opportunityID)
-		return &model.ActionResponse{Accepted: false}, nil
-	}
-	return &model.ActionResponse{Accepted: false}, nil
-}
-
-// OpportunityRemoveOwner is the resolver for the opportunity_RemoveOwner field.
-func (r *mutationResolver) OpportunityRemoveOwner(ctx context.Context, opportunityID string) (*model.ActionResponse, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OpportunityRemoveOwner", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.opportunityID", opportunityID))
-
-	err := r.Services.OpportunityService.RemoveOwner(ctx, opportunityID)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to remove owner for opportunity %s", opportunityID)
 		return &model.ActionResponse{Accepted: false}, nil
 	}
 	return &model.ActionResponse{Accepted: false}, nil

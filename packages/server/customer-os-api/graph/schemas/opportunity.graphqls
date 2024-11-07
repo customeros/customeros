@@ -11,9 +11,7 @@ extend type Mutation {
 
     #TODO: Remove these after UI migration
     opportunity_Create(input: OpportunityCreateInput!): Opportunity! @hasRole(roles: [ADMIN, USER]) @hasTenant #Deprecated
-    opportunity_Update(input: OpportunityUpdateInput!): Opportunity! @hasRole(roles: [ADMIN, USER]) @hasTenant #Deprecated
     opportunity_SetOwner(opportunityId: ID!, userId: ID!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant #Deprecated
-    opportunity_RemoveOwner(opportunityId: ID!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant #Deprecated
 }
 
 type Opportunity implements MetadataInterface {

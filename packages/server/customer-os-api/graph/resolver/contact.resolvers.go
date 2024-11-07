@@ -409,24 +409,6 @@ func (r *mutationResolver) ContactHardDelete(ctx context.Context, contactID stri
 	}, nil
 }
 
-// ContactRestoreFromArchive is the resolver for the contact_RestoreFromArchive field.
-func (r *mutationResolver) ContactRestoreFromArchive(ctx context.Context, contactID string) (*model.Result, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactRestoreFromArchive", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.contactID", contactID))
-
-	result, err := r.Services.ContactService.RestoreFromArchive(ctx, contactID)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to restore from archive contact %s", contactID)
-		return nil, err
-	}
-	return &model.Result{
-		Result: result,
-	}, nil
-}
-
 // ContactMerge is the resolver for the contact_Merge field.
 func (r *mutationResolver) ContactMerge(ctx context.Context, primaryContactID string, mergedContactIds []string) (*model.Contact, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactMerge", graphql.GetOperationContext(ctx))

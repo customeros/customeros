@@ -924,7 +924,6 @@ type ComplexityRoot struct {
 		ContactRemoveLocation                      func(childComplexity int, contactID string, locationID string) int
 		ContactRemoveSocial                        func(childComplexity int, contactID string, socialID string) int
 		ContactRemoveTag                           func(childComplexity int, input model.ContactTagInput) int
-		ContactRestoreFromArchive                  func(childComplexity int, contactID string) int
 		ContactUpdate                              func(childComplexity int, input model.ContactUpdateInput) int
 		ContractAddAttachment                      func(childComplexity int, contractID string, attachmentID string) int
 		ContractCreate                             func(childComplexity int, input model.ContractInput) int
@@ -1000,18 +999,13 @@ type ComplexityRoot struct {
 		NoteUpdate                                 func(childComplexity int, input model.NoteUpdateInput) int
 		OpportunityArchive                         func(childComplexity int, id string) int
 		OpportunityCreate                          func(childComplexity int, input model.OpportunityCreateInput) int
-		OpportunityRemoveOwner                     func(childComplexity int, opportunityID string) int
 		OpportunityRenewalUpdate                   func(childComplexity int, input model.OpportunityRenewalUpdateInput, ownerUserID *string) int
 		OpportunityRenewalUpdateAllForOrganization func(childComplexity int, input model.OpportunityRenewalUpdateAllForOrganizationInput) int
 		OpportunitySave                            func(childComplexity int, input model.OpportunitySaveInput) int
 		OpportunitySetOwner                        func(childComplexity int, opportunityID string, userID string) int
-		OpportunityUpdate                          func(childComplexity int, input model.OpportunityUpdateInput) int
-		OrganizationAddNewLocation                 func(childComplexity int, organizationID string) int
 		OrganizationAddSocial                      func(childComplexity int, organizationID string, input model.SocialInput) int
 		OrganizationAddSubsidiary                  func(childComplexity int, input model.LinkOrganizationsInput) int
 		OrganizationAddTag                         func(childComplexity int, input model.OrganizationTagInput) int
-		OrganizationArchive                        func(childComplexity int, id string) int
-		OrganizationArchiveAll                     func(childComplexity int, ids []string) int
 		OrganizationHide                           func(childComplexity int, id string) int
 		OrganizationHideAll                        func(childComplexity int, ids []string) int
 		OrganizationMerge                          func(childComplexity int, primaryOrganizationID string, mergedOrganizationIds []string) int
@@ -1707,7 +1701,6 @@ type MutationResolver interface {
 	CustomerContactCreate(ctx context.Context, input model.CustomerContactInput) (*model.CustomerContact, error)
 	ContactUpdate(ctx context.Context, input model.ContactUpdateInput) (*model.Contact, error)
 	ContactHardDelete(ctx context.Context, contactID string) (*model.Result, error)
-	ContactRestoreFromArchive(ctx context.Context, contactID string) (*model.Result, error)
 	ContactMerge(ctx context.Context, primaryContactID string, mergedContactIds []string) (*model.Contact, error)
 	ContactHide(ctx context.Context, contactID string) (*model.ActionResponse, error)
 	ContactAddOrganizationByID(ctx context.Context, input model.ContactOrganizationInput) (*model.Contact, error)
@@ -1787,12 +1780,8 @@ type MutationResolver interface {
 	OpportunityRenewalUpdate(ctx context.Context, input model.OpportunityRenewalUpdateInput, ownerUserID *string) (*model.Opportunity, error)
 	OpportunityRenewalUpdateAllForOrganization(ctx context.Context, input model.OpportunityRenewalUpdateAllForOrganizationInput) (*model.Organization, error)
 	OpportunityCreate(ctx context.Context, input model.OpportunityCreateInput) (*model.Opportunity, error)
-	OpportunityUpdate(ctx context.Context, input model.OpportunityUpdateInput) (*model.Opportunity, error)
 	OpportunitySetOwner(ctx context.Context, opportunityID string, userID string) (*model.ActionResponse, error)
-	OpportunityRemoveOwner(ctx context.Context, opportunityID string) (*model.ActionResponse, error)
 	OrganizationSave(ctx context.Context, input model.OrganizationSaveInput) (*model.Organization, error)
-	OrganizationArchive(ctx context.Context, id string) (*model.Result, error)
-	OrganizationArchiveAll(ctx context.Context, ids []string) (*model.Result, error)
 	OrganizationHide(ctx context.Context, id string) (string, error)
 	OrganizationHideAll(ctx context.Context, ids []string) (*model.Result, error)
 	OrganizationShow(ctx context.Context, id string) (string, error)
@@ -1800,7 +1789,6 @@ type MutationResolver interface {
 	OrganizationMerge(ctx context.Context, primaryOrganizationID string, mergedOrganizationIds []string) (*model.Organization, error)
 	OrganizationAddSubsidiary(ctx context.Context, input model.LinkOrganizationsInput) (*model.Organization, error)
 	OrganizationRemoveSubsidiary(ctx context.Context, organizationID string, subsidiaryID string) (*model.Organization, error)
-	OrganizationAddNewLocation(ctx context.Context, organizationID string) (*model.Location, error)
 	OrganizationAddSocial(ctx context.Context, organizationID string, input model.SocialInput) (*model.Social, error)
 	OrganizationRemoveSocial(ctx context.Context, organizationID string, socialID string) (*model.ActionResponse, error)
 	OrganizationUpdateOnboardingStatus(ctx context.Context, input model.OnboardingStatusInput) (*model.Organization, error)
@@ -6500,18 +6488,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.ContactRemoveTag(childComplexity, args["input"].(model.ContactTagInput)), true
 
-	case "Mutation.contact_RestoreFromArchive":
-		if e.complexity.Mutation.ContactRestoreFromArchive == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_contact_RestoreFromArchive_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.ContactRestoreFromArchive(childComplexity, args["contactId"].(string)), true
-
 	case "Mutation.contact_Update":
 		if e.complexity.Mutation.ContactUpdate == nil {
 			break
@@ -7412,18 +7388,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.OpportunityCreate(childComplexity, args["input"].(model.OpportunityCreateInput)), true
 
-	case "Mutation.opportunity_RemoveOwner":
-		if e.complexity.Mutation.OpportunityRemoveOwner == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_opportunity_RemoveOwner_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.OpportunityRemoveOwner(childComplexity, args["opportunityId"].(string)), true
-
 	case "Mutation.opportunityRenewalUpdate":
 		if e.complexity.Mutation.OpportunityRenewalUpdate == nil {
 			break
@@ -7472,30 +7436,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.OpportunitySetOwner(childComplexity, args["opportunityId"].(string), args["userId"].(string)), true
 
-	case "Mutation.opportunity_Update":
-		if e.complexity.Mutation.OpportunityUpdate == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_opportunity_Update_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.OpportunityUpdate(childComplexity, args["input"].(model.OpportunityUpdateInput)), true
-
-	case "Mutation.organization_AddNewLocation":
-		if e.complexity.Mutation.OrganizationAddNewLocation == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_organization_AddNewLocation_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.OrganizationAddNewLocation(childComplexity, args["organizationId"].(string)), true
-
 	case "Mutation.organization_AddSocial":
 		if e.complexity.Mutation.OrganizationAddSocial == nil {
 			break
@@ -7531,30 +7471,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.OrganizationAddTag(childComplexity, args["input"].(model.OrganizationTagInput)), true
-
-	case "Mutation.organization_Archive":
-		if e.complexity.Mutation.OrganizationArchive == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_organization_Archive_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.OrganizationArchive(childComplexity, args["id"].(string)), true
-
-	case "Mutation.organization_ArchiveAll":
-		if e.complexity.Mutation.OrganizationArchiveAll == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_organization_ArchiveAll_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.OrganizationArchiveAll(childComplexity, args["ids"].([]string)), true
 
 	case "Mutation.organization_Hide":
 		if e.complexity.Mutation.OrganizationHide == nil {
@@ -11694,7 +11610,6 @@ extend type Mutation {
 
     contact_Update(input: ContactUpdateInput!): Contact!
     contact_HardDelete(contactId: ID!): Result!
-    contact_RestoreFromArchive(contactId: ID!): Result!
     contact_Merge(primaryContactId: ID!, mergedContactIds: [ID!]!): Contact!
     contact_Hide(contactId: ID!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
@@ -13891,9 +13806,7 @@ extend type Mutation {
 
     #TODO: Remove these after UI migration
     opportunity_Create(input: OpportunityCreateInput!): Opportunity! @hasRole(roles: [ADMIN, USER]) @hasTenant #Deprecated
-    opportunity_Update(input: OpportunityUpdateInput!): Opportunity! @hasRole(roles: [ADMIN, USER]) @hasTenant #Deprecated
     opportunity_SetOwner(opportunityId: ID!, userId: ID!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant #Deprecated
-    opportunity_RemoveOwner(opportunityId: ID!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant #Deprecated
 }
 
 type Opportunity implements MetadataInterface {
@@ -14056,8 +13969,6 @@ input OpportunityRenewalUpdateAllForOrganizationInput {
 extend type Mutation {
     organization_Save(input: OrganizationSaveInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
-    organization_Archive(id: ID!): Result @hasRole(roles: [ADMIN, USER]) @hasTenant
-    organization_ArchiveAll(ids: [ID!]!): Result @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_Hide(id: ID!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_HideAll(ids: [ID!]!): Result @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_Show(id: ID!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
@@ -14066,7 +13977,6 @@ extend type Mutation {
     organization_Merge(primaryOrganizationId: ID!, mergedOrganizationIds: [ID!]!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_AddSubsidiary(input: LinkOrganizationsInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_RemoveSubsidiary(organizationId: ID!, subsidiaryId: ID!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    organization_AddNewLocation(organizationId: ID!): Location! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_AddSocial(organizationId: ID!, input: SocialInput!): Social! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_RemoveSocial(organizationId: ID!, socialId: ID!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
@@ -16827,38 +16737,6 @@ func (ec *executionContext) field_Mutation_contact_RemoveTag_argsInput(
 	}
 
 	var zeroVal model.ContactTagInput
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Mutation_contact_RestoreFromArchive_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	arg0, err := ec.field_Mutation_contact_RestoreFromArchive_argsContactID(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["contactId"] = arg0
-	return args, nil
-}
-func (ec *executionContext) field_Mutation_contact_RestoreFromArchive_argsContactID(
-	ctx context.Context,
-	rawArgs map[string]interface{},
-) (string, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["contactId"]
-	if !ok {
-		var zeroVal string
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("contactId"))
-	if tmp, ok := rawArgs["contactId"]; ok {
-		return ec.unmarshalNID2string(ctx, tmp)
-	}
-
-	var zeroVal string
 	return zeroVal, nil
 }
 
@@ -20595,38 +20473,6 @@ func (ec *executionContext) field_Mutation_opportunity_Create_argsInput(
 	return zeroVal, nil
 }
 
-func (ec *executionContext) field_Mutation_opportunity_RemoveOwner_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	arg0, err := ec.field_Mutation_opportunity_RemoveOwner_argsOpportunityID(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["opportunityId"] = arg0
-	return args, nil
-}
-func (ec *executionContext) field_Mutation_opportunity_RemoveOwner_argsOpportunityID(
-	ctx context.Context,
-	rawArgs map[string]interface{},
-) (string, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["opportunityId"]
-	if !ok {
-		var zeroVal string
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("opportunityId"))
-	if tmp, ok := rawArgs["opportunityId"]; ok {
-		return ec.unmarshalNID2string(ctx, tmp)
-	}
-
-	var zeroVal string
-	return zeroVal, nil
-}
-
 func (ec *executionContext) field_Mutation_opportunity_Save_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -20711,70 +20557,6 @@ func (ec *executionContext) field_Mutation_opportunity_SetOwner_argsUserID(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("userId"))
 	if tmp, ok := rawArgs["userId"]; ok {
-		return ec.unmarshalNID2string(ctx, tmp)
-	}
-
-	var zeroVal string
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Mutation_opportunity_Update_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	arg0, err := ec.field_Mutation_opportunity_Update_argsInput(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["input"] = arg0
-	return args, nil
-}
-func (ec *executionContext) field_Mutation_opportunity_Update_argsInput(
-	ctx context.Context,
-	rawArgs map[string]interface{},
-) (model.OpportunityUpdateInput, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["input"]
-	if !ok {
-		var zeroVal model.OpportunityUpdateInput
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNOpportunityUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOpportunityUpdateInput(ctx, tmp)
-	}
-
-	var zeroVal model.OpportunityUpdateInput
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Mutation_organization_AddNewLocation_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	arg0, err := ec.field_Mutation_organization_AddNewLocation_argsOrganizationID(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["organizationId"] = arg0
-	return args, nil
-}
-func (ec *executionContext) field_Mutation_organization_AddNewLocation_argsOrganizationID(
-	ctx context.Context,
-	rawArgs map[string]interface{},
-) (string, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["organizationId"]
-	if !ok {
-		var zeroVal string
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationId"))
-	if tmp, ok := rawArgs["organizationId"]; ok {
 		return ec.unmarshalNID2string(ctx, tmp)
 	}
 
@@ -20902,70 +20684,6 @@ func (ec *executionContext) field_Mutation_organization_AddTag_argsInput(
 	}
 
 	var zeroVal model.OrganizationTagInput
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Mutation_organization_ArchiveAll_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	arg0, err := ec.field_Mutation_organization_ArchiveAll_argsIds(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["ids"] = arg0
-	return args, nil
-}
-func (ec *executionContext) field_Mutation_organization_ArchiveAll_argsIds(
-	ctx context.Context,
-	rawArgs map[string]interface{},
-) ([]string, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["ids"]
-	if !ok {
-		var zeroVal []string
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("ids"))
-	if tmp, ok := rawArgs["ids"]; ok {
-		return ec.unmarshalNID2ᚕstringᚄ(ctx, tmp)
-	}
-
-	var zeroVal []string
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Mutation_organization_Archive_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	arg0, err := ec.field_Mutation_organization_Archive_argsID(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["id"] = arg0
-	return args, nil
-}
-func (ec *executionContext) field_Mutation_organization_Archive_argsID(
-	ctx context.Context,
-	rawArgs map[string]interface{},
-) (string, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["id"]
-	if !ok {
-		var zeroVal string
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-	if tmp, ok := rawArgs["id"]; ok {
-		return ec.unmarshalNID2string(ctx, tmp)
-	}
-
-	var zeroVal string
 	return zeroVal, nil
 }
 
@@ -56452,65 +56170,6 @@ func (ec *executionContext) fieldContext_Mutation_contact_HardDelete(ctx context
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_contact_RestoreFromArchive(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_contact_RestoreFromArchive(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().ContactRestoreFromArchive(rctx, fc.Args["contactId"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.Result)
-	fc.Result = res
-	return ec.marshalNResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐResult(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_contact_RestoreFromArchive(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "result":
-				return ec.fieldContext_Result_result(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Result", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_contact_RestoreFromArchive_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Mutation_contact_Merge(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_contact_Merge(ctx, field)
 	if err != nil {
@@ -65085,159 +64744,6 @@ func (ec *executionContext) fieldContext_Mutation_opportunity_Create(ctx context
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_opportunity_Update(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_opportunity_Update(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().OpportunityUpdate(rctx, fc.Args["input"].(model.OpportunityUpdateInput))
-		}
-
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
-			if err != nil {
-				var zeroVal *model.Opportunity
-				return zeroVal, err
-			}
-			if ec.directives.HasRole == nil {
-				var zeroVal *model.Opportunity
-				return zeroVal, errors.New("directive hasRole is not implemented")
-			}
-			return ec.directives.HasRole(ctx, nil, directive0, roles)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.HasTenant == nil {
-				var zeroVal *model.Opportunity
-				return zeroVal, errors.New("directive hasTenant is not implemented")
-			}
-			return ec.directives.HasTenant(ctx, nil, directive1)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.Opportunity); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.Opportunity`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.Opportunity)
-	fc.Result = res
-	return ec.marshalNOpportunity2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOpportunity(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_opportunity_Update(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "metadata":
-				return ec.fieldContext_Opportunity_metadata(ctx, field)
-			case "name":
-				return ec.fieldContext_Opportunity_name(ctx, field)
-			case "amount":
-				return ec.fieldContext_Opportunity_amount(ctx, field)
-			case "maxAmount":
-				return ec.fieldContext_Opportunity_maxAmount(ctx, field)
-			case "currency":
-				return ec.fieldContext_Opportunity_currency(ctx, field)
-			case "likelihoodRate":
-				return ec.fieldContext_Opportunity_likelihoodRate(ctx, field)
-			case "internalType":
-				return ec.fieldContext_Opportunity_internalType(ctx, field)
-			case "externalType":
-				return ec.fieldContext_Opportunity_externalType(ctx, field)
-			case "internalStage":
-				return ec.fieldContext_Opportunity_internalStage(ctx, field)
-			case "externalStage":
-				return ec.fieldContext_Opportunity_externalStage(ctx, field)
-			case "estimatedClosedAt":
-				return ec.fieldContext_Opportunity_estimatedClosedAt(ctx, field)
-			case "generalNotes":
-				return ec.fieldContext_Opportunity_generalNotes(ctx, field)
-			case "nextSteps":
-				return ec.fieldContext_Opportunity_nextSteps(ctx, field)
-			case "renewedAt":
-				return ec.fieldContext_Opportunity_renewedAt(ctx, field)
-			case "renewalApproved":
-				return ec.fieldContext_Opportunity_renewalApproved(ctx, field)
-			case "renewalLikelihood":
-				return ec.fieldContext_Opportunity_renewalLikelihood(ctx, field)
-			case "renewalUpdatedByUserId":
-				return ec.fieldContext_Opportunity_renewalUpdatedByUserId(ctx, field)
-			case "renewalUpdatedByUserAt":
-				return ec.fieldContext_Opportunity_renewalUpdatedByUserAt(ctx, field)
-			case "renewalAdjustedRate":
-				return ec.fieldContext_Opportunity_renewalAdjustedRate(ctx, field)
-			case "comments":
-				return ec.fieldContext_Opportunity_comments(ctx, field)
-			case "stageLastUpdated":
-				return ec.fieldContext_Opportunity_stageLastUpdated(ctx, field)
-			case "organization":
-				return ec.fieldContext_Opportunity_organization(ctx, field)
-			case "createdBy":
-				return ec.fieldContext_Opportunity_createdBy(ctx, field)
-			case "owner":
-				return ec.fieldContext_Opportunity_owner(ctx, field)
-			case "externalLinks":
-				return ec.fieldContext_Opportunity_externalLinks(ctx, field)
-			case "id":
-				return ec.fieldContext_Opportunity_id(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Opportunity_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_Opportunity_updatedAt(ctx, field)
-			case "source":
-				return ec.fieldContext_Opportunity_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_Opportunity_sourceOfTruth(ctx, field)
-			case "appSource":
-				return ec.fieldContext_Opportunity_appSource(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Opportunity", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_opportunity_Update_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Mutation_opportunity_SetOwner(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_opportunity_SetOwner(ctx, field)
 	if err != nil {
@@ -65325,99 +64831,6 @@ func (ec *executionContext) fieldContext_Mutation_opportunity_SetOwner(ctx conte
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_opportunity_SetOwner_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_opportunity_RemoveOwner(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_opportunity_RemoveOwner(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().OpportunityRemoveOwner(rctx, fc.Args["opportunityId"].(string))
-		}
-
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
-			if err != nil {
-				var zeroVal *model.ActionResponse
-				return zeroVal, err
-			}
-			if ec.directives.HasRole == nil {
-				var zeroVal *model.ActionResponse
-				return zeroVal, errors.New("directive hasRole is not implemented")
-			}
-			return ec.directives.HasRole(ctx, nil, directive0, roles)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.HasTenant == nil {
-				var zeroVal *model.ActionResponse
-				return zeroVal, errors.New("directive hasTenant is not implemented")
-			}
-			return ec.directives.HasTenant(ctx, nil, directive1)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.ActionResponse); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.ActionResponse`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.ActionResponse)
-	fc.Result = res
-	return ec.marshalNActionResponse2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐActionResponse(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_opportunity_RemoveOwner(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "accepted":
-				return ec.fieldContext_ActionResponse_accepted(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type ActionResponse", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_opportunity_RemoveOwner_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -65653,186 +65066,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_Save(ctx context.
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_organization_Save_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_organization_Archive(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_organization_Archive(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().OrganizationArchive(rctx, fc.Args["id"].(string))
-		}
-
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
-			if err != nil {
-				var zeroVal *model.Result
-				return zeroVal, err
-			}
-			if ec.directives.HasRole == nil {
-				var zeroVal *model.Result
-				return zeroVal, errors.New("directive hasRole is not implemented")
-			}
-			return ec.directives.HasRole(ctx, nil, directive0, roles)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.HasTenant == nil {
-				var zeroVal *model.Result
-				return zeroVal, errors.New("directive hasTenant is not implemented")
-			}
-			return ec.directives.HasTenant(ctx, nil, directive1)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.Result); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.Result`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.Result)
-	fc.Result = res
-	return ec.marshalOResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐResult(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_organization_Archive(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "result":
-				return ec.fieldContext_Result_result(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Result", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_organization_Archive_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_organization_ArchiveAll(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_organization_ArchiveAll(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().OrganizationArchiveAll(rctx, fc.Args["ids"].([]string))
-		}
-
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
-			if err != nil {
-				var zeroVal *model.Result
-				return zeroVal, err
-			}
-			if ec.directives.HasRole == nil {
-				var zeroVal *model.Result
-				return zeroVal, errors.New("directive hasRole is not implemented")
-			}
-			return ec.directives.HasRole(ctx, nil, directive0, roles)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.HasTenant == nil {
-				var zeroVal *model.Result
-				return zeroVal, errors.New("directive hasTenant is not implemented")
-			}
-			return ec.directives.HasTenant(ctx, nil, directive1)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.Result); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.Result`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.Result)
-	fc.Result = res
-	return ec.marshalOResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐResult(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_organization_ArchiveAll(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "result":
-				return ec.fieldContext_Result_result(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Result", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_organization_ArchiveAll_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -66896,153 +66129,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveSubsidiary(
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_organization_RemoveSubsidiary_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_organization_AddNewLocation(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_organization_AddNewLocation(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().OrganizationAddNewLocation(rctx, fc.Args["organizationId"].(string))
-		}
-
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
-			if err != nil {
-				var zeroVal *model.Location
-				return zeroVal, err
-			}
-			if ec.directives.HasRole == nil {
-				var zeroVal *model.Location
-				return zeroVal, errors.New("directive hasRole is not implemented")
-			}
-			return ec.directives.HasRole(ctx, nil, directive0, roles)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.HasTenant == nil {
-				var zeroVal *model.Location
-				return zeroVal, errors.New("directive hasTenant is not implemented")
-			}
-			return ec.directives.HasTenant(ctx, nil, directive1)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.Location); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.Location`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.Location)
-	fc.Result = res
-	return ec.marshalNLocation2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐLocation(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_organization_AddNewLocation(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Location_id(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Location_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_Location_updatedAt(ctx, field)
-			case "source":
-				return ec.fieldContext_Location_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_Location_sourceOfTruth(ctx, field)
-			case "appSource":
-				return ec.fieldContext_Location_appSource(ctx, field)
-			case "name":
-				return ec.fieldContext_Location_name(ctx, field)
-			case "rawAddress":
-				return ec.fieldContext_Location_rawAddress(ctx, field)
-			case "country":
-				return ec.fieldContext_Location_country(ctx, field)
-			case "countryCodeA2":
-				return ec.fieldContext_Location_countryCodeA2(ctx, field)
-			case "countryCodeA3":
-				return ec.fieldContext_Location_countryCodeA3(ctx, field)
-			case "region":
-				return ec.fieldContext_Location_region(ctx, field)
-			case "district":
-				return ec.fieldContext_Location_district(ctx, field)
-			case "locality":
-				return ec.fieldContext_Location_locality(ctx, field)
-			case "street":
-				return ec.fieldContext_Location_street(ctx, field)
-			case "address":
-				return ec.fieldContext_Location_address(ctx, field)
-			case "address2":
-				return ec.fieldContext_Location_address2(ctx, field)
-			case "zip":
-				return ec.fieldContext_Location_zip(ctx, field)
-			case "addressType":
-				return ec.fieldContext_Location_addressType(ctx, field)
-			case "houseNumber":
-				return ec.fieldContext_Location_houseNumber(ctx, field)
-			case "postalCode":
-				return ec.fieldContext_Location_postalCode(ctx, field)
-			case "plusFour":
-				return ec.fieldContext_Location_plusFour(ctx, field)
-			case "commercial":
-				return ec.fieldContext_Location_commercial(ctx, field)
-			case "predirection":
-				return ec.fieldContext_Location_predirection(ctx, field)
-			case "latitude":
-				return ec.fieldContext_Location_latitude(ctx, field)
-			case "longitude":
-				return ec.fieldContext_Location_longitude(ctx, field)
-			case "timeZone":
-				return ec.fieldContext_Location_timeZone(ctx, field)
-			case "utcOffset":
-				return ec.fieldContext_Location_utcOffset(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Location", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_organization_AddNewLocation_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -113220,13 +112306,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "contact_RestoreFromArchive":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_contact_RestoreFromArchive(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "contact_Merge":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_contact_Merge(ctx, field)
@@ -113777,23 +112856,9 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "opportunity_Update":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_opportunity_Update(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "opportunity_SetOwner":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_opportunity_SetOwner(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "opportunity_RemoveOwner":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_opportunity_RemoveOwner(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -113805,14 +112870,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "organization_Archive":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_organization_Archive(ctx, field)
-			})
-		case "organization_ArchiveAll":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_organization_ArchiveAll(ctx, field)
-			})
 		case "organization_Hide":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_organization_Hide(ctx, field)
@@ -113852,13 +112909,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "organization_RemoveSubsidiary":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_organization_RemoveSubsidiary(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "organization_AddNewLocation":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_organization_AddNewLocation(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -123152,11 +122202,6 @@ func (ec *executionContext) unmarshalNOpportunityRenewalUpdateInput2githubᚗcom
 
 func (ec *executionContext) unmarshalNOpportunitySaveInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOpportunitySaveInput(ctx context.Context, v interface{}) (model.OpportunitySaveInput, error) {
 	res, err := ec.unmarshalInputOpportunitySaveInput(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) unmarshalNOpportunityUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOpportunityUpdateInput(ctx context.Context, v interface{}) (model.OpportunityUpdateInput, error) {
-	res, err := ec.unmarshalInputOpportunityUpdateInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 

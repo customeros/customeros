@@ -14,7 +14,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
@@ -75,52 +74,6 @@ func (r *mutationResolver) OrganizationSave(ctx context.Context, input model.Org
 	}
 
 	return mapper.MapEntityToOrganization(e), nil
-}
-
-// OrganizationArchive is the resolver for the organization_Archive field.
-func (r *mutationResolver) OrganizationArchive(ctx context.Context, id string) (*model.Result, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationArchive", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.id", id))
-
-	tenant := common.GetTenantFromContext(ctx)
-
-	err := r.Services.CommonServices.OrganizationService.Archive(ctx, nil, tenant, id)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to archive organization %s", id)
-		return &model.Result{
-			Result: false,
-		}, err
-	}
-	return &model.Result{
-		Result: true,
-	}, nil
-}
-
-// OrganizationArchiveAll is the resolver for the organization_ArchiveAll field.
-func (r *mutationResolver) OrganizationArchiveAll(ctx context.Context, ids []string) (*model.Result, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationArchiveAll", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.Object("request.organizationIDs", ids))
-
-	tenant := common.GetTenantFromContext(ctx)
-
-	for _, id := range ids {
-		err := r.Services.CommonServices.OrganizationService.Archive(ctx, nil, tenant, id)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			graphql.AddErrorf(ctx, "Failed to archive organization %s", id)
-			return &model.Result{
-				Result: false,
-			}, err
-		}
-	}
-	return &model.Result{
-		Result: true,
-	}, nil
 }
 
 // OrganizationHide is the resolver for the organization_Hide field.
@@ -297,26 +250,6 @@ func (r *mutationResolver) OrganizationRemoveSubsidiary(ctx context.Context, org
 		return nil, err
 	}
 	return mapper.MapEntityToOrganization(organizationEntity), nil
-}
-
-// OrganizationAddNewLocation is the resolver for the organization_AddNewLocation field.
-func (r *mutationResolver) OrganizationAddNewLocation(ctx context.Context, organizationID string) (*model.Location, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationAddNewLocation", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.organizationID", organizationID))
-
-	locationEntity, err := r.Services.LocationService.CreateLocationForEntity(ctx, commonModel.ORGANIZATION, organizationID, entity.SourceFields{
-		Source:        neo4jentity.DataSourceOpenline,
-		SourceOfTruth: neo4jentity.DataSourceOpenline,
-		AppSource:     constants.AppSourceCustomerOsApi,
-	})
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Error creating location for organization %s", organizationID)
-		return nil, err
-	}
-	return mapper.MapEntityToLocation(locationEntity), nil
 }
 
 // OrganizationAddSocial is the resolver for the organization_AddSocial field.
@@ -768,7 +701,7 @@ func (r *mutationResolver) OrganizationAddTag(ctx context.Context, input model.O
 
 // OrganizationRemoveTag is the resolver for the organization_RemoveTag field.
 func (r *mutationResolver) OrganizationRemoveTag(ctx context.Context, input model.OrganizationTagInput) (*model.ActionResponse, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationAddTag", graphql.GetOperationContext(ctx))
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationRemoveTag", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.Object("request", input))
@@ -779,7 +712,7 @@ func (r *mutationResolver) OrganizationRemoveTag(ctx context.Context, input mode
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Error removing tag from organization")
-		return nil, nil
+		return &model.ActionResponse{Accepted: false}, nil
 	}
 
 	return &model.ActionResponse{Accepted: true}, nil

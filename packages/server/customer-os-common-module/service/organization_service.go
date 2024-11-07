@@ -32,8 +32,6 @@ type OrganizationService interface {
 	Hide(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId string) error
 	Show(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId string) error
 
-	Archive(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId string) error
-
 	GetLatestOrganizationsWithJobRolesForContacts(ctx context.Context, contactIds []string) (*neo4jentity.OrganizationWithJobRoleEntities, error)
 
 	GetHiddenOrganizationIds(ctx context.Context, hiddenAfter time.Time) ([]string, error)
@@ -388,34 +386,6 @@ func (s *organizationService) Show(ctx context.Context, tx *neo4j.ManagedTransac
 	}
 
 	utils.EventCompleted(ctx, tenant, model.ORGANIZATION.String(), organizationId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithCreate())
-
-	return nil
-}
-
-func (s *organizationService) Archive(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.Archive")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.SetTag(tracing.SpanTagEntityId, organizationId)
-
-	organization, err := s.GetById(ctx, tenant, organizationId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-	if organization == nil {
-		err = fmt.Errorf("opportunity not found")
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	err = s.services.Neo4jRepositories.OrganizationWriteRepository.Archive(ctx, tx, tenant, organizationId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	utils.EventCompleted(ctx, tenant, model.ORGANIZATION.String(), organizationId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithDelete())
 
 	return nil
 }
