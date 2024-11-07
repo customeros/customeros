@@ -49,13 +49,18 @@ func (s *mailboxService) AddMailbox(ctx context.Context, domain, username, passw
 
 	// Check user exists for given linked user email
 	linkedUserFound := false
-	userDbNode, err := s.services.Neo4jRepositories.UserReadRepository.GetFirstUserByEmail(ctx, tenant, linkedUserEmail)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error getting user by email"))
-		return err
-	}
-	if userDbNode != nil {
-		linkedUserFound = true
+	userId := ""
+	if linkedUserEmail != "" {
+		userDbNode, err := s.services.Neo4jRepositories.UserReadRepository.GetFirstUserByEmail(ctx, tenant, linkedUserEmail)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "Error getting user by email"))
+			return err
+		}
+		if userDbNode != nil {
+			linkedUserFound = true
+			userEntity := neo4jmapper.MapDbNodeToUserEntity(userDbNode)
+			userId = userEntity.Id
+		}
 	}
 
 	mailboxEmail := username + "@" + domain
@@ -109,14 +114,13 @@ func (s *mailboxService) AddMailbox(ctx context.Context, domain, username, passw
 	// Create email node for registered mailbox
 	if linkedUserFound {
 		// create email node for linked user
-		userEntity := neo4jmapper.MapDbNodeToUserEntity(userDbNode)
 		_, err = s.services.EmailService.Merge(ctx, tenant, EmailFields{
 			Email:     mailboxEmail,
 			Source:    neo4jentity.DataSourceOpenline,
 			AppSource: common.GetAppSourceFromContext(ctx),
 		}, &LinkWith{
 			Type: model.USER,
-			Id:   userEntity.Id,
+			Id:   userId,
 		})
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "Error creating email node for mailbox"))
