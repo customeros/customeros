@@ -183,7 +183,7 @@ export class LinkedinService {
       });
       return { profileUrl, recentPosts };
     } catch (err) {
-      logger.info("Failed to get retrieve recent posts", {
+      logger.info("Failed to retrieve retrieve recent posts", {
         source: "LinkedinService",
       });
       throw LinkedinService.handleError(err);
