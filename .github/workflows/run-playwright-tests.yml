@@ -77,67 +77,67 @@ jobs:
           echo "EOF" >> $GITHUB_OUTPUT
         working-directory: ./packages/apps/frontera
 
-      - name: Create Linear issues for failed tests
-        if: failure()
-        env:
-          LINEAR_API_KEY_SILVIU_FE_TESTS: ${{ secrets.LINEAR_API_KEY_SILVIU_FE_TESTS }}
-          LINEAR_PRODUCT_TEAMID: ${{ secrets.LINEAR_PRODUCT_TEAMID }}
-          LINEAR_LABEL_BUG: ${{ secrets.LINEAR_LABEL_BUG }}
-          LINEAR_USER_SILVIU: ${{ secrets.LINEAR_USER_SILVIU }}
-        run: |
-          cd ./packages/apps/frontera
-          
-          FAILED_TESTS_FILE="failed-tests.txt"
-          if [ ! -f "$FAILED_TESTS_FILE" ] || [ ! -s "$FAILED_TESTS_FILE" ]; then
-            echo "failed-tests.txt not found or empty, using test-results.txt"
-            FAILED_TESTS_FILE="test-results.txt"
-          fi
-          
-          echo "---Content of $FAILED_TESTS_FILE:---"
-          cat "$FAILED_TESTS_FILE"
-          echo "---End of file content---"
-          
-          ISSUE_COUNT=0
-          ISSUE_INFO=""
-          while IFS= read -r line || [ -n "$line" ]; do
-            echo "Processing line: $line"
-            if [[ $line == *"❌"* ]]; then
-              TEST_NAME=$(echo "$line" | sed 's/.*❌[^:]*: //')
-              echo "Creating issue for test: $TEST_NAME"
-          
-              JSON_DATA="{\"query\":\"mutation IssueCreate(\$input: IssueCreateInput!) { issueCreate(input: \$input) { success issue { id title identifier url } } }\",\"variables\":{\"input\":{\"title\":\"[Playwright] $TEST_NAME\",\"description\":\"$TEST_NAME\",\"teamId\":\"$LINEAR_PRODUCT_TEAMID\",\"labelIds\":[\"$LINEAR_LABEL_BUG\"],\"assigneeId\":\"$LINEAR_USER_SILVIU\"}}}"
-          
-              echo "Sending request to Linear API..."
-              RESPONSE=$(curl -s \
-              -X POST \
-              -H "Content-Type: application/json" \
-              -H "Authorization: $LINEAR_API_KEY_SILVIU_FE_TESTS" \
-              --data "$JSON_DATA" \
-              https://api.linear.app/graphql)
-          
-              echo "Linear API Response: $RESPONSE"
-          
-              if echo "$RESPONSE" | grep -q '"success":true'; then
-                echo "Successfully created issue for: $TEST_NAME"
-                ISSUE_COUNT=$((ISSUE_COUNT + 1))
-                IDENTIFIER=$(echo "$RESPONSE" | jq -r '.data.issueCreate.issue.identifier')
-                URL=$(echo "$RESPONSE" | jq -r '.data.issueCreate.issue.url')
-                ISSUE_INFO="${ISSUE_INFO}<${URL}|${IDENTIFIER}: ${TEST_NAME}>\n"
-              else
-                echo "Failed to create issue for: $TEST_NAME"
-                echo "Error response: $RESPONSE"
-                ISSUE_INFO="${ISSUE_INFO}Failed to create Linear issue: ${TEST_NAME}\n"
-              fi
-            else
-              echo "Line does not match pattern, skipping: $line"
-            fi
-          done < "$FAILED_TESTS_FILE"
-          
-          echo "Finished processing failed tests"
-          echo "Total issues created: $ISSUE_COUNT"
-          echo "ISSUE_INFO<<EOF" >> $GITHUB_ENV
-          echo "$ISSUE_INFO" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
+#      - name: Create Linear issues for failed tests
+#        if: failure()
+#        env:
+#          LINEAR_API_KEY_SILVIU_FE_TESTS: ${{ secrets.LINEAR_API_KEY_SILVIU_FE_TESTS }}
+#          LINEAR_PRODUCT_TEAMID: ${{ secrets.LINEAR_PRODUCT_TEAMID }}
+#          LINEAR_LABEL_BUG: ${{ secrets.LINEAR_LABEL_BUG }}
+#          LINEAR_USER_SILVIU: ${{ secrets.LINEAR_USER_SILVIU }}
+#        run: |
+#          cd ./packages/apps/frontera
+#
+#          FAILED_TESTS_FILE="failed-tests.txt"
+#          if [ ! -f "$FAILED_TESTS_FILE" ] || [ ! -s "$FAILED_TESTS_FILE" ]; then
+#            echo "failed-tests.txt not found or empty, using test-results.txt"
+#            FAILED_TESTS_FILE="test-results.txt"
+#          fi
+#
+#          echo "---Content of $FAILED_TESTS_FILE:---"
+#          cat "$FAILED_TESTS_FILE"
+#          echo "---End of file content---"
+#
+#          ISSUE_COUNT=0
+#          ISSUE_INFO=""
+#          while IFS= read -r line || [ -n "$line" ]; do
+#            echo "Processing line: $line"
+#            if [[ $line == *"❌"* ]]; then
+#              TEST_NAME=$(echo "$line" | sed 's/.*❌[^:]*: //')
+#              echo "Creating issue for test: $TEST_NAME"
+#
+#              JSON_DATA="{\"query\":\"mutation IssueCreate(\$input: IssueCreateInput!) { issueCreate(input: \$input) { success issue { id title identifier url } } }\",\"variables\":{\"input\":{\"title\":\"[Playwright] $TEST_NAME\",\"description\":\"$TEST_NAME\",\"teamId\":\"$LINEAR_PRODUCT_TEAMID\",\"labelIds\":[\"$LINEAR_LABEL_BUG\"],\"assigneeId\":\"$LINEAR_USER_SILVIU\"}}}"
+#
+#              echo "Sending request to Linear API..."
+#              RESPONSE=$(curl -s \
+#              -X POST \
+#              -H "Content-Type: application/json" \
+#              -H "Authorization: $LINEAR_API_KEY_SILVIU_FE_TESTS" \
+#              --data "$JSON_DATA" \
+#              https://api.linear.app/graphql)
+#
+#              echo "Linear API Response: $RESPONSE"
+#
+#              if echo "$RESPONSE" | grep -q '"success":true'; then
+#                echo "Successfully created issue for: $TEST_NAME"
+#                ISSUE_COUNT=$((ISSUE_COUNT + 1))
+#                IDENTIFIER=$(echo "$RESPONSE" | jq -r '.data.issueCreate.issue.identifier')
+#                URL=$(echo "$RESPONSE" | jq -r '.data.issueCreate.issue.url')
+#                ISSUE_INFO="${ISSUE_INFO}<${URL}|${IDENTIFIER}: ${TEST_NAME}>\n"
+#              else
+#                echo "Failed to create issue for: $TEST_NAME"
+#                echo "Error response: $RESPONSE"
+#                ISSUE_INFO="${ISSUE_INFO}Failed to create Linear issue: ${TEST_NAME}\n"
+#              fi
+#            else
+#              echo "Line does not match pattern, skipping: $line"
+#            fi
+#          done < "$FAILED_TESTS_FILE"
+#
+#          echo "Finished processing failed tests"
+#          echo "Total issues created: $ISSUE_COUNT"
+#          echo "ISSUE_INFO<<EOF" >> $GITHUB_ENV
+#          echo "$ISSUE_INFO" >> $GITHUB_ENV
+#          echo "EOF" >> $GITHUB_ENV
 
       - name: Send test results to Slack
         if: always()
