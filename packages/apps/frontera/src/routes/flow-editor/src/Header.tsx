@@ -76,6 +76,22 @@ export const Header = observer(
       }
     });
 
+    useEffect(() => {
+      const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+        if (hasChanges) {
+          event.preventDefault();
+
+          return 'You have unsaved changes. If you leave this page, your changes will be lost.';
+        }
+      };
+
+      window.addEventListener('beforeunload', handleBeforeUnload);
+
+      return () => {
+        window.removeEventListener('beforeunload', handleBeforeUnload);
+      };
+    }, [hasChanges]);
+
     const handleSave = () => {
       const nodes = getNodes();
       const edges = getEdges();
