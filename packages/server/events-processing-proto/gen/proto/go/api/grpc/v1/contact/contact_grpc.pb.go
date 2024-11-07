@@ -25,7 +25,6 @@ const _ = grpc.SupportPackageIsVersion7
 type ContactGrpcServiceClient interface {
 	LinkPhoneNumberToContact(ctx context.Context, in *LinkPhoneNumberToContactGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error)
 	LinkLocationToContact(ctx context.Context, in *LinkLocationToContactGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error)
-	RemoveSocial(ctx context.Context, in *ContactRemoveSocialGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error)
 	AddLocation(ctx context.Context, in *ContactAddLocationGrpcRequest, opts ...grpc.CallOption) (*location.LocationIdGrpcResponse, error)
 }
 
@@ -55,15 +54,6 @@ func (c *contactGrpcServiceClient) LinkLocationToContact(ctx context.Context, in
 	return out, nil
 }
 
-func (c *contactGrpcServiceClient) RemoveSocial(ctx context.Context, in *ContactRemoveSocialGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error) {
-	out := new(ContactIdGrpcResponse)
-	err := c.cc.Invoke(ctx, "/contactGrpcService/RemoveSocial", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *contactGrpcServiceClient) AddLocation(ctx context.Context, in *ContactAddLocationGrpcRequest, opts ...grpc.CallOption) (*location.LocationIdGrpcResponse, error) {
 	out := new(location.LocationIdGrpcResponse)
 	err := c.cc.Invoke(ctx, "/contactGrpcService/AddLocation", in, out, opts...)
@@ -79,7 +69,6 @@ func (c *contactGrpcServiceClient) AddLocation(ctx context.Context, in *ContactA
 type ContactGrpcServiceServer interface {
 	LinkPhoneNumberToContact(context.Context, *LinkPhoneNumberToContactGrpcRequest) (*ContactIdGrpcResponse, error)
 	LinkLocationToContact(context.Context, *LinkLocationToContactGrpcRequest) (*ContactIdGrpcResponse, error)
-	RemoveSocial(context.Context, *ContactRemoveSocialGrpcRequest) (*ContactIdGrpcResponse, error)
 	AddLocation(context.Context, *ContactAddLocationGrpcRequest) (*location.LocationIdGrpcResponse, error)
 }
 
@@ -92,9 +81,6 @@ func (UnimplementedContactGrpcServiceServer) LinkPhoneNumberToContact(context.Co
 }
 func (UnimplementedContactGrpcServiceServer) LinkLocationToContact(context.Context, *LinkLocationToContactGrpcRequest) (*ContactIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method LinkLocationToContact not implemented")
-}
-func (UnimplementedContactGrpcServiceServer) RemoveSocial(context.Context, *ContactRemoveSocialGrpcRequest) (*ContactIdGrpcResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RemoveSocial not implemented")
 }
 func (UnimplementedContactGrpcServiceServer) AddLocation(context.Context, *ContactAddLocationGrpcRequest) (*location.LocationIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddLocation not implemented")
@@ -147,24 +133,6 @@ func _ContactGrpcService_LinkLocationToContact_Handler(srv interface{}, ctx cont
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ContactGrpcService_RemoveSocial_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ContactRemoveSocialGrpcRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ContactGrpcServiceServer).RemoveSocial(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/contactGrpcService/RemoveSocial",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ContactGrpcServiceServer).RemoveSocial(ctx, req.(*ContactRemoveSocialGrpcRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _ContactGrpcService_AddLocation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ContactAddLocationGrpcRequest)
 	if err := dec(in); err != nil {
@@ -197,10 +165,6 @@ var ContactGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "LinkLocationToContact",
 			Handler:    _ContactGrpcService_LinkLocationToContact_Handler,
-		},
-		{
-			MethodName: "RemoveSocial",
-			Handler:    _ContactGrpcService_RemoveSocial_Handler,
 		},
 		{
 			MethodName: "AddLocation",

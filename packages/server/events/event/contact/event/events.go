@@ -9,31 +9,11 @@ import (
 
 const (
 	// Deprecated
-	ContactCreateV1 = "V1_CONTACT_CREATE"
-	// Deprecated
-	ContactUpdateV1          = "V1_CONTACT_UPDATE"
 	ContactPhoneNumberLinkV1 = "V1_CONTACT_PHONE_NUMBER_LINK"
 	// Deprecated
-	ContactEmailLinkV1 = "V1_CONTACT_EMAIL_LINK"
-	// Deprecated
-	ContactEmailUnlinkV1  = "V1_CONTACT_EMAIL_UNLINK"
 	ContactLocationLinkV1 = "V1_CONTACT_LOCATION_LINK"
-	// Deprecated
-	ContactOrganizationLinkV1 = "V1_CONTACT_ORGANIZATION_LINK"
-	// Deprecated
-	ContactAddSocialV1    = "V1_CONTACT_ADD_SOCIAL"
-	ContactRemoveSocialV1 = "V1_CONTACT_REMOVE_SOCIAL"
 	//Deprecated
-	ContactAddTagV1 = "V1_CONTACT_ADD_TAG"
-	//Deprecated
-	ContactRemoveTagV1 = "V1_CONTACT_REMOVE_TAG"
-	//Deprecated
-	ContactRequestEnrichV1 = "V1_CONTACT_ENRICH"
-	ContactAddLocationV1   = "V1_CONTACT_ADD_LOCATION"
-	// Deprecated
-	ContactShowV1 = "V1_CONTACT_SHOW"
-	// Deprecated
-	ContactHideV1 = "V1_CONTACT_HIDE"
+	ContactAddLocationV1 = "V1_CONTACT_ADD_LOCATION"
 )
 
 type ContactLinkPhoneNumberEvent struct {

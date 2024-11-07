@@ -108,25 +108,6 @@ func (s *contactService) LinkLocationToContact(ctx context.Context, request *con
 	return &contactpb.ContactIdGrpcResponse{Id: request.ContactId}, nil
 }
 
-func (s *contactService) RemoveSocial(ctx context.Context, request *contactpb.ContactRemoveSocialGrpcRequest) (*contactpb.ContactIdGrpcResponse, error) {
-	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ContactService.RemoveSocial")
-	defer span.Finish()
-	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	tracing.LogObjectAsJson(span, "request", request)
-	span.SetTag(tracing.SpanTagEntityId, request.ContactId)
-
-	initAggregateFunc := func() eventstore.Aggregate {
-		return contact.NewContactAggregateWithTenantAndID(request.Tenant, request.ContactId)
-	}
-	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request); err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("(RemoveSocial.HandleGRPCRequest) tenant:{%s}, contact ID: {%s}, err: %s", request.Tenant, request.ContactId, err.Error())
-		return nil, grpcerr.ErrResponse(err)
-	}
-
-	return &contactpb.ContactIdGrpcResponse{Id: request.ContactId}, nil
-}
-
 func (s *contactService) errResponse(err error) error {
 	return grpcerr.ErrResponse(err)
 }

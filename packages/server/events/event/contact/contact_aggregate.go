@@ -36,41 +36,12 @@ func (a *ContactAggregate) HandleGRPCRequest(ctx context.Context, request any, p
 	defer span.Finish()
 
 	switch r := request.(type) {
-	case *contactpb.ContactRemoveSocialGrpcRequest:
-		return nil, a.removeSocial(ctx, r)
 	case *contactpb.ContactAddLocationGrpcRequest:
 		return a.addLocation(ctx, r)
 	default:
 		tracing.TraceErr(span, eventstore.ErrInvalidRequestType)
 		return nil, eventstore.ErrInvalidRequestType
 	}
-}
-
-func (a *ContactAggregate) removeSocial(ctx context.Context, request *contactpb.ContactRemoveSocialGrpcRequest) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "ContactAggregate.removeSocial")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
-	tracing.LogObjectAsJson(span, "request", request)
-
-	socialId := request.SocialId
-	if socialId == "" {
-		return errors.New("SocialId is required")
-	}
-
-	removeSocialEvent, err := event.NewContactRemoveSocialEvent(a, socialId, request.Url)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewContactRemoveSocialEvent")
-	}
-	eventstore.EnrichEventWithMetadataExtended(&removeSocialEvent, span, eventstore.EventMetadata{
-		Tenant: a.GetTenant(),
-		UserId: request.LoggedInUserId,
-		App:    request.AppSource,
-	})
-
-	return a.Apply(removeSocialEvent)
 }
 
 func (a *ContactAggregate) addLocation(ctx context.Context, request *contactpb.ContactAddLocationGrpcRequest) (string, error) {

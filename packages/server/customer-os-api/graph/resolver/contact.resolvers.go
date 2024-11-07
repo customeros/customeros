@@ -29,7 +29,6 @@ import (
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	postgresrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
-	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	pkgerrors "github.com/pkg/errors"
@@ -622,15 +621,10 @@ func (r *mutationResolver) ContactRemoveSocial(ctx context.Context, contactID st
 	span.LogFields(log.String("request.contactID", contactID), log.String("request.socialID", socialID))
 
 	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err := utils.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
-		return r.Clients.ContactClient.RemoveSocial(ctx, &contactpb.ContactRemoveSocialGrpcRequest{
-			Tenant:         common.GetTenantFromContext(ctx),
-			LoggedInUserId: common.GetUserIdFromContext(ctx),
-			ContactId:      contactID,
-			SocialId:       socialID,
-			AppSource:      constants.AppSourceCustomerOsApi,
-		})
-	})
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	err := r.Services.CommonServices.Neo4jRepositories.SocialWriteRepository.RemoveSocialForEntityById(ctx, tenant, contactID, commonmodel.NodeLabelContact, socialID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to remove social %s from contact %s", socialID, contactID)

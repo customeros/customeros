@@ -27,15 +27,6 @@ message LinkLocationToContactGrpcRequest {
   string appSource = 5;
 }
 
-message ContactRemoveSocialGrpcRequest {
-  string tenant = 1;
-  string contactId = 2;
-  string loggedInUserId = 3;
-  string appSource = 4;
-  string socialId = 5; // The id of the social, used to identify the social
-  string url = 6; // The url of the social, used to identify the social if missing socialId
-}
-
 message ContactAddLocationGrpcRequest {
   string tenant = 1;
   string contactId = 2;
@@ -53,6 +44,5 @@ message ContactIdGrpcResponse {
 service contactGrpcService {
   rpc LinkPhoneNumberToContact(LinkPhoneNumberToContactGrpcRequest) returns (ContactIdGrpcResponse);
   rpc LinkLocationToContact(LinkLocationToContactGrpcRequest) returns (ContactIdGrpcResponse);
-  rpc RemoveSocial(ContactRemoveSocialGrpcRequest) returns (ContactIdGrpcResponse);
   rpc AddLocation(ContactAddLocationGrpcRequest) returns (LocationIdGrpcResponse);
 }

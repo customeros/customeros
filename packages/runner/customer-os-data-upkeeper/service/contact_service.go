@@ -106,14 +106,7 @@ func (s *contactService) removeEmptySocials(ctx context.Context) {
 
 		//remove socials from contact
 		for _, record := range records {
-			_, err = utils.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
-				return s.commonServices.GrpcClients.ContactClient.RemoveSocial(ctx, &contactpb.ContactRemoveSocialGrpcRequest{
-					Tenant:    record.Tenant,
-					ContactId: record.LinkedEntityId,
-					SocialId:  record.SocialId,
-					AppSource: constants.AppSourceDataUpkeeper,
-				})
-			})
+			err := s.commonServices.Neo4jRepositories.SocialWriteRepository.RemoveSocialForEntityById(ctx, record.Tenant, record.LinkedEntityId, model.NodeLabelContact, record.SocialId)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error removing social {%s}: %s", record.SocialId, err.Error())
@@ -161,14 +154,11 @@ func (s *contactService) removeDuplicatedSocials(ctx context.Context) {
 
 		//remove socials from contact
 		for _, record := range records {
-			_, err = utils.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
-				return s.commonServices.GrpcClients.ContactClient.RemoveSocial(ctx, &contactpb.ContactRemoveSocialGrpcRequest{
-					Tenant:    record.Tenant,
-					ContactId: record.LinkedEntityId,
-					SocialId:  record.SocialId,
-					AppSource: constants.AppSourceDataUpkeeper,
-				})
-			})
+			err := s.commonServices.Neo4jRepositories.SocialWriteRepository.RemoveSocialForEntityById(ctx, record.Tenant, record.LinkedEntityId, model.NodeLabelContact, record.SocialId)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("Error removing social {%s}: %s", record.SocialId, err.Error())
+			}
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error removing social {%s}: %s", record.SocialId, err.Error())

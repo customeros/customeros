@@ -181,7 +181,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		emailevents.EmailUpsertV1,
 		orgevents.OrganizationRefreshLastTouchpointV1,
 		phonenumberevents.PhoneNumberValidationSkippedV1,
-		contactevent.ContactRequestEnrichV1,
 		orgevents.OrganizationRequestRenewalForecastV1,
 		orgevents.OrganizationRequestNextCycleDateV1,
 		orgevents.OrganizationUpdateRenewalLikelihoodV1,
@@ -214,18 +213,8 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		logentryevents.LogEntryAddTagV1,
 		logentryevents.LogEntryRemoveTagV1,
 		invoiceevents.InvoiceUpdateV1,
-		contactevent.ContactAddSocialV1,
-		contactevent.ContactCreateV1,
-		contactevent.ContactUpdateV1,
-		contactevent.ContactHideV1,
-		contactevent.ContactShowV1,
-		contactevent.ContactEmailLinkV1,
-		contactevent.ContactEmailUnlinkV1,
-		contactevent.ContactAddTagV1,
-		contactevent.ContactOrganizationLinkV1,
 		contractevent.ContractCreateV1,
-		contractevent.ContractUpdateV1,
-		contactevent.ContactRemoveTagV1:
+		contractevent.ContractUpdateV1:
 
 		return nil
 	}
@@ -265,8 +254,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 	case contactevent.ContactLocationLinkV1:
 		_ = s.contactEventHandler.OnLocationLinkToContact(ctx, evt)
 		return nil
-	case contactevent.ContactRemoveSocialV1:
-		_ = s.contactEventHandler.OnSocialRemovedFromContactV1(ctx, evt)
 		return nil
 	case contactevent.ContactAddLocationV1:
 		_ = s.contactEventHandler.OnLocationAddedToContact(ctx, evt)

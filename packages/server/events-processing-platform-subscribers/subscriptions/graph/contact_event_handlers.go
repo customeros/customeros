@@ -70,39 +70,6 @@ func (h *ContactEventHandler) OnLocationLinkToContact(ctx context.Context, evt e
 	return err
 }
 
-func (h *ContactEventHandler) OnSocialRemovedFromContactV1(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactEventHandler.OnSocialRemovedFromContactV1")
-	defer span.Finish()
-	setEventSpanTagsAndLogFields(span, evt)
-
-	var eventData event.ContactRemoveSocialEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "evt.GetJsonData")
-	}
-	contactId := contact.GetContactObjectID(evt.AggregateID, eventData.Tenant)
-	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
-	span.SetTag(tracing.SpanTagEntityId, contactId)
-
-	if eventData.SocialId != "" {
-		err := h.services.CommonServices.Neo4jRepositories.SocialWriteRepository.RemoveSocialForEntityById(ctx, eventData.Tenant, contactId, model.NodeLabelContact, eventData.SocialId)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil
-		}
-	} else {
-		err := h.services.CommonServices.Neo4jRepositories.SocialWriteRepository.RemoveSocialForEntityByUrl(ctx, eventData.Tenant, contactId, model.NodeLabelContact, eventData.Url)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil
-		}
-	}
-
-	utils.EventCompleted(ctx, eventData.Tenant, model.CONTACT.String(), contactId, h.grpcClients, utils.NewEventCompletedDetails().WithUpdate())
-
-	return nil
-}
-
 func (h *ContactEventHandler) OnLocationAddedToContact(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactEventHandler.OnLocationAddedToContact")
 	defer span.Finish()
