@@ -6,8 +6,6 @@ import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
-	eventcompletionpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/event_completion"
-	"google.golang.org/protobuf/types/known/emptypb"
 	"testing"
 	"time"
 
@@ -1202,55 +1200,6 @@ func TestQueryResolver_Organization_WithContracts(t *testing.T) {
 	require.Equal(t, "invoice note 2", *secondContract.InvoiceNote)
 }
 
-func TestMutationResolver_OrganizationArchive(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-
-	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "LLC LLC")
-	locationId := neo4jt.CreateLocation(ctx, driver, tenantName, neo4jentity.LocationEntity{
-		Source: "manual",
-	})
-	neo4jt.OrganizationAssociatedWithLocation(ctx, driver, organizationId, locationId)
-
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Location"))
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
-
-	// prepare grpc mock
-	callbacks := events_platform.MockEventCompletionCallbacks{
-		NotifyEventProcessed: func(context context.Context, org *eventcompletionpb.NotifyEventProcessedRequest) (*emptypb.Empty, error) {
-			return &emptypb.Empty{}, nil
-		},
-	}
-	events_platform.SetEventCompletionServiceCallbacks(&callbacks)
-
-	rawResponse, err := c.RawPost(getQuery("organization/archive_organization"),
-		client.Var("organizationId", organizationId))
-	assertRawResponseSuccess(t, rawResponse, err)
-
-	var result struct {
-		Organization_Archive model.Result
-	}
-
-	err = decode.Decode(rawResponse.Data.(map[string]any), &result)
-	require.Nil(t, err)
-	require.NotNil(t, result)
-	require.Equal(t, true, result.Organization_Archive.Result)
-
-	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{
-		"Organization":                       1,
-		"Organization_" + tenantName:         0,
-		"ArchivedOrganization":               0,
-		"ArchivedOrganization_" + tenantName: 1,
-	})
-	neo4jtest.AssertNeo4jRelationCount(ctx, t, driver, map[string]int{
-		"ARCHIVED":                       1,
-		"ORGANIZATION_BELONGS_TO_TENANT": 0,
-	})
-
-	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Organization", "ArchivedOrganization_" + tenantName, "Location", "Location_" + tenantName})
-}
-
 //func TestMutationResolver_OrganizationMerge_Properties(t *testing.T) {
 //	ctx := context.Background()
 //	defer tearDownTestCase(ctx)(t)
@@ -1481,37 +1430,6 @@ func TestMutationResolver_OrganizationRemoveSubsidiary(t *testing.T) {
 	require.Equal(t, parentOrgId, organization.ID)
 	require.True(t, calledRemoveParent)
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 2})
-}
-
-func TestMutationResolver_OrganizationAddNewLocation(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-
-	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "org name")
-
-	rawResponse := callGraphQL(t, "organization/add_new_location_to_organization",
-		map[string]interface{}{"organizationId": organizationId})
-
-	var organizationStruct struct {
-		Organization_AddNewLocation model.Location
-	}
-
-	err := decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
-	require.Nil(t, err)
-	require.NotNil(t, organizationStruct)
-	location := organizationStruct.Organization_AddNewLocation
-	require.NotNil(t, location.ID)
-	require.NotNil(t, location.CreatedAt)
-	require.NotNil(t, location.UpdatedAt)
-	require.Equal(t, constants.AppSourceCustomerOsApi, location.AppSource)
-	require.Equal(t, model.DataSourceOpenline, location.Source)
-	require.Equal(t, model.DataSourceOpenline, location.SourceOfTruth)
-
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Location"))
-	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "ASSOCIATED_WITH"))
-	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Location", "Location_" + tenantName, "Organization", "Organization_" + tenantName})
 }
 
 func TestMutationResolver_OrganizationSetOwner_NewOwner(t *testing.T) {

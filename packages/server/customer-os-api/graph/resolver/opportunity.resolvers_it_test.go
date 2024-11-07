@@ -13,9 +13,7 @@ import (
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/types/known/timestamppb"
 	"testing"
-	"time"
 )
 
 func TestQueryResolver_OpportunityForContract(t *testing.T) {
@@ -107,57 +105,6 @@ func TestQueryResolver_OpportunityForOrganization(t *testing.T) {
 	require.Equal(t, "external stage", opportunity.ExternalStage)
 	require.NotNil(t, opportunity.Organization)
 	require.Equal(t, orgId, opportunity.Organization.Metadata.ID)
-}
-
-func TestMutationResolver_OpportunityUpdate(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
-
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
-	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
-	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{})
-	opportunityId := neo4jtest.CreateOpportunityForContract(ctx, driver, tenantName, contractId, neo4jentity.OpportunityEntity{})
-	calledUpdateOpportunity := false
-
-	opportunityServiceCallbacks := events_platform.MockOpportunityServiceCallbacks{
-		UpdateOpportunity: func(context context.Context, opportunity *opportunitypb.UpdateOpportunityGrpcRequest) (*opportunitypb.OpportunityIdGrpcResponse, error) {
-			require.Equal(t, tenantName, opportunity.Tenant)
-			require.Equal(t, opportunityId, opportunity.Id)
-			require.Equal(t, testUserId, opportunity.LoggedInUserId)
-			require.Equal(t, string(neo4jentity.DataSourceOpenline), opportunity.SourceFields.Source)
-			require.Equal(t, "Updated Opportunity", opportunity.Name)
-			require.Equal(t, float64(100), opportunity.Amount)
-			require.Equal(t, "external type", opportunity.ExternalType)
-			require.Equal(t, "external stage", opportunity.ExternalStage)
-			estimatedCloseAt, err := time.Parse(time.RFC3339, "2019-03-01T00:00:00Z")
-			if err != nil {
-				t.Fatalf("Failed to parse expected timestamp: %v", err)
-			}
-			require.Equal(t, timestamppb.New(estimatedCloseAt), opportunity.EstimatedCloseDate)
-			calledUpdateOpportunity = true
-			return &opportunitypb.OpportunityIdGrpcResponse{
-				Id: opportunityId,
-			}, nil
-		},
-	}
-	events_platform.SetOpportunityCallbacks(&opportunityServiceCallbacks)
-
-	rawResponse := callGraphQL(t, "opportunity/update_opportunity", map[string]interface{}{
-		"opportunityId": opportunityId,
-	})
-
-	var opportunityStruct struct {
-		Opportunity_Update model.Opportunity
-	}
-
-	require.Nil(t, rawResponse.Errors)
-	err := decode.Decode(rawResponse.Data.(map[string]any), &opportunityStruct)
-	require.Nil(t, err)
-	opportunity := opportunityStruct.Opportunity_Update
-	require.Equal(t, opportunityId, opportunity.ID)
-
-	require.True(t, calledUpdateOpportunity)
 }
 
 func TestMutationResolver_OpportunityRenewalUpdate(t *testing.T) {

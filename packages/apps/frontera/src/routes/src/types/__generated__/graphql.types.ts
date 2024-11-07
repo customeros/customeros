@@ -2373,9 +2373,7 @@ export type Mutation = {
   opportunityRenewalUpdate: Opportunity;
   opportunityRenewal_UpdateAllForOrganization: Organization;
   opportunity_Archive: ActionResponse;
-  opportunity_Create: Opportunity;
   opportunity_Save: Opportunity;
-  opportunity_SetOwner: ActionResponse;
   organization_AddSocial: Social;
   organization_AddSubsidiary: Organization;
   /** @deprecated No longer supported */
@@ -2897,17 +2895,8 @@ export type MutationOpportunity_ArchiveArgs = {
   id: Scalars['ID']['input'];
 };
 
-export type MutationOpportunity_CreateArgs = {
-  input: OpportunityCreateInput;
-};
-
 export type MutationOpportunity_SaveArgs = {
   input: OpportunitySaveInput;
-};
-
-export type MutationOpportunity_SetOwnerArgs = {
-  opportunityId: Scalars['ID']['input'];
-  userId: Scalars['ID']['input'];
 };
 
 export type MutationOrganization_AddSocialArgs = {

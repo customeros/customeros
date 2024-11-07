@@ -117,48 +117,6 @@ func (r *mutationResolver) OpportunityRenewalUpdateAllForOrganization(ctx contex
 	return mapper.MapEntityToOrganization(organizationEntity), nil
 }
 
-// OpportunityCreate is the resolver for the opportunity_Create field.
-func (r *mutationResolver) OpportunityCreate(ctx context.Context, input model.OpportunityCreateInput) (*model.Opportunity, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OpportunityCreate", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.input", input)
-
-	tenant := common.GetTenantFromContext(ctx)
-
-	opportunityId, err := r.Services.OpportunityService.Create(ctx, input)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to create opportunity")
-		return nil, nil
-	}
-
-	opportunityEntity, err := r.Services.CommonServices.OpportunityService.GetById(ctx, tenant, opportunityId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed fetching opportunity details. Opportunity id: %s", opportunityId)
-		return &model.Opportunity{Metadata: &model.Metadata{ID: opportunityId}}, nil
-	}
-
-	return mapper.MapEntityToOpportunity(opportunityEntity), nil
-}
-
-// OpportunitySetOwner is the resolver for the opportunity_SetOwner field.
-func (r *mutationResolver) OpportunitySetOwner(ctx context.Context, opportunityID string, userID string) (*model.ActionResponse, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OpportunitySetOwner", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.opportunityID", opportunityID), log.String("request.userID", userID))
-
-	err := r.Services.OpportunityService.ReplaceOwner(ctx, opportunityID, userID)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to set owner %s for opportunity %s", userID, opportunityID)
-		return &model.ActionResponse{Accepted: false}, nil
-	}
-	return &model.ActionResponse{Accepted: false}, nil
-}
-
 // Organization is the resolver for the organization field.
 func (r *opportunityResolver) Organization(ctx context.Context, obj *model.Opportunity) (*model.Organization, error) {
 	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))

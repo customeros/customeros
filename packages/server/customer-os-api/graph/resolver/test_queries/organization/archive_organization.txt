@@ -1,6 +1,0 @@
-mutation ArchiveOrganization($organizationId: ID!) {
-  organization_Archive(id: $organizationId)
-    {
-      result
-    }
-}

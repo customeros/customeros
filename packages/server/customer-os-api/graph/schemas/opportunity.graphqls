@@ -8,10 +8,6 @@ extend type Mutation {
 
     opportunityRenewalUpdate(input: OpportunityRenewalUpdateInput!, ownerUserId: ID): Opportunity!
     opportunityRenewal_UpdateAllForOrganization(input: OpportunityRenewalUpdateAllForOrganizationInput!): Organization!
-
-    #TODO: Remove these after UI migration
-    opportunity_Create(input: OpportunityCreateInput!): Opportunity! @hasRole(roles: [ADMIN, USER]) @hasTenant #Deprecated
-    opportunity_SetOwner(opportunityId: ID!, userId: ID!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant #Deprecated
 }
 
 type Opportunity implements MetadataInterface {
