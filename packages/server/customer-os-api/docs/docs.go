@@ -1928,6 +1928,11 @@ const docTemplate = `{
                     "description": "IsRoleMailbox indicates if the email belongs to a role (e.g., info@, support@)",
                     "type": "boolean",
                     "example": false
+                },
+                "isSystemGenerated": {
+                    "description": "IsSystemGenerated indicates if the email is system-generated",
+                    "type": "boolean",
+                    "example": false
                 }
             }
         },

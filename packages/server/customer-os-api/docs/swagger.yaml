@@ -861,6 +861,10 @@ definitions:
           info@, support@)
         example: false
         type: boolean
+      isSystemGenerated:
+        description: IsSystemGenerated indicates if the email is system-generated
+        example: false
+        type: boolean
     type: object
   restverify.EmailVerificationSyntax:
     properties:
