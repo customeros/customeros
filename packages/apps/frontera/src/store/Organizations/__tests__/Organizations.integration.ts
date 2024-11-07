@@ -4,12 +4,6 @@ import { Transport } from '../../transport';
 import { OrganizationsService } from '../__service__/Organizations.service';
 
 const transport = new Transport();
-
-transport.setHeaders({
-  'X-OPENLINE-API-KEY': import.meta.env.VITE_TEST_API_KEY as string,
-  'X-OPENLINE-USERNAME': import.meta.env.VITE_TEST_USERNAME as string,
-});
-
 const service = OrganizationsService.getInstance(transport);
 
 describe('OrganizationsService - Integration Tests', () => {
