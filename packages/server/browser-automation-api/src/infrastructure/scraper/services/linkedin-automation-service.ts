@@ -303,7 +303,7 @@ export class LinkedinAutomationService {
   }
 
   async retrieveMessages(profileUrl: string) {
-    const browser = await Browser.getFreshInstance(this.proxyConfig, {debug:true});
+    const browser = await Browser.getFreshInstance(this.proxyConfig);
     const context = await browser.newContext({
       userAgent: this.userAgent,
     });
@@ -353,7 +353,6 @@ export class LinkedinAutomationService {
               const messageData = {
                 name: `${sender.participantType.member.firstName.text} ${sender.participantType.member.lastName.text}`,
                 time: new Date(element.deliveredAt).toISOString(),
-                timeIndex: 1,
                 message: element.body?.text || ''
               };
               messages.push(messageData);
