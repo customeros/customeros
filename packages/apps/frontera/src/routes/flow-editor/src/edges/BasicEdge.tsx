@@ -1,17 +1,15 @@
 import { MouseEventHandler } from 'react';
 
-import { useKey } from 'rooks';
 import { observer } from 'mobx-react-lite';
 import {
   BaseEdge,
   EdgeProps,
-  useReactFlow,
   getSmoothStepPath,
   EdgeLabelRenderer,
 } from '@xyflow/react';
 
-import { cn } from '@ui/utils/cn.ts';
-import { Plus } from '@ui/media/icons/Plus.tsx';
+import { cn } from '@ui/utils/cn';
+import { Plus } from '@ui/media/icons/Plus';
 import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
 
@@ -20,13 +18,10 @@ import { StepViewportPortal } from './StepViewportPortal';
 export const BasicEdge: React.FC<
   EdgeProps & { data: Record<string, boolean | string> }
 > = observer(({ id, data, ...props }) => {
-  const { setEdges } = useReactFlow();
   const [edgePath, labelX, labelY] = getSmoothStepPath({
     ...props,
   });
   const { ui } = useStore();
-
-  const selected = props.selected;
 
   const toggleOpen: MouseEventHandler<HTMLButtonElement> = (e) => {
     e.stopPropagation();
@@ -48,14 +43,6 @@ export const BasicEdge: React.FC<
       },
     });
   };
-
-  const handleDisconnectSteps = () => {
-    setEdges((edges) => edges.filter((edge) => edge.id !== id));
-  };
-
-  useKey('Backspace', handleDisconnectSteps, {
-    when: selected,
-  });
 
   return (
     <>
@@ -90,7 +77,7 @@ export const BasicEdge: React.FC<
               />
             }
             className={cn(
-              'bg-gray-300 border-4 border-white text-transparent hover:bg-gray-700 hover:text-white focus:bg-inherit focus:text-inherit  rounded-full scale-[0.3635] transition-all ease-in-out ',
+              'bg-gray-300 border-4 border-white text-transparent hover:bg-gray-700 hover:text-white focus:bg-inherit focus:text-inherit rounded-full scale-[0.3635] transition-all ease-in-out ',
               {
                 'scale-100 !bg-gray-700 text-white border-2':
                   data?.isHovered ||
