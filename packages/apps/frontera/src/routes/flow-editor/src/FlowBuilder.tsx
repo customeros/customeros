@@ -281,7 +281,10 @@ export const FlowBuilder = observer(
               e.type === 'add' || e.type === 'remove' || e.type === 'replace',
           )
         ) {
-          onHasNewChanges();
+          // avoid setting new changes flag  to true on nodes init
+          if (nodes.length !== changes.length) {
+            onHasNewChanges();
+          }
         }
 
         // Check if we need to open the side panel

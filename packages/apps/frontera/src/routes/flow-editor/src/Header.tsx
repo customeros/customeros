@@ -81,7 +81,7 @@ export const Header = observer(
         if (hasChanges) {
           event.preventDefault();
 
-          return 'You have unsaved changes. If you leave this page, your changes will be lost.';
+          return `The changes you've made may not be saved`;
         }
       };
 
