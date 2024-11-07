@@ -80,20 +80,31 @@ export const CustomFieldModal = observer(
     const store = useStore();
     const [searchParams] = useSearchParams();
     const [name, setName] = useState<string>('');
-    const [selectedOption, setSelectedOption] = useState(options[0]);
+
+    const [selectedOption, setSelectedOption] = useState(() => {
+      if (isEdit) {
+        const fieldType = store.customFields.value.get(fieldId || '')?.value
+          .template?.type;
+
+        return options.find((option) => option.id === fieldType) || options[0];
+      }
+
+      return options[0];
+    });
     const [isHovered, setIsHovered] = useState<string | null>(null);
 
     const [newOption, setnewOptions] = useState<
       { id: string; value: string; label: string }[]
-    >(
-      () =>
-        store.customFields.value
-          .get(fieldId || '')
-          ?.value?.template?.validValues?.map((option) => ({
-            value: option,
-            label: option,
-            id: `option-${crypto.randomUUID()}`,
-          })) || [],
+    >(() =>
+      isEdit
+        ? store.customFields.value
+            .get(fieldId || '')
+            ?.value?.template?.validValues?.map((option) => ({
+              value: option,
+              label: option,
+              id: `option-${crypto.randomUUID()}`,
+            })) || []
+        : [],
     );
 
     const Option = ({ children, ...props }: OptionProps) => {
@@ -165,20 +176,21 @@ export const CustomFieldModal = observer(
           <ModalOverlay className='z-[99]' />
           <ModalFeaturedContent className='z-[99]'>
             <ModalFeaturedHeader>
-              <p className='text-lg font-semibold mb-1'>{title}</p>
+              <p className='text-lg font-semibold'>{title}</p>
               <ModalCloseButton asChild />
             </ModalFeaturedHeader>
             <ModalCloseButton />
-            <ModalBody className='flex flex-col gap-4'>
+            <ModalBody className='flex flex-col gap-4 '>
               <div className='flex flex-col gap-2'>
                 <div>
                   {!isEdit ? (
                     <>
-                      <label htmlFor='type' className='font-medium'>
+                      <label htmlFor='type' className='font-medium text-sm'>
                         Type
                       </label>
                       <Select
                         id='type'
+                        className='mt-1'
                         autoFocus={false}
                         defaultValue={options[0]}
                         components={{ Option, ValueContainer }}
@@ -206,12 +218,13 @@ export const CustomFieldModal = observer(
                   )}
                 </div>
                 <div>
-                  <label htmlFor='name' className='font-medium'>
+                  <label htmlFor='name' className='font-medium text-sm'>
                     Name
                   </label>
                   <Input
                     id='name'
                     size='sm'
+                    className='mt-1'
                     variant='outline'
                     placeholder='Custom field name'
                     defaultValue={customField?.value.name}
@@ -226,7 +239,7 @@ export const CustomFieldModal = observer(
                 {selectedOption?.id ===
                   CustomFieldTemplateType.SingleSelect && (
                   <div className='mt-2 flex flex-col'>
-                    <label htmlFor='options' className='font-medium'>
+                    <label htmlFor='options' className='font-medium text-sm'>
                       Options
                     </label>
                     <DragDropContext
@@ -260,14 +273,16 @@ export const CustomFieldModal = observer(
                             {...provided.draggableProps}
                             {...provided.dragHandleProps}
                           >
-                            <HandleDrag className='absolute bottom-2.5 left-1.5' />
+                            <HandleDrag className='absolute bottom-2.5 left-[7px]' />
                             <Input
                               size='sm'
+                              className='pl-8'
                               variant='outline'
                               placeholder='Option'
-                              className='my-0.5 pl-6'
                               id={`option-${rubric.source.index}`}
-                              value={newOption[rubric.source.index].label}
+                              defaultValue={
+                                newOption[rubric.source.index].label
+                              }
                             />
                           </div>
                         )}
@@ -308,6 +323,18 @@ export const CustomFieldModal = observer(
                           },
                         ])
                       }
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          setnewOptions([
+                            ...newOption,
+                            {
+                              value: '',
+                              label: '',
+                              id: `option-${crypto.randomUUID()}`,
+                            },
+                          ]);
+                        }
+                      }}
                     >
                       Add option
                     </Button>
@@ -316,7 +343,7 @@ export const CustomFieldModal = observer(
               </div>
             </ModalBody>
             <ModalFooter className='flex gap-3'>
-              <ModalClose className='w-full'>
+              <ModalClose asChild className='w-full'>
                 <Button className='w-full'>Cancel</Button>
               </ModalClose>
               <Button
@@ -332,7 +359,7 @@ export const CustomFieldModal = observer(
                       entityType: EntityType.Organization,
                       type: selectedOption.id as CustomFieldTemplateType,
                       validValues:
-                        selectedOption.id ===
+                        selectedOption?.id ===
                         CustomFieldTemplateType.SingleSelect
                           ? newOption.map((option) => option.value)
                           : null,

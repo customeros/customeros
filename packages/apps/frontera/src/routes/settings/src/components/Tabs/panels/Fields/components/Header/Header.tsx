@@ -59,7 +59,7 @@ export const Header = ({
 
   return (
     <>
-      <div className='flex items-center justify-between'>
+      <div className='flex items-center justify-between pb-2 pt-[5px] sticky top-0 bg-gray-25 z-10'>
         <h1 className='font-medium'>{title}</h1>
         <Button
           size='xs'
@@ -76,7 +76,7 @@ export const Header = ({
           <Button
             size='sm'
             onClick={handleItemClick('custom')}
-            className={`w-[50%] ${dynamicClassesCustom}`}
+            className={`w-[50%] ${dynamicClassesCustom} !border-r-[1px]`}
           >
             Custom • {numberOfCustomFields}
           </Button>
@@ -88,13 +88,14 @@ export const Header = ({
             Core • {numberOfCoreFields}
           </Button>
         </ButtonGroup>
-        <InputGroup className='hover:border-transparent focus-within:border-transparent focus-within:hover:border-transparent'>
+        <InputGroup className=''>
           <LeftElement>
             <SearchSm className='text-gray-500' />
           </LeftElement>
           <Input
+            size='sm'
             variant='unstyled'
-            placeholder='Search fields'
+            placeholder='Search fields...'
             onChange={(e) => handleSearch(e)}
             value={searchParams?.get('search') || ''}
           />

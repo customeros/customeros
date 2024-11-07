@@ -32,21 +32,22 @@ export const DraggableItem = ({
     <Draggable index={index} key={option.id} draggableId={option.id}>
       {(provided) => (
         <div
+          key={option.id}
           ref={provided.innerRef}
           {...provided.draggableProps}
           {...provided.dragHandleProps}
-          className='flex relative'
+          className='flex relative mt-1'
           onMouseLeave={() => setIsHovered(null)}
           onMouseEnter={() => setIsHovered(option.id)}
         >
-          <HandleDrag className='absolute bottom-2.5 left-1.5' />
+          <HandleDrag className='absolute bottom-2.5 left-[7px]' />
           <Input
             size='sm'
             variant='outline'
             value={option.label}
             placeholder='Option'
             id={`option-${index}`}
-            className='my-0.5 pl-6'
+            className='my-0.5 pl-8'
             onChange={(e) => {
               const newOptions = [...newOption];
 
@@ -64,7 +65,7 @@ export const DraggableItem = ({
               icon={<X />}
               variant='ghost'
               aria-label='delete option'
-              className='absolute right-2 transform translate-y-[45%]'
+              className='absolute right-2 transform translate-y-[43%]'
               onClick={() => {
                 newOption.splice(index, 1);
                 setnewOptions([...newOption]);

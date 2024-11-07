@@ -18,7 +18,7 @@ export type fieldType = {
   columnAccesor: ColumnViewType;
   fieldType: CustomFieldTemplateType | 'multi-select' | 'date';
   groupOptions?: { label: string; options: { id: string; label: string }[] };
-  fieldTypeName: 'Text' | 'Number' | 'Date' | 'Single Select' | 'Multi Select';
+  fieldTypeName: 'Text' | 'Number' | 'Date' | 'Single select' | 'Multi select';
 };
 
 import { uniqBy } from 'lodash';
@@ -46,7 +46,7 @@ export const getDefaultFieldTypes = (store?: RootStore) => {
     },
     [ColumnViewType.OrganizationsRelationship]: {
       fieldType: CustomFieldTemplateType.SingleSelect,
-      fieldTypeName: 'Single Select',
+      fieldTypeName: 'Single select',
       fieldName: 'Relationship',
       columnAccesor: ColumnViewType.OrganizationsRelationship,
       icon: <RadioButton />,
@@ -71,7 +71,7 @@ export const getDefaultFieldTypes = (store?: RootStore) => {
     },
     [ColumnViewType.OrganizationsRenewalLikelihood]: {
       fieldType: CustomFieldTemplateType.SingleSelect,
-      fieldTypeName: 'Single Select',
+      fieldTypeName: 'Single select',
       fieldName: 'Health',
       columnAccesor: ColumnViewType.OrganizationsRenewalLikelihood,
       icon: <RadioButton />,
@@ -84,7 +84,7 @@ export const getDefaultFieldTypes = (store?: RootStore) => {
     },
     [ColumnViewType.OrganizationsOnboardingStatus]: {
       fieldType: CustomFieldTemplateType.SingleSelect,
-      fieldTypeName: 'Single Select',
+      fieldTypeName: 'Single select',
       fieldName: 'Onboarding status',
       columnAccesor: ColumnViewType.OrganizationsOnboardingStatus,
       icon: <RadioButton />,
@@ -136,7 +136,7 @@ export const getDefaultFieldTypes = (store?: RootStore) => {
     },
     [ColumnViewType.OrganizationsOwner]: {
       fieldType: CustomFieldTemplateType.SingleSelect,
-      fieldTypeName: 'Single Select',
+      fieldTypeName: 'Single select',
       fieldName: 'Owner',
       columnAccesor: ColumnViewType.OrganizationsOwner,
       icon: <RadioButton />,
@@ -184,7 +184,7 @@ export const getDefaultFieldTypes = (store?: RootStore) => {
     },
     [ColumnViewType.OrganizationsLastTouchpoint]: {
       fieldType: CustomFieldTemplateType.SingleSelect,
-      fieldTypeName: 'Single Select',
+      fieldTypeName: 'Single select',
       fieldName: 'Last touchpoint',
       columnAccesor: ColumnViewType.OrganizationsLastTouchpoint,
       icon: <RadioButton />,
@@ -230,7 +230,7 @@ export const getDefaultFieldTypes = (store?: RootStore) => {
     },
     [ColumnViewType.OrganizationsIndustry]: {
       fieldType: CustomFieldTemplateType.SingleSelect,
-      fieldTypeName: 'Single Select',
+      fieldTypeName: 'Single select',
       fieldName: 'Industry',
       columnAccesor: ColumnViewType.OrganizationsIndustry,
       icon: <RadioButton />,
@@ -252,7 +252,7 @@ export const getDefaultFieldTypes = (store?: RootStore) => {
     },
     [ColumnViewType.OrganizationsTags]: {
       fieldType: 'multi-select',
-      fieldTypeName: 'Multi Select',
+      fieldTypeName: 'Multi select',
       fieldName: 'Tags',
       columnAccesor: ColumnViewType.OrganizationsTags,
       icon: <ListBulleted />,
@@ -263,7 +263,7 @@ export const getDefaultFieldTypes = (store?: RootStore) => {
     },
     [ColumnViewType.OrganizationsHeadquarters]: {
       fieldType: CustomFieldTemplateType.SingleSelect,
-      fieldTypeName: 'Single Select',
+      fieldTypeName: 'Single select',
       fieldName: 'Country',
       columnAccesor: ColumnViewType.OrganizationsHeadquarters,
       icon: <RadioButton />,
@@ -277,7 +277,7 @@ export const getDefaultFieldTypes = (store?: RootStore) => {
     },
     [ColumnViewType.OrganizationsIsPublic]: {
       fieldType: CustomFieldTemplateType.SingleSelect,
-      fieldTypeName: 'Single Select',
+      fieldTypeName: 'Single select',
       fieldName: 'Ownership type',
       columnAccesor: ColumnViewType.OrganizationsIsPublic,
       icon: <RadioButton />,
@@ -288,7 +288,7 @@ export const getDefaultFieldTypes = (store?: RootStore) => {
     },
     [ColumnViewType.OrganizationsStage]: {
       fieldType: CustomFieldTemplateType.SingleSelect,
-      fieldTypeName: 'Single Select',
+      fieldTypeName: 'Single select',
       fieldName: 'Stage',
       columnAccesor: ColumnViewType.OrganizationsStage,
       icon: <RadioButton />,
@@ -349,7 +349,7 @@ export const getCustomFieldTypes = () => {
     },
     [CustomFieldTemplateType.SingleSelect]: {
       fieldType: CustomFieldTemplateType.SingleSelect,
-      fieldTypeName: 'Single Select',
+      fieldTypeName: 'Single select',
       icon: <RadioButton />,
     },
   };

@@ -44,15 +44,19 @@ export const OrganizationFields = observer(() => {
   return (
     <Layout>
       <Header
-        title='Organization Fields'
-        numberOfCustomFields={customFields.length}
-        numberOfCoreFields={filteredFields.length}
+        title='Organization fields'
+        numberOfCoreFields={coreFields.length}
+        numberOfCustomFields={customFieldStore.length}
         subTitle='Create and manage custom fields for organizations'
       />
 
-      <div className='flex items-center justify-between px-2 mt-4'>
-        <p className='flex flex-2 font-medium'>Field name</p>
-        <p className='flex flex-1 font-medium'>Type</p>
+      <div className='flex items-center justify-between mt-4'>
+        {activeTab('core') && coreFields.length > 0 && (
+          <>
+            <p className='flex flex-2 font-medium text-sm'>Field name</p>
+            <p className='flex flex-1 font-medium text-sm'>Type</p>
+          </>
+        )}
       </div>
       {activeTab('core') ? (
         filteredFields.map((field) => (
@@ -65,11 +69,28 @@ export const OrganizationFields = observer(() => {
         ))
       ) : (
         <>
-          {filteredCustomFields.map((field) => (
-            <div key={field.id} className='flex justify-between items-center'>
-              <CustomFieldItem field={field} store={store} isEditable={true} />
-            </div>
-          ))}
+          {filteredCustomFields.length === 0 ? (
+            search ? (
+              <p>
+                Nothing to search for yet. Go ahead, add you first custom field
+              </p>
+            ) : (
+              <p className='text-center text-sm text-gray-500'>
+                Nothing to search for yet. Go ahead, add you first custom
+                field...
+              </p>
+            )
+          ) : (
+            filteredCustomFields.map((field) => (
+              <div key={field.id} className='flex justify-between items-center'>
+                <CustomFieldItem
+                  field={field}
+                  store={store}
+                  isEditable={true}
+                />
+              </div>
+            ))
+          )}
         </>
       )}
     </Layout>

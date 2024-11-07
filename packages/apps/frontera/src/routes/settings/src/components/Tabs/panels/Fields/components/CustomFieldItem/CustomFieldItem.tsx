@@ -8,6 +8,7 @@ import { Archive } from '@ui/media/icons/Archive';
 import { DotsVertical } from '@ui/media/icons/DotsVertical';
 import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
+// import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
 import {
   ColumnView,
   CustomField,
@@ -59,9 +60,9 @@ export const CustomFieldItem = ({
 
   return (
     <>
-      <div className='flex justify-between items-center py-2 w-full px-2'>
+      <div className='flex justify-between items-center py-1 w-full '>
         <div className='flex justify-between w-full'>
-          <div className='flex items-center gap-2 flex-2 text-sm'>
+          <div className='flex items-center gap-2 flex-2 text-sm '>
             {fieldIcon}
             {fieldName}
           </div>
@@ -116,6 +117,16 @@ export const CustomFieldItem = ({
           fieldId={(field as CustomField)?.id}
         />
       )}
+      {/* <ConfirmDeleteDialog
+        isOpen={true}
+        onClose={() => {}}
+        confirmButtonLabel='Archive field'
+        label={`Archive ${fieldName} field?`}
+        description={`Are you sure you want to archive the ${fieldType} field?`}
+        onConfirm={() => {
+          store.customFields.deleteCustomField((field as CustomField)?.id);
+        }}
+      /> */}
     </>
   );
 };
