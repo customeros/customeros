@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	cosModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	"github.com/sirupsen/logrus"
@@ -313,20 +312,20 @@ func bookingCreatedHandler(request BookingCreatedRequest, body []byte, secretsRe
 	return nil, nil
 }
 
-func getParticipantAndTenant(userEmail *string) (*cosModel.MeetingParticipantInput, *string, error) {
-	//user, err := cosService.GetUserByEmail(userEmail)
-	//if err != nil {
-	//	return nil, nil, fmt.Errorf("no user for meeting creation to parse json: %v", err.Error())
-	//} else {
-	//	log.Printf("createdBy: %s %s", user.UserByEmail.ID, *userEmail)
-	//}
-	//tenant, err := cosService.GetTenant(userEmail)
-	//if err != nil {
-	//	return nil, nil, fmt.Errorf("unable to get tenant by for user: %v", err.Error())
-	//}
-	//return &cosModel.MeetingParticipantInput{UserID: &user.UserByEmail.ID}, &tenant.Tenant, nil
-	return nil, nil, nil
-}
+//func getParticipantAndTenant(userEmail *string) (*cosModel.MeetingParticipantInput, *string, error) {
+//user, err := cosService.GetUserByEmail(userEmail)
+//if err != nil {
+//	return nil, nil, fmt.Errorf("no user for meeting creation to parse json: %v", err.Error())
+//} else {
+//	log.Printf("createdBy: %s %s", user.UserByEmail.ID, *userEmail)
+//}
+//tenant, err := cosService.GetTenant(userEmail)
+//if err != nil {
+//	return nil, nil, fmt.Errorf("unable to get tenant by for user: %v", err.Error())
+//}
+//return &cosModel.MeetingParticipantInput{UserID: &user.UserByEmail.ID}, &tenant.Tenant, nil
+//return nil, nil, nil
+//}
 
 type BookingCreatedRequest struct {
 	TriggerEvent string `json:"triggerEvent"`

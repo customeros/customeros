@@ -7,7 +7,6 @@ on:
       - packages/server/customer-os-common-module/**
       - packages/server/customer-os-postgres-repository/**
       - packages/server/customer-os-neo4j-repository/**
-      - packages/server/customer-os-api-sdk/**
       - packages/server/file-store-api/**
       - .github/workflows/build-file-store-api.yml
   pull_request:
@@ -15,7 +14,6 @@ on:
       - packages/server/customer-os-common-module/**
       - packages/server/customer-os-postgres-repository/**
       - packages/server/customer-os-neo4j-repository/**
-      - packages/server/customer-os-api-sdk/**
       - packages/server/file-store-api/**
       - .github/workflows/build-file-store-api.yml
   release:

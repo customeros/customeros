@@ -17,7 +17,7 @@ import (
 	"github.com/h2non/filetype"
 	"github.com/h2non/filetype/types"
 	"github.com/machinebox/graphql"
-	graph_model "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/constants"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -76,7 +76,7 @@ func (s *fileService) GetById(ctx context.Context, userEmail, tenantName, id str
 	span.SetTag(tracing.SpanTagTenant, tenantName)
 	span.LogFields(log.String("fileId", id), log.String("userEmail", userEmail))
 
-	attachment, err := s.getCosAttachmentById(ctx, userEmail, tenantName, id)
+	attachment, err := s.commonServices.AttachmentService.GetById(ctx, id)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Error getting attachment by id"))
 		return nil, err
@@ -147,31 +147,13 @@ func (s *fileService) UploadSingleFile(ctx context.Context, userEmail, tenantNam
 		}
 	}
 
-	graphqlRequest := graphql.NewRequest(
-		`mutation AttachmentCreate($id: ID, $cdnUrl: String!, $basePath: String!, $mimeType: String!, $size: Int64!, $fileName: String!, $appSource: String!) {
-			attachment_Create(input: {
-				id: $id	
-				cdnUrl: $cdnUrl	
-				basePath: $basePath	
-				mimeType: $mimeType	
-				fileName: $fileName
-				size: $size
-				appSource: $appSource
-			}) {
-				id
-				cdnUrl
-				basePath
-				mimeType
-				fileName
-				size
-			}
-		}`)
-
-	graphqlRequest.Var("id", fileId)
-	graphqlRequest.Var("mimeType", multipartFileHeader.Header.Get(http.CanonicalHeaderKey("Content-Type")))
-	graphqlRequest.Var("fileName", multipartFileHeader.Filename)
-	graphqlRequest.Var("size", multipartFileHeader.Size)
-	graphqlRequest.Var("appSource", "file-store-api")
+	attachmentEntity := neo4jentity.AttachmentEntity{
+		Id:        fileId,
+		FileName:  multipartFileHeader.Filename,
+		MimeType:  multipartFileHeader.Header.Get(http.CanonicalHeaderKey("Content-Type")),
+		Size:      multipartFileHeader.Size,
+		AppSource: constants.AppSourceFileStoreApi,
+	}
 
 	if s.cfg.Service.CloudflareImageUploadApiKey != "" && s.cfg.Service.CloudflareImageUploadAccountId != "" && s.cfg.Service.CloudflareImageUploadSignKey != "" &&
 		cdnUpload && (fileType.Extension == "gif" || fileType.Extension == "png" || fileType.Extension == "jpg" || fileType.Extension == "jpeg") {
@@ -200,9 +182,7 @@ func (s *fileService) UploadSingleFile(ctx context.Context, userEmail, tenantNam
 			return nil, err
 		}
 
-		graphqlRequest.Var("cdnUrl", generateSignedURL(uploadedFileToCdn.Variants[0], s.cfg.Service.CloudflareImageUploadSignKey))
-	} else {
-		graphqlRequest.Var("cdnUrl", "")
+		attachmentEntity.CdnUrl = generateSignedURL(uploadedFileToCdn.Variants[0], s.cfg.Service.CloudflareImageUploadSignKey)
 	}
 
 	session, err := awsSes.NewSession(&aws.Config{Region: aws.String(s.cfg.AWS.Region)})
@@ -230,28 +210,15 @@ func (s *fileService) UploadSingleFile(ctx context.Context, userEmail, tenantNam
 		return nil, err
 	}
 
-	graphqlRequest.Var("basePath", basePath)
+	attachmentEntity.BasePath = basePath
 
-	err = s.addHeadersToGraphRequest(graphqlRequest, tenantName, userEmail)
+	created, err := s.commonServices.AttachmentService.Create(ctx, &attachmentEntity)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error adding headers to graph request"))
-		return nil, err
-	}
-	ctx, cancel, err := s.contextWithTimeout(ctx)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error creating context with timeout"))
-		return nil, err
-	}
-	defer cancel()
-
-	var graphqlResponse model.AttachmentCreateResponse
-	tracing.InjectSpanContextIntoGraphQLRequest(graphqlRequest, span)
-	if err = s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error running graphql client"))
+		tracing.TraceErr(span, errors.Wrap(err, "Error creating attachment"))
 		return nil, err
 	}
 
-	return mapper.MapAttachmentResponseToFileEntity(&graphqlResponse.Attachment), nil
+	return mapper.MapAttachmentResponseToFileEntity(created), nil
 }
 
 func (s *fileService) DownloadSingleFile(ctx context.Context, userEmail, tenantName, id string, ginContext *gin.Context, inline bool) (*model.File, error) {
@@ -260,7 +227,7 @@ func (s *fileService) DownloadSingleFile(ctx context.Context, userEmail, tenantN
 	tracing.TagTenant(span, tenantName)
 	span.LogFields(log.String("userEmail", userEmail), log.String("fileId", id), log.Bool("inline", inline))
 
-	attachment, err := s.getCosAttachmentById(ctx, userEmail, tenantName, id)
+	attachment, err := s.commonServices.AttachmentService.GetById(ctx, id)
 	byId := mapper.MapAttachmentResponseToFileEntity(attachment)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Error getting attachment by id"))
@@ -290,7 +257,7 @@ func (s *fileService) DownloadSingleFile(ctx context.Context, userEmail, tenantN
 
 	// Get the object metadata to determine the file size and ETag
 	bucket := s.cfg.AWS.Bucket
-	key := tenantName + byId.BasePath + "/" + attachment.ID + "." + extension
+	key := tenantName + byId.BasePath + "/" + attachment.Id + "." + extension
 	span.LogFields(log.String("bucket", bucket), log.String("key", key))
 	respHead, err := svc.HeadObject(&s3.HeadObjectInput{
 		Bucket: aws.String(bucket),
@@ -346,7 +313,7 @@ func (s *fileService) DownloadSingleFile(ctx context.Context, userEmail, tenantN
 	ginContext.Header("Content-Type", fmt.Sprintf("%s", byId.MimeType))
 	resp, err := svc.GetObject(&s3.GetObjectInput{
 		Bucket: aws.String(s.cfg.AWS.Bucket),
-		Key:    aws.String(tenantName + byId.BasePath + "/" + attachment.ID + "." + extension),
+		Key:    aws.String(tenantName + byId.BasePath + "/" + attachment.Id + "." + extension),
 		Range:  aws.String("bytes=" + strconv.FormatInt(start, 10) + "-" + strconv.FormatInt(end, 10)),
 	})
 	if err != nil {
@@ -369,7 +336,7 @@ func (s *fileService) Base64Image(ctx context.Context, userEmail, tenantName str
 	span.SetTag(tracing.SpanTagTenant, tenantName)
 	span.LogFields(log.String("userEmail", userEmail), log.String("fileId", id))
 
-	attachment, err := s.getCosAttachmentById(ctx, userEmail, tenantName, id)
+	attachment, err := s.commonServices.AttachmentService.GetById(ctx, id)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Error getting attachment by id"))
 		return nil, err
@@ -391,7 +358,7 @@ func (s *fileService) Base64Image(ctx context.Context, userEmail, tenantName str
 	_, err = downloader.Download(aws.NewWriteAtBuffer(fileBytes),
 		&s3.GetObjectInput{
 			Bucket: aws.String(s.cfg.AWS.Bucket),
-			Key:    aws.String(attachment.ID),
+			Key:    aws.String(attachment.Id),
 		})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Error downloading file"))
@@ -419,47 +386,6 @@ func (s *fileService) Base64Image(ctx context.Context, userEmail, tenantName str
 	// Append the base64 encoded output
 	base64Encoding += base64.StdEncoding.EncodeToString(fileBytes)
 	return &base64Encoding, nil
-}
-
-func (s *fileService) getCosAttachmentById(ctx context.Context, userEmail, tenantName, id string) (*graph_model.Attachment, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FileService.getCosAttachmentById")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenantName)
-	span.LogFields(log.String("userEmail", userEmail), log.String("fileId", id))
-
-	graphqlRequest := graphql.NewRequest(
-		`query GetAttachment($id: ID!) {
-			attachment(id: $id) {
-				id
-				createdAt
-				mimeType
-				fileName
-				basePath
-				cdnUrl
-				size
-			}
-		}`)
-	graphqlRequest.Var("id", id)
-
-	err := s.addHeadersToGraphRequest(graphqlRequest, tenantName, userEmail)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error adding headers to graph request"))
-		return nil, err
-	}
-	ctx, cancel, err := s.contextWithTimeout(ctx)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error creating context with timeout"))
-		return nil, err
-	}
-	defer cancel()
-
-	var graphqlResponse model.AttachmentResponse
-	tracing.InjectSpanContextIntoGraphQLRequest(graphqlRequest, span)
-	if err = s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error running graphql client"))
-		return nil, err
-	}
-	return &graphqlResponse.Attachment, nil
 }
 
 func uploadFileToS3(ctx context.Context, cfg *config.Config, session *awsSes.Session, tenantName, basePath, fileId string, multipartFile *multipart.FileHeader) error {
@@ -499,18 +425,6 @@ func uploadFileToS3(ctx context.Context, cfg *config.Config, session *awsSes.Ses
 		ServerSideEncryption: aws.String("AES256"),
 	})
 	return err2
-}
-
-func (s *fileService) addHeadersToGraphRequest(req *graphql.Request, tenant string, userEmail string) error {
-	req.Header.Add("X-Openline-API-KEY", s.cfg.Service.CustomerOsAPIKey)
-	if userEmail != "" {
-		req.Header.Add("X-Openline-USERNAME", userEmail)
-	}
-	if tenant != "" {
-		req.Header.Add("X-Openline-TENANT", tenant)
-	}
-
-	return nil
 }
 
 func (s *fileService) contextWithTimeout(ctx context.Context) (context.Context, context.CancelFunc, error) {

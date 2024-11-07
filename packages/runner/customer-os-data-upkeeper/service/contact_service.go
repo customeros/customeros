@@ -9,8 +9,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/constants"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/logger"
-	cosClient "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/client"
-	cosModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
@@ -48,20 +46,18 @@ type ContactService interface {
 }
 
 type contactService struct {
-	cfg                 *config.Config
-	log                 logger.Logger
-	commonServices      *commonService.Services
-	customerOSApiClient cosClient.CustomerOSApiClient
-	eventBufferService  *eventbuffer.EventBufferStoreService
+	cfg                *config.Config
+	log                logger.Logger
+	commonServices     *commonService.Services
+	eventBufferService *eventbuffer.EventBufferStoreService
 }
 
-func NewContactService(cfg *config.Config, log logger.Logger, commonServices *commonService.Services, customerOSApiClient cosClient.CustomerOSApiClient, eventBufferService *eventbuffer.EventBufferStoreService) ContactService {
+func NewContactService(cfg *config.Config, log logger.Logger, commonServices *commonService.Services, eventBufferService *eventbuffer.EventBufferStoreService) ContactService {
 	return &contactService{
-		cfg:                 cfg,
-		log:                 log,
-		commonServices:      commonServices,
-		customerOSApiClient: customerOSApiClient,
-		eventBufferService:  eventBufferService,
+		cfg:                cfg,
+		log:                log,
+		commonServices:     commonServices,
+		eventBufferService: eventBufferService,
 	}
 }
 
@@ -476,14 +472,9 @@ func (s *contactService) processLinkedInUrl(ctx context.Context, tenant, linkedi
 
 	var contactIds []string
 	if len(contactsWithLinkedin) == 0 {
-		contactInput := cosModel.ContactInput{
-			SocialURL: &linkedinProfileUrl,
-			AppSource: utils.StringPtr(constants.AppSourceDataUpkeeper),
-		}
-
-		contactId, err := s.customerOSApiClient.CreateContact(tenant, "", contactInput)
+		contactId, err := s.commonServices.ContactService.SaveContact(ctx, nil, neo4jrepository.ContactFields{}, linkedinProfileUrl, neo4jmodel.ExternalSystem{})
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "CreateContact"))
+			tracing.TraceErr(span, err)
 			return err
 		}
 		contactIds = append(contactIds, contactId)

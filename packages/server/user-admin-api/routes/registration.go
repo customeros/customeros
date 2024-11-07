@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	cosModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/constants"
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
@@ -14,7 +14,6 @@ import (
 	commonUtils "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
-	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/model"
@@ -31,8 +30,6 @@ import (
 	"strings"
 	"time"
 )
-
-const APP_SOURCE = "user-admin-api"
 
 func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services *service.Services) {
 	personalEmailProviders, err := services.CommonServices.PostgresRepositories.PersonalEmailProviderRepository.GetPersonalEmailProviders()
@@ -124,7 +121,7 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 						go func() {
 							innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
 								Tenant:    *tenantName,
-								AppSource: APP_SOURCE,
+								AppSource: constants.AppSourceUserAdminApi,
 							})
 							err = services.CommonServices.RegistrationService.PrepareDefaultTenantSetup(innerCtx, signInRequest.LoggedInEmail)
 							if err != nil {
@@ -415,7 +412,7 @@ func getTenant(c context.Context, services *service.Services, personalEmailProvi
 		_, err := services.CommonServices.WorkspaceService.MergeToTenant(ctx, neo4jentity.WorkspaceEntity{
 			Name:      domain,
 			Provider:  signInRequest.Provider,
-			AppSource: APP_SOURCE,
+			AppSource: constants.AppSourceUserAdminApi,
 		}, tenantEntity.Name)
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -517,8 +514,6 @@ func initializeUser(c context.Context, services *service.Services, provider, pro
 	span, ctx := opentracing.StartSpanFromContext(c, "Registration.initializeUser")
 	defer span.Finish()
 
-	appSource := APP_SOURCE
-
 	userId := ""
 	playerId := ""
 
@@ -549,20 +544,20 @@ func initializeUser(c context.Context, services *service.Services, provider, pro
 	if userId == "" {
 		innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
 			Tenant:    tenant,
-			AppSource: appSource,
+			AppSource: constants.AppSourceUserAdminApi,
 		})
 		userId, err = services.CommonServices.UserService.CreateUser(innerCtx, neo4jentity.UserEntity{
 			FirstName: *firstName,
 			LastName:  *lastName,
 			Roles:     []string{"USER", "OWNER"},
-			AppSource: appSource,
+			AppSource: constants.AppSourceUserAdminApi,
 		})
 
 		_, err = services.CommonServices.EmailService.Merge(innerCtx, tenant, commonservice.EmailFields{
 			Primary:   true,
 			Email:     email,
 			Source:    neo4jentity.DataSourceOpenline,
-			AppSource: APP_SOURCE,
+			AppSource: constants.AppSourceUserAdminApi,
 		}, &commonservice.LinkWith{
 			Type: commonModel.USER,
 			Id:   userId,
@@ -597,7 +592,7 @@ func initializeUser(c context.Context, services *service.Services, provider, pro
 			AuthId:     email,
 			Provider:   provider,
 			IdentityId: providerAccountId,
-			AppSource:  appSource,
+			AppSource:  constants.AppSourceUserAdminApi,
 		})
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -697,17 +692,7 @@ func registerNewTenantAsLeadInProviderTenant(ctx context.Context, config *config
 	span.LogFields(tracingLog.String("providerOrganizationId", *organizationId))
 	span.LogFields(tracingLog.String("providerContactId", *contactId))
 
-	waitForOrganizationAndContactToBeCreated(ctx, services, organizationId, contactId)
-
-	emailId, err := services.CustomerOSApiClient.MergeEmailToContact(config.Service.ProviderTenantName, *contactId, cosModel.EmailInput{Email: registeredEmail})
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	span.LogFields(tracingLog.String("emailId", emailId))
-
-	//TODO EDI
+	//TODO EDI - send welcome email
 
 	//	type EmailPayload struct {
 	//		Channel   string   `json:"channel"`
@@ -831,12 +816,4 @@ func registerNewTenantAsLeadInProviderTenant(ctx context.Context, config *config
 	//span.LogFields(tracingLog.Object("email sent: ", mapBody))
 
 	return nil
-}
-
-func waitForOrganizationAndContactToBeCreated(ctx context.Context, services *service.Services, organizationId, contactId *string) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "registration.waitForOrganizationAndContactToBeCreated")
-	defer span.Finish()
-
-	neo4jrepository.WaitForNodeCreatedInNeo4jWithConfig(ctx, span, services.CommonServices.Neo4jRepositories, *organizationId, commonModel.NodeLabelOrganization, 30*time.Second)
-	neo4jrepository.WaitForNodeCreatedInNeo4jWithConfig(ctx, span, services.CommonServices.Neo4jRepositories, *contactId, commonModel.NodeLabelContact, 30*time.Second)
 }

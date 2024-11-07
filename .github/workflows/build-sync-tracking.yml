@@ -10,7 +10,6 @@ on:
       - packages/server/events-processing-proto/**
       - packages/server/events/**
       - packages/server/validation-api/**
-      - packages/server/customer-os-api-sdk/**
       - packages/runner/sync-tracking/**
       - .github/workflows/build-sync-tracking.yml
   pull_request:
@@ -21,7 +20,6 @@ on:
       - packages/server/events-processing-proto/**
       - packages/server/events/**
       - packages/server/validation-api/**
-      - packages/server/customer-os-api-sdk/**
       - packages/runner/sync-tracking/**
       - .github/workflows/build-sync-tracking.yml
   release:

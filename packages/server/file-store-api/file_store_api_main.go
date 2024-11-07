@@ -9,12 +9,12 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/machinebox/graphql"
 	commonconf "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
+	constants2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/constants"
 	fsc "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/file_store_client"
 	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/model"
@@ -248,7 +248,7 @@ func MapFileEntityToDTO(cfg *config.Config, fileEntity *model.File) *fsc.FileDTO
 func initLogger(cfg *config.Config) logger.Logger {
 	appLogger := logger.NewExtendedAppLogger(&cfg.Logger)
 	appLogger.InitLogger()
-	appLogger.WithName(constants.ServiceName)
+	appLogger.WithName(constants2.AppSourceFileStoreApi)
 	return appLogger
 }
 

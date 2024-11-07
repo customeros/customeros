@@ -16,10 +16,6 @@ import (
 	"log"
 )
 
-const (
-	AppName = "USER-ADMIN-API"
-)
-
 func InitDB(cfg *config.Config, appLogger logger.Logger) (db *config.StorageDB, err error) {
 	if db, err = config.NewDBConn(cfg); err != nil {
 		appLogger.Fatalf("Coud not open db connection: %s", err.Error())
@@ -32,7 +28,7 @@ func main() {
 
 	appLogger := logger.NewExtendedAppLogger(&cfg.Logger)
 	appLogger.InitLogger()
-	appLogger.WithName(AppName)
+	appLogger.WithName("user-admin-api")
 
 	// Initialize Tracing
 	tracingCloser := initTracing(cfg, appLogger)

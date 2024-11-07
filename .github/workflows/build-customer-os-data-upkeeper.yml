@@ -9,7 +9,6 @@ on:
       - packages/server/customer-os-neo4j-repository/**
       - packages/server/events-processing-proto/**
       - packages/server/events/**
-      - packages/server/customer-os-api-sdk/**
       - packages/server/enrichment-api/**
       - packages/server/validation-api/**
       - packages/runner/customer-os-data-upkeeper/**
@@ -21,7 +20,6 @@ on:
       - packages/server/customer-os-neo4j-repository/**
       - packages/server/events-processing-proto/**
       - packages/server/events/**
-      - packages/server/customer-os-api-sdk/**
       - packages/server/validation-api/**
       - packages/runner/customer-os-data-upkeeper/**
       - .github/workflows/build-customer-os-data-upkeeper.yml

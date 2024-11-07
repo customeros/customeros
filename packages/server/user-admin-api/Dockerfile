@@ -5,7 +5,6 @@ COPY customer-os-common-module/. ./customer-os-common-module/
 COPY customer-os-neo4j-repository/. ./customer-os-neo4j-repository/
 COPY customer-os-postgres-repository/. ./customer-os-postgres-repository/
 COPY events-processing-proto/. ./events-processing-proto/
-COPY customer-os-api-sdk/. ./customer-os-api-sdk/
 COPY user-admin-api/. ./user-admin-api
 
 WORKDIR /app/user-admin-api

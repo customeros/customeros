@@ -3,10 +3,17 @@ package service
 import (
 	"context"
 	"errors"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model"
+	"github.com/99designs/gqlgen/graphql"
+	constants "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/constants"
+	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	commonUtils "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
+	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"strings"
@@ -52,20 +59,31 @@ func (s *registrationService) CreateOrganizationAndContact(ctx context.Context, 
 		}
 
 		if organizationByDomain == nil {
-			prospect := model.OrganizationRelationshipProspect
-			trial := model.OrganizationStageTrial
-			organizationId, err = s.services.CustomerOSApiClient.CreateOrganization(tenant, "", model.OrganizationInput{Relationship: &prospect, Stage: &trial, Domains: []string{domain}, LeadSource: &leadSource, Name: commonUtils.StringPtr(domain), Website: commonUtils.StringPtr(domain)})
+			orgId, err := s.services.CommonServices.OrganizationService.Save(ctx, nil, tenant, nil, &repository.OrganizationSaveFields{
+				Domains:      []string{domain},
+				Name:         domain,
+				Relationship: enum.Prospect,
+				Stage:        enum.Trial,
+				LeadSource:   leadSource,
+				Website:      domain,
+			})
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return nil, nil, err
 			}
+			if orgId == nil {
+				e := errors.New("organization id empty")
+				tracing.TraceErr(span, e)
+				return nil, nil, e
+			}
+			organizationId = *orgId
 		} else {
 			organizationId = mapper.MapDbNodeToOrganizationEntity(organizationByDomain).ID
 		}
 
 		if organizationId == "" {
-			tracing.TraceErr(span, errors.New("organization id empty"))
-			return nil, nil, errors.New("organization id empty")
+			tracing.TraceErr(span, err)
+			return nil, nil, err
 		}
 		span.LogFields(tracingLog.String("result.organizationId", organizationId))
 
@@ -76,19 +94,31 @@ func (s *registrationService) CreateOrganizationAndContact(ctx context.Context, 
 		}
 
 		if contactNode == nil {
-			contactInput := model.ContactInput{
-				ProfilePhotoURL: nil,
-			}
-
-			contactId, err = s.services.CustomerOSApiClient.CreateContact(tenant, "", contactInput)
+			contactId, err = s.services.CommonServices.ContactService.SaveContact(ctx, nil, repository.ContactFields{}, "", neo4jmodel.ExternalSystem{})
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return nil, nil, err
 			}
 
-			_, err = s.services.CustomerOSApiClient.LinkContactToOrganization(tenant, contactId, organizationId)
+			_, err := s.services.CommonServices.EmailService.Merge(ctx, tenant,
+				commonservice.EmailFields{
+					Email:     email,
+					Source:    neo4jentity.DataSourceOpenline,
+					AppSource: constants.AppSourceUserAdminApi,
+				}, &commonservice.LinkWith{
+					Type: commonModel.CONTACT,
+					Id:   contactId,
+				})
 			if err != nil {
 				tracing.TraceErr(span, err)
+				return nil, nil, err
+			}
+
+			err = s.services.CommonServices.ContactService.LinkContactWithOrganization(ctx, contactId, organizationId, "", "",
+				neo4jentity.DataSourceOpenline.String(), false, nil, nil)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				graphql.AddErrorf(ctx, "Failed to add organization %s to contact %s", organizationId, contactId)
 				return nil, nil, err
 			}
 		} else {

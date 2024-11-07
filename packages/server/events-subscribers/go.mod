@@ -12,8 +12,6 @@ replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-
 
 replace github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto => ../events-processing-proto
 
-replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk => ../customer-os-api-sdk
-
 replace github.com/openline-ai/openline-customer-os/packages/server/enrichment-api => ../enrichment-api
 
 replace github.com/openline-ai/openline-customer-os/packages/server/validation-api => ../validation-api

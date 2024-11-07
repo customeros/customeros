@@ -2,8 +2,8 @@ package mapper
 
 import (
 	"fmt"
-	graph_model "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model"
 	fs "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/file_store_client"
+	neo4jEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/model"
 )
 
@@ -23,16 +23,16 @@ func MapFileEntityToDTO(input *model.File, serviceUrl string) *fs.FileDTO {
 	return &file
 }
 
-func MapAttachmentResponseToFileEntity(input *graph_model.Attachment) *model.File {
+func MapAttachmentResponseToFileEntity(input *neo4jEntity.AttachmentEntity) *model.File {
 	if input == nil {
 		return nil
 	}
 	return &model.File{
-		ID:       input.ID,
+		ID:       input.Id,
 		FileName: input.FileName,
 		MimeType: input.MimeType,
 		BasePath: input.BasePath,
 		Size:     input.Size,
-		CdnUrl:   input.CdnURL,
+		CdnUrl:   input.CdnUrl,
 	}
 }

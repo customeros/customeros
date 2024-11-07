@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	AppName = "USER-ADMIN-API"
+	AppName = "events-subscribersI"
 )
 
 func InitDB(cfg *config.Config, appLogger logger.Logger) (db *config.StorageDB, err error) {
