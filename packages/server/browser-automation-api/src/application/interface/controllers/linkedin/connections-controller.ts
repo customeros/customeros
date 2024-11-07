@@ -103,7 +103,7 @@ export class ConnectionsController {
       });
     } catch (err) {
       const error = ErrorParser.parse(err);
-      logger.error("Error in ConnectController", {
+      logger.error("Error in ConnectionsController", {
         error: error.message,
         details: error.details,
         source: "ConnectionsController",
