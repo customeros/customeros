@@ -119,11 +119,17 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 
 					if !isPersonalEmail || isPersonalEmail { // TODO alexb temporary add for all users until mailboxes implemented
 						go func() {
-							innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+							c, cancelFunc := context.WithTimeout(context.Background(), 300*time.Second)
+							defer cancelFunc()
+
+							ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c, "/signin - prepare default setup", ginContext.Request.Header)
+							defer span.Finish()
+
+							ctx = common.WithCustomContext(ctx, &common.CustomContext{
 								Tenant:    *tenantName,
 								AppSource: constants.AppSourceUserAdminApi,
 							})
-							err = services.CommonServices.RegistrationService.PrepareDefaultTenantSetup(innerCtx, signInRequest.LoggedInEmail)
+							err = services.CommonServices.RegistrationService.PrepareDefaultTenantSetup(ctx, signInRequest.LoggedInEmail)
 							if err != nil {
 								tracing.TraceErr(span, err)
 							}
@@ -137,12 +143,14 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 						ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c, "/signin - register new tenant", ginContext.Request.Header)
 						defer span.Finish()
 
+						ctx = common.WithCustomContext(ctx, &common.CustomContext{
+							Tenant:    *tenantName,
+							AppSource: constants.AppSourceUserAdminApi,
+						})
+
 						err = registerNewTenantAsLeadInProviderTenant(ctx, config, services, signInRequest.LoggedInEmail)
 						if err != nil {
 							tracing.TraceErr(span, err)
-							ginContext.JSON(http.StatusInternalServerError, gin.H{
-								"result": fmt.Sprintf("unable to register new tenant as lead in provider tenant: %v", err.Error()),
-							})
 							return
 						}
 

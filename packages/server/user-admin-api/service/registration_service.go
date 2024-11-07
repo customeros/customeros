@@ -60,12 +60,15 @@ func (s *registrationService) CreateOrganizationAndContact(ctx context.Context, 
 
 		if organizationByDomain == nil {
 			orgId, err := s.services.CommonServices.OrganizationService.Save(ctx, nil, tenant, nil, &repository.OrganizationSaveFields{
-				Domains:      []string{domain},
-				Name:         domain,
-				Relationship: enum.Prospect,
-				Stage:        enum.Trial,
-				LeadSource:   leadSource,
-				Website:      domain,
+				Domains:            []string{domain},
+				Name:               domain,
+				Relationship:       enum.Prospect,
+				Stage:              enum.Trial,
+				LeadSource:         leadSource,
+				UpdateName:         true,
+				UpdateRelationship: true,
+				UpdateStage:        true,
+				UpdateLeadSource:   true,
 			})
 			if err != nil {
 				tracing.TraceErr(span, err)

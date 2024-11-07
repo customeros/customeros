@@ -22,7 +22,7 @@ func NewRegistrationService(services *Services) RegistrationService {
 }
 
 func (s *registrationService) PrepareDefaultTenantSetup(ctx context.Context, loggedInUserEmail string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialService.GetAllForEntities")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "RegistrationService.PrepareDefaultTenantSetup")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogKV("loggedInUserEmail", loggedInUserEmail)
