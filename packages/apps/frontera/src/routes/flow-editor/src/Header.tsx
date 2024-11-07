@@ -14,6 +14,7 @@ import { User01 } from '@ui/media/icons/User01';
 import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
 import { Settings03 } from '@ui/media/icons/Settings03';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip.tsx';
 import { ChevronRight } from '@ui/media/icons/ChevronRight';
 import { ViewSettings } from '@shared/components/ViewSettings';
 import {
@@ -140,27 +141,35 @@ export const Header = observer(
                   </span>
                 </>
               ) : (
-                <Button
-                  size='xxs'
-                  className='ml-2'
-                  variant='outline'
-                  colorScheme='gray'
-                  leftIcon={<User01 />}
-                  dataTest='flow-contacts'
-                  isLoading={contactsStore.isLoading || store.flows.isLoading}
-                  onClick={() => {
-                    navigate(`?show=finder&preset=${flowContactsPreset}`);
-                  }}
-                  leftSpinner={
-                    <Spinner
-                      size='sm'
-                      label='adding'
-                      className='text-gray-300 fill-gray-400'
-                    />
+                <Tooltip
+                  label={
+                    contactsStore.isLoading || store.flows.isLoading
+                      ? `We're loading your contacts`
+                      : ''
                   }
                 >
-                  {flow?.value?.contacts?.length}
-                </Button>
+                  <Button
+                    size='xxs'
+                    className='ml-2'
+                    variant='outline'
+                    colorScheme='gray'
+                    leftIcon={<User01 />}
+                    dataTest='flow-contacts'
+                    isLoading={contactsStore.isLoading || store.flows.isLoading}
+                    onClick={() => {
+                      navigate(`?show=finder&preset=${flowContactsPreset}`);
+                    }}
+                    leftSpinner={
+                      <Spinner
+                        size='sm'
+                        label='adding'
+                        className='text-gray-300 fill-gray-400'
+                      />
+                    }
+                  >
+                    {flow?.value?.contacts?.length}
+                  </Button>
+                </Tooltip>
               )}
             </div>
           </div>
