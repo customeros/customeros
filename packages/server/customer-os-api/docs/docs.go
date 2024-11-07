@@ -1557,12 +1557,12 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "domain": {
-                    "description": "Domain is the domain name to be configured\nRequired: true\nExample: example.com",
+                    "description": "Domain is the domain name to be configured\nRequired: true",
                     "type": "string",
                     "example": "example.com"
                 },
                 "website": {
-                    "description": "Destination website for permanent redirect\nRequired: true\nExample: www.example.com",
+                    "description": "Destination website for permanent redirect\nRequired: true",
                     "type": "string",
                     "example": "www.example.com"
                 }
@@ -1573,27 +1573,27 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "createdDate": {
-                    "description": "CreatedDate is the date the domain was registered\nExample: 09/14/2024",
+                    "description": "CreatedDate is the date the domain was registered",
                     "type": "string",
                     "example": "09/14/2024"
                 },
                 "domain": {
-                    "description": "Domain is the domain name that was registered\nExample: example.com",
+                    "description": "Domain is the domain name that was registered",
                     "type": "string",
                     "example": "example.com"
                 },
                 "expiredDate": {
-                    "description": "ExpiredDate is the date when the domain registration will expire\nExample: 09/14/2025",
+                    "description": "ExpiredDate is the date when the domain registration will expire",
                     "type": "string",
                     "example": "09/14/2025"
                 },
                 "message": {
-                    "description": "Message provides additional information about the action\nExample: Domain registered successfully",
+                    "description": "Message provides additional information about the action",
                     "type": "string",
                     "example": "Domain retrieved successfully"
                 },
                 "nameservers": {
-                    "description": "Nameservers lists the nameservers associated with the domain\nExample: [ns1.example.com, ns2.example.com]",
+                    "description": "Nameservers lists the nameservers associated with the domain",
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -1604,7 +1604,7 @@ const docTemplate = `{
                     ]
                 },
                 "status": {
-                    "description": "Status indicates the result of the action\nExample: success",
+                    "description": "Status indicates the result of the action",
                     "type": "string",
                     "example": "success"
                 }
@@ -1621,12 +1621,12 @@ const docTemplate = `{
                     }
                 },
                 "message": {
-                    "description": "Message provides additional information about the action\nExample: Domain retrieved successfully",
+                    "description": "Message provides additional information about the action",
                     "type": "string",
                     "example": "Domains retrieved successfully"
                 },
                 "status": {
-                    "description": "Status indicates the result of the action\nExample: success",
+                    "description": "Status indicates the result of the action",
                     "type": "string",
                     "example": "success"
                 }
@@ -1637,12 +1637,12 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "forwardingEnabled": {
-                    "description": "Specifies if email forwarding is enabled\nExample: true",
+                    "description": "Specifies if email forwarding is enabled",
                     "type": "boolean",
                     "example": true
                 },
                 "forwardingTo": {
-                    "description": "Email address to forward to (if forwarding is enabled)\nExample: johndoe.forward@example.com",
+                    "description": "Email address to forward to (if forwarding is enabled)",
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -1652,18 +1652,23 @@ const docTemplate = `{
                         " 'user2@example.com']"
                     ]
                 },
+                "linkedUser": {
+                    "description": "LinkedUser is the email address of the user to whom new mailbox should be linked. If not provided or not found, mailbox will not be associated with any user\nRequired: false",
+                    "type": "string",
+                    "example": "john.doe@mycompany.com"
+                },
                 "password": {
-                    "description": "Password for the mailbox (e.g., \"SecurePassword123!\")\nRequired: false\nExample: SecurePassword123!",
+                    "description": "Password for the mailbox (e.g., \"SecurePassword123!\")\nRequired: false",
                     "type": "string",
                     "example": "SecurePassword123!"
                 },
                 "username": {
-                    "description": "Username for the mailbox (e.g., \"john.doe\")\nRequired: true\nExample: john.doe",
+                    "description": "Username for the mailbox (e.g., \"john.doe\")\nRequired: true",
                     "type": "string",
                     "example": "john.doe"
                 },
                 "webmailEnabled": {
-                    "description": "Specifies if webmail access is enabled\nExample: true",
+                    "description": "Specifies if webmail access is enabled",
                     "type": "boolean",
                     "example": true
                 }
@@ -1674,17 +1679,17 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "email": {
-                    "description": "Email is the email address for the mailbox\nRequired: true\nExample: user@example.com",
+                    "description": "Email is the email address for the mailbox\nRequired: true",
                     "type": "string",
                     "example": "user@example.com"
                 },
                 "forwardingEnabled": {
-                    "description": "ForwardingEnabled indicates if email forwarding is enabled\nExample: true",
+                    "description": "ForwardingEnabled indicates if email forwarding is enabled",
                     "type": "boolean",
                     "example": true
                 },
                 "forwardingTo": {
-                    "description": "ForwardingTo is the email address the mailbox forwards to\nExample: user@forward.com",
+                    "description": "ForwardingTo is the email address the mailbox forwards to",
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -1695,22 +1700,22 @@ const docTemplate = `{
                     ]
                 },
                 "message": {
-                    "description": "Message provides additional information about the action\nExample: Mailbox setup successful",
+                    "description": "Message provides additional information about the action",
                     "type": "string",
                     "example": "Mailbox setup successful"
                 },
                 "password": {
-                    "description": "Password is the password for the mailbox\nRequired: false\nExample: SecurePassword123!",
+                    "description": "Password is the password for the mailbox\nRequired: false",
                     "type": "string",
                     "example": "SecurePassword123!"
                 },
                 "status": {
-                    "description": "Status indicates the result of the action\nExample: success",
+                    "description": "Status indicates the result of the action",
                     "type": "string",
                     "example": "success"
                 },
                 "webmailEnabled": {
-                    "description": "WebmailEnabled indicates if webmail access is enabled\nExample: true",
+                    "description": "WebmailEnabled indicates if webmail access is enabled",
                     "type": "boolean",
                     "example": true
                 }
@@ -1727,12 +1732,12 @@ const docTemplate = `{
                     }
                 },
                 "message": {
-                    "description": "Message provides additional information about the action\nExample: Mailboxes retrieved successfully",
+                    "description": "Message provides additional information about the action",
                     "type": "string",
                     "example": "Mailboxes retrieved successfully"
                 },
                 "status": {
-                    "description": "Status indicates the result of the action\nExample: success",
+                    "description": "Status indicates the result of the action",
                     "type": "string",
                     "example": "success"
                 }
@@ -1743,12 +1748,12 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "domain": {
-                    "description": "Domain is the domain name to be registered\nRequired: true\nExample: example.com",
+                    "description": "Domain is the domain name to be registered\nRequired: true",
                     "type": "string",
                     "example": "example.com"
                 },
                 "website": {
-                    "description": "Destination website for permanent redirect\nRequired: true\nExample: www.example.com",
+                    "description": "Destination website for permanent redirect\nRequired: true",
                     "type": "string",
                     "example": "www.example.com"
                 }

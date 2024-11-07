@@ -557,14 +557,12 @@ definitions:
         description: |-
           Domain is the domain name to be configured
           Required: true
-          Example: example.com
         example: example.com
         type: string
       website:
         description: |-
           Destination website for permanent redirect
           Required: true
-          Example: www.example.com
         example: www.example.com
         type: string
     type: object
@@ -572,33 +570,23 @@ definitions:
     description: Domain object in the response
     properties:
       createdDate:
-        description: |-
-          CreatedDate is the date the domain was registered
-          Example: 09/14/2024
+        description: CreatedDate is the date the domain was registered
         example: 09/14/2024
         type: string
       domain:
-        description: |-
-          Domain is the domain name that was registered
-          Example: example.com
+        description: Domain is the domain name that was registered
         example: example.com
         type: string
       expiredDate:
-        description: |-
-          ExpiredDate is the date when the domain registration will expire
-          Example: 09/14/2025
+        description: ExpiredDate is the date when the domain registration will expire
         example: 09/14/2025
         type: string
       message:
-        description: |-
-          Message provides additional information about the action
-          Example: Domain registered successfully
+        description: Message provides additional information about the action
         example: Domain retrieved successfully
         type: string
       nameservers:
-        description: |-
-          Nameservers lists the nameservers associated with the domain
-          Example: [ns1.example.com, ns2.example.com]
+        description: Nameservers lists the nameservers associated with the domain
         example:
         - '[''ns1.example.com'''
         - ' ''ns2.example.com'']'
@@ -606,9 +594,7 @@ definitions:
           type: string
         type: array
       status:
-        description: |-
-          Status indicates the result of the action
-          Example: success
+        description: Status indicates the result of the action
         example: success
         type: string
     type: object
@@ -620,15 +606,11 @@ definitions:
           $ref: '#/definitions/restmailstack.DomainResponse'
         type: array
       message:
-        description: |-
-          Message provides additional information about the action
-          Example: Domain retrieved successfully
+        description: Message provides additional information about the action
         example: Domains retrieved successfully
         type: string
       status:
-        description: |-
-          Status indicates the result of the action
-          Example: success
+        description: Status indicates the result of the action
         example: success
         type: string
     type: object
@@ -636,39 +618,37 @@ definitions:
     description: Request body for adding and configuring a new mailbox
     properties:
       forwardingEnabled:
-        description: |-
-          Specifies if email forwarding is enabled
-          Example: true
+        description: Specifies if email forwarding is enabled
         example: true
         type: boolean
       forwardingTo:
-        description: |-
-          Email address to forward to (if forwarding is enabled)
-          Example: johndoe.forward@example.com
+        description: Email address to forward to (if forwarding is enabled)
         example:
         - '[''user1@example.com'''
         - ' ''user2@example.com'']'
         items:
           type: string
         type: array
+      linkedUser:
+        description: |-
+          LinkedUser is the email address of the user to whom new mailbox should be linked. If not provided or not found, mailbox will not be associated with any user
+          Required: false
+        example: john.doe@mycompany.com
+        type: string
       password:
         description: |-
           Password for the mailbox (e.g., "SecurePassword123!")
           Required: false
-          Example: SecurePassword123!
         example: SecurePassword123!
         type: string
       username:
         description: |-
           Username for the mailbox (e.g., "john.doe")
           Required: true
-          Example: john.doe
         example: john.doe
         type: string
       webmailEnabled:
-        description: |-
-          Specifies if webmail access is enabled
-          Example: true
+        description: Specifies if webmail access is enabled
         example: true
         type: boolean
     type: object
@@ -679,19 +659,14 @@ definitions:
         description: |-
           Email is the email address for the mailbox
           Required: true
-          Example: user@example.com
         example: user@example.com
         type: string
       forwardingEnabled:
-        description: |-
-          ForwardingEnabled indicates if email forwarding is enabled
-          Example: true
+        description: ForwardingEnabled indicates if email forwarding is enabled
         example: true
         type: boolean
       forwardingTo:
-        description: |-
-          ForwardingTo is the email address the mailbox forwards to
-          Example: user@forward.com
+        description: ForwardingTo is the email address the mailbox forwards to
         example:
         - '[''user1@example.com'''
         - ' ''user2@example.com'']'
@@ -699,28 +674,21 @@ definitions:
           type: string
         type: array
       message:
-        description: |-
-          Message provides additional information about the action
-          Example: Mailbox setup successful
+        description: Message provides additional information about the action
         example: Mailbox setup successful
         type: string
       password:
         description: |-
           Password is the password for the mailbox
           Required: false
-          Example: SecurePassword123!
         example: SecurePassword123!
         type: string
       status:
-        description: |-
-          Status indicates the result of the action
-          Example: success
+        description: Status indicates the result of the action
         example: success
         type: string
       webmailEnabled:
-        description: |-
-          WebmailEnabled indicates if webmail access is enabled
-          Example: true
+        description: WebmailEnabled indicates if webmail access is enabled
         example: true
         type: boolean
     type: object
@@ -732,15 +700,11 @@ definitions:
           $ref: '#/definitions/restmailstack.MailboxResponse'
         type: array
       message:
-        description: |-
-          Message provides additional information about the action
-          Example: Mailboxes retrieved successfully
+        description: Message provides additional information about the action
         example: Mailboxes retrieved successfully
         type: string
       status:
-        description: |-
-          Status indicates the result of the action
-          Example: success
+        description: Status indicates the result of the action
         example: success
         type: string
     type: object
@@ -751,14 +715,12 @@ definitions:
         description: |-
           Domain is the domain name to be registered
           Required: true
-          Example: example.com
         example: example.com
         type: string
       website:
         description: |-
           Destination website for permanent redirect
           Required: true
-          Example: www.example.com
         example: www.example.com
         type: string
     type: object
