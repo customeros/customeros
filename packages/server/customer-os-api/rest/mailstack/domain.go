@@ -2,10 +2,10 @@ package restmailstack
 
 import (
 	"github.com/gin-gonic/gin"
-	coserrors "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/coserrors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
@@ -327,7 +327,7 @@ func configureDomain(ctx context.Context, tenant, domain, website string, servic
 	}
 
 	// setup domain in openSRS
-	err = services.OpensrsService.SetupDomainForMailStack(ctx, tenant, domain)
+	err = services.CommonServices.OpenSrsService.SetupDomainForMailStack(ctx, tenant, domain)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Error setting up domain in OpenSRS"))
 		return domainResponse, coserrors.ErrDomainConfigurationFailed

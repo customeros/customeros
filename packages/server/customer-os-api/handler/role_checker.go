@@ -3,9 +3,9 @@ package handler
 import (
 	"context"
 	"github.com/99designs/gqlgen/graphql"
-	localerrors "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/coserrors"
 )
 
 func GetRoleChecker() func(ctx context.Context, obj interface{}, next graphql.Resolver, roles []model.Role) (res interface{}, err error) {
@@ -21,6 +21,6 @@ func GetRoleChecker() func(ctx context.Context, obj interface{}, next graphql.Re
 			}
 		}
 		// If the role is not in the list of allowed roles, return an error
-		return nil, localerrors.ErrAccessDenied
+		return nil, coserrors.ErrAccessDenied
 	}
 }

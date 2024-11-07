@@ -51,6 +51,7 @@ type Services struct {
 	OrganizationService        OrganizationService
 	TagService                 TagService
 	RegistrationService        RegistrationService
+	MailboxService             MailboxService
 
 	GoogleService   GoogleService
 	AzureService    AzureService
@@ -101,7 +102,7 @@ func InitServices(globalConfig *config.GlobalConfig, db *gorm.DB, driver *neo4j.
 	services.PostmarkService = NewPostmarkService(services)
 	services.NovuService = NewNovuService(services)
 	services.OrganizationService = NewOrganizationService(services)
-	services.OpenSrsService = NewOpenSRSService(services)
+	services.OpenSrsService = NewOpenSRSService(log, services)
 	services.SlackChannelService = NewSlackChannelService(services.PostgresRepositories)
 	services.ServiceLineItemService = NewServiceLineItemService(log, services)
 	services.TagService = NewTagService(log, services)
@@ -110,6 +111,7 @@ func InitServices(globalConfig *config.GlobalConfig, db *gorm.DB, driver *neo4j.
 	services.WorkflowService = NewWorkflowService(services)
 	services.WorkspaceService = NewWorkspaceService(services)
 	services.RegistrationService = NewRegistrationService(services)
+	services.MailboxService = NewMailboxService(log, services)
 
 	//init app cache
 	personalEmailProviderEntities, err := services.PostgresRepositories.PersonalEmailProviderRepository.GetPersonalEmailProviders()

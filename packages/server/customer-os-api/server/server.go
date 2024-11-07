@@ -104,6 +104,9 @@ func (server *server) Run(parentCtx context.Context) error {
 	// Setting up Postgres repositories
 	commonServices := commonservice.InitServices(&commonConfig.GlobalConfig{
 		RabbitMQConfig: &server.cfg.RabbitMQConfig,
+		ExternalServices: commonConfig.ExternalServices{
+			OpenSRSConfig: server.cfg.ExternalServices.OpenSRSConfig,
+		},
 	}, db.GormDB, &neo4jDriver, server.cfg.Neo4j.Database, grpcContainer, server.log)
 
 	// Setting up Gin

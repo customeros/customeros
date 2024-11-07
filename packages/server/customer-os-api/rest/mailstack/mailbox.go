@@ -3,20 +3,14 @@ package restmailstack
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
-	coserrors "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
-	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/coserrors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
-	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-	"golang.org/x/net/context"
 	"net/http"
 	"regexp"
 	"strings"
@@ -122,7 +116,13 @@ func RegisterNewMailbox(services *service.Services) gin.HandlerFunc {
 		additionalForwardingTo := fmt.Sprintf("bcc@%s.customeros.ai", strings.ToLower(tenant))
 		forwardingTo = append(forwardingTo, additionalForwardingTo)
 
-		response, err := addMailbox(ctx, domain, username, password, forwardingEnabled, mailboxRequest.WebmailEnabled, forwardingTo, services)
+		err := services.CommonServices.MailboxService.AddMailbox(ctx, domain, username, password, forwardingEnabled, mailboxRequest.WebmailEnabled, forwardingTo)
+		response := MailboxResponse{
+			Email:             username + "@" + domain,
+			WebmailEnabled:    mailboxRequest.WebmailEnabled,
+			ForwardingEnabled: forwardingEnabled,
+			ForwardingTo:      forwardingTo,
+		}
 		if err != nil {
 			if errors.Is(err, coserrors.ErrDomainNotFound) {
 				c.JSON(http.StatusNotFound,
@@ -158,68 +158,6 @@ func RegisterNewMailbox(services *service.Services) gin.HandlerFunc {
 		}
 		c.JSON(http.StatusOK, response)
 	}
-}
-
-func addMailbox(ctx context.Context, domain string, username, password string, forwardingEnabled, webmailEnabled bool, forwardingTo []string, services *service.Services) (MailboxResponse, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "addMailbox")
-	defer span.Finish()
-
-	tenant := common.GetTenantFromContext(ctx)
-
-	mailboxResponse := MailboxResponse{
-		Email: username + "@" + domain,
-	}
-
-	// Check domain belongs to tenant
-	domainBelongsToTenant, err := services.CommonServices.PostgresRepositories.MailStackDomainRepository.CheckDomainOwnership(ctx, tenant, domain)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error checking domain"))
-		return mailboxResponse, err
-	}
-	if !domainBelongsToTenant {
-		return mailboxResponse, coserrors.ErrDomainNotFound
-	}
-
-	// Check mailbox doesn't already exist
-	mailboxRecord, err := services.CommonServices.PostgresRepositories.TenantSettingsMailboxRepository.GetByMailbox(ctx, mailboxResponse.Email)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error checking mailbox"))
-		return mailboxResponse, err
-	}
-	if mailboxRecord != nil {
-		return mailboxResponse, coserrors.ErrMailboxExists
-	}
-
-	err = services.OpensrsService.SetMailbox(ctx, tenant, domain, username, password, forwardingEnabled, forwardingTo, webmailEnabled)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error setting mailbox"))
-		return mailboxResponse, err
-	}
-
-	// Save mailbox details in postgres
-	err = services.CommonServices.PostgresRepositories.TenantSettingsMailboxRepository.Merge(ctx, &entity.TenantSettingsMailbox{
-		Domain: domain, MailboxUsername: username + "@" + domain, Tenant: tenant, MailboxPassword: password, MinMinutesBetweenEmails: 5, MaxMinutesBetweenEmails: 10,
-	})
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error saving mailbox"))
-		return mailboxResponse, err
-	}
-
-	// create email node in neo4j
-	_, err = services.CommonServices.EmailService.Merge(ctx, tenant, commonservice.EmailFields{
-		Email:     username + "@" + domain,
-		Source:    neo4jentity.DataSourceOpenline,
-		AppSource: constants.AppSourceCustomerOsApiRest,
-	}, nil)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error creating email node for mailbox"))
-	}
-
-	mailboxResponse.WebmailEnabled = webmailEnabled
-	mailboxResponse.ForwardingEnabled = forwardingEnabled
-	mailboxResponse.ForwardingTo = forwardingTo
-
-	return mailboxResponse, nil
 }
 
 func validateMailboxUsername(username string) error {
@@ -294,7 +232,7 @@ func GetMailboxes(services *service.Services) gin.HandlerFunc {
 			Status: "success",
 		}
 		for _, mailboxRecord := range mailboxRecords {
-			mailboxDetails, err := services.OpensrsService.GetMailboxDetails(ctx, mailboxRecord.MailboxUsername)
+			mailboxDetails, err := services.CommonServices.OpenSrsService.GetMailboxDetails(ctx, mailboxRecord.MailboxUsername)
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "Error getting mailbox details"))
 				span.LogFields(tracingLog.String("result", "Error getting mailbox details"))

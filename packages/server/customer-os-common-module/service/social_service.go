@@ -3,8 +3,8 @@ package service
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/coserrors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
-	commonerrors "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -80,7 +80,7 @@ func (s *socialService) Update(ctx context.Context, socialEntity neo4jentity.Soc
 	currentSocialEntity := neo4jmapper.MapDbNodeToSocialEntity(socialDbNode)
 	if currentSocialEntity.IsLinkedin() {
 		if currentSocialEntity.Alias != "" || currentSocialEntity.ExternalId != "" {
-			return currentSocialEntity, commonerrors.ErrOperationNotAllowed
+			return currentSocialEntity, coserrors.ErrOperationNotAllowed
 		}
 	}
 

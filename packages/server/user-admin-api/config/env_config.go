@@ -30,4 +30,5 @@ type Config struct {
 	Neo4j            config.Neo4jConfig
 	Jaeger           tracing.JaegerConfig
 	RabbitMQConfig   config.RabbitMQConfig
+	OpenSRSConfig    config.OpenSRSConfig
 }

@@ -7,13 +7,13 @@ package resolver
 import (
 	"context"
 	"errors"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/coserrors"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
-	commonerrors "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/errors"
 	"github.com/opentracing/opentracing-go/log"
 )
 
@@ -26,7 +26,7 @@ func (r *mutationResolver) SocialUpdate(ctx context.Context, input model.SocialU
 
 	socialEntity, err := r.Services.CommonServices.SocialService.Update(ctx, *mapper.MapSocialUpdateInputToEntity(&input))
 	if err != nil {
-		if errors.Is(err, commonerrors.ErrOperationNotAllowed) {
+		if errors.Is(err, coserrors.ErrOperationNotAllowed) {
 			graphql.AddErrorf(ctx, "Operation not allowed. Confirmed linked in url cannot be changed. Create a new social instead.")
 		} else {
 			tracing.TraceErr(span, err)

@@ -391,7 +391,6 @@ func TestGraphUserEventHandler_OnUserUpdate(t *testing.T) {
 	require.Equal(t, 2, len(utils.GetListStringPropOrEmpty(userProps, "roles")))
 	require.Contains(t, utils.GetListStringPropOrEmpty(userProps, "roles"), "OWNER")
 	require.Contains(t, utils.GetListStringPropOrEmpty(userProps, "roles"), "USER")
-
 }
 
 func TestGraphUserEventHandler_OnPhoneNumberLinkedToUser(t *testing.T) {
