@@ -33,14 +33,12 @@ type ContactService interface {
 	GetFirstContactByPhoneNumber(ctx context.Context, phoneNumber string) (*neo4jentity.ContactEntity, error)
 	FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
 	PermanentDelete(ctx context.Context, id string) (bool, error)
-	Archive(ctx context.Context, contactId string) (bool, error)
 	RestoreFromArchive(ctx context.Context, contactId string) (bool, error)
 	GetContactsForJobRoles(ctx context.Context, jobRoleIds []string) (*neo4jentity.ContactEntities, error)
 	GetContactsForOrganization(ctx context.Context, organizationId string, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
 	Merge(ctx context.Context, primaryContactId, mergedContactId string) error
 	GetContactsForEmails(ctx context.Context, emailIds []string) (*neo4jentity.ContactEntities, error)
 	GetContactsForPhoneNumbers(ctx context.Context, phoneNumberIds []string) (*neo4jentity.ContactEntities, error)
-	RemoveOrganization(ctx context.Context, contactId, organizationId string) (*neo4jentity.ContactEntity, error)
 	RemoveLocation(ctx context.Context, contactId string, locationId string) error
 	CustomerContactCreate(ctx context.Context, entity *CustomerContactCreateData) (*model.CustomerContact, error)
 	GetContactCountByOrganizations(ctx context.Context, ids []string) (map[string]int64, error)
@@ -191,14 +189,6 @@ func (s *contactService) PermanentDelete(ctx context.Context, contactId string) 
 		return false, err
 	}
 
-	return true, nil
-}
-
-func (s *contactService) Archive(ctx context.Context, contactId string) (bool, error) {
-	err := s.repositories.ContactRepository.Archive(ctx, common.GetTenantFromContext(ctx), contactId)
-	if err != nil {
-		return false, err
-	}
 	return true, nil
 }
 
@@ -391,24 +381,6 @@ func (s *contactService) Merge(ctx context.Context, primaryContactId, mergedCont
 	}
 
 	return err
-}
-
-func (s *contactService) RemoveOrganization(ctx context.Context, contactId, organizationId string) (*neo4jentity.ContactEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.RemoveOrganization")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.String("contactId", contactId), log.String("organizationId", organizationId))
-
-	contactNodePtr, err := s.repositories.ContactRepository.RemoveOrganization(ctx, common.GetTenantFromContext(ctx), contactId, organizationId)
-	if err != nil {
-		return nil, err
-	}
-	s.services.OrganizationService.UpdateLastTouchpoint(ctx, organizationId)
-
-	utils.EventCompleted(ctx, common.GetTenantFromContext(ctx), commonModel.CONTACT.String(), contactId, s.grpcClients, utils.NewEventCompletedDetails().WithUpdate())
-	utils.EventCompleted(ctx, common.GetTenantFromContext(ctx), commonModel.ORGANIZATION.String(), organizationId, s.grpcClients, utils.NewEventCompletedDetails().WithUpdate())
-
-	return neo4jmapper.MapDbNodeToContactEntity(contactNodePtr), nil
 }
 
 func (s *contactService) GetContactsForEmails(ctx context.Context, emailIds []string) (*neo4jentity.ContactEntities, error) {

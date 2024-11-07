@@ -915,7 +915,6 @@ type ComplexityRoot struct {
 		ContactAddOrganizationByID                 func(childComplexity int, input model.ContactOrganizationInput) int
 		ContactAddSocial                           func(childComplexity int, contactID string, input model.SocialInput) int
 		ContactAddTag                              func(childComplexity int, input model.ContactTagInput) int
-		ContactArchive                             func(childComplexity int, contactID string) int
 		ContactCreate                              func(childComplexity int, input model.ContactInput) int
 		ContactCreateForOrganization               func(childComplexity int, input model.ContactInput, organizationID string) int
 		ContactFindWorkEmail                       func(childComplexity int, contactID string, organizationID *string, domain *string, findMobileNumber *bool) int
@@ -923,7 +922,6 @@ type ComplexityRoot struct {
 		ContactHide                                func(childComplexity int, contactID string) int
 		ContactMerge                               func(childComplexity int, primaryContactID string, mergedContactIds []string) int
 		ContactRemoveLocation                      func(childComplexity int, contactID string, locationID string) int
-		ContactRemoveOrganizationByID              func(childComplexity int, input model.ContactOrganizationInput) int
 		ContactRemoveSocial                        func(childComplexity int, contactID string, socialID string) int
 		ContactRemoveTag                           func(childComplexity int, input model.ContactTagInput) int
 		ContactRestoreFromArchive                  func(childComplexity int, contactID string) int
@@ -1709,12 +1707,10 @@ type MutationResolver interface {
 	CustomerContactCreate(ctx context.Context, input model.CustomerContactInput) (*model.CustomerContact, error)
 	ContactUpdate(ctx context.Context, input model.ContactUpdateInput) (*model.Contact, error)
 	ContactHardDelete(ctx context.Context, contactID string) (*model.Result, error)
-	ContactArchive(ctx context.Context, contactID string) (*model.Result, error)
 	ContactRestoreFromArchive(ctx context.Context, contactID string) (*model.Result, error)
 	ContactMerge(ctx context.Context, primaryContactID string, mergedContactIds []string) (*model.Contact, error)
 	ContactHide(ctx context.Context, contactID string) (*model.ActionResponse, error)
 	ContactAddOrganizationByID(ctx context.Context, input model.ContactOrganizationInput) (*model.Contact, error)
-	ContactRemoveOrganizationByID(ctx context.Context, input model.ContactOrganizationInput) (*model.Contact, error)
 	ContactAddNewLocation(ctx context.Context, contactID string) (*model.Location, error)
 	ContactRemoveLocation(ctx context.Context, contactID string, locationID string) (*model.Contact, error)
 	ContactAddSocial(ctx context.Context, contactID string, input model.SocialInput) (*model.Social, error)
@@ -6396,18 +6392,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.ContactAddTag(childComplexity, args["input"].(model.ContactTagInput)), true
 
-	case "Mutation.contact_Archive":
-		if e.complexity.Mutation.ContactArchive == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_contact_Archive_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.ContactArchive(childComplexity, args["contactId"].(string)), true
-
 	case "Mutation.contact_Create":
 		if e.complexity.Mutation.ContactCreate == nil {
 			break
@@ -6491,18 +6475,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.ContactRemoveLocation(childComplexity, args["contactId"].(string), args["locationId"].(string)), true
-
-	case "Mutation.contact_RemoveOrganizationById":
-		if e.complexity.Mutation.ContactRemoveOrganizationByID == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_contact_RemoveOrganizationById_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.ContactRemoveOrganizationByID(childComplexity, args["input"].(model.ContactOrganizationInput)), true
 
 	case "Mutation.contact_RemoveSocial":
 		if e.complexity.Mutation.ContactRemoveSocial == nil {
@@ -11722,13 +11694,11 @@ extend type Mutation {
 
     contact_Update(input: ContactUpdateInput!): Contact!
     contact_HardDelete(contactId: ID!): Result!
-    contact_Archive(contactId: ID!): Result! @deprecated(reason: "Use contact_Hide instead")
     contact_RestoreFromArchive(contactId: ID!): Result!
     contact_Merge(primaryContactId: ID!, mergedContactIds: [ID!]!): Contact!
     contact_Hide(contactId: ID!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
     contact_AddOrganizationById(input: ContactOrganizationInput!): Contact!
-    contact_RemoveOrganizationById(input: ContactOrganizationInput!): Contact!
 
     contact_AddNewLocation(contactId: ID!): Location!
     contact_RemoveLocation(contactId: ID!, locationId: ID!): Contact!
@@ -15970,21 +15940,6 @@ func (ec *executionContext) field_Mutation_contact_AddTag_args(ctx context.Conte
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_contact_Archive_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["contactId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contactId"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["contactId"] = arg0
-	return args, nil
-}
-
 func (ec *executionContext) field_Mutation_contact_CreateForOrganization_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -16141,21 +16096,6 @@ func (ec *executionContext) field_Mutation_contact_RemoveLocation_args(ctx conte
 		}
 	}
 	args["locationId"] = arg1
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_contact_RemoveOrganizationById_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 model.ContactOrganizationInput
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNContactOrganizationInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐContactOrganizationInput(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["input"] = arg0
 	return args, nil
 }
 
@@ -50682,65 +50622,6 @@ func (ec *executionContext) fieldContext_Mutation_contact_HardDelete(ctx context
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_contact_Archive(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_contact_Archive(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().ContactArchive(rctx, fc.Args["contactId"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.Result)
-	fc.Result = res
-	return ec.marshalNResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐResult(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_contact_Archive(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "result":
-				return ec.fieldContext_Result_result(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Result", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_contact_Archive_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Mutation_contact_RestoreFromArchive(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_contact_RestoreFromArchive(ctx, field)
 	if err != nil {
@@ -51129,129 +51010,6 @@ func (ec *executionContext) fieldContext_Mutation_contact_AddOrganizationById(ct
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_contact_AddOrganizationById_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_contact_RemoveOrganizationById(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_contact_RemoveOrganizationById(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().ContactRemoveOrganizationByID(rctx, fc.Args["input"].(model.ContactOrganizationInput))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.Contact)
-	fc.Result = res
-	return ec.marshalNContact2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐContact(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_contact_RemoveOrganizationById(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "metadata":
-				return ec.fieldContext_Contact_metadata(ctx, field)
-			case "id":
-				return ec.fieldContext_Contact_id(ctx, field)
-			case "title":
-				return ec.fieldContext_Contact_title(ctx, field)
-			case "prefix":
-				return ec.fieldContext_Contact_prefix(ctx, field)
-			case "name":
-				return ec.fieldContext_Contact_name(ctx, field)
-			case "firstName":
-				return ec.fieldContext_Contact_firstName(ctx, field)
-			case "lastName":
-				return ec.fieldContext_Contact_lastName(ctx, field)
-			case "username":
-				return ec.fieldContext_Contact_username(ctx, field)
-			case "description":
-				return ec.fieldContext_Contact_description(ctx, field)
-			case "timezone":
-				return ec.fieldContext_Contact_timezone(ctx, field)
-			case "profilePhotoUrl":
-				return ec.fieldContext_Contact_profilePhotoUrl(ctx, field)
-			case "hide":
-				return ec.fieldContext_Contact_hide(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Contact_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_Contact_updatedAt(ctx, field)
-			case "label":
-				return ec.fieldContext_Contact_label(ctx, field)
-			case "source":
-				return ec.fieldContext_Contact_source(ctx, field)
-			case "appSource":
-				return ec.fieldContext_Contact_appSource(ctx, field)
-			case "tags":
-				return ec.fieldContext_Contact_tags(ctx, field)
-			case "jobRoles":
-				return ec.fieldContext_Contact_jobRoles(ctx, field)
-			case "organizations":
-				return ec.fieldContext_Contact_organizations(ctx, field)
-			case "latestOrganizationWithJobRole":
-				return ec.fieldContext_Contact_latestOrganizationWithJobRole(ctx, field)
-			case "phoneNumbers":
-				return ec.fieldContext_Contact_phoneNumbers(ctx, field)
-			case "emails":
-				return ec.fieldContext_Contact_emails(ctx, field)
-			case "primaryEmail":
-				return ec.fieldContext_Contact_primaryEmail(ctx, field)
-			case "locations":
-				return ec.fieldContext_Contact_locations(ctx, field)
-			case "socials":
-				return ec.fieldContext_Contact_socials(ctx, field)
-			case "connectedUsers":
-				return ec.fieldContext_Contact_connectedUsers(ctx, field)
-			case "customFields":
-				return ec.fieldContext_Contact_customFields(ctx, field)
-			case "owner":
-				return ec.fieldContext_Contact_owner(ctx, field)
-			case "flows":
-				return ec.fieldContext_Contact_flows(ctx, field)
-			case "timelineEvents":
-				return ec.fieldContext_Contact_timelineEvents(ctx, field)
-			case "timelineEventsTotalCount":
-				return ec.fieldContext_Contact_timelineEventsTotalCount(ctx, field)
-			case "enrichDetails":
-				return ec.fieldContext_Contact_enrichDetails(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_contact_RemoveOrganizationById_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -107030,13 +106788,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "contact_Archive":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_contact_Archive(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "contact_RestoreFromArchive":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_contact_RestoreFromArchive(ctx, field)
@@ -107061,13 +106812,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "contact_AddOrganizationById":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_contact_AddOrganizationById(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "contact_RemoveOrganizationById":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_contact_RemoveOrganizationById(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++

@@ -116,11 +116,6 @@ func (r *mutationResolver) ContactHardDelete(ctx context.Context, contactID stri
 	panic(fmt.Errorf("not implemented: ContactHardDelete - contact_HardDelete"))
 }
 
-// ContactArchive is the resolver for the contact_Archive field.
-func (r *mutationResolver) ContactArchive(ctx context.Context, contactID string) (*model.Result, error) {
-	panic(fmt.Errorf("not implemented: ContactArchive - contact_Archive"))
-}
-
 // ContactRestoreFromArchive is the resolver for the contact_RestoreFromArchive field.
 func (r *mutationResolver) ContactRestoreFromArchive(ctx context.Context, contactID string) (*model.Result, error) {
 	panic(fmt.Errorf("not implemented: ContactRestoreFromArchive - contact_RestoreFromArchive"))
@@ -139,11 +134,6 @@ func (r *mutationResolver) ContactHide(ctx context.Context, contactID string) (*
 // ContactAddOrganizationByID is the resolver for the contact_AddOrganizationById field.
 func (r *mutationResolver) ContactAddOrganizationByID(ctx context.Context, input model.ContactOrganizationInput) (*model.Contact, error) {
 	panic(fmt.Errorf("not implemented: ContactAddOrganizationByID - contact_AddOrganizationById"))
-}
-
-// ContactRemoveOrganizationByID is the resolver for the contact_RemoveOrganizationById field.
-func (r *mutationResolver) ContactRemoveOrganizationByID(ctx context.Context, input model.ContactOrganizationInput) (*model.Contact, error) {
-	panic(fmt.Errorf("not implemented: ContactRemoveOrganizationByID - contact_RemoveOrganizationById"))
 }
 
 // ContactAddNewLocation is the resolver for the contact_AddNewLocation field.
@@ -212,6 +202,12 @@ type contactResolver struct{ *Resolver }
 //   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
 //     it when you're done.
 //   - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *mutationResolver) ContactArchive(ctx context.Context, contactID string) (*model.Result, error) {
+	panic(fmt.Errorf("not implemented: ContactArchive - contact_Archive"))
+}
+func (r *mutationResolver) ContactRemoveOrganizationByID(ctx context.Context, input model.ContactOrganizationInput) (*model.Contact, error) {
+	panic(fmt.Errorf("not implemented: ContactRemoveOrganizationByID - contact_RemoveOrganizationById"))
+}
 func (r *contactResolver) LatestOrganizationWithJorRole(ctx context.Context, obj *model.Contact) (*model.Organization, error) {
 	panic(fmt.Errorf("not implemented: LatestOrganizationWithJorRole - latestOrganizationWithJorRole"))
 }

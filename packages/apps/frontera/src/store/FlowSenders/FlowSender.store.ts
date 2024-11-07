@@ -79,6 +79,7 @@ export const getDefaultValue = (): FlowSender => ({
     createdAt: '',
     updatedAt: '',
     bot: false,
+    test: false,
     calendars: [],
     roles: [],
     internal: false,

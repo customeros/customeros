@@ -2287,8 +2287,6 @@ export type Mutation = {
   contact_AddOrganizationById: Contact;
   contact_AddSocial: Social;
   contact_AddTag: ActionResponse;
-  /** @deprecated Use contact_Hide instead */
-  contact_Archive: Result;
   contact_Create: Scalars['ID']['output'];
   contact_CreateForOrganization: Contact;
   contact_FindWorkEmail: ActionResponse;
@@ -2296,7 +2294,6 @@ export type Mutation = {
   contact_Hide: ActionResponse;
   contact_Merge: Contact;
   contact_RemoveLocation: Contact;
-  contact_RemoveOrganizationById: Contact;
   contact_RemoveSocial: ActionResponse;
   contact_RemoveTag: ActionResponse;
   contact_RestoreFromArchive: Result;
@@ -2512,10 +2509,6 @@ export type MutationContact_AddTagArgs = {
   input: ContactTagInput;
 };
 
-export type MutationContact_ArchiveArgs = {
-  contactId: Scalars['ID']['input'];
-};
-
 export type MutationContact_CreateArgs = {
   input: ContactInput;
 };
@@ -2548,10 +2541,6 @@ export type MutationContact_MergeArgs = {
 export type MutationContact_RemoveLocationArgs = {
   contactId: Scalars['ID']['input'];
   locationId: Scalars['ID']['input'];
-};
-
-export type MutationContact_RemoveOrganizationByIdArgs = {
-  input: ContactOrganizationInput;
 };
 
 export type MutationContact_RemoveSocialArgs = {
@@ -4776,6 +4765,7 @@ export type User = {
   roles: Array<Role>;
   source: DataSource;
   sourceOfTruth: DataSource;
+  test: Scalars['Boolean']['output'];
   timezone?: Maybe<Scalars['String']['output']>;
   updatedAt: Scalars['Time']['output'];
 };

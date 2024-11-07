@@ -33,13 +33,10 @@ extend type Mutation {
 
     contact_Update(input: ContactUpdateInput!): Contact!
     contact_HardDelete(contactId: ID!): Result!
-    contact_Archive(contactId: ID!): Result! @deprecated(reason: "Use contact_Hide instead")
-    contact_RestoreFromArchive(contactId: ID!): Result!
     contact_Merge(primaryContactId: ID!, mergedContactIds: [ID!]!): Contact!
     contact_Hide(contactId: ID!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
     contact_AddOrganizationById(input: ContactOrganizationInput!): Contact!
-    contact_RemoveOrganizationById(input: ContactOrganizationInput!): Contact!
 
     contact_AddNewLocation(contactId: ID!): Location!
     contact_RemoveLocation(contactId: ID!, locationId: ID!): Contact!

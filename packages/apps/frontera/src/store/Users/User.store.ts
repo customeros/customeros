@@ -69,6 +69,7 @@ const defaultValue: User = {
   calendars: [],
   roles: [],
   internal: false,
+  test: false,
   jobRoles: [],
   hasLinkedInToken: false,
   phoneNumbers: [],

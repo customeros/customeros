@@ -409,24 +409,6 @@ func (r *mutationResolver) ContactHardDelete(ctx context.Context, contactID stri
 	}, nil
 }
 
-// ContactArchive is the resolver for the contact_Archive field.
-func (r *mutationResolver) ContactArchive(ctx context.Context, contactID string) (*model.Result, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactArchive", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.contactID", contactID))
-
-	result, err := r.Services.ContactService.Archive(ctx, contactID)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to archive contact %s", contactID)
-		return nil, err
-	}
-	return &model.Result{
-		Result: result,
-	}, nil
-}
-
 // ContactRestoreFromArchive is the resolver for the contact_RestoreFromArchive field.
 func (r *mutationResolver) ContactRestoreFromArchive(ctx context.Context, contactID string) (*model.Result, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactRestoreFromArchive", graphql.GetOperationContext(ctx))
@@ -523,23 +505,6 @@ func (r *mutationResolver) ContactAddOrganizationByID(ctx context.Context, input
 		return nil, nil
 	}
 	return mapper.MapEntityToContact(contactEntity), nil
-}
-
-// ContactRemoveOrganizationByID is the resolver for the contact_RemoveOrganizationById field.
-func (r *mutationResolver) ContactRemoveOrganizationByID(ctx context.Context, input model.ContactOrganizationInput) (*model.Contact, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactRemoveOrganizationByID", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.contactID", input.ContactID), log.String("request.organizationID", input.OrganizationID))
-	tracing.LogObjectAsJson(span, "request.input", input)
-
-	updatedContact, err := r.Services.ContactService.RemoveOrganization(ctx, input.ContactID, input.OrganizationID)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to remove organization %s from contact %s", input.OrganizationID, input.ContactID)
-		return nil, err
-	}
-	return mapper.MapEntityToContact(updatedContact), nil
 }
 
 // ContactAddNewLocation is the resolver for the contact_AddNewLocation field.
