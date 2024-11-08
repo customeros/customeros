@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"errors"
-	"github.com/99designs/gqlgen/graphql"
 	constants "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/constants"
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
@@ -121,7 +120,6 @@ func (s *registrationService) CreateOrganizationAndContact(ctx context.Context, 
 				neo4jentity.DataSourceOpenline.String(), false, nil, nil)
 			if err != nil {
 				tracing.TraceErr(span, err)
-				graphql.AddErrorf(ctx, "Failed to add organization %s to contact %s", organizationId, contactId)
 				return nil, nil, err
 			}
 		} else {

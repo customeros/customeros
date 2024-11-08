@@ -92,7 +92,8 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 				tenantName = tn
 
 				ctx = common.WithCustomContext(ctx, &common.CustomContext{
-					Tenant: *tenantName,
+					Tenant:    *tenantName,
+					AppSource: constants.AppSourceUserAdminApi,
 				})
 
 				err = initializeUser(ctx, services, signInRequest.Provider, signInRequest.OAuthToken.ProviderAccountId, *tenantName, signInRequest.LoggedInEmail, firstName, lastName)
@@ -117,23 +118,11 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 						}
 					}
 
-					if !isPersonalEmail || isPersonalEmail { // TODO alexb temporary add for all users until mailboxes implemented
-						go func() {
-							c, cancelFunc := context.WithTimeout(context.Background(), 300*time.Second)
-							defer cancelFunc()
-
-							ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c, "/signin - prepare default setup", ginContext.Request.Header)
-							defer span.Finish()
-
-							ctx = common.WithCustomContext(ctx, &common.CustomContext{
-								Tenant:    *tenantName,
-								AppSource: constants.AppSourceUserAdminApi,
-							})
-							err = services.CommonServices.RegistrationService.PrepareDefaultTenantSetup(ctx, signInRequest.LoggedInEmail)
-							if err != nil {
-								tracing.TraceErr(span, err)
-							}
-						}()
+					if !isPersonalEmail || isPersonalEmail { // TODO alexb remove second if condition
+						err = services.CommonServices.RegistrationService.PrepareDefaultTenantSetup(ctx, signInRequest.LoggedInEmail)
+						if err != nil {
+							tracing.TraceErr(span, err)
+						}
 					}
 
 					go func() {
@@ -142,11 +131,6 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 
 						ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c, "/signin - register new tenant", ginContext.Request.Header)
 						defer span.Finish()
-
-						ctx = common.WithCustomContext(ctx, &common.CustomContext{
-							Tenant:    *tenantName,
-							AppSource: constants.AppSourceUserAdminApi,
-						})
 
 						err = registerNewTenantAsLeadInProviderTenant(ctx, config, services, signInRequest.LoggedInEmail)
 						if err != nil {
