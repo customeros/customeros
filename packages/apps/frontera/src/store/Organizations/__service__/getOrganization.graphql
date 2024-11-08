@@ -51,24 +51,11 @@ query Organization($id: ID!) {
     employees
     yearFounded
     public
-    tags {
-      id
-      name
-      createdAt
-      updatedAt
-      entityType
-      source
-      appSource
-      metadata {
-        id
-        created
-        lastUpdated
-        source
-        sourceOfTruth
-        appSource
-      }
+    enrichDetails {
+      enrichedAt
+      failedAt
+      requestedAt
     }
-
     accountDetails {
       churned
       ltv

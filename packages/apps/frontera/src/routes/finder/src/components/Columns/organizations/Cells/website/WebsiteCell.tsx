@@ -20,8 +20,8 @@ export const WebsiteCell = observer(({ organizationId }: WebsiteCellProps) => {
   const [isEdit, setIsEdit] = useState(false);
   const [metaKey, setMetaKey] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const organization = store.organizations.value.get(organizationId);
-  const enrichedOrganizations = organization?.value.enrichDetails;
+  const organization = store.organizations.getById(organizationId);
+  const enrichedOrganizations = organization?.value?.enrichDetails;
 
   const enrichingStatus =
     !enrichedOrganizations?.enrichedAt &&
@@ -38,7 +38,7 @@ export const WebsiteCell = observer(({ organizationId }: WebsiteCellProps) => {
     store.ui.setIsEditingTableCell(isEdit);
   }, [isEdit]);
 
-  if (!organization?.value.website?.length)
+  if (!organization?.value?.website?.length)
     return (
       <div
         className='flex items-center'

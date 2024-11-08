@@ -8,9 +8,14 @@ export default defineConfig({
   plugins: [
     react({
       babel: {
-        parserOpts: {
-          plugins: ['decorators'],
-        },
+        plugins: [
+          [
+            '@babel/plugin-proposal-decorators',
+            {
+              version: '2023-05',
+            },
+          ],
+        ],
       },
     }),
     graphqlLoader(),

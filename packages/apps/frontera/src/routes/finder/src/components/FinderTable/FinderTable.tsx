@@ -300,6 +300,8 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
     return <EmptyState />;
   }
 
+  return null;
+
   return (
     <div className='flex'>
       {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}

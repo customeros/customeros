@@ -1,6 +1,7 @@
 import { Params } from 'react-router-dom';
 
 import Fuse from 'fuse.js';
+import sizeof from 'object-sizeof';
 import { match } from 'ts-pattern';
 import { RootStore } from '@store/root';
 import { inPlaceSort } from 'fast-sort';
@@ -97,7 +98,7 @@ export const computeFinderData = (
             keys: [
               {
                 name: 'name',
-                getFn: (o) => o.value.name,
+                getFn: (o) => o?.value?.name || '',
               },
               {
                 name: 'webiste',
@@ -105,7 +106,7 @@ export const computeFinderData = (
               },
               {
                 name: 'socials',
-                getFn: (o) => o.value.socialMedia?.[0]?.url,
+                getFn: (o) => o?.value?.socialMedia?.[0]?.url || '',
               },
             ],
             threshold: 0.4,
@@ -114,6 +115,10 @@ export const computeFinderData = (
             .search(removeAccents(searchTerm), { limit: 40 })
             .map((r) => r.item);
         }
+
+        const plm = arr.map((c) => c.value);
+
+        console.log(sizeof(plm));
 
         return arr;
       }),

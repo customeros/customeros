@@ -62,6 +62,12 @@ export type OrganizationQuery = {
       url: string;
       followersCount: any;
     }>;
+    enrichDetails: {
+      __typename?: 'EnrichDetails';
+      enrichedAt?: any | null;
+      failedAt?: any | null;
+      requestedAt?: any | null;
+    };
     accountDetails?: {
       __typename?: 'OrgAccountDetails';
       churned?: any | null;

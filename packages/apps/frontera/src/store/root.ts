@@ -23,8 +23,8 @@ import { WorkFlowsStore } from './WorkFlows/WorkFlows.store';
 import { CustomFieldsStore } from './Settings/CustomFields.store';
 import { GlobalCacheStore } from './GlobalCache/GlobalCache.store';
 import { TableViewDefsStore } from './TableViewDefs/TableViewDefs.store';
-import { OrganizationsStore } from './Organizations/Organizations.store';
 import { OpportunitiesStore } from './Opportunities/Opportunities.store';
+import { OrganizationsStore } from './Organizations/Organizations.store';
 import { TimelineEventsStore } from './TimelineEvents/TimelineEvents.store';
 import { ContractLineItemsStore } from './ContractLineItems/ContractLineItems.store';
 import { FlowEmailVariablesStore } from './FlowEmailVariables/FlowEmailVariables.store';
@@ -123,19 +123,19 @@ export class RootStore {
       this.tableViewDefs.bootstrap(),
       this.globalCache.bootstrap(),
       this.settings.bootstrap(),
-      this.customFields.bootstrap(),
+      // this.customFields.bootstrap(),
       // this.organizations.bootstrapStream(),
       this.organizations.bootstrap(),
-      this.tags.bootstrap(),
-      this.opportunities.bootstrap(),
-      this.invoices.bootstrap(),
-      this.contracts.bootstrap(),
-      this.externalSystemInstances.bootstrap(),
-      this.users.bootstrap(),
-      this.contacts.bootstrap(),
-      this.workFlows.bootstrap(),
-      this.flows.bootstrap(),
-      this.flowEmailVariables.bootstrap(),
+      // this.tags.bootstrap(),
+      // this.opportunities.bootstrap(),
+      // this.invoices.bootstrap(),
+      // this.contracts.bootstrap(),
+      // this.externalSystemInstances.bootstrap(),
+      // this.users.bootstrap(),
+      // this.contacts.bootstrap(),
+      // this.workFlows.bootstrap(),
+      // this.flows.bootstrap(),
+      // this.flowEmailVariables.bootstrap(),
     ]);
   }
 
