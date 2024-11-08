@@ -1,8 +1,7 @@
 module github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module
 
 go 1.22
-
-toolchain go1.22.0
+toolchain go1.22.9
 
 replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository => ../customer-os-postgres-repository
 
@@ -44,7 +43,7 @@ require (
 	golang.org/x/net v0.30.0
 	golang.org/x/oauth2 v0.24.0
 	google.golang.org/api v0.205.0
-	google.golang.org/grpc v1.67.1
+	google.golang.org/grpc v1.68.0
 	google.golang.org/protobuf v1.35.1
 	gorm.io/driver/postgres v1.5.9
 	gorm.io/gorm v1.25.12
