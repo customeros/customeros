@@ -52,7 +52,6 @@ const tenantName = "openline"
 const testUserId = "test-user-id"
 const testUserEmail = "test-user-email"
 const testContactId = "test-contact-id"
-const testPlayerId = "test-player-id"
 
 func TestMain(m *testing.M) {
 	neo4jContainer, driver = neo4jt.InitTestNeo4jDB()
@@ -100,19 +99,17 @@ func prepareClient() {
 	graphResolver := NewResolver(appLogger, customerOsApiServices, customerOsApiServices.CommonServices.GrpcClients, &config.Config{})
 	loader := dataloader.NewDataLoader(customerOsApiServices)
 	customCtx := &common.CustomContext{
-		Tenant:     tenantName,
-		UserId:     testUserId,
-		UserEmail:  testUserEmail,
-		IdentityId: testPlayerId,
-		Roles:      []string{model.RoleUser.String()},
+		Tenant:    tenantName,
+		UserId:    testUserId,
+		UserEmail: testUserEmail,
+		Roles:     []string{model.RoleUser.String()},
 	}
 
 	customOwnerCtx := &common.CustomContext{
-		Tenant:     tenantName,
-		UserId:     testUserId,
-		UserEmail:  testUserEmail,
-		IdentityId: testPlayerId,
-		Roles:      []string{model.RoleUser.String(), model.RoleOwner.String()},
+		Tenant:    tenantName,
+		UserId:    testUserId,
+		UserEmail: testUserEmail,
+		Roles:     []string{model.RoleUser.String(), model.RoleOwner.String()},
 	}
 	customCustomerOsPlatformOwnerCtx := &common.CustomContext{
 		Tenant:    tenantName,

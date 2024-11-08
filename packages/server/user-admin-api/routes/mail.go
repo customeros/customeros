@@ -57,9 +57,6 @@ func addMailRoutes(rg *gin.RouterGroup, conf *config.Config, services *service.S
 			if c.Keys[security.KEY_USER_EMAIL] != nil {
 				customCtx.UserEmail = c.Keys[security.KEY_USER_EMAIL].(string)
 			}
-			if c.Keys[security.KEY_IDENTITY_ID] != nil {
-				customCtx.IdentityId = c.Keys[security.KEY_IDENTITY_ID].(string)
-			}
 
 			ctx = common.WithCustomContext(ctx, customCtx)
 
