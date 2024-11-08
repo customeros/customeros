@@ -1,8 +1,7 @@
 module github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers
 
 go 1.22
-
-toolchain go1.22.0
+toolchain go1.22.9
 
 replace github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto => ../events-processing-proto
 
@@ -46,7 +45,7 @@ require (
 	go.uber.org/zap v1.27.0
 	golang.org/x/net v0.30.0
 	golang.org/x/sync v0.8.0
-	google.golang.org/grpc v1.67.1
+	google.golang.org/grpc v1.68.0
 	google.golang.org/protobuf v1.35.1
 	gorm.io/driver/postgres v1.5.9
 	gorm.io/gorm v1.25.12
