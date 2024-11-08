@@ -9,6 +9,7 @@ type ExternalSystem struct {
 	ExternalIdSecond string     `json:"externalIdSecond,omitempty"`
 	ExternalSource   string     `json:"externalSource,omitempty"`
 	SyncDate         *time.Time `json:"syncDate,omitempty"`
+	Primary          bool       `json:"primary"`
 }
 
 func (e ExternalSystem) Available() bool {

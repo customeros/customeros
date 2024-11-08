@@ -16,6 +16,7 @@ type ExternalSystemWriteRepository interface {
 	LinkWithEntity(ctx context.Context, tenant, linkedEntityId, linkedEntityNodeLabel string, externalSystem model.ExternalSystem) error
 	LinkWithEntityInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, linkedEntityId, linkedEntityNodeLabel string, externalSystem model.ExternalSystem) error
 	SetProperty(ctx context.Context, tenant, externalSystemId, propertyName string, propertyValue any) error
+	SetPrimaryExternalId(ctx context.Context, tenant, externalSystemId string, externalId, linkedEntityNodeLabel, linkedEntityId string) error
 }
 
 type externalSystemWriteRepository struct {
@@ -134,5 +135,41 @@ func (r *externalSystemWriteRepository) SetProperty(ctx context.Context, tenant,
 		tracing.TraceErr(span, err)
 	}
 	return err
+}
 
+func (r *externalSystemWriteRepository) SetPrimaryExternalId(ctx context.Context, tenant, externalSystemId string, externalId, linkedEntityNodeLabel, linkedEntityId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemWriteRepository.SetPrimaryExternalId")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
+	span.LogFields(
+		log.String("externalSystemId", externalSystemId),
+		log.String("externalId", externalId),
+		log.String("linkedEntityNodeLabel", linkedEntityNodeLabel),
+		log.String("linkedEntityId", linkedEntityId))
+
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystemId})
+		MATCH (n:%s {id:$linkedEntityId})
+		WITH n, e
+		MERGE (n)-[r:IS_LINKED_WITH {externalId:$externalId}]->(e)
+		SET r.primary=true
+		WITH n, e
+		MATCH (n)-[r:IS_LINKED_WITH]->(e)
+		r.externalId<>$externalId
+		SET r.primary=false`, linkedEntityNodeLabel+"_"+tenant)
+	params := map[string]any{
+		"tenant":           tenant,
+		"externalSystemId": externalSystemId,
+		"externalId":       externalId,
+		"linkedEntityId":   linkedEntityId,
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
 }

@@ -73,7 +73,8 @@ func registerBillingRoutes(ctx context.Context, r *gin.Engine, services *service
 }
 
 func registerOrganizationRoutes(ctx context.Context, r *gin.Engine, services *service.Services, grpcClients *grpc_client.Clients, cache *commoncaches.Cache) {
-	setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/organizations", customerBaseV1Path), services, cache, restcustomerbase.CreateOrganization(services, grpcClients))
+	setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/organizations", customerBaseV1Path), services, cache, restcustomerbase.CreateOrganization(services))
+	setupRestRoute(ctx, r, "PUT", fmt.Sprintf("%s/organizations/:id/links/:externalSystem/primary", customerBaseV1Path), services, cache, restcustomerbase.SetPrimaryExternalSystemId(services))
 	setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/organizations/:id", customerBaseV1Path), services, cache, restcustomerbase.GetOrganization(services))
 }
 

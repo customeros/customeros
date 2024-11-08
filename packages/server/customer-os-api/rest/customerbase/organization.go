@@ -7,8 +7,8 @@ import (
 	enummapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
@@ -19,6 +19,7 @@ import (
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"net/http"
+	"strings"
 )
 
 // @Summary Create a new organization
@@ -35,7 +36,7 @@ import (
 // @Failure 500  "Failed to create organization"
 // @Router /customerbase/v1/organizations [post]
 // @Security ApiKeyAuth
-func CreateOrganization(services *service.Services, grpcClients *grpc_client.Clients) gin.HandlerFunc {
+func CreateOrganization(services *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "CreateOrganization", c.Request.Header)
 		defer span.Finish()
@@ -162,7 +163,7 @@ func CreateOrganization(services *service.Services, grpcClients *grpc_client.Cli
 
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 		_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-			return grpcClients.OrganizationClient.UpsertOrganization(ctx, &upsertOrganizationRequest)
+			return services.CommonServices.GrpcClients.OrganizationClient.UpsertOrganization(ctx, &upsertOrganizationRequest)
 		})
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "Failed to create organization"))
@@ -173,7 +174,7 @@ func CreateOrganization(services *service.Services, grpcClients *grpc_client.Cli
 
 		if request.LinkedinUrl != "" {
 			_, err = utils.CallEventsPlatformGRPCWithRetry[*socialpb.SocialIdGrpcResponse](func() (*socialpb.SocialIdGrpcResponse, error) {
-				return grpcClients.OrganizationClient.AddSocial(ctx, &organizationpb.AddSocialGrpcRequest{
+				return services.CommonServices.GrpcClients.OrganizationClient.AddSocial(ctx, &organizationpb.AddSocialGrpcRequest{
 					Tenant:         common.GetTenantFromContext(ctx),
 					LoggedInUserId: common.GetUserIdFromContext(ctx),
 					OrganizationId: newOrgId,
@@ -206,6 +207,92 @@ func CreateOrganization(services *service.Services, grpcClients *grpc_client.Cli
 				Message: "Organization created successfully",
 				ID:      newOrgId,
 			})
+	}
+}
+
+// @Summary Set primary link ID for an organization
+// @Description Sets or replaces the primary ID for an organization linked to a specific external system (e.g., Stripe, HubSpot)
+// @Tags CustomerBASE API
+// @Accept  json
+// @Produce  json
+// @Param   id             path     string  true  "Organization ID"
+// @Param   externalSystem path     string  true  "External system name, supported values (stripe, hubspot)
+// @Param   body           body     SetPrimaryExternalSystemIdRequest true  "Request payload to set primary external system ID"
+// @Success 200 {object} SetPrimaryExternalSystemIdResponse "Primary ID set successfully"
+// @Failure 400  "Invalid request body or input"
+// @Failure 401  "Unauthorized access"
+// @Failure 404  "Organization or external system not found"
+// @Failure 500  "Internal server error"
+// @Router /customerbase/v1/organizations/{id}/links/{externalSystem}/primary [put]
+// @Security ApiKeyAuth
+func SetPrimaryExternalSystemId(services *service.Services) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "SetPrimaryExternalSystemId", c.Request.Header)
+		defer span.Finish()
+		tracing.TagComponentRest(span)
+		tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+
+		tenant := common.GetTenantFromContext(ctx)
+		if tenant == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"status": "error", "message": "API key invalid or expired"})
+			span.LogFields(tracingLog.String("result", "Missing tenant in context"))
+			return
+		}
+
+		orgId := c.Param("id")
+		externalSystem := strings.ToLower(c.Param("externalSystem"))
+		request := SetPrimaryExternalSystemIdRequest{}
+
+		if err := c.ShouldBindJSON(&request); err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "Invalid request body"))
+			services.Log.Error(ctx, "Invalid request body", err)
+			c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Invalid request body"})
+			return
+		}
+		tracing.LogObjectAsJson(span, "request.body", request)
+
+		// Validate if the organization exists
+		exists, err := services.Repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, tenant, orgId, commonmodel.NodeLabelOrganization)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Failed to retrieve organization"})
+			return
+		}
+		if !exists {
+			c.JSON(http.StatusNotFound, gin.H{"status": "error", "message": "Organization not found"})
+			span.LogFields(tracingLog.String("result", "Organization not found"))
+			return
+		}
+
+		// Validate if the external system exists
+		externalSystemValid := neo4jentity.IsValidDataSource(externalSystem)
+		if !externalSystemValid {
+			c.JSON(http.StatusNotFound, gin.H{"status": "error", "message": "External system not found"})
+			span.LogFields(tracingLog.String("result", "External system not found"))
+			return
+		}
+
+		// Set or replace the primary ID
+		err = services.CommonServices.ExternalSystemService.SetPrimaryExternalId(ctx, externalSystem, request.ExternalId,
+			commonservice.LinkWith{
+				Type: commonmodel.ORGANIZATION,
+				Id:   orgId,
+			})
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "Failed to set primary external ID"))
+			services.Log.Error(ctx, "Failed to set primary external ID", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Failed to set primary external ID"})
+			return
+		}
+
+		span.LogFields(tracingLog.String("result", "Primary external ID set successfully"))
+		c.JSON(http.StatusOK, SetPrimaryExternalSystemIdResponse{
+			Status:            "success",
+			Message:           "Primary external ID set successfully",
+			OrganizationId:    orgId,
+			ExternalSystem:    externalSystem,
+			PrimaryExternalId: request.ExternalId,
+		})
 	}
 }
 

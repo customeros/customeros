@@ -100,3 +100,29 @@ type SocialLink struct {
 	// Follower count on the social media platform
 	FollowerCount int `json:"followerCount" example:"1000"`
 }
+
+// SetPrimaryExternalSystemIdRequest represents the request body for setting a primary external system ID
+// @Description Request to set or replace the primary external system ID for an organization
+type SetPrimaryExternalSystemIdRequest struct {
+	// The ID of the external system to be set as primary.
+	ExternalId string `json:"externalId" example:"stripe-1234"`
+}
+
+// SetPrimaryExternalSystemIdResponse represents the response body when setting a primary external system ID
+// @Description Response after setting the primary external system ID for an organization
+type SetPrimaryExternalSystemIdResponse struct {
+	// Status indicates the status of the creation process (e.g., "success" or "partial_success").
+	Status string `json:"status" example:"success"`
+
+	// Message provides additional information regarding the API.
+	Message string `json:"message,omitempty" example:"Primary ID set successfully"`
+
+	// The organization ID for which the primary ID was set.
+	OrganizationId string `json:"organizationId" example:"org-789"`
+
+	// The name of the external system.
+	ExternalSystem string `json:"externalSystem" example:"stripe"`
+
+	// The primary external ID that was set.
+	PrimaryExternalId string `json:"primaryExternalId" example:"stripe-1234"`
+}
