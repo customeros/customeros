@@ -676,6 +676,15 @@ func MapDbNodeToExternalSystem(node *dbtype.Node) *entity.ExternalSystemEntity {
 	return &externalSystemEntity
 }
 
+func AddDbRelationshipToExternalSystemEntity(relationship dbtype.Relationship, entity *entity.ExternalSystemEntity) {
+	props := utils.GetPropsFromRelationship(relationship)
+	entity.Relationship.SyncDate = utils.GetTimePropOrNil(props, "syncDate")
+	entity.Relationship.ExternalId = utils.GetStringPropOrEmpty(props, "externalId")
+	entity.Relationship.ExternalUrl = utils.GetStringPropOrNil(props, "externalUrl")
+	entity.Relationship.ExternalSource = utils.GetStringPropOrNil(props, "externalSource")
+	entity.Relationship.Primary = utils.GetBoolPropOrFalse(props, "primary")
+}
+
 // TODO use nil
 func MapDbNodeToOpportunityEntity(node *dbtype.Node) *entity.OpportunityEntity {
 	if node == nil {

@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
@@ -43,6 +44,16 @@ func RedirectToPayInvoice(services *service.Services) gin.HandlerFunc {
 		tracing.TagTenant(span, tenant)
 		span.LogKV(log.String("invoiceStatus", invoice.Status.String()))
 
+		// get organization linked to invoice
+		organizationDbNode, err := services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByInvoiceId(ctx, tenant, invoice.Id)
+		if err != nil {
+			tracing.TraceErr(span, err)
+		}
+		organizationEntity := neo4jentity.OrganizationEntity{}
+		if organizationDbNode != nil {
+			organizationEntity = *neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
+		}
+
 		// Check invoice status
 		switch invoice.Status {
 		case neo4jenum.InvoiceStatusPaid:
@@ -72,7 +83,15 @@ func RedirectToPayInvoice(services *service.Services) gin.HandlerFunc {
 
 		if generateNewLink {
 			paymentLink = ""
-			err := callIntegrationAppWithApiRequestForNewPaymentLink(ctx, services.Cfg.ExternalServices.IntegrationApp.WorkspaceKey, services.Cfg.ExternalServices.IntegrationApp.WorkspaceSecret, tenant, services.Cfg.ExternalServices.IntegrationApp.ApiTriggerUrlCreatePaymentLinks, invoice)
+
+			primaryStripeCustomerId, err := services.CommonServices.ExternalSystemService.GetPrimaryExternalId(ctx, neo4jenum.Stripe.String(), organizationEntity.ID, model.ORGANIZATION)
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "Error fetching primary stripe customer ID"))
+			}
+
+			err = callIntegrationAppWithApiRequestForNewPaymentLink(ctx, services.Cfg.ExternalServices.IntegrationApp.WorkspaceKey,
+				services.Cfg.ExternalServices.IntegrationApp.WorkspaceSecret, tenant,
+				services.Cfg.ExternalServices.IntegrationApp.ApiTriggerUrlCreatePaymentLinks, primaryStripeCustomerId, invoice)
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "Error calling integration app"))
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to obtain payment link, please try again later"})
@@ -149,12 +168,14 @@ type ApiRequestCreatePaymentLinksInput struct {
 	Currency                     string `json:"currency"`
 	InvoiceDescription           string `json:"invoiceDescription"`
 	CustomerEmail                string `json:"customerEmail"`
+	PrimaryStripeCustomerId      string `json:"stripeCustomerId"`
 }
 
-func callIntegrationAppWithApiRequestForNewPaymentLink(ctx context.Context, key, secret, tenant, url string, invoice *neo4jentity.InvoiceEntity) error {
+func callIntegrationAppWithApiRequestForNewPaymentLink(ctx context.Context, key, secret, tenant, url, primaryStripeCustomerId string, invoice *neo4jentity.InvoiceEntity) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "callIntegrationAppWithApiRequestForNewPaymentLink")
 	defer span.Finish()
 	span.LogKV("url", url)
+	span.LogKV("primaryStripeCustomerId", primaryStripeCustomerId)
 	span.SetTag(tracing.SpanTagTenant, tenant)
 
 	var SigningKey = []byte(secret)
@@ -186,6 +207,7 @@ func callIntegrationAppWithApiRequestForNewPaymentLink(ctx context.Context, key,
 			Currency:                     invoice.Currency.String(),
 			InvoiceDescription:           fmt.Sprintf("Invoice %s", invoice.Number),
 			CustomerEmail:                invoice.Customer.Email,
+			PrimaryStripeCustomerId:      primaryStripeCustomerId,
 		},
 	}
 	payload, err := json.Marshal(input)

@@ -37,6 +37,7 @@ type GeneratePaymentLinkEventBody struct {
 	InvoiceId                    string `json:"invoiceId"`
 	InvoiceDescription           string `json:"invoiceDescription"`
 	CustomerEmail                string `json:"customerEmail"`
+	PrimaryStripeCustomerId      string `json:"stripeCustomerId"`
 }
 
 type InvoiceFinalizedEventBody struct {
@@ -49,6 +50,7 @@ type InvoiceFinalizedEventBody struct {
 	Status                       string `json:"status"`
 	CustomerEmail                string `json:"customerEmail"`
 	CustomerName                 string `json:"customerName"`
+	PrimaryStripeCustomerId      string `json:"stripeCustomerId"`
 	Pay                          struct {
 		PayAutomatically      bool `json:"payAutomatically"`
 		CanPayWithCard        bool `json:"canPayWithCard"`
@@ -550,11 +552,15 @@ func (s *invoiceService) GenerateInvoicePaymentLinks() {
 
 		//process records
 		for _, record := range records {
+			innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+				Tenant:    record.Tenant,
+				AppSource: constants.AppSourceDataUpkeeper,
+			})
 			invoice := neo4jmapper.MapDbNodeToInvoiceEntity(record.Node)
 			tenant := record.Tenant
 
 			// get contract linked to invoice
-			contractDbNode, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractForInvoice(ctx, tenant, invoice.Id)
+			contractDbNode, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractForInvoice(innerCtx, tenant, invoice.Id)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error getting contract for invoice %s: %s", invoice.Id, err.Error())
@@ -564,6 +570,17 @@ func (s *invoiceService) GenerateInvoicePaymentLinks() {
 				contractEntity = *neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
 			}
 
+			// get organization for invoice
+			organizationDbNode, err := s.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByInvoiceId(innerCtx, tenant, invoice.Id)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("Error getting organization for invoice %s: %s", invoice.Id, err.Error())
+			}
+			organizationEntity := neo4jentity.OrganizationEntity{}
+			if organizationDbNode != nil {
+				organizationEntity = *neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
+			}
+
 			// convert amount to the smallest currency unit
 			amountInSmallestCurrencyUnit, err := data.InSmallestCurrencyUnit(invoice.Currency.String(), invoice.TotalAmount)
 			if err != nil {
@@ -571,10 +588,16 @@ func (s *invoiceService) GenerateInvoicePaymentLinks() {
 			}
 
 			// mark payment link request first, before sending the event
-			err = s.repositories.Neo4jRepositories.InvoiceWriteRepository.MarkPaymentLinkRequested(ctx, tenant, invoice.Id)
+			err = s.repositories.Neo4jRepositories.InvoiceWriteRepository.MarkPaymentLinkRequested(innerCtx, tenant, invoice.Id)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error marking payment link requested for invoice %s: %s", invoice.Id, err.Error())
+			}
+
+			primaryStripeCustomerId, err := s.commonServices.ExternalSystemService.GetPrimaryExternalId(innerCtx, neo4jenum.Stripe.String(), organizationEntity.ID, model.ORGANIZATION)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("Error getting primary stripe customer id for contract %s: %s", contractEntity.Id, err.Error())
 			}
 
 			requestBody := GeneratePaymentLinkEventBody{
@@ -584,6 +607,7 @@ func (s *invoiceService) GenerateInvoicePaymentLinks() {
 				InvoiceId:                    invoice.Id,
 				InvoiceDescription:           fmt.Sprintf("Invoice %s", invoice.Number),
 				CustomerEmail:                contractEntity.InvoiceEmail,
+				PrimaryStripeCustomerId:      primaryStripeCustomerId,
 			}
 
 			// Convert the request body to JSON
@@ -915,12 +939,17 @@ func (s *invoiceService) integrationAppInvoiceFinalizedWebhook(ctx context.Conte
 	tracing.TagTenant(span, tenant)
 	tracing.LogObjectAsJson(span, "invoice", invoice)
 
+	innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+		Tenant:    tenant,
+		AppSource: constants.AppSourceDataUpkeeper,
+	})
+
 	if s.cfg.EventNotifications.IntegrationAppEventWebhookUrls.InvoiceFinalizedUrl == "" {
 		return nil
 	}
 
 	// get organization linked to invoice
-	organizationDbNode, err := s.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByInvoiceId(ctx, tenant, invoice.Id)
+	organizationDbNode, err := s.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByInvoiceId(innerCtx, tenant, invoice.Id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error getting organization for invoice %s: %s", invoice.Id, err.Error())
@@ -932,7 +961,7 @@ func (s *invoiceService) integrationAppInvoiceFinalizedWebhook(ctx context.Conte
 	}
 
 	// get contract linked to invoice
-	contractDbNode, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractForInvoice(ctx, tenant, invoice.Id)
+	contractDbNode, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractForInvoice(innerCtx, tenant, invoice.Id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error getting contract for invoice %s: %s", invoice.Id, err.Error())
@@ -949,6 +978,12 @@ func (s *invoiceService) integrationAppInvoiceFinalizedWebhook(ctx context.Conte
 		return fmt.Errorf("error converting amount to smallest currency unit: %v", err.Error())
 	}
 
+	primaryStripeCustomerId, err := s.commonServices.ExternalSystemService.GetPrimaryExternalId(innerCtx, neo4jenum.Stripe.String(), organizationEntity.ID, model.ORGANIZATION)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error getting primary stripe customer id for contract %s: %s", contractEntity.Id, err.Error())
+	}
+
 	requestBody := InvoiceFinalizedEventBody{
 		Tenant:                       tenant,
 		Currency:                     invoice.Currency.String(),
@@ -959,6 +994,7 @@ func (s *invoiceService) integrationAppInvoiceFinalizedWebhook(ctx context.Conte
 		Status:                       invoice.Status.String(),
 		CustomerEmail:                contractEntity.InvoiceEmail,
 		CustomerName:                 utils.GetReadableNameFromEmail(contractEntity.InvoiceEmail),
+		PrimaryStripeCustomerId:      primaryStripeCustomerId,
 		Pay: struct {
 			PayAutomatically      bool `json:"payAutomatically"`
 			CanPayWithCard        bool `json:"canPayWithCard"`
