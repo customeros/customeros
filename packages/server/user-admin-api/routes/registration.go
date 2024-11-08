@@ -118,7 +118,7 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 						}
 					}
 
-					if !isPersonalEmail || isPersonalEmail { // TODO alexb remove second if condition
+					if !isPersonalEmail {
 						err = services.CommonServices.RegistrationService.PrepareDefaultTenantSetup(ctx, signInRequest.LoggedInEmail)
 						if err != nil {
 							tracing.TraceErr(span, err)
