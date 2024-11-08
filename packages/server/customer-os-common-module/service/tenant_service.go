@@ -250,13 +250,8 @@ func (s *tenantService) HardDelete(ctx context.Context, tenant string) error {
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	err := s.services.Neo4jRepositories.TenantWriteRepository.HardDeleteTenant(ctx, tenant)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	err = s.services.PostgresRepositories.CommonRepository.PermanentlyDelete(ctx, tenant)
+	// Step 1: Permanently delete all tenant data from postgres
+	err := s.services.PostgresRepositories.CommonRepository.PermanentlyDelete(ctx, tenant)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -267,6 +262,23 @@ func (s *tenantService) HardDelete(ctx context.Context, tenant string) error {
 		tracing.TraceErr(span, err)
 		return err
 	}
+
+	// Step 2: Permanently delete all tenant data from neo4j
+	// TODO implement incremental delete to avoid crashing neo4j DB
+	err = s.services.Neo4jRepositories.TenantWriteRepository.HardDeleteTenant(ctx, tenant)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	// Step 3: Permanently delete tenant bucket from S3
+	// TODO implement this
+
+	// Step 4: Permanently delete tenant data integration app
+	// TODO implement this
+
+	// Step 5: Permanently delete tenant mailboxes data OpenSRS
+	// TODO implement this
 
 	return nil
 }
