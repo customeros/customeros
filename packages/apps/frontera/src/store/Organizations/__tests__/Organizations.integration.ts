@@ -1,104 +1,18 @@
+// __tests__/Organizations.test.ts
+
 import { it, expect, describe } from 'vitest';
 
 import { Transport } from '../../transport';
 import { OrganizationsService } from '../__service__/Organizations.service';
+import {
+  Organization,
+  ExpectedState,
+  ExpectedValue,
+  SpecialAssertion,
+} from './organization.types';
 
 const transport = new Transport();
 const service = OrganizationsService.getInstance(transport);
-
-// Type definitions
-interface OnboardingDetails {
-  status: string;
-  updatedAt: null;
-  comments: string;
-}
-
-interface RenewalSummary {
-  arrForecast: null;
-  maxArrForecast: null;
-  nextRenewalDate: null;
-  renewalLikelihood: null;
-}
-
-interface AccountDetails {
-  ltv: number;
-  churned: null;
-  onboarding: OnboardingDetails;
-  renewalSummary: RenewalSummary;
-}
-
-interface LastTouchpoint {
-  lastTouchPointAt: Date | null;
-  lastTouchPointType: string | null;
-  lastTouchPointTimelineEvent: string | null;
-  lastTouchPointTimelineEventId: string | null;
-}
-
-interface ParentCompany {
-  id: string;
-  name: string;
-  relationship?: string;
-}
-
-interface SocialMedia {
-  url: string;
-}
-
-interface Tag {
-  name: string;
-}
-
-interface Subsidiary {
-  organization: {
-    name: string;
-  };
-}
-
-interface Organization {
-  owner: null;
-  icon: string;
-  logo: string;
-  name: string;
-  stage: string;
-  contracts: null;
-  public: boolean;
-  website: string;
-  industry: string;
-  domains: string[];
-  employees: number;
-  yearFounded: null;
-  leadSource: string;
-  tags: Tag[] | null;
-  description: string;
-  isCustomer: boolean;
-  locations: string[];
-  relationship: string;
-  valueProposition: string;
-  socialMedia: SocialMedia[];
-  subsidiaries: Subsidiary[];
-  accountDetails: AccountDetails;
-  lastTouchpoint: LastTouchpoint;
-  parentCompanies: ParentCompany[];
-}
-
-type AssertionType = 'not.toBeNull' | 'toBeNull';
-
-interface SpecialAssertion {
-  assertType: AssertionType;
-}
-
-type ExpectedValue =
-  | string
-  | number
-  | boolean
-  | null
-  | SpecialAssertion
-  | Record<string, unknown>
-  | unknown[];
-
-interface ExpectedState {
-  [key: string]: ExpectedValue;
-}
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -121,10 +35,8 @@ function makeAssertion(actual: unknown, expected: unknown, fieldPath: string) {
         if (typeof expectedItem === 'object' && expectedItem !== null) {
           const actualItem = actual[index];
 
-          // Only check specified nested properties
           Object.entries(expectedItem).forEach(([key, value]) => {
             if (typeof value === 'object' && value !== null) {
-              // Recursively check nested objects
               makeAssertion(
                 actualItem[key],
                 value,
@@ -240,46 +152,37 @@ async function verifyOrganizationState(
         throw new Error('Organization not found');
       }
 
-      // Create a deep clone of the expected state
       const modifiedExpectedState = JSON.parse(
         JSON.stringify(expectedState),
       ) as ExpectedState;
 
-      // Process custom assertions
       Object.entries(customAssertions).forEach(([path, value]) => {
         const pathParts = path.split('.');
 
         if (pathParts.length === 1) {
-          // Direct field override
           modifiedExpectedState[pathParts[0]] = value as ExpectedValue;
         } else {
-          // Handle nested paths
           let current = modifiedExpectedState as Record<string, unknown>;
 
-          // Build the nested structure
           for (let i = 0; i < pathParts.length - 1; i++) {
             const part = pathParts[i];
             const nextPart = pathParts[i + 1];
 
             if (!(part in current)) {
-              // Create intermediate object/array based on next part
               current[part] = !isNaN(Number(nextPart)) ? [] : {};
             } else if (current[part] === null) {
-              // Convert null to object/array if needed
               current[part] = !isNaN(Number(nextPart)) ? [] : {};
             }
 
             current = current[part] as Record<string, unknown>;
           }
 
-          // Set the final value
           const lastPart = pathParts[pathParts.length - 1];
 
           current[lastPart] = value;
         }
       });
 
-      // Start verification from root level
       Object.entries(modifiedExpectedState).forEach(([key, value]) => {
         verifyNestedState(
           organization[key as keyof Organization],
