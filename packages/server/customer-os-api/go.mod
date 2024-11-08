@@ -1,6 +1,6 @@
 module github.com/openline-ai/openline-customer-os/packages/server/customer-os-api
 
-go 1.22.5
+go 1.22.7
 
 toolchain go1.23.1
 
@@ -48,7 +48,7 @@ require (
 	go.uber.org/zap v1.27.0
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56
 	golang.org/x/net v0.30.0
-	google.golang.org/grpc v1.67.1
+	google.golang.org/grpc v1.68.0
 	google.golang.org/protobuf v1.35.1
 	gorm.io/gorm v1.25.12
 )

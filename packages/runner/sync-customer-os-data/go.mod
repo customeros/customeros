@@ -1,8 +1,8 @@
 module github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data
 
-go 1.22
+go 1.22.7
 
-toolchain go1.22.0
+toolchain go1.23.1
 
 replace github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto => ../../server/events-processing-proto
 
@@ -23,7 +23,7 @@ require (
 	github.com/uber/jaeger-client-go v2.30.0+incompatible
 	golang.org/x/oauth2 v0.24.0
 	golang.org/x/text v0.19.0
-	google.golang.org/grpc v1.67.1
+	google.golang.org/grpc v1.68.0
 	gorm.io/driver/postgres v1.5.9
 	gorm.io/gorm v1.25.12
 	zgo.at/zcache v1.2.0
