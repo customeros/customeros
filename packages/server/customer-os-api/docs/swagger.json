@@ -170,6 +170,71 @@
                 }
             }
         },
+        "/customerbase/v1/organizations/{id}/links/{externalSystem}/primary": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Sets or replaces the primary ID for an organization linked to a specific external system (e.g., Stripe, HubSpot)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CustomerBASE API"
+                ],
+                "summary": "Set primary link ID for an organization",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Organization ID or Organization COS ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "External system name, supported values (stripe, hubspot, close)",
+                        "name": "externalSystem",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Request payload to set primary external system ID",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/customerbase.SetPrimaryExternalSystemIdRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Primary ID set successfully",
+                        "schema": {
+                            "$ref": "#/definitions/customerbase.SetPrimaryExternalSystemIdResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body or input"
+                    },
+                    "401": {
+                        "description": "Unauthorized access"
+                    },
+                    "404": {
+                        "description": "Organization or external system not found"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            }
+        },
         "/enrich/v1/organization": {
             "get": {
                 "security": [
@@ -1008,6 +1073,11 @@
                     "description": "External app identified",
                     "type": "string",
                     "example": "stripe"
+                },
+                "primary": {
+                    "description": "Primary flag",
+                    "type": "boolean",
+                    "example": true
                 }
             }
         },
@@ -1087,6 +1157,48 @@
                     "description": "Organization's website URL.",
                     "type": "string",
                     "example": "https://customeros.ai"
+                }
+            }
+        },
+        "customerbase.SetPrimaryExternalSystemIdRequest": {
+            "description": "Request to set or replace the primary external system ID for an organization",
+            "type": "object",
+            "properties": {
+                "externalId": {
+                    "description": "The ID of the external system to be set as primary.",
+                    "type": "string",
+                    "example": "stripe-1234"
+                }
+            }
+        },
+        "customerbase.SetPrimaryExternalSystemIdResponse": {
+            "description": "Response after setting the primary external system ID for an organization",
+            "type": "object",
+            "properties": {
+                "externalSystem": {
+                    "description": "The name of the external system.",
+                    "type": "string",
+                    "example": "stripe"
+                },
+                "message": {
+                    "description": "Message provides additional information regarding the API.",
+                    "type": "string",
+                    "example": "Primary ID set successfully"
+                },
+                "organizationId": {
+                    "description": "The organization ID for which the primary ID was set.",
+                    "type": "string",
+                    "example": "org-789"
+                },
+                "primaryExternalId": {
+                    "description": "The primary external ID that was set.",
+                    "type": "string",
+                    "example": "stripe-1234"
+                },
+                "status": {
+                    "description": "Status indicates the status of the creation process (e.g., \"success\" or \"partial_success\").",
+                    "type": "string",
+                    "example": "success"
                 }
             }
         },

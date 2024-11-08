@@ -91,6 +91,9 @@ type ExternalLink struct {
 
 	// External app id
 	Id string `json:"id" example:"cos-12345"`
+
+	// Primary flag
+	Primary bool `json:"primary" example:"true"`
 }
 
 type SocialLink struct {

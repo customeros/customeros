@@ -112,6 +112,10 @@ definitions:
         description: External app identified
         example: stripe
         type: string
+      primary:
+        description: Primary flag
+        example: true
+        type: boolean
     type: object
   customerbase.OrganizationResponse:
     description: Organization details
@@ -174,6 +178,39 @@ definitions:
       website:
         description: Organization's website URL.
         example: https://customeros.ai
+        type: string
+    type: object
+  customerbase.SetPrimaryExternalSystemIdRequest:
+    description: Request to set or replace the primary external system ID for an organization
+    properties:
+      externalId:
+        description: The ID of the external system to be set as primary.
+        example: stripe-1234
+        type: string
+    type: object
+  customerbase.SetPrimaryExternalSystemIdResponse:
+    description: Response after setting the primary external system ID for an organization
+    properties:
+      externalSystem:
+        description: The name of the external system.
+        example: stripe
+        type: string
+      message:
+        description: Message provides additional information regarding the API.
+        example: Primary ID set successfully
+        type: string
+      organizationId:
+        description: The organization ID for which the primary ID was set.
+        example: org-789
+        type: string
+      primaryExternalId:
+        description: The primary external ID that was set.
+        example: stripe-1234
+        type: string
+      status:
+        description: Status indicates the status of the creation process (e.g., "success"
+          or "partial_success").
+        example: success
         type: string
     type: object
   rest.ErrorResponse:
@@ -1103,6 +1140,49 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Get an organization
+      tags:
+      - CustomerBASE API
+  /customerbase/v1/organizations/{id}/links/{externalSystem}/primary:
+    put:
+      consumes:
+      - application/json
+      description: Sets or replaces the primary ID for an organization linked to a
+        specific external system (e.g., Stripe, HubSpot)
+      parameters:
+      - description: Organization ID or Organization COS ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: External system name, supported values (stripe, hubspot, close)
+        in: path
+        name: externalSystem
+        required: true
+        type: string
+      - description: Request payload to set primary external system ID
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/customerbase.SetPrimaryExternalSystemIdRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Primary ID set successfully
+          schema:
+            $ref: '#/definitions/customerbase.SetPrimaryExternalSystemIdResponse'
+        "400":
+          description: Invalid request body or input
+        "401":
+          description: Unauthorized access
+        "404":
+          description: Organization or external system not found
+        "500":
+          description: Internal server error
+      security:
+      - ApiKeyAuth: []
+      summary: Set primary link ID for an organization
       tags:
       - CustomerBASE API
   /enrich/v1/organization:

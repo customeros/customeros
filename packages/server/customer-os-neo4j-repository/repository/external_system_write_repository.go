@@ -155,7 +155,7 @@ func (r *externalSystemWriteRepository) SetPrimaryExternalId(ctx context.Context
 		SET r.primary=true
 		WITH n, e
 		MATCH (n)-[r:IS_LINKED_WITH]->(e)
-		r.externalId<>$externalId
+		WHERE r.externalId <> $externalId
 		SET r.primary=false`, linkedEntityNodeLabel+"_"+tenant)
 	params := map[string]any{
 		"tenant":           tenant,

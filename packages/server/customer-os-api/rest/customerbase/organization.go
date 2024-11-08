@@ -215,8 +215,8 @@ func CreateOrganization(services *service.Services) gin.HandlerFunc {
 // @Tags CustomerBASE API
 // @Accept  json
 // @Produce  json
-// @Param   id             path     string  true  "Organization ID"
-// @Param   externalSystem path     string  true  "External system name, supported values (stripe, hubspot)
+// @Param   id             path     string  true  "Organization ID or Organization COS ID"
+// @Param   externalSystem path     string  true  "External system name, supported values (stripe, hubspot, close)"
 // @Param   body           body     SetPrimaryExternalSystemIdRequest true  "Request payload to set primary external system ID"
 // @Success 200 {object} SetPrimaryExternalSystemIdResponse "Primary ID set successfully"
 // @Failure 400  "Invalid request body or input"
@@ -252,15 +252,14 @@ func SetPrimaryExternalSystemId(services *service.Services) gin.HandlerFunc {
 		tracing.LogObjectAsJson(span, "request.body", request)
 
 		// Validate if the organization exists
-		exists, err := services.Repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, tenant, orgId, commonmodel.NodeLabelOrganization)
+		organizationDbNode, err := services.Repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByIdOrCustomerOsId(ctx, tenant, orgId)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Failed to retrieve organization"})
+			c.JSON(http.StatusNotFound, gin.H{"status": "error", "message": "Organization not found"})
 			return
 		}
-		if !exists {
+		if organizationDbNode == nil {
 			c.JSON(http.StatusNotFound, gin.H{"status": "error", "message": "Organization not found"})
-			span.LogFields(tracingLog.String("result", "Organization not found"))
 			return
 		}
 
@@ -382,8 +381,9 @@ func GetOrganization(services *service.Services) gin.HandlerFunc {
 			for _, externalSystemEntity := range *externalSystemEntities {
 				if externalSystemEntity.Relationship.ExternalId != "" {
 					response.ExternalLinks = append(response.ExternalLinks, ExternalLink{
-						Name: externalSystemEntity.ExternalSystemId.String(),
-						Id:   externalSystemEntity.Relationship.ExternalId,
+						Name:    externalSystemEntity.ExternalSystemId.String(),
+						Id:      externalSystemEntity.Relationship.ExternalId,
+						Primary: externalSystemEntity.Relationship.Primary,
 					})
 				}
 			}

@@ -16,6 +16,7 @@ type ExternalSystemEntity struct {
 		SyncDate       *time.Time
 		ExternalUrl    *string
 		ExternalSource *string
+		Primary        bool
 	}
 	Stripe struct {
 		PaymentMethodTypes []string
