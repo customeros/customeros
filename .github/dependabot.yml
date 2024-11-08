@@ -123,6 +123,20 @@ updates:
     rebase-strategy: "auto"
 
   - package-ecosystem: "gomod"
+    directory: "/packages/server/events-subscribers"
+    schedule:
+      interval: "daily"
+      time: "04:15"
+    open-pull-requests-limit: 3
+    labels:
+      - "gomod"
+      - "dependencies"
+      - "app/events-subscribers"
+    pull-request-branch-name:
+      separator: "-"
+    rebase-strategy: "auto"
+
+  - package-ecosystem: "gomod"
     directory: "/packages/server/events-processing-platform-subscribers"
     schedule:
       interval: "daily"

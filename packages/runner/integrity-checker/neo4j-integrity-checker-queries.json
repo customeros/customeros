@@ -272,6 +272,14 @@
         {
           "name": "Duplicated contacts by socials",
           "query": "MATCH (t:Tenant)<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)--(s:Social) WHERE s.url is not null and s.url <> '' WITH t, s.url AS sharedUrl, COUNT(c) AS contactCount WHERE contactCount > 1 RETURN count(sharedUrl)"
+        },
+        {
+          "name": "Percentage of contacts without primary email",
+          "query": "MATCH (c:Contact) WHERE c.hide = false OR c.hide = NULL WITH c OPTIONAL MATCH (c)-[r:HAS]->(e:Email) WHERE r.primary = true WITH c, COLLECT(r) AS primaryRels WITH COUNT(c) AS totalContacts, COUNT(CASE WHEN SIZE(primaryRels) = 0 THEN c END) AS contactsWithoutPrimaryEmail RETURN ROUND(100.0 * contactsWithoutPrimaryEmail / totalContacts) AS percentageWithoutPrimaryEmail"
+        },
+        {
+          "name": "Percentage of contacts without linked in",
+          "query": "MATCH (c:Contact) WHERE c.hide = false OR c.hide = NULL WITH c OPTIONAL MATCH (c)-[:HAS]->(s:Social) WHERE s.url CONTAINS 'linkedin.com' WITH c, COLLECT(s) AS linkedinSocials WITH COUNT(c) AS totalContacts, COUNT(CASE WHEN SIZE(linkedinSocials) = 0 THEN c END) AS contactsWithoutLinkedIn RETURN ROUND(100.0 * contactsWithoutLinkedIn / totalContacts) AS percentageWithoutLinkedIn"
         }
       ]
     },

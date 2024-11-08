@@ -1,7 +1,8 @@
 module github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto
 
-go 1.21
-toolchain go1.22.9
+go 1.22.7
+
+toolchain go1.23.1
 
 require (
 	google.golang.org/grpc v1.68.0
