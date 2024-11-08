@@ -40,6 +40,10 @@ func MapCustomFieldTemplateInputToSaveFields(input model.CustomFieldTemplateInpu
 		fields.Max = input.Max
 		fields.UpdateMax = true
 	}
+	if input.ValidValues != nil {
+		fields.ValidValues = input.ValidValues
+		fields.UpdateValidValues = true
+	}
 
 	return fields
 }
