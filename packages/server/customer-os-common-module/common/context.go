@@ -2,17 +2,17 @@ package common
 
 import (
 	"context"
+	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"net/http"
 )
 
 type CustomContext struct {
-	AppSource  string
-	Tenant     string
-	UserId     string
-	UserEmail  string
-	IdentityId string
-	Roles      []string
+	AppSource string
+	Tenant    string
+	UserId    string
+	UserEmail string
+	Roles     []string
 }
 
 var customContextKey = "CUSTOM_CONTEXT"
@@ -26,6 +26,17 @@ func WithContext(customContext *CustomContext, next http.Handler) http.Handler {
 
 func WithCustomContext(ctx context.Context, customContext *CustomContext) context.Context {
 	return context.WithValue(ctx, customContextKey, customContext)
+}
+
+func WithCustomContextFromGinRequest(c *gin.Context, appSource string) context.Context {
+	customContext := &CustomContext{
+		AppSource: appSource,
+		Tenant:    c.GetString("TenantName"),
+		UserId:    c.GetString("UserId"),
+		UserEmail: c.GetString("UserEmail"),
+		Roles:     c.GetStringSlice("UserRoles"),
+	}
+	return WithCustomContext(c.Request.Context(), customContext)
 }
 
 func GetContext(ctx context.Context) *CustomContext {
@@ -54,10 +65,6 @@ func GetUserIdFromContext(ctx context.Context) string {
 
 func GetUserEmailFromContext(ctx context.Context) string {
 	return GetContext(ctx).UserEmail
-}
-
-func GetIdentityIdFromContext(ctx context.Context) string {
-	return GetContext(ctx).IdentityId
 }
 
 func SetAppSourceInContext(ctx context.Context, appSource string) context.Context {

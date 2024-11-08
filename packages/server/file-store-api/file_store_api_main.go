@@ -8,8 +8,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/machinebox/graphql"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	commonconf "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
-	constants2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/constants"
 	fsc "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/file_store_client"
 	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
@@ -100,58 +101,56 @@ func main() {
 		jwtTennantUserService.GetJWTTenantUserEnhancer(),
 		security.TenantUserContextEnhancer(security.USERNAME_OR_TENANT, commonServices.Neo4jRepositories, security.WithCache(commonServices.Cache)),
 		security.ApiKeyCheckerHTTP(commonServices.PostgresRepositories.TenantWebhookApiKeyRepository, commonServices.PostgresRepositories.AppKeyRepository, security.FILE_STORE_API, security.WithCache(commonServices.Cache)),
-		func(ctx *gin.Context) {
-			tenantName, _ := ctx.Keys["TenantName"].(string)
-			userEmail, _ := ctx.Keys["UserEmail"].(string)
+		func(c *gin.Context) {
+			ctx := common.WithCustomContextFromGinRequest(c, constants.AppSourceFileStoreApi)
 
-			cdnUpload := ctx.Request.FormValue("cdnUpload") == "true"
-			basePath := ctx.Request.FormValue("basePath")
-			fileId := ctx.Request.FormValue("fileId")
+			cdnUpload := c.Request.FormValue("cdnUpload") == "true"
+			basePath := c.Request.FormValue("basePath")
+			fileId := c.Request.FormValue("fileId")
 
-			multipartFileHeader, err := ctx.FormFile("file")
+			multipartFileHeader, err := c.FormFile("file")
 			if err != nil {
-				ctx.AbortWithStatusJSON(500, map[string]string{"error": "missing field file"}) //todo
+				c.AbortWithStatusJSON(500, map[string]string{"error": "missing field file"}) //todo
 				return
 			}
 
-			fileEntity, err := services.FileService.UploadSingleFile(ctx, userEmail, tenantName, basePath, fileId, multipartFileHeader, cdnUpload)
+			fileEntity, err := services.FileService.UploadSingleFile(ctx, basePath, fileId, multipartFileHeader, cdnUpload)
 			if err != nil {
-				ctx.AbortWithStatusJSON(500, map[string]string{"error": fmt.Sprintf("Error Uploading File %v", err)}) //todo
+				c.AbortWithStatusJSON(500, map[string]string{"error": fmt.Sprintf("Error Uploading File %v", err)}) //todo
 				return
 			}
 
-			ctx.JSON(http.StatusOK, MapFileEntityToDTO(cfg, fileEntity))
+			c.JSON(http.StatusOK, MapFileEntityToDTO(cfg, fileEntity))
 		})
 	r.GET("/file/:id",
 		tracing.TracingEnhancer(ctx, "GET /file/:id"),
 		jwtTennantUserService.GetJWTTenantUserEnhancer(),
 		security.TenantUserContextEnhancer(security.USERNAME_OR_TENANT, commonServices.Neo4jRepositories, security.WithCache(commonServices.Cache)),
 		security.ApiKeyCheckerHTTP(commonServices.PostgresRepositories.TenantWebhookApiKeyRepository, commonServices.PostgresRepositories.AppKeyRepository, security.FILE_STORE_API, security.WithCache(commonServices.Cache)),
-		func(ctx *gin.Context) {
-			tenantName, _ := ctx.Keys["TenantName"].(string)
-			userEmail, _ := ctx.Keys["UserEmail"].(string)
+		func(c *gin.Context) {
+			ctx := common.WithCustomContextFromGinRequest(c, constants.AppSourceFileStoreApi)
 
-			byId, err := services.FileService.GetById(ctx, userEmail, tenantName, ctx.Param("id"))
+			byId, err := services.FileService.GetById(ctx, c.Param("id"))
 			if err != nil && err.Error() != "record not found" {
-				ctx.AbortWithStatus(500) //todo
+				c.AbortWithStatus(500) //todo
 				return
 			}
 			if err != nil && err.Error() == "record not found" {
-				ctx.AbortWithStatus(404)
+				c.AbortWithStatus(404)
 				return
 			}
 
-			ctx.JSON(200, MapFileEntityToDTO(cfg, byId))
+			c.JSON(200, MapFileEntityToDTO(cfg, byId))
 		})
 	r.GET("/file/:id/download",
 		tracing.TracingEnhancer(ctx, "GET /file/:id/download"),
 		jwtTennantUserService.GetJWTTenantUserEnhancer(),
-		security.TenantUserContextEnhancer(security.USERNAME_OR_TENANT, commonServices.Neo4jRepositories, security.WithCache(commonServices.Cache)),
 		security.ApiKeyCheckerHTTP(commonServices.PostgresRepositories.TenantWebhookApiKeyRepository, commonServices.PostgresRepositories.AppKeyRepository, security.FILE_STORE_API, security.WithCache(commonServices.Cache)),
+		security.TenantUserContextEnhancer(security.USERNAME_OR_TENANT, commonServices.Neo4jRepositories, security.WithCache(commonServices.Cache)),
 		func(c *gin.Context) {
-			tenantName, _ := c.Keys["TenantName"].(string)
-			userEmail, _ := c.Keys["UserEmail"].(string)
-			_, err := services.FileService.DownloadSingleFile(c.Request.Context(), userEmail, tenantName, c.Param("id"), c, c.Query("inline") == "true")
+			ctx := common.WithCustomContextFromGinRequest(c, constants.AppSourceFileStoreApi)
+
+			_, err := services.FileService.DownloadSingleFile(ctx, c.Param("id"), c, c.Query("inline") == "true")
 			if err != nil && err.Error() != "record not found" {
 				c.AbortWithStatus(http.StatusInternalServerError)
 				return
@@ -166,43 +165,42 @@ func main() {
 		jwtTennantUserService.GetJWTTenantUserEnhancer(),
 		security.TenantUserContextEnhancer(security.USERNAME_OR_TENANT, commonServices.Neo4jRepositories, security.WithCache(commonServices.Cache)),
 		security.ApiKeyCheckerHTTP(commonServices.PostgresRepositories.TenantWebhookApiKeyRepository, commonServices.PostgresRepositories.AppKeyRepository, security.FILE_STORE_API, security.WithCache(commonServices.Cache)),
-		func(ctx *gin.Context) {
-			tenantName, _ := ctx.Keys["TenantName"].(string)
-			userEmail, _ := ctx.Keys["UserEmail"].(string)
+		func(c *gin.Context) {
+			ctx := common.WithCustomContextFromGinRequest(c, constants.AppSourceFileStoreApi)
 
-			base64Encoded, err := services.FileService.Base64Image(ctx, userEmail, tenantName, ctx.Param("id"))
+			base64Encoded, err := services.FileService.Base64Image(ctx, c.Param("id"))
 			if err != nil && err.Error() != "record not found" {
-				ctx.AbortWithStatus(500) //todo
+				c.AbortWithStatus(500) //todo
 				return
 			}
 			if err != nil && err.Error() == "record not found" {
-				ctx.AbortWithStatus(404)
+				c.AbortWithStatus(404)
 				return
 			}
 
 			bytes := []byte(*base64Encoded)
-			ctx.Writer.Write(bytes)
+			c.Writer.Write(bytes)
 		})
 	r.GET("/file/:id/public-url",
 		tracing.TracingEnhancer(ctx, "GET /file/:id/public-url"),
 		jwtTennantUserService.GetJWTTenantUserEnhancer(),
 		security.TenantUserContextEnhancer(security.USERNAME_OR_TENANT, commonServices.Neo4jRepositories, security.WithCache(commonServices.Cache)),
 		security.ApiKeyCheckerHTTP(commonServices.PostgresRepositories.TenantWebhookApiKeyRepository, commonServices.PostgresRepositories.AppKeyRepository, security.FILE_STORE_API, security.WithCache(commonServices.Cache)),
-		func(ctx *gin.Context) {
-			tenantName, _ := ctx.Keys["TenantName"].(string)
+		func(c *gin.Context) {
+			ctx := common.WithCustomContextFromGinRequest(c, constants.AppSourceFileStoreApi)
 
-			publicUrl, err := services.FileService.GetFilePublicUrl(ctx, tenantName, ctx.Param("id"))
+			publicUrl, err := services.FileService.GetFilePublicUrl(ctx, c.Param("id"))
 			if err != nil && err.Error() != "record not found" {
-				ctx.JSON(500, gin.H{"error": "Internal Server Error"})
+				c.JSON(500, gin.H{"error": "Internal Server Error"})
 				return
 			}
 			if err != nil && err.Error() == "record not found" {
-				ctx.JSON(404, gin.H{"error": "File not found"})
+				c.JSON(404, gin.H{"error": "File not found"})
 				return
 			}
 
 			// return public url
-			ctx.JSON(200, gin.H{"publicUrl": publicUrl})
+			c.JSON(200, gin.H{"publicUrl": publicUrl})
 		})
 
 	r.GET("/health", healthCheckHandler)
@@ -248,7 +246,7 @@ func MapFileEntityToDTO(cfg *config.Config, fileEntity *model.File) *fsc.FileDTO
 func initLogger(cfg *config.Config) logger.Logger {
 	appLogger := logger.NewExtendedAppLogger(&cfg.Logger)
 	appLogger.InitLogger()
-	appLogger.WithName(constants2.AppSourceFileStoreApi)
+	appLogger.WithName(constants.AppSourceFileStoreApi)
 	return appLogger
 }
 

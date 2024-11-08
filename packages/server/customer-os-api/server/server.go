@@ -245,7 +245,6 @@ func (server *server) graphqlHandler(grpcContainer *grpc_client.Clients, service
 	schemaConfig := generated.Config{Resolvers: graphResolver}
 	schemaConfig.Directives.HasRole = cosHandler.GetRoleChecker()
 	schemaConfig.Directives.HasTenant = cosHandler.GetTenantChecker()
-	schemaConfig.Directives.HasIdentityId = cosHandler.GetIdentityIdChecker()
 
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(schemaConfig))
 	srv.SetRecoverFunc(func(ctx context.Context, err interface{}) error {
@@ -290,9 +289,6 @@ func (server *server) graphqlHandler(grpcContainer *grpc_client.Clients, service
 		}
 		if c.Keys[security.KEY_USER_EMAIL] != nil {
 			customCtx.UserEmail = c.Keys[security.KEY_USER_EMAIL].(string)
-		}
-		if c.Keys[security.KEY_IDENTITY_ID] != nil {
-			customCtx.IdentityId = c.Keys[security.KEY_IDENTITY_ID].(string)
 		}
 
 		customCtx.AppSource = constants.AppSourceCustomerOsApi
@@ -354,7 +350,6 @@ func loggerMiddleware(ctx *common.CustomContext, graphqlOperationName string) gi
 		zap.L().With(
 			zap.String("tenant", ctx.Tenant),
 			zap.String("userId", ctx.UserId),
-			zap.String("identityId", ctx.IdentityId),
 		).Sugar().Infof("GraphQL Method: %s", graphqlOperationName)
 
 		// Execute the GraphQL handler
@@ -422,9 +417,6 @@ func enrichContextMiddleware(appSource string) gin.HandlerFunc {
 		}
 		if c.Keys[security.KEY_USER_EMAIL] != nil {
 			customCtx.UserEmail = c.Keys[security.KEY_USER_EMAIL].(string)
-		}
-		if c.Keys[security.KEY_IDENTITY_ID] != nil {
-			customCtx.IdentityId = c.Keys[security.KEY_IDENTITY_ID].(string)
 		}
 
 		// Add the custom context to the request context

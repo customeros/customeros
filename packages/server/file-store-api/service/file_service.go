@@ -17,6 +17,7 @@ import (
 	"github.com/h2non/filetype"
 	"github.com/h2non/filetype/types"
 	"github.com/machinebox/graphql"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/constants"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
@@ -47,11 +48,11 @@ const (
 )
 
 type FileService interface {
-	GetById(ctx context.Context, userEmail, tenantName string, id string) (*model.File, error)
-	UploadSingleFile(ctx context.Context, userEmail, tenantName, basePath, fileId string, multipartFileHeader *multipart.FileHeader, cdnUpload bool) (*model.File, error)
-	DownloadSingleFile(ctx context.Context, userEmail, tenantName, id string, context *gin.Context, inline bool) (*model.File, error)
-	Base64Image(ctx context.Context, userEmail, tenantName string, id string) (*string, error)
-	GetFilePublicUrl(ctx context.Context, tenantName, id string) (string, error)
+	GetById(ctx context.Context, id string) (*model.File, error)
+	UploadSingleFile(ctx context.Context, basePath, fileId string, multipartFileHeader *multipart.FileHeader, cdnUpload bool) (*model.File, error)
+	DownloadSingleFile(ctx context.Context, id string, context *gin.Context, inline bool) (*model.File, error)
+	Base64Image(ctx context.Context, id string) (*string, error)
+	GetFilePublicUrl(ctx context.Context, id string) (string, error)
 }
 
 type fileService struct {
@@ -70,11 +71,12 @@ func NewFileService(cfg *config.Config, commonServices *commonService.Services, 
 	}
 }
 
-func (s *fileService) GetById(ctx context.Context, userEmail, tenantName, id string) (*model.File, error) {
+func (s *fileService) GetById(ctx context.Context, id string) (*model.File, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FileService.GetById")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenantName)
-	span.LogFields(log.String("fileId", id), log.String("userEmail", userEmail))
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	span.LogFields(log.String("fileId", id))
 
 	attachment, err := s.commonServices.AttachmentService.GetById(ctx, id)
 	if err != nil {
@@ -85,11 +87,12 @@ func (s *fileService) GetById(ctx context.Context, userEmail, tenantName, id str
 	return mapper.MapAttachmentResponseToFileEntity(attachment), nil
 }
 
-func (s *fileService) UploadSingleFile(ctx context.Context, userEmail, tenantName, basePath, fileId string, multipartFileHeader *multipart.FileHeader, cdnUpload bool) (*model.File, error) {
+func (s *fileService) UploadSingleFile(ctx context.Context, basePath, fileId string, multipartFileHeader *multipart.FileHeader, cdnUpload bool) (*model.File, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FileService.UploadSingleFile")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenantName)
-	span.LogFields(log.String("userEmail", userEmail), log.String("basePath", basePath), log.String("fileId", fileId))
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	span.LogFields(log.String("basePath", basePath), log.String("fileId", fileId))
 	if multipartFileHeader != nil {
 		span.LogFields(log.String("fileName", multipartFileHeader.Filename), log.Int64("size", multipartFileHeader.Size))
 	}
@@ -200,7 +203,7 @@ func (s *fileService) UploadSingleFile(ctx context.Context, userEmail, tenantNam
 	if strings.HasPrefix(extension, ".") {
 		extension = extension[1:]
 	}
-	err = uploadFileToS3(ctx, s.cfg, session, tenantName, basePath, fileId+"."+extension, multipartFileHeader)
+	err = uploadFileToS3(ctx, s.cfg, session, basePath, fileId+"."+extension, multipartFileHeader)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Error uploading file to s3"))
 		s.log.Fatal(err)
@@ -221,11 +224,14 @@ func (s *fileService) UploadSingleFile(ctx context.Context, userEmail, tenantNam
 	return mapper.MapAttachmentResponseToFileEntity(created), nil
 }
 
-func (s *fileService) DownloadSingleFile(ctx context.Context, userEmail, tenantName, id string, ginContext *gin.Context, inline bool) (*model.File, error) {
+func (s *fileService) DownloadSingleFile(ctx context.Context, id string, ginContext *gin.Context, inline bool) (*model.File, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FileService.DownloadSingleFile")
 	defer span.Finish()
-	tracing.TagTenant(span, tenantName)
-	span.LogFields(log.String("userEmail", userEmail), log.String("fileId", id), log.Bool("inline", inline))
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	span.LogFields(log.String("fileId", id), log.Bool("inline", inline))
+
+	tenant := common.GetTenantFromContext(ctx)
 
 	attachment, err := s.commonServices.AttachmentService.GetById(ctx, id)
 	byId := mapper.MapAttachmentResponseToFileEntity(attachment)
@@ -257,7 +263,7 @@ func (s *fileService) DownloadSingleFile(ctx context.Context, userEmail, tenantN
 
 	// Get the object metadata to determine the file size and ETag
 	bucket := s.cfg.AWS.Bucket
-	key := tenantName + byId.BasePath + "/" + attachment.Id + "." + extension
+	key := tenant + byId.BasePath + "/" + attachment.Id + "." + extension
 	span.LogFields(log.String("bucket", bucket), log.String("key", key))
 	respHead, err := svc.HeadObject(&s3.HeadObjectInput{
 		Bucket: aws.String(bucket),
@@ -313,7 +319,7 @@ func (s *fileService) DownloadSingleFile(ctx context.Context, userEmail, tenantN
 	ginContext.Header("Content-Type", fmt.Sprintf("%s", byId.MimeType))
 	resp, err := svc.GetObject(&s3.GetObjectInput{
 		Bucket: aws.String(s.cfg.AWS.Bucket),
-		Key:    aws.String(tenantName + byId.BasePath + "/" + attachment.Id + "." + extension),
+		Key:    aws.String(tenant + byId.BasePath + "/" + attachment.Id + "." + extension),
 		Range:  aws.String("bytes=" + strconv.FormatInt(start, 10) + "-" + strconv.FormatInt(end, 10)),
 	})
 	if err != nil {
@@ -330,11 +336,12 @@ func (s *fileService) DownloadSingleFile(ctx context.Context, userEmail, tenantN
 	return byId, nil
 }
 
-func (s *fileService) Base64Image(ctx context.Context, userEmail, tenantName string, id string) (*string, error) {
+func (s *fileService) Base64Image(ctx context.Context, id string) (*string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FileService.Base64Image")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenantName)
-	span.LogFields(log.String("userEmail", userEmail), log.String("fileId", id))
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	span.LogFields(log.String("fileId", id))
 
 	attachment, err := s.commonServices.AttachmentService.GetById(ctx, id)
 	if err != nil {
@@ -388,10 +395,13 @@ func (s *fileService) Base64Image(ctx context.Context, userEmail, tenantName str
 	return &base64Encoding, nil
 }
 
-func uploadFileToS3(ctx context.Context, cfg *config.Config, session *awsSes.Session, tenantName, basePath, fileId string, multipartFile *multipart.FileHeader) error {
+func uploadFileToS3(ctx context.Context, cfg *config.Config, session *awsSes.Session, basePath, fileId string, multipartFile *multipart.FileHeader) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FileService.uploadFileToS3")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenantName)
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	tenant := common.GetTenantFromContext(ctx)
+
 	span.LogFields(log.String("basePath", basePath), log.String("fileId", fileId))
 	if multipartFile != nil {
 		span.LogFields(log.String("fileName", multipartFile.Filename), log.Int64("size", multipartFile.Size))
@@ -405,7 +415,7 @@ func uploadFileToS3(ctx context.Context, cfg *config.Config, session *awsSes.Ses
 
 	_, err = s3.New(session).PutObject(&s3.PutObjectInput{
 		Bucket:        aws.String(cfg.AWS.Bucket),
-		Key:           aws.String(tenantName + basePath + "/" + fileId),
+		Key:           aws.String(tenant + basePath + "/" + fileId),
 		ACL:           aws.String("private"),
 		ContentLength: aws.Int64(0),
 	})
@@ -414,9 +424,9 @@ func uploadFileToS3(ctx context.Context, cfg *config.Config, session *awsSes.Ses
 		return fmt.Errorf("uploadFileToS3: %w", err)
 	}
 
-	_, err2 := s3.New(session).PutObject(&s3.PutObjectInput{
+	_, err = s3.New(session).PutObject(&s3.PutObjectInput{
 		Bucket:               aws.String(cfg.AWS.Bucket),
-		Key:                  aws.String(tenantName + basePath + "/" + fileId),
+		Key:                  aws.String(tenant + basePath + "/" + fileId),
 		ACL:                  aws.String("private"),
 		Body:                 fileStream,
 		ContentLength:        aws.Int64(multipartFile.Size),
@@ -424,17 +434,14 @@ func uploadFileToS3(ctx context.Context, cfg *config.Config, session *awsSes.Ses
 		ContentDisposition:   aws.String("attachment"),
 		ServerSideEncryption: aws.String("AES256"),
 	})
-	return err2
-}
-
-func (s *fileService) contextWithTimeout(ctx context.Context) (context.Context, context.CancelFunc, error) {
-	ctx, cancel := context.WithTimeout(ctx, 1000*time.Second)
-	return ctx, cancel, nil
+	return err
 }
 
 func storeMultipartFileToTemp(ctx context.Context, fileId string, multipartFileHeader *multipart.FileHeader) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FileService.storeMultipartFileToTemp")
 	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
 	span.LogFields(log.String("fileId", fileId))
 
 	file, err := os.CreateTemp("", fileId)
@@ -492,11 +499,14 @@ func generateSignedURL(imageDeliveryURL, key string) string {
 	return parsedURL.String()
 }
 
-func (s *fileService) GetFilePublicUrl(ctx context.Context, tenant, fileId string) (string, error) {
+func (s *fileService) GetFilePublicUrl(ctx context.Context, fileId string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FileService.GetFilePublicUrl")
 	defer span.Finish()
-	tracing.TagTenant(span, tenant)
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
 	span.LogKV("fileId", fileId)
+
+	tenant := common.GetTenantFromContext(ctx)
 
 	attachmentDbNode, err := s.commonServices.Neo4jRepositories.AttachmentReadRepository.GetById(ctx, tenant, fileId)
 	if err != nil {

@@ -71,9 +71,8 @@ type ResolverRoot interface {
 }
 
 type DirectiveRoot struct {
-	HasIdentityId func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error)
-	HasRole       func(ctx context.Context, obj interface{}, next graphql.Resolver, roles []model.Role) (res interface{}, err error)
-	HasTenant     func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error)
+	HasRole   func(ctx context.Context, obj interface{}, next graphql.Resolver, roles []model.Role) (res interface{}, err error)
+	HasTenant func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error)
 }
 
 type ComplexityRoot struct {
@@ -12658,8 +12657,7 @@ enum Role {
     PLATFORM_OWNER
 }
 
-directive @hasTenant on FIELD_DEFINITION
-directive @hasIdentityId on FIELD_DEFINITION`, BuiltIn: false},
+directive @hasTenant on FIELD_DEFINITION`, BuiltIn: false},
 	{Name: "../schemas/email.graphqls", Input: `extend type Query {
     email(id: ID!): Email! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }

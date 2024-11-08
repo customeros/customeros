@@ -1,7 +1,6 @@
 package security
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 
@@ -11,7 +10,6 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-	"google.golang.org/grpc/metadata"
 )
 
 type App string
@@ -144,21 +142,4 @@ func ApiKeyCheckerHTTP(tenantApiKeyRepo postgresRepository.TenantWebhookApiKeyRe
 			return
 		}
 	}
-}
-
-func ApiKeyCheckerGRPC(ctx context.Context, appKeyRepo postgresRepository.AppKeyRepository, app App) bool {
-	md, ok := metadata.FromIncomingContext(ctx)
-	if !ok {
-		return false
-	}
-
-	kh := md.Get(ApiKeyHeader)
-	if len(kh) == 1 {
-		appKey, err := appKeyRepo.FindByKey(ctx, string(app), kh[0])
-		if err != nil {
-			return false
-		}
-		return appKey != nil
-	}
-	return false
 }

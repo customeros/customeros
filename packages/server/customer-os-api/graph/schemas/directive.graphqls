@@ -18,4 +18,3 @@ enum Role {
 }
 
 directive @hasTenant on FIELD_DEFINITION
-directive @hasIdentityId on FIELD_DEFINITION

@@ -32,6 +32,7 @@ func NewAttachmentService(services *Services) AttachmentService {
 func (s *attachmentService) GetById(c context.Context, id string) (*neo4jentity.AttachmentEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(c, "AttachmentService.GetById")
 	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	node, err := s.services.Neo4jRepositories.AttachmentReadRepository.GetById(ctx, common.GetTenantFromContext(ctx), id)
 	if err != nil {
@@ -45,6 +46,7 @@ func (s *attachmentService) GetById(c context.Context, id string) (*neo4jentity.
 func (s *attachmentService) GetFor(c context.Context, entityType model.EntityType, relation *model.EntityRelation, ids []string) (*neo4jentity.AttachmentEntities, error) {
 	span, ctx := opentracing.StartSpanFromContext(c, "AttachmentService.GetFor")
 	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	records, err := s.services.Neo4jRepositories.AttachmentReadRepository.GetFor(ctx, common.GetTenantFromContext(ctx), entityType, relation, ids)
 	if err != nil {
@@ -64,6 +66,7 @@ func (s *attachmentService) GetFor(c context.Context, entityType model.EntityTyp
 func (s *attachmentService) Create(c context.Context, record *neo4jentity.AttachmentEntity) (*neo4jentity.AttachmentEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(c, "AttachmentService.Create")
 	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	session := utils.NewNeo4jWriteSession(ctx, *s.services.Neo4jRepositories.Neo4jDriver)
 	defer session.Close(ctx)
@@ -79,6 +82,7 @@ func (s *attachmentService) Create(c context.Context, record *neo4jentity.Attach
 func (s *attachmentService) createAttachmentInDBTxWork(c context.Context, newAttachment *neo4jentity.AttachmentEntity) func(tx neo4j.ManagedTransaction) (any, error) {
 	span, ctx := opentracing.StartSpanFromContext(c, "AttachmentService.createAttachmentInDBTxWork")
 	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	return func(tx neo4j.ManagedTransaction) (any, error) {
 		tenant := common.GetContext(ctx).Tenant

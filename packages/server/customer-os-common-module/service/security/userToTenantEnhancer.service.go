@@ -24,13 +24,11 @@ const (
 	KEY_USER_ID     = "UserId"
 	KEY_USER_EMAIL  = "UserEmail"
 	KEY_USER_ROLES  = "UserRoles"
-	KEY_IDENTITY_ID = "IdentityId"
 	KEY_APP_SOURCE  = "AppSource"
 )
 
 const UsernameHeader = "X-Openline-USERNAME"
 const TenantHeader = "X-Openline-TENANT"
-const IdentityIdHeader = "X-Openline-IDENTITY-ID"
 
 func TenantUserContextEnhancer(headerAllowance HeaderAllowance, cr *neo4jrepository.Repositories, opts ...CommonServiceOption) func(c *gin.Context) {
 	// Apply the options to configure the middleware
@@ -68,7 +66,6 @@ func TenantUserContextEnhancer(headerAllowance HeaderAllowance, cr *neo4jreposit
 			roles        []string
 			err          error
 		)
-		c.Set(KEY_IDENTITY_ID, c.GetHeader(IdentityIdHeader))
 
 		switch headerAllowance {
 		case TENANT:
