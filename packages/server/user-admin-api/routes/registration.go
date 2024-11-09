@@ -675,7 +675,12 @@ func registerNewTenantAsLeadInProviderTenant(ctx context.Context, config *config
 	span, ctx := opentracing.StartSpanFromContext(ctx, "registration.registerNewTenantAsLeadInProviderTenant")
 	defer span.Finish()
 
-	organizationId, contactId, err := services.RegistrationService.CreateOrganizationAndContact(ctx, config.Service.ProviderTenantName, registeredEmail, true, "Tenant Registration")
+	providerTenantCtx := common.WithCustomContext(ctx, &common.CustomContext{
+		Tenant:    config.Service.ProviderTenantName,
+		AppSource: constants.AppSourceUserAdminApi,
+	})
+
+	organizationId, contactId, err := services.RegistrationService.CreateOrganizationAndContact(providerTenantCtx, config.Service.ProviderTenantName, registeredEmail, true, "Tenant Registration")
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err

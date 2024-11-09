@@ -5,11 +5,9 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
-	"github.com/pkg/errors"
 )
 
 type App string
@@ -137,7 +135,7 @@ func ApiKeyCheckerHTTP(tenantApiKeyRepo postgresRepository.TenantWebhookApiKeyRe
 			c.JSON(http.StatusUnauthorized, gin.H{
 				"errors": []gin.H{{"message": "Api key is required"}},
 			})
-			tracing.TraceErr(span, errors.New("Api key is required"))
+			span.LogFields(log.String("result", "Missing api key"))
 			c.Abort()
 			return
 		}
