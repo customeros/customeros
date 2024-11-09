@@ -339,9 +339,16 @@ export class OrganizationsStore extends SyncableGroup<
   }
 
   async hide(ids: string[]) {
+    const persisted = await this.persister?.getItem<Map<string, Organization>>(
+      'data',
+    );
+
     ids.forEach((id) => {
       this.value.delete(id);
+      persisted?.delete(id);
     });
+
+    await this.persister?.setItem('data', persisted);
 
     try {
       this.isLoading = true;
@@ -366,9 +373,15 @@ export class OrganizationsStore extends SyncableGroup<
     mergeIds: string[],
     callback?: (id: string) => void,
   ) {
+    const persisted = await this.persister?.getItem<Map<string, Organization>>(
+      'data',
+    );
+
     mergeIds.forEach((id) => {
       this.value.delete(id);
+      persisted?.delete(id);
     });
+    await this.persister?.setItem('data', persisted);
     callback?.(primaryId);
 
     try {
@@ -393,7 +406,7 @@ export class OrganizationsStore extends SyncableGroup<
     }
   }
 
-  updateTags = (ids: string[], tags: Tag[]) => {
+  updateTags = async (ids: string[], tags: Tag[]) => {
     const tagIdsToUpdate = new Set(tags.map((tag) => tag.id));
 
     const shouldRemoveTags = ids.every((id) => {

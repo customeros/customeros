@@ -4,7 +4,7 @@ export type PersisterInstance = LocalForage;
 
 export class Persister {
   static DB_NAME = 'customerDB';
-  private static version = 2.9;
+  private static version = 0.1;
   private static instances: Map<string, PersisterInstance> = new Map();
   private static sharedInstances: Map<string, PersisterInstance> = new Map();
 
