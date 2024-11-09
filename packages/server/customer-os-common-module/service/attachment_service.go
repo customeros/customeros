@@ -29,12 +29,20 @@ func NewAttachmentService(services *Services) AttachmentService {
 	}
 }
 
-func (s *attachmentService) GetById(c context.Context, id string) (*neo4jentity.AttachmentEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(c, "AttachmentService.GetById")
+func (s *attachmentService) GetById(ctx context.Context, id string) (*neo4jentity.AttachmentEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AttachmentService.GetById")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	node, err := s.services.Neo4jRepositories.AttachmentReadRepository.GetById(ctx, common.GetTenantFromContext(ctx), id)
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+
+	node, err := s.services.Neo4jRepositories.AttachmentReadRepository.GetById(ctx, tenant, id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err

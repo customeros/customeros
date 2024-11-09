@@ -29,7 +29,7 @@ func NewAttachmentReadRepository(driver *neo4j.DriverWithContext, database strin
 	}
 }
 
-func (r *attachmentReadRepository) GetById(ctx context.Context, tenant string, id string) (*neo4j.Node, error) {
+func (r *attachmentReadRepository) GetById(ctx context.Context, tenant, id string) (*neo4j.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AttachmentReadRepository.GetById")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
