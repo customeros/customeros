@@ -315,13 +315,6 @@ func (s *contactService) AskForLinkedInConnections() {
 	s.askForLinkedInConnections(ctx)
 }
 
-func (s *contactService) ProcessLinkedInConnections() {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	s.processLinkedInConnections(ctx)
-}
-
 func (s *contactService) LinkOrphanContactsToOrganizationBaseOnLinkedinScrapIn() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -379,8 +372,10 @@ func (s *contactService) askForLinkedInConnections(c context.Context) {
 
 }
 
-func (s *contactService) processLinkedInConnections(c context.Context) {
-	span, ctx := tracing.StartTracerSpan(c, "ContactService.processLinkedInConnections")
+func (s *contactService) ProcessLinkedInConnections() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	span, ctx := tracing.StartTracerSpan(ctx, "ContactService.ProcessLinkedInConnections")
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
 
@@ -393,12 +388,16 @@ func (s *contactService) processLinkedInConnections(c context.Context) {
 	span.LogFields(log.Int("processing", len(automationsRuns)))
 
 	for _, automationRun := range automationsRuns {
+		ctx = common.WithCustomContext(ctx, &common.CustomContext{
+			Tenant:    automationRun.Tenant,
+			AppSource: constants.AppSourceDataUpkeeper,
+		})
 		s.processAutomationRunResult(ctx, automationRun)
 	}
 }
 
-func (s *contactService) processAutomationRunResult(c context.Context, automationRun postgresentity.BrowserAutomationsRun) {
-	span, ctx := opentracing.StartSpanFromContext(c, "ContactService.processAutomationRunResult")
+func (s *contactService) processAutomationRunResult(ctx context.Context, automationRun postgresentity.BrowserAutomationsRun) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.processAutomationRunResult")
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
 
