@@ -373,7 +373,7 @@ func GetOrganization(services *service.Services) gin.HandlerFunc {
 		}
 
 		// Fetch external links associated with the organization
-		externalSystemEntities, err := services.ExternalSystemService.GetExternalSystemsForEntities(ctx, []string{organizationEntity.ID}, commonmodel.ORGANIZATION)
+		externalSystemEntities, err := services.CommonServices.ExternalSystemService.GetExternalSystemsForEntities(ctx, []string{organizationEntity.ID}, commonmodel.ORGANIZATION)
 		if err != nil {
 			partialSuccess = true
 			tracing.TraceErr(span, errors.Wrap(err, "Failed to retrieve external links"))
