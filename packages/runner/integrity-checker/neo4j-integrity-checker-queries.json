@@ -275,11 +275,11 @@
         },
         {
           "name": "Percentage of contacts without primary email",
-          "query": "MATCH (c:Contact) WHERE c.hide = false OR c.hide = NULL WITH c OPTIONAL MATCH (c)-[r:HAS]->(e:Email) WHERE r.primary = true WITH c, COLLECT(r) AS primaryRels WITH COUNT(c) AS totalContacts, COUNT(CASE WHEN SIZE(primaryRels) = 0 THEN c END) AS contactsWithoutPrimaryEmail RETURN ROUND(100.0 * contactsWithoutPrimaryEmail / totalContacts) AS percentageWithoutPrimaryEmail"
+          "query": "MATCH (c:Contact) WHERE c.hide = false OR c.hide = NULL WITH c OPTIONAL MATCH (c)-[r:HAS]->(e:Email) WHERE r.primary = true WITH c, COLLECT(r) AS primaryRels WITH COUNT(c) AS totalContacts, COUNT(CASE WHEN SIZE(primaryRels) = 0 THEN c END) AS contactsWithoutPrimaryEmail RETURN toInteger(ROUND(100.0 * contactsWithoutPrimaryEmail / totalContacts)) AS percentageWithoutPrimaryEmail"
         },
         {
           "name": "Percentage of contacts without linked in",
-          "query": "MATCH (c:Contact) WHERE c.hide = false OR c.hide = NULL WITH c OPTIONAL MATCH (c)-[:HAS]->(s:Social) WHERE s.url CONTAINS 'linkedin.com' WITH c, COLLECT(s) AS linkedinSocials WITH COUNT(c) AS totalContacts, COUNT(CASE WHEN SIZE(linkedinSocials) = 0 THEN c END) AS contactsWithoutLinkedIn RETURN ROUND(100.0 * contactsWithoutLinkedIn / totalContacts) AS percentageWithoutLinkedIn"
+          "query": "MATCH (c:Contact) WHERE c.hide = false OR c.hide = NULL WITH c OPTIONAL MATCH (c)-[:HAS]->(s:Social) WHERE s.url CONTAINS 'linkedin.com' WITH c, COLLECT(s) AS linkedinSocials WITH COUNT(c) AS totalContacts, COUNT(CASE WHEN SIZE(linkedinSocials) = 0 THEN c END) AS contactsWithoutLinkedIn RETURN toInteger(ROUND(100.0 * contactsWithoutLinkedIn / totalContacts)) AS percentageWithoutLinkedIn"
         }
       ]
     },
