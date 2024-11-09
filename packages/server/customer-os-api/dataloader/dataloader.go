@@ -287,7 +287,7 @@ func NewDataLoader(services *service.Services) *Loaders {
 		attachmentService: services.CommonServices.AttachmentService,
 	}
 	externalSystemBatcher := externalSystemBatcher{
-		externalSystemService: services.ExternalSystemService,
+		externalSystemService: services.CommonServices.ExternalSystemService,
 	}
 	timelineEventBatcher := timelineEventBatcher{
 		timelineEventService: services.TimelineEventService,
