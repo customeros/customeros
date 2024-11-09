@@ -180,7 +180,7 @@ type attachmentBatcher struct {
 	attachmentService commonservice.AttachmentService
 }
 type externalSystemBatcher struct {
-	externalSystemService service.ExternalSystemService
+	externalSystemService commonservice.ExternalSystemService
 }
 type timelineEventBatcher struct {
 	timelineEventService service.TimelineEventService
