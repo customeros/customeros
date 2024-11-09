@@ -1,0 +1,5 @@
+mutation addTagsToContact($input: ContactTagInput!) {
+  contact_AddTag(input: $input) {
+    accepted
+  }
+}

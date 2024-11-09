@@ -1417,6 +1417,7 @@ export type EmailValidationDetails = {
   isPrimaryDomain?: Maybe<Scalars['Boolean']['output']>;
   isRisky?: Maybe<Scalars['Boolean']['output']>;
   isRoleAccount?: Maybe<Scalars['Boolean']['output']>;
+  isSystemGenerated?: Maybe<Scalars['Boolean']['output']>;
   isValidSyntax?: Maybe<Scalars['Boolean']['output']>;
   primaryDomain?: Maybe<Scalars['String']['output']>;
   provider?: Maybe<Scalars['String']['output']>;

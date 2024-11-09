@@ -1,13 +1,8 @@
-import { useRef, useState, useEffect, KeyboardEvent } from 'react';
+import { useRef } from 'react';
 
-import set from 'lodash/set';
 import { observer } from 'mobx-react-lite';
 
-import { Input } from '@ui/form/Input';
-import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
-import { Edit03 } from '@ui/media/icons/Edit03.tsx';
-import { useOutsideClick } from '@ui/utils/hooks/useOutsideClick.ts';
 
 interface JobTitleCellProps {
   contactId: string;
@@ -15,13 +10,14 @@ interface JobTitleCellProps {
 
 export const JobTitleCell = observer(({ contactId }: JobTitleCellProps) => {
   const store = useStore();
-  const [isHovered, setIsHovered] = useState(false);
-  const [isEdit, setIsEdit] = useState(false);
-  const jobTitleInputRef = useRef<HTMLInputElement | null>(null);
+  // const [isHovered, setIsHovered] = useState(false);
+  // const [isEdit, setIsEdit] = useState(false);
+  // const jobTitleInputRef = useRef<HTMLInputElement | null>(null);
   const ref = useRef(null);
 
   const contactStore = store.contacts.value.get(contactId);
-  const jobTitle = contactStore?.value.jobRoles?.[0]?.jobTitle ?? '';
+  const jobTitle =
+    contactStore?.value.latestOrganizationWithJobRole?.jobRole.jobTitle;
 
   const enrichedContact = contactStore?.value.enrichDetails;
 
@@ -30,49 +26,49 @@ export const JobTitleCell = observer(({ contactId }: JobTitleCellProps) => {
     enrichedContact?.requestedAt &&
     !enrichedContact?.failedAt;
 
-  useOutsideClick({
-    ref: ref,
-    handler: () => {
-      setIsEdit(false);
-    },
-  });
+  // useOutsideClick({
+  //   ref: ref,
+  //   handler: () => {
+  //     setIsEdit(false);
+  //   },
+  // });
 
-  useEffect(() => {
-    if (isHovered && isEdit) {
-      jobTitleInputRef.current?.focus();
-    }
-  }, [isHovered, isEdit]);
+  // useEffect(() => {
+  //   if (isHovered && isEdit) {
+  //     jobTitleInputRef.current?.focus();
+  //   }
+  // }, [isHovered, isEdit]);
 
-  useEffect(() => {
-    store.ui.setIsEditingTableCell(isEdit);
-  }, [isEdit]);
+  // useEffect(() => {
+  //   store.ui.setIsEditingTableCell(isEdit);
+  // }, [isEdit]);
 
-  const handleEscape = (e: KeyboardEvent<HTMLDivElement>) => {
-    if (e.key === 'Escape' || e.key === 'Enter') {
-      jobTitleInputRef?.current?.blur();
-      setIsEdit(false);
-    }
-  };
+  // const handleEscape = (e: KeyboardEvent<HTMLDivElement>) => {
+  //   if (e.key === 'Escape' || e.key === 'Enter') {
+  //     jobTitleInputRef?.current?.blur();
+  //     setIsEdit(false);
+  //   }
+  // };
 
   return (
     <div
       ref={ref}
-      onKeyDown={handleEscape}
+      // onKeyDown={handleEscape}
       className='flex justify-between'
-      onDoubleClick={() => setIsEdit(true)}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      // onDoubleClick={() => setIsEdit(true)}
+      // onMouseEnter={() => setIsHovered(true)}
+      // onMouseLeave={() => setIsHovered(false)}
     >
       <div className='flex ' style={{ width: `calc(100% - 1rem)` }}>
-        {!isEdit && !jobTitle && (
+        {!jobTitle && (
           <p className='text-gray-400'>
             {enrichingStatus ? 'Enriching...' : 'Not set'}
           </p>
         )}
-        {!isEdit && jobTitle && (
+        {jobTitle && (
           <p className='overflow-ellipsis overflow-hidden'>{jobTitle}</p>
         )}
-        {isEdit && (
+        {/* {isEdit && (
           <Input
             size='xs'
             variant='unstyled'
@@ -108,7 +104,7 @@ export const JobTitleCell = observer(({ contactId }: JobTitleCellProps) => {
             onClick={() => setIsEdit(!isEdit)}
             icon={<Edit03 className='text-gray-500' />}
           />
-        )}
+        )} */}
       </div>
     </div>
   );

@@ -1,0 +1,3 @@
+mutation CreateContact($contactInput: ContactInput!) {
+  contact_Create(input: $contactInput)
+}

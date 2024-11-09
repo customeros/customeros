@@ -1,65 +1,42 @@
-import type { RootStore } from '@store/root';
-
-import set from 'lodash/set';
-import { Channel } from 'phoenix';
-import { gql } from 'graphql-request';
-import { P, match } from 'ts-pattern';
-import { Operation } from '@store/types';
-import { makePayload } from '@store/util';
+import { set } from 'lodash';
+import { RootStore } from '@store/root';
+import { Syncable } from '@store/syncable';
 import { Transport } from '@store/transport';
-import { rdiffResult } from 'recursive-diff';
 import { FlowStore } from '@store/Flows/Flow.store';
-import { Store, makeAutoSyncable } from '@store/store';
-import { runInAction, makeAutoObservable } from 'mobx';
 import { countryMap } from '@assets/countries/countriesMap';
+import { action, override, runInAction, makeObservable } from 'mobx';
 
-import { Tag, Contact, DataSource, ContactUpdateInput } from '@graphql/types';
+import {
+  Contact,
+  DataSource,
+  ContactUpdateInput,
+} from '@shared/types/__generated__/graphql.types';
 
-import { ContactService } from './__service__/Contact.service.ts';
+import { ContactService } from './__service__/Contacts.service';
 
-export class ContactStore implements Store<Contact> {
-  value: Contact;
-  version = 0;
-  isLoading = false;
-  history: Operation[] = [];
-  error: string | null = null;
-  channel?: Channel | undefined;
-  subscribe = makeAutoSyncable.subscribe;
-  load = makeAutoSyncable.load<Contact>();
-  update = makeAutoSyncable.update<Contact>();
+export class ContactStore extends Syncable<Contact> {
   private service: ContactService;
 
-  constructor(public root: RootStore, public transport: Transport) {
-    this.value = getDefaultValue();
-
-    makeAutoSyncable(this, {
-      channelName: 'Contact',
-      mutator: this.save,
-      getId: (d) => d?.metadata.id,
-    });
-    makeAutoObservable(this);
+  constructor(
+    public root: RootStore,
+    public transport: Transport,
+    data: Contact,
+  ) {
+    super(root, transport, data ?? getDefaultValue());
     this.service = ContactService.getInstance(transport);
+
+    makeObservable(this, {
+      id: override,
+      save: override,
+      getId: override,
+      setId: override,
+      invalidate: action,
+      getChannelName: override,
+    });
   }
 
-  async invalidate() {
-    try {
-      this.isLoading = true;
-
-      const { contact } = await this.transport.graphql.request<
-        CONTACT_QUERY_RESULT,
-        { id: string }
-      >(CONTACT_QUERY, { id: this.id });
-
-      this.load(contact);
-    } catch (err) {
-      runInAction(() => {
-        this.error = (err as Error)?.message;
-      });
-    } finally {
-      runInAction(() => {
-        this.isLoading = false;
-      });
-    }
+  getChannelName(): string {
+    return 'Contacts';
   }
 
   set id(id: string) {
@@ -146,100 +123,68 @@ export class ContactStore implements Store<Contact> {
     return this.value.flows.find((flow) => flow.metadata.id === flowId);
   }
 
-  private async save(operation: Operation) {
-    const diff = operation.diff?.[0];
-    const type = diff?.op;
-    const path = diff?.path;
-    const value = diff?.val;
-    const oldValue = (diff as rdiffResult & { oldVal: unknown })?.oldVal;
+  async invalidate(): Promise<void> {
+    try {
+      this.isLoading = true;
 
-    match(path)
-      .with(['phoneNumbers', 0, ...P.array()], () => {
-        if (type === 'add') {
-          this.addPhoneNumber();
-        }
+      const { contact } = await this.service.getContact(this.value.id);
 
-        if (type === 'update') {
-          this.updatePhoneNumber();
-        }
-      })
-      .with(['socials', ...P.array()], ([_, index]) => {
-        if (type === 'add') {
-          this.addSocial(value.url);
-        }
-
-        if (type === 'update') {
-          this.updateSocial(index as number);
-        }
-      })
-      .with(['jobRoles', 0, ...P.array()], () => {
-        if (type === 'add') {
-          this.addJobRole();
-        }
-
-        if (type === 'update') {
-          this.updateJobRole();
-        }
-      })
-      .with(['emails', 0, ...P.array()], () => {
-        if (type === 'update') {
-          this.updateEmail(oldValue);
-        }
-      })
-      .with(['tags', ...P.array()], () => {
-        if (type === 'add') {
-          this.addTagToContact(value.id, value.name);
-        }
-
-        if (type === 'delete') {
-          if (typeof oldValue === 'object') {
-            this.removeTagFromContact(oldValue.id);
-          }
-        }
-
-        // if tag with index different that last one is deleted it comes as an update, bulk creation updates also come as updates
-        if (type === 'update') {
-          if (!oldValue) {
-            (value as Array<Tag>)?.forEach((tag: Tag) => {
-              this.addTagToContact(tag.id, tag.name);
-            });
-          }
-
-          if (oldValue) {
-            this.removeTagFromContact(oldValue);
-          }
-        }
-      })
-      .otherwise(() => {
-        const payload = makePayload<ContactUpdateInput>(operation);
-
-        this.updateContact(payload);
+      this.load(contact as Contact);
+    } catch (e) {
+      runInAction(() => {
+        this.error = (e as Error).message;
       });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+      });
+    }
   }
 
   async linkOrganization(organizationId: string) {
     try {
-      await this.service.linkOrganization({
-        input: {
-          contactId: this.getId(),
-          organizationId,
-        },
-      });
+      this.isLoading = true;
+
+      const { contact_AddOrganizationById } =
+        await this.service.linkOrganization({
+          input: {
+            contactId: this.value.id,
+            organizationId,
+          },
+        });
+
+      this.load(contact_AddOrganizationById as Contact);
     } catch (e) {
       runInAction(() => {
         this.error = (e as Error).message;
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
       });
     }
   }
 
   private async updateContact(input: ContactUpdateInput) {
     try {
-      await this.service.updateContact({
-        input: { ...input, id: this.getId(), patch: true },
+      this.isLoading = true;
+
+      const { contact_Update } = await this.service.updateContact({
+        input: {
+          ...input,
+          id: this.value.id,
+          patch: true,
+        },
       });
+
+      this.load(contact_Update as Contact);
     } catch (e) {
       runInAction(() => {
         this.error = (e as Error).message;
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
       });
     }
   }
@@ -250,7 +195,7 @@ export class ContactStore implements Store<Contact> {
     try {
       await this.service.updateContact({
         input: {
-          id: this.getId(),
+          id: this.value.id,
           name: name,
         },
       });
@@ -272,8 +217,9 @@ export class ContactStore implements Store<Contact> {
         },
       });
 
+      this.load(jobRole_Create as Contact);
       runInAction(() => {
-        set(this.value.jobRoles?.[0], 'id', jobRole_Create.id);
+        set(this.value.jobRoles[0], 'id', jobRole_Create.id);
       });
     } catch (e) {
       runInAction(() => {
@@ -538,168 +484,6 @@ export class ContactStore implements Store<Contact> {
     }
   }
 }
-
-type CONTACT_QUERY_RESULT = {
-  contact: Contact;
-};
-const CONTACT_QUERY = gql`
-  query contact($id: ID!) {
-    contact(id: $id) {
-      firstName
-      lastName
-      name
-      createdAt
-      prefix
-      description
-      timezone
-      metadata {
-        id
-      }
-      tags {
-        metadata {
-          id
-          source
-          sourceOfTruth
-          appSource
-          created
-          lastUpdated
-        }
-        id
-        name
-        source
-        updatedAt
-        createdAt
-        appSource
-      }
-      flows {
-        metadata {
-          id
-        }
-      }
-      organizations(pagination: { limit: 2, page: 0 }) {
-        content {
-          metadata {
-            id
-          }
-          id
-          name
-        }
-        totalElements
-        totalAvailable
-      }
-      tags {
-        id
-        name
-      }
-      jobRoles {
-        id
-        primary
-        jobTitle
-        description
-        company
-        startedAt
-        endedAt
-      }
-      primaryEmail {
-        id
-        primary
-        email
-        emailValidationDetails {
-          verified
-          verifyingCheckAll
-          isValidSyntax
-          isRisky
-          isFirewalled
-          provider
-          firewall
-          isCatchAll
-          canConnectSmtp
-          deliverable
-          isMailboxFull
-          isRoleAccount
-          isFreeAccount
-          smtpSuccess
-        }
-      }
-      latestOrganizationWithJobRole {
-        organization {
-          name
-          metadata {
-            id
-          }
-        }
-        jobRole {
-          id
-          primary
-          jobTitle
-          description
-          company
-          startedAt
-          endedAt
-        }
-      }
-
-      locations {
-        id
-        address
-        locality
-        postalCode
-        country
-        region
-        countryCodeA2
-        countryCodeA3
-      }
-
-      phoneNumbers {
-        id
-        e164
-        rawPhoneNumber
-        label
-        primary
-      }
-      emails {
-        id
-        primary
-        email
-        emailValidationDetails {
-          verified
-          verifyingCheckAll
-          isValidSyntax
-          isRisky
-          isFirewalled
-          provider
-          firewall
-          isCatchAll
-          canConnectSmtp
-          deliverable
-          isMailboxFull
-          isRoleAccount
-          isFreeAccount
-          smtpSuccess
-        }
-      }
-      socials {
-        id
-        url
-        alias
-        followersCount
-      }
-      connectedUsers {
-        id
-      }
-      updatedAt
-      enrichDetails {
-        enrichedAt
-        failedAt
-        requestedAt
-        emailEnrichedAt
-        emailFound
-        emailRequestedAt
-      }
-      profilePhotoUrl
-    }
-  }
-`;
 
 const getDefaultValue = (): Contact => ({
   id: crypto.randomUUID(),

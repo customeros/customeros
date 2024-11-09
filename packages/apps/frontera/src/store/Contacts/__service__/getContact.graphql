@@ -1,0 +1,156 @@
+query contact($id: ID!) {
+  contact(id: $id) {
+    firstName
+    lastName
+    name
+    createdAt
+    prefix
+    description
+    timezone
+    metadata {
+      id
+    }
+    tags {
+      metadata {
+        id
+        source
+        sourceOfTruth
+        appSource
+        created
+        lastUpdated
+      }
+      id
+      name
+      source
+      updatedAt
+      createdAt
+      appSource
+    }
+    flows {
+      metadata {
+        id
+      }
+    }
+    organizations(pagination: { limit: 2, page: 0 }) {
+      content {
+        metadata {
+          id
+        }
+        id
+        name
+      }
+      totalElements
+      totalAvailable
+    }
+    tags {
+      id
+      name
+    }
+    jobRoles {
+      id
+      primary
+      jobTitle
+      description
+      company
+      startedAt
+      endedAt
+    }
+    primaryEmail {
+      id
+      primary
+      email
+      emailValidationDetails {
+        verified
+        verifyingCheckAll
+        isValidSyntax
+        isRisky
+        isFirewalled
+        provider
+        firewall
+        isCatchAll
+        canConnectSmtp
+        deliverable
+        isMailboxFull
+        isRoleAccount
+        isFreeAccount
+        smtpSuccess
+      }
+    }
+    latestOrganizationWithJobRole {
+      organization {
+        name
+        metadata {
+          id
+        }
+      }
+      jobRole {
+        id
+        primary
+        jobTitle
+        description
+        company
+        startedAt
+        endedAt
+      }
+    }
+
+    locations {
+      id
+      address
+      locality
+      postalCode
+      country
+      region
+      countryCodeA2
+      countryCodeA3
+    }
+
+    phoneNumbers {
+      id
+      e164
+      rawPhoneNumber
+      label
+      primary
+    }
+    emails {
+      id
+      primary
+      email
+      emailValidationDetails {
+        verified
+        verifyingCheckAll
+        isValidSyntax
+        isRisky
+        isFirewalled
+        provider
+        firewall
+        isCatchAll
+        canConnectSmtp
+        deliverable
+        isMailboxFull
+        isRoleAccount
+        isFreeAccount
+        smtpSuccess
+      }
+    }
+    socials {
+      id
+      url
+      alias
+      followersCount
+    }
+    connectedUsers {
+      id
+    }
+    updatedAt
+    enrichDetails {
+      enrichedAt
+      failedAt
+      requestedAt
+      emailEnrichedAt
+      emailFound
+      emailRequestedAt
+    }
+    profilePhotoUrl
+  }
+}

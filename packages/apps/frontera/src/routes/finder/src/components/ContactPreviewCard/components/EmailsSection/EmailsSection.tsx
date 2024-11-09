@@ -101,22 +101,17 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
                   store.ui.setSelectionId(
                     contactStore?.value.emails.length || 1,
                   );
-                  contactStore?.update(
-                    (c) => {
-                      c.emails.push({
-                        id: crypto.randomUUID(),
-                        email: '',
-                        appSource: '',
-                        contacts: [],
-                        createdAt: new Date().toISOString(),
-                        updatedAt: new Date().toISOString(),
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                      } as any);
 
-                      return c;
-                    },
-                    { mutate: false },
-                  );
+                  contactStore?.value.emails.push({
+                    id: crypto.randomUUID(),
+                    email: '',
+                    appSource: '',
+                    contacts: [],
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  } as any);
+
                   store.ui.commandMenu.setContext({
                     ids: [contactStore?.value.id || ''],
                     entity: 'Contact',
@@ -213,14 +208,7 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
                     <MenuItem
                       className='group/archive-email'
                       onClick={() => {
-                        contactStore?.update(
-                          (c) => {
-                            c.emails.splice(idx, 1);
-
-                            return c;
-                          },
-                          { mutate: false },
-                        );
+                        contactStore?.value.emails.splice(idx, 1);
 
                         contactStore?.updateEmail(email?.email ?? '');
                       }}

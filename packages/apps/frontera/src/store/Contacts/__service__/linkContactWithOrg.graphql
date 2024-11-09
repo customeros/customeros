@@ -1,0 +1,5 @@
+mutation linkOrganization($input: ContactOrganizationInput!) {
+  contact_AddOrganizationById(input: $input) {
+    id
+  }
+}

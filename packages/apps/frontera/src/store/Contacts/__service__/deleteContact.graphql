@@ -1,0 +1,5 @@
+mutation deleteContact($contactId: ID!) {
+  contact_HardDelete(contactId: $contactId) {
+    result
+  }
+}

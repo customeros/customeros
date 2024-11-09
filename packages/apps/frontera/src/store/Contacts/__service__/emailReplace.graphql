@@ -1,0 +1,13 @@
+mutation updateContactEmail(
+  $contactId: ID!
+  $previousEmail: String!
+  $input: EmailInput!
+) {
+  emailReplaceForContact(
+    contactId: $contactId
+    previousEmail: $previousEmail
+    input: $input
+  ) {
+    id
+  }
+}

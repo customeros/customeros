@@ -1,0 +1,5 @@
+mutation updateContactPhoneNumber($input: PhoneNumberUpdateInput!) {
+  phoneNumber_Update(input: $input) {
+    id
+  }
+}

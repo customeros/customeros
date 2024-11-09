@@ -102,9 +102,9 @@ export const PeoplePanel = observer(() => {
       )}
       {!!contacts.length &&
         contacts.map((contact) => (
-          <div key={contact.metadata.id} style={{ width: '100%' }}>
+          <div style={{ width: '100%' }} key={contact?.metadata?.id}>
             <ContactCard
-              id={contact.metadata.id}
+              id={contact?.metadata?.id}
               contact={contact as Contact}
               organizationName={organization?.value.name}
             />

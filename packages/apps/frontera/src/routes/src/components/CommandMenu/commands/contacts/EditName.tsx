@@ -32,12 +32,9 @@ export const EditName = observer(() => {
       return;
     }
 
-    contact?.update((o) => {
-      o.name = name;
+    contact.value.name = name;
 
-      return o;
-    });
-
+    contact.commit();
     handleClose();
   };
 

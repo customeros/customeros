@@ -1,0 +1,5 @@
+mutation addJobRole($contactId: ID!, $input: JobRoleInput!) {
+  jobRole_Create(contactId: $contactId, input: $input) {
+    id
+  }
+}

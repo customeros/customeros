@@ -3,9 +3,9 @@ import { useMemo, useState } from 'react';
 import { CommandGroup } from 'cmdk';
 import { observer } from 'mobx-react-lite';
 
+import { Tag } from '@graphql/types';
 import { DataSource } from '@graphql/types';
 import { Plus } from '@ui/media/icons/Plus.tsx';
-import { Tag as TagType } from '@graphql/types';
 import { Check } from '@ui/media/icons/Check.tsx';
 import { useStore } from '@shared/hooks/useStore';
 import { useModKey } from '@shared/hooks/useModKey';
@@ -25,77 +25,47 @@ export const EditPersonaTag = observer(() => {
       ? `Contact - ${contact?.name}`
       : `${selectedIds?.length} contacts`;
 
-  const handleSelect = (t: TagType) => () => {
+  const handleSelect = (t: Tag) => () => {
     if (!context.ids?.[0]) return;
 
     if (!contact) return;
 
     if (selectedIds?.length === 1) {
-      contact?.update((o) => {
-        const existingIndex = o.tags?.find((e) => e.name === t.name);
+      const foundIndex = contact.value?.tags?.findIndex(
+        (e) => e.metadata.id === t.metadata.id,
+      );
 
-        if (existingIndex) {
-          const newTags = o.tags?.filter((e) => e.name !== t.name);
-
-          o.tags = newTags;
-        }
-
-        if (!existingIndex) {
-          o.tags = [...(o.tags ?? []), t];
-        }
-
-        return o;
-      });
+      if (foundIndex !== -1) {
+        contact.value.tags?.splice(foundIndex || 0, 1);
+      } else {
+        contact.value.tags = contact.value.tags ?? [];
+        contact.value.tags.push(t);
+      }
+      contact.commit();
     } else {
-      selectedIds.forEach((id) => {
-        const contact = store.contacts.value.get(id);
-
-        if (contact) {
-          contact.update((o) => {
-            const existingIndex = o.tags?.find((e) => e.name === t.name);
-
-            if (existingIndex) {
-              const newTags = o.tags?.filter((e) => e.name !== t.name);
-
-              o.tags = newTags;
-            }
-
-            if (!existingIndex) {
-              o.tags = [...(o.tags ?? []), t];
-            }
-
-            return o;
-          });
-        }
-      });
+      store.contacts.updateTags(selectedIds, [t]);
     }
   };
 
   const handleCreateOption = (value: string) => {
     store.tags?.create({ name: value });
-    contact?.update((c) => {
-      c.tags = [
-        ...(c.tags || []),
-        {
-          id: value,
-          name: value,
-          metadata: {
-            id: value,
-            source: DataSource.Openline,
-            sourceOfTruth: DataSource.Openline,
-            appSource: 'organization',
-            created: new Date().toISOString(),
-            lastUpdated: new Date().toISOString(),
-          },
-          appSource: 'organization',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          source: DataSource.Openline,
-        },
-      ];
-
-      return c;
+    contact?.value.tags?.push({
+      id: value,
+      name: value,
+      metadata: {
+        id: value,
+        source: DataSource.Openline,
+        sourceOfTruth: DataSource.Openline,
+        appSource: 'organization',
+        created: new Date().toISOString(),
+        lastUpdated: new Date().toISOString(),
+      },
+      appSource: 'organization',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      source: DataSource.Openline,
     });
+    contact?.commit();
 
     setSearch('');
   };
@@ -145,7 +115,7 @@ export const EditPersonaTag = observer(() => {
             e.stopPropagation();
             store.ui.commandMenu.setOpen(false);
           } else {
-            handleSelect(search as unknown as TagType);
+            handleSelect(search as unknown as Tag);
           }
         }}
       />

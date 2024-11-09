@@ -20,14 +20,8 @@ export const EditPhoneNumber = observer(() => {
   const handleChangePhoneNumber = () => {
     if (!contact) return;
 
-    contact?.update(
-      (value) => {
-        set(value, 'phoneNumbers[0].rawPhoneNumber', number);
-
-        return value;
-      },
-      { mutate: false },
-    );
+    set(contact.value, 'phoneNumbers[0].rawPhoneNumber', number);
+    contact.commit();
 
     if (!contact?.value.phoneNumbers?.[0]?.id) {
       contact?.addPhoneNumber();

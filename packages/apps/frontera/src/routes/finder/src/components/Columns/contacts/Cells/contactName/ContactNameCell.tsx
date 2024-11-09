@@ -51,6 +51,8 @@ export const ContactNameCell = observer(
       e.stopPropagation();
     };
 
+    if (!contactStore) return;
+
     return (
       <div
         ref={ref}
@@ -94,17 +96,10 @@ export const ContactNameCell = observer(
             onFocus={(e) => e.target.select()}
             className={'font-medium placeholder-font-normal'}
             onBlur={() => {
-              contactStore?.updateContactName();
+              contactStore.commit();
             }}
             onChange={(e) => {
-              contactStore?.update(
-                (value) => {
-                  value.name = e.target.value;
-
-                  return value;
-                },
-                { mutate: false },
-              );
+              contactStore.value.name = e.target.value;
             }}
           />
         )}

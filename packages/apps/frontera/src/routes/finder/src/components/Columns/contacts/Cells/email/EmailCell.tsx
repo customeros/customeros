@@ -100,22 +100,16 @@ export const EmailCell = observer(
                   store.ui.setSelectionId(
                     contactStore?.value.emails.length || 0 + 1,
                   );
-                  contactStore?.update(
-                    (c) => {
-                      c.emails.push({
-                        id: crypto.randomUUID(),
-                        email: '',
-                        appSource: '',
-                        contacts: [],
-                        createdAt: new Date().toISOString(),
-                        updatedAt: new Date().toISOString(),
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                      } as any);
 
-                      return c;
-                    },
-                    { mutate: false },
-                  );
+                  contactStore.value.emails.push({
+                    id: crypto.randomUUID(),
+                    email: '',
+                    appSource: '',
+                    contacts: [],
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  } as any);
                 }
                 store.ui.commandMenu.setContext({
                   ids: [contactStore?.value.id || ''],
@@ -213,20 +207,9 @@ export const EmailCell = observer(
                     (e) => e.email === email,
                   );
 
-                  contactStore?.update(
-                    (c) => {
-                      if (idx === 0) {
-                        c.emails = [];
-                      }
-
-                      if (idx !== undefined && idx > -1) {
-                        c.emails.splice(idx, 1);
-                      }
-
-                      return c;
-                    },
-                    { mutate: false },
-                  );
+                  if (idx !== -1) {
+                    contactStore?.value.emails.splice(idx || 0, 1);
+                  }
                   contactStore?.updateEmail(oldEmail || '', idx);
                 }}
               >

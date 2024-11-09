@@ -1,5 +1,6 @@
 import { useState } from 'react';
 
+import { set } from 'lodash';
 import { observer } from 'mobx-react-lite';
 
 import { Check } from '@ui/media/icons/Check';
@@ -30,21 +31,15 @@ export const EditTimeZone = observer(() => {
     if (!contact) return;
 
     if (selectedIds?.length === 1) {
-      contact?.update((o) => {
-        o.timezone = timezone;
-
-        return o;
-      });
+      set(contact.value, 'timezone', timezone);
+      contact.commit();
     } else {
       selectedIds.forEach((id) => {
         const contact = store.contacts.value.get(id);
 
         if (contact) {
-          contact.update((o) => {
-            o.timezone = timezone;
-
-            return o;
-          });
+          set(contact.value, 'timezone', timezone);
+          contact.commit();
         }
       });
     }

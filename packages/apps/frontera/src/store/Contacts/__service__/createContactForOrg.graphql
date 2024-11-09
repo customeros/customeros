@@ -1,0 +1,8 @@
+mutation createContact($input: ContactInput!, $organizationId: ID!) {
+  contact_CreateForOrganization(
+    input: $input
+    organizationId: $organizationId
+  ) {
+    id
+  }
+}

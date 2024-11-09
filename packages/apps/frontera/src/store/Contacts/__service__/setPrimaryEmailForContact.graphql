@@ -1,0 +1,5 @@
+mutation setPrimaryEmailForContact($contactId: ID!, $email: String!) {
+  emailSetPrimaryForContact(contactId: $contactId, email: $email) {
+    result
+  }
+}

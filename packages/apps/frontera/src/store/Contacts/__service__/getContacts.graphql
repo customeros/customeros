@@ -1,0 +1,164 @@
+query contacts($pagination: Pagination!) {
+  contacts(pagination: $pagination) {
+    content {
+      id
+      name
+      firstName
+      lastName
+      prefix
+      description
+      timezone
+      metadata {
+        id
+      }
+      flows {
+        metadata {
+          id
+        }
+      }
+      tags {
+        metadata {
+          id
+          source
+          sourceOfTruth
+          appSource
+          created
+          lastUpdated
+        }
+        id
+        name
+        source
+        updatedAt
+        createdAt
+        appSource
+      }
+      updatedAt
+      createdAt
+      organizations(pagination: { limit: 2, page: 0 }) {
+        content {
+          metadata {
+            id
+          }
+          id
+          name
+        }
+        totalElements
+        totalAvailable
+      }
+      tags {
+        id
+        name
+      }
+      primaryEmail {
+        id
+        primary
+        email
+        emailValidationDetails {
+          verified
+          verifyingCheckAll
+          isValidSyntax
+          isRisky
+          isFirewalled
+          provider
+          firewall
+          isCatchAll
+          canConnectSmtp
+          deliverable
+          isMailboxFull
+          isRoleAccount
+          isFreeAccount
+          smtpSuccess
+        }
+      }
+      latestOrganizationWithJobRole {
+        organization {
+          name
+          metadata {
+            id
+          }
+        }
+        jobRole {
+          id
+          primary
+          jobTitle
+          description
+          company
+          startedAt
+          endedAt
+        }
+      }
+
+      jobRoles {
+        id
+        primary
+        jobTitle
+        description
+        company
+        startedAt
+        endedAt
+      }
+
+      locations {
+        id
+        address
+        locality
+        postalCode
+        country
+        countryCodeA2
+        countryCodeA3
+        region
+      }
+
+      phoneNumbers {
+        id
+        e164
+        rawPhoneNumber
+        label
+        primary
+      }
+      emails {
+        id
+        primary
+        email
+        emailValidationDetails {
+          verified
+          verifyingCheckAll
+          isValidSyntax
+          isRisky
+          isFirewalled
+          provider
+          firewall
+          isCatchAll
+          canConnectSmtp
+          deliverable
+          isMailboxFull
+          isRoleAccount
+          isFreeAccount
+          smtpSuccess
+        }
+        work
+      }
+
+      socials {
+        id
+        url
+        alias
+        followersCount
+      }
+      enrichDetails {
+        enrichedAt
+        failedAt
+        requestedAt
+        emailEnrichedAt
+        emailFound
+        emailRequestedAt
+      }
+      connectedUsers {
+        id
+      }
+      profilePhotoUrl
+    }
+    totalPages
+    totalElements
+  }
+}

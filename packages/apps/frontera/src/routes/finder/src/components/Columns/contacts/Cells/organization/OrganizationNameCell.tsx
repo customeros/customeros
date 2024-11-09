@@ -9,6 +9,7 @@ import { Combobox } from '@ui/form/Combobox';
 import { Edit03 } from '@ui/media/icons/Edit03';
 import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
+import { Organization } from '@shared/types/__generated__/graphql.types';
 import {
   Popover,
   PopoverTrigger,
@@ -23,6 +24,7 @@ interface OrganizationNameCellProps {
 export const OrganizationNameCell = observer(
   ({ org, contactId, orgId }: OrganizationNameCellProps) => {
     const store = useStore();
+    const [isOpen, setIsOpen] = useState(false);
     const [isHoverd, setIsHoverd] = useState(false);
 
     const [tabs] = useLocalStorage<{
@@ -55,28 +57,55 @@ export const OrganizationNameCell = observer(
               ref={linkRef}
               className='inline text-gray-700 no-underline hover:no-underline font-normal'
             >
-              {org}
+              {
+                contactStore?.value.latestOrganizationWithJobRole?.organization
+                  .name
+              }
             </Link>
           ) : (
             <span className='text-gray-400'>None</span>
           )}
         </span>
-        <Popover>
+        <Popover open={isOpen} onOpenChange={(value) => setIsOpen(value)}>
           <PopoverTrigger asChild>
             <IconButton
               size='xxs'
               variant='ghost'
               icon={<Edit03 />}
               aria-label='edit-organization'
+              onClick={() => setIsOpen(true)}
               className={cn('opacity-0 ml-2', isHoverd && 'opacity-100')}
             />
           </PopoverTrigger>
           <PopoverContent align='end' side='bottom' className='w-[200px]'>
             <Combobox
               options={options}
-              closeMenuOnSelect={true}
               onChange={(value) => {
+                contactStore?.value.organizations.content.map((org) => {
+                  if (org.metadata.id === value.value) return;
+                  contactStore.value.organizations.content.push({
+                    metadata: {
+                      id: value.value,
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    } as any,
+                    id: value.value,
+                    name: value.label,
+                  } as Organization);
+                });
+
+                if (contactStore?.value.latestOrganizationWithJobRole) {
+                  contactStore.value.latestOrganizationWithJobRole.organization =
+                    {
+                      metadata: {
+                        id: value.value,
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      } as any,
+                      id: value.value,
+                      name: value.label,
+                    } as Organization;
+                }
                 contactStore?.linkOrganization(value.value);
+                setIsOpen(false);
               }}
             />
           </PopoverContent>

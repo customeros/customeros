@@ -1,0 +1,5 @@
+mutation removeTagFromContact($input: ContactTagInput!) {
+  contact_RemoveTag(input: $input) {
+    accepted
+  }
+}

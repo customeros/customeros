@@ -1,0 +1,5 @@
+mutation updateContactRole($contactId: ID!, $input: JobRoleUpdateInput!) {
+  jobRole_Update(contactId: $contactId, input: $input) {
+    id
+  }
+}

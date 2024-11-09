@@ -1,0 +1,5 @@
+mutation archiveContact($contactId: ID!) {
+  contact_Hide(contactId: $contactId) {
+    accepted
+  }
+}

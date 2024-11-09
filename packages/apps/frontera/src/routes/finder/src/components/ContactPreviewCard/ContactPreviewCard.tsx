@@ -57,7 +57,11 @@ export const ContactPreviewCard = observer(() => {
   const company =
     contact?.value.latestOrganizationWithJobRole?.organization.name;
 
-  const role = contact?.value.latestOrganizationWithJobRole?.jobRole.jobTitle;
+  const roleId = contact?.value.latestOrganizationWithJobRole?.jobRole.id;
+
+  const jobRole = contact?.value.jobRoles.find(
+    (jobRole) => jobRole.id === roleId,
+  );
 
   const countryA3 = contact?.value.locations?.[0]?.countryCodeA3;
   const countryA2 = contact?.value.locations?.[0]?.countryCodeA2;
@@ -81,44 +85,39 @@ export const ContactPreviewCard = observer(() => {
     ?.toLocaleString()
     .replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 
+  if (!contact) return null;
+
   const handleUpdateSocial = (url: string) => {
     const linkedinId = contact?.value.socials.find((social) =>
       social.url.includes('linkedin'),
     )?.id;
 
+    const formattedValue =
+      url.includes('https://www') || url.includes('linkedin.com')
+        ? getFormattedLink(url).replace(/^linkedin\.com\//, '')
+        : `in/${url}`;
+
     if (fromatedUrl === undefined && url.trim() !== '') {
-      contact?.update((contactData) => {
-        const formattedValue =
-          url.includes('https://www') || url.includes('linkedin.com')
-            ? getFormattedLink(url).replace(/^linkedin\.com\//, '')
-            : url;
-
-        contactData.socials.push({
-          id: crypto.randomUUID(),
-          url: `linkedin.com/${formattedValue}`,
-        } as Social);
-
-        return contactData;
-      });
+      contact?.value.socials.push({
+        id: crypto.randomUUID(),
+        url: `linkedin.com/${formattedValue}`,
+      } as Social);
     }
 
-    contact?.update((org) => {
-      const idx = org.socials.findIndex((s) => s.id === linkedinId);
-      const formattedValue =
-        url.includes('https://www') || url.includes('linkedin.com')
-          ? getFormattedLink(url).replace(/^linkedin\.com\//, '')
-          : `in/${url}`;
+    const foundIndex = contact?.value.socials.findIndex(
+      (social) => social.id === linkedinId,
+    );
 
-      if (idx !== -1) {
-        org.socials[idx].url = `linkedin.com/${formattedValue}`;
-      }
+    if (foundIndex !== -1) {
+      contact.value.socials[
+        foundIndex || 0
+      ].url = `linkedin.com/${formattedValue}`;
+    }
 
-      if (url === '') {
-        org.socials.splice(idx, 1);
-      }
-
-      return org;
-    });
+    if (url === '') {
+      contact.value.socials.splice(foundIndex, 1);
+    }
+    contact.commit();
   };
 
   useKeyBindings(
@@ -193,13 +192,12 @@ export const ContactPreviewCard = observer(() => {
               placeholder='Unknown'
               className='mb-[-8px]'
               onFocus={(e) => e.target.select()}
-              onBlur={() => setIsEditName(false)}
               onChange={(e) => {
-                contact?.update((value) => {
-                  set(value, 'name', e.target.value);
-
-                  return value;
-                });
+                contact.value.name = e.target.value;
+              }}
+              onBlur={() => {
+                setIsEditName(false);
+                contact?.commit();
               }}
             />
           ) : (
@@ -225,16 +223,30 @@ export const ContactPreviewCard = observer(() => {
           <Input
             size='xs'
             variant='unstyled'
-            value={role || ''}
             placeholder='Enter title'
+            value={jobRole?.jobTitle || ''}
             onFocus={(e) => e.target.select()}
             className='w-[290px] overflow-hidden text-ellipsis whitespace-nowrap'
+            onBlur={() => {
+              contact.commit();
+              set(
+                contact.value,
+                'latestOrganizationWithJobRole.jobRole.jobTitle',
+                jobRole?.jobTitle,
+              );
+            }}
             onChange={(e) => {
-              contact?.update((value) => {
-                set(value, 'jobRoles[0].jobTitle', e.target.value);
+              const foundIndex = contact.value.jobRoles.findIndex(
+                (jobRole) => jobRole.id === roleId,
+              );
 
-                return value;
-              });
+              if (foundIndex === -1) return;
+
+              set(
+                contact.value.jobRoles[foundIndex],
+                'jobTitle',
+                e.target.value,
+              );
             }}
           />
           <div className={cn('flex items-center mb-4', countryA3 && 'gap-1')}>
@@ -271,14 +283,10 @@ export const ContactPreviewCard = observer(() => {
                 })) || []
               }
               onChange={(e) => {
-                contact?.update((c) => {
-                  c.tags =
-                    (e
-                      .map((tag) => store.tags?.value.get(tag.value)?.value)
-                      .filter(Boolean) as Array<Tag>) ?? [];
-
-                  return c;
-                });
+                contact.value.tags = e.map(
+                  (tag) => store.tags?.value.get(tag.value)?.value,
+                ) as Array<Tag>;
+                contact.commit();
               }}
             />
           </div>

@@ -24,45 +24,37 @@ export const AddPersonaTagSubItemGroup = observer(() => {
     if (!contact) return;
 
     if (selectedIds?.length === 1) {
-      contact?.update((o) => {
-        const existingIndex = o.tags?.find((e) => e.name === t.name);
+      const foundIndex = contact.value?.tags?.findIndex(
+        (e) => e.name === t.name,
+      );
 
-        if (existingIndex) {
-          const newTags = o.tags?.filter((e) => e.name !== t.name);
-
-          o.tags = newTags;
-        }
-
-        if (!existingIndex) {
-          o.tags = [...(o.tags ?? []), t];
-        }
-
-        return o;
-      });
+      if (foundIndex !== -1) {
+        contact.value.tags?.splice(foundIndex || 0, 1);
+      } else {
+        contact.value.tags = contact.value.tags ?? [];
+        contact.value.tags.push(t);
+      }
     } else {
       selectedIds.forEach((id) => {
         const contact = store.contacts.value.get(id);
 
         if (contact) {
-          contact.update((o) => {
-            const existingIndex = o.tags?.find((e) => e.name === t.name);
+          const foundIndex = contact.value?.tags?.findIndex(
+            (e) => e.name === t.name,
+          );
 
-            if (existingIndex) {
-              const newTags = o.tags?.filter((e) => e.name !== t.name);
-
-              o.tags = newTags;
-            }
-
-            if (!existingIndex) {
-              o.tags = [...(o.tags ?? []), t];
-            }
-
-            return o;
-          });
+          if (foundIndex !== -1) {
+            contact.value.tags?.splice(foundIndex || 0, 1);
+          } else {
+            contact.value.tags = contact.value.tags ?? [];
+            contact.value.tags.push(t);
+          }
         }
       });
     }
+    contact.commit();
   };
+
   const newSelectedTags = new Set(
     (contact?.value?.tags ?? []).map((tag) => tag.name),
   );

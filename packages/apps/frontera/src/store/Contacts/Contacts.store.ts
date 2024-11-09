@@ -1,60 +1,44 @@
-import { Channel } from 'phoenix';
-import { gql } from 'graphql-request';
 import { RootStore } from '@store/root';
 import { Transport } from '@store/transport';
-import { GroupOperation } from '@store/types';
-import { when, runInAction, makeAutoObservable } from 'mobx';
-import { GroupStore, makeAutoSyncableGroup } from '@store/group-store';
+import { SyncableGroup } from '@store/syncable-group';
+import {
+  action,
+  override,
+  observable,
+  runInAction,
+  makeObservable,
+} from 'mobx';
 
-import { Contact, DataSource, Pagination, ContactInput } from '@graphql/types';
+import {
+  Tag,
+  Contact,
+  DataSource,
+  ContactInput,
+} from '@shared/types/__generated__/graphql.types';
 
 import mock from './mock.json';
 import { ContactStore } from './Contact.store';
-import { ContactService } from './__service__/Contact.service.ts';
+import { ContactService } from './__service__/Contacts.service';
 
-export class ContactsStore implements GroupStore<Contact> {
-  version = 0;
-  isLoading = false;
-  history: GroupOperation[] = [];
-  error: string | null = null;
-  channel?: Channel | undefined;
-  isBootstrapped: boolean = false;
-  value: Map<string, ContactStore> = new Map();
-  sync = makeAutoSyncableGroup.sync;
-  subscribe = makeAutoSyncableGroup.subscribe;
-  load = makeAutoSyncableGroup.load<Contact>();
+export class ContactsStore extends SyncableGroup<Contact, ContactStore> {
   totalElements = 0;
-  isFullyLoaded = false;
   private service: ContactService;
 
   constructor(public root: RootStore, public transport: Transport) {
+    super(root, transport, ContactStore);
     this.service = ContactService.getInstance(transport);
 
-    makeAutoSyncableGroup(this, {
-      channelName: 'Contacts',
-      getItemId: (item) => item?.id,
-      ItemStore: ContactStore,
+    makeObservable(this, {
+      totalElements: observable,
+      create: action.bound,
+      channelName: override,
+      archive: action.bound,
+      delete: action.bound,
     });
-    makeAutoObservable(this);
+  }
 
-    when(
-      () =>
-        this.isBootstrapped &&
-        this.totalElements > 0 &&
-        this.totalElements !== this.value.size &&
-        !this.root.demoMode,
-      async () => {
-        await this.bootstrapRest();
-      },
-    );
-
-    when(
-      () => this.isBootstrapped && this.totalElements === this.value.size,
-      () => {
-        this.isFullyLoaded = true;
-        this.isLoading = false;
-      },
-    );
+  get channelName() {
+    return 'Contacts';
   }
 
   toArray() {
@@ -69,19 +53,21 @@ export class ContactsStore implements GroupStore<Contact> {
 
   delete = (ids: string[]) => {
     ids.forEach((id) => {
-      this.remove(id);
+      this.delete([id]);
     });
   };
 
   archive = (ids: string[]) => {
     ids.forEach((id) => {
-      this.softDelete(id);
+      this.archive([id]);
     });
   };
 
   async bootstrap() {
     if (this.root.demoMode) {
-      this.load(mock.data.contacts.content as unknown as Contact[]);
+      this.load(mock.data.contacts.content as unknown as Contact[], {
+        getId: (data) => data.metadata.id,
+      });
       this.isBootstrapped = true;
       this.totalElements = mock.data.contacts.totalElements;
 
@@ -93,14 +79,13 @@ export class ContactsStore implements GroupStore<Contact> {
     try {
       this.isLoading = true;
 
-      const { contacts } = await this.transport.graphql.request<
-        CONTACTS_QUERY_RESPONSE,
-        CONTACTS_QUERY_PAYLOAD
-      >(CONTACTS_QUERY, {
+      const { contacts } = await this.service.getContacts({
         pagination: { limit: 1000, page: 0 },
       });
 
-      this.load(contacts.content);
+      this.load(contacts.content as Contact[], {
+        getId: (data) => data.metadata.id,
+      });
       runInAction(() => {
         this.totalElements = contacts.totalElements;
       });
@@ -118,16 +103,15 @@ export class ContactsStore implements GroupStore<Contact> {
 
     while (this.totalElements > this.value.size) {
       try {
-        const { contacts } = await this.transport.graphql.request<
-          CONTACTS_QUERY_RESPONSE,
-          CONTACTS_QUERY_PAYLOAD
-        >(CONTACTS_QUERY, {
+        const { contacts } = await this.service.getContacts({
           pagination: { limit: 1000, page },
         });
 
         runInAction(() => {
           page++;
-          this.load(contacts.content);
+          this.load(contacts.content as Contact[], {
+            getId: (data) => data.metadata.id,
+          });
         });
       } catch (e) {
         runInAction(() => {
@@ -143,7 +127,15 @@ export class ContactsStore implements GroupStore<Contact> {
     options?: { onSuccess?: (serverId: string) => void },
     input?: ContactInput,
   ) {
-    const newContact = new ContactStore(this.root, this.transport);
+    const newContact = new ContactStore(this.root, this.transport, {
+      name: '',
+      metadata: {
+        id: crypto.randomUUID(),
+        created: new Date().toISOString(),
+        lastUpdated: new Date().toISOString(),
+        appSource: DataSource.Openline,
+      },
+    } as Contact);
     const tempId = newContact.value.metadata?.id;
     let serverId: string | undefined;
 
@@ -158,12 +150,9 @@ export class ContactsStore implements GroupStore<Contact> {
 
     try {
       const { contact_CreateForOrganization } =
-        await this.transport.graphql.request<
-          CREATE_CONTACT_MUTATION_RESPONSE,
-          CREATE_CONTACT_MUTATION_PAYLOAD
-        >(CREATE_CONTACT_MUTATION, {
+        await this.service.createContactForOrganization({
           organizationId,
-          input: input || {},
+          input: input ?? {},
         });
 
       runInAction(() => {
@@ -203,7 +192,11 @@ export class ContactsStore implements GroupStore<Contact> {
   }) {
     this.isLoading = true;
 
-    const newContact = new ContactStore(this.root, this.transport);
+    const newContact = new ContactStore(
+      this.root,
+      this.transport,
+      {} as Contact,
+    );
     const tempId = newContact.value.id;
     const socialId = crypto.randomUUID();
 
@@ -243,10 +236,7 @@ export class ContactsStore implements GroupStore<Contact> {
 
     try {
       const { contact_CreateForOrganization } =
-        await this.transport.graphql.request<
-          CREATE_CONTACT_MUTATION_RESPONSE,
-          CREATE_CONTACT_MUTATION_PAYLOAD
-        >(CREATE_CONTACT_MUTATION, {
+        await this.service.createContactForOrganization({
           organizationId,
           input: {
             socialUrl,
@@ -301,7 +291,11 @@ export class ContactsStore implements GroupStore<Contact> {
   }) {
     this.isLoading = true;
 
-    const newContact = new ContactStore(this.root, this.transport);
+    const newContact = new ContactStore(
+      this.root,
+      this.transport,
+      {} as Contact,
+    );
     const tempId = newContact.value.id;
     const socialId = crypto.randomUUID();
     let serverId: string | undefined = undefined;
@@ -332,10 +326,7 @@ export class ContactsStore implements GroupStore<Contact> {
     this.value.set(tempId, newContact);
 
     try {
-      const { contact_Create } = await this.transport.graphql.request<
-        CREATE_CONTACT_MUTATION_WITHOUT_ORG_RESPONSE,
-        CREATE_CONTACT_MUTATION_WITHOUT_ORG_PAYLOAD
-      >(CREATE_CONTACT_MUTATION_WITHOUT_ORG, {
+      const { contact_Create } = await this.service.createContact({
         contactInput: {
           socialUrl,
         },
@@ -441,214 +432,45 @@ export class ContactsStore implements GroupStore<Contact> {
       });
     }
   }
-}
 
-type CONTACTS_QUERY_RESPONSE = {
-  contacts: {
-    totalPages: number;
-    content: Contact[];
-    totalElements: number;
-  };
-};
-type CONTACTS_QUERY_PAYLOAD = {
-  pagination: Pagination;
-};
-const CONTACTS_QUERY = gql`
-  query contacts($pagination: Pagination!) {
-    contacts(pagination: $pagination) {
-      content {
-        id
-        name
-        firstName
-        lastName
-        prefix
-        description
-        timezone
-        metadata {
-          id
-        }
-        flows {
-          metadata {
-            id
-          }
-        }
-        tags {
-          metadata {
-            id
-            source
-            sourceOfTruth
-            appSource
-            created
-            lastUpdated
-          }
-          id
-          name
-          source
-          updatedAt
-          createdAt
-          appSource
-        }
-        updatedAt
-        createdAt
-        organizations(pagination: { limit: 2, page: 0 }) {
-          content {
-            metadata {
-              id
-            }
-            id
-            name
-          }
-          totalElements
-          totalAvailable
-        }
-        tags {
-          id
-          name
-        }
-        primaryEmail {
-          id
-          primary
-          email
-          emailValidationDetails {
-            verified
-            verifyingCheckAll
-            isValidSyntax
-            isRisky
-            isFirewalled
-            provider
-            firewall
-            isCatchAll
-            canConnectSmtp
-            deliverable
-            isMailboxFull
-            isRoleAccount
-            isFreeAccount
-            smtpSuccess
-          }
-        }
-        latestOrganizationWithJobRole {
-          organization {
-            name
-            metadata {
-              id
-            }
-          }
-          jobRole {
-            id
-            primary
-            jobTitle
-            description
-            company
-            startedAt
-            endedAt
-          }
+  updateTags = (ids: string[], tags: Tag[]) => {
+    const tagIdsToUpdate = new Set(tags?.map((tag) => tag.id));
+
+    const shouldRemoveTags = ids.every((id) => {
+      const contact = this.value.get(id);
+
+      if (!contact) return false;
+
+      const contactIdsTags = new Set(
+        (contact.value.tags ?? []).map((tag) => tag.id),
+      );
+
+      return Array.from(tagIdsToUpdate).every((tagId) =>
+        contactIdsTags.has(tagId),
+      );
+    });
+
+    ids.forEach((id) => {
+      const contact = this.value.get(id);
+
+      if (!contact) return;
+
+      if (shouldRemoveTags) {
+        contact.value.tags = contact.value.tags?.filter(
+          (t) => !tagIdsToUpdate.has(t.id),
+        );
+      } else {
+        const existingIds = new Set(contact.value.tags?.map((t) => t.id) ?? []);
+        const newTags = tags.filter((t) => !existingIds.has(t.id));
+
+        if (!Array.isArray(contact.value.tags)) {
+          contact.value.tags = [];
         }
 
-        jobRoles {
-          id
-          primary
-          jobTitle
-          description
-          company
-          startedAt
-          endedAt
-        }
+        contact.value.tags = [...(contact.value.tags ?? []), ...newTags];
 
-        locations {
-          id
-          address
-          locality
-          postalCode
-          country
-          countryCodeA2
-          countryCodeA3
-          region
-        }
-
-        phoneNumbers {
-          id
-          e164
-          rawPhoneNumber
-          label
-          primary
-        }
-        emails {
-          id
-          primary
-          email
-          emailValidationDetails {
-            verified
-            verifyingCheckAll
-            isValidSyntax
-            isRisky
-            isFirewalled
-            provider
-            firewall
-            isCatchAll
-            canConnectSmtp
-            deliverable
-            isMailboxFull
-            isRoleAccount
-            isFreeAccount
-            smtpSuccess
-          }
-          work
-        }
-
-        socials {
-          id
-          url
-          alias
-          followersCount
-        }
-        enrichDetails {
-          enrichedAt
-          failedAt
-          requestedAt
-          emailEnrichedAt
-          emailFound
-          emailRequestedAt
-        }
-        connectedUsers {
-          id
-        }
-        profilePhotoUrl
+        contact.commit();
       }
-      totalPages
-      totalElements
-    }
-  }
-`;
-
-type CREATE_CONTACT_MUTATION_RESPONSE = {
-  contact_CreateForOrganization: {
-    id: string;
+    });
   };
-};
-type CREATE_CONTACT_MUTATION_PAYLOAD = {
-  input: ContactInput;
-  organizationId: string;
-};
-const CREATE_CONTACT_MUTATION = gql`
-  mutation createContact($input: ContactInput!, $organizationId: ID!) {
-    contact_CreateForOrganization(
-      input: $input
-      organizationId: $organizationId
-    ) {
-      id
-    }
-  }
-`;
-
-type CREATE_CONTACT_MUTATION_WITHOUT_ORG_RESPONSE = {
-  contact_Create: string;
-};
-
-type CREATE_CONTACT_MUTATION_WITHOUT_ORG_PAYLOAD = {
-  contactInput: ContactInput;
-};
-const CREATE_CONTACT_MUTATION_WITHOUT_ORG = gql`
-  mutation CreateContact($contactInput: ContactInput!) {
-    contact_Create(input: $contactInput)
-  }
-`;
+}

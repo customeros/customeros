@@ -1,4 +1,3 @@
-import set from 'lodash/set';
 import { observer } from 'mobx-react-lite';
 
 import { Check } from '@ui/media/icons/Check';
@@ -30,28 +29,21 @@ export const AddJobRolesSubItemGroup = observer(() => {
     if (!context.ids?.[0] || !contact) return;
 
     if (selectedIds?.length === 1) {
-      contact.update((value) => {
-        const selectedValues = opt.map((v) => v.value).join(',');
-
-        set(value, 'jobRoles[0].description', selectedValues);
-
-        return value;
+      contact.value.jobRoles.map((jobRole) => {
+        jobRole.description = opt.map((v) => v.value).join(',');
       });
     } else {
       selectedIds.forEach((id) => {
         const contact = store.contacts.value.get(id);
 
         if (contact) {
-          contact.update((value) => {
-            const selectedValues = opt.map((v) => v.value).join(',');
-
-            set(value, 'jobRoles[0].description', selectedValues);
-
-            return value;
+          contact.value.jobRoles.map((jobRole) => {
+            jobRole.description = opt.map((v) => v.value).join(',');
           });
         }
       });
     }
+    contact.commit();
   };
 
   useModKey('Enter', () => {

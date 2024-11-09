@@ -1,4 +1,4 @@
-import React, { useRef, useMemo, useEffect, MouseEvent } from 'react';
+import React, { useRef, useEffect, MouseEvent } from 'react';
 
 import set from 'lodash/set';
 import { observer } from 'mobx-react-lite';
@@ -102,10 +102,6 @@ export const ContactCard = observer(
     const contactStore = store.contacts.value.get(id);
     const emailInputRef = useRef<HTMLInputElement | null>(null);
     const nameInputRef = useRef<HTMLInputElement | null>(null);
-    const oldEmail = useMemo(
-      () => contactStore?.value.emails?.[0]?.email,
-      [contactStore?.isLoading],
-    );
 
     const toggle = (e: MouseEvent<HTMLDivElement>) => {
       if (
@@ -182,46 +178,26 @@ export const ContactCard = observer(
       contactStore?.findEmail();
     };
 
-    const handleChange = (
-      e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-    ) => {
-      contactStore?.update((value) => {
-        const property = e.target.name as keyof Contact;
-
-        if (!property) return value;
-
-        value[property] = e.target.value;
-
-        return value;
-      });
-    };
-
     const handleCreateOption = (value: string) => {
       store.tags?.create({ name: value });
 
-      contactStore?.update((org) => {
-        org.tags = [
-          ...(org.tags || []),
-          {
-            id: value,
-            name: value,
-            metadata: {
-              id: value,
-              source: DataSource.Openline,
-              sourceOfTruth: DataSource.Openline,
-              appSource: 'organization',
-              created: new Date().toISOString(),
-              lastUpdated: new Date().toISOString(),
-            },
-            appSource: 'organization',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            source: DataSource.Openline,
-          },
-        ];
-
-        return org;
+      contactStore?.value.tags?.push({
+        id: value,
+        name: value,
+        metadata: {
+          id: value,
+          source: DataSource.Openline,
+          sourceOfTruth: DataSource.Openline,
+          appSource: 'organization',
+          created: new Date().toISOString(),
+          lastUpdated: new Date().toISOString(),
+        },
+        appSource: 'organization',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        source: DataSource.Openline,
       });
+      contactStore?.commit();
     };
 
     const enrichedContact = contactStore?.value.enrichDetails;
@@ -234,6 +210,8 @@ export const ContactCard = observer(
       !enrichedContact?.emailEnrichedAt &&
       enrichedContact?.emailRequestedAt &&
       !enrichedContact?.emailFound;
+
+    if (!contactStore) return null;
 
     return (
       <>
@@ -279,10 +257,13 @@ export const ContactCard = observer(
                     name='name'
                     ref={nameInputRef}
                     placeholder='Name'
-                    onChange={handleChange}
                     value={contactStore?.name ?? ''}
                     dataTest='org-people-contact-name'
+                    onBlur={() => contactStore.commit()}
                     className='font-semibold text-gray-700'
+                    onChange={(e) => {
+                      contactStore.value.name = e.target.value;
+                    }}
                   />
                   <Input
                     size='xs'
@@ -290,13 +271,10 @@ export const ContactCard = observer(
                     placeholder='Title'
                     className='text-gray-500'
                     dataTest='org-people-contact-title'
+                    onBlur={() => contactStore.commit()}
                     value={contactStore?.value?.jobRoles?.[0]?.jobTitle ?? ''}
                     onChange={(e) => {
-                      contactStore?.update((value) => {
-                        set(value, 'jobRoles[0].jobTitle', e.target.value);
-
-                        return value;
-                      });
+                      contactStore.value.jobRoles[0].jobTitle = e.target.value;
                     }}
                   />
                   <Select
@@ -313,15 +291,11 @@ export const ContactCard = observer(
                         .map((v) => ({ value: v, label: v })) ?? []
                     }
                     onChange={(opt) => {
-                      contactStore?.update((value) => {
-                        const description = opt
-                          .map((v: SelectOption) => v.value)
-                          .join(',');
+                      contactStore.value.jobRoles[0].description = opt
+                        .map((v: SelectOption) => v.value)
+                        .join(',');
 
-                        set(value, 'jobRoles[0].description', description);
-
-                        return value;
-                      });
+                      contactStore.commit();
                     }}
                   />
                 </div>
@@ -385,17 +359,15 @@ export const ContactCard = observer(
                   dataTest='org-people-contact-email'
                   value={contactStore?.value?.emails?.[0]?.email ?? ''}
                   onBlur={() => {
-                    contactStore?.updateEmail(oldEmail ?? '');
+                    contactStore.commit();
                   }}
                   onChange={(e) => {
-                    contactStore?.update(
-                      (value) => {
-                        set(value, 'emails[0].email', e.target.value);
-
-                        return value;
-                      },
-                      { mutate: false },
+                    set(
+                      contactStore.value,
+                      ['emails', 0, 'email'],
+                      e.target.value,
                     );
+                    set(contactStore.value, ['emails', 0, 'primary'], true);
                   }}
                 />
                 <RightElement>
@@ -416,28 +388,17 @@ export const ContactCard = observer(
                   variant='unstyled'
                   placeholder='Phone number'
                   dataTest='org-people-contact-phone-number'
+                  onBlur={() => {
+                    contactStore.commit();
+                  }}
                   value={
                     contactStore?.value.phoneNumbers?.[0]?.rawPhoneNumber ?? ''
                   }
-                  onBlur={() => {
-                    if (!contactStore?.value.phoneNumbers?.[0]?.id) {
-                      contactStore?.addPhoneNumber();
-                    } else {
-                      contactStore?.updatePhoneNumber();
-                    }
-                  }}
                   onChange={(e) => {
-                    contactStore?.update(
-                      (value) => {
-                        set(
-                          value,
-                          'phoneNumbers[0].rawPhoneNumber',
-                          e.target.value,
-                        );
-
-                        return value;
-                      },
-                      { mutate: false },
+                    set(
+                      contactStore.value,
+                      ['phoneNumbers', 0, 'rawPhoneNumber'],
+                      e.target.value,
                     );
                   }}
                 />
@@ -466,14 +427,13 @@ export const ContactCard = observer(
                   })) ?? []
                 }
                 onChange={(e) => {
-                  contactStore?.update((c) => {
-                    c.tags =
-                      (e
-                        .map((tag) => store.tags?.value.get(tag.value)?.value)
-                        .filter(Boolean) as Array<Tag>) ?? [];
+                  contactStore.value.tags = e
+                    .map(
+                      (tag) => store.tags?.value.get(tag.value)?.value as Tag,
+                    )
+                    .filter(Boolean) as Tag[];
 
-                    return c;
-                  });
+                  contactStore.commit();
                 }}
               />
 
@@ -488,34 +448,29 @@ export const ContactCard = observer(
                   })) ?? []
                 }
                 onCreate={(value) => {
-                  contactStore?.update((prev) => {
-                    prev.socials.push({
-                      id: crypto.randomUUID(),
-                      url: value,
-                    } as Social);
-
-                    return prev;
-                  });
+                  contactStore.value.socials.push({
+                    id: crypto.randomUUID(),
+                    url: value,
+                  } as Social);
+                  contactStore.commit();
                 }}
                 onChange={(e) => {
                   const id = e.target.id;
 
-                  contactStore?.update((value) => {
-                    const foundIndex = value.socials.findIndex(
-                      (s) => s.id === id,
+                  const foundIndex = contactStore.value.socials.findIndex(
+                    (s) => s.id === id,
+                  );
+
+                  if (foundIndex !== -1) {
+                    contactStore.value.socials[foundIndex].url = e.target.value;
+
+                    set(
+                      contactStore.value,
+                      ['socials', foundIndex, 'url'],
+                      e.target.value,
                     );
-
-                    if (foundIndex !== -1) {
-                      value.socials[foundIndex].url = e.target.value;
-                      set(
-                        value,
-                        ['socials', foundIndex, 'url'],
-                        e.target.value,
-                      );
-                    }
-
-                    return value;
-                  });
+                  }
+                  contactStore.commit();
                 }}
               />
               <TimezoneSelect
@@ -528,11 +483,8 @@ export const ContactCard = observer(
                   (v) => v.value === contactStore?.value?.timezone,
                 )}
                 onChange={(opt) => {
-                  contactStore?.update((value) => {
-                    value.timezone = opt?.value;
-
-                    return value;
-                  });
+                  contactStore.value.timezone = opt?.value;
+                  contactStore.commit();
                 }}
               />
               {/* <AutoresizeTextarea

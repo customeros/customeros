@@ -65,16 +65,17 @@ export class InvoicesService {
     });
   }
 
-  public async mutateOperation(operation: Operation, _store: InvoiceStore) {
+  public async mutateOperation(operation: Operation, store: InvoiceStore) {
     const diff = operation.diff?.[0];
     const path = diff?.path;
-    const invoiceId = operation.entityId;
+    const invoiceNumber = operation.entityId;
+    const invoiceId = store.value.metadata.id;
 
     if (!operation.diff.length) {
       return;
     }
 
-    if (!invoiceId) {
+    if (!invoiceNumber) {
       console.error('Missing entityId in Operation! Mutations will not fire.');
 
       return;

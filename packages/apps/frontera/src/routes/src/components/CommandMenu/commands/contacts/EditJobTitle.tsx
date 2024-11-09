@@ -1,6 +1,5 @@
 import { useState } from 'react';
 
-import { set } from 'lodash';
 import { observer } from 'mobx-react-lite';
 
 import { Edit03 } from '@ui/media/icons/Edit03';
@@ -26,24 +25,21 @@ export const EditJobTitle = observer(() => {
     if (!contact) return;
 
     if (selectedIds?.length === 1) {
-      contact?.update((value) => {
-        set(value, 'jobRoles[0].jobTitle', name);
-
-        return value;
+      contact.value.jobRoles.map((jobRole) => {
+        jobRole.jobTitle = name;
       });
     } else {
       selectedIds.forEach((id) => {
         const contact = store.contacts.value.get(id);
 
         if (contact) {
-          contact.update((value) => {
-            value.jobRoles[0].jobTitle = name;
-
-            return value;
+          contact.value.jobRoles.map((jobRole) => {
+            jobRole.jobTitle = name;
           });
         }
       });
     }
+    contact.commit();
     store.ui.commandMenu.setOpen(false);
     store.ui.commandMenu.setType('ContactCommands');
   };
