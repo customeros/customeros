@@ -96,3 +96,19 @@ type InvoiceInternalFields struct {
 }
 
 type InvoiceEntities []InvoiceEntity
+
+func (i InvoiceEntity) IsDue() bool {
+	return i.Status == enum.InvoiceStatusDue
+}
+
+func (i InvoiceEntity) IsOverdue() bool {
+	return i.Status == enum.InvoiceStatusOverdue
+}
+
+func (i InvoiceEntity) IsPaid() bool {
+	return i.Status == enum.InvoiceStatusPaid
+}
+
+func (i InvoiceEntity) IsVoid() bool {
+	return i.Status == enum.InvoiceStatusVoid
+}

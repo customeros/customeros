@@ -1118,7 +1118,7 @@ func (h *InvoiceEventHandler) onInvoicePayNotificationV1(ctx context.Context, ev
 	var invoiceEntity neo4jentity.InvoiceEntity
 	var contractEntity neo4jentity.ContractEntity
 
-	//load invoice
+	// load invoice entity
 	invoiceNode, err := h.services.CommonServices.Neo4jRepositories.InvoiceReadRepository.GetInvoiceById(ctx, eventData.Tenant, invoiceId)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "GetInvoice"))
@@ -1131,7 +1131,10 @@ func (h *InvoiceEventHandler) onInvoicePayNotificationV1(ctx context.Context, ev
 		return nil
 	}
 
-	if invoiceEntity.DryRun || invoiceEntity.TotalAmount == float64(0) {
+	// Do not send email if invoice is dry run or total amount is 0 or invoice is not due or overdue
+	invoiceStatusAllowedForPayNotification := invoiceEntity.IsDue() || invoiceEntity.IsOverdue()
+	if invoiceEntity.DryRun || invoiceEntity.TotalAmount == float64(0) || !invoiceStatusAllowedForPayNotification {
+		span.LogFields(log.String("result", "skipped pay notification"))
 		return nil
 	}
 
@@ -1140,6 +1143,7 @@ func (h *InvoiceEventHandler) onInvoicePayNotificationV1(ctx context.Context, ev
 		return nil
 	}
 
+	// load contract entity
 	contractNode, err := h.services.CommonServices.Neo4jRepositories.ContractReadRepository.GetContractForInvoice(ctx, eventData.Tenant, invoiceEntity.Id)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "GetContractForInvoice"))
@@ -1157,7 +1161,7 @@ func (h *InvoiceEventHandler) onInvoicePayNotificationV1(ctx context.Context, ev
 		return errors.New("contractEntity.InvoiceEmail is empty or invalid")
 	}
 
-	//load tenant billing profile from neo4j
+	// load tenant billing profile from neo4j
 	tenantBillingProfileEntity, err := h.loadTenantBillingProfile(ctx, eventData.Tenant, false)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "loadTenantBillingProfile"))
@@ -1165,7 +1169,7 @@ func (h *InvoiceEventHandler) onInvoicePayNotificationV1(ctx context.Context, ev
 	}
 
 	workflowId := ""
-	if invoiceEntity.PaymentDetails.PaymentLink == "" {
+	if contractEntity.PayOnline || contractEntity.PayAutomatically {
 		workflowId = commonService.WorkflowInvoiceReadyNoPaymentLink
 	} else {
 		workflowId = commonService.WorkflowInvoiceReadyWithPaymentLink
@@ -1181,7 +1185,7 @@ func (h *InvoiceEventHandler) onInvoicePayNotificationV1(ctx context.Context, ev
 
 	paymentLink := ""
 	// prepare payment link for email only if invoice payment link was generated
-	if invoiceEntity.PaymentDetails.PaymentLink != "" {
+	if contractEntity.PayOnline || contractEntity.PayAutomatically {
 		paymentLink = h.cfg.Services.CustomerOsApi.ApiUrl + "/invoice/" + invoiceEntity.Id + "/pay"
 	}
 
@@ -1279,7 +1283,7 @@ func (h *InvoiceEventHandler) onInvoiceRemindNotificationV1(ctx context.Context,
 		return nil
 	}
 
-	if invoiceEntity.DryRun || invoiceEntity.TotalAmount == float64(0) || invoiceEntity.Status != neo4jenum.InvoiceStatusOverdue {
+	if invoiceEntity.DryRun || invoiceEntity.TotalAmount == float64(0) || !invoiceEntity.IsOverdue() {
 		tracing.TraceErr(span, errors.New("remind invoice notification requested for not applicable invoice"))
 		return nil
 	}
