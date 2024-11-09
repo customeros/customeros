@@ -61,7 +61,13 @@ func (s *registrationService) PrepareDefaultTenantSetup(ctx context.Context, log
 	}
 	span.LogKV("result.testEmailId", testEmailId)
 
-	// Step 3 - Register mailbox
+	// Step 3 - Create postmark server for the tenant
+	err = s.services.PostmarkService.CreateServer(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+
+	// Step 4 - Register mailbox in opensrs
 	password := utils.GenerateLowerAlpha(1) + utils.GenerateKey(11, false)
 	username := strings.ToLower(tenant)
 	forwardingTo := []string{fmt.Sprintf("bcc@%s.customeros.ai", strings.ToLower(tenant))}

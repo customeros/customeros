@@ -30,7 +30,8 @@ func InitServices(cfg *config.Config, db *gorm.DB, driver *neo4j.DriverWithConte
 		GoogleOAuthConfig: &cfg.GoogleOAuth,
 		RabbitMQConfig:    &cfg.RabbitMQConfig,
 		ExternalServices: commonConfig.ExternalServices{
-			OpenSRSConfig: cfg.OpenSRSConfig,
+			OpenSRSConfig:  cfg.OpenSRSConfig,
+			PostmarkConfig: cfg.PostmarkConfig,
 		},
 	}, db, driver, cfg.Neo4j.Database, grpcClients, appLogger)
 	services.RegistrationService = NewRegistrationService(&services)

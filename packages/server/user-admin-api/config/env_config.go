@@ -31,4 +31,5 @@ type Config struct {
 	Jaeger           tracing.JaegerConfig
 	RabbitMQConfig   config.RabbitMQConfig
 	OpenSRSConfig    config.OpenSRSConfig
+	PostmarkConfig   config.PostmarkConfig
 }

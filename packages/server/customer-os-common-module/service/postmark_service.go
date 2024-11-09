@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/pkg/errors"
 	"strings"
@@ -60,6 +61,8 @@ type PostmarkEmailAttachment struct {
 
 type PostmarkService interface {
 	SendNotification(ctx context.Context, postmarkEmail PostmarkEmail, tenant string) error
+	CreateServer(ctx context.Context) error
+	DeleteServer(ctx context.Context, tenant string) error
 }
 
 type postmarkService struct {
@@ -72,11 +75,11 @@ func NewPostmarkService(services *Services) PostmarkService {
 	}
 }
 
-func (np *postmarkService) getPostmarkClient(ctx context.Context, tenant string) (*postmark.Client, error) {
+func (s *postmarkService) getPostmarkClient(ctx context.Context, tenant string) (*postmark.Client, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "PostmarkService.getPostmarkClient")
 	defer span.Finish()
 
-	p := np.services.PostgresRepositories.PostmarkApiKeyRepository.GetPostmarkApiKey(ctx, tenant)
+	p := s.services.PostgresRepositories.PostmarkApiKeyRepository.GetPostmarkApiKey(ctx, tenant)
 	if p.Error != nil {
 		tracing.TraceErr(span, p.Error)
 		return nil, p.Error
@@ -93,7 +96,7 @@ func (np *postmarkService) getPostmarkClient(ctx context.Context, tenant string)
 	return postmark.NewClient(serverToken, ""), nil
 }
 
-func (np *postmarkService) SendNotification(ctx context.Context, postmarkEmail PostmarkEmail, tenant string) error {
+func (s *postmarkService) SendNotification(ctx context.Context, postmarkEmail PostmarkEmail, tenant string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "PostmarkService.SendNotification")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, tenant)
@@ -105,25 +108,25 @@ func (np *postmarkService) SendNotification(ctx context.Context, postmarkEmail P
 		return err
 	}
 
-	postmarkClient, err := np.getPostmarkClient(ctx, tenant)
+	postmarkClient, err := s.getPostmarkClient(ctx, tenant)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 
-	htmlContent, err := np.LoadEmailContent(ctx, postmarkEmail.WorkflowId, "mjml", postmarkEmail.TemplateData)
+	htmlContent, err := s.LoadEmailContent(ctx, postmarkEmail.WorkflowId, "mjml", postmarkEmail.TemplateData)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 
-	htmlContent, err = np.ConvertMjmlToHtml(ctx, htmlContent)
+	htmlContent, err = s.convertMjmlToHtml(ctx, htmlContent)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 
-	textContent, err := np.LoadEmailContent(ctx, postmarkEmail.WorkflowId, "txt", postmarkEmail.TemplateData)
+	textContent, err := s.LoadEmailContent(ctx, postmarkEmail.WorkflowId, "txt", postmarkEmail.TemplateData)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -166,22 +169,22 @@ func (np *postmarkService) SendNotification(ctx context.Context, postmarkEmail P
 	return nil
 }
 
-func (np *postmarkService) LoadEmailContent(ctx context.Context, workflowId, fileExtension string, templateData map[string]string) (string, error) {
+func (s *postmarkService) LoadEmailContent(ctx context.Context, workflowId, fileExtension string, templateData map[string]string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "PostmarkService.LoadEmailContent")
 	defer span.Finish()
 
-	rawEmailTemplate, err := np.LoadEmailBody(ctx, workflowId, fileExtension)
+	rawEmailTemplate, err := s.LoadEmailBody(ctx, workflowId, fileExtension)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return "", err
 	}
 
-	emailTemplate := np.FillTemplate(rawEmailTemplate, templateData)
+	emailTemplate := s.FillTemplate(rawEmailTemplate, templateData)
 
 	return emailTemplate, nil
 }
 
-func (np *postmarkService) GetFileName(workflowId, fileExtension string) string {
+func (s *postmarkService) getFileName(workflowId, fileExtension string) string {
 	var fileName string
 	switch workflowId {
 	case WorkflowInvoicePaid:
@@ -202,11 +205,11 @@ func (np *postmarkService) GetFileName(workflowId, fileExtension string) string 
 	return fileName
 }
 
-func (np *postmarkService) LoadEmailBody(ctx context.Context, workflowId, fileExtension string) (string, error) {
+func (s *postmarkService) LoadEmailBody(ctx context.Context, workflowId, fileExtension string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "PostmarkService.LoadEmailBody")
 	defer span.Finish()
 
-	fileName := np.GetFileName(workflowId, fileExtension)
+	fileName := s.getFileName(workflowId, fileExtension)
 	session, err := awsSes.NewSession(&aws.Config{Region: aws.String("eu-west-1")})
 	if err != nil {
 		return "", err
@@ -227,7 +230,7 @@ func (np *postmarkService) LoadEmailBody(ctx context.Context, workflowId, fileEx
 	return string(buffer.Bytes()), nil
 }
 
-func (np *postmarkService) FillTemplate(template string, replace map[string]string) string {
+func (s *postmarkService) FillTemplate(template string, replace map[string]string) string {
 	filledTemplate := template
 	for k, v := range replace {
 		filledTemplate = strings.Replace(filledTemplate, k, v, -1)
@@ -236,8 +239,8 @@ func (np *postmarkService) FillTemplate(template string, replace map[string]stri
 	return filledTemplate
 }
 
-func (np *postmarkService) ConvertMjmlToHtml(ctx context.Context, filledTemplate string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "PostmarkService.ConvertMjmlToHtml")
+func (s *postmarkService) convertMjmlToHtml(ctx context.Context, filledTemplate string) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PostmarkService.convertMjmlToHtml")
 	defer span.Finish()
 
 	html, err := mjml.ToHTML(ctx, filledTemplate)
@@ -248,4 +251,53 @@ func (np *postmarkService) ConvertMjmlToHtml(ctx context.Context, filledTemplate
 	}
 
 	return html, err
+}
+
+func (s *postmarkService) CreateServer(ctx context.Context) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PostmarkService.CreateServer")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+
+	// check postmark url and api key
+	if s.services.GlobalConfig.ExternalServices.PostmarkConfig.Url == "" {
+		err := errors.New("postmark url not configured")
+		tracing.TraceErr(span, err)
+		return err
+	}
+	if s.services.GlobalConfig.ExternalServices.PostmarkConfig.AccountApiKey == "" {
+		err := errors.New("postmark api key not configured")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	postmarkServerName := strings.ToLower(tenant)
+	inboundWebhookURL := s.services.GlobalConfig.ExternalServices.PostmarkConfig.DefaultInboundStreamWebhook
+	inboundForwardingDomain := postmarkServerName + ".customeros.ai"
+	apiClient := NewPostmarkAPIClient(s.services.GlobalConfig.ExternalServices.PostmarkConfig.Url, s.services.GlobalConfig.ExternalServices.PostmarkConfig.AccountApiKey)
+
+	serverResponse, err := apiClient.CreateServer(ctx, postmarkServerName, inboundWebhookURL, inboundForwardingDomain)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	tracing.LogObjectAsJson(span, "serverResponse", serverResponse)
+
+	return nil
+}
+
+func (np *postmarkService) DeleteServer(ctx context.Context, tenant string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PostmarkService.DeleteServer")
+	defer span.Finish()
+
+	// TODO implement me
+
+	return nil
 }
