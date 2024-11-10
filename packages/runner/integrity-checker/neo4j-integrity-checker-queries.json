@@ -461,7 +461,7 @@
     },
     {
       "name": "Check organization data consistency",
-      "query": "CALL {\n     MATCH (org:Organization) WHERE org.onboardingStatus IS NULL OR NOT org.onboardingStatus IN ['NOT_APPLICABLE','NOT_STARTED','ON_TRACK','LATE','STUCK','DONE','SUCCESSFUL'] with org RETURN count(org) as cnt\n} RETURN sum(cnt)",
+      "query": "MATCH (org:Organization) WHERE org.onboardingStatus IS NULL OR NOT org.onboardingStatus IN ['NOT_APPLICABLE','NOT_STARTED','ON_TRACK','LATE','STUCK','DONE','SUCCESSFUL'] with org RETURN count(org)",
       "description": "Checks: 1 - Organizations with wrong onboardingStatus value."
     },
     {

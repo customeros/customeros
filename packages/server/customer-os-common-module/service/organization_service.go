@@ -128,9 +128,19 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 				}
 			}
 		}
-	}
 
-	if organizationId != nil {
+		// set source fields if not provided
+		if input.SourceFields.AppSource == "" {
+			input.SourceFields.AppSource = common.GetAppSourceFromContext(ctx)
+		}
+		if input.SourceFields.Source == "" {
+			if input.ExternalSystem.Available() {
+				input.SourceFields.Source = input.ExternalSystem.ExternalSystemId
+			} else {
+				input.SourceFields.Source = neo4jentity.DataSourceOpenline.String()
+			}
+		}
+	} else {
 		existing, err = s.GetById(ctx, tenant, *organizationId)
 		if err != nil {
 			tracing.TraceErr(span, err)
