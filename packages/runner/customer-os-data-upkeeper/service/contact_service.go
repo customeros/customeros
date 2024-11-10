@@ -67,7 +67,7 @@ func (s *contactService) UpkeepContacts() {
 
 	s.removeEmptySocials(ctx)
 	s.removeDuplicatedSocials(ctx)
-	s.hideContactsWithGroupEmail(ctx)
+	s.hideContactsWithGroupOrSystemGeneratedEmail(ctx)
 	s.updateContactNamesFromEmails(ctx)
 }
 
@@ -171,8 +171,8 @@ func (s *contactService) removeDuplicatedSocials(ctx context.Context) {
 	}
 }
 
-func (s *contactService) hideContactsWithGroupEmail(ctx context.Context) {
-	span, ctx := tracing.StartTracerSpan(ctx, "ContactService.hideContactsWithGroupEmail")
+func (s *contactService) hideContactsWithGroupOrSystemGeneratedEmail(ctx context.Context) {
+	span, ctx := tracing.StartTracerSpan(ctx, "ContactService.hideContactsWithGroupOrSystemGeneratedEmail")
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
 

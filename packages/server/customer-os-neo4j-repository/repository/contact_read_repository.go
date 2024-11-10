@@ -523,8 +523,7 @@ func (r *contactReadRepository) GetContactsWithGroupOrSystemGeneratedEmail(ctx c
 	cypher := `MATCH (t:Tenant)<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)-[:HAS]->(e:Email)
 				WHERE
 					(c.hide IS NULL OR c.hide = false) AND
-					e.isRoleAccount = true AND
-					e.isSystemGenerated = true 
+					(e.isRoleAccount = true OR e.isSystemGenerated = true) 
 				RETURN DISTINCT t.name, c.id LIMIT $limit`
 	params := map[string]any{
 		"limit": limit,
