@@ -181,8 +181,8 @@ func (s *emailService) ValidateEmails() {
 				tracing.TraceErr(span, err)
 			}
 
-			// pause 0.5 seconds before next request
-			time.Sleep(500 * time.Millisecond)
+			// pause 1 second before next request
+			time.Sleep(1 * time.Second)
 		}
 		if len(records) < limit {
 			return

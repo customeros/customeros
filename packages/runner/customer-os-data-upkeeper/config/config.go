@@ -66,7 +66,7 @@ type ProcessConfig struct {
 }
 
 type Limits struct {
-	EmailsValidationLimit       int `env:"EMAILS_VALIDATION_LIMIT" envDefault:"30" required:"true"`
+	EmailsValidationLimit       int `env:"EMAILS_VALIDATION_LIMIT" envDefault:"25" required:"true"`
 	BulkEmailsValidationThreads int `env:"BULK_EMAILS_VALIDATION_THREADS" envDefault:"6" required:"true"`
 }
 
