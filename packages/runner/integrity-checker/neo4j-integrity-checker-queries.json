@@ -266,7 +266,7 @@
           "query": "MATCH (t:Tenant)<-[:CONTACT_BELONGS_TO_TENANT]-(n:Contact) WHERE size(labels(n)) <> 2 OR NOT 'Contact_'+t.name in labels(n) return count(n)"
         },
         {
-          "name": "Contacts with group email address",
+          "name": "Unhidden contacts with role or system generated email address",
           "query": "MATCH (c:Contact)-[:HAS]->(e:Email) WHERE (c.hide IS NULL OR c.hide = false) AND (e.isRoleAccount = true OR e.isSystemGenerated = true) AND c.updatedAt < datetime() - duration({minutes:15}) AND e.updatedAt < datetime() - duration({minutes:15}) RETURN COUNT(c)"
         },
         {
