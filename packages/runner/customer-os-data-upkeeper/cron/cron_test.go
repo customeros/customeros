@@ -47,7 +47,7 @@ func TestStartCron(t *testing.T) {
 			CronScheduleAskForLinkedInConnections:                             "0 0 */1 * * *",
 			CronScheduleProcessLinkedInConnections:                            "0 0 */1 * * *",
 			CronScheduleLinkOrphanContactsToOrganizationBaseOnLinkedinScrapIn: "0 0 */1 * * *",
-			CronScheduleValidateCustomerOSEmails:                              "0 0 */1 * * *",
+			CronScheduleValidateEmails:                                        "0 0 */1 * * *",
 			CronScheduleValidateEmailsFromBulkRequests:                        "0 0 */1 * * *",
 			CronScheduleCheckScrubbyResult:                                    "0 0 */1 * * *",
 			CronScheduleCheckEnrowResults:                                     "0 0 */1 * * *",
