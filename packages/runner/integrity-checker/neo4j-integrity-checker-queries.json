@@ -119,8 +119,8 @@
         },
         {
           "name": "Organization renewal date in past",
-          "query": "MATCH (:Tenant {active:true})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {hide:false})--(c:Contract) WHERE c.status <> 'OUT_OF_CONTRACT' AND c.status <> 'DRAFT' AND date(org.derivedNextRenewalAt) < date() RETURN count(org)",
-          "description": "Organization with derived next renewal date in the past. If organization has multiple contracts, all contracts should be in status different than 'OUT_OF_CONTRACT'."
+          "query": "MATCH (:Tenant {active:true})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {hide:false}) OPTIONAL MATCH (org)--(c:Contract) WITH org, collect(c) as contracts WHERE size(contracts) > 0 AND ALL(c IN contracts WHERE c.status <> 'OUT_OF_CONTRACT' and c.status <> 'DRAFT') AND date(org.derivedNextRenewalAt) < date() RETURN count(org)",
+          "description": "Organization with derived next renewal date in the past. If organization has multiple contracts, all contracts should be in status different than 'OUT_OF_CONTRACT' and 'DRAFT'."
         },
         {
           "name": "Organization renewal date not updated",
