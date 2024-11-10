@@ -296,10 +296,19 @@ func (r *opportunityWriteRepository) Save(ctx context.Context, txx *neo4j.Manage
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, txx, func(tx neo4j.ManagedTransaction) (any, error) {
 
 		//create if not exists
-		cypherCreate := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}) MERGE(t)<-[:OPPORTUNITY_BELONGS_TO_TENANT]-(op:Opportunity:Opportunity_%s {id:$opportunityId})`, tenant)
+		cypherCreate := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}) MERGE(t)<-[:OPPORTUNITY_BELONGS_TO_TENANT]-(op:Opportunity:Opportunity_%s {id:$opportunityId})
+			ON CREATE SET
+				op.createdAt=datetime(),
+				op.updatedAt=datetime(),
+				op.stageUpdatedAt=datetime(),
+				op.source=$source,
+				op.appSource=$appSource,
+			`, tenant)
 		paramsCreate := map[string]any{
 			"tenant":        tenant,
 			"opportunityId": opportunityId,
+			"appSource":     data.AppSource,
+			"source":        data.Source,
 		}
 
 		span.LogFields(log.String("cypherCreate", cypherCreate))
