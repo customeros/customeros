@@ -226,7 +226,7 @@ func StartCron(cont *container.Container) *cron.Cron {
 		cont.Log.Fatalf("Could not add cron job %s: %v", "executeWorkflows", err.Error())
 	}
 
-	err = c.AddFunc(cont.Cfg.Cron.CronScheduleValidateCustomerOSEmails, func() {
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleValidateEmails, func() {
 		lockAndRunJob(cont, emailGroup, validateEmails)
 	})
 	if err != nil {
