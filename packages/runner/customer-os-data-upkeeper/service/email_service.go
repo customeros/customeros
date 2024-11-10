@@ -158,7 +158,7 @@ func (s *emailService) ValidateEmails() {
 			return
 		}
 
-		// no record
+		// no record found, exit
 		if len(records) == 0 {
 			return
 		}
@@ -180,6 +180,9 @@ func (s *emailService) ValidateEmails() {
 			if err != nil {
 				tracing.TraceErr(span, err)
 			}
+
+			// pause 0.5 seconds before next request
+			time.Sleep(500 * time.Millisecond)
 		}
 		if len(records) < limit {
 			return
