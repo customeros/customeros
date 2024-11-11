@@ -540,7 +540,7 @@ func (r *mutationResolver) ContactAddSocial(ctx context.Context, contactID strin
 	span.LogKV("request.contactID", contactID)
 	tracing.LogObjectAsJson(span, "request.input", input)
 
-	socialId, err := r.Services.CommonServices.SocialService.MergeSocialWithEntity(ctx, commonService.LinkWith{
+	socialId, err := r.Services.CommonServices.SocialService.AddSocialToEntity(ctx, commonService.LinkWith{
 		Id:   contactID,
 		Type: commonmodel.CONTACT,
 	},

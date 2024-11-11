@@ -319,7 +319,7 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 	}
 	if !failedSync && contactInput.HasSocials() {
 		for _, social := range contactInput.Socials {
-			_, err = s.services.CommonServices.SocialService.MergeSocialWithEntity(ctx,
+			_, err = s.services.CommonServices.SocialService.AddSocialToEntity(ctx,
 				commonservice.LinkWith{
 					Id:   contactId,
 					Type: commonmodel.CONTACT,

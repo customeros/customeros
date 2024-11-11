@@ -106,9 +106,10 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 		domains = utils.RemoveEmpties(domains)
 		domains = utils.RemoveDuplicates(domains)
 
+		// Dedup organizations by domain on creation
 		if len(domains) > 0 {
 			// for each domain check that no org exists with that domain
-			// if exist reject creation and return error
+			// if exist reject creation and return existing org id and error
 			for _, domain := range domains {
 				orgDbNode, err := s.services.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByDomain(ctx, tenant, domain)
 				if err != nil {

@@ -459,7 +459,7 @@ func (c *contactListenerImpl) enrichContactWithScrapInEnrichDetails(ctx context.
 			}
 		}
 
-		_, err = c.services.SocialService.MergeSocialWithEntity(ctx,
+		_, err = c.services.SocialService.AddSocialToEntity(ctx,
 			service.LinkWith{
 				Id:   contact.Id,
 				Type: model.CONTACT,
@@ -474,7 +474,7 @@ func (c *contactListenerImpl) enrichContactWithScrapInEnrichDetails(ctx context.
 				AppSource:      constants.AppScrapin,
 			})
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "ContactClient.AddSocial"))
+			tracing.TraceErr(span, errors.Wrap(err, "SocialService.AddSocialToEntity"))
 			c.log.Errorf("Error adding social profile: %s", err.Error())
 		}
 	}

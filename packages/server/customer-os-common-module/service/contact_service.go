@@ -126,7 +126,7 @@ func (s *contactService) SaveContact(ctx context.Context, id *string, contactFie
 	}
 
 	if createFlow && socialUrl != "" {
-		_, err := s.services.SocialService.MergeSocialWithEntity(ctx,
+		_, err := s.services.SocialService.AddSocialToEntity(ctx,
 			LinkWith{
 				Id:   contactId,
 				Type: model.CONTACT,

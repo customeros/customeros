@@ -551,7 +551,7 @@ func (r *organizationWriteRepository) Save(ctx context.Context, tx *neo4j.Manage
 					org.appSource = $appSource,
 					org.createdAt = datetime(),
 					org.updatedAt = datetime(),
-					org.onboardingStatus = $onboardingStatus
+					org.onboardingStatus = $onboardingStatus,
 					org.hide=false`, tenant)
 		paramsCreate := map[string]any{
 			"tenant":           tenant,

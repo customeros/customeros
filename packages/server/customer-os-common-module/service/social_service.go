@@ -21,7 +21,7 @@ import (
 
 type SocialService interface {
 	GetById(ctx context.Context, socialId string) (*neo4jentity.SocialEntity, error)
-	MergeSocialWithEntity(ctx context.Context, linkWith LinkWith, socialEntity neo4jentity.SocialEntity) (string, error)
+	AddSocialToEntity(ctx context.Context, linkWith LinkWith, socialEntity neo4jentity.SocialEntity) (string, error)
 	Update(ctx context.Context, entity neo4jentity.SocialEntity) (*neo4jentity.SocialEntity, error)
 	PermanentlyDelete(ctx context.Context, tenant, socialId string) error
 	GetAllForEntities(ctx context.Context, tenant string, linkedEntityType model.EntityType, linkedEntityIds []string) (*neo4jentity.SocialEntities, error)
@@ -152,8 +152,8 @@ func (s *socialService) PermanentlyDelete(ctx context.Context, tenant string, so
 	return err
 }
 
-func (s *socialService) MergeSocialWithEntity(ctx context.Context, linkWith LinkWith, socialEntity neo4jentity.SocialEntity) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialService.MergeSocialWithEntity")
+func (s *socialService) AddSocialToEntity(ctx context.Context, linkWith LinkWith, socialEntity neo4jentity.SocialEntity) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialService.AddSocialToEntity")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("linkWith.id", linkWith.Id), log.String("linkWith.type", string(linkWith.Type)))
@@ -185,7 +185,11 @@ func (s *socialService) MergeSocialWithEntity(ctx context.Context, linkWith Link
 		return "", err
 	}
 
-	// get or generate social id
+	// prepare social url
+	socialUrl := normalizeSocialUrl(socialEntity.Url)
+	span.LogFields(log.String("socialUrl.normalized", socialUrl))
+
+	// get or generate social entity id
 	createSocialFlow := false
 	socialId := socialEntity.Id
 	if socialId == "" {
@@ -196,17 +200,6 @@ func (s *socialService) MergeSocialWithEntity(ctx context.Context, linkWith Link
 		}
 	}
 	tracing.TagEntity(span, socialId)
-
-	socialUrl := strings.TrimSpace(socialEntity.Url)
-
-	// adjust social url value
-	if strings.HasPrefix(socialUrl, "linkedin.com") {
-		socialUrl = "https://www." + socialUrl
-	}
-	if strings.Contains(socialUrl, "linkedin.com") && !strings.HasSuffix(socialUrl, "") {
-		socialUrl = socialUrl + "/"
-	}
-	span.LogFields(log.String("socialUrl", socialUrl))
 
 	// save social to neo4j
 	data := neo4jrepository.SocialFields{
@@ -248,7 +241,6 @@ func (s *socialService) MergeSocialWithEntity(ctx context.Context, linkWith Link
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "unable to publish message AddSocialToContact"))
 		}
-
 		utils.EventCompleted(ctx, tenant, model.CONTACT.String(), linkWith.Id, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
 	case model.ORGANIZATION:
 		err = s.services.RabbitMQService.PublishEvent(ctx, linkWith.Id, model.ORGANIZATION, dto.AddSocialToOrganization{
@@ -258,11 +250,22 @@ func (s *socialService) MergeSocialWithEntity(ctx context.Context, linkWith Link
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "unable to publish message AddSocialToOrganization"))
 		}
-
 		utils.EventCompleted(ctx, tenant, model.ORGANIZATION.String(), linkWith.Id, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
 	}
 
 	return socialId, nil
+}
+
+func normalizeSocialUrl(url string) string {
+	socialUrl := strings.TrimSpace(url)
+	// adjust social url value
+	if strings.HasPrefix(socialUrl, "linkedin.com") {
+		socialUrl = "https://www." + socialUrl
+	}
+	if strings.Contains(socialUrl, "linkedin.com") && !strings.HasSuffix(socialUrl, "") {
+		socialUrl = socialUrl + "/"
+	}
+	return socialUrl
 }
 
 func (s *socialService) GetById(ctx context.Context, socialId string) (*neo4jentity.SocialEntity, error) {
