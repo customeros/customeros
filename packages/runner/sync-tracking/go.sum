@@ -262,8 +262,8 @@ github.com/smarty/assertions v1.16.0 h1:EvHNkdRA4QHMrn75NZSoUQ/mAUXAYWfatfB01yTC
 github.com/smarty/assertions v1.16.0/go.mod h1:duaaFdCS0K9dnoM50iyek/eYINOZ64gbh1Xlf6LG7AI=
 github.com/smarty/gunit v1.5.0 h1:OmG6a/rgi7qCjlQis6VjXbvx/WqZ8I6xSlbfN4YB5MY=
 github.com/smarty/gunit v1.5.0/go.mod h1:uAeNibUD292KZRcg5OTy7lb6WR5++UC0BQOzNuiRzpU=
-github.com/smartystreets/smartystreets-go-sdk v1.19.7 h1:Ln8sRa6n0Z/YXEjKziOgeuSrZD+WoUV3oN9/jX3L6yc=
-github.com/smartystreets/smartystreets-go-sdk v1.19.7/go.mod h1:x5VhKfBjfsOBL1ye1/Cq5u7yEEMcZS2l2JgKS0VCjlg=
+github.com/smartystreets/smartystreets-go-sdk v1.20.1 h1:XBa35vv1egzXqo3VE7wjjJxnZuzxb+5QasamCtf0uH0=
+github.com/smartystreets/smartystreets-go-sdk v1.20.1/go.mod h1:x5VhKfBjfsOBL1ye1/Cq5u7yEEMcZS2l2JgKS0VCjlg=
 github.com/spf13/pflag v1.0.5 h1:iy+VFUOCP1a+8yFto/drg2CJ5u0yRoB7fZw3DKv/JXA=
 github.com/spf13/pflag v1.0.5/go.mod h1:McXfInJRrz4CZXVZOBLb0bTZqETkiAhM9Iw0y3An2Bg=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=

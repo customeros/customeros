@@ -90,7 +90,7 @@ require (
 	github.com/rabbitmq/amqp091-go v1.10.0 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
-	github.com/smartystreets/smartystreets-go-sdk v1.19.7 // indirect
+	github.com/smartystreets/smartystreets-go-sdk v1.20.1 // indirect
 	github.com/tetratelabs/wazero v1.8.0 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/uber/jaeger-client-go v2.30.0+incompatible // indirect
