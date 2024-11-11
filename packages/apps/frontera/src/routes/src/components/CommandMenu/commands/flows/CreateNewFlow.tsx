@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { useDidMount } from 'rooks';
 import { observer } from 'mobx-react-lite';
 
 import { Input } from '@ui/form/Input';
@@ -15,29 +14,23 @@ import {
 
 export const CreateNewFlow = observer(() => {
   const store = useStore();
-  const [allowSubmit, setAllowSubmit] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const { flows } = useStore();
   const navigate = useNavigate();
 
   const [flowName, setFlowName] = useState('');
 
-  useDidMount(() => {
-    setTimeout(() => {
-      setAllowSubmit(true);
-    }, 100);
-  });
-
   const handleConfirm = () => {
-    if (!allowSubmit) return;
-    setAllowSubmit(false);
+    setIsSaving(true);
 
     flows.create(flowName, {
       onSuccess: (id) => {
+        setIsSaving(false);
+
         navigate(`/flow-editor/${id}`);
+        store.ui.commandMenu.toggle('CreateNewFlow');
       },
     });
-
-    store.ui.commandMenu.toggle('CreateNewFlow');
   };
 
   return (
@@ -88,8 +81,10 @@ export const CreateNewFlow = observer(() => {
 
         <Button
           className='w-full'
+          isLoading={isSaving}
           colorScheme='primary'
           onClick={handleConfirm}
+          loadingText={'Creating…'}
           data-test='confirm-create-new-flow'
         >
           Create
