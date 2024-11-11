@@ -99,7 +99,7 @@ export const CommandItem = forwardRef<HTMLDivElement, CommandItemProps>(
         data-test={dataTest}
         {...props}
       >
-        {leftAccessory && <span>{leftAccessory}</span>}
+        {leftAccessory && <span className='inline-flex'>{leftAccessory}</span>}
         {children}
         {rightAccessory && (
           <div className='flex gap-1 items-center ml-auto'>
