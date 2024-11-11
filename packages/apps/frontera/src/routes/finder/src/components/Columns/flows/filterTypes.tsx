@@ -28,7 +28,9 @@ export const getFilterTypes = () => {
         ComparisonOperator.IsEmpty,
         ComparisonOperator.IsNotEmpty,
       ],
-      icon: <Shuffle01 className='group-hover:text-gray-700 text-gray-500' />,
+      icon: (
+        <Shuffle01 className='group-hover:text-gray-700 text-gray-500 mb-0.5' />
+      ),
     },
   };
 

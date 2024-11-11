@@ -138,7 +138,7 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
   return (
     <div
       ref={wrapperRef}
-      className='flex items-center justify-between pr-1 w-full gap-2 bg-white'
+      className='flex items-center justify-between pr-1 w-full gap-2 bg-white border-b'
     >
       <InputGroup className='relative w-full bg-transparent hover:border-transparent focus-within:border-transparent focus-within:hover:border-transparent gap-1'>
         <LeftElement className='ml-2'>

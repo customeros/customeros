@@ -48,7 +48,9 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.IsEmpty,
         ComparisonOperator.IsNotEmpty,
       ],
-      icon: <User03 className='group-hover:text-gray-700 text-gray-500' />,
+      icon: (
+        <User03 className='group-hover:text-gray-700 text-gray-500 mb-0.5' />
+      ),
     },
     [ColumnViewType.ContactsOrganization]: {
       filterType: 'text',
@@ -60,7 +62,9 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.IsEmpty,
         ComparisonOperator.IsNotEmpty,
       ],
-      icon: <Building07 className='group-hover:text-gray-700 text-gray-500' />,
+      icon: (
+        <Building07 className='group-hover:text-gray-700 text-gray-500 mb-0.5' />
+      ),
     },
 
     [ColumnViewType.ContactsPrimaryEmail]: {
@@ -73,7 +77,9 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.IsEmpty,
         ComparisonOperator.IsNotEmpty,
       ],
-      icon: <Mail01 className='group-hover:text-gray-700 text-gray-500' />,
+      icon: (
+        <Mail01 className='group-hover:text-gray-700 text-gray-500 mb-0.5' />
+      ),
     },
     ['EMAIL_VERIFICATION_PRIMARY_EMAIL']: {
       filterType: 'list',
@@ -85,7 +91,9 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.IsEmpty,
         ComparisonOperator.IsNotEmpty,
       ],
-      icon: <Mail01 className='group-hover:text-gray-700 text-gray-500' />,
+      icon: (
+        <Mail01 className='group-hover:text-gray-700 text-gray-500 mb-0.5' />
+      ),
       options: [],
       groupOptions: [
         {
@@ -151,7 +159,9 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.IsEmpty,
         ComparisonOperator.IsNotEmpty,
       ],
-      icon: <Phone className='group-hover:text-gray-700 text-gray-500' />,
+      icon: (
+        <Phone className='group-hover:text-gray-700 text-gray-500 mb-0.5' />
+      ),
     },
     [ColumnViewType.ContactsCity]: {
       filterType: 'list',
@@ -163,7 +173,9 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.IsEmpty,
         ComparisonOperator.IsNotEmpty,
       ],
-      icon: <Globe05 className='group-hover:text-gray-700 text-gray-500' />,
+      icon: (
+        <Globe05 className='group-hover:text-gray-700 text-gray-500 mb-0.5' />
+      ),
       options: uniqBy(
         store?.contacts
           ?.toArray()
@@ -193,7 +205,7 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.IsNotEmpty,
       ],
       icon: (
-        <LinkedinOutline className='group-hover:text-gray-700 text-gray-500' />
+        <LinkedinOutline className='group-hover:text-gray-700 text-gray-500 mb-0.5' />
       ),
     },
     [ColumnViewType.ContactsPersona]: {
@@ -206,7 +218,9 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.IsEmpty,
         ComparisonOperator.IsNotEmpty,
       ],
-      icon: <Tag01 className='group-hover:text-gray-700 text-gray-500' />,
+      icon: (
+        <Tag01 className='group-hover:text-gray-700 text-gray-500 mb-0.5' />
+      ),
       options: store?.tags.toArray().map((tag) => ({
         id: tag?.value?.id,
         label: tag?.value?.name,
@@ -223,7 +237,7 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.IsNotEmpty,
       ],
       icon: (
-        <Certificate01 className='group-hover:text-gray-700 text-gray-500' />
+        <Certificate01 className='group-hover:text-gray-700 text-gray-500 mb-0.5' />
       ),
     },
     [ColumnViewType.ContactsTimeInCurrentRole]: {
@@ -231,7 +245,9 @@ export const getFilterTypes = (store?: RootStore) => {
       filterName: 'Time in current role',
       filterAccesor: ColumnViewType.ContactsTimeInCurrentRole,
       filterOperators: [ComparisonOperator.Gt, ComparisonOperator.Lt],
-      icon: <ClockCheck className='group-hover:text-gray-700 text-gray-500' />,
+      icon: (
+        <ClockCheck className='group-hover:text-gray-700 text-gray-500 mb-0.5' />
+      ),
     },
     [ColumnViewType.ContactsLinkedinFollowerCount]: {
       filterType: 'number',
@@ -243,7 +259,9 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.Eq,
         ComparisonOperator.NotEqual,
       ],
-      icon: <Users03 className='group-hover:text-gray-700 text-gray-500' />,
+      icon: (
+        <Users03 className='group-hover:text-gray-700 text-gray-500 mb-0.5' />
+      ),
     },
     // [ColumnViewType.ContactsLastInteraction]: {
     //   filterType: 'number',
@@ -268,7 +286,7 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.IsNotEmpty,
       ],
       icon: (
-        <LinkedinOutline className='group-hover:text-gray-700 text-gray-500' />
+        <LinkedinOutline className='group-hover:text-gray-700 text-gray-500 mb-0.5' />
       ),
       options: store?.users.toArray().map((user) => ({
         id: user?.id,
@@ -286,7 +304,9 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.IsEmpty,
         ComparisonOperator.IsNotEmpty,
       ],
-      icon: <Globe04 className='group-hover:text-gray-700 text-gray-500' />,
+      icon: (
+        <Globe04 className='group-hover:text-gray-700 text-gray-500 mb-0.5' />
+      ),
       options: uniqBy(
         store?.contacts
           ?.toArray()
@@ -309,7 +329,9 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.IsEmpty,
         ComparisonOperator.IsNotEmpty,
       ],
-      icon: <Globe06 className='group-hover:text-gray-700 text-gray-500' />,
+      icon: (
+        <Globe06 className='group-hover:text-gray-700 text-gray-500 mb-0.5' />
+      ),
       options: uniqBy(
         store?.contacts
           ?.toArray()
@@ -336,7 +358,9 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.IsEmpty,
         ComparisonOperator.IsNotEmpty,
       ],
-      icon: <Shuffle01 className='group-hover:text-gray-700 text-gray-500' />,
+      icon: (
+        <Shuffle01 className='group-hover:text-gray-700 text-gray-500 mb-0.5' />
+      ),
       options: uniqBy(
         store?.flows.toArray().map((flow) => ({
           id: flow?.id,
@@ -356,7 +380,9 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.IsEmpty,
         ComparisonOperator.IsNotEmpty,
       ],
-      icon: <Shuffle01 className='group-hover:text-gray-700 text-gray-500' />,
+      icon: (
+        <Shuffle01 className='group-hover:text-gray-700 text-gray-500 mb-0.5' />
+      ),
       options: [
         {
           id: FlowParticipantStatus.OnHold,

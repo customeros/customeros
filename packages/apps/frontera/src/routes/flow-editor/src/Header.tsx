@@ -5,7 +5,6 @@ import { useUnmount } from 'usehooks-ts';
 import { observer } from 'mobx-react-lite';
 import { useReactFlow } from '@xyflow/react';
 import { FlowStore } from '@store/Flows/Flow.store';
-import { useFeatureIsOn } from '@growthbook/growthbook-react';
 
 import { cn } from '@ui/utils/cn';
 import { Spinner } from '@ui/feedback/Spinner';
@@ -16,11 +15,7 @@ import { useStore } from '@shared/hooks/useStore';
 import { Settings03 } from '@ui/media/icons/Settings03';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip.tsx';
 import { ChevronRight } from '@ui/media/icons/ChevronRight';
-import { ViewSettings } from '@shared/components/ViewSettings';
-import {
-  FlowStatus,
-  TableViewType,
-} from '@shared/types/__generated__/graphql.types';
+import { FlowStatus } from '@shared/types/__generated__/graphql.types';
 
 import { FlowStatusMenu } from './components';
 
@@ -50,7 +45,6 @@ export const Header = observer(
     const showFinder = searchParams.get('show') === 'finder';
     const flowContactsPreset = store.tableViewDefs.flowContactsPreset;
     const canSave = hasChanges && status === FlowStatus.Inactive;
-    const flag = useFeatureIsOn('filters-v2');
 
     useEffect(() => {
       if (!store.ui.commandMenu.isOpen) {
@@ -120,8 +114,8 @@ export const Header = observer(
       <div>
         <div
           className={cn(
-            'bg-white px-4 pl-2 h-[41px]  flex items-center text-base font-bold justify-between',
-            !flag && 'border-b',
+            'bg-white px-4 pl-2 h-[41px] flex items-center text-base font-bold justify-between',
+            'border-b',
           )}
         >
           <div className='flex items-center'>
@@ -192,7 +186,6 @@ export const Header = observer(
             </div>
           </div>
           <div className='flex gap-2'>
-            {showFinder && <ViewSettings type={TableViewType.Contacts} />}
             {canSave && (
               <Button
                 size='xs'
@@ -210,7 +203,7 @@ export const Header = observer(
             />
             <IconButton
               size='xs'
-              variant='ghost'
+              variant='outline'
               icon={<Settings03 />}
               aria-label={'Toggle Settings'}
               dataTest={'flow-toggle-settings'}

@@ -54,6 +54,7 @@ export const FinderPage = observer(() => {
   const tableType = tableViewDef?.value?.tableType;
   const flag = useFeatureIsOn('filters-v2');
   const isPreset = tableViewDef?.value?.isPreset;
+  const filters = tableViewDef?.getFilters().AND.length > 0;
 
   const handleAddToMyViews: MouseEventHandler<HTMLButtonElement> = (e) => {
     e.stopPropagation();
@@ -94,12 +95,14 @@ export const FinderPage = observer(() => {
                   Clear
                 </Button>
               )}
-              {isPreset && (
+              {isPreset && filters && (
                 <Button size='xs' onClick={handleAddToMyViews}>
                   Save to...
                 </Button>
               )}
-              <Divider className='rotate-90 w-5 mx-[-6px]' />
+              {(isPreset || filters) && (
+                <Divider className='rotate-90 w-5 mx-[-6px]' />
+              )}
               {tableViewType && (
                 <ViewSettings tableId={tableId} type={tableViewType} />
               )}

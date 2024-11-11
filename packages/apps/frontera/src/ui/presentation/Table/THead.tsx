@@ -78,7 +78,7 @@ const THead = observer(
               : 'border-transparent',
             (canSort && isOpen) || isSorted ? 'ml-0' : 'ml-3',
             !canSort ? '' : 'group-hover:ml-0',
-            'flex items-center border rounded-[4px] transition-opacity duration-200 ease-in-out ',
+            'flex items-center border rounded-[4px] transition-opacity duration-200 ease-in-out pr-2',
           )}
         >
           {canSort ? (

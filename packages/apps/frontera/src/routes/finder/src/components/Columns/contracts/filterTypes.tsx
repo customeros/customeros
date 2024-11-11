@@ -39,14 +39,18 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.IsEmpty,
         ComparisonOperator.IsNotEmpty,
       ],
-      icon: <File02 className='group-hover:text-gray-700 text-gray-500' />,
+      icon: (
+        <File02 className='group-hover:text-gray-700 text-gray-500 mb-0.5' />
+      ),
     },
     [ColumnViewType.ContractsEnded]: {
       filterType: 'date',
       filterName: 'Ended',
       filterAccesor: ColumnViewType.ContractsEnded,
       filterOperators: [ComparisonOperator.Lt, ComparisonOperator.Gt],
-      icon: <Calendar className='group-hover:text-gray-700 text-gray-500' />,
+      icon: (
+        <Calendar className='group-hover:text-gray-700 text-gray-500 mb-0.5' />
+      ),
     },
     [ColumnViewType.ContractsPeriod]: {
       filterType: 'list',
@@ -59,7 +63,7 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.IsNotEmpty,
       ],
       icon: (
-        <ClockFastForward className='group-hover:text-gray-700 text-gray-500' />
+        <ClockFastForward className='group-hover:text-gray-700 text-gray-500 mb-0.5' />
       ),
       options: [
         { id: '1', label: 'Monthly' },
@@ -79,7 +83,7 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.IsNotEmpty,
       ],
       icon: (
-        <CurrencyDollarCircle className='group-hover:text-gray-700 text-gray-500' />
+        <CurrencyDollarCircle className='group-hover:text-gray-700 text-gray-500 mb-0.5' />
       ),
       options: [
         { id: 'USD', label: 'USD' },
@@ -98,7 +102,9 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.IsEmpty,
         ComparisonOperator.IsNotEmpty,
       ],
-      icon: <ClockCheck className='group-hover:text-gray-700 text-gray-500' />,
+      icon: (
+        <ClockCheck className='group-hover:text-gray-700 text-gray-500 mb-0.5' />
+      ),
       options: [
         { label: 'Draft', id: ContractStatus.Draft },
         { label: 'Ended', id: ContractStatus.Ended },
@@ -134,7 +140,7 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.NotEqual,
       ],
       icon: (
-        <CurrencyDollarCircle className='group-hover:text-gray-700 text-gray-500' />
+        <CurrencyDollarCircle className='group-hover:text-gray-700 text-gray-500 mb-0.5' />
       ),
     },
     [ColumnViewType.ContractsRenewalDate]: {
@@ -142,7 +148,9 @@ export const getFilterTypes = (store?: RootStore) => {
       filterName: 'Renewal date',
       filterAccesor: ColumnViewType.ContractsRenewalDate,
       filterOperators: [ComparisonOperator.Lt, ComparisonOperator.Gt],
-      icon: <Calendar className='group-hover:text-gray-700 text-gray-500' />,
+      icon: (
+        <Calendar className='group-hover:text-gray-700 text-gray-500 mb-0.5' />
+      ),
     },
     [ColumnViewType.ContractsForecastArr]: {
       filterType: 'number',
@@ -154,7 +162,9 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.Eq,
         ComparisonOperator.NotEqual,
       ],
-      icon: <Calculator className='group-hover:text-gray-700 text-gray-500' />,
+      icon: (
+        <Calculator className='group-hover:text-gray-700 text-gray-500 mb-0.5' />
+      ),
     },
     [ColumnViewType.ContractsHealth]: {
       filterType: 'list',
@@ -166,7 +176,9 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.IsEmpty,
         ComparisonOperator.IsNotEmpty,
       ],
-      icon: <Activity className='group-hover:text-gray-700 text-gray-500' />,
+      icon: (
+        <Activity className='group-hover:text-gray-700 text-gray-500 mb-0.5' />
+      ),
       options: [
         { id: OpportunityRenewalLikelihood.HighRenewal, label: 'High' },
         { id: OpportunityRenewalLikelihood.MediumRenewal, label: 'Medium' },
@@ -184,7 +196,9 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.IsEmpty,
         ComparisonOperator.IsNotEmpty,
       ],
-      icon: <Key01 className='group-hover:text-gray-700 text-gray-500' />,
+      icon: (
+        <Key01 className='group-hover:text-gray-700 text-gray-500 mb-0.5' />
+      ),
       options: store?.users.toArray().map((user) => ({
         id: user?.id,
         label: user?.name,

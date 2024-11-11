@@ -10,8 +10,11 @@ import { FinderFilters } from '@finder/components/FinderFilters/FinderFilters';
 import { cn } from '@ui/utils/cn';
 import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
-import { TableViewType } from '@shared/types/tableDef';
-import { TableIdType } from '@shared/types/__generated__/graphql.types';
+import { ViewSettings } from '@shared/components/ViewSettings';
+import {
+  TableIdType,
+  TableViewType,
+} from '@shared/types/__generated__/graphql.types';
 
 import { Header } from './src/Header';
 import { FlowBuilder } from './src/FlowBuilder';
@@ -66,24 +69,27 @@ const FlowContent = observer(
     return (
       <>
         {showFinder && (
-          <div className='flex justify-start flex-col bg-white'>
+          <div className='flex justify-start flex-col bg-white '>
             {flag && (
-              <div className='mt-1 mb-2 bg-white ml-1 flex items-center justify-between'>
+              <div className='mt-2 mb-2 bg-white ml-1 flex items-center justify-between'>
                 <FinderFilters
                   tableId={tableId || TableIdType.Organizations}
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   type={tableType || (TableViewType.Organizations as any)}
                 />
-                {tableViewDef?.hasFilters() && (
-                  <Button
-                    size='xs'
-                    variant='ghost'
-                    className='mr-4'
-                    onClick={() => tableViewDef?.removeFilters()}
-                  >
-                    Clear
-                  </Button>
-                )}
+                <div className='flex items-center gap-2 mr-4'>
+                  {tableViewDef?.hasFilters() && (
+                    <Button
+                      size='xs'
+                      variant='ghost'
+                      className='mr-4'
+                      onClick={() => tableViewDef?.removeFilters()}
+                    >
+                      Clear
+                    </Button>
+                  )}
+                  {showFinder && <ViewSettings type={TableViewType.Contacts} />}
+                </div>
               </div>
             )}
 
