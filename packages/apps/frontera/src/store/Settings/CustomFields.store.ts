@@ -133,6 +133,10 @@ export class CustomFieldsStore extends SyncableGroup<
     return 'customFields';
   }
 
+  get persisterKey() {
+    return 'CustomFields';
+  }
+
   toArray() {
     return Array.from(this.value.values());
   }

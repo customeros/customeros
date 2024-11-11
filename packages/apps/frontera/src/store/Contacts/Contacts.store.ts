@@ -41,6 +41,10 @@ export class ContactsStore extends SyncableGroup<Contact, ContactStore> {
     return 'Contacts';
   }
 
+  get persisterKey() {
+    return 'Contacts';
+  }
+
   toArray() {
     return Array.from(this.value.values());
   }
