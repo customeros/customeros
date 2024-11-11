@@ -7,11 +7,11 @@ package resolver
 import (
 	"context"
 	"errors"
+	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/customeros/mailsherpa/domaincheck"
-	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
@@ -20,13 +20,12 @@ import (
 	enummapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
-	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
-	commonTracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	commontracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
-	socialpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/social"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	pkgerrors "github.com/pkg/errors"
@@ -106,7 +105,7 @@ func (r *mutationResolver) OrganizationHideAll(ctx context.Context, ids []string
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.Object("request.organizationIds", ids))
 
-	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	ctx = commontracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	for _, orgId := range ids {
 		err := r.Services.CommonServices.OrganizationService.Hide(ctx, nil, common.GetTenantFromContext(ctx), orgId)
 		if err != nil {
@@ -127,7 +126,7 @@ func (r *mutationResolver) OrganizationShow(ctx context.Context, id string) (str
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.organizationId", id))
 
-	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	ctx = commontracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	response, err := utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
 		return r.Clients.OrganizationClient.ShowOrganization(ctx, &organizationpb.OrganizationIdGrpcRequest{
 			Tenant:         common.GetTenantFromContext(ctx),
@@ -155,7 +154,7 @@ func (r *mutationResolver) OrganizationShowAll(ctx context.Context, ids []string
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.Object("request.organizationIds", ids))
 
-	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	ctx = commontracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	for _, orgId := range ids {
 		_, err := utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
 			return r.Clients.OrganizationClient.ShowOrganization(ctx, &organizationpb.OrganizationIdGrpcRequest{
@@ -260,20 +259,13 @@ func (r *mutationResolver) OrganizationAddSocial(ctx context.Context, organizati
 	span.LogFields(log.String("request.organizationID", organizationID))
 	tracing.LogObjectAsJson(span, "request.input", input)
 
-	socialId := uuid.New().String()
-	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err := utils.CallEventsPlatformGRPCWithRetry[*socialpb.SocialIdGrpcResponse](func() (*socialpb.SocialIdGrpcResponse, error) {
-		return r.Clients.OrganizationClient.AddSocial(ctx, &organizationpb.AddSocialGrpcRequest{
-			Tenant:         common.GetTenantFromContext(ctx),
-			LoggedInUserId: common.GetUserIdFromContext(ctx),
-			OrganizationId: organizationID,
-			SocialId:       socialId,
-			Url:            input.URL,
-			SourceFields: &commonpb.SourceFields{
-				Source:    string(neo4jentity.DataSourceOpenline),
-				AppSource: constants.AppSourceCustomerOsApi,
-			},
-		})
+	socialId, err := r.Services.CommonServices.SocialService.AddSocialToEntity(ctx, commonservice.LinkWith{
+		Id:   organizationID,
+		Type: commonmodel.ORGANIZATION,
+	}, neo4jentity.SocialEntity{
+		Url:       input.URL,
+		Source:    neo4jentity.DataSourceOpenline,
+		AppSource: constants.AppSourceCustomerOsApi,
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -293,7 +285,7 @@ func (r *mutationResolver) OrganizationRemoveSocial(ctx context.Context, organiz
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.organizationID", organizationID), log.String("request.socialID", socialID))
 
-	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	ctx = commontracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	_, err := utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
 		return r.Clients.OrganizationClient.RemoveSocial(ctx, &organizationpb.RemoveSocialGrpcRequest{
 			Tenant:         common.GetTenantFromContext(ctx),
@@ -352,7 +344,7 @@ func (r *mutationResolver) OrganizationUpdateOnboardingStatus(ctx context.Contex
 		grpcRequest.OnboardingStatus = organizationpb.OnboardingStatus_ONBOARDING_STATUS_NOT_APPLICABLE
 	}
 
-	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	ctx = commontracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	_, err := utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
 		return r.Clients.OrganizationClient.UpdateOnboardingStatus(ctx, &grpcRequest)
 	})
@@ -626,7 +618,7 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 		upsertOrganizationRequest.IsPublic = *input.Public
 	}
 
-	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	ctx = commontracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	response, err := utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
 		return r.Clients.OrganizationClient.UpsertOrganization(ctx, &upsertOrganizationRequest)
 	})
@@ -689,7 +681,7 @@ func (r *mutationResolver) OrganizationAddTag(ctx context.Context, input model.O
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	_, err := r.Services.CommonServices.TagService.AddTag(ctx, nil, tenant, input.OrganizationID, commonModel.ORGANIZATION, utils.StringOrEmpty(input.Tag.ID), utils.StringOrEmpty(input.Tag.Name), constants.AppSourceCustomerOsApi)
+	_, err := r.Services.CommonServices.TagService.AddTag(ctx, nil, tenant, input.OrganizationID, commonmodel.ORGANIZATION, utils.StringOrEmpty(input.Tag.ID), utils.StringOrEmpty(input.Tag.Name), constants.AppSourceCustomerOsApi)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Error adding tag to organization")
@@ -708,7 +700,7 @@ func (r *mutationResolver) OrganizationRemoveTag(ctx context.Context, input mode
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	err := r.Services.CommonServices.TagService.RemoveTag(ctx, nil, tenant, input.OrganizationID, commonModel.ORGANIZATION, utils.StringOrEmpty(input.Tag.ID), constants.AppSourceCustomerOsApi)
+	err := r.Services.CommonServices.TagService.RemoveTag(ctx, nil, tenant, input.OrganizationID, commonmodel.ORGANIZATION, utils.StringOrEmpty(input.Tag.ID), constants.AppSourceCustomerOsApi)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Error removing tag from organization")

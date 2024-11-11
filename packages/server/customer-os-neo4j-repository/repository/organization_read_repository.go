@@ -11,6 +11,7 @@ import (
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+	"strings"
 	"time"
 )
 
@@ -38,6 +39,7 @@ type OrganizationReadRepository interface {
 	GetOrganizationByIdOrCustomerOsId(ctx context.Context, tenant, id string) (*dbtype.Node, error)
 	GetOrganizationByDomain(ctx context.Context, tenant, domain string) (*dbtype.Node, error)
 	GetOrganizationBySocialUrl(ctx context.Context, tenant, socialUrl string) (*dbtype.Node, error)
+	GetOrganizationsByLinkedIn(ctx context.Context, tenant, url, alias string) ([]*dbtype.Node, error)
 	GetForApiCache(ctx context.Context, tenant string, skip, limit int) ([]map[string]interface{}, error)
 	GetPatchesForApiCache(ctx context.Context, tenant string, lastPatchTimestamp time.Time) ([]map[string]interface{}, error)
 	GetAllForInvoices(ctx context.Context, tenant string, invoiceIds []string) ([]*utils.DbNodeAndId, error)
@@ -552,6 +554,59 @@ func (r *organizationReadRepository) GetOrganizationBySocialUrl(ctx context.Cont
 	span.LogFields(log.Bool("result.found", true))
 
 	return result.(*dbtype.Node), err
+}
+
+func (r *organizationReadRepository) GetOrganizationsByLinkedIn(ctx context.Context, tenant, url, alias string) ([]*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialReadRepository.GetOrganizationsByLinkedIn")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogFields(log.String("url", url), log.String("alias", alias))
+
+	if url == "" {
+		return nil, nil
+	}
+
+	minimizedUrl := url
+	// remove trailing / if any
+	if minimizedUrl[len(minimizedUrl)-1] == '/' {
+		minimizedUrl = minimizedUrl[:len(minimizedUrl)-1]
+	}
+	// remove all chars before linkedin.com
+	if i := strings.Index(minimizedUrl, "linkedin.com/company"); i != -1 {
+		minimizedUrl = minimizedUrl[i:]
+	}
+
+	cypher := `MATCH (:Tenant {name:$tenant})--(o:Organization)-[:HAS]->(s:Social)
+				WHERE s.url CONTAINS $url  `
+	if alias != "" {
+		cypher += ` OR s.alias = $alias `
+	}
+	cypher += ` RETURN o`
+	params := map[string]any{
+		"tenant": tenant,
+		"url":    minimizedUrl,
+		"alias":  alias,
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	nodes := result.([]*dbtype.Node)
+	span.LogFields(log.Int("result.count", len(nodes)))
+	return nodes, err
 }
 
 func (r *organizationReadRepository) GetForApiCache(ctx context.Context, tenant string, skip, limit int) ([]map[string]interface{}, error) {

@@ -15,7 +15,7 @@ import (
 type ServiceLineItemReadRepository interface {
 	GetServiceLineItemById(ctx context.Context, tenant, serviceLineItemId string) (*dbtype.Node, error)
 	GetServiceLineItemsByParentId(ctx context.Context, tenant, sliParentId string) ([]*dbtype.Node, error)
-	GetServiceLineItemsForContract(ctx context.Context, tenant, contractId string) ([]*neo4j.Node, error)
+	GetServiceLineItemsForContract(ctx context.Context, tenant, contractId string) ([]*dbtype.Node, error)
 	GetServiceLineItemsForContracts(ctx context.Context, tenant string, contractIds []string) ([]*utils.DbNodeAndId, error)
 	GetServiceLineItemsForInvoiceLines(ctx context.Context, tenant string, invoiceLineIds []string) ([]*utils.DbNodeAndId, error)
 	GetLatestServiceLineItemByParentId(ctx context.Context, tenant, serviceLineItemParentId string, beforeDate *time.Time) (*dbtype.Node, error)

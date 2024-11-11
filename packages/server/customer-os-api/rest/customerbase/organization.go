@@ -15,7 +15,6 @@ import (
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
-	socialpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/social"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"net/http"
@@ -173,17 +172,13 @@ func CreateOrganization(services *service.Services) gin.HandlerFunc {
 		}
 
 		if request.LinkedinUrl != "" {
-			_, err = utils.CallEventsPlatformGRPCWithRetry[*socialpb.SocialIdGrpcResponse](func() (*socialpb.SocialIdGrpcResponse, error) {
-				return services.CommonServices.GrpcClients.OrganizationClient.AddSocial(ctx, &organizationpb.AddSocialGrpcRequest{
-					Tenant:         common.GetTenantFromContext(ctx),
-					LoggedInUserId: common.GetUserIdFromContext(ctx),
-					OrganizationId: newOrgId,
-					Url:            request.LinkedinUrl,
-					SourceFields: &commonpb.SourceFields{
-						Source:    string(neo4jentity.DataSourceOpenline),
-						AppSource: constants.AppSourceCustomerOsApiRest,
-					},
-				})
+			_, err = services.CommonServices.SocialService.AddSocialToEntity(ctx, commonservice.LinkWith{
+				Id:   newOrgId,
+				Type: commonmodel.ORGANIZATION,
+			}, neo4jentity.SocialEntity{
+				Url:       request.LinkedinUrl,
+				Source:    neo4jentity.DataSourceOpenline,
+				AppSource: constants.AppSourceCustomerOsApiRest,
 			})
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "Failed to add linkedin url"))

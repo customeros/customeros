@@ -37,3 +37,29 @@ type SocialEntities []SocialEntity
 func (s SocialEntity) IsLinkedin() bool {
 	return strings.Contains(s.Url, "linkedin.com")
 }
+
+func (s SocialEntity) ExtractLinkedinCompanyIdentifierFromUrl() string {
+	if !s.IsLinkedin() {
+		return ""
+	}
+
+	identifier := s.Url
+
+	// trim trailing / from url
+	identifier = strings.TrimSuffix(s.Url, "/")
+
+	// remove all chars before linkedin.com/company
+	if i := strings.Index(identifier, "linkedin.com/company"); i != -1 {
+		identifier = identifier[i:]
+	}
+
+	if strings.HasPrefix(identifier, "linkedin.com/company") {
+		// get last part of url
+		parts := strings.Split(identifier, "/")
+		identifier = parts[len(parts)-1]
+		if identifier == "company" {
+			identifier = ""
+		}
+	}
+	return identifier
+}

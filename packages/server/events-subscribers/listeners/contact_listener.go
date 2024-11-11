@@ -21,8 +21,6 @@ import (
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
 	locationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/location"
-	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
-	socialpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/social"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-subscribers/constants"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -503,16 +501,15 @@ func (c *contactListenerImpl) enrichContactWithScrapInEnrichDetails(ctx context.
 				}
 				if organizationDbNode != nil {
 					orgId := utils.GetStringPropOrEmpty(organizationDbNode.Props, "id")
-					_, err = utils.CallEventsPlatformGRPCWithRetry[*socialpb.SocialIdGrpcResponse](func() (*socialpb.SocialIdGrpcResponse, error) {
-						return c.services.GrpcClients.OrganizationClient.AddSocial(ctx, &organizationpb.AddSocialGrpcRequest{
-							Tenant:         tenant,
-							OrganizationId: orgId,
-							Url:            scrapinContactResponse.Company.LinkedInUrl,
-							FollowersCount: int64(scrapinContactResponse.Company.FollowerCount),
-						})
+					_, err = c.services.SocialService.AddSocialToEntity(ctx, service.LinkWith{
+						Id:   orgId,
+						Type: model.ORGANIZATION,
+					}, neo4jentity.SocialEntity{
+						Url:            scrapinContactResponse.Company.LinkedInUrl,
+						FollowersCount: int64(scrapinContactResponse.Company.FollowerCount),
 					})
 					if err != nil {
-						tracing.TraceErr(span, errors.Wrap(err, "OrganizationClient.AddSocial"))
+						tracing.TraceErr(span, errors.Wrap(err, "SocialService.AddSocialToEntity"))
 						c.log.Errorf("Error adding social profile: %s", err.Error())
 					}
 				}
@@ -542,16 +539,15 @@ func (c *contactListenerImpl) enrichContactWithScrapInEnrichDetails(ctx context.
 				tracing.TraceErr(span, errors.New("organization id is nil"))
 				return errors.New("organization id is nil")
 			} else {
-				_, err = utils.CallEventsPlatformGRPCWithRetry[*socialpb.SocialIdGrpcResponse](func() (*socialpb.SocialIdGrpcResponse, error) {
-					return c.services.GrpcClients.OrganizationClient.AddSocial(ctx, &organizationpb.AddSocialGrpcRequest{
-						Tenant:         tenant,
-						OrganizationId: *orgId,
-						Url:            scrapinContactResponse.Company.LinkedInUrl,
-						FollowersCount: int64(scrapinContactResponse.Company.FollowerCount),
-					})
+				_, err = c.services.SocialService.AddSocialToEntity(ctx, service.LinkWith{
+					Id:   *orgId,
+					Type: model.ORGANIZATION,
+				}, neo4jentity.SocialEntity{
+					Url:            scrapinContactResponse.Company.LinkedInUrl,
+					FollowersCount: int64(scrapinContactResponse.Company.FollowerCount),
 				})
 				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "OrganizationClient.AddSocial"))
+					tracing.TraceErr(span, errors.Wrap(err, "SocialService.AddSocialToEntity"))
 					c.log.Errorf("Error adding social profile: %s", err.Error())
 				}
 			}

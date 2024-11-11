@@ -189,6 +189,28 @@ func (s *socialService) AddSocialToEntity(ctx context.Context, linkWith LinkWith
 	socialUrl := normalizeSocialUrl(socialEntity.Url)
 	span.LogFields(log.String("socialUrl.normalized", socialUrl))
 
+	// Check social not used by another entity
+	if socialEntity.IsLinkedin() {
+		if linkWith.Type == model.ORGANIZATION {
+			alias := socialEntity.Alias
+			if alias == "" {
+				// use identifier as alias
+				alias = socialEntity.ExtractLinkedinCompanyIdentifierFromUrl()
+			}
+			orgs, err := s.services.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsByLinkedIn(ctx, tenant, socialUrl, alias)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return "", err
+			}
+			if len(orgs) > 0 {
+				err = errors.Errorf("linkedin url %s already used by organization %s", socialUrl, orgs[0].Props["id"])
+				return "", err
+			}
+		} else if linkWith.Type == model.CONTACT {
+			// TODO here is depup logic for contacts
+		}
+	}
+
 	// get or generate social entity id
 	createSocialFlow := false
 	socialId := socialEntity.Id

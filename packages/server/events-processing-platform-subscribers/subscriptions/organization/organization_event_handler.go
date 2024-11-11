@@ -5,15 +5,16 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	enrichmentmodel "github.com/openline-ai/openline-customer-os/packages/server/enrichment-api/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	locationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/location"
-	socialpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/social"
 	"io"
 	"net/http"
 	"strings"
@@ -131,17 +132,17 @@ func (h *organizationEventHandler) enrichOrganization(ctx context.Context, tenan
 		return nil
 	}
 
-	err = h.services.CommonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, tenant, model.NodeLabelOrganization, organizationId, string(neo4jentity.OrganizationPropertyEnrichRequestedAt), utils.NowPtr())
+	err = h.services.CommonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, tenant, commonmodel.NodeLabelOrganization, organizationId, string(neo4jentity.OrganizationPropertyEnrichRequestedAt), utils.NowPtr())
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to update enrich requested at"))
 	}
-	utils.EventCompleted(ctx, tenant, model.ORGANIZATION.String(), organizationId, h.grpcClients, utils.NewEventCompletedDetails().WithUpdate())
+	utils.EventCompleted(ctx, tenant, commonmodel.ORGANIZATION.String(), organizationId, h.grpcClients, utils.NewEventCompletedDetails().WithUpdate())
 
 	enrichOrganizationResponse, err := h.callApiEnrichOrganization(ctx, tenant, domain)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to call enrich organization API"))
 		h.log.Errorf("Error calling enrich organization API: %s", err.Error())
-		err = h.services.CommonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, tenant, model.NodeLabelOrganization, organizationId, string(neo4jentity.OrganizationPropertyEnrichFailedAt), utils.NowPtr())
+		err = h.services.CommonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, tenant, commonmodel.NodeLabelOrganization, organizationId, string(neo4jentity.OrganizationPropertyEnrichFailedAt), utils.NowPtr())
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to update enrich failed at"))
 		}
@@ -150,7 +151,7 @@ func (h *organizationEventHandler) enrichOrganization(ctx context.Context, tenan
 	if enrichOrganizationResponse != nil && enrichOrganizationResponse.Success == true {
 		h.updateOrganizationFromEnrichmentResponse(ctx, tenant, domain, enrichOrganizationResponse.PrimaryEnrichSource, *organizationEntity, &enrichOrganizationResponse.Data)
 	} else {
-		err = h.services.CommonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, tenant, model.NodeLabelOrganization, organizationId, string(neo4jentity.OrganizationPropertyEnrichFailedAt), utils.NowPtr())
+		err = h.services.CommonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, tenant, commonmodel.NodeLabelOrganization, organizationId, string(neo4jentity.OrganizationPropertyEnrichFailedAt), utils.NowPtr())
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to update enrich failed at"))
 		}
@@ -363,19 +364,23 @@ func (h *organizationEventHandler) addSocial(ctx context.Context, organizationId
 	span.SetTag(tracing.SpanTagEntityId, organizationId)
 	span.LogFields(log.String("organizationId", organizationId), log.String("url", url))
 
-	_, err := subscriptions.CallEventsPlatformGRPCWithRetry[*socialpb.SocialIdGrpcResponse](func() (*socialpb.SocialIdGrpcResponse, error) {
-		return h.grpcClients.OrganizationClient.AddSocial(ctx, &organizationpb.AddSocialGrpcRequest{
-			Tenant:         tenant,
-			OrganizationId: organizationId,
-			Url:            url,
-			Alias:          alias,
-			ExternalId:     externalId,
-			SourceFields: &commonpb.SourceFields{
-				AppSource: appSource,
-				Source:    constants.SourceOpenline,
-			},
-		})
+	innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+		Tenant:    tenant,
+		AppSource: appSource,
 	})
+
+	socialEntity := neo4jentity.SocialEntity{
+		Url:        url,
+		Alias:      alias,
+		ExternalId: externalId,
+		AppSource:  appSource,
+		Source:     neo4jentity.DataSourceOpenline,
+	}
+
+	_, err := h.services.CommonServices.SocialService.AddSocialToEntity(innerCtx, commonservice.LinkWith{
+		Id:   organizationId,
+		Type: commonmodel.ORGANIZATION,
+	}, socialEntity)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error adding %s social: %s", url, err.Error())
@@ -401,7 +406,7 @@ func (h *organizationEventHandler) AdjustNewOrganizationFields(ctx context.Conte
 
 	// wait for organization to be created in neo4j before updating it
 	for attempt := 1; attempt <= constants.MaxRetriesCheckDataInNeo4j; attempt++ {
-		exists, err := h.services.CommonServices.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, eventData.Tenant, organizationId, model.NodeLabelOrganization)
+		exists, err := h.services.CommonServices.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, eventData.Tenant, organizationId, commonmodel.NodeLabelOrganization)
 		if err == nil && exists {
 			break
 		}
@@ -556,7 +561,7 @@ func (h *organizationEventHandler) mapIndustryToGICSWithAI(ctx context.Context, 
 		PromptType:     constants.PromptType_MapIndustry,
 		Tenant:         &tenant,
 		NodeId:         &orgId,
-		NodeLabel:      utils.StringPtr(model.NodeLabelOrganization),
+		NodeLabel:      utils.StringPtr(commonmodel.NodeLabelOrganization),
 		PromptTemplate: &h.cfg.Services.Anthropic.IndustryLookupPrompt1,
 		Prompt:         firstPrompt,
 	}
@@ -598,7 +603,7 @@ func (h *organizationEventHandler) mapIndustryToGICSWithAI(ctx context.Context, 
 		PromptType:     constants.PromptType_ExtractIndustryValue,
 		Tenant:         &tenant,
 		NodeId:         &orgId,
-		NodeLabel:      utils.StringPtr(model.NodeLabelOrganization),
+		NodeLabel:      utils.StringPtr(commonmodel.NodeLabelOrganization),
 		PromptTemplate: &h.cfg.Services.Anthropic.IndustryLookupPrompt2,
 		Prompt:         secondPrompt,
 	}

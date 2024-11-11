@@ -19,7 +19,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/repository"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
-	socialpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/social"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	pkgerrors "github.com/pkg/errors"
@@ -474,20 +473,17 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 
 		if !orgInput.HasSocials() {
 			for _, social := range orgInput.Socials {
-				// Link social to contact
-				_, err = CallEventsPlatformGRPCWithRetry[*socialpb.SocialIdGrpcResponse](func() (*socialpb.SocialIdGrpcResponse, error) {
-					return s.grpcClients.OrganizationClient.AddSocial(ctx, &organizationpb.AddSocialGrpcRequest{
-						Tenant:         common.GetTenantFromContext(ctx),
-						OrganizationId: organizationId,
-						SourceFields: &commonpb.SourceFields{
-							Source:    orgInput.ExternalSystem,
-							AppSource: appSource,
-						},
-						Url: social.URL,
-					})
+				// Link social to organization
+				_, err = s.services.CommonServices.SocialService.AddSocialToEntity(ctx, commonservice.LinkWith{
+					Id:   organizationId,
+					Type: commonmodel.ORGANIZATION,
+				}, neo4jentity.SocialEntity{
+					Url:       social.URL,
+					Source:    neo4jentity.DecodeDataSource(orgInput.ExternalSystem),
+					AppSource: appSource,
 				})
 				if err != nil {
-					tracing.TraceErr(span, err, log.String("grpcMethod", "AddSocial"))
+					tracing.TraceErr(span, err)
 					reason = fmt.Sprintf("Failed to link social %s with organization %s: %s", social.URL, organizationId, err.Error())
 					s.log.Error(reason)
 				}
