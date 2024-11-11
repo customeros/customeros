@@ -89,7 +89,7 @@ export class ContactsStore extends SyncableGroup<Contact, ContactStore> {
 
   archive = (ids: string[]) => {
     ids.forEach((id) => {
-      this.archive([id]);
+      this.remove(id);
     });
   };
 
