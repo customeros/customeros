@@ -28,8 +28,9 @@ export const FlowEditor = () => {
       <div className='flex h-full flex-col'>
         <Header
           hasChanges={hasNewChanges}
+          isSidePanelOpen={isSidePanelOpen}
           onToggleHasChanges={setHasNewChanges}
-          onToggleSidePanel={() => setIsSidePanelOpen(!isSidePanelOpen)}
+          onToggleSidePanel={setIsSidePanelOpen}
         />
         <FlowContent
           showSidePanel={isSidePanelOpen}

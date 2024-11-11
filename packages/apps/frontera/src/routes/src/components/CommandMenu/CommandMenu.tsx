@@ -59,6 +59,7 @@ import {
   ChangeBulkArrEstimate,
   UnlinkContactFromFlow,
   ConfirmSingleFlowEdit,
+  FlowValidationMessage,
   ChooseOpportunityStage,
   MergeConfirmationModal,
   SetOpportunityNextSteps,
@@ -131,6 +132,7 @@ const Commands: Record<CommandMenuType, ReactElement> = {
   RenameFlow: <RenameFlow />,
   ChangeFlowStatus: <ChangeFlowStatus />,
   EditContactFlow: <EditContactFlow />,
+  FlowValidationMessage: <FlowValidationMessage />,
   GetBrowserExtensionLink: <GetBrowserExtensionLink />,
   InstallLinkedInExtension: <InstallLinkedInExtension />,
 

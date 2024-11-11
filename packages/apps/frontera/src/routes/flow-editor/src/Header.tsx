@@ -31,9 +31,11 @@ export const Header = observer(
     hasChanges,
     onToggleHasChanges,
     onToggleSidePanel,
+    isSidePanelOpen,
   }: {
     hasChanges: boolean;
-    onToggleSidePanel: () => void;
+    isSidePanelOpen: boolean;
+    onToggleSidePanel: (status: boolean) => void;
     onToggleHasChanges: (status: boolean) => void;
   }) => {
     const id = useParams().id as string;
@@ -81,7 +83,7 @@ export const Header = observer(
         if (hasChanges) {
           event.preventDefault();
 
-          return `The changes you've made may not be saved`;
+          return `The changes you've made will NOT BE SAVED`;
         }
       };
 
@@ -202,14 +204,17 @@ export const Header = observer(
                 Save changes
               </Button>
             )}
-            <FlowStatusMenu id={id} />
+            <FlowStatusMenu
+              id={id}
+              handleOpenSettingsPanel={() => onToggleSidePanel(true)}
+            />
             <IconButton
               size='xs'
               variant='ghost'
               icon={<Settings03 />}
-              onClick={onToggleSidePanel}
               aria-label={'Toggle Settings'}
               dataTest={'flow-toggle-settings'}
+              onClick={() => onToggleSidePanel(!isSidePanelOpen)}
             />
           </div>
         </div>

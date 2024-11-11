@@ -51,6 +51,7 @@ export type CommandMenuType =
   | 'ConfirmSingleFlowEdit'
   | 'GetBrowserExtensionLink'
   | 'InstallLinkedInExtension'
+  | 'FlowValidationMessage'
   | 'ContactBulkCommands';
 
 export type Context = {
