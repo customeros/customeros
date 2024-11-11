@@ -77,7 +77,7 @@ export const Header = observer(
         if (hasChanges) {
           event.preventDefault();
 
-          return `The changes you've made will NOT BE SAVED`;
+          return `Changes you’ve made will NOT be saved`;
         }
       };
 
