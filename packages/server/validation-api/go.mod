@@ -26,7 +26,7 @@ require (
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.3
-	github.com/smartystreets/smartystreets-go-sdk v1.19.7
+	github.com/smartystreets/smartystreets-go-sdk v1.20.1
 	golang.org/x/net v0.31.0
 	gorm.io/gorm v1.25.12
 )
