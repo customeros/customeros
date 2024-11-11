@@ -22,7 +22,7 @@ export const ChangeFlowStatus = observer(() => {
     }
 
     if (flowStatus === FlowStatus.Paused) {
-      store.ui.commandMenu.setType('StopFlow');
+      store.ui.commandMenu.setType('PauseFlow');
 
       return;
     }

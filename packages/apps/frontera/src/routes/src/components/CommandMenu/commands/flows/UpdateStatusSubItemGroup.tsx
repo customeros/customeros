@@ -36,7 +36,7 @@ export const UpdateStatusSubItemGroup = observer(() => {
     }
 
     if (status === FlowStatus.Paused) {
-      store.ui.commandMenu.setType('StopFlow');
+      store.ui.commandMenu.setType('PauseFlow');
 
       return;
     }
