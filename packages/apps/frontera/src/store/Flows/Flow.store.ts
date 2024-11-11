@@ -87,8 +87,6 @@ export class FlowStore implements Store<Flow> {
     match(path)
       .with(['status', ...P.array()], () => {
         this.saveStatus();
-
-        return;
       })
       .with(['name', ...P.array()], () => {
         // todo COS-5311 - use another mutation to not update nodes and edges when updating the name

@@ -26,7 +26,7 @@ export const StartFlow = observer(() => {
   };
 
   const handleConfirm = () => {
-    if (context.meta?.hasUnsavedChanges) {
+    if (context?.meta?.hasUnsavedChanges) {
       context?.callback?.();
       handleClose();
 
@@ -38,11 +38,12 @@ export const StartFlow = observer(() => {
 
       return f;
     });
-    store.ui.commandMenu.clearContext();
     store.ui.commandMenu.setOpen(false);
+
+    store.ui.commandMenu.clearContext();
   };
 
-  const data = match(context?.meta?.type)
+  const data = match(flow?.value?.status)
     .with(FlowStatus.Paused, () => ({
       title: `Resume flow '${flow?.value.name}'?`,
       description: `Resuming this flow will immediately start all upcoming actions for active contacts.`,

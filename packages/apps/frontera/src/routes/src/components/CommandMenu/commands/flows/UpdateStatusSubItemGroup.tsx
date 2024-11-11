@@ -14,8 +14,6 @@ export const UpdateStatusSubItemGroup = observer(() => {
   const context = store.ui.commandMenu.context;
   const selectedIds = context.ids;
 
-  const entity = store.flows.value.get(context.ids?.[0] as string);
-
   const isSelected = () => {
     if (selectedIds.length > 1) {
       return;
@@ -29,25 +27,19 @@ export const UpdateStatusSubItemGroup = observer(() => {
   const handleUpdateStatus = (status: FlowStatus) => {
     if (!context.ids?.[0]) return;
 
-    if (status === FlowStatus.Active) {
-      store.ui.commandMenu.setType('StartFlow');
-
-      return;
-    }
-
-    if (status === FlowStatus.Paused) {
-      store.ui.commandMenu.setType('PauseFlow');
-
-      return;
-    }
-
     match(context.entity)
       .with('Flow', () => {
-        entity?.update((value) => {
-          value.status = status;
+        if (status === FlowStatus.Active) {
+          store.ui.commandMenu.setType('StartFlow');
 
-          return value;
-        });
+          return;
+        }
+
+        if (status === FlowStatus.Paused) {
+          store.ui.commandMenu.setType('PauseFlow');
+
+          return;
+        }
       })
       .with('Flows', () => {
         context.ids?.forEach((id) => {
@@ -58,11 +50,10 @@ export const UpdateStatusSubItemGroup = observer(() => {
 
             return value;
           });
+          store.ui.commandMenu.setOpen(false);
+          store.ui.commandMenu.setType('FlowCommands');
         });
-      })
-      .otherwise(() => '');
-    store.ui.commandMenu.setOpen(false);
-    store.ui.commandMenu.setType('FlowCommands');
+      });
   };
 
   return (
@@ -86,17 +77,6 @@ export const UpdateStatusSubItemGroup = observer(() => {
         rightAccessory={isSelected() === FlowStatus.Paused ? <Check /> : null}
         onSelectAction={() => {
           handleUpdateStatus(FlowStatus.Paused);
-        }}
-      />
-
-      <CommandSubItem
-        icon={<Columns03 />}
-        rightLabel='Not started'
-        leftLabel='Change flow status'
-        keywords={[...flowKeywords.status_update, 'not started']}
-        rightAccessory={isSelected() === FlowStatus.Inactive ? <Check /> : null}
-        onSelectAction={() => {
-          handleUpdateStatus(FlowStatus.Inactive);
         }}
       />
     </>

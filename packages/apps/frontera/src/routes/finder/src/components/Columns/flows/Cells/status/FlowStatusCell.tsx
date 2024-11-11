@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useMemo, useState } from 'react';
 
 import { observer } from 'mobx-react-lite';
 import { flowOptions } from '@finder/components/Columns/flows/utils.ts';
@@ -30,13 +30,36 @@ export const FlowStatusCell = observer(
     );
 
     const handleSelect = (option: SelectOption<FlowStatus>) => {
-      flowSequence?.update((seq) => {
-        seq.status = option.value;
+      if (option.value === FlowStatus.Active) {
+        store.ui.commandMenu.setType('StartFlow');
+        store.ui.commandMenu.setOpen(true);
 
-        return seq;
-      });
-      setIsEditing(false);
+        setIsEditing(false);
+
+        return;
+      }
+
+      if (option.value === FlowStatus.Paused) {
+        store.ui.commandMenu.setType('PauseFlow');
+        store.ui.commandMenu.setOpen(true);
+
+        setIsEditing(false);
+
+        return;
+      }
     };
+    const filteredFlowOptions = useMemo(
+      () =>
+        flowOptions.filter(
+          (e) =>
+            ![
+              FlowStatus.Archived,
+              FlowStatus.Scheduling,
+              FlowStatus.Inactive,
+            ].includes(e.value),
+        ),
+      [],
+    );
 
     if (flowSequence?.value.status === FlowStatus.Scheduling) {
       return (
@@ -88,17 +111,15 @@ export const FlowStatusCell = observer(
             />
           </MenuButton>
           <MenuList data-test={'flow-statuses'}>
-            {flowOptions
-              .filter((e) => e.value !== FlowStatus.Archived)
-              .map((option) => (
-                <MenuItem
-                  key={option.value.toString()}
-                  onClick={() => handleSelect(option)}
-                  data-test={`flow-status-${option.value}`}
-                >
-                  {option.label}
-                </MenuItem>
-              ))}
+            {filteredFlowOptions.map((option) => (
+              <MenuItem
+                key={option.value.toString()}
+                onClick={() => handleSelect(option)}
+                data-test={`flow-status-${option.value}`}
+              >
+                {option.label}
+              </MenuItem>
+            ))}
           </MenuList>
         </Menu>
       </div>

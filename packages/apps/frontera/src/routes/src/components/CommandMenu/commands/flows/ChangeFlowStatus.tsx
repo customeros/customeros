@@ -15,27 +15,18 @@ export const ChangeFlowStatus = observer(() => {
   const handleSelect = (flowStatus: FlowStatus) => () => {
     if (!context.ids?.[0]) return;
 
-    if (flowStatus === FlowStatus.Active) {
-      store.ui.commandMenu.setType('StartFlow');
-
-      return;
-    }
-
-    if (flowStatus === FlowStatus.Paused) {
-      store.ui.commandMenu.setType('PauseFlow');
-
-      return;
-    }
-
     match(context.entity)
       .with('Flow', () => {
-        entity?.update((value) => {
-          value.status = flowStatus;
+        if (flowStatus === FlowStatus.Active) {
+          return store.ui.commandMenu.setType('StartFlow');
+        }
 
-          return value;
-        });
+        if (flowStatus === FlowStatus.Paused) {
+          return store.ui.commandMenu.setType('PauseFlow');
+        }
       })
       .with('Flows', () => {
+        // todo refactor after bulk mutation is available
         context.ids?.forEach((id) => {
           const sequence = store.flows.value.get(id);
 
@@ -45,10 +36,9 @@ export const ChangeFlowStatus = observer(() => {
             return value;
           });
         });
-      })
-      .otherwise(() => '');
-    store.ui.commandMenu.setOpen(false);
-    store.ui.commandMenu.setType('FlowCommands');
+        store.ui.commandMenu.setOpen(false);
+        store.ui.commandMenu.setType('FlowCommands');
+      });
   };
 
   const label = match(context.entity)
@@ -83,14 +73,7 @@ export const ChangeFlowStatus = observer(() => {
           onSelect={handleSelect(FlowStatus.Paused)}
           rightAccessory={status === FlowStatus.Paused ? <Check /> : null}
         >
-          Stopped
-        </CommandItem>
-        <CommandItem
-          key={FlowStatus.Inactive}
-          onSelect={handleSelect(FlowStatus.Inactive)}
-          rightAccessory={status === FlowStatus.Inactive ? <Check /> : null}
-        >
-          Not Started
+          Paused
         </CommandItem>
       </Command.List>
     </Command>
