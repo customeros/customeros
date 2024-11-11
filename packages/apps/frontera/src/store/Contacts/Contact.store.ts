@@ -485,6 +485,54 @@ export class ContactStore extends Syncable<Contact> {
       });
     }
   }
+
+  static getDefaultValue(): Contact {
+    return {
+      id: crypto.randomUUID(),
+      createdAt: '',
+      customFields: [],
+      emails: [],
+      firstName: '',
+      jobRoles: [],
+      lastName: '',
+      locations: [],
+      phoneNumbers: [],
+      profilePhotoUrl: '',
+      organizations: {
+        content: [],
+        totalPages: 0,
+        totalElements: 0,
+        totalAvailable: 0,
+      },
+      flows: [],
+      socials: [],
+      timezone: '',
+      source: DataSource.Openline,
+      timelineEvents: [],
+      timelineEventsTotalCount: 0,
+      updatedAt: '',
+      appSource: DataSource.Openline,
+      description: '',
+      prefix: '',
+      name: '',
+      owner: null,
+      tags: [],
+      connectedUsers: [],
+      metadata: {
+        source: DataSource.Openline,
+        appSource: DataSource.Openline,
+        id: crypto.randomUUID(),
+        created: '',
+        lastUpdated: new Date().toISOString(),
+        sourceOfTruth: DataSource.Openline,
+      },
+      enrichDetails: {
+        enrichedAt: '',
+        failedAt: '',
+        requestedAt: '',
+      },
+    };
+  }
 }
 
 const getDefaultValue = (): Contact => ({

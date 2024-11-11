@@ -157,15 +157,11 @@ export class ContactsStore extends SyncableGroup<Contact, ContactStore> {
     options?: { onSuccess?: (serverId: string) => void },
     input?: ContactInput,
   ) {
-    const newContact = new ContactStore(this.root, this.transport, {
-      name: '',
-      metadata: {
-        id: crypto.randomUUID(),
-        created: new Date().toISOString(),
-        lastUpdated: new Date().toISOString(),
-        appSource: DataSource.Openline,
-      },
-    } as Contact);
+    const newContact = new ContactStore(
+      this.root,
+      this.transport,
+      ContactStore.getDefaultValue() as Contact,
+    );
     const tempId = newContact.value.metadata?.id;
     let serverId: string | undefined;
 
@@ -225,8 +221,9 @@ export class ContactsStore extends SyncableGroup<Contact, ContactStore> {
     const newContact = new ContactStore(
       this.root,
       this.transport,
-      {} as Contact,
+      ContactStore.getDefaultValue(),
     );
+
     const tempId = newContact.value.id;
     const socialId = crypto.randomUUID();
 
@@ -276,7 +273,6 @@ export class ContactsStore extends SyncableGroup<Contact, ContactStore> {
       runInAction(() => {
         serverId = contact_CreateForOrganization.id;
         newContact.value.id = serverId;
-
         this.value.set(serverId, newContact);
         this.value.delete(tempId);
 
@@ -301,11 +297,6 @@ export class ContactsStore extends SyncableGroup<Contact, ContactStore> {
         if (serverId) {
           this.value.get(serverId)?.invalidate();
         }
-      }, 600);
-      setTimeout(() => {
-        if (serverId) {
-          this.value.get(serverId)?.invalidate();
-        }
       }, 2000);
     }
   }
@@ -324,7 +315,7 @@ export class ContactsStore extends SyncableGroup<Contact, ContactStore> {
     const newContact = new ContactStore(
       this.root,
       this.transport,
-      {} as Contact,
+      ContactStore.getDefaultValue(),
     );
     const tempId = newContact.value.id;
     const socialId = crypto.randomUUID();
@@ -352,7 +343,6 @@ export class ContactsStore extends SyncableGroup<Contact, ContactStore> {
         updatedAt: new Date().toISOString(),
       },
     ];
-
     this.value.set(tempId, newContact);
 
     try {
@@ -365,7 +355,6 @@ export class ContactsStore extends SyncableGroup<Contact, ContactStore> {
       runInAction(() => {
         serverId = contact_Create;
         newContact.value.id = serverId;
-
         this.value.set(serverId, newContact);
         this.value.delete(tempId);
 
@@ -384,11 +373,7 @@ export class ContactsStore extends SyncableGroup<Contact, ContactStore> {
       });
     } finally {
       serverId && options?.onSuccess?.(serverId);
-      setTimeout(() => {
-        if (serverId) {
-          this.value.get(serverId)?.invalidate();
-        }
-      }, 600);
+
       setTimeout(() => {
         if (serverId) {
           this.value.get(serverId)?.invalidate();
