@@ -41,6 +41,7 @@ class Transaction {
   ) {
     this.type = type;
     this.operation = operation;
+    this.syncOnly = this?.options?.syncOnly ?? false;
   }
 
   start() {

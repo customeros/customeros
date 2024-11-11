@@ -95,9 +95,11 @@ export class SyncableGroup<T extends object, TSyncable extends Syncable<T>> {
       },
     );
 
-    window.addEventListener('focus', async () => {
-      await this.getRecentChanges();
-    });
+    if (this.channelName) {
+      window.addEventListener('focus', async () => {
+        await this.getRecentChanges();
+      });
+    }
   }
 
   get channelName() {

@@ -98,6 +98,8 @@ export class ContactStore extends Syncable<Contact> {
     return this.root.organizations.value.get(this.organizationId)?.value;
   }
 
+  async getRecentChanges() {}
+
   setId(id: string) {
     this.value.id = id;
     this.value.metadata.id = id;

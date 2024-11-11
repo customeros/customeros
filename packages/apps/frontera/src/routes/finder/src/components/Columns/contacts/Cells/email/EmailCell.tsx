@@ -1,4 +1,4 @@
-import { useRef, useMemo, useState } from 'react';
+import { useRef, useState } from 'react';
 
 import { observer } from 'mobx-react-lite';
 
@@ -28,10 +28,6 @@ export const EmailCell = observer(
     const [isHovered, setIsHovered] = useState(false);
 
     const contactStore = store.contacts.value.get(contactId);
-    const oldEmail = useMemo(
-      () => contactStore?.value?.primaryEmail?.email,
-      [],
-    );
 
     const enrichedContact = contactStore?.value.enrichDetails;
 
@@ -210,7 +206,7 @@ export const EmailCell = observer(
                   if (idx !== -1) {
                     contactStore?.value.emails.splice(idx || 0, 1);
                   }
-                  contactStore?.updateEmail(oldEmail || '', idx);
+                  contactStore?.commit();
                 }}
               >
                 <div className='overflow-hidden text-ellipsis'>

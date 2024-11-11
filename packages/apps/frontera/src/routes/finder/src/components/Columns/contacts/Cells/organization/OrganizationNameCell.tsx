@@ -92,6 +92,7 @@ export const OrganizationNameCell = observer(
                     name: value.label,
                   } as Organization);
                 });
+                contactStore?.commit();
 
                 if (contactStore?.value.latestOrganizationWithJobRole) {
                   contactStore.value.latestOrganizationWithJobRole.organization =
@@ -104,8 +105,8 @@ export const OrganizationNameCell = observer(
                       name: value.label,
                     } as Organization;
                 }
-                contactStore?.linkOrganization(value.value);
                 setIsOpen(false);
+                contactStore?.commit({ syncOnly: true });
               }}
             />
           </PopoverContent>

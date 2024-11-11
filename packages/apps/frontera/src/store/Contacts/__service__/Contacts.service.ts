@@ -283,6 +283,16 @@ class ContactService {
     }
 
     match(path)
+      .with(['organizations', 'content', ...P.array()], () => {
+        if (type === 'add') {
+          this.linkOrganization({
+            input: {
+              contactId: contactId!,
+              organizationId: value.metadata.id,
+            },
+          });
+        }
+      })
       .with(['phoneNumbers', 0, ...P.array()], () => {
         if (type === 'add') {
           this.addPhoneNumber({
@@ -367,6 +377,16 @@ class ContactService {
               primary: true,
             },
             previousEmail: '',
+          });
+        }
+
+        if (type === 'delete') {
+          this.updateContactEmail({
+            contactId: contactId!,
+            input: {
+              email: '',
+            },
+            previousEmail: oldValue.email,
           });
         }
       })

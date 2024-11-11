@@ -234,6 +234,7 @@ export const ContactPreviewCard = observer(() => {
                 'latestOrganizationWithJobRole.jobRole.jobTitle',
                 jobRole?.jobTitle,
               );
+              contact.commit({ syncOnly: true });
             }}
             onChange={(e) => {
               const foundIndex = contact.value.jobRoles.findIndex(

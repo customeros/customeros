@@ -210,7 +210,7 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
                       onClick={() => {
                         contactStore?.value.emails.splice(idx, 1);
 
-                        contactStore?.updateEmail(email?.email ?? '');
+                        contactStore?.commit();
                       }}
                     >
                       <Archive className='text-gray-500 group-hover/archive-email:text-gray-700' />
