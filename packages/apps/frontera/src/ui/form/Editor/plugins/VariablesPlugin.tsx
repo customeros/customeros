@@ -144,7 +144,7 @@ function VariablesTypeaheadMenuItem({
       onMouseEnter={onMouseEnter}
       id={'variable-item-' + index}
       className={cn(
-        'flex gap-2 items-center text-start py-[6px] px-[10px] leading-[18px] text-gray-700  rounded-sm outline-none cursor-pointer hover:bg-gray-50 hover:rounded-md ',
+        'flex gap-2 items-center text-start py-[6px] px-[10px] text-sm text-gray-700 rounded-sm outline-none cursor-pointer hover:bg-gray-50 hover:rounded-md ',
         'data-[disabled]:opacity-50 data-[disabled]:cursor-not-allowed hover:data-[disabled]:bg-transparent',
         isSelected && 'bg-gray-50 text-gray-700',
       )}
@@ -169,7 +169,9 @@ export default function VariablesPlugin({
   });
 
   const _options = useMemo(() => {
-    const res = options.map((item) => new VariableTypeaheadOption(item));
+    const res = options
+      .sort((a, b) => a.localeCompare(b))
+      .map((item) => new VariableTypeaheadOption(item));
 
     if (queryString) {
       return res.filter((item) =>
