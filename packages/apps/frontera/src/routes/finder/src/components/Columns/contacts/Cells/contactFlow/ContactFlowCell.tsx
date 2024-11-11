@@ -107,7 +107,7 @@ export const ContactFlowCell = observer(
               data-test='flow-name'
               className='flex items-center overflow-x-hidden gap-2 overflow-ellipsis bg-gray-100 rounded-md px-1.5 truncate'
             >
-              {status && icons?.[status]}
+              <span className='flex'>{status && icons?.[status]}</span>
               <div className='truncate'>{contactFlows?.[0]?.value.name}</div>
             </div>{' '}
             {!!contactFlows?.length && contactFlows.length > 1 && (
