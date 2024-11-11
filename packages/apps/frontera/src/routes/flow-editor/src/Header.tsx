@@ -206,6 +206,8 @@ export const Header = observer(
             )}
             <FlowStatusMenu
               id={id}
+              hasUnsavedChanges={hasChanges}
+              onToggleHasChanges={onToggleHasChanges}
               handleOpenSettingsPanel={() => onToggleSidePanel(true)}
             />
             <IconButton

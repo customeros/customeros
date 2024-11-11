@@ -3,15 +3,15 @@ import React, { useRef } from 'react';
 import { observer } from 'mobx-react-lite';
 
 import { FlowStatus } from '@graphql/types';
+import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
-import { Button } from '@ui/form/Button/Button.tsx';
 import {
   Command,
   CommandCancelButton,
   CommandCancelIconButton,
 } from '@ui/overlay/CommandMenu';
 
-export const StopFlow = observer(() => {
+export const PauseFlow = observer(() => {
   const store = useStore();
   const context = store.ui.commandMenu.context;
   const flow = store.flows.value.get(context.ids?.[0]);
@@ -29,8 +29,7 @@ export const StopFlow = observer(() => {
 
       return f;
     });
-    store.ui.commandMenu.setOpen(false);
-    store.ui.commandMenu.clearCallback();
+    handleClose();
   };
 
   return (
@@ -38,38 +37,21 @@ export const StopFlow = observer(() => {
       <article className='relative w-full p-6 flex flex-col border-b border-b-gray-100'>
         <div className='flex items-center justify-between'>
           <h1 className='text-base font-semibold'>
-            Stop flow '{flow?.value.name}'?
+            Pause flow '{flow?.value.name}'?
           </h1>
           <CommandCancelIconButton onClose={handleClose} />
         </div>
 
-        {/* todo remove when bottom part is integrated with BE */}
+        {/* todo update when we support multiple record types*/}
         <p className='text-sm mt-2'>
-          You currently have {flow?.value?.contacts?.length}{' '}
-          {flow?.value?.contacts?.length === 1 ? 'contact' : 'contacts'} active
-          in this flow.
+          Pausing this flow will immediately stop all upcoming actions for
+          active contacts.
+          <p className='mt-2'>
+            You can resume the flow at any time and these contacts will continue
+            from their last completed step.
+          </p>
         </p>
-        {/* todo uncomment when be is ready */}
-        {/*<div>*/}
-        {/*  <label className='text-sm'>*/}
-        {/*    <div className='mb-2'>*/}
-        {/*      You currently have {} contacts active in this flow. How would you*/}
-        {/*      like to handle them?*/}
-        {/*    </div>*/}
-        {/*    <RadioGroup*/}
-        {/*      value={value}*/}
-        {/*      name='last-touchpoint-date-before'*/}
-        {/*      onValueChange={(val: 'my-view' | 'team-view') => setValue(val)}*/}
-        {/*    >*/}
-        {/*      <Radio value={'pause'}>*/}
-        {/*        <span className='text-sm'>Pause and resume them later</span>*/}
-        {/*      </Radio>*/}
-        {/*      <Radio value={'end'}>*/}
-        {/*        <span className='text-sm'>End them early</span>*/}
-        {/*      </Radio>*/}
-        {/*    </RadioGroup>*/}
-        {/*  </label>*/}
-        {/*</div>*/}
+
         <div className='flex justify-between gap-3 mt-6'>
           <CommandCancelButton onClose={handleClose} />
 
@@ -87,7 +69,7 @@ export const StopFlow = observer(() => {
               }
             }}
           >
-            Stop flow
+            Pause flow
           </Button>
         </div>
       </article>

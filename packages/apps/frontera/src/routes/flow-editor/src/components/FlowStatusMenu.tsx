@@ -11,23 +11,30 @@ import { Spinner } from '@ui/feedback/Spinner';
 import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
 import { DotLive } from '@ui/media/icons/DotLive';
-import { StopCircle } from '@ui/media/icons/StopCircle';
-import { Tooltip } from '@ui/overlay/Tooltip/Tooltip.tsx';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
+import { PauseCircle } from '@ui/media/icons/PauseCircle';
 import { Tag, TagLabel, TagLeftIcon } from '@ui/presentation/Tag';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
 
 interface FlowStatusMenuSelectProps {
   id: string;
+  hasUnsavedChanges: boolean;
   handleOpenSettingsPanel: () => void;
+  onToggleHasChanges: (test: boolean) => void;
 }
 
 export const FlowStatusMenu = observer(
-  ({ id, handleOpenSettingsPanel }: FlowStatusMenuSelectProps) => {
+  ({
+    id,
+    handleOpenSettingsPanel,
+    hasUnsavedChanges,
+    onToggleHasChanges,
+  }: FlowStatusMenuSelectProps) => {
     const store = useStore();
 
     const flow = store.flows.value.get(id);
     const status = flow?.value.status;
-    const { getNodes } = useReactFlow();
+    const { getNodes, getEdges } = useReactFlow();
 
     const showValidationMessage = (
       meta: (typeof ValidationMessage)[keyof typeof ValidationMessage],
@@ -76,10 +83,8 @@ export const FlowStatusMenu = observer(
       if (
         hasEmailSteps &&
         hasLinkedInSteps &&
-        senders.every(
-          (sender) =>
-            !sender || !sender?.mailboxes.length || !sender?.hasLinkedInToken,
-        )
+        senders.every((sender) => !sender || !sender?.mailboxes.length) &&
+        senders.every((sender) => !sender || !sender?.hasLinkedInToken)
       ) {
         showValidationMessage(
           ValidationMessage.NO_MAILBOXES_AND_LINKEDIN,
@@ -110,12 +115,51 @@ export const FlowStatusMenu = observer(
       return false;
     };
 
+    const saveChangesAndActivateFlow = () => {
+      const nodes = getNodes();
+      const edges = getEdges();
+
+      flow?.updateFlow(
+        {
+          nodes: JSON.stringify(nodes),
+          edges: JSON.stringify(edges),
+        },
+        {
+          onSuccess: () => {
+            onToggleHasChanges(false);
+            flow?.update((f) => {
+              f.status = FlowStatus.Scheduling;
+
+              return f;
+            });
+          },
+          onError: () => {
+            onToggleHasChanges(true);
+            store.ui.toastError(
+              'Failed to save changes',
+              'failed-save-changes',
+            );
+          },
+        },
+      );
+    };
+
     const handleStartFlow = () => {
       const hasErrors = handleFlowValidation();
 
       if (hasErrors) return;
 
-      store.ui.commandMenu.toggle('StartFlow');
+      if (hasUnsavedChanges) {
+        store.ui.commandMenu.setCallback(saveChangesAndActivateFlow);
+      }
+
+      store.ui.commandMenu.toggle('StartFlow', {
+        ...store.ui.commandMenu.context,
+        meta: {
+          type: status,
+          hasUnsavedChanges,
+        },
+      });
     };
 
     if (status !== FlowStatus.Active) {
@@ -133,9 +177,11 @@ export const FlowStatusMenu = observer(
               variant='outline'
               leftIcon={<Play />}
               dataTest='start-flow'
-              onClick={handleStartFlow}
               loadingText='Scheduling...'
               isLoading={status === FlowStatus.Scheduling}
+              onClick={() => {
+                handleStartFlow();
+              }}
               colorScheme={
                 status === FlowStatus.Scheduling ? 'gray' : 'primary'
               }
@@ -151,7 +197,7 @@ export const FlowStatusMenu = observer(
                 />
               }
             >
-              Start flow
+              {status === FlowStatus.Paused ? 'Resume flow' : 'Start flow'}
             </Button>
           </div>
         </Tooltip>
@@ -182,10 +228,10 @@ export const FlowStatusMenu = observer(
             <MenuItem
               className='flex items-center '
               data-test='stop-flow-menu-button'
-              onClick={() => store.ui.commandMenu.toggle('StopFlow')}
+              onClick={() => store.ui.commandMenu.toggle('PauseFlow')}
             >
-              <StopCircle className='mr-1 text-gray-500' />
-              Stop flow...
+              <PauseCircle className='mr-1 text-gray-500' />
+              Pause flow...
             </MenuItem>
           </MenuList>
         </Menu>
@@ -220,5 +266,10 @@ const ValidationMessage = {
     description:
       'To start this flow, add the CustomerOS LinkedIn browser extension to a sender',
     buttonText: 'Go to flow settings',
+  },
+  HAS_UNSAVED_CHANGES: {
+    title: 'You have unsaved changes',
+    description: '',
+    buttonText: 'Save changes',
   },
 };

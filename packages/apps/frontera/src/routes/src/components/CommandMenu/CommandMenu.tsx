@@ -23,7 +23,7 @@ import {
 import {
   FlowHub,
   EditName,
-  StopFlow,
+  PauseFlow,
   GlobalHub,
   EditEmail,
   StartFlow,
@@ -127,7 +127,7 @@ const Commands: Record<CommandMenuType, ReactElement> = {
   FlowsBulkCommands: <FlowsBulkCommands />,
   FlowCommands: <FlowsCommands />,
   StartFlow: <StartFlow />,
-  StopFlow: <StopFlow />,
+  PauseFlow: <PauseFlow />,
   CreateNewFlow: <CreateNewFlow />,
   RenameFlow: <RenameFlow />,
   ChangeFlowStatus: <ChangeFlowStatus />,
