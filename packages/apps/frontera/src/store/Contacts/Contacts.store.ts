@@ -2,8 +2,10 @@ import { RootStore } from '@store/root';
 import { Transport } from '@store/transport';
 import { SyncableGroup } from '@store/syncable-group';
 import {
+  when,
   action,
   override,
+  computed,
   observable,
   runInAction,
   makeObservable,
@@ -32,9 +34,33 @@ export class ContactsStore extends SyncableGroup<Contact, ContactStore> {
       totalElements: observable,
       create: action.bound,
       channelName: override,
+      isFullyLoaded: computed,
       archive: action.bound,
       delete: action.bound,
     });
+
+    when(
+      () =>
+        this.isBootstrapped &&
+        this.totalElements > 0 &&
+        this.totalElements !== this.value.size &&
+        !this.root.demoMode,
+      async () => {
+        await this.bootstrapRest();
+      },
+    );
+
+    when(
+      () => this.isBootstrapped && this.totalElements === this.value.size,
+      () => {
+        this.isFullyLoaded && (this.isLoading = false);
+        this.isLoading = false;
+      },
+    );
+  }
+
+  get isFullyLoaded() {
+    return this.totalElements === this.value.size;
   }
 
   get channelName() {
