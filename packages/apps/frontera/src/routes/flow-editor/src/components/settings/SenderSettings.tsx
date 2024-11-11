@@ -50,7 +50,7 @@ export const SenderSettings = observer(
           <SenderDropdown flowId={id} />
         </div>
         <Divider />
-        <div className='flex flex-col gap-1'>
+        <div className='flex flex-col gap-2'>
           <h3 className='text-sm font-medium'>Send schedule</h3>
           <p className='text-sm'>
             Messages will be sent on week days between 8am and 7pm using the
