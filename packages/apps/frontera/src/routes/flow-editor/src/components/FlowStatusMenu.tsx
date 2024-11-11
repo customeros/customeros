@@ -95,7 +95,7 @@ export const FlowStatusMenu = observer(
       ) {
         showValidationMessage(ValidationMessage.NO_MAILBOXES, true);
 
-        return;
+        return true;
       }
 
       if (
