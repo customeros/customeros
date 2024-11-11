@@ -26,6 +26,7 @@ const (
 	//Deprecated
 	OrganizationLinkDomainV1   = "V1_ORGANIZATION_LINK_DOMAIN"
 	OrganizationUnlinkDomainV1 = "V1_ORGANIZATION_UNLINK_DOMAIN"
+	//Deprecated
 	OrganizationAddSocialV1    = "V1_ORGANIZATION_ADD_SOCIAL"
 	OrganizationRemoveSocialV1 = "V1_ORGANIZATION_REMOVE_SOCIAL"
 	//Deprecated

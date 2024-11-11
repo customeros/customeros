@@ -14,7 +14,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/mocked_grpc"
-	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	eventcompletionpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/event_completion"
@@ -60,112 +59,6 @@ func TestGraphOrganizationEventHandler_OnOrganizationShow(t *testing.T) {
 	require.Equal(t, false, organization.Hide)
 	require.NotEqual(t, "", organization.CustomerOsId)
 	require.True(t, regexp.MustCompile(customerOsIdPattern).MatchString(organization.CustomerOsId), "Valid CustomerOsId should match the format")
-}
-
-func TestGraphOrganizationEventHandler_OnSocialAddedToOrganization_New(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx, testDatabase)(t)
-
-	socialId := uuid.New().String()
-	socialUrl := "https://www.facebook.com/organization"
-	now := utils.Now()
-	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{
-		Name: "test org",
-	})
-	neo4jtest.CreateSocial(ctx, testDatabase.Driver, tenantName, neo4jentity.SocialEntity{
-		Url: socialUrl,
-	})
-	orgEventHandler := &OrganizationEventHandler{
-		services:    testDatabase.Services,
-		grpcClients: testMockedGrpcClient,
-	}
-	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
-
-	sourceFields := commonEvents.Source{
-		Source:        constants.SourceOpenline,
-		SourceOfTruth: constants.SourceOpenline,
-		AppSource:     constants.AppSourceEventProcessingPlatformSubscribers,
-	}
-	event, err := events.NewOrganizationAddSocialEvent(orgAggregate, socialId, socialUrl, "alias", "ext-1", int64(123), sourceFields, now)
-	require.Nil(t, err)
-	err = orgEventHandler.OnSocialAddedToOrganization(context.Background(), event)
-	require.Nil(t, err)
-
-	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Organization": 1, "Organization_" + tenantName: 1, "Social": 2, "Social_" + tenantName: 2})
-	neo4jtest.AssertNeo4jLabels(ctx, t, testDatabase.Driver, []string{"Organization", "Organization_" + tenantName, "Tenant", "Social", "Social_" + tenantName})
-
-	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Social_"+tenantName, socialId)
-	require.Nil(t, err)
-	require.NotNil(t, dbNode)
-
-	social := neo4jmapper.MapDbNodeToSocialEntity(dbNode)
-	require.Equal(t, socialId, social.Id)
-	require.Equal(t, socialUrl, social.Url)
-	require.Equal(t, "alias", social.Alias)
-	require.Equal(t, "ext-1", social.ExternalId)
-	require.Equal(t, int64(123), social.FollowersCount)
-	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), social.Source)
-	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, social.AppSource)
-	require.Equal(t, now, social.CreatedAt)
-	test.AssertRecentTime(t, social.UpdatedAt)
-}
-
-func TestGraphOrganizationEventHandler_OnSocialAddedToOrganization_SocialUrlAlreadyExistsForOrg(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx, testDatabase)(t)
-
-	socialUrl := "https://www.facebook.com/organization"
-	now := utils.Now()
-	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{
-		Name: "test org",
-	})
-	existingSocialId := neo4jtest.CreateSocial(ctx, testDatabase.Driver, tenantName, neo4jentity.SocialEntity{
-		Url:            socialUrl,
-		Alias:          "existing alias",
-		ExternalId:     "ext-1",
-		FollowersCount: int64(5),
-	})
-	neo4jt.LinkSocial(ctx, testDatabase.Driver, existingSocialId, orgId)
-
-	orgEventHandler := &OrganizationEventHandler{
-		services:    testDatabase.Services,
-		grpcClients: testMockedGrpcClient,
-	}
-	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
-
-	// prepare grpc mock
-	callbacks := mocked_grpc.MockEventCompletionCallbacks{
-		NotifyEventProcessed: func(context context.Context, org *eventcompletionpb.NotifyEventProcessedRequest) (*emptypb.Empty, error) {
-			return &emptypb.Empty{}, nil
-		},
-	}
-	mocked_grpc.SetEventCompletionServiceCallbacks(&callbacks)
-
-	sourceFields := commonEvents.Source{
-		Source:        constants.SourceOpenline,
-		SourceOfTruth: constants.SourceOpenline,
-		AppSource:     constants.AppSourceEventProcessingPlatformSubscribers,
-	}
-	event, err := events.NewOrganizationAddSocialEvent(orgAggregate, existingSocialId, socialUrl, "alias", "ext-1", int64(100), sourceFields, now)
-	require.Nil(t, err)
-	err = orgEventHandler.OnSocialAddedToOrganization(context.Background(), event)
-	require.Nil(t, err)
-
-	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Organization": 1, "Organization_" + tenantName: 1, "Social": 1, "Social_" + tenantName: 1})
-	neo4jtest.AssertNeo4jLabels(ctx, t, testDatabase.Driver, []string{"Organization", "Organization_" + tenantName, "Tenant", "Social", "Social_" + tenantName})
-
-	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Social_"+tenantName, existingSocialId)
-	require.Nil(t, err)
-	require.NotNil(t, dbNode)
-
-	social := neo4jmapper.MapDbNodeToSocialEntity(dbNode)
-	require.Equal(t, existingSocialId, social.Id)
-	require.Equal(t, socialUrl, social.Url)
-	require.Equal(t, "alias", social.Alias)
-	require.Equal(t, "ext-1", social.ExternalId)
-	require.Equal(t, int64(100), social.FollowersCount)
 }
 
 func TestGraphOrganizationEventHandler_OnLocationLinkedToOrganization(t *testing.T) {

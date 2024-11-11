@@ -465,43 +465,6 @@ func (h *OrganizationEventHandler) OnDomainUnlinkedFromOrganization(ctx context.
 	return nil
 }
 
-func (h *OrganizationEventHandler) OnSocialAddedToOrganization(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnSocialAddedToOrganization")
-	defer span.Finish()
-	setEventSpanTagsAndLogFields(span, evt)
-
-	var eventData events.OrganizationAddSocialEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "evt.GetJsonData")
-	}
-	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
-	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
-	span.SetTag(tracing.SpanTagEntityId, organizationId)
-
-	data := neo4jrepository.SocialFields{
-		SocialId:       eventData.SocialId,
-		Url:            eventData.Url,
-		Alias:          eventData.Alias,
-		ExternalId:     eventData.ExternalId,
-		FollowersCount: eventData.FollowersCount,
-		CreatedAt:      eventData.CreatedAt,
-		SourceFields: neo4jmodel.SourceFields{
-			Source:        helper.GetSource(eventData.Source),
-			SourceOfTruth: helper.GetSource(eventData.SourceOfTruth),
-			AppSource:     helper.GetSource(eventData.AppSource),
-		},
-	}
-	err := h.services.CommonServices.Neo4jRepositories.SocialWriteRepository.MergeSocialForEntity(ctx, eventData.Tenant, organizationId, commonmodel.NodeLabelOrganization, data)
-	if err != nil {
-		tracing.TraceErr(span, err)
-	}
-
-	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, h.grpcClients, utils.NewEventCompletedDetails().WithUpdate())
-
-	return nil
-}
-
 func (h *OrganizationEventHandler) OnSocialRemovedFromOrganization(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnSocialRemovedFromOrganization")
 	defer span.Finish()

@@ -274,19 +274,6 @@ enum OnboardingStatus {
   ONBOARDING_STATUS_SUCCESSFUL = 6;
 }
 
-message AddSocialGrpcRequest {
-  string tenant = 1;
-  string organizationId = 2;
-  string loggedInUserId = 3;
-  SourceFields sourceFields = 4;
-  string socialId = 5;
-  string url = 6;
-  google.protobuf.Timestamp  createdAt = 7;
-  string alias = 9;
-  int64 followersCount = 10;
-  string externalId = 11;
-}
-
 message RemoveSocialGrpcRequest {
   string tenant = 1;
   string organizationId = 2;
@@ -381,7 +368,6 @@ service organizationGrpcService {
   rpc RemoveParentOrganization(RemoveParentOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc UpdateOnboardingStatus(UpdateOnboardingStatusGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc UpdateOrganization(UpdateOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
-  rpc AddSocial(AddSocialGrpcRequest) returns (SocialIdGrpcResponse);
   rpc RemoveSocial(RemoveSocialGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc UpdateOrganizationOwner(UpdateOrganizationOwnerGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc CreateBillingProfile(CreateBillingProfileGrpcRequest) returns (BillingProfileIdGrpcResponse);

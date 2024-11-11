@@ -214,6 +214,7 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		logentryevents.LogEntryRemoveTagV1,
 		invoiceevents.InvoiceUpdateV1,
 		contractevent.ContractCreateV1,
+		orgevents.OrganizationAddSocialV1,
 		contractevent.ContractUpdateV1:
 
 		return nil
@@ -272,9 +273,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return nil
 	case orgevents.OrganizationUnlinkDomainV1:
 		_ = s.organizationEventHandler.OnDomainUnlinkedFromOrganization(ctx, evt)
-		return nil
-	case orgevents.OrganizationAddSocialV1:
-		_ = s.organizationEventHandler.OnSocialAddedToOrganization(ctx, evt)
 		return nil
 	case orgevents.OrganizationRemoveSocialV1:
 		_ = s.organizationEventHandler.OnSocialRemovedFromOrganization(ctx, evt)

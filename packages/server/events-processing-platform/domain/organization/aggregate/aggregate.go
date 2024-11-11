@@ -42,8 +42,6 @@ func (a *OrganizationAggregate) HandleGRPCRequest(ctx context.Context, request a
 	switch r := request.(type) {
 	case *organizationpb.UnLinkDomainFromOrganizationGrpcRequest:
 		return nil, a.unlinkDomain(ctx, r)
-	case *organizationpb.AddSocialGrpcRequest:
-		return a.addSocial(ctx, r)
 	case *organizationpb.RemoveSocialGrpcRequest:
 		return nil, a.removeSocial(ctx, r)
 	case *organizationpb.OrganizationAddLocationGrpcRequest:
@@ -52,42 +50,6 @@ func (a *OrganizationAggregate) HandleGRPCRequest(ctx context.Context, request a
 		tracing.TraceErr(span, eventstore.ErrInvalidRequestType)
 		return nil, eventstore.ErrInvalidRequestType
 	}
-}
-
-func (a *OrganizationAggregate) addSocial(ctx context.Context, request *organizationpb.AddSocialGrpcRequest) (string, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.addSocial")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
-	tracing.LogObjectAsJson(span, "request", request)
-
-	createdAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.CreatedAt), utils.Now())
-
-	sourceFields := common.Source{}
-	sourceFields.FromGrpc(request.SourceFields)
-	sourceFields.SetDefaultValues()
-
-	socialId := request.SocialId
-	if request.Url != "" && socialId == "" {
-		if existingSocialId := a.Organization.GetSocialIdForUrl(request.Url); existingSocialId != "" {
-			socialId = existingSocialId
-		}
-	}
-	socialId = utils.NewUUIDIfEmpty(socialId)
-
-	event, err := organizationEvents.NewOrganizationAddSocialEvent(a, socialId, request.Url, request.Alias, request.ExternalId, request.FollowersCount, sourceFields, createdAtNotNil)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return "", errors.Wrap(err, "NewOrganizationAddSocialEvent")
-	}
-	eventstore.EnrichEventWithMetadataExtended(&event, span, eventstore.EventMetadata{
-		Tenant: a.GetTenant(),
-		UserId: request.LoggedInUserId,
-		App:    sourceFields.AppSource,
-	})
-
-	return socialId, a.Apply(event)
 }
 
 func (a *OrganizationAggregate) removeSocial(ctx context.Context, request *organizationpb.RemoveSocialGrpcRequest) error {
@@ -220,9 +182,9 @@ func (a *OrganizationAggregate) When(event eventstore.Event) error {
 	case organizationEvents.OrganizationUnlinkDomainV1:
 		return nil
 	case organizationEvents.OrganizationAddSocialV1:
-		return a.onAddSocial(event)
+		return nil
 	case organizationEvents.OrganizationRemoveSocialV1:
-		return a.onRemoveSocial(event)
+		return nil
 	case organizationEvents.OrganizationShowV1:
 		return a.onShow(event)
 	case organizationEvents.OrganizationUpsertCustomFieldV1:
@@ -527,35 +489,6 @@ func (a *OrganizationAggregate) onLocationLink(event eventstore.Event) error {
 		return errors.Wrap(err, "GetJsonData")
 	}
 	a.Organization.LocationIds = utils.AddToListIfNotExists(a.Organization.LocationIds, eventData.LocationId)
-	return nil
-}
-
-func (a *OrganizationAggregate) onAddSocial(event eventstore.Event) error {
-	var eventData organizationEvents.OrganizationAddSocialEvent
-	if err := event.GetJsonData(&eventData); err != nil {
-		return errors.Wrap(err, "GetJsonData")
-	}
-	if a.Organization.Socials == nil {
-		a.Organization.Socials = make(map[string]common.Social)
-	}
-	a.Organization.Socials[eventData.SocialId] = common.Social{
-		Url:            eventData.Url,
-		Alias:          eventData.Alias,
-		ExternalId:     eventData.ExternalId,
-		FollowersCount: eventData.FollowersCount,
-	}
-	return nil
-}
-
-func (a *OrganizationAggregate) onRemoveSocial(event eventstore.Event) error {
-	var eventData organizationEvents.OrganizationAddSocialEvent
-	if err := event.GetJsonData(&eventData); err != nil {
-		return errors.Wrap(err, "GetJsonData")
-	}
-	if a.Organization.Socials == nil {
-		a.Organization.Socials = make(map[string]common.Social)
-	}
-	delete(a.Organization.Socials, eventData.SocialId)
 	return nil
 }
 
