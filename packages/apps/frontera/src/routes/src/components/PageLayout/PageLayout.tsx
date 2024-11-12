@@ -96,7 +96,7 @@ export const PageLayout = ({
           width: isDragging ? '14rem' : '3px',
         }}
         className={cn(
-          'absolute top-0 left-0 h-full z-10 hover:bg-transparent  transition-colors hover:w-[1px]',
+          'absolute top-0 left-0 h-full z-10 hover:bg-transparent transition-colors hover:w-[1px]',
           {
             'border-l': isDragging,
             'hover:border-l cursor-col-resize': isResizable,
