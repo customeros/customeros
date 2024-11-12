@@ -187,6 +187,7 @@ input TableViewDefCreateInput {
     icon: String!
     columns: [ColumnViewInput!]!
     filters: String!
+    defaultFilters: String!
     sorting: String!
     isPreset: Boolean!
     isShared: Boolean!

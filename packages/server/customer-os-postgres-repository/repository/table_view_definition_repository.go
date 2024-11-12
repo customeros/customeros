@@ -113,13 +113,14 @@ func (t tableViewDefinitionRepository) UpdateTableViewDefinition(ctx context.Con
 	// Update the record
 	// Map the fields you want to allow updating, excluding UserId and TenantName
 	updateData := map[string]interface{}{
-		"table_name": viewDefinition.Name,
-		"position":   viewDefinition.Order,
-		"icon":       viewDefinition.Icon,
-		"filters":    viewDefinition.Filters,
-		"sorting":    viewDefinition.Sorting,
-		"columns":    viewDefinition.ColumnsJson,
-		"updated_at": utils.Now(),
+		"table_name":      viewDefinition.Name,
+		"position":        viewDefinition.Order,
+		"icon":            viewDefinition.Icon,
+		"filters":         viewDefinition.Filters,
+		"default_filters": viewDefinition.DefaultFilters,
+		"sorting":         viewDefinition.Sorting,
+		"columns":         viewDefinition.ColumnsJson,
+		"updated_at":      utils.Now(),
 	}
 
 	err = t.gormDb.Model(&existing).Updates(updateData).Error

@@ -2493,16 +2493,17 @@ func (TableViewDef) IsNode()            {}
 func (this TableViewDef) GetID() string { return this.ID }
 
 type TableViewDefCreateInput struct {
-	TableType TableViewType      `json:"tableType"`
-	TableID   TableIDType        `json:"tableId"`
-	Name      string             `json:"name"`
-	Order     int                `json:"order"`
-	Icon      string             `json:"icon"`
-	Columns   []*ColumnViewInput `json:"columns"`
-	Filters   string             `json:"filters"`
-	Sorting   string             `json:"sorting"`
-	IsPreset  bool               `json:"isPreset"`
-	IsShared  bool               `json:"isShared"`
+	TableType      TableViewType      `json:"tableType"`
+	TableID        TableIDType        `json:"tableId"`
+	Name           string             `json:"name"`
+	Order          int                `json:"order"`
+	Icon           string             `json:"icon"`
+	Columns        []*ColumnViewInput `json:"columns"`
+	Filters        string             `json:"filters"`
+	DefaultFilters string             `json:"defaultFilters"`
+	Sorting        string             `json:"sorting"`
+	IsPreset       bool               `json:"isPreset"`
+	IsShared       bool               `json:"isShared"`
 }
 
 type TableViewDefUpdateInput struct {
