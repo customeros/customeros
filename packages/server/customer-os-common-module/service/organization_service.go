@@ -39,6 +39,7 @@ type OrganizationService interface {
 	GetMergedOrganizationIds(ctx context.Context, mergedAfter time.Time) ([]string, error)
 	RequestRefreshLastTouchpoint(ctx context.Context, organizationId string) error
 	RefreshLastTouchpoint(ctx context.Context, organizationId string) error
+	CheckOrganizationExistsWithEmail(ctx context.Context, email string) (bool, string, error)
 }
 
 type organizationService struct {

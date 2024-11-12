@@ -68,6 +68,31 @@ func (s *emailService) Merge(ctx context.Context, tenant string, emailFields Ema
 		return nil, nil
 	}
 
+	// check if email exists for linked entity
+	if linkWith != nil {
+		if linkWith.Type == commonmodel.CONTACT {
+			emailUsed, existingContactId, err := s.services.ContactService.CheckContactExistsWithEmail(ctx, emailFields.Email)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return nil, err
+			}
+			if emailUsed {
+				err = errors.Errorf("email %s already used by contact %s", emailFields.Email, existingContactId)
+				return nil, err
+			}
+		} else if linkWith.Type == commonmodel.ORGANIZATION {
+			emailUsed, existingOrganizationIdId, err := s.services.OrganizationService.CheckOrganizationExistsWithEmail(ctx, emailFields.Email)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return nil, err
+			}
+			if emailUsed {
+				err = errors.Errorf("email %s already used by organization %s", emailFields.Email, existingOrganizationIdId)
+				return nil, err
+			}
+		}
+	}
+
 	// check if email already exists
 	emailId, err = s.services.Neo4jRepositories.EmailReadRepository.GetEmailIdIfExists(ctx, tenant, emailFields.Email)
 	if err != nil {
@@ -164,6 +189,29 @@ func (s *emailService) ReplaceEmail(ctx context.Context, previousEmail string, e
 	if previousEmail == emailFields.Email {
 		span.LogFields(log.Bool("email.same", true))
 		return nil, nil
+	}
+
+	// check if email exists for linked entity
+	if linkWith.Type == commonmodel.CONTACT {
+		emailUsed, existingContactId, err := s.services.ContactService.CheckContactExistsWithEmail(ctx, emailFields.Email)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+		if emailUsed {
+			err = errors.Errorf("email %s already used by contact %s", emailFields.Email, existingContactId)
+			return nil, err
+		}
+	} else if linkWith.Type == commonmodel.ORGANIZATION {
+		emailUsed, existingOrganizationIdId, err := s.services.OrganizationService.CheckOrganizationExistsWithEmail(ctx, emailFields.Email)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+		if emailUsed {
+			err = errors.Errorf("email %s already used by organization %s", emailFields.Email, existingOrganizationIdId)
+			return nil, err
+		}
 	}
 
 	if previousEmail != "" {
