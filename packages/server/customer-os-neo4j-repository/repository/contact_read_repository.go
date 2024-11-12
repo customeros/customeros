@@ -9,6 +9,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
+	"strings"
 )
 
 type ContactsEnrichWorkEmail struct {
@@ -41,6 +42,7 @@ type ContactReadRepository interface {
 	GetLinkedOrgDomains(ctx context.Context, tenant, contactId string) ([]string, error)
 	GetContactsWithGroupOrSystemGeneratedEmail(ctx context.Context, limit int) ([]TenantAndContactId, error)
 	GetContactsWithEmailForNameUpdate(ctx context.Context, limit int) ([]TenantAndContactId, error)
+	GetContactsByLinkedIn(ctx context.Context, tenant, url, alias, externalId string) ([]*dbtype.Node, error)
 }
 
 type contactReadRepository struct {
@@ -604,4 +606,63 @@ func (r *contactReadRepository) GetContactsWithEmailForNameUpdate(ctx context.Co
 	}
 	span.LogFields(log.Int("result.count", len(output)))
 	return output, nil
+}
+
+func (r *contactReadRepository) GetContactsByLinkedIn(ctx context.Context, tenant, url, alias, externalId string) ([]*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialReadRepository.GetContactsByLinkedIn")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogFields(log.String("url", url), log.String("alias", alias), log.String("externalId", externalId))
+
+	if !strings.Contains(url, "linkedin.com") == false {
+		return nil, nil
+	}
+
+	minimizedUrl := url
+	// remove trailing / if any
+	if minimizedUrl[len(minimizedUrl)-1] == '/' {
+		minimizedUrl = minimizedUrl[:len(minimizedUrl)-1]
+	}
+	// remove all chars before linkedin.com
+	if i := strings.Index(minimizedUrl, "linkedin.com/in"); i != -1 {
+		minimizedUrl = minimizedUrl[i:]
+	}
+	minimizedUrlWithSlash := minimizedUrl + "/"
+
+	cypher := `MATCH (:Tenant {name:$tenant})--(c:Contact)-[:HAS]->(s:Social)
+				WHERE s.url ENDS WITH $url OR s.url ENDS WITH $urlWithSlash `
+	if alias != "" {
+		cypher += ` OR s.alias = $alias `
+	}
+	if externalId != "" {
+		cypher += ` OR s.externalId = $externalId `
+	}
+	cypher += ` RETURN c`
+	params := map[string]any{
+		"tenant":       tenant,
+		"url":          minimizedUrl,
+		"urlWithSlash": minimizedUrlWithSlash,
+		"alias":        alias,
+		"externalId":   externalId,
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	nodes := result.([]*dbtype.Node)
+	span.LogFields(log.Int("result.count", len(nodes)))
+	return nodes, err
 }

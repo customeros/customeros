@@ -557,12 +557,12 @@ func (r *organizationReadRepository) GetOrganizationBySocialUrl(ctx context.Cont
 }
 
 func (r *organizationReadRepository) GetOrganizationsByLinkedIn(ctx context.Context, tenant, url, alias string) ([]*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialReadRepository.GetOrganizationsByLinkedIn")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganizationsByLinkedIn")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("url", url), log.String("alias", alias))
 
-	if url == "" {
+	if !strings.Contains(url, "linkedin.com") == false {
 		return nil, nil
 	}
 
@@ -575,17 +575,19 @@ func (r *organizationReadRepository) GetOrganizationsByLinkedIn(ctx context.Cont
 	if i := strings.Index(minimizedUrl, "linkedin.com/company"); i != -1 {
 		minimizedUrl = minimizedUrl[i:]
 	}
+	minimizedUrlWithSlash := minimizedUrl + "/"
 
 	cypher := `MATCH (:Tenant {name:$tenant})--(o:Organization)-[:HAS]->(s:Social)
-				WHERE s.url CONTAINS $url  `
+				WHERE s.url ENDS WITH $url OR s.url ENDS WITH $urlWithSlash `
 	if alias != "" {
 		cypher += ` OR s.alias = $alias `
 	}
 	cypher += ` RETURN o`
 	params := map[string]any{
-		"tenant": tenant,
-		"url":    minimizedUrl,
-		"alias":  alias,
+		"tenant":       tenant,
+		"url":          minimizedUrl,
+		"urlWithSlash": minimizedUrlWithSlash,
+		"alias":        alias,
 	}
 
 	span.LogFields(log.String("cypher", cypher))

@@ -63,3 +63,29 @@ func (s SocialEntity) ExtractLinkedinCompanyIdentifierFromUrl() string {
 	}
 	return identifier
 }
+
+func (s SocialEntity) ExtractLinkedinPersonIdentifierFromUrl() string {
+	if !s.IsLinkedin() {
+		return ""
+	}
+
+	identifier := s.Url
+
+	// trim trailing / from url
+	identifier = strings.TrimSuffix(s.Url, "/")
+
+	// remove all chars before linkedin.com/company
+	if i := strings.Index(identifier, "linkedin.com/in"); i != -1 {
+		identifier = identifier[i:]
+	}
+
+	if strings.HasPrefix(identifier, "linkedin.com/in") {
+		// get last part of url
+		parts := strings.Split(identifier, "/")
+		identifier = parts[len(parts)-1]
+		if identifier == "in" {
+			identifier = ""
+		}
+	}
+	return identifier
+}
