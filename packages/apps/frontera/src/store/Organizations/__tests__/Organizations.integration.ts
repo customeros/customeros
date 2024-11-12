@@ -3,6 +3,7 @@ import { it, expect, describe } from 'vitest';
 import { OnboardingStatus, SortingDirection } from '@graphql/types';
 
 import { Transport } from '../../transport';
+import { trackOrganization } from './organizationsTestState';
 import { OrganizationsService } from '../__service__/Organizations.service';
 
 const transport = new Transport();
@@ -36,6 +37,8 @@ describe('OrganizationsService - Integration Tests', () => {
       input: { name: organization_name },
     });
 
+    trackOrganization(organization_Save.metadata.id);
+
     const sleep = (ms: number) =>
       new Promise((resolve) => setTimeout(resolve, ms));
     const maxRetries = 3;
@@ -43,7 +46,7 @@ describe('OrganizationsService - Integration Tests', () => {
     let organization;
     let assertionsPassed = false;
 
-    await sleep(500);
+    await sleep(1000);
 
     while (retries < maxRetries && !assertionsPassed) {
       try {
@@ -126,7 +129,7 @@ describe('OrganizationsService - Integration Tests', () => {
         retries++;
 
         if (retries < maxRetries) {
-          await sleep(500);
+          await sleep(1000);
         } else {
           throw error;
         }
@@ -140,6 +143,8 @@ describe('OrganizationsService - Integration Tests', () => {
     const { organization_Save } = await organizationsService.saveOrganization({
       input: { name: organization_name },
     });
+
+    trackOrganization(organization_Save.metadata.id);
 
     await organizationsService.addTag({
       input: {
@@ -185,6 +190,8 @@ describe('OrganizationsService - Integration Tests', () => {
       input: { name: organization_name },
     });
 
+    trackOrganization(organization_Save.metadata.id);
+
     const { organization_AddSocial } = await organizationsService.addSocial({
       organizationId: organization_Save.metadata.id,
       input: {
@@ -204,22 +211,6 @@ describe('OrganizationsService - Integration Tests', () => {
 
     const organization_subsequent_social_url =
       'www.IT_' + crypto.randomUUID() + '.com';
-
-    // console.log(
-    //   'organization_initial_social_url:',
-    //   organization_initial_social_url,
-    // );
-    // console.log(
-    //   'organization_subsequent_social_url:',
-    //   organization_subsequent_social_url,
-    // );
-    // console.log('organization_name:', organization_name);
-    // await service.updateSocial({
-    //   input: {
-    //     id: organization_Save.metadata.id,
-    //     url: organization_subsequent_social_url,
-    //   },
-    // });
 
     organization = await organizationsService.getOrganization(
       organization_Save.metadata.id,
@@ -247,11 +238,16 @@ describe('OrganizationsService - Integration Tests', () => {
     const parent_organization = await organizationsService.saveOrganization({
       input: { name: parent_organization_name },
     });
+
+    trackOrganization(parent_organization.organization_Save.metadata.id);
+
     const subsidiary_organization = await organizationsService.saveOrganization(
       {
         input: { name: subsidiary_organization_name },
       },
     );
+
+    trackOrganization(subsidiary_organization.organization_Save.metadata.id);
 
     await organizationsService.addSubsidiary({
       input: {
@@ -326,6 +322,8 @@ describe('OrganizationsService - Integration Tests', () => {
     const new_organization = await organizationsService.saveOrganization({
       input: { name: organization_name },
     });
+
+    trackOrganization(new_organization.organization_Save.metadata.id);
 
     const sleep = (ms: number) =>
       new Promise((resolve) => setTimeout(resolve, ms));
@@ -406,6 +404,8 @@ describe('OrganizationsService - Integration Tests', () => {
       input: { name: organization_name },
     });
 
+    trackOrganization(organization_Save.metadata.id);
+
     let organization;
 
     organization = await organizationsService.getOrganization(
@@ -427,18 +427,5 @@ describe('OrganizationsService - Integration Tests', () => {
     expect(organization.organization?.accountDetails?.onboarding?.status).toBe(
       'STUCK',
     );
-  });
-
-  it.only('updates updateAllOpportunityRenewals', async () => {
-    const organization_name = 'IT_' + crypto.randomUUID();
-
-    const { organization_Save } = await organizationsService.saveOrganization({
-      input: { name: organization_name },
-    });
-
-    await organizationsService.getOrganization(organization_Save.metadata.id);
-
-    /// ADD CONTRACT TO ORGANIZATION
-    // await contractsService.
   });
 });

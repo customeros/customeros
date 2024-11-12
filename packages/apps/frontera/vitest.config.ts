@@ -10,6 +10,7 @@ export default defineConfig({
     include: ['**/*.integration.ts'],
     testTimeout: 30000,
     setupFiles: ['src/store/vitest-hooks.ts'],
+    hookTimeout: 60000,
   },
   plugins: [graphqlLoader()],
   resolve: {
