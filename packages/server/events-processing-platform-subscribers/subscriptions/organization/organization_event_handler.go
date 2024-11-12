@@ -651,19 +651,13 @@ func (h *organizationEventHandler) OnAdjustIndustry(ctx context.Context, evt eve
 	industry := h.mapIndustryToGICS(ctx, eventData.Tenant, organizationId, organizationEntity.Industry)
 
 	if industry != "" && organizationEntity.Industry != industry {
-		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err := subscriptions.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-			request := organizationpb.UpdateOrganizationGrpcRequest{
-				Tenant:         eventData.Tenant,
-				OrganizationId: organizationId,
-				SourceFields: &commonpb.SourceFields{
-					AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
-					Source:    constants.SourceOpenline,
-				},
-				Industry:   industry,
-				FieldsMask: []organizationpb.OrganizationMaskField{organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_INDUSTRY},
-			}
-			return h.grpcClients.OrganizationClient.UpdateOrganization(ctx, &request)
+		_, err = h.services.CommonServices.OrganizationService.Save(ctx, nil, eventData.Tenant, &organizationId, &repository.OrganizationSaveFields{
+			SourceFields: neo4jmodel.SourceFields{
+				AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
+				Source:    constants.SourceOpenline,
+			},
+			Industry:       industry,
+			UpdateIndustry: true,
 		})
 		if err != nil {
 			tracing.TraceErr(span, err)
