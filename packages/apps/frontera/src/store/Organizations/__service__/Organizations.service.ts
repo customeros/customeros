@@ -17,8 +17,6 @@ import type { OrganizationStore } from '../Organization.store';
 import AddTagDocument from './addTag.graphql';
 import AddSocialDocument from './addSocial.graphql';
 import RemoveTagDocument from './removeTag.graphql';
-import RemoveOwnerDocument from './removeOwner.graphql';
-import UpdateOwnerDocument from './updateOwner.graphql';
 import UpdateSocialDocument from './updateSocial.graphql';
 import RemoveSocialDocument from './removeSocial.graphql';
 import AddSubsidiaryDocument from './addSubsidiary.graphql';
@@ -65,10 +63,6 @@ import {
   HideOrganizationsMutationVariables,
 } from './hideOrganizations.generated';
 import {
-  SetOrganizationOwnerMutation,
-  SetOrganizationOwnerMutationVariables,
-} from './updateOwner.generated';
-import {
   MergeOrganizationsMutation,
   MergeOrganizationsMutationVariables,
 } from './mergeOrganizations.generated';
@@ -76,10 +70,6 @@ import {
   UpdateOrganizationMutation,
   UpdateOrganizationMutationVariables,
 } from './updateOrganization.generated';
-import {
-  RemoveOrganizationOwnerMutation,
-  RemoveOrganizationOwnerMutationVariables,
-} from './removeOwner.generated';
 import {
   RemoveTagFromOrganizationMutation,
   RemoveTagFromOrganizationMutationVariables,
@@ -202,20 +192,6 @@ export class OrganizationsService {
       RemoveTagFromOrganizationMutation,
       RemoveTagFromOrganizationMutationVariables
     >(RemoveTagDocument, payload);
-  }
-
-  async updateOwner(payload: SetOrganizationOwnerMutationVariables) {
-    return this.transport.graphql.request<
-      SetOrganizationOwnerMutation,
-      SetOrganizationOwnerMutationVariables
-    >(UpdateOwnerDocument, payload);
-  }
-
-  async removeOwner(payload: RemoveOrganizationOwnerMutationVariables) {
-    return this.transport.graphql.request<
-      RemoveOrganizationOwnerMutation,
-      RemoveOrganizationOwnerMutationVariables
-    >(RemoveOwnerDocument, payload);
   }
 
   async updateSocial(payload: UpdateSocialMutationVariables) {

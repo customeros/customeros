@@ -9,6 +9,7 @@ import { runInAction, makeAutoObservable } from 'mobx';
 import { ContractStore } from '@store/Contracts/Contract.store.ts';
 import { GroupStore, makeAutoSyncableGroup } from '@store/group-store.ts';
 import { ContractLineItemStore } from '@store/ContractLineItems/ContractLineItem.store.ts';
+import { ContractLineItemService } from '@store/ContractLineItems/ContractLineItem.service.ts';
 
 import { DateTimeUtils } from '@utils/date.ts';
 import {
@@ -30,8 +31,10 @@ export class ContractLineItemsStore implements GroupStore<ServiceLineItem> {
   sync = makeAutoSyncableGroup.sync;
   subscribe = makeAutoSyncableGroup.subscribe;
   load = makeAutoSyncableGroup.load<ServiceLineItem>();
+  private service: ContractLineItemService;
 
   constructor(public root: RootStore, public transport: Transport) {
+    this.service = new ContractLineItemService(transport);
     makeAutoObservable(this);
     makeAutoSyncableGroup(this, {
       channelName: `ContractLineItems`,
@@ -261,23 +264,10 @@ export class ContractLineItemsStore implements GroupStore<ServiceLineItem> {
     let serverId = '';
 
     try {
-      const { contractLineItem_Create } = await this.transport.graphql.request<
-        SERVICE_LINE_CREATE_RESPONSE,
-        SERVICE_LINE_CREATE_PAYLOAD
-      >(SERVICE_LINE_CREATE_MUTATION, {
-        input: {
-          tax: {
-            taxRate: payload.tax.taxRate,
-          },
-          contractId,
-          billingCycle: payload.billingCycle,
-          price: payload.price,
-          quantity: payload.quantity,
-          serviceEnded: payload.serviceEnded,
-          description: payload.description,
-          serviceStarted: payload.serviceStarted,
-        },
-      });
+      const { contractLineItem_Create } =
+        await this.service.createContractLineItem({
+          input: { ...payload, contractId },
+        });
 
       runInAction(() => {
         serverId = contractLineItem_Create.metadata.id;
@@ -313,22 +303,6 @@ export class ContractLineItemsStore implements GroupStore<ServiceLineItem> {
     }
   };
 }
-
-type SERVICE_LINE_CREATE_PAYLOAD = {
-  input: ServiceLineItemInput;
-};
-type SERVICE_LINE_CREATE_RESPONSE = {
-  contractLineItem_Create: ServiceLineItem;
-};
-const SERVICE_LINE_CREATE_MUTATION = gql`
-  mutation contractLineItemCreate($input: ServiceLineItemInput!) {
-    contractLineItem_Create(input: $input) {
-      metadata {
-        id
-      }
-    }
-  }
-`;
 
 type SERVICE_LINE_CREATE_NEW_VERSION_PAYLOAD = {
   input: ServiceLineItemNewVersionInput;

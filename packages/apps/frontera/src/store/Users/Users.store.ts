@@ -1,12 +1,12 @@
 import { Channel } from 'phoenix';
-import { gql } from 'graphql-request';
 import { RootStore } from '@store/root';
 import { Transport } from '@store/transport';
 import { GroupOperation } from '@store/types';
 import { runInAction, makeAutoObservable } from 'mobx';
+import { UserService } from '@store/Users/User.service.ts';
 import { GroupStore, makeAutoSyncableGroup } from '@store/group-store';
 
-import { User, Filter, UserPage, Pagination } from '@graphql/types';
+import { User } from '@graphql/types';
 
 import mock from './mock.json';
 import { UserStore } from './User.store';
@@ -23,8 +23,10 @@ export class UsersStore implements GroupStore<User> {
   sync = makeAutoSyncableGroup.sync;
   load = makeAutoSyncableGroup.load<User>();
   subscribe = makeAutoSyncableGroup.subscribe;
+  private service: UserService;
 
   constructor(public root: RootStore, public transport: Transport) {
+    this.service = UserService.getInstance(transport);
     makeAutoSyncableGroup(this, {
       channelName: 'Users',
       ItemStore: UserStore,
@@ -53,10 +55,7 @@ export class UsersStore implements GroupStore<User> {
     try {
       this.isLoading = true;
 
-      const { users } = await this.transport.graphql.request<
-        USERS_QUERY_RESPONSE,
-        USERS_QUERY_PAYLOAD
-      >(USERS_QUERY, {
+      const { users } = await this.service.getUsers({
         pagination: {
           limit: 1000,
           page: 0,
@@ -88,32 +87,3 @@ export class UsersStore implements GroupStore<User> {
     return compute(this.toArray());
   }
 }
-
-type USERS_QUERY_PAYLOAD = {
-  where?: Filter;
-  pagination: Pagination;
-};
-type USERS_QUERY_RESPONSE = {
-  users: UserPage;
-};
-const USERS_QUERY = gql`
-  query getUsers($pagination: Pagination!, $where: Filter) {
-    users(pagination: $pagination, where: $where) {
-      content {
-        id
-        firstName
-        lastName
-        name
-        profilePhotoUrl
-        mailboxes
-        bot
-        timezone
-        hasLinkedInToken
-        emails {
-          email
-        }
-      }
-      totalElements
-    }
-  }
-`;

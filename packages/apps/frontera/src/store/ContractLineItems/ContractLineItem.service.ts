@@ -2,7 +2,11 @@ import type { Transport } from '@store/transport';
 
 import { gql } from 'graphql-request';
 
-import { ServiceLineItemUpdateInput } from '@graphql/types';
+import {
+  ServiceLineItem,
+  ServiceLineItemInput,
+  ServiceLineItemUpdateInput,
+} from '@graphql/types';
 
 class ContractLineItemService {
   private static instance: ContractLineItemService | null = null;
@@ -46,6 +50,15 @@ class ContractLineItemService {
       { id: string }
     >(CONTRACT_LINE_ITEM_RESUME_MUTATION, payload);
   }
+
+  async createContractLineItem(
+    payload: SERVICE_LINE_CREATE_PAYLOAD,
+  ): Promise<SERVICE_LINE_CREATE_RESPONSE> {
+    return this.transport.graphql.request<
+      SERVICE_LINE_CREATE_RESPONSE,
+      SERVICE_LINE_CREATE_PAYLOAD
+    >(SERVICE_LINE_CREATE_MUTATION, payload);
+  }
 }
 
 type CONTRACT_LINE_ITEM_UPDATE_RESPONSE = {
@@ -77,6 +90,22 @@ const CONTRACT_LINE_ITEM_RESUME_MUTATION = gql`
   mutation contractLineItemPause($id: ID!) {
     contractLineItem_Resume(id: $id) {
       accepted
+    }
+  }
+`;
+
+type SERVICE_LINE_CREATE_PAYLOAD = {
+  input: ServiceLineItemInput;
+};
+type SERVICE_LINE_CREATE_RESPONSE = {
+  contractLineItem_Create: ServiceLineItem;
+};
+const SERVICE_LINE_CREATE_MUTATION = gql`
+  mutation contractLineItemCreate($input: ServiceLineItemInput!) {
+    contractLineItem_Create(input: $input) {
+      metadata {
+        id
+      }
     }
   }
 `;

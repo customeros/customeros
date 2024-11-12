@@ -2,7 +2,12 @@ import type { Transport } from '@store/transport';
 
 import { gql } from 'graphql-request';
 
-import type { ContractInput, ContractUpdateInput } from '@graphql/types';
+import {
+  Contract,
+  Pagination,
+  ContractInput,
+  ContractUpdateInput,
+} from '@graphql/types';
 
 class ContractService {
   private static instance: ContractService | null = null;
@@ -64,7 +69,184 @@ class ContractService {
       CREATE_CONTRACT_PAYLOAD
     >(CREATE_CONTRACT_MUTATION, payload);
   }
+
+  async getContracts(
+    payload: CONTRACTS_QUERY_PAYLOAD,
+  ): Promise<CONTRACTS_QUERY_RESPONSE> {
+    return this.transport.graphql.request<
+      CONTRACTS_QUERY_RESPONSE,
+      CONTRACTS_QUERY_PAYLOAD
+    >(CONTRACTS_QUERY, payload);
+  }
 }
+
+type CONTRACTS_QUERY_RESPONSE = {
+  contracts: {
+    totalPages: number;
+    content: Contract[];
+    totalElements: number;
+    totalAvailable: number;
+  };
+};
+type CONTRACTS_QUERY_PAYLOAD = {
+  pagination: Pagination;
+};
+
+const CONTRACTS_QUERY = gql`
+  query getContracts($pagination: Pagination!) {
+    contracts(pagination: $pagination) {
+      totalPages
+      totalElements
+      totalAvailable
+      content {
+        metadata {
+          id
+          created
+          source
+          lastUpdated
+        }
+
+        contractName
+        serviceStarted
+        contractSigned
+        contractEnded
+        contractStatus
+        committedPeriodInMonths
+        approved
+        ltv
+
+        contractUrl
+        billingCycle
+        billingEnabled
+        currency
+        invoiceEmail
+        autoRenew
+
+        billingDetails {
+          nextInvoicing
+          postalCode
+          country
+          locality
+          addressLine1
+          addressLine2
+          invoiceNote
+          organizationLegalName
+          billingCycle
+          payAutomatically
+          billingCycleInMonths
+          invoicingStarted
+          region
+          dueDays
+          billingEmail
+          billingEmailCC
+          billingEmailBCC
+          check
+          payOnline
+          canPayWithDirectDebit
+          canPayWithBankTransfer
+          canPayWithCard
+        }
+        upcomingInvoices {
+          metadata {
+            id
+          }
+        }
+        opportunities {
+          metadata {
+            id
+            created
+            lastUpdated
+            source
+            sourceOfTruth
+            appSource
+          }
+          name
+          amount
+          maxAmount
+          internalType
+          externalType
+          internalStage
+          externalStage
+          estimatedClosedAt
+          generalNotes
+          nextSteps
+          renewedAt
+          renewalApproved
+          renewalLikelihood
+          renewalUpdatedByUserId
+          renewalUpdatedByUserAt
+          renewalAdjustedRate
+          comments
+          organization {
+            metadata {
+              id
+              created
+              lastUpdated
+              sourceOfTruth
+            }
+          }
+          createdBy {
+            id
+            firstName
+            lastName
+            name
+          }
+          owner {
+            id
+            firstName
+            lastName
+            name
+          }
+          externalLinks {
+            externalUrl
+            externalId
+          }
+          id
+          createdAt
+          updatedAt
+          source
+          appSource
+        }
+        contractLineItems {
+          metadata {
+            id
+            created
+            lastUpdated
+            source
+            appSource
+            sourceOfTruth
+          }
+          paused
+          description
+          billingCycle
+          price
+          quantity
+          comments
+          serviceEnded
+          parentId
+          serviceStarted
+          tax {
+            salesTax
+            vat
+            taxRate
+          }
+        }
+        attachments {
+          id
+          createdAt
+          basePath
+          cdnUrl
+          fileName
+          mimeType
+          size
+          source
+          sourceOfTruth
+          appSource
+        }
+      }
+    }
+  }
+`;
 
 type CREATE_CONTRACT_PAYLOAD = {
   input: ContractInput;

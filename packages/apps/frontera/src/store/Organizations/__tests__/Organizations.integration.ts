@@ -1,15 +1,25 @@
 import { it, expect, describe } from 'vitest';
 
-import { Currency, OnboardingStatus, SortingDirection } from '@graphql/types';
+import {
+  Currency,
+  BilledType,
+  OnboardingStatus,
+  SortingDirection,
+  OpportunityRenewalLikelihood,
+} from '@graphql/types';
 
 import { Transport } from '../../transport';
+import { UserService } from '../../Users/User.service';
 import { trackOrganization } from './organizationsTestState';
 import { ContractService } from '../../Contracts/Contract.service';
 import { OrganizationsService } from '../__service__/Organizations.service';
+import { ContractLineItemService } from '../../ContractLineItems/ContractLineItem.service';
 
 const transport = new Transport();
 const organizationsService = OrganizationsService.getInstance(transport);
 const contractService = ContractService.getInstance(transport);
+const contractLineItemsService = ContractLineItemService.getInstance(transport);
+const userService = UserService.getInstance(transport);
 
 describe('OrganizationsService - Integration Tests', () => {
   it('gets organizations', async () => {
@@ -448,7 +458,7 @@ describe('OrganizationsService - Integration Tests', () => {
     );
   });
 
-  it.only('updates updateAllOpportunityRenewals', async () => {
+  it('updates updateAllOpportunityRenewals', async () => {
     const organization_name = 'IT_' + crypto.randomUUID();
 
     const { organization_Save } = await organizationsService.saveOrganization({
@@ -457,13 +467,12 @@ describe('OrganizationsService - Integration Tests', () => {
 
     trackOrganization(organization_Save.metadata.id);
 
-    await organizationsService.getOrganization(organization_Save.metadata.id);
-
     const contract_name = 'IT_' + crypto.randomUUID();
     const threeMonthsAgo = new Date();
 
     threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
-    await contractService.createContract({
+
+    const { contract_Create } = await contractService.createContract({
       input: {
         organizationId: organization_Save.metadata.id,
         committedPeriodInMonths: 3,
@@ -472,5 +481,85 @@ describe('OrganizationsService - Integration Tests', () => {
         serviceStarted: threeMonthsAgo,
       },
     });
+
+    await contractLineItemsService.createContractLineItem({
+      input: {
+        billingCycle: BilledType.Monthly,
+        contractId: contract_Create.metadata.id,
+        description: 'SLI_001',
+        price: 4,
+        quantity: 3,
+        serviceEnded: null,
+        serviceStarted: threeMonthsAgo,
+        tax: { taxRate: 5 },
+      },
+    });
+
+    await organizationsService.updateAllOpportunityRenewals({
+      input: {
+        organizationId: organization_Save.metadata.id,
+        renewalAdjustedRate: 53,
+        renewalLikelihood: OpportunityRenewalLikelihood.HighRenewal,
+      },
+    });
+
+    await organizationsService.updateAllOpportunityRenewals({
+      input: {
+        organizationId: organization_Save.metadata.id,
+        renewalAdjustedRate: 53,
+        renewalLikelihood: OpportunityRenewalLikelihood.HighRenewal,
+      },
+    });
+
+    const updatedContract = await contractService
+      .getContracts({
+        pagination: { limit: 1000, page: 0 },
+      })
+      .then(
+        (res) =>
+          res.contracts.content.filter(
+            (c) => c.metadata.id === contract_Create.metadata.id,
+          )[0],
+      );
+
+    expect
+      .soft(updatedContract.opportunities?.[0].renewalLikelihood)
+      .toBe(OpportunityRenewalLikelihood.HighRenewal);
+    expect
+      .soft(updatedContract.opportunities?.[0].renewalAdjustedRate)
+      .toBe(53);
+    expect.soft(updatedContract.opportunities?.[0].amount).toBe(76.32);
+    // );
+  });
+
+  it('adds updates owner of the organization', async () => {
+    const organization_name = 'IT_' + crypto.randomUUID();
+    const { organization_Save } = await organizationsService.saveOrganization({
+      input: { name: organization_name },
+    });
+
+    trackOrganization(organization_Save.metadata.id);
+
+    let organization = await organizationsService.getOrganization(
+      organization_Save.metadata.id,
+    );
+
+    expect(organization.organization?.owner).toBeNull();
+
+    const user = await userService.getUsers({
+      pagination: { limit: 1000, page: 0 },
+    });
+
+    await organizationsService.saveOrganization({
+      input: {
+        id: organization_Save.metadata.id,
+        ownerId: user.users.content[0].id,
+      },
+    });
+
+    organization = await organizationsService.getOrganization(
+      organization_Save.metadata.id,
+    );
+    expect(organization.organization?.owner?.id).toBe(user.users.content[0].id);
   });
 });

@@ -9,7 +9,7 @@ import { when, runInAction, makeAutoObservable } from 'mobx';
 import { ContractService } from '@store/Contracts/Contract.service.ts';
 import { GroupStore, makeAutoSyncableGroup } from '@store/group-store.ts';
 
-import { Contract, Pagination, ContractInput } from '@graphql/types';
+import { Contract, ContractInput } from '@graphql/types';
 
 import mock from './mock.json';
 import { ContractStore } from './Contract.store';
@@ -70,10 +70,7 @@ export class ContractsStore implements GroupStore<Contract> {
     try {
       this.isLoading = true;
 
-      const { contracts } = await this.transport.graphql.request<
-        CONTRACTS_QUERY_RESPONSE,
-        CONTRACTS_QUERY_PAYLOAD
-      >(CONTRACTS_QUERY, {
+      const { contracts } = await this.service.getContracts({
         pagination: { limit: 1000, page: 0 },
       });
 
@@ -100,10 +97,7 @@ export class ContractsStore implements GroupStore<Contract> {
       try {
         this.isLoading = true;
 
-        const { contracts } = await this.transport.graphql.request<
-          CONTRACTS_QUERY_RESPONSE,
-          CONTRACTS_QUERY_PAYLOAD
-        >(CONTRACTS_QUERY, {
+        const { contracts } = await this.service.getContracts({
           pagination: { limit: 100, page },
         });
 
@@ -124,10 +118,9 @@ export class ContractsStore implements GroupStore<Contract> {
     try {
       this.isLoading = true;
 
-      const { contracts } = await this.transport.graphql.request<
-        CONTRACTS_QUERY_RESPONSE,
-        CONTRACTS_QUERY_PAYLOAD
-      >(CONTRACTS_QUERY, { pagination: { limit: 1000, page: 0 } });
+      const { contracts } = await this.service.getContracts({
+        pagination: { limit: 1000, page: 0 },
+      });
 
       this.totalElements = contracts.totalElements;
 
@@ -251,179 +244,12 @@ export class ContractsStore implements GroupStore<Contract> {
   };
 }
 
-type CONTRACTS_QUERY_RESPONSE = {
-  contracts: {
-    totalPages: number;
-    content: Contract[];
-    totalElements: number;
-    totalAvailable: number;
-  };
-};
-type CONTRACTS_QUERY_PAYLOAD = {
-  pagination: Pagination;
-};
-
 type CONTRACT_DELETE_PAYLOAD = { id: string };
 const DELETE_CONTRACT = gql`
   mutation deleteContract($id: ID!) {
     contract_Delete(id: $id) {
       accepted
       completed
-    }
-  }
-`;
-const CONTRACTS_QUERY = gql`
-  query getContracts($pagination: Pagination!) {
-    contracts(pagination: $pagination) {
-      totalPages
-      totalElements
-      totalAvailable
-      content {
-        metadata {
-          id
-          created
-          source
-          lastUpdated
-        }
-
-        contractName
-        serviceStarted
-        contractSigned
-        contractEnded
-        contractStatus
-        committedPeriodInMonths
-        approved
-        ltv
-
-        contractUrl
-        billingCycle
-        billingEnabled
-        currency
-        invoiceEmail
-        autoRenew
-
-        billingDetails {
-          nextInvoicing
-          postalCode
-          country
-          locality
-          addressLine1
-          addressLine2
-          invoiceNote
-          organizationLegalName
-          billingCycle
-          payAutomatically
-          billingCycleInMonths
-          invoicingStarted
-          region
-          dueDays
-          billingEmail
-          billingEmailCC
-          billingEmailBCC
-          check
-          payOnline
-          canPayWithDirectDebit
-          canPayWithBankTransfer
-          canPayWithCard
-        }
-        upcomingInvoices {
-          metadata {
-            id
-          }
-        }
-        opportunities {
-          metadata {
-            id
-            created
-            lastUpdated
-            source
-            sourceOfTruth
-            appSource
-          }
-          name
-          amount
-          maxAmount
-          internalType
-          externalType
-          internalStage
-          externalStage
-          estimatedClosedAt
-          generalNotes
-          nextSteps
-          renewedAt
-          renewalApproved
-          renewalLikelihood
-          renewalUpdatedByUserId
-          renewalUpdatedByUserAt
-          renewalAdjustedRate
-          comments
-          organization {
-            metadata {
-              id
-              created
-              lastUpdated
-              sourceOfTruth
-            }
-          }
-          createdBy {
-            id
-            firstName
-            lastName
-            name
-          }
-          owner {
-            id
-            firstName
-            lastName
-            name
-          }
-          externalLinks {
-            externalUrl
-            externalId
-          }
-          id
-          createdAt
-          updatedAt
-          source
-          appSource
-        }
-        contractLineItems {
-          metadata {
-            id
-            created
-            lastUpdated
-            source
-            appSource
-            sourceOfTruth
-          }
-          paused
-          description
-          billingCycle
-          price
-          quantity
-          comments
-          serviceEnded
-          parentId
-          serviceStarted
-          tax {
-            salesTax
-            vat
-            taxRate
-          }
-        }
-        attachments {
-          id
-          createdAt
-          basePath
-          cdnUrl
-          fileName
-          mimeType
-          size
-          source
-          sourceOfTruth
-          appSource
-        }
-      }
     }
   }
 `;
