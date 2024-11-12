@@ -4395,6 +4395,7 @@ export type TableViewDef = Node & {
 
 export type TableViewDefCreateInput = {
   columns: Array<ColumnViewInput>;
+  defaultFilters: Scalars['String']['input'];
   filters: Scalars['String']['input'];
   icon: Scalars['String']['input'];
   isPreset: Scalars['Boolean']['input'];
@@ -4408,6 +4409,7 @@ export type TableViewDefCreateInput = {
 
 export type TableViewDefUpdateInput = {
   columns: Array<ColumnViewInput>;
+  defaultFilters?: InputMaybe<Scalars['String']['input']>;
   filters: Scalars['String']['input'];
   icon: Scalars['String']['input'];
   id: Scalars['ID']['input'];

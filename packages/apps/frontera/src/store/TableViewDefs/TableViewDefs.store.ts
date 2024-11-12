@@ -229,6 +229,8 @@ export class TableViewDefsStore implements GroupStore<TableViewDef> {
           }`,
       isPreset: false,
       isShared,
+      filters: '',
+      defaultFilters: favoritePreset?.filters || '',
     };
 
     const {
@@ -249,6 +251,7 @@ export class TableViewDefsStore implements GroupStore<TableViewDef> {
       const { tableViewDef_Create } = await this.service.createTableViewDef({
         input: {
           ...payload,
+          defaultFilters: newTableViewDef.value.defaultFilters,
         },
       });
 
