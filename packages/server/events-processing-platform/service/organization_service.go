@@ -349,47 +349,6 @@ func (s *organizationService) UpdateOnboardingStatus(ctx context.Context, reques
 	return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
 }
 
-func (s *organizationService) UpdateOrganization(ctx context.Context, request *organizationpb.UpdateOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
-	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.UpdateOrganization")
-	defer span.Finish()
-	tracing.SetServiceSpanTags(ctx, span, request.Tenant, utils.StringFirstNonEmpty(request.LoggedInUserId, request.LoggedInUserId))
-	span.SetTag(tracing.SpanTagEntityId, request.OrganizationId)
-	tracing.LogObjectAsJson(span, "request", request)
-
-	dataFields := model.OrganizationDataFields{
-		Name:               request.Name,
-		Description:        request.Description,
-		Website:            request.Website,
-		Industry:           request.Industry,
-		SubIndustry:        request.SubIndustry,
-		IndustryGroup:      request.IndustryGroup,
-		TargetAudience:     request.TargetAudience,
-		ValueProposition:   request.ValueProposition,
-		Employees:          request.Employees,
-		Market:             request.Market,
-		LogoUrl:            request.LogoUrl,
-		IconUrl:            request.IconUrl,
-		Headquarters:       request.Headquarters,
-		YearFounded:        request.YearFounded,
-		EmployeeGrowthRate: request.EmployeeGrowthRate,
-		Relationship:       request.Relationship,
-		Stage:              request.Stage,
-		IsPublic:           request.IsPublic,
-	}
-	sourceFields := commonmodel.Source{}
-	sourceFields.FromGrpc(request.SourceFields)
-
-	updateCommand := command.NewUpdateOrganizationCommand(request.OrganizationId, request.Tenant, request.LoggedInUserId, sourceFields.AppSource, sourceFields.Source, dataFields,
-		utils.TimestampProtoToTimePtr(request.UpdatedAt), request.EnrichDomain, request.EnrichSource, extractOrganizationMaskFields(request.FieldsMask))
-	if err := s.organizationCommands.UpdateOrganization.Handle(ctx, updateCommand); err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("(UpdateOrganization.Handle) tenant:%s, organizationID: %s , err: %s", request.Tenant, request.OrganizationId, err.Error())
-		return nil, s.errResponse(err)
-	}
-
-	return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
-}
-
 func (s *organizationService) RemoveSocial(ctx context.Context, request *organizationpb.RemoveSocialGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.RemoveSocial")
 	defer span.Finish()

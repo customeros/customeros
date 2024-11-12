@@ -83,37 +83,6 @@ message UpsertOrganizationGrpcRequest {
   bool icpFit = 41;
 }
 
-message UpdateOrganizationGrpcRequest {
-  string organizationId = 1;
-  string tenant = 2;
-  string loggedInUserId = 3;
-  google.protobuf.Timestamp  updatedAt = 4;
-  repeated OrganizationMaskField fieldsMask = 5;
-  SourceFields sourceFields = 6;
-  string webScrapedUrl = 7 [deprecated = true];
-  string market = 8;
-  string industry = 9;
-  string subIndustry = 10;
-  string industryGroup = 11;
-  string targetAudience = 12;
-  string valueProposition = 13;
-  string logoUrl = 14;
-  string headquarters = 15;
-  string employeeGrowthRate = 16;
-  optional int64 yearFounded = 17;
-  string name = 18;
-  string description = 19;
-  string website = 20;
-  int64 employees = 21;
-  string slackChannelId = 36;
-  string relationship = 37;
-  string stage = 38;
-  string enrichSource = 39;
-  string enrichDomain = 40;
-  bool isPublic = 41;
-  string iconUrl = 42;
-}
-
 message OrganizationIdGrpcRequest {
   string tenant = 1;
   string organizationId = 2;
@@ -367,7 +336,6 @@ service organizationGrpcService {
   rpc AddParentOrganization(AddParentOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc RemoveParentOrganization(RemoveParentOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc UpdateOnboardingStatus(UpdateOnboardingStatusGrpcRequest) returns (OrganizationIdGrpcResponse);
-  rpc UpdateOrganization(UpdateOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc RemoveSocial(RemoveSocialGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc UpdateOrganizationOwner(UpdateOrganizationOwnerGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc CreateBillingProfile(CreateBillingProfileGrpcRequest) returns (BillingProfileIdGrpcResponse);
