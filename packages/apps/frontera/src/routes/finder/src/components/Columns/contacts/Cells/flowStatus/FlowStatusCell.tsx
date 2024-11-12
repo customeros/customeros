@@ -1,13 +1,25 @@
-import { match } from 'ts-pattern';
+import { useParams } from 'react-router-dom';
 
+import { match } from 'ts-pattern';
+import { observer } from 'mobx-react-lite';
+
+import { useStore } from '@shared/hooks/useStore';
 import { FlowParticipantStatus } from '@graphql/types';
 
 interface FlowStatusCellProps {
-  value: string;
+  contactID: string;
 }
 
-export const FlowStatusCell = ({ value }: FlowStatusCellProps) => {
-  const flowStatus = match(value)
+export const FlowStatusCell = observer(({ contactID }: FlowStatusCellProps) => {
+  const { flows } = useStore();
+  const id = useParams()?.id as string;
+
+  const flowStore = flows.value.get(id)?.value;
+  const contact = flowStore?.contacts.find(
+    (c) => c.contact.metadata.id === contactID,
+  );
+
+  const flowStatus = match(contact?.status)
     .with(FlowParticipantStatus.OnHold, () => 'On Hold')
     .with(FlowParticipantStatus.Ready, () => 'Ready')
     .with(FlowParticipantStatus.InProgress, () => 'In Progress')
@@ -17,4 +29,4 @@ export const FlowStatusCell = ({ value }: FlowStatusCellProps) => {
     .otherwise(() => <span className='text-grayModern-400'>Not in flow</span>);
 
   return <div>{flowStatus}</div>;
-};
+});

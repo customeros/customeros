@@ -588,9 +588,9 @@ const columns: Record<string, Column> = {
     enableColumnFilter: false,
     enableSorting: true,
     cell: (props) => {
-      const value = props.getValue()?.flowContact?.value?.status;
+      const value = props.getValue()?.value.metadata.id;
 
-      return <FlowStatusCell value={value} />;
+      return <FlowStatusCell contactID={value} />;
     },
     header: (props) => (
       <THead<HTMLInputElement>
