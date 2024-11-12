@@ -54,8 +54,9 @@ describe('OrganizationsService - Integration Tests', () => {
           organization_Save.metadata.id,
         );
 
-        expect.soft(organization.organization?.accountDetails?.churned)
-          .toBeNull;
+        expect
+          .soft(organization.organization?.accountDetails?.churned)
+          .toBeNull();
         expect.soft(organization.organization?.accountDetails?.ltv).toBe(0);
         expect
           .soft(organization.organization?.accountDetails?.onboarding?.status)
@@ -63,25 +64,35 @@ describe('OrganizationsService - Integration Tests', () => {
         expect
           .soft(organization.organization?.accountDetails?.onboarding?.comments)
           .toBe('');
-        expect.soft(
-          organization.organization?.accountDetails?.onboarding?.updatedAt,
-        ).toBeNull;
-        expect.soft(
-          organization.organization?.accountDetails?.renewalSummary
-            ?.arrForecast,
-        ).toBeNull;
-        expect.soft(
-          organization.organization?.accountDetails?.renewalSummary
-            ?.maxArrForecast,
-        ).toBeNull;
-        expect.soft(
-          organization.organization?.accountDetails?.renewalSummary
-            ?.renewalLikelihood,
-        ).toBeNull;
-        expect.soft(
-          organization.organization?.accountDetails?.renewalSummary
-            ?.nextRenewalDate,
-        ).toBeNull;
+        expect
+          .soft(
+            organization.organization?.accountDetails?.onboarding?.updatedAt,
+          )
+          .toBeNull();
+        expect
+          .soft(
+            organization.organization?.accountDetails?.renewalSummary
+              ?.arrForecast,
+          )
+          .toBeNull();
+        expect
+          .soft(
+            organization.organization?.accountDetails?.renewalSummary
+              ?.maxArrForecast,
+          )
+          .toBeNull();
+        expect
+          .soft(
+            organization.organization?.accountDetails?.renewalSummary
+              ?.renewalLikelihood,
+          )
+          .toBeNull();
+        expect
+          .soft(
+            organization.organization?.accountDetails?.renewalSummary
+              ?.nextRenewalDate,
+          )
+          .toBeNull();
         expect.soft(organization.organization?.contracts).toBeNull();
         expect.soft(organization.organization?.description).toBe('');
         expect.soft(organization.organization?.domains).toEqual([]);
@@ -111,11 +122,11 @@ describe('OrganizationsService - Integration Tests', () => {
         expect.soft(organization.organization?.locations).toEqual([]);
         expect.soft(organization.organization?.logo).toBe('');
         expect.soft(organization.organization?.name).toBe(organization_name);
-        expect.soft(organization.organization?.owner).toBeNull;
+        expect.soft(organization.organization?.owner).toBeNull();
         expect.soft(organization.organization?.parentCompanies).toEqual([]);
         expect.soft(organization.organization?.public).toBe(false);
         expect.soft(organization.organization?.relationship).toBe('');
-        expect.soft(organization.organization?.tags).toBeNull;
+        expect.soft(organization.organization?.tags).toBeNull();
         expect.soft(organization.organization?.socialMedia).toEqual([]);
         expect.soft(organization.organization?.subsidiaries).toEqual([]);
         expect.soft(organization.organization?.stage).toBe('');
@@ -212,6 +223,12 @@ describe('OrganizationsService - Integration Tests', () => {
     const organization_subsequent_social_url =
       'www.IT_' + crypto.randomUUID() + '.com';
 
+    await organizationsService.updateSocial({
+      input: {
+        id: organization_Save.metadata.id,
+        url: organization_subsequent_social_url,
+      },
+    });
     organization = await organizationsService.getOrganization(
       organization_Save.metadata.id,
     );
@@ -427,5 +444,20 @@ describe('OrganizationsService - Integration Tests', () => {
     expect(organization.organization?.accountDetails?.onboarding?.status).toBe(
       'STUCK',
     );
+  });
+
+  it('updates updateAllOpportunityRenewals', async () => {
+    const organization_name = 'IT_' + crypto.randomUUID();
+
+    const { organization_Save } = await organizationsService.saveOrganization({
+      input: { name: organization_name },
+    });
+
+    trackOrganization(organization_Save.metadata.id);
+
+    await organizationsService.getOrganization(organization_Save.metadata.id);
+
+    /// ADD CONTRACT TO ORGANIZATION
+    // await contractService.
   });
 });
