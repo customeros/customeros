@@ -29,10 +29,15 @@ afterAll(async () => {
   //   },
   // });
 
-  await tagService.updateTag({
-    input: {
-      id: 'b794b214-35c6-41c8-9c39-7814804ee427',
-      name: 'b794b214-35c6-41c8-9c39-7814804ee427XXX',
-    },
-  });
+  // await tagService.updateTag({
+  //   input: {
+  //     id: 'b794b214-35c6-41c8-9c39-7814804ee427',
+  //     name: 'b794b214-35c6-41c8-9c39-7814804ee427XXX',
+  //   },
+  // });
+  await tagService
+    .getTags()
+    .then((res) =>
+      res.tags.filter((tag) => tag.name.includes('IT_')).map((tag) => tag.id),
+    );
 });

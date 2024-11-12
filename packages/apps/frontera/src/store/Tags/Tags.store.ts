@@ -41,9 +41,7 @@ export class TagsStore implements GroupStore<Tag> {
     try {
       this.isLoading = true;
 
-      const { tags } = await this.transport.graphql.request<TAG_QUERY_RESPONSE>(
-        TAG_QUERY,
-      );
+      const { tags } = await this.service.getTags();
 
       runInAction(() => {
         this.load(tags);
@@ -149,31 +147,6 @@ export class TagsStore implements GroupStore<Tag> {
     return this.value.get(id);
   }
 }
-
-type TAG_QUERY_RESPONSE = {
-  tags: Tag[];
-};
-
-const TAG_QUERY = gql`
-  query getTags {
-    tags {
-      metadata {
-        id
-        source
-        sourceOfTruth
-        appSource
-        created
-        lastUpdated
-      }
-      id
-      name
-      source
-      updatedAt
-      createdAt
-      appSource
-    }
-  }
-`;
 
 type CREATE_TAG_PAYLOAD = {
   input: TagInput;

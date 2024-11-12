@@ -32,6 +32,10 @@ class TagService {
       DELETE_TAG_PAYLOAD
     >(DELETE_TAG_MUTATION, payload);
   }
+
+  async getTags(): Promise<TAG_QUERY_RESPONSE> {
+    return this.transport.graphql.request(TAG_QUERY);
+  }
 }
 
 type DELETE_TAG_PAYLOAD = {
@@ -62,6 +66,31 @@ const UPDATE_TAG_MUTATION = gql`
   mutation UpdateTag($input: TagUpdateInput!) {
     tag_Update(input: $input) {
       id
+    }
+  }
+`;
+
+type TAG_QUERY_RESPONSE = {
+  tags: Tag[];
+};
+
+const TAG_QUERY = gql`
+  query getTags {
+    tags {
+      metadata {
+        id
+        source
+        sourceOfTruth
+        appSource
+        created
+        lastUpdated
+      }
+      id
+      name
+      source
+      updatedAt
+      createdAt
+      appSource
     }
   }
 `;

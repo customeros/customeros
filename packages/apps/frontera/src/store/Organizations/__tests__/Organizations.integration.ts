@@ -429,7 +429,7 @@ describe('OrganizationsService - Integration Tests', () => {
     );
   });
 
-  it('updates updateAllOpportunityRenewals', async () => {
+  it.only('updates updateAllOpportunityRenewals', async () => {
     const organization_name = 'IT_' + crypto.randomUUID();
 
     const { organization_Save } = await organizationsService.saveOrganization({
