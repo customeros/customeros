@@ -207,18 +207,13 @@ func (s *socialService) AddSocialToEntity(ctx context.Context, linkWith LinkWith
 				return "", err
 			}
 		} else if linkWith.Type == model.CONTACT {
-			alias := socialEntity.Alias
-			if alias == "" {
-				// use identifier as alias
-				alias = socialEntity.ExtractLinkedinPersonIdentifierFromUrl()
-			}
-			contacts, err := s.services.Neo4jRepositories.ContactReadRepository.GetContactsByLinkedIn(ctx, tenant, socialUrl, alias, socialEntity.ExternalId)
+			linkedInUsed, existingContactId, err := s.services.ContactService.CheckContactExistsWithLinkedIn(ctx, socialUrl, socialEntity.Alias, socialEntity.ExternalId)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return "", err
 			}
-			if len(contacts) > 0 {
-				err = errors.Errorf("linkedin url %s already used by contact %s", socialUrl, contacts[0].Props["id"])
+			if linkedInUsed {
+				err = errors.Errorf("linkedin url %s already used by contact %s", socialUrl, existingContactId)
 				return "", err
 			}
 		}

@@ -26,6 +26,7 @@ type ContactService interface {
 	ShowContact(ctx context.Context, contactId string) error
 	GetContactById(ctx context.Context, contactId string) (*neo4jentity.ContactEntity, error)
 	LinkContactWithOrganization(ctx context.Context, contactId, organizationId, jobTitle, description, source string, primary bool, startedAt, endedAt *time.Time) error
+	CheckContactExistsWithLinkedIn(ctx context.Context, url, alias, externalId string) (bool, string, error)
 }
 
 type contactService struct {
@@ -64,17 +65,36 @@ func (s *contactService) SaveContact(ctx context.Context, id *string, contactFie
 	createFlow := false
 	contactId := ""
 
-	// TODO add here any dedup logic
 	if id == nil || *id == "" {
 		createFlow = true
+
+		// Reject contact creation if linked-in url is already used by another contact
+		if (neo4jentity.SocialEntity{Url: socialUrl}).IsLinkedin() {
+			linkedInUsed, existingContactId, err := s.services.ContactService.CheckContactExistsWithLinkedIn(ctx, socialUrl, "", "")
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return "", err
+			}
+			if linkedInUsed {
+				err = errors.Errorf("linkedin url %s already used by contact %s", socialUrl, existingContactId)
+				return "", err
+			}
+		}
+
 		span.LogKV("flow", "create")
 		contactId, err = s.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelContact)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return "", err
 		}
-		// if createdAt missing, set it to now
+		// prepare missing fields
 		contactFields.CreatedAt = utils.NowIfZero(contactFields.CreatedAt)
+		if contactFields.SourceFields.Source == "" {
+			contactFields.SourceFields.Source = neo4jentity.DataSourceOpenline.String()
+		}
+		if contactFields.SourceFields.AppSource == "" {
+			contactFields.SourceFields.AppSource = common.GetAppSourceFromContext(ctx)
+		}
 	} else {
 		span.LogKV("flow", "update")
 		contactId = *id
@@ -141,7 +161,11 @@ func (s *contactService) SaveContact(ctx context.Context, id *string, contactFie
 		}
 	}
 
-	span.LogFields(log.Bool("response.contactCreated", true))
+	if createFlow {
+		span.LogFields(log.Bool("response.contactCreated", true))
+	} else {
+		span.LogFields(log.Bool("response.contactUpdated", true))
+	}
 	return contactId, nil
 }
 
@@ -320,4 +344,20 @@ func (s *contactService) LinkContactWithOrganization(ctx context.Context, contac
 	}
 
 	return nil
+}
+
+func (s *contactService) CheckContactExistsWithLinkedIn(ctx context.Context, url, alias, externalId string) (bool, string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.CheckContactExistsWithLinkedIn")
+	defer span.Finish()
+
+	if alias == "" {
+		// use identifier as alias
+		alias = neo4jentity.SocialEntity{Url: url}.ExtractLinkedinPersonIdentifierFromUrl()
+	}
+	contacts, err := s.services.Neo4jRepositories.ContactReadRepository.GetContactsByLinkedIn(ctx, common.GetTenantFromContext(ctx), url, alias, externalId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return false, "", err
+	}
+	return len(contacts) > 0, contacts[0].Props["id"].(string), nil
 }
