@@ -614,18 +614,13 @@ func (h *OpportunityEventHandler) OnCloseLost(ctx context.Context, evt eventstor
 			organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
 			// Make organization target if it's not already
 			if organizationEntity.Relationship == neo4jenum.Prospect && organizationEntity.Stage == neo4jenum.Engaged {
-				ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-				_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-					return h.grpcClients.OrganizationClient.UpdateOrganization(ctx, &organizationpb.UpdateOrganizationGrpcRequest{
-						Tenant:         eventData.Tenant,
-						OrganizationId: organizationEntity.ID,
-						Stage:          neo4jenum.Target.String(),
-						SourceFields: &commonpb.SourceFields{
-							AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
-							Source:    constants.SourceOpenline,
-						},
-						FieldsMask: []organizationpb.OrganizationMaskField{organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_STAGE},
-					})
+				_, err = h.services.CommonServices.OrganizationService.Save(ctx, nil, eventData.Tenant, &organizationEntity.ID, &neo4jrepository.OrganizationSaveFields{
+					Stage:       neo4jenum.Target,
+					UpdateStage: true,
+					SourceFields: neo4jmodel.SourceFields{
+						AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
+						Source:    constants.SourceOpenline,
+					},
 				})
 				if err != nil {
 					tracing.TraceErr(span, err)
