@@ -6,6 +6,7 @@ import { RootStore } from '@store/root.ts';
 import { Transport } from '@store/transport.ts';
 import { GroupOperation } from '@store/types.ts';
 import { when, runInAction, makeAutoObservable } from 'mobx';
+import { ContractService } from '@store/Contracts/Contract.service.ts';
 import { GroupStore, makeAutoSyncableGroup } from '@store/group-store.ts';
 
 import { Contract, Pagination, ContractInput } from '@graphql/types';
@@ -27,8 +28,10 @@ export class ContractsStore implements GroupStore<Contract> {
   subscribe = makeAutoSyncableGroup.subscribe;
   load = makeAutoSyncableGroup.load<Contract>();
   totalElements = 0;
+  private service: ContractService;
 
   constructor(public root: RootStore, public transport: Transport) {
+    this.service = new ContractService(transport);
     makeAutoSyncableGroup(this, {
       channelName: 'Contracts',
       getItemId: (item: Contract) => item?.metadata?.id,
@@ -168,13 +171,8 @@ export class ContractsStore implements GroupStore<Contract> {
     );
 
     try {
-      const { contract_Create } = await this.transport.graphql.request<
-        CREATE_CONTRACT_RESPONSE,
-        CREATE_CONTRACT_PAYLOAD
-      >(CREATE_CONTRACT_MUTATION, {
-        input: {
-          ...payload,
-        },
+      const { contract_Create } = await this.service.createContract({
+        input: { ...payload },
       });
 
       runInAction(() => {
@@ -425,26 +423,6 @@ const CONTRACTS_QUERY = gql`
           sourceOfTruth
           appSource
         }
-      }
-    }
-  }
-`;
-
-type CREATE_CONTRACT_PAYLOAD = {
-  input: ContractInput;
-};
-type CREATE_CONTRACT_RESPONSE = {
-  contract_Create: {
-    metadata: {
-      id: string;
-    };
-  };
-};
-const CREATE_CONTRACT_MUTATION = gql`
-  mutation createContract($input: ContractInput!) {
-    contract_Create(input: $input) {
-      metadata {
-        id
       }
     }
   }

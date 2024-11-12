@@ -1,13 +1,15 @@
 import { it, expect, describe } from 'vitest';
 
-import { OnboardingStatus, SortingDirection } from '@graphql/types';
+import { Currency, OnboardingStatus, SortingDirection } from '@graphql/types';
 
 import { Transport } from '../../transport';
 import { trackOrganization } from './organizationsTestState';
+import { ContractService } from '../../Contracts/Contract.service';
 import { OrganizationsService } from '../__service__/Organizations.service';
 
 const transport = new Transport();
 const organizationsService = OrganizationsService.getInstance(transport);
+const contractService = ContractService.getInstance(transport);
 
 describe('OrganizationsService - Integration Tests', () => {
   it('gets organizations', async () => {
@@ -444,5 +446,31 @@ describe('OrganizationsService - Integration Tests', () => {
     expect(organization.organization?.accountDetails?.onboarding?.status).toBe(
       'STUCK',
     );
+  });
+
+  it.only('updates updateAllOpportunityRenewals', async () => {
+    const organization_name = 'IT_' + crypto.randomUUID();
+
+    const { organization_Save } = await organizationsService.saveOrganization({
+      input: { name: organization_name },
+    });
+
+    trackOrganization(organization_Save.metadata.id);
+
+    await organizationsService.getOrganization(organization_Save.metadata.id);
+
+    const contract_name = 'IT_' + crypto.randomUUID();
+    const threeMonthsAgo = new Date();
+
+    threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+    await contractService.createContract({
+      input: {
+        organizationId: organization_Save.metadata.id,
+        committedPeriodInMonths: 3,
+        currency: Currency.Usd,
+        name: contract_name,
+        serviceStarted: threeMonthsAgo,
+      },
+    });
   });
 });

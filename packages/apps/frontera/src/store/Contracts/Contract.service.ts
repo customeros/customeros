@@ -2,7 +2,7 @@ import type { Transport } from '@store/transport';
 
 import { gql } from 'graphql-request';
 
-import type { ContractUpdateInput } from '@graphql/types';
+import type { ContractInput, ContractUpdateInput } from '@graphql/types';
 
 class ContractService {
   private static instance: ContractService | null = null;
@@ -55,7 +55,36 @@ class ContractService {
       REMOVE_CONTRACT_ATTACHMENT_PAYLOAD
     >(REMOVE_CONTRACT_ATTACHMENT_MUTATION, payload);
   }
+
+  async createContract(
+    payload: CREATE_CONTRACT_PAYLOAD,
+  ): Promise<CREATE_CONTRACT_RESPONSE> {
+    return this.transport.graphql.request<
+      CREATE_CONTRACT_RESPONSE,
+      CREATE_CONTRACT_PAYLOAD
+    >(CREATE_CONTRACT_MUTATION, payload);
+  }
 }
+
+type CREATE_CONTRACT_PAYLOAD = {
+  input: ContractInput;
+};
+type CREATE_CONTRACT_RESPONSE = {
+  contract_Create: {
+    metadata: {
+      id: string;
+    };
+  };
+};
+const CREATE_CONTRACT_MUTATION = gql`
+  mutation createContract($input: ContractInput!) {
+    contract_Create(input: $input) {
+      metadata {
+        id
+      }
+    }
+  }
+`;
 
 type CONTRACT_UPDATE_PAYLOAD = { input: ContractUpdateInput };
 const UPDATE_CONTRACT_MUTATION = gql`
