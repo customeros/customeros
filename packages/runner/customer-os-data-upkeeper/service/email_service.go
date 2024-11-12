@@ -634,7 +634,7 @@ func (s *emailService) deleteOrphanEmails() {
 	tracing.TagComponentCronJob(span)
 
 	limit := 500
-	delayFromLastUpdateInHours := 7 * 24
+	delayFromLastUpdateInHours := 24 // 24 hours
 
 	for {
 		select {

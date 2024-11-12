@@ -359,5 +359,9 @@ func (s *contactService) CheckContactExistsWithLinkedIn(ctx context.Context, url
 		tracing.TraceErr(span, err)
 		return false, "", err
 	}
-	return len(contacts) > 0, contacts[0].Props["id"].(string), nil
+	contactId := ""
+	if len(contacts) > 0 {
+		contactId = contacts[0].Props["id"].(string)
+	}
+	return len(contacts) > 0, contactId, nil
 }
