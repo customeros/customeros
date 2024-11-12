@@ -27,6 +27,7 @@ type ContactService interface {
 	GetContactById(ctx context.Context, contactId string) (*neo4jentity.ContactEntity, error)
 	LinkContactWithOrganization(ctx context.Context, contactId, organizationId, jobTitle, description, source string, primary bool, startedAt, endedAt *time.Time) error
 	CheckContactExistsWithLinkedIn(ctx context.Context, url, alias, externalId string) (bool, string, error)
+	CheckContactExistsWithEmail(ctx context.Context, email string) (bool, string, error)
 }
 
 type contactService struct {
@@ -355,6 +356,25 @@ func (s *contactService) CheckContactExistsWithLinkedIn(ctx context.Context, url
 		alias = neo4jentity.SocialEntity{Url: url}.ExtractLinkedinPersonIdentifierFromUrl()
 	}
 	contacts, err := s.services.Neo4jRepositories.ContactReadRepository.GetContactsByLinkedIn(ctx, common.GetTenantFromContext(ctx), url, alias, externalId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return false, "", err
+	}
+	contactId := ""
+	if len(contacts) > 0 {
+		contactId = contacts[0].Props["id"].(string)
+	}
+	return len(contacts) > 0, contactId, nil
+}
+
+func (s *contactService) CheckContactExistsWithEmail(ctx context.Context, email string) (bool, string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.CheckContactExistsWithEmail")
+	defer span.Finish()
+
+	if email == "" {
+		return false, "", nil
+	}
+	contacts, err := s.services.Neo4jRepositories.ContactReadRepository.GetContactsWithEmail(ctx, common.GetTenantFromContext(ctx), email)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return false, "", err

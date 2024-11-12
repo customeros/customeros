@@ -698,3 +698,22 @@ func (s *organizationService) RefreshLastTouchpoint(ctx context.Context, organiz
 
 	return nil
 }
+
+func (s *organizationService) CheckOrganizationExistsWithEmail(ctx context.Context, email string) (bool, string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.CheckOrganizationExistsWithEmail")
+	defer span.Finish()
+
+	if email == "" {
+		return false, "", nil
+	}
+	orgs, err := s.services.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsWithEmail(ctx, common.GetTenantFromContext(ctx), email)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return false, "", err
+	}
+	orgId := ""
+	if len(orgs) > 0 {
+		orgId = orgs[0].Props["id"].(string)
+	}
+	return len(orgs) > 0, orgId, nil
+}
