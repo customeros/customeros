@@ -45,7 +45,7 @@ export const TriggersHub = observer(() => {
           updateSelectedNode('RecordAddedManually');
         }}
       >
-        Record added manually...
+        Record is added to this flow...
       </CommandItem>
 
       <ContactAddedManuallySubItem />
@@ -58,7 +58,7 @@ export const TriggersHub = observer(() => {
           className='text-gray-700'
           data-test={'flow-trigger-record-created'}
         >
-          Record created
+          Record is created
         </span>{' '}
         <span className='text-gray-500'>(Coming soon)</span>
       </CommandItem>
@@ -71,7 +71,7 @@ export const TriggersHub = observer(() => {
           className='text-gray-700'
           data-test={'flow-trigger-record-updated'}
         >
-          Record updated
+          Record is updated
         </span>{' '}
         <span className='text-gray-500'>(Coming soon)</span>
       </CommandItem>
@@ -94,7 +94,7 @@ export const TriggersHub = observer(() => {
         keywords={keywords.webhook}
       >
         <span className='text-gray-700' data-test={'flow-trigger-webhook'}>
-          Webhook
+          Webhook is called
         </span>{' '}
         <span className='text-gray-500'>(Coming soon)</span>
       </CommandItem>

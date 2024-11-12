@@ -131,7 +131,7 @@ export const useLayout = () => {
 export const getNodeWidth = (node: Node) => {
   switch (node.type) {
     case 'trigger':
-      return { width: 300, height: 56 };
+      return { width: 300, height: 83 };
     case 'control':
       return { width: 156, height: 56 };
     case 'wait':

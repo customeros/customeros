@@ -30,9 +30,13 @@ export const TriggerNode = (
   return (
     <>
       <div
-        className={`h-[56px] w-[300px] bg-white border border-grayModern-300 p-4 rounded-lg group relative cursor-pointer flex items-center`}
+        className={`h-[83px] w-[300px] bg-white border border-grayModern-300 rounded-lg group relative cursor-pointer flex flex-col items-center`}
       >
-        <div className='flex items-center justify-between w-full'>
+        <div className='px-4 bg-gray-25 text-xs h-full flex items-center w-full rounded-t-lg justify-center border-b border-dashed border-gray-300 text-gray-500'>
+          Flow triggers when
+        </div>
+
+        <div className='flex items-center justify-between w-full p-4  h-[56px]'>
           <div className='truncate text-sm flex items-center'>
             <div className='size-6 mr-2 bg-gray-50 border border-gray-100 rounded flex items-center justify-center'>
               {props.data.entity && props.data?.triggerType ? (
@@ -53,9 +57,10 @@ export const TriggerNode = (
               <span
                 role={'button'}
                 onClick={handleOpen}
+                className='text-gray-400'
                 data-test={'flow-trigger-block'}
               >
-                What should trigger this flow?
+                Choose a trigger…
               </span>
             )}
           </div>
@@ -106,7 +111,7 @@ export const TriggerViewportPortal = observer(
               className='border border-gray-200 rounded-lg shadow-lg'
               style={{
                 transform: `translate(calc(${positionAbsoluteX}px + 150px - 180px), ${
-                  positionAbsoluteY + 48 + 24 // 48 is height of the node, 24 is desired spacing
+                  positionAbsoluteY + 83 + 4 // 83 is height of the node, 4 is desired spacing
                 }px)`,
                 position: 'absolute',
                 pointerEvents: 'all',

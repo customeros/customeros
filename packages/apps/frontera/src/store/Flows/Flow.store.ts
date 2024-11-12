@@ -390,10 +390,14 @@ const getDefaultValue = (): Flow => ({
 const initialNodes = [
   {
     $H: 497,
-    data: { action: 'FLOW_START', entity: null, triggerType: null },
-    height: 48,
+    data: {
+      action: 'FLOW_START',
+      entity: 'CONTACT',
+      triggerType: 'RecordAddedManually',
+    },
+    height: 83,
     id: 'tn-1',
-    position: { x: 12, y: 12 },
+    position: { x: 12, y: 11 },
     properties: { 'org.eclipse.elk.portConstraints': 'FIXED_ORDER' },
     sourcePosition: 'bottom',
     targetPosition: 'top',
@@ -405,17 +409,17 @@ const initialNodes = [
   {
     $H: 499,
     data: { action: 'FLOW_END' },
-    height: 48,
+    height: 56,
     id: 'tn-2',
-    measured: { height: 48, width: 131 },
-    position: { x: 96.5, y: 160 },
+    measured: { height: 56, width: 131 },
+    position: { x: 84, y: 195 },
     properties: { 'org.eclipse.elk.portConstraints': 'FIXED_ORDER' },
     sourcePosition: 'bottom',
     targetPosition: 'top',
     type: 'control',
-    width: 131,
-    x: 96.5,
-    y: 160,
+    width: 156,
+    x: 84,
+    y: 195,
   },
 ];
 
