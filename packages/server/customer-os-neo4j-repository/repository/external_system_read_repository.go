@@ -145,7 +145,7 @@ func (r *externalSystemReadRepository) GetAllForTenant(ctx context.Context, tena
 }
 
 func (r *externalSystemReadRepository) GetFor(ctx context.Context, tenant string, ids []string, label string) ([]*utils.DbNodeWithRelationAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "RxternalSystemReadRepository.GetFor")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemReadRepository.GetFor")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("label", label))

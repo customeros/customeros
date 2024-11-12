@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -44,8 +46,13 @@ func RedirectToPayInvoice(services *service.Services) gin.HandlerFunc {
 		tracing.TagTenant(span, tenant)
 		span.LogKV(log.String("invoiceStatus", invoice.Status.String()))
 
+		innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+			Tenant:    tenant,
+			AppSource: constants.AppSourceCustomerOsApiRest,
+		})
+
 		// get organization linked to invoice
-		organizationDbNode, err := services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByInvoiceId(ctx, tenant, invoice.Id)
+		organizationDbNode, err := services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByInvoiceId(innerCtx, tenant, invoice.Id)
 		if err != nil {
 			tracing.TraceErr(span, err)
 		}
@@ -84,12 +91,12 @@ func RedirectToPayInvoice(services *service.Services) gin.HandlerFunc {
 		if generateNewLink {
 			paymentLink = ""
 
-			primaryStripeCustomerId, err := services.CommonServices.ExternalSystemService.GetPrimaryExternalId(ctx, neo4jenum.Stripe.String(), organizationEntity.ID, model.ORGANIZATION)
+			primaryStripeCustomerId, err := services.CommonServices.ExternalSystemService.GetPrimaryExternalId(innerCtx, neo4jenum.Stripe.String(), organizationEntity.ID, model.ORGANIZATION)
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "Error fetching primary stripe customer ID"))
 			}
 
-			err = callIntegrationAppWithApiRequestForNewPaymentLink(ctx, services.Cfg.ExternalServices.IntegrationApp.WorkspaceKey,
+			err = callIntegrationAppWithApiRequestForNewPaymentLink(innerCtx, services.Cfg.ExternalServices.IntegrationApp.WorkspaceKey,
 				services.Cfg.ExternalServices.IntegrationApp.WorkspaceSecret, tenant,
 				services.Cfg.ExternalServices.IntegrationApp.ApiTriggerUrlCreatePaymentLinks, primaryStripeCustomerId, invoice)
 			if err != nil {
