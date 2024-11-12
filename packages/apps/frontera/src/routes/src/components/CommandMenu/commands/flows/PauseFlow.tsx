@@ -59,7 +59,7 @@ export const PauseFlow = observer(() => {
             size='sm'
             variant='outline'
             className='w-full'
-            colorScheme='error'
+            colorScheme='primary'
             ref={confirmButtonRef}
             onClick={handleConfirm}
             data-test='flow-actions-confirm-stop'
