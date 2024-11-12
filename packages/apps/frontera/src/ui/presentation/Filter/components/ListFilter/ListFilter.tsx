@@ -99,9 +99,10 @@ export const ListFilter = ({
   const filterValueLabels =
     filterName !== 'Primary email status'
       ? _options
-          ?.filter(
-            (option) =>
-              isArray(selectedIds) && selectedIds?.includes(option.id),
+          ?.filter((option) =>
+            isArray(selectedIds)
+              ? selectedIds?.includes(option.id)
+              : selectedIds === option.id,
           )
           .map((option) => option.label)
       : groupOptions
