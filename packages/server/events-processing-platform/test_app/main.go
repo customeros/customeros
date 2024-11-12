@@ -86,7 +86,6 @@ func main() {
 	//testCreateOrganization()
 	//testEnrichOrganization()
 	//testUpdateWithUpsertOrganization()
-	//testUpdateOrganization()
 	//testHideOrganization()
 	//testShowOrganization()
 	//testCreateLogEntry()
@@ -228,20 +227,6 @@ func testUpdateWithUpsertOrganization() {
 		Id:                organizationId,
 		Website:           website,
 		LastFundingAmount: lastFoundingAmont,
-	})
-	print(result)
-}
-
-func testUpdateOrganization() {
-
-	organizationId := "cfaaf31f-ec3b-44d1-836e-4e50834632ae"
-	name := "xtz.com"
-
-	result, _ := clients.OrganizationClient.UpdateOrganization(context.Background(), &organizationpb.UpdateOrganizationGrpcRequest{
-		Tenant:         tenant,
-		OrganizationId: organizationId,
-		Name:           name,
-		FieldsMask:     []organizationpb.OrganizationMaskField{organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_NAME},
 	})
 	print(result)
 }
