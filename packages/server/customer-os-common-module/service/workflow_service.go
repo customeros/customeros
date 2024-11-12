@@ -7,10 +7,9 @@ import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
-	neo4jrepo "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
+	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
+	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
-	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
-	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -88,7 +87,7 @@ func (s *workflowService) findOrganizationIds(ctx context.Context, tenant string
 		// add condition to filter that stage is Lead
 		filter.And = append(filter.And, &model.Filter{
 			Filter: &model.FilterItem{
-				Property:  neo4jrepo.OrganizationSearchParamStage,
+				Property:  neo4jrepository.OrganizationSearchParamStage,
 				Operation: model.ComparisonOperatorEq,
 				Value:     model.AnyTypeValue{Str: utils.StringPtr(neo4jenum.Lead.String())},
 				JsonValue: neo4jenum.Lead.String(),
@@ -111,18 +110,13 @@ func (s *workflowService) executeOrganizationAction(ctx context.Context, tenant 
 
 	switch workflowType {
 	case postgresentity.WorkflowTypeIdealCustomerProfile:
-		_, err := utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-			request := organizationpb.UpdateOrganizationGrpcRequest{
-				Tenant:         tenant,
-				OrganizationId: organizationId,
-				SourceFields: &commonpb.SourceFields{
-					AppSource: string(workflowType),
-					Source:    neo4jentity.DataSourceOpenline.String(),
-				},
-				Stage:      neo4jenum.Target.String(),
-				FieldsMask: []organizationpb.OrganizationMaskField{organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_STAGE},
-			}
-			return s.services.GrpcClients.OrganizationClient.UpdateOrganization(ctx, &request)
+		_, err := s.services.OrganizationService.Save(ctx, nil, tenant, &organizationId, &neo4jrepository.OrganizationSaveFields{
+			SourceFields: neo4jmodel.SourceFields{
+				AppSource: string(workflowType),
+				Source:    neo4jentity.DataSourceOpenline.String(),
+			},
+			Stage:       neo4jenum.Target,
+			UpdateStage: true,
 		})
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -150,7 +144,7 @@ func (s *workflowService) findContactIds(ctx context.Context, tenant string, wor
 		// add condition to filter that stage is Lead
 		filter.And = append(filter.And, &model.Filter{
 			Filter: &model.FilterItem{
-				Property:  neo4jrepo.ContactSearchParamStage,
+				Property:  neo4jrepository.ContactSearchParamStage,
 				Operation: model.ComparisonOperatorEq,
 				Value:     model.AnyTypeValue{Str: utils.StringPtr(neo4jenum.Target.String())},
 				JsonValue: neo4jenum.Target.String(),

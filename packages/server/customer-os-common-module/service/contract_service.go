@@ -15,6 +15,7 @@ import (
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
+	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
@@ -470,17 +471,11 @@ func (s *contractService) updateOrganizationRelationship(ctx context.Context, te
 		}
 
 		if !activeContractFound {
-			_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-				return s.services.GrpcClients.OrganizationClient.UpdateOrganization(ctx, &organizationpb.UpdateOrganizationGrpcRequest{
-					Tenant:         tenant,
-					OrganizationId: orgEntity.ID,
-					Relationship:   neo4jenum.FormerCustomer.String(),
-					Stage:          neo4jenum.Target.String(),
-					FieldsMask: []organizationpb.OrganizationMaskField{
-						organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_RELATIONSHIP,
-						organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_STAGE,
-					},
-				})
+			_, err = s.services.OrganizationService.Save(ctx, nil, tenant, &orgEntity.ID, &neo4jrepository.OrganizationSaveFields{
+				Relationship:       neo4jenum.FormerCustomer,
+				Stage:              neo4jenum.Target,
+				UpdateRelationship: true,
+				UpdateStage:        true,
 			})
 			if err != nil {
 				tracing.TraceErr(span, err)
