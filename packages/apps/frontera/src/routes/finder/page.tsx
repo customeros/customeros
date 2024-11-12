@@ -54,7 +54,7 @@ export const FinderPage = observer(() => {
   const tableType = tableViewDef?.value?.tableType;
   const flag = useFeatureIsOn('filters-v2');
   const isPreset = tableViewDef?.value?.isPreset;
-  const filters = tableViewDef?.getFilters().AND.length > 0;
+  const filters = tableViewDef?.getFilters()?.AND?.length > 0;
 
   const handleAddToMyViews: MouseEventHandler<HTMLButtonElement> = (e) => {
     e.stopPropagation();
