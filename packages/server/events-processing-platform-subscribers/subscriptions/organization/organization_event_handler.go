@@ -12,6 +12,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	enrichmentmodel "github.com/openline-ai/openline-customer-os/packages/server/enrichment-api/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	locationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/location"
@@ -149,7 +151,7 @@ func (h *organizationEventHandler) enrichOrganization(ctx context.Context, tenan
 		return nil
 	}
 	if enrichOrganizationResponse != nil && enrichOrganizationResponse.Success == true {
-		h.updateOrganizationFromEnrichmentResponse(ctx, tenant, domain, enrichOrganizationResponse.PrimaryEnrichSource, *organizationEntity, &enrichOrganizationResponse.Data)
+		h.updateOrganizationWithEnrichData(ctx, tenant, domain, enrichOrganizationResponse.PrimaryEnrichSource, *organizationEntity, &enrichOrganizationResponse.Data)
 	} else {
 		err = h.services.CommonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, tenant, commonmodel.NodeLabelOrganization, organizationId, string(neo4jentity.OrganizationPropertyEnrichFailedAt), utils.NowPtr())
 		if err != nil {
@@ -237,17 +239,13 @@ func (h *organizationEventHandler) callApiEnrichOrganization(ctx context.Context
 	return &enrichOrganizationApiResponse, nil
 }
 
-func (h *organizationEventHandler) updateOrganizationFromEnrichmentResponse(ctx context.Context, tenant, domain, enrichSource string, organizationEntity neo4jentity.OrganizationEntity, data *enrichmentmodel.EnrichOrganizationResponseData) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.updateOrganizationFromEnrichmentResponse")
+func (h *organizationEventHandler) updateOrganizationWithEnrichData(ctx context.Context, tenant, domain, enrichSource string, organizationEntity neo4jentity.OrganizationEntity, data *enrichmentmodel.EnrichOrganizationResponseData) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.updateOrganizationWithEnrichData")
 	defer span.Finish()
 	tracing.LogObjectAsJson(span, "data", data)
 
-	organizationFieldsMask := make([]organizationpb.OrganizationMaskField, 0)
-	updateGrpcRequest := organizationpb.UpdateOrganizationGrpcRequest{
-		Tenant:         tenant,
-		OrganizationId: organizationEntity.ID,
-		Employees:      data.Employees,
-		SourceFields: &commonpb.SourceFields{
+	orgFields := repository.OrganizationSaveFields{
+		SourceFields: neo4jmodel.SourceFields{
 			AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 			Source:    constants.SourceOpenline,
 		},
@@ -255,73 +253,69 @@ func (h *organizationEventHandler) updateOrganizationFromEnrichmentResponse(ctx 
 		EnrichSource: enrichSource,
 	}
 	if organizationEntity.Employees == 0 && data.Employees > 0 {
-		organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_EMPLOYEES)
-		updateGrpcRequest.Employees = data.Employees
+		orgFields.Employees = data.Employees
+		orgFields.UpdateEmployees = true
 	}
 	if (organizationEntity.YearFounded == nil || *organizationEntity.YearFounded < 1000) && data.FoundedYear > 0 {
-		organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_YEAR_FOUNDED)
-		updateGrpcRequest.YearFounded = &data.FoundedYear
+		orgFields.YearFounded = data.FoundedYear
+		orgFields.UpdateYearFounded = true
 	}
 	if organizationEntity.ValueProposition == "" && data.ShortDescription != "" {
-		organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_VALUE_PROPOSITION)
-		updateGrpcRequest.ValueProposition = data.ShortDescription
+		orgFields.ValueProposition = data.ShortDescription
+		orgFields.UpdateValueProposition = true
 	}
 	if organizationEntity.Description == "" && data.LongDescription != "" {
-		organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_DESCRIPTION)
-		updateGrpcRequest.Description = data.LongDescription
+		orgFields.Description = data.LongDescription
+		orgFields.UpdateDescription = true
 	}
 	if data.Public != nil {
-		organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_IS_PUBLIC)
-		updateGrpcRequest.IsPublic = *data.Public
+		orgFields.IsPublic = *data.Public
+		orgFields.UpdateIsPublic = true
 	}
 
-	// Set company name
-	if organizationEntity.Name == "" {
-		if data.Name != "" {
-			organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_NAME)
-			updateGrpcRequest.Name = data.Name
-		} else if data.Domain != "" {
-			organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_NAME)
+	// Set organization name
+	if data.Name != "" {
+		orgFields.Name = data.Name
+		orgFields.UpdateName = true
+	} else if organizationEntity.Name == "" {
+		if data.Domain != "" {
 			domainPrefixCapitalized := utils.CapitalizeAllParts(utils.GetDomainWithoutTLD(data.Domain), []string{"-", "_", "."})
-			updateGrpcRequest.Name = domainPrefixCapitalized
+			orgFields.Name = domainPrefixCapitalized
+			orgFields.UpdateName = true
 		}
 	}
 
 	// Set company website
 	if organizationEntity.Website == "" {
 		if data.Website != "" {
-			organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_WEBSITE)
-			updateGrpcRequest.Website = data.Website
+			orgFields.Website = data.Website
+			orgFields.UpdateWebsite = true
 		} else if data.Domain != "" {
-			organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_WEBSITE)
-			updateGrpcRequest.Website = data.Domain
+			orgFields.Website = data.Domain
+			orgFields.UpdateWebsite = true
 		}
 	}
 
 	// Set company logo and icon urls
 	if organizationEntity.LogoUrl == "" && len(data.Logos) > 0 {
-		organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_LOGO_URL)
-		updateGrpcRequest.LogoUrl = data.Logos[0]
+		orgFields.LogoUrl = data.Logos[0]
+		orgFields.UpdateLogoUrl = true
 	}
 	if organizationEntity.IconUrl == "" && len(data.Icons) > 0 {
-		organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_ICON_URL)
-		updateGrpcRequest.IconUrl = data.Icons[0]
+		orgFields.IconUrl = data.Icons[0]
+		orgFields.UpdateIconUrl = true
 	}
 
 	// set industry
 	if organizationEntity.Industry == "" && data.Industry != "" {
-		organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_INDUSTRY)
-		updateGrpcRequest.Industry = data.Industry
+		orgFields.Industry = data.Industry
+		orgFields.UpdateIndustry = true
 	}
 
-	updateGrpcRequest.FieldsMask = organizationFieldsMask
-	tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err := subscriptions.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-		return h.grpcClients.OrganizationClient.UpdateOrganization(ctx, &updateGrpcRequest)
-	})
+	_, err := h.services.CommonServices.OrganizationService.Save(ctx, nil, tenant, &organizationEntity.ID, &orgFields)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		h.log.Errorf("Error updating organization: %s", err.Error())
+		h.log.Errorf("Error updaing organization with enrich data: %s", err.Error())
 	}
 
 	//add location
