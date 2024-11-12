@@ -445,19 +445,4 @@ describe('OrganizationsService - Integration Tests', () => {
       'STUCK',
     );
   });
-
-  it('updates updateAllOpportunityRenewals', async () => {
-    const organization_name = 'IT_' + crypto.randomUUID();
-
-    const { organization_Save } = await organizationsService.saveOrganization({
-      input: { name: organization_name },
-    });
-
-    trackOrganization(organization_Save.metadata.id);
-
-    await organizationsService.getOrganization(organization_Save.metadata.id);
-
-    /// ADD CONTRACT TO ORGANIZATION
-    // await contractService.
-  });
 });
