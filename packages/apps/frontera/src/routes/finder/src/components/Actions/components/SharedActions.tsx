@@ -4,6 +4,7 @@ import { ActionItem } from '@finder/components/Actions/components/ActionItem.tsx
 
 import { X } from '@ui/media/icons/X.tsx';
 import { ButtonGroup } from '@ui/form/ButtonGroup';
+import { Grid01 } from '@ui/media/icons/Grid01.tsx';
 import { Delete } from '@ui/media/icons/Delete.tsx';
 import { Archive } from '@ui/media/icons/Archive.tsx';
 import { TableInstance } from '@ui/presentation/Table';
@@ -66,13 +67,9 @@ export const SharedTableActions = ({
         <ActionItem
           onClick={onOpenCommandK}
           dataTest='org-actions-commandk'
-          icon={
-            <span className='text-inherit w-auto h-auto'>
-              {isUserPlatformMac() ? '⌘' : 'Ctrl'}
-            </span>
-          }
+          icon={<Grid01 className='size-3 text-inherit' />}
         >
-          Command
+          Actions
         </ActionItem>
       </ButtonGroup>
     </>

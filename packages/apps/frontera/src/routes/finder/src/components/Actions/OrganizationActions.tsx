@@ -12,6 +12,7 @@ import { Archive } from '@ui/media/icons/Archive';
 import { useStore } from '@shared/hooks/useStore';
 import { ButtonGroup } from '@ui/form/ButtonGroup';
 import { OrganizationStage } from '@graphql/types';
+import { Grid01 } from '@ui/media/icons/Grid01.tsx';
 import { Delete } from '@ui/media/icons/Delete.tsx';
 import { useModKey } from '@shared/hooks/useModKey';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
@@ -282,16 +283,13 @@ export const OrganizationTableActions = observer(
                 Merge
               </ActionItem>
             )}
+
             <ActionItem
               onClick={onOpenCommandK}
               dataTest='org-actions-commandk'
-              icon={
-                <span className='text-inherit w-auto h-auto'>
-                  {isUserPlatformMac() ? '⌘' : 'Ctrl'}
-                </span>
-              }
+              icon={<Grid01 className='size-3 text-inherit' />}
             >
-              Command
+              Actions
             </ActionItem>
           </ButtonGroup>
         )}
