@@ -7,6 +7,8 @@ import {
   ComponentType,
 } from 'react';
 
+import { isArray } from 'lodash';
+
 import { flags } from '@ui/media/flags';
 import { Avatar } from '@ui/media/Avatar';
 import { Combobox } from '@ui/form/Combobox';
@@ -85,7 +87,7 @@ export const ListFilter = ({
     let newSelectedIds;
 
     if (selectedIds.includes(id)) {
-      newSelectedIds = selectedIds.filter((selectedId) => selectedId !== id);
+      newSelectedIds = selectedIds?.filter((selectedId) => selectedId !== id);
     } else {
       newSelectedIds = [...selectedIds, id];
     }
@@ -97,7 +99,10 @@ export const ListFilter = ({
   const filterValueLabels =
     filterName !== 'Primary email status'
       ? _options
-          .filter((option) => selectedIds?.includes(option.id))
+          ?.filter(
+            (option) =>
+              isArray(selectedIds) && selectedIds?.includes(option.id),
+          )
           .map((option) => option.label)
       : groupOptions
           ?.flatMap((group) => group.options)
