@@ -22,10 +22,12 @@ const (
 	NotificationsExchangeName = "notifications"
 	NotificationRoutingKey    = "notification"
 
-	EventsExchangeName        = "customeros"
-	EventsRoutingKey          = "event"
-	EventsQueueName           = "events"
-	EventsOpensearchQueueName = "events-opensearch"
+	EventsExchangeName                      = "customeros"
+	EventsRoutingKey                        = "event"
+	EventsQueueName                         = "events"
+	EventsFlowParticipantScheduleQueueName  = "events-flow-participant-schedule"
+	EventsFlowParticipantScheduleRoutingKey = "flow-participant-schedule"
+	EventsOpensearchQueueName               = "events-opensearch"
 )
 
 //{
@@ -138,10 +140,10 @@ func (r *RabbitMQService) reconnect(ctx context.Context) {
 
 // PublishEvent publishes a message to the given exchange and routing key with automatic reconnection
 func (r *RabbitMQService) PublishEvent(ctx context.Context, entityId string, entityType model.EntityType, message interface{}) error {
-	return r.PublishEventOnQueue(ctx, entityId, entityType, message, EventsExchangeName, EventsRoutingKey)
+	return r.PublishEventOnExchange(ctx, entityId, entityType, message, EventsExchangeName, EventsRoutingKey)
 }
 
-func (r *RabbitMQService) PublishEventOnQueue(ctx context.Context, entityId string, entityType model.EntityType, message interface{}, exchange, routingKey string) error {
+func (r *RabbitMQService) PublishEventOnExchange(ctx context.Context, entityId string, entityType model.EntityType, message interface{}, exchange, routingKey string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "RabbitMQService.PublishOnQueue")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -265,37 +267,79 @@ func (r *RabbitMQService) RegisterHandler(eventType interface{}, handler func(ct
 }
 
 // Listen listens for messages from the specified queue and processes them with the provided handler
-func (r *RabbitMQService) Listen() {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-
-	// Start consuming messages
-	msgs, err := r.channel.Consume(
-		EventsQueueName, // queue
-		"",              // consumer tag
-		false,           // auto-ack
-		false,           // exclusive
-		false,           // no-local
-		false,           // no-wait
-		nil,             // args
-	)
-	failOnError(err, "Failed to register consumer")
-
-	// Handle messages in a separate goroutine
+func (r *RabbitMQService) ListenQueue(queueName string, exclusiveConsumer bool) {
 	go func() {
-		for d := range msgs {
-			r.ProcessMessage(d)
+		for {
+			r.mu.Lock()
+			msgs, err := r.channel.Consume(
+				queueName,         // queue
+				"",                // consumer tag
+				false,             // auto-ack
+				exclusiveConsumer, // exclusive
+				false,             // no-local
+				false,             // no-wait
+				nil,               // args
+			)
+			r.mu.Unlock()
+
+			if err != nil {
+				log.Printf("Failed to register consumer: %v. Retrying...", err)
+				r.reconnect(context.Background())
+				continue
+			}
+
+			done := make(chan bool)
+
+			// Start processing messages
+			go func() {
+				for d := range msgs {
+					err := r.ProcessMessage(d)
+					if err != nil {
+						log.Printf("Failed to process message: %v", err)
+						retryAckNack(d, false)
+					} else {
+						retryAckNack(d, true)
+					}
+				}
+				// If msgs channel is closed, signal disconnection
+				done <- true
+			}()
+
+			// Wait for channel closure or disconnection signal
+			<-done
+			log.Printf("Connection lost for queue %s. Reconnecting...", queueName)
+			r.reconnect(context.Background()) // Re-establish connection and channel
 		}
 	}()
 }
 
-func (r *RabbitMQService) ProcessMessage(d amqp091.Delivery) {
+func retryAckNack(d amqp091.Delivery, ack bool) {
+	maxRetries := 5
+	retryDelay := 100 * time.Millisecond
+
+	for i := 0; i < maxRetries; i++ {
+		var err error
+		if ack {
+			err = d.Ack(false)
+		} else {
+			err = d.Nack(false, false)
+		}
+
+		if err == nil {
+			return // Successfully Acked/Nacked, exit the retry loop
+		}
+
+		time.Sleep(retryDelay) // Wait before retrying
+	}
+}
+
+func (r *RabbitMQService) ProcessMessage(d amqp091.Delivery) error {
 	ctx := context.Background()
 
 	var event dto.Event
 	if err := json.Unmarshal(d.Body, &event); err != nil {
 		log.Printf("Failed to unmarshal message: %s", err)
-		return
+		return err
 	}
 
 	ctx = common.WithCustomContext(ctx, &common.CustomContext{
@@ -314,34 +358,22 @@ func (r *RabbitMQService) ProcessMessage(d amqp091.Delivery) {
 		if err := d.Nack(false, false); err != nil {
 			log.Printf("Failed to negatively acknowledge message: %s", err)
 		}
-		return
+		return errors.New("Data not found in message")
 	}
 
 	// Invoke the appropriate handler based on the event type
 	eventHandler, found := r.handlerRegistry[event.Event.EventType]
 	if !found {
-		if err := d.Ack(false); err != nil {
-			log.Printf("Failed to acknowledge message: %s", err.Error())
-			//TODO retry nack
-		}
-		return
+		return errors.New("Handler not found for event type: " + event.Event.EventType)
 	}
 
 	if data == nil {
-		tracing.TraceErr(nil, errors.New("Data not found in message"))
-		if err := d.Nack(false, false); err != nil {
-			log.Printf("Failed to negatively acknowledge message: %s", err)
-		}
-		return
+		return errors.New("Data not found in message")
 	}
 
 	eventDataPtr := reflect.New(eventHandler.DataType).Interface()
 	if err := mapstructure.Decode(data, eventDataPtr); err != nil {
-		log.Printf("Failed to decode data for event type %s: %s", event.Event.EventType, err)
-		if err := d.Nack(false, false); err != nil {
-			log.Printf("Failed to negatively acknowledge message: %s", err)
-		}
-		return
+		return err
 	}
 
 	event.Event.Data = eventDataPtr
@@ -349,16 +381,10 @@ func (r *RabbitMQService) ProcessMessage(d amqp091.Delivery) {
 	err := eventHandler.HandlerFunc(ctx, r.services, &event) // Pass the entire delivery struct to the handler
 	if err != nil {
 		log.Printf("Failed to handle message: %s", err)
-		if err := d.Nack(false, false); err != nil {
-			log.Printf("Failed to negatively acknowledge message: %s", err)
-		}
-		return
+		return err
 	}
 
-	if err := d.Ack(false); err != nil {
-		log.Printf("Failed to acknowledge message: %s", err)
-		//TODO retry nack
-	}
+	return nil
 }
 
 // Close closes the RabbitMQ connection and channel

@@ -283,7 +283,7 @@ func StartCron(cont *container.Container) *cron.Cron {
 	}
 
 	err = c.AddFunc(cont.Cfg.Cron.CronScheduleSendEmails, func() {
-		lockAndRunJob(cont, sendEmailsGroup, sendEmails)
+		//lockAndRunJob(cont, sendEmailsGroup, sendEmails)
 	})
 	if err != nil {
 		cont.Log.Fatalf("Could not add cron job %s: %v", "sendEmails", err.Error())

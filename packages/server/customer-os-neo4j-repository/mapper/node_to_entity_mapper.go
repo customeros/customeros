@@ -1135,6 +1135,7 @@ func MapDbNodeToFlowActionExecutionEntity(node *dbtype.Node) *entity.FlowActionE
 		CreatedAt:       utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:       utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		FlowId:          utils.GetStringPropOrEmpty(props, "flowId"),
+		ParticipantId:   utils.GetStringPropOrEmpty(props, "participantId"),
 		EntityId:        utils.GetStringPropOrEmpty(props, "entityId"),
 		EntityType:      model.DecodeEntityType(utils.GetStringPropOrEmpty(props, "entityType")),
 		ActionId:        utils.GetStringPropOrEmpty(props, "actionId"),

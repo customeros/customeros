@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	AppName = "events-subscribersI"
+	AppName = "events-subscribers"
 )
 
 func InitDB(cfg *config.Config, appLogger logger.Logger) (db *config.StorageDB, err error) {
@@ -73,7 +73,8 @@ func main() {
 	}, db.GormDB, &neo4jDriver, cfg.Neo4j.Database, eventsProcessingGrpcClient, appLogger)
 
 	//Register listeners
-	commonServices.RabbitMQService.RegisterHandler(dto.FlowInitialSchedule{}, listeners.Handle_FlowInitialSchedule)
+	commonServices.RabbitMQService.RegisterHandler(dto.FlowSchedule{}, listeners.Handle_FlowSchedule)
+	commonServices.RabbitMQService.RegisterHandler(dto.FlowParticipantSchedule{}, listeners.Handle_FlowParticipantSchedule)
 	commonServices.RabbitMQService.RegisterHandler(dto.FlowComputeParticipantsRequirements{}, listeners.Handle_FlowComputeParticipantsRequirements)
 	commonServices.RabbitMQService.RegisterHandler(dto.FlowParticipantGoalAchieved{}, listeners.Handle_FlowParticipantGoalAchieved)
 	commonServices.RabbitMQService.RegisterHandler(dto.AddSocialToContact{}, listeners.OnSocialAddedToContact)
@@ -81,7 +82,8 @@ func main() {
 	commonServices.RabbitMQService.RegisterHandler(dto.RequestRefreshLastTouchpoint{}, listeners.OnRequestLastTouchpointRefresh)
 
 	// Listen for messages
-	commonServices.RabbitMQService.Listen()
+	commonServices.RabbitMQService.ListenQueue(commonService.EventsQueueName, false)
+	commonServices.RabbitMQService.ListenQueue(commonService.EventsFlowParticipantScheduleQueueName, true)
 
 	// Block the main thread from exiting
 	forever := make(chan bool)

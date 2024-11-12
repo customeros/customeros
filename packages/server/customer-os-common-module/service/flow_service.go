@@ -264,8 +264,8 @@ func (s *flowService) FlowMerge(ctx context.Context, tx *neo4j.ManagedTransactio
 				return nil, errors.New("flow not found")
 			}
 
-			if toStore.Status == neo4jentity.FlowStatusScheduling {
-				return nil, errors.New("flow is in scheduling status")
+			if toStore.Status == neo4jentity.FlowStatusActive {
+				return nil, errors.New("flow is in active status")
 			}
 		}
 
@@ -427,6 +427,7 @@ func (s *flowService) FlowMerge(ctx context.Context, tx *neo4j.ManagedTransactio
 
 	e := flowEntity.(*neo4jentity.FlowEntity)
 
+	//todo check if something is actually changed
 	err = s.services.RabbitMQService.PublishEvent(ctx, e.Id, model.FLOW, dto.FlowComputeParticipantsRequirements{})
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -585,6 +586,8 @@ func (s *flowService) FlowChangeStatus(ctx context.Context, id string, status ne
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
+	tenant := common.GetTenantFromContext(ctx)
+
 	node, err := s.services.Neo4jRepositories.FlowReadRepository.GetById(ctx, id)
 	if err != nil {
 		return nil, err
@@ -601,38 +604,42 @@ func (s *flowService) FlowChangeStatus(ctx context.Context, id string, status ne
 		return flow, nil
 	}
 
-	session := utils.NewNeo4jWriteSession(ctx, *s.services.Neo4jRepositories.Neo4jDriver)
-	defer session.Close(ctx)
+	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, nil, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
 
-	startInitialSchedule := false
-
-	_, err = session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		scheduleFlow := false
 
 		if flow.Status == neo4jentity.FlowStatusInactive && status == neo4jentity.FlowStatusActive {
-			flow.Status = neo4jentity.FlowStatusScheduling
-
-			startInitialSchedule = true
-		} else {
-			flow.Status = status
+			scheduleFlow = true
 		}
 
-		node, err = s.services.Neo4jRepositories.FlowWriteRepository.Merge(ctx, &tx, flow)
+		flow.Status = status
+
+		node, err = s.services.Neo4jRepositories.FlowWriteRepository.Merge(ctx, txWithPostCommit.Tx, flow)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err
+		}
+
+		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
+			s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, flow.Id, model.FLOW, utils.NewEventCompletedDetails().WithUpdate())
+			return nil
+		})
+
+		if scheduleFlow {
+
+			txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
+				err := s.services.RabbitMQService.PublishEvent(ctx, flow.Id, model.FLOW, dto.FlowSchedule{})
+				if err != nil {
+					tracing.TraceErr(span, err)
+					return err
+				}
+
+				return nil
+			})
 		}
 
 		return nil, nil
 	})
-
-	if startInitialSchedule {
-		err := s.services.RabbitMQService.PublishEvent(ctx, flow.Id, model.FLOW, dto.FlowInitialSchedule{})
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil, err
-		}
-	}
-
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -811,7 +818,7 @@ func (s *flowService) FlowParticipantAdd(ctx context.Context, flowId, entityId s
 			}
 		}
 
-		e, err := utils.ExecuteWriteInTransaction(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, nil, func(tx neo4j.ManagedTransaction) (any, error) {
+		e, err := utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, nil, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
 			toStore := neo4jentity.FlowParticipantEntity{
 				Status:     neo4jentity.FlowParticipantStatusOnHold,
 				EntityId:   entityId,
@@ -823,13 +830,22 @@ func (s *flowService) FlowParticipantAdd(ctx context.Context, flowId, entityId s
 				return nil, errors.Wrap(err, "failed to generate id")
 			}
 
-			identified, err = s.services.Neo4jRepositories.FlowParticipantWriteRepository.Merge(ctx, &tx, &toStore)
+			identified, err = s.services.Neo4jRepositories.FlowParticipantWriteRepository.Merge(ctx, txWithPostCommit.Tx, &toStore)
 			if err != nil {
 				return nil, errors.Wrap(err, "failed to merge flow participant")
 			}
 			entity := mapper.MapDbNodeToFlowParticipantEntity(identified)
 
-			err = s.services.Neo4jRepositories.CommonWriteRepository.Link(ctx, &tx, common.GetTenantFromContext(ctx), repository.LinkDetails{
+			txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
+				span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowParticipantAdd.PostCommitAction")
+				defer span.Finish()
+
+				s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, toStore.Id, model.FLOW_PARTICIPANT, utils.NewEventCompletedDetails().WithCreate())
+
+				return nil
+			})
+
+			err = s.services.Neo4jRepositories.CommonWriteRepository.Link(ctx, txWithPostCommit.Tx, common.GetTenantFromContext(ctx), repository.LinkDetails{
 				FromEntityId:   flowId,
 				FromEntityType: model.FLOW,
 				Relationship:   model.HAS,
@@ -840,7 +856,7 @@ func (s *flowService) FlowParticipantAdd(ctx context.Context, flowId, entityId s
 				return nil, errors.Wrap(err, "failed to link flow to flow participant")
 			}
 
-			err = s.services.Neo4jRepositories.CommonWriteRepository.Link(ctx, &tx, common.GetTenantFromContext(ctx), repository.LinkDetails{
+			err = s.services.Neo4jRepositories.CommonWriteRepository.Link(ctx, txWithPostCommit.Tx, common.GetTenantFromContext(ctx), repository.LinkDetails{
 				FromEntityId:   entity.Id,
 				FromEntityType: model.FLOW_PARTICIPANT,
 				Relationship:   model.HAS,
@@ -851,21 +867,28 @@ func (s *flowService) FlowParticipantAdd(ctx context.Context, flowId, entityId s
 				return nil, errors.Wrap(err, "failed to link flow participant to entity")
 			}
 
-			requirements, err := s.services.FlowExecutionService.GetFlowRequirements(ctx, flowId)
-			if err != nil {
-				return nil, errors.Wrap(err, "failed to get flow requirements")
-			}
-
-			_, err = s.services.FlowExecutionService.UpdateParticipantFlowRequirements(ctx, &tx, entity, requirements)
-			if err != nil {
-				return nil, errors.Wrap(err, "failed to update participant flow requirements")
-			}
-
 			if flow.Status == neo4jentity.FlowStatusActive && entity.Status == neo4jentity.FlowParticipantStatusReady {
-				err := s.services.FlowExecutionService.ScheduleFlow(ctx, &tx, flowId, entity)
+				err := s.services.FlowExecutionService.ScheduleFlow(ctx, txWithPostCommit, flowId, entity)
 				if err != nil {
 					return nil, errors.Wrap(err, "failed to schedule flow")
 				}
+			} else {
+				txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
+					span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowParticipantAdd.PostCommitAction")
+					defer span.Finish()
+
+					flowRequirements, err := s.services.FlowExecutionService.GetFlowRequirements(ctx, flowId)
+					if err != nil {
+						return errors.Wrap(err, "failed to get flow requirements")
+					}
+
+					err = s.services.FlowExecutionService.UpdateParticipantFlowRequirements(ctx, nil, entity, flowRequirements)
+					if err != nil {
+						return err
+					}
+
+					return nil
+				})
 			}
 
 			return entity, nil
@@ -875,10 +898,6 @@ func (s *flowService) FlowParticipantAdd(ctx context.Context, flowId, entityId s
 			tracing.TraceErr(span, err)
 			return nil, err
 		}
-
-		flowParticipant := e.(*neo4jentity.FlowParticipantEntity)
-
-		s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, flowParticipant.Id, model.FLOW_PARTICIPANT, utils.NewEventCompletedDetails().WithCreate())
 
 		return e.(*neo4jentity.FlowParticipantEntity), nil
 	} else {

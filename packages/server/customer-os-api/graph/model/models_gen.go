@@ -1072,19 +1072,34 @@ type FilterItem struct {
 }
 
 type Flow struct {
-	Metadata    *Metadata         `json:"metadata"`
-	Name        string            `json:"name"`
-	Description string            `json:"description"`
-	Nodes       string            `json:"nodes"`
-	Edges       string            `json:"edges"`
-	Status      entity.FlowStatus `json:"status"`
-	Contacts    []*FlowContact    `json:"contacts"`
-	Senders     []*FlowSender     `json:"senders"`
-	Statistics  *FlowStatistics   `json:"statistics"`
+	Metadata     *Metadata          `json:"metadata"`
+	Name         string             `json:"name"`
+	Description  string             `json:"description"`
+	Nodes        string             `json:"nodes"`
+	Edges        string             `json:"edges"`
+	Status       entity.FlowStatus  `json:"status"`
+	Contacts     []*FlowContact     `json:"contacts"`
+	Participants []*FlowParticipant `json:"participants"`
+	Senders      []*FlowSender      `json:"senders"`
+	Statistics   *FlowStatistics    `json:"statistics"`
 }
 
 func (Flow) IsMetadataInterface()        {}
 func (this Flow) GetMetadata() *Metadata { return this.Metadata }
+
+type FlowAction struct {
+	Metadata *Metadata             `json:"metadata"`
+	Action   entity.FlowActionType `json:"action"`
+}
+
+type FlowActionExecution struct {
+	Metadata    *Metadata                        `json:"metadata"`
+	Action      *FlowAction                      `json:"action"`
+	Status      entity.FlowActionExecutionStatus `json:"status"`
+	ScheduledAt *time.Time                       `json:"scheduledAt,omitempty"`
+	ExecutedAt  *time.Time                       `json:"executedAt,omitempty"`
+	Error       *string                          `json:"error,omitempty"`
+}
 
 type FlowActionInputData struct {
 	Wait                      *FlowActionInputDataWait                      `json:"wait,omitempty"`
@@ -1129,6 +1144,17 @@ type FlowMergeInput struct {
 	Nodes string  `json:"nodes"`
 	Edges string  `json:"edges"`
 }
+
+type FlowParticipant struct {
+	Metadata   *Metadata                    `json:"metadata"`
+	EntityType string                       `json:"entityType"`
+	EntityID   string                       `json:"entityId"`
+	Status     entity.FlowParticipantStatus `json:"status"`
+	Executions []*FlowActionExecution       `json:"executions"`
+}
+
+func (FlowParticipant) IsMetadataInterface()        {}
+func (this FlowParticipant) GetMetadata() *Metadata { return this.Metadata }
 
 type FlowSender struct {
 	Metadata *Metadata `json:"metadata"`
@@ -3098,6 +3124,7 @@ const (
 	ColumnViewTypeContactsConnections                ColumnViewType = "CONTACTS_CONNECTIONS"
 	ColumnViewTypeContactsFlows                      ColumnViewType = "CONTACTS_FLOWS"
 	ColumnViewTypeContactsFlowStatus                 ColumnViewType = "CONTACTS_FLOW_STATUS"
+	ColumnViewTypeContactsFlowNextAction             ColumnViewType = "CONTACTS_FLOW_NEXT_ACTION"
 	ColumnViewTypeContactsUpdatedAt                  ColumnViewType = "CONTACTS_UPDATED_AT"
 	ColumnViewTypeContactsCreatedAt                  ColumnViewType = "CONTACTS_CREATED_AT"
 	ColumnViewTypeOpportunitiesCommonColumn          ColumnViewType = "OPPORTUNITIES_COMMON_COLUMN"
@@ -3195,6 +3222,7 @@ var AllColumnViewType = []ColumnViewType{
 	ColumnViewTypeContactsConnections,
 	ColumnViewTypeContactsFlows,
 	ColumnViewTypeContactsFlowStatus,
+	ColumnViewTypeContactsFlowNextAction,
 	ColumnViewTypeContactsUpdatedAt,
 	ColumnViewTypeContactsCreatedAt,
 	ColumnViewTypeOpportunitiesCommonColumn,
@@ -3232,7 +3260,7 @@ var AllColumnViewType = []ColumnViewType{
 
 func (e ColumnViewType) IsValid() bool {
 	switch e {
-	case ColumnViewTypeInvoicesIssueDate, ColumnViewTypeInvoicesIssueDatePast, ColumnViewTypeInvoicesDueDate, ColumnViewTypeInvoicesContract, ColumnViewTypeInvoicesBillingCycle, ColumnViewTypeInvoicesInvoiceNumber, ColumnViewTypeInvoicesAmount, ColumnViewTypeInvoicesInvoiceStatus, ColumnViewTypeInvoicesInvoicePreview, ColumnViewTypeInvoicesOrganization, ColumnViewTypeOrganizationsAvatar, ColumnViewTypeOrganizationsName, ColumnViewTypeOrganizationsWebsite, ColumnViewTypeOrganizationsRelationship, ColumnViewTypeOrganizationsOnboardingStatus, ColumnViewTypeOrganizationsRenewalLikelihood, ColumnViewTypeOrganizationsRenewalDate, ColumnViewTypeOrganizationsForecastArr, ColumnViewTypeOrganizationsOwner, ColumnViewTypeOrganizationsLastTouchpoint, ColumnViewTypeOrganizationsLastTouchpointDate, ColumnViewTypeOrganizationsStage, ColumnViewTypeOrganizationsContactCount, ColumnViewTypeOrganizationsSocials, ColumnViewTypeOrganizationsLeadSource, ColumnViewTypeOrganizationsCreatedDate, ColumnViewTypeOrganizationsEmployeeCount, ColumnViewTypeOrganizationsYearFounded, ColumnViewTypeOrganizationsIndustry, ColumnViewTypeOrganizationsChurnDate, ColumnViewTypeOrganizationsLtv, ColumnViewTypeOrganizationsCity, ColumnViewTypeOrganizationsIsPublic, ColumnViewTypeOrganizationsLinkedinFollowerCount, ColumnViewTypeOrganizationsTags, ColumnViewTypeOrganizationsHeadquarters, ColumnViewTypeOrganizationsParentOrganization, ColumnViewTypeContactsAvatar, ColumnViewTypeContactsName, ColumnViewTypeContactsOrganization, ColumnViewTypeContactsEmails, ColumnViewTypeContactsPersonalEmails, ColumnViewTypeContactsPrimaryEmail, ColumnViewTypeContactsPhoneNumbers, ColumnViewTypeContactsLinkedin, ColumnViewTypeContactsCity, ColumnViewTypeContactsPersona, ColumnViewTypeContactsLastInteraction, ColumnViewTypeContactsCountry, ColumnViewTypeContactsRegion, ColumnViewTypeContactsSkills, ColumnViewTypeContactsSchools, ColumnViewTypeContactsLanguages, ColumnViewTypeContactsTimeInCurrentRole, ColumnViewTypeContactsExperience, ColumnViewTypeContactsLinkedinFollowerCount, ColumnViewTypeContactsJobTitle, ColumnViewTypeContactsTags, ColumnViewTypeContactsConnections, ColumnViewTypeContactsFlows, ColumnViewTypeContactsFlowStatus, ColumnViewTypeContactsUpdatedAt, ColumnViewTypeContactsCreatedAt, ColumnViewTypeOpportunitiesCommonColumn, ColumnViewTypeOpportunitiesName, ColumnViewTypeOpportunitiesOrganization, ColumnViewTypeOpportunitiesStage, ColumnViewTypeOpportunitiesEstimatedArr, ColumnViewTypeOpportunitiesOwner, ColumnViewTypeOpportunitiesTimeInStage, ColumnViewTypeOpportunitiesCreatedDate, ColumnViewTypeOpportunitiesNextStep, ColumnViewTypeContractsName, ColumnViewTypeContractsEnded, ColumnViewTypeContractsPeriod, ColumnViewTypeContractsCurrency, ColumnViewTypeContractsStatus, ColumnViewTypeContractsRenewal, ColumnViewTypeContractsLtv, ColumnViewTypeContractsRenewalDate, ColumnViewTypeContractsForecastArr, ColumnViewTypeContractsOwner, ColumnViewTypeContractsHealth, ColumnViewTypeFlowName, ColumnViewTypeFlowTotalCount, ColumnViewTypeFlowOnHoldCount, ColumnViewTypeFlowReadyCount, ColumnViewTypeFlowScheduledCount, ColumnViewTypeFlowInProgressCount, ColumnViewTypeFlowCompletedCount, ColumnViewTypeFlowGoalAchievedCount, ColumnViewTypeFlowStatus, ColumnViewTypeFlowActionName, ColumnViewTypeFlowActionStatus:
+	case ColumnViewTypeInvoicesIssueDate, ColumnViewTypeInvoicesIssueDatePast, ColumnViewTypeInvoicesDueDate, ColumnViewTypeInvoicesContract, ColumnViewTypeInvoicesBillingCycle, ColumnViewTypeInvoicesInvoiceNumber, ColumnViewTypeInvoicesAmount, ColumnViewTypeInvoicesInvoiceStatus, ColumnViewTypeInvoicesInvoicePreview, ColumnViewTypeInvoicesOrganization, ColumnViewTypeOrganizationsAvatar, ColumnViewTypeOrganizationsName, ColumnViewTypeOrganizationsWebsite, ColumnViewTypeOrganizationsRelationship, ColumnViewTypeOrganizationsOnboardingStatus, ColumnViewTypeOrganizationsRenewalLikelihood, ColumnViewTypeOrganizationsRenewalDate, ColumnViewTypeOrganizationsForecastArr, ColumnViewTypeOrganizationsOwner, ColumnViewTypeOrganizationsLastTouchpoint, ColumnViewTypeOrganizationsLastTouchpointDate, ColumnViewTypeOrganizationsStage, ColumnViewTypeOrganizationsContactCount, ColumnViewTypeOrganizationsSocials, ColumnViewTypeOrganizationsLeadSource, ColumnViewTypeOrganizationsCreatedDate, ColumnViewTypeOrganizationsEmployeeCount, ColumnViewTypeOrganizationsYearFounded, ColumnViewTypeOrganizationsIndustry, ColumnViewTypeOrganizationsChurnDate, ColumnViewTypeOrganizationsLtv, ColumnViewTypeOrganizationsCity, ColumnViewTypeOrganizationsIsPublic, ColumnViewTypeOrganizationsLinkedinFollowerCount, ColumnViewTypeOrganizationsTags, ColumnViewTypeOrganizationsHeadquarters, ColumnViewTypeOrganizationsParentOrganization, ColumnViewTypeContactsAvatar, ColumnViewTypeContactsName, ColumnViewTypeContactsOrganization, ColumnViewTypeContactsEmails, ColumnViewTypeContactsPersonalEmails, ColumnViewTypeContactsPrimaryEmail, ColumnViewTypeContactsPhoneNumbers, ColumnViewTypeContactsLinkedin, ColumnViewTypeContactsCity, ColumnViewTypeContactsPersona, ColumnViewTypeContactsLastInteraction, ColumnViewTypeContactsCountry, ColumnViewTypeContactsRegion, ColumnViewTypeContactsSkills, ColumnViewTypeContactsSchools, ColumnViewTypeContactsLanguages, ColumnViewTypeContactsTimeInCurrentRole, ColumnViewTypeContactsExperience, ColumnViewTypeContactsLinkedinFollowerCount, ColumnViewTypeContactsJobTitle, ColumnViewTypeContactsTags, ColumnViewTypeContactsConnections, ColumnViewTypeContactsFlows, ColumnViewTypeContactsFlowStatus, ColumnViewTypeContactsFlowNextAction, ColumnViewTypeContactsUpdatedAt, ColumnViewTypeContactsCreatedAt, ColumnViewTypeOpportunitiesCommonColumn, ColumnViewTypeOpportunitiesName, ColumnViewTypeOpportunitiesOrganization, ColumnViewTypeOpportunitiesStage, ColumnViewTypeOpportunitiesEstimatedArr, ColumnViewTypeOpportunitiesOwner, ColumnViewTypeOpportunitiesTimeInStage, ColumnViewTypeOpportunitiesCreatedDate, ColumnViewTypeOpportunitiesNextStep, ColumnViewTypeContractsName, ColumnViewTypeContractsEnded, ColumnViewTypeContractsPeriod, ColumnViewTypeContractsCurrency, ColumnViewTypeContractsStatus, ColumnViewTypeContractsRenewal, ColumnViewTypeContractsLtv, ColumnViewTypeContractsRenewalDate, ColumnViewTypeContractsForecastArr, ColumnViewTypeContractsOwner, ColumnViewTypeContractsHealth, ColumnViewTypeFlowName, ColumnViewTypeFlowTotalCount, ColumnViewTypeFlowOnHoldCount, ColumnViewTypeFlowReadyCount, ColumnViewTypeFlowScheduledCount, ColumnViewTypeFlowInProgressCount, ColumnViewTypeFlowCompletedCount, ColumnViewTypeFlowGoalAchievedCount, ColumnViewTypeFlowStatus, ColumnViewTypeFlowActionName, ColumnViewTypeFlowActionStatus:
 		return true
 	}
 	return false

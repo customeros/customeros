@@ -518,7 +518,7 @@ func (s *contactService) processLinkedInUrl(ctx context.Context, tenant, linkedi
 
 	if pendingLinkedinRequests != nil {
 		for _, cid := range contactIds {
-			flowActionExecutions, err := s.commonServices.FlowExecutionService.GetFlowActionExecutionForParticipantWithActionType(ctx, cid, model.CONTACT, neo4jentity.FlowActionTypeLinkedinConnectionRequest)
+			flowActionExecutions, err := s.commonServices.FlowExecutionService.GetFlowActionExecutionsForParticipantWithActionType(ctx, cid, model.CONTACT, neo4jentity.FlowActionTypeLinkedinConnectionRequest)
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "FlowService.FlowGetByParticipant"))
 				return err

@@ -92,11 +92,10 @@ type FlowSenderEntities []FlowSenderEntity
 type FlowStatus string
 
 const (
-	FlowStatusInactive   FlowStatus = "INACTIVE"
-	FlowStatusScheduling FlowStatus = "SCHEDULING"
-	FlowStatusActive     FlowStatus = "ACTIVE"
-	FlowStatusPaused     FlowStatus = "PAUSED"
-	FlowStatusArchived   FlowStatus = "ARCHIVED"
+	FlowStatusInactive FlowStatus = "INACTIVE"
+	FlowStatusActive   FlowStatus = "ACTIVE"
+	FlowStatusPaused   FlowStatus = "PAUSED"
+	FlowStatusArchived FlowStatus = "ARCHIVED"
 )
 
 func GetFlowStatus(s string) FlowStatus {
@@ -147,14 +146,16 @@ type FlowExecutionSettingsEntity struct {
 }
 
 type FlowActionExecutionEntity struct {
+	DataLoaderKey
 	Id        string
 	CreatedAt time.Time
 	UpdatedAt time.Time
 
-	FlowId     string
-	ActionId   string
-	EntityId   string
-	EntityType model.EntityType
+	FlowId        string
+	ActionId      string
+	ParticipantId string
+	EntityId      string
+	EntityType    model.EntityType
 
 	// Scheduling Info
 	ScheduledAt     time.Time
@@ -170,6 +171,8 @@ type FlowActionExecutionEntity struct {
 	// Additional metadata
 	Error *string // If execution fails, store the error message
 }
+
+type FlowActionExecutionEntities []FlowActionExecutionEntity
 
 type FlowActionExecutionStatus string
 

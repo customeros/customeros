@@ -19,6 +19,7 @@ import (
 type FlowActionExecutionReadRepository interface {
 	GetById(ctx context.Context, id string) (*dbtype.Node, error)
 	GetExecution(ctx context.Context, flowId, actionId, entityId string, entityType model.EntityType) (*dbtype.Node, error)
+	GetForParticipants(ctx context.Context, participantIds []string) ([]*utils.DbNodeAndId, error)
 	GetForEntity(ctx context.Context, tx *neo4j.ManagedTransaction, flowId, entityId string, entityType model.EntityType) ([]*dbtype.Node, error)
 	GetFirstSlotForMailbox(ctx context.Context, tx *neo4j.ManagedTransaction, mailbox string) (*time.Time, error)
 	GetLastScheduledForMailbox(ctx context.Context, tx *neo4j.ManagedTransaction, mailbox string) (*dbtype.Node, error)
@@ -114,6 +115,41 @@ func (r *flowActionExecutionReadRepositoryImpl) GetExecution(ctx context.Context
 		return nil, err
 	}
 	return result.(*dbtype.Node), nil
+}
+
+func (r *flowActionExecutionReadRepositoryImpl) GetForParticipants(ctx context.Context, participantIds []string) ([]*utils.DbNodeAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionExecutionReadRepository.GetForParticipants")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(fae:FlowActionExecution_%s) WHERE fae.participantId in $participantIds RETURN fae, fae.participantId order by fae.scheduledAt`, tenant)
+	params := map[string]any{
+		"tenant":         tenant,
+		"participantIds": participantIds,
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	result, err := utils.ExecuteReadInTransaction(ctx, r.driver, r.database, nil, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
+	})
+
+	if err != nil {
+		return nil, nil
+	}
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return result.([]*utils.DbNodeAndId), nil
 }
 
 func (r *flowActionExecutionReadRepositoryImpl) GetForEntity(ctx context.Context, tx *neo4j.ManagedTransaction, flowId, entityId string, entityType model.EntityType) ([]*dbtype.Node, error) {

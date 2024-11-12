@@ -20,7 +20,7 @@ func CallEventsPlatformGRPCWithRetry[T any](operation func() (T, error)) (T, err
 		return result, nil
 	}
 
-	response, err := backoff.RetryWithData(operationWithData, BackOffForInvokingEventsPlatformGrpcClient())
+	response, err := backoff.RetryWithData(operationWithData, BackOffForInvoking())
 	return response, err
 }
 
@@ -37,6 +37,6 @@ func BackOffConfig(initialInterval time.Duration, multiplier float64, maxInterva
 	return backoffWithMaxRetries
 }
 
-func BackOffForInvokingEventsPlatformGrpcClient() backoff.BackOff {
+func BackOffForInvoking() backoff.BackOff {
 	return BackOffConfig(50*time.Millisecond, 2, 2*time.Second, 7*time.Second, 10)
 }

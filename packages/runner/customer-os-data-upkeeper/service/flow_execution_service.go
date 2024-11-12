@@ -5,7 +5,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -271,17 +270,13 @@ func (s *flowExecutionService) ComputeFlowStatistics() {
 				continue
 			}
 
-			err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateInt64Property(ctx, tenant.Name, model.NodeLabelFlow, flow.Id, "total", onHold+ready+inProgress+completed+goalAchieved)
+			err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateInt64Property(ctx, tenant.Name, model.NodeLabelFlow, flow.Id, "total", onHold+ready+scheduled+inProgress+completed+goalAchieved)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return
 			}
 
-			err = s.commonServices.RabbitMQService.PublishEvent(ctx, flow.Id, model.FLOW, dto.FlowComputeParticipantsRequirements{})
-			if err != nil {
-				tracing.TraceErr(span, err)
-				return
-			}
+			s.commonServices.RabbitMQService.PublishEventCompleted(ctx, tenant.Name, flow.Id, model.FLOW, utils.NewEventCompletedDetails().WithUpdate())
 		}
 
 	}

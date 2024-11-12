@@ -25,13 +25,28 @@ func (r *flowResolver) Contacts(ctx context.Context, obj *model.Flow) ([]*model.
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 
-	entities, err := dataloader.For(ctx).GetFlowContactsForFlow(ctx, obj.Metadata.ID)
+	entities, err := dataloader.For(ctx).GetFlowParticipantsForFlow(ctx, obj.Metadata.ID)
 	if err != nil {
 		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		graphql.AddErrorf(ctx, "Failed to get flow contacts")
 		return nil, nil
 	}
 	return mapper.MapEntitiesToFlowContacts(entities), nil
+}
+
+// Participants is the resolver for the participants field.
+func (r *flowResolver) Participants(ctx context.Context, obj *model.Flow) ([]*model.FlowParticipant, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.Participants", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	entities, err := dataloader.For(ctx).GetFlowParticipantsForFlow(ctx, obj.Metadata.ID)
+	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		graphql.AddErrorf(ctx, "Failed to get flow contacts")
+		return nil, nil
+	}
+	return mapper.MapEntitiesToFlowParticipants(entities), nil
 }
 
 // Senders is the resolver for the senders field.
@@ -47,6 +62,29 @@ func (r *flowResolver) Senders(ctx context.Context, obj *model.Flow) ([]*model.F
 		return nil, nil
 	}
 	return mapper.MapEntitiesToFlowSenders(entities), nil
+}
+
+// Action is the resolver for the action field.
+func (r *flowActionExecutionResolver) Action(ctx context.Context, obj *model.FlowActionExecution) (*model.FlowAction, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.Action", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	flowActionExecution, err := r.Services.CommonServices.FlowExecutionService.GetFlowActionExecutionById(ctx, obj.Metadata.ID)
+	if err != nil || flowActionExecution == nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get flow action")
+		return nil, err
+	}
+
+	flowAction, err := r.Services.CommonServices.FlowService.FlowActionGetById(ctx, flowActionExecution.ActionId)
+	if err != nil || flowAction == nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get flow action")
+		return nil, err
+	}
+
+	return mapper.MapEntityToFlowAction(flowAction), nil
 }
 
 // Contact is the resolver for the contact field.
@@ -71,6 +109,22 @@ func (r *flowContactResolver) Contact(ctx context.Context, obj *model.FlowContac
 	}
 
 	return mapper.MapEntityToContact(contactEntity), nil
+}
+
+// Executions is the resolver for the executions field.
+func (r *flowParticipantResolver) Executions(ctx context.Context, obj *model.FlowParticipant) ([]*model.FlowActionExecution, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.Executions", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	entities, err := dataloader.For(ctx).GetExecutionsForParticipant(ctx, obj.Metadata.ID)
+	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		graphql.AddErrorf(ctx, "Failed to get flow action executions")
+		return nil, nil
+	}
+
+	return mapper.MapEntitiesToFlowActionExecutions(entities), nil
 }
 
 // Flow is the resolver for the flow field.
@@ -484,12 +538,24 @@ func (r *queryResolver) FlowEmailVariables(ctx context.Context) ([]*model.EmailV
 // Flow returns generated.FlowResolver implementation.
 func (r *Resolver) Flow() generated.FlowResolver { return &flowResolver{r} }
 
+// FlowActionExecution returns generated.FlowActionExecutionResolver implementation.
+func (r *Resolver) FlowActionExecution() generated.FlowActionExecutionResolver {
+	return &flowActionExecutionResolver{r}
+}
+
 // FlowContact returns generated.FlowContactResolver implementation.
 func (r *Resolver) FlowContact() generated.FlowContactResolver { return &flowContactResolver{r} }
+
+// FlowParticipant returns generated.FlowParticipantResolver implementation.
+func (r *Resolver) FlowParticipant() generated.FlowParticipantResolver {
+	return &flowParticipantResolver{r}
+}
 
 // FlowSender returns generated.FlowSenderResolver implementation.
 func (r *Resolver) FlowSender() generated.FlowSenderResolver { return &flowSenderResolver{r} }
 
 type flowResolver struct{ *Resolver }
+type flowActionExecutionResolver struct{ *Resolver }
 type flowContactResolver struct{ *Resolver }
+type flowParticipantResolver struct{ *Resolver }
 type flowSenderResolver struct{ *Resolver }

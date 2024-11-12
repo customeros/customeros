@@ -29,7 +29,8 @@ type Flow implements MetadataInterface {
     edges: String!
 
     status: FlowStatus!
-    contacts: [FlowContact!]! @goField(forceResolver: true)
+    contacts: [FlowContact!]! @goField(forceResolver: true) @deprecated
+    participants: [FlowParticipant!]! @goField(forceResolver: true)
     senders: [FlowSender!]! @goField(forceResolver: true)
 
     statistics: FlowStatistics!
@@ -55,12 +56,12 @@ input FlowMergeInput {
 
 enum FlowStatus {
     INACTIVE
-    SCHEDULING
     ACTIVE
     PAUSED
     ARCHIVED
 }
 
+#deprecated
 type FlowContact implements MetadataInterface {
     metadata:               Metadata!
 
@@ -70,6 +71,31 @@ type FlowContact implements MetadataInterface {
 
     scheduledAction: String
     scheduledAt: Time
+}
+
+type FlowParticipant implements MetadataInterface {
+    metadata: Metadata!
+
+    entityType: String!
+    entityId: ID!
+
+    status: FlowParticipantStatus!
+
+    executions: [FlowActionExecution!]! @goField(forceResolver: true)
+}
+
+type FlowActionExecution {
+    metadata: Metadata!
+    action: FlowAction! @goField(forceResolver: true)
+    status: FlowActionExecutionStatus!
+    scheduledAt: Time
+    executedAt: Time
+    error: String
+}
+
+type FlowAction {
+   metadata: Metadata!
+   action: FlowActionType!
 }
 
 type FlowSender implements MetadataInterface {
@@ -146,4 +172,20 @@ enum EmailVariableName {
     CONTACT_FULL_NAME
     CONTACT_EMAIL
     ORGANIZATION_NAME
+}
+
+enum FlowActionType{
+    EMAIL_NEW
+    EMAIL_REPLY
+    LINKEDIN_CONNECTION_REQUEST
+    LINKEDIN_MESSAGE
+}
+
+enum FlowActionExecutionStatus{
+    SCHEDULED
+    IN_PROGRESS
+    SKIPPED
+    SUCCESS
+    TECH_ERROR
+    BUSINESS_ERROR
 }

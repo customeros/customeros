@@ -9,3 +9,7 @@ type ShowContact struct{}
 type RequestEnrichContact struct{}
 
 type RequestRefreshLastTouchpoint struct{}
+
+type FlowSchedule struct{}
+
+type FlowParticipantSchedule struct{}

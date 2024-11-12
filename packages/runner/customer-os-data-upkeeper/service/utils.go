@@ -20,6 +20,6 @@ func CallEventsPlatformGRPCWithRetry[T any](operation func() (T, error)) (T, err
 		return result, nil
 	}
 
-	response, err := backoff.RetryWithData(operationWithData, utils.BackOffForInvokingEventsPlatformGrpcClient())
+	response, err := backoff.RetryWithData(operationWithData, utils.BackOffForInvoking())
 	return response, err
 }

@@ -47,7 +47,9 @@ type ResolverRoot interface {
 	DashboardCustomerMap() DashboardCustomerMapResolver
 	Email() EmailResolver
 	Flow() FlowResolver
+	FlowActionExecution() FlowActionExecutionResolver
 	FlowContact() FlowContactResolver
+	FlowParticipant() FlowParticipantResolver
 	FlowSender() FlowSenderResolver
 	InteractionEvent() InteractionEventResolver
 	InteractionSession() InteractionSessionResolver
@@ -542,14 +544,29 @@ type ComplexityRoot struct {
 	}
 
 	Flow struct {
-		Contacts    func(childComplexity int) int
-		Description func(childComplexity int) int
-		Edges       func(childComplexity int) int
+		Contacts     func(childComplexity int) int
+		Description  func(childComplexity int) int
+		Edges        func(childComplexity int) int
+		Metadata     func(childComplexity int) int
+		Name         func(childComplexity int) int
+		Nodes        func(childComplexity int) int
+		Participants func(childComplexity int) int
+		Senders      func(childComplexity int) int
+		Statistics   func(childComplexity int) int
+		Status       func(childComplexity int) int
+	}
+
+	FlowAction struct {
+		Action   func(childComplexity int) int
+		Metadata func(childComplexity int) int
+	}
+
+	FlowActionExecution struct {
+		Action      func(childComplexity int) int
+		Error       func(childComplexity int) int
+		ExecutedAt  func(childComplexity int) int
 		Metadata    func(childComplexity int) int
-		Name        func(childComplexity int) int
-		Nodes       func(childComplexity int) int
-		Senders     func(childComplexity int) int
-		Statistics  func(childComplexity int) int
+		ScheduledAt func(childComplexity int) int
 		Status      func(childComplexity int) int
 	}
 
@@ -559,6 +576,14 @@ type ComplexityRoot struct {
 		ScheduledAction func(childComplexity int) int
 		ScheduledAt     func(childComplexity int) int
 		Status          func(childComplexity int) int
+	}
+
+	FlowParticipant struct {
+		EntityID   func(childComplexity int) int
+		EntityType func(childComplexity int) int
+		Executions func(childComplexity int) int
+		Metadata   func(childComplexity int) int
+		Status     func(childComplexity int) int
 	}
 
 	FlowSender struct {
@@ -1613,10 +1638,17 @@ type EmailResolver interface {
 }
 type FlowResolver interface {
 	Contacts(ctx context.Context, obj *model.Flow) ([]*model.FlowContact, error)
+	Participants(ctx context.Context, obj *model.Flow) ([]*model.FlowParticipant, error)
 	Senders(ctx context.Context, obj *model.Flow) ([]*model.FlowSender, error)
+}
+type FlowActionExecutionResolver interface {
+	Action(ctx context.Context, obj *model.FlowActionExecution) (*model.FlowAction, error)
 }
 type FlowContactResolver interface {
 	Contact(ctx context.Context, obj *model.FlowContact) (*model.Contact, error)
+}
+type FlowParticipantResolver interface {
+	Executions(ctx context.Context, obj *model.FlowParticipant) ([]*model.FlowActionExecution, error)
 }
 type FlowSenderResolver interface {
 	Flow(ctx context.Context, obj *model.FlowSender) (*model.Flow, error)
@@ -4327,6 +4359,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Flow.Nodes(childComplexity), true
 
+	case "Flow.participants":
+		if e.complexity.Flow.Participants == nil {
+			break
+		}
+
+		return e.complexity.Flow.Participants(childComplexity), true
+
 	case "Flow.senders":
 		if e.complexity.Flow.Senders == nil {
 			break
@@ -4347,6 +4386,62 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Flow.Status(childComplexity), true
+
+	case "FlowAction.action":
+		if e.complexity.FlowAction.Action == nil {
+			break
+		}
+
+		return e.complexity.FlowAction.Action(childComplexity), true
+
+	case "FlowAction.metadata":
+		if e.complexity.FlowAction.Metadata == nil {
+			break
+		}
+
+		return e.complexity.FlowAction.Metadata(childComplexity), true
+
+	case "FlowActionExecution.action":
+		if e.complexity.FlowActionExecution.Action == nil {
+			break
+		}
+
+		return e.complexity.FlowActionExecution.Action(childComplexity), true
+
+	case "FlowActionExecution.error":
+		if e.complexity.FlowActionExecution.Error == nil {
+			break
+		}
+
+		return e.complexity.FlowActionExecution.Error(childComplexity), true
+
+	case "FlowActionExecution.executedAt":
+		if e.complexity.FlowActionExecution.ExecutedAt == nil {
+			break
+		}
+
+		return e.complexity.FlowActionExecution.ExecutedAt(childComplexity), true
+
+	case "FlowActionExecution.metadata":
+		if e.complexity.FlowActionExecution.Metadata == nil {
+			break
+		}
+
+		return e.complexity.FlowActionExecution.Metadata(childComplexity), true
+
+	case "FlowActionExecution.scheduledAt":
+		if e.complexity.FlowActionExecution.ScheduledAt == nil {
+			break
+		}
+
+		return e.complexity.FlowActionExecution.ScheduledAt(childComplexity), true
+
+	case "FlowActionExecution.status":
+		if e.complexity.FlowActionExecution.Status == nil {
+			break
+		}
+
+		return e.complexity.FlowActionExecution.Status(childComplexity), true
 
 	case "FlowContact.contact":
 		if e.complexity.FlowContact.Contact == nil {
@@ -4382,6 +4477,41 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.FlowContact.Status(childComplexity), true
+
+	case "FlowParticipant.entityId":
+		if e.complexity.FlowParticipant.EntityID == nil {
+			break
+		}
+
+		return e.complexity.FlowParticipant.EntityID(childComplexity), true
+
+	case "FlowParticipant.entityType":
+		if e.complexity.FlowParticipant.EntityType == nil {
+			break
+		}
+
+		return e.complexity.FlowParticipant.EntityType(childComplexity), true
+
+	case "FlowParticipant.executions":
+		if e.complexity.FlowParticipant.Executions == nil {
+			break
+		}
+
+		return e.complexity.FlowParticipant.Executions(childComplexity), true
+
+	case "FlowParticipant.metadata":
+		if e.complexity.FlowParticipant.Metadata == nil {
+			break
+		}
+
+		return e.complexity.FlowParticipant.Metadata(childComplexity), true
+
+	case "FlowParticipant.status":
+		if e.complexity.FlowParticipant.Status == nil {
+			break
+		}
+
+		return e.complexity.FlowParticipant.Status(childComplexity), true
 
 	case "FlowSender.flow":
 		if e.complexity.FlowSender.Flow == nil {
@@ -12986,7 +13116,8 @@ type Flow implements MetadataInterface {
     edges: String!
 
     status: FlowStatus!
-    contacts: [FlowContact!]! @goField(forceResolver: true)
+    contacts: [FlowContact!]! @goField(forceResolver: true) @deprecated
+    participants: [FlowParticipant!]! @goField(forceResolver: true)
     senders: [FlowSender!]! @goField(forceResolver: true)
 
     statistics: FlowStatistics!
@@ -13012,12 +13143,12 @@ input FlowMergeInput {
 
 enum FlowStatus {
     INACTIVE
-    SCHEDULING
     ACTIVE
     PAUSED
     ARCHIVED
 }
 
+#deprecated
 type FlowContact implements MetadataInterface {
     metadata:               Metadata!
 
@@ -13027,6 +13158,31 @@ type FlowContact implements MetadataInterface {
 
     scheduledAction: String
     scheduledAt: Time
+}
+
+type FlowParticipant implements MetadataInterface {
+    metadata: Metadata!
+
+    entityType: String!
+    entityId: ID!
+
+    status: FlowParticipantStatus!
+
+    executions: [FlowActionExecution!]! @goField(forceResolver: true)
+}
+
+type FlowActionExecution {
+    metadata: Metadata!
+    action: FlowAction! @goField(forceResolver: true)
+    status: FlowActionExecutionStatus!
+    scheduledAt: Time
+    executedAt: Time
+    error: String
+}
+
+type FlowAction {
+   metadata: Metadata!
+   action: FlowActionType!
 }
 
 type FlowSender implements MetadataInterface {
@@ -13103,6 +13259,22 @@ enum EmailVariableName {
     CONTACT_FULL_NAME
     CONTACT_EMAIL
     ORGANIZATION_NAME
+}
+
+enum FlowActionType{
+    EMAIL_NEW
+    EMAIL_REPLY
+    LINKEDIN_CONNECTION_REQUEST
+    LINKEDIN_MESSAGE
+}
+
+enum FlowActionExecutionStatus{
+    SCHEDULED
+    IN_PROGRESS
+    SKIPPED
+    SUCCESS
+    TECH_ERROR
+    BUSINESS_ERROR
 }
 `, BuiltIn: false},
 	{Name: "../schemas/interaction_event.graphqls", Input: `union InteractionEventParticipant = EmailParticipant | PhoneNumberParticipant | ContactParticipant | UserParticipant | OrganizationParticipant | JobRoleParticipant
@@ -15379,6 +15551,7 @@ enum ColumnViewType {
     CONTACTS_CONNECTIONS
     CONTACTS_FLOWS
     CONTACTS_FLOW_STATUS
+    CONTACTS_FLOW_NEXT_ACTION
     CONTACTS_UPDATED_AT
     CONTACTS_CREATED_AT
 
@@ -30981,6 +31154,8 @@ func (ec *executionContext) fieldContext_Contact_flows(_ context.Context, field 
 				return ec.fieldContext_Flow_status(ctx, field)
 			case "contacts":
 				return ec.fieldContext_Flow_contacts(ctx, field)
+			case "participants":
+				return ec.fieldContext_Flow_participants(ctx, field)
 			case "senders":
 				return ec.fieldContext_Flow_senders(ctx, field)
 			case "statistics":
@@ -41373,6 +41548,62 @@ func (ec *executionContext) fieldContext_Flow_contacts(_ context.Context, field 
 	return fc, nil
 }
 
+func (ec *executionContext) _Flow_participants(ctx context.Context, field graphql.CollectedField, obj *model.Flow) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Flow_participants(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Flow().Participants(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.FlowParticipant)
+	fc.Result = res
+	return ec.marshalNFlowParticipant2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFlowParticipantᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Flow_participants(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Flow",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "metadata":
+				return ec.fieldContext_FlowParticipant_metadata(ctx, field)
+			case "entityType":
+				return ec.fieldContext_FlowParticipant_entityType(ctx, field)
+			case "entityId":
+				return ec.fieldContext_FlowParticipant_entityId(ctx, field)
+			case "status":
+				return ec.fieldContext_FlowParticipant_status(ctx, field)
+			case "executions":
+				return ec.fieldContext_FlowParticipant_executions(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type FlowParticipant", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Flow_senders(ctx context.Context, field graphql.CollectedField, obj *model.Flow) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Flow_senders(ctx, field)
 	if err != nil {
@@ -41480,6 +41711,387 @@ func (ec *executionContext) fieldContext_Flow_statistics(_ context.Context, fiel
 				return ec.fieldContext_FlowStatistics_goalAchieved(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type FlowStatistics", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FlowAction_metadata(ctx context.Context, field graphql.CollectedField, obj *model.FlowAction) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FlowAction_metadata(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Metadata, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Metadata)
+	fc.Result = res
+	return ec.marshalNMetadata2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMetadata(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FlowAction_metadata(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FlowAction",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Metadata_id(ctx, field)
+			case "created":
+				return ec.fieldContext_Metadata_created(ctx, field)
+			case "lastUpdated":
+				return ec.fieldContext_Metadata_lastUpdated(ctx, field)
+			case "source":
+				return ec.fieldContext_Metadata_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Metadata_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Metadata_appSource(ctx, field)
+			case "version":
+				return ec.fieldContext_Metadata_version(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Metadata", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FlowAction_action(ctx context.Context, field graphql.CollectedField, obj *model.FlowAction) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FlowAction_action(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Action, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(entity.FlowActionType)
+	fc.Result = res
+	return ec.marshalNFlowActionType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowActionType(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FlowAction_action(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FlowAction",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type FlowActionType does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FlowActionExecution_metadata(ctx context.Context, field graphql.CollectedField, obj *model.FlowActionExecution) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FlowActionExecution_metadata(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Metadata, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Metadata)
+	fc.Result = res
+	return ec.marshalNMetadata2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMetadata(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FlowActionExecution_metadata(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FlowActionExecution",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Metadata_id(ctx, field)
+			case "created":
+				return ec.fieldContext_Metadata_created(ctx, field)
+			case "lastUpdated":
+				return ec.fieldContext_Metadata_lastUpdated(ctx, field)
+			case "source":
+				return ec.fieldContext_Metadata_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Metadata_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Metadata_appSource(ctx, field)
+			case "version":
+				return ec.fieldContext_Metadata_version(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Metadata", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FlowActionExecution_action(ctx context.Context, field graphql.CollectedField, obj *model.FlowActionExecution) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FlowActionExecution_action(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.FlowActionExecution().Action(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.FlowAction)
+	fc.Result = res
+	return ec.marshalNFlowAction2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFlowAction(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FlowActionExecution_action(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FlowActionExecution",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "metadata":
+				return ec.fieldContext_FlowAction_metadata(ctx, field)
+			case "action":
+				return ec.fieldContext_FlowAction_action(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type FlowAction", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FlowActionExecution_status(ctx context.Context, field graphql.CollectedField, obj *model.FlowActionExecution) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FlowActionExecution_status(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Status, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(entity.FlowActionExecutionStatus)
+	fc.Result = res
+	return ec.marshalNFlowActionExecutionStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowActionExecutionStatus(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FlowActionExecution_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FlowActionExecution",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type FlowActionExecutionStatus does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FlowActionExecution_scheduledAt(ctx context.Context, field graphql.CollectedField, obj *model.FlowActionExecution) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FlowActionExecution_scheduledAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ScheduledAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FlowActionExecution_scheduledAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FlowActionExecution",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FlowActionExecution_executedAt(ctx context.Context, field graphql.CollectedField, obj *model.FlowActionExecution) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FlowActionExecution_executedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ExecutedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FlowActionExecution_executedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FlowActionExecution",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FlowActionExecution_error(ctx context.Context, field graphql.CollectedField, obj *model.FlowActionExecution) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FlowActionExecution_error(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Error, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FlowActionExecution_error(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FlowActionExecution",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -41783,6 +42395,256 @@ func (ec *executionContext) fieldContext_FlowContact_scheduledAt(_ context.Conte
 	return fc, nil
 }
 
+func (ec *executionContext) _FlowParticipant_metadata(ctx context.Context, field graphql.CollectedField, obj *model.FlowParticipant) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FlowParticipant_metadata(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Metadata, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Metadata)
+	fc.Result = res
+	return ec.marshalNMetadata2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMetadata(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FlowParticipant_metadata(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FlowParticipant",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Metadata_id(ctx, field)
+			case "created":
+				return ec.fieldContext_Metadata_created(ctx, field)
+			case "lastUpdated":
+				return ec.fieldContext_Metadata_lastUpdated(ctx, field)
+			case "source":
+				return ec.fieldContext_Metadata_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Metadata_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Metadata_appSource(ctx, field)
+			case "version":
+				return ec.fieldContext_Metadata_version(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Metadata", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FlowParticipant_entityType(ctx context.Context, field graphql.CollectedField, obj *model.FlowParticipant) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FlowParticipant_entityType(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.EntityType, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FlowParticipant_entityType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FlowParticipant",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FlowParticipant_entityId(ctx context.Context, field graphql.CollectedField, obj *model.FlowParticipant) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FlowParticipant_entityId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.EntityID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FlowParticipant_entityId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FlowParticipant",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FlowParticipant_status(ctx context.Context, field graphql.CollectedField, obj *model.FlowParticipant) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FlowParticipant_status(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Status, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(entity.FlowParticipantStatus)
+	fc.Result = res
+	return ec.marshalNFlowParticipantStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantStatus(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FlowParticipant_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FlowParticipant",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type FlowParticipantStatus does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FlowParticipant_executions(ctx context.Context, field graphql.CollectedField, obj *model.FlowParticipant) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FlowParticipant_executions(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.FlowParticipant().Executions(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.FlowActionExecution)
+	fc.Result = res
+	return ec.marshalNFlowActionExecution2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFlowActionExecutionᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FlowParticipant_executions(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FlowParticipant",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "metadata":
+				return ec.fieldContext_FlowActionExecution_metadata(ctx, field)
+			case "action":
+				return ec.fieldContext_FlowActionExecution_action(ctx, field)
+			case "status":
+				return ec.fieldContext_FlowActionExecution_status(ctx, field)
+			case "scheduledAt":
+				return ec.fieldContext_FlowActionExecution_scheduledAt(ctx, field)
+			case "executedAt":
+				return ec.fieldContext_FlowActionExecution_executedAt(ctx, field)
+			case "error":
+				return ec.fieldContext_FlowActionExecution_error(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type FlowActionExecution", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _FlowSender_metadata(ctx context.Context, field graphql.CollectedField, obj *model.FlowSender) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_FlowSender_metadata(ctx, field)
 	if err != nil {
@@ -41893,6 +42755,8 @@ func (ec *executionContext) fieldContext_FlowSender_flow(_ context.Context, fiel
 				return ec.fieldContext_Flow_status(ctx, field)
 			case "contacts":
 				return ec.fieldContext_Flow_contacts(ctx, field)
+			case "participants":
+				return ec.fieldContext_Flow_participants(ctx, field)
 			case "senders":
 				return ec.fieldContext_Flow_senders(ctx, field)
 			case "statistics":
@@ -60074,6 +60938,8 @@ func (ec *executionContext) fieldContext_Mutation_flow_Merge(ctx context.Context
 				return ec.fieldContext_Flow_status(ctx, field)
 			case "contacts":
 				return ec.fieldContext_Flow_contacts(ctx, field)
+			case "participants":
+				return ec.fieldContext_Flow_participants(ctx, field)
 			case "senders":
 				return ec.fieldContext_Flow_senders(ctx, field)
 			case "statistics":
@@ -60183,6 +61049,8 @@ func (ec *executionContext) fieldContext_Mutation_flow_ChangeStatus(ctx context.
 				return ec.fieldContext_Flow_status(ctx, field)
 			case "contacts":
 				return ec.fieldContext_Flow_contacts(ctx, field)
+			case "participants":
+				return ec.fieldContext_Flow_participants(ctx, field)
 			case "senders":
 				return ec.fieldContext_Flow_senders(ctx, field)
 			case "statistics":
@@ -83367,6 +84235,8 @@ func (ec *executionContext) fieldContext_Query_flow(ctx context.Context, field g
 				return ec.fieldContext_Flow_status(ctx, field)
 			case "contacts":
 				return ec.fieldContext_Flow_contacts(ctx, field)
+			case "participants":
+				return ec.fieldContext_Flow_participants(ctx, field)
 			case "senders":
 				return ec.fieldContext_Flow_senders(ctx, field)
 			case "statistics":
@@ -83476,6 +84346,8 @@ func (ec *executionContext) fieldContext_Query_flows(_ context.Context, field gr
 				return ec.fieldContext_Flow_status(ctx, field)
 			case "contacts":
 				return ec.fieldContext_Flow_contacts(ctx, field)
+			case "participants":
+				return ec.fieldContext_Flow_participants(ctx, field)
 			case "senders":
 				return ec.fieldContext_Flow_senders(ctx, field)
 			case "statistics":
@@ -104310,13 +105182,13 @@ func (ec *executionContext) _MetadataInterface(ctx context.Context, sel ast.Sele
 			return graphql.Null
 		}
 		return ec._Contact(ctx, sel, obj)
-	case model.BankAccount:
-		return ec._BankAccount(ctx, sel, &obj)
-	case *model.BankAccount:
+	case model.FlowSender:
+		return ec._FlowSender(ctx, sel, &obj)
+	case *model.FlowSender:
 		if obj == nil {
 			return graphql.Null
 		}
-		return ec._BankAccount(ctx, sel, obj)
+		return ec._FlowSender(ctx, sel, obj)
 	case model.Contract:
 		return ec._Contract(ctx, sel, &obj)
 	case *model.Contract:
@@ -104338,13 +105210,20 @@ func (ec *executionContext) _MetadataInterface(ctx context.Context, sel ast.Sele
 			return graphql.Null
 		}
 		return ec._FlowContact(ctx, sel, obj)
-	case model.FlowSender:
-		return ec._FlowSender(ctx, sel, &obj)
-	case *model.FlowSender:
+	case model.FlowParticipant:
+		return ec._FlowParticipant(ctx, sel, &obj)
+	case *model.FlowParticipant:
 		if obj == nil {
 			return graphql.Null
 		}
-		return ec._FlowSender(ctx, sel, obj)
+		return ec._FlowParticipant(ctx, sel, obj)
+	case model.BankAccount:
+		return ec._BankAccount(ctx, sel, &obj)
+	case *model.BankAccount:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._BankAccount(ctx, sel, obj)
 	case model.Invoice:
 		return ec._Invoice(ctx, sel, &obj)
 	case *model.Invoice:
@@ -108611,6 +109490,42 @@ func (ec *executionContext) _Flow(ctx context.Context, sel ast.SelectionSet, obj
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "participants":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Flow_participants(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "senders":
 			field := field
 
@@ -108652,6 +109567,136 @@ func (ec *executionContext) _Flow(ctx context.Context, sel ast.SelectionSet, obj
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var flowActionImplementors = []string{"FlowAction"}
+
+func (ec *executionContext) _FlowAction(ctx context.Context, sel ast.SelectionSet, obj *model.FlowAction) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, flowActionImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("FlowAction")
+		case "metadata":
+			out.Values[i] = ec._FlowAction_metadata(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "action":
+			out.Values[i] = ec._FlowAction_action(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var flowActionExecutionImplementors = []string{"FlowActionExecution"}
+
+func (ec *executionContext) _FlowActionExecution(ctx context.Context, sel ast.SelectionSet, obj *model.FlowActionExecution) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, flowActionExecutionImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("FlowActionExecution")
+		case "metadata":
+			out.Values[i] = ec._FlowActionExecution_metadata(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "action":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._FlowActionExecution_action(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "status":
+			out.Values[i] = ec._FlowActionExecution_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "scheduledAt":
+			out.Values[i] = ec._FlowActionExecution_scheduledAt(ctx, field, obj)
+		case "executedAt":
+			out.Values[i] = ec._FlowActionExecution_executedAt(ctx, field, obj)
+		case "error":
+			out.Values[i] = ec._FlowActionExecution_error(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -108736,6 +109781,96 @@ func (ec *executionContext) _FlowContact(ctx context.Context, sel ast.SelectionS
 			out.Values[i] = ec._FlowContact_scheduledAction(ctx, field, obj)
 		case "scheduledAt":
 			out.Values[i] = ec._FlowContact_scheduledAt(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var flowParticipantImplementors = []string{"FlowParticipant", "MetadataInterface"}
+
+func (ec *executionContext) _FlowParticipant(ctx context.Context, sel ast.SelectionSet, obj *model.FlowParticipant) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, flowParticipantImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("FlowParticipant")
+		case "metadata":
+			out.Values[i] = ec._FlowParticipant_metadata(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "entityType":
+			out.Values[i] = ec._FlowParticipant_entityType(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "entityId":
+			out.Values[i] = ec._FlowParticipant_entityId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "status":
+			out.Values[i] = ec._FlowParticipant_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "executions":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._FlowParticipant_executions(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -120344,6 +121479,106 @@ func (ec *executionContext) marshalNFlow2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenl
 	return ec._Flow(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNFlowAction2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFlowAction(ctx context.Context, sel ast.SelectionSet, v model.FlowAction) graphql.Marshaler {
+	return ec._FlowAction(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNFlowAction2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFlowAction(ctx context.Context, sel ast.SelectionSet, v *model.FlowAction) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._FlowAction(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNFlowActionExecution2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFlowActionExecutionᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.FlowActionExecution) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNFlowActionExecution2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFlowActionExecution(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNFlowActionExecution2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFlowActionExecution(ctx context.Context, sel ast.SelectionSet, v *model.FlowActionExecution) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._FlowActionExecution(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNFlowActionExecutionStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowActionExecutionStatus(ctx context.Context, v interface{}) (entity.FlowActionExecutionStatus, error) {
+	tmp, err := graphql.UnmarshalString(v)
+	res := entity.FlowActionExecutionStatus(tmp)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNFlowActionExecutionStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowActionExecutionStatus(ctx context.Context, sel ast.SelectionSet, v entity.FlowActionExecutionStatus) graphql.Marshaler {
+	res := graphql.MarshalString(string(v))
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) unmarshalNFlowActionType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowActionType(ctx context.Context, v interface{}) (entity.FlowActionType, error) {
+	tmp, err := graphql.UnmarshalString(v)
+	res := entity.FlowActionType(tmp)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNFlowActionType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowActionType(ctx context.Context, sel ast.SelectionSet, v entity.FlowActionType) graphql.Marshaler {
+	res := graphql.MarshalString(string(v))
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
 func (ec *executionContext) marshalNFlowContact2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFlowContact(ctx context.Context, sel ast.SelectionSet, v model.FlowContact) graphql.Marshaler {
 	return ec._FlowContact(ctx, sel, &v)
 }
@@ -120405,6 +121640,60 @@ func (ec *executionContext) marshalNFlowContact2ᚖgithubᚗcomᚋopenlineᚑai�
 func (ec *executionContext) unmarshalNFlowMergeInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFlowMergeInput(ctx context.Context, v interface{}) (model.FlowMergeInput, error) {
 	res, err := ec.unmarshalInputFlowMergeInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNFlowParticipant2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFlowParticipantᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.FlowParticipant) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNFlowParticipant2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFlowParticipant(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNFlowParticipant2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFlowParticipant(ctx context.Context, sel ast.SelectionSet, v *model.FlowParticipant) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._FlowParticipant(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNFlowParticipantStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantStatus(ctx context.Context, v interface{}) (entity.FlowParticipantStatus, error) {

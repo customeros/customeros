@@ -7,6 +7,8 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/log"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"time"
@@ -652,6 +654,80 @@ func ExecuteWriteInTransaction(
 	})
 
 	return r, err
+}
+
+type TxWithPostCommit struct {
+	Tx       *neo4j.ManagedTransaction
+	onCommit []func(ctx context.Context) error
+}
+
+func NewTxWithPostCommit(tx *neo4j.ManagedTransaction) *TxWithPostCommit {
+	return &TxWithPostCommit{
+		Tx:       tx,
+		onCommit: []func(ctx context.Context) error{},
+	}
+}
+
+func ExecuteWriteInTransactionWithPostCommitActions(
+	ctx context.Context,
+	driver *neo4j.DriverWithContext,
+	database string,
+	txWithPostCommit *TxWithPostCommit,
+	action func(tx *TxWithPostCommit) (any, error), // Updated to use *TxWithPostCommit
+) (any, error) {
+	// If a transaction is already provided, execute the action in it
+	if txWithPostCommit != nil {
+		return action(txWithPostCommit)
+	}
+
+	// Otherwise, create a new transaction using ExecuteWrite
+	session := NewNeo4jWriteSession(ctx, *driver, WithDatabaseName(database))
+	defer session.Close(ctx)
+
+	var result any
+	var err error
+
+	// Execute the action within a managed transaction
+	r, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		// Wrap the new transaction with post-commit functionality
+		txWithPostCommit = NewTxWithPostCommit(&tx)
+
+		// Execute the action with the wrapped transaction
+		result, err = action(txWithPostCommit)
+		if err != nil {
+			return nil, err
+		}
+
+		return result, nil
+	})
+
+	// Only run post-commit actions if ExecuteWrite completes successfully
+	if err == nil && txWithPostCommit != nil {
+		if err := txWithPostCommit.runPostCommitActions(ctx); err != nil {
+			return nil, err
+		}
+	}
+
+	return r, err
+}
+
+// AddPostCommitAction adds a post-commit action (e.g., publish message to RabbitMQ)
+func (t *TxWithPostCommit) AddPostCommitAction(action func(ctx context.Context) error) {
+	t.onCommit = append(t.onCommit, action)
+}
+
+// RunPostCommitActions executes all post-commit actions after the transaction successfully commits.
+func (t *TxWithPostCommit) runPostCommitActions(ctx context.Context) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "Neo4jUtils.RunPostCommitActions")
+	defer span.Finish()
+
+	for _, action := range t.onCommit {
+		err := action(ctx)
+		if err != nil {
+			tracing.TraceErr(span, err)
+		}
+	}
+	return nil
 }
 
 func ExecuteWriteQuery(ctx context.Context, driver neo4j.DriverWithContext, cypher string, params map[string]any) error {

@@ -43,6 +43,7 @@ func MapEntitiesToFlows(entities *neo4jentity.FlowEntities) []*model.Flow {
 	return mapped
 }
 
+// deprecated
 func MapEntityToFlowContact(entity *neo4jentity.FlowParticipantEntity) *model.FlowContact {
 	if entity == nil {
 		return nil
@@ -62,10 +63,38 @@ func MapEntityToFlowContact(entity *neo4jentity.FlowParticipantEntity) *model.Fl
 	}
 }
 
+// deprecated
 func MapEntitiesToFlowContacts(entities *neo4jentity.FlowParticipantEntities) []*model.FlowContact {
 	var mapped []*model.FlowContact
 	for _, entity := range *entities {
 		mapped = append(mapped, MapEntityToFlowContact(&entity))
+	}
+	return mapped
+}
+
+func MapEntityToFlowParticipant(entity *neo4jentity.FlowParticipantEntity) *model.FlowParticipant {
+	if entity == nil {
+		return nil
+	}
+	return &model.FlowParticipant{
+		Metadata: &model.Metadata{
+			ID:            entity.Id,
+			Created:       entity.CreatedAt,
+			LastUpdated:   entity.UpdatedAt,
+			Source:        model.DataSourceOpenline,
+			SourceOfTruth: model.DataSourceOpenline,
+			AppSource:     "",
+		},
+		Status:     entity.Status,
+		EntityID:   entity.EntityId,
+		EntityType: entity.EntityType.String(),
+	}
+}
+
+func MapEntitiesToFlowParticipants(entities *neo4jentity.FlowParticipantEntities) []*model.FlowParticipant {
+	var mapped []*model.FlowParticipant
+	for _, entity := range *entities {
+		mapped = append(mapped, MapEntityToFlowParticipant(&entity))
 	}
 	return mapped
 }
@@ -90,6 +119,58 @@ func MapEntitiesToFlowSenders(entities *neo4jentity.FlowSenderEntities) []*model
 	var mapped []*model.FlowSender
 	for _, entity := range *entities {
 		mapped = append(mapped, MapEntityToFlowSender(&entity))
+	}
+	return mapped
+}
+
+func MapEntityToFlowAction(entity *neo4jentity.FlowActionEntity) *model.FlowAction {
+	if entity == nil {
+		return nil
+	}
+	return &model.FlowAction{
+		Metadata: &model.Metadata{
+			ID:            entity.Id,
+			Created:       entity.CreatedAt,
+			LastUpdated:   entity.UpdatedAt,
+			Source:        model.DataSourceOpenline,
+			SourceOfTruth: model.DataSourceOpenline,
+			AppSource:     "",
+		},
+		Action: entity.Data.Action,
+	}
+}
+
+func MapEntitiesToFlowActions(entities *neo4jentity.FlowActionEntities) []*model.FlowAction {
+	var mapped []*model.FlowAction
+	for _, entity := range *entities {
+		mapped = append(mapped, MapEntityToFlowAction(&entity))
+	}
+	return mapped
+}
+
+func MapEntityToFlowActionExecution(entity *neo4jentity.FlowActionExecutionEntity) *model.FlowActionExecution {
+	if entity == nil {
+		return nil
+	}
+	return &model.FlowActionExecution{
+		Metadata: &model.Metadata{
+			ID:            entity.Id,
+			Created:       entity.CreatedAt,
+			LastUpdated:   entity.UpdatedAt,
+			Source:        model.DataSourceOpenline,
+			SourceOfTruth: model.DataSourceOpenline,
+			AppSource:     "",
+		},
+		Status:      entity.Status,
+		ScheduledAt: &entity.ScheduledAt,
+		ExecutedAt:  entity.ExecutedAt,
+	}
+}
+
+func MapEntitiesToFlowActionExecutions(entities *neo4jentity.FlowActionExecutionEntities) []*model.FlowActionExecution {
+	var mapped []*model.FlowActionExecution
+	for _, entity := range *entities {
+		mapped = append(mapped, MapEntityToFlowActionExecution(&entity))
 	}
 	return mapped
 }
