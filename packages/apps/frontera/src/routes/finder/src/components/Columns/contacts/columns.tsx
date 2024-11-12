@@ -4,7 +4,6 @@ import { CountryCell } from '@finder/components/Columns/Cells/country';
 import { TextCell } from '@finder/components/Columns/shared/Cells/TextCell';
 import { JobTitleCell } from '@finder/components/Columns/contacts/Cells/jobTitle';
 import { ContactFlowCell } from '@finder/components/Columns/contacts/Cells/contactFlow';
-import { ConnectedToFilter } from '@finder/components/Columns/contacts/Filters/ConnectedToFilter';
 
 import { DateTimeUtils } from '@utils/date.ts';
 import { createColumnHelper } from '@ui/presentation/Table';
@@ -15,22 +14,14 @@ import { User, Social, TableViewDef, ColumnViewType } from '@graphql/types';
 import { EmailCell } from './Cells/email';
 import { PhoneCell } from './Cells/phone';
 import { AvatarCell } from './Cells/avatar';
-import { EmailFilter } from './Filters/Email';
 import { ContactsTagsCell } from './Cells/tags';
-import { FlowsFilter } from './Filters/FlowsFilter';
 import { FlowStatusCell } from './Cells/flowStatus';
 import { ContactLinkedInCell } from './Cells/socials';
 import { ContactNameCell } from './Cells/contactName';
 import { ContactAvatarHeader } from './Headers/Avatar';
-import { PersonaFilter } from './Filters/PersonaFilter';
 import { ConnectedUsers } from './Cells/connectedUsers';
-import { SocialsFilter } from '../shared/Filters/Socials';
 import { OrganizationNameCell } from './Cells/organization';
 import { getColumnConfig } from '../shared/util/getColumnConfig';
-import { ContactFlowStatusFilter } from './Filters/FlowStatusFilter';
-import { SearchTextFilter } from '../shared/Filters/SearchTextFilter';
-import { NumericValueFilter } from '../shared/Filters/NumericValueFilter';
-import { LocationFilter } from '../shared/Filters/LocationFilter/LocationFilter';
 
 type ColumnDatum = ContactStore;
 
@@ -70,7 +61,7 @@ const columns: Record<string, Column> = {
     minSize: 150,
     maxSize: 650,
     enableResizing: true,
-    enableColumnFilter: true,
+    enableColumnFilter: false,
     enableSorting: true,
     cell: (props) => {
       return (
@@ -83,15 +74,7 @@ const columns: Record<string, Column> = {
     header: (props) => (
       <THead<HTMLInputElement>
         title='Name'
-        filterWidth='14rem'
         id={ColumnViewType.ContactsName}
-        renderFilter={(initialFocusRef) => (
-          <SearchTextFilter
-            initialFocusRef={initialFocusRef}
-            placeholder={'e.g. Isabella Evans'}
-            property={ColumnViewType.ContactsName}
-          />
-        )}
         {...getTHeadProps<ContactStore>(props)}
       />
     ),
@@ -102,7 +85,7 @@ const columns: Record<string, Column> = {
     minSize: 150,
     maxSize: 650,
     enableResizing: true,
-    enableColumnFilter: true,
+    enableColumnFilter: false,
     enableSorting: true,
     cell: (props) => {
       const lasOrganizationId =
@@ -124,15 +107,8 @@ const columns: Record<string, Column> = {
     },
     header: (props) => (
       <THead<HTMLInputElement>
-        filterWidth='14rem'
         title='Organization'
         id={ColumnViewType.ContactsOrganization}
-        renderFilter={(initialFocusRef) => (
-          <SearchTextFilter
-            initialFocusRef={initialFocusRef}
-            property={ColumnViewType.ContactsOrganization}
-          />
-        )}
         {...getTHeadProps<ContactStore>(props)}
       />
     ),
@@ -146,7 +122,7 @@ const columns: Record<string, Column> = {
       minSize: 230,
       maxSize: 650,
       enableResizing: true,
-      enableColumnFilter: true,
+      enableColumnFilter: false,
       enableSorting: false,
       cell: (props) => {
         const validationDetails =
@@ -164,12 +140,6 @@ const columns: Record<string, Column> = {
           filterWidth='15rem'
           title='Primary Email'
           id={ColumnViewType.ContactsPrimaryEmail}
-          renderFilter={(initialFocusRef) => (
-            <EmailFilter
-              initialFocusRef={initialFocusRef}
-              property={ColumnViewType.ContactsPersonalEmails}
-            />
-          )}
           {...getTHeadProps<ContactStore>(props)}
         />
       ),
@@ -184,20 +154,13 @@ const columns: Record<string, Column> = {
       minSize: 125,
       maxSize: 650,
       enableResizing: true,
-      enableColumnFilter: true,
+      enableColumnFilter: false,
       enableSorting: false,
 
       header: (props) => (
         <THead<HTMLInputElement>
           title='Mobile Number'
           id={ColumnViewType.ContactsPhoneNumbers}
-          renderFilter={(initialFocusRef) => (
-            <SearchTextFilter
-              initialFocusRef={initialFocusRef}
-              placeholder={'e.g. (907) 834-2765'}
-              property={ColumnViewType.ContactsPhoneNumbers}
-            />
-          )}
           {...getTHeadProps<ContactStore>(props)}
         />
       ),
@@ -227,7 +190,7 @@ const columns: Record<string, Column> = {
     minSize: 125,
     maxSize: 650,
     enableResizing: true,
-    enableColumnFilter: true,
+    enableColumnFilter: false,
     enableSorting: true,
     cell: (props) => {
       const city = props.getValue()?.[0]?.locality;
@@ -243,15 +206,6 @@ const columns: Record<string, Column> = {
       <THead<HTMLInputElement>
         title='City'
         id={ColumnViewType.ContactsCity}
-        renderFilter={(initialFocusRef) => (
-          <LocationFilter
-            type='contacts'
-            locationType='locality'
-            placeholder={'e.g. New York'}
-            initialFocusRef={initialFocusRef}
-            property={ColumnViewType.ContactsCity}
-          />
-        )}
         {...getTHeadProps<ContactStore>(props)}
       />
     ),
@@ -266,7 +220,7 @@ const columns: Record<string, Column> = {
     minSize: 125,
     maxSize: 650,
     enableResizing: true,
-    enableColumnFilter: true,
+    enableColumnFilter: false,
     enableSorting: false,
     cell: (props) => <ContactLinkedInCell contactId={props.row.original.id} />,
     header: (props) => (
@@ -274,13 +228,6 @@ const columns: Record<string, Column> = {
         title='LinkedIn'
         filterWidth='14rem'
         id={ColumnViewType.ContactsLinkedin}
-        renderFilter={(initialFocusRef) => (
-          <SocialsFilter
-            initialFocusRef={initialFocusRef}
-            property={ColumnViewType.ContactsLinkedin}
-            placeholder={'e.g. linkedin.com/in/isabella-evans'}
-          />
-        )}
         {...getTHeadProps<ContactStore>(props)}
       />
     ),
@@ -291,7 +238,7 @@ const columns: Record<string, Column> = {
     minSize: 120,
     maxSize: 650,
     enableResizing: true,
-    enableColumnFilter: true,
+    enableColumnFilter: false,
     enableSorting: false,
     cell: (props) => {
       return <ContactsTagsCell id={props.row.original.id} />;
@@ -301,13 +248,6 @@ const columns: Record<string, Column> = {
         title='Persona'
         filterWidth='14rem'
         id={ColumnViewType.ContactsPersona}
-        renderFilter={(initialFocusRef) => (
-          <PersonaFilter
-            placeholder={'e.g. Solo RevOps'}
-            initialFocusRef={initialFocusRef}
-            property={ColumnViewType.ContactsPersona}
-          />
-        )}
         {...getTHeadProps<ContactStore>(props)}
       />
     ),
@@ -322,7 +262,7 @@ const columns: Record<string, Column> = {
     minSize: 120,
     maxSize: 650,
     enableResizing: true,
-    enableColumnFilter: true,
+    enableColumnFilter: false,
     enableSorting: false,
     cell: (props) => {
       const value = props.getValue()?.id;
@@ -333,13 +273,6 @@ const columns: Record<string, Column> = {
       <THead<HTMLInputElement>
         title='Job Title'
         id={ColumnViewType.ContactsJobTitle}
-        renderFilter={(initialFocusRef) => (
-          <SearchTextFilter
-            placeholder={'e.g. CTO'}
-            initialFocusRef={initialFocusRef}
-            property={ColumnViewType.ContactsJobTitle}
-          />
-        )}
         {...getTHeadProps<ContactStore>(props)}
       />
     ),
@@ -385,7 +318,7 @@ const columns: Record<string, Column> = {
       minSize: 190,
       maxSize: 650,
       enableResizing: true,
-      enableColumnFilter: true,
+      enableColumnFilter: false,
       enableSorting: false,
       cell: (props) => {
         const jobRole =
@@ -411,14 +344,6 @@ const columns: Record<string, Column> = {
           filterWidth='21rem'
           title='Time In Current Role'
           id={ColumnViewType.ContactsTimeInCurrentRole}
-          renderFilter={(initialFocusRef) => (
-            <NumericValueFilter
-              suffix='month'
-              label='time in current role'
-              initialFocusRef={initialFocusRef}
-              property={ColumnViewType.ContactsTimeInCurrentRole}
-            />
-          )}
           {...getTHeadProps<ContactStore>(props)}
         />
       ),
@@ -434,7 +359,7 @@ const columns: Record<string, Column> = {
     minSize: 200,
     maxSize: 650,
     enableResizing: true,
-    enableColumnFilter: true,
+    enableColumnFilter: false,
     enableSorting: false,
     cell: (props) => {
       const value = props.getValue()?.id;
@@ -445,14 +370,6 @@ const columns: Record<string, Column> = {
       <THead<HTMLInputElement>
         title='Country'
         id={ColumnViewType.ContactsCountry}
-        renderFilter={(initialFocusRef) => (
-          <LocationFilter
-            type='contacts'
-            locationType='countryCodeA2'
-            initialFocusRef={initialFocusRef}
-            property={ColumnViewType.ContactsCountry}
-          />
-        )}
         {...getTHeadProps<ContactStore>(props)}
       />
     ),
@@ -539,7 +456,7 @@ const columns: Record<string, Column> = {
       minSize: 165,
       maxSize: 165,
       enableResizing: true,
-      enableColumnFilter: true,
+      enableColumnFilter: false,
       enableSorting: false,
 
       cell: (props) => {
@@ -569,12 +486,6 @@ const columns: Record<string, Column> = {
           filterWidth='17.5rem'
           title='LinkedIn Followers'
           id={ColumnViewType.ContactsLinkedinFollowerCount}
-          renderFilter={() => (
-            <NumericValueFilter
-              label='followers'
-              property={ColumnViewType.ContactsLinkedinFollowerCount}
-            />
-          )}
           {...getTHeadProps<ContactStore>(props)}
         />
       ),
@@ -594,12 +505,6 @@ const columns: Record<string, Column> = {
         filterWidth='17.5rem'
         title='Last Interaction'
         id={ColumnViewType.ContactsLastInteraction}
-        renderFilter={() => (
-          <NumericValueFilter
-            label='followers'
-            property={ColumnViewType.ContactsLastInteraction}
-          />
-        )}
         {...getTHeadProps<ContactStore>(props)}
       />
     ),
@@ -611,7 +516,7 @@ const columns: Record<string, Column> = {
       id: ColumnViewType.ContactsConnections,
       minSize: 150,
       maxSize: 600,
-      enableColumnFilter: true,
+      enableColumnFilter: false,
       enableSorting: true,
 
       cell: (props) => {
@@ -623,9 +528,6 @@ const columns: Record<string, Column> = {
         <THead<HTMLInputElement>
           title='LinkedIn Connections'
           id={ColumnViewType.ContactsConnections}
-          renderFilter={(initialFocusRef) => (
-            <ConnectedToFilter initialFocusRef={initialFocusRef} />
-          )}
           {...getTHeadProps<ContactStore>(props)}
         />
       ),
@@ -637,7 +539,7 @@ const columns: Record<string, Column> = {
     minSize: 150,
     maxSize: 600,
     enableResizing: true,
-    enableColumnFilter: true,
+    enableColumnFilter: false,
     enableSorting: true,
     cell: (props) => {
       const region = props.getValue()?.[0]?.region;
@@ -653,15 +555,6 @@ const columns: Record<string, Column> = {
       <THead<HTMLInputElement>
         title='Region'
         id={ColumnViewType.ContactsRegion}
-        renderFilter={(initialFocusRef) => (
-          <LocationFilter
-            type='contacts'
-            locationType='region'
-            placeholder='e.g. California'
-            initialFocusRef={initialFocusRef}
-            property={ColumnViewType.ContactsRegion}
-          />
-        )}
         {...getTHeadProps<ContactStore>(props)}
       />
     ),
@@ -672,7 +565,7 @@ const columns: Record<string, Column> = {
     minSize: 170,
     maxSize: 600,
     enableResizing: true,
-    enableColumnFilter: true,
+    enableColumnFilter: false,
     enableSorting: true,
     cell: (props) => {
       return <ContactFlowCell contactId={props.row.original.id} />;
@@ -682,12 +575,6 @@ const columns: Record<string, Column> = {
         title='Current Flows'
         filterWidth='17.5rem'
         id={ColumnViewType.ContactsFlows}
-        renderFilter={(initialFocusRef) => (
-          <FlowsFilter
-            placeholder='e.g. Aerospace CTO'
-            initialFocusRef={initialFocusRef}
-          />
-        )}
         {...getTHeadProps<ContactStore>(props)}
       />
     ),
@@ -698,7 +585,7 @@ const columns: Record<string, Column> = {
     minSize: 170,
     maxSize: 600,
     enableResizing: true,
-    enableColumnFilter: true,
+    enableColumnFilter: false,
     enableSorting: true,
     cell: (props) => {
       const value = props.getValue()?.flowContact?.value?.status;
@@ -709,7 +596,6 @@ const columns: Record<string, Column> = {
       <THead<HTMLInputElement>
         title='Status in Flow'
         id={ColumnViewType.ContactsFlowStatus}
-        renderFilter={() => <ContactFlowStatusFilter />}
         {...getTHeadProps<ContactStore>(props)}
       />
     ),

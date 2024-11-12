@@ -1,5 +1,5 @@
 import { observer } from 'mobx-react-lite';
-import { EmailVerificationStatus } from '@finder/components/Columns/contacts/Filters/Email/utils.ts';
+import { EmailVerificationStatus } from '@finder/components/Columns/contacts/filterTypes';
 
 import { useStore } from '@shared/hooks/useStore';
 import { XCircle } from '@ui/media/icons/XCircle.tsx';

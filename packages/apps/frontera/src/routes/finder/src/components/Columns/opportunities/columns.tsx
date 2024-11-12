@@ -1,18 +1,12 @@
-import { DateFilter } from '@finder/components/Columns/contracts/Filters';
 import { OpportunityStore } from '@store/Opportunities/Opportunity.store';
 import { DateCell } from '@finder/components/Columns/shared/Cells/DateCell';
 import { TextCell } from '@finder/components/Columns/shared/Cells/TextCell';
-import { StageFilter } from '@finder/components/Columns/opportunities/Filter';
-import { OwnerFilter } from '@finder/components/Columns/shared/Filters/Owner';
-import { ForecastFilter } from '@finder/components/Columns/shared/Filters/Forecast';
 import {
   ColumnDef,
   ColumnDef as ColumnDefinition,
 } from '@tanstack/react-table';
 import { OrganizationCell } from '@finder/components/Columns/shared/Cells/organization';
 import { getColumnConfig } from '@finder/components/Columns/shared/util/getColumnConfig.ts';
-import { SearchTextFilter } from '@finder/components/Columns/shared/Filters/SearchTextFilter';
-import { NumericValueFilter } from '@finder/components/Columns/shared/Filters/NumericValueFilter';
 
 import { DateTimeUtils } from '@utils/date.ts';
 import { createColumnHelper } from '@ui/presentation/Table';
@@ -36,7 +30,7 @@ export const columns: Record<string, Column> = {
     minSize: 160,
     size: 160,
     maxSize: 400,
-    enableColumnFilter: true,
+    enableColumnFilter: false,
     enableSorting: true,
     enableResizing: true,
     cell: (props) => {
@@ -49,14 +43,7 @@ export const columns: Record<string, Column> = {
     header: (props) => (
       <THead<HTMLInputElement>
         title='Name'
-        filterWidth='14rem'
         id={ColumnViewType.OpportunitiesName}
-        renderFilter={(initialFocusRef) => (
-          <SearchTextFilter
-            initialFocusRef={initialFocusRef}
-            property={ColumnViewType.OpportunitiesName}
-          />
-        )}
         {...getTHeadProps<OpportunityStore>(props)}
       />
     ),
@@ -68,7 +55,7 @@ export const columns: Record<string, Column> = {
       id: ColumnViewType.OpportunitiesOrganization,
       minSize: 125,
       maxSize: 400,
-      enableColumnFilter: true,
+      enableColumnFilter: false,
       enableResizing: true,
       enableSorting: true,
       cell: (props) => {
@@ -84,15 +71,8 @@ export const columns: Record<string, Column> = {
       },
       header: (props) => (
         <THead<HTMLInputElement>
-          filterWidth='14rem'
           title='Organization'
           id={ColumnViewType.OpportunitiesOrganization}
-          renderFilter={(initialFocusRef) => (
-            <SearchTextFilter
-              initialFocusRef={initialFocusRef}
-              property={ColumnViewType.OpportunitiesOrganization}
-            />
-          )}
           {...getTHeadProps<OpportunityStore>(props)}
         />
       ),
@@ -105,13 +85,12 @@ export const columns: Record<string, Column> = {
       id: ColumnViewType.OpportunitiesStage,
       minSize: 160,
       maxSize: 400,
-      enableColumnFilter: true,
+      enableColumnFilter: false,
       enableResizing: true,
       enableSorting: true,
       header: (props) => (
         <THead
           title='Stage'
-          renderFilter={() => <StageFilter />}
           id={ColumnViewType.OpportunitiesStage}
           {...getTHeadProps<OpportunityStore>(props)}
         />
@@ -130,7 +109,7 @@ export const columns: Record<string, Column> = {
       id: ColumnViewType.OpportunitiesEstimatedArr,
       minSize: 125,
       maxSize: 400,
-      enableColumnFilter: true,
+      enableColumnFilter: false,
       enableResizing: true,
       enableSorting: true,
       cell: (props) => {
@@ -140,12 +119,6 @@ export const columns: Record<string, Column> = {
         <THead<HTMLInputElement>
           title='ARR Estimate'
           id={ColumnViewType.OpportunitiesEstimatedArr}
-          renderFilter={(initialFocusRef) => (
-            <ForecastFilter
-              initialFocusRef={initialFocusRef}
-              property={ColumnViewType.OpportunitiesEstimatedArr}
-            />
-          )}
           {...getTHeadProps<OpportunityStore>(props)}
         />
       ),
@@ -161,7 +134,7 @@ export const columns: Record<string, Column> = {
     minSize: 110,
     size: 110,
     maxSize: 400,
-    enableColumnFilter: true,
+    enableColumnFilter: false,
     enableResizing: true,
     enableSorting: true,
     cell: (props) => {
@@ -177,12 +150,6 @@ export const columns: Record<string, Column> = {
         title='Owner'
         data-test='owner'
         id={ColumnViewType.OpportunitiesOwner}
-        renderFilter={(initialFocusedRef) => (
-          <OwnerFilter
-            initialFocusRef={initialFocusedRef}
-            property={ColumnViewType.OpportunitiesOwner}
-          />
-        )}
         {...getTHeadProps<OpportunityStore>(props)}
       />
     ),
@@ -199,7 +166,7 @@ export const columns: Record<string, Column> = {
       minSize: 140,
       size: 140,
       maxSize: 400,
-      enableColumnFilter: true,
+      enableColumnFilter: false,
       enableResizing: true,
       enableSorting: true,
       cell: (props) => {
@@ -212,17 +179,8 @@ export const columns: Record<string, Column> = {
 
       header: (props) => (
         <THead<HTMLInputElement>
-          filterWidth='15rem'
           title='Time in Stage'
           id={ColumnViewType.OpportunitiesTimeInStage}
-          renderFilter={(initialFocusRef) => (
-            <NumericValueFilter
-              label='days'
-              suffix='day'
-              initialFocusRef={initialFocusRef}
-              property={ColumnViewType.OpportunitiesTimeInStage}
-            />
-          )}
           {...getTHeadProps<OpportunityStore>(props)}
         />
       ),
@@ -236,7 +194,7 @@ export const columns: Record<string, Column> = {
       minSize: 154,
       size: 154,
       maxSize: 400,
-      enableColumnFilter: true,
+      enableColumnFilter: false,
       enableResizing: true,
       enableSorting: true,
       cell: (props) => {
@@ -245,11 +203,7 @@ export const columns: Record<string, Column> = {
       header: (props) => (
         <THead
           title='Created'
-          filterWidth='17rem'
           id={ColumnViewType.OpportunitiesCreatedDate}
-          renderFilter={() => (
-            <DateFilter property={ColumnViewType.OpportunitiesCreatedDate} />
-          )}
           {...getTHeadProps<OpportunityStore>(props)}
         />
       ),
@@ -268,7 +222,7 @@ export const columns: Record<string, Column> = {
       minSize: 154,
       size: 154,
       maxSize: 400,
-      enableColumnFilter: true,
+      enableColumnFilter: false,
       enableResizing: true,
       enableSorting: true,
       cell: (props) => {
@@ -279,14 +233,7 @@ export const columns: Record<string, Column> = {
       header: (props) => (
         <THead<HTMLInputElement>
           title='Next Steps'
-          filterWidth='17rem'
           id={ColumnViewType.OpportunitiesNextStep}
-          renderFilter={(initialFocusRef) => (
-            <SearchTextFilter
-              initialFocusRef={initialFocusRef}
-              property={ColumnViewType.OpportunitiesNextStep}
-            />
-          )}
           {...getTHeadProps<OpportunityStore>(props)}
         />
       ),

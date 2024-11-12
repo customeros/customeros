@@ -45,7 +45,6 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
       ? { id: ColumnViewType.ContactsCreatedAt, desc: true }
       : { id: ColumnViewType.OrganizationsLastTouchpoint, desc: true },
   ]);
-  const filtersV2 = useFeatureIsOn('filters-v2');
 
   const searchTerm = searchParams?.get('search');
   const { reset, targetId, isConfirming, onConfirm } = useTableActions();
@@ -58,7 +57,7 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
     currentPreset: preset,
   });
 
-  const data = computeFinderData(store, filtersV2, {
+  const data = computeFinderData(store, {
     sorting,
     tableViewDef,
     urlParams: params,

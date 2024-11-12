@@ -14,11 +14,6 @@ import THead, { getTHeadProps } from '@ui/presentation/Table/THead';
 
 import { OrganizationName } from './Cells/OrganizationName';
 import {
-  IssueDateFilter,
-  BillingCycleFilter,
-  InvoiceStatusFilter,
-} from './Filters';
-import {
   AmountCell,
   ContractCell,
   BillingCycleCell,
@@ -40,16 +35,13 @@ const columns: Record<string, Column> = {
     minSize: 150,
     maxSize: 300,
     enableResizing: true,
-    enableColumnFilter: true,
+    enableColumnFilter: false,
     enableSorting: true,
     header: (props) => (
       <THead
         filterWidth={250}
         title='Issue Date'
         id={ColumnViewType.InvoicesIssueDate}
-        renderFilter={() => (
-          <IssueDateFilter property={ColumnViewType.InvoicesIssueDate} />
-        )}
         {...getTHeadProps(props)}
       />
     ),
@@ -63,16 +55,13 @@ const columns: Record<string, Column> = {
     minSize: 150,
     maxSize: 300,
     enableResizing: true,
-    enableColumnFilter: true,
+    enableColumnFilter: false,
     enableSorting: true,
     header: (props) => (
       <THead
         filterWidth={250}
         title='Created At'
         id={ColumnViewType.InvoicesIssueDatePast}
-        renderFilter={() => (
-          <IssueDateFilter property={ColumnViewType.InvoicesIssueDatePast} />
-        )}
         {...getTHeadProps(props)}
       />
     ),
@@ -85,7 +74,7 @@ const columns: Record<string, Column> = {
     minSize: 150,
     maxSize: 300,
     enableResizing: true,
-    enableColumnFilter: true,
+    enableColumnFilter: false,
     enableSorting: true,
     header: (props) => (
       <THead
@@ -93,9 +82,6 @@ const columns: Record<string, Column> = {
         filterWidth={250}
         id={ColumnViewType.InvoicesDueDate}
         {...getTHeadProps(props)}
-        renderFilter={() => (
-          <IssueDateFilter property={ColumnViewType.InvoicesDueDate} />
-        )}
       />
     ),
     cell: (props) => <DateCell value={props.getValue()?.value?.due} />,
@@ -107,7 +93,7 @@ const columns: Record<string, Column> = {
     minSize: 160,
     maxSize: 600,
     enableResizing: true,
-    enableColumnFilter: true,
+    enableColumnFilter: false,
     enableSorting: true,
     header: (props) => (
       <THead
@@ -155,13 +141,12 @@ const columns: Record<string, Column> = {
     minSize: 150,
     maxSize: 300,
     enableResizing: true,
-    enableColumnFilter: true,
+    enableColumnFilter: false,
     enableSorting: false,
     header: (props) => (
       <THead
         title='Billing Cycle'
         id={ColumnViewType.InvoicesBillingCycle}
-        renderFilter={() => <BillingCycleFilter />}
         {...getTHeadProps(props)}
       />
     ),
@@ -176,13 +161,12 @@ const columns: Record<string, Column> = {
     minSize: 175,
     maxSize: 300,
     enableResizing: true,
-    enableColumnFilter: true,
+    enableColumnFilter: false,
     enableSorting: true,
     header: (props) => (
       <THead
         title='Invoice Status'
         id={ColumnViewType.InvoicesInvoiceStatus}
-        renderFilter={() => <InvoiceStatusFilter />}
         {...getTHeadProps(props)}
       />
     ),

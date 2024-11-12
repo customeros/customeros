@@ -1,5 +1,5 @@
 import { match } from 'ts-pattern';
-import { EmailVerificationStatus } from '@finder/components/Columns/contacts/Filters/Email/utils';
+import { EmailVerificationStatus } from '@finder/components/Columns/contacts/filterTypes';
 
 import { Equal } from '@ui/media/icons/Equal';
 import { Cube01 } from '@ui/media/icons/Cube01';

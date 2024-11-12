@@ -2,7 +2,7 @@ import React, { useRef, MouseEvent, KeyboardEvent } from 'react';
 
 import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
-import { EmailVerificationStatus } from '@finder/components/Columns/contacts/Filters/Email/utils.ts';
+import { EmailVerificationStatus } from '@finder/components/Columns/contacts/filterTypes';
 
 import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';

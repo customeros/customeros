@@ -1,21 +1,10 @@
 import { ContractStore } from '@store/Contracts/Contract.store';
 import { TextCell } from '@finder/components/Columns/shared/Cells/TextCell';
-import { OwnerFilter } from '@finder/components/Columns/shared/Filters/Owner';
-import { ForecastFilter } from '@finder/components/Columns/shared/Filters/Forecast';
 import {
   ColumnDef,
   ColumnDef as ColumnDefinition,
 } from '@tanstack/react-table';
 import { currencyIcon } from '@settings/components/Tabs/panels/BillingPanel/components/utils.tsx';
-import { RenewalLikelihoodFilter } from '@finder/components/Columns/shared/Filters/RenewalLikelihood';
-import {
-  LtvFilter,
-  DateFilter,
-  StatusFilter,
-  PeriodFilter,
-  RenewalFilter,
-  CurrencyFilter,
-} from '@finder/components/Columns/contracts/Filters';
 
 import { DateTimeUtils } from '@utils/date.ts';
 import { createColumnHelper } from '@ui/presentation/Table';
@@ -24,7 +13,6 @@ import THead, { getTHeadProps } from '@ui/presentation/Table/THead';
 import { Opportunity, TableViewDef, ColumnViewType } from '@graphql/types';
 
 import { getColumnConfig } from '../shared/util/getColumnConfig';
-import { SearchTextFilter } from '../shared/Filters/SearchTextFilter';
 import {
   LtvCell,
   OwnerCell,
@@ -49,7 +37,7 @@ const columns: Record<string, Column> = {
     minSize: 160,
     maxSize: 650,
     enableResizing: true,
-    enableColumnFilter: true,
+    enableColumnFilter: false,
     enableSorting: true,
     cell: (props) => {
       return (
@@ -61,13 +49,6 @@ const columns: Record<string, Column> = {
         filterWidth='14rem'
         title='  Contract Name'
         id={ColumnViewType.ContractsName}
-        renderFilter={(initialFocusRef) => (
-          <SearchTextFilter
-            initialFocusRef={initialFocusRef}
-            property={ColumnViewType.ContractsName}
-            placeholder={'e.g. CustomerOS contract'}
-          />
-        )}
         {...getTHeadProps<ContractStore>(props)}
       />
     ),
@@ -79,7 +60,7 @@ const columns: Record<string, Column> = {
     minSize: 150,
     maxSize: 650,
     enableResizing: true,
-    enableColumnFilter: true,
+    enableColumnFilter: false,
     enableSorting: true,
     cell: (props) => {
       const contractEnded = props.getValue()?.value?.contractEnded;
@@ -101,9 +82,6 @@ const columns: Record<string, Column> = {
         title='Ended'
         filterWidth='14rem'
         id={ColumnViewType.ContractsEnded}
-        renderFilter={() => (
-          <DateFilter property={ColumnViewType.ContractsEnded} />
-        )}
         {...getTHeadProps<ContractStore>(props)}
       />
     ),
@@ -114,7 +92,7 @@ const columns: Record<string, Column> = {
     minSize: 150,
     maxSize: 650,
     enableResizing: true,
-    enableColumnFilter: true,
+    enableColumnFilter: false,
     enableSorting: true,
     cell: (props) => {
       const committedPeriodInMonths =
@@ -129,9 +107,6 @@ const columns: Record<string, Column> = {
         title='Period'
         filterWidth='14rem'
         id={ColumnViewType.ContractsPeriod}
-        renderFilter={(initialFocusRef) => (
-          <PeriodFilter initialFocusRef={initialFocusRef} />
-        )}
         {...getTHeadProps<ContractStore>(props)}
       />
     ),
@@ -142,7 +117,7 @@ const columns: Record<string, Column> = {
     minSize: 120,
     maxSize: 350,
     enableResizing: true,
-    enableColumnFilter: true,
+    enableColumnFilter: false,
     enableSorting: true,
     cell: (props) => {
       const currency = props.getValue().value.currency;
@@ -158,7 +133,6 @@ const columns: Record<string, Column> = {
         title='Currency'
         filterWidth='14rem'
         id={ColumnViewType.ContractsCurrency}
-        renderFilter={() => <CurrencyFilter />}
         {...getTHeadProps<ContractStore>(props)}
       />
     ),
@@ -169,7 +143,7 @@ const columns: Record<string, Column> = {
     minSize: 100,
     maxSize: 650,
     enableResizing: true,
-    enableColumnFilter: true,
+    enableColumnFilter: false,
     enableSorting: true,
     cell: (props) => {
       return <StatusCell status={props.getValue().value.contractStatus} />;
@@ -181,7 +155,6 @@ const columns: Record<string, Column> = {
         title='Status'
         filterWidth='14rem'
         id={ColumnViewType.ContractsStatus}
-        renderFilter={() => <StatusFilter />}
         {...getTHeadProps<ContractStore>(props)}
       />
     ),
@@ -192,7 +165,7 @@ const columns: Record<string, Column> = {
     minSize: 150,
     maxSize: 650,
     enableResizing: true,
-    enableColumnFilter: true,
+    enableColumnFilter: false,
     enableSorting: true,
     cell: (props) => {
       return (
@@ -211,7 +184,6 @@ const columns: Record<string, Column> = {
         title='Renewal'
         filterWidth='14rem'
         id={ColumnViewType.ContractsRenewal}
-        renderFilter={() => <RenewalFilter />}
         {...getTHeadProps<ContractStore>(props)}
       />
     ),
@@ -222,7 +194,7 @@ const columns: Record<string, Column> = {
     minSize: 150,
     maxSize: 650,
     enableResizing: true,
-    enableColumnFilter: true,
+    enableColumnFilter: false,
     enableSorting: true,
     cell: (props) => {
       return (
@@ -239,9 +211,6 @@ const columns: Record<string, Column> = {
         title='LTV'
         filterWidth='14rem'
         id={ColumnViewType.ContractsLtv}
-        renderFilter={(initialFocusRef) => (
-          <LtvFilter initialFocusRef={initialFocusRef} />
-        )}
         {...getTHeadProps<ContractStore>(props)}
       />
     ),
@@ -251,7 +220,7 @@ const columns: Record<string, Column> = {
     minSize: 150,
     maxSize: 650,
     enableResizing: true,
-    enableColumnFilter: true,
+    enableColumnFilter: false,
     enableSorting: true,
     cell: (props) => {
       return <OwnerCell id={props.getValue()?.value?.metadata?.id} />;
@@ -263,12 +232,6 @@ const columns: Record<string, Column> = {
         title='Owner'
         filterWidth='14rem'
         id={ColumnViewType.ContractsOwner}
-        renderFilter={(initialFocusRef) => (
-          <OwnerFilter
-            initialFocusRef={initialFocusRef}
-            property={ColumnViewType.ContractsOwner}
-          />
-        )}
         {...getTHeadProps<ContractStore>(props)}
       />
     ),
@@ -278,7 +241,7 @@ const columns: Record<string, Column> = {
     minSize: 150,
     maxSize: 650,
     enableResizing: true,
-    enableColumnFilter: true,
+    enableColumnFilter: false,
     enableSorting: true,
     cell: (props) => {
       const renewsAt = props
@@ -304,9 +267,6 @@ const columns: Record<string, Column> = {
         filterWidth='14rem'
         title='Renewal Date'
         id={ColumnViewType.ContractsRenewalDate}
-        renderFilter={() => (
-          <DateFilter property={ColumnViewType.ContractsRenewalDate} />
-        )}
         {...getTHeadProps<ContractStore>(props)}
       />
     ),
@@ -316,7 +276,7 @@ const columns: Record<string, Column> = {
     minSize: 150,
     maxSize: 650,
     enableResizing: true,
-    enableColumnFilter: true,
+    enableColumnFilter: false,
     enableSorting: true,
     cell: (props) => {
       return <HealthCell id={props.getValue()?.value?.metadata?.id} />;
@@ -328,9 +288,6 @@ const columns: Record<string, Column> = {
         title='Health'
         filterWidth='14rem'
         id={ColumnViewType.ContractsHealth}
-        renderFilter={() => (
-          <RenewalLikelihoodFilter property={ColumnViewType.ContractsHealth} />
-        )}
         {...getTHeadProps<ContractStore>(props)}
       />
     ),
@@ -340,7 +297,7 @@ const columns: Record<string, Column> = {
     minSize: 150,
     maxSize: 650,
     enableResizing: true,
-    enableColumnFilter: true,
+    enableColumnFilter: false,
     enableSorting: true,
     cell: (props) => {
       return <ArrForecastCell id={props.getValue()?.value?.metadata?.id} />;
@@ -352,12 +309,6 @@ const columns: Record<string, Column> = {
         filterWidth='14rem'
         title='ARR Forecast'
         id={ColumnViewType.ContractsForecastArr}
-        renderFilter={(initialFocusRef) => (
-          <ForecastFilter
-            initialFocusRef={initialFocusRef}
-            property={ColumnViewType.ContractsForecastArr}
-          />
-        )}
         {...getTHeadProps<ContractStore>(props)}
       />
     ),

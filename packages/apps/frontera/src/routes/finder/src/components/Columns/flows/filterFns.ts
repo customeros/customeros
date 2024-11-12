@@ -15,27 +15,6 @@ export const getFlowFiltersFns = (
     .with(
       { property: ColumnViewType.FlowActionName },
       (filter) => (row: FlowStore) => {
-        const filterValues = filter?.value;
-
-        if (!filter.active || !filterValues.length) return true;
-
-        return filterValues?.includes(row.value?.status);
-      },
-    )
-    .otherwise(() => noop);
-};
-
-export const getFlowFiltersV2Fns = (
-  serverFilter: FilterItem | null | undefined,
-) => {
-  const noop = (_row: FlowStore) => true;
-
-  if (!serverFilter) return noop;
-
-  return match(serverFilter)
-    .with(
-      { property: ColumnViewType.FlowActionName },
-      (filter) => (row: FlowStore) => {
         if (!filter.active) return true;
         const value = row.value?.name;
 
@@ -62,17 +41,10 @@ const filterTypeText = (filter: FilterItem, value: string | undefined) => {
     .otherwise(() => false);
 };
 
-export const getFlowsFilterFns = (
-  filters: Filter | null,
-  isFeatureEnabled: boolean,
-) => {
+export const getFlowsFilterFns = (filters: Filter | null) => {
   if (!filters || !filters.AND) return [];
 
   const data = filters?.AND;
-
-  if (isFeatureEnabled) {
-    return data.map(({ filter }) => getFlowFiltersV2Fns(filter));
-  }
 
   return data.map(({ filter }) => getFlowFiltersFns(filter));
 };

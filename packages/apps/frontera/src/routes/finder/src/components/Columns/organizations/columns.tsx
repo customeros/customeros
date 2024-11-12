@@ -1,8 +1,6 @@
 import { CountryCell } from '@finder/components/Columns/Cells/country';
 import { OrganizationStore } from '@store/Organizations/Organization.store';
 import { OrganizationStageCell } from '@finder/components/Columns/Cells/stage';
-import { SocialsFilter } from '@finder/components/Columns/shared/Filters/Socials';
-import { StageFilter } from '@finder/components/Columns/organizations/Filters/Stage';
 import {
   ColumnDef,
   ColumnDef as ColumnDefinition,
@@ -10,7 +8,6 @@ import {
 import { AvatarHeader } from '@finder/components/Columns/organizations/Headers/Avatar';
 import { DateCell } from '@finder/components/Columns/shared/Cells/DateCell/DateCell.tsx';
 import { getColumnConfig } from '@finder/components/Columns/shared/util/getColumnConfig.ts';
-import { NumericValueFilter } from '@finder/components/Columns/shared/Filters/NumericValueFilter';
 
 import { cn } from '@ui/utils/cn.ts';
 import { createColumnHelper } from '@ui/presentation/Table';
@@ -19,9 +16,6 @@ import { formatCurrency } from '@utils/getFormattedCurrencyNumber.ts';
 import { Social, TableViewDef, ColumnViewType } from '@graphql/types';
 import THead, { getTHeadProps } from '@ui/presentation/Table/THead.tsx';
 
-import { TagFilter } from './Filters/Tags';
-import { OwnershipTypeFilter } from '../shared/Filters/OwnershipTypeFilter';
-import { LocationFilter } from '../shared/Filters/LocationFilter/LocationFilter';
 import {
   OwnerCell,
   AvatarCell,
@@ -38,23 +32,6 @@ import {
   OrganizationLinkedInCell,
   OrganizationRelationshipCell,
 } from './Cells';
-import {
-  LtvFilter,
-  OwnerFilter,
-  SourceFilter,
-  ChurnedFilter,
-  WebsiteFilter,
-  ForecastFilter,
-  IndustryFilter,
-  OnboardingFilter,
-  CreatedDateFilter,
-  OrganizationFilter,
-  RelationshipFilter,
-  TimeToRenewalFilter,
-  LastInteractedFilter,
-  LastTouchpointFilter,
-  RenewalLikelihoodFilter,
-} from './Filters';
 
 type ColumnDatum = OrganizationStore;
 
@@ -95,7 +72,7 @@ export const columns: Record<string, Column> = {
     minSize: 160,
     size: 160,
     maxSize: 400,
-    enableColumnFilter: true,
+    enableColumnFilter: false,
     enableResizing: true,
     cell: (props) => {
       return (
@@ -111,12 +88,8 @@ export const columns: Record<string, Column> = {
     },
     header: (props) => (
       <THead<HTMLInputElement>
-        filterWidth='14rem'
         title='Organization'
         id={ColumnViewType.OrganizationsName}
-        renderFilter={(initialFocusRef) => (
-          <OrganizationFilter initialFocusRef={initialFocusRef} />
-        )}
         {...getTHeadProps<OrganizationStore>(props)}
       />
     ),
@@ -128,7 +101,7 @@ export const columns: Record<string, Column> = {
       id: ColumnViewType.OrganizationsWebsite,
       minSize: 125,
       maxSize: 400,
-      enableColumnFilter: true,
+      enableColumnFilter: false,
       enableResizing: true,
       enableSorting: false,
       cell: (props) => {
@@ -139,11 +112,7 @@ export const columns: Record<string, Column> = {
       header: (props) => (
         <THead<HTMLInputElement>
           title='Website'
-          filterWidth='14rem'
           id={ColumnViewType.OrganizationsWebsite}
-          renderFilter={(initialFocusRef) => (
-            <WebsiteFilter initialFocusRef={initialFocusRef} />
-          )}
           {...getTHeadProps<OrganizationStore>(props)}
         />
       ),
@@ -156,12 +125,11 @@ export const columns: Record<string, Column> = {
       id: ColumnViewType.OrganizationsRelationship,
       minSize: 160,
       maxSize: 400,
-      enableColumnFilter: true,
+      enableColumnFilter: false,
       enableResizing: true,
       header: (props) => (
         <THead
           title='Relationship'
-          renderFilter={() => <RelationshipFilter />}
           id={ColumnViewType.OrganizationsRelationship}
           {...getTHeadProps<OrganizationStore>(props)}
         />
@@ -185,7 +153,7 @@ export const columns: Record<string, Column> = {
       id: ColumnViewType.OrganizationsOnboardingStatus,
       minSize: 125,
       maxSize: 400,
-      enableColumnFilter: true,
+      enableColumnFilter: false,
       enableResizing: true,
       cell: (props) => {
         const status = props.getValue()?.onboarding?.status;
@@ -196,7 +164,6 @@ export const columns: Record<string, Column> = {
       header: (props) => (
         <THead
           title='Onboarding'
-          renderFilter={() => <OnboardingFilter />}
           id={ColumnViewType.OrganizationsOnboardingStatus}
           {...getTHeadProps<OrganizationStore>(props)}
         />
@@ -215,7 +182,7 @@ export const columns: Record<string, Column> = {
       minSize: 110,
       size: 110,
       maxSize: 400,
-      enableColumnFilter: true,
+      enableColumnFilter: false,
       enableResizing: true,
       enableSorting: true,
       cell: (props) => {
@@ -232,7 +199,6 @@ export const columns: Record<string, Column> = {
         <THead
           title='Health'
           data-test='renewal-likelihood'
-          renderFilter={() => <RenewalLikelihoodFilter />}
           id={ColumnViewType.OrganizationsRenewalLikelihood}
           {...getTHeadProps<OrganizationStore>(props)}
         />
@@ -251,7 +217,7 @@ export const columns: Record<string, Column> = {
       minSize: 156,
       size: 156,
       maxSize: 400,
-      enableColumnFilter: true,
+      enableColumnFilter: false,
       enableResizing: true,
       enableSorting: true,
       cell: (props) => {
@@ -263,10 +229,8 @@ export const columns: Record<string, Column> = {
 
       header: (props) => (
         <THead
-          filterWidth='15rem'
           title='Renewal Date'
           id={ColumnViewType.OrganizationsRenewalDate}
-          renderFilter={() => <TimeToRenewalFilter />}
           {...getTHeadProps<OrganizationStore>(props)}
         />
       ),
@@ -280,7 +244,7 @@ export const columns: Record<string, Column> = {
       minSize: 154,
       size: 154,
       maxSize: 400,
-      enableColumnFilter: true,
+      enableColumnFilter: false,
       enableResizing: true,
       enableSorting: true,
       cell: (props) => {
@@ -298,12 +262,8 @@ export const columns: Record<string, Column> = {
       },
       header: (props) => (
         <THead<HTMLInputElement>
-          filterWidth='17rem'
           title='ARR Forecast'
           id={ColumnViewType.OrganizationsForecastArr}
-          renderFilter={(initialFocusRef) => (
-            <ForecastFilter initialFocusRef={initialFocusRef} />
-          )}
           {...getTHeadProps<OrganizationStore>(props)}
         />
       ),
@@ -320,7 +280,7 @@ export const columns: Record<string, Column> = {
     minSize: 154,
     size: 154,
     maxSize: 400,
-    enableColumnFilter: true,
+    enableColumnFilter: false,
     enableResizing: true,
     cell: (props) => {
       return (
@@ -333,11 +293,7 @@ export const columns: Record<string, Column> = {
     header: (props) => (
       <THead<HTMLInputElement>
         title='Owner'
-        filterWidth='14rem'
         id={ColumnViewType.OrganizationsOwner}
-        renderFilter={(initialFocusRef) => (
-          <OwnerFilter initialFocusRef={initialFocusRef} />
-        )}
         {...getTHeadProps<OrganizationStore>(props)}
       />
     ),
@@ -350,7 +306,7 @@ export const columns: Record<string, Column> = {
       minSize: 100,
       size: 100,
       maxSize: 400,
-      enableColumnFilter: true,
+      enableColumnFilter: false,
       enableResizing: true,
       cell: (props) => {
         if (!props.getValue()) {
@@ -366,7 +322,6 @@ export const columns: Record<string, Column> = {
       header: (props) => (
         <THead<HTMLInputElement>
           title='Source'
-          renderFilter={() => <SourceFilter />}
           id={ColumnViewType.OrganizationsLeadSource}
           {...getTHeadProps<OrganizationStore>(props)}
         />
@@ -382,7 +337,7 @@ export const columns: Record<string, Column> = {
       minSize: 145,
       maxSize: 400,
       enableResizing: true,
-      enableColumnFilter: true,
+      enableColumnFilter: false,
       cell: (props) => {
         const value = props.getValue();
 
@@ -390,9 +345,7 @@ export const columns: Record<string, Column> = {
       },
       header: (props) => (
         <THead<HTMLInputElement>
-          filterWidth='14rem'
           title='Created Date'
-          renderFilter={() => <CreatedDateFilter />}
           id={ColumnViewType.OrganizationsCreatedDate}
           {...getTHeadProps<OrganizationStore>(props)}
         />
@@ -408,7 +361,7 @@ export const columns: Record<string, Column> = {
       minSize: 120,
       maxSize: 400,
       enableResizing: true,
-      enableColumnFilter: true,
+      enableColumnFilter: false,
       cell: (props) => {
         const value = props.getValue();
         const enrichedOrg = props.row.original.value.enrichDetails;
@@ -430,15 +383,7 @@ export const columns: Record<string, Column> = {
       header: (props) => (
         <THead<HTMLInputElement>
           title='Founded'
-          filterWidth='17.5rem'
           id={ColumnViewType.OrganizationsYearFounded}
-          renderFilter={() => (
-            <NumericValueFilter
-              label='age'
-              suffix={'year'}
-              property={ColumnViewType.OrganizationsYearFounded}
-            />
-          )}
           {...getTHeadProps<OrganizationStore>(props)}
         />
       ),
@@ -453,7 +398,7 @@ export const columns: Record<string, Column> = {
       minSize: 125,
       maxSize: 400,
       enableResizing: true,
-      enableColumnFilter: true,
+      enableColumnFilter: false,
       enableSorting: false,
       cell: (props) => {
         const value = props.getValue();
@@ -476,14 +421,7 @@ export const columns: Record<string, Column> = {
       header: (props) => (
         <THead<HTMLInputElement>
           title='Employees'
-          filterWidth='17.5rem'
           id={ColumnViewType.OrganizationsEmployeeCount}
-          renderFilter={() => (
-            <NumericValueFilter
-              label='employees'
-              property={ColumnViewType.OrganizationsEmployeeCount}
-            />
-          )}
           {...getTHeadProps<OrganizationStore>(props)}
         />
       ),
@@ -498,7 +436,7 @@ export const columns: Record<string, Column> = {
       minSize: 125,
       maxSize: 400,
       enableResizing: true,
-      enableColumnFilter: true,
+      enableColumnFilter: false,
       enableSorting: false,
       cell: (props) => (
         <OrganizationLinkedInCell organizationId={props.row.original.id} />
@@ -506,11 +444,7 @@ export const columns: Record<string, Column> = {
       header: (props) => (
         <THead<HTMLInputElement>
           title='LinkedIn'
-          filterWidth='14rem'
           id={ColumnViewType.OrganizationsSocials}
-          renderFilter={(initialFocusRef) => (
-            <SocialsFilter initialFocusRef={initialFocusRef} />
-          )}
           {...getTHeadProps<OrganizationStore>(props)}
         />
       ),
@@ -525,7 +459,7 @@ export const columns: Record<string, Column> = {
       minSize: 200,
       maxSize: 400,
       enableResizing: true,
-      enableColumnFilter: true,
+      enableColumnFilter: false,
       enableSorting: true,
       cell: (props) => (
         <LastTouchpointCell
@@ -544,7 +478,6 @@ export const columns: Record<string, Column> = {
       header: (props) => (
         <THead<HTMLInputElement>
           title='Last Touchpoint'
-          renderFilter={() => <LastTouchpointFilter />}
           id={ColumnViewType.OrganizationsLastTouchpoint}
           {...getTHeadProps<OrganizationStore>(props)}
         />
@@ -565,7 +498,7 @@ export const columns: Record<string, Column> = {
       minSize: 154,
       maxSize: 400,
       enableResizing: true,
-      enableColumnFilter: true,
+      enableColumnFilter: false,
       enableSorting: true,
       cell: (props) => (
         <LastTouchpointDateCell
@@ -577,7 +510,6 @@ export const columns: Record<string, Column> = {
       header: (props) => (
         <THead<HTMLInputElement>
           title='Last Interacted'
-          renderFilter={() => <LastInteractedFilter />}
           id={ColumnViewType.OrganizationsLastTouchpointDate}
           {...getTHeadProps<OrganizationStore>(props)}
         />
@@ -598,7 +530,7 @@ export const columns: Record<string, Column> = {
       minSize: 115,
       maxSize: 400,
       enableResizing: true,
-      enableColumnFilter: true,
+      enableColumnFilter: false,
       enableSorting: true,
       cell: (props) => {
         const value = props.row.original.value.accountDetails?.churned;
@@ -609,9 +541,6 @@ export const columns: Record<string, Column> = {
         <THead<HTMLInputElement>
           title='Churn Date'
           id={ColumnViewType.OrganizationsChurnDate}
-          renderFilter={() => {
-            return <ChurnedFilter />;
-          }}
           {...getTHeadProps<OrganizationStore>(props)}
         />
       ),
@@ -626,7 +555,7 @@ export const columns: Record<string, Column> = {
       minSize: 100,
       maxSize: 600,
       enableResizing: true,
-      enableColumnFilter: true,
+      enableColumnFilter: false,
       cell: (props) => {
         const value = props.row.original.value.accountDetails?.ltv;
 
@@ -646,11 +575,7 @@ export const columns: Record<string, Column> = {
       header: (props) => (
         <THead<HTMLInputElement>
           title='LTV'
-          filterWidth='14rem'
           id={ColumnViewType.OrganizationsLtv}
-          renderFilter={(initialFocusRef) => {
-            return <LtvFilter initialFocusRef={initialFocusRef} />;
-          }}
           {...getTHeadProps<OrganizationStore>(props)}
         />
       ),
@@ -677,11 +602,7 @@ export const columns: Record<string, Column> = {
       header: (props) => (
         <THead<HTMLInputElement>
           title='Industry'
-          filterWidth='17rem'
           id={ColumnViewType.OrganizationsIndustry}
-          renderFilter={(initialFocusRef) => (
-            <IndustryFilter initialFocusRef={initialFocusRef} />
-          )}
           {...getTHeadProps<OrganizationStore>(props)}
         />
       ),
@@ -720,7 +641,7 @@ export const columns: Record<string, Column> = {
       minSize: 175,
       maxSize: 400,
       enableResizing: true,
-      enableColumnFilter: true,
+      enableColumnFilter: false,
       enableSorting: true,
 
       cell: (props) => {
@@ -737,15 +658,8 @@ export const columns: Record<string, Column> = {
       },
       header: (props) => (
         <THead<HTMLInputElement>
-          filterWidth='17.5rem'
           title='LinkedIn Followers'
           id={ColumnViewType.OrganizationsLinkedinFollowerCount}
-          renderFilter={() => (
-            <NumericValueFilter
-              label='followers'
-              property={ColumnViewType.OrganizationsLinkedinFollowerCount}
-            />
-          )}
           {...getTHeadProps<OrganizationStore>(props)}
         />
       ),
@@ -769,13 +683,6 @@ export const columns: Record<string, Column> = {
         title='Tags'
         filterWidth='auto'
         id={ColumnViewType.OrganizationsTags}
-        renderFilter={(initialFocusRef) => (
-          <TagFilter
-            placeholder={'e.g. Solo RevOps'}
-            initialFocusRef={initialFocusRef}
-            property={ColumnViewType.OrganizationsTags}
-          />
-        )}
         {...getTHeadProps<OrganizationStore>(props)}
       />
     ),
@@ -787,7 +694,7 @@ export const columns: Record<string, Column> = {
     minSize: 154,
     maxSize: 400,
     enableResizing: true,
-    enableColumnFilter: true,
+    enableColumnFilter: false,
     cell: (props) => {
       const value = props.getValue()?.public;
 
@@ -801,12 +708,6 @@ export const columns: Record<string, Column> = {
       <THead<HTMLInputElement>
         title='Ownership Type'
         id={ColumnViewType.OrganizationsIsPublic}
-        renderFilter={(initialFocusRef) => (
-          <OwnershipTypeFilter
-            initialFocusRef={initialFocusRef}
-            property={ColumnViewType.OrganizationsIsPublic}
-          />
-        )}
         {...getTHeadProps<OrganizationStore>(props)}
       />
     ),
@@ -818,7 +719,7 @@ export const columns: Record<string, Column> = {
     minSize: 154,
     maxSize: 400,
     enableResizing: true,
-    enableColumnFilter: true,
+    enableColumnFilter: false,
     enableSorting: true,
     cell: (props) => {
       return (
@@ -829,7 +730,6 @@ export const columns: Record<string, Column> = {
       <THead<HTMLInputElement>
         title='Stage'
         filterWidth='auto'
-        renderFilter={() => <StageFilter />}
         id={ColumnViewType.OrganizationsStage}
         {...getTHeadProps<OrganizationStore>(props)}
       />
@@ -845,7 +745,7 @@ export const columns: Record<string, Column> = {
       minSize: 210,
       maxSize: 400,
       enableResizing: true,
-      enableColumnFilter: true,
+      enableColumnFilter: false,
       enableSorting: true,
       cell: (props) => {
         const value = props.getValue()?.id;
@@ -857,14 +757,6 @@ export const columns: Record<string, Column> = {
           title='Country'
           filterWidth='auto'
           id={ColumnViewType.OrganizationsHeadquarters}
-          renderFilter={(initialFocusRef) => (
-            <LocationFilter
-              type='organizations'
-              locationType='countryCodeA2'
-              initialFocusRef={initialFocusRef}
-              property={ColumnViewType.OrganizationsHeadquarters}
-            />
-          )}
           {...getTHeadProps<OrganizationStore>(props)}
         />
       ),
@@ -880,7 +772,7 @@ export const columns: Record<string, Column> = {
       minSize: 210,
       maxSize: 400,
       enableResizing: true,
-      enableColumnFilter: true,
+      enableColumnFilter: false,
       enableSorting: true,
       cell: (props) => {
         const parentOrg =
@@ -901,12 +793,6 @@ export const columns: Record<string, Column> = {
         <THead<HTMLInputElement>
           title='Parent Org'
           id={ColumnViewType.OrganizationsParentOrganization}
-          renderFilter={(initialFocusRef) => (
-            <OrganizationFilter
-              initialFocusRef={initialFocusRef}
-              property={ColumnViewType.OrganizationsParentOrganization}
-            />
-          )}
           {...getTHeadProps<OrganizationStore>(props)}
         />
       ),

@@ -45,7 +45,6 @@ interface ComputeFinderDataOptions {
 
 export const computeFinderData = (
   store: RootStore,
-  isFeatureEnabled: boolean,
   options: ComputeFinderDataOptions,
 ) => {
   const { searchTerm, sorting, tableViewDef, urlParams } = options;
@@ -67,12 +66,8 @@ export const computeFinderData = (
       store.organizations?.toComputedArray((arr) => {
         const defaultFilters = getOrganizationDefaultFilterFns(
           tableViewDef?.getDefaultFilters(),
-          isFeatureEnabled,
         );
-        const filters = getOrganizationFilterFns(
-          tableViewDef?.getFilters(),
-          isFeatureEnabled,
-        );
+        const filters = getOrganizationFilterFns(tableViewDef?.getFilters());
         const flowFilters = getFlowFilterFns(workFlow?.getFilters());
 
         // TODO: Should filter only once for both defaultFilters and filters
@@ -137,13 +132,9 @@ export const computeFinderData = (
 
         const defaultFilters = getContactDefaultFilterFns(
           tableViewDef?.getDefaultFilters(),
-          isFeatureEnabled,
         );
 
-        const filters = getContactFilterFns(
-          tableViewDef?.getFilters(),
-          isFeatureEnabled,
-        );
+        const filters = getContactFilterFns(tableViewDef?.getFilters());
 
         if (defaultFilters) {
           arr = arr.filter((v) => defaultFilters.every((fn) => fn(v)));
@@ -189,13 +180,9 @@ export const computeFinderData = (
       store.contracts?.toComputedArray((arr) => {
         const defaultFilters = getContractDefaultFilters(
           tableViewDef?.getDefaultFilters(),
-          isFeatureEnabled,
         );
 
-        const filters = getContractFilterFns(
-          tableViewDef?.getFilters(),
-          isFeatureEnabled,
-        );
+        const filters = getContractFilterFns(tableViewDef?.getFilters());
 
         if (defaultFilters) {
           arr = arr.filter((v) => defaultFilters.every((fn) => fn(v)));
@@ -231,12 +218,8 @@ export const computeFinderData = (
       store.invoices.toComputedArray((arr) => {
         const defaultFilters = getInvoiceDefaultFilterFns(
           tableViewDef?.getDefaultFilters(),
-          isFeatureEnabled,
         );
-        const filters = getInvoiceFilterFns(
-          tableViewDef?.getFilters(),
-          isFeatureEnabled,
-        );
+        const filters = getInvoiceFilterFns(tableViewDef?.getFilters());
 
         if (defaultFilters) {
           arr = arr.filter((v) => defaultFilters.every((fn) => fn(v)));
@@ -274,10 +257,7 @@ export const computeFinderData = (
       store.flows.toComputedArray((arr) => {
         if (tableType !== TableViewType.Flow) return arr;
 
-        const filters = getFlowsFilterFns(
-          tableViewDef?.getFilters(),
-          isFeatureEnabled,
-        );
+        const filters = getFlowsFilterFns(tableViewDef?.getFilters());
 
         if (filters) {
           arr = arr.filter((v) => filters.every((fn) => fn(v)));
@@ -312,10 +292,7 @@ export const computeFinderData = (
         if (tableType !== TableViewType.Opportunities) return arr;
         arr = arr.filter((opp) => opp.value.internalType === 'NBO');
 
-        const filters = getOpportunityFilterFns(
-          tableViewDef?.getFilters(),
-          isFeatureEnabled,
-        );
+        const filters = getOpportunityFilterFns(tableViewDef?.getFilters());
 
         if (filters) {
           arr = arr.filter((v) => filters.every((fn) => fn(v)));

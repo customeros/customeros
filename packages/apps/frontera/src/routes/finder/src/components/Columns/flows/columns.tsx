@@ -1,5 +1,4 @@
 import { FlowStore } from '@store/Flows/Flow.store.ts';
-import { StatusFilter } from '@finder/components/Columns/flows/Filters';
 import {
   ColumnDef,
   ColumnDef as ColumnDefinition,
@@ -53,14 +52,13 @@ const columns: Record<string, Column> = {
     minSize: 150,
     maxSize: 300,
     enableResizing: true,
-    enableColumnFilter: true,
+    enableColumnFilter: false,
     enableSorting: true,
     header: (props) => (
       <THead
         title='Status'
         filterWidth={250}
         id={ColumnViewType.FlowActionName}
-        renderFilter={() => <StatusFilter />}
         {...getTHeadProps(props)}
       />
     ),
