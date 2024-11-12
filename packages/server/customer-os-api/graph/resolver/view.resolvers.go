@@ -130,6 +130,17 @@ func (r *mutationResolver) TableViewDefUpdate(ctx context.Context, input model.T
 		Tenant:      tenant,
 		UserId:      userId,
 	}
+	if input.DefaultFilters != nil {
+		viewDefinition.DefaultFilters = *input.DefaultFilters
+	} else {
+		currentTableViewDef, err := r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.GetTableViewDefinition(ctx, tenant, id)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			graphql.AddErrorf(ctx, "Failed to update table view definition")
+			return nil, nil
+		}
+		viewDefinition.DefaultFilters = currentTableViewDef.DefaultFilters
+	}
 
 	result := r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.UpdateTableViewDefinition(ctx, viewDefinition)
 	if result.Error != nil {
@@ -197,6 +208,17 @@ func (r *mutationResolver) TableViewDefUpdateShared(ctx context.Context, input m
 		IsPreset:    true,
 		IsShared:    true,
 		UserId:      "",
+	}
+	if input.DefaultFilters != nil {
+		viewDefinition.DefaultFilters = *input.DefaultFilters
+	} else {
+		currentTableViewDef, err := r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.GetTableViewDefinition(ctx, tenant, id)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			graphql.AddErrorf(ctx, "Failed to update table view definition")
+			return nil, nil
+		}
+		viewDefinition.DefaultFilters = currentTableViewDef.DefaultFilters
 	}
 
 	result := r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.UpdateTableViewSharedDefinition(ctx, viewDefinition)

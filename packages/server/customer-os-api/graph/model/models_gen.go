@@ -2507,13 +2507,14 @@ type TableViewDefCreateInput struct {
 }
 
 type TableViewDefUpdateInput struct {
-	ID      string             `json:"id"`
-	Name    string             `json:"name"`
-	Order   int                `json:"order"`
-	Icon    string             `json:"icon"`
-	Columns []*ColumnViewInput `json:"columns"`
-	Filters string             `json:"filters"`
-	Sorting string             `json:"sorting"`
+	ID             string             `json:"id"`
+	Name           string             `json:"name"`
+	Order          int                `json:"order"`
+	Icon           string             `json:"icon"`
+	Columns        []*ColumnViewInput `json:"columns"`
+	Filters        string             `json:"filters"`
+	DefaultFilters *string            `json:"defaultFilters,omitempty"`
+	Sorting        string             `json:"sorting"`
 }
 
 type Tag struct {

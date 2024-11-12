@@ -176,6 +176,7 @@ input TableViewDefUpdateInput {
     icon: String!
     columns: [ColumnViewInput!]!
     filters: String!
+    defaultFilters: String
     sorting: String!
 }
 

@@ -23,6 +23,7 @@ type TableViewDefinitionRepository interface {
 	UpdateTableViewDefinition(ctx context.Context, viewDefinition entity.TableViewDefinition) helper.QueryResult
 	UpdateTableViewSharedDefinition(ctx context.Context, viewDefinition entity.TableViewDefinition) helper.QueryResult
 	ArchiveTableViewDefinition(ctx context.Context, viewDefinitionId uint64) error
+	GetTableViewDefinition(ctx context.Context, tenant string, id uint64) (entity.TableViewDefinition, error)
 }
 
 func NewTableViewDefinitionRepository(gormDb *gorm.DB) TableViewDefinitionRepository {
@@ -200,4 +201,21 @@ func (t tableViewDefinitionRepository) ArchiveTableViewDefinition(ctx context.Co
 	}
 
 	return nil
+}
+
+func (t tableViewDefinitionRepository) GetTableViewDefinition(ctx context.Context, tenant string, id uint64) (entity.TableViewDefinition, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "TableViewDefinitionRepository.GetTableViewDefinition")
+	defer span.Finish()
+
+	var tableViewDefinition entity.TableViewDefinition
+	err := t.gormDb.
+		Where("tenant = ?", tenant).
+		Where("id = ?", id).
+		First(&tableViewDefinition).Error
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return entity.TableViewDefinition{}, err
+	}
+
+	return tableViewDefinition, nil
 }

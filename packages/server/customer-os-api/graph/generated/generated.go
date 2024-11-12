@@ -15424,6 +15424,7 @@ input TableViewDefUpdateInput {
     icon: String!
     columns: [ColumnViewInput!]!
     filters: String!
+    defaultFilters: String
     sorting: String!
 }
 
@@ -103146,7 +103147,7 @@ func (ec *executionContext) unmarshalInputTableViewDefUpdateInput(ctx context.Co
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "name", "order", "icon", "columns", "filters", "sorting"}
+	fieldsInOrder := [...]string{"id", "name", "order", "icon", "columns", "filters", "defaultFilters", "sorting"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -103195,6 +103196,13 @@ func (ec *executionContext) unmarshalInputTableViewDefUpdateInput(ctx context.Co
 				return it, err
 			}
 			it.Filters = data
+		case "defaultFilters":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("defaultFilters"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DefaultFilters = data
 		case "sorting":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sorting"))
 			data, err := ec.unmarshalNString2string(ctx, v)
