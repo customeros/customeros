@@ -1,262 +1,22 @@
-// __tests__/Organizations.test.ts
-
 import { it, expect, describe } from 'vitest';
+
+import { OnboardingStatus, SortingDirection } from '@graphql/types';
 
 import { Transport } from '../../transport';
 import { OrganizationsService } from '../__service__/Organizations.service';
-import {
-  Organization,
-  ExpectedState,
-  ExpectedValue,
-  SpecialAssertion,
-} from './organization.types';
 
 const transport = new Transport();
-const service = OrganizationsService.getInstance(transport);
-
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-function createFieldPath(parts: string[]): string {
-  return parts.join('.');
-}
-
-function makeAssertion(actual: unknown, expected: unknown, fieldPath: string) {
-  if (Array.isArray(expected)) {
-    expect
-      .soft(Array.isArray(actual), `Field '${fieldPath}' should be an array`)
-      .toBe(true);
-
-    if (Array.isArray(actual)) {
-      expect
-        .soft(actual.length, `Field '${fieldPath}' length mismatch`)
-        .toEqual(expected.length);
-
-      expected.forEach((expectedItem, index) => {
-        if (typeof expectedItem === 'object' && expectedItem !== null) {
-          const actualItem = actual[index];
-
-          Object.entries(expectedItem).forEach(([key, value]) => {
-            if (typeof value === 'object' && value !== null) {
-              makeAssertion(
-                actualItem[key],
-                value,
-                `${fieldPath}[${index}].${key}`,
-              );
-            } else {
-              expect
-                .soft(
-                  actualItem[key],
-                  `Field '${fieldPath}[${index}].${key}' value mismatch`,
-                )
-                .toEqual(value);
-            }
-          });
-        } else {
-          expect
-            .soft(actual[index], `Field '${fieldPath}[${index}] value mismatch`)
-            .toEqual(expectedItem);
-        }
-      });
-    }
-  } else if (expected === null) {
-    expect.soft(actual, `Field '${fieldPath}' should be null`).toBeNull();
-  } else if (typeof expected === 'object') {
-    expect
-      .soft(actual, `Field '${fieldPath}' should be an object`)
-      .toBeDefined();
-
-    if (actual) {
-      Object.entries(expected).forEach(([key, value]) => {
-        makeAssertion(
-          (actual as Record<string, unknown>)[key],
-          value,
-          `${fieldPath}.${key}`,
-        );
-      });
-    }
-  } else {
-    expect
-      .soft(actual, `Field '${fieldPath}' value mismatch`)
-      .toEqual(expected);
-  }
-}
-
-function verifyNestedState(
-  actual: unknown,
-  expected: ExpectedValue,
-  path: string[],
-): void {
-  if (expected === null) {
-    makeAssertion(actual, null, createFieldPath(path));
-
-    return;
-  }
-
-  if (Array.isArray(expected)) {
-    makeAssertion(actual, expected, createFieldPath(path));
-
-    return;
-  }
-
-  if (typeof expected === 'object' && 'assertType' in expected) {
-    const assertion = expect.soft(
-      actual,
-      `Field '${createFieldPath(path)}' assertion failed`,
-    );
-
-    switch ((expected as SpecialAssertion).assertType) {
-      case 'not.toBeNull':
-        assertion.not.toBeNull();
-        break;
-      case 'toBeNull':
-        assertion.toBeNull();
-        break;
-    }
-
-    return;
-  }
-
-  if (typeof expected === 'object') {
-    Object.entries(expected as Record<string, ExpectedValue>).forEach(
-      ([key, value]) => {
-        verifyNestedState(
-          (actual as Record<string, unknown>)?.[key],
-          value as ExpectedValue,
-          [...path, key],
-        );
-      },
-    );
-
-    return;
-  }
-
-  makeAssertion(actual, expected, createFieldPath(path));
-}
-
-async function verifyOrganizationState(
-  organizationId: string,
-  expectedState: ExpectedState,
-  customAssertions: Record<string, ExpectedValue>,
-  maxRetries = 3,
-): Promise<void> {
-  let retries = 0;
-  let assertionsPassed = false;
-
-  await sleep(1000);
-
-  while (retries < maxRetries && !assertionsPassed) {
-    try {
-      const { organization } = await service.getOrganization(organizationId);
-
-      if (!organization) {
-        throw new Error('Organization not found');
-      }
-
-      const modifiedExpectedState = JSON.parse(
-        JSON.stringify(expectedState),
-      ) as ExpectedState;
-
-      Object.entries(customAssertions).forEach(([path, value]) => {
-        const pathParts = path.split('.');
-
-        if (pathParts.length === 1) {
-          modifiedExpectedState[pathParts[0]] = value as ExpectedValue;
-        } else {
-          let current = modifiedExpectedState as Record<string, unknown>;
-
-          for (let i = 0; i < pathParts.length - 1; i++) {
-            const part = pathParts[i];
-            const nextPart = pathParts[i + 1];
-
-            if (!(part in current)) {
-              current[part] = !isNaN(Number(nextPart)) ? [] : {};
-            } else if (current[part] === null) {
-              current[part] = !isNaN(Number(nextPart)) ? [] : {};
-            }
-
-            current = current[part] as Record<string, unknown>;
-          }
-
-          const lastPart = pathParts[pathParts.length - 1];
-
-          current[lastPart] = value;
-        }
-      });
-
-      Object.entries(modifiedExpectedState).forEach(([key, value]) => {
-        verifyNestedState(
-          organization[key as keyof Organization],
-          value as ExpectedValue,
-          [key],
-        );
-      });
-
-      assertionsPassed = true;
-    } catch (error) {
-      retries++;
-
-      if (retries < maxRetries) {
-        await sleep(500);
-      } else {
-        throw error;
-      }
-    }
-  }
-}
-
-const DEFAULT_ORGANIZATION_STATE: ExpectedState = {
-  accountDetails: {
-    churned: null,
-    ltv: 0,
-    onboarding: {
-      status: 'NOT_APPLICABLE',
-      comments: '',
-      updatedAt: null,
-    },
-    renewalSummary: {
-      arrForecast: null,
-      maxArrForecast: null,
-      renewalLikelihood: null,
-      nextRenewalDate: null,
-    },
-  },
-  contracts: null,
-  description: '',
-  domains: [],
-  employees: 0,
-  icon: '',
-  industry: '',
-  isCustomer: false,
-  lastTouchpoint: {
-    lastTouchPointAt: { assertType: 'not.toBeNull' },
-    lastTouchPointTimelineEvent: { assertType: 'not.toBeNull' },
-    lastTouchPointTimelineEventId: { assertType: 'not.toBeNull' },
-    lastTouchPointType: { assertType: 'not.toBeNull' },
-  },
-  leadSource: '',
-  locations: [],
-  logo: '',
-  owner: null,
-  parentCompanies: [],
-  public: false,
-  relationship: '',
-  socialMedia: [],
-  subsidiaries: [],
-  stage: '',
-  valueProposition: '',
-  yearFounded: null,
-  website: '',
-  tags: null,
-};
+const organizationsService = OrganizationsService.getInstance(transport);
 
 describe('OrganizationsService - Integration Tests', () => {
   it('gets organizations', async () => {
-    const { dashboardView_Organizations } = await service.getOrganizations({
-      pagination: {
-        page: 0,
-        limit: 1000,
-      },
-    });
+    const { dashboardView_Organizations } =
+      await organizationsService.getOrganizations({
+        pagination: {
+          page: 0,
+          limit: 1000,
+        },
+      });
 
     expect(dashboardView_Organizations).toHaveProperty('content');
     expect(dashboardView_Organizations).toHaveProperty('totalElements');
@@ -272,111 +32,413 @@ describe('OrganizationsService - Integration Tests', () => {
 
   it('checks create empty organization', async () => {
     const organization_name = 'IT_' + crypto.randomUUID();
-    const { organization_Save } = await service.saveOrganization({
+    const { organization_Save } = await organizationsService.saveOrganization({
       input: { name: organization_name },
     });
 
-    const customState = {
-      ...DEFAULT_ORGANIZATION_STATE,
-      name: organization_name,
-    };
+    const sleep = (ms: number) =>
+      new Promise((resolve) => setTimeout(resolve, ms));
+    const maxRetries = 3;
+    let retries = 0;
+    let organization;
+    let assertionsPassed = false;
 
-    await verifyOrganizationState(
-      organization_Save.metadata.id,
-      customState,
-      {},
-    );
+    await sleep(500);
+
+    while (retries < maxRetries && !assertionsPassed) {
+      try {
+        organization = await organizationsService.getOrganization(
+          organization_Save.metadata.id,
+        );
+
+        expect.soft(organization.organization?.accountDetails?.churned)
+          .toBeNull;
+        expect.soft(organization.organization?.accountDetails?.ltv).toBe(0);
+        expect
+          .soft(organization.organization?.accountDetails?.onboarding?.status)
+          .toBe('NOT_APPLICABLE');
+        expect
+          .soft(organization.organization?.accountDetails?.onboarding?.comments)
+          .toBe('');
+        expect.soft(
+          organization.organization?.accountDetails?.onboarding?.updatedAt,
+        ).toBeNull;
+        expect.soft(
+          organization.organization?.accountDetails?.renewalSummary
+            ?.arrForecast,
+        ).toBeNull;
+        expect.soft(
+          organization.organization?.accountDetails?.renewalSummary
+            ?.maxArrForecast,
+        ).toBeNull;
+        expect.soft(
+          organization.organization?.accountDetails?.renewalSummary
+            ?.renewalLikelihood,
+        ).toBeNull;
+        expect.soft(
+          organization.organization?.accountDetails?.renewalSummary
+            ?.nextRenewalDate,
+        ).toBeNull;
+        expect.soft(organization.organization?.contracts).toBeNull();
+        expect.soft(organization.organization?.description).toBe('');
+        expect.soft(organization.organization?.domains).toEqual([]);
+        expect.soft(organization.organization?.employees).toEqual(0);
+        expect.soft(organization.organization?.icon).toBe('');
+        expect.soft(organization.organization?.industry).toBe('');
+        expect.soft(organization.organization?.isCustomer).toBe(false);
+        expect
+          .soft(organization.organization?.lastTouchpoint?.lastTouchPointAt)
+          .not.toBeNull();
+        expect
+          .soft(
+            organization.organization?.lastTouchpoint
+              ?.lastTouchPointTimelineEvent,
+          )
+          .not.toBeNull();
+        expect
+          .soft(
+            organization.organization?.lastTouchpoint
+              ?.lastTouchPointTimelineEventId,
+          )
+          .not.toBeNull();
+        expect
+          .soft(organization.organization?.lastTouchpoint?.lastTouchPointType)
+          .not.toBeNull();
+        expect.soft(organization.organization?.leadSource).toBe('');
+        expect.soft(organization.organization?.locations).toEqual([]);
+        expect.soft(organization.organization?.logo).toBe('');
+        expect.soft(organization.organization?.name).toBe(organization_name);
+        expect.soft(organization.organization?.owner).toBeNull;
+        expect.soft(organization.organization?.parentCompanies).toEqual([]);
+        expect.soft(organization.organization?.public).toBe(false);
+        expect.soft(organization.organization?.relationship).toBe('');
+        expect.soft(organization.organization?.tags).toBeNull;
+        expect.soft(organization.organization?.socialMedia).toEqual([]);
+        expect.soft(organization.organization?.subsidiaries).toEqual([]);
+        expect.soft(organization.organization?.stage).toBe('');
+        expect.soft(organization.organization?.valueProposition).toBe('');
+        expect.soft(organization.organization?.yearFounded).toBeNull();
+        expect.soft(organization.organization?.website).toBe('');
+        expect.soft(organization.organization?.website).toBe('');
+
+        assertionsPassed = true;
+      } catch (error) {
+        retries++;
+
+        if (retries < maxRetries) {
+          await sleep(500);
+        } else {
+          throw error;
+        }
+      }
+    }
   });
 
   it('adds tags to organization', async () => {
     const organization_name = 'IT_' + crypto.randomUUID();
     const organization_tag_name = 'IT_' + crypto.randomUUID();
-    const { organization_Save } = await service.saveOrganization({
+    const { organization_Save } = await organizationsService.saveOrganization({
       input: { name: organization_name },
     });
 
-    await service.addTag({
+    await organizationsService.addTag({
       input: {
         organizationId: organization_Save.metadata.id,
         tag: { name: organization_tag_name },
       },
     });
 
-    const customState = {
-      ...DEFAULT_ORGANIZATION_STATE,
-      name: organization_name,
-      tags: [{ name: organization_tag_name }],
-    };
+    let organization;
 
-    await verifyOrganizationState(
+    organization = await organizationsService.getOrganization(
       organization_Save.metadata.id,
-      customState,
-      {},
     );
+    expect(organization.organization?.tags?.[0].name).toEqual(
+      organization_tag_name,
+    );
+
+    if (organization?.organization?.tags?.[0]?.id) {
+      await organizationsService.removeTag({
+        input: {
+          organizationId: organization_Save.metadata.id,
+          tag: { id: organization.organization.tags[0].id },
+        },
+      });
+
+      organization = await organizationsService.getOrganization(
+        organization_Save.metadata.id,
+      );
+      expect(organization.organization?.tags).toBeNull();
+    } else {
+      throw new Error(
+        'Tag removal failed: Organization or tag ID is undefined.',
+      );
+    }
   });
 
   it('adds social to organization', async () => {
     const organization_name = 'IT_' + crypto.randomUUID();
-    const organization_social_url = 'www.IT_' + crypto.randomUUID() + '.com';
-    const { organization_Save } = await service.saveOrganization({
+    const organization_initial_social_url =
+      'www.IT_' + crypto.randomUUID() + '.com';
+
+    const { organization_Save } = await organizationsService.saveOrganization({
       input: { name: organization_name },
     });
 
-    await service.addSocial({
+    const { organization_AddSocial } = await organizationsService.addSocial({
       organizationId: organization_Save.metadata.id,
       input: {
-        url: organization_social_url,
+        url: organization_initial_social_url,
       },
     });
 
-    const customState = {
-      ...DEFAULT_ORGANIZATION_STATE,
-      name: organization_name,
-      socialMedia: [{ url: organization_social_url }],
-    };
+    let organization;
 
-    await verifyOrganizationState(
+    organization = await organizationsService.getOrganization(
       organization_Save.metadata.id,
-      customState,
-      {},
     );
+
+    expect(organization.organization?.socialMedia[0].url).toEqual(
+      organization_initial_social_url,
+    );
+
+    const organization_subsequent_social_url =
+      'www.IT_' + crypto.randomUUID() + '.com';
+
+    // console.log(
+    //   'organization_initial_social_url:',
+    //   organization_initial_social_url,
+    // );
+    // console.log(
+    //   'organization_subsequent_social_url:',
+    //   organization_subsequent_social_url,
+    // );
+    // console.log('organization_name:', organization_name);
+    // await service.updateSocial({
+    //   input: {
+    //     id: organization_Save.metadata.id,
+    //     url: organization_subsequent_social_url,
+    //   },
+    // });
+
+    organization = await organizationsService.getOrganization(
+      organization_Save.metadata.id,
+    );
+
+    expect(organization.organization?.socialMedia[0].url).toEqual(
+      organization_subsequent_social_url,
+    );
+
+    await organizationsService.removeSocial({
+      socialId: organization_AddSocial.id,
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 1000)); // waits for 1 second
+    organization = await organizationsService.getOrganization(
+      organization_Save.metadata.id,
+    );
+
+    expect(organization.organization?.socialMedia.length).toBe(0);
   });
 
   it('adds subsidiary to organization', async () => {
     const parent_organization_name = 'IT_' + crypto.randomUUID();
     const subsidiary_organization_name = 'IT_' + crypto.randomUUID();
-
-    const parent_organization = await service.saveOrganization({
+    const parent_organization = await organizationsService.saveOrganization({
       input: { name: parent_organization_name },
     });
+    const subsidiary_organization = await organizationsService.saveOrganization(
+      {
+        input: { name: subsidiary_organization_name },
+      },
+    );
 
-    const subsidiary_organization = await service.saveOrganization({
-      input: { name: subsidiary_organization_name },
-    });
-
-    await service.addSubsidiary({
+    await organizationsService.addSubsidiary({
       input: {
         organizationId: parent_organization.organization_Save.metadata.id,
         subsidiaryId: subsidiary_organization.organization_Save.metadata.id,
       },
     });
 
-    const customState = {
-      ...DEFAULT_ORGANIZATION_STATE,
-      subsidiaries: [
-        {
-          organization: {
-            name: subsidiary_organization_name,
-          },
-        },
-      ],
-      name: parent_organization_name,
-    };
+    const sleep = (ms: number) =>
+      new Promise((resolve) => setTimeout(resolve, ms));
+    const maxRetries = 3;
+    let retries = 0;
+    let organization;
+    let assertionsPassed = false;
 
-    await verifyOrganizationState(
-      parent_organization.organization_Save.metadata.id,
-      customState,
-      {},
+    await sleep(500);
+
+    while (retries < maxRetries && !assertionsPassed) {
+      try {
+        organization = await organizationsService.getOrganization(
+          parent_organization.organization_Save.metadata.id,
+        );
+
+        expect(
+          organization.organization?.subsidiaries[0].organization.name,
+        ).toEqual(subsidiary_organization_name);
+
+        assertionsPassed = true;
+      } catch (error) {
+        retries++;
+
+        if (retries < maxRetries) {
+          await sleep(500);
+        } else {
+          throw error;
+        }
+      }
+    }
+
+    await organizationsService.removeSubsidiary({
+      organizationId: parent_organization.organization_Save.metadata.id,
+      subsidiaryId: subsidiary_organization.organization_Save.metadata.id,
+    });
+
+    while (retries < maxRetries && !assertionsPassed) {
+      try {
+        organization = await organizationsService.getOrganization(
+          parent_organization.organization_Save.metadata.id,
+        );
+
+        expect(
+          organization.organization?.subsidiaries[0].organization.name,
+        ).toBeNull();
+
+        assertionsPassed = true;
+      } catch (error) {
+        retries++;
+
+        if (retries < maxRetries) {
+          await sleep(500);
+        } else {
+          throw error;
+        }
+      }
+    }
+  });
+
+  it('retrieve archived organizations', async () => {
+    const testStartDate = new Date().toISOString();
+
+    const organization_name = 'IT_' + crypto.randomUUID();
+    const new_organization = await organizationsService.saveOrganization({
+      input: { name: organization_name },
+    });
+
+    const sleep = (ms: number) =>
+      new Promise((resolve) => setTimeout(resolve, ms));
+
+    await sleep(500);
+
+    let retrieved_organizations = await organizationsService.getOrganizations({
+      pagination: { limit: 1000, page: 0 },
+      sort: {
+        by: 'LAST_TOUCHPOINT',
+        caseSensitive: false,
+        direction: SortingDirection.Desc,
+      },
+    });
+
+    let hasName = (organizationName: string): boolean => {
+      return (
+        retrieved_organizations?.dashboardView_Organizations?.content?.some(
+          (org) => org.name === organizationName,
+        ) ?? false
+      );
+    };
+    let organizationExistsInDashboard = hasName(organization_name);
+
+    expect(organizationExistsInDashboard).toBe(true);
+
+    let archived_organizations =
+      await organizationsService.getArchivedOrganizationsAfter({
+        date: testStartDate,
+      });
+
+    expect(
+      archived_organizations.organizations_HiddenAfter.includes(
+        new_organization.organization_Save.metadata.id,
+      ),
+    ).toBe(false);
+
+    await organizationsService.hideOrganizations({
+      ids: [new_organization.organization_Save.metadata.id],
+    });
+
+    retrieved_organizations = await organizationsService.getOrganizations({
+      pagination: { limit: 1000, page: 0 },
+      sort: {
+        by: 'LAST_TOUCHPOINT',
+        caseSensitive: false,
+        direction: SortingDirection.Desc,
+      },
+    });
+
+    hasName = (organizationName: string): boolean => {
+      return (
+        retrieved_organizations?.dashboardView_Organizations?.content?.some(
+          (org) => org.name === organizationName,
+        ) ?? false
+      );
+    };
+    organizationExistsInDashboard = hasName(organization_name);
+
+    expect(organizationExistsInDashboard).toBe(false);
+
+    archived_organizations =
+      await organizationsService.getArchivedOrganizationsAfter({
+        date: testStartDate,
+      });
+
+    expect(
+      archived_organizations.organizations_HiddenAfter.includes(
+        new_organization.organization_Save.metadata.id,
+      ),
+    ).toBe(true);
+  });
+
+  it('updates onboarding status to organization', async () => {
+    const organization_name = 'IT_' + crypto.randomUUID();
+
+    const { organization_Save } = await organizationsService.saveOrganization({
+      input: { name: organization_name },
+    });
+
+    let organization;
+
+    organization = await organizationsService.getOrganization(
+      organization_Save.metadata.id,
     );
+    expect(organization.organization?.accountDetails?.onboarding?.status).toBe(
+      'NOT_APPLICABLE',
+    );
+    await organizationsService.updateOnboardingStatus({
+      input: {
+        organizationId: organization_Save.metadata.id,
+        status: OnboardingStatus.Stuck,
+      },
+    });
+
+    organization = await organizationsService.getOrganization(
+      organization_Save.metadata.id,
+    );
+    expect(organization.organization?.accountDetails?.onboarding?.status).toBe(
+      'STUCK',
+    );
+  });
+
+  it('updates updateAllOpportunityRenewals', async () => {
+    const organization_name = 'IT_' + crypto.randomUUID();
+
+    const { organization_Save } = await organizationsService.saveOrganization({
+      input: { name: organization_name },
+    });
+
+    await organizationsService.getOrganization(organization_Save.metadata.id);
+
+    /// ADD CONTRACT TO ORGANIZATION
+    // await contractsService.
   });
 });

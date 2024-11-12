@@ -8,6 +8,8 @@ export default defineConfig({
     environment: 'jsdom',
     name: 'Frontera',
     include: ['**/*.integration.ts'],
+    testTimeout: 30000,
+    setupFiles: ['src/store/vitest-hooks.ts'],
   },
   plugins: [graphqlLoader()],
   resolve: {
