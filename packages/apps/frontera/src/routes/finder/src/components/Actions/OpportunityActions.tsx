@@ -58,7 +58,7 @@ export const OpportunitiesTableActions = observer(
         });
       } else {
         store.ui.commandMenu.setContext({
-          ids: selection || focusedId,
+          ids: [focusedId || ''],
           entity: 'Opportunity',
           property: property,
         });

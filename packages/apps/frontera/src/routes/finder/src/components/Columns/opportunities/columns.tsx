@@ -14,6 +14,7 @@ import { Skeleton } from '@ui/feedback/Skeleton/Skeleton.tsx';
 import { TableViewDef, ColumnViewType } from '@graphql/types';
 import THead, { getTHeadProps } from '@ui/presentation/Table/THead.tsx';
 
+import { OpportunityName } from './Cells/opportunityName';
 import { OwnerCell, StageCell, ArrEstimateCell } from './Cells';
 
 type ColumnDatum = OpportunityStore;
@@ -38,7 +39,7 @@ export const columns: Record<string, Column> = {
 
       if (!name) return <div className='text-gray-400'>Unnamed</div>;
 
-      return <p className='font-medium'>{name}</p>;
+      return <OpportunityName opportunityId={props.row.original.value.id} />;
     },
     header: (props) => (
       <THead<HTMLInputElement>
