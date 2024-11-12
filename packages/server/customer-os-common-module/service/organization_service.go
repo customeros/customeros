@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	mailsherpa "github.com/customeros/mailsherpa/mailvalidate"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
@@ -706,6 +707,12 @@ func (s *organizationService) CheckOrganizationExistsWithEmail(ctx context.Conte
 	if email == "" {
 		return false, "", nil
 	}
+	// if not a valid email, return false
+	syntaxValidation := mailsherpa.ValidateEmailSyntax(email)
+	if !syntaxValidation.IsValid {
+		return false, "", nil
+	}
+
 	orgs, err := s.services.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsWithEmail(ctx, common.GetTenantFromContext(ctx), email)
 	if err != nil {
 		tracing.TraceErr(span, err)

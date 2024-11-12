@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	mailsherpa "github.com/customeros/mailsherpa/mailvalidate"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/constants"
@@ -374,6 +375,12 @@ func (s *contactService) CheckContactExistsWithEmail(ctx context.Context, email 
 	if email == "" {
 		return false, "", nil
 	}
+	// if not a valid email, return false
+	syntaxValidation := mailsherpa.ValidateEmailSyntax(email)
+	if !syntaxValidation.IsValid {
+		return false, "", nil
+	}
+
 	contacts, err := s.services.Neo4jRepositories.ContactReadRepository.GetContactsWithEmail(ctx, common.GetTenantFromContext(ctx), email)
 	if err != nil {
 		tracing.TraceErr(span, err)
