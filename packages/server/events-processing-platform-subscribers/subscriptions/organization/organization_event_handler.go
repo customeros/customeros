@@ -474,26 +474,15 @@ func (h *organizationEventHandler) callUpdateOrganizationCommand(ctx context.Con
 	time.Sleep(250 * time.Millisecond)
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err := subscriptions.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-		request := organizationpb.UpdateOrganizationGrpcRequest{
-			Tenant:         tenant,
-			OrganizationId: organizationId,
-			SourceFields: &commonpb.SourceFields{
-				AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
-				Source:    constants.SourceOpenline,
-			},
-			Market:   market,
-			Industry: industry,
-		}
-		var fieldsMask []organizationpb.OrganizationMaskField
-		if updateMarket {
-			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_MARKET)
-		}
-		if updateIndustry {
-			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_INDUSTRY)
-		}
-		request.FieldsMask = fieldsMask
-		return h.grpcClients.OrganizationClient.UpdateOrganization(ctx, &request)
+	_, err := h.services.CommonServices.OrganizationService.Save(ctx, nil, tenant, &organizationId, &repository.OrganizationSaveFields{
+		SourceFields: neo4jmodel.SourceFields{
+			AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
+			Source:    constants.SourceOpenline,
+		},
+		Market:         market,
+		Industry:       industry,
+		UpdateMarket:   updateMarket,
+		UpdateIndustry: updateIndustry,
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
