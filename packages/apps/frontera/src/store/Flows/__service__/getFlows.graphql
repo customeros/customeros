@@ -3,6 +3,7 @@ query getFlows {
     metadata {
       id
     }
+    firstStartedAt
     name
     edges
     nodes
