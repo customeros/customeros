@@ -1,4 +1,5 @@
 import { MouseEventHandler } from 'react';
+import { useParams } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
 import { NodeProps, ViewportPortal } from '@xyflow/react';
@@ -15,7 +16,9 @@ import { DropdownCommandMenu } from '../commands/Commands';
 export const TriggerNode = (
   props: NodeProps & { data: Record<string, string> },
 ) => {
-  const { ui } = useStore();
+  const { ui, flows } = useStore();
+  const flowId = useParams()?.id as string;
+  const flowWasStarted = flows.value.get(flowId)?.value?.firstStartedAt;
 
   const handleOpen: MouseEventHandler<HTMLButtonElement> = (e) => {
     e.stopPropagation();
@@ -65,14 +68,16 @@ export const TriggerNode = (
             )}
           </div>
 
-          <IconButton
-            size='xxs'
-            variant='ghost'
-            aria-label='Edit'
-            onClick={handleOpen}
-            icon={<ChevronDown />}
-            className='ml-2 opacity-0 group-hover:opacity-100 pointer-events-all'
-          />
+          {!flowWasStarted && (
+            <IconButton
+              size='xxs'
+              variant='ghost'
+              aria-label='Edit'
+              onClick={handleOpen}
+              icon={<ChevronDown />}
+              className='ml-2 opacity-0 group-hover:opacity-100 pointer-events-all'
+            />
+          )}
         </div>
         <Handle type='target' />
         <Handle type='source' />

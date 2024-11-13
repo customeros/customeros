@@ -12,6 +12,7 @@ export type GetFlowQuery = {
     edges: string;
     nodes: string;
     status: Types.FlowStatus;
+    firstStartedAt?: any | null;
     metadata: { __typename?: 'Metadata'; id: string };
     senders: Array<{
       __typename?: 'FlowSender';

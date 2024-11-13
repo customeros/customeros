@@ -7,6 +7,7 @@ query getFlow($id: ID!) {
     edges
     nodes
     status
+    firstStartedAt
     senders {
         metadata {
             id

@@ -55,6 +55,7 @@ import {
   ContactBulkCommands,
   ConfirmBulkFlowEdit,
   OrganizationCommands,
+  ActiveFlowUpdateInfo,
   RenameOpportunityName,
   ChangeBulkArrEstimate,
   UnlinkContactFromFlow,
@@ -133,6 +134,7 @@ const Commands: Record<CommandMenuType, ReactElement> = {
   ChangeFlowStatus: <ChangeFlowStatus />,
   EditContactFlow: <EditContactFlow />,
   FlowValidationMessage: <FlowValidationMessage />,
+  ActiveFlowUpdateInfo: <ActiveFlowUpdateInfo />,
   GetBrowserExtensionLink: <GetBrowserExtensionLink />,
   InstallLinkedInExtension: <InstallLinkedInExtension />,
 

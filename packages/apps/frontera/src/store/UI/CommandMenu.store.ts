@@ -46,6 +46,7 @@ export type CommandMenuType =
   | 'StartFlow'
   | 'StopFlow'
   | 'EditContactFlow'
+  | 'ActiveFlowUpdateInfo'
   | 'UnlinkContactFromFlow'
   | 'ConfirmBulkFlowEdit'
   | 'ConfirmSingleFlowEdit'

@@ -40,6 +40,7 @@ export const Header = observer(
     const { getNodes, getEdges } = useReactFlow();
 
     const flow = store.flows.value.get(id) as FlowStore;
+
     const status = flow?.value?.status;
     const contactsStore = store.contacts;
     const showFinder = searchParams.get('show') === 'finder';

@@ -171,6 +171,13 @@ export const FlowBuilder = observer(
     );
 
     const onBeforeDelete: OnBeforeDelete = async (elements) => {
+      if (flow.value.firstStartedAt) {
+        ui.commandMenu.setType('ActiveFlowUpdateInfo');
+        ui.commandMenu.setOpen(true);
+
+        return false;
+      }
+
       const hasStartNode = elements.nodes.some(
         (e) => e.data?.action === FlowActionType.FLOW_START,
       );

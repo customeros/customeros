@@ -6,3 +6,4 @@ export * from './ChangeFlowStatus';
 export * from './GetBrowserExtensionLink';
 export * from './InstallLinkedInExtension';
 export * from './FlowValidationMessage';
+export * from './ActiveFlowUpdateInfo';

@@ -1,4 +1,5 @@
 import { MouseEventHandler } from 'react';
+import { useParams } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
 import {
@@ -21,10 +22,19 @@ export const BasicEdge: React.FC<
   const [edgePath, labelX, labelY] = getSmoothStepPath({
     ...props,
   });
-  const { ui } = useStore();
+  const { ui, flows } = useStore();
+  const flowId = useParams()?.id as string;
+  const flowWasStarted = flows.value.get(flowId)?.value?.firstStartedAt;
 
   const toggleOpen: MouseEventHandler<HTMLButtonElement> = (e) => {
     e.stopPropagation();
+
+    if (flowWasStarted) {
+      ui.commandMenu.setType('ActiveFlowUpdateInfo');
+      ui.commandMenu.setOpen(true);
+
+      return;
+    }
 
     if (ui.flowCommandMenu.isOpen) {
       ui.flowCommandMenu.setOpen(false);

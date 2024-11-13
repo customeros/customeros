@@ -6,6 +6,7 @@ export type GetFlowsQuery = {
   __typename?: 'Query';
   flows: Array<{
     __typename?: 'Flow';
+    firstStartedAt?: any | null;
     name: string;
     edges: string;
     nodes: string;
