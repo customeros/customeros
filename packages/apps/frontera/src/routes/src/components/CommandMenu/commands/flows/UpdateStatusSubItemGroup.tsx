@@ -30,13 +30,25 @@ export const UpdateStatusSubItemGroup = observer(() => {
     match(context.entity)
       .with('Flow', () => {
         if (status === FlowStatus.On) {
-          store.ui.commandMenu.setType('StartFlow');
+          store.ui.commandMenu.setOpen(true, {
+            type: 'StartFlow',
+            context: {
+              ids: selectedIds,
+              entity: 'Flow',
+            },
+          });
 
           return;
         }
 
         if (status === FlowStatus.Off) {
-          store.ui.commandMenu.setType('StopFlow');
+          store.ui.commandMenu.setOpen(true, {
+            type: 'StopFlow',
+            context: {
+              ids: selectedIds,
+              entity: 'Flow',
+            },
+          });
 
           return;
         }

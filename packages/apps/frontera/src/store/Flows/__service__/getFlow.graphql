@@ -43,6 +43,9 @@ query getFlow($id: ID!) {
         executedAt
         error
         action {
+          metadata {
+            id
+          }
           action
         }
       }

@@ -19,6 +19,7 @@ interface FlowStatusCellProps {
 export const FlowStatusCell = observer(
   ({ id, dataTest }: FlowStatusCellProps) => {
     const store = useStore();
+
     const [isEditing, setIsEditing] = useState(false);
 
     const flowSequence = store.flows.value.get(id);
@@ -29,8 +30,13 @@ export const FlowStatusCell = observer(
 
     const handleSelect = (option: SelectOption<FlowStatus>) => {
       if (option.value === FlowStatus.On) {
-        store.ui.commandMenu.setType('StartFlow');
-        store.ui.commandMenu.setOpen(true);
+        store.ui.commandMenu.setOpen(true, {
+          type: 'StartFlow',
+          context: {
+            ids: [id],
+            entity: 'Flow',
+          },
+        });
 
         setIsEditing(false);
 
@@ -38,8 +44,13 @@ export const FlowStatusCell = observer(
       }
 
       if (option.value === FlowStatus.Off) {
-        store.ui.commandMenu.setType('StopFlow');
-        store.ui.commandMenu.setOpen(true);
+        store.ui.commandMenu.setOpen(true, {
+          type: 'StopFlow',
+          context: {
+            ids: [id],
+            entity: 'Flow',
+          },
+        });
 
         setIsEditing(false);
 

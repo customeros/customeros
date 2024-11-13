@@ -91,7 +91,7 @@ export class CommandMenuStore {
 
   setOpen(
     open: boolean,
-    options: { context: string | null; type: CommandMenuType | null } = {
+    options: { context: Context | null; type: CommandMenuType | null } = {
       type: null,
       context: null,
     },
@@ -99,6 +99,7 @@ export class CommandMenuStore {
     runInAction(() => {
       this.isOpen = open;
       this.type = options?.type ?? this.type;
+      this.context = options?.context ?? this.context;
     });
   }
 

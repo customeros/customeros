@@ -4,6 +4,7 @@ import { CountryCell } from '@finder/components/Columns/Cells/country';
 import { TextCell } from '@finder/components/Columns/shared/Cells/TextCell';
 import { JobTitleCell } from '@finder/components/Columns/contacts/Cells/jobTitle';
 import { ContactFlowCell } from '@finder/components/Columns/contacts/Cells/contactFlow';
+import { NextFlowAction } from '@finder/components/Columns/contacts/Cells/nextFlowAction';
 
 import { DateTimeUtils } from '@utils/date.ts';
 import { createColumnHelper } from '@ui/presentation/Table';
@@ -613,7 +614,7 @@ const columns: Record<string, Column> = {
     cell: (props) => {
       const value = props.getValue()?.value.metadata.id;
 
-      return <FlowStatusCell contactID={value} />;
+      return <NextFlowAction contactID={value} />;
     },
     header: (props) => (
       <THead<HTMLInputElement>
