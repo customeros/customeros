@@ -5,7 +5,6 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
@@ -459,29 +458,24 @@ func (r *contactReadRepository) GetContactsToEnrich(ctx context.Context, minutes
 	span.LogFields(log.Int("minutesFromLastEnrichAttempt", minutesFromLastEnrichAttempt))
 	span.LogFields(log.Int("limit", limit))
 
-	cypher := `MATCH (t:Tenant)<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact),
+	cypher := `MATCH (t:Tenant {active:true})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact),
 				(t)--(ts:TenantSettings)
 				WHERE 
-					t.active = true AND
 					ts.enrichContacts = true AND
 					c.enrichedAt IS NULL AND
 					(c.techEnrichAttempts IS NULL OR c.techEnrichAttempts < $maxAttempts) AND
-					(c.enrichFailedAt IS NULL OR c.enrichFailedAt < datetime() - duration({minutes: $minutesFromLastFailure})) AND
 					(c.updatedAt < datetime() - duration({minutes: $minutesFromLastContactUpdate})) AND
 					(c.techEnrichRequestedAt IS NULL OR c.techEnrichRequestedAt < datetime() - duration({minutes: $minutesFromLastEnrichAttempt}))
-				WITH *
+				WITH t, c
 				OPTIONAL MATCH (c)-[:HAS]->(e:Email)
 				WHERE
-					e.isRoleAccount = false AND
-					e.isSystemGenerated = false AND 
-					(e.isPrimaryDomain = true OR e.isPrimaryDomain IS NULL)
-				WITH t,c,e
-				OPTIONAL MATCH (c)--(j:JobRole)--(o:Organization)
-				WHERE
-					o.relationship IN $allowedOrgRelationships AND
-					NOT o.stage IN $restrictedOrgStages AND
-					NOT (e.isFreeAccount = false AND o IS NULL)
-				WITH t.name as tenant, c.id as contactId
+    				e.isRoleAccount = false AND
+    				e.isSystemGenerated = false
+				OPTIONAL MATCH (c)--(:JobRole)--(o:Organization)--(:Domain)
+				OPTIONAL MATCH (c)--(s:Social)
+				WHERE s.url CONTAINS 'linkedin.com'
+				WITH t.name AS tenant, c.id AS contactId, c, e, o, s
+				WHERE e IS NOT NULL OR o IS NOT NULL OR s IS NOT NULL
 				ORDER BY CASE WHEN c.techEnrichRequestedAt IS NULL THEN 0 ELSE 1 END, c.techEnrichRequestedAt ASC
 				LIMIT $limit
 				RETURN DISTINCT tenant, contactId`
@@ -489,8 +483,6 @@ func (r *contactReadRepository) GetContactsToEnrich(ctx context.Context, minutes
 		"minutesFromLastContactUpdate": minutesFromLastContactUpdate,
 		"minutesFromLastEnrichAttempt": minutesFromLastEnrichAttempt,
 		"minutesFromLastFailure":       minutesFromLastFailure,
-		"allowedOrgRelationships":      []string{enum.Customer.String(), enum.Prospect.String()},
-		"restrictedOrgStages":          []string{enum.Lead.String()},
 		"limit":                        limit,
 		"maxAttempts":                  1,
 	}
