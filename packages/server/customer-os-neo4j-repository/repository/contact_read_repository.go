@@ -42,8 +42,7 @@ type ContactReadRepository interface {
 	GetContactCountByOrganizations(ctx context.Context, tenant string, ids []string) (map[string]int64, error)
 	GetContactsToFindWorkEmailWithBetterContact(ctx context.Context, minutesFromLastContactUpdate, limit int) ([]ContactsEnrichWorkEmail, error)
 	GetContactsToEnrichWithEmailFromBetterContact(ctx context.Context, limit int) ([]TenantAndContactId, error)
-	GetContactsToEnrich(ctx context.Context, minutesFromLastContactUpdate, minutesFromLastEnrichAttempt, minutesFromLastFailure, limit int) ([]TenantAndContactId, error)
-	GetLinkedOrgDomains(ctx context.Context, tenant, contactId string) ([]string, error)
+	GetContactsToEnrich(ctx context.Context, minutesFromLastContactUpdate, minutesFromLastEnrichAttempt, limit int) ([]TenantAndContactId, error)
 	GetContactsWithGroupOrSystemGeneratedEmail(ctx context.Context, limit int) ([]TenantAndContactId, error)
 	GetContactsWithEmailForNameUpdate(ctx context.Context, limit int) ([]TenantAndContactId, error)
 	GetContactsToCheck(ctx context.Context, minutesSinceLastUpdate, hoursSinceLastCheck, limit int) ([]TenantAndContact, error)
@@ -157,43 +156,6 @@ func (r *contactReadRepository) GetContactsWithEmail(ctx context.Context, tenant
 	}
 	span.LogFields(log.Int("result.count", len(result.([]*dbtype.Node))))
 	return result.([]*dbtype.Node), err
-}
-
-func (r *contactReadRepository) GetLinkedOrgDomains(ctx context.Context, tenant, contactId string) ([]string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactReadRepository.GetLinkedOrgDomains")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, contactId)
-
-	cypher := `MATCH (:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id:$id})--(:JobRole)--(o:Organization)--(d:Domain)
-				RETURN DISTINCT d.domain`
-	params := map[string]any{
-		"tenant": tenant,
-		"id":     contactId,
-	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
-
-	session := r.prepareReadSession(ctx)
-	defer session.Close(ctx)
-
-	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, cypher, params)
-		if err != nil {
-			return nil, err
-		}
-		return queryResult.Collect(ctx)
-	})
-	if err != nil {
-		return nil, err
-	}
-	output := make([]string, 0)
-	for _, v := range result.([]*neo4j.Record) {
-		output = append(output, v.Values[0].(string))
-	}
-	span.LogFields(log.Object("result", output))
-	return output, nil
 }
 
 func (r *contactReadRepository) prepareReadSession(ctx context.Context) neo4j.SessionWithContext {
@@ -450,7 +412,7 @@ func (r *contactReadRepository) GetContactsToEnrichWithEmailFromBetterContact(ct
 	return output, nil
 }
 
-func (r *contactReadRepository) GetContactsToEnrich(ctx context.Context, minutesFromLastContactUpdate, minutesFromLastEnrichAttempt, minutesFromLastFailure, limit int) ([]TenantAndContactId, error) {
+func (r *contactReadRepository) GetContactsToEnrich(ctx context.Context, minutesFromLastContactUpdate, minutesFromLastEnrichAttempt, limit int) ([]TenantAndContactId, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactReadRepository.GetContactsToEnrich")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
@@ -482,7 +444,6 @@ func (r *contactReadRepository) GetContactsToEnrich(ctx context.Context, minutes
 	params := map[string]any{
 		"minutesFromLastContactUpdate": minutesFromLastContactUpdate,
 		"minutesFromLastEnrichAttempt": minutesFromLastEnrichAttempt,
-		"minutesFromLastFailure":       minutesFromLastFailure,
 		"limit":                        limit,
 		"maxAttempts":                  1,
 	}

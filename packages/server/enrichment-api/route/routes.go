@@ -92,9 +92,9 @@ func enrichPerson(services *service.Services) gin.HandlerFunc {
 
 		foundByLinkedInUrl := enrichPersonData != nil && enrichPersonData.PersonProfile != nil && enrichPersonData.PersonProfile.Person != nil
 
-		// Step 2 - Search by email and domain
-		if !foundByLinkedInUrl && (request.Email != "" || request.Domain != "") {
-			recordId, response, err := services.ScrapeInService.ScrapInSearchPerson(ctx, request.Email, request.FirstName, request.LastName, request.Domain)
+		// Step 2 - Search by email, domain and company name
+		if !foundByLinkedInUrl && (request.Email != "" || request.Domain != "" || request.CompanyName != "") {
+			recordId, response, err := services.ScrapeInService.ScrapInSearchPerson(ctx, request.Email, request.FirstName, request.LastName, request.Domain, request.CompanyName)
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "ScrapInSearchPerson"))
 				c.JSON(http.StatusInternalServerError, model.EnrichPersonScrapinResponse{

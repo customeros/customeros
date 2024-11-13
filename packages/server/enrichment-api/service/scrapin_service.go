@@ -20,7 +20,7 @@ import (
 
 type ScrapinService interface {
 	ScrapInPersonProfile(ctx context.Context, linkedInUrl string) (uint64, *postgresentity.ScrapInResponseBody, error)
-	ScrapInSearchPerson(ctx context.Context, email, fistName, lastName, domain string) (uint64, *postgresentity.ScrapInResponseBody, error)
+	ScrapInSearchPerson(ctx context.Context, email, fistName, lastName, domain, companyName string) (uint64, *postgresentity.ScrapInResponseBody, error)
 	ScrapInCompanyProfile(ctx context.Context, linkedInUrl string) (uint64, *postgresentity.ScrapInResponseBody, error)
 	ScrapInSearchCompany(ctx context.Context, domain string) (uint64, *postgresentity.ScrapInResponseBody, error)
 }
@@ -185,12 +185,17 @@ func (s *scrapinService) callScrapinPersonProfile(ctx context.Context, linkedInU
 	return &scrapinResponse, nil
 }
 
-func (s *scrapinService) ScrapInSearchPerson(ctx context.Context, email, firstName, lastName, domain string) (uint64, *postgresentity.ScrapInResponseBody, error) {
+func (s *scrapinService) ScrapInSearchPerson(ctx context.Context, email, firstName, lastName, domain, companyName string) (uint64, *postgresentity.ScrapInResponseBody, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ScrapinService.ScrapInSearchPerson")
 	defer span.Finish()
-	span.LogFields(log.String("email", email), log.String("firstName", firstName), log.String("lastName", lastName), log.String("domain", domain))
+	span.LogFields(
+		log.String("email", email),
+		log.String("firstName", firstName),
+		log.String("lastName", lastName),
+		log.String("domain", domain),
+		log.String("companyName", companyName))
 
-	latestEnrichDetailsScrapInRecord, err := s.services.CommonServices.PostgresRepositories.EnrichDetailsScrapInRepository.GetLatestByAllParamsAndFlow(ctx, email, firstName, lastName, domain, postgresentity.ScrapInFlowPersonSearch)
+	latestEnrichDetailsScrapInRecord, err := s.services.CommonServices.PostgresRepositories.EnrichDetailsScrapInRepository.GetLatestByAllParamsAndFlow(ctx, email, firstName, lastName, domain, companyName, postgresentity.ScrapInFlowPersonSearch)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to get scrapin data"))
 		return 0, nil, err
@@ -213,7 +218,7 @@ func (s *scrapinService) ScrapInSearchPerson(ctx context.Context, email, firstNa
 	// if cached data is missing or last time fetched > ttl refresh
 	if callScrapInNow {
 		// get data from scrapin
-		if data, err = s.callScrapinPersonSearch(ctx, email, firstName, lastName, domain); err != nil {
+		if data, err = s.callScrapinPersonSearch(ctx, email, firstName, lastName, domain, companyName); err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to call scrapin"))
 			return 0, nil, err
 		}
@@ -266,7 +271,7 @@ func (s *scrapinService) ScrapInSearchPerson(ctx context.Context, email, firstNa
 
 	// if fresh data not found, check most recent cached data with person found
 	if data == nil || data.Person == nil {
-		latestEnrichDetailsScrapInRecordWithPersonFound, err := s.services.CommonServices.PostgresRepositories.EnrichDetailsScrapInRepository.GetLatestByAllParamsAndFlowWithPersonFound(ctx, email, firstName, lastName, domain, postgresentity.ScrapInFlowPersonSearch)
+		latestEnrichDetailsScrapInRecordWithPersonFound, err := s.services.CommonServices.PostgresRepositories.EnrichDetailsScrapInRepository.GetLatestByAllParamsAndFlowWithPersonFound(ctx, email, firstName, lastName, domain, companyName, postgresentity.ScrapInFlowPersonSearch)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to get scrapin data"))
 			return 0, nil, err
@@ -285,10 +290,10 @@ func (s *scrapinService) ScrapInSearchPerson(ctx context.Context, email, firstNa
 	return recordId, data, nil
 }
 
-func (s *scrapinService) callScrapinPersonSearch(ctx context.Context, email, firstName, lastName, domain string) (*postgresentity.ScrapInResponseBody, error) {
+func (s *scrapinService) callScrapinPersonSearch(ctx context.Context, email, firstName, lastName, domain, companyName string) (*postgresentity.ScrapInResponseBody, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ScrapInService.callScrapinPersonSearch")
 	defer span.Finish()
-	span.LogFields(log.String("email", email), log.String("firstName", firstName), log.String("lastName", lastName), log.String("domain", domain))
+	span.LogKV("email", email, "firstName", firstName, "lastName", lastName, "domain", domain, "companyName", companyName)
 
 	baseUrl := s.config.ScrapinConfig.Url
 	if baseUrl == "" {
@@ -316,6 +321,9 @@ func (s *scrapinService) callScrapinPersonSearch(ctx context.Context, email, fir
 	}
 	if domain != "" {
 		params.Add("companyDomain", domain)
+	}
+	if companyName != "" {
+		params.Add("companyName", companyName)
 	}
 
 	scrapinStatusCode, body, err := makeScrapInHTTPRequest(baseUrl + "/enrichment" + "?" + params.Encode())

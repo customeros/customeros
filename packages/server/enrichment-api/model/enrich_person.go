@@ -11,6 +11,7 @@ type EnrichPersonRequest struct {
 	FirstName   string `json:"firstName"`
 	LastName    string `json:"lastName"`
 	Domain      string `json:"domain"`
+	CompanyName string `json:"companyName"`
 }
 
 func (e *EnrichPersonRequest) Normalize() {
@@ -19,6 +20,7 @@ func (e *EnrichPersonRequest) Normalize() {
 	e.FirstName = strings.TrimSpace(e.FirstName)
 	e.LastName = strings.TrimSpace(e.LastName)
 	e.Domain = strings.TrimSpace(e.Domain)
+	e.CompanyName = strings.TrimSpace(e.CompanyName)
 }
 
 type EnrichPersonScrapinResponse struct {
