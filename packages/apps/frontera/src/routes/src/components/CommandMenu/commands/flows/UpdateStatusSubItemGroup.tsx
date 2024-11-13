@@ -29,14 +29,14 @@ export const UpdateStatusSubItemGroup = observer(() => {
 
     match(context.entity)
       .with('Flow', () => {
-        if (status === FlowStatus.Active) {
+        if (status === FlowStatus.On) {
           store.ui.commandMenu.setType('StartFlow');
 
           return;
         }
 
-        if (status === FlowStatus.Paused) {
-          store.ui.commandMenu.setType('PauseFlow');
+        if (status === FlowStatus.Off) {
+          store.ui.commandMenu.setType('StopFlow');
 
           return;
         }
@@ -63,9 +63,9 @@ export const UpdateStatusSubItemGroup = observer(() => {
         icon={<Columns03 />}
         leftLabel='Change flow status'
         keywords={[...flowKeywords.status_update, 'live']}
-        rightAccessory={isSelected() === FlowStatus.Active ? <Check /> : null}
+        rightAccessory={isSelected() === FlowStatus.On ? <Check /> : null}
         onSelectAction={() => {
-          handleUpdateStatus(FlowStatus.Active);
+          handleUpdateStatus(FlowStatus.On);
         }}
       />
 
@@ -74,9 +74,9 @@ export const UpdateStatusSubItemGroup = observer(() => {
         rightLabel='Stopped'
         leftLabel='Change flow status'
         keywords={[...flowKeywords.status_update, 'stopped', 'paused']}
-        rightAccessory={isSelected() === FlowStatus.Paused ? <Check /> : null}
+        rightAccessory={isSelected() === FlowStatus.Off ? <Check /> : null}
         onSelectAction={() => {
-          handleUpdateStatus(FlowStatus.Paused);
+          handleUpdateStatus(FlowStatus.Off);
         }}
       />
     </>

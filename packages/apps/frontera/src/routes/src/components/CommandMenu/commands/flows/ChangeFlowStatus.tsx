@@ -17,12 +17,12 @@ export const ChangeFlowStatus = observer(() => {
 
     match(context.entity)
       .with('Flow', () => {
-        if (flowStatus === FlowStatus.Active) {
+        if (flowStatus === FlowStatus.On) {
           return store.ui.commandMenu.setType('StartFlow');
         }
 
-        if (flowStatus === FlowStatus.Paused) {
-          return store.ui.commandMenu.setType('PauseFlow');
+        if (flowStatus === FlowStatus.Off) {
+          return store.ui.commandMenu.setType('StopFlow');
         }
       })
       .with('Flows', () => {
@@ -62,18 +62,18 @@ export const ChangeFlowStatus = observer(() => {
 
       <Command.List>
         <CommandItem
-          key={FlowStatus.Active}
-          onSelect={handleSelect(FlowStatus.Active)}
-          rightAccessory={status === FlowStatus.Active ? <Check /> : null}
+          key={FlowStatus.On}
+          onSelect={handleSelect(FlowStatus.On)}
+          rightAccessory={status === FlowStatus.On ? <Check /> : null}
         >
           Live
         </CommandItem>
         <CommandItem
-          key={FlowStatus.Paused}
-          onSelect={handleSelect(FlowStatus.Paused)}
-          rightAccessory={status === FlowStatus.Paused ? <Check /> : null}
+          key={FlowStatus.Off}
+          onSelect={handleSelect(FlowStatus.Off)}
+          rightAccessory={status === FlowStatus.Off ? <Check /> : null}
         >
-          Paused
+          Stopped
         </CommandItem>
       </Command.List>
     </Command>

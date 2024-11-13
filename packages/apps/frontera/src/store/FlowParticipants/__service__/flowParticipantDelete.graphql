@@ -1,0 +1,5 @@
+mutation flowParticipantDelete($id: ID! ) {
+  flowParticipant_Delete(id: $id) {
+    result
+  }
+}

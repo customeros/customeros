@@ -4,8 +4,8 @@ import { observer } from 'mobx-react-lite';
 import {
   BaseEdge,
   EdgeProps,
-  getSmoothStepPath,
   EdgeLabelRenderer,
+  getSmoothStepPath,
 } from '@xyflow/react';
 
 import { cn } from '@ui/utils/cn';
@@ -50,7 +50,7 @@ export const BasicEdge: React.FC<
 
       <EdgeLabelRenderer>
         <div
-          className='nodrag nopan'
+          className={cn('nodrag nopan')}
           style={{
             position: 'absolute',
             transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,

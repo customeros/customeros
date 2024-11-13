@@ -67,8 +67,8 @@ export const ContactFlowCell = observer(
       );
     }
 
-    const status = contactFlows?.[0]?.value.contacts.find(
-      (e) => e.contact.metadata.id === contactId,
+    const status = contactFlows?.[0]?.value.participants.find(
+      (e) => e.entityId === contactId,
     )?.status;
 
     return (
@@ -84,8 +84,8 @@ export const ContactFlowCell = observer(
                 <div>
                   {flow.value.name} •{' '}
                   <span className='capitalize'>
-                    {flow.value.contacts
-                      .find((e) => e.contact.metadata.id === contactId)
+                    {flow.value.participants
+                      .find((e) => e.entityId === contactId)
                       ?.status?.toLowerCase()
                       ?.split('_')
                       ?.join(' ')}{' '}

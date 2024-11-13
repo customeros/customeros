@@ -1,5 +1,0 @@
-mutation flowContactDeleteBulk($id: [ID!]!) {
-  flowContact_DeleteBulk(id: $id) {
-    result
-  }
-}

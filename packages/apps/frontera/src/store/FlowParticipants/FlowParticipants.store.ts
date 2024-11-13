@@ -4,49 +4,72 @@ import { RootStore } from '@store/root';
 import { Transport } from '@store/transport';
 import { GroupOperation } from '@store/types';
 import { runInAction, makeAutoObservable } from 'mobx';
-import { FlowContactsService } from '@store/FlowContacts/__service__';
 import { GroupStore, makeAutoSyncableGroup } from '@store/group-store';
-import { FlowContactStore } from '@store/FlowContacts/FlowContact.store.ts';
+import { FlowParticipantsService } from '@store/FlowParticipants/__service__';
+import { FlowParticipantStore } from '@store/FlowParticipants/FlowParticipant.store.ts';
 
-import { FlowContact } from '@graphql/types';
+import { FlowEntityType, FlowParticipant } from '@graphql/types';
 
-export class FlowParticipantsStore implements GroupStore<FlowContact> {
+export class FlowParticipantsStore implements GroupStore<FlowParticipant> {
   version = 0;
   isLoading = false;
   history: GroupOperation[] = [];
   error: string | null = null;
   channel?: Channel | undefined;
   isBootstrapped: boolean = false;
-  value: Map<string, Store<FlowContact>> = new Map();
+  value: Map<string, Store<FlowParticipant>> = new Map();
   sync = makeAutoSyncableGroup.sync;
   subscribe = makeAutoSyncableGroup.subscribe;
-  load = makeAutoSyncableGroup.load<FlowContact>();
+  load = makeAutoSyncableGroup.load<FlowParticipant>();
   totalElements = 0;
-  private service: FlowContactsService;
+  private service: FlowParticipantsService;
 
   constructor(public root: RootStore, public transport: Transport) {
     makeAutoObservable(this);
     makeAutoSyncableGroup(this, {
-      channelName: 'FlowContacts',
+      channelName: 'FlowParticipants',
       getItemId: (item) => item?.metadata?.id,
-      ItemStore: FlowContactStore,
+      ItemStore: FlowParticipantStore,
     });
-    this.service = FlowContactsService.getInstance(transport);
+    this.service = FlowParticipantsService.getInstance(transport);
   }
 
-  public deleteFlowContacts = async (ids: string[]) => {
+  public addFlowParticipants = async (
+    entityIds: string[],
+    flowId: string,
+    entityType?: FlowEntityType,
+  ) => {
+    return this.service.createFlowParticipants({
+      entitiIds: entityIds,
+      flowId,
+      entityType: entityType || FlowEntityType.Contact,
+    });
+  };
+  public addFlowParticipant = async (
+    entityId: string,
+    flowId: string,
+    entityType?: FlowEntityType,
+  ) => {
+    return this.service.createFlowParticipant({
+      entityId,
+      flowId,
+      entityType: entityType || FlowEntityType.Contact,
+    });
+  };
+
+  public deleteFlowParticipants = async (ids: string[]) => {
     if (!ids.length) return;
     this.isLoading = true;
 
-    const flowContacts = ids.map(
-      (id) => this.value.get(id) as FlowContactStore,
+    const FlowParticipants = ids.map(
+      (id) => this.value.get(id) as FlowParticipantStore,
     );
 
-    const contactStores = flowContacts.map((fc) => fc?.contact);
+    const contactStores = FlowParticipants.map((fc) => fc?.contact);
     const flowStores = contactStores.flatMap((cs) => cs?.flows);
 
     try {
-      await this.service.deleteFlowContacts({
+      await this.service.deleteFlowParticipants({
         id: ids,
       });
 
@@ -64,7 +87,7 @@ export class FlowParticipantsStore implements GroupStore<FlowContact> {
         flowStores.forEach((c) => {
           c?.update(
             (c) => {
-              c.contacts = c.contacts.filter(
+              c.participants = c.participants.filter(
                 (e) => !ids.includes(e.metadata.id),
               );
 
@@ -76,7 +99,7 @@ export class FlowParticipantsStore implements GroupStore<FlowContact> {
 
         this.root.contacts.sync({
           action: 'INVALIDATE',
-          ids: flowContacts.map((e) => e.contactId),
+          ids: FlowParticipants.map((e) => e.contactId),
         });
 
         const flowsIds = flowStores

@@ -1534,10 +1534,9 @@ export type FilterItem = {
 
 export type Flow = MetadataInterface & {
   __typename?: 'Flow';
-  /** @deprecated No longer supported */
-  contacts: Array<FlowContact>;
   description: Scalars['String']['output'];
   edges: Scalars['String']['output'];
+  firstStartedAt?: Maybe<Scalars['Time']['output']>;
   metadata: Metadata;
   name: Scalars['String']['output'];
   nodes: Scalars['String']['output'];
@@ -1621,6 +1620,10 @@ export type FlowContact = MetadataInterface & {
   status: FlowParticipantStatus;
 };
 
+export enum FlowEntityType {
+  Contact = 'CONTACT',
+}
+
 export type FlowMergeInput = {
   edges: Scalars['String']['input'];
   id?: InputMaybe<Scalars['ID']['input']>;
@@ -1670,10 +1673,9 @@ export type FlowStatistics = {
 };
 
 export enum FlowStatus {
-  Active = 'ACTIVE',
   Archived = 'ARCHIVED',
-  Inactive = 'INACTIVE',
-  Paused = 'PAUSED',
+  Off = 'OFF',
+  On = 'ON',
 }
 
 export enum FundingRound {
@@ -2374,10 +2376,10 @@ export type Mutation = {
   emailSetPrimaryForContact: Result;
   email_Validate: ActionResponse;
   externalSystem_Create: Scalars['ID']['output'];
-  flowContact_Add: FlowContact;
-  flowContact_AddBulk: Result;
-  flowContact_Delete: Result;
-  flowContact_DeleteBulk: Result;
+  flowParticipant_Add: FlowParticipant;
+  flowParticipant_AddBulk: Result;
+  flowParticipant_Delete: Result;
+  flowParticipant_DeleteBulk: Result;
   flowSender_Delete: Result;
   flowSender_Merge: FlowSender;
   flow_ChangeStatus: Flow;
@@ -2745,21 +2747,23 @@ export type MutationExternalSystem_CreateArgs = {
   input: ExternalSystemInput;
 };
 
-export type MutationFlowContact_AddArgs = {
-  contactId: Scalars['ID']['input'];
+export type MutationFlowParticipant_AddArgs = {
+  entityId: Scalars['ID']['input'];
+  entityType: FlowEntityType;
   flowId: Scalars['ID']['input'];
 };
 
-export type MutationFlowContact_AddBulkArgs = {
-  contactId: Array<Scalars['ID']['input']>;
+export type MutationFlowParticipant_AddBulkArgs = {
+  entityIds: Array<Scalars['ID']['input']>;
+  entityType: FlowEntityType;
   flowId: Scalars['ID']['input'];
 };
 
-export type MutationFlowContact_DeleteArgs = {
+export type MutationFlowParticipant_DeleteArgs = {
   id: Scalars['ID']['input'];
 };
 
-export type MutationFlowContact_DeleteBulkArgs = {
+export type MutationFlowParticipant_DeleteBulkArgs = {
   id: Array<Scalars['ID']['input']>;
 };
 
@@ -3916,7 +3920,7 @@ export type Query = {
   externalMeetings: MeetingsPage;
   externalSystemInstances: Array<ExternalSystemInstance>;
   flow: Flow;
-  flowParticipant: FlowContact;
+  flowParticipant: FlowParticipant;
   flow_emailVariables: Array<EmailVariableEntity>;
   flows: Array<Flow>;
   gcli_Search: Array<GCliItem>;

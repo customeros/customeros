@@ -1,5 +1,6 @@
 import { when, makeAutoObservable } from 'mobx';
 import { FlowSendersStore } from '@store/FlowSenders/FlowSenders.store.ts';
+import { FlowParticipantsStore } from '@store/FlowParticipants/FlowParticipants.store.ts';
 
 import type { Transport } from './transport';
 
@@ -21,7 +22,6 @@ import { RemindersStore } from './Reminders/Reminders.store';
 import { WorkFlowsStore } from './WorkFlows/WorkFlows.store';
 import { CustomFieldsStore } from './Settings/CustomFields.store';
 import { GlobalCacheStore } from './GlobalCache/GlobalCache.store';
-import { FlowContactsStore } from './FlowContacts/FlowContacts.store';
 import { TableViewDefsStore } from './TableViewDefs/TableViewDefs.store';
 import { OrganizationsStore } from './Organizations/Organizations.store';
 import { OpportunitiesStore } from './Opportunities/Opportunities.store';
@@ -50,7 +50,7 @@ export class RootStore {
   workFlows: WorkFlowsStore;
   windowManager: WindowManager;
   globalCache: GlobalCacheStore;
-  flowContacts: FlowContactsStore;
+  flowParticipants: FlowParticipantsStore;
   customFields: CustomFieldsStore;
   tableViewDefs: TableViewDefsStore;
   organizations: OrganizationsStore;
@@ -84,7 +84,7 @@ export class RootStore {
     this.customFields = new CustomFieldsStore(this, this.transport);
     this.globalCache = new GlobalCacheStore(this, this.transport);
     this.flowSenders = new FlowSendersStore(this, this.transport);
-    this.flowContacts = new FlowContactsStore(this, this.transport);
+    this.flowParticipants = new FlowParticipantsStore(this, this.transport);
     this.tableViewDefs = new TableViewDefsStore(this, this.transport);
     this.organizations = new OrganizationsStore(this, this.transport);
     this.opportunities = new OpportunitiesStore(this, this.transport);

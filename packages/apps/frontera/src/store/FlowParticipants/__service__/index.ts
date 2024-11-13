@@ -1,1 +1,1 @@
-export * from './FlowContacts.service.ts';
+export * from './FlowParticipants.service.ts';

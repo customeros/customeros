@@ -16,10 +16,9 @@ import { FlowParticipantStore } from '@store/FlowParticipants/FlowParticipant.st
 import { uuidv4 } from '@utils/generateUuid';
 import {
   Flow,
-  Contact,
   DataSource,
   FlowStatus,
-  FlowContact,
+  FlowParticipant,
   FlowParticipantStatus,
 } from '@graphql/types';
 
@@ -113,7 +112,7 @@ export class FlowStore implements Store<Flow> {
     { nodes, edges }: { nodes: string; edges: string },
     options?: { onError: () => void; onSuccess: () => void },
   ) {
-    if (this.value.status !== FlowStatus.Inactive) {
+    if (this.value.status !== FlowStatus.Off) {
       this.root.ui.toastError(
         'You can only edit draft flows',
         'update-flow-error',
@@ -186,13 +185,13 @@ export class FlowStore implements Store<Flow> {
     const output = merge(this.value, data);
 
     const flowContacts = data.participants?.map((item) => {
-      this.root.flowContacts.load([item]);
+      this.root.flowParticipants.load([item]);
 
       if (!item.metadata.id) {
         return;
       }
 
-      return this.root.flowContacts.value.get(item.metadata.id)?.value;
+      return this.root.flowParticipants.value.get(item.metadata.id)?.value;
     });
 
     const flowSenders = data.senders?.map((item) => {
@@ -201,7 +200,7 @@ export class FlowStore implements Store<Flow> {
       return this.root.flowSenders.value.get(item?.metadata?.id)?.value;
     });
 
-    flowContacts && set(output, 'contacts', flowContacts);
+    flowContacts && set(output, 'participants', flowContacts);
     flowSenders && set(output, 'senders', flowSenders);
 
     return output;
@@ -213,10 +212,8 @@ export class FlowStore implements Store<Flow> {
     try {
       const contactStore = this.root.contacts.value.get(contactId);
 
-      const { flowContact_Add } = await this.service.addContact({
-        contactId,
-        flowId: this.id,
-      });
+      const { flowParticipant_Add } =
+        await this.root.flowParticipants.addFlowParticipant(contactId, this.id);
 
       runInAction(() => {
         contactStore?.update(
@@ -228,32 +225,31 @@ export class FlowStore implements Store<Flow> {
           { mutate: false },
         );
 
-        const newFlowContactValue = {
-          ...flowContact_Add,
-          contact: {
-            id: contactId,
-            metadata: {
-              id: contactId,
-              source: DataSource.Openline,
-              appSource: DataSource.Openline,
-              created: new Date().toISOString(),
-              lastUpdated: new Date().toISOString(),
-              sourceOfTruth: DataSource.Openline,
-            },
-          } as Contact,
-        } as FlowContact;
-
-        this.value.contacts = [...this.value.contacts, newFlowContactValue];
-        this.value.statistics.onHold += 1;
-        this.value.statistics.total += 1;
-
         const newFLowContact = new FlowParticipantStore(
           this.root,
           this.transport,
         );
 
+        const newFlowContactValue = {
+          metadata: {
+            ...newFLowContact.value.metadata,
+            id: flowParticipant_Add.metadata.id,
+          },
+          entityType: 'CONTACT',
+          entityId: contactId,
+          status: FlowParticipantStatus.Scheduled,
+          executions: [],
+        };
+
+        this.value.participants = [
+          ...this.value.participants,
+          newFlowContactValue,
+        ];
+        this.value.statistics.onHold += 1;
+        this.value.statistics.total += 1;
+
         newFLowContact.value = newFlowContactValue;
-        this.root.flowContacts.value.set(
+        this.root.flowParticipants.value.set(
           newFlowContactValue.metadata.id,
           newFLowContact,
         );
@@ -289,10 +285,7 @@ export class FlowStore implements Store<Flow> {
         return this.root.contacts.value.get(e);
       });
 
-      await this.service.addContactBulk({
-        contactId: contactIds,
-        flowId: this.id,
-      });
+      await this.root.flowParticipants.addFlowParticipants(contactIds, this.id);
 
       runInAction(() => {
         contactStores.map((e) => {
@@ -311,6 +304,8 @@ export class FlowStore implements Store<Flow> {
         this.value.participants = [
           ...this.value.participants,
           ...(contactStores || []).map((cs) => ({
+            entityType: 'CONTACT',
+            entityId: cs?.id,
             metadata: {
               id: uuidv4(),
               source: DataSource.Openline,
@@ -319,22 +314,8 @@ export class FlowStore implements Store<Flow> {
               lastUpdated: new Date().toISOString(),
               sourceOfTruth: DataSource.Openline,
             },
-            status: FlowParticipantStatus.Scheduled,
-            scheduledAction: '',
-            scheduledAt: new Date().toISOString(),
-            contact: {
-              id: cs?.id,
-              metadata: {
-                id: cs?.id,
-                source: DataSource.Openline,
-                appSource: DataSource.Openline,
-                created: new Date().toISOString(),
-                lastUpdated: new Date().toISOString(),
-                sourceOfTruth: DataSource.Openline,
-              },
-            },
           })),
-        ] as FlowContact[];
+        ] as FlowParticipant[];
 
         this.root.ui.toastSuccess(
           `${contactIds.length} contacts added to flow`,
@@ -360,7 +341,7 @@ export class FlowStore implements Store<Flow> {
 
 const getDefaultValue = (): Flow => ({
   name: '',
-  status: FlowStatus.Inactive,
+  status: FlowStatus.Off,
   description: '',
   metadata: {
     source: DataSource.Openline,
@@ -381,7 +362,6 @@ const getDefaultValue = (): Flow => ({
   },
   participants: [],
   // deprecated but needed for type compatibility
-  contacts: [],
   senders: [],
   nodes: JSON.stringify(initialNodes),
   edges: JSON.stringify(initialEdges),

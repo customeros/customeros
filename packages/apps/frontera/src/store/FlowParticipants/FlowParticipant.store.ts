@@ -7,12 +7,17 @@ import { Store, makeAutoSyncable } from '@store/store';
 import { runInAction, makeAutoObservable } from 'mobx';
 import { makeAutoSyncableGroup } from '@store/group-store';
 
-import { DataSource, FlowContact, FlowParticipantStatus } from '@graphql/types';
+import {
+  DataSource,
+  FlowEntityType,
+  FlowParticipant,
+  FlowParticipantStatus,
+} from '@graphql/types';
 
-import { FlowContactsService } from './__service__';
+import { FlowParticipantsService } from './__service__';
 
-export class FlowParticipantStore implements Store<FlowContact> {
-  value: FlowContact = getDefaultValue();
+export class FlowParticipantStore implements Store<FlowParticipant> {
+  value: FlowParticipant = getDefaultValue();
   version = 0;
   isLoading = false;
   history: Operation[] = [];
@@ -20,18 +25,18 @@ export class FlowParticipantStore implements Store<FlowContact> {
   channel?: Channel | undefined;
   subscribe = makeAutoSyncable.subscribe;
   sync = makeAutoSyncableGroup.sync;
-  load = makeAutoSyncable.load<FlowContact>();
-  update = makeAutoSyncable.update<FlowContact>();
-  private service: FlowContactsService;
+  load = makeAutoSyncable.load<FlowParticipant>();
+  update = makeAutoSyncable.update<FlowParticipant>();
+  private service: FlowParticipantsService;
 
   constructor(public root: RootStore, public transport: Transport) {
     makeAutoSyncable(this, {
-      channelName: 'FlowContact',
-      getId: (d: FlowContact) => d?.metadata?.id,
+      channelName: 'FlowParticipant',
+      getId: (d: FlowParticipant) => d?.metadata?.id,
     });
     makeAutoObservable(this);
 
-    this.service = FlowContactsService.getInstance(transport);
+    this.service = FlowParticipantsService.getInstance(transport);
   }
 
   get id() {
@@ -39,11 +44,11 @@ export class FlowParticipantStore implements Store<FlowContact> {
   }
 
   get contactId() {
-    return this.value.contact?.metadata?.id;
+    return this.value.entityId;
   }
 
   get contact() {
-    return this.root.contacts.value.get(this.value.contact.metadata.id);
+    return this.root.contacts.value.get(this.value.entityId);
   }
 
   setId(id: string) {
@@ -57,7 +62,7 @@ export class FlowParticipantStore implements Store<FlowContact> {
       });
 
       runInAction(() => {
-        this.value = flowParticipant as FlowContact;
+        this.value = flowParticipant as FlowParticipant;
       });
     } catch (err) {
       runInAction(() => {
@@ -66,14 +71,14 @@ export class FlowParticipantStore implements Store<FlowContact> {
     }
   }
 
-  public removeFlowContact = async () => {
-    return this.service.deleteFlowContact({
+  public removeFlowParticipant = async () => {
+    return this.service.deleteFlowParticipant({
       id: this.id,
     });
   };
 
   // this is triggered only if one contact is selected and it has exactly 1 flow - otherwise bulk operation is performed
-  public deleteFlowContact = async () => {
+  public deleteFlowParticipant = async () => {
     this.isLoading = true;
 
     const contactStore = this.contact;
@@ -81,7 +86,7 @@ export class FlowParticipantStore implements Store<FlowContact> {
     const flowId = this.contact?.flows?.[0]?.value.metadata.id ?? '';
 
     try {
-      await this.removeFlowContact();
+      await this.removeFlowParticipant();
       runInAction(() => {
         contactStore?.update(
           (c) => {
@@ -121,7 +126,10 @@ export class FlowParticipantStore implements Store<FlowContact> {
   };
 }
 
-const getDefaultValue = (): FlowContact => ({
+const getDefaultValue = (): FlowParticipant => ({
+  entityId: '',
+  entityType: FlowEntityType.Contact,
+  executions: [],
   metadata: {
     source: DataSource.Openline,
     appSource: DataSource.Openline,
@@ -131,47 +139,4 @@ const getDefaultValue = (): FlowContact => ({
     sourceOfTruth: DataSource.Openline,
   },
   status: FlowParticipantStatus.Scheduled,
-  scheduledAction: '',
-  scheduledAt: new Date().toISOString(),
-  contact: {
-    id: crypto.randomUUID(),
-    createdAt: '',
-    customFields: [],
-    emails: [],
-    firstName: '',
-    jobRoles: [],
-    lastName: '',
-    locations: [],
-    phoneNumbers: [],
-    profilePhotoUrl: '',
-    enrichDetails: {},
-    organizations: {
-      content: [],
-      totalPages: 0,
-      totalElements: 0,
-      totalAvailable: 0,
-    },
-    flows: [],
-    socials: [],
-    timezone: '',
-    source: DataSource.Openline,
-    timelineEvents: [],
-    timelineEventsTotalCount: 0,
-    updatedAt: '',
-    appSource: DataSource.Openline,
-    description: '',
-    prefix: '',
-    name: '',
-    owner: null,
-    tags: [],
-    connectedUsers: [],
-    metadata: {
-      source: DataSource.Openline,
-      appSource: DataSource.Openline,
-      id: crypto.randomUUID(),
-      created: '',
-      lastUpdated: new Date().toISOString(),
-      sourceOfTruth: DataSource.Openline,
-    },
-  },
 });
