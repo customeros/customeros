@@ -1,106 +1,49 @@
-import { useParams } from 'react-router-dom';
-import { useRef, useMemo, useState, useEffect } from 'react';
+import { useRef } from 'react';
 
 import { LexicalEditor } from 'lexical';
 import { observer } from 'mobx-react-lite';
-import { render } from '@react-email/render';
 import { FlowActionType } from '@store/Flows/types';
 
 import { cn } from '@ui/utils/cn';
 import { Check } from '@ui/media/icons/Check';
 import { Button } from '@ui/form/Button/Button';
 import { Editor } from '@ui/form/Editor/Editor';
-import { useStore } from '@shared/hooks/useStore';
+import { EmailVariableName } from '@graphql/types';
 import { ChevronRight } from '@ui/media/icons/ChevronRight';
 import { Modal, ModalPortal, ModalContent } from '@ui/overlay/Modal';
 import { extractPlainText } from '@ui/form/Editor/utils/extractPlainText';
-import { EmailTemplate } from '@shared/components/EmailTemplate/EmailTemplate.tsx';
 import { convertPlainTextToHtml } from '@ui/form/Editor/utils/convertPlainTextToHtml';
 
-import { useUndoRedo } from '../../hooks';
-
 interface EmailEditorModalProps {
+  subject: string;
+  flowName?: string;
+  placeholder: string;
+  bodyTemplate: string;
   isEditorOpen: boolean;
+  action: FlowActionType;
+  handleSave: () => void;
   handleCancel: () => void;
-  data: { subject: string; bodyTemplate: string; action: FlowActionType };
-  handleEmailDataChange: (args: {
-    subject: string;
-    bodyTemplate: string;
-  }) => void;
+  variables?: Array<EmailVariableName>;
+  setSubject: (subject: string) => void;
+  setBodyTemplate: (bodyTemplate: string) => void;
 }
 
 export const EmailEditorModal = observer(
   ({
     isEditorOpen,
-    handleEmailDataChange,
-    data,
+    subject,
+    bodyTemplate,
     handleCancel,
+    setSubject,
+    setBodyTemplate,
+    flowName,
+    placeholder,
+    variables,
+    action,
+    handleSave,
   }: EmailEditorModalProps) => {
-    const id = useParams().id as string;
     const inputRef = useRef<LexicalEditor>(null);
     const editorRef = useRef<LexicalEditor>(null);
-    const store = useStore();
-
-    const [subject, setSubject] = useState(data?.subject ?? '');
-    const [bodyTemplate, setBodyTemplate] = useState(data?.bodyTemplate ?? '');
-    const { takeSnapshot } = useUndoRedo();
-
-    useEffect(() => {
-      if (isEditorOpen) {
-        setSubject(data?.subject ?? '');
-        setBodyTemplate(data?.bodyTemplate ?? '');
-
-        if (
-          data.action !== FlowActionType.EMAIL_REPLY &&
-          data?.subject?.trim()?.length === 0
-        ) {
-          setTimeout(() => {
-            inputRef.current?.focus();
-          }, 0);
-        }
-      }
-    }, [isEditorOpen, data.subject, data.bodyTemplate, data.action]);
-
-    const flow = store.flows.value.get(id)?.value?.name;
-    const placeholder = useMemo(() => getRandomEmailPrompt(), [isEditorOpen]);
-    const variables = store.flowEmailVariables?.value.get('CONTACT')?.variables;
-
-    const prepareEmailContent = async (bodyHtml: string) => {
-      try {
-        const emailHtml = await render(<EmailTemplate bodyHtml={bodyHtml} />, {
-          pretty: true,
-        });
-
-        return {
-          html: emailHtml,
-        };
-      } catch (error) {
-        store.ui.toastError(
-          'Unable to process email content',
-          'email-content-parsing-error',
-        );
-      }
-    };
-
-    const handleSave = async () => {
-      try {
-        const emailContent = await prepareEmailContent(bodyTemplate);
-
-        if (emailContent?.html) {
-          handleEmailDataChange({
-            subject: subject,
-            bodyTemplate: emailContent.html,
-          });
-        }
-
-        setTimeout(() => {
-          takeSnapshot();
-        }, 0);
-      } catch (error) {
-        console.error('Error saving email:', error);
-        store.ui.toastError('Error saving email', 'email-save-error');
-      }
-    };
 
     return (
       <Modal modal={false} open={isEditorOpen}>
@@ -111,10 +54,10 @@ export const EmailEditorModal = observer(
           >
             <div className='flex justify-between bg-white pt-4 pb-2 mb-[60px] w-[570px] sticky top-0 z-[50]'>
               <div className='flex items-center text-sm'>
-                <span>{flow}</span>
+                <span>{flowName}</span>
                 <ChevronRight className='size-3 mx-1 text-gray-400' />
                 <span className='mr-2 cursor-default'>
-                  {data.action === FlowActionType.EMAIL_NEW
+                  {action === FlowActionType.EMAIL_NEW
                     ? 'Send Email'
                     : 'Reply to Email'}
                 </span>
@@ -124,8 +67,8 @@ export const EmailEditorModal = observer(
                   size='xs'
                   variant='ghost'
                   onClick={() => {
-                    setSubject(data.subject);
-                    setBodyTemplate(data.bodyTemplate);
+                    setSubject(subject);
+                    setBodyTemplate(bodyTemplate);
                     handleCancel();
                   }}
                 >
@@ -162,7 +105,7 @@ export const EmailEditorModal = observer(
                     `text-lg font-medium h-auto cursor-text email-editor-subject`,
                     {
                       'pointer-events-none text-gray-400':
-                        data.action === FlowActionType.EMAIL_REPLY,
+                        action === FlowActionType.EMAIL_REPLY,
                     },
                   )}
                 />
@@ -186,25 +129,3 @@ export const EmailEditorModal = observer(
     );
   },
 );
-
-const emailPrompts = [
-  'Write something {{contact_first_name}} will want to share with their boss',
-  'Craft an email that makes {{contact_first_name}} say "Wow!"',
-  'Compose an email {{contact_first_name}} will quote in their presentation',
-  "Make {{contact_first_name}} feel like they've discovered a hidden treasure",
-  'Write an email that makes {{contact_first_name}} rethink their strategy',
-  "Write something {{contact_first_name}} can't get from a Google search",
-  'Compose the email that ends {{contact_first_name}}’s decision paralysis',
-  "Write an email {{contact_first_name}} can't ignore",
-  'Write something that makes {{contact_first_name}} feel stupid for not replying',
-  'Write something that makes {{contact_first_name}} say, “Yes, this is what we need!”',
-  'Show {{contact_first_name}} what they’re missing—start typing...',
-  'Type an email that helps {{contact_first_name}} win',
-  'Write something {{contact_first_name}} remember',
-];
-
-function getRandomEmailPrompt(): string {
-  const randomIndex = Math.floor(Math.random() * emailPrompts.length);
-
-  return emailPrompts[randomIndex];
-}

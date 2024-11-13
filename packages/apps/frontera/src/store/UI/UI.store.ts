@@ -5,11 +5,12 @@ import { Persister } from '@store/persister';
 import { Transport } from '@store/transport';
 import { when, makeAutoObservable } from 'mobx';
 import { SystemSyncPacket } from '@store/types';
-import { FlowStepCommandMenuStore } from '@store/UI/FlowStepCommandMenu.store.ts';
 
 import { toastError, toastSuccess } from '@ui/presentation/Toast';
 
 import { CommandMenuStore } from './CommandMenu.store';
+import { FlowActionSidePanelStore } from './FlowActionSidePanel.store';
+import { FlowStepCommandMenuStore } from './FlowStepCommandMenu.store';
 
 export class UIStore {
   searchCount: number = 0;
@@ -26,6 +27,7 @@ export class UIStore {
   commandMenu = new CommandMenuStore();
   selectionId: number | null = null;
   flowCommandMenu = new FlowStepCommandMenuStore();
+  flowActionSidePanel = new FlowActionSidePanelStore();
   isSystemNotificationOpen = false;
   private channel?: Channel;
   private activeConfirmationCallback: () => void = () => {};

@@ -32,6 +32,7 @@ import { useStore } from '@shared/hooks/useStore';
 import { nodeTypes } from './nodes';
 import { BasicEdge } from './edges';
 import { getHelperLines } from './utils';
+import { EmailSettingsPanel } from './components/email';
 import { useUndoRedo, useKeyboardShortcuts } from './hooks';
 import { HelperLines, FlowBuilderToolbar } from './components';
 
@@ -354,16 +355,6 @@ export const FlowBuilder = observer(
             minZoom: 0.1,
             maxZoom: 5,
           }}
-          onClick={() => {
-            // this behaves as click outside
-            if (ui.flowCommandMenu.isOpen) {
-              ui.flowCommandMenu.setOpen(false);
-            }
-
-            if (showSidePanel) {
-              onToggleSidePanel(false);
-            }
-          }}
           onInit={(instance) => {
             const fitViewOptions: FitViewOptions = {
               padding: 0.1,
@@ -387,8 +378,29 @@ export const FlowBuilder = observer(
             }
             onEdgesChange(changes);
           }}
+          onClick={() => {
+            // this behaves as click outside
+            if (ui.flowCommandMenu.isOpen) {
+              ui.flowCommandMenu.setOpen(false);
+            }
+
+            if (ui.flowActionSidePanel.isOpen) {
+              if (ui.flowActionSidePanel.context.hasUnsavedChanges) {
+                ui.commandMenu.setType('ConfirmEmailContentChanges');
+                ui.commandMenu.setOpen(true);
+
+                return;
+              }
+
+              ui.flowActionSidePanel.setOpen(false);
+            }
+
+            if (showSidePanel) {
+              onToggleSidePanel(false);
+            }
+          }}
           onNodeDoubleClick={(_event, node) => {
-            if (node.type === 'wait' || node.type === 'action') {
+            if (node.type === 'wait') {
               setNodes((nds) =>
                 nds.map((n) =>
                   n.id === node.id
@@ -396,6 +408,18 @@ export const FlowBuilder = observer(
                     : n,
                 ),
               );
+
+              return;
+            }
+
+            if (node.type === 'action') {
+              store.ui.flowActionSidePanel.setOpen(true, {
+                type: 'EmailAction',
+                context: {
+                  id: node.id,
+                  node: node,
+                },
+              });
 
               return;
             }
@@ -418,6 +442,8 @@ export const FlowBuilder = observer(
           />
           <Background />
           <FlowBuilderToolbar />
+
+          {store.ui.flowActionSidePanel.isOpen && <EmailSettingsPanel />}
         </ReactFlow>
       </>
     );

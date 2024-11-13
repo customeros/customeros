@@ -1,16 +1,15 @@
 import { useMemo, ReactElement } from 'react';
 
+import { NodeProps } from '@xyflow/react';
 import { htmlToText } from 'html-to-text';
 import { FlowActionType } from '@store/Flows/types';
-import { NodeProps, useReactFlow } from '@xyflow/react';
 
 import { cn } from '@ui/utils/cn';
 import { Mail01 } from '@ui/media/icons/Mail01';
 import { Edit03 } from '@ui/media/icons/Edit03';
 import { IconButton } from '@ui/form/IconButton';
+import { useStore } from '@shared/hooks/useStore';
 import { MailReply } from '@ui/media/icons/MailReply';
-
-import { EmailEditorModal } from '../../components';
 
 const iconMap: Record<string, ReactElement> = {
   [FlowActionType.EMAIL_NEW]: <Mail01 className='text-inherit' />,
@@ -23,7 +22,6 @@ const colorMap: Record<string, string> = {
 };
 
 export const EmailActionNode = ({
-  id,
   data,
 }: NodeProps & {
   data: {
@@ -33,78 +31,14 @@ export const EmailActionNode = ({
     action: FlowActionType;
   };
 }) => {
-  const { setNodes } = useReactFlow();
+  const { ui } = useStore();
 
   const color = colorMap?.[data.action];
-
-  const handleEmailDataChange = ({
-    subject,
-    bodyTemplate,
-  }: {
-    subject: string;
-    bodyTemplate: string;
-  }) => {
-    setNodes((nds) =>
-      nds.map((node) => {
-        if (node.id === id) {
-          return {
-            ...node,
-            data: {
-              ...node.data,
-              subject,
-              bodyTemplate,
-              isEditing: false,
-            },
-          };
-        }
-
-        if (node.data?.replyTo === id) {
-          return {
-            ...node,
-            data: {
-              ...node.data,
-              subject: `RE: ${subject}`,
-            },
-          };
-        }
-
-        return node;
-      }),
-    );
-  };
-
-  const handleCancel = () => {
-    setNodes((nds) =>
-      nds.map((node) => {
-        if (node.id === id) {
-          return {
-            ...node,
-            data: {
-              ...node.data,
-              isEditing: false,
-            },
-          };
-        }
-
-        return node;
-      }),
-    );
-  };
 
   const parsedTemplate = useMemo(
     () => htmlToText(data?.bodyTemplate).trim(),
     [data?.bodyTemplate],
   );
-
-  const toggleEditing = () => {
-    setNodes((nds) =>
-      nds.map((node) =>
-        node.id === id
-          ? { ...node, data: { ...node.data, isEditing: true } }
-          : node,
-      ),
-    );
-  };
 
   return (
     <>
@@ -138,16 +72,13 @@ export const EmailActionNode = ({
           variant='ghost'
           aria-label='Edit'
           icon={<Edit03 />}
-          onClick={toggleEditing}
           className='ml-2 opacity-0 group-hover:opacity-100 pointer-events-all'
+          onClick={(e) => {
+            e.stopPropagation();
+            ui.flowActionSidePanel.setOpen(true);
+          }}
         />
       </div>
-      <EmailEditorModal
-        data={data}
-        handleCancel={handleCancel}
-        isEditorOpen={data.isEditing || false}
-        handleEmailDataChange={handleEmailDataChange}
-      />
     </>
   );
 };
