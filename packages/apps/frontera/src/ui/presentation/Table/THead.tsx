@@ -1,7 +1,7 @@
 import type { HeaderContext } from '@tanstack/react-table';
 
+import { memo, RefObject } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { memo, useRef, RefObject, useEffect } from 'react';
 
 import { observer } from 'mobx-react-lite';
 
@@ -9,15 +9,6 @@ import { cn } from '@ui/utils/cn';
 import { ArrowUp } from '@ui/media/icons/ArrowUp';
 import { useStore } from '@shared/hooks/useStore';
 import { ArrowDown } from '@ui/media/icons/ArrowDown';
-import { FilterLines } from '@ui/media/icons/FilterLines';
-import { IconButton } from '@ui/form/IconButton/IconButton';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@ui/overlay/Popover/Popover';
-
-import { useTHeadState } from './THead.atom';
 
 interface THeadProps<
   InitialRefType extends { focus(): void } = HTMLButtonElement,
@@ -46,37 +37,24 @@ const THead = observer(
     canSort,
     isSorted,
     subTitle,
-    canFilter,
-    isFiltered,
-    filterWidth,
     onToggleSort,
-    renderFilter,
     py,
   }: THeadProps<InitialRefType>) => {
     const store = useStore();
     const [searchParams] = useSearchParams();
     const preset = searchParams.get('preset');
 
-    const [isOpen, setIsOpen] = useTHeadState(id);
-    const initialFocusRef = useRef<InitialRefType>(null);
-
-    const isActive =
-      isFiltered ||
-      store.tableViewDefs.getById(preset ?? '')?.getFilter(id)?.active;
-
-    useEffect(() => {
-      store.ui.setIsFilteringTable(isOpen);
-    }, [isOpen]);
+    const isActive = store.tableViewDefs
+      .getById(preset ?? '')
+      ?.getFilter(id)?.active;
 
     return (
       <div className='flex w-full ml-[-22px] flex-col justify-start items-start group'>
         <div
           style={{ paddingTop: py ?? '0', paddingBottom: py ?? '0' }}
           className={cn(
-            isActive || isOpen
-              ? 'border-gray-300 shadow-sm'
-              : 'border-transparent',
-            (canSort && isOpen) || isSorted ? 'ml-0' : 'ml-3',
+            isActive ? 'border-gray-300 shadow-sm' : 'border-transparent',
+            (canSort && isActive) || isSorted ? 'ml-0' : 'ml-3',
             !canSort ? '' : 'group-hover:ml-0',
             'flex items-center border rounded-[4px] transition-opacity duration-200 ease-in-out pr-2',
           )}
@@ -88,7 +66,7 @@ const THead = observer(
                 id='sort-icon'
                 onClick={onToggleSort}
                 className={cn(
-                  isSorted || isOpen ? 'w-3 ' : 'w-0 ',
+                  isSorted || isActive ? 'w-3 ' : 'w-0 ',
                   !isSorted ? 'text-gray-400' : 'text-gray-700',
                   'mx-1 w-3 h-3 cursor-pointer group-hover:transition-opacity group-hover:opacity-100 group-hover:w-3 group-hover:duration-200 group-hover:ease-in-out',
                 )}
@@ -99,7 +77,7 @@ const THead = observer(
                 id='sort-icon'
                 onClick={onToggleSort}
                 className={cn(
-                  isSorted || isOpen ? 'w-3 opacity-100' : 'w-0 opacity-0',
+                  isSorted || isActive ? 'w-3 opacity-100' : 'w-0 opacity-0',
                   !isSorted ? 'text-gray-400' : 'text-gray-700',
                   'mx-1 h-3 cursor-pointer group-hover:transition-opacity group-hover:opacity-100 group-hover:w-3 group-hover:duration-200 group-hover:ease-in-out',
                 )}
@@ -120,43 +98,6 @@ const THead = observer(
           >
             {title}
           </p>
-          {canFilter && (
-            <Popover
-              open={isOpen}
-              onOpenChange={(value) => {
-                if (!store.ui.commandMenu.isOpen) {
-                  setIsOpen(value);
-                }
-              }}
-            >
-              <PopoverTrigger asChild>
-                <IconButton
-                  size='xxs'
-                  variant='ghost'
-                  aria-label='filter'
-                  icon={
-                    <FilterLines
-                      className={cn(
-                        isActive || isOpen ? 'text-gray-700' : 'text-gray-400',
-                      )}
-                    />
-                  }
-                  className={cn(
-                    isActive || isOpen ? 'opacity-100' : 'opacity-0',
-                    'filter-icon-button ml-0.5 mr-0.5 rounded-sm group-hover:transition-opacity group-hover:opacity-100 group-hover:duration-200 group-hover:ease-in-out',
-                  )}
-                />
-              </PopoverTrigger>
-              <PopoverContent
-                side='bottom'
-                align='start'
-                onFocus={() => setIsOpen(true)}
-                style={{ width: filterWidth ?? '12rem' }}
-              >
-                {renderFilter?.(initialFocusRef)}
-              </PopoverContent>
-            </Popover>
-          )}
         </div>
         {subTitle && <p className='text-xs text-gray-500'>{subTitle}</p>}
       </div>
