@@ -195,7 +195,7 @@ export const Header = observer(
                 dataTest='save-flow'
                 onClick={handleSave}
               >
-                Save changes
+                Publish changes
               </Button>
             )}
             <FlowStatusMenu

@@ -134,7 +134,7 @@ export const FlowStatusMenu = observer(
           onError: () => {
             onToggleHasChanges(true);
             store.ui.toastError(
-              'Failed to save changes',
+              'Failed to publish changes',
               'failed-save-changes',
             );
           },
