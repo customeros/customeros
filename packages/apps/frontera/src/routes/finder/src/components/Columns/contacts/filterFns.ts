@@ -102,19 +102,14 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
     .with(
       { property: ColumnViewType.ContactsPhoneNumbers },
       (filter) => (row: ContactStore) => {
-        const value = row.value?.phoneNumbers
-          ?.map((p) => p.rawPhoneNumber)
-          ?.join(' ');
-
         if (!filter.active) return true;
+        const value = row.value?.phoneNumbers?.map((p) => p.rawPhoneNumber);
 
-        if (value.length < 1) {
+        if (!String(value).length) {
           return ComparisonOperator.IsEmpty === filter.operation;
-        } else {
-          if (!filter.value) return true;
         }
 
-        return filterTypeText(filter, value ?? undefined);
+        return filterTypeText(filter, String(value) ?? undefined);
       },
     )
 
@@ -247,15 +242,15 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
       if (!filter.active) return () => true;
 
       return (row: ContactStore) => {
-        if (!row.hasFlows)
+        const values = row.flows?.map((e) => e?.value?.metadata.id);
+
+        if ((values ?? []).length === 0)
           return (
             filter.operation === ComparisonOperator.IsEmpty ||
             filter.operation === ComparisonOperator.NotContains
           );
 
-        return row.flows?.some((e) =>
-          filterTypeList(filter, e.value.name?.split(' ') as string[]),
-        );
+        return filterTypeList(filter, Array.isArray(values) ? values : []);
       };
     })
 

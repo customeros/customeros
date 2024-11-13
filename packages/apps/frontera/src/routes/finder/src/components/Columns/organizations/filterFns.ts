@@ -9,6 +9,7 @@ import {
   Filter,
   Social,
   ColumnViewType,
+  OnboardingStatus,
   ComparisonOperator,
   OrganizationRelationship,
 } from '@graphql/types';
@@ -109,7 +110,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
 
         return filterTypeList(
           filter,
-          Array.isArray(values) ? values : [values],
+          Array.isArray(values) ? values.map(String) : [String(values)],
         );
       },
     )
@@ -161,7 +162,8 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         if (!filter.active) return true;
         const values = row.value.accountDetails?.onboarding?.status;
 
-        if (!values)
+        if (!values) return false;
+        if (values === OnboardingStatus.NotApplicable)
           return (
             filter.operation === ComparisonOperator.IsEmpty ||
             filter.operation === ComparisonOperator.NotContains

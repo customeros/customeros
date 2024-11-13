@@ -177,7 +177,7 @@ export const getFilterTypes = (store?: RootStore) => {
       options: uniqBy(
         store?.contacts
           ?.toArray()
-          .flatMap((contact) => contact?.value.locations?.[0])
+          .flatMap((contact) => contact?.value.locations)
           .filter(
             (l) =>
               l?.locality !== null &&
@@ -189,7 +189,7 @@ export const getFilterTypes = (store?: RootStore) => {
             label: location?.locality,
           }))
           .sort((a, b) => (a.label ?? '').localeCompare(b.label ?? '')),
-        ['id', 'label'],
+        'id',
       ),
     },
     [ColumnViewType.ContactsLinkedin]: {
