@@ -17,7 +17,7 @@ require (
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
 	github.com/cenkalti/backoff/v4 v4.3.0
 	github.com/coocood/freecache v1.2.4
-	github.com/customeros/mailsherpa v0.2.18
+	github.com/customeros/mailsherpa v0.3.1
 	github.com/docker/docker v27.3.1+incompatible
 	github.com/emersion/go-message v0.18.1
 	github.com/forPelevin/gomoji v1.2.0
