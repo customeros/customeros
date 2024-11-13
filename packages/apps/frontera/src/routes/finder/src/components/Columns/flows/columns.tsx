@@ -81,7 +81,7 @@ const columns: Record<string, Column> = {
     enableSorting: true,
     header: (props) => (
       <THead
-        title='On hold'
+        title='Blocked'
         filterWidth={250}
         id={ColumnViewType.FlowOnHoldCount}
         {...getTHeadProps(props)}

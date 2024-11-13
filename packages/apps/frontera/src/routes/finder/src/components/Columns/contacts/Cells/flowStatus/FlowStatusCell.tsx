@@ -20,7 +20,7 @@ export const FlowStatusCell = observer(({ contactID }: FlowStatusCellProps) => {
   );
 
   const flowStatus = match(contact?.status)
-    .with(FlowParticipantStatus.OnHold, () => 'On Hold')
+    .with(FlowParticipantStatus.OnHold, () => 'Blocked')
     .with(FlowParticipantStatus.Ready, () => 'Ready')
     .with(FlowParticipantStatus.InProgress, () => 'In Progress')
     .with(FlowParticipantStatus.Completed, () => 'Completed')

@@ -216,7 +216,7 @@ export const flowsMap: Record<string, string> = {
   [ColumnViewType.FlowName]: 'Flow',
   [ColumnViewType.FlowActionName]: 'Status', // This is the actual status of the flow - Wrong naming of enum -> to be refactored
   [ColumnViewType.FlowTotalCount]: 'Total',
-  [ColumnViewType.FlowOnHoldCount]: 'On Hold',
+  [ColumnViewType.FlowOnHoldCount]: 'Blocked',
   [ColumnViewType.FlowReadyCount]: 'Ready',
   [ColumnViewType.FlowScheduledCount]: 'Scheduled',
   [ColumnViewType.FlowInProgressCount]: 'In progress',

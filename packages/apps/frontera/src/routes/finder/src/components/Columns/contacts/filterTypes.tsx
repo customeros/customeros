@@ -384,7 +384,7 @@ export const getFilterTypes = (store?: RootStore) => {
       options: [
         {
           id: FlowParticipantStatus.OnHold,
-          label: 'On Hold',
+          label: 'Blocked',
         },
         {
           id: FlowParticipantStatus.Ready,
