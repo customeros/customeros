@@ -1,0 +1,22 @@
+query getFlowParticipant($id: ID!) {
+  flowParticipant(id: $id) {
+    status
+    entityId
+    entityType
+    executions {
+      metadata {
+        id
+      }
+      status
+      scheduledAt
+      executedAt
+      error
+      action {
+        action
+      }
+    }
+    metadata {
+      id
+    }
+  }
+}

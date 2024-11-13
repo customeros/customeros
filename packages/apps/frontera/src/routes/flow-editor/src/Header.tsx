@@ -44,7 +44,7 @@ export const Header = observer(
     const contactsStore = store.contacts;
     const showFinder = searchParams.get('show') === 'finder';
     const flowContactsPreset = store.tableViewDefs.flowContactsPreset;
-    const canSave = hasChanges && status === FlowStatus.Inactive;
+    const canSave = hasChanges && status === FlowStatus.On;
 
     useEffect(() => {
       if (!store.ui.commandMenu.isOpen) {
@@ -145,8 +145,8 @@ export const Header = observer(
                 <>
                   <ChevronRight className='text-gray-400' />
                   <span className='font-medium cursor-default'>
-                    {`${flow?.value?.contacts?.length} ${
-                      flow?.value?.contacts?.length === 1
+                    {`${flow?.value?.participants?.length} ${
+                      flow?.value?.participants?.length === 1
                         ? 'Contact'
                         : 'Contacts'
                     }`}
@@ -179,7 +179,7 @@ export const Header = observer(
                       />
                     }
                   >
-                    {flow?.value?.contacts?.length}
+                    {flow?.value?.participants?.length}
                   </Button>
                 </Tooltip>
               )}

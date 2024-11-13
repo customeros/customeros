@@ -3,7 +3,7 @@ import React, { useRef, useEffect } from 'react';
 import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
 import { ContactStore } from '@store/Contacts/Contact.store';
-import { FlowContactStore } from '@store/FlowContacts/FlowContact.store.ts';
+import { FlowParticipantStore } from '@store/FlowParticipants/FlowParticipant.store';
 
 import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
@@ -37,8 +37,8 @@ export const UnlinkContactFromFlow = observer(() => {
 
     return contact.flows
       .map((flow) => {
-        const matchingContact = flow.value.contacts.find(
-          (c) => c.contact.metadata.id === contactId,
+        const matchingContact = flow.value.participants.find(
+          (c) => c.entityId === contactId,
         );
 
         return matchingContact?.metadata.id;
@@ -48,21 +48,21 @@ export const UnlinkContactFromFlow = observer(() => {
   const flowContactIds: string[] = [
     ...new Set(context.ids.flatMap((id) => getContactFlowIds(id))),
   ];
-  const flowContact = store.flowContacts.value.get(
+  const flowContact = store.flowParticipants.value.get(
     flowContactIds[0],
-  ) as FlowContactStore;
+  ) as FlowParticipantStore;
 
   const handleConfirm = () => {
     if (!context.ids?.length) return;
 
     if (flowContactIds.length > 1) {
-      store.flowContacts.deleteFlowContacts(flowContactIds);
+      store.flowParticipants.deleteFlowParticipants(flowContactIds);
       handleClose();
 
       return;
     }
 
-    flowContact.deleteFlowContact();
+    flowContact.deleteFlowParticipant();
     handleClose();
   };
 

@@ -1,4 +1,4 @@
-import React, { useRef, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { observer } from 'mobx-react-lite';
 import { flowOptions } from '@finder/components/Columns/flows/utils.ts';
@@ -7,7 +7,6 @@ import { cn } from '@ui/utils/cn';
 import { FlowStatus } from '@graphql/types';
 import { Edit03 } from '@ui/media/icons/Edit03';
 import { useStore } from '@shared/hooks/useStore';
-import { TableCellTooltip } from '@ui/presentation/Table';
 import { SelectOption } from '@shared/types/SelectOptions';
 import { IconButton } from '@ui/form/IconButton/IconButton';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
@@ -21,7 +20,6 @@ export const FlowStatusCell = observer(
   ({ id, dataTest }: FlowStatusCellProps) => {
     const store = useStore();
     const [isEditing, setIsEditing] = useState(false);
-    const itemRef = useRef<HTMLDivElement>(null);
 
     const flowSequence = store.flows.value.get(id);
 
@@ -30,7 +28,7 @@ export const FlowStatusCell = observer(
     );
 
     const handleSelect = (option: SelectOption<FlowStatus>) => {
-      if (option.value === FlowStatus.Active) {
+      if (option.value === FlowStatus.On) {
         store.ui.commandMenu.setType('StartFlow');
         store.ui.commandMenu.setOpen(true);
 
@@ -39,8 +37,8 @@ export const FlowStatusCell = observer(
         return;
       }
 
-      if (option.value === FlowStatus.Paused) {
-        store.ui.commandMenu.setType('PauseFlow');
+      if (option.value === FlowStatus.Off) {
+        store.ui.commandMenu.setType('StopFlow');
         store.ui.commandMenu.setOpen(true);
 
         setIsEditing(false);
@@ -49,38 +47,9 @@ export const FlowStatusCell = observer(
       }
     };
     const filteredFlowOptions = useMemo(
-      () =>
-        flowOptions.filter(
-          (e) =>
-            ![
-              FlowStatus.Archived,
-              FlowStatus.Scheduling,
-              FlowStatus.Inactive,
-            ].includes(e.value),
-        ),
+      () => flowOptions.filter((e) => ![FlowStatus.Archived].includes(e.value)),
       [],
     );
-
-    if (flowSequence?.value.status === FlowStatus.Scheduling) {
-      return (
-        <TableCellTooltip
-          hasArrow
-          align='start'
-          side='bottom'
-          targetRef={itemRef}
-          label={'Scheduling'}
-        >
-          <div ref={itemRef} className='flex overflow-hidden'>
-            <div
-              data-test={`${dataTest}-text-in-flows-table`}
-              className=' overflow-x-hidden overflow-ellipsis'
-            >
-              Scheduling
-            </div>
-          </div>
-        </TableCellTooltip>
-      );
-    }
 
     return (
       <div className='flex gap-1 items-center group/relationship'>

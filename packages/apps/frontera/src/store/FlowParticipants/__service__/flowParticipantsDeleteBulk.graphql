@@ -1,0 +1,6 @@
+mutation flowParticipantDeleteBulk($id: [ID!]!) {
+  flowParticipant_DeleteBulk(id: $id) {
+    result
+  }
+}
+

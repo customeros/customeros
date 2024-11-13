@@ -15,9 +15,7 @@ export const FlowStatusCell = observer(({ contactID }: FlowStatusCellProps) => {
   const id = useParams()?.id as string;
 
   const flowStore = flows.value.get(id)?.value;
-  const contact = flowStore?.contacts.find(
-    (c) => c.contact.metadata.id === contactID,
-  );
+  const contact = flowStore?.participants.find((c) => c.entityId === contactID);
 
   const flowStatus = match(contact?.status)
     .with(FlowParticipantStatus.OnHold, () => 'Blocked')

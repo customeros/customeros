@@ -11,7 +11,7 @@ import {
   CommandCancelIconButton,
 } from '@ui/overlay/CommandMenu';
 
-export const PauseFlow = observer(() => {
+export const StopFlow = observer(() => {
   const store = useStore();
   const context = store.ui.commandMenu.context;
   const flow = store.flows.value.get(context.ids?.[0]);
@@ -25,7 +25,7 @@ export const PauseFlow = observer(() => {
 
   const handleConfirm = () => {
     flow?.update((f) => {
-      f.status = FlowStatus.Paused;
+      f.status = FlowStatus.Off;
 
       return f;
     });
@@ -37,18 +37,20 @@ export const PauseFlow = observer(() => {
       <article className='relative w-full p-6 flex flex-col border-b border-b-gray-100'>
         <div className='flex items-center justify-between'>
           <h1 className='text-base font-semibold'>
-            Pause flow '{flow?.value.name}'?
+            Stop flow '{flow?.value.name}'?
           </h1>
           <CommandCancelIconButton onClose={handleClose} />
         </div>
 
         {/* todo update when we support multiple record types*/}
         <p className='text-sm mt-2'>
-          Pausing this flow will immediately stop all upcoming actions for
-          active contacts.
+          This will stop all upcoming steps for your active
+          {flow?.value.participants?.length === 1 ? 'contact' : 'contacts'} from
+          taking place.
           <p className='mt-2'>
-            You can resume the flow at any time and these contacts will continue
-            from their last completed step.
+            When you start the flow again,{' '}
+            {flow?.value.participants?.length === 1 ? 'contact' : 'contacts'}{' '}
+            will pick up from the last completed step on a new schedule.
           </p>
         </p>
 
