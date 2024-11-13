@@ -603,6 +603,27 @@ const columns: Record<string, Column> = {
     ),
     skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
   }),
+  [ColumnViewType.ContactsFlowNextAction]: columnHelper.accessor((row) => row, {
+    id: ColumnViewType.ContactsFlowNextAction,
+    minSize: 170,
+    maxSize: 600,
+    enableResizing: true,
+    enableColumnFilter: false,
+    enableSorting: true,
+    cell: (props) => {
+      const value = props.getValue()?.value.metadata.id;
+
+      return <FlowStatusCell contactID={value} />;
+    },
+    header: (props) => (
+      <THead<HTMLInputElement>
+        title='Next Flow Action'
+        id={ColumnViewType.ContactsFlowNextAction}
+        {...getTHeadProps<ContactStore>(props)}
+      />
+    ),
+    skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
+  }),
 };
 
 export const getContactColumnsConfig = (

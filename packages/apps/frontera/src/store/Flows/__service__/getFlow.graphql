@@ -30,18 +30,24 @@ query getFlow($id: ID!) {
       completed
       goalAchieved
     }
-    contacts {
+    participants {
       status
-      scheduledAction
-      scheduledAt
-      metadata {
-        id
-      }
-
-      contact {
+      entityId
+      entityType
+      executions {
         metadata {
           id
         }
+        status
+        scheduledAt
+        executedAt
+        error
+        action {
+          action
+        }
+      }
+      metadata {
+        id
       }
     }
   }

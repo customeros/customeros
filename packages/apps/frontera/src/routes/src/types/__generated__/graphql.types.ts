@@ -312,6 +312,7 @@ export enum ColumnViewType {
   ContactsEmails = 'CONTACTS_EMAILS',
   ContactsExperience = 'CONTACTS_EXPERIENCE',
   ContactsFlows = 'CONTACTS_FLOWS',
+  ContactsFlowNextAction = 'CONTACTS_FLOW_NEXT_ACTION',
   ContactsFlowStatus = 'CONTACTS_FLOW_STATUS',
   ContactsJobTitle = 'CONTACTS_JOB_TITLE',
   ContactsLanguages = 'CONTACTS_LANGUAGES',
@@ -1533,16 +1534,43 @@ export type FilterItem = {
 
 export type Flow = MetadataInterface & {
   __typename?: 'Flow';
+  /** @deprecated No longer supported */
   contacts: Array<FlowContact>;
   description: Scalars['String']['output'];
   edges: Scalars['String']['output'];
   metadata: Metadata;
   name: Scalars['String']['output'];
   nodes: Scalars['String']['output'];
+  participants: Array<FlowParticipant>;
   senders: Array<FlowSender>;
   statistics: FlowStatistics;
   status: FlowStatus;
 };
+
+export type FlowAction = {
+  __typename?: 'FlowAction';
+  action: FlowActionType;
+  metadata: Metadata;
+};
+
+export type FlowActionExecution = {
+  __typename?: 'FlowActionExecution';
+  action: FlowAction;
+  error?: Maybe<Scalars['String']['output']>;
+  executedAt?: Maybe<Scalars['Time']['output']>;
+  metadata: Metadata;
+  scheduledAt?: Maybe<Scalars['Time']['output']>;
+  status: FlowActionExecutionStatus;
+};
+
+export enum FlowActionExecutionStatus {
+  BusinessError = 'BUSINESS_ERROR',
+  InProgress = 'IN_PROGRESS',
+  Scheduled = 'SCHEDULED',
+  Skipped = 'SKIPPED',
+  Success = 'SUCCESS',
+  TechError = 'TECH_ERROR',
+}
 
 export type FlowActionInputData = {
   email_new?: InputMaybe<FlowActionInputDataEmail>;
@@ -1577,6 +1605,13 @@ export enum FlowActionStatus {
   Paused = 'PAUSED',
 }
 
+export enum FlowActionType {
+  EmailNew = 'EMAIL_NEW',
+  EmailReply = 'EMAIL_REPLY',
+  LinkedinConnectionRequest = 'LINKEDIN_CONNECTION_REQUEST',
+  LinkedinMessage = 'LINKEDIN_MESSAGE',
+}
+
 export type FlowContact = MetadataInterface & {
   __typename?: 'FlowContact';
   contact: Contact;
@@ -1591,6 +1626,15 @@ export type FlowMergeInput = {
   id?: InputMaybe<Scalars['ID']['input']>;
   name: Scalars['String']['input'];
   nodes: Scalars['String']['input'];
+};
+
+export type FlowParticipant = MetadataInterface & {
+  __typename?: 'FlowParticipant';
+  entityId: Scalars['ID']['output'];
+  entityType: Scalars['String']['output'];
+  executions: Array<FlowActionExecution>;
+  metadata: Metadata;
+  status: FlowParticipantStatus;
 };
 
 export enum FlowParticipantStatus {
@@ -1630,7 +1674,6 @@ export enum FlowStatus {
   Archived = 'ARCHIVED',
   Inactive = 'INACTIVE',
   Paused = 'PAUSED',
-  Scheduling = 'SCHEDULING',
 }
 
 export enum FundingRound {

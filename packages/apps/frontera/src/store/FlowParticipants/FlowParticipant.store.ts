@@ -6,11 +6,12 @@ import { Transport } from '@store/transport';
 import { Store, makeAutoSyncable } from '@store/store';
 import { runInAction, makeAutoObservable } from 'mobx';
 import { makeAutoSyncableGroup } from '@store/group-store';
-import { FlowContactsService } from '@store/FlowContacts/__service__';
 
 import { DataSource, FlowContact, FlowParticipantStatus } from '@graphql/types';
 
-export class FlowContactStore implements Store<FlowContact> {
+import { FlowContactsService } from './__service__';
+
+export class FlowParticipantStore implements Store<FlowContact> {
   value: FlowContact = getDefaultValue();
   version = 0;
   isLoading = false;

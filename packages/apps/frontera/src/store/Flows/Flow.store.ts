@@ -11,7 +11,7 @@ import { FlowService } from '@store/Flows/__service__';
 import { Store, makeAutoSyncable } from '@store/store';
 import { runInAction, makeAutoObservable } from 'mobx';
 import { makeAutoSyncableGroup } from '@store/group-store';
-import { FlowContactStore } from '@store/FlowContacts/FlowContact.store';
+import { FlowParticipantStore } from '@store/FlowParticipants/FlowParticipant.store';
 
 import { uuidv4 } from '@utils/generateUuid';
 import {
@@ -58,14 +58,9 @@ export class FlowStore implements Store<Flow> {
     this.isLoading = true;
 
     try {
-      const newStatus =
-        this.value.status === FlowStatus.Scheduling
-          ? FlowStatus.Active
-          : this.value.status;
-
       await this.service.changeStatus({
         id: this.id,
-        status: newStatus as FlowStatus,
+        status: this.value.status as FlowStatus,
       });
     } catch (error) {
       this.root.ui.toastError(
@@ -190,7 +185,7 @@ export class FlowStore implements Store<Flow> {
   init(data: Flow) {
     const output = merge(this.value, data);
 
-    const flowContacts = data.contacts?.map((item) => {
+    const flowContacts = data.participants?.map((item) => {
       this.root.flowContacts.load([item]);
 
       if (!item.metadata.id) {
@@ -252,7 +247,10 @@ export class FlowStore implements Store<Flow> {
         this.value.statistics.onHold += 1;
         this.value.statistics.total += 1;
 
-        const newFLowContact = new FlowContactStore(this.root, this.transport);
+        const newFLowContact = new FlowParticipantStore(
+          this.root,
+          this.transport,
+        );
 
         newFLowContact.value = newFlowContactValue;
         this.root.flowContacts.value.set(
@@ -310,8 +308,8 @@ export class FlowStore implements Store<Flow> {
           return e;
         });
 
-        this.value.contacts = [
-          ...this.value.contacts,
+        this.value.participants = [
+          ...this.value.participants,
           ...(contactStores || []).map((cs) => ({
             metadata: {
               id: uuidv4(),
@@ -381,6 +379,8 @@ const getDefaultValue = (): Flow => ({
     completed: 0,
     goalAchieved: 0,
   },
+  participants: [],
+  // deprecated but needed for type compatibility
   contacts: [],
   senders: [],
   nodes: JSON.stringify(initialNodes),

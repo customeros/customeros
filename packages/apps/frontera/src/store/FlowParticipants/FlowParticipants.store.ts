@@ -10,7 +10,7 @@ import { FlowContactStore } from '@store/FlowContacts/FlowContact.store.ts';
 
 import { FlowContact } from '@graphql/types';
 
-export class FlowContactsStore implements GroupStore<FlowContact> {
+export class FlowParticipantsStore implements GroupStore<FlowContact> {
   version = 0;
   isLoading = false;
   history: GroupOperation[] = [];

@@ -32,16 +32,21 @@ export type GetFlowQuery = {
       completed: any;
       goalAchieved: any;
     };
-    contacts: Array<{
-      __typename?: 'FlowContact';
+    participants: Array<{
+      __typename?: 'FlowParticipant';
       status: Types.FlowParticipantStatus;
-      scheduledAction?: string | null;
-      scheduledAt?: any | null;
-      metadata: { __typename?: 'Metadata'; id: string };
-      contact: {
-        __typename?: 'Contact';
+      entityId: string;
+      entityType: string;
+      executions: Array<{
+        __typename?: 'FlowActionExecution';
+        status: Types.FlowActionExecutionStatus;
+        scheduledAt?: any | null;
+        executedAt?: any | null;
+        error?: string | null;
         metadata: { __typename?: 'Metadata'; id: string };
-      };
+        action: { __typename?: 'FlowAction'; action: Types.FlowActionType };
+      }>;
+      metadata: { __typename?: 'Metadata'; id: string };
     }>;
   };
 };
