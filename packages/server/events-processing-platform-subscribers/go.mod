@@ -67,7 +67,7 @@ require (
 	github.com/cloudwego/base64x v0.1.4 // indirect
 	github.com/cloudwego/iasm v0.2.0 // indirect
 	github.com/containerd/platforms v0.2.1 // indirect
-	github.com/customeros/mailsherpa v0.3.0 // indirect
+	github.com/customeros/mailsherpa v0.3.1 // indirect
 	github.com/distribution/reference v0.6.0 // indirect
 	github.com/emersion/go-message v0.18.1 // indirect
 	github.com/facebookgo/clock v0.0.0-20150410010913-600d898af40a // indirect
