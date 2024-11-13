@@ -32,8 +32,8 @@ import (
 
 type ContactListener interface {
 	enrichContact(ctx context.Context, contactId, linkedInUrl string) error
-	getContactEmail(ctx context.Context, contactId string) (string, error)
-	callApiEnrichPerson(ctx context.Context, tenant, linkedinUrl, email, firstName, lastName, domain string) (*enrichmentmodel.EnrichPersonScrapinResponse, error)
+	getContactEmailAddress(ctx context.Context, contactId string) (string, error)
+	callApiEnrichPerson(ctx context.Context, tenant, linkedinUrl, email, firstName, lastName, domain, companyName string) (*enrichmentmodel.EnrichPersonScrapinResponse, error)
 	enrichContactWithScrapInEnrichDetails(ctx context.Context, tenant string, contact *neo4jentity.ContactEntity, enrichPersonResponse *enrichmentmodel.EnrichPersonScrapinResponse) error
 }
 
@@ -144,62 +144,93 @@ func (c *contactListenerImpl) enrichContact(ctx context.Context, contactId, link
 	}
 
 	// skip enrichment if contact is already enriched
-	contactDbNode, err := c.services.Neo4jRepositories.ContactReadRepository.GetContact(ctx, tenant, contactId)
+	contactEntity, err := c.services.ContactService.GetContactById(ctx, contactId)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "ContactReadRepository.GetContact"))
+		tracing.TraceErr(span, errors.Wrap(err, "ContactService.GetContactById"))
 		return nil
 	}
-	contactEntity := neo4jmapper.MapDbNodeToContactEntity(contactDbNode)
 
 	if contactEntity.EnrichDetails.EnrichedAt != nil {
 		span.LogFields(log.String("result", "contact already enriched"))
 		return nil
 	}
 
-	emailAddress, firstName, lastName, domain := "", "", "", ""
+	emailAddress, firstName, lastName, domain, companyName := "", "", "", "", ""
+	// if linkedInUrl is empty fetch all data for searching person
 	if linkedInUrl == "" {
+		// prepare linked in for searching person
 		socialDbNodes, err := c.services.Neo4jRepositories.SocialReadRepository.GetAllForEntities(ctx, tenant, model.CONTACT, []string{contactId})
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "SocialReadRepository.GetAllForEntities"))
 		} else {
 			for _, socialDbNode := range socialDbNodes {
 				socialEntity := neo4jmapper.MapDbNodeToSocialEntity(socialDbNode.Node)
-				if strings.Contains(socialEntity.Url, "linkedin.com") {
+				if socialEntity.IsLinkedin() {
 					linkedInUrl = socialEntity.Url
 					break
 				}
 			}
 		}
 
-		// get email from contact
-		emailAddress, err = c.getContactEmail(ctx, contactId)
+		// prepare email address for searching person
+		emailAddress, err = c.getContactEmailAddress(ctx, contactId)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "getContactEmail"))
 			return err
 		}
 
-		domains, _ := c.services.Neo4jRepositories.ContactReadRepository.GetLinkedOrgDomains(ctx, tenant, contactEntity.Id)
-		emailDomain := utils.ExtractDomainFromEmail(emailAddress)
-		if utils.Contains(domains, emailDomain) {
-			domain = emailDomain
-		} else if len(domains) > 0 {
-			domain = domains[0]
+		// prepare organization name for searching person
+		result, err := c.services.Neo4jRepositories.OrganizationReadRepository.GetLatestOrganizationWithJobRoleForContacts(ctx, tenant, []string{contactId})
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "OrganizationReadRepository.GetLatestOrganizationWithJobRoleForContacts"))
 		}
-		if domain == "" {
-			domain = emailDomain
+		var organizationEntity *neo4jentity.OrganizationEntity
+		if len(result) > 0 && result[0].Pair.First != nil {
+			organizationEntity = neo4jmapper.MapDbNodeToOrganizationEntity(result[0].Pair.First)
+			companyName = organizationEntity.Name
 		}
+
+		// prepare domain for searching person
+		if organizationEntity != nil {
+			organizationDomainDbNodes, err := c.services.Neo4jRepositories.DomainReadRepository.GetForOrganizations(ctx, tenant, []string{organizationEntity.ID})
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "DomainReadRepository.GetForOrganizations"))
+			}
+			for _, domainDbNode := range organizationDomainDbNodes {
+				domainEntity := neo4jmapper.MapDbNodeToDomainEntity(domainDbNode.Node)
+				if utils.IfNotNilBool(domainEntity.IsPrimary) {
+					domain = domainEntity.Domain
+				} else if domain == "" {
+					domain = domainEntity.Domain
+				}
+			}
+		}
+
+		// if not found domain from organization, get one from email, check it's not a personal one
+		if domain == "" && emailAddress != "" {
+			emailDomain := utils.ExtractDomainFromEmail(emailAddress)
+			if !c.services.Cache.IsPersonalEmailProvider(emailDomain) {
+				domain = emailDomain
+			}
+		}
+
 		firstName, lastName = contactEntity.DeriveFirstAndLastNames()
 	}
 
-	span.LogFields(log.String("emailAddress", emailAddress), log.String("firstName", firstName), log.String("lastName", lastName), log.String("domain", domain))
-	if linkedInUrl != "" || emailAddress != "" || (firstName != "" && lastName != "" && domain != "") {
+	span.LogFields(
+		log.String("emailAddress", emailAddress),
+		log.String("firstName", firstName),
+		log.String("lastName", lastName),
+		log.String("domain", domain),
+		log.String("companyName", companyName))
+	if linkedInUrl != "" || emailAddress != "" || (firstName != "" && lastName != "" && domain != "" && companyName != "") {
 		err = c.services.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, tenant, model.NodeLabelContact, contactEntity.Id, string(neo4jentity.ContactPropertyEnrichRequestedAt), utils.NowPtr())
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to update enrich requested at"))
 		}
 		utils.EventCompleted(ctx, tenant, model.CONTACT.String(), contactId, c.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
 
-		apiResponse, err := c.callApiEnrichPerson(ctx, tenant, linkedInUrl, emailAddress, firstName, lastName, domain)
+		apiResponse, err := c.callApiEnrichPerson(ctx, tenant, linkedInUrl, emailAddress, firstName, lastName, domain, companyName)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "callApiEnrichPerson"))
 			err = c.services.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, tenant, model.NodeLabelContact, contactEntity.Id, string(neo4jentity.ContactPropertyEnrichFailedAt), utils.NowPtr())
@@ -219,8 +250,8 @@ func (c *contactListenerImpl) enrichContact(ctx context.Context, contactId, link
 	return nil
 }
 
-func (c *contactListenerImpl) getContactEmail(ctx context.Context, contactId string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactListener.getContactEmail")
+func (c *contactListenerImpl) getContactEmailAddress(ctx context.Context, contactId string) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactListener.getContactEmailAddress")
 	defer span.Finish()
 	span.LogFields(log.String("contactId", contactId))
 
@@ -234,22 +265,31 @@ func (c *contactListenerImpl) getContactEmail(ctx context.Context, contactId str
 	foundEmailAddress := ""
 	for _, record := range records {
 		emailEntity := neo4jmapper.MapDbNodeToEmailEntity(record.Node)
-		if emailEntity.Email != "" && strings.Contains(emailEntity.Email, "@") {
-			foundEmailAddress = emailEntity.Email
-			break
-		}
-		if emailEntity.RawEmail != "" && strings.Contains(emailEntity.RawEmail, "@") {
+		if emailEntity.Email != "" {
+			// Choose email address with primary domain
+			if utils.IfNotNilBool(emailEntity.IsPrimaryDomain) {
+				foundEmailAddress = emailEntity.Email
+			} else if foundEmailAddress == "" {
+				foundEmailAddress = emailEntity.Email
+			}
+		} else if foundEmailAddress == "" && emailEntity.RawEmail != "" && strings.Contains(emailEntity.RawEmail, "@") {
 			foundEmailAddress = emailEntity.RawEmail
 		}
 	}
 	return foundEmailAddress, nil
 }
 
-func (c *contactListenerImpl) callApiEnrichPerson(ctx context.Context, tenant, linkedinUrl, email, firstName, lastName, domain string) (*enrichmentmodel.EnrichPersonScrapinResponse, error) {
+func (c *contactListenerImpl) callApiEnrichPerson(ctx context.Context, tenant, linkedinUrl, email, firstName, lastName, domain, companyName string) (*enrichmentmodel.EnrichPersonScrapinResponse, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactListener.callApiEnrichPerson")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, tenant)
-	span.LogFields(log.String("linkedinUrl", linkedinUrl), log.String("email", email), log.String("firstName", firstName), log.String("lastName", lastName), log.String("domain", domain))
+	span.LogFields(
+		log.String("linkedinUrl", linkedinUrl),
+		log.String("email", email),
+		log.String("firstName", firstName),
+		log.String("lastName", lastName),
+		log.String("domain", domain),
+		log.String("companyName", companyName))
 
 	requestJSON, err := json.Marshal(enrichmentmodel.EnrichPersonRequest{
 		Email:       email,
@@ -257,6 +297,7 @@ func (c *contactListenerImpl) callApiEnrichPerson(ctx context.Context, tenant, l
 		FirstName:   firstName,
 		LastName:    lastName,
 		Domain:      domain,
+		CompanyName: companyName,
 	})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to marshal request"))

@@ -1185,10 +1185,9 @@ func (s *contactService) enrichContacts(ctx context.Context) {
 			// continue as normal
 		}
 
-		minutesFromLastContactUpdate := 2
+		minutesFromLastContactUpdate := 3
 		minutesFromLastContactEnrichAttempt := 1 * 24 * 60 // 1 day
-		minutesFromLastFailure := 10 * 24 * 60             // 10 days
-		records, err := s.commonServices.Neo4jRepositories.ContactReadRepository.GetContactsToEnrich(ctx, minutesFromLastContactUpdate, minutesFromLastContactEnrichAttempt, minutesFromLastFailure, limit)
+		records, err := s.commonServices.Neo4jRepositories.ContactReadRepository.GetContactsToEnrich(ctx, minutesFromLastContactUpdate, minutesFromLastContactEnrichAttempt, limit)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error getting socials: %v", err)

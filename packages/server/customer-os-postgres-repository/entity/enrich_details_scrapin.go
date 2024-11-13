@@ -18,6 +18,7 @@ type EnrichDetailsScrapIn struct {
 	Param2        string      `gorm:"column:param2;type:varchar(1000);" json:"param2"`
 	Param3        string      `gorm:"column:param3;type:varchar(1000);" json:"param3"`
 	Param4        string      `gorm:"column:param4;type:varchar(1000);" json:"param4"`
+	Param5        string      `gorm:"column:param5;type:varchar(1000);" json:"param5"`
 	AllParamsJson string      `gorm:"column:all_params_json;type:text;DEFAULT:'';NOT NULL" json:"allParams"`
 	Data          string      `gorm:"column:data;type:text;DEFAULT:'';NOT NULL" json:"data"`
 	CreatedAt     time.Time   `gorm:"column:created_at;type:timestamp;DEFAULT:current_timestamp" json:"createdAt"`

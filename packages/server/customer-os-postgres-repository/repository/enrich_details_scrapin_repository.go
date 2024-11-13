@@ -21,8 +21,8 @@ type EnrichDetailsScrapInRepository interface {
 	GetLatestByParam1AndFlow(ctx context.Context, param string, flow entity.ScrapInFlow) (*entity.EnrichDetailsScrapIn, error)
 	GetLatestByParam1AndFlowWithPersonFound(ctx context.Context, param string, flow entity.ScrapInFlow) (*entity.EnrichDetailsScrapIn, error)
 	GetLatestByParam1AndFlowWithCompanyFound(ctx context.Context, param string, flow entity.ScrapInFlow) (*entity.EnrichDetailsScrapIn, error)
-	GetLatestByAllParamsAndFlow(ctx context.Context, param1, param2, param3, param4 string, flow entity.ScrapInFlow) (*entity.EnrichDetailsScrapIn, error)
-	GetLatestByAllParamsAndFlowWithPersonFound(ctx context.Context, param1, param2, param3, param4 string, flow entity.ScrapInFlow) (*entity.EnrichDetailsScrapIn, error)
+	GetLatestByAllParamsAndFlow(ctx context.Context, param1, param2, param3, param4, param5 string, flow entity.ScrapInFlow) (*entity.EnrichDetailsScrapIn, error)
+	GetLatestByAllParamsAndFlowWithPersonFound(ctx context.Context, param1, param2, param3, param4, param5 string, flow entity.ScrapInFlow) (*entity.EnrichDetailsScrapIn, error)
 	GetById(ctx context.Context, id uint64) (*entity.EnrichDetailsScrapIn, error)
 }
 
@@ -98,13 +98,13 @@ func (r enrichDetailsScrapInRepository) GetById(ctx context.Context, id uint64) 
 	return &data, nil
 }
 
-func (r enrichDetailsScrapInRepository) GetLatestByAllParamsAndFlow(ctx context.Context, param1, param2, param3, param4 string, flow entity.ScrapInFlow) (*entity.EnrichDetailsScrapIn, error) {
+func (r enrichDetailsScrapInRepository) GetLatestByAllParamsAndFlow(ctx context.Context, param1, param2, param3, param4, param5 string, flow entity.ScrapInFlow) (*entity.EnrichDetailsScrapIn, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsScrapInRepository.GetLatestByAllParamsAndFlow")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
 	var data entity.EnrichDetailsScrapIn
-	err := r.db.Where("param1 = ? AND param2 = ? AND param3 = ? AND param4 = ? AND flow = ?", param1, param2, param3, param4, flow).Order("created_at desc").First(&data).Error
+	err := r.db.Where("param1 = ? AND param2 = ? AND param3 = ? AND param4 = ? AND param5 = ? AND flow = ?", param1, param2, param3, param4, param5, flow).Order("created_at desc").First(&data).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil // Return nil if no record found
@@ -149,13 +149,13 @@ func (r enrichDetailsScrapInRepository) GetLatestByParam1AndFlowWithCompanyFound
 	return &data, nil
 }
 
-func (r enrichDetailsScrapInRepository) GetLatestByAllParamsAndFlowWithPersonFound(ctx context.Context, param1, param2, param3, param4 string, flow entity.ScrapInFlow) (*entity.EnrichDetailsScrapIn, error) {
+func (r enrichDetailsScrapInRepository) GetLatestByAllParamsAndFlowWithPersonFound(ctx context.Context, param1, param2, param3, param4, param5 string, flow entity.ScrapInFlow) (*entity.EnrichDetailsScrapIn, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsScrapInRepository.GetLatestByAllParamsAndFlowWithPersonFound")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
 	var data entity.EnrichDetailsScrapIn
-	err := r.db.Where("param1 = ? AND param2 = ? AND param3 = ? AND param4 = ? AND flow = ? AND person_found = ?", param1, param2, param3, param4, flow, true).Order("created_at desc").First(&data).Error
+	err := r.db.Where("param1 = ? AND param2 = ? AND param3 = ? AND param4 = ? AND param5 = ? AND flow = ? AND person_found = ?", param1, param2, param3, param4, param5, flow, true).Order("created_at desc").First(&data).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil // Return nil if no record found
