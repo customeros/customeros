@@ -31,7 +31,7 @@ func Handle_FlowSchedule(ctx context.Context, services *service.Services, input 
 		return err
 	}
 
-	if flow.Status != neo4jentity.FlowStatusActive {
+	if flow.Status != neo4jentity.FlowStatusOn {
 		return nil
 	}
 

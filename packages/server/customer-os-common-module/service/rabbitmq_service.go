@@ -144,7 +144,7 @@ func (r *RabbitMQService) PublishEvent(ctx context.Context, entityId string, ent
 }
 
 func (r *RabbitMQService) PublishEventOnExchange(ctx context.Context, entityId string, entityType model.EntityType, message interface{}, exchange, routingKey string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "RabbitMQService.PublishOnQueue")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "RabbitMQService.PublishEventOnExchange")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
@@ -168,11 +168,11 @@ func (r *RabbitMQService) PublishEventOnExchange(ctx context.Context, entityId s
 		},
 	}
 
-	return r.PublishOnQueue(ctx, eventMessage, exchange, routingKey)
+	return r.PublishMessageOnExchange(ctx, eventMessage, exchange, routingKey)
 }
 
-func (r *RabbitMQService) PublishOnQueue(ctx context.Context, message interface{}, exchange, routingKey string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "RabbitMQService.PublishOnQueue")
+func (r *RabbitMQService) PublishMessageOnExchange(ctx context.Context, message interface{}, exchange, routingKey string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "RabbitMQService.PublishMessageOnExchange")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
@@ -245,7 +245,7 @@ func (r *RabbitMQService) PublishEventCompletedBulk(ctx context.Context, tenant 
 		event.Delete = details.Delete
 	}
 
-	err := r.PublishOnQueue(ctx, event, NotificationsExchangeName, NotificationRoutingKey)
+	err := r.PublishMessageOnExchange(ctx, event, NotificationsExchangeName, NotificationRoutingKey)
 
 	if err != nil {
 		tracing.TraceErr(span, err)

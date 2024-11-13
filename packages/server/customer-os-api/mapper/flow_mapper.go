@@ -19,10 +19,11 @@ func MapEntityToFlow(entity *neo4jentity.FlowEntity) *model.Flow {
 			SourceOfTruth: model.DataSourceOpenline,
 			AppSource:     "",
 		},
-		Name:   entity.Name,
-		Nodes:  entity.Nodes,
-		Edges:  entity.Edges,
-		Status: entity.Status,
+		Name:           entity.Name,
+		Nodes:          entity.Nodes,
+		Edges:          entity.Edges,
+		FirstStartedAt: entity.FirstStartedAt,
+		Status:         entity.Status,
 		Statistics: &model.FlowStatistics{
 			Total:        entity.Total,
 			OnHold:       entity.OnHold,
@@ -39,35 +40,6 @@ func MapEntitiesToFlows(entities *neo4jentity.FlowEntities) []*model.Flow {
 	var mapped []*model.Flow
 	for _, entity := range *entities {
 		mapped = append(mapped, MapEntityToFlow(&entity))
-	}
-	return mapped
-}
-
-// deprecated
-func MapEntityToFlowContact(entity *neo4jentity.FlowParticipantEntity) *model.FlowContact {
-	if entity == nil {
-		return nil
-	}
-	return &model.FlowContact{
-		Metadata: &model.Metadata{
-			ID:            entity.Id,
-			Created:       entity.CreatedAt,
-			LastUpdated:   entity.UpdatedAt,
-			Source:        model.DataSourceOpenline,
-			SourceOfTruth: model.DataSourceOpenline,
-			AppSource:     "",
-		},
-		Status:          entity.Status,
-		ScheduledAction: entity.ScheduledAction,
-		ScheduledAt:     entity.ScheduledAt,
-	}
-}
-
-// deprecated
-func MapEntitiesToFlowContacts(entities *neo4jentity.FlowParticipantEntities) []*model.FlowContact {
-	var mapped []*model.FlowContact
-	for _, entity := range *entities {
-		mapped = append(mapped, MapEntityToFlowContact(&entity))
 	}
 	return mapped
 }

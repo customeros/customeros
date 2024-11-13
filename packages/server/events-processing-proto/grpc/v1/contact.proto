@@ -27,16 +27,6 @@ message LinkLocationToContactGrpcRequest {
   string appSource = 5;
 }
 
-message ContactAddLocationGrpcRequest {
-  string tenant = 1;
-  string contactId = 2;
-  string loggedInUserId = 3;
-  SourceFields sourceFields = 4;
-  string locationId = 5;
-  LocationDetails locationDetails = 6;
-  google.protobuf.Timestamp  createdAt = 7;
-}
-
 message ContactIdGrpcResponse {
   string id = 1;
 }
@@ -44,5 +34,4 @@ message ContactIdGrpcResponse {
 service contactGrpcService {
   rpc LinkPhoneNumberToContact(LinkPhoneNumberToContactGrpcRequest) returns (ContactIdGrpcResponse);
   rpc LinkLocationToContact(LinkLocationToContactGrpcRequest) returns (ContactIdGrpcResponse);
-  rpc AddLocation(ContactAddLocationGrpcRequest) returns (LocationIdGrpcResponse);
 }

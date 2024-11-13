@@ -225,7 +225,7 @@ func (s *flowService) FlowMerge(ctx context.Context, tx *neo4j.ManagedTransactio
 			return nil, err
 		}
 
-		if flowEntity.Status != neo4jentity.FlowStatusInactive {
+		if flowEntity.Status != neo4jentity.FlowStatusOff {
 			return nil, nil
 		}
 	}
@@ -253,7 +253,7 @@ func (s *flowService) FlowMerge(ctx context.Context, tx *neo4j.ManagedTransactio
 				return nil, err
 			}
 
-			toStore.Status = neo4jentity.FlowStatusInactive
+			toStore.Status = neo4jentity.FlowStatusOff
 		} else {
 			toStore, err = s.FlowGetById(ctx, input.Id)
 			if err != nil {
@@ -264,7 +264,7 @@ func (s *flowService) FlowMerge(ctx context.Context, tx *neo4j.ManagedTransactio
 				return nil, errors.New("flow not found")
 			}
 
-			if toStore.Status == neo4jentity.FlowStatusActive {
+			if toStore.Status == neo4jentity.FlowStatusOn {
 				return nil, errors.New("flow is in active status")
 			}
 		}
@@ -606,10 +606,21 @@ func (s *flowService) FlowChangeStatus(ctx context.Context, id string, status ne
 
 	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, nil, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
 
-		scheduleFlow := false
+		if flow.Status == neo4jentity.FlowStatusOff && status == neo4jentity.FlowStatusOn {
 
-		if flow.Status == neo4jentity.FlowStatusInactive && status == neo4jentity.FlowStatusActive {
-			scheduleFlow = true
+			if flow.FirstStartedAt == nil {
+				flow.FirstStartedAt = utils.TimePtr(utils.Now())
+			}
+
+			txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
+				err := s.services.RabbitMQService.PublishEvent(ctx, flow.Id, model.FLOW, dto.FlowSchedule{})
+				if err != nil {
+					tracing.TraceErr(span, err)
+					return err
+				}
+
+				return nil
+			})
 		}
 
 		flow.Status = status
@@ -624,19 +635,6 @@ func (s *flowService) FlowChangeStatus(ctx context.Context, id string, status ne
 			s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, flow.Id, model.FLOW, utils.NewEventCompletedDetails().WithUpdate())
 			return nil
 		})
-
-		if scheduleFlow {
-
-			txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
-				err := s.services.RabbitMQService.PublishEvent(ctx, flow.Id, model.FLOW, dto.FlowSchedule{})
-				if err != nil {
-					tracing.TraceErr(span, err)
-					return err
-				}
-
-				return nil
-			})
-		}
 
 		return nil, nil
 	})
@@ -867,7 +865,7 @@ func (s *flowService) FlowParticipantAdd(ctx context.Context, flowId, entityId s
 				return nil, errors.Wrap(err, "failed to link flow participant to entity")
 			}
 
-			if flow.Status == neo4jentity.FlowStatusActive && entity.Status == neo4jentity.FlowParticipantStatusReady {
+			if flow.Status == neo4jentity.FlowStatusOn {
 				err := s.services.FlowExecutionService.ScheduleFlow(ctx, txWithPostCommit, flowId, entity)
 				if err != nil {
 					return nil, errors.Wrap(err, "failed to schedule flow")

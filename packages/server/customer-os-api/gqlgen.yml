@@ -71,6 +71,9 @@ models:
   FlowStatus:
     model:
       - github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity.FlowStatus
+  FlowEntityType:
+    model:
+      - github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model.EntityType
   FlowActionStatus:
     model:
       - github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity.FlowActionStatus

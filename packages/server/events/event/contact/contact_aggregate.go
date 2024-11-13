@@ -3,12 +3,9 @@ package contact
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
-	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event/contact/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 )
@@ -35,73 +32,8 @@ func (a *ContactAggregate) HandleGRPCRequest(ctx context.Context, request any, p
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactAggregate.HandleGRPCRequest")
 	defer span.Finish()
 
-	switch r := request.(type) {
-	case *contactpb.ContactAddLocationGrpcRequest:
-		return a.addLocation(ctx, r)
-	default:
-		tracing.TraceErr(span, eventstore.ErrInvalidRequestType)
-		return nil, eventstore.ErrInvalidRequestType
-	}
-}
-
-func (a *ContactAggregate) addLocation(ctx context.Context, request *contactpb.ContactAddLocationGrpcRequest) (string, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "ContactAggregate.addLocation")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
-	tracing.LogObjectAsJson(span, "request", request)
-
-	createdAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.CreatedAt), utils.Now())
-
-	sourceFields := cmnmod.Source{}
-	sourceFields.FromGrpc(request.SourceFields)
-	sourceFields.SetDefaultValues()
-
-	locationDtls := cmnmod.Location{
-		Name:          request.LocationDetails.Name,
-		RawAddress:    request.LocationDetails.RawAddress,
-		Country:       request.LocationDetails.Country,
-		CountryCodeA2: request.LocationDetails.CountryCodeA2,
-		CountryCodeA3: request.LocationDetails.CountryCodeA3,
-		Region:        request.LocationDetails.Region,
-		Locality:      request.LocationDetails.Locality,
-		AddressLine1:  request.LocationDetails.AddressLine1,
-		AddressLine2:  request.LocationDetails.AddressLine2,
-		Street:        request.LocationDetails.Street,
-		HouseNumber:   request.LocationDetails.HouseNumber,
-		ZipCode:       request.LocationDetails.ZipCode,
-		PostalCode:    request.LocationDetails.PostalCode,
-		AddressType:   request.LocationDetails.AddressType,
-		Commercial:    request.LocationDetails.Commercial,
-		Predirection:  request.LocationDetails.Predirection,
-		PlusFour:      request.LocationDetails.PlusFour,
-		TimeZone:      request.LocationDetails.TimeZone,
-		UtcOffset:     request.LocationDetails.UtcOffset,
-		Latitude:      utils.ParseStringToFloat(request.LocationDetails.Latitude),
-		Longitude:     utils.ParseStringToFloat(request.LocationDetails.Longitude),
-	}
-
-	locationId := request.LocationId
-	if locationId == "" && !locationDtls.IsEmpty() {
-		if existingLocaitonId := a.Contact.GetLocationIdForDetails(locationDtls); existingLocaitonId != "" {
-			locationId = existingLocaitonId
-		}
-	}
-	locationId = utils.NewUUIDIfEmpty(locationId)
-
-	event, err := event.NewContactAddLocationEvent(a, locationId, locationDtls, sourceFields, createdAtNotNil)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return "", errors.Wrap(err, "NewContactAddLocationEvent")
-	}
-	eventstore.EnrichEventWithMetadataExtended(&event, span, eventstore.EventMetadata{
-		Tenant: a.GetTenant(),
-		UserId: request.LoggedInUserId,
-		App:    sourceFields.AppSource,
-	})
-
-	return locationId, a.Apply(event)
+	tracing.TraceErr(span, eventstore.ErrInvalidRequestType)
+	return nil, eventstore.ErrInvalidRequestType
 }
 
 func (a *ContactAggregate) When(evt eventstore.Event) error {
@@ -110,8 +42,6 @@ func (a *ContactAggregate) When(evt eventstore.Event) error {
 		return a.onPhoneNumberLink(evt)
 	case event.ContactLocationLinkV1:
 		return a.onLocationLink(evt)
-	case event.ContactAddLocationV1:
-		return a.onAddLocation(evt)
 	default:
 		return nil
 	}
@@ -139,39 +69,5 @@ func (a *ContactAggregate) onLocationLink(evt eventstore.Event) error {
 		return errors.Wrap(err, "GetJsonData")
 	}
 	a.Contact.LocationIds = utils.AddToListIfNotExists(a.Contact.LocationIds, eventData.LocationId)
-	return nil
-}
-
-func (a *ContactAggregate) onAddLocation(evt eventstore.Event) error {
-	var eventData event.ContactAddLocationEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		return errors.Wrap(err, "GetJsonData")
-	}
-	if a.Contact.Locations == nil {
-		a.Contact.Locations = make(map[string]cmnmod.Location)
-	}
-	a.Contact.Locations[eventData.LocationId] = cmnmod.Location{
-		Name:          eventData.Name,
-		RawAddress:    eventData.RawAddress,
-		Country:       eventData.Country,
-		CountryCodeA2: eventData.CountryCodeA2,
-		CountryCodeA3: eventData.CountryCodeA3,
-		Region:        eventData.Region,
-		Locality:      eventData.Locality,
-		AddressLine1:  eventData.AddressLine1,
-		AddressLine2:  eventData.AddressLine2,
-		Street:        eventData.Street,
-		HouseNumber:   eventData.HouseNumber,
-		ZipCode:       eventData.ZipCode,
-		PostalCode:    eventData.PostalCode,
-		AddressType:   eventData.AddressType,
-		Commercial:    eventData.Commercial,
-		Predirection:  eventData.Predirection,
-		PlusFour:      eventData.PlusFour,
-		TimeZone:      eventData.TimeZone,
-		UtcOffset:     eventData.UtcOffset,
-		Latitude:      eventData.Latitude,
-		Longitude:     eventData.Longitude,
-	}
 	return nil
 }

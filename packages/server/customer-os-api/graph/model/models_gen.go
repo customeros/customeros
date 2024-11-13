@@ -1072,16 +1072,16 @@ type FilterItem struct {
 }
 
 type Flow struct {
-	Metadata     *Metadata          `json:"metadata"`
-	Name         string             `json:"name"`
-	Description  string             `json:"description"`
-	Nodes        string             `json:"nodes"`
-	Edges        string             `json:"edges"`
-	Status       entity.FlowStatus  `json:"status"`
-	Contacts     []*FlowContact     `json:"contacts"`
-	Participants []*FlowParticipant `json:"participants"`
-	Senders      []*FlowSender      `json:"senders"`
-	Statistics   *FlowStatistics    `json:"statistics"`
+	Metadata       *Metadata          `json:"metadata"`
+	Name           string             `json:"name"`
+	Description    string             `json:"description"`
+	Nodes          string             `json:"nodes"`
+	Edges          string             `json:"edges"`
+	FirstStartedAt *time.Time         `json:"firstStartedAt,omitempty"`
+	Status         entity.FlowStatus  `json:"status"`
+	Participants   []*FlowParticipant `json:"participants"`
+	Senders        []*FlowSender      `json:"senders"`
+	Statistics     *FlowStatistics    `json:"statistics"`
 }
 
 func (Flow) IsMetadataInterface()        {}

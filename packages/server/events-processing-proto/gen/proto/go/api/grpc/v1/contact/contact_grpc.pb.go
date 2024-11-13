@@ -8,7 +8,6 @@ package contact_grpc_service
 
 import (
 	context "context"
-	location "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/location"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -25,7 +24,6 @@ const _ = grpc.SupportPackageIsVersion7
 type ContactGrpcServiceClient interface {
 	LinkPhoneNumberToContact(ctx context.Context, in *LinkPhoneNumberToContactGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error)
 	LinkLocationToContact(ctx context.Context, in *LinkLocationToContactGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error)
-	AddLocation(ctx context.Context, in *ContactAddLocationGrpcRequest, opts ...grpc.CallOption) (*location.LocationIdGrpcResponse, error)
 }
 
 type contactGrpcServiceClient struct {
@@ -54,22 +52,12 @@ func (c *contactGrpcServiceClient) LinkLocationToContact(ctx context.Context, in
 	return out, nil
 }
 
-func (c *contactGrpcServiceClient) AddLocation(ctx context.Context, in *ContactAddLocationGrpcRequest, opts ...grpc.CallOption) (*location.LocationIdGrpcResponse, error) {
-	out := new(location.LocationIdGrpcResponse)
-	err := c.cc.Invoke(ctx, "/contactGrpcService/AddLocation", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // ContactGrpcServiceServer is the server API for ContactGrpcService service.
 // All implementations should embed UnimplementedContactGrpcServiceServer
 // for forward compatibility
 type ContactGrpcServiceServer interface {
 	LinkPhoneNumberToContact(context.Context, *LinkPhoneNumberToContactGrpcRequest) (*ContactIdGrpcResponse, error)
 	LinkLocationToContact(context.Context, *LinkLocationToContactGrpcRequest) (*ContactIdGrpcResponse, error)
-	AddLocation(context.Context, *ContactAddLocationGrpcRequest) (*location.LocationIdGrpcResponse, error)
 }
 
 // UnimplementedContactGrpcServiceServer should be embedded to have forward compatible implementations.
@@ -81,9 +69,6 @@ func (UnimplementedContactGrpcServiceServer) LinkPhoneNumberToContact(context.Co
 }
 func (UnimplementedContactGrpcServiceServer) LinkLocationToContact(context.Context, *LinkLocationToContactGrpcRequest) (*ContactIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method LinkLocationToContact not implemented")
-}
-func (UnimplementedContactGrpcServiceServer) AddLocation(context.Context, *ContactAddLocationGrpcRequest) (*location.LocationIdGrpcResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AddLocation not implemented")
 }
 
 // UnsafeContactGrpcServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -133,24 +118,6 @@ func _ContactGrpcService_LinkLocationToContact_Handler(srv interface{}, ctx cont
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ContactGrpcService_AddLocation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ContactAddLocationGrpcRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ContactGrpcServiceServer).AddLocation(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/contactGrpcService/AddLocation",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ContactGrpcServiceServer).AddLocation(ctx, req.(*ContactAddLocationGrpcRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // ContactGrpcService_ServiceDesc is the grpc.ServiceDesc for ContactGrpcService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -165,10 +132,6 @@ var ContactGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "LinkLocationToContact",
 			Handler:    _ContactGrpcService_LinkLocationToContact_Handler,
-		},
-		{
-			MethodName: "AddLocation",
-			Handler:    _ContactGrpcService_AddLocation_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

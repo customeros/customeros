@@ -120,6 +120,7 @@ func (repo *emailMessageRepositoryImpl) Store(ctx context.Context, tenant string
 	span.LogFields(log.String("tenant", tenant), log.String("producerId", input.ProducerId), log.String("producerType", input.ProducerType))
 
 	if input.Status == "" || input.ProducerId == "" || input.ProducerType == "" || input.From == "" || len(input.To) == 0 || input.Subject == "" || input.Content == "" {
+		span.LogFields(log.Object("input", input))
 		err := errors.New("params missing")
 		tracing.TraceErr(span, err)
 		return err

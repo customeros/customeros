@@ -1035,20 +1035,21 @@ func MapDbNodeToFlowEntity(node *dbtype.Node) *entity.FlowEntity {
 	}
 	props := utils.GetPropsFromNode(*node)
 	domain := entity.FlowEntity{
-		Id:           utils.GetStringPropOrEmpty(props, "id"),
-		CreatedAt:    utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt:    utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Name:         utils.GetStringPropOrEmpty(props, "name"),
-		Nodes:        utils.GetStringPropOrEmpty(props, "nodes"),
-		Edges:        utils.GetStringPropOrEmpty(props, "edges"),
-		Status:       entity.GetFlowStatus(utils.GetStringPropOrEmpty(props, "status")),
-		Total:        utils.GetInt64PropOrZero(props, "total"),
-		OnHold:       utils.GetInt64PropOrZero(props, "onHold"),
-		Ready:        utils.GetInt64PropOrZero(props, "ready"),
-		Scheduled:    utils.GetInt64PropOrZero(props, "scheduled"),
-		InProgress:   utils.GetInt64PropOrZero(props, "inProgress"),
-		Completed:    utils.GetInt64PropOrZero(props, "completed"),
-		GoalAchieved: utils.GetInt64PropOrZero(props, "goalAchieved"),
+		Id:             utils.GetStringPropOrEmpty(props, "id"),
+		CreatedAt:      utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:      utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		Name:           utils.GetStringPropOrEmpty(props, "name"),
+		Nodes:          utils.GetStringPropOrEmpty(props, "nodes"),
+		Edges:          utils.GetStringPropOrEmpty(props, "edges"),
+		FirstStartedAt: utils.GetTimePropOrNil(props, "firstStartedAt"),
+		Status:         entity.GetFlowStatus(utils.GetStringPropOrEmpty(props, "status")),
+		Total:          utils.GetInt64PropOrZero(props, "total"),
+		OnHold:         utils.GetInt64PropOrZero(props, "onHold"),
+		Ready:          utils.GetInt64PropOrZero(props, "ready"),
+		Scheduled:      utils.GetInt64PropOrZero(props, "scheduled"),
+		InProgress:     utils.GetInt64PropOrZero(props, "inProgress"),
+		Completed:      utils.GetInt64PropOrZero(props, "completed"),
+		GoalAchieved:   utils.GetInt64PropOrZero(props, "goalAchieved"),
 	}
 	return &domain
 }

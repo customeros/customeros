@@ -2,7 +2,7 @@ extend type Query {
     flow(id: ID!): Flow! @hasRole(roles: [ADMIN, USER]) @hasTenant
     flows: [Flow!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
-    flowParticipant(id: ID!): FlowContact! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    flowParticipant(id: ID!): FlowParticipant! @hasRole(roles: [ADMIN, USER]) @hasTenant
     flow_emailVariables: [EmailVariableEntity!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
@@ -10,10 +10,10 @@ extend type Mutation {
     flow_Merge(input: FlowMergeInput!): Flow! @hasRole(roles: [ADMIN, USER]) @hasTenant
     flow_ChangeStatus(id: ID!, status: FlowStatus!): Flow! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
-    flowContact_Add(flowId: ID!, contactId: ID!): FlowContact! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    flowContact_AddBulk(flowId: ID!, contactId: [ID!]!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    flowContact_Delete(id: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    flowContact_DeleteBulk(id: [ID!]!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    flowParticipant_Add(flowId: ID!, entityId: ID!, entityType: FlowEntityType!): FlowParticipant! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    flowParticipant_AddBulk(flowId: ID!, entityIds: [ID!]!, entityType: FlowEntityType!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    flowParticipant_Delete(id: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    flowParticipant_DeleteBulk(id: [ID!]!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
     flowSender_Merge(flowId: ID!, input: FlowSenderMergeInput!): FlowSender! @hasRole(roles: [ADMIN, USER]) @hasTenant
     flowSender_Delete(id: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
@@ -28,8 +28,9 @@ type Flow implements MetadataInterface {
     nodes: String!
     edges: String!
 
+    firstStartedAt: Time
     status: FlowStatus!
-    contacts: [FlowContact!]! @goField(forceResolver: true) @deprecated
+
     participants: [FlowParticipant!]! @goField(forceResolver: true)
     senders: [FlowSender!]! @goField(forceResolver: true)
 
@@ -55,9 +56,8 @@ input FlowMergeInput {
 }
 
 enum FlowStatus {
-    INACTIVE
-    ACTIVE
-    PAUSED
+    ON
+    OFF
     ARCHIVED
 }
 
@@ -188,4 +188,8 @@ enum FlowActionExecutionStatus{
     SUCCESS
     TECH_ERROR
     BUSINESS_ERROR
+}
+
+enum FlowEntityType {
+    CONTACT
 }

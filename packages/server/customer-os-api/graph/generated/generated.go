@@ -15,6 +15,7 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	model1 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
@@ -544,16 +545,16 @@ type ComplexityRoot struct {
 	}
 
 	Flow struct {
-		Contacts     func(childComplexity int) int
-		Description  func(childComplexity int) int
-		Edges        func(childComplexity int) int
-		Metadata     func(childComplexity int) int
-		Name         func(childComplexity int) int
-		Nodes        func(childComplexity int) int
-		Participants func(childComplexity int) int
-		Senders      func(childComplexity int) int
-		Statistics   func(childComplexity int) int
-		Status       func(childComplexity int) int
+		Description    func(childComplexity int) int
+		Edges          func(childComplexity int) int
+		FirstStartedAt func(childComplexity int) int
+		Metadata       func(childComplexity int) int
+		Name           func(childComplexity int) int
+		Nodes          func(childComplexity int) int
+		Participants   func(childComplexity int) int
+		Senders        func(childComplexity int) int
+		Statistics     func(childComplexity int) int
+		Status         func(childComplexity int) int
 	}
 
 	FlowAction struct {
@@ -984,11 +985,11 @@ type ComplexityRoot struct {
 		EmailValidate                              func(childComplexity int, id string) int
 		ExternalSystemCreate                       func(childComplexity int, input model.ExternalSystemInput) int
 		FlowChangeStatus                           func(childComplexity int, id string, status entity.FlowStatus) int
-		FlowContactAdd                             func(childComplexity int, flowID string, contactID string) int
-		FlowContactAddBulk                         func(childComplexity int, flowID string, contactID []string) int
-		FlowContactDelete                          func(childComplexity int, id string) int
-		FlowContactDeleteBulk                      func(childComplexity int, id []string) int
 		FlowMerge                                  func(childComplexity int, input model.FlowMergeInput) int
+		FlowParticipantAdd                         func(childComplexity int, flowID string, entityID string, entityType model1.EntityType) int
+		FlowParticipantAddBulk                     func(childComplexity int, flowID string, entityIds []string, entityType model1.EntityType) int
+		FlowParticipantDelete                      func(childComplexity int, id string) int
+		FlowParticipantDeleteBulk                  func(childComplexity int, id []string) int
 		FlowSenderDelete                           func(childComplexity int, id string) int
 		FlowSenderMerge                            func(childComplexity int, flowID string, input model.FlowSenderMergeInput) int
 		InteractionEventLinkAttachment             func(childComplexity int, eventID string, attachmentID string) int
@@ -1637,7 +1638,6 @@ type EmailResolver interface {
 	Organizations(ctx context.Context, obj *model.Email) ([]*model.Organization, error)
 }
 type FlowResolver interface {
-	Contacts(ctx context.Context, obj *model.Flow) ([]*model.FlowContact, error)
 	Participants(ctx context.Context, obj *model.Flow) ([]*model.FlowParticipant, error)
 	Senders(ctx context.Context, obj *model.Flow) ([]*model.FlowSender, error)
 }
@@ -1768,10 +1768,10 @@ type MutationResolver interface {
 	ExternalSystemCreate(ctx context.Context, input model.ExternalSystemInput) (string, error)
 	FlowMerge(ctx context.Context, input model.FlowMergeInput) (*model.Flow, error)
 	FlowChangeStatus(ctx context.Context, id string, status entity.FlowStatus) (*model.Flow, error)
-	FlowContactAdd(ctx context.Context, flowID string, contactID string) (*model.FlowContact, error)
-	FlowContactAddBulk(ctx context.Context, flowID string, contactID []string) (*model.Result, error)
-	FlowContactDelete(ctx context.Context, id string) (*model.Result, error)
-	FlowContactDeleteBulk(ctx context.Context, id []string) (*model.Result, error)
+	FlowParticipantAdd(ctx context.Context, flowID string, entityID string, entityType model1.EntityType) (*model.FlowParticipant, error)
+	FlowParticipantAddBulk(ctx context.Context, flowID string, entityIds []string, entityType model1.EntityType) (*model.Result, error)
+	FlowParticipantDelete(ctx context.Context, id string) (*model.Result, error)
+	FlowParticipantDeleteBulk(ctx context.Context, id []string) (*model.Result, error)
 	FlowSenderMerge(ctx context.Context, flowID string, input model.FlowSenderMergeInput) (*model.FlowSender, error)
 	FlowSenderDelete(ctx context.Context, id string) (*model.Result, error)
 	InteractionEventLinkAttachment(ctx context.Context, eventID string, attachmentID string) (*model.Result, error)
@@ -1955,7 +1955,7 @@ type QueryResolver interface {
 	ExternalSystemInstances(ctx context.Context) ([]*model.ExternalSystemInstance, error)
 	Flow(ctx context.Context, id string) (*model.Flow, error)
 	Flows(ctx context.Context) ([]*model.Flow, error)
-	FlowParticipant(ctx context.Context, id string) (*model.FlowContact, error)
+	FlowParticipant(ctx context.Context, id string) (*model.FlowParticipant, error)
 	FlowEmailVariables(ctx context.Context) ([]*model.EmailVariableEntity, error)
 	InteractionEvent(ctx context.Context, id string) (*model.InteractionEvent, error)
 	Invoice(ctx context.Context, id string) (*model.Invoice, error)
@@ -4317,13 +4317,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ExternalSystemStripeDetails.PaymentMethodTypes(childComplexity), true
 
-	case "Flow.contacts":
-		if e.complexity.Flow.Contacts == nil {
-			break
-		}
-
-		return e.complexity.Flow.Contacts(childComplexity), true
-
 	case "Flow.description":
 		if e.complexity.Flow.Description == nil {
 			break
@@ -4337,6 +4330,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Flow.Edges(childComplexity), true
+
+	case "Flow.firstStartedAt":
+		if e.complexity.Flow.FirstStartedAt == nil {
+			break
+		}
+
+		return e.complexity.Flow.FirstStartedAt(childComplexity), true
 
 	case "Flow.metadata":
 		if e.complexity.Flow.Metadata == nil {
@@ -7041,54 +7041,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.FlowChangeStatus(childComplexity, args["id"].(string), args["status"].(entity.FlowStatus)), true
 
-	case "Mutation.flowContact_Add":
-		if e.complexity.Mutation.FlowContactAdd == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_flowContact_Add_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.FlowContactAdd(childComplexity, args["flowId"].(string), args["contactId"].(string)), true
-
-	case "Mutation.flowContact_AddBulk":
-		if e.complexity.Mutation.FlowContactAddBulk == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_flowContact_AddBulk_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.FlowContactAddBulk(childComplexity, args["flowId"].(string), args["contactId"].([]string)), true
-
-	case "Mutation.flowContact_Delete":
-		if e.complexity.Mutation.FlowContactDelete == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_flowContact_Delete_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.FlowContactDelete(childComplexity, args["id"].(string)), true
-
-	case "Mutation.flowContact_DeleteBulk":
-		if e.complexity.Mutation.FlowContactDeleteBulk == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_flowContact_DeleteBulk_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.FlowContactDeleteBulk(childComplexity, args["id"].([]string)), true
-
 	case "Mutation.flow_Merge":
 		if e.complexity.Mutation.FlowMerge == nil {
 			break
@@ -7100,6 +7052,54 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.FlowMerge(childComplexity, args["input"].(model.FlowMergeInput)), true
+
+	case "Mutation.flowParticipant_Add":
+		if e.complexity.Mutation.FlowParticipantAdd == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_flowParticipant_Add_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.FlowParticipantAdd(childComplexity, args["flowId"].(string), args["entityId"].(string), args["entityType"].(model1.EntityType)), true
+
+	case "Mutation.flowParticipant_AddBulk":
+		if e.complexity.Mutation.FlowParticipantAddBulk == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_flowParticipant_AddBulk_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.FlowParticipantAddBulk(childComplexity, args["flowId"].(string), args["entityIds"].([]string), args["entityType"].(model1.EntityType)), true
+
+	case "Mutation.flowParticipant_Delete":
+		if e.complexity.Mutation.FlowParticipantDelete == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_flowParticipant_Delete_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.FlowParticipantDelete(childComplexity, args["id"].(string)), true
+
+	case "Mutation.flowParticipant_DeleteBulk":
+		if e.complexity.Mutation.FlowParticipantDeleteBulk == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_flowParticipant_DeleteBulk_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.FlowParticipantDeleteBulk(childComplexity, args["id"].([]string)), true
 
 	case "Mutation.flowSender_Delete":
 		if e.complexity.Mutation.FlowSenderDelete == nil {
@@ -13089,7 +13089,7 @@ enum ComparisonOperator {
     flow(id: ID!): Flow! @hasRole(roles: [ADMIN, USER]) @hasTenant
     flows: [Flow!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
-    flowParticipant(id: ID!): FlowContact! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    flowParticipant(id: ID!): FlowParticipant! @hasRole(roles: [ADMIN, USER]) @hasTenant
     flow_emailVariables: [EmailVariableEntity!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
@@ -13097,10 +13097,10 @@ extend type Mutation {
     flow_Merge(input: FlowMergeInput!): Flow! @hasRole(roles: [ADMIN, USER]) @hasTenant
     flow_ChangeStatus(id: ID!, status: FlowStatus!): Flow! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
-    flowContact_Add(flowId: ID!, contactId: ID!): FlowContact! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    flowContact_AddBulk(flowId: ID!, contactId: [ID!]!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    flowContact_Delete(id: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    flowContact_DeleteBulk(id: [ID!]!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    flowParticipant_Add(flowId: ID!, entityId: ID!, entityType: FlowEntityType!): FlowParticipant! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    flowParticipant_AddBulk(flowId: ID!, entityIds: [ID!]!, entityType: FlowEntityType!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    flowParticipant_Delete(id: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    flowParticipant_DeleteBulk(id: [ID!]!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
     flowSender_Merge(flowId: ID!, input: FlowSenderMergeInput!): FlowSender! @hasRole(roles: [ADMIN, USER]) @hasTenant
     flowSender_Delete(id: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
@@ -13115,8 +13115,9 @@ type Flow implements MetadataInterface {
     nodes: String!
     edges: String!
 
+    firstStartedAt: Time
     status: FlowStatus!
-    contacts: [FlowContact!]! @goField(forceResolver: true) @deprecated
+
     participants: [FlowParticipant!]! @goField(forceResolver: true)
     senders: [FlowSender!]! @goField(forceResolver: true)
 
@@ -13142,9 +13143,8 @@ input FlowMergeInput {
 }
 
 enum FlowStatus {
-    INACTIVE
-    ACTIVE
-    PAUSED
+    ON
+    OFF
     ARCHIVED
 }
 
@@ -13275,6 +13275,10 @@ enum FlowActionExecutionStatus{
     SUCCESS
     TECH_ERROR
     BUSINESS_ERROR
+}
+
+enum FlowEntityType {
+    CONTACT
 }
 `, BuiltIn: false},
 	{Name: "../schemas/interaction_event.graphqls", Input: `union InteractionEventParticipant = EmailParticipant | PhoneNumberParticipant | ContactParticipant | UserParticipant | OrganizationParticipant | JobRoleParticipant
@@ -18545,22 +18549,27 @@ func (ec *executionContext) field_Mutation_externalSystem_Create_argsInput(
 	return zeroVal, nil
 }
 
-func (ec *executionContext) field_Mutation_flowContact_AddBulk_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_flowParticipant_AddBulk_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	arg0, err := ec.field_Mutation_flowContact_AddBulk_argsFlowID(ctx, rawArgs)
+	arg0, err := ec.field_Mutation_flowParticipant_AddBulk_argsFlowID(ctx, rawArgs)
 	if err != nil {
 		return nil, err
 	}
 	args["flowId"] = arg0
-	arg1, err := ec.field_Mutation_flowContact_AddBulk_argsContactID(ctx, rawArgs)
+	arg1, err := ec.field_Mutation_flowParticipant_AddBulk_argsEntityIds(ctx, rawArgs)
 	if err != nil {
 		return nil, err
 	}
-	args["contactId"] = arg1
+	args["entityIds"] = arg1
+	arg2, err := ec.field_Mutation_flowParticipant_AddBulk_argsEntityType(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["entityType"] = arg2
 	return args, nil
 }
-func (ec *executionContext) field_Mutation_flowContact_AddBulk_argsFlowID(
+func (ec *executionContext) field_Mutation_flowParticipant_AddBulk_argsFlowID(
 	ctx context.Context,
 	rawArgs map[string]interface{},
 ) (string, error) {
@@ -18582,21 +18591,21 @@ func (ec *executionContext) field_Mutation_flowContact_AddBulk_argsFlowID(
 	return zeroVal, nil
 }
 
-func (ec *executionContext) field_Mutation_flowContact_AddBulk_argsContactID(
+func (ec *executionContext) field_Mutation_flowParticipant_AddBulk_argsEntityIds(
 	ctx context.Context,
 	rawArgs map[string]interface{},
 ) ([]string, error) {
 	// We won't call the directive if the argument is null.
 	// Set call_argument_directives_with_null to true to call directives
 	// even if the argument is null.
-	_, ok := rawArgs["contactId"]
+	_, ok := rawArgs["entityIds"]
 	if !ok {
 		var zeroVal []string
 		return zeroVal, nil
 	}
 
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("contactId"))
-	if tmp, ok := rawArgs["contactId"]; ok {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("entityIds"))
+	if tmp, ok := rawArgs["entityIds"]; ok {
 		return ec.unmarshalNID2ᚕstringᚄ(ctx, tmp)
 	}
 
@@ -18604,22 +18613,49 @@ func (ec *executionContext) field_Mutation_flowContact_AddBulk_argsContactID(
 	return zeroVal, nil
 }
 
-func (ec *executionContext) field_Mutation_flowContact_Add_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_flowParticipant_AddBulk_argsEntityType(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (model1.EntityType, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["entityType"]
+	if !ok {
+		var zeroVal model1.EntityType
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("entityType"))
+	if tmp, ok := rawArgs["entityType"]; ok {
+		return ec.unmarshalNFlowEntityType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐEntityType(ctx, tmp)
+	}
+
+	var zeroVal model1.EntityType
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_flowParticipant_Add_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	arg0, err := ec.field_Mutation_flowContact_Add_argsFlowID(ctx, rawArgs)
+	arg0, err := ec.field_Mutation_flowParticipant_Add_argsFlowID(ctx, rawArgs)
 	if err != nil {
 		return nil, err
 	}
 	args["flowId"] = arg0
-	arg1, err := ec.field_Mutation_flowContact_Add_argsContactID(ctx, rawArgs)
+	arg1, err := ec.field_Mutation_flowParticipant_Add_argsEntityID(ctx, rawArgs)
 	if err != nil {
 		return nil, err
 	}
-	args["contactId"] = arg1
+	args["entityId"] = arg1
+	arg2, err := ec.field_Mutation_flowParticipant_Add_argsEntityType(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["entityType"] = arg2
 	return args, nil
 }
-func (ec *executionContext) field_Mutation_flowContact_Add_argsFlowID(
+func (ec *executionContext) field_Mutation_flowParticipant_Add_argsFlowID(
 	ctx context.Context,
 	rawArgs map[string]interface{},
 ) (string, error) {
@@ -18641,21 +18677,21 @@ func (ec *executionContext) field_Mutation_flowContact_Add_argsFlowID(
 	return zeroVal, nil
 }
 
-func (ec *executionContext) field_Mutation_flowContact_Add_argsContactID(
+func (ec *executionContext) field_Mutation_flowParticipant_Add_argsEntityID(
 	ctx context.Context,
 	rawArgs map[string]interface{},
 ) (string, error) {
 	// We won't call the directive if the argument is null.
 	// Set call_argument_directives_with_null to true to call directives
 	// even if the argument is null.
-	_, ok := rawArgs["contactId"]
+	_, ok := rawArgs["entityId"]
 	if !ok {
 		var zeroVal string
 		return zeroVal, nil
 	}
 
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("contactId"))
-	if tmp, ok := rawArgs["contactId"]; ok {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("entityId"))
+	if tmp, ok := rawArgs["entityId"]; ok {
 		return ec.unmarshalNID2string(ctx, tmp)
 	}
 
@@ -18663,17 +18699,39 @@ func (ec *executionContext) field_Mutation_flowContact_Add_argsContactID(
 	return zeroVal, nil
 }
 
-func (ec *executionContext) field_Mutation_flowContact_DeleteBulk_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_flowParticipant_Add_argsEntityType(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (model1.EntityType, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["entityType"]
+	if !ok {
+		var zeroVal model1.EntityType
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("entityType"))
+	if tmp, ok := rawArgs["entityType"]; ok {
+		return ec.unmarshalNFlowEntityType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐEntityType(ctx, tmp)
+	}
+
+	var zeroVal model1.EntityType
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_flowParticipant_DeleteBulk_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	arg0, err := ec.field_Mutation_flowContact_DeleteBulk_argsID(ctx, rawArgs)
+	arg0, err := ec.field_Mutation_flowParticipant_DeleteBulk_argsID(ctx, rawArgs)
 	if err != nil {
 		return nil, err
 	}
 	args["id"] = arg0
 	return args, nil
 }
-func (ec *executionContext) field_Mutation_flowContact_DeleteBulk_argsID(
+func (ec *executionContext) field_Mutation_flowParticipant_DeleteBulk_argsID(
 	ctx context.Context,
 	rawArgs map[string]interface{},
 ) ([]string, error) {
@@ -18695,17 +18753,17 @@ func (ec *executionContext) field_Mutation_flowContact_DeleteBulk_argsID(
 	return zeroVal, nil
 }
 
-func (ec *executionContext) field_Mutation_flowContact_Delete_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_flowParticipant_Delete_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	arg0, err := ec.field_Mutation_flowContact_Delete_argsID(ctx, rawArgs)
+	arg0, err := ec.field_Mutation_flowParticipant_Delete_argsID(ctx, rawArgs)
 	if err != nil {
 		return nil, err
 	}
 	args["id"] = arg0
 	return args, nil
 }
-func (ec *executionContext) field_Mutation_flowContact_Delete_argsID(
+func (ec *executionContext) field_Mutation_flowParticipant_Delete_argsID(
 	ctx context.Context,
 	rawArgs map[string]interface{},
 ) (string, error) {
@@ -31150,10 +31208,10 @@ func (ec *executionContext) fieldContext_Contact_flows(_ context.Context, field 
 				return ec.fieldContext_Flow_nodes(ctx, field)
 			case "edges":
 				return ec.fieldContext_Flow_edges(ctx, field)
+			case "firstStartedAt":
+				return ec.fieldContext_Flow_firstStartedAt(ctx, field)
 			case "status":
 				return ec.fieldContext_Flow_status(ctx, field)
-			case "contacts":
-				return ec.fieldContext_Flow_contacts(ctx, field)
 			case "participants":
 				return ec.fieldContext_Flow_participants(ctx, field)
 			case "senders":
@@ -41448,6 +41506,47 @@ func (ec *executionContext) fieldContext_Flow_edges(_ context.Context, field gra
 	return fc, nil
 }
 
+func (ec *executionContext) _Flow_firstStartedAt(ctx context.Context, field graphql.CollectedField, obj *model.Flow) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Flow_firstStartedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.FirstStartedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Flow_firstStartedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Flow",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Flow_status(ctx context.Context, field graphql.CollectedField, obj *model.Flow) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Flow_status(ctx, field)
 	if err != nil {
@@ -41487,62 +41586,6 @@ func (ec *executionContext) fieldContext_Flow_status(_ context.Context, field gr
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type FlowStatus does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Flow_contacts(ctx context.Context, field graphql.CollectedField, obj *model.Flow) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Flow_contacts(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Flow().Contacts(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*model.FlowContact)
-	fc.Result = res
-	return ec.marshalNFlowContact2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFlowContactᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Flow_contacts(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Flow",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "metadata":
-				return ec.fieldContext_FlowContact_metadata(ctx, field)
-			case "contact":
-				return ec.fieldContext_FlowContact_contact(ctx, field)
-			case "status":
-				return ec.fieldContext_FlowContact_status(ctx, field)
-			case "scheduledAction":
-				return ec.fieldContext_FlowContact_scheduledAction(ctx, field)
-			case "scheduledAt":
-				return ec.fieldContext_FlowContact_scheduledAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type FlowContact", field.Name)
 		},
 	}
 	return fc, nil
@@ -42751,10 +42794,10 @@ func (ec *executionContext) fieldContext_FlowSender_flow(_ context.Context, fiel
 				return ec.fieldContext_Flow_nodes(ctx, field)
 			case "edges":
 				return ec.fieldContext_Flow_edges(ctx, field)
+			case "firstStartedAt":
+				return ec.fieldContext_Flow_firstStartedAt(ctx, field)
 			case "status":
 				return ec.fieldContext_Flow_status(ctx, field)
-			case "contacts":
-				return ec.fieldContext_Flow_contacts(ctx, field)
 			case "participants":
 				return ec.fieldContext_Flow_participants(ctx, field)
 			case "senders":
@@ -60934,10 +60977,10 @@ func (ec *executionContext) fieldContext_Mutation_flow_Merge(ctx context.Context
 				return ec.fieldContext_Flow_nodes(ctx, field)
 			case "edges":
 				return ec.fieldContext_Flow_edges(ctx, field)
+			case "firstStartedAt":
+				return ec.fieldContext_Flow_firstStartedAt(ctx, field)
 			case "status":
 				return ec.fieldContext_Flow_status(ctx, field)
-			case "contacts":
-				return ec.fieldContext_Flow_contacts(ctx, field)
 			case "participants":
 				return ec.fieldContext_Flow_participants(ctx, field)
 			case "senders":
@@ -61045,10 +61088,10 @@ func (ec *executionContext) fieldContext_Mutation_flow_ChangeStatus(ctx context.
 				return ec.fieldContext_Flow_nodes(ctx, field)
 			case "edges":
 				return ec.fieldContext_Flow_edges(ctx, field)
+			case "firstStartedAt":
+				return ec.fieldContext_Flow_firstStartedAt(ctx, field)
 			case "status":
 				return ec.fieldContext_Flow_status(ctx, field)
-			case "contacts":
-				return ec.fieldContext_Flow_contacts(ctx, field)
 			case "participants":
 				return ec.fieldContext_Flow_participants(ctx, field)
 			case "senders":
@@ -61073,8 +61116,8 @@ func (ec *executionContext) fieldContext_Mutation_flow_ChangeStatus(ctx context.
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_flowContact_Add(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_flowContact_Add(ctx, field)
+func (ec *executionContext) _Mutation_flowParticipant_Add(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_flowParticipant_Add(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -61088,24 +61131,24 @@ func (ec *executionContext) _Mutation_flowContact_Add(ctx context.Context, field
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().FlowContactAdd(rctx, fc.Args["flowId"].(string), fc.Args["contactId"].(string))
+			return ec.resolvers.Mutation().FlowParticipantAdd(rctx, fc.Args["flowId"].(string), fc.Args["entityId"].(string), fc.Args["entityType"].(model1.EntityType))
 		}
 
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
 			if err != nil {
-				var zeroVal *model.FlowContact
+				var zeroVal *model.FlowParticipant
 				return zeroVal, err
 			}
 			if ec.directives.HasRole == nil {
-				var zeroVal *model.FlowContact
+				var zeroVal *model.FlowParticipant
 				return zeroVal, errors.New("directive hasRole is not implemented")
 			}
 			return ec.directives.HasRole(ctx, nil, directive0, roles)
 		}
 		directive2 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.HasTenant == nil {
-				var zeroVal *model.FlowContact
+				var zeroVal *model.FlowParticipant
 				return zeroVal, errors.New("directive hasTenant is not implemented")
 			}
 			return ec.directives.HasTenant(ctx, nil, directive1)
@@ -61118,10 +61161,10 @@ func (ec *executionContext) _Mutation_flowContact_Add(ctx context.Context, field
 		if tmp == nil {
 			return nil, nil
 		}
-		if data, ok := tmp.(*model.FlowContact); ok {
+		if data, ok := tmp.(*model.FlowParticipant); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.FlowContact`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.FlowParticipant`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -61133,12 +61176,12 @@ func (ec *executionContext) _Mutation_flowContact_Add(ctx context.Context, field
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.FlowContact)
+	res := resTmp.(*model.FlowParticipant)
 	fc.Result = res
-	return ec.marshalNFlowContact2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFlowContact(ctx, field.Selections, res)
+	return ec.marshalNFlowParticipant2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFlowParticipant(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_flowContact_Add(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_flowParticipant_Add(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -61147,17 +61190,17 @@ func (ec *executionContext) fieldContext_Mutation_flowContact_Add(ctx context.Co
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "metadata":
-				return ec.fieldContext_FlowContact_metadata(ctx, field)
-			case "contact":
-				return ec.fieldContext_FlowContact_contact(ctx, field)
+				return ec.fieldContext_FlowParticipant_metadata(ctx, field)
+			case "entityType":
+				return ec.fieldContext_FlowParticipant_entityType(ctx, field)
+			case "entityId":
+				return ec.fieldContext_FlowParticipant_entityId(ctx, field)
 			case "status":
-				return ec.fieldContext_FlowContact_status(ctx, field)
-			case "scheduledAction":
-				return ec.fieldContext_FlowContact_scheduledAction(ctx, field)
-			case "scheduledAt":
-				return ec.fieldContext_FlowContact_scheduledAt(ctx, field)
+				return ec.fieldContext_FlowParticipant_status(ctx, field)
+			case "executions":
+				return ec.fieldContext_FlowParticipant_executions(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type FlowContact", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type FlowParticipant", field.Name)
 		},
 	}
 	defer func() {
@@ -61167,15 +61210,15 @@ func (ec *executionContext) fieldContext_Mutation_flowContact_Add(ctx context.Co
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_flowContact_Add_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_flowParticipant_Add_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_flowContact_AddBulk(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_flowContact_AddBulk(ctx, field)
+func (ec *executionContext) _Mutation_flowParticipant_AddBulk(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_flowParticipant_AddBulk(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -61189,7 +61232,7 @@ func (ec *executionContext) _Mutation_flowContact_AddBulk(ctx context.Context, f
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().FlowContactAddBulk(rctx, fc.Args["flowId"].(string), fc.Args["contactId"].([]string))
+			return ec.resolvers.Mutation().FlowParticipantAddBulk(rctx, fc.Args["flowId"].(string), fc.Args["entityIds"].([]string), fc.Args["entityType"].(model1.EntityType))
 		}
 
 		directive1 := func(ctx context.Context) (interface{}, error) {
@@ -61239,7 +61282,7 @@ func (ec *executionContext) _Mutation_flowContact_AddBulk(ctx context.Context, f
 	return ec.marshalNResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐResult(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_flowContact_AddBulk(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_flowParticipant_AddBulk(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -61260,15 +61303,15 @@ func (ec *executionContext) fieldContext_Mutation_flowContact_AddBulk(ctx contex
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_flowContact_AddBulk_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_flowParticipant_AddBulk_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_flowContact_Delete(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_flowContact_Delete(ctx, field)
+func (ec *executionContext) _Mutation_flowParticipant_Delete(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_flowParticipant_Delete(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -61282,7 +61325,7 @@ func (ec *executionContext) _Mutation_flowContact_Delete(ctx context.Context, fi
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().FlowContactDelete(rctx, fc.Args["id"].(string))
+			return ec.resolvers.Mutation().FlowParticipantDelete(rctx, fc.Args["id"].(string))
 		}
 
 		directive1 := func(ctx context.Context) (interface{}, error) {
@@ -61332,7 +61375,7 @@ func (ec *executionContext) _Mutation_flowContact_Delete(ctx context.Context, fi
 	return ec.marshalNResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐResult(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_flowContact_Delete(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_flowParticipant_Delete(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -61353,15 +61396,15 @@ func (ec *executionContext) fieldContext_Mutation_flowContact_Delete(ctx context
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_flowContact_Delete_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_flowParticipant_Delete_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_flowContact_DeleteBulk(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_flowContact_DeleteBulk(ctx, field)
+func (ec *executionContext) _Mutation_flowParticipant_DeleteBulk(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_flowParticipant_DeleteBulk(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -61375,7 +61418,7 @@ func (ec *executionContext) _Mutation_flowContact_DeleteBulk(ctx context.Context
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().FlowContactDeleteBulk(rctx, fc.Args["id"].([]string))
+			return ec.resolvers.Mutation().FlowParticipantDeleteBulk(rctx, fc.Args["id"].([]string))
 		}
 
 		directive1 := func(ctx context.Context) (interface{}, error) {
@@ -61425,7 +61468,7 @@ func (ec *executionContext) _Mutation_flowContact_DeleteBulk(ctx context.Context
 	return ec.marshalNResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐResult(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_flowContact_DeleteBulk(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_flowParticipant_DeleteBulk(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -61446,7 +61489,7 @@ func (ec *executionContext) fieldContext_Mutation_flowContact_DeleteBulk(ctx con
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_flowContact_DeleteBulk_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_flowParticipant_DeleteBulk_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -84231,10 +84274,10 @@ func (ec *executionContext) fieldContext_Query_flow(ctx context.Context, field g
 				return ec.fieldContext_Flow_nodes(ctx, field)
 			case "edges":
 				return ec.fieldContext_Flow_edges(ctx, field)
+			case "firstStartedAt":
+				return ec.fieldContext_Flow_firstStartedAt(ctx, field)
 			case "status":
 				return ec.fieldContext_Flow_status(ctx, field)
-			case "contacts":
-				return ec.fieldContext_Flow_contacts(ctx, field)
 			case "participants":
 				return ec.fieldContext_Flow_participants(ctx, field)
 			case "senders":
@@ -84342,10 +84385,10 @@ func (ec *executionContext) fieldContext_Query_flows(_ context.Context, field gr
 				return ec.fieldContext_Flow_nodes(ctx, field)
 			case "edges":
 				return ec.fieldContext_Flow_edges(ctx, field)
+			case "firstStartedAt":
+				return ec.fieldContext_Flow_firstStartedAt(ctx, field)
 			case "status":
 				return ec.fieldContext_Flow_status(ctx, field)
-			case "contacts":
-				return ec.fieldContext_Flow_contacts(ctx, field)
 			case "participants":
 				return ec.fieldContext_Flow_participants(ctx, field)
 			case "senders":
@@ -84380,18 +84423,18 @@ func (ec *executionContext) _Query_flowParticipant(ctx context.Context, field gr
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
 			if err != nil {
-				var zeroVal *model.FlowContact
+				var zeroVal *model.FlowParticipant
 				return zeroVal, err
 			}
 			if ec.directives.HasRole == nil {
-				var zeroVal *model.FlowContact
+				var zeroVal *model.FlowParticipant
 				return zeroVal, errors.New("directive hasRole is not implemented")
 			}
 			return ec.directives.HasRole(ctx, nil, directive0, roles)
 		}
 		directive2 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.HasTenant == nil {
-				var zeroVal *model.FlowContact
+				var zeroVal *model.FlowParticipant
 				return zeroVal, errors.New("directive hasTenant is not implemented")
 			}
 			return ec.directives.HasTenant(ctx, nil, directive1)
@@ -84404,10 +84447,10 @@ func (ec *executionContext) _Query_flowParticipant(ctx context.Context, field gr
 		if tmp == nil {
 			return nil, nil
 		}
-		if data, ok := tmp.(*model.FlowContact); ok {
+		if data, ok := tmp.(*model.FlowParticipant); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.FlowContact`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.FlowParticipant`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -84419,9 +84462,9 @@ func (ec *executionContext) _Query_flowParticipant(ctx context.Context, field gr
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.FlowContact)
+	res := resTmp.(*model.FlowParticipant)
 	fc.Result = res
-	return ec.marshalNFlowContact2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFlowContact(ctx, field.Selections, res)
+	return ec.marshalNFlowParticipant2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFlowParticipant(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_flowParticipant(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -84433,17 +84476,17 @@ func (ec *executionContext) fieldContext_Query_flowParticipant(ctx context.Conte
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "metadata":
-				return ec.fieldContext_FlowContact_metadata(ctx, field)
-			case "contact":
-				return ec.fieldContext_FlowContact_contact(ctx, field)
+				return ec.fieldContext_FlowParticipant_metadata(ctx, field)
+			case "entityType":
+				return ec.fieldContext_FlowParticipant_entityType(ctx, field)
+			case "entityId":
+				return ec.fieldContext_FlowParticipant_entityId(ctx, field)
 			case "status":
-				return ec.fieldContext_FlowContact_status(ctx, field)
-			case "scheduledAction":
-				return ec.fieldContext_FlowContact_scheduledAction(ctx, field)
-			case "scheduledAt":
-				return ec.fieldContext_FlowContact_scheduledAt(ctx, field)
+				return ec.fieldContext_FlowParticipant_status(ctx, field)
+			case "executions":
+				return ec.fieldContext_FlowParticipant_executions(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type FlowContact", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type FlowParticipant", field.Name)
 		},
 	}
 	defer func() {
@@ -109449,47 +109492,13 @@ func (ec *executionContext) _Flow(ctx context.Context, sel ast.SelectionSet, obj
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
+		case "firstStartedAt":
+			out.Values[i] = ec._Flow_firstStartedAt(ctx, field, obj)
 		case "status":
 			out.Values[i] = ec._Flow_status(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
-		case "contacts":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Flow_contacts(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
-				return res
-			}
-
-			if field.Deferrable != nil {
-				dfs, ok := deferred[field.Deferrable.Label]
-				di := 0
-				if ok {
-					dfs.AddField(field)
-					di = len(dfs.Values) - 1
-				} else {
-					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
-					deferred[field.Deferrable.Label] = dfs
-				}
-				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
-					return innerFunc(ctx, dfs)
-				})
-
-				// don't run the out.Concurrently() call below
-				out.Values[i] = graphql.Null
-				continue
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "participants":
 			field := field
 
@@ -113396,30 +113405,30 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "flowContact_Add":
+		case "flowParticipant_Add":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_flowContact_Add(ctx, field)
+				return ec._Mutation_flowParticipant_Add(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "flowContact_AddBulk":
+		case "flowParticipant_AddBulk":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_flowContact_AddBulk(ctx, field)
+				return ec._Mutation_flowParticipant_AddBulk(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "flowContact_Delete":
+		case "flowParticipant_Delete":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_flowContact_Delete(ctx, field)
+				return ec._Mutation_flowParticipant_Delete(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "flowContact_DeleteBulk":
+		case "flowParticipant_DeleteBulk":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_flowContact_DeleteBulk(ctx, field)
+				return ec._Mutation_flowParticipant_DeleteBulk(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -121579,67 +121588,29 @@ func (ec *executionContext) marshalNFlowActionType2githubᚗcomᚋopenlineᚑai�
 	return res
 }
 
-func (ec *executionContext) marshalNFlowContact2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFlowContact(ctx context.Context, sel ast.SelectionSet, v model.FlowContact) graphql.Marshaler {
-	return ec._FlowContact(ctx, sel, &v)
+func (ec *executionContext) unmarshalNFlowEntityType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐEntityType(ctx context.Context, v interface{}) (model1.EntityType, error) {
+	tmp, err := graphql.UnmarshalString(v)
+	res := model1.EntityType(tmp)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNFlowContact2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFlowContactᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.FlowContact) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNFlowContact2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFlowContact(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
-}
-
-func (ec *executionContext) marshalNFlowContact2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFlowContact(ctx context.Context, sel ast.SelectionSet, v *model.FlowContact) graphql.Marshaler {
-	if v == nil {
+func (ec *executionContext) marshalNFlowEntityType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐEntityType(ctx context.Context, sel ast.SelectionSet, v model1.EntityType) graphql.Marshaler {
+	res := graphql.MarshalString(string(v))
+	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
 		}
-		return graphql.Null
 	}
-	return ec._FlowContact(ctx, sel, v)
+	return res
 }
 
 func (ec *executionContext) unmarshalNFlowMergeInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFlowMergeInput(ctx context.Context, v interface{}) (model.FlowMergeInput, error) {
 	res, err := ec.unmarshalInputFlowMergeInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNFlowParticipant2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFlowParticipant(ctx context.Context, sel ast.SelectionSet, v model.FlowParticipant) graphql.Marshaler {
+	return ec._FlowParticipant(ctx, sel, &v)
 }
 
 func (ec *executionContext) marshalNFlowParticipant2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFlowParticipantᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.FlowParticipant) graphql.Marshaler {

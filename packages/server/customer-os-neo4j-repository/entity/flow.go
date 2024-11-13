@@ -16,7 +16,8 @@ type FlowEntity struct {
 	Nodes string
 	Edges string
 
-	Status FlowStatus
+	FirstStartedAt *time.Time
+	Status         FlowStatus
 
 	// Statistics
 
@@ -92,9 +93,8 @@ type FlowSenderEntities []FlowSenderEntity
 type FlowStatus string
 
 const (
-	FlowStatusInactive FlowStatus = "INACTIVE"
-	FlowStatusActive   FlowStatus = "ACTIVE"
-	FlowStatusPaused   FlowStatus = "PAUSED"
+	FlowStatusOff      FlowStatus = "OFF"
+	FlowStatusOn       FlowStatus = "ON"
 	FlowStatusArchived FlowStatus = "ARCHIVED"
 )
 

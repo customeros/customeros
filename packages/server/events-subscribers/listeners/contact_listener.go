@@ -18,9 +18,6 @@ import (
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	enrichmentmodel "github.com/openline-ai/openline-customer-os/packages/server/enrichment-api/model"
-	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
-	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
-	locationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/location"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-subscribers/constants"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -362,43 +359,55 @@ func (c *contactListenerImpl) enrichContactWithScrapInEnrichDetails(ctx context.
 			tracing.TraceErr(span, errors.Wrap(err, "ExtractAndEnrichLocation"))
 		}
 		if contactLocation != nil {
-			tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-			_, err := utils.CallEventsPlatformGRPCWithRetry[*locationpb.LocationIdGrpcResponse](func() (*locationpb.LocationIdGrpcResponse, error) {
-				return c.services.GrpcClients.ContactClient.AddLocation(ctx, &contactpb.ContactAddLocationGrpcRequest{
-					ContactId: contact.Id,
-					Tenant:    tenant,
-					SourceFields: &commonpb.SourceFields{
-						Source:    constants.SourceOpenline,
-						AppSource: constants.AppScrapin,
-					},
-					LocationDetails: &locationpb.LocationDetails{
-						RawAddress:    scrapinContactResponse.Person.Location,
-						Country:       contactLocation.Country,
-						CountryCodeA2: contactLocation.CountryCodeA2,
-						CountryCodeA3: contactLocation.CountryCodeA3,
-						Region:        contactLocation.Region,
-						Locality:      contactLocation.Locality,
-						AddressLine1:  contactLocation.Address,
-						AddressLine2:  contactLocation.Address2,
-						ZipCode:       contactLocation.Zip,
-						AddressType:   contactLocation.AddressType,
-						HouseNumber:   contactLocation.HouseNumber,
-						PostalCode:    contactLocation.PostalCode,
-						Commercial:    contactLocation.Commercial,
-						Predirection:  contactLocation.Predirection,
-						District:      contactLocation.District,
-						Street:        contactLocation.Street,
-						Latitude:      utils.FloatToString(contactLocation.Latitude),
-						Longitude:     utils.FloatToString(contactLocation.Longitude),
-						TimeZone:      contactLocation.TimeZone,
-						UtcOffset:     contactLocation.UtcOffset,
-					},
-				})
-			})
-			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "ContactClient.AddLocationToContact"))
-				c.log.Errorf("Error adding location to contact: %s", err.Error())
+
+			data := neo4jrepository.LocationCreateFields{
+				RawAddress: scrapinContactResponse.Person.Location,
+				CreatedAt:  utils.Now(),
+				SourceFields: neo4jmodel.SourceFields{
+					Source:    constants.SourceOpenline,
+					AppSource: constants.AppScrapin,
+				},
+				AddressDetails: neo4jrepository.AddressDetails{
+					Latitude:      contactLocation.Latitude,
+					Longitude:     contactLocation.Longitude,
+					Country:       contactLocation.Country,
+					CountryCodeA2: contactLocation.CountryCodeA2,
+					CountryCodeA3: contactLocation.CountryCodeA3,
+					Region:        contactLocation.Region,
+					District:      contactLocation.District,
+					Locality:      contactLocation.Locality,
+					Street:        contactLocation.Street,
+					Address:       contactLocation.Address,
+					Address2:      contactLocation.Address2,
+					Zip:           contactLocation.Zip,
+					AddressType:   contactLocation.AddressType,
+					HouseNumber:   contactLocation.HouseNumber,
+					PostalCode:    contactLocation.PostalCode,
+					PlusFour:      contactLocation.PlusFour,
+					Commercial:    contactLocation.Commercial,
+					Predirection:  contactLocation.Predirection,
+					TimeZone:      contactLocation.TimeZone,
+					UtcOffset:     contactLocation.UtcOffset,
+				},
 			}
+
+			locationId, err := c.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelLocation)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return err
+			}
+
+			err = c.services.Neo4jRepositories.LocationWriteRepository.CreateLocation(ctx, tenant, locationId, data)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return err
+			}
+			err = c.services.Neo4jRepositories.LocationWriteRepository.LinkWithContact(ctx, tenant, contact.Id, locationId)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return err
+			}
+
 			// update timezone on contact
 			if contact.Timezone != "" && contactLocation.TimeZone != "" {
 				updateContact = true
