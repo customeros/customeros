@@ -29,6 +29,11 @@ type TenantAndContactId struct {
 	FieldStr1 string
 }
 
+type TenantAndContact struct {
+	Tenant  string
+	Contact *dbtype.Node
+}
+
 type ContactReadRepository interface {
 	GetContact(ctx context.Context, tenant, contactId string) (*dbtype.Node, error)
 	GetContactsEnrichedNotLinkedToOrganization(ctx context.Context) ([]TenantAndContactId, error)
@@ -42,6 +47,7 @@ type ContactReadRepository interface {
 	GetLinkedOrgDomains(ctx context.Context, tenant, contactId string) ([]string, error)
 	GetContactsWithGroupOrSystemGeneratedEmail(ctx context.Context, limit int) ([]TenantAndContactId, error)
 	GetContactsWithEmailForNameUpdate(ctx context.Context, limit int) ([]TenantAndContactId, error)
+	GetContactsToCheck(ctx context.Context, minutesSinceLastUpdate, hoursSinceLastCheck, limit int) ([]TenantAndContact, error)
 	GetContactsByLinkedIn(ctx context.Context, tenant, url, alias, externalId string) ([]*dbtype.Node, error)
 }
 
@@ -602,6 +608,54 @@ func (r *contactReadRepository) GetContactsWithEmailForNameUpdate(ctx context.Co
 				Tenant:    v.Values[0].(string),
 				ContactId: v.Values[1].(string),
 				FieldStr1: v.Values[2].(string),
+			})
+	}
+	span.LogFields(log.Int("result.count", len(output)))
+	return output, nil
+}
+
+func (r *contactReadRepository) GetContactsToCheck(ctx context.Context, minutesFromLastUpdate, hoursFromLastCheck, limit int) ([]TenantAndContact, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactReadRepository.GetContactsToCheck")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+	span.LogFields(log.Int("limit", limit))
+	span.LogFields(log.Int("minutesFromLastUpdate", minutesFromLastUpdate))
+	span.LogFields(log.Int("hoursFromLastCheck", hoursFromLastCheck))
+
+	cypher := `MATCH (t:Tenant {active:true})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)
+				WHERE
+					(c.hide IS NULL OR c.hide = false) AND
+					(c.techCheckedAt IS NULL OR c.checkedAt < datetime() - duration({hours: $hoursFromLastCheck})) AND
+					c.updatedAt < datetime() - duration({minutes: $minutesFromLastUpdate})
+					ORDER BY CASE WHEN c.techCheckedAt IS NULL THEN 0 ELSE 1 END, c.techCheckedAt ASC
+				RETURN tenant, c LIMIT $limit`
+	params := map[string]any{
+		"limit":                 limit,
+		"minutesFromLastUpdate": minutesFromLastUpdate,
+		"hoursFromLastCheck":    hoursFromLastCheck,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return queryResult.Collect(ctx)
+	})
+	if err != nil {
+		return nil, err
+	}
+	output := make([]TenantAndContact, 0)
+	for _, v := range records.([]*neo4j.Record) {
+		output = append(output,
+			TenantAndContact{
+				Tenant:  v.Values[0].(string),
+				Contact: v.Values[1].(*dbtype.Node),
 			})
 	}
 	span.LogFields(log.Int("result.count", len(output)))

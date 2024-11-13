@@ -26,6 +26,11 @@ type TenantAndOrganizationIdExtended struct {
 	Param1         string
 }
 
+type TenantAndOrganization struct {
+	Tenant       string
+	Organization *dbtype.Node
+}
+
 type OrganizationReadRepository interface {
 	CountByTenant(ctx context.Context, tenant string) (int64, error)
 	GetOrganization(ctx context.Context, tenant, organizationId string) (*dbtype.Node, error)
@@ -54,6 +59,7 @@ type OrganizationReadRepository interface {
 	GetHiddenOrganizationIds(ctx context.Context, tenant string, hiddenAfter time.Time) ([]string, error)
 	GetMergedOrganizationIds(ctx context.Context, tenant string, mergedAfter time.Time) ([]string, error)
 	GetOrganizationsWithEmail(ctx context.Context, tenant, email string) ([]*dbtype.Node, error)
+	GetOrganizationsToCheck(ctx context.Context, minutesSinceLastUpdate, hoursSinceLastCheck, limit int) ([]TenantAndOrganization, error)
 }
 
 type organizationReadRepository struct {
@@ -1270,4 +1276,52 @@ func (r *organizationReadRepository) GetOrganizationsWithEmail(ctx context.Conte
 	}
 	span.LogFields(log.Int("result.count", len(result.([]*dbtype.Node))))
 	return result.([]*dbtype.Node), err
+}
+
+func (r *organizationReadRepository) GetOrganizationsToCheck(ctx context.Context, minutesFromLastUpdate, hoursFromLastCheck, limit int) ([]TenantAndOrganization, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganizationsToCheck")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+	span.LogFields(log.Int("limit", limit))
+	span.LogFields(log.Int("minutesFromLastUpdate", minutesFromLastUpdate))
+	span.LogFields(log.Int("hoursFromLastCheck", hoursFromLastCheck))
+
+	cypher := `MATCH (t:Tenant {active:true})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)
+				WHERE
+					(o.hide IS NULL OR o.hide = false) AND
+					(o.techCheckedAt IS NULL OR o.checkedAt < datetime() - duration({hours: $hoursFromLastCheck})) AND
+					o.updatedAt < datetime() - duration({minutes: $minutesFromLastUpdate})
+					ORDER BY CASE WHEN o.techCheckedAt IS NULL THEN 0 ELSE 1 END, o.techCheckedAt ASC
+				RETURN tenant, o LIMIT $limit`
+	params := map[string]any{
+		"limit":                 limit,
+		"minutesFromLastUpdate": minutesFromLastUpdate,
+		"hoursFromLastCheck":    hoursFromLastCheck,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return queryResult.Collect(ctx)
+	})
+	if err != nil {
+		return nil, err
+	}
+	output := make([]TenantAndOrganization, 0)
+	for _, v := range records.([]*neo4j.Record) {
+		output = append(output,
+			TenantAndOrganization{
+				Tenant:       v.Values[0].(string),
+				Organization: v.Values[1].(*dbtype.Node),
+			})
+	}
+	span.LogFields(log.Int("result.count", len(output)))
+	return output, nil
 }

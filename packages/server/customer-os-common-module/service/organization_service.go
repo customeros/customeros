@@ -21,7 +21,6 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-	"strings"
 	"time"
 )
 
@@ -216,18 +215,6 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 	// Clean and update organization name if not updated manually
 	if common.GetAppSourceFromContext(ctx) != constants.AppSourceCustomerOsApi {
 		if input.UpdateName {
-			// TODO move this into upkeeper
-			legalEntities := []string{
-				"llc", "ltd", "inc", "corp", "corporation", "incorporated", "limited",
-				"company", "co", "plc", "gmbh", "bv", "nv", "sa", "ag", "pty", "ptd",
-				"holdings", "group", "lp", "llp", "l.l.c.", "l.l.p.", "s.a.", "n.v.",
-				"b.v.", "a.g.", "p.t.y.", "p.t.d.", "pty. ltd.", "pty ltd",
-			}
-			// Remove legal entities from the end of the name
-			for _, legalEntity := range legalEntities {
-				input.Name = strings.TrimSuffix(input.Name, " "+legalEntity)
-			}
-
 			input.Name = utils.CleanName(input.Name)
 		}
 	}
