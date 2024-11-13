@@ -60,7 +60,8 @@ export const EmailSettingsPanel = observer(() => {
     ui.commandMenu.setCallback(handleSave);
 
     const isSubjectChanged = subject !== data?.subject;
-    const plainTextBodyBefore = extractPlainText(data?.bodyTemplate)?.trim();
+    const plainTextBodyBefore =
+      data?.bodyTemplate && extractPlainText(data?.bodyTemplate)?.trim();
     const plainTextBody = extractPlainText(bodyTemplate)?.trim();
 
     if (isSubjectChanged || plainTextBodyBefore !== plainTextBody) {
@@ -245,7 +246,7 @@ export const EmailSettingsPanel = observer(() => {
       <EmailEditorModal
         flowName={flow}
         subject={subject}
-        action={data.action}
+        action={data?.action}
         variables={variables}
         setSubject={setSubject}
         handleSave={handleSave}

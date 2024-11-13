@@ -1,12 +1,22 @@
 import { Node } from '@xyflow/react';
+import { FlowActionType } from '@store/Flows/types';
 import { runInAction, makeAutoObservable } from 'mobx';
 
 export type FlowStepCommandMenuType = 'EmailAction';
 
 export type Context = {
   id: string;
-  node: Node | null;
   hasUnsavedChanges?: boolean;
+  node:
+    | (Node & {
+        data: {
+          subject: string;
+          isEditing?: boolean;
+          bodyTemplate: string;
+          action: FlowActionType;
+        };
+      })
+    | null;
 };
 
 const makeDefaultContext = () => ({

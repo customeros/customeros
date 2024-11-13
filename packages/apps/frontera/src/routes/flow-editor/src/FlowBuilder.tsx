@@ -417,6 +417,7 @@ export const FlowBuilder = observer(
                 type: 'EmailAction',
                 context: {
                   id: node.id,
+                  // @ts-expect-error to do improve types on flowActionSidePanel
                   node: node,
                 },
               });
