@@ -20,8 +20,8 @@ interface EmailEditorModalProps {
   placeholder: string;
   bodyTemplate: string;
   isEditorOpen: boolean;
-  action: FlowActionType;
   handleSave: () => void;
+  action?: FlowActionType;
   handleCancel: () => void;
   variables?: Array<EmailVariableName>;
   setSubject: (subject: string) => void;
