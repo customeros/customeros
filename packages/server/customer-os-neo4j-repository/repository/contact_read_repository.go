@@ -573,15 +573,13 @@ func (r *contactReadRepository) GetContactsWithEmailForNameUpdate(ctx context.Co
 	cypher := `MATCH (t:Tenant {active:true})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)-[:HAS]->(e:Email)
 				WHERE
 					(c.hide IS NULL OR c.hide = false) AND
-					c.enrichedAt IS NULL AND
 					(c.firstName IS NULL OR c.firstName = '') AND
 					(c.lastName IS NULL OR c.lastName = '') AND
 					(c.name IS NULL OR c.name = '') AND
-					e.isRoleAccount = false AND
-					e.isSystemGenerated = false AND
-					(e.username IS NOT NULL AND e.username <> '') AND
-					c.updatedAt < datetime() - duration({minutes: 1})
-				RETURN DISTINCT t.name, c.id, e.username LIMIT $limit`
+					e.email IS NOT NULL AND 
+					e.email <> '' AND 
+					c.updatedAt < datetime() - duration({minutes: 3})
+				RETURN DISTINCT t.name, c.id, e.email LIMIT $limit`
 	params := map[string]any{
 		"limit": limit,
 	}

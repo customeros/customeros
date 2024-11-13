@@ -1,9 +1,7 @@
 package entity
 
 import (
-	"github.com/forPelevin/gomoji"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"strings"
 	"time"
 )
@@ -139,43 +137,6 @@ func (c ContactEntity) DeriveFirstAndLastNames() (string, string) {
 			firstName = parts[0]
 			lastName = strings.Join(parts[1:], " ")
 		}
-	}
-
-	return firstName, lastName
-}
-
-func (c ContactEntity) GetNamesFromString(input string) (string, string) {
-	firstName := ""
-	lastName := ""
-	specialChars := []string{" ", ".", "-", "_", "+", "=", ","}
-
-	// Trim spaces
-	input = gomoji.RemoveEmojis(input)
-	input = strings.TrimSpace(input)
-
-	if input != "" {
-		// Find the position of the first occurrence of any special character
-		splitPos := -1
-		for _, char := range specialChars {
-			if pos := strings.Index(input, char); pos != -1 {
-				if splitPos == -1 || pos < splitPos {
-					splitPos = pos
-				}
-			}
-		}
-
-		if splitPos == -1 {
-			// No special characters, treat input as a single word (set as first name)
-			firstName = input
-		} else {
-			// Split input at the first special character
-			firstName = input[:splitPos]
-			lastName = strings.TrimSpace(input[splitPos+1:])
-		}
-
-		// Apply Camel case to both names
-		firstName = utils.ToCamelCase(firstName)
-		lastName = utils.ToCamelCase(lastName)
 	}
 
 	return firstName, lastName

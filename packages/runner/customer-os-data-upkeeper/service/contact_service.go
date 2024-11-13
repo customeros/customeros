@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/customeros/mailsherpa/emailparser"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/constants"
@@ -69,7 +70,7 @@ func (s *contactService) UpkeepContacts() {
 	s.removeDuplicatedSocials(ctx)
 	s.hideContactsWithGroupOrSystemGeneratedEmail(ctx)
 	s.checkContacts(ctx)
-	s.updateContactNamesFromEmails(ctx) // TODO refactor
+	s.updateContactNamesFromEmails(ctx)
 }
 
 func (s *contactService) removeEmptySocials(ctx context.Context) {
@@ -348,27 +349,31 @@ func (s *contactService) updateContactNamesFromEmails(ctx context.Context) {
 				AppSource: constants.AppSourceDataUpkeeper,
 			})
 
-			firstName, lastName := neo4jentity.ContactEntity{}.GetNamesFromString(record.FieldStr1)
-			if firstName == "" && lastName == "" {
-				err = errors.New("cannot derive names from email")
+			parsedEmail, err := emailparser.Parse(record.FieldStr1)
+			if err != nil {
 				tracing.TraceErr(span, err)
-				s.log.Errorf("Error updating contact {%s}: %s", record.ContactId, err.Error())
+				s.log.Errorf("Error parsing email {%s}: %s", record.FieldStr1, err.Error())
 				continue
 			}
 
+			saveContact := false
 			contactFields := neo4jrepository.ContactFields{}
-			if firstName != "" {
-				contactFields.FirstName = firstName
+			if parsedEmail.FirstName != "" {
+				contactFields.FirstName = utils.CleanName(parsedEmail.FirstName)
 				contactFields.UpdateFirstName = true
+				saveContact = true
 			}
-			if lastName != "" {
-				contactFields.LastName = lastName
+			if parsedEmail.LastName != "" {
+				contactFields.LastName = utils.CleanName(parsedEmail.LastName)
 				contactFields.UpdateLastName = true
+				saveContact = true
 			}
-			_, err = s.commonServices.ContactService.SaveContact(innerCtx, &record.ContactId, contactFields, "", neo4jmodel.ExternalSystem{})
-			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "ContactService.SaveContact"))
-				s.log.Errorf("Error updating contact {%s}: %s", record.ContactId, err.Error())
+			if saveContact {
+				_, err = s.commonServices.ContactService.SaveContact(innerCtx, &record.ContactId, contactFields, "", neo4jmodel.ExternalSystem{})
+				if err != nil {
+					tracing.TraceErr(span, errors.Wrap(err, "ContactService.SaveContact"))
+					s.log.Errorf("Error updating contact {%s}: %s", record.ContactId, err.Error())
+				}
 			}
 		}
 
