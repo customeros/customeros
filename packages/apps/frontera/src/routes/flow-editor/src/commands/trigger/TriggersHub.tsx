@@ -45,7 +45,7 @@ export const TriggersHub = observer(() => {
           updateSelectedNode('RecordAddedManually');
         }}
       >
-        Record is added to this flow...
+        Record is added to this flow
       </CommandItem>
 
       <ContactAddedManuallySubItem />
