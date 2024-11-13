@@ -47,6 +47,7 @@ export const contactsOptionsMap: Record<InvoicesColumnType | string, string> = {
   [ColumnViewType.ContactsFlows]: 'Current Flows',
   [ColumnViewType.ContactsPrimaryEmail]: 'Primary Email',
   [ColumnViewType.ContactsFlowStatus]: 'Status in Flow',
+  [ColumnViewType.ContactsFlowNextAction]: 'Next Flow Action',
 };
 
 export const invoicesHelperTextMap: Record<
@@ -166,6 +167,7 @@ export const contactsHelperTextMap: Record<string, string> = {
   [ColumnViewType.ContactsFlows]: 'E.g. Education',
   [ColumnViewType.ContactsPersonalEmails]: 'E.g. steph@convoy.com',
   [ColumnViewType.ContactsFlowStatus]: 'E.g. Completed',
+  [ColumnViewType.ContactsFlowNextAction]: ' E.g. Step 2/3',
 };
 
 export const contractsMap: Record<string, string> = {
