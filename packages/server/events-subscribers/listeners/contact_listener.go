@@ -331,12 +331,12 @@ func (c *contactListenerImpl) enrichContactWithScrapInEnrichDetails(ctx context.
 
 	updateContact := false
 	contactFields := neo4jrepository.ContactFields{}
-	if strings.TrimSpace(contact.FirstName) == "" && scrapinContactResponse.Person.FirstName != "" {
+	if scrapinContactResponse.Person.FirstName != "" {
 		updateContact = true
 		contactFields.FirstName = scrapinContactResponse.Person.FirstName
 		contactFields.UpdateFirstName = true
 	}
-	if strings.TrimSpace(contact.LastName) == "" && scrapinContactResponse.Person.LastName != "" {
+	if scrapinContactResponse.Person.LastName != "" {
 		updateContact = true
 		contactFields.LastName = scrapinContactResponse.Person.LastName
 		contactFields.UpdateLastName = true
