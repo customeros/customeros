@@ -69,7 +69,7 @@ func (r *flowWriteRepositoryImpl) Merge(ctx context.Context, tx *neo4j.ManagedTr
 		"name":           entity.Name,
 		"nodes":          entity.Nodes,
 		"edges":          entity.Edges,
-		"firstStartedAt": entity.FirstStartedAt,
+		"firstStartedAt": utils.TimePtrAsAny(entity.FirstStartedAt),
 		"status":         entity.Status,
 		"createdAt":      utils.NowIfZero(entity.CreatedAt),
 		"updatedAt":      utils.NowIfZero(entity.UpdatedAt),
