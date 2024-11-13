@@ -44,6 +44,9 @@ query getFlows {
         error
         action {
           action
+          metadata {
+            id
+          }
         }
       }
       metadata {

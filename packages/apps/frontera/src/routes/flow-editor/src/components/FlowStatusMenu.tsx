@@ -153,6 +153,7 @@ export const FlowStatusMenu = observer(
 
       store.ui.commandMenu.toggle('StartFlow', {
         ...store.ui.commandMenu.context,
+        ids: [id],
         meta: {
           type: status,
           hasUnsavedChanges,
@@ -211,7 +212,12 @@ export const FlowStatusMenu = observer(
             <MenuItem
               className='flex items-center '
               data-test='stop-flow-menu-button'
-              onClick={() => store.ui.commandMenu.toggle('StopFlow')}
+              onClick={() =>
+                store.ui.commandMenu.toggle('StopFlow', {
+                  ids: [id],
+                  entity: 'Flow',
+                })
+              }
             >
               <PauseCircle className='mr-1 text-gray-500' />
               Pause flow...

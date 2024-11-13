@@ -42,7 +42,11 @@ export type GetFlowsQuery = {
         executedAt?: any | null;
         error?: string | null;
         metadata: { __typename?: 'Metadata'; id: string };
-        action: { __typename?: 'FlowAction'; action: Types.FlowActionType };
+        action: {
+          __typename?: 'FlowAction';
+          action: Types.FlowActionType;
+          metadata: { __typename?: 'Metadata'; id: string };
+        };
       }>;
       metadata: { __typename?: 'Metadata'; id: string };
     }>;
