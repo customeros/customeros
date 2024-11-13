@@ -26,6 +26,7 @@ const (
 	ContactPropertyFindMobilePhoneWithBetterContactCompletedAt ContactProperty = "techFindMobilePhoneWithBetterContactCompletedAt"
 	ContactPropertyFindMobilePhoneWithBetterContactFound       ContactProperty = "techFindMobilePhoneWithBetterContactFound"
 	ContactPropertyUpdateWithWorkEmailRequestedAt              ContactProperty = "techUpdateWithWorkEmailRequestedAt"
+	ContactPropertyCheckedAt                                   ContactProperty = "techCheckedAt"
 	ContactPropertyPrefix                                      ContactProperty = "prefix"
 	ContactPropertyName                                        ContactProperty = "name"
 	ContactPropertyFirstName                                   ContactProperty = "firstName"
@@ -68,6 +69,7 @@ type ContactEntity struct {
 type ContactInternalFields struct {
 	UpdateWithWorkEmailRequestedAt *time.Time
 	HiddenAt                       *time.Time
+	CheckedAt                      *time.Time
 }
 
 type ContactEnrichDetails struct {

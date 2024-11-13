@@ -111,6 +111,19 @@ func (s *contactService) SaveContact(ctx context.Context, id *string, contactFie
 	}
 	tracing.TagEntity(span, contactId)
 
+	// Clean and update contact names if not updated manually
+	if common.GetAppSourceFromContext(ctx) != constants.AppSourceCustomerOsApi {
+		if contactFields.UpdateName {
+			contactFields.Name = utils.CleanName(contactFields.Name)
+		}
+		if contactFields.UpdateFirstName {
+			contactFields.FirstName = utils.CleanName(contactFields.FirstName)
+		}
+		if contactFields.UpdateLastName {
+			contactFields.LastName = utils.CleanName(contactFields.LastName)
+		}
+	}
+
 	_, err = utils.ExecuteWriteInTransaction(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, nil, func(tx neo4j.ManagedTransaction) (any, error) {
 		innerErr := s.services.Neo4jRepositories.ContactWriteRepository.SaveContactInTx(ctx, &tx, tenant, contactId, contactFields)
 		if innerErr != nil {

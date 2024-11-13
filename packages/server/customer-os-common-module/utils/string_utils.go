@@ -239,3 +239,35 @@ func ToCamelCase(input string) string {
 	}
 	return strings.ToUpper(string(input[0])) + strings.ToLower(input[1:])
 }
+
+func CleanName(input string) string {
+	if input == "" {
+		return input
+	}
+	output := input
+	output = strings.ReplaceAll(output, "\n", "")
+	output = strings.ReplaceAll(output, "\r", "")
+	output = strings.ReplaceAll(output, "\t", "")
+	output = strings.ReplaceAll(output, "\v", "")
+	output = strings.ReplaceAll(output, "\f", "")
+
+	// replace special characters
+	specialChars := []string{
+		"®", "™", "©", "℠", "&amp;", "&", "@", "!", "?", "*", "#",
+		"(", ")", "[", "]", "{", "}", "|", "\\", "/", "+", "=",
+	}
+	for _, char := range specialChars {
+		output = strings.ReplaceAll(output, char, "")
+	}
+
+	// Remove emojis
+	output = gomoji.RemoveEmojis(output)
+
+	// Remove non-ASCII characters
+	output = SanitizeUTF8(output)
+
+	// Capitalize the first letter of each word
+	output = CapitalizeAllParts(output, []string{" "})
+
+	return output
+}

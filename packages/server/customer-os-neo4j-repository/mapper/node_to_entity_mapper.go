@@ -284,6 +284,7 @@ func MapDbNodeToOrganizationEntity(dbNode *dbtype.Node) *entity.OrganizationEnti
 		OrganizationInternalFields: entity.OrganizationInternalFields{
 			DomainCheckedAt:   utils.GetTimePropOrNil(props, string(entity.OrganizationPropertyDomainCheckedAt)),
 			IndustryCheckedAt: utils.GetTimePropOrNil(props, string(entity.OrganizationPropertyIndustryCheckedAt)),
+			CheckedAt:         utils.GetTimePropOrNil(props, string(entity.OrganizationPropertyCheckedAt)),
 			HiddenAt:          utils.GetTimePropOrNil(props, string(entity.OrganizationPropertyHiddenAt)),
 		},
 		EventStoreAggregate: entity.EventStoreAggregate{
@@ -926,7 +927,9 @@ func MapDbNodeToContactEntity(dbNode *dbtype.Node) *entity.ContactEntity {
 		EventStoreAggregate: entity.EventStoreAggregate{
 			AggregateVersion: utils.GetInt64PropOrNil(props, "aggregateVersion"),
 		},
-		ContactInternalFields: entity.ContactInternalFields{},
+		ContactInternalFields: entity.ContactInternalFields{
+			CheckedAt: utils.GetTimePropOrNil(props, string(entity.ContactPropertyCheckedAt)),
+		},
 		EnrichDetails: entity.ContactEnrichDetails{
 			EnrichRequestedAt:         utils.GetTimePropOrNil(props, string(entity.ContactPropertyEnrichRequestedAt)),
 			EnrichedAt:                utils.GetTimePropOrNil(props, string(entity.ContactPropertyEnrichedAt)),
