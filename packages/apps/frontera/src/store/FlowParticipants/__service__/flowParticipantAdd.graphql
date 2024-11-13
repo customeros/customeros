@@ -1,0 +1,7 @@
+mutation flowParticipantAdd($flowId: ID!, $entityId: ID!, $entityType: FlowEntityType!) {
+  flowParticipant_Add(flowId: $flowId, entityId: $entityId, entityType: $entityType) {
+    metadata {
+      id
+    }
+  }
+}

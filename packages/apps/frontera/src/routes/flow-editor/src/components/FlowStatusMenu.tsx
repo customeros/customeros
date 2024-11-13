@@ -4,14 +4,12 @@ import { observer } from 'mobx-react-lite';
 import { useReactFlow } from '@xyflow/react';
 import { FlowActionType } from '@store/Flows/types.ts';
 
-import { cn } from '@ui/utils/cn.ts';
 import { FlowStatus } from '@graphql/types';
 import { Play } from '@ui/media/icons/Play';
 import { Spinner } from '@ui/feedback/Spinner';
 import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
 import { DotLive } from '@ui/media/icons/DotLive';
-import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { PauseCircle } from '@ui/media/icons/PauseCircle';
 import { Tag, TagLabel, TagLeftIcon } from '@ui/presentation/Tag';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
@@ -128,7 +126,7 @@ export const FlowStatusMenu = observer(
           onSuccess: () => {
             onToggleHasChanges(false);
             flow?.update((f) => {
-              f.status = FlowStatus.Scheduling;
+              f.status = FlowStatus.On;
 
               return f;
             });
@@ -162,45 +160,30 @@ export const FlowStatusMenu = observer(
       });
     };
 
-    if (status !== FlowStatus.Active) {
+    if (status !== FlowStatus.On) {
       return (
-        <Tooltip
-          label={
-            status === FlowStatus.Scheduling
-              ? 'We’re scheduling this flow’s contacts'
-              : ''
-          }
-        >
-          <div>
-            <Button
-              size='xs'
-              variant='outline'
-              leftIcon={<Play />}
-              dataTest='start-flow'
-              loadingText='Scheduling...'
-              isLoading={status === FlowStatus.Scheduling}
-              onClick={() => {
-                handleStartFlow();
-              }}
-              colorScheme={
-                status === FlowStatus.Scheduling ? 'gray' : 'primary'
-              }
-              className={cn({
-                'text-gray-500 pointer-events-none':
-                  status === FlowStatus.Scheduling,
-              })}
-              leftSpinner={
-                <Spinner
-                  size='sm'
-                  label='Scheduling'
-                  className='text-gray-500 fill-gray-200'
-                />
-              }
-            >
-              {status === FlowStatus.Paused ? 'Resume flow' : 'Start flow'}
-            </Button>
-          </div>
-        </Tooltip>
+        <div>
+          <Button
+            size='xs'
+            variant='outline'
+            leftIcon={<Play />}
+            dataTest='start-flow'
+            colorScheme={'primary'}
+            loadingText='Scheduling...'
+            onClick={() => {
+              handleStartFlow();
+            }}
+            leftSpinner={
+              <Spinner
+                size='sm'
+                label='Scheduling'
+                className='text-gray-500 fill-gray-200'
+              />
+            }
+          >
+            Start flow
+          </Button>
+        </div>
       );
     }
 
@@ -228,7 +211,7 @@ export const FlowStatusMenu = observer(
             <MenuItem
               className='flex items-center '
               data-test='stop-flow-menu-button'
-              onClick={() => store.ui.commandMenu.toggle('PauseFlow')}
+              onClick={() => store.ui.commandMenu.toggle('StopFlow')}
             >
               <PauseCircle className='mr-1 text-gray-500' />
               Pause flow...

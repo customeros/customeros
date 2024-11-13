@@ -1,6 +1,5 @@
 import React, { useRef } from 'react';
 
-import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
 
 import { FlowStatus } from '@graphql/types';
@@ -34,7 +33,7 @@ export const StartFlow = observer(() => {
     }
 
     flow?.update((f) => {
-      f.status = FlowStatus.Scheduling;
+      f.status = FlowStatus.On;
 
       return f;
     });
@@ -43,38 +42,26 @@ export const StartFlow = observer(() => {
     store.ui.commandMenu.clearContext();
   };
 
-  const data = match(flow?.value?.status)
-    .with(FlowStatus.Paused, () => ({
-      title: `Resume flow '${flow?.value.name}'?`,
-      description: `Resuming this flow will immediately start all upcoming actions for active contacts.`,
-      button: 'Resume flow',
-    }))
-    .otherwise(() => ({
-      title: `Start flow '${flow?.value.name}'?`,
-      description: (
-        <>
-          Making this flow live will trigger it for{' '}
-          {flow?.value.contacts?.length}{' '}
-          {flow?.value.contacts?.length === 1 ? 'contact' : 'contacts'} right
-          away and automatically for future contacts when the trigger conditions
-          are met.
-          <p className='mt-2'>
-            We will automatically save your latest changes.
-          </p>
-        </>
-      ),
-      button: 'Start flow',
-    }));
-
   return (
     <Command>
       <article className='relative w-full p-6 flex flex-col border-b border-b-gray-100'>
         <div className='flex items-center justify-between'>
-          <h1 className='text-base font-semibold'>{data.title}</h1>
+          <h1 className='text-base font-semibold'>
+            Start flow '{flow?.value.name}'?
+          </h1>
           <CommandCancelIconButton onClose={handleClose} />
         </div>
 
-        <p className='text-sm mt-2'>{data.description}</p>
+        <p className='text-sm mt-2'>
+          Making this flow live will trigger it for{' '}
+          {flow?.value.participants?.length}{' '}
+          {flow?.value.participants?.length === 1 ? 'contact' : 'contacts'}{' '}
+          right away and automatically for future contacts when the trigger
+          conditions are met.
+          <p className='mt-2'>
+            We will automatically save your latest changes.
+          </p>
+        </p>
         <div className='flex justify-between gap-3 mt-6'>
           <CommandCancelButton onClose={handleClose} />
 
@@ -92,7 +79,7 @@ export const StartFlow = observer(() => {
               }
             }}
           >
-            {data.button}
+            Start flow
           </Button>
         </div>
       </article>

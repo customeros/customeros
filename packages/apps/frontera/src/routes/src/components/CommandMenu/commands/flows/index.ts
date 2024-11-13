@@ -1,5 +1,5 @@
 export * from './StartFlow';
-export * from './PauseFlow.tsx';
+export * from './StopFlow';
 export * from './CreateNewFlow';
 export * from './RenameFlow.tsx';
 export * from './ChangeFlowStatus';
