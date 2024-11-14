@@ -23,6 +23,7 @@ const colorMap: Record<string, string> = {
 
 export const EmailActionNode = ({
   data,
+  ...rest
 }: NodeProps & {
   data: {
     subject: string;
@@ -75,7 +76,16 @@ export const EmailActionNode = ({
           className='ml-2 opacity-0 group-hover:opacity-100 pointer-events-all'
           onClick={(e) => {
             e.stopPropagation();
-            ui.flowActionSidePanel.setOpen(true);
+            ui.flowActionSidePanel.setOpen(true, {
+              context: {
+                // @ts-expect-error to do improve types on flowActionSidePanel
+                node: {
+                  ...rest,
+                  data,
+                },
+                id: rest?.id,
+              },
+            });
           }}
         />
       </div>
