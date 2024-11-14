@@ -12,8 +12,6 @@ export const NoEmailNodesPanel = () => {
         backgroundPositionX: 'center',
       }}
     >
-      <h2 className='text-base font-medium'>Flow Settings</h2>
-
       <div className='flex flex-col items-center mt-8'>
         <FeaturedIcon size='lg' colorScheme='gray'>
           <Sliders04 className='text-primary-600' />
