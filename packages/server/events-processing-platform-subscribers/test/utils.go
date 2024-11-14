@@ -2,11 +2,13 @@ package test
 
 import (
 	"context"
+	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	comlog "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
+	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/test"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
@@ -45,11 +47,20 @@ func SetupTestDatabase() (TestDatabase, func()) {
 	postgresContainer, postgresGormDB, _ := postgrest.InitTestDB()
 	testDBs.GormDB = postgresGormDB
 
+	rabbitMqContainer, _ := neo4jt.InitTestRabbitMQ()
+	defer func(rabbitMqContainer testcontainers.Container, ctx context.Context) {
+		neo4jt.TerminateRabbitMQ(rabbitMqContainer, ctx)
+	}(rabbitMqContainer, context.Background())
+
 	testDialFactory := mocked_grpc.NewMockedTestDialFactory()
 	grpcConn, _ := testDialFactory.GetEventsProcessingPlatformConn()
 	testDBs.GrpcClients = grpc_client.InitClients(grpcConn)
 
-	testDBs.CommonServices = commonService.InitServices(&commonConfig.GlobalConfig{}, postgresGormDB, testDBs.Driver, "neo4j", testDBs.GrpcClients, SetupTestLogger())
+	testDBs.CommonServices = commonService.InitServices(&commonConfig.GlobalConfig{
+		RabbitMQConfig: &commonConfig.RabbitMQConfig{
+			Url: fmt.Sprintf("amqp://guest:guest@%s:%s/", "localhost", "5672"),
+		},
+	}, postgresGormDB, testDBs.Driver, "neo4j", testDBs.GrpcClients, SetupTestLogger())
 	testDBs.Services = &service.Services{
 		CommonServices: testDBs.CommonServices,
 	}

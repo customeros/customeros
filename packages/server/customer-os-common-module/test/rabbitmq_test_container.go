@@ -58,6 +58,11 @@ func InitTestRabbitMQ() (testcontainers.Container, *amqp091.Connection) {
 		time.Sleep(1 * time.Second)
 	}
 
+	err = createQueues(rabbitConn)
+	if err != nil {
+		log.Panic("Failed to create queues:", err)
+	}
+
 	return rabbitmqContainer, rabbitConn
 }
 
@@ -69,29 +74,27 @@ func createQueues(conn *amqp091.Connection) error {
 	defer conn.Close()
 
 	// Set up the exchange
-	exchangeName := "customeros"
-	exchangeType := "fanout"
-	if err := declareExchange(channel, exchangeName, exchangeType); err != nil {
+	customerosExchange := "customeros"
+	exchangeTypeDirect := "direct"
+	if err := declareExchange(channel, customerosExchange, exchangeTypeDirect); err != nil {
 		return fmt.Errorf("Failed to declare exchange: %v", err)
 	}
 
 	// Set up the queue
-	queueName := "events"
-	queue, err := declareQueue(channel, queueName)
+	queueEvents, err := declareQueue(channel, "events")
 	if err != nil {
 		return fmt.Errorf("Failed to declare queue: %v", err)
 	}
 
 	// Bind the queue to the exchange
-	routingKey := "*"
-	if err := bindQueue(channel, queue.Name, exchangeName, routingKey); err != nil {
+	if err := bindQueue(channel, queueEvents.Name, customerosExchange, "event"); err != nil {
 		return fmt.Errorf("Failed to bind queue to exchange: %v", err)
 	}
 
 	return nil
 }
 
-func TerminateRabbitMq(container testcontainers.Container, ctx context.Context) {
+func TerminateRabbitMQ(container testcontainers.Container, ctx context.Context) {
 	err := container.Terminate(ctx)
 	if err != nil {
 		log.Fatal("Container should stop")
