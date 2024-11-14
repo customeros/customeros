@@ -2,9 +2,11 @@ import { useRef, ReactElement } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { Node } from '@xyflow/react';
+import { toZonedTime } from 'date-fns-tz';
 import { observer } from 'mobx-react-lite';
 import { FlowActionType } from '@store/Flows/types';
 
+import { DateTimeUtils } from '@utils/date.ts';
 import { Mail01 } from '@ui/media/icons/Mail01';
 import { useStore } from '@shared/hooks/useStore';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
@@ -63,13 +65,22 @@ export const NextFlowAction = observer(
     const nodes = parseNodes(flowStore.nodes);
     const actionNodes = getActionNodes(nodes);
 
-    const nextActionId = contact.executions.find(
+    const nextAction = contact.executions.find(
       (e) => e.scheduledAt && !e.executedAt,
-    )?.action.metadata.id;
+    );
 
-    const nextActionNode = nodes.find((e) => e.internalId === nextActionId);
+    const nextActionNode = nodes.find(
+      (e) => e.internalId === nextAction?.action?.metadata?.id,
+    );
     const nextActionIndex = actionNodes.findIndex(
-      (e) => e.internalId === nextActionId,
+      (e) => e.internalId === nextAction?.action?.metadata?.id,
+    );
+    const nextActionDate = nextAction?.scheduledAt;
+    const utcScheduledAt = toZonedTime(nextActionDate, 'UTC').toUTCString();
+
+    const formattedDate = DateTimeUtils.format(
+      utcScheduledAt,
+      'd MMM y, hh:mm',
     );
 
     return (
@@ -79,17 +90,15 @@ export const NextFlowAction = observer(
         side='bottom'
         label={
           <div className='space-y-1'>
-            {actionNodes.map((action, index) => (
-              <div className='flex gap-1' key={action.internalId}>
-                <span>
-                  Step {index + 1} • (
-                  <span className='capitalize'>
-                    {formatActionName(action.data.action as string)}
-                  </span>
-                  )
+            <div className='flex gap-1'>
+              <span>
+                Step {nextActionIndex + 1} (
+                <span className='capitalize'>
+                  {formatActionName(nextActionNode?.data.action as string)}
                 </span>
-              </div>
-            ))}
+                ) • {formattedDate}
+              </span>
+            </div>
           </div>
         }
       >
