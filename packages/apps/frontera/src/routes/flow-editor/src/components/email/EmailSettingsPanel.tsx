@@ -183,43 +183,62 @@ export const EmailSettingsPanel = observer(() => {
         <div className='flex gap-2'>
           <div>
             <Button size='xs' variant='ghost' onClick={handleCancel}>
-              Cancel
+              Cancel changes
             </Button>
           </div>
           <div>
             <Button size='xs' variant='outline' onClick={handleSave}>
-              Save changes
+              Save email
             </Button>
           </div>
         </div>
       </div>
 
       <div className='px-4'>
-        <div>
-          <Editor
-            size='md'
-            usePlainText
-            ref={inputRef}
-            placeholder='Subject'
-            namespace='flow-email-editor-subject'
-            onChange={(html) => setSubject(extractPlainText(html))}
-            defaultHtmlValue={convertPlainTextToHtml(subject ?? '')}
-            placeholderClassName='text-sm font-medium h-auto cursor-text'
-            onKeyDown={(e) => {
-              if (e.key === 'Tab') {
-                e.preventDefault();
-                editorRef.current?.focus();
-              }
-            }}
-            className={cn(
-              `text-sm font-medium h-auto cursor-text email-editor-subject`,
-              {
-                'pointer-events-none text-gray-400':
-                  data?.action === FlowActionType.EMAIL_REPLY,
-              },
-            )}
-          />
-        </div>
+        <Tooltip
+          align='start'
+          label={
+            data?.action === FlowActionType.EMAIL_REPLY
+              ? `Reply to email subjects can't be edited`
+              : ''
+          }
+        >
+          <div
+            className={cn({
+              'cursor-not-allowed': data?.action === FlowActionType.EMAIL_REPLY,
+            })}
+          >
+            <Editor
+              size='md'
+              usePlainText
+              ref={inputRef}
+              placeholder='Subject'
+              namespace='flow-email-editor-subject'
+              onChange={(html) => setSubject(extractPlainText(html))}
+              defaultHtmlValue={convertPlainTextToHtml(subject ?? '')}
+              onKeyDown={(e) => {
+                if (e.key === 'Tab') {
+                  e.preventDefault();
+                  editorRef.current?.focus();
+                }
+              }}
+              placeholderClassName={cn(
+                'text-sm font-medium h-auto cursor-text',
+                {
+                  'pointer-events-none text-gray-400':
+                    data?.action === FlowActionType.EMAIL_REPLY,
+                },
+              )}
+              className={cn(
+                `text-sm font-medium h-auto cursor-text email-editor-subject`,
+                {
+                  'pointer-events-none text-gray-400':
+                    data?.action === FlowActionType.EMAIL_REPLY,
+                },
+              )}
+            />
+          </div>
+        </Tooltip>
 
         <Editor
           ref={editorRef}
