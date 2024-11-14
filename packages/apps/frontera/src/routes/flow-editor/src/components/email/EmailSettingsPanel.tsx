@@ -195,31 +195,49 @@ export const EmailSettingsPanel = observer(() => {
       </div>
 
       <div className='px-4'>
-        <div>
-          <Editor
-            size='md'
-            usePlainText
-            ref={inputRef}
-            placeholder='Subject'
-            namespace='flow-email-editor-subject'
-            onChange={(html) => setSubject(extractPlainText(html))}
-            defaultHtmlValue={convertPlainTextToHtml(subject ?? '')}
-            placeholderClassName='text-sm font-medium h-auto cursor-text'
-            onKeyDown={(e) => {
-              if (e.key === 'Tab') {
-                e.preventDefault();
-                editorRef.current?.focus();
-              }
-            }}
-            className={cn(
-              `text-sm font-medium h-auto cursor-text email-editor-subject`,
-              {
-                'pointer-events-none text-gray-400':
-                  data?.action === FlowActionType.EMAIL_REPLY,
-              },
-            )}
-          />
-        </div>
+        <Tooltip
+          label={
+            data?.action === FlowActionType.EMAIL_REPLY
+              ? `The subject will start with 'RE:' followed by the original subject (this can't be changed)`
+              : ''
+          }
+        >
+          <div
+            className={cn({
+              'cursor-not-allowed': data?.action === FlowActionType.EMAIL_REPLY,
+            })}
+          >
+            <Editor
+              size='md'
+              usePlainText
+              ref={inputRef}
+              placeholder='Subject'
+              namespace='flow-email-editor-subject'
+              onChange={(html) => setSubject(extractPlainText(html))}
+              defaultHtmlValue={convertPlainTextToHtml(subject ?? '')}
+              onKeyDown={(e) => {
+                if (e.key === 'Tab') {
+                  e.preventDefault();
+                  editorRef.current?.focus();
+                }
+              }}
+              placeholderClassName={cn(
+                'text-sm font-medium h-auto cursor-text',
+                {
+                  'pointer-events-none text-gray-400':
+                    data?.action === FlowActionType.EMAIL_REPLY,
+                },
+              )}
+              className={cn(
+                `text-sm font-medium h-auto cursor-text email-editor-subject`,
+                {
+                  'pointer-events-none text-gray-400':
+                    data?.action === FlowActionType.EMAIL_REPLY,
+                },
+              )}
+            />
+          </div>
+        </Tooltip>
 
         <Editor
           ref={editorRef}
