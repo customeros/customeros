@@ -220,7 +220,7 @@ export const FlowStatusMenu = observer(
               }
             >
               <PauseCircle className='mr-1 text-gray-500' />
-              Pause flow...
+              Stop flow...
             </MenuItem>
           </MenuList>
         </Menu>
