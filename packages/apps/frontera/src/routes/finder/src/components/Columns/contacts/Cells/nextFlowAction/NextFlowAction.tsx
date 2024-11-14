@@ -5,6 +5,7 @@ import { Node } from '@xyflow/react';
 import { toZonedTime } from 'date-fns-tz';
 import { observer } from 'mobx-react-lite';
 import { FlowActionType } from '@store/Flows/types';
+import { FlowStore } from '@store/Flows/Flow.store.ts';
 
 import { DateTimeUtils } from '@utils/date.ts';
 import { Mail01 } from '@ui/media/icons/Mail01';
@@ -25,22 +26,14 @@ const FLOW_ACTION_ICONS: Record<string, ReactElement> = {
   ),
   [FlowActionType.LINKEDIN_MESSAGE]: <LinkedinOutline className='size-3' />,
 };
-
-const parseNodes = (nodesString: string): ExtendedNode[] => {
-  try {
-    return JSON.parse(nodesString);
-  } catch (error) {
-    console.error('Failed to parse flow nodes:', error);
-
-    return [];
-  }
+const TOOLTIP_MESSAGE: Record<string, (date: string) => string> = {
+  [FlowActionType.EMAIL_NEW]: (date) => `Email scheduled for ${date}`,
+  [FlowActionType.EMAIL_REPLY]: (date) => `Email scheduled for ${date}`,
+  [FlowActionType.LINKEDIN_CONNECTION_REQUEST]: (date) =>
+    `Connection request scheduled for ${date}`,
+  [FlowActionType.LINKEDIN_MESSAGE]: (date) =>
+    `LinkedIn message scheduled for ${date}`,
 };
-
-const getActionNodes = (nodes: ExtendedNode[]): ExtendedNode[] =>
-  nodes.filter((node) => node.type === 'action');
-
-const formatActionName = (action: string): string =>
-  action.split('_').join(' ').toLowerCase();
 
 export const NextFlowAction = observer(
   ({ contactID }: { contactID: string }) => {
@@ -53,28 +46,31 @@ export const NextFlowAction = observer(
       return <span className='text-grayModern-400'>None</span>;
     }
 
-    const flowStore = flows.value.get(id)?.value;
-    const contact = flowStore?.participants.find(
+    const flowStore = flows.value.get(id) as FlowStore;
+    const contact = flowStore?.value?.participants.find(
       (c) => c.entityId === contactID,
     );
 
-    if (!contact?.executions?.length || !flowStore?.nodes) {
+    if (!contact?.executions?.length || !flowStore?.value?.nodes) {
       return <span className='text-grayModern-400'>None</span>;
     }
 
     // Process flow data
-    const nodes = parseNodes(flowStore.nodes);
-    const actionNodes = getActionNodes(nodes);
+    const nodes = flowStore.parsedNodes;
+
+    const actionNodes = nodes.filter(
+      (node: ExtendedNode) => node.type === 'action',
+    );
 
     const nextAction = contact.executions.find(
       (e) => e.scheduledAt && !e.executedAt,
     );
 
     const nextActionNode = nodes.find(
-      (e) => e.internalId === nextAction?.action?.metadata?.id,
+      (e: ExtendedNode) => e.internalId === nextAction?.action?.metadata?.id,
     );
     const nextActionIndex = actionNodes.findIndex(
-      (e) => e.internalId === nextAction?.action?.metadata?.id,
+      (e: ExtendedNode) => e.internalId === nextAction?.action?.metadata?.id,
     );
     const nextActionDate = nextAction?.scheduledAt;
     const utcScheduledAt = toZonedTime(nextActionDate, 'UTC').toUTCString();
@@ -84,6 +80,10 @@ export const NextFlowAction = observer(
       'd MMM y, hh:mm',
     );
 
+    if (typeof nextActionNode?.data?.action !== 'string') {
+      return null;
+    }
+
     return (
       <Tooltip
         hasArrow
@@ -92,13 +92,7 @@ export const NextFlowAction = observer(
         label={
           <div className='space-y-1'>
             <div className='flex gap-1'>
-              <span>
-                Step {nextActionIndex + 1} (
-                <span className='capitalize'>
-                  {formatActionName(nextActionNode?.data.action as string)}
-                </span>
-                ) • {formattedDate}
-              </span>
+              {TOOLTIP_MESSAGE[nextActionNode.data.action](formattedDate)}
             </div>
           </div>
         }
@@ -108,8 +102,7 @@ export const NextFlowAction = observer(
             data-test='flow-name'
             className='flex items-center gap-2 px-1.5 bg-gray-100 rounded-md w-max overflow-hidden'
           >
-            {typeof nextActionNode?.data?.action === 'string' &&
-              FLOW_ACTION_ICONS[nextActionNode.data.action]}
+            {FLOW_ACTION_ICONS[nextActionNode.data.action]}
             <div className='text-sm truncate'>
               Step {nextActionIndex + 1}/{actionNodes.length}
             </div>

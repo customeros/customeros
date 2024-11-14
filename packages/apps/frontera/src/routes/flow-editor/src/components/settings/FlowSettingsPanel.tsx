@@ -67,7 +67,7 @@ export const FlowSettingsPanel = ({
           />
         </div>
       </div>
-      <div className='px-4'>
+      <div className='px-4 gap-2 flex flex-col'>
         {showSenderSettings && (
           <SenderSettings
             id={id}
