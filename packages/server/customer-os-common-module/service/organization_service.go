@@ -71,7 +71,10 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.Save")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("input", input))
+	tracing.LogObjectAsJson(span, "input", input)
+	if organizationId != nil {
+		tracing.TagEntity(span, *organizationId)
+	}
 
 	var err error
 	var existing *neo4jentity.OrganizationEntity
