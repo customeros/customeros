@@ -579,7 +579,7 @@ func (r *contactReadRepository) GetContactsToCheck(ctx context.Context, minutesF
 					(c.techCheckedAt IS NULL OR c.checkedAt < datetime() - duration({hours: $hoursFromLastCheck})) AND
 					c.updatedAt < datetime() - duration({minutes: $minutesFromLastUpdate})
 					ORDER BY CASE WHEN c.techCheckedAt IS NULL THEN 0 ELSE 1 END, c.techCheckedAt ASC
-				RETURN tenant, c LIMIT $limit`
+				RETURN t.name, c LIMIT $limit`
 	params := map[string]any{
 		"limit":                 limit,
 		"minutesFromLastUpdate": minutesFromLastUpdate,

@@ -1292,7 +1292,7 @@ func (r *organizationReadRepository) GetOrganizationsToCheck(ctx context.Context
 					(o.techCheckedAt IS NULL OR o.checkedAt < datetime() - duration({hours: $hoursFromLastCheck})) AND
 					o.updatedAt < datetime() - duration({minutes: $minutesFromLastUpdate})
 					ORDER BY CASE WHEN o.techCheckedAt IS NULL THEN 0 ELSE 1 END, o.techCheckedAt ASC
-				RETURN tenant, o LIMIT $limit`
+				RETURN t.name, o LIMIT $limit`
 	params := map[string]any{
 		"limit":                 limit,
 		"minutesFromLastUpdate": minutesFromLastUpdate,
