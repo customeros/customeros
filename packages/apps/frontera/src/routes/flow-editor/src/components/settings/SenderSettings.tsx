@@ -27,7 +27,6 @@ export const SenderSettings = observer(
 
     return (
       <>
-        <h2 className='text-base font-medium'>Flow Settings</h2>
         <div className='flex flex-col gap-2'>
           <h3 className='text-sm font-medium'>Senders</h3>
           <SenderStatus

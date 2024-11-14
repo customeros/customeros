@@ -41,6 +41,7 @@ const edgeTypes = {
   baseEdge: BasicEdge,
 };
 
+// Todo extract bloated functions to dedicated hooks for better maintainability
 export const FlowBuilder = observer(
   ({
     onHasNewChanges,
@@ -68,7 +69,6 @@ export const FlowBuilder = observer(
       number | undefined
     >(undefined);
 
-    // const { screenToFlowPosition } = useReactFlow();
     const { ui } = useStore();
 
     const onConnect: OnConnect = useCallback(
@@ -384,6 +384,10 @@ export const FlowBuilder = observer(
               ui.flowCommandMenu.setOpen(false);
             }
 
+            if (showSidePanel) {
+              onToggleSidePanel(false);
+            }
+
             if (ui.flowActionSidePanel.isOpen) {
               if (ui.flowActionSidePanel.context.hasUnsavedChanges) {
                 ui.commandMenu.setType('ConfirmEmailContentChanges');
@@ -444,6 +448,7 @@ export const FlowBuilder = observer(
           <Background />
           <FlowBuilderToolbar />
 
+          {/* todo explore way to merge that with flow settings panel*/}
           {store.ui.flowActionSidePanel.isOpen && <EmailSettingsPanel />}
         </ReactFlow>
       </>
