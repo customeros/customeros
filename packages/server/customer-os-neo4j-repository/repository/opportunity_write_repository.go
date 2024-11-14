@@ -302,7 +302,7 @@ func (r *opportunityWriteRepository) Save(ctx context.Context, txx *neo4j.Manage
 				op.updatedAt=datetime(),
 				op.stageUpdatedAt=datetime(),
 				op.source=$source,
-				op.appSource=$appSource,
+				op.appSource=$appSource
 			`, tenant)
 		paramsCreate := map[string]any{
 			"tenant":        tenant,
