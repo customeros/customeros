@@ -1,15 +1,27 @@
-import { Node } from '@xyflow/react';
-import { FlowActionType } from '@store/Flows/types.ts';
+import React from 'react';
 
-import { SenderSettings } from './SenderSettings.tsx';
+import { Node } from '@xyflow/react';
+import { FlowActionType } from '@store/Flows/types';
+
+import { IconButton } from '@ui/form/IconButton';
+import { Settings03 } from '@ui/media/icons/Settings03';
+
+import { SenderSettings } from './SenderSettings';
+import { FlowStatusMenu } from '../FlowStatusMenu';
 import { NoEmailNodesPanel } from './NoEmailNodesPanel';
 
 export const FlowSettingsPanel = ({
   id,
   nodes,
+  hasChanges,
+  onToggleHasChanges,
+  onToggleSidePanel,
 }: {
   id: string;
   nodes: Node[];
+  hasChanges: boolean;
+  onToggleSidePanel: (status: boolean) => void;
+  onToggleHasChanges: (status: boolean) => void;
 }) => {
   const hasEmailNodes = nodes.some(
     (node) =>
@@ -30,15 +42,41 @@ export const FlowSettingsPanel = ({
   const showSenderSettings = hasEmailNodes || hasLinkedInNodes;
 
   return (
-    <div className='absolute z-10 top-[41px] bottom-0 right-0 w-[400px] bg-white p-4 border-l flex flex-col gap-4 animate-slideLeft'>
-      {showSenderSettings && (
-        <SenderSettings
-          id={id}
-          hasEmailNodes={hasEmailNodes}
-          hasLinkedInNodes={hasLinkedInNodes}
-        />
-      )}
-      {!showSenderSettings && <NoEmailNodesPanel />}
-    </div>
+    <article
+      onClick={(e) => e.stopPropagation()}
+      className='fixed z-50 top-[0px] bottom-0 right-0 w-[400px] bg-white  border-l flex flex-col gap-4 animate-slideLeft'
+    >
+      {' '}
+      <div className='flex justify-between items-center border-b border-gray-200 p-4 y-2 h-[41px]'>
+        <h1 className='font-medium'>Flow Settings</h1>
+
+        <div className='flex gap-2'>
+          <FlowStatusMenu
+            id={id}
+            hasUnsavedChanges={hasChanges}
+            onToggleHasChanges={onToggleHasChanges}
+            handleOpenSettingsPanel={() => onToggleSidePanel(true)}
+          />
+          <IconButton
+            size='xs'
+            variant='outline'
+            icon={<Settings03 />}
+            aria-label={'Toggle Settings'}
+            dataTest={'flow-toggle-settings'}
+            onClick={() => onToggleSidePanel(false)}
+          />
+        </div>
+      </div>
+      <div className='px-4'>
+        {showSenderSettings && (
+          <SenderSettings
+            id={id}
+            hasEmailNodes={hasEmailNodes}
+            hasLinkedInNodes={hasLinkedInNodes}
+          />
+        )}
+        {!showSenderSettings && <NoEmailNodesPanel />}
+      </div>
+    </article>
   );
 };

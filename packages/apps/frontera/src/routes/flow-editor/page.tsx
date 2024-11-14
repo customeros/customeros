@@ -35,8 +35,10 @@ export const FlowEditor = () => {
           onToggleSidePanel={setIsSidePanelOpen}
         />
         <FlowContent
-          showSidePanel={isSidePanelOpen}
+          hasNewChanges={hasNewChanges}
+          isSidePanelOpen={isSidePanelOpen}
           setHasNewChanges={setHasNewChanges}
+          setIsSidePanelOpen={setIsSidePanelOpen}
         />
       </div>
     </ReactFlowProvider>
@@ -45,16 +47,19 @@ export const FlowEditor = () => {
 
 const FlowContent = observer(
   ({
-    showSidePanel,
+    isSidePanelOpen,
     setHasNewChanges,
+    setIsSidePanelOpen,
+    hasNewChanges,
   }: {
-    showSidePanel: boolean;
+    hasNewChanges: boolean;
+    isSidePanelOpen: boolean;
     setHasNewChanges: (data: boolean) => void;
+    setIsSidePanelOpen: (data: boolean) => void;
   }) => {
     const store = useStore();
 
     const [searchParams] = useSearchParams();
-    const [isSidePanelOpen, setIsSidePanelOpen] = useState<boolean>(false);
     const { getNodes } = useReactFlow();
     const id = useParams().id as string;
     const preset = searchParams.get('preset');
@@ -104,7 +109,15 @@ const FlowContent = observer(
           />
         </div>
 
-        {showSidePanel && <FlowSettingsPanel id={id} nodes={getNodes()} />}
+        {isSidePanelOpen && (
+          <FlowSettingsPanel
+            id={id}
+            nodes={getNodes()}
+            hasChanges={hasNewChanges}
+            onToggleHasChanges={setHasNewChanges}
+            onToggleSidePanel={setIsSidePanelOpen}
+          />
+        )}
       </>
     );
   },
