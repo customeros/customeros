@@ -9,13 +9,18 @@ import (
 	"fmt"
 
 	"github.com/99designs/gqlgen/graphql"
+	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	opentracing "github.com/opentracing/opentracing-go"
 )
 
@@ -174,113 +179,6 @@ func (r *mutationResolver) FlowChangeStatus(ctx context.Context, id string, stat
 		graphql.AddErrorf(ctx, "")
 		return nil, err
 	}
-
-	//TODO this is correct and used in testing for email
-	//tenant := common.GetTenantFromContext(ctx)
-	//
-	//t := true
-	//
-	//for i := 1; i <= 500; i++ {
-	//	contactId, err := r.Services.ContactService.Create(ctx, &service.ContactCreateData{
-	//		ContactEntity: &neo4jentity.ContactEntity{
-	//			FirstName: "Test",
-	//			LastName:  fmt.Sprintf("%d", i),
-	//		},
-	//		EmailEntity: &neo4jentity.EmailEntity{
-	//			RawEmail: fmt.Sprintf("%d@test.com", i),
-	//			Work:     &t,
-	//		},
-	//	})
-	//
-	//	if err != nil {
-	//		tracing.TraceErr(span, err)
-	//		graphql.AddErrorf(ctx, "")
-	//		return nil, err
-	//	}
-	//
-	//	_, err = r.Services.CommonServices.FlowService.FlowParticipantAdd(ctx, e.Id, contactId, commonModel.CONTACT)
-	//	if err != nil {
-	//		tracing.TraceErr(span, err)
-	//		graphql.AddErrorf(ctx, "")
-	//		return nil, err
-	//	}
-	//}
-	//
-	//userId := uuid.New().String()
-	//err = r.Services.CommonServices.Neo4jRepositories.UserWriteRepository.CreateUser(ctx, neo4jentity.UserEntity{Id: userId})
-	//
-	//for i := 1; i <= 5; i++ {
-	//	userEmail := fmt.Sprintf("mailbox%d@test.com%s", i, uuid.New().String())
-	//	mailboxdId := uuid.New().String()
-	//	r.Services.CommonServices.Neo4jRepositories.EmailWriteRepository.CreateEmail(ctx, tenant, mailboxdId, repository.EmailCreateFields{RawEmail: userEmail})
-	//	r.Services.CommonServices.Neo4jRepositories.EmailWriteRepository.LinkWithUser(ctx, tenant, userId, mailboxdId, false)
-	//	mailbox := entity.TenantSettingsMailbox{
-	//		Tenant:          tenant,
-	//		MailboxUsername: userEmail,
-	//		Username:        userEmail,
-	//	}
-	//	r.Services.CommonServices.PostgresRepositories.TenantSettingsMailboxRepository.Merge(ctx, tenant, &mailbox)
-	//	mailbox = entity.TenantSettingsMailbox{
-	//		Tenant:                  tenant,
-	//		MailboxUsername:         userEmail,
-	//		Username:                userEmail,
-	//		RampUpCurrent:           40,
-	//		RampUpMax:               40,
-	//		MinMinutesBetweenEmails: 10,
-	//		MaxMinutesBetweenEmails: 10,
-	//	}
-	//	r.Services.CommonServices.PostgresRepositories.TenantSettingsMailboxRepository.Merge(ctx, tenant, &mailbox)
-	//}
-	//
-	//r.FlowSenderMerge(ctx, e.Id, model.FlowSenderMergeInput{
-	//	UserID: &userId,
-	//})
-	//
-	//schedule1 := entity.UserWorkingSchedule{
-	//	UserId:    userId,
-	//	DayRange:  "Mon-Wed",
-	//	StartHour: "08:30",
-	//	EndHour:   "10:00",
-	//}
-	//err = r.Services.Repositories.PostgresRepositories.UserWorkingScheduleRepository.Store(ctx, tenant, &schedule1)
-	//if err != nil {
-	//	tracing.TraceErr(span, err)
-	//	graphql.AddErrorf(ctx, "")
-	//	return nil, err
-	//}
-	//
-	//schedule2 := entity.UserWorkingSchedule{
-	//	UserId:    userId,
-	//	DayRange:  "Thu-Thu",
-	//	StartHour: "10:00",
-	//	EndHour:   "14:00",
-	//}
-	//err = r.Services.Repositories.PostgresRepositories.UserWorkingScheduleRepository.Store(ctx, tenant, &schedule2)
-	//if err != nil {
-	//	tracing.TraceErr(span, err)
-	//	graphql.AddErrorf(ctx, "")
-	//	return nil, err
-	//}
-	//
-	//schedule3 := entity.UserWorkingSchedule{
-	//	UserId:    userId,
-	//	DayRange:  "Fri-Fri",
-	//	StartHour: "16:00",
-	//	EndHour:   "18:00",
-	//}
-	//err = r.Services.Repositories.PostgresRepositories.UserWorkingScheduleRepository.Store(ctx, tenant, &schedule3)
-	//if err != nil {
-	//	tracing.TraceErr(span, err)
-	//	graphql.AddErrorf(ctx, "")
-	//	return nil, err
-	//}
-	//
-	//e, err = r.Services.CommonServices.FlowService.FlowChangeStatus(ctx, e.Id, neo4jentity.FlowStatusOn)
-	//if err != nil {
-	//	tracing.TraceErr(span, err)
-	//	graphql.AddErrorf(ctx, "")
-	//	return nil, err
-	//}
 
 	//TODO this is correct and used in testing sending linkedin connections
 	//tenant := common.GetTenantFromContext(ctx)
@@ -449,6 +347,157 @@ func (r *mutationResolver) FlowSenderDelete(ctx context.Context, id string) (*mo
 		graphql.AddErrorf(ctx, "")
 		return &model.Result{Result: false}, err
 	}
+	return &model.Result{Result: true}, nil
+}
+
+// FlowEmailActionTest is the resolver for the flowEmailActionTest field.
+func (r *mutationResolver) FlowEmailActionTest(ctx context.Context, subject string, bodyTemplate string, sendToEmailAddress string) (*model.Result, error) {
+	return &model.Result{Result: true}, nil
+}
+
+// FlowDummy1Email is the resolver for the flow_Dummy_1Email field.
+func (r *mutationResolver) FlowDummy1Email(ctx context.Context, contactsCount int, userCount int, mailboxForEachUserCount int) (*model.Result, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.FlowDummy1Email", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	flow, err := r.Services.CommonServices.FlowService.FlowMerge(ctx, nil, &neo4jentity.FlowEntity{
+		Name:  "Test Flow 1 Email",
+		Nodes: "[{\"$H\":284,\"data\":{\"action\":\"FLOW_START\",\"triggerType\":\"RecordAddedManually\",\"entity\":\"CONTACT\"},\"height\":56,\"id\":\"tn-1\",\"internalId\":\"83676215-647f-44c3-b8b9-e7e6c0aa5084\",\"measured\":{\"height\":56,\"width\":300},\"position\":{\"x\":12,\"y\":12},\"properties\":{\"org.eclipse.elk.portConstraints\":\"FIXED_ORDER\"},\"sourcePosition\":\"bottom\",\"targetPosition\":\"top\",\"type\":\"trigger\",\"width\":300,\"x\":12,\"y\":12},{\"$H\":286,\"data\":{\"action\":\"FLOW_END\"},\"height\":56,\"id\":\"tn-2\",\"internalId\":\"47efb59e-0a52-4811-9025-5c937a44a6c1\",\"measured\":{\"height\":56,\"width\":131},\"position\":{\"x\":96.5,\"y\":324},\"properties\":{\"org.eclipse.elk.portConstraints\":\"FIXED_ORDER\"},\"sourcePosition\":\"bottom\",\"targetPosition\":\"top\",\"type\":\"control\",\"width\":131,\"x\":96.5,\"y\":324},{\"$H\":288,\"data\":{\"action\":\"EMAIL_NEW\",\"bodyTemplate\":\"<div dir=\\\"ltr\\\"><div><span style=\\\"color: rgb(31, 31, 31);\\\">Hi Amith,</span></div><div><br></div><div><span style=\\\"color: rgb(31, 31, 31);\\\">We've built a tool to generate chip drivers for you. It takes PDFs, transforms them into a neat graphical interface, and generates stable driver code. We use AI but are way better than any generalist tool you've tried.</span></div><div><br></div><div><span style=\\\"color: rgb(31, 31, 31);\\\">Try it yourself: </span><a href=\\\"https://customeros.ai\\\" rel=\\\"noopener noreferrer\\\" target=\\\"_blank\\\" style=\\\"color: rgb(31, 31, 31);\\\">https://customeros.ai</a></div><div><br></div><div><span style=\\\"color: rgb(31, 31, 31);\\\">Kind regards,</span></div><div><span style=\\\"color: rgb(31, 31, 31);\\\">Matt</span></div><div><span style=\\\"color: rgb(31, 31, 31);\\\">CEO @CustomerOS</span></div><div><br></div><div><span style=\\\"color: rgb(31, 31, 31);\\\">P.S. If you are busy we understand. Email us a datasheet and we will email you a driver within an hour.</span></div><div><br></div></div>Let me know if I've missed the mark <a href='https://faltering-theologiser-6c3ca0680c02.herokuapp.com/u?mid=66f329d51a3dee01b3af3d11'>here</a>\",\"subject\":\"Let AI deal with terrible datasheets\",\"waitDuration\":0},\"height\":56,\"id\":\"EMAIL_NEW-3\",\"internalId\":\"b1b9219d-282f-4b38-b4f6-bc83f73cfed6\",\"measured\":{\"height\":56,\"width\":300},\"position\":{\"x\":12,\"y\":168},\"properties\":{\"org.eclipse.elk.portConstraints\":\"FIXED_ORDER\"},\"selected\":true,\"sourcePosition\":\"bottom\",\"targetPosition\":\"top\",\"type\":\"action\",\"width\":300,\"x\":12,\"y\":168}]",
+		Edges: "[{\"id\":\"tn-1\",\"source\":\"tn-1\",\"target\":\"EMAIL_NEW-3\",\"type\":\"baseEdge\",\"markerEnd\":{\"type\":\"arrow\"},\"sections\":[{\"id\":\"etn-1-EMAIL_NEW-3_s0\",\"startPoint\":{\"x\":162,\"y\":68},\"endPoint\":{\"x\":162,\"y\":168},\"incomingShape\":\"tn-1\",\"outgoingShape\":\"EMAIL_NEW-3\"}],\"container\":\"root\"},{\"id\":\"eEMAIL_NEW-3-tn-2\",\"source\":\"EMAIL_NEW-3\",\"target\":\"tn-2\",\"type\":\"baseEdge\",\"markerEnd\":{\"type\":\"arrow\"},\"sections\":[{\"id\":\"eEMAIL_NEW-3-tn-2_s0\",\"startPoint\":{\"x\":162,\"y\":224},\"endPoint\":{\"x\":162,\"y\":324},\"incomingShape\":\"EMAIL_NEW-3\",\"outgoingShape\":\"tn-2\"}],\"container\":\"root\"}]",
+	})
+	if err != nil || flow == nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "")
+		return nil, err
+	}
+
+	t := true
+	for i := 1; i <= contactsCount; i++ {
+		contactId, err := r.Services.ContactService.Create(ctx, &service.ContactCreateData{
+			ContactEntity: &neo4jentity.ContactEntity{
+				FirstName: "Test",
+				LastName:  fmt.Sprintf("%d", i),
+			},
+			EmailEntity: &neo4jentity.EmailEntity{
+				RawEmail: fmt.Sprintf("%d@test.com%s", i, flow.Id),
+				Work:     &t,
+			},
+		})
+
+		if err != nil {
+			tracing.TraceErr(span, err)
+			graphql.AddErrorf(ctx, "")
+			return nil, err
+		}
+
+		_, err = r.Services.CommonServices.FlowService.FlowParticipantAdd(ctx, flow.Id, contactId, commonModel.CONTACT)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			graphql.AddErrorf(ctx, "")
+			return nil, err
+		}
+	}
+
+	for i := 1; i <= userCount; i++ {
+		userId := uuid.New().String()
+		err = r.Services.CommonServices.Neo4jRepositories.UserWriteRepository.CreateUser(ctx, neo4jentity.UserEntity{Id: userId})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			graphql.AddErrorf(ctx, "")
+			return nil, err
+		}
+
+		userEmail := fmt.Sprintf("user%d@test.com", i)
+		mailboxdId := uuid.New().String()
+
+		err := r.Services.CommonServices.Neo4jRepositories.EmailWriteRepository.CreateEmail(ctx, tenant, mailboxdId, repository.EmailCreateFields{RawEmail: userEmail})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			graphql.AddErrorf(ctx, "")
+			return nil, err
+		}
+
+		err = r.Services.CommonServices.Neo4jRepositories.EmailWriteRepository.LinkWithUser(ctx, tenant, userId, mailboxdId, false)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			graphql.AddErrorf(ctx, "")
+			return nil, err
+		}
+
+		for j := 1; j <= mailboxForEachUserCount; j++ {
+			mailboxUsername := fmt.Sprintf("mailbox%d@test.com", j)
+			mailbox := entity.TenantSettingsMailbox{
+				Tenant:          tenant,
+				MailboxUsername: mailboxUsername,
+				Username:        userEmail,
+			}
+			err := r.Services.CommonServices.PostgresRepositories.TenantSettingsMailboxRepository.Merge(ctx, &mailbox)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				graphql.AddErrorf(ctx, "")
+				return nil, err
+			}
+
+			mailbox = entity.TenantSettingsMailbox{
+				Tenant:                  tenant,
+				MailboxUsername:         mailboxUsername,
+				Username:                userEmail,
+				RampUpCurrent:           40,
+				RampUpMax:               40,
+				MinMinutesBetweenEmails: 10,
+				MaxMinutesBetweenEmails: 10,
+			}
+			err = r.Services.CommonServices.PostgresRepositories.TenantSettingsMailboxRepository.Merge(ctx, &mailbox)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				graphql.AddErrorf(ctx, "")
+				return nil, err
+			}
+
+			emailMailboxId := uuid.New().String()
+			err = r.Services.CommonServices.Neo4jRepositories.EmailWriteRepository.CreateEmail(ctx, tenant, emailMailboxId, repository.EmailCreateFields{RawEmail: mailboxUsername})
+			if err != nil {
+				tracing.TraceErr(span, err)
+				graphql.AddErrorf(ctx, "")
+				return nil, err
+			}
+
+			err = r.Services.CommonServices.Neo4jRepositories.EmailWriteRepository.LinkWithUser(ctx, tenant, userId, emailMailboxId, false)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				graphql.AddErrorf(ctx, "")
+				return nil, err
+			}
+		}
+
+		r.FlowSenderMerge(ctx, flow.Id, model.FlowSenderMergeInput{
+			UserID: &userId,
+		})
+
+		schedule1 := entity.UserWorkingSchedule{
+			UserId:    userId,
+			DayRange:  "Mon-Fri",
+			StartHour: "08:00",
+			EndHour:   "17:00",
+		}
+		err = r.Services.Repositories.PostgresRepositories.UserWorkingScheduleRepository.Store(ctx, tenant, &schedule1)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			graphql.AddErrorf(ctx, "")
+			return nil, err
+		}
+	}
+
+	_, err = r.Services.CommonServices.FlowService.FlowChangeStatus(ctx, flow.Id, neo4jentity.FlowStatusOn)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "")
+		return nil, err
+	}
+
 	return &model.Result{Result: true}, nil
 }
 

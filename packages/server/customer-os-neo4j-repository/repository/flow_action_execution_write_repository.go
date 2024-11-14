@@ -16,6 +16,7 @@ import (
 type FlowActionExecutionWriteRepository interface {
 	Merge(ctx context.Context, tx *neo4j.ManagedTransaction, entity *entity.FlowActionExecutionEntity) (*dbtype.Node, error)
 	Delete(ctx context.Context, id string) error
+	DeleteScheduledForFlow(ctx context.Context, flowId string) error
 }
 
 type flowActionExecutionWriteRepositoryImpl struct {
@@ -118,6 +119,43 @@ func (r *flowActionExecutionWriteRepositoryImpl) Delete(ctx context.Context, id 
 	params := map[string]any{
 		"tenant": tenant,
 		"id":     id,
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	return nil
+}
+
+func (r *flowActionExecutionWriteRepositoryImpl) DeleteScheduledForFlow(ctx context.Context, flowId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CommonWriteRepository.DeleteScheduledForFlow")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	span.LogFields(log.String("flowId", flowId))
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name: $tenant})<-[r:BELONGS_TO_TENANT]-(fae:FlowActionExecution_%s {flowId:$flowId, status: 'SCHEDULED'}) detach delete fae`, tenant)
+
+	params := map[string]any{
+		"tenant": tenant,
+		"flowId": flowId,
 	}
 
 	span.LogFields(log.String("cypher", cypher))

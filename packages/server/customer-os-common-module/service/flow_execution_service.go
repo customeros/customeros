@@ -28,6 +28,7 @@ type FlowExecutionService interface {
 	GetFlowActionExecutionsForParticipants(ctx context.Context, flowParticipantIds []string) (*entity.FlowActionExecutionEntities, error)
 	GetFlowActionExecutionsForParticipant(ctx context.Context, tx *neo4j.ManagedTransaction, flowId, entityId string, entityType model.EntityType) ([]*entity.FlowActionExecutionEntity, error)
 	GetFlowActionExecutionsForParticipantWithActionType(ctx context.Context, entityId string, entityType model.EntityType, actionType entity.FlowActionType) ([]*entity.FlowActionExecutionEntity, error)
+	UpdateAllParticipantsFlowRequirements(ctx context.Context, flowId string) error
 	UpdateParticipantFlowRequirements(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, participant *entity.FlowParticipantEntity, requirements *FlowComputeParticipantsRequirementsInput) error
 	ScheduleFlow(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, flowId string, flowParticipant *entity.FlowParticipantEntity) error
 	ProcessActionExecution(ctx context.Context, scheduledActionExecution *entity.FlowActionExecutionEntity) error
@@ -127,6 +128,35 @@ func (s *flowExecutionService) GetFlowActionExecutionsForParticipantWithActionTy
 	return entities, nil
 }
 
+func (s *flowExecutionService) UpdateAllParticipantsFlowRequirements(ctx context.Context, flowId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.UpdateAllParticipantsFlowRequirements")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	span.LogFields(log.String("flowId", flowId))
+
+	flowParticipants, err := s.services.FlowService.FlowParticipantGetList(ctx, []string{flowId})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	flowRequirements, err := s.GetFlowRequirements(ctx, flowId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	for _, v := range *flowParticipants {
+		err := s.UpdateParticipantFlowRequirements(ctx, nil, &v, flowRequirements)
+		if err != nil {
+			tracing.TraceErr(span, err)
+		}
+	}
+
+	return nil
+}
+
 func (s *flowExecutionService) UpdateParticipantFlowRequirements(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, participant *entity.FlowParticipantEntity, requirements *FlowComputeParticipantsRequirementsInput) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.UpdateParticipantFlowRequirements")
 	defer span.Finish()
@@ -205,6 +235,16 @@ func (s *flowExecutionService) ScheduleFlow(ctx context.Context, txWithPostCommi
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	now := utils.Now()
+
+	flow, err := s.services.FlowService.FlowGetByParticipantId(ctx, flowParticipant.Id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	if flow.Status != entity.FlowStatusOn {
+		return nil
+	}
 
 	//check if the participant meets flow requirements
 	flowRequirements, err := s.services.FlowExecutionService.GetFlowRequirements(ctx, flowId)

@@ -606,22 +606,30 @@ func (s *flowService) FlowChangeStatus(ctx context.Context, id string, status ne
 
 	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, nil, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
 
-		if flow.Status == neo4jentity.FlowStatusOff && status == neo4jentity.FlowStatusOn {
+		var triggerEvent interface{}
+
+		if status == neo4jentity.FlowStatusOn {
 
 			if flow.FirstStartedAt == nil {
 				flow.FirstStartedAt = utils.TimePtr(utils.Now())
 			}
 
-			txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
-				err := s.services.RabbitMQService.PublishEvent(ctx, flow.Id, model.FLOW, dto.FlowSchedule{})
-				if err != nil {
-					tracing.TraceErr(span, err)
-					return err
-				}
-
-				return nil
-			})
+			triggerEvent = dto.FlowOn{}
+		} else if status == neo4jentity.FlowStatusOff {
+			triggerEvent = dto.FlowOff{}
+		} else if status == neo4jentity.FlowStatusArchived {
+			triggerEvent = dto.FlowArchive{}
 		}
+
+		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
+			err := s.services.RabbitMQService.PublishEvent(ctx, flow.Id, model.FLOW, triggerEvent)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return err
+			}
+
+			return nil
+		})
 
 		flow.Status = status
 

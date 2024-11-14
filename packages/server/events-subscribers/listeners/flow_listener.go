@@ -11,8 +11,8 @@ import (
 	"github.com/opentracing/opentracing-go"
 )
 
-func Handle_FlowSchedule(ctx context.Context, services *service.Services, input any) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "Listeners.Handle_FlowSchedule")
+func Handle_FlowOn(ctx context.Context, services *service.Services, input any) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "Listeners.Handle_FlowOn")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "input", input)
@@ -47,6 +47,88 @@ func Handle_FlowSchedule(ctx context.Context, services *service.Services, input 
 			tracing.TraceErr(span, err)
 			return err
 		}
+	}
+
+	return nil
+}
+
+func Handle_FlowOff(ctx context.Context, services *service.Services, input any) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "Listeners.Handle_FlowOff")
+	defer span.Finish()
+	tracing.SetDefaultListenerSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "input", input)
+
+	message := input.(*dto.Event)
+
+	flow, err := services.FlowService.FlowGetById(ctx, message.Event.EntityId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	if flow == nil {
+		err = errors.New("flow not found")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	span.LogKV("flow status", flow.Status)
+
+	if flow.Status != neo4jentity.FlowStatusOff {
+		return nil
+	}
+
+	err = services.Neo4jRepositories.FlowActionExecutionWriteRepository.DeleteScheduledForFlow(ctx, flow.Id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	err = services.FlowExecutionService.UpdateAllParticipantsFlowRequirements(ctx, flow.Id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	return nil
+}
+
+func Handle_FlowArchive(ctx context.Context, services *service.Services, input any) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "Listeners.Handle_FlowArchive")
+	defer span.Finish()
+	tracing.SetDefaultListenerSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "input", input)
+
+	message := input.(*dto.Event)
+
+	flow, err := services.FlowService.FlowGetById(ctx, message.Event.EntityId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	if flow == nil {
+		err = errors.New("flow not found")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	span.LogKV("flow status", flow.Status)
+
+	if flow.Status != neo4jentity.FlowStatusArchived {
+		return nil
+	}
+
+	err = services.Neo4jRepositories.FlowActionExecutionWriteRepository.DeleteScheduledForFlow(ctx, flow.Id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	err = services.FlowExecutionService.UpdateAllParticipantsFlowRequirements(ctx, flow.Id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
 	}
 
 	return nil
