@@ -54,7 +54,7 @@ func (r *mutationResolver) OrganizationSave(ctx context.Context, input model.Org
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationSave", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.Object("request.input", input))
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	tenant := common.GetTenantFromContext(ctx)
 
