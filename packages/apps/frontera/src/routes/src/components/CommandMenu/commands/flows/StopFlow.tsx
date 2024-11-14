@@ -71,7 +71,7 @@ export const StopFlow = observer(() => {
               }
             }}
           >
-            Pause flow
+            Stop flow
           </Button>
         </div>
       </article>
