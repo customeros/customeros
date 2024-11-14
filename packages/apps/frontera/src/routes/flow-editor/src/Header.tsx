@@ -12,10 +12,9 @@ import { Button } from '@ui/form/Button/Button';
 import { User01 } from '@ui/media/icons/User01';
 import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { Settings03 } from '@ui/media/icons/Settings03';
-import { Tooltip } from '@ui/overlay/Tooltip/Tooltip.tsx';
 import { ChevronRight } from '@ui/media/icons/ChevronRight';
-import { FlowStatus } from '@shared/types/__generated__/graphql.types';
 
 import { FlowStatusMenu } from './components';
 
@@ -41,11 +40,10 @@ export const Header = observer(
 
     const flow = store.flows.value.get(id) as FlowStore;
 
-    const status = flow?.value?.status;
     const contactsStore = store.contacts;
     const showFinder = searchParams.get('show') === 'finder';
     const flowContactsPreset = store.tableViewDefs.flowContactsPreset;
-    const canSave = hasChanges && status === FlowStatus.On;
+    const canSave = hasChanges;
 
     useEffect(() => {
       if (!store.ui.commandMenu.isOpen) {
