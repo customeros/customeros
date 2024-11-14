@@ -44,7 +44,7 @@ export const FlowSettingsPanel = ({
   return (
     <article
       onClick={(e) => e.stopPropagation()}
-      className='fixed z-50 top-[0px] bottom-0 right-0 w-[400px] bg-white  border-l flex flex-col gap-4 animate-slideLeft'
+      className='fixed z-10 top-[0px] bottom-0 right-0 w-[400px] bg-white  border-l flex flex-col gap-4 animate-slideLeft'
     >
       {' '}
       <div className='flex justify-between items-center border-b border-gray-200 p-4 y-2 h-[41px]'>
