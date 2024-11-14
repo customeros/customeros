@@ -285,6 +285,8 @@ func (s *emailService) linkEmail(ctx context.Context, emailId, email, appSource 
 			tracing.TraceErr(span, errors.Wrap(err, "EmailWriteRepository.LinkWithContact"))
 			return err
 		}
+		// reset contact enrich attempts
+		_ = s.services.Neo4jRepositories.ContactWriteRepository.ResetEnrichAttempts(ctx, tenant, linkWith.Id)
 	case commonmodel.USER.String():
 		err = s.services.Neo4jRepositories.EmailWriteRepository.LinkWithUser(ctx, tenant, linkWith.Id, emailId, primary)
 		if err != nil {

@@ -6,7 +6,6 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -39,8 +38,7 @@ type ContactFields struct {
 
 type ContactWriteRepository interface {
 	SaveContactInTx(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, contactId string, data ContactFields) error
-	// Deprecated, Use CommonRepository.UpdateAnyProperty instead
-	UpdateAnyProperty(ctx context.Context, tenant, contactId string, property entity.ContactProperty, value any) error
+	ResetEnrichAttempts(ctx context.Context, tenant, contactId string) error
 }
 
 type contactWriteRepository struct {
@@ -133,20 +131,19 @@ func (r *contactWriteRepository) SaveContactInTx(ctx context.Context, tx *neo4j.
 	return err
 }
 
-func (r *contactWriteRepository) UpdateAnyProperty(ctx context.Context, tenant, contactId string, property entity.ContactProperty, value any) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactWriteRepository.UpdateTimeProperty")
+func (r *contactWriteRepository) ResetEnrichAttempts(ctx context.Context, tenant, contactId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactWriteRepository.ResetEnrichAttempts")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
 	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, contactId)
-	span.LogFields(log.String("property", string(property)), log.Object("value", value))
+	tracing.TagEntity(span, contactId)
 
-	cypher := fmt.Sprintf(`MATCH (t:Tenant {name: $tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id: $contactId})
-	SET c.%s = $value`, string(property))
+	cypher := `MATCH (t:Tenant {name: $tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id: $contactId})
+	WHERE c.enrichedAt IS NOT NULL
+	REMOVE c.techEnrichAttempts, c.techEnrichRequestedAt`
 	params := map[string]any{
 		"tenant":    tenant,
 		"contactId": contactId,
-		"value":     value,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

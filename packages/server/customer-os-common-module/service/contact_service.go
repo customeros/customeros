@@ -198,7 +198,7 @@ func (s *contactService) HideContact(ctx context.Context, contactId string) erro
 	}
 	tenant := common.GetTenantFromContext(ctx)
 
-	err = s.services.Neo4jRepositories.ContactWriteRepository.UpdateAnyProperty(ctx, tenant, contactId, neo4jentity.ContactPropertyHide, true)
+	err = s.services.Neo4jRepositories.CommonWriteRepository.UpdateBoolProperty(ctx, tenant, model.NodeLabelContact, contactId, string(neo4jentity.ContactPropertyHide), true)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("error while hiding contact %s: %s", contactId, err.Error())
@@ -233,7 +233,7 @@ func (s *contactService) ShowContact(ctx context.Context, contactId string) erro
 	}
 	tenant := common.GetTenantFromContext(ctx)
 
-	err = s.services.Neo4jRepositories.ContactWriteRepository.UpdateAnyProperty(ctx, tenant, contactId, neo4jentity.ContactPropertyHide, false)
+	err = s.services.Neo4jRepositories.CommonWriteRepository.UpdateBoolProperty(ctx, tenant, model.NodeLabelContact, contactId, string(neo4jentity.ContactPropertyHide), false)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("error while showing contact %s: %s", contactId, err.Error())
@@ -336,6 +336,9 @@ func (s *contactService) LinkContactWithOrganization(ctx context.Context, contac
 		return err
 	}
 
+	// reset contact enrich attempts
+	_ = s.services.Neo4jRepositories.ContactWriteRepository.ResetEnrichAttempts(ctx, tenant, contactId)
+
 	utils.EventCompleted(ctx, tenant, model.CONTACT.String(), contactId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
 	utils.EventCompleted(ctx, tenant, model.ORGANIZATION.String(), organizationId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
 
@@ -349,6 +352,7 @@ func (s *contactService) LinkContactWithOrganization(ctx context.Context, contac
 		StartedAt:      startedAt,
 		EndedAt:        endedAt,
 	}
+
 	err = s.services.RabbitMQService.PublishEvent(ctx, contactId, model.CONTACT, dtoData)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message AddContactToOrganization for contact"))

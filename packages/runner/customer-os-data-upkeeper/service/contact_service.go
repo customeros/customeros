@@ -773,7 +773,7 @@ func (s *contactService) findEmailsWithBetterContact(ctx context.Context) {
 				span.LogFields(log.Object("record", record))
 			} else {
 				// mark contact with enrich requested
-				err = s.commonServices.Neo4jRepositories.ContactWriteRepository.UpdateAnyProperty(ctx, record.Tenant, record.ContactId, neo4jentity.ContactPropertyFindWorkEmailWithBetterContactRequestedId, enrichmentResponse.BetterContactRequestId)
+				err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateStringProperty(ctx, nil, record.Tenant, model.NodeLabelContact, record.ContactId, string(neo4jentity.ContactPropertyFindWorkEmailWithBetterContactRequestedId), enrichmentResponse.BetterContactRequestId)
 				if err != nil {
 					tracing.TraceErr(span, err)
 				}
