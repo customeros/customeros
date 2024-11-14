@@ -71,8 +71,8 @@ export const SendTestEmail = observer(() => {
 
       <div className='pr-6 pl-6 pb-6 flex flex-col gap-2 '>
         <p className='text-sm mt-2'>
-          Immediately from {/* todo replace with the actual email*/} mailbox
-          setup for your tenant using random variables if applicable
+          The email will be sent from a test mailbox set up for you, using
+          random variables where applicable.
         </p>
         <Input
           autoFocus
