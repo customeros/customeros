@@ -985,7 +985,7 @@ type ComplexityRoot struct {
 		EmailValidate                              func(childComplexity int, id string) int
 		ExternalSystemCreate                       func(childComplexity int, input model.ExternalSystemInput) int
 		FlowChangeStatus                           func(childComplexity int, id string, status entity.FlowStatus) int
-		FlowDummy1Email                            func(childComplexity int, contactsCount int, userCount int, mailboxForEachUserCount int) int
+		FlowDummy1Email                            func(childComplexity int, flowsCount int, contactsCount int, userCount int, mailboxForEachUserCount int) int
 		FlowEmailActionTest                        func(childComplexity int, subject string, bodyTemplate string, sendToEmailAddress string) int
 		FlowMerge                                  func(childComplexity int, input model.FlowMergeInput) int
 		FlowParticipantAdd                         func(childComplexity int, flowID string, entityID string, entityType model1.EntityType) int
@@ -1777,7 +1777,7 @@ type MutationResolver interface {
 	FlowSenderMerge(ctx context.Context, flowID string, input model.FlowSenderMergeInput) (*model.FlowSender, error)
 	FlowSenderDelete(ctx context.Context, id string) (*model.Result, error)
 	FlowEmailActionTest(ctx context.Context, subject string, bodyTemplate string, sendToEmailAddress string) (*model.Result, error)
-	FlowDummy1Email(ctx context.Context, contactsCount int, userCount int, mailboxForEachUserCount int) (*model.Result, error)
+	FlowDummy1Email(ctx context.Context, flowsCount int, contactsCount int, userCount int, mailboxForEachUserCount int) (*model.Result, error)
 	InteractionEventLinkAttachment(ctx context.Context, eventID string, attachmentID string) (*model.Result, error)
 	InvoiceNextDryRunForContract(ctx context.Context, contractID string) (string, error)
 	InvoiceUpdate(ctx context.Context, input model.InvoiceUpdateInput) (*model.Invoice, error)
@@ -7055,7 +7055,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.FlowDummy1Email(childComplexity, args["contactsCount"].(int), args["userCount"].(int), args["mailboxForEachUserCount"].(int)), true
+		return e.complexity.Mutation.FlowDummy1Email(childComplexity, args["flowsCount"].(int), args["contactsCount"].(int), args["userCount"].(int), args["mailboxForEachUserCount"].(int)), true
 
 	case "Mutation.flowEmailActionTest":
 		if e.complexity.Mutation.FlowEmailActionTest == nil {
@@ -13136,7 +13136,7 @@ extend type Mutation {
     flowEmailActionTest(subject: String!, bodyTemplate: String!, sendToEmailAddress: String!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
     #mutations used for testing
-    flow_Dummy_1Email(contactsCount: Int!, userCount: Int!, mailboxForEachUserCount: Int!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    flow_Dummy_1Email(flowsCount: Int!, contactsCount: Int!, userCount: Int!, mailboxForEachUserCount: Int!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 #Flow
@@ -19058,23 +19058,50 @@ func (ec *executionContext) field_Mutation_flow_ChangeStatus_argsStatus(
 func (ec *executionContext) field_Mutation_flow_Dummy_1Email_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	arg0, err := ec.field_Mutation_flow_Dummy_1Email_argsContactsCount(ctx, rawArgs)
+	arg0, err := ec.field_Mutation_flow_Dummy_1Email_argsFlowsCount(ctx, rawArgs)
 	if err != nil {
 		return nil, err
 	}
-	args["contactsCount"] = arg0
-	arg1, err := ec.field_Mutation_flow_Dummy_1Email_argsUserCount(ctx, rawArgs)
+	args["flowsCount"] = arg0
+	arg1, err := ec.field_Mutation_flow_Dummy_1Email_argsContactsCount(ctx, rawArgs)
 	if err != nil {
 		return nil, err
 	}
-	args["userCount"] = arg1
-	arg2, err := ec.field_Mutation_flow_Dummy_1Email_argsMailboxForEachUserCount(ctx, rawArgs)
+	args["contactsCount"] = arg1
+	arg2, err := ec.field_Mutation_flow_Dummy_1Email_argsUserCount(ctx, rawArgs)
 	if err != nil {
 		return nil, err
 	}
-	args["mailboxForEachUserCount"] = arg2
+	args["userCount"] = arg2
+	arg3, err := ec.field_Mutation_flow_Dummy_1Email_argsMailboxForEachUserCount(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["mailboxForEachUserCount"] = arg3
 	return args, nil
 }
+func (ec *executionContext) field_Mutation_flow_Dummy_1Email_argsFlowsCount(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (int, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["flowsCount"]
+	if !ok {
+		var zeroVal int
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("flowsCount"))
+	if tmp, ok := rawArgs["flowsCount"]; ok {
+		return ec.unmarshalNInt2int(ctx, tmp)
+	}
+
+	var zeroVal int
+	return zeroVal, nil
+}
+
 func (ec *executionContext) field_Mutation_flow_Dummy_1Email_argsContactsCount(
 	ctx context.Context,
 	rawArgs map[string]interface{},
@@ -62000,7 +62027,7 @@ func (ec *executionContext) _Mutation_flow_Dummy_1Email(ctx context.Context, fie
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().FlowDummy1Email(rctx, fc.Args["contactsCount"].(int), fc.Args["userCount"].(int), fc.Args["mailboxForEachUserCount"].(int))
+			return ec.resolvers.Mutation().FlowDummy1Email(rctx, fc.Args["flowsCount"].(int), fc.Args["contactsCount"].(int), fc.Args["userCount"].(int), fc.Args["mailboxForEachUserCount"].(int))
 		}
 
 		directive1 := func(ctx context.Context) (interface{}, error) {

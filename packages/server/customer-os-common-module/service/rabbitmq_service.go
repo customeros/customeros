@@ -14,6 +14,7 @@ import (
 	"github.com/rabbitmq/amqp091-go"
 	"log"
 	"reflect"
+	"strings"
 	"sync"
 	"time"
 )
@@ -57,10 +58,13 @@ type EventHandler struct {
 }
 
 type RabbitMQService struct {
-	conn    *amqp091.Connection
-	channel *amqp091.Channel
-	mu      sync.Mutex
-	url     string
+	connection      *amqp091.Connection
+	connectionMutex sync.Mutex
+
+	publishChannel *amqp091.Channel
+	publishMutex   sync.Mutex
+
+	url string
 
 	handlerRegistry map[string]EventHandler
 
@@ -89,24 +93,26 @@ func NewRabbitMQService(url string, services *Services) RabbitMQService {
 	return rabbitMQService
 }
 
-// connect establishes a connection to RabbitMQ and opens a channel
 func (r *RabbitMQService) connect() {
+	r.connectionMutex.Lock()
+	defer r.connectionMutex.Unlock()
+
 	var err error
 
 	// Attempt to connect to RabbitMQ server
-	r.conn, err = amqp091.Dial(r.url)
+	r.connection, err = amqp091.Dial(r.url)
 	failOnError(err, "Failed to connect to RabbitMQ")
 
 	// Open a channel
-	r.channel, err = r.conn.Channel()
-	failOnError(err, "Failed to open a channel")
+	r.publishChannel, err = r.connection.Channel()
+	failOnError(err, "Failed to open the publish channel")
 
 	log.Println("Connected to RabbitMQ")
 
 	// Set up a notification for connection closures to handle reconnections
 	go func() {
-		notifyClose := r.conn.NotifyClose(make(chan *amqp091.Error)) // Capture connection close
-		err := <-notifyClose                                         // Wait for the error
+		notifyClose := r.connection.NotifyClose(make(chan *amqp091.Error)) // Capture connection close
+		err := <-notifyClose                                               // Wait for the error
 		if err != nil {
 			log.Printf("RabbitMQ connection closed: %v", err)
 			r.reconnect(context.Background())
@@ -124,8 +130,8 @@ func (r *RabbitMQService) reconnect(ctx context.Context) {
 		// Try reconnecting every 1 seconds
 		time.Sleep(250 * time.Millisecond)
 
-		r.connect() // Re-establish connection
-		if r.conn != nil && r.conn.IsClosed() == false {
+		r.connect()
+		if r.connection != nil && r.connection.IsClosed() == false {
 			return
 		}
 
@@ -178,8 +184,8 @@ func (r *RabbitMQService) PublishMessageOnExchange(ctx context.Context, message 
 
 	tracing.LogObjectAsJson(span, "message", message)
 
-	r.mu.Lock()
-	defer r.mu.Unlock()
+	r.publishMutex.Lock()
+	defer r.publishMutex.Unlock()
 
 	// Convert the message to JSON
 	jsonBody, err := json.Marshal(message)
@@ -189,22 +195,17 @@ func (r *RabbitMQService) PublishMessageOnExchange(ctx context.Context, message 
 	}
 
 	// Ensure the connection is not nil
-	if r.conn == nil {
-		tracing.TraceErr(span, errors.New("RabbitMQ connection is nil"))
-		return nil
-	}
-
-	if r.conn.IsClosed() {
+	if r.connection == nil || r.connection.IsClosed() || r.publishChannel == nil || r.publishChannel.IsClosed() {
 		r.reconnect(ctx)
 	}
 
-	if r.conn.IsClosed() {
+	if r.connection.IsClosed() {
 		tracing.TraceErr(span, errors.New("RabbitMQ connection is closed"))
 		return nil
 	}
 
 	// Try publishing the message
-	err = r.channel.Publish(
+	err = r.publishChannel.Publish(
 		exchange,   // Exchange name
 		routingKey, // Routing key
 		false,      // Mandatory
@@ -254,9 +255,6 @@ func (r *RabbitMQService) PublishEventCompletedBulk(ctx context.Context, tenant 
 
 // RegisterHandler allows you to register a handler for a specific event type
 func (r *RabbitMQService) RegisterHandler(eventType interface{}, handler func(ctx context.Context, services *Services, event any) error) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-
 	typeOf := reflect.TypeOf(eventType)
 
 	r.handlerRegistry[typeOf.Name()] = EventHandler{
@@ -266,31 +264,38 @@ func (r *RabbitMQService) RegisterHandler(eventType interface{}, handler func(ct
 	}
 }
 
-// Listen listens for messages from the specified queue and processes them with the provided handler
-func (r *RabbitMQService) ListenQueue(queueName string, exclusiveConsumer bool) {
+func (r *RabbitMQService) ListenQueue(queueName string) {
 	go func() {
 		for {
-			r.mu.Lock()
-			msgs, err := r.channel.Consume(
-				queueName,         // queue
-				"",                // consumer tag
-				false,             // auto-ack
-				exclusiveConsumer, // exclusive
-				false,             // no-local
-				false,             // no-wait
-				nil,               // args
+			// Open a new channel for each queue (ensure it's properly closed after use)
+			channel, err := r.connection.Channel()
+			if err != nil {
+				log.Printf("Failed to open channel for queue %s: %v. Retrying...", queueName, err)
+				r.reconnect(context.Background()) // Reconnect in case of connection failure
+				continue
+			}
+			defer channel.Close() // Ensure the channel is closed after use
+
+			msgs, err := channel.Consume(
+				queueName, // queue
+				"",        // consumer tag
+				false,     // auto-ack
+				false,     // exclusive
+				false,     // no-local
+				false,     // no-wait
+				nil,       // args
 			)
-			r.mu.Unlock()
 
 			if err != nil {
-				log.Printf("Failed to register consumer: %v. Retrying...", err)
+				log.Printf("Failed to register consumer on queue %s: %v. Reconnecting...", queueName, err)
 				r.reconnect(context.Background())
 				continue
 			}
 
 			done := make(chan bool)
 
-			// Start processing messages
+			log.Printf("Listening for messages on queue %s", queueName)
+
 			go func() {
 				for d := range msgs {
 					err := r.ProcessMessage(d)
@@ -301,14 +306,74 @@ func (r *RabbitMQService) ListenQueue(queueName string, exclusiveConsumer bool) 
 						retryAckNack(d, true)
 					}
 				}
-				// If msgs channel is closed, signal disconnection
+				// Signal disconnection when msgs channel is closed
 				done <- true
 			}()
 
-			// Wait for channel closure or disconnection signal
+			// Wait for channel closure to trigger reconnection in connectAndConsume
 			<-done
 			log.Printf("Connection lost for queue %s. Reconnecting...", queueName)
-			r.reconnect(context.Background()) // Re-establish connection and channel
+			r.reconnect(context.Background())
+		}
+	}()
+}
+
+func (r *RabbitMQService) ListenQueueExclusive(queueName string) {
+	go func() {
+		for {
+			// Open a new channel for each queue (ensure it's properly closed after use)
+			channel, err := r.connection.Channel()
+			if err != nil {
+				log.Printf("Failed to open channel for exclusive queue %s: %v. Retrying...", queueName, err)
+				r.reconnect(context.Background()) // Reconnect in case of connection failure
+				continue
+			}
+			defer channel.Close() // Ensure the channel is closed after use
+
+			msgs, err := channel.Consume(
+				queueName, // queue
+				"",        // consumer tag
+				false,     // auto-ack
+				true,      // exclusive
+				false,     // no-local
+				false,     // no-wait
+				nil,       // args
+			)
+
+			if err != nil {
+				if strings.Contains(err.Error(), "ACCESS_REFUSED") && strings.Contains(err.Error(), "exclusive") {
+					log.Printf("Exclusive consumer conflict for queue %s. Only one instance can consume exclusively.", queueName)
+					time.Sleep(10 * time.Second)
+					continue
+				} else {
+					log.Printf("Failed to register exclusive consumer on queue %s: %v. Reconnecting...", queueName, err)
+					r.reconnect(context.Background())
+					continue
+				}
+			}
+
+			log.Printf("Listening for messages on exclusive queue %s", queueName)
+
+			done := make(chan bool)
+
+			go func() {
+				for d := range msgs {
+					err := r.ProcessMessage(d)
+					if err != nil {
+						log.Printf("Failed to process message: %v", err)
+						retryAckNack(d, false)
+					} else {
+						retryAckNack(d, true)
+					}
+				}
+				// Signal disconnection when msgs channel is closed
+				done <- true
+			}()
+
+			// Wait for channel closure to trigger reconnection
+			<-done
+			log.Printf("Connection lost for queue %s. Reconnecting...", queueName)
+			r.reconnect(context.Background())
 		}
 	}()
 }
@@ -389,13 +454,10 @@ func (r *RabbitMQService) ProcessMessage(d amqp091.Delivery) error {
 
 // Close closes the RabbitMQ connection and channel
 func (r *RabbitMQService) Close() {
-	r.mu.Lock()
-	defer r.mu.Unlock()
+	r.connectionMutex.Lock()
+	defer r.connectionMutex.Unlock()
 
-	if r.channel != nil {
-		r.channel.Close()
-	}
-	if r.conn != nil {
-		r.conn.Close()
+	if r.connection != nil {
+		r.connection.Close()
 	}
 }
