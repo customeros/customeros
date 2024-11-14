@@ -82,13 +82,24 @@ func (s *domainService) GetPrimaryDomainForOrganizationWebsite(ctx context.Conte
 func (s *domainService) IsKnownCompanyHostingUrl(ctx context.Context, website string) bool {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "DomainService.IsKnownCompanyHostingUrl")
 	defer span.Finish()
+	span.LogKV("website", website)
+
+	website = strings.ToLower(website)
 
 	urlPatterns := s.getKnownOrganizationHostingUrlPatterns(ctx)
+
+	// check if url start with pattern or contains pattern prefixed with . or /
 	for _, pattern := range urlPatterns {
-		if strings.Contains(website, pattern) {
+		if pattern == "" {
+			continue
+		}
+		if strings.HasPrefix(website, pattern) || strings.Contains(website, "."+pattern) || strings.Contains(website, "/"+pattern) {
+			span.LogFields(log.String("result.pattern", pattern))
+			span.LogFields(log.Bool("result", true))
 			return true
 		}
 	}
+	span.LogFields(log.Bool("result", false))
 	return false
 }
 
@@ -97,16 +108,23 @@ func (s *domainService) getKnownOrganizationHostingUrlPatterns(ctx context.Conte
 	defer span.Finish()
 
 	urlPatterns := s.services.Cache.GetOrganizationWebsiteHostingUrlPatters()
-	var err error
 	if len(urlPatterns) == 0 {
-		urlPatterns, err = s.services.PostgresRepositories.OranizationWebsiteHostingPlatformRepository.GetAllUrlPatterns(ctx)
+		dbUrlPatterns, err := s.services.PostgresRepositories.OranizationWebsiteHostingPlatformRepository.GetAllUrlPatterns(ctx)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error while getting known organization hosting url patterns: %v", err)
 			return []string{}
 		}
+		for _, pattern := range dbUrlPatterns {
+			if pattern == "" || !strings.Contains(pattern, ".") || !strings.Contains(pattern, "/") {
+				// Not a valid pattern, continue. All patterns should have . or /
+				continue
+			}
+			urlPatterns = append(urlPatterns, pattern)
+		}
 		s.services.Cache.SetOrganizationWebsiteHostingUrlPatters(urlPatterns)
 	}
+	span.LogFields(log.Int("result.count", len(urlPatterns)))
 	return urlPatterns
 }
 
