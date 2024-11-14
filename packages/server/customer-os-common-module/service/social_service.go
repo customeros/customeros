@@ -262,8 +262,11 @@ func (s *socialService) AddSocialToEntity(ctx context.Context, linkWith LinkWith
 		}
 	}
 
+	// finally, notify linked entity
 	switch linkWith.Type {
 	case model.CONTACT:
+		// reset contact enrich attempts
+		_ = s.services.Neo4jRepositories.ContactWriteRepository.ResetEnrichAttempts(ctx, tenant, linkWith.Id)
 		err = s.services.RabbitMQService.PublishEvent(ctx, linkWith.Id, model.CONTACT, dto.AddSocialToContact{
 			SocialId: socialId,
 			Social:   socialUrl,

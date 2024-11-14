@@ -44,6 +44,8 @@ func (s *domainService) GetPrimaryDomainForOrganizationWebsite(ctx context.Conte
 	span.LogKV("websiteUrl", websiteUrl)
 	returnedWebsiteUrl := websiteUrl
 
+	websiteUrl = strings.ToLower(websiteUrl)
+
 	if strings.TrimSpace(websiteUrl) == "" {
 		return "", ""
 	}

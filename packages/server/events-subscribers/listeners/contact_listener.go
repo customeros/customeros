@@ -359,12 +359,12 @@ func (c *contactListenerImpl) enrichContactWithScrapInEnrichDetails(ctx context.
 		// mark contact as failed to enrich
 		err := c.services.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, tenant, model.NodeLabelContact, contact.Id, string(neo4jentity.ContactPropertyEnrichFailedAt), utils.NowPtr())
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "ContactWriteRepository.UpdateTimeProperty"))
+			tracing.TraceErr(span, errors.Wrap(err, "CommonWriteRepository.UpdateTimeProperty"))
 		}
 
-		err = c.services.Neo4jRepositories.ContactWriteRepository.UpdateAnyProperty(ctx, tenant, contact.Id, neo4jentity.ContactPropertyEnrichedScrapinRecordId, strconv.FormatUint(enrichPersonResponse.RecordId, 10))
+		err = c.services.Neo4jRepositories.CommonWriteRepository.UpdateStringProperty(ctx, nil, tenant, model.NodeLabelContact, contact.Id, string(neo4jentity.ContactPropertyEnrichedScrapinRecordId), strconv.FormatUint(enrichPersonResponse.RecordId, 10))
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "ContactWriteRepository.UpdateAnyProperty"))
+			tracing.TraceErr(span, errors.Wrap(err, "CommonWriteRepository.UpdateStringProperty"))
 		}
 
 		return nil
@@ -466,16 +466,16 @@ func (c *contactListenerImpl) enrichContactWithScrapInEnrichDetails(ctx context.
 		}
 	}
 
-	err := c.services.Neo4jRepositories.ContactWriteRepository.UpdateAnyProperty(ctx, tenant, contact.Id, neo4jentity.ContactPropertyEnrichedScrapinRecordId, strconv.FormatUint(enrichPersonResponse.RecordId, 10))
+	err := c.services.Neo4jRepositories.CommonWriteRepository.UpdateStringProperty(ctx, nil, tenant, model.NodeLabelContact, contact.Id, string(neo4jentity.ContactPropertyEnrichedScrapinRecordId), strconv.FormatUint(enrichPersonResponse.RecordId, 10))
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "ContactWriteRepository.UpdateAnyProperty"))
+		tracing.TraceErr(span, errors.Wrap(err, "CommonWriteRepository.UpdateStringProperty"))
 		c.log.Errorf("Error updating enriched scrap in person search param property: %s", err.Error())
 	}
 
 	// mark contact as enriched
 	err = c.services.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, tenant, model.NodeLabelContact, contact.Id, string(neo4jentity.ContactPropertyEnrichedAt), utils.NowPtr())
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "ContactWriteRepository.UpdateTimeProperty"))
+		tracing.TraceErr(span, errors.Wrap(err, "CommonWriteRepository.UpdateTimeProperty"))
 		c.log.Errorf("Error updating enriched at property: %s", err.Error())
 	}
 
