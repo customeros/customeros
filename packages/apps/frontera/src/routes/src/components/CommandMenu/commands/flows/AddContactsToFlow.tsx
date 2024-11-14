@@ -22,8 +22,9 @@ export const AddContactsToFlow = observer(() => {
   const handleSelect = (opt: ContactStore) => {
     if (!selectedFlowId) {
       ui.toastError('No flow selected', 'no-flow-selected');
-    return;
 
+      return;
+    }
     selectedFlow?.linkContact(opt.id);
   };
 
