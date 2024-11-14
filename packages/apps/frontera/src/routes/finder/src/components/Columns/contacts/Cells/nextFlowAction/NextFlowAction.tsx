@@ -10,6 +10,7 @@ import { DateTimeUtils } from '@utils/date.ts';
 import { Mail01 } from '@ui/media/icons/Mail01';
 import { useStore } from '@shared/hooks/useStore';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
+import { MailReply } from '@ui/media/icons/MailReply';
 import { LinkedinOutline } from '@ui/media/icons/LinkedinOutline';
 
 interface ExtendedNode extends Node {
@@ -18,7 +19,7 @@ interface ExtendedNode extends Node {
 
 const FLOW_ACTION_ICONS: Record<string, ReactElement> = {
   [FlowActionType.EMAIL_NEW]: <Mail01 className='size-3' />,
-  [FlowActionType.EMAIL_REPLY]: <Mail01 className='size-3' />,
+  [FlowActionType.EMAIL_REPLY]: <MailReply className='size-3' />,
   [FlowActionType.LINKEDIN_CONNECTION_REQUEST]: (
     <LinkedinOutline className='size-3' />
   ),
