@@ -6,11 +6,7 @@ import { FlowStore } from '@store/Flows/Flow.store';
 import { countryMap } from '@assets/countries/countriesMap';
 import { action, override, runInAction, makeObservable } from 'mobx';
 
-import {
-  Contact,
-  DataSource,
-  ContactUpdateInput,
-} from '@shared/types/__generated__/graphql.types';
+import { Contact, DataSource } from '@shared/types/__generated__/graphql.types';
 
 import { ContactService } from './__service__/Contacts.service';
 
@@ -143,110 +139,6 @@ export class ContactStore extends Syncable<Contact> {
     }
   }
 
-  async linkOrganization(organizationId: string) {
-    try {
-      this.isLoading = true;
-
-      const { contact_AddOrganizationById } =
-        await this.service.linkOrganization({
-          input: {
-            contactId: this.value.id,
-            organizationId,
-          },
-        });
-
-      this.load(contact_AddOrganizationById as Contact);
-    } catch (e) {
-      runInAction(() => {
-        this.error = (e as Error).message;
-      });
-    } finally {
-      runInAction(() => {
-        this.isLoading = false;
-      });
-    }
-  }
-
-  private async updateContact(input: ContactUpdateInput) {
-    try {
-      this.isLoading = true;
-
-      const { contact_Update } = await this.service.updateContact({
-        input: {
-          ...input,
-          id: this.value.id,
-          patch: true,
-        },
-      });
-
-      this.load(contact_Update as Contact);
-    } catch (e) {
-      runInAction(() => {
-        this.error = (e as Error).message;
-      });
-    } finally {
-      runInAction(() => {
-        this.isLoading = false;
-      });
-    }
-  }
-
-  async updateContactName() {
-    const name = this.value.name;
-
-    try {
-      await this.service.updateContact({
-        input: {
-          id: this.value.id,
-          name: name,
-        },
-      });
-    } catch (e) {
-      runInAction(() => {
-        this.error = (e as Error).message;
-      });
-    }
-  }
-
-  async addJobRole() {
-    try {
-      const { jobRole_Create } = await this.service.addJobRole({
-        contactId: this.getId(),
-        input: {
-          organizationId: this.organizationId,
-          description: this.value.jobRoles[0].description,
-          jobTitle: this.value.jobRoles[0].jobTitle,
-        },
-      });
-
-      this.load(jobRole_Create as Contact);
-      runInAction(() => {
-        set(this.value.jobRoles[0], 'id', jobRole_Create.id);
-      });
-    } catch (e) {
-      runInAction(() => {
-        this.error = (e as Error).message;
-      });
-    }
-  }
-
-  async updateJobRole() {
-    try {
-      await this.service.updateJobRole({
-        contactId: this.getId(),
-        input: {
-          id: this.value.jobRoles[0].id,
-          description: this.value.jobRoles[0].description,
-          jobTitle: this.value.jobRoles[0].jobTitle,
-        },
-      });
-    } catch (e) {
-      runInAction(() => {
-        this.error = (e as Error).message;
-      });
-    }
-  }
-
   async updateEmail(
     previousEmail: string,
     index?: number,
@@ -335,19 +227,6 @@ export class ContactStore extends Syncable<Contact> {
     }
   }
 
-  async removePhoneNumber(id: string) {
-    try {
-      await this.service.removePhoneNumber({
-        id,
-        contactId: this.getId(),
-      });
-    } catch (e) {
-      runInAction(() => {
-        this.error = (e as Error).message;
-      });
-    }
-  }
-
   async addSocial(
     url: string,
     options?: { onSuccess?: (serverId: string) => void },
@@ -371,23 +250,6 @@ export class ContactStore extends Syncable<Contact> {
       });
     } finally {
       options?.onSuccess?.(this.value.socials?.[0]?.id);
-    }
-  }
-
-  async updateSocial(index: number) {
-    const social = this.value.socials?.[index];
-
-    try {
-      await this.service.updateSocial({
-        input: {
-          id: social.id,
-          url: social.url,
-        },
-      });
-    } catch (e) {
-      runInAction(() => {
-        this.error = (e as Error).message;
-      });
     }
   }
 
@@ -424,27 +286,6 @@ export class ContactStore extends Syncable<Contact> {
     } finally {
       this.isLoading = false;
       this.invalidate();
-    }
-  }
-
-  async addTagToContact(tagId: string, tagName: string) {
-    try {
-      await this.service.addTagsToContact({
-        input: {
-          contactId: this.getId(),
-          tag: {
-            id: tagId,
-            name: tagName,
-          },
-        },
-      });
-      runInAction(() => {
-        this.root.ui.toastSuccess('Tag has been added', 'tags-added-success');
-      });
-    } catch (e) {
-      runInAction(() => {
-        this.error = (e as Error).message;
-      });
     }
   }
 

@@ -121,12 +121,10 @@ describe('OrganizationsService - Integration Tests', () => {
               ?.lastTouchPointTimelineEvent,
           )
           .not.toBeNull();
-        expect
-          .soft(
-            organization.organization?.lastTouchpoint
-              ?.lastTouchPointTimelineEventId,
-          )
-          .not.toBeNull();
+        expect(
+          organization.organization?.lastTouchpoint
+            ?.lastTouchPointTimelineEventId,
+        ).not.toBeNull();
         expect
           .soft(organization.organization?.lastTouchpoint?.lastTouchPointType)
           .not.toBeNull();
