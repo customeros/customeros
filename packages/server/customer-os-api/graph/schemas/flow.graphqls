@@ -17,6 +17,11 @@ extend type Mutation {
 
     flowSender_Merge(flowId: ID!, input: FlowSenderMergeInput!): FlowSender! @hasRole(roles: [ADMIN, USER]) @hasTenant
     flowSender_Delete(id: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
+
+    flowEmailActionTest(subject: String!, bodyTemplate: String!, sendToEmailAddress: String!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
+
+    #mutations used for testing
+    flow_Dummy_1Email(contactsCount: Int!, userCount: Int!, mailboxForEachUserCount: Int!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 #Flow
