@@ -48,6 +48,15 @@ export const ContactAvatarHeader = observer(() => {
 
   const contactsPreset = store.tableViewDefs.contactsPreset;
   const contactsTargetPreset = store.tableViewDefs.contactsTargetPreset;
+  const contactsFlowPreset = store.tableViewDefs.contactsFlowsPreset;
+
+  useEffect(() => {
+    hasSubmitedRef?.current && validate();
+  }, [linkedin, organizationId]);
+
+  if (contactsFlowPreset === preset) {
+    return null;
+  }
 
   const options = store?.organizations
     ?.toComputedArray((arr) => {
@@ -121,10 +130,6 @@ export const ContactAvatarHeader = observer(() => {
     });
     hasSubmitedRef.current = false;
   };
-
-  useEffect(() => {
-    hasSubmitedRef?.current && validate();
-  }, [linkedin, organizationId]);
 
   return (
     <Modal
