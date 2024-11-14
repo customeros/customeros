@@ -1,4 +1,5 @@
 export * from './StopFlow';
+export * from './SendTestEmail';
 export * from './StartFlow';
 export * from './RenameFlow';
 export * from './CreateNewFlow';

@@ -46,6 +46,7 @@ export type CommandMenuType =
   | 'FlowHub'
   | 'StartFlow'
   | 'StopFlow'
+  | 'SendTestEmail'
   | 'EditContactFlow'
   | 'AddContactsToFlow'
   | 'ActiveFlowUpdateInfo'

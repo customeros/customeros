@@ -12,7 +12,7 @@ import { Button } from '@ui/form/Button/Button';
 import { Editor } from '@ui/form/Editor/Editor';
 import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
-// import { MailAdd } from '@ui/media/icons/MailAdd';
+import { MailAdd } from '@ui/media/icons/MailAdd';
 import { ZenCircle } from '@ui/media/icons/ZenCircle';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { EmailTemplate } from '@shared/components/EmailTemplate';
@@ -57,6 +57,8 @@ export const EmailSettingsPanel = observer(() => {
   const flow = flows.value.get(flowId)?.value?.name;
 
   useEffect(() => {
+    ui.commandMenu.setCallback(handleSave);
+
     const isSubjectChanged = subject !== data?.subject;
     const plainTextBodyBefore =
       data?.bodyTemplate && extractPlainText(data?.bodyTemplate)?.trim();
@@ -265,16 +267,28 @@ export const EmailSettingsPanel = observer(() => {
             />
           </div>
         </div>
-        {/*<Button*/}
-        {/*  size='lg'*/}
-        {/*  isDisabled*/}
-        {/*  variant='ghost'*/}
-        {/*  colorScheme='primary'*/}
-        {/*  leftIcon={<MailAdd className='text-inherit size-4' />}*/}
-        {/*  className='text-primary-700 w-full text-sm absolute bottom-0 py-4 rounded-none border-t border-solid border-gray-200'*/}
-        {/*>*/}
-        {/*  Set up a test email...*/}
-        {/*</Button>*/}
+          <Button
+              size='lg'
+              variant='ghost'
+              colorScheme='primary'
+              leftIcon={<MailAdd className='text-inherit size-4' />}
+              className='text-primary-700 w-full text-sm absolute bottom-0 py-4 rounded-none border-t border-solid border-gray-200'
+              onClick={() => {
+                  ui.commandMenu.setOpen(true, {
+                      type: 'SendTestEmail',
+                      context: {
+                          entity: 'Flow',
+                          ids: [flowId],
+                          meta: {
+                              subject,
+                              bodyTemplate,
+                          },
+                      },
+                  });
+              }}
+          >
+              Set up a test email...
+          </Button>
         <EmailEditorModal
           flowName={flow}
           subject={subject}

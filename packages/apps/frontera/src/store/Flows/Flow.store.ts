@@ -328,6 +328,39 @@ export class FlowStore implements Store<Flow> {
       });
     }
   };
+
+  public sendTestEmail = async (
+    payload: {
+      subject: string;
+      bodyTemplate: string;
+      sendToEmailAddress: string;
+    },
+    options?: {
+      onSuccess: () => void;
+    },
+  ) => {
+    this.isLoading = true;
+
+    try {
+      await this.service.sendTestEmail(payload);
+
+      this.root.ui.toastSuccess('Test email sent', 'send-test-email-success');
+      runInAction(() => {
+        options?.onSuccess();
+      });
+    } catch (e) {
+      runInAction(() => {
+        this.root.ui.toastError(
+          "We couldn't send the test email",
+          'send-test-email-error',
+        );
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+      });
+    }
+  };
 }
 
 const getDefaultValue = (): Flow => ({

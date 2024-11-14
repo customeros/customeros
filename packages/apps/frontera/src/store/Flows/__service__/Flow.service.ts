@@ -1,20 +1,24 @@
 import type { Transport } from '@store/transport';
 
-import {
-  FlowMergeMutation,
-  FlowMergeMutationVariables,
-} from '@store/Flows/__service__/flowMerge.generated';
-import {
-  FlowChangeStatusMutation,
-  FlowChangeStatusMutationVariables,
-} from '@store/Flows/__service__/changeFlowStatus.generated';
-
 import { Flow } from '@graphql/types';
 
 import GetFlowDocument from './getFlow.graphql';
 import GetFlowsDocument from './getFlows.graphql';
 import MergeFlowDocument from './flowMerge.graphql';
 import ChangeStatusDocument from './changeFlowStatus.graphql';
+import SendTestEmailDocument from './flowEmailActionTest.graphql';
+import {
+  FlowMergeMutation,
+  FlowMergeMutationVariables,
+} from './flowMerge.generated';
+import {
+  FlowChangeStatusMutation,
+  FlowChangeStatusMutationVariables,
+} from './changeFlowStatus.generated';
+import {
+  FlowEmailActionTestMutation,
+  FlowEmailActionTestMutationVariables,
+} from './flowEmailActionTest.generated.ts';
 
 class FlowService {
   private static instance: FlowService | null = null;
@@ -57,6 +61,13 @@ class FlowService {
       FlowChangeStatusMutation,
       FlowChangeStatusMutationVariables
     >(ChangeStatusDocument, payload);
+  }
+
+  async sendTestEmail(payload: FlowEmailActionTestMutationVariables) {
+    return this.transport.graphql.request<
+      FlowEmailActionTestMutation,
+      FlowEmailActionTestMutationVariables
+    >(SendTestEmailDocument, payload);
   }
 }
 
