@@ -183,12 +183,12 @@ export const EmailSettingsPanel = observer(() => {
         <div className='flex gap-2'>
           <div>
             <Button size='xs' variant='ghost' onClick={handleCancel}>
-              Cancel
+              Cancel changes
             </Button>
           </div>
           <div>
             <Button size='xs' variant='outline' onClick={handleSave}>
-              Save changes
+              Save email
             </Button>
           </div>
         </div>

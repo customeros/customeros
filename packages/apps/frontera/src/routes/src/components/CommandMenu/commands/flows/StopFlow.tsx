@@ -36,21 +36,17 @@ export const StopFlow = observer(() => {
     <Command>
       <article className='relative w-full p-6 flex flex-col border-b border-b-gray-100'>
         <div className='flex items-center justify-between'>
-          <h1 className='text-base font-semibold'>
-            Stop flow '{flow?.value.name}'?
-          </h1>
+          <h1 className='text-base font-semibold'>Stop {flow?.value.name}?</h1>
           <CommandCancelIconButton onClose={handleClose} />
         </div>
 
         {/* todo update when we support multiple record types*/}
         <p className='text-sm mt-2'>
-          This will stop all upcoming steps for your active
-          {flow?.value.participants?.length === 1 ? 'contact' : 'contacts'} from
-          taking place.
+          This will stop all upcoming steps for your active contacts from taking
+          place.
           <p className='mt-2'>
-            When you start the flow again,{' '}
-            {flow?.value.participants?.length === 1 ? 'contact' : 'contacts'}{' '}
-            will pick up from the last completed step on a new schedule.
+            When you start the flow again, contacts will pick up from the last
+            completed step on a new schedule.
           </p>
         </p>
 
