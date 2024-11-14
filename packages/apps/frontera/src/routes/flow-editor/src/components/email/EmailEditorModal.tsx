@@ -21,7 +21,7 @@ interface EmailEditorModalProps {
   bodyTemplate: string;
   isEditorOpen: boolean;
   handleSave: () => void;
-  action: FlowActionType = FlowActionType.EMAIL_NEW;
+  action?: FlowActionType;
   handleCancel: () => void;
   variables?: Array<EmailVariableName>;
   setSubject: (subject: string) => void;
