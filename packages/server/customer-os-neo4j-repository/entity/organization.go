@@ -10,6 +10,7 @@ type OrganizationProperty string
 
 const (
 	OrganizationPropertyEmployees                 OrganizationProperty = "employees"
+	OrganizationPropertyUpdatedAt                 OrganizationProperty = "updatedAt"
 	OrganizationPropertyYearFounded               OrganizationProperty = "yearFounded"
 	OrganizationPropertyHide                      OrganizationProperty = "hide"
 	OrganizationPropertyStage                     OrganizationProperty = "stage"

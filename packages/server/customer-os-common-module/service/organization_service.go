@@ -111,13 +111,14 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 		// Dedup organizations by domain on creation
 		if len(domains) > 0 {
 			// for each domain check that no org exists with that domain
-			// if exist reject creation and return existing org id and error
+			// if exist reject creation and return existing org id
 			for _, domain := range domains {
 				orgDbNode, err := s.services.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByDomain(ctx, tenant, domain)
 				if err != nil {
 					tracing.TraceErr(span, err)
 					return nil, err
 				}
+				// existing organization found
 				if orgDbNode != nil {
 					organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(orgDbNode)
 					if organizationEntity.Hide {
@@ -127,6 +128,16 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 							return nil, nil
 						}
 					}
+
+					// touch organization
+					err = s.services.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, tenant, model.NodeLabelOrganization, organizationEntity.ID, string(neo4jentity.OrganizationPropertyUpdatedAt), utils.NowPtr())
+					if err != nil {
+						tracing.TraceErr(span, err)
+						s.services.Logger.Errorf("Failed to update organization updated at property: %v", err.Error())
+					}
+
+					// send completion event for refresh
+					utils.EventCompleted(ctx, tenant, model.ORGANIZATION.String(), organizationEntity.ID, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
 					return &organizationEntity.ID, nil
 				}
 			}
