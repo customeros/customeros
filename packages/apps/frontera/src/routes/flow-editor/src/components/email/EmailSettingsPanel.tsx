@@ -196,9 +196,10 @@ export const EmailSettingsPanel = observer(() => {
 
       <div className='px-4'>
         <Tooltip
+          align='start'
           label={
             data?.action === FlowActionType.EMAIL_REPLY
-              ? `The subject will start with 'RE:' followed by the original subject (this can't be changed)`
+              ? `Reply to email subjects can't be edited`
               : ''
           }
         >
