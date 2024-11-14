@@ -86,16 +86,22 @@ func (h *organizationEventHandler) EnrichOrganizationByRequest(ctx context.Conte
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
+
+	innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+		Tenant:    eventData.Tenant,
+		AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
+	})
+
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
 	span.SetTag(tracing.SpanTagEntityId, organizationId)
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 
-	domain, _ := h.services.CommonServices.DomainService.GetPrimaryDomainForOrganizationWebsite(ctx, eventData.Website)
+	domain, _ := h.services.CommonServices.DomainService.GetPrimaryDomainForOrganizationWebsite(innerCtx, eventData.Website)
 	if domain == "" {
 		return nil
 	}
 
-	return h.enrichOrganization(ctx, eventData.Tenant, organizationId, domain)
+	return h.enrichOrganization(innerCtx, eventData.Tenant, organizationId, domain)
 }
 
 func (h *organizationEventHandler) enrichOrganization(ctx context.Context, tenant, organizationId, domain string) error {

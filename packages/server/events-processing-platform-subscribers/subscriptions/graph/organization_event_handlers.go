@@ -66,11 +66,16 @@ func (h *OrganizationEventHandler) OnOrganizationCreate(ctx context.Context, evt
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
+	innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+		Tenant:    eventData.Tenant,
+		AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
+	})
+
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
 
-	session := utils.NewNeo4jWriteSession(ctx, *h.services.CommonServices.Neo4jRepositories.Neo4jDriver)
-	defer session.Close(ctx)
-	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+	session := utils.NewNeo4jWriteSession(innerCtx, *h.services.CommonServices.Neo4jRepositories.Neo4jDriver)
+	defer session.Close(innerCtx)
+	_, err := session.ExecuteWrite(innerCtx, func(tx neo4j.ManagedTransaction) (any, error) {
 		var err error
 		data := neo4jrepository.OrganizationCreateFields{
 			AggregateVersion: evt.Version,
@@ -107,7 +112,7 @@ func (h *OrganizationEventHandler) OnOrganizationCreate(ctx context.Context, evt
 			LeadSource:         eventData.LeadSource,
 			IcpFit:             eventData.IcpFit,
 		}
-		err = h.services.CommonServices.Neo4jRepositories.OrganizationWriteRepository.CreateOrganizationInTx(ctx, tx, eventData.Tenant, organizationId, data)
+		err = h.services.CommonServices.Neo4jRepositories.OrganizationWriteRepository.CreateOrganizationInTx(innerCtx, tx, eventData.Tenant, organizationId, data)
 		if err != nil {
 			h.log.Errorf("Error while saving organization %s: %s", organizationId, err.Error())
 			return nil, err
@@ -121,7 +126,7 @@ func (h *OrganizationEventHandler) OnOrganizationCreate(ctx context.Context, evt
 				ExternalSource:   eventData.ExternalSystem.ExternalSource,
 				SyncDate:         eventData.ExternalSystem.SyncDate,
 			}
-			err = h.services.CommonServices.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntityInTx(ctx, tx, eventData.Tenant, organizationId, commonmodel.NodeLabelOrganization, externalSystemData)
+			err = h.services.CommonServices.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntityInTx(innerCtx, tx, eventData.Tenant, organizationId, commonmodel.NodeLabelOrganization, externalSystemData)
 			if err != nil {
 				h.log.Errorf("Error while link organization %s with external system %s: %s", organizationId, eventData.ExternalSystem.ExternalSystemId, err.Error())
 				return nil, err
@@ -135,7 +140,7 @@ func (h *OrganizationEventHandler) OnOrganizationCreate(ctx context.Context, evt
 	}
 
 	// set customer os id
-	customerOsErr := h.setCustomerOsId(ctx, eventData.Tenant, organizationId)
+	customerOsErr := h.setCustomerOsId(innerCtx, eventData.Tenant, organizationId)
 	if customerOsErr != nil {
 		tracing.TraceErr(span, customerOsErr)
 		h.log.Errorf("Failed to set customer os id for tenant %s organization %s", eventData.Tenant, organizationId)
@@ -148,7 +153,7 @@ func (h *OrganizationEventHandler) OnOrganizationCreate(ctx context.Context, evt
 		return errors.Wrap(err, "json.Unmarshal")
 	} else {
 		if evtMetadata.UserId != "" {
-			err = h.services.CommonServices.Neo4jRepositories.OrganizationWriteRepository.ReplaceOwner(ctx, nil, eventData.Tenant, organizationId, evtMetadata.UserId)
+			err = h.services.CommonServices.Neo4jRepositories.OrganizationWriteRepository.ReplaceOwner(innerCtx, nil, eventData.Tenant, organizationId, evtMetadata.UserId)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				h.log.Errorf("Failed to replace owner of organization %s with user %s", organizationId, evtMetadata.UserId)
@@ -157,7 +162,7 @@ func (h *OrganizationEventHandler) OnOrganizationCreate(ctx context.Context, evt
 	}
 
 	// Set create action
-	_, err = h.services.CommonServices.Neo4jRepositories.ActionWriteRepository.MergeByActionType(ctx, nil, eventData.Tenant, organizationId, commonmodel.ORGANIZATION, neo4jenum.ActionCreated, "", "", eventData.CreatedAt, constants.AppSourceEventProcessingPlatformSubscribers)
+	_, err = h.services.CommonServices.Neo4jRepositories.ActionWriteRepository.MergeByActionType(innerCtx, nil, eventData.Tenant, organizationId, commonmodel.ORGANIZATION, neo4jenum.ActionCreated, "", "", eventData.CreatedAt, constants.AppSourceEventProcessingPlatformSubscribers)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Failed creating likelihood update action for organization %s: %s", organizationId, err.Error())
@@ -165,9 +170,9 @@ func (h *OrganizationEventHandler) OnOrganizationCreate(ctx context.Context, evt
 
 	// set domain
 	if eventData.Website != "" {
-		primaryDomain, _ := h.services.CommonServices.DomainService.GetPrimaryDomainForOrganizationWebsite(ctx, eventData.Website)
+		primaryDomain, _ := h.services.CommonServices.DomainService.GetPrimaryDomainForOrganizationWebsite(innerCtx, eventData.Website)
 		if primaryDomain != "" {
-			err = h.services.CommonServices.OrganizationService.LinkWithDomain(ctx, nil, organizationId, primaryDomain)
+			err = h.services.CommonServices.OrganizationService.LinkWithDomain(innerCtx, nil, organizationId, primaryDomain)
 		}
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -175,18 +180,13 @@ func (h *OrganizationEventHandler) OnOrganizationCreate(ctx context.Context, evt
 		}
 	}
 
-	// Request last touch point update
-	innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
-		Tenant:    eventData.Tenant,
-		AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
-	})
 	err = h.services.CommonServices.OrganizationService.RequestRefreshLastTouchpoint(innerCtx, organizationId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while refreshing last touchpoint for organization %s: %s", organizationId, err.Error())
 	}
 
-	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, h.grpcClients, utils.NewEventCompletedDetails().WithCreate())
+	utils.EventCompleted(innerCtx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, h.grpcClients, utils.NewEventCompletedDetails().WithCreate())
 
 	return nil
 }
@@ -240,8 +240,13 @@ func (h *OrganizationEventHandler) OnOrganizationUpdate(ctx context.Context, evt
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 	span.SetTag(tracing.SpanTagEntityId, organizationId)
 
+	innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+		Tenant:    eventData.Tenant,
+		AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
+	})
+
 	var beforeOrganizationEntity, afterOrganizationEntity neo4jentity.OrganizationEntity
-	existingOrganization, err := h.services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganization(ctx, eventData.Tenant, organizationId)
+	existingOrganization, err := h.services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganization(innerCtx, eventData.Tenant, organizationId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -307,10 +312,10 @@ func (h *OrganizationEventHandler) OnOrganizationUpdate(ctx context.Context, evt
 		UpdateIcpFit:             eventData.UpdateIcpFit(),
 	}
 
-	err = h.services.CommonServices.Neo4jRepositories.OrganizationWriteRepository.UpdateOrganization(ctx, eventData.Tenant, organizationId, data)
+	err = h.services.CommonServices.Neo4jRepositories.OrganizationWriteRepository.UpdateOrganization(innerCtx, eventData.Tenant, organizationId, data)
 
 	// set customer os id if not set
-	customerOsErr := h.setCustomerOsId(ctx, eventData.Tenant, organizationId)
+	customerOsErr := h.setCustomerOsId(innerCtx, eventData.Tenant, organizationId)
 	if customerOsErr != nil {
 		tracing.TraceErr(span, customerOsErr)
 		h.log.Errorf("Failed to set customer os id for tenant %s organization %s", eventData.Tenant, organizationId)
@@ -323,10 +328,10 @@ func (h *OrganizationEventHandler) OnOrganizationUpdate(ctx context.Context, evt
 
 	// link with external system
 	if eventData.ExternalSystem.Available() {
-		session := utils.NewNeo4jWriteSession(ctx, *h.services.CommonServices.Neo4jRepositories.Neo4jDriver)
-		defer session.Close(ctx)
+		session := utils.NewNeo4jWriteSession(innerCtx, *h.services.CommonServices.Neo4jRepositories.Neo4jDriver)
+		defer session.Close(innerCtx)
 
-		_, err = session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err = session.ExecuteWrite(innerCtx, func(tx neo4j.ManagedTransaction) (any, error) {
 			if eventData.ExternalSystem.Available() {
 				externalSystemData := neo4jmodel.ExternalSystem{
 					ExternalSystemId: eventData.ExternalSystem.ExternalSystemId,
@@ -336,7 +341,7 @@ func (h *OrganizationEventHandler) OnOrganizationUpdate(ctx context.Context, evt
 					ExternalSource:   eventData.ExternalSystem.ExternalSource,
 					SyncDate:         eventData.ExternalSystem.SyncDate,
 				}
-				innerErr := h.services.CommonServices.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntityInTx(ctx, tx, eventData.Tenant, organizationId, commonmodel.NodeLabelOrganization, externalSystemData)
+				innerErr := h.services.CommonServices.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntityInTx(innerCtx, tx, eventData.Tenant, organizationId, commonmodel.NodeLabelOrganization, externalSystemData)
 				if innerErr != nil {
 					h.log.Errorf("Error while link organization %s with external system %s: %s", organizationId, eventData.ExternalSystem.ExternalSystemId, err.Error())
 					return nil, innerErr
@@ -354,13 +359,13 @@ func (h *OrganizationEventHandler) OnOrganizationUpdate(ctx context.Context, evt
 	if eventData.UpdateSlackChannelId() {
 		if beforeOrganizationEntity.ID != "" && beforeOrganizationEntity.SlackChannelId != eventData.SlackChannelId {
 			if eventData.SlackChannelId == "" {
-				err := h.services.CommonServices.Neo4jRepositories.IssueWriteRepository.RemoveReportedByOrganizationWithGroupId(ctx, eventData.Tenant, organizationId, beforeOrganizationEntity.SlackChannelId)
+				err := h.services.CommonServices.Neo4jRepositories.IssueWriteRepository.RemoveReportedByOrganizationWithGroupId(innerCtx, eventData.Tenant, organizationId, beforeOrganizationEntity.SlackChannelId)
 				if err != nil {
 					tracing.TraceErr(span, err)
 					h.log.Errorf("Failed to remove reported by organization with groupId %s: %s", beforeOrganizationEntity.SlackChannelId, err.Error())
 				}
 			} else {
-				err := h.services.CommonServices.Neo4jRepositories.IssueWriteRepository.ReportedByOrganizationWithGroupId(ctx, eventData.Tenant, organizationId, eventData.SlackChannelId)
+				err := h.services.CommonServices.Neo4jRepositories.IssueWriteRepository.ReportedByOrganizationWithGroupId(innerCtx, eventData.Tenant, organizationId, eventData.SlackChannelId)
 				if err != nil {
 					tracing.TraceErr(span, err)
 					h.log.Errorf("Failed to mark reported by organization with groupId %s: %s", eventData.SlackChannelId, err.Error())
@@ -369,7 +374,7 @@ func (h *OrganizationEventHandler) OnOrganizationUpdate(ctx context.Context, evt
 		}
 	}
 
-	updatedOrganization, err := h.services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganization(ctx, eventData.Tenant, organizationId)
+	updatedOrganization, err := h.services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganization(innerCtx, eventData.Tenant, organizationId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -377,9 +382,9 @@ func (h *OrganizationEventHandler) OnOrganizationUpdate(ctx context.Context, evt
 	afterOrganizationEntity = *neo4jmapper.MapDbNodeToOrganizationEntity(updatedOrganization)
 
 	if beforeOrganizationEntity.Website != afterOrganizationEntity.Website {
-		primaryDomain, _ := h.services.CommonServices.DomainService.GetPrimaryDomainForOrganizationWebsite(ctx, eventData.Website)
+		primaryDomain, _ := h.services.CommonServices.DomainService.GetPrimaryDomainForOrganizationWebsite(innerCtx, eventData.Website)
 		if primaryDomain != "" {
-			err = h.services.CommonServices.OrganizationService.LinkWithDomain(ctx, nil, organizationId, primaryDomain)
+			err = h.services.CommonServices.OrganizationService.LinkWithDomain(innerCtx, nil, organizationId, primaryDomain)
 		}
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -388,11 +393,11 @@ func (h *OrganizationEventHandler) OnOrganizationUpdate(ctx context.Context, evt
 	}
 
 	if beforeOrganizationEntity.Stage != afterOrganizationEntity.Stage {
-		h.handleStageChange(ctx, eventData.Tenant, &beforeOrganizationEntity, &afterOrganizationEntity)
+		h.handleStageChange(innerCtx, eventData.Tenant, &beforeOrganizationEntity, &afterOrganizationEntity)
 	}
 
 	if eventData.AppSource != constants.AppSourceCustomerOsApi {
-		utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, h.grpcClients, utils.NewEventCompletedDetails().WithUpdate())
+		utils.EventCompleted(innerCtx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, h.grpcClients, utils.NewEventCompletedDetails().WithUpdate())
 	}
 
 	return nil

@@ -76,6 +76,11 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 		tracing.TagEntity(span, *organizationId)
 	}
 
+	// TODO: check flows where tenant is missing on context
+	if common.GetTenantFromContext(ctx) == "" {
+		tracing.TraceErr(span, errors.New("missing tenant in context for organizationService.Save"))
+	}
+
 	var err error
 	var existing *neo4jentity.OrganizationEntity
 	createFlow := false
@@ -104,6 +109,7 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 	// if the org is new, we are looking for existing orgs with the same domain based on the website, we show it and we return it
 	if organizationId == nil {
 		createFlow = true
+		span.LogFields(log.String("process.flow", "create"))
 		domains := input.Domains
 		if input.UpdateWebsite && input.Website != "" && primaryDomainFromWebsite != "" {
 			domains = append(domains, primaryDomainFromWebsite)
@@ -123,6 +129,8 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 				}
 				// existing organization found
 				if orgDbNode != nil {
+					span.LogFields(log.String("result.duplicate.domain", domain))
+					span.LogFields(log.String("result.duplicate.orgId", orgDbNode.Props["id"].(string)))
 					organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(orgDbNode)
 					if organizationEntity.Hide {
 						err = s.Show(ctx, tx, tenant, organizationEntity.ID)
@@ -158,6 +166,7 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 			}
 		}
 	} else {
+		span.LogFields(log.String("process.flow", "update"))
 		existing, err = s.GetById(ctx, tenant, *organizationId)
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -224,6 +233,7 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 			return nil, err
 		}
 		organizationId = &generatedId
+		tracing.TagEntity(span, *organizationId)
 	}
 
 	// Clean and update organization name if not updated manually
