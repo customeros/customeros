@@ -166,6 +166,7 @@ export const contactsHelperTextMap: Record<string, string> = {
   [ColumnViewType.ContactsRegion]: 'E.g. California',
   [ColumnViewType.ContactsFlows]: 'E.g. Education',
   [ColumnViewType.ContactsPersonalEmails]: 'E.g. steph@convoy.com',
+  [ColumnViewType.ContactsPrimaryEmail]: 'E.g. steph@acme.com',
   [ColumnViewType.ContactsFlowStatus]: 'E.g. Completed',
   [ColumnViewType.ContactsFlowNextAction]: ' E.g. Step 2/3',
 };
