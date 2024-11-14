@@ -635,7 +635,12 @@ func (h *organizationEventHandler) OnAdjustIndustry(ctx context.Context, evt eve
 	span.SetTag(tracing.SpanTagEntityId, organizationId)
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 
-	orgDbNode, err := h.services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganization(ctx, eventData.Tenant, organizationId)
+	innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+		Tenant:    eventData.Tenant,
+		AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
+	})
+
+	orgDbNode, err := h.services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganization(innerCtx, eventData.Tenant, organizationId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error getting organization with id %s: %v", organizationId, err)
@@ -643,10 +648,10 @@ func (h *organizationEventHandler) OnAdjustIndustry(ctx context.Context, evt eve
 	}
 	organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(orgDbNode)
 
-	industry := h.mapIndustryToGICS(ctx, eventData.Tenant, organizationId, organizationEntity.Industry)
+	industry := h.mapIndustryToGICS(innerCtx, eventData.Tenant, organizationId, organizationEntity.Industry)
 
 	if industry != "" && organizationEntity.Industry != industry {
-		_, err = h.services.CommonServices.OrganizationService.Save(ctx, nil, eventData.Tenant, &organizationId, &repository.OrganizationSaveFields{
+		_, err = h.services.CommonServices.OrganizationService.Save(innerCtx, nil, eventData.Tenant, &organizationId, &repository.OrganizationSaveFields{
 			SourceFields: neo4jmodel.SourceFields{
 				AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 				Source:    constants.SourceOpenline,
