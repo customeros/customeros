@@ -70,6 +70,7 @@ import {
   OrganizationBulkCommands,
   InstallLinkedInExtension,
   RenameOrganizationProperty,
+  ConfirmEmailContentChanges,
   ChooseOpportunityOrganization,
   ContactEmailVerificationInfoModal,
 } from './commands';
@@ -136,6 +137,7 @@ const Commands: Record<CommandMenuType, ReactElement> = {
   FlowValidationMessage: <FlowValidationMessage />,
   ActiveFlowUpdateInfo: <ActiveFlowUpdateInfo />,
   GetBrowserExtensionLink: <GetBrowserExtensionLink />,
+  ConfirmEmailContentChanges: <ConfirmEmailContentChanges />,
   InstallLinkedInExtension: <InstallLinkedInExtension />,
 
   //TableViewDef

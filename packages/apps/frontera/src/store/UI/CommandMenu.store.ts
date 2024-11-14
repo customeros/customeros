@@ -53,6 +53,7 @@ export type CommandMenuType =
   | 'GetBrowserExtensionLink'
   | 'InstallLinkedInExtension'
   | 'FlowValidationMessage'
+  | 'ConfirmEmailContentChanges'
   | 'ContactBulkCommands';
 
 export type Context = {
