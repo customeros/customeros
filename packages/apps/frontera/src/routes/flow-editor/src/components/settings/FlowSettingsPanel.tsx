@@ -48,7 +48,7 @@ export const FlowSettingsPanel = ({
     >
       {' '}
       <div className='flex justify-between items-center border-b border-gray-200 p-4 y-2 h-[41px]'>
-        <h1 className='font-medium'>Flow Settings</h1>
+        <h1 className='font-medium'>Flow settings</h1>
 
         <div className='flex gap-2'>
           <FlowStatusMenu
