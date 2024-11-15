@@ -718,7 +718,7 @@ const TContent = forwardRef<HTMLDivElement, TContentProps>(
     const mergedRef = useMergeRefs(ref, _ref);
 
     const borderColorDynamic = borderColor ? borderColor : 'gray.200';
-    const heightDynamic = height ? height : 'calc(100vh - 48px)';
+    const heightDynamic = height ? height : 'calc(100vh - 88px)';
     const scrollBarStyle =
       '[&::-webkit-scrollbar-track]:size-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-500 [&::-webkit-scrollbar-thumb]:rounded-lg [&::-webkit-scrollbar]:size-2 [&::-webkit-scrollbar]:bg-transparent';
 
