@@ -87,7 +87,7 @@ func (s *mailboxService) AddMailbox(ctx context.Context, domain, username, passw
 		return coserrors.ErrMailboxExists
 	}
 
-	err = s.services.OpenSrsService.SetMailbox(ctx, tenant, domain, username, password, forwardingEnabled, forwardingTo, webmailEnabled)
+	err = s.services.OpenSrsService.SetupMailbox(ctx, tenant, domain, username, password, forwardingEnabled, forwardingTo, webmailEnabled)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Error setting mailbox"))
 		return err

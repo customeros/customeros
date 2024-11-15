@@ -11,6 +11,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"io"
 	"net/http"
@@ -35,8 +36,8 @@ type MailboxDetails struct {
 
 type OpenSrsService interface {
 	SendEmail(ctx context.Context, request *entity.EmailMessage) error
-	SetupDomainForMailStack(ctx context.Context, tenant, domain string) error
-	SetMailbox(ctx context.Context, tenant, domain, username, password string, forwardingEnabled bool, forwardingTo []string, webmailEnabled bool) error
+	SetupDomain(ctx context.Context, tenant, domain string) error
+	SetupMailbox(ctx context.Context, tenant, domain, username, password string, forwardingEnabled bool, forwardingTo []string, webmailEnabled bool) error
 	GetMailboxDetails(ctx context.Context, email string) (MailboxDetails, error)
 }
 
@@ -228,8 +229,8 @@ func NewOpenSRSService(log logger.Logger, services *Services) OpenSrsService {
 	}
 }
 
-func (s *openSRSService) SetupDomainForMailStack(ctx context.Context, tenant, domain string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OpensrsService.SetupDomainForMailStack")
+func (s *openSRSService) SetupDomain(ctx context.Context, tenant, domain string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OpensrsService.SetupDomain")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	tracing.TagTenant(span, tenant)
@@ -339,16 +340,24 @@ func (s *openSRSService) setEmailDomainInOpenSRS(ctx context.Context, domain, dk
 	return nil
 }
 
-func (s *openSRSService) SetMailbox(ctx context.Context, tenant, domain, username, password string, forwardingEnabled bool, forwardingTo []string, webmailEnabled bool) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OpensrsService.SetMailbox")
+func (s *openSRSService) SetupMailbox(ctx context.Context, tenant, domain, username, password string, forwardingEnabled bool, forwardingTo []string, webmailEnabled bool) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OpensrsService.SetupMailbox")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	tracing.TagTenant(span, tenant)
 	span.LogKV("domain", domain, "username", username)
+	span.LogFields(log.Bool("forwardingEnabled", forwardingEnabled), log.Bool("webmailEnabled", webmailEnabled), log.Object("forwardingTo", forwardingTo))
 
 	// Define the API endpoint for adding a mailbox (replace with your environment's URL)
 	apiURL := s.services.GlobalConfig.ExternalServices.OpenSRSConfig.Url + "/api/change_user"
 
+	if s.services.GlobalConfig.ExternalServices.OpenSRSConfig.Username == "" || s.services.GlobalConfig.ExternalServices.OpenSRSConfig.ApiKey == "" {
+		tracing.TraceErr(span, errors.New("OpenSRS credentials not set"))
+		s.log.Error("OpenSRS credentials not set")
+		return errors.New("OpenSRS credentials not set")
+	}
+
+	// prepare the attributes for the openSRS API
 	attributes := map[string]interface{}{
 		"type":           "mailbox",
 		"password":       password,
@@ -410,7 +419,7 @@ func (s *openSRSService) SetMailbox(ctx context.Context, tenant, domain, usernam
 	if resp.StatusCode != http.StatusOK {
 		tracing.TraceErr(span, errors.New("API request failed"))
 		s.log.Error("API request failed", err)
-		return fmt.Errorf("API request failed")
+		return fmt.Errorf("API request failed, status code: %d", resp.StatusCode)
 	}
 
 	// Parse the response
@@ -420,7 +429,7 @@ func (s *openSRSService) SetMailbox(ctx context.Context, tenant, domain, usernam
 		s.log.Error("failed to read response body", err)
 		return err
 	}
-	span.LogKV("responseBody", string(body))
+	span.LogKV("OpenSRS.responseBody", string(body))
 
 	// Check for a successful response
 	var response OpenSRSResponse
