@@ -12,7 +12,6 @@ require (
 	github.com/cenkalti/backoff/v4 v4.3.0
 	github.com/cucumber/godog v0.15.0
 	github.com/docker/docker v27.3.1+incompatible
-	github.com/forPelevin/gomoji v1.2.0
 	github.com/google/uuid v1.6.0
 	github.com/neo4j/neo4j-go-driver/v5 v5.26.0
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240925071556-618778a7336e
@@ -44,6 +43,7 @@ require (
 	github.com/docker/go-connections v0.5.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
+	github.com/forPelevin/gomoji v1.2.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/gin-gonic/gin v1.10.0 // indirect
@@ -114,7 +114,7 @@ require (
 	golang.org/x/sync v0.9.0 // indirect
 	golang.org/x/sys v0.27.0 // indirect
 	golang.org/x/text v0.20.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20241021214115-324edc3d5d38 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20241104194629-dd2ea8efbc28 // indirect
 	google.golang.org/grpc v1.68.0 // indirect
 	google.golang.org/protobuf v1.35.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
