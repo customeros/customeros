@@ -125,12 +125,6 @@ func Handle_FlowArchive(ctx context.Context, services *service.Services, input a
 		return err
 	}
 
-	err = services.FlowExecutionService.UpdateAllParticipantsFlowRequirements(ctx, flow.Id)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-
 	return nil
 }
 

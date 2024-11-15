@@ -7,6 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	comlog "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
+	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/test"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
@@ -45,11 +46,17 @@ func SetupTestDatabase() (TestDatabase, func()) {
 	postgresContainer, postgresGormDB, _ := postgrest.InitTestDB()
 	testDBs.GormDB = postgresGormDB
 
+	rabbitMqContainer, rabbitMqUrl := neo4jt.InitTestRabbitMQ()
+
 	testDialFactory := mocked_grpc.NewMockedTestDialFactory()
 	grpcConn, _ := testDialFactory.GetEventsProcessingPlatformConn()
 	testDBs.GrpcClients = grpc_client.InitClients(grpcConn)
 
-	testDBs.CommonServices = commonService.InitServices(&commonConfig.GlobalConfig{}, postgresGormDB, testDBs.Driver, "neo4j", testDBs.GrpcClients, SetupTestLogger())
+	testDBs.CommonServices = commonService.InitServices(&commonConfig.GlobalConfig{
+		RabbitMQConfig: &commonConfig.RabbitMQConfig{
+			Url: rabbitMqUrl,
+		},
+	}, postgresGormDB, testDBs.Driver, "neo4j", testDBs.GrpcClients, SetupTestLogger())
 	testDBs.Services = &service.Services{
 		CommonServices: testDBs.CommonServices,
 	}
@@ -58,6 +65,7 @@ func SetupTestDatabase() (TestDatabase, func()) {
 		neo4jtest.CloseDriver(*testDBs.Driver)
 		neo4jtest.Terminate(testDBs.Neo4jContainer, context.Background())
 		postgrest.Terminate(postgresContainer, context.Background())
+		postgrest.Terminate(rabbitMqContainer, context.Background())
 	}
 	return testDBs, shutdown
 }

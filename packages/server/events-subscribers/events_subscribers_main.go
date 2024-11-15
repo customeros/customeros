@@ -85,12 +85,12 @@ func main() {
 	commonServices.RabbitMQService.RegisterHandler(dto.RequestRefreshLastTouchpoint{}, listeners.OnRequestLastTouchpointRefresh)
 
 	// Listen for messages
-	commonServices.RabbitMQService.ListenQueue(commonService.EventsQueueName, false)
-	commonServices.RabbitMQService.ListenQueue(commonService.EventsFlowParticipantScheduleQueueName, true)
+	commonServices.RabbitMQService.ListenQueue(commonService.EventsQueueName)
+	commonServices.RabbitMQService.ListenQueueExclusive(commonService.EventsFlowParticipantScheduleQueueName)
 
 	// Block the main thread from exiting
 	forever := make(chan bool)
-	log.Println("Waiting for messages. To exit press CTRL+C")
+	log.Println(" [*] Waiting for messages")
 	<-forever
 
 }
