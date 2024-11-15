@@ -419,6 +419,10 @@
         {
           "name": "Opportunities with missing mandatory properties",
           "query": "MATCH (op:Opportunity) WHERE (op.internalType IN ['NBO'] AND op.stageUpdatedAt IS NULL) RETURN count(op)"
+        },
+        {
+          "name": "Opportunities without internal type",
+          "query": "MATCH (op:Opportunity) WHERE op.internalType IS NULL OR op.internalType = '' RETURN count(op)"
         }
       ]
     },

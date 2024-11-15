@@ -171,7 +171,7 @@ func (h *organizationEventHandler) enrichOrganization(ctx context.Context, tenan
 func (h *organizationEventHandler) callApiEnrichOrganization(ctx context.Context, tenant, domain string) (*enrichmentmodel.EnrichOrganizationResponse, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.callApiEnrichOrganization")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
+	tracing.TagTenant(span, tenant)
 	span.LogKV("domain", domain)
 
 	requestJSON, err := json.Marshal(enrichmentmodel.EnrichOrganizationRequest{
@@ -248,6 +248,7 @@ func (h *organizationEventHandler) updateOrganizationWithEnrichData(ctx context.
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.updateOrganizationWithEnrichData")
 	defer span.Finish()
 	tracing.LogObjectAsJson(span, "data", data)
+	tracing.TagTenant(span, tenant)
 
 	orgFields := repository.OrganizationSaveFields{
 		SourceFields: neo4jmodel.SourceFields{
@@ -359,9 +360,9 @@ func (h *organizationEventHandler) updateOrganizationWithEnrichData(ctx context.
 func (h *organizationEventHandler) addSocial(ctx context.Context, organizationId, tenant, url, alias, externalId, appSource string) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.addSocial")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	span.SetTag(tracing.SpanTagEntityId, organizationId)
-	span.LogFields(log.String("organizationId", organizationId), log.String("url", url))
+	tracing.TagTenant(span, tenant)
+	tracing.TagEntity(span, organizationId)
+	span.LogKV("url", url, "alias", alias, "externalId", externalId, "appSource", appSource)
 
 	socialEntity := neo4jentity.SocialEntity{
 		Url:        url,
@@ -411,7 +412,7 @@ func (h *organizationEventHandler) AdjustNewOrganizationFields(ctx context.Conte
 	updateIndustry := industry != "" && eventData.Industry != industry
 
 	if updateMarket || updateIndustry {
-		err := h.callUpdateOrganizationCommand(ctx, eventData.Tenant, organizationId, eventData.SourceOfTruth, market, industry, updateMarket, updateIndustry)
+		err := h.saveOrganizationIndustryAndMarket(ctx, eventData.Tenant, organizationId, market, industry, updateMarket, updateIndustry)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
@@ -455,7 +456,7 @@ func (h *organizationEventHandler) AdjustUpdatedOrganizationFields(ctx context.C
 	updateIndustry := eventData.UpdateIndustry() && industry != "" && eventData.Industry != industry
 
 	if updateMarket || updateIndustry {
-		err := h.callUpdateOrganizationCommand(innerCtx, eventData.Tenant, organizationId, eventData.Source, market, industry, updateMarket, updateIndustry)
+		err := h.saveOrganizationIndustryAndMarket(innerCtx, eventData.Tenant, organizationId, market, industry, updateMarket, updateIndustry)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
@@ -466,8 +467,8 @@ func (h *organizationEventHandler) AdjustUpdatedOrganizationFields(ctx context.C
 	return nil
 }
 
-func (h *organizationEventHandler) callUpdateOrganizationCommand(ctx context.Context, tenant, organizationId, source, market, industry string, updateMarket, updateIndustry bool) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.callUpdateOrganizationCommand")
+func (h *organizationEventHandler) saveOrganizationIndustryAndMarket(ctx context.Context, tenant, organizationId, market, industry string, updateMarket, updateIndustry bool) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.saveOrganizationIndustryAndMarket")
 	defer span.Finish()
 
 	if !updateMarket && !updateIndustry {

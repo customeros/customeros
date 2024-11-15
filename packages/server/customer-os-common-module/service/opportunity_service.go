@@ -130,6 +130,10 @@ func (s *opportunityService) Save(ctx context.Context, tx *neo4j.ManagedTransact
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("input", input))
 
+	if common.GetTenantFromContext(ctx) == "" {
+		tracing.TraceErr(span, errors.New("missing tenant in context"))
+	}
+
 	var err error
 	var existing *neo4jentity.OpportunityEntity
 
