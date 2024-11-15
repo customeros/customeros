@@ -712,7 +712,7 @@ func (r *organizationWriteRepository) Save(ctx context.Context, tx *neo4j.Manage
 }
 
 func (r *organizationWriteRepository) LinkWithDomain(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId, domain string) (bool, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.MergeOrganizationDomain")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.LinkWithDomain")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
 	tracing.TagTenant(span, tenant)
@@ -724,10 +724,12 @@ func (r *organizationWriteRepository) LinkWithDomain(ctx context.Context, tx *ne
 				WITH d
 				MATCH (t:Tenant {name: $tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id: $organizationId})
 				OPTIONAL MATCH (d)<-[:HAS_DOMAIN]-(otherOrg:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(t)
+				WHERE org <> otherOrg
 				WITH d, org, COUNT(otherOrg) AS existingOrgCount
-				WHERE existingOrgCount = 0
-				MERGE (org)-[rel:HAS_DOMAIN]->(d)
-				SET org.updatedAt = datetime()
+				FOREACH (_ IN CASE WHEN existingOrgCount = 0 THEN [1] ELSE [] END | 
+ 					MERGE (org)-[rel:HAS_DOMAIN]->(d)
+  					SET org.updatedAt = datetime()
+				)
 				RETURN existingOrgCount = 0 AS linked`
 	params := map[string]any{
 		"tenant":         tenant,
