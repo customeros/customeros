@@ -1088,6 +1088,7 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 
 				toEmail := primaryEmail.RawEmail
 
+				subjectTemplate := *currentAction.Data.Subject
 				bodyTemplate := *currentAction.Data.BodyTemplate
 
 				if scheduledActionExecution.EntityType == model.CONTACT {
@@ -1111,9 +1112,12 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 					if len(*contactWithOrganizations) > 0 {
 						contactWithOrganization := (*contactWithOrganizations)[0]
 						bodyTemplate = replacePlaceholders(bodyTemplate, "organization_name", contactWithOrganization.Organization.Name)
+						subjectTemplate = strings.ReplaceAll(subjectTemplate, "{{organization_name}}", contactWithOrganization.Organization.Name)
 					} else {
 						bodyTemplate = replacePlaceholders(bodyTemplate, "organization_name", "")
+						subjectTemplate = strings.ReplaceAll(subjectTemplate, "{{organization_name}}", "")
 					}
+
 				}
 
 				userNode, err := s.services.Neo4jRepositories.UserReadRepository.GetFirstUserByEmail(ctx, tenant, *scheduledActionExecution.Mailbox)
@@ -1142,7 +1146,7 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 				}
 
 				if currentAction.Data.Action == entity.FlowActionTypeEmailNew {
-					emailMessage.Subject = *currentAction.Data.Subject
+					emailMessage.Subject = subjectTemplate
 				}
 
 				if currentAction.Data.Action == entity.FlowActionTypeEmailReply {
