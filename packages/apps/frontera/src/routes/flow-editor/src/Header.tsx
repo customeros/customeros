@@ -14,6 +14,7 @@ import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { Settings03 } from '@ui/media/icons/Settings03';
+import { UserPlus01 } from '@ui/media/icons/UserPlus01.tsx';
 import { ChevronRight } from '@ui/media/icons/ChevronRight';
 
 import { FlowStatusMenu } from './components';
@@ -185,6 +186,25 @@ export const Header = observer(
             </div>
           </div>
           <div className='flex gap-2'>
+            {showFinder && (
+              <Button
+                size='xs'
+                variant='outline'
+                colorScheme='gray'
+                leftIcon={<UserPlus01 />}
+                onClick={() =>
+                  store.ui.commandMenu.setOpen(true, {
+                    type: 'AddContactsToFlow',
+                    context: {
+                      entity: 'Flow',
+                      ids: [id],
+                    },
+                  })
+                }
+              >
+                Add contacts
+              </Button>
+            )}
             {canSave && (
               <Button
                 size='xs'

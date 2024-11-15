@@ -252,7 +252,7 @@ export class FlowStore implements Store<Flow> {
         contactStore?.invalidate();
         setTimeout(() => {
           this.invalidate();
-        }, 1000);
+        }, 400);
       });
     } catch (e) {
       runInAction(() => {
