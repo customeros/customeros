@@ -1,5 +1,8 @@
 import { useState } from 'react';
 
+import _ from 'lodash';
+import { useLocalStorage } from 'usehooks-ts';
+
 import { Input } from '@ui/form/Input';
 import { Button } from '@ui/form/Button/Button';
 import { IconButton } from '@ui/form/IconButton';
@@ -18,6 +21,11 @@ export const AddDomainsCard = () => {
   const [domainVariations, setDomainVariations] = useState<string[]>([]);
   const [isHovered, setIsHovered] = useState<number | null>(null);
   const [showSecondHalf, setShowSecondHalf] = useState(false);
+
+  const [_storedBrandName, setStoredBrandName] = useLocalStorage<string[]>(
+    'brandName',
+    [],
+  );
 
   function generateDomainVariations(baseName: string) {
     if (!baseName) return [];
@@ -42,7 +50,7 @@ export const AddDomainsCard = () => {
       `${baseName}inc`,
       `${baseName}software`,
       `${baseName}cloud`,
-    ];
+    ].filter((item, i) => item !== _storedBrandName[i]);
 
     return variations.map((variation) => `${variation}.com`);
   }
@@ -87,8 +95,8 @@ export const AddDomainsCard = () => {
         <div className='mt-2'>
           {displayedDomains.map((domain, index) => (
             <div
-              key={index}
               onMouseLeave={() => setIsHovered(null)}
+              key={`${domain}-${crypto.randomUUID()}`}
               onMouseEnter={() => setIsHovered(index)}
               className='flex items-center justify-between py-1'
             >
@@ -99,6 +107,21 @@ export const AddDomainsCard = () => {
                   variant='ghost'
                   aria-label='add to cart'
                   icon={<ShoppingCartAdd className='text-primary-700' />}
+                  onClick={() => {
+                    setStoredBrandName((prev) => {
+                      return [...prev, domain];
+                    });
+                    setDomainVariations((prev) => {
+                      const foundIndex = prev.findIndex(
+                        (item) => item === domain,
+                      );
+
+                      return [
+                        ...prev.slice(0, foundIndex),
+                        ...prev.slice(foundIndex + 1),
+                      ];
+                    });
+                  }}
                 />
               )}
             </div>

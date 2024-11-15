@@ -5,6 +5,7 @@ import { ChevronRight } from '@ui/media/icons/ChevronRight';
 import { CheckoutCard } from './components/CheckoutCard';
 import { EmptyMailboxes } from './components/EmptyMailboxes';
 import { AddDomainsCard } from './components/AddDomainsCard';
+import { UsersCard } from './components/UsersCard/UsersCard';
 
 export const Mailboxes = () => {
   const [isUpdated, setIsUpdated] = useState(true);
@@ -25,8 +26,10 @@ export const Mailboxes = () => {
               <ChevronRight className='mt-0.5 text-gray-400 size-3' />
               <span className='font-semibold'>Add new</span>
             </div>
-
-            <AddDomainsCard />
+            <div className=' space-y-4 '>
+              <AddDomainsCard />
+              <UsersCard />
+            </div>
           </div>
           <div className='py-[10px] px-6 flex flex-col h-full'>
             <p className='mb-4 font-semibold'>Checkout</p>
