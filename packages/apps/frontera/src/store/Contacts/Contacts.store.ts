@@ -437,6 +437,7 @@ export class ContactsStore extends SyncableGroup<Contact, ContactStore> {
       });
 
       await this.service.archiveContact({ contactId: id });
+      this.totalElements--;
     } catch (e) {
       runInAction(() => {
         this.error = (e as Error)?.message;
