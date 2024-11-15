@@ -10,6 +10,7 @@ import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/opentracing/opentracing-go"
+	"github.com/pkg/errors"
 	"strings"
 )
 
@@ -44,14 +45,12 @@ func (s *registrationService) PrepareDefaultTenantSetup(ctx context.Context, log
 
 	err = s.ConfigureTestMailbox(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
+		tracing.TraceErr(span, errors.Wrap(err, "Error configuring test mailbox during tenant onboarding"))
 	}
 
 	err = s.CreatePostmarkServer(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
+		tracing.TraceErr(span, errors.Wrap(err, "Error creating postmark server during tenant onboarding"))
 	}
 
 	return nil
@@ -91,12 +90,7 @@ func (s *registrationService) ConfigureTestMailbox(ctx context.Context) error {
 	} else {
 		testUserId = mapper.MapDbNodeToUserEntity(existingTestUser).Id
 	}
-
 	span.LogKV("result.testUserId", testUserId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
 
 	// Step 2 - Create test email node for the user
 	mailboxAddress := strings.ToLower(fmt.Sprintf("%s@%s", tenant, TEST_MAILBOX_DOMAIN))
@@ -130,7 +124,7 @@ func (s *registrationService) ConfigureTestMailbox(ctx context.Context) error {
 		}
 	}
 
-	span.LogKV("result.mailbox", mailboxAddress)
+	span.LogKV("result.mailboxAddress", mailboxAddress)
 
 	return nil
 }

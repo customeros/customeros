@@ -327,7 +327,7 @@ func configureDomain(ctx context.Context, tenant, domain, website string, servic
 	}
 
 	// setup domain in openSRS
-	err = services.CommonServices.OpenSrsService.SetupDomainForMailStack(ctx, tenant, domain)
+	err = services.CommonServices.OpenSrsService.SetupDomain(ctx, tenant, domain)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Error setting up domain in OpenSRS"))
 		return domainResponse, coserrors.ErrDomainConfigurationFailed
