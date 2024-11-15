@@ -8,7 +8,7 @@ const transport = new Transport();
 const organizationsService = OrganizationsService.getInstance(transport);
 const contactService = ContactService.getInstance(transport);
 
-describe('OrganizationsService - Integration Tests', () => {
+describe('ContactsService - Integration Tests', () => {
   it('create contact', async () => {
     const contact_social_url = 'IT_' + crypto.randomUUID();
 
@@ -218,9 +218,11 @@ describe('OrganizationsService - Integration Tests', () => {
     );
     expect(contactAfterFirstJobRole.contact?.jobRoles[1].primary).toBe(false);
     expect(contactAfterFirstJobRole.contact?.jobRoles[1].company).toBeNull();
-    expect(contactAfterFirstJobRole.contact?.jobRoles[1].startedAt).toBe(
-      jobRoleOneStartedAt,
-    );
+    expect(
+      new Date(
+        contactAfterFirstJobRole.contact?.jobRoles[1].startedAt,
+      ).getTime(),
+    ).toBe(new Date(jobRoleOneStartedAt).getTime());
     expect(contactAfterFirstJobRole.contact?.jobRoles[0].endedAt).toBeNull();
   });
 });
