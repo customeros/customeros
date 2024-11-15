@@ -22,7 +22,7 @@ require (
 	github.com/neo4j/neo4j-go-driver/v5 v5.26.0 // indirect
 	github.com/uber/jaeger-client-go v2.30.0+incompatible // indirect
 	go.uber.org/zap v1.27.0 // indirect
-	google.golang.org/protobuf v1.35.1 // indirect
+	google.golang.org/protobuf v1.35.2 // indirect
 )
 
 require (
