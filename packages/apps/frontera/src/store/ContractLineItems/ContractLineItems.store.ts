@@ -266,7 +266,18 @@ export class ContractLineItemsStore implements GroupStore<ServiceLineItem> {
     try {
       const { contractLineItem_Create } =
         await this.service.createContractLineItem({
-          input: { ...payload, contractId },
+          input: {
+            tax: {
+              taxRate: payload.tax.taxRate,
+            },
+            contractId,
+            billingCycle: payload.billingCycle,
+            price: payload.price,
+            quantity: payload.quantity,
+            serviceEnded: payload.serviceEnded,
+            description: payload.description,
+            serviceStarted: payload.serviceStarted,
+          },
         });
 
       runInAction(() => {
