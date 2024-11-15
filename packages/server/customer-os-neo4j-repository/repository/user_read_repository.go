@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
@@ -16,6 +17,7 @@ type UserReadRepository interface {
 	GetByIds(ctx context.Context, tenant string, ids []string) ([]*dbtype.Node, error)
 	GetUserById(ctx context.Context, tenant, userId string) (*dbtype.Node, error)
 	FindFirstUserWithRolesByEmail(ctx context.Context, email string) (string, string, []string, error)
+	FindTestUser(ctx context.Context) (*dbtype.Node, error)
 	GetFirstUserByEmail(ctx context.Context, tenant, email string) (*dbtype.Node, error)
 	GetAllOwnersForOrganizations(ctx context.Context, tenant string, organizationIDs []string) ([]*utils.DbNodeAndId, error)
 	GetOwnerForOrganization(ctx context.Context, tenant, organizationId string) (*dbtype.Node, error)
@@ -194,6 +196,46 @@ func (r *userReadRepository) GetFirstUserByEmail(ctx context.Context, tenant, em
 	params := map[string]any{
 		"tenant": tenant,
 		"email":  email,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractFirstRecordFirstValueAsDbNodePtr(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	if result == nil {
+		span.LogFields(log.Bool("result.found", false))
+		return nil, nil
+	}
+
+	span.LogFields(log.Bool("result.found", true))
+	return result.(*dbtype.Node), nil
+}
+
+func (r *userReadRepository) FindTestUser(ctx context.Context) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserRepository.FindTestUser")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	cypher := `MATCH (:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User)
+			WHERE u.test = true and u.firstName = "Test" and u.lastName = "Sender"
+			RETURN u limit 1`
+	params := map[string]any{
+		"tenant": tenant,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

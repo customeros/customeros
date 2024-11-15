@@ -23,7 +23,7 @@ import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
-	"github.com/opentracing/opentracing-go"
+	opentracing "github.com/opentracing/opentracing-go"
 )
 
 // Participants is the resolver for the participants field.
@@ -621,6 +621,46 @@ func (r *queryResolver) FlowEmailVariables(ctx context.Context) ([]*model.EmailV
 	})
 
 	return emailVariables, nil
+}
+
+// FlowTestEmailSender is the resolver for the flow_testEmailSender field.
+func (r *queryResolver) FlowTestEmailSender(ctx context.Context) (string, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.FlowTestEmailSender", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	testEmailAddress, err := r.Services.Repositories.Neo4jRepositories.EmailReadRepository.GetTestEmailForFlows(ctx, tenant)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "")
+		return "", err
+	}
+
+	if testEmailAddress == "" {
+		err := r.Services.CommonServices.RegistrationService.PrepareDefaultTenantSetup(ctx, common.GetUserEmailFromContext(ctx))
+		if err != nil {
+			tracing.TraceErr(span, err)
+			graphql.AddErrorf(ctx, "")
+			return "", err
+		}
+
+		testEmailAddress, err = r.Services.Repositories.Neo4jRepositories.EmailReadRepository.GetTestEmailForFlows(ctx, tenant)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			graphql.AddErrorf(ctx, "")
+			return "", err
+		}
+
+		if testEmailAddress == "" {
+			tracing.TraceErr(span, err)
+			graphql.AddErrorf(ctx, "")
+			return "", fmt.Errorf("Test email address not found")
+		}
+	}
+
+	return testEmailAddress, nil
 }
 
 // Flow returns generated.FlowResolver implementation.
