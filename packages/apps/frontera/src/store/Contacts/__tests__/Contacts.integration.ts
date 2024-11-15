@@ -1,26 +1,11 @@
 import { it, expect, describe } from 'vitest';
 
-// import {
-//   Currency,
-//   BilledType,
-//   OnboardingStatus,
-//   SortingDirection,
-//   OpportunityRenewalLikelihood,
-// } from '@graphql/types';
-
 import { Transport } from '../../transport';
-// import { UserService } from '../../Users/User.service';
-// import { trackOrganization } from './organizationsTestState';
 import { ContactService } from '../../Contacts/__service__/Contacts.service';
-// import { ContractService } from '../../Contracts/Contract.service';
 import { OrganizationsService } from '../../Organizations/__service__/Organizations.service';
-// import { ContractLineItemService } from '../../ContractLineItems/ContractLineItem.service';
 
 const transport = new Transport();
 const organizationsService = OrganizationsService.getInstance(transport);
-// const contractService = ContractService.getInstance(transport);
-// const contractLineItemsService = ContractLineItemService.getInstance(transport);
-// const userService = UserService.getInstance(transport);
 const contactService = ContactService.getInstance(transport);
 
 describe('OrganizationsService - Integration Tests', () => {
