@@ -37,7 +37,7 @@ export const OrganizationCommands = observer(() => {
   const store = useStore();
   const selectedIds = store.ui.commandMenu.context.ids;
   const id = (store.ui.commandMenu.context.ids as string[])?.[0];
-  const organization = store.organizations.value.get(id);
+  const organization = store.organizations.getById(id);
   const label = `Organization - ${organization?.value.name}`;
 
   return (

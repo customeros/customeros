@@ -2,7 +2,6 @@ import { runInAction } from 'mobx';
 import { observer } from 'mobx-react-lite';
 
 import { Combobox } from '@ui/form/Combobox';
-import { Organization } from '@graphql/types';
 import { useStore } from '@shared/hooks/useStore';
 import { ArrowCircleBrokenUpLeft } from '@ui/media/icons/ArrowCircleBrokenUpLeft';
 import {
@@ -19,18 +18,19 @@ interface ParentOrgInputProps {
 export const ParentOrgInput = observer(
   ({ id, isReadOnly }: ParentOrgInputProps) => {
     const store = useStore();
-    const data = store.organizations?.toArray();
+    const data = store.organizations?.findMany(
+      (org) => org.id !== id && org.name.length > 0,
+    );
 
-    const organization = store.organizations.value.get(id);
+    const organization = store.organizations.getById(id);
 
-    const options = data
-      ?.filter((e) => e.value.metadata?.id !== id && e.value.name?.length > 0)
-      .map((org) => ({
-        value: org.value.metadata?.id,
-        label: org.value.name,
-      }));
+    const options = data.map((org) => ({
+      value: org.metadata?.id,
+      label: org.name,
+    }));
 
-    const parentCompany = organization?.parentCompanies?.[0];
+    const parentCompany =
+      organization?.value?.parentCompanies?.[0]?.organization;
 
     const selection = parentCompany
       ? {
@@ -62,66 +62,73 @@ export const ParentOrgInput = observer(
               runInAction(() => {
                 if (!organization) return;
 
-                const newParent = store.organizations.value?.get(option?.value);
+                const newParent = store.organizations.getById(option?.value);
 
                 if (!newParent) {
                   const parentId =
-                    organization.value.parentCompanies?.[0]?.organization
+                    organization.value?.parentCompanies?.[0]?.organization
                       ?.metadata?.id;
 
-                  organization.value.parentCompanies = [];
+                  // organization.value!.parentCompanies = [];
+                  organization.value.clearParentCompanies();
                   organization.commit();
 
-                  const parentCompany =
-                    store.organizations.value?.get(parentId);
+                  const parentCompany = store.organizations.getById(parentId!);
 
                   if (!parentCompany) return;
 
-                  parentCompany.value.subsidiaries =
-                    parentCompany.value.subsidiaries.filter(
-                      (s) => s.organization.metadata.id !== organization.id,
-                    );
+                  // parentCompany.value.subsidiaries =
+                  //   parentCompany.value?.subsidiaries?.filter(
+                  //     (s) => s.metadata.id !== organization.id,
+                  //   ) ?? [];
 
+                  parentCompany.value.removeSubsidiary(organization.id);
                   parentCompany.commit();
                 } else {
                   const currentParentId =
-                    organization.value.parentCompanies?.[0]?.organization
+                    organization.value?.parentCompanies?.[0]?.organization
                       ?.metadata?.id;
 
-                  const currentParent =
-                    store.organizations.value.get(currentParentId);
+                  const currentParent = store.organizations.getById(
+                    currentParentId!,
+                  );
 
                   if (currentParent) {
-                    const subsidiaryIndex =
-                      currentParent.value.subsidiaries.findIndex(
-                        (s) => s.organization.metadata.id === organization.id,
-                      );
+                    // const subsidiaryIndex =
+                    //   currentParent.value?.subsidiaries.findIndex(
+                    //     (s) => s.metadata.id === organization.id,
+                    //   );
+                    //
+                    // if (subsidiaryIndex) {
+                    //   currentParent.value?.subsidiaries?.splice(
+                    //     subsidiaryIndex,
+                    //     1,
+                    //   );
+                    // }
 
-                    currentParent.value.subsidiaries.splice(subsidiaryIndex, 1);
-
+                    currentParent.value.removeSubsidiary(organization.id);
                     currentParent.commit();
 
-                    organization.value.parentCompanies = [];
+                    // organization.value!.parentCompanies = [];
+                    organization.value.clearParentCompanies();
                     organization.commit();
                   }
 
-                  newParent.value?.subsidiaries?.push({
-                    organization: {
-                      id: organization?.value?.metadata?.id,
-                      name: organization?.value?.name,
-                      metadata: { ...organization?.value?.metadata },
-                    } as Organization,
-                  });
+                  // newParent.value?.subsidiaries?.push({
+                  //   organization: organization.value,
+                  // });
+                  newParent.value.addSubsidiary(organization.id);
                   newParent.commit();
 
-                  if (!Array.isArray(!organization.value.parentCompanies)) {
-                    organization.value.parentCompanies = [];
-                  }
+                  // if (!Array.isArray(!organization.value?.parentCompanies)) {
+                  //   organization.value!.parentCompanies = [];
+                  // }
+                  //
+                  // if (newParent?.value) {
+                  //   organization.value.parentCompanies[0] = newParent.value;
+                  // }
 
-                  organization.value.parentCompanies[0] = {
-                    organization: newParent.value,
-                  };
-
+                  organization.value.addSubsidiary(newParent.id);
                   organization.commit();
                 }
               });

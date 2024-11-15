@@ -10,7 +10,10 @@ export type OrganizationQuery = {
     __typename?: 'Organization';
     name: string;
     stage?: Types.OrganizationStage | null;
+    lastFundingRound?: Types.FundingRound | null;
+    customerOsId: string;
     description?: string | null;
+    market?: Types.Market | null;
     industry?: string | null;
     website?: string | null;
     domains: Array<string>;
@@ -19,6 +22,7 @@ export type OrganizationQuery = {
     icon?: string | null;
     relationship?: Types.OrganizationRelationship | null;
     leadSource?: string | null;
+    referenceId?: string | null;
     valueProposition?: string | null;
     employees?: any | null;
     yearFounded?: any | null;
@@ -101,6 +105,14 @@ export type OrganizationQuery = {
       countryCodeA2?: string | null;
       countryCodeA3?: string | null;
     }>;
+    contacts: {
+      __typename?: 'ContactsPage';
+      content: Array<{
+        __typename?: 'Contact';
+        id: string;
+        metadata: { __typename?: 'Metadata'; id: string };
+      }>;
+    };
     subsidiaries: Array<{
       __typename?: 'LinkedOrganization';
       organization: {

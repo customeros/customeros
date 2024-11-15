@@ -57,13 +57,23 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
     currentPreset: preset,
   });
 
-  const data = computeFinderData(store, {
-    sorting,
-    tableViewDef,
-    urlParams: params,
-    searchTerm: searchTerm ?? '',
-  });
+  const handleSortChange = (updater: (old: SortingState) => SortingState) => {
+    const next = updater(sorting);
 
+    setSorting(updater);
+
+    tableViewDef?.setSorting(next[0]?.id, next[0]?.desc);
+  };
+
+  const data = store.organizations.getViewById(preset ?? '');
+
+  // const data = computeFinderData(store, filtersV2, {
+  //   sorting,
+  //   tableViewDef,
+  //   urlParams: params,
+  //   searchTerm: searchTerm ?? '',
+  // });
+  //
   const isCommandMenuPrompted = store.ui.commandMenu.isOpen;
   const handleColumnSizing = useColumnSizing(columns, tableViewDef);
 
@@ -167,7 +177,7 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
 
   const [targetInvoiceNumber, targetInvoiceEmail] = match(tableType)
     .with(TableViewType.Invoices, () => {
-      const invoice = data?.find((i) => i.value.metadata?.id === targetId)
+      const invoice = data?.find((i) => i.value!.metadata.id === targetId)
         ?.value as Invoice;
 
       const targetInvoiceNumber = invoice?.invoiceNumber || '';
@@ -300,20 +310,20 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
     return <EmptyState />;
   }
 
-  return null;
-
   return (
     <div className='flex'>
       {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
       <Table<any>
         data={data}
+        canFetchMore
         manualFiltering
         sorting={sorting}
         columns={columns}
         tableRef={tableRef}
         getRowId={(row) => row.id}
         enableColumnResizing={true}
-        onSortingChange={setSorting}
+        totalItems={data.length ?? 40}
+        onSortingChange={handleSortChange}
         onResizeColumn={handleColumnSizing}
         onSelectionChange={onSelectionChange}
         onFocusedRowChange={handleSetFocused}
@@ -321,10 +331,15 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
         dataTest={`finder-table-${tableType}`}
         isLoading={store.organizations.isLoading}
         fullRowSelection={tableType === TableViewType.Invoices}
-        totalItems={store.organizations.isLoading ? 40 : data.length}
         enableKeyboardShortcuts={
           !isEditing && !isFiltering && !isCommandMenuPrompted
         }
+        onFetchMore={() => {
+          store.organizations.setActiveRange(
+            0,
+            store.organizations.range[1] + 40,
+          );
+        }}
         enableTableActions={
           tableType &&
           [TableViewType.Invoices, TableViewType.Contracts].includes(tableType)

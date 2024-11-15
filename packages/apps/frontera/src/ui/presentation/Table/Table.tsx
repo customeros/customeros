@@ -14,14 +14,20 @@ import React, {
   useState,
   useEffect,
   forwardRef,
+  useCallback,
   HTMLAttributes,
   MutableRefObject,
 } from 'react';
 
 import { twMerge } from 'tailwind-merge';
 import { difference, intersection } from 'lodash';
-import { Virtualizer, useVirtualizer } from '@tanstack/react-virtual';
 import { useKey, useMergeRefs, useKeyBindings, useOutsideClick } from 'rooks';
+import {
+  Range,
+  Virtualizer,
+  useVirtualizer,
+  defaultRangeExtractor,
+} from '@tanstack/react-virtual';
 import {
   createRow,
   flexRender,
@@ -77,6 +83,7 @@ interface TableProps<T extends object> {
   onSelectionChange?: (selectedIds: string[]) => void;
   tableRef?: MutableRefObject<TableInstance<T> | null>;
   onSelectedIndexChange?: (index: number | null) => void;
+  onRowRangeChange?: (startIndex: number, endIndex: number) => void;
   onFocusedRowChange?: (index: number | null, selectedIds: string[]) => void;
   // REASON: Typing TValue is too exhaustive and has no benefit
   renderTableActions?: (
@@ -95,7 +102,7 @@ export const Table = <T extends object>({
   isLoading,
   onFetchMore,
   canFetchMore,
-  totalItems = 40,
+  totalItems = 100,
   onSortingChange,
   sorting: _sorting,
   renderTableActions,
@@ -109,6 +116,7 @@ export const Table = <T extends object>({
   manualFiltering,
   onFocusedRowChange,
   onFullRowSelection,
+  onRowRangeChange,
   enableKeyboardShortcuts,
   enableColumnResizing = false,
   onResizeColumn,
@@ -201,12 +209,21 @@ export const Table = <T extends object>({
     onColumnSizingChange: onResizeColumn,
   });
 
+  const rangeExtractor = useCallback((r: Range) => {
+    onRowRangeChange?.(0, r.endIndex + r.overscan);
+
+    return defaultRangeExtractor(r);
+  }, []);
+
+  const getEstimateSize = useCallback(() => rowHeight, [rowHeight]);
+
   const { rows } = table.getRowModel();
   const rowVirtualizer = useVirtualizer({
-    count: !data.length && isLoading ? 40 : totalItems,
-    overscan: 30,
+    count: data.length,
+    overscan: 20,
     getScrollElement: () => scrollElementRef.current,
-    estimateSize: () => rowHeight,
+    estimateSize: getEstimateSize,
+    rangeExtractor,
   });
 
   const columnSizeVars = React.useMemo(() => {
@@ -530,9 +547,9 @@ const TableBody = <T extends object>({
         return (
           <TRow
             tabIndex={1}
-            key={row?.index}
+            key={row.id}
             data-index={virtualRow.index}
-            ref={rowVirtualizer.measureElement}
+            // ref={rowVirtualizer.measureElement}
             data-selected={row?.getIsSelected()}
             data-focused={row?.index === focusedRowIndex}
             style={{

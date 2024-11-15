@@ -13,9 +13,8 @@ import {
   type OrganizationUpdateInput,
 } from '@graphql/types';
 
-import type { OrganizationStore } from '../Organization.store';
-
 import AddTagDocument from './addTag.graphql';
+import { Organization } from '../Organization';
 import AddSocialDocument from './addSocial.graphql';
 import RemoveTagDocument from './removeTag.graphql';
 import UpdateSocialDocument from './updateSocial.graphql';
@@ -236,7 +235,7 @@ export class OrganizationsService {
     >(UpdateOnboardingStatusDocument, payload);
   }
 
-  public async mutateOperation(operation: Operation, store: OrganizationStore) {
+  public async mutateOperation(operation: Operation, store: Organization) {
     const diff = operation.diff?.[0];
     const type = diff?.op;
     const path = diff?.path;
@@ -259,17 +258,16 @@ export class OrganizationsService {
         this.saveOrganization({
           input: {
             id: organizationId,
-            ownerId: store.value.owner?.id || '',
+            ownerId: store?.owner?.id || '',
           },
         });
       })
       .with(['contracts', ...P.array()], () => {})
       .with(['contacts', ...P.array()], () => {})
       .with(['accountDetails', 'renewalSummary', ...P.array()], async () => {
-        const amount =
-          store.value.accountDetails?.renewalSummary?.arrForecast ?? 0;
+        const amount = store?.accountDetails?.renewalSummary?.arrForecast ?? 0;
         const potentialAmount =
-          store.value.accountDetails?.renewalSummary?.maxArrForecast ?? 0;
+          store?.accountDetails?.renewalSummary?.maxArrForecast ?? 0;
         const rate =
           amount === 0 || potentialAmount === 0
             ? 0
@@ -280,7 +278,7 @@ export class OrganizationsService {
             organizationId,
             renewalAdjustedRate: rate,
             renewalLikelihood:
-              store.value.accountDetails?.renewalSummary?.renewalLikelihood,
+              store.accountDetails?.renewalSummary?.renewalLikelihood,
           },
         });
       })
@@ -289,9 +287,9 @@ export class OrganizationsService {
           input: {
             organizationId,
             status:
-              store.value?.accountDetails?.onboarding?.status ??
+              store?.accountDetails?.onboarding?.status ??
               OnboardingStatus.NotApplicable,
-            comments: store.value?.accountDetails?.onboarding?.comments ?? '',
+            comments: store?.accountDetails?.onboarding?.comments ?? '',
           },
         });
       })
@@ -308,7 +306,7 @@ export class OrganizationsService {
           .with('update', async () => {
             const index = path[1] as number;
 
-            const foundSocial = get(store, `value.socialMedia[${index}]`, null);
+            const foundSocial = get(store, `socialMedia[${index}]`, null);
 
             if (!foundSocial) return;
 

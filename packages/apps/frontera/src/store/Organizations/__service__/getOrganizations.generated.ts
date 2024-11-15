@@ -32,6 +32,7 @@ export type GetOrganizationsQuery = {
       slackChannelId?: string | null;
       public?: boolean | null;
       employees?: any | null;
+      customerOsId: string;
       yearFounded?: any | null;
       metadata: {
         __typename?: 'Metadata';

@@ -352,8 +352,8 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.IsNotEmpty,
       ],
       icon: <Building05 />,
-      options: uniqBy(store?.organizations.toActiveArray(), 'value.industry')
-        .map((v) => v.value?.industry)
+      options: uniqBy(store?.organizations.toArray(), 'industry')
+        .map((v) => v?.industry)
         .filter(Boolean)
         .sort((a, b) => (a && b ? a?.localeCompare(b) : -1))
         .map((industry) => ({
@@ -408,9 +408,9 @@ export const getFilterTypes = (store?: RootStore) => {
         <Globe04 className='group-hover:text-gray-700 text-gray-500 mb-0.5' />
       ),
       options: uniqBy(
-        store?.organizations.toActiveArray().map((org) => ({
-          id: org.value?.locations?.[0]?.countryCodeA2,
-          label: org.value?.locations?.[0]?.country,
+        store?.organizations.toArray().map((org) => ({
+          id: org.locations?.[0]?.countryCodeA2,
+          label: org.locations?.[0]?.country,
         })),
         'id',
       ),

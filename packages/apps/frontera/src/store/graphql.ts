@@ -67,6 +67,7 @@ export class GraphqlService {
       .otherwise(() => {});
   }
 
+  // TODO: see if we need to get an active record instead of a dto
   private getStore(operation: Operation, storePath: keyof RootStore) {
     // @ts-expect-error no issue
     const store = this.root[storePath]?.value?.get(operation.entityId);

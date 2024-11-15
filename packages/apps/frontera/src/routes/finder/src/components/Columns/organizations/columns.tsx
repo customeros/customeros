@@ -275,7 +275,7 @@ export const columns: Record<string, Column> = {
       ),
     },
   ),
-  [ColumnViewType.OrganizationsOwner]: columnHelper.accessor('value.owner', {
+  [ColumnViewType.OrganizationsOwner]: columnHelper.accessor((row) => row, {
     id: ColumnViewType.OrganizationsOwner,
     minSize: 154,
     size: 154,
@@ -283,12 +283,12 @@ export const columns: Record<string, Column> = {
     enableColumnFilter: false,
     enableResizing: true,
     cell: (props) => {
-      return (
-        <OwnerCell
-          owner={props.getValue()}
-          id={props.row.original.value.metadata?.id}
-        />
-      );
+      const row = props.getValue();
+
+      const owner = row?.value?.owner;
+      const orgId = row?.id;
+
+      return <OwnerCell id={orgId} owner={owner} />;
     },
     header: (props) => (
       <THead<HTMLInputElement>

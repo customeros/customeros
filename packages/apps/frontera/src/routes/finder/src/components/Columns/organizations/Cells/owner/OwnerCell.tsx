@@ -19,7 +19,7 @@ interface OwnerProps {
 
 export const OwnerCell = observer(({ id, owner, ownerId: _ }: OwnerProps) => {
   const store = useStore();
-  const organization = store.organizations.value.get(id);
+  const organization = store.organizations.getById(id);
   const [isEditing, setIsEditing] = useState(false);
 
   const users = store.users.toComputedArray((arr) => {
@@ -51,11 +51,16 @@ export const OwnerCell = observer(({ id, owner, ownerId: _ }: OwnerProps) => {
   };
 
   const handleSelect = (option: SelectOption) => {
-    const targetOwner = store.users.value.get(option?.value);
+    const userId = option?.value;
 
     if (!organization) return;
 
-    organization.value.owner = option?.value ? targetOwner?.value : null;
+    if (userId) {
+      organization.value.setOwner(userId);
+    } else {
+      organization.value.clearOwner();
+    }
+
     organization.commit();
   };
 

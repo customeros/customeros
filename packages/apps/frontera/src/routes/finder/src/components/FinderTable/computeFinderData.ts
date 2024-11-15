@@ -1,7 +1,6 @@
 import { Params } from 'react-router-dom';
 
 import Fuse from 'fuse.js';
-import sizeof from 'object-sizeof';
 import { match } from 'ts-pattern';
 import { RootStore } from '@store/root';
 import { inPlaceSort } from 'fast-sort';
@@ -63,7 +62,10 @@ export const computeFinderData = (
   const workFlow = store.workFlows.getByType(getWorkFlowId[0]);
 
   return match(tableType)
-    .with(TableViewType.Organizations, () =>
+    .with(TableViewType.Organizations, () => {
+      return [];
+      // return store.organizations.activeView(tableViewDef.value.id);
+
       store.organizations?.toComputedArray((arr) => {
         const defaultFilters = getOrganizationDefaultFilterFns(
           tableViewDef?.getDefaultFilters(),
@@ -116,13 +118,9 @@ export const computeFinderData = (
             .map((r) => r.item);
         }
 
-        const plm = arr.map((c) => c.value);
-
-        console.log(sizeof(plm));
-
         return arr;
-      }),
-    )
+      });
+    })
     .with(TableViewType.Contacts, () =>
       store.contacts?.toComputedArray((arr) => {
         if (tableViewDef?.value.tableId === TableIdType.FlowContacts) {

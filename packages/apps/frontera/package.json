@@ -15,7 +15,8 @@
     "codegen:graphql": "graphql-codegen --require dotenv/config --config scripts/codegen-graphql.ts",
     "codegen:icons": "node scripts/codegen-icons.js",
     "codegen:logos": "node scripts/codegen-logos.js",
-    "codegen:gql": "graphql-codegen --require dotenv/config --config scripts/codegen-graphql-stores.ts",
+    "codegen:gqlnew": "graphql-codegen --require dotenv/config --config scripts/codegen-graphql-stores.ts",
+    "codegen:gql": "npm run codegen:graphql && npm run codegen:gqlnew",
     "test:e2e": "playwright test",
     "test:integration": "npx vitest"
   },

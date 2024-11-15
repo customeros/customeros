@@ -21,9 +21,9 @@ export const OrganizationLinkedInCell = observer(
     const [isHovered, setIsHovered] = useState(false);
     const [isEdit, setIsEdit] = useState(false);
     const [metaKey, setMetaKey] = useState(false);
-    const organization = store.organizations.value.get(organizationId);
+    const organization = store.organizations.getById(organizationId);
 
-    const enrichedOrganizations = organization?.value.enrichDetails;
+    const enrichedOrganizations = organization?.value?.enrichDetails;
 
     const enrichingStatus =
       !enrichedOrganizations?.enrichedAt &&
@@ -42,7 +42,7 @@ export const OrganizationLinkedInCell = observer(
           ? getFormattedLink(url).replace(/^linkedin\.com\//, '')
           : `in/${url}`;
 
-      organization.value.socialMedia.push({
+      organization.value?.socialMedia.push({
         id: crypto.randomUUID(),
         url: `linkedin.com/${formattedValue}`,
       } as Social);
@@ -53,13 +53,14 @@ export const OrganizationLinkedInCell = observer(
     };
 
     const handleUpdateSocial = (url: string) => {
-      const linkedinId = organization?.value.socialMedia.find((social) =>
+      if (!organization.value) return;
+      const linkedinId = organization?.value?.socialMedia.find((social) =>
         social.url.includes('linkedin'),
       )?.id;
 
       if (!linkedinId) return;
 
-      const idx = organization.value.socialMedia.findIndex(
+      const idx = organization.value?.socialMedia.findIndex(
         (s) => s.id === linkedinId,
       );
 
@@ -86,7 +87,7 @@ export const OrganizationLinkedInCell = observer(
       social.url.includes('linkedin'),
     );
 
-    if (!organization?.value.socialMedia?.length || !linkedIn) {
+    if (!organization.value?.socialMedia?.length || !linkedIn) {
       return (
         <LinkedInInput
           type='company'

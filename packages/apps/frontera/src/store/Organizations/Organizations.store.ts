@@ -1,26 +1,31 @@
-import { RootStore } from '@store/root';
+import type { RootStore } from '@store/root';
+import type { Transport } from '@store/transport';
+
 import { Store } from '@store/active-record';
-import { Transport } from '@store/transport';
-import { action, override, computed, observable, runInAction } from 'mobx';
+import { action, computed, runInAction } from 'mobx';
 
 import {
   SortingDirection,
   ComparisonOperator,
 } from '@shared/types/__generated__/graphql.types';
 
+import { OrganizationDTO, type Organization } from './Organization';
+import { AllOrganizationsView } from './__views__/AllOrganizations.view';
 import { OrganizationsService } from './__service__/Organizations.service';
-import { OrganizationQuery } from './__service__/getOrganization.generated';
-
-type Organization = OrganizationQuery['organization'];
 
 export class OrganizationsStore extends Store<Organization> {
-  @observable private accessor totalElements = 0;
   private service: OrganizationsService;
 
   constructor(public root: RootStore, public transport: Transport) {
-    super(root, transport, { name: 'Organizations' });
+    super(root, transport, {
+      name: 'Organizations',
+      getId: (data) => data!.metadata.id,
+      factory: OrganizationDTO,
+    });
 
     this.service = OrganizationsService.getInstance(this.transport);
+
+    new AllOrganizationsView(this);
   }
 
   @computed
@@ -28,14 +33,16 @@ export class OrganizationsStore extends Store<Organization> {
     return this.totalElements === this.value.size;
   }
 
-  @override
+  @action
   async getRecentChanges() {
     try {
       if (this.root.demoMode || this.isBootstrapping) {
         return;
       }
 
-      this.isLoading = true;
+      runInAction(() => {
+        this.isLoading = true;
+      });
 
       const lastActiveAtUTC = this.root.windowManager
         .getLastActiveAtUTC()
@@ -79,17 +86,16 @@ export class OrganizationsStore extends Store<Organization> {
 
       const data =
         (dashboardView_Organizations?.content as Organization[]) ?? [];
-      const totalElements = dashboardView_Organizations?.totalElements;
 
       runInAction(() => {
-        data.forEach((item) => {
-          if (!item) return;
+        this.size = this.value.size;
+        data.forEach((raw) => {
+          if (!raw) return;
 
-          this.value.set(item?.metadata?.id, item);
+          const organization = OrganizationDTO.of(this.root, raw);
+
+          this.value.set(organization.id, organization);
         });
-      });
-      runInAction(() => {
-        this.totalElements = totalElements;
       });
     } catch (e) {
       runInAction(() => {
@@ -104,7 +110,9 @@ export class OrganizationsStore extends Store<Organization> {
 
   @action
   async getAllData() {
-    this.isBootstrapping = true;
+    runInAction(() => {
+      this.isBootstrapping = true;
+    });
 
     try {
       const { dashboardView_Organizations } =
@@ -122,14 +130,20 @@ export class OrganizationsStore extends Store<Organization> {
       const totalElements = dashboardView_Organizations?.totalElements;
 
       runInAction(() => {
-        data.forEach((item) => {
-          if (!item) return;
+        data.forEach((raw) => {
+          if (!raw) return;
 
-          this.value.set(item?.metadata?.id, item);
+          const organization = OrganizationDTO.of(this.root, raw);
+
+          this.value.set(organization.id, organization);
         });
-        this.totalElements = totalElements;
-      });
 
+        this.size = this.value.size;
+
+        if (this.totalElements !== totalElements) {
+          this.totalElements = totalElements;
+        }
+      });
       await this.bootstrapRest();
     } catch (e) {
       runInAction(() => {
@@ -140,6 +154,7 @@ export class OrganizationsStore extends Store<Organization> {
     }
   }
 
+  @action
   async bootstrap() {
     if (this.root.demoMode) {
       // this.load(
@@ -169,6 +184,7 @@ export class OrganizationsStore extends Store<Organization> {
     }
   }
 
+  @action
   async bootstrapRest() {
     let page = 1;
 
@@ -186,18 +202,19 @@ export class OrganizationsStore extends Store<Organization> {
 
         const data =
           (dashboardView_Organizations?.content as Organization[]) ?? [];
-        const totalElements = dashboardView_Organizations?.totalElements;
+
+        page++;
 
         runInAction(() => {
-          page++;
+          data.forEach((raw) => {
+            if (!raw) return;
 
-          data.forEach((item) => {
-            if (!item) return;
+            const organization = OrganizationDTO.of(this.root, raw);
 
-            this.value.set(item?.metadata?.id, item);
+            this.value.set(organization.id, organization);
           });
 
-          this.totalElements = totalElements;
+          this.size = this.value.size;
         });
       } catch (e) {
         runInAction(() => {
@@ -207,7 +224,30 @@ export class OrganizationsStore extends Store<Organization> {
       }
     }
 
-    this.isBootstrapped = this.totalElements === this.value.size;
-    this.isBootstrapping = false;
+    runInAction(() => {
+      this.isBootstrapped = this.totalElements === this.value.size;
+      this.isBootstrapping = false;
+    });
+  }
+
+  @action
+  public async invalidate(id: string) {
+    try {
+      const { organization } = await this.service.getOrganization(id);
+
+      if (!organization) return;
+
+      runInAction(() => {
+        this.value.set(id, OrganizationDTO.of(this.root, organization));
+
+        if (this.active.has(id)) {
+          const active = this.active.get(id);
+
+          Object.assign(active as Organization, organization);
+        }
+      });
+    } catch (e) {
+      console.error('Failed invalidating organization with ID: ' + id);
+    }
   }
 }

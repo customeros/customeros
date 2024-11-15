@@ -26,7 +26,10 @@ query Organization($id: ID!) {
       name
     }
     stage
+    lastFundingRound
+    customerOsId
     description
+    market
     industry
     website
     domains
@@ -35,6 +38,7 @@ query Organization($id: ID!) {
     icon
     relationship
     leadSource
+    referenceId
     tags {
       id
       name
@@ -85,6 +89,14 @@ query Organization($id: ID!) {
       locality
       countryCodeA2
       countryCodeA3
+    }
+    contacts(pagination: { page: 0, limit: 100 }) {
+      content {
+        id
+        metadata {
+          id
+        }
+      }
     }
     subsidiaries {
       organization {

@@ -73,7 +73,6 @@ export class RootStore {
     this.files = new FilesStore(this, this.transport);
     this.users = new UsersStore(this, this.transport);
     this.flows = new FlowsStore(this, this.transport);
-    this.flows = new FlowsStore(this, this.transport);
     this.session = new SessionStore(this, this.transport);
     this.settings = new SettingsStore(this, this.transport);
     this.invoices = new InvoicesStore(this, this.transport);
@@ -131,7 +130,7 @@ export class RootStore {
       // this.invoices.bootstrap(),
       // this.contracts.bootstrap(),
       // this.externalSystemInstances.bootstrap(),
-      // this.users.bootstrap(),
+      this.users.bootstrap(),
       // this.contacts.bootstrap(),
       // this.workFlows.bootstrap(),
       // this.flows.bootstrap(),
