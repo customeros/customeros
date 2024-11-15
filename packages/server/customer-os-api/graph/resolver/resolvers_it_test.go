@@ -40,6 +40,7 @@ var (
 	postgresSqlDB     *sql.DB
 
 	rabbitMqContainer testcontainers.Container
+	rabbitMqUrl       string
 
 	c                        *client.Client
 	cOwner                   *client.Client
@@ -69,7 +70,7 @@ func TestMain(m *testing.M) {
 	}(postgresContainer, context.Background())
 
 	// Start RabbitMQ container
-	rabbitMqContainer, _ = neo4jt.InitTestRabbitMQ()
+	rabbitMqContainer, rabbitMqUrl = neo4jt.InitTestRabbitMQ()
 	defer func(rabbitMqContainer testcontainers.Container, ctx context.Context) {
 		neo4jt.TerminateRabbitMQ(rabbitMqContainer, ctx)
 	}(rabbitMqContainer, context.Background())
@@ -98,7 +99,7 @@ func prepareClient() {
 	grpcClient := grpc_client.InitClients(gRPCconn)
 	commonServices := commonService.InitServices(&commonConfig.GlobalConfig{
 		RabbitMQConfig: &commonConfig.RabbitMQConfig{
-			Url: fmt.Sprintf("amqp://guest:guest@%s:%s/", "localhost", "5672"),
+			Url: rabbitMqUrl,
 		},
 	}, postgresGormDB, driver, "neo4j", grpcClient, appLogger)
 	customerOsApiServices = service.InitServices(appLogger, driver, &config.Config{}, commonServices, grpcClient, postgresGormDB)

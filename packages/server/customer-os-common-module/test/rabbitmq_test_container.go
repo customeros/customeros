@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func InitTestRabbitMQ() (testcontainers.Container, *amqp091.Connection) {
+func InitTestRabbitMQ() (testcontainers.Container, string) {
 	var ctx = context.Background()
 
 	// Set up RabbitMQ container
@@ -63,7 +63,7 @@ func InitTestRabbitMQ() (testcontainers.Container, *amqp091.Connection) {
 		log.Panic("Failed to create queues:", err)
 	}
 
-	return rabbitmqContainer, rabbitConn
+	return rabbitmqContainer, connString
 }
 
 func createQueues(conn *amqp091.Connection) error {

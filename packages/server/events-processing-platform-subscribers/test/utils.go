@@ -2,7 +2,6 @@ package test
 
 import (
 	"context"
-	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
@@ -47,7 +46,7 @@ func SetupTestDatabase() (TestDatabase, func()) {
 	postgresContainer, postgresGormDB, _ := postgrest.InitTestDB()
 	testDBs.GormDB = postgresGormDB
 
-	rabbitMqContainer, _ := neo4jt.InitTestRabbitMQ()
+	rabbitMqContainer, rabbitMqUrl := neo4jt.InitTestRabbitMQ()
 	defer func(rabbitMqContainer testcontainers.Container, ctx context.Context) {
 		neo4jt.TerminateRabbitMQ(rabbitMqContainer, ctx)
 	}(rabbitMqContainer, context.Background())
@@ -58,7 +57,7 @@ func SetupTestDatabase() (TestDatabase, func()) {
 
 	testDBs.CommonServices = commonService.InitServices(&commonConfig.GlobalConfig{
 		RabbitMQConfig: &commonConfig.RabbitMQConfig{
-			Url: fmt.Sprintf("amqp://guest:guest@%s:%s/", "localhost", "5672"),
+			Url: rabbitMqUrl,
 		},
 	}, postgresGormDB, testDBs.Driver, "neo4j", testDBs.GrpcClients, SetupTestLogger())
 	testDBs.Services = &service.Services{
