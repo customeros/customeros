@@ -224,7 +224,6 @@ func (h *organizationEventHandler) callApiEnrichOrganization(ctx context.Context
 
 	if response.StatusCode != http.StatusOK {
 		h.log.Errorf("Enrich organization API response status is : %d", response.StatusCode)
-		return nil, fmt.Errorf("Response status is %d", response.StatusCode)
 	}
 
 	body, err := io.ReadAll(response.Body)

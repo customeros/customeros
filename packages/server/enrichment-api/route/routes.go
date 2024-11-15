@@ -329,7 +329,7 @@ func enrichOrganization(services *service.Services) gin.HandlerFunc {
 				Success: false,
 			})
 			return
-		} else if scrapinResponseBody.Success == false && brandfetchResponseBody.IsEmpty() {
+		} else if (scrapinResponseBody != nil && scrapinResponseBody.Success == false) && (brandfetchResponseBody != nil && brandfetchResponseBody.IsEmpty()) {
 			span.LogKV("result", "No data found")
 			c.JSON(http.StatusNotFound, model.EnrichOrganizationResponse{
 				Status:  "Not found",
