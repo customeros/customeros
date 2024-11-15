@@ -363,11 +363,6 @@ func (h *organizationEventHandler) addSocial(ctx context.Context, organizationId
 	span.SetTag(tracing.SpanTagEntityId, organizationId)
 	span.LogFields(log.String("organizationId", organizationId), log.String("url", url))
 
-	innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
-		Tenant:    tenant,
-		AppSource: appSource,
-	})
-
 	socialEntity := neo4jentity.SocialEntity{
 		Url:        url,
 		Alias:      alias,
@@ -376,7 +371,7 @@ func (h *organizationEventHandler) addSocial(ctx context.Context, organizationId
 		Source:     neo4jentity.DataSourceOpenline,
 	}
 
-	_, err := h.services.CommonServices.SocialService.AddSocialToEntity(innerCtx, commonservice.LinkWith{
+	_, err := h.services.CommonServices.SocialService.AddSocialToEntity(ctx, commonservice.LinkWith{
 		Id:   organizationId,
 		Type: commonmodel.ORGANIZATION,
 	}, socialEntity)
@@ -442,20 +437,25 @@ func (h *organizationEventHandler) AdjustUpdatedOrganizationFields(ctx context.C
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 	span.SetTag(tracing.SpanTagEntityId, organizationId)
 
+	innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+		Tenant:    eventData.Tenant,
+		AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
+	})
+
 	market := ""
 	if eventData.UpdateMarket() {
 		market = h.mapMarketValue(eventData.Market)
 	}
 	industry := ""
 	if eventData.UpdateIndustry() {
-		industry = h.mapIndustryToGICS(ctx, eventData.Tenant, organizationId, eventData.Industry)
+		industry = h.mapIndustryToGICS(innerCtx, eventData.Tenant, organizationId, eventData.Industry)
 	}
 
 	updateMarket := eventData.UpdateMarket() && market != "" && eventData.Market != market
 	updateIndustry := eventData.UpdateIndustry() && industry != "" && eventData.Industry != industry
 
 	if updateMarket || updateIndustry {
-		err := h.callUpdateOrganizationCommand(ctx, eventData.Tenant, organizationId, eventData.Source, market, industry, updateMarket, updateIndustry)
+		err := h.callUpdateOrganizationCommand(innerCtx, eventData.Tenant, organizationId, eventData.Source, market, industry, updateMarket, updateIndustry)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
@@ -478,7 +478,6 @@ func (h *organizationEventHandler) callUpdateOrganizationCommand(ctx context.Con
 	//delay to avoid updating organization before main event
 	time.Sleep(250 * time.Millisecond)
 
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	_, err := h.services.CommonServices.OrganizationService.Save(ctx, nil, tenant, &organizationId, &repository.OrganizationSaveFields{
 		SourceFields: neo4jmodel.SourceFields{
 			AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
