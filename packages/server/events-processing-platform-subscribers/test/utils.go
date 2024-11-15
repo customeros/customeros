@@ -47,9 +47,6 @@ func SetupTestDatabase() (TestDatabase, func()) {
 	testDBs.GormDB = postgresGormDB
 
 	rabbitMqContainer, rabbitMqUrl := neo4jt.InitTestRabbitMQ()
-	defer func(rabbitMqContainer testcontainers.Container, ctx context.Context) {
-		neo4jt.TerminateRabbitMQ(rabbitMqContainer, ctx)
-	}(rabbitMqContainer, context.Background())
 
 	testDialFactory := mocked_grpc.NewMockedTestDialFactory()
 	grpcConn, _ := testDialFactory.GetEventsProcessingPlatformConn()
@@ -68,6 +65,7 @@ func SetupTestDatabase() (TestDatabase, func()) {
 		neo4jtest.CloseDriver(*testDBs.Driver)
 		neo4jtest.Terminate(testDBs.Neo4jContainer, context.Background())
 		postgrest.Terminate(postgresContainer, context.Background())
+		postgrest.Terminate(rabbitMqContainer, context.Background())
 	}
 	return testDBs, shutdown
 }
