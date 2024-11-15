@@ -619,7 +619,7 @@ func (r *contactReadRepository) GetContactsByLinkedIn(ctx context.Context, tenan
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("url", url), log.String("alias", alias), log.String("externalId", externalId))
 
-	if !strings.Contains(url, "linkedin.com") == false {
+	if !strings.Contains(url, "linkedin.com") {
 		return nil, nil
 	}
 
