@@ -4,6 +4,7 @@ extend type Query {
 
     flowParticipant(id: ID!): FlowParticipant! @hasRole(roles: [ADMIN, USER]) @hasTenant
     flow_emailVariables: [EmailVariableEntity!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    flow_testEmailSender: String! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 extend type Mutation {

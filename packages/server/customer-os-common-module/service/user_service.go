@@ -16,7 +16,6 @@ type UserService interface {
 	GetAllUsersForTenant(ctx context.Context, tenant string) ([]*neo4jentity.UserEntity, error)
 	FindUserByEmail(parentCtx context.Context, email string) (*neo4jentity.UserEntity, error)
 	CreateUser(ctx context.Context, userEntity neo4jentity.UserEntity) (string, error)
-	CreateTestUser(ctx context.Context, firstName, lastName string) (string, error)
 }
 
 type userService struct {
@@ -100,16 +99,4 @@ func (s *userService) CreateUser(ctx context.Context, userEntity neo4jentity.Use
 	}
 
 	return userId, nil
-}
-
-func (s *userService) CreateTestUser(ctx context.Context, firstName, lastName string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserService.CreateTestUser")
-	defer span.Finish()
-	span.LogKV("firstName", firstName, "lastName", lastName)
-
-	return s.CreateUser(ctx, neo4jentity.UserEntity{
-		FirstName: firstName,
-		LastName:  lastName,
-		Test:      true,
-	})
 }
