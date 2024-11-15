@@ -69,6 +69,7 @@ func (s *contactService) SaveContact(ctx context.Context, id *string, contactFie
 
 	if id == nil || *id == "" {
 		createFlow = true
+		span.LogKV("flow", "create")
 
 		// Reject contact creation if linked-in url is already used by another contact
 		if (neo4jentity.SocialEntity{Url: socialUrl}).IsLinkedin() {
@@ -83,7 +84,6 @@ func (s *contactService) SaveContact(ctx context.Context, id *string, contactFie
 			}
 		}
 
-		span.LogKV("flow", "create")
 		contactId, err = s.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelContact)
 		if err != nil {
 			tracing.TraceErr(span, err)
