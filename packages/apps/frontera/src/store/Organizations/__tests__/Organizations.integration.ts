@@ -112,9 +112,9 @@ describe('OrganizationsService - Integration Tests', () => {
         expect.soft(organization.organization?.icon).toBe('');
         expect.soft(organization.organization?.industry).toBe('');
         expect.soft(organization.organization?.isCustomer).toBe(false);
-        expect
-          .soft(organization.organization?.lastTouchpoint?.lastTouchPointAt)
-          .not.toBeNull();
+        expect(
+          organization.organization?.lastTouchpoint?.lastTouchPointAt,
+        ).not.toBeNull();
         expect
           .soft(
             organization.organization?.lastTouchpoint

@@ -197,14 +197,23 @@ describe('OrganizationsService - Integration Tests', () => {
 
     expect(contactBeforeFirstJobRole.contact?.jobRoles.length).toBe(1);
     expect(contactBeforeFirstJobRole.contact?.jobRoles[0].jobTitle).toBeNull();
+    expect(contactBeforeFirstJobRole.contact?.jobRoles[0].description).toBe('');
+    expect(contactBeforeFirstJobRole.contact?.jobRoles[0].primary).toBe(false);
+    expect(contactBeforeFirstJobRole.contact?.jobRoles[0].company).toBeNull();
+    expect(contactBeforeFirstJobRole.contact?.jobRoles[0].startedAt).toBeNull();
+    expect(contactBeforeFirstJobRole.contact?.jobRoles[0].endedAt).toBeNull();
+
+    const jobRoleOneDescription = 'IT_' + crypto.randomUUID();
+    const jobRoleOneTitle = 'IT_' + crypto.randomUUID();
+    const jobRoleOneStartedAt = new Date().toISOString();
 
     await contactService.addJobRole({
       contactId: contactBeforeFirstJobRole.contact!.metadata.id,
       input: {
-        description: 'IT_' + crypto.randomUUID(),
-        // addJobRole: 'zzzzz',
+        description: jobRoleOneDescription,
+        jobTitle: jobRoleOneTitle,
         organizationId: organization_Save.metadata.id,
-        startedAt: new Date().toISOString(),
+        startedAt: jobRoleOneStartedAt,
       },
     });
 
@@ -213,6 +222,20 @@ describe('OrganizationsService - Integration Tests', () => {
     );
 
     expect(contactAfterFirstJobRole.contact?.jobRoles.length).toBe(2);
-    expect(contactBeforeFirstJobRole.contact?.jobRoles[1].jobTitle).toBeNull();
+    expect(contactAfterFirstJobRole.contact?.jobRoles[1].jobTitle).toBe(
+      jobRoleOneTitle,
+    );
+    expect(contactAfterFirstJobRole.contact?.jobRoles[1].jobTitle).toBe(
+      jobRoleOneTitle,
+    );
+    expect(contactAfterFirstJobRole.contact?.jobRoles[1].description).toBe(
+      jobRoleOneDescription,
+    );
+    expect(contactAfterFirstJobRole.contact?.jobRoles[1].primary).toBe(false);
+    expect(contactAfterFirstJobRole.contact?.jobRoles[1].company).toBeNull();
+    expect(contactAfterFirstJobRole.contact?.jobRoles[1].startedAt).toBe(
+      jobRoleOneStartedAt,
+    );
+    expect(contactAfterFirstJobRole.contact?.jobRoles[0].endedAt).toBeNull();
   });
 });

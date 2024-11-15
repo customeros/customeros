@@ -2045,7 +2045,7 @@ export type JobRoleInput = {
   company?: InputMaybe<Scalars['String']['input']>;
   description?: InputMaybe<Scalars['String']['input']>;
   endedAt?: InputMaybe<Scalars['Time']['input']>;
-  addJobRole?: InputMaybe<Scalars['String']['input']>;
+  jobTitle?: InputMaybe<Scalars['String']['input']>;
   organizationId?: InputMaybe<Scalars['ID']['input']>;
   primary?: InputMaybe<Scalars['Boolean']['input']>;
   startedAt?: InputMaybe<Scalars['Time']['input']>;
