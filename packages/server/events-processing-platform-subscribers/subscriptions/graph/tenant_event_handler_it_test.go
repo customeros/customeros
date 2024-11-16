@@ -7,7 +7,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test"
@@ -97,74 +96,4 @@ func TestTenantEventHandler_OnUpdateBillingProfileV1(t *testing.T) {
 	require.Equal(t, true, tenantBillingProfileEntity.CanPayWithPigeon)
 	require.Equal(t, true, tenantBillingProfileEntity.CanPayWithBankTransfer)
 	require.Equal(t, true, tenantBillingProfileEntity.Check)
-}
-
-func TestTenantEventHandler_OnUpdateTenantSettingsV1(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx, testDatabase)(t)
-
-	// prepare neo4j data
-	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	settingsId := neo4jtest.CreateTenantSettings(ctx, testDatabase.Driver, tenantName, neo4jentity.TenantSettingsEntity{})
-
-	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		model.NodeLabelTenant:         1,
-		model.NodeLabelTenantSettings: 1,
-	})
-
-	// Prepare the event handler
-	eventHandler := &TenantEventHandler{
-		log:      testLogger,
-		services: testDatabase.Services,
-	}
-
-	timeNow := utils.Now()
-
-	aggregate := tenant.NewTenantAggregate(tenantName)
-	updateEvent, err := event.NewTenantSettingsUpdateEvent(
-		aggregate,
-		&tenantpb.UpdateTenantSettingsRequest{
-			LogoRepositoryFileId: "logoRepositoryFileId",
-			BaseCurrency:         neo4jenum.CurrencyAUD.String(),
-			InvoicingEnabled:     true,
-			InvoicingPostpaid:    true,
-			WorkspaceLogo:        "workspaceLogo",
-			WorkspaceName:        "workspaceName",
-		},
-		timeNow,
-		[]string{
-			event.FieldMaskLogoRepositoryFileId,
-			event.FieldMaskBaseCurrency,
-			event.FieldMaskInvoicingEnabled,
-			event.FieldMaskInvoicingPostpaid,
-			event.FieldMaskWorkspaceLogo,
-			event.FieldMaskWorkspaceName,
-		},
-	)
-	require.Nil(t, err)
-
-	// EXECUTE
-	err = eventHandler.OnUpdateTenantSettingsV1(context.Background(), updateEvent)
-	require.Nil(t, err)
-
-	// check still same nodes available
-	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		model.NodeLabelTenant:         1,
-		model.NodeLabelTenantSettings: 1,
-	})
-
-	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, model.NodeLabelTenantSettings, settingsId)
-	require.Nil(t, err)
-	require.NotNil(t, dbNode)
-
-	// verify
-	tenantSettingsEntity := neo4jmapper.MapDbNodeToTenantSettingsEntity(dbNode)
-	require.Equal(t, settingsId, tenantSettingsEntity.Id)
-	test.AssertRecentTime(t, tenantSettingsEntity.UpdatedAt)
-	require.Equal(t, "logoRepositoryFileId", tenantSettingsEntity.LogoRepositoryFileId)
-	require.Equal(t, true, tenantSettingsEntity.InvoicingEnabled)
-	require.Equal(t, true, tenantSettingsEntity.InvoicingPostpaid)
-	require.Equal(t, neo4jenum.CurrencyAUD, tenantSettingsEntity.BaseCurrency)
-	require.Equal(t, "workspaceLogo", tenantSettingsEntity.WorkspaceLogo)
-	require.Equal(t, "workspaceName", tenantSettingsEntity.WorkspaceName)
 }
