@@ -4,7 +4,6 @@ import (
 	"context"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	tenantpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/tenant"
-	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type MockTenantServiceCallbacks struct {
@@ -12,7 +11,6 @@ type MockTenantServiceCallbacks struct {
 	UpdateBillingProfile func(context.Context, *tenantpb.UpdateBillingProfileRequest) (*commonpb.IdResponse, error)
 	AddBankAccount       func(context.Context, *tenantpb.AddBankAccountGrpcRequest) (*commonpb.IdResponse, error)
 	UpdateBankAccount    func(context.Context, *tenantpb.UpdateBankAccountGrpcRequest) (*commonpb.IdResponse, error)
-	DeleteBankAccount    func(context.Context, *tenantpb.DeleteBankAccountGrpcRequest) (*emptypb.Empty, error)
 }
 
 var tenantCallbacks = &MockTenantServiceCallbacks{}
@@ -51,11 +49,4 @@ func (MockTenantService) UpdateBankAccount(context context.Context, proto *tenan
 		panic("tenantCallbacks.UpdateBankAccount is not set")
 	}
 	return tenantCallbacks.UpdateBankAccount(context, proto)
-}
-
-func (MockTenantService) DeleteBankAccount(context context.Context, proto *tenantpb.DeleteBankAccountGrpcRequest) (*emptypb.Empty, error) {
-	if tenantCallbacks.DeleteBankAccount == nil {
-		panic("tenantCallbacks.DeleteBankAccount is not set")
-	}
-	return tenantCallbacks.DeleteBankAccount(context, proto)
 }

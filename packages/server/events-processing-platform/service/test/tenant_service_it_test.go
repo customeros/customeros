@@ -6,7 +6,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	tenant "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/tenant"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/tenant/event"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test"
 	eventstoret "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/eventstore"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	tenantpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/tenant"
@@ -297,44 +296,4 @@ func TestTenantService_UpdateBankAccount(t *testing.T) {
 	require.Equal(t, "routingNumber", eventData.RoutingNumber)
 	require.Equal(t, "otherDetails", eventData.OtherDetails)
 	require.Equal(t, 6, len(eventData.FieldsMask))
-}
-
-func TestTenantService_DeleteBankAccount(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx, testDatabase)(t)
-
-	// setup test environment
-	tenantName := "ziggy"
-	bankAccountId := uuid.New().String()
-
-	// setup aggregate and create initial event
-	aggregateStore := eventstoret.NewTestAggregateStore()
-	grpcConnection, err := dialFactory.GetEventsProcessingPlatformConn(testDatabase.Repositories, aggregateStore)
-	require.Nil(t, err, "Failed to get grpc connection")
-	tenantServiceClient := tenantpb.NewTenantGrpcServiceClient(grpcConnection)
-
-	response, err := tenantServiceClient.DeleteBankAccount(ctx, &tenantpb.DeleteBankAccountGrpcRequest{
-		Tenant: tenantName,
-		Id:     bankAccountId,
-	})
-	require.Nil(t, err)
-	require.NotNil(t, response)
-
-	eventsMap := aggregateStore.GetEventMap()
-	require.Equal(t, 1, len(eventsMap))
-
-	tenantAggregate := tenant.NewTenantAggregate(tenantName)
-	eventList := eventsMap[tenantAggregate.ID]
-	require.Equal(t, 1, len(eventList))
-	require.Equal(t, event.TenantDeleteBankAccountV1, eventList[0].GetEventType())
-	require.Equal(t, string(tenant.TenantAggregateType)+"-"+tenantName, eventList[0].GetAggregateID())
-
-	var eventData event.TenantBankAccountDeleteEvent
-	err = eventList[0].GetJsonData(&eventData)
-	require.Nil(t, err, "Failed to unmarshal event data")
-
-	// Assertions to validate the contract create event data
-	require.Equal(t, tenantName, eventData.Tenant)
-	require.Equal(t, bankAccountId, eventData.Id)
-	test.AssertRecentTime(t, eventData.DeletedAt)
 }

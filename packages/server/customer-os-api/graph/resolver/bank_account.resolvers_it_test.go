@@ -14,7 +14,6 @@ import (
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	tenantpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/tenant"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/types/known/emptypb"
 	"testing"
 )
 
@@ -200,46 +199,4 @@ func TestMutationResolver_BankAccountUpdate_FromEurToUsd(t *testing.T) {
 	require.Equal(t, bankAccountId, bankAccount.Metadata.ID)
 
 	require.True(t, calledUpdateBankAccount)
-}
-
-func TestMutationResolver_BankAccountDelete(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
-
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
-	bankAccountId := neo4jtest.CreateBankAccount(ctx, driver, tenantName, neo4jentity.BankAccountEntity{})
-
-	calledDeleteBankAccount := false
-
-	tenantServiceCallbacks := events_platform.MockTenantServiceCallbacks{
-		DeleteBankAccount: func(context context.Context, bankAccount *tenantpb.DeleteBankAccountGrpcRequest) (*emptypb.Empty, error) {
-			require.Equal(t, tenantName, bankAccount.Tenant)
-			require.Equal(t, testUserId, bankAccount.LoggedInUserId)
-			require.Equal(t, constants.AppSourceCustomerOsApi, bankAccount.AppSource)
-			require.Equal(t, bankAccountId, bankAccount.Id)
-			calledDeleteBankAccount = true
-			neo4jtest.CreateBankAccount(ctx, driver, tenantName, neo4jentity.BankAccountEntity{Id: bankAccountId})
-			return &emptypb.Empty{}, nil
-		},
-	}
-	events_platform.SetTenantCallbacks(&tenantServiceCallbacks)
-
-	rawResponse := callGraphQL(t, "bank_account/delete_bank_account", map[string]interface{}{
-		"accountId": bankAccountId,
-	})
-	require.Nil(t, rawResponse.Errors)
-
-	var graphqlResponse struct {
-		BankAccount_Delete model.DeleteResponse
-	}
-
-	err := decode.Decode(rawResponse.Data.(map[string]any), &graphqlResponse)
-	require.Nil(t, err)
-
-	deleteResponse := graphqlResponse.BankAccount_Delete
-	require.True(t, deleteResponse.Accepted)
-	require.False(t, deleteResponse.Completed)
-
-	require.True(t, calledDeleteBankAccount)
 }
