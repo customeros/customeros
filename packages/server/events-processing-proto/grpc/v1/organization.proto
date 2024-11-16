@@ -69,7 +69,6 @@ message UpsertOrganizationGrpcRequest {
   ExternalSystemFields externalSystemFields = 26;
   string loggedInUserId = 27;
   string referenceId = 28;
-  bool webScrapeMetadata = 30 [deprecated = true];
   repeated OrganizationMaskField fieldsMask = 31;
   string logoUrl = 32;
   string headquarters = 33;
