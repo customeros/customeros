@@ -74,6 +74,7 @@ export class OrganizationPeoplePage {
     );
 
     const contactName = randomUUID().slice(0, 8);
+
     const requestPromise = createRequestPromise(this.page, 'name', contactName);
 
     const responsePromise = createResponsePromise(
@@ -83,8 +84,9 @@ export class OrganizationPeoplePage {
     );
 
     await orgPeopleContactNameInput.pressSequentially(contactName, {
-      delay: 200,
+      delay: 100,
     });
+    await orgPeopleContactNameInput.press('Tab');
 
     const [_, response] = await Promise.all([requestPromise, responsePromise]);
 
@@ -110,6 +112,7 @@ export class OrganizationPeoplePage {
     );
 
     await orgPeopleContactTitleInput.pressSequentially('CTO', { delay: 500 });
+    await orgPeopleContactTitleInput.press('Tab');
     await Promise.all([requestPromise, responsePromise]);
     await expect(orgPeopleContactTitleInput).toHaveValue('CTO');
   }

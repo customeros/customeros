@@ -138,7 +138,7 @@ export class OrganizationsPage {
       .locator('..');
 
     await this.page.waitForTimeout(2000);
-    await this.page.reload();
+    // await this.page.reload();
     await this.page.waitForSelector('[data-index="0"]', { timeout: 30000 });
 
     await assertWithRetry(async () => {

@@ -144,23 +144,23 @@ export class OpportunitiesKanbanPage {
 
     const responseMutationPromise = createResponsePromise(
       this.page,
-      'opportunity_Create?.metadata?.id',
+      'saveOpportunity?.metadata?.id',
       undefined,
     );
     const queryResponsePromise1 = createResponsePromise(
       this.page,
-      'opportunity?.metadata?.id',
+      'opportunity_Save?.metadata?.id',
       undefined,
     );
-    const queryResponsePromise2 = createResponsePromise(
-      this.page,
-      'opportunity?.metadata?.id',
-      undefined,
-    );
+    // const queryResponsePromise2 = createResponsePromise(
+    //   this.page,
+    //   'opportunity?.metadata?.id',
+    //   undefined,
+    // );
 
     await responseMutationPromise;
     await queryResponsePromise1;
-    await queryResponsePromise2;
+    // await queryResponsePromise2;
     await this.page.waitForTimeout(1500);
   }
 
