@@ -37,7 +37,6 @@ type Services struct {
 	IssueService               IssueService
 	PageViewService            PageViewService
 	MeetingService             MeetingService
-	TenantService              TenantService
 	ExternalSystemService      ExternalSystemService
 	ActionService              ActionService
 	CountryService             CountryService
@@ -66,7 +65,6 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, cfg *confi
 		CustomFieldTemplateService: NewCustomFieldTemplateService(log, repositories),
 		LocationService:            NewLocationService(log, repositories),
 		PageViewService:            NewPageViewService(log, repositories),
-		TenantService:              NewTenantService(log, repositories, grpcClients),
 		ExternalSystemService:      NewExternalSystemService(log, repositories),
 		ActionService:              NewActionService(log, repositories),
 		CountryService:             NewCountryService(log, repositories),

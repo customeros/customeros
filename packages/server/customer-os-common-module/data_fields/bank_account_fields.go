@@ -19,9 +19,7 @@ type BankAccountFields struct {
 
 // IsEmpty returns true if there are no fields to update
 func (fields BankAccountFields) IsEmpty() bool {
-	return fields.AppSource == nil &&
-		fields.Source == nil &&
-		fields.BankName == nil &&
+	return fields.BankName == nil &&
 		fields.BankTransferEnabled == nil &&
 		fields.AllowInternational == nil &&
 		fields.Currency == nil &&

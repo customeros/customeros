@@ -8,12 +8,14 @@ import (
 	"context"
 	"errors"
 	"github.com/99designs/gqlgen/graphql"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/opentracing/opentracing-go/log"
 )
 
@@ -24,7 +26,27 @@ func (r *mutationResolver) TenantAddBillingProfile(ctx context.Context, input mo
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "request.input", input)
 
-	profileId, err := r.Services.TenantService.CreateTenantBillingProfile(ctx, input)
+	dataFields := data_fields.TenantBillingProfileFields{
+		Source:                 utils.StringPtr(neo4jentity.DataSourceOpenline.String()),
+		AppSource:              utils.StringPtr(constants.AppSourceCustomerOsApi),
+		Phone:                  input.Phone,
+		LegalName:              input.LegalName,
+		AddressLine1:           input.AddressLine1,
+		AddressLine2:           input.AddressLine2,
+		AddressLine3:           input.AddressLine3,
+		Locality:               input.Locality,
+		Country:                input.Country,
+		Region:                 input.Region,
+		Zip:                    input.Zip,
+		VatNumber:              utils.StringPtr(input.VatNumber),
+		SendInvoicesFrom:       utils.StringPtr(input.SendInvoicesFrom),
+		SendInvoicesBcc:        input.SendInvoicesBcc,
+		CanPayWithPigeon:       utils.BoolPtr(input.CanPayWithPigeon),
+		CanPayWithBankTransfer: utils.BoolPtr(input.CanPayWithBankTransfer),
+		Check:                  utils.BoolPtr(input.Check),
+	}
+
+	profileId, err := r.Services.CommonServices.TenantSettingsService.CreateTenantBillingProfile(ctx, dataFields)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to create tenant billing profile")
@@ -55,7 +77,25 @@ func (r *mutationResolver) TenantUpdateBillingProfile(ctx context.Context, input
 		return nil, nil
 	}
 
-	err := r.Services.TenantService.UpdateTenantBillingProfile(ctx, input)
+	dataFields := data_fields.TenantBillingProfileFields{
+		Phone:                  input.Phone,
+		LegalName:              input.LegalName,
+		AddressLine1:           input.AddressLine1,
+		AddressLine2:           input.AddressLine2,
+		AddressLine3:           input.AddressLine3,
+		Locality:               input.Locality,
+		Country:                input.Country,
+		Region:                 input.Region,
+		Zip:                    input.Zip,
+		VatNumber:              input.VatNumber,
+		SendInvoicesFrom:       input.SendInvoicesFrom,
+		SendInvoicesBcc:        input.SendInvoicesBcc,
+		CanPayWithPigeon:       input.CanPayWithPigeon,
+		CanPayWithBankTransfer: input.CanPayWithBankTransfer,
+		Check:                  input.Check,
+	}
+
+	err := r.Services.CommonServices.TenantSettingsService.UpdateTenantBillingProfile(ctx, input.ID, dataFields)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to update billing profile")

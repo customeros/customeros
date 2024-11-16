@@ -4,81 +4,24 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
-	"time"
-
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
 
-type TenantBillingProfileCreateFields struct {
-	Id                     string             `json:"id"`
-	CreatedAt              time.Time          `json:"createdAt"`
-	SourceFields           model.SourceFields `json:"sourceFields"`
-	Phone                  string             `json:"phone"`
-	LegalName              string             `json:"legalName"`
-	AddressLine1           string             `json:"addressLine1"`
-	AddressLine2           string             `json:"addressLine2"`
-	AddressLine3           string             `json:"addressLine3"`
-	Locality               string             `json:"locality"`
-	Country                string             `json:"country"`
-	Region                 string             `json:"region"`
-	Zip                    string             `json:"zip"`
-	VatNumber              string             `json:"vatNumber"`
-	SendInvoicesFrom       string             `json:"sendInvoicesFrom"`
-	SendInvoicesBcc        string             `json:"sendInvoicesBcc"`
-	CanPayWithPigeon       bool               `json:"canPayWithPigeon"`
-	CanPayWithBankTransfer bool               `json:"canPayWithBankTransfer"`
-	Check                  bool               `json:"check"`
-}
-
-type TenantBillingProfileUpdateFields struct {
-	Id                           string `json:"id"`
-	Phone                        string `json:"phone"`
-	LegalName                    string `json:"legalName"`
-	AddressLine1                 string `json:"addressLine1"`
-	AddressLine2                 string `json:"addressLine2"`
-	AddressLine3                 string `json:"addressLine3"`
-	Locality                     string `json:"locality"`
-	Country                      string `json:"country"`
-	Region                       string `json:"region"`
-	Zip                          string `json:"zip"`
-	VatNumber                    string `json:"vatNumber"`
-	SendInvoicesFrom             string `json:"sendInvoicesFrom"`
-	SendInvoicesBcc              string `json:"sendInvoicesBcc"`
-	CanPayWithPigeon             bool   `json:"canPayWithPigeon"`
-	CanPayWithBankTransfer       bool   `json:"canPayWithBankTransfer"`
-	Check                        bool   `json:"check"`
-	UpdatePhone                  bool   `json:"updatePhone"`
-	UpdateLegalName              bool   `json:"updateLegalName"`
-	UpdateAddressLine1           bool   `json:"updateAddressLine1"`
-	UpdateAddressLine2           bool   `json:"updateAddressLine2"`
-	UpdateAddressLine3           bool   `json:"updateAddressLine3"`
-	UpdateLocality               bool   `json:"updateLocality"`
-	UpdateCountry                bool   `json:"updateCountry"`
-	UpdateRegion                 bool   `json:"updateRegion"`
-	UpdateZip                    bool   `json:"updateZip"`
-	UpdateVatNumber              bool   `json:"updateVatNumber"`
-	UpdateSendInvoicesFrom       bool   `json:"updateSendInvoicesFrom"`
-	UpdateSendInvoicesBcc        bool   `json:"updateSendInvoicesBcc"`
-	UpdateCanPayWithPigeon       bool   `json:"updateCanPayWithPigeon"`
-	UpdateCanPayWithBankTransfer bool   `json:"updateCanPayWithBankTransfer"`
-	UpdateCheck                  bool   `json:"updateCheck"`
-}
-
 type TenantWriteRepository interface {
 	CreateTenantIfNotExistAndReturn(ctx context.Context, tenant neo4jentity.TenantEntity) (*dbtype.Node, error)
 
-	CreateTenantBillingProfile(ctx context.Context, tenant string, data TenantBillingProfileCreateFields) error
-	UpdateTenantBillingProfile(ctx context.Context, tenant string, data TenantBillingProfileUpdateFields) error
+	CreateTenantBillingProfile(ctx context.Context, tenant string, data data_fields.TenantBillingProfileFields) error
+	UpdateTenantBillingProfile(ctx context.Context, tenant string, data data_fields.TenantBillingProfileFields) error
+
 	UpdateTenantSettings(ctx context.Context, tenant string, data data_fields.TenantSettingsFields) error
 
 	HardDeleteTenant(ctx context.Context, tenant string) error
@@ -149,7 +92,7 @@ func (r *tenantWriteRepository) CreateTenantIfNotExistAndReturn(ctx context.Cont
 	}
 }
 
-func (r *tenantWriteRepository) CreateTenantBillingProfile(ctx context.Context, tenant string, data TenantBillingProfileCreateFields) error {
+func (r *tenantWriteRepository) CreateTenantBillingProfile(ctx context.Context, tenant string, data data_fields.TenantBillingProfileFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantWriteRepository.CreateTenantBillingProfile")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
@@ -159,10 +102,9 @@ func (r *tenantWriteRepository) CreateTenantBillingProfile(ctx context.Context, 
 							MERGE (t)-[:HAS_BILLING_PROFILE]->(tbp:TenantBillingProfile {id:$billingProfileId}) 
 							ON CREATE SET 
 								tbp:TenantBillingProfile_%s,
-								tbp.createdAt=$createdAt,
+								tbp.createdAt=datetime(),
 								tbp.updatedAt=datetime(),
 								tbp.source=$source,
-								tbp.sourceOfTruth=$sourceOfTruth,
 								tbp.appSource=$appSource,
 								tbp.phone=$phone,
 								tbp.legalName=$legalName,	
@@ -182,26 +124,24 @@ func (r *tenantWriteRepository) CreateTenantBillingProfile(ctx context.Context, 
 							`, tenant)
 	params := map[string]any{
 		"tenant":                 tenant,
-		"billingProfileId":       data.Id,
-		"createdAt":              data.CreatedAt,
-		"source":                 data.SourceFields.Source,
-		"sourceOfTruth":          data.SourceFields.Source,
-		"appSource":              data.SourceFields.AppSource,
-		"phone":                  data.Phone,
-		"legalName":              data.LegalName,
-		"addressLine1":           data.AddressLine1,
-		"addressLine2":           data.AddressLine2,
-		"addressLine3":           data.AddressLine3,
-		"locality":               data.Locality,
-		"country":                data.Country,
-		"region":                 data.Region,
-		"zip":                    data.Zip,
-		"vatNumber":              data.VatNumber,
-		"sendInvoicesFrom":       data.SendInvoicesFrom,
-		"sendInvoicesBcc":        data.SendInvoicesBcc,
-		"canPayWithPigeon":       data.CanPayWithPigeon,
-		"canPayWithBankTransfer": data.CanPayWithBankTransfer,
-		"check":                  data.Check,
+		"billingProfileId":       data.ID,
+		"source":                 utils.IfNotNilString(data.Source),
+		"appSource":              utils.IfNotNilString(data.AppSource),
+		"phone":                  utils.IfNotNilString(data.Phone),
+		"legalName":              utils.IfNotNilString(data.LegalName),
+		"addressLine1":           utils.IfNotNilString(data.AddressLine1),
+		"addressLine2":           utils.IfNotNilString(data.AddressLine2),
+		"addressLine3":           utils.IfNotNilString(data.AddressLine3),
+		"locality":               utils.IfNotNilString(data.Locality),
+		"country":                utils.IfNotNilString(data.Country),
+		"region":                 utils.IfNotNilString(data.Region),
+		"zip":                    utils.IfNotNilString(data.Zip),
+		"vatNumber":              utils.IfNotNilString(data.VatNumber),
+		"sendInvoicesFrom":       utils.IfNotNilString(data.SendInvoicesFrom),
+		"sendInvoicesBcc":        utils.IfNotNilString(data.SendInvoicesBcc),
+		"canPayWithPigeon":       utils.IfNotNilBool(data.CanPayWithPigeon),
+		"canPayWithBankTransfer": utils.IfNotNilBool(data.CanPayWithBankTransfer),
+		"check":                  utils.IfNotNilBool(data.Check),
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -213,7 +153,7 @@ func (r *tenantWriteRepository) CreateTenantBillingProfile(ctx context.Context, 
 	return err
 }
 
-func (r *tenantWriteRepository) UpdateTenantBillingProfile(ctx context.Context, tenant string, data TenantBillingProfileUpdateFields) error {
+func (r *tenantWriteRepository) UpdateTenantBillingProfile(ctx context.Context, tenant string, data data_fields.TenantBillingProfileFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantWriteRepository.UpdateTenantBillingProfile")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
@@ -226,67 +166,67 @@ func (r *tenantWriteRepository) UpdateTenantBillingProfile(ctx context.Context, 
 							`
 	params := map[string]any{
 		"tenant":           tenant,
-		"billingProfileId": data.Id,
+		"billingProfileId": data.ID,
 	}
-	if data.UpdatePhone {
+	if data.Phone != nil {
 		cypher += `,tbp.phone=$phone`
-		params["phone"] = data.Phone
+		params["phone"] = *data.Phone
 	}
-	if data.UpdateLegalName {
+	if data.LegalName != nil {
 		cypher += `,tbp.legalName=$legalName`
-		params["legalName"] = data.LegalName
+		params["legalName"] = *data.LegalName
 	}
-	if data.UpdateAddressLine1 {
+	if data.AddressLine1 != nil {
 		cypher += `,tbp.addressLine1=$addressLine1`
-		params["addressLine1"] = data.AddressLine1
+		params["addressLine1"] = *data.AddressLine1
 	}
-	if data.UpdateAddressLine2 {
+	if data.AddressLine2 != nil {
 		cypher += `,tbp.addressLine2=$addressLine2`
-		params["addressLine2"] = data.AddressLine2
+		params["addressLine2"] = *data.AddressLine2
 	}
-	if data.UpdateAddressLine3 {
+	if data.AddressLine3 != nil {
 		cypher += `,tbp.addressLine3=$addressLine3`
-		params["addressLine3"] = data.AddressLine3
+		params["addressLine3"] = *data.AddressLine3
 	}
-	if data.UpdateLocality {
+	if data.Locality != nil {
 		cypher += `,tbp.locality=$locality`
-		params["locality"] = data.Locality
+		params["locality"] = *data.Locality
 	}
-	if data.UpdateCountry {
+	if data.Country != nil {
 		cypher += `,tbp.country=$country`
-		params["country"] = data.Country
+		params["country"] = *data.Country
 	}
-	if data.UpdateRegion {
+	if data.Region != nil {
 		cypher += `,tbp.region=$region`
-		params["region"] = data.Region
+		params["region"] = *data.Region
 	}
-	if data.UpdateZip {
+	if data.Zip != nil {
 		cypher += `,tbp.zip=$zip`
-		params["zip"] = data.Zip
+		params["zip"] = *data.Zip
 	}
-	if data.UpdateVatNumber {
+	if data.VatNumber != nil {
 		cypher += `,tbp.vatNumber=$vatNumber`
-		params["vatNumber"] = data.VatNumber
+		params["vatNumber"] = *data.VatNumber
 	}
-	if data.UpdateSendInvoicesFrom {
+	if data.SendInvoicesFrom != nil {
 		cypher += `,tbp.sendInvoicesFrom=$sendInvoicesFrom`
-		params["sendInvoicesFrom"] = data.SendInvoicesFrom
+		params["sendInvoicesFrom"] = *data.SendInvoicesFrom
 	}
-	if data.UpdateSendInvoicesBcc {
+	if data.SendInvoicesBcc != nil {
 		cypher += `,tbp.sendInvoicesBcc=$sendInvoicesBcc`
-		params["sendInvoicesBcc"] = data.SendInvoicesBcc
+		params["sendInvoicesBcc"] = *data.SendInvoicesBcc
 	}
-	if data.UpdateCanPayWithPigeon {
+	if data.CanPayWithPigeon != nil {
 		cypher += `,tbp.canPayWithPigeon=$canPayWithPigeon`
-		params["canPayWithPigeon"] = data.CanPayWithPigeon
+		params["canPayWithPigeon"] = *data.CanPayWithPigeon
 	}
-	if data.UpdateCanPayWithBankTransfer {
+	if data.CanPayWithBankTransfer != nil {
 		cypher += `,tbp.canPayWithBankTransfer=$canPayWithBankTransfer`
-		params["canPayWithBankTransfer"] = data.CanPayWithBankTransfer
+		params["canPayWithBankTransfer"] = *data.CanPayWithBankTransfer
 	}
-	if data.UpdateCheck {
+	if data.Check != nil {
 		cypher += `,tbp.check=$check`
-		params["check"] = data.Check
+		params["check"] = *data.Check
 	}
 
 	span.LogFields(log.String("cypher", cypher))

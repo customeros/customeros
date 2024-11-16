@@ -28,7 +28,7 @@ import (
 	logentryevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/event"
 	phonenumberevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/events"
 	servicelineitemevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/event"
-	tenantevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/tenant/event"
+	tenantevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/tenant"
 	userevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/events"
 	opportunityevent "github.com/openline-ai/openline-customer-os/packages/server/events/event/opportunity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
@@ -55,7 +55,6 @@ type GraphSubscriber struct {
 	contractEventHandler        *ContractEventHandler
 	serviceLineItemEventHandler *ServiceLineItemEventHandler
 	invoiceEventHandler         *InvoiceEventHandler
-	tenantEventHandler          *TenantEventHandler
 	reminderEventHandler        *ReminderEventHandler
 }
 
@@ -78,7 +77,6 @@ func NewGraphSubscriber(log logger.Logger, db *esdb.Client, services *service.Se
 		contractEventHandler:        NewContractEventHandler(log, services, grpcClients),
 		serviceLineItemEventHandler: NewServiceLineItemEventHandler(log, services, grpcClients),
 		invoiceEventHandler:         NewInvoiceEventHandler(log, services, grpcClients),
-		tenantEventHandler:          NewTenantEventHandler(log, services),
 		reminderEventHandler:        NewReminderEventHandler(log, services),
 	}
 }
@@ -217,6 +215,8 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		tenantevent.TenantDeleteBankAccountV1,
 		tenantevent.TenantAddBankAccountV1,
 		tenantevent.TenantUpdateBankAccountV1,
+		tenantevent.TenantAddBillingProfileV1,
+		tenantevent.TenantUpdateBillingProfileV1,
 		contractevent.ContractUpdateV1:
 
 		return nil
@@ -454,13 +454,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return nil
 	case invoiceevents.InvoiceDeleteV1:
 		_ = s.invoiceEventHandler.OnInvoiceDeleteV1(ctx, evt)
-		return nil
-
-	case tenantevent.TenantAddBillingProfileV1:
-		_ = s.tenantEventHandler.OnAddBillingProfileV1(ctx, evt)
-		return nil
-	case tenantevent.TenantUpdateBillingProfileV1:
-		_ = s.tenantEventHandler.OnUpdateBillingProfileV1(ctx, evt)
 		return nil
 
 	case reminderevents.ReminderCreateV1:
