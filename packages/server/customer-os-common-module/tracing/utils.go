@@ -18,14 +18,13 @@ import (
 )
 
 const (
-	SpanTagTenant                = "tenant"
-	SpanTagUserId                = "user-id"
-	SpanTagUserEmail             = "user-email"
-	SpanTagEntityId              = "entity-id"
-	SpanTagComponent             = "component"
-	SpanTagExternalSystem        = "external-system"
-	SpanTagAggregateId           = "aggregateID"
-	SpanTagRedundantEventSkipped = "redundantEventSkipped"
+	SpanTagTenant         = "tenant"
+	SpanTagUserId         = "user-id"
+	SpanTagUserEmail      = "user-email"
+	SpanTagEntityId       = "entity-id"
+	SpanTagComponent      = "component"
+	SpanTagExternalSystem = "external-system"
+	SpanTagAggregateId    = "aggregateID"
 )
 
 const (
@@ -33,6 +32,7 @@ const (
 	SpanTagComponentNeo4jRepository    = "neo4jRepository"
 	SpanTagComponentRest               = "rest"
 	SpanTagComponentCronJob            = "cronJob"
+	SpanTagComponentService            = "service"
 )
 
 func GraphQlTracingEnhancer(ctx context.Context) func(c *gin.Context) {
@@ -194,7 +194,7 @@ func setDefaultSpanTags(ctx context.Context, span opentracing.Span) {
 
 func SetDefaultServiceSpanTags(ctx context.Context, span opentracing.Span) {
 	setDefaultSpanTags(ctx, span)
-	span.SetTag(SpanTagComponent, constants.ComponentService)
+	TagComponentService(span)
 }
 func SetDefaultListenerSpanTags(ctx context.Context, span opentracing.Span) {
 	setDefaultSpanTags(ctx, span)
@@ -271,4 +271,8 @@ func TagComponentCronJob(span opentracing.Span) {
 
 func TagComponentRest(span opentracing.Span) {
 	span.SetTag(SpanTagComponent, SpanTagComponentRest)
+}
+
+func TagComponentService(span opentracing.Span) {
+	span.SetTag(SpanTagComponent, SpanTagComponentService)
 }

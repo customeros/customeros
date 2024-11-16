@@ -176,7 +176,7 @@ func (s *contractService) Save(ctx context.Context, id *string, dataFields data_
 	} else {
 		err = s.services.RabbitMQService.PublishEvent(ctx, contractId, model.CONTRACT, dto.UpdateContract{dataFields})
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateContractOld"))
+			tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateContract"))
 		}
 		if dataFields.AppSource == nil || *dataFields.AppSource != constants.AppSourceCustomerOsApi {
 			utils.EventCompleted(ctx, tenant, model.CONTRACT.String(), contractId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
