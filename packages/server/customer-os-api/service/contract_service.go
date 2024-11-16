@@ -150,7 +150,7 @@ func (s *contractService) Create(ctx context.Context, contractDetails *ContractC
 		}
 	}
 
-	tenantBillingProfileEntity, err := s.services.CommonServices.TenantService.GetDefaultTenantBillingProfile(ctx)
+	tenantBillingProfileEntity, err := s.services.CommonServices.TenantSettingsService.GetDefaultTenantBillingProfile(ctx)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return "", err

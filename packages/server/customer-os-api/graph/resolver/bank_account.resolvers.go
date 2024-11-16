@@ -87,13 +87,13 @@ func (r *mutationResolver) BankAccountDelete(ctx context.Context, id string) (*m
 		return &model.DeleteResponse{Accepted: false, Completed: false}, nil
 	}
 
-	deletionCompleted, err := r.Services.BankAccountService.DeleteTenantBankAccount(ctx, id)
+	err := r.Services.BankAccountService.DeleteTenantBankAccount(ctx, id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to delete bank account")
 		return &model.DeleteResponse{Accepted: false, Completed: false}, nil
 	}
-	return &model.DeleteResponse{Accepted: true, Completed: deletionCompleted}, nil
+	return &model.DeleteResponse{Accepted: true, Completed: true}, nil
 }
 
 // BankAccounts is the resolver for the bankAccounts field.

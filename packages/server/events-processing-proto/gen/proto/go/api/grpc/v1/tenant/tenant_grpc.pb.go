@@ -12,7 +12,6 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
-	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -28,7 +27,6 @@ type TenantGrpcServiceClient interface {
 	UpdateBillingProfile(ctx context.Context, in *UpdateBillingProfileRequest, opts ...grpc.CallOption) (*common.IdResponse, error)
 	AddBankAccount(ctx context.Context, in *AddBankAccountGrpcRequest, opts ...grpc.CallOption) (*common.IdResponse, error)
 	UpdateBankAccount(ctx context.Context, in *UpdateBankAccountGrpcRequest, opts ...grpc.CallOption) (*common.IdResponse, error)
-	DeleteBankAccount(ctx context.Context, in *DeleteBankAccountGrpcRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type tenantGrpcServiceClient struct {
@@ -75,15 +73,6 @@ func (c *tenantGrpcServiceClient) UpdateBankAccount(ctx context.Context, in *Upd
 	return out, nil
 }
 
-func (c *tenantGrpcServiceClient) DeleteBankAccount(ctx context.Context, in *DeleteBankAccountGrpcRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/tenantGrpcService/DeleteBankAccount", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // TenantGrpcServiceServer is the server API for TenantGrpcService service.
 // All implementations should embed UnimplementedTenantGrpcServiceServer
 // for forward compatibility
@@ -92,7 +81,6 @@ type TenantGrpcServiceServer interface {
 	UpdateBillingProfile(context.Context, *UpdateBillingProfileRequest) (*common.IdResponse, error)
 	AddBankAccount(context.Context, *AddBankAccountGrpcRequest) (*common.IdResponse, error)
 	UpdateBankAccount(context.Context, *UpdateBankAccountGrpcRequest) (*common.IdResponse, error)
-	DeleteBankAccount(context.Context, *DeleteBankAccountGrpcRequest) (*emptypb.Empty, error)
 }
 
 // UnimplementedTenantGrpcServiceServer should be embedded to have forward compatible implementations.
@@ -110,9 +98,6 @@ func (UnimplementedTenantGrpcServiceServer) AddBankAccount(context.Context, *Add
 }
 func (UnimplementedTenantGrpcServiceServer) UpdateBankAccount(context.Context, *UpdateBankAccountGrpcRequest) (*common.IdResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateBankAccount not implemented")
-}
-func (UnimplementedTenantGrpcServiceServer) DeleteBankAccount(context.Context, *DeleteBankAccountGrpcRequest) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteBankAccount not implemented")
 }
 
 // UnsafeTenantGrpcServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -198,24 +183,6 @@ func _TenantGrpcService_UpdateBankAccount_Handler(srv interface{}, ctx context.C
 	return interceptor(ctx, in, info, handler)
 }
 
-func _TenantGrpcService_DeleteBankAccount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteBankAccountGrpcRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(TenantGrpcServiceServer).DeleteBankAccount(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/tenantGrpcService/DeleteBankAccount",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TenantGrpcServiceServer).DeleteBankAccount(ctx, req.(*DeleteBankAccountGrpcRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // TenantGrpcService_ServiceDesc is the grpc.ServiceDesc for TenantGrpcService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -238,10 +205,6 @@ var TenantGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateBankAccount",
 			Handler:    _TenantGrpcService_UpdateBankAccount_Handler,
-		},
-		{
-			MethodName: "DeleteBankAccount",
-			Handler:    _TenantGrpcService_DeleteBankAccount_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -302,7 +302,7 @@ func (r *mutationResolver) InvoiceSimulate(ctx context.Context, input model.Invo
 
 		// populate provider data
 		if requestedProviderDtls {
-			tenantBillingProfile, err := r.Services.CommonServices.TenantService.GetDefaultTenantBillingProfile(ctx)
+			tenantBillingProfile, err := r.Services.CommonServices.TenantSettingsService.GetDefaultTenantBillingProfile(ctx)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				graphql.AddErrorf(ctx, "Failed to get tenant billing profile")

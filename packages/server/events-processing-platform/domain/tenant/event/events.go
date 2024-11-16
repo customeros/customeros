@@ -7,6 +7,7 @@ const (
 	TenantUpdateSettingsV1    = "V1_TENANT_SETTINGS_UPDATE"
 	TenantAddBankAccountV1    = "V1_TENANT_BANK_ACCOUNT_CREATE"
 	TenantUpdateBankAccountV1 = "V1_TENANT_BANK_ACCOUNT_UPDATE"
+	// Deprecated
 	TenantDeleteBankAccountV1 = "V1_TENANT_BANK_ACCOUNT_DELETE"
 )
 

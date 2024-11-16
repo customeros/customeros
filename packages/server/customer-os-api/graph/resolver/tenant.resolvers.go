@@ -31,7 +31,7 @@ func (r *mutationResolver) TenantAddBillingProfile(ctx context.Context, input mo
 		return &model.TenantBillingProfile{ID: profileId}, err
 	}
 
-	createdTenantBillingProfileEntity, err := r.Services.CommonServices.TenantService.GetTenantBillingProfile(ctx, profileId)
+	createdTenantBillingProfileEntity, err := r.Services.CommonServices.TenantSettingsService.GetTenantBillingProfile(ctx, profileId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Tenant billing profile not yet available.")
@@ -62,7 +62,7 @@ func (r *mutationResolver) TenantUpdateBillingProfile(ctx context.Context, input
 		return nil, err
 	}
 
-	updatedTenantBillingProfileEntity, err := r.Services.CommonServices.TenantService.GetTenantBillingProfile(ctx, input.ID)
+	updatedTenantBillingProfileEntity, err := r.Services.CommonServices.TenantSettingsService.GetTenantBillingProfile(ctx, input.ID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to fetch tenant billing profile details")
@@ -164,7 +164,7 @@ func (r *queryResolver) TenantBillingProfiles(ctx context.Context) ([]*model.Ten
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 
-	tenantBillingProfileEntities, err := r.Services.CommonServices.TenantService.GetTenantBillingProfiles(ctx)
+	tenantBillingProfileEntities, err := r.Services.CommonServices.TenantSettingsService.GetTenantBillingProfiles(ctx)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to fetch billing profiles")
@@ -180,7 +180,7 @@ func (r *queryResolver) TenantBillingProfile(ctx context.Context, id string) (*m
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.tenantBillingProfileId", id))
 
-	tenantBillingProfileEntity, err := r.Services.CommonServices.TenantService.GetTenantBillingProfile(ctx, id)
+	tenantBillingProfileEntity, err := r.Services.CommonServices.TenantSettingsService.GetTenantBillingProfile(ctx, id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to fetch tenant billing profile details")

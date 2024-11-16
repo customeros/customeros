@@ -10,7 +10,6 @@ import (
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	tenantpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/tenant"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
-	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type tenantService struct {
@@ -102,23 +101,4 @@ func (s *tenantService) UpdateBankAccount(ctx context.Context, request *tenantpb
 	}
 
 	return &commonpb.IdResponse{Id: request.Id}, nil
-}
-
-func (s *tenantService) DeleteBankAccount(ctx context.Context, request *tenantpb.DeleteBankAccountGrpcRequest) (*emptypb.Empty, error) {
-	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "TenantService.DeleteBankAccount")
-	defer span.Finish()
-	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	tracing.LogObjectAsJson(span, "request", request)
-
-	initAggregateFunc := func() eventstore.Aggregate {
-		return tenant.NewTenantAggregate(request.Tenant)
-	}
-	_, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, *eventstore.NewLoadAggregateOptions(), request)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("(DeleteBankAccount) tenant:{%v}, err: %v", request.Tenant, err.Error())
-		return nil, grpcerr.ErrResponse(err)
-	}
-
-	return &emptypb.Empty{}, nil
 }

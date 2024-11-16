@@ -9,7 +9,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
-	model2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
@@ -19,7 +19,6 @@ import (
 	tenantpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/tenant"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
-	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type BankAccountService interface {
@@ -27,20 +26,22 @@ type BankAccountService interface {
 	UpdateTenantBankAccount(ctx context.Context, input *model.BankAccountUpdateInput) error
 	GetTenantBankAccounts(ctx context.Context) (*neo4jentity.BankAccountEntities, error)
 	GetTenantBankAccount(ctx context.Context, id string) (*neo4jentity.BankAccountEntity, error)
-	DeleteTenantBankAccount(ctx context.Context, id string) (bool, error)
+	DeleteTenantBankAccount(ctx context.Context, id string) error
 }
 
 type bankAccountService struct {
 	log          logger.Logger
 	repositories *repository.Repositories
 	grpcClients  *grpc_client.Clients
+	services     *Services
 }
 
-func NewBankAccountService(log logger.Logger, repository *repository.Repositories, grpcClients *grpc_client.Clients) BankAccountService {
+func NewBankAccountService(log logger.Logger, repository *repository.Repositories, grpcClients *grpc_client.Clients, services *Services) BankAccountService {
 	return &bankAccountService{
 		log:          log,
 		repositories: repository,
 		grpcClients:  grpcClients,
+		services:     services,
 	}
 }
 
@@ -113,7 +114,7 @@ func (s *bankAccountService) CreateTenantBankAccount(ctx context.Context, input 
 		return "", err
 	}
 
-	neo4jrepository.WaitForNodeCreatedInNeo4j(ctx, s.repositories.Neo4jRepositories, response.Id, model2.NodeLabelBankAccount, span)
+	neo4jrepository.WaitForNodeCreatedInNeo4j(ctx, s.repositories.Neo4jRepositories, response.Id, commonmodel.NodeLabelBankAccount, span)
 
 	return response.Id, nil
 }
@@ -131,7 +132,7 @@ func (s *bankAccountService) UpdateTenantBankAccount(ctx context.Context, input 
 		return err
 	}
 
-	bankAccountExists, _ := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), input.ID, model2.NodeLabelBankAccount)
+	bankAccountExists, _ := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), input.ID, commonmodel.NodeLabelBankAccount)
 	if !bankAccountExists {
 		err := fmt.Errorf("bank account with id {%s} not found", input.ID)
 		s.log.Error(err.Error())
@@ -238,51 +239,31 @@ func (s *bankAccountService) UpdateTenantBankAccount(ctx context.Context, input 
 	return nil
 }
 
-func (s *bankAccountService) DeleteTenantBankAccount(ctx context.Context, bankAccountId string) (bool, error) {
+func (s *bankAccountService) DeleteTenantBankAccount(ctx context.Context, bankAccountId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "BankAccountService.DeleteTenantBankAccount")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("bankAccountId", bankAccountId))
 
-	bankAccountExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), bankAccountId, model2.NodeLabelBankAccount)
+	bankAccountExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), bankAccountId, commonmodel.NodeLabelBankAccount)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("error on checking if bank account exists: %s", err.Error())
-		return false, err
+		return err
 	}
 	if !bankAccountExists {
 		err := fmt.Errorf("bank account with id {%s} not found", bankAccountId)
 		tracing.TraceErr(span, err)
 		s.log.Errorf(err.Error())
-		return false, err
+		return err
 	}
 
-	deleteRequest := tenantpb.DeleteBankAccountGrpcRequest{
-		Tenant:         common.GetTenantFromContext(ctx),
-		Id:             bankAccountId,
-		LoggedInUserId: common.GetUserIdFromContext(ctx),
-		AppSource:      constants.AppSourceCustomerOsApi,
-	}
-
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = utils.CallEventsPlatformGRPCWithRetry[*emptypb.Empty](func() (*emptypb.Empty, error) {
-		return s.grpcClients.TenantClient.DeleteBankAccount(ctx, &deleteRequest)
-	})
+	err = s.services.CommonServices.TenantSettingsService.DeleteBankAccount(ctx, bankAccountId)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("Error from events processing: %s", err.Error())
-		return false, err
+		s.log.Errorf("error on deleting bank account: %s", err.Error())
+		return err
 	}
 
-	// wait for service line item to be deleted from graph db
-	neo4jrepository.WaitForNodeDeletedFromNeo4j(ctx, s.repositories.Neo4jRepositories, bankAccountId, model2.NodeLabelBankAccount, span)
-
-	bankAccountExists, err = s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), bankAccountId, model2.NodeLabelBankAccount)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("error on checking if bank account exists: %s", err.Error())
-		return false, err
-	}
-
-	return !bankAccountExists, nil
+	return nil
 }
