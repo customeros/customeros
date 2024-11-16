@@ -20,7 +20,6 @@ import (
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	phonenumberpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/phone_number"
 	servicelineitempb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/service_line_item"
-	tenantpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/tenant"
 	userpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/user"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -47,7 +46,6 @@ type Clients struct {
 	ContractClient         contractpb.ContractGrpcServiceClient
 	ServiceLineItemClient  servicelineitempb.ServiceLineItemGrpcServiceClient
 	OpportunityClient      opportunitypb.OpportunityGrpcServiceClient
-	TenantClient           tenantpb.TenantGrpcServiceClient
 	InvoiceClient          invoicepb.InvoiceGrpcServiceClient
 	EventStoreClient       eventstorepb.EventStoreGrpcServiceClient
 }
@@ -72,7 +70,6 @@ func InitClients() {
 		ContractClient:         contractpb.NewContractGrpcServiceClient(conn),
 		OpportunityClient:      opportunitypb.NewOpportunityGrpcServiceClient(conn),
 		ServiceLineItemClient:  servicelineitempb.NewServiceLineItemGrpcServiceClient(conn),
-		TenantClient:           tenantpb.NewTenantGrpcServiceClient(conn),
 		InvoiceClient:          invoicepb.NewInvoiceGrpcServiceClient(conn),
 		EventStoreClient:       eventstorepb.NewEventStoreGrpcServiceClient(conn),
 	}
@@ -163,18 +160,6 @@ func PleasePayInvoiceNotification() {
 	if err != nil {
 		log.Fatalf("Failed: %v", err.Error())
 	}
-}
-
-func testAddTenantBillingProfile() {
-	result, err := clients.TenantClient.AddBillingProfile(context.Background(), &tenantpb.AddBillingProfileRequest{
-		Tenant:          tenant,
-		SendInvoicesBcc: "invoice@openline.ai",
-		LegalName:       "Openline",
-	})
-	if err != nil {
-		log.Fatalf("Failed: %v", err.Error())
-	}
-	log.Printf("Result: %v", result.Id)
 }
 
 func testRequestGenerateSummaryRequest() {
