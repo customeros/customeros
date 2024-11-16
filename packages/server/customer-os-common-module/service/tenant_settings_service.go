@@ -25,7 +25,9 @@ type TenantSettingsService interface {
 	GetTenantBillingProfile(ctx context.Context, id string) (*neo4jentity.TenantBillingProfileEntity, error)
 	GetDefaultTenantBillingProfile(ctx context.Context) (*neo4jentity.TenantBillingProfileEntity, error)
 
-	DeleteBankAccount(ctx context.Context, id string) error
+	CreateBankAccount(ctx context.Context, dataFields data_fields.BankAccountFields) (string, error)
+	UpdateBankAccount(ctx context.Context, bankAccountId string, dataFields data_fields.BankAccountFields) error
+	DeleteBankAccount(ctx context.Context, bankAccountId string) error
 }
 
 type tenantSettingsService struct {
@@ -156,11 +158,49 @@ func (s *tenantSettingsService) GetDefaultTenantBillingProfile(ctx context.Conte
 	}
 }
 
-func (s *tenantSettingsService) DeleteBankAccount(ctx context.Context, id string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantSettingsService.DeleteBankAccount")
+func (s *tenantSettingsService) CreateBankAccount(ctx context.Context, dataFields data_fields.BankAccountFields) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantSettingsService.CreateBankAccount")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogKV("id", id)
+	tracing.LogObjectAsJson(span, "dataFields", dataFields)
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+
+	// generate new id
+	bankAccountId, err := s.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelBankAccount)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+	dataFields.ID = bankAccountId
+
+	err = s.services.Neo4jRepositories.BankAccountWriteRepository.CreateBankAccount(ctx, tenant, dataFields)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Error("Unable to create bank account", err)
+		return "", err
+	}
+
+	// send event to RabbitMQ
+	err = s.services.RabbitMQService.PublishEvent(ctx, tenant, model.TENANT_SETTINGS, dto.CreateBankAccount{dataFields})
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateBankAccount"))
+	}
+
+	return bankAccountId, nil
+}
+
+func (s *tenantSettingsService) UpdateBankAccount(ctx context.Context, bankAccountId string, dataFields data_fields.BankAccountFields) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantSettingsService.UpdateBankAccount")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "dataFields", dataFields)
 
 	// validate tenant
 	err := common.ValidateTenant(ctx)
@@ -170,7 +210,47 @@ func (s *tenantSettingsService) DeleteBankAccount(ctx context.Context, id string
 	}
 	tenant := common.GetTenantFromContext(ctx)
 
-	err = s.services.Neo4jRepositories.BankAccountWriteRepository.DeleteBankAccount(ctx, tenant, id)
+	// verify if bank account exists
+	exists, err := s.services.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, tenant, bankAccountId, model.NodeLabelBankAccount)
+	if err != nil || !exists {
+		err = errors.New("bank account not found")
+		tracing.TraceErr(span, err)
+		return err
+	}
+	dataFields.ID = bankAccountId
+	tracing.TagEntity(span, bankAccountId)
+
+	err = s.services.Neo4jRepositories.BankAccountWriteRepository.UpdateBankAccount(ctx, tenant, dataFields)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Error("Unable to create bank account", err)
+		return err
+	}
+
+	// send event to RabbitMQ
+	err = s.services.RabbitMQService.PublishEvent(ctx, tenant, model.TENANT_SETTINGS, dto.UpdateBankAccount{dataFields})
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateBankAccount"))
+	}
+
+	return nil
+}
+
+func (s *tenantSettingsService) DeleteBankAccount(ctx context.Context, bankAccountId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantSettingsService.DeleteBankAccount")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.TagEntity(span, bankAccountId)
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+
+	err = s.services.Neo4jRepositories.BankAccountWriteRepository.DeleteBankAccount(ctx, tenant, bankAccountId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Error("Unable to delete bank account", err)
@@ -178,7 +258,7 @@ func (s *tenantSettingsService) DeleteBankAccount(ctx context.Context, id string
 	}
 
 	// send event to RabbitMQ
-	err = s.services.RabbitMQService.PublishEvent(ctx, tenant, model.TENANT_SETTINGS, dto.DeleteBankAccount{ID: id})
+	err = s.services.RabbitMQService.PublishEvent(ctx, tenant, model.TENANT_SETTINGS, dto.DeleteBankAccount{ID: bankAccountId})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message DeleteBankAccount"))
 	}
