@@ -14,17 +14,6 @@ type Tenant struct {
 	SourceFields    common.Source          `json:"source"`
 	BillingProfiles []TenantBillingProfile `json:"billingProfiles"`
 	BankAccounts    []BankAccount          `json:"bankAccounts"`
-	TenantSettings  TenantSettings         `json:"tenantSettings"`
-}
-
-type TenantSettings struct {
-	InvoicingEnabled     bool   `json:"invoicingEnabled"`
-	InvoicingPostpaid    bool   `json:"invoicingPostpaid"`
-	BaseCurrency         string `json:"baseCurrency"`
-	LogoUrl              string `json:"logoUrl"`
-	LogoRepositoryFileId string `json:"logoRepositoryFileId"`
-	WorkspaceLogo        string `json:"workspaceLogo"`
-	WorkspaceName        string `json:"workspaceName"`
 }
 
 type TenantBillingProfile struct {
