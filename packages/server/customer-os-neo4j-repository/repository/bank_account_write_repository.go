@@ -49,7 +49,6 @@ func (r *bankAccountWriteRepository) CreateBankAccount(ctx context.Context, tena
 								ba.createdAt=datetime(),
 								ba.updatedAt=datetime(),
 								ba.source=$source,
-								ba.sourceOfTruth=$sourceOfTruth,
 								ba.appSource=$appSource,
 								ba.bankName=$bankName,
 								ba.bankTransferEnabled=$bankTransferEnabled,

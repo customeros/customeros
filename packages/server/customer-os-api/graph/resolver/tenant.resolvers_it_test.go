@@ -3,11 +3,8 @@ package resolver
 import (
 	"context"
 	"github.com/99designs/gqlgen/client"
-	"github.com/google/uuid"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/events_platform"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
@@ -15,8 +12,6 @@ import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
-	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
-	tenantpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/tenant"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -126,134 +121,6 @@ func TestQueryResolver_GetTenantBillingProfile(t *testing.T) {
 	require.True(t, tenantBillingProfile.CanPayWithPigeon)
 	require.True(t, tenantBillingProfile.CanPayWithBankTransfer)
 	require.True(t, tenantBillingProfile.Check)
-}
-
-func TestMutationResolver_TenantAddBillingProfile(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
-
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
-	profileId := uuid.New().String()
-	calledAddTenantBillingProfile := false
-
-	tenantServiceCallbacks := events_platform.MockTenantServiceCallbacks{
-		AddBillingProfile: func(context context.Context, profile *tenantpb.AddBillingProfileRequest) (*commonpb.IdResponse, error) {
-			require.Equal(t, tenantName, profile.Tenant)
-			require.Equal(t, testUserId, profile.LoggedInUserId)
-			require.Equal(t, neo4jentity.DataSourceOpenline.String(), profile.SourceFields.Source)
-			require.Equal(t, constants.AppSourceCustomerOsApi, profile.SourceFields.AppSource)
-			require.Equal(t, "phone", profile.Phone)
-			require.Equal(t, "legalName", profile.LegalName)
-			require.Equal(t, "addressLine1", profile.AddressLine1)
-			require.Equal(t, "addressLine2", profile.AddressLine2)
-			require.Equal(t, "addressLine3", profile.AddressLine3)
-			require.Equal(t, "locality", profile.Locality)
-			require.Equal(t, "country", profile.Country)
-			require.Equal(t, "region", profile.Region)
-			require.Equal(t, "zip", profile.Zip)
-			require.Equal(t, "vatNumber", profile.VatNumber)
-			require.Equal(t, "sendInvoicesFrom", profile.SendInvoicesFrom)
-			require.Equal(t, "sendInvoicesBcc", profile.SendInvoicesBcc)
-			require.True(t, profile.CanPayWithPigeon)
-			require.True(t, profile.CanPayWithBankTransfer)
-			require.True(t, profile.Check)
-
-			calledAddTenantBillingProfile = true
-			neo4jtest.CreateTenantBillingProfile(ctx, driver, tenantName, neo4jentity.TenantBillingProfileEntity{Id: profileId})
-			return &commonpb.IdResponse{
-				Id: profileId,
-			}, nil
-		},
-	}
-	events_platform.SetTenantCallbacks(&tenantServiceCallbacks)
-
-	rawResponse := callGraphQL(t, "tenant/add_tenant_billing_profile", map[string]interface{}{})
-	require.Nil(t, rawResponse.Errors)
-
-	var billingProfileStruct struct {
-		Tenant_AddBillingProfile model.TenantBillingProfile
-	}
-
-	err := decode.Decode(rawResponse.Data.(map[string]any), &billingProfileStruct)
-	require.Nil(t, err)
-
-	profile := billingProfileStruct.Tenant_AddBillingProfile
-	require.Equal(t, profileId, profile.ID)
-
-	require.True(t, calledAddTenantBillingProfile)
-}
-
-func TestMutationResolver_TenantUpdateBillingProfile(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
-
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
-	profileId := neo4jtest.CreateTenantBillingProfile(ctx, driver, tenantName, neo4jentity.TenantBillingProfileEntity{})
-	calledUpdateTenantBillingProfile := false
-
-	tenantServiceCallbacks := events_platform.MockTenantServiceCallbacks{
-		UpdateBillingProfile: func(context context.Context, profile *tenantpb.UpdateBillingProfileRequest) (*commonpb.IdResponse, error) {
-			require.Equal(t, tenantName, profile.Tenant)
-			require.Equal(t, profileId, profile.Id)
-			require.Equal(t, testUserId, profile.LoggedInUserId)
-			require.Equal(t, constants.AppSourceCustomerOsApi, profile.AppSource)
-			require.Equal(t, "phone", profile.Phone)
-			require.Equal(t, "legalName", profile.LegalName)
-			require.Equal(t, "addressLine1", profile.AddressLine1)
-			require.Equal(t, "addressLine2", profile.AddressLine2)
-			require.Equal(t, "addressLine3", profile.AddressLine3)
-			require.Equal(t, "locality", profile.Locality)
-			require.Equal(t, "country", profile.Country)
-			require.Equal(t, "region", profile.Region)
-			require.Equal(t, "zip", profile.Zip)
-			require.Equal(t, "vatNumber", profile.VatNumber)
-			require.Equal(t, "sendInvoicesFrom", profile.SendInvoicesFrom)
-			require.Equal(t, "sendInvoicesBcc", profile.SendInvoicesBcc)
-			require.True(t, profile.CanPayWithPigeon)
-			require.True(t, profile.CanPayWithBankTransfer)
-			require.True(t, profile.Check)
-			require.ElementsMatch(t, []tenantpb.TenantBillingProfileFieldMask{
-				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_PHONE,
-				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_LEGAL_NAME,
-				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_ADDRESS_LINE_1,
-				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_ADDRESS_LINE_2,
-				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_ADDRESS_LINE_3,
-				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_LOCALITY,
-				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_COUNTRY,
-				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_ZIP,
-				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_VAT_NUMBER,
-				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_SEND_INVOICES_FROM,
-				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_SEND_INVOICES_BCC,
-				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_CAN_PAY_WITH_PIGEON,
-				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_CAN_PAY_WITH_BANK_TRANSFER,
-				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_REGION,
-				tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_CHECK,
-			},
-				profile.FieldsMask)
-			calledUpdateTenantBillingProfile = true
-			return &commonpb.IdResponse{
-				Id: profileId,
-			}, nil
-		},
-	}
-	events_platform.SetTenantCallbacks(&tenantServiceCallbacks)
-
-	rawResponse := callGraphQL(t, "tenant/update_tenant_billing_profile", map[string]interface{}{"id": profileId})
-	require.Nil(t, rawResponse.Errors)
-
-	var billingProfileStruct struct {
-		Tenant_UpdateBillingProfile model.TenantBillingProfile
-	}
-
-	err := decode.Decode(rawResponse.Data.(map[string]any), &billingProfileStruct)
-	require.Nil(t, err)
-
-	profile := billingProfileStruct.Tenant_UpdateBillingProfile
-	require.Equal(t, profileId, profile.ID)
-
-	require.True(t, calledUpdateTenantBillingProfile)
 }
 
 func TestQueryResolver_GetTenantSettings(t *testing.T) {
