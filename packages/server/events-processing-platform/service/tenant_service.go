@@ -66,25 +66,6 @@ func (s *tenantService) UpdateBillingProfile(ctx context.Context, request *tenan
 	return &commonpb.IdResponse{Id: request.Id}, nil
 }
 
-func (s *tenantService) UpdateTenantSettings(ctx context.Context, request *tenantpb.UpdateTenantSettingsRequest) (*emptypb.Empty, error) {
-	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "TenantService.UpdateTenantSettings")
-	defer span.Finish()
-	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	tracing.LogObjectAsJson(span, "request", request)
-
-	initAggregateFunc := func() eventstore.Aggregate {
-		return tenant.NewTenantAggregate(request.Tenant)
-	}
-	_, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, *eventstore.NewLoadAggregateOptions(), request)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("(UpdateTenantSettings) tenant:{%v}, err: %v", request.Tenant, err.Error())
-		return nil, grpcerr.ErrResponse(err)
-	}
-
-	return &emptypb.Empty{}, nil
-}
-
 func (s *tenantService) AddBankAccount(ctx context.Context, request *tenantpb.AddBankAccountGrpcRequest) (*commonpb.IdResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "TenantService.AddBankAccount")
 	defer span.Finish()

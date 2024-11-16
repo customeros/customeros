@@ -215,6 +215,7 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		invoiceevents.InvoiceUpdateV1,
 		contractevent.ContractCreateV1,
 		orgevents.OrganizationAddSocialV1,
+		tenantevent.TenantUpdateSettingsV1,
 		contractevent.ContractUpdateV1:
 
 		return nil
@@ -459,9 +460,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return nil
 	case tenantevent.TenantUpdateBillingProfileV1:
 		_ = s.tenantEventHandler.OnUpdateBillingProfileV1(ctx, evt)
-		return nil
-	case tenantevent.TenantUpdateSettingsV1:
-		_ = s.tenantEventHandler.OnUpdateTenantSettingsV1(ctx, evt)
 		return nil
 	case tenantevent.TenantAddBankAccountV1:
 		_ = s.bankAccountEventHandler.OnAddBankAccountV1(ctx, evt)

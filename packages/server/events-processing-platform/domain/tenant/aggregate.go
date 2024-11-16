@@ -9,7 +9,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/tenant/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	tenantpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/tenant"
-	events2 "github.com/openline-ai/openline-customer-os/packages/server/events/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
@@ -49,8 +48,6 @@ func (a *TenantAggregate) HandleGRPCRequest(ctx context.Context, request any, pa
 		return a.AddBillingProfile(ctx, r)
 	case *tenantpb.UpdateBillingProfileRequest:
 		return r.Id, a.UpdateBillingProfile(ctx, r)
-	case *tenantpb.UpdateTenantSettingsRequest:
-		return nil, a.UpdateTenantSettings(ctx, r)
 	case *tenantpb.AddBankAccountGrpcRequest:
 		return a.AddBankAccount(ctx, r)
 	case *tenantpb.UpdateBankAccountGrpcRequest:
@@ -112,30 +109,6 @@ func (a *TenantAggregate) UpdateBillingProfile(ctx context.Context, r *tenantpb.
 	})
 
 	return a.Apply(updateBillingProfileEvent)
-}
-
-func (a *TenantAggregate) UpdateTenantSettings(ctx context.Context, r *tenantpb.UpdateTenantSettingsRequest) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "TenantAggregate.UpdateTenantSettings")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("AggregateVersion", a.GetVersion()))
-
-	updatedAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(r.UpdatedAt), utils.Now())
-	fieldsMaks := extractTenantSettingsFieldsMask(r.FieldsMask)
-
-	updateSettingsEvent, err := event.NewTenantSettingsUpdateEvent(a, r, updatedAtNotNil, fieldsMaks)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "TenantSettingsUpdateEvent")
-	}
-	eventstore.EnrichEventWithMetadataExtended(&updateSettingsEvent, span, eventstore.EventMetadata{
-		Tenant: r.Tenant,
-		UserId: r.LoggedInUserId,
-		App:    r.AppSource,
-	})
-
-	return a.Apply(updateSettingsEvent)
 }
 
 func (a *TenantAggregate) AddBankAccount(ctx context.Context, r *tenantpb.AddBankAccountGrpcRequest) (string, error) {
@@ -217,8 +190,6 @@ func (a *TenantAggregate) When(evt eventstore.Event) error {
 		return a.onAddBillingProfile(evt)
 	case event.TenantUpdateBillingProfileV1:
 		return a.onUpdateBillingProfile(evt)
-	case event.TenantUpdateSettingsV1:
-		return a.onUpdateTenantSettings(evt)
 	case event.TenantAddBankAccountV1:
 		return a.onAddBankAccount(evt)
 	case event.TenantUpdateBankAccountV1:
@@ -226,12 +197,7 @@ func (a *TenantAggregate) When(evt eventstore.Event) error {
 	case event.TenantDeleteBankAccountV1:
 		return a.onDeleteBankAccount(evt)
 	default:
-		if strings.HasPrefix(evt.GetEventType(), events2.EsInternalStreamPrefix) {
-			return nil
-		}
-		err := eventstore.ErrInvalidEventType
-		err.EventType = evt.GetEventType()
-		return err
+		return nil
 	}
 }
 
@@ -327,30 +293,6 @@ func (a *TenantAggregate) onUpdateBillingProfile(evt eventstore.Event) error {
 	}
 	if eventData.UpdateCheck() {
 		tenantBillingProfile.Check = eventData.Check
-	}
-	return nil
-}
-
-func (a *TenantAggregate) onUpdateTenantSettings(evt eventstore.Event) error {
-	var eventData event.TenantSettingsUpdateEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		return errors.Wrap(err, "GetJsonData")
-	}
-
-	if eventData.UpdateBaseCurrency() {
-		a.TenantDetails.TenantSettings.BaseCurrency = eventData.BaseCurrency
-	}
-	if eventData.UpdateInvoicingEnabled() {
-		a.TenantDetails.TenantSettings.InvoicingEnabled = eventData.InvoicingEnabled
-	}
-	if eventData.UpdateLogoRepositoryFileId() {
-		a.TenantDetails.TenantSettings.LogoRepositoryFileId = eventData.LogoRepositoryFileId
-	}
-	if eventData.UpdateWorkspaceLogo() {
-		a.TenantDetails.TenantSettings.WorkspaceLogo = eventData.WorkspaceLogo
-	}
-	if eventData.UpdateWorkspaceName() {
-		a.TenantDetails.TenantSettings.WorkspaceName = eventData.WorkspaceName
 	}
 	return nil
 }

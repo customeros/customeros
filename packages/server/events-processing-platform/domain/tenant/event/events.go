@@ -3,10 +3,11 @@ package event
 const (
 	TenantAddBillingProfileV1    = "V1_TENANT_BILLING_PROFILE_NEW"
 	TenantUpdateBillingProfileV1 = "V1_TENANT_BILLING_PROFILE_UPDATE"
-	TenantUpdateSettingsV1       = "V1_TENANT_SETTINGS_UPDATE"
-	TenantAddBankAccountV1       = "V1_TENANT_BANK_ACCOUNT_CREATE"
-	TenantUpdateBankAccountV1    = "V1_TENANT_BANK_ACCOUNT_UPDATE"
-	TenantDeleteBankAccountV1    = "V1_TENANT_BANK_ACCOUNT_DELETE"
+	// Deprecated
+	TenantUpdateSettingsV1    = "V1_TENANT_SETTINGS_UPDATE"
+	TenantAddBankAccountV1    = "V1_TENANT_BANK_ACCOUNT_CREATE"
+	TenantUpdateBankAccountV1 = "V1_TENANT_BANK_ACCOUNT_UPDATE"
+	TenantDeleteBankAccountV1 = "V1_TENANT_BANK_ACCOUNT_DELETE"
 )
 
 const (

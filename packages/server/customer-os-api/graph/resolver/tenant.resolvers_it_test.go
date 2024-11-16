@@ -18,7 +18,6 @@ import (
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	tenantpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/tenant"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/types/known/emptypb"
 	"testing"
 )
 
@@ -283,48 +282,6 @@ func TestQueryResolver_GetTenantSettings(t *testing.T) {
 	require.Equal(t, "logoRepositoryFileId", *tenantSettings.LogoRepositoryFileID)
 	require.Equal(t, model.CurrencyUsd, *tenantSettings.BaseCurrency)
 	require.Equal(t, true, tenantSettings.BillingEnabled)
-}
-
-func TestMutationResolver_TenantUpdateSettings(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
-
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
-	neo4jtest.CreateTenantSettings(ctx, driver, tenantName, neo4jentity.TenantSettingsEntity{})
-	calledUpdateTenantSettings := false
-
-	tenantServiceCallbacks := events_platform.MockTenantServiceCallbacks{
-		UpdateTenantSettings: func(context context.Context, profile *tenantpb.UpdateTenantSettingsRequest) (*emptypb.Empty, error) {
-			require.Equal(t, tenantName, profile.Tenant)
-			require.Equal(t, testUserId, profile.LoggedInUserId)
-			require.Equal(t, constants.AppSourceCustomerOsApi, profile.AppSource)
-			require.Equal(t, "123-456-789", profile.LogoRepositoryFileId)
-			require.Equal(t, "EUR", profile.BaseCurrency)
-			require.Equal(t, true, profile.InvoicingEnabled)
-			require.ElementsMatch(t, []tenantpb.TenantSettingsFieldMask{
-				tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_INVOICING_ENABLED,
-				tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_BASE_CURRENCY,
-				tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_LOGO_REPOSITORY_FILE_ID,
-			},
-				profile.FieldsMask)
-			calledUpdateTenantSettings = true
-			return &emptypb.Empty{}, nil
-		},
-	}
-	events_platform.SetTenantCallbacks(&tenantServiceCallbacks)
-
-	rawResponse := callGraphQL(t, "tenant/update_tenant_settings", map[string]interface{}{})
-	require.Nil(t, rawResponse.Errors)
-
-	var responseStruct struct {
-		Tenant_UpdateSettings model.TenantSettings
-	}
-
-	err := decode.Decode(rawResponse.Data.(map[string]any), &responseStruct)
-	require.Nil(t, err)
-
-	require.True(t, calledUpdateTenantSettings)
 }
 
 //func TestMutationResolver_TenantHardDelete(t *testing.T) {
