@@ -13,7 +13,6 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
-	"strings"
 )
 
 const (
@@ -211,32 +210,8 @@ func (a *OrganizationAggregate) When(event eventstore.Event) error {
 		return a.onLocationUnlinkFromBillingProfile(event)
 	case organizationEvents.OrganizationAddLocationV1:
 		return a.onAddLocation(event)
-	case organizationEvents.OrganizationUpdateRenewalLikelihoodV1,
-		organizationEvents.OrganizationUpdateRenewalForecastV1,
-		organizationEvents.OrganizationUpdateBillingDetailsV1,
-		organizationEvents.OrganizationRequestRenewalForecastV1,
-		organizationEvents.OrganizationRequestNextCycleDateV1,
-		organizationEvents.OrganizationRefreshLastTouchpointV1,
-		organizationEvents.OrganizationRefreshArrV1,
-		organizationEvents.OrganizationRefreshDerivedDataV1,
-		organizationEvents.OrganizationRefreshRenewalSummaryV1,
-		organizationEvents.OrganizationRequestScrapeByWebsiteV1,
-		organizationEvents.OrganizationUpdateOwnerNotificationV1,
-		organizationEvents.OrganizationRequestEnrichV1,
-		organizationEvents.OrganizationHideV1,
-		organizationEvents.OrganizationAddTagV1,
-		organizationEvents.OrganizationRemoveTagV1:
-		return nil
 	default:
-		if strings.HasPrefix(event.GetEventType(), constants.EsInternalStreamPrefix) {
-			return nil
-		}
-		span, _ := opentracing.StartSpanFromContext(context.Background(), "OrganizationAggregate.When")
-		defer span.Finish()
-		err := eventstore.ErrInvalidEventType
-		err.EventType = event.GetEventType()
-		tracing.TraceErr(span, eventstore.ErrInvalidEventType)
-		return err
+		return nil
 	}
 }
 

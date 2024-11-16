@@ -6,7 +6,6 @@ import (
 
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
@@ -118,30 +117,6 @@ func NewOrganizationLinkLocationEvent(aggregate eventstore.Aggregate, locationId
 	event := eventstore.NewBaseEvent(aggregate, OrganizationLocationLinkV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationLinkLocationEvent")
-	}
-	return event, nil
-}
-
-type OrganizationRequestScrapeByWebsite struct {
-	Tenant      string    `json:"tenant" validate:"required"`
-	Website     string    `json:"website" validate:"required"`
-	RequestedAt time.Time `json:"requestedAt"`
-}
-
-func NewOrganizationRequestScrapeByWebsite(aggregate eventstore.Aggregate, website string) (eventstore.Event, error) {
-	eventData := OrganizationRequestScrapeByWebsite{
-		Tenant:      aggregate.GetTenant(),
-		Website:     website,
-		RequestedAt: utils.Now(),
-	}
-
-	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "failed to validate OrganizationRequestScrapeByWebsite")
-	}
-
-	event := eventstore.NewBaseEvent(aggregate, OrganizationRequestScrapeByWebsiteV1)
-	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationRequestScrapeByWebsite")
 	}
 	return event, nil
 }
