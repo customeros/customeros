@@ -140,7 +140,7 @@ func (s *contractService) Create(ctx context.Context, contractDetails *ContractC
 		contractDataFields.Currency = utils.ToPtr(neo4jenum.DecodeCurrency(contractDetails.Input.Currency.String()))
 	} else {
 		// if not provided, get default currency from tenant settings
-		tenantSettingsEntity, err := s.services.CommonServices.TenantService.GetTenantSettings(ctx)
+		tenantSettingsEntity, err := s.services.CommonServices.TenantSettingsService.GetTenantSettings(ctx)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return "", err

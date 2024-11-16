@@ -116,7 +116,7 @@ func (r *queryResolver) GlobalCache(ctx context.Context) (*model.GlobalCache, er
 
 	response.ContractsExist = contractsExistForTenant
 
-	tenantSettings, err := r.Services.CommonServices.TenantService.GetTenantSettings(ctx)
+	tenantSettings, err := r.Services.CommonServices.TenantSettingsService.GetTenantSettings(ctx)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed GlobalCache - get tenant billing profiles")

@@ -10,7 +10,6 @@ import (
 type MockTenantServiceCallbacks struct {
 	AddBillingProfile    func(context.Context, *tenantpb.AddBillingProfileRequest) (*commonpb.IdResponse, error)
 	UpdateBillingProfile func(context.Context, *tenantpb.UpdateBillingProfileRequest) (*commonpb.IdResponse, error)
-	UpdateTenantSettings func(context.Context, *tenantpb.UpdateTenantSettingsRequest) (*emptypb.Empty, error)
 	AddBankAccount       func(context.Context, *tenantpb.AddBankAccountGrpcRequest) (*commonpb.IdResponse, error)
 	UpdateBankAccount    func(context.Context, *tenantpb.UpdateBankAccountGrpcRequest) (*commonpb.IdResponse, error)
 	DeleteBankAccount    func(context.Context, *tenantpb.DeleteBankAccountGrpcRequest) (*emptypb.Empty, error)
@@ -38,13 +37,6 @@ func (MockTenantService) UpdateBillingProfile(context context.Context, proto *te
 		panic("tenantCallbacks.UpdateBillingProfile is not set")
 	}
 	return tenantCallbacks.UpdateBillingProfile(context, proto)
-}
-
-func (MockTenantService) UpdateTenantSettings(context context.Context, proto *tenantpb.UpdateTenantSettingsRequest) (*emptypb.Empty, error) {
-	if tenantCallbacks.UpdateTenantSettings == nil {
-		panic("tenantCallbacks.UpdateTenantSettings is not set")
-	}
-	return tenantCallbacks.UpdateTenantSettings(context, proto)
 }
 
 func (MockTenantService) AddBankAccount(context context.Context, proto *tenantpb.AddBankAccountGrpcRequest) (*commonpb.IdResponse, error) {

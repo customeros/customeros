@@ -7,12 +7,13 @@ package resolver
 import (
 	"context"
 	"errors"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go/log"
 )
 
@@ -77,14 +78,26 @@ func (r *mutationResolver) TenantUpdateSettings(ctx context.Context, input *mode
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "request.input", input)
 
-	err := r.Services.TenantService.UpdateTenantSettings(ctx, input)
+	//LogoRepositoryFileId: utils.IfNotNilString(input.LogoRepositoryFileID),
+	//		BaseCurrency:         baseCurrency,
+	dataFields := data_fields.TenantSettingsFields{
+		WorkspaceName:        input.WorkspaceName,
+		WorkspaceLogo:        input.WorkspaceLogo,
+		InvoicingEnabled:     input.BillingEnabled,
+		LogoRepositoryFileId: input.LogoRepositoryFileID,
+	}
+	if input.BaseCurrency != nil {
+		dataFields.BaseCurrency = utils.StringPtr(input.BaseCurrency.String())
+	}
+
+	err := r.Services.CommonServices.TenantSettingsService.UpdateTenantSettings(ctx, dataFields)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to update tenant settings")
 		return nil, err
 	}
 
-	updatedTenantSettingsEntity, err := r.Services.CommonServices.TenantService.GetTenantSettings(ctx)
+	updatedTenantSettingsEntity, err := r.Services.CommonServices.TenantSettingsService.GetTenantSettings(ctx)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to fetch tenant settings")
@@ -182,7 +195,7 @@ func (r *queryResolver) TenantSettings(ctx context.Context) (*model.TenantSettin
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 
-	tenantSettingsEntity, err := r.Services.CommonServices.TenantService.GetTenantSettings(ctx)
+	tenantSettingsEntity, err := r.Services.CommonServices.TenantSettingsService.GetTenantSettings(ctx)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to fetch tenant settings")

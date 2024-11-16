@@ -74,29 +74,11 @@ type TenantBillingProfileUpdateFields struct {
 	UpdateCheck                  bool   `json:"updateCheck"`
 }
 
-// DEPRECATED
-type TenantSettingsFields struct {
-	LogoRepositoryFileId       string        `json:"logoRepositoryFileId"`
-	BaseCurrency               enum.Currency `json:"baseCurrency"`
-	InvoicingEnabled           bool          `json:"invoicingEnabled"`
-	InvoicingPostpaid          bool          `json:"invoicingPostpaid"`
-	WorkspaceLogo              string        `json:"workspaceLogo"`
-	WorkspaceName              string        `json:"workspaceName"`
-	UpdateLogoRepositoryFileId bool          `json:"updateLogoRepositoryFileId"`
-	UpdateInvoicingEnabled     bool          `json:"updateInvoicingEnabled"`
-	UpdateInvoicingPostpaid    bool          `json:"updateInvoicingPostpaid"`
-	UpdateBaseCurrency         bool          `json:"updateBaseCurrency"`
-	UpdateWorkspaceLogo        bool          `json:"updateWorkspaceLogo"`
-	UpdateWorkspaceName        bool          `json:"updateWorkspaceName"`
-}
-
 type TenantWriteRepository interface {
 	CreateTenantIfNotExistAndReturn(ctx context.Context, tenant neo4jentity.TenantEntity) (*dbtype.Node, error)
 
 	CreateTenantBillingProfile(ctx context.Context, tenant string, data TenantBillingProfileCreateFields) error
 	UpdateTenantBillingProfile(ctx context.Context, tenant string, data TenantBillingProfileUpdateFields) error
-	// Deprecated
-	UpdateTenantSettingsOld(ctx context.Context, tenant string, data TenantSettingsFields) error
 	UpdateTenantSettings(ctx context.Context, tenant string, data data_fields.TenantSettingsFields) error
 
 	HardDeleteTenant(ctx context.Context, tenant string) error
@@ -305,59 +287,6 @@ func (r *tenantWriteRepository) UpdateTenantBillingProfile(ctx context.Context, 
 	if data.UpdateCheck {
 		cypher += `,tbp.check=$check`
 		params["check"] = data.Check
-	}
-
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
-
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
-	if err != nil {
-		tracing.TraceErr(span, err)
-	}
-	return err
-}
-
-func (r *tenantWriteRepository) UpdateTenantSettingsOld(ctx context.Context, tenant string, data TenantSettingsFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantWriteRepository.UpdateTenantSettingsOld")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	tracing.LogObjectAsJson(span, "data", data)
-
-	cypher := `MATCH (t:Tenant {name:$tenant})
-				MERGE (t)-[:HAS_SETTINGS]->(ts:TenantSettings {tenant:$tenant})
-				ON CREATE SET
-					ts.id=randomUUID(),
-					ts.createdAt=$now
-				SET
-					ts.updatedAt=datetime()`
-	params := map[string]any{
-		"tenant": tenant,
-		"now":    utils.Now(),
-	}
-	if data.UpdateInvoicingEnabled {
-		cypher += ", ts.invoicingEnabled=$invoicingEnabled"
-		params["invoicingEnabled"] = data.InvoicingEnabled
-	}
-	if data.UpdateInvoicingPostpaid {
-		cypher += ", ts.invoicingPostpaid=$invoicingPostpaid"
-		params["invoicingPostpaid"] = data.InvoicingPostpaid
-	}
-	if data.UpdateBaseCurrency {
-		cypher += ", ts.baseCurrency=$baseCurrency"
-		params["baseCurrency"] = data.BaseCurrency.String()
-	}
-	if data.UpdateLogoRepositoryFileId {
-		cypher += ", ts.logoRepositoryFileId=$logoRepositoryFileId"
-		params["logoRepositoryFileId"] = data.LogoRepositoryFileId
-	}
-	if data.UpdateWorkspaceLogo {
-		cypher += ", ts.workspaceLogo=$workspaceLogo"
-		params["workspaceLogo"] = data.WorkspaceLogo
-	}
-	if data.UpdateWorkspaceName {
-		cypher += ", ts.workspaceName=$workspaceName"
-		params["workspaceName"] = data.WorkspaceName
 	}
 
 	span.LogFields(log.String("cypher", cypher))

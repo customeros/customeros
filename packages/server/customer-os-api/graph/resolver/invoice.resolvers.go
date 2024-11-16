@@ -308,7 +308,7 @@ func (r *mutationResolver) InvoiceSimulate(ctx context.Context, input model.Invo
 				graphql.AddErrorf(ctx, "Failed to get tenant billing profile")
 				return nil, err
 			}
-			tenantSettings, err := r.Services.CommonServices.TenantService.GetTenantSettings(ctx)
+			tenantSettings, err := r.Services.CommonServices.TenantSettingsService.GetTenantSettings(ctx)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				graphql.AddErrorf(ctx, "Failed to get tenant settings")
