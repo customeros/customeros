@@ -62,7 +62,6 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, cfg *confi
 
 	services := Services{
 		CommonServices:             commonServices,
-		BankAccountService:         NewBankAccountService(log, repositories, grpcClients),
 		CustomFieldService:         NewCustomFieldService(log, repositories),
 		CustomFieldTemplateService: NewCustomFieldTemplateService(log, repositories),
 		LocationService:            NewLocationService(log, repositories),
@@ -78,6 +77,7 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, cfg *confi
 		ReminderService:            NewReminderService(log, repositories, grpcClients),
 	}
 	services.Repositories = repositories
+	services.BankAccountService = NewBankAccountService(log, repositories, grpcClients, &services)
 	services.UserService = NewUserService(log, repositories, grpcClients, &services)
 	services.OrganizationService = NewOrganizationService(log, repositories, grpcClients, &services)
 	services.IssueService = NewIssueService(log, repositories, &services)

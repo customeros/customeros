@@ -52,8 +52,6 @@ func (a *TenantAggregate) HandleGRPCRequest(ctx context.Context, request any, pa
 		return a.AddBankAccount(ctx, r)
 	case *tenantpb.UpdateBankAccountGrpcRequest:
 		return r.Id, a.UpdateBankAccount(ctx, r)
-	case *tenantpb.DeleteBankAccountGrpcRequest:
-		return nil, a.DeleteBankAccount(ctx, r)
 	default:
 		return nil, nil
 	}
@@ -163,27 +161,6 @@ func (a *TenantAggregate) UpdateBankAccount(ctx context.Context, r *tenantpb.Upd
 	return a.Apply(updateBankAccountEvent)
 }
 
-func (a *TenantAggregate) DeleteBankAccount(ctx context.Context, r *tenantpb.DeleteBankAccountGrpcRequest) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "TenantAggregate.DeleteBankAccount")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("AggregateVersion", a.GetVersion()))
-
-	deleteBankAccountEvent, err := event.NewTenantBankAccountDeleteEvent(a, r.Id, utils.Now())
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "TenantBankAccountDeleteEvent")
-	}
-	eventstore.EnrichEventWithMetadataExtended(&deleteBankAccountEvent, span, eventstore.EventMetadata{
-		Tenant: r.Tenant,
-		UserId: r.LoggedInUserId,
-		App:    r.AppSource,
-	})
-
-	return a.Apply(deleteBankAccountEvent)
-}
-
 func (a *TenantAggregate) When(evt eventstore.Event) error {
 	switch evt.GetEventType() {
 	case event.TenantAddBillingProfileV1:
@@ -194,8 +171,6 @@ func (a *TenantAggregate) When(evt eventstore.Event) error {
 		return a.onAddBankAccount(evt)
 	case event.TenantUpdateBankAccountV1:
 		return a.onUpdateBankAccount(evt)
-	case event.TenantDeleteBankAccountV1:
-		return a.onDeleteBankAccount(evt)
 	default:
 		return nil
 	}
@@ -369,21 +344,6 @@ func (a *TenantAggregate) onUpdateBankAccount(evt eventstore.Event) error {
 	}
 	if eventData.UpdateOtherDetails() {
 		bankAccount.OtherDetails = eventData.OtherDetails
-	}
-	return nil
-}
-
-func (a *TenantAggregate) onDeleteBankAccount(evt eventstore.Event) error {
-	var eventData event.TenantBankAccountDeleteEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		return errors.Wrap(err, "GetJsonData")
-	}
-
-	for i, bankAccount := range a.TenantDetails.BankAccounts {
-		if bankAccount.Id == eventData.Id {
-			a.TenantDetails.BankAccounts = append(a.TenantDetails.BankAccounts[:i], a.TenantDetails.BankAccounts[i+1:]...)
-			break
-		}
 	}
 	return nil
 }

@@ -216,6 +216,7 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		contractevent.ContractCreateV1,
 		orgevents.OrganizationAddSocialV1,
 		tenantevent.TenantUpdateSettingsV1,
+		tenantevent.TenantDeleteBankAccountV1,
 		contractevent.ContractUpdateV1:
 
 		return nil
@@ -467,9 +468,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 	case tenantevent.TenantUpdateBankAccountV1:
 		_ = s.bankAccountEventHandler.OnUpdateBankAccountV1(ctx, evt)
 		return nil
-	case tenantevent.TenantDeleteBankAccountV1:
-		_ = s.bankAccountEventHandler.OnDeleteBankAccountV1(ctx, evt)
-		return nil
 
 	case reminderevents.ReminderCreateV1:
 		_ = s.reminderEventHandler.OnCreate(ctx, evt)
@@ -483,6 +481,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		err := eventstore.ErrInvalidEventType
 		err.EventType = evt.GetEventType()
 		tracing.TraceErr(span, err)
-		return err
+		return nil
 	}
 }

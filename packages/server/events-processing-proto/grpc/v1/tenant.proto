@@ -122,13 +122,6 @@ message UpdateBankAccountGrpcRequest {
   string otherDetails = 16;
 }
 
-message DeleteBankAccountGrpcRequest {
-  string id = 1;
-  string tenant = 2;
-  string loggedInUserId = 3;
-  string appSource = 4;
-}
-
 enum BankAccountFieldMask {
   BANK_ACCOUNT_FIELD_NONE = 0; // No property, ignored by the server
   BANK_ACCOUNT_FIELD_BANK_NAME = 1;
@@ -148,5 +141,4 @@ service tenantGrpcService {
   rpc UpdateBillingProfile(UpdateBillingProfileRequest) returns (IdResponse);
   rpc AddBankAccount(AddBankAccountGrpcRequest) returns (IdResponse);
   rpc UpdateBankAccount(UpdateBankAccountGrpcRequest) returns (IdResponse);
-  rpc DeleteBankAccount(DeleteBankAccountGrpcRequest) returns (google.protobuf.Empty);
 }

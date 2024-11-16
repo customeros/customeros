@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
@@ -19,12 +18,7 @@ type TenantService interface {
 	GetAllTenants(ctx context.Context) ([]*neo4jentity.TenantEntity, error)
 	GetTenantForWorkspace(ctx context.Context, workspaceEntity neo4jentity.WorkspaceEntity) (*neo4jentity.TenantEntity, error)
 	GetTenantForUserEmail(ctx context.Context, email string) (*neo4jentity.TenantEntity, error)
-	GetTenantBillingProfiles(ctx context.Context) (*neo4jentity.TenantBillingProfileEntities, error)
-	GetTenantBillingProfile(ctx context.Context, id string) (*neo4jentity.TenantBillingProfileEntity, error)
-	GetDefaultTenantBillingProfile(ctx context.Context) (*neo4jentity.TenantBillingProfileEntity, error)
-
 	Merge(ctx context.Context, tenantEntity neo4jentity.TenantEntity) (*neo4jentity.TenantEntity, error)
-
 	HardDelete(ctx context.Context, tenant string) error
 }
 
@@ -88,57 +82,6 @@ func (s *tenantService) GetTenantForUserEmail(ctx context.Context, email string)
 	}
 
 	return neo4jmapper.MapDbNodeToTenantEntity(tenant), nil
-}
-
-func (s *tenantService) GetTenantBillingProfiles(ctx context.Context) (*neo4jentity.TenantBillingProfileEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantService.GetTenantBillingProfiles")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-
-	dbNodes, err := s.services.Neo4jRepositories.TenantReadRepository.GetTenantBillingProfiles(ctx, common.GetTenantFromContext(ctx))
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, fmt.Errorf("GetTenantBillingProfiles: %w", err)
-	}
-
-	tenantBillingProfiles := neo4jentity.TenantBillingProfileEntities{}
-	for _, dbNode := range dbNodes {
-		tenantBillingProfiles = append(tenantBillingProfiles, *neo4jmapper.MapDbNodeToTenantBillingProfileEntity(dbNode))
-	}
-
-	return &tenantBillingProfiles, nil
-}
-
-func (s *tenantService) GetTenantBillingProfile(ctx context.Context, id string) (*neo4jentity.TenantBillingProfileEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantService.GetTenantBillingProfile")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("id", id))
-
-	dbNode, err := s.services.Neo4jRepositories.TenantReadRepository.GetTenantBillingProfileById(ctx, common.GetTenantFromContext(ctx), id)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, fmt.Errorf("GetTenantBillingProfile: %w", err)
-	}
-
-	return neo4jmapper.MapDbNodeToTenantBillingProfileEntity(dbNode), nil
-}
-
-func (s *tenantService) GetDefaultTenantBillingProfile(ctx context.Context) (*neo4jentity.TenantBillingProfileEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantService.GetDefaultTenantBillingProfile")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-
-	tenantBillingProfiles, err := s.GetTenantBillingProfiles(ctx)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, fmt.Errorf("GetDefaultTenantBillingProfile: %w", err)
-	}
-	if tenantBillingProfiles == nil || len(*tenantBillingProfiles) == 0 {
-		return nil, nil
-	} else {
-		return &(*tenantBillingProfiles)[0], nil
-	}
 }
 
 func (s *tenantService) Merge(ctx context.Context, tenantEntity neo4jentity.TenantEntity) (*neo4jentity.TenantEntity, error) {

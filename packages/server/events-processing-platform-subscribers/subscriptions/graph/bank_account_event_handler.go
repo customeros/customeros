@@ -115,24 +115,3 @@ func (h *BankAccountEventHandler) OnUpdateBankAccountV1(ctx context.Context, evt
 	}
 	return err
 }
-
-func (h *BankAccountEventHandler) OnDeleteBankAccountV1(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "BankAccountEventHandler.OnDeleteBankAccountV1")
-	defer span.Finish()
-	setEventSpanTagsAndLogFields(span, evt)
-
-	var eventData event.TenantBankAccountDeleteEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "evt.GetJsonData")
-	}
-
-	tenantName := tenant.GetTenantName(evt.GetAggregateID())
-	span.SetTag(tracing.SpanTagEntityId, tenantName)
-
-	err := h.services.CommonServices.Neo4jRepositories.BankAccountWriteRepository.DeleteBankAccount(ctx, tenantName, eventData.Id)
-	if err != nil {
-		tracing.TraceErr(span, err)
-	}
-	return err
-}
