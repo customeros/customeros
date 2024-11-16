@@ -243,7 +243,7 @@ func notifyOnSlackPaymentFailed(ctx context.Context, services *service.Services,
 	span, ctx := opentracing.StartSpanFromContext(ctx, "notifyOnSlackPaymentFailed")
 	defer span.Finish()
 
-	tenantSettings, err := services.CommonServices.TenantService.GetTenantSettingsForTenant(ctx, tenant)
+	tenantSettings, err := services.CommonServices.TenantSettingsService.GetTenantSettingsForTenant(ctx, tenant)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Error fetching tenant settings"))
 	}

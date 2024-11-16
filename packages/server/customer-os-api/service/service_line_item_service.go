@@ -439,7 +439,7 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 
 	// Do not allow updating past SLIs for invoiced contracts
 	if isRetroactiveCorrection && contractIsInvoiced {
-		tenantSettings, _ := s.services.CommonServices.TenantService.GetTenantSettings(ctx)
+		tenantSettings, _ := s.services.CommonServices.TenantSettingsService.GetTenantSettings(ctx)
 		isInvoicingPostpaid := tenantSettings.InvoicingPostpaid
 		referenceDate := utils.Today()
 		if isInvoicingPostpaid && contractEntity.NextInvoiceDate != nil {

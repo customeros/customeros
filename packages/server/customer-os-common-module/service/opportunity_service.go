@@ -177,7 +177,7 @@ func (s *opportunityService) Save(ctx context.Context, tx *neo4j.ManagedTransact
 		}
 
 		if input.Currency == "" {
-			tenantSettings, err := s.services.TenantService.GetTenantSettings(ctx)
+			tenantSettings, err := s.services.TenantSettingsService.GetTenantSettings(ctx)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return nil, err

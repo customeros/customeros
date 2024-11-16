@@ -18,13 +18,11 @@ import (
 	tenantpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/tenant"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
-	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type TenantService interface {
 	CreateTenantBillingProfile(ctx context.Context, input model.TenantBillingProfileInput) (string, error)
 	UpdateTenantBillingProfile(ctx context.Context, input model.TenantBillingProfileUpdateInput) error
-	UpdateTenantSettings(ctx context.Context, input *model.TenantSettingsInput) error
 }
 
 type tenantService struct {
@@ -186,59 +184,6 @@ func (s *tenantService) UpdateTenantBillingProfile(ctx context.Context, input mo
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	_, err := utils.CallEventsPlatformGRPCWithRetry[*commonpb.IdResponse](func() (*commonpb.IdResponse, error) {
 		return s.grpcClients.TenantClient.UpdateBillingProfile(ctx, &updateRequest)
-	})
-	if err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("Error from events processing: %s", err.Error())
-		return err
-	}
-
-	return nil
-}
-
-func (s *tenantService) UpdateTenantSettings(ctx context.Context, input *model.TenantSettingsInput) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantService.UpdateTenantSettings")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "input", input)
-
-	var baseCurrency string
-	if input.BaseCurrency != nil {
-		baseCurrency = input.BaseCurrency.String()
-	}
-
-	var fieldMask []tenantpb.TenantSettingsFieldMask
-	updateRequest := tenantpb.UpdateTenantSettingsRequest{
-		Tenant:               common.GetTenantFromContext(ctx),
-		LoggedInUserId:       common.GetUserIdFromContext(ctx),
-		AppSource:            constants.AppSourceCustomerOsApi,
-		LogoRepositoryFileId: utils.IfNotNilString(input.LogoRepositoryFileID),
-		WorkspaceLogo:        utils.IfNotNilString(input.WorkspaceLogo),
-		WorkspaceName:        utils.IfNotNilString(input.WorkspaceName),
-		BaseCurrency:         baseCurrency,
-		InvoicingEnabled:     utils.IfNotNilBool(input.BillingEnabled),
-	}
-
-	if input.LogoRepositoryFileID != nil {
-		fieldMask = append(fieldMask, tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_LOGO_REPOSITORY_FILE_ID)
-	}
-	if input.BaseCurrency != nil {
-		fieldMask = append(fieldMask, tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_BASE_CURRENCY)
-	}
-	if input.BillingEnabled != nil {
-		fieldMask = append(fieldMask, tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_INVOICING_ENABLED)
-	}
-	if input.WorkspaceLogo != nil {
-		fieldMask = append(fieldMask, tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_WORKSPACE_LOGO)
-	}
-	if input.WorkspaceName != nil {
-		fieldMask = append(fieldMask, tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_WORKSPACE_NAME)
-	}
-	updateRequest.FieldsMask = fieldMask
-
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err := utils.CallEventsPlatformGRPCWithRetry[*emptypb.Empty](func() (*emptypb.Empty, error) {
-		return s.grpcClients.TenantClient.UpdateTenantSettings(ctx, &updateRequest)
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)

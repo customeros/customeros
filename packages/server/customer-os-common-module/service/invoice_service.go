@@ -214,7 +214,7 @@ func (s *invoiceService) SimulateInvoice(ctx context.Context, simulateInvoicesWi
 
 	var response []*SimulateInvoiceResponseData
 
-	tenantSettings, err := s.services.TenantService.GetTenantSettings(ctx)
+	tenantSettings, err := s.services.TenantSettingsService.GetTenantSettings(ctx)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -419,7 +419,7 @@ func (s *invoiceService) SimulateOnCycleInvoice(ctx context.Context, contract *n
 	invoiceEntity := &neo4jentity.InvoiceEntity{}
 	invoiceLines := []*invoicepb.InvoiceLine{}
 
-	tenantSettings, err := s.services.TenantService.GetTenantSettings(ctx)
+	tenantSettings, err := s.services.TenantSettingsService.GetTenantSettings(ctx)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -480,7 +480,7 @@ func (s *invoiceService) SimulateOffCycleInvoice(ctx context.Context, contract *
 	invoiceEntity := &neo4jentity.InvoiceEntity{}
 	invoiceLines := []*invoicepb.InvoiceLine{}
 
-	tenantSettings, err := s.services.TenantService.GetTenantSettings(ctx)
+	tenantSettings, err := s.services.TenantSettingsService.GetTenantSettings(ctx)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -586,7 +586,7 @@ func (s *invoiceService) NextInvoiceDryRun(ctx context.Context, contractId, appS
 	}
 	invoicePeriodEnd = calculateInvoiceCycleEnd(invoicePeriodStart, contract.BillingCycleInMonths)
 
-	tenantSettings, err := s.services.TenantService.GetTenantSettings(ctx)
+	tenantSettings, err := s.services.TenantSettingsService.GetTenantSettings(ctx)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return "", err
