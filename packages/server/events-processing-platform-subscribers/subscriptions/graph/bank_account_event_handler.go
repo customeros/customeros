@@ -108,7 +108,7 @@ func (h *BankAccountEventHandler) OnUpdateBankAccountV1(ctx context.Context, evt
 		UpdateRoutingNumber:       eventData.UpdateRoutingNumber(),
 		UpdateOtherDetails:        eventData.UpdateOtherDetails(),
 	}
-	err := h.services.CommonServices.Neo4jRepositories.BankAccountWriteRepository.UpdateBankAccount(ctx, tenantName, data)
+	err := h.services.CommonServices.Neo4jRepositories.BankAccountWriteRepository.UpdateBankAccountOld(ctx, tenantName, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
