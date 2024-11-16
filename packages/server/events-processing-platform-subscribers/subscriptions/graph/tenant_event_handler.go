@@ -157,7 +157,7 @@ func (h *TenantEventHandler) OnUpdateTenantSettingsV1(ctx context.Context, evt e
 		UpdateWorkspaceLogo:        eventData.UpdateWorkspaceLogo(),
 		UpdateWorkspaceName:        eventData.UpdateWorkspaceName(),
 	}
-	err := h.services.CommonServices.Neo4jRepositories.TenantWriteRepository.UpdateTenantSettings(ctx, tenantName, data)
+	err := h.services.CommonServices.Neo4jRepositories.TenantWriteRepository.UpdateTenantSettingsOld(ctx, tenantName, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err

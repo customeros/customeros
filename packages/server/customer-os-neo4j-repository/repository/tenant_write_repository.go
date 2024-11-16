@@ -4,11 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"time"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	model2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
@@ -73,6 +74,7 @@ type TenantBillingProfileUpdateFields struct {
 	UpdateCheck                  bool   `json:"updateCheck"`
 }
 
+// DEPRECATED
 type TenantSettingsFields struct {
 	LogoRepositoryFileId       string        `json:"logoRepositoryFileId"`
 	BaseCurrency               enum.Currency `json:"baseCurrency"`
@@ -93,7 +95,9 @@ type TenantWriteRepository interface {
 
 	CreateTenantBillingProfile(ctx context.Context, tenant string, data TenantBillingProfileCreateFields) error
 	UpdateTenantBillingProfile(ctx context.Context, tenant string, data TenantBillingProfileUpdateFields) error
-	UpdateTenantSettings(ctx context.Context, tenant string, data TenantSettingsFields) error
+	// Deprecated
+	UpdateTenantSettingsOld(ctx context.Context, tenant string, data TenantSettingsFields) error
+	UpdateTenantSettings(ctx context.Context, tenant string, data data_fields.TenantSettingsFields) error
 
 	HardDeleteTenant(ctx context.Context, tenant string) error
 
@@ -313,8 +317,8 @@ func (r *tenantWriteRepository) UpdateTenantBillingProfile(ctx context.Context, 
 	return err
 }
 
-func (r *tenantWriteRepository) UpdateTenantSettings(ctx context.Context, tenant string, data TenantSettingsFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantWriteRepository.UpdateTenantBillingProfile")
+func (r *tenantWriteRepository) UpdateTenantSettingsOld(ctx context.Context, tenant string, data TenantSettingsFields) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantWriteRepository.UpdateTenantSettingsOld")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
 	tracing.TagTenant(span, tenant)
@@ -366,6 +370,58 @@ func (r *tenantWriteRepository) UpdateTenantSettings(ctx context.Context, tenant
 	return err
 }
 
+func (r *tenantWriteRepository) UpdateTenantSettings(ctx context.Context, tenant string, data data_fields.TenantSettingsFields) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantWriteRepository.UpdateTenantSettings")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
+	tracing.LogObjectAsJson(span, "data", data)
+
+	cypher := `MATCH (t:Tenant {name:$tenant})
+				MERGE (t)-[:HAS_SETTINGS]->(ts:TenantSettings {tenant:$tenant})
+				ON CREATE SET
+					ts.id=randomUUID(),
+					ts.createdAt=datetime()
+				SET
+					ts.updatedAt=datetime()`
+	params := map[string]any{
+		"tenant": tenant,
+	}
+	if data.InvoicingEnabled != nil {
+		cypher += ", ts.invoicingEnabled=$invoicingEnabled"
+		params["invoicingEnabled"] = *data.InvoicingEnabled
+	}
+	if data.InvoicingPostpaid != nil {
+		cypher += ", ts.invoicingPostpaid=$invoicingPostpaid"
+		params["invoicingPostpaid"] = *data.InvoicingPostpaid
+	}
+	if data.BaseCurrency != nil {
+		cypher += ", ts.baseCurrency=$baseCurrency"
+		params["baseCurrency"] = *data.BaseCurrency
+	}
+	if data.LogoRepositoryFileId != nil {
+		cypher += ", ts.logoRepositoryFileId=$logoRepositoryFileId"
+		params["logoRepositoryFileId"] = *data.LogoRepositoryFileId
+	}
+	if data.WorkspaceLogo != nil {
+		cypher += ", ts.workspaceLogo=$workspaceLogo"
+		params["workspaceLogo"] = *data.WorkspaceLogo
+	}
+	if data.WorkspaceName != nil {
+		cypher += ", ts.workspaceName=$workspaceName"
+		params["workspaceName"] = *data.WorkspaceName
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
 func (r *tenantWriteRepository) HardDeleteTenant(ctx context.Context, tenant string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantWriteRepository.HardDelete")
 	defer span.Finish()
@@ -374,40 +430,40 @@ func (r *tenantWriteRepository) HardDeleteTenant(ctx context.Context, tenant str
 	tracing.LogObjectAsJson(span, "tenant", tenant)
 
 	nodeWithTenantSuffix := []string{
-		model2.NodeLabelTenantBillingProfile,
-		model2.NodeLabelBankAccount,
-		model2.NodeLabelTimelineEvent,
-		model2.NodeLabelContact,
-		model2.NodeLabelCustomField,
-		model2.NodeLabelJobRole,
-		model2.NodeLabelEmail,
-		model2.NodeLabelLocation,
-		model2.NodeLabelInteractionEvent,
-		model2.NodeLabelInteractionSession,
-		model2.NodeLabelNote,
-		model2.NodeLabelLogEntry,
-		model2.NodeLabelOrganization,
-		model2.NodeLabelBillingProfile,
-		model2.NodeLabelAction,
-		model2.NodeLabelPageView,
-		model2.NodeLabelPhoneNumber,
-		model2.NodeLabelTag,
-		model2.NodeLabelIssue,
-		model2.NodeLabelUser,
-		model2.NodeLabelAttachment,
-		model2.NodeLabelMeeting,
-		model2.NodeLabelSocial,
-		model2.NodeLabelActionItem,
-		model2.NodeLabelComment,
-		model2.NodeLabelContract,
-		model2.NodeLabelDeletedContract,
-		model2.NodeLabelServiceLineItem,
-		model2.NodeLabelOpportunity,
-		model2.NodeLabelInvoicingCycle,
-		model2.NodeLabelExternalSystem,
-		model2.NodeLabelInvoice,
-		model2.NodeLabelInvoiceLine,
-		model2.NodeLabelReminder,
+		commonmodel.NodeLabelTenantBillingProfile,
+		commonmodel.NodeLabelBankAccount,
+		commonmodel.NodeLabelTimelineEvent,
+		commonmodel.NodeLabelContact,
+		commonmodel.NodeLabelCustomField,
+		commonmodel.NodeLabelJobRole,
+		commonmodel.NodeLabelEmail,
+		commonmodel.NodeLabelLocation,
+		commonmodel.NodeLabelInteractionEvent,
+		commonmodel.NodeLabelInteractionSession,
+		commonmodel.NodeLabelNote,
+		commonmodel.NodeLabelLogEntry,
+		commonmodel.NodeLabelOrganization,
+		commonmodel.NodeLabelBillingProfile,
+		commonmodel.NodeLabelAction,
+		commonmodel.NodeLabelPageView,
+		commonmodel.NodeLabelPhoneNumber,
+		commonmodel.NodeLabelTag,
+		commonmodel.NodeLabelIssue,
+		commonmodel.NodeLabelUser,
+		commonmodel.NodeLabelAttachment,
+		commonmodel.NodeLabelMeeting,
+		commonmodel.NodeLabelSocial,
+		commonmodel.NodeLabelActionItem,
+		commonmodel.NodeLabelComment,
+		commonmodel.NodeLabelContract,
+		commonmodel.NodeLabelDeletedContract,
+		commonmodel.NodeLabelServiceLineItem,
+		commonmodel.NodeLabelOpportunity,
+		commonmodel.NodeLabelInvoicingCycle,
+		commonmodel.NodeLabelExternalSystem,
+		commonmodel.NodeLabelInvoice,
+		commonmodel.NodeLabelInvoiceLine,
+		commonmodel.NodeLabelReminder,
 	}
 
 	//drop nodes with NodeLabel_Tenant

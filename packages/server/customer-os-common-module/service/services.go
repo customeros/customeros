@@ -43,6 +43,7 @@ type Services struct {
 	SlackChannelService        SlackChannelService
 	ServiceLineItemService     ServiceLineItemService
 	TenantService              TenantService
+	TenantSettingsService      TenantSettingsService
 	UserService                UserService
 	WorkflowService            WorkflowService
 	WorkspaceService           WorkspaceService
@@ -107,6 +108,7 @@ func InitServices(globalConfig *config.GlobalConfig, db *gorm.DB, driver *neo4j.
 	services.ServiceLineItemService = NewServiceLineItemService(log, services)
 	services.TagService = NewTagService(log, services)
 	services.TenantService = NewTenantService(log, services)
+	services.TenantSettingsService = NewTenantSettingsService(log, services)
 	services.UserService = NewUserService(services)
 	services.WorkflowService = NewWorkflowService(services)
 	services.WorkspaceService = NewWorkspaceService(services)
