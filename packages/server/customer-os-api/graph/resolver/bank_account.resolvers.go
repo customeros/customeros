@@ -7,6 +7,8 @@ package resolver
 import (
 	"context"
 	"errors"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
@@ -22,7 +24,21 @@ func (r *mutationResolver) BankAccountCreate(ctx context.Context, input *model.B
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "request.input", input)
 
-	bankAccountId, err := r.Services.BankAccountService.CreateTenantBankAccount(ctx, input)
+	dataFields := data_fields.BankAccountFields{
+		BankName:            input.BankName,
+		BankTransferEnabled: input.BankTransferEnabled,
+		AllowInternational:  input.AllowInternational,
+		IBAN:                input.Iban,
+		BIC:                 input.Bic,
+		SortCode:            input.SortCode,
+		AccountNumber:       input.AccountNumber,
+		RoutingNumber:       input.RoutingNumber,
+		OtherDetails:        input.OtherDetails,
+	}
+	if input.Currency != nil {
+		dataFields.Currency = utils.StringPtr(input.Currency.String())
+	}
+	bankAccountId, err := r.Services.CommonServices.TenantSettingsService.CreateBankAccount(ctx, dataFields)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to create bank account")
@@ -57,7 +73,22 @@ func (r *mutationResolver) BankAccountUpdate(ctx context.Context, input *model.B
 		return nil, nil
 	}
 
-	err := r.Services.BankAccountService.UpdateTenantBankAccount(ctx, input)
+	dataFields := data_fields.BankAccountFields{
+		BankName:            input.BankName,
+		BankTransferEnabled: input.BankTransferEnabled,
+		AllowInternational:  input.AllowInternational,
+		IBAN:                input.Iban,
+		BIC:                 input.Bic,
+		SortCode:            input.SortCode,
+		AccountNumber:       input.AccountNumber,
+		RoutingNumber:       input.RoutingNumber,
+		OtherDetails:        input.OtherDetails,
+	}
+	if input.Currency != nil {
+		dataFields.Currency = utils.StringPtr(input.Currency.String())
+	}
+
+	err := r.Services.CommonServices.TenantSettingsService.UpdateBankAccount(ctx, input.ID, dataFields)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to update bank account")
@@ -87,7 +118,7 @@ func (r *mutationResolver) BankAccountDelete(ctx context.Context, id string) (*m
 		return &model.DeleteResponse{Accepted: false, Completed: false}, nil
 	}
 
-	err := r.Services.BankAccountService.DeleteTenantBankAccount(ctx, id)
+	err := r.Services.CommonServices.TenantSettingsService.DeleteBankAccount(ctx, id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to delete bank account")

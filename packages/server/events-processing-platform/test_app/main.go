@@ -114,7 +114,6 @@ func main() {
 	//testCreateInvoice()
 	//testCreateReminder()
 	//testUpdateReminder()
-	//testAddBankAccount()
 }
 
 func testEnrichOrganization() {
@@ -591,21 +590,4 @@ func testRefreshRenewalSummary() {
 		log.Fatalf("Failed: %v", err.Error())
 	}
 	log.Printf("Result: %v", result.Id)
-}
-
-func testAddBankAccount() {
-	_, err := clients.TenantClient.AddBankAccount(context.Background(), &tenantpb.AddBankAccountGrpcRequest{
-		Tenant:        tenant,
-		OtherDetails:  "Some eur details",
-		BankName:      "Bank of Europe",
-		AccountNumber: "ACC-456",
-		RoutingNumber: "ROUT-456",
-		Iban:          "IBAN-456",
-		Bic:           "BIC-456",
-		SortCode:      "SORT-456",
-		Currency:      "USD",
-	})
-	if err != nil {
-		log.Fatalf("Failed: %v", err.Error())
-	}
 }

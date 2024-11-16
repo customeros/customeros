@@ -240,7 +240,6 @@ func (s *tenantSettingsService) DeleteBankAccount(ctx context.Context, bankAccou
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantSettingsService.DeleteBankAccount")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.TagEntity(span, bankAccountId)
 
 	// validate tenant
 	err := common.ValidateTenant(ctx)
@@ -249,6 +248,15 @@ func (s *tenantSettingsService) DeleteBankAccount(ctx context.Context, bankAccou
 		return err
 	}
 	tenant := common.GetTenantFromContext(ctx)
+
+	// verify if bank account exists
+	exists, err := s.services.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, tenant, bankAccountId, model.NodeLabelBankAccount)
+	if err != nil || !exists {
+		err = errors.New("bank account not found")
+		tracing.TraceErr(span, err)
+		return err
+	}
+	tracing.TagEntity(span, bankAccountId)
 
 	err = s.services.Neo4jRepositories.BankAccountWriteRepository.DeleteBankAccount(ctx, tenant, bankAccountId)
 	if err != nil {
