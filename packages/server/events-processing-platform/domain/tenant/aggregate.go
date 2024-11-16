@@ -48,10 +48,6 @@ func (a *TenantAggregate) HandleGRPCRequest(ctx context.Context, request any, pa
 		return a.AddBillingProfile(ctx, r)
 	case *tenantpb.UpdateBillingProfileRequest:
 		return r.Id, a.UpdateBillingProfile(ctx, r)
-	case *tenantpb.AddBankAccountGrpcRequest:
-		return a.AddBankAccount(ctx, r)
-	case *tenantpb.UpdateBankAccountGrpcRequest:
-		return r.Id, a.UpdateBankAccount(ctx, r)
 	default:
 		return nil, nil
 	}
@@ -109,68 +105,12 @@ func (a *TenantAggregate) UpdateBillingProfile(ctx context.Context, r *tenantpb.
 	return a.Apply(updateBillingProfileEvent)
 }
 
-func (a *TenantAggregate) AddBankAccount(ctx context.Context, r *tenantpb.AddBankAccountGrpcRequest) (string, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "TenantAggregate.AddBankAccount")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("AggregateVersion", a.GetVersion()))
-
-	sourceFields := common.Source{}
-	sourceFields.FromGrpc(r.SourceFields)
-
-	createdAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(r.CreatedAt), utils.Now())
-
-	bankAccountId := uuid.New().String()
-
-	addBankAccountEvent, err := event.NewTenantBankAccountCreateEvent(a, sourceFields, bankAccountId, r, createdAtNotNil)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return "", errors.Wrap(err, "TenantBankAccountCreateEvent")
-	}
-	eventstore.EnrichEventWithMetadataExtended(&addBankAccountEvent, span, eventstore.EventMetadata{
-		Tenant: r.Tenant,
-		UserId: r.LoggedInUserId,
-		App:    sourceFields.AppSource,
-	})
-
-	return bankAccountId, a.Apply(addBankAccountEvent)
-}
-
-func (a *TenantAggregate) UpdateBankAccount(ctx context.Context, r *tenantpb.UpdateBankAccountGrpcRequest) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "TenantAggregate.UpdateBankAccount")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("AggregateVersion", a.GetVersion()))
-
-	updatedAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(r.UpdatedAt), utils.Now())
-	fieldsMaks := extractTenantBankAccountFieldsMask(r.FieldsMask)
-
-	updateBankAccountEvent, err := event.NewTenantBankAccountUpdateEvent(a, r.Id, r, updatedAtNotNil, fieldsMaks)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "TenantBankAccountUpdateEvent")
-	}
-	eventstore.EnrichEventWithMetadataExtended(&updateBankAccountEvent, span, eventstore.EventMetadata{
-		Tenant: r.Tenant,
-		UserId: r.LoggedInUserId,
-		App:    r.AppSource,
-	})
-
-	return a.Apply(updateBankAccountEvent)
-}
-
 func (a *TenantAggregate) When(evt eventstore.Event) error {
 	switch evt.GetEventType() {
 	case event.TenantAddBillingProfileV1:
 		return a.onAddBillingProfile(evt)
 	case event.TenantUpdateBillingProfileV1:
 		return a.onUpdateBillingProfile(evt)
-	case event.TenantAddBankAccountV1:
-		return a.onAddBankAccount(evt)
-	case event.TenantUpdateBankAccountV1:
-		return a.onUpdateBankAccount(evt)
 	default:
 		return nil
 	}
@@ -272,82 +212,6 @@ func (a *TenantAggregate) onUpdateBillingProfile(evt eventstore.Event) error {
 	return nil
 }
 
-func (a *TenantAggregate) onAddBankAccount(evt eventstore.Event) error {
-	var eventData event.TenantBankAccountCreateEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		return errors.Wrap(err, "GetJsonData")
-	}
-
-	if a.TenantDetails.HasBankAccount(eventData.Id) {
-		return nil
-	}
-	bankAccount := BankAccount{
-		Id:                  eventData.Id,
-		CreatedAt:           eventData.CreatedAt,
-		BankName:            eventData.BankName,
-		BankTransferEnabled: eventData.BankTransferEnabled,
-		AllowInternational:  eventData.AllowInternational,
-		Currency:            eventData.Currency,
-		Iban:                eventData.Iban,
-		Bic:                 eventData.Bic,
-		SortCode:            eventData.SortCode,
-		AccountNumber:       eventData.AccountNumber,
-		RoutingNumber:       eventData.RoutingNumber,
-		OtherDetails:        eventData.OtherDetails,
-		SourceFields:        eventData.SourceFields,
-	}
-	a.TenantDetails.BankAccounts = append(a.TenantDetails.BankAccounts, bankAccount)
-
-	return nil
-}
-
-func (a *TenantAggregate) onUpdateBankAccount(evt eventstore.Event) error {
-	var eventData event.TenantBankAccountUpdateEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		return errors.Wrap(err, "GetJsonData")
-	}
-
-	if !a.TenantDetails.HasBankAccount(eventData.Id) {
-		bankAccount := BankAccount{
-			Id: eventData.Id,
-		}
-		a.TenantDetails.BankAccounts = append(a.TenantDetails.BankAccounts, bankAccount)
-	}
-
-	bankAccount := a.TenantDetails.GetBankAccount(eventData.Id)
-	if eventData.UpdateBankName() {
-		bankAccount.BankName = eventData.BankName
-	}
-	if eventData.UpdateBankTransferEnabled() {
-		bankAccount.BankTransferEnabled = eventData.BankTransferEnabled
-	}
-	if eventData.UpdateAllowInternational() {
-		bankAccount.AllowInternational = eventData.AllowInternational
-	}
-	if eventData.UpdateCurrency() {
-		bankAccount.Currency = eventData.Currency
-	}
-	if eventData.UpdateIban() {
-		bankAccount.Iban = eventData.Iban
-	}
-	if eventData.UpdateBic() {
-		bankAccount.Bic = eventData.Bic
-	}
-	if eventData.UpdateSortCode() {
-		bankAccount.SortCode = eventData.SortCode
-	}
-	if eventData.UpdateAccountNumber() {
-		bankAccount.AccountNumber = eventData.AccountNumber
-	}
-	if eventData.UpdateRoutingNumber() {
-		bankAccount.RoutingNumber = eventData.RoutingNumber
-	}
-	if eventData.UpdateOtherDetails() {
-		bankAccount.OtherDetails = eventData.OtherDetails
-	}
-	return nil
-}
-
 func extractTenantBillingProfileFieldsMask(requestFieldsMask []tenantpb.TenantBillingProfileFieldMask) []string {
 	var fieldsMask []string
 	for _, requestFieldMask := range requestFieldsMask {
@@ -382,58 +246,6 @@ func extractTenantBillingProfileFieldsMask(requestFieldsMask []tenantpb.TenantBi
 			fieldsMask = append(fieldsMask, event.FieldMaskCanPayWithBankTransfer)
 		case tenantpb.TenantBillingProfileFieldMask_TENANT_BILLING_PROFILE_FIELD_CHECK:
 			fieldsMask = append(fieldsMask, event.FieldMaskCheck)
-		}
-	}
-	fieldsMask = utils.RemoveDuplicates(fieldsMask)
-	return fieldsMask
-}
-
-func extractTenantSettingsFieldsMask(inputFieldsMask []tenantpb.TenantSettingsFieldMask) []string {
-	var fieldsMask []string
-	for _, requestFieldMask := range inputFieldsMask {
-		switch requestFieldMask {
-		case tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_LOGO_REPOSITORY_FILE_ID:
-			fieldsMask = append(fieldsMask, event.FieldMaskLogoRepositoryFileId)
-		case tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_BASE_CURRENCY:
-			fieldsMask = append(fieldsMask, event.FieldMaskBaseCurrency)
-		case tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_INVOICING_ENABLED:
-			fieldsMask = append(fieldsMask, event.FieldMaskInvoicingEnabled)
-		case tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_INVOICING_POSTPAID:
-			fieldsMask = append(fieldsMask, event.FieldMaskInvoicingPostpaid)
-		case tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_WORKSPACE_LOGO:
-			fieldsMask = append(fieldsMask, event.FieldMaskWorkspaceLogo)
-		case tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_WORKSPACE_NAME:
-			fieldsMask = append(fieldsMask, event.FieldMaskWorkspaceName)
-		}
-	}
-	fieldsMask = utils.RemoveDuplicates(fieldsMask)
-	return fieldsMask
-}
-
-func extractTenantBankAccountFieldsMask(inputFieldsMask []tenantpb.BankAccountFieldMask) []string {
-	var fieldsMask []string
-	for _, requestFieldMask := range inputFieldsMask {
-		switch requestFieldMask {
-		case tenantpb.BankAccountFieldMask_BANK_ACCOUNT_FIELD_BANK_NAME:
-			fieldsMask = append(fieldsMask, event.FieldMaskBankAccountBankName)
-		case tenantpb.BankAccountFieldMask_BANK_ACCOUNT_FIELD_BANK_TRANSFER_ENABLED:
-			fieldsMask = append(fieldsMask, event.FieldMaskBankAccountBankTransferEnabled)
-		case tenantpb.BankAccountFieldMask_BANK_ACCOUNT_FIELD_ALLOW_INTERNATIONAL:
-			fieldsMask = append(fieldsMask, event.FieldMaskBankAccountAllowInternational)
-		case tenantpb.BankAccountFieldMask_BANK_ACCOUNT_FIELD_CURRENCY:
-			fieldsMask = append(fieldsMask, event.FieldMaskBankAccountCurrency)
-		case tenantpb.BankAccountFieldMask_BANK_ACCOUNT_FIELD_IBAN:
-			fieldsMask = append(fieldsMask, event.FieldMaskBankAccountIban)
-		case tenantpb.BankAccountFieldMask_BANK_ACCOUNT_FIELD_BIC:
-			fieldsMask = append(fieldsMask, event.FieldMaskBankAccountBic)
-		case tenantpb.BankAccountFieldMask_BANK_ACCOUNT_FIELD_SORT_CODE:
-			fieldsMask = append(fieldsMask, event.FieldMaskBankAccountSortCode)
-		case tenantpb.BankAccountFieldMask_BANK_ACCOUNT_FIELD_ACCOUNT_NUMBER:
-			fieldsMask = append(fieldsMask, event.FieldMaskBankAccountAccountNumber)
-		case tenantpb.BankAccountFieldMask_BANK_ACCOUNT_FIELD_ROUTING_NUMBER:
-			fieldsMask = append(fieldsMask, event.FieldMaskBankAccountRoutingNumber)
-		case tenantpb.BankAccountFieldMask_BANK_ACCOUNT_FIELD_OTHER_DETAILS:
-			fieldsMask = append(fieldsMask, event.FieldMaskBankAccountOtherDetails)
 		}
 	}
 	fieldsMask = utils.RemoveDuplicates(fieldsMask)

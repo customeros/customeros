@@ -56,7 +56,6 @@ type GraphSubscriber struct {
 	serviceLineItemEventHandler *ServiceLineItemEventHandler
 	invoiceEventHandler         *InvoiceEventHandler
 	tenantEventHandler          *TenantEventHandler
-	bankAccountEventHandler     *BankAccountEventHandler
 	reminderEventHandler        *ReminderEventHandler
 }
 
@@ -80,7 +79,6 @@ func NewGraphSubscriber(log logger.Logger, db *esdb.Client, services *service.Se
 		serviceLineItemEventHandler: NewServiceLineItemEventHandler(log, services, grpcClients),
 		invoiceEventHandler:         NewInvoiceEventHandler(log, services, grpcClients),
 		tenantEventHandler:          NewTenantEventHandler(log, services),
-		bankAccountEventHandler:     NewBankAccountEventHandler(log, services),
 		reminderEventHandler:        NewReminderEventHandler(log, services),
 	}
 }
@@ -217,6 +215,8 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		orgevents.OrganizationAddSocialV1,
 		tenantevent.TenantUpdateSettingsV1,
 		tenantevent.TenantDeleteBankAccountV1,
+		tenantevent.TenantAddBankAccountV1,
+		tenantevent.TenantUpdateBankAccountV1,
 		contractevent.ContractUpdateV1:
 
 		return nil
@@ -461,12 +461,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return nil
 	case tenantevent.TenantUpdateBillingProfileV1:
 		_ = s.tenantEventHandler.OnUpdateBillingProfileV1(ctx, evt)
-		return nil
-	case tenantevent.TenantAddBankAccountV1:
-		_ = s.bankAccountEventHandler.OnAddBankAccountV1(ctx, evt)
-		return nil
-	case tenantevent.TenantUpdateBankAccountV1:
-		_ = s.bankAccountEventHandler.OnUpdateBankAccountV1(ctx, evt)
 		return nil
 
 	case reminderevents.ReminderCreateV1:

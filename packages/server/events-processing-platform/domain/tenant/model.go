@@ -13,7 +13,6 @@ type Tenant struct {
 	UpdatedAt       time.Time              `json:"updatedAt"`
 	SourceFields    common.Source          `json:"source"`
 	BillingProfiles []TenantBillingProfile `json:"billingProfiles"`
-	BankAccounts    []BankAccount          `json:"bankAccounts"`
 }
 
 type TenantBillingProfile struct {
@@ -71,26 +70,4 @@ func (t Tenant) GetBillingProfile(id string) *TenantBillingProfile {
 		}
 	}
 	return nil
-}
-
-func (t Tenant) HasBankAccount(id string) bool {
-	for _, ba := range t.BankAccounts {
-		if ba.Id == id {
-			return true
-		}
-	}
-	return false
-}
-
-func (t Tenant) GetBankAccount(id string) *BankAccount {
-	for _, ba := range t.BankAccounts {
-		if ba.Id == id {
-			return &ba
-		}
-	}
-	return nil
-}
-
-func (t Tenant) AddBankAccount(ba BankAccount) {
-	t.BankAccounts = append(t.BankAccounts, ba)
 }
