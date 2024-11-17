@@ -49,7 +49,11 @@ func (s *opportunityService) GetById(ctx context.Context, tenant, opportunityId 
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityService.GetById")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("opportunityId", opportunityId))
+	span.LogKV("opportunityId", opportunityId)
+
+	if common.GetTenantFromContext(ctx) == "" {
+		tracing.TagTenant(span, tenant)
+	}
 
 	if opportunityDbNode, err := s.services.Neo4jRepositories.OpportunityReadRepository.GetOpportunityById(ctx, tenant, opportunityId); err != nil {
 		tracing.TraceErr(span, err)

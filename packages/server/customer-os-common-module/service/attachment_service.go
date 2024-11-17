@@ -15,7 +15,6 @@ import (
 type AttachmentService interface {
 	GetById(ctx context.Context, id string) (*neo4jentity.AttachmentEntity, error)
 	GetFor(ctx context.Context, entityType model.EntityType, relation *model.EntityRelation, ids []string) (*neo4jentity.AttachmentEntities, error)
-
 	Create(ctx context.Context, record *neo4jentity.AttachmentEntity) (*neo4jentity.AttachmentEntity, error)
 }
 

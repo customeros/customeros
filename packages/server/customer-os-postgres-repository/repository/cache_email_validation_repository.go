@@ -51,7 +51,7 @@ func (r cacheEmailValidationRepository) Save(ctx context.Context, cacheEmailVali
 	tracing.LogObjectAsJson(span, "cacheEmailValidation", cacheEmailValidation)
 
 	var existingData entity.CacheEmailValidation
-	result := r.db.WithContext(ctx).Where("email = ?", cacheEmailValidation.Email).Order("created_at desc").First(&existingData)
+	result := r.db.WithContext(ctx).Where("email = ?", cacheEmailValidation.Email).First(&existingData)
 
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
