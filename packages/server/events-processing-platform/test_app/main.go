@@ -15,14 +15,12 @@ import (
 	iepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/interaction_event"
 	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
 	issuepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/issue"
-	logentrypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/log_entry"
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	phonenumberpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/phone_number"
 	servicelineitempb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/service_line_item"
 	userpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/user"
 	"google.golang.org/grpc"
-	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 const grpcApiKey = "082c1193-a5a2-42fc-87fc-e960e692fffd"
@@ -39,7 +37,6 @@ type Clients struct {
 	ContactClient          contactpb.ContactGrpcServiceClient
 	EmailClient            emailpb.EmailGrpcServiceClient
 	PhoneNumberClient      phonenumberpb.PhoneNumberGrpcServiceClient
-	LogEntryClient         logentrypb.LogEntryGrpcServiceClient
 	IssueClient            issuepb.IssueGrpcServiceClient
 	CommentClient          commentpb.CommentGrpcServiceClient
 	UserClient             userpb.UserGrpcServiceClient
@@ -61,7 +58,6 @@ func InitClients() {
 		InteractionEventClient: iepb.NewInteractionEventGrpcServiceClient(conn),
 		OrganizationClient:     organizationpb.NewOrganizationGrpcServiceClient(conn),
 		ContactClient:          contactpb.NewContactGrpcServiceClient(conn),
-		LogEntryClient:         logentrypb.NewLogEntryGrpcServiceClient(conn),
 		EmailClient:            emailpb.NewEmailGrpcServiceClient(conn),
 		PhoneNumberClient:      phonenumberpb.NewPhoneNumberGrpcServiceClient(conn),
 		IssueClient:            issuepb.NewIssueGrpcServiceClient(conn),
