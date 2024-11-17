@@ -13,7 +13,6 @@ import (
 	issuepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/issue"
 	job_role_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/job_role"
 	locationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/location"
-	log_entry_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/log_entry"
 	opportunity_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
 	organization_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	phone_number_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/phone_number"
@@ -28,7 +27,6 @@ type Clients struct {
 	EmailClient              email_grpc_service.EmailGrpcServiceClient
 	InvoiceClient            invoice_grpc_service.InvoiceGrpcServiceClient
 	JobRoleClient            job_role_grpc_service.JobRoleGrpcServiceClient
-	LogEntryClient           log_entry_grpc_service.LogEntryGrpcServiceClient
 	OpportunityClient        opportunity_grpc_service.OpportunityGrpcServiceClient
 	OrganizationClient       organization_grpc_service.OrganizationGrpcServiceClient
 	PhoneNumberClient        phone_number_grpc_service.PhoneNumberGrpcServiceClient
@@ -54,7 +52,6 @@ func InitClients(conn *grpc.ClientConn) *Clients {
 		EmailClient:              email_grpc_service.NewEmailGrpcServiceClient(conn),
 		UserClient:               userpb.NewUserGrpcServiceClient(conn),
 		JobRoleClient:            job_role_grpc_service.NewJobRoleGrpcServiceClient(conn),
-		LogEntryClient:           log_entry_grpc_service.NewLogEntryGrpcServiceClient(conn),
 		ContractClient:           contract_grpc_service.NewContractGrpcServiceClient(conn),
 		ServiceLineItemClient:    service_line_item_grpc_service.NewServiceLineItemGrpcServiceClient(conn),
 		OpportunityClient:        opportunity_grpc_service.NewOpportunityGrpcServiceClient(conn),

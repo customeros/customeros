@@ -4,20 +4,19 @@ import (
 	"context"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/repository"
-	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
-	logentrypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/log_entry"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
-	"google.golang.org/protobuf/types/known/timestamppb"
 	"strings"
 	"sync"
 	"time"
@@ -182,35 +181,31 @@ func (s *logEntryService) syncLogEntry(ctx context.Context, syncMutex *sync.Mute
 		span.LogFields(log.Bool("found matching log entry", matchingLogEntryExists))
 		span.LogFields(log.String("logEntryId", logEntryId))
 
-		request := logentrypb.UpsertLogEntryGrpcRequest{
-			Id:          logEntryId,
-			Tenant:      tenant,
-			Content:     logEntryInput.Content,
-			ContentType: logEntryInput.ContentType,
-			CreatedAt:   timestamppb.New(utils.TimePtrAsAny(logEntryInput.CreatedAt, utils.NowPtr()).(time.Time)),
-			UpdatedAt:   timestamppb.New(utils.TimePtrAsAny(logEntryInput.UpdatedAt, utils.NowPtr()).(time.Time)),
-			StartedAt:   timestamppb.New(utils.TimePtrAsAny(logEntryInput.StartedAt, utils.NowPtr()).(time.Time)),
-			SourceFields: &commonpb.SourceFields{
-				Source:    logEntryInput.ExternalSystem,
-				AppSource: utils.StringFirstNonEmpty(logEntryInput.AppSource, constants.AppSourceCustomerOsWebhooks),
-			},
-			ExternalSystemFields: &commonpb.ExternalSystemFields{
+		logEntryFields := data_fields.LogEntryFields{
+			Content:     utils.StringPtr(logEntryInput.Content),
+			ContentType: utils.StringPtr(logEntryInput.ContentType),
+			ExternalSystem: &neo4jmodel.ExternalSystem{
 				ExternalSystemId: logEntryInput.ExternalSystem,
 				ExternalId:       logEntryInput.ExternalId,
 				ExternalSource:   logEntryInput.ExternalSourceEntity,
 				ExternalUrl:      logEntryInput.ExternalUrl,
-				SyncDate:         utils.ConvertTimeToTimestampPtr(&syncDate),
+				SyncDate:         &syncDate,
 			},
+			Source:    utils.StringPtr(logEntryInput.ExternalSystem),
+			AppSource: utils.StringPtr(utils.StringFirstNonEmpty(logEntryInput.AppSource, constants.AppSourceCustomerOsWebhooks)),
+			CreatedAt: logEntryInput.CreatedAt,
+			StartedAt: logEntryInput.StartedAt,
 		}
+
 		userAuthorId, _ := s.services.UserService.GetIdForReferencedUser(ctx, tenant, logEntryInput.ExternalSystem, logEntryInput.AuthorUser)
 		if userAuthorId != "" {
-			request.AuthorUserId = utils.StringPtr(userAuthorId)
+			logEntryFields.AuthorUserId = utils.StringPtr(userAuthorId)
 		}
 		if len(loggedOrgIds) == 0 {
-			failedSync, reason = s.sendLogEntryToEventStoreForLoggedOrganization(ctx, logEntryId, logEntryInput.ExternalId, "", &request, span, matchingLogEntryExists)
+			failedSync, reason = s.saveLogEntryToDb(ctx, logEntryId, logEntryInput.ExternalId, "", logEntryFields, span, matchingLogEntryExists)
 		} else {
 			for _, orgId := range loggedOrgIds {
-				failedSync, reason = s.sendLogEntryToEventStoreForLoggedOrganization(ctx, logEntryId, logEntryInput.ExternalId, orgId, &request, span, matchingLogEntryExists)
+				failedSync, reason = s.saveLogEntryToDb(ctx, logEntryId, logEntryInput.ExternalId, orgId, logEntryFields, span, matchingLogEntryExists)
 				if failedSync {
 					break
 				}
@@ -227,33 +222,19 @@ func (s *logEntryService) syncLogEntry(ctx context.Context, syncMutex *sync.Mute
 	return NewSuccessfulSyncStatus()
 }
 
-func (s *logEntryService) sendLogEntryToEventStoreForLoggedOrganization(ctx context.Context, logEntryId, externalId, organizationId string, request *logentrypb.UpsertLogEntryGrpcRequest, span opentracing.Span, matchingLogEntryExists bool) (bool, string) {
+func (s *logEntryService) saveLogEntryToDb(ctx context.Context, logEntryId, externalId, organizationId string, logEntryFields data_fields.LogEntryFields, span opentracing.Span, matchingLogEntryExists bool) (bool, string) {
 	if organizationId != "" {
-		request.LoggedOrganizationId = utils.StringPtr(organizationId)
+		logEntryFields.OrganizationId = utils.StringPtr(organizationId)
 	}
 	failedSync := false
 	reason := ""
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := CallEventsPlatformGRPCWithRetry[*logentrypb.LogEntryIdGrpcResponse](func() (*logentrypb.LogEntryIdGrpcResponse, error) {
-		return s.grpcClients.LogEntryClient.UpsertLogEntry(ctx, request)
-	})
+	logEntryId, err := s.services.CommonServices.LogEntryService.Save(ctx, &logEntryId, logEntryFields)
 	if err != nil {
 		failedSync = true
-		tracing.TraceErr(span, err, log.String("grpcMethod", "UpsertLogEntry"))
-		reason = fmt.Sprintf("failed sending event to upsert log entry with external reference %s for tenant %s :%s", externalId, common.GetTenantFromContext(ctx), err.Error())
+		tracing.TraceErr(span, err)
+		reason = fmt.Sprintf("error saving log entry with external reference %s for tenant %s :%s", externalId, common.GetTenantFromContext(ctx), err.Error())
 		s.log.Error(reason)
-	} else {
-		logEntryId = response.GetId()
 	}
-	// Wait for log entry to be created in neo4j
-	if !failedSync && !matchingLogEntryExists {
-		for i := 1; i <= constants.MaxRetryCheckDataInNeo4jAfterEventRequest; i++ {
-			logEntry, findErr := s.repositories.LogEntryRepository.GetById(ctx, common.GetTenantFromContext(ctx), logEntryId)
-			if logEntry != nil && findErr == nil {
-				break
-			}
-			time.Sleep(utils.BackOffExponentialDelay(i))
-		}
-	}
+
 	return failedSync, reason
 }

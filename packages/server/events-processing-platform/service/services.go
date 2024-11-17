@@ -30,7 +30,6 @@ type Services struct {
 	UserService            *userService
 	LocationService        *locationService
 	JobRoleService         *jobRoleService
-	LogEntryService        *logEntryService
 	IssueService           *issueService
 	CommentService         *commentService
 	OpportunityService     *opportunityService
@@ -60,7 +59,6 @@ func InitServices(cfg *config.Config, repositories *repository.Repositories, agg
 	services.UserService = NewUserService(log, aggregateStore, cfg, commandHandlers.User, &services)
 	services.LocationService = NewLocationService(log, commandHandlers.Location)
 	services.JobRoleService = NewJobRoleService(log, commandHandlers.JobRole)
-	services.LogEntryService = NewLogEntryService(log, commandHandlers.LogEntry)
 	services.IssueService = NewIssueService(log, commandHandlers.Issue)
 	services.CommentService = NewCommentService(&services, log, aggregateStore, cfg)
 	services.OpportunityService = NewOpportunityService(log, commandHandlers.Opportunity, aggregateStore, &services)

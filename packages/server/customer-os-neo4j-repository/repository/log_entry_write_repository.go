@@ -4,37 +4,16 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
-	"time"
 )
 
-type LogEntryCreateFields struct {
-	AggregateVersion     int64              `json:"aggregateVersion"`
-	Content              string             `json:"content"`
-	ContentType          string             `json:"contentType"`
-	StartedAt            time.Time          `json:"startedAt" `
-	AuthorUserId         string             `json:"authorUserId"`
-	LoggedOrganizationId string             `json:"loggedOrganizationId"`
-	SourceFields         model.SourceFields `json:"sourceFields"`
-	CreatedAt            time.Time          `json:"createdAt"`
-}
-
-type LogEntryUpdateFields struct {
-	AggregateVersion     int64     `json:"aggregateVersion"`
-	Content              string    `json:"content"`
-	ContentType          string    `json:"contentType"`
-	StartedAt            time.Time `json:"startedAt"`
-	Source               string    `json:"source"`
-	LoggedOrganizationId string    `json:"loggedOrganizationId"`
-}
-
 type LogEntryWriteRepository interface {
-	Create(ctx context.Context, tenant, logEntryId string, data LogEntryCreateFields) error
-	Update(ctx context.Context, tenant, logEntryId string, data LogEntryUpdateFields) error
+	CreateInTx(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, logEntryId string, data data_fields.LogEntryFields) error
+	UpdateInTx(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, logEntryId string, data data_fields.LogEntryFields) error
 }
 
 type logEntryWriteRepository struct {
@@ -49,8 +28,8 @@ func NewLogEntryWriteRepository(driver *neo4j.DriverWithContext, database string
 	}
 }
 
-func (r *logEntryWriteRepository) Create(ctx context.Context, tenant, logEntryId string, data LogEntryCreateFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "LogEntryWriteRepository.Create")
+func (r *logEntryWriteRepository) CreateInTx(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, logEntryId string, data data_fields.LogEntryFields) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "LogEntryWriteRepository.CreateInTx")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
 	tracing.TagTenant(span, tenant)
@@ -67,11 +46,9 @@ func (r *logEntryWriteRepository) Create(ctx context.Context, tenant, logEntryId
 								l.updatedAt=datetime(),
 								l.startedAt=$startedAt,
 								l.source=$source,
-								l.sourceOfTruth=$sourceOfTruth,
 								l.appSource=$appSource,
 								l.content=$content,
 								l.contentType=$contentType,
-								l.aggregateVersion=$aggregateVersion,
 								o.updatedAt=datetime()
 							WITH l, t
 							OPTIONAL MATCH (t)<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$authorUserId}) 
@@ -80,68 +57,75 @@ func (r *logEntryWriteRepository) Create(ctx context.Context, tenant, logEntryId
     							MERGE (l)-[:CREATED_BY]->(u))
 							`, tenant, tenant)
 	params := map[string]any{
-		"tenant":           tenant,
-		"logEntryId":       logEntryId,
-		"orgId":            data.LoggedOrganizationId,
-		"createdAt":        data.CreatedAt,
-		"startedAt":        data.StartedAt,
-		"source":           data.SourceFields.Source,
-		"sourceOfTruth":    data.SourceFields.SourceOfTruth,
-		"appSource":        data.SourceFields.AppSource,
-		"content":          data.Content,
-		"contentType":      data.ContentType,
-		"authorUserId":     data.AuthorUserId,
-		"aggregateVersion": data.AggregateVersion,
+		"tenant":       tenant,
+		"logEntryId":   logEntryId,
+		"orgId":        utils.IfNotNilString(data.OrganizationId),
+		"createdAt":    utils.IfNotNilTimeWithDefault(data.StartedAt, utils.Now()),
+		"startedAt":    utils.IfNotNilTimeWithDefault(data.StartedAt, utils.Now()),
+		"source":       utils.IfNotNilString(data.Source),
+		"appSource":    utils.IfNotNilString(data.AppSource),
+		"content":      utils.IfNotNilString(data.Content),
+		"contentType":  utils.IfNotNilString(data.ContentType),
+		"authorUserId": utils.IfNotNilString(data.AuthorUserId),
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
+	})
+
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
+
 	return err
 }
 
-func (r *logEntryWriteRepository) Update(ctx context.Context, tenant, logEntryId string, data LogEntryUpdateFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "LogEntryWriteRepository.Create")
+func (r *logEntryWriteRepository) UpdateInTx(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, logEntryId string, data data_fields.LogEntryFields) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "LogEntryWriteRepository.UpdateInTx")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
 	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, logEntryId)
 	tracing.LogObjectAsJson(span, "data", data)
 
-	cypher := fmt.Sprintf(`MATCH (l:LogEntry_%s {id:$logEntryId})
-								WHERE l.aggregateVersion IS NULL OR l.aggregateVersion < $aggregateVersion
-								SET 
-								l.updatedAt=datetime(),
-								l.startedAt=$startedAt,
-								l.sourceOfTruth=$sourceOfTruth,
-								l.content=$content,
-								l.contentType=$contentType,
-								l.aggregateVersion=$aggregateVersion
-								WITH l
-							OPTIONAL MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$orgId}) 
-							WHERE $orgId <> ""
-							FOREACH (ignore IN CASE WHEN org IS NOT NULL THEN [1] ELSE [] END |
-    							MERGE (l)<-[:LOGGED]-(org))
-								SET org.updatedAt=datetime()`, tenant)
+	cypher := fmt.Sprintf(`MATCH (l:LogEntry_%s {id:$logEntryId}) SET l.updatedAt=datetime()`, tenant)
 	params := map[string]any{
-		"tenant":           tenant,
-		"logEntryId":       logEntryId,
-		"startedAt":        data.StartedAt,
-		"sourceOfTruth":    data.Source,
-		"content":          data.Content,
-		"contentType":      data.ContentType,
-		"orgId":            data.LoggedOrganizationId,
-		"aggregateVersion": data.AggregateVersion,
+		"tenant":      tenant,
+		"logEntryId":  logEntryId,
+		"startedAt":   data.StartedAt,
+		"content":     data.Content,
+		"contentType": data.ContentType,
 	}
+
+	if data.Content != nil {
+		params["content"] = *data.Content
+		cypher += ", l.content=$content"
+	}
+	if data.ContentType != nil {
+		params["contentType"] = *data.ContentType
+		cypher += ", l.contentType=$contentType"
+	}
+
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
+	})
+
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
+
 	return err
 }

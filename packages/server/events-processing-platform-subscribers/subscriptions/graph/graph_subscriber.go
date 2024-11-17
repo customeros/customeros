@@ -25,7 +25,7 @@ import (
 	issueevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/issue/event"
 	jobroleevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/events"
 	locationevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/events"
-	logentryevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/event"
+	logentryevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry"
 	phonenumberevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/events"
 	servicelineitemevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/event"
 	tenantevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/tenant"
@@ -48,7 +48,6 @@ type GraphSubscriber struct {
 	userEventHandler            *UserEventHandler
 	locationEventHandler        *LocationEventHandler
 	jobRoleEventHandler         *JobRoleEventHandler
-	logEntryEventHandler        *LogEntryEventHandler
 	issueEventHandler           *IssueEventHandler
 	commentEventHandler         *CommentEventHandler
 	opportunityEventHandler     *OpportunityEventHandler
@@ -70,7 +69,6 @@ func NewGraphSubscriber(log logger.Logger, db *esdb.Client, services *service.Se
 		userEventHandler:            NewUserEventHandler(log, services),
 		locationEventHandler:        NewLocationEventHandler(services),
 		jobRoleEventHandler:         NewJobRoleEventHandler(services),
-		logEntryEventHandler:        NewLogEntryEventHandler(log, services, grpcClients),
 		issueEventHandler:           NewIssueEventHandler(log, services, grpcClients),
 		commentEventHandler:         NewCommentEventHandler(log, services),
 		opportunityEventHandler:     NewOpportunityEventHandler(log, services, grpcClients),
@@ -217,6 +215,8 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		tenantevent.TenantUpdateBankAccountV1,
 		tenantevent.TenantAddBillingProfileV1,
 		tenantevent.TenantUpdateBillingProfileV1,
+		logentryevents.LogEntryCreateV1,
+		logentryevents.LogEntryUpdateV1,
 		contractevent.ContractUpdateV1:
 
 		return nil
@@ -354,13 +354,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return nil
 	case jobroleevents.JobRoleCreateV1:
 		_ = s.jobRoleEventHandler.OnJobRoleCreate(ctx, evt)
-		return nil
-
-	case logentryevents.LogEntryCreateV1:
-		_ = s.logEntryEventHandler.OnCreate(ctx, evt)
-		return nil
-	case logentryevents.LogEntryUpdateV1:
-		_ = s.logEntryEventHandler.OnUpdate(ctx, evt)
 		return nil
 
 	case commentevent.CommentCreateV1:

@@ -85,8 +85,6 @@ func main() {
 	//testUpdateWithUpsertOrganization()
 	//testHideOrganization()
 	//testShowOrganization()
-	//testCreateLogEntry()
-	//testUpdateLogEntry()
 	//testAddCustomField()
 	//testCreatePhoneNumber()
 	//testAddParentOrganization()
@@ -221,42 +219,6 @@ func testShowOrganization() {
 	result, _ := clients.OrganizationClient.ShowOrganization(context.Background(), &organizationpb.OrganizationIdGrpcRequest{
 		Tenant:         tenant,
 		OrganizationId: organizationId,
-	})
-	print(result)
-}
-
-func testCreateLogEntry() {
-
-	organizationId := "2829263d-b489-4e92-b0ba-b1bca9ff4d04"
-	userId := "development@openline.ai"
-	authorId := "c61f8af2-0e46-4464-a5db-ded8e4fe242f"
-
-	result, _ := clients.LogEntryClient.UpsertLogEntry(context.Background(), &logentrypb.UpsertLogEntryGrpcRequest{
-		Tenant:               tenant,
-		LoggedOrganizationId: utils.StringPtr(organizationId),
-		SourceFields: &commonpb.SourceFields{
-			AppSource: "test_app",
-		},
-		AuthorUserId: utils.StringPtr(authorId),
-		Content:      "I spoke with client",
-		ContentType:  "text/plain",
-		UserId:       userId,
-	})
-	print(result)
-}
-
-func testUpdateLogEntry() {
-
-	userId := "development@openline.ai"
-	logEntryId := "ccffe134-4bcd-4fa0-955f-c79b9e1a985f"
-
-	result, _ := clients.LogEntryClient.UpsertLogEntry(context.Background(), &logentrypb.UpsertLogEntryGrpcRequest{
-		Tenant:      tenant,
-		Id:          logEntryId,
-		Content:     "new content",
-		ContentType: "text/plain2",
-		UserId:      userId,
-		StartedAt:   timestamppb.New(utils.Now()),
 	})
 	print(result)
 }
