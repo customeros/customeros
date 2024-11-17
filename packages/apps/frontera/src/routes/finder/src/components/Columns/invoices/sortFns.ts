@@ -26,7 +26,7 @@ export const getInvoicesSortFn = (columnId: string) =>
       return value ? new Date(value) : null;
     })
     .with(ColumnViewType.InvoicesIssueDate, () => (row: InvoiceStore) => {
-      const value = row.value?.due;
+      const value = row.value?.issued;
 
       return value ? new Date(value) : null;
     })
