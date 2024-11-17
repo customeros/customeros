@@ -7,6 +7,7 @@ package resolver
 import (
 	"context"
 	"fmt"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
@@ -20,11 +21,8 @@ import (
 	commonTracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	grpccommon "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
-	logentrypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/log_entry"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
-	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // CreatedBy is the resolver for the createdBy field.
@@ -89,22 +87,17 @@ func (r *mutationResolver) LogEntryCreateForOrganization(ctx context.Context, or
 		return "", nil
 	}
 
-	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := utils.CallEventsPlatformGRPCWithRetry[*logentrypb.LogEntryIdGrpcResponse](func() (*logentrypb.LogEntryIdGrpcResponse, error) {
-		return r.Clients.LogEntryClient.UpsertLogEntry(ctx, &logentrypb.UpsertLogEntryGrpcRequest{
-			Tenant:      common.GetTenantFromContext(ctx),
-			UserId:      common.GetUserIdFromContext(ctx),
-			Content:     utils.IfNotNilString(input.Content),
-			ContentType: utils.IfNotNilString(input.ContentType),
-			StartedAt:   timestamppb.New(utils.IfNotNilTimeWithDefault(input.StartedAt, utils.Now())),
-			SourceFields: &grpccommon.SourceFields{
-				AppSource: constants.AppSourceCustomerOsApi,
-				Source:    string(neo4jentity.DataSourceOpenline),
-			},
-			LoggedOrganizationId: utils.StringPtr(organizationID),
-			AuthorUserId:         utils.StringPtr(common.GetUserIdFromContext(ctx)),
-		})
-	})
+	logEntryDataFields := data_fields.LogEntryFields{
+		Content:        input.Content,
+		ContentType:    input.ContentType,
+		StartedAt:      input.StartedAt,
+		Source:         utils.StringPtr(string(neo4jentity.DataSourceOpenline)),
+		AppSource:      utils.StringPtr(constants.AppSourceCustomerOsApi),
+		AuthorUserId:   utils.StringPtr(common.GetUserIdFromContext(ctx)),
+		OrganizationId: utils.StringPtr(organizationID),
+	}
+
+	logEntryId, err := r.Services.CommonServices.LogEntryService.Save(ctx, nil, logEntryDataFields)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Error creating log entry")
@@ -112,14 +105,14 @@ func (r *mutationResolver) LogEntryCreateForOrganization(ctx context.Context, or
 	}
 
 	for _, tag := range input.Tags {
-		_, err := r.Services.CommonServices.TagService.AddTag(ctx, nil, tenant, response.Id, commonmodel.LOG_ENTRY, utils.StringOrEmpty(tag.ID), utils.StringOrEmpty(tag.Name), constants.AppSourceCustomerOsApi)
+		_, err := r.Services.CommonServices.TagService.AddTag(ctx, nil, tenant, logEntryId, commonmodel.LOG_ENTRY, utils.StringOrEmpty(tag.ID), utils.StringOrEmpty(tag.Name), constants.AppSourceCustomerOsApi)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			graphql.AddErrorf(ctx, "Error adding tag to log entry")
 			return "", nil
 		}
 	}
-	return response.Id, nil
+	return logEntryId, nil
 }
 
 // LogEntryUpdate is the resolver for the logEntry_Update field.
@@ -131,41 +124,21 @@ func (r *mutationResolver) LogEntryUpdate(ctx context.Context, id string, input 
 	span.LogFields(log.String("request.id", id))
 	tracing.LogObjectAsJson(span, "request.input", input)
 
-	logEntryEntity, err := r.Services.LogEntryService.GetById(ctx, id)
-	if err != nil || logEntryEntity == nil {
-		if err == nil {
-			err = fmt.Errorf("Log entry %s not found", id)
-		}
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Log entry %s not found", id)
-		return "", nil
-	}
-	grpcRequestMessage := logentrypb.UpsertLogEntryGrpcRequest{
-		Id:          id,
-		Tenant:      common.GetTenantFromContext(ctx),
-		UserId:      common.GetUserIdFromContext(ctx),
-		Content:     utils.IfNotNilString(input.Content),
-		ContentType: utils.IfNotNilString(input.ContentType),
-		SourceFields: &grpccommon.SourceFields{
-			SourceOfTruth: string(neo4jentity.DataSourceOpenline),
-			AppSource:     constants.AppSourceCustomerOsApi,
-		},
-	}
-	if input.StartedAt != nil {
-		grpcRequestMessage.StartedAt = timestamppb.New(*input.StartedAt)
+	logEntryDataFields := data_fields.LogEntryFields{
+		Content:     input.Content,
+		ContentType: input.ContentType,
+		StartedAt:   input.StartedAt,
+		Source:      utils.StringPtr(string(neo4jentity.DataSourceOpenline)),
+		AppSource:   utils.StringPtr(constants.AppSourceCustomerOsApi),
 	}
 
-	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := utils.CallEventsPlatformGRPCWithRetry[*logentrypb.LogEntryIdGrpcResponse](func() (*logentrypb.LogEntryIdGrpcResponse, error) {
-		return r.Clients.LogEntryClient.UpsertLogEntry(ctx, &grpcRequestMessage)
-	})
-
+	_, err := r.Services.CommonServices.LogEntryService.Save(ctx, &id, logEntryDataFields)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Error updating log entry")
 		return "", nil
 	}
-	return response.Id, nil
+	return id, nil
 }
 
 // LogEntryResetTags is the resolver for the logEntry_ResetTags field.

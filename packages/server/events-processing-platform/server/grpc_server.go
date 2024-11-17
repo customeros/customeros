@@ -14,7 +14,6 @@ import (
 	issuepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/issue"
 	jobrolepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/job_role"
 	locationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/location"
-	logentrypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/log_entry"
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	phonenumpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/phone_number"
@@ -80,7 +79,6 @@ func RegisterGrpcServices(grpcServer *grpc.Server, services *service.Services) {
 	userpb.RegisterUserGrpcServiceServer(grpcServer, services.UserService)
 	locationpb.RegisterLocationGrpcServiceServer(grpcServer, services.LocationService)
 	jobrolepb.RegisterJobRoleGrpcServiceServer(grpcServer, services.JobRoleService)
-	logentrypb.RegisterLogEntryGrpcServiceServer(grpcServer, services.LogEntryService)
 	issuepb.RegisterIssueGrpcServiceServer(grpcServer, services.IssueService)
 	commentpb.RegisterCommentGrpcServiceServer(grpcServer, services.CommentService)
 	opportunitypb.RegisterOpportunityGrpcServiceServer(grpcServer, services.OpportunityService)
