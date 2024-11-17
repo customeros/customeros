@@ -537,6 +537,7 @@ func (h *organizationEventHandler) mapIndustryToGICS(ctx context.Context, tenant
 func (h *organizationEventHandler) mapIndustryToGICSWithAI(ctx context.Context, tenant, orgId, inputIndustry string) string {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.mapIndustryToGICSWithAI")
 	defer span.Finish()
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("inputIndustry", inputIndustry))
 
 	firstPrompt := fmt.Sprintf(h.cfg.Services.Anthropic.IndustryLookupPrompt1, inputIndustry)
@@ -555,7 +556,7 @@ func (h *organizationEventHandler) mapIndustryToGICSWithAI(ctx context.Context, 
 	}
 	promptStoreLogId1, err := h.services.CommonServices.PostgresRepositories.AiPromptLogRepository.Store(promptLog1)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "failed to store prompt log"))
 		h.log.Errorf("Error storing prompt log: %v", err)
 	} else {
 		span.LogFields(log.String("promptStoreLogId1", promptStoreLogId1))
@@ -563,18 +564,18 @@ func (h *organizationEventHandler) mapIndustryToGICSWithAI(ctx context.Context, 
 
 	firstResult, err := h.aiModel.Inference(ctx, firstPrompt) // ai.InvokeAnthropic(ctx, h.cfg, h.log, firstPrompt)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "failed to invoke AI for first prompt"))
 		h.log.Errorf("Error invoking AI: %v", err)
 		storeErr := h.services.CommonServices.PostgresRepositories.AiPromptLogRepository.UpdateError(promptStoreLogId1, err.Error())
 		if storeErr != nil {
-			tracing.TraceErr(span, storeErr)
+			tracing.TraceErr(span, errors.Wrap(storeErr, "failed to update prompt log with error"))
 			h.log.Errorf("Error updating prompt log with error: %v", storeErr)
 		}
 		return ""
 	} else {
 		storeErr := h.services.CommonServices.PostgresRepositories.AiPromptLogRepository.UpdateResponse(promptStoreLogId1, firstResult)
 		if storeErr != nil {
-			tracing.TraceErr(span, storeErr)
+			tracing.TraceErr(span, errors.Wrap(storeErr, "failed to update prompt log with ai response"))
 			h.log.Errorf("Error updating prompt log with ai response: %v", storeErr)
 		}
 	}
@@ -597,23 +598,23 @@ func (h *organizationEventHandler) mapIndustryToGICSWithAI(ctx context.Context, 
 	}
 	promptStoreLogId2, err := h.services.CommonServices.PostgresRepositories.AiPromptLogRepository.Store(promptLog2)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "failed to store prompt log"))
 		h.log.Errorf("Error storing prompt log with error: %v", err)
 	}
 	secondResult, err := h.aiModel.Inference(ctx, secondPrompt) // ai.InvokeAnthropic(ctx, h.cfg, h.log, secondPrompt)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "failed to invoke AI for second prompt"))
 		h.log.Errorf("Error invoking AI: %v", err)
 		err = h.services.CommonServices.PostgresRepositories.AiPromptLogRepository.UpdateError(promptStoreLogId2, err.Error())
 		if err != nil {
-			tracing.TraceErr(span, err)
+			tracing.TraceErr(span, errors.Wrap(err, "failed to update prompt log with error"))
 			h.log.Errorf("Error updating prompt log with error: %v", err)
 		}
 		return ""
 	} else {
 		err = h.services.CommonServices.PostgresRepositories.AiPromptLogRepository.UpdateResponse(promptStoreLogId2, secondResult)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			tracing.TraceErr(span, errors.Wrap(err, "failed to update prompt log with ai response"))
 			h.log.Errorf("Error updating prompt log with ai response: %v", err)
 		}
 	}
