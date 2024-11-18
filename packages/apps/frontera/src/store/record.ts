@@ -2,10 +2,10 @@ import { toJS, computed, observable } from 'mobx';
 
 import type { Store } from './_store';
 
-export class Record<T extends object = object> {
+export class Entity<T extends object> {
   @observable accessor value: T;
 
-  constructor(public store: Store<Record>, data: T) {
+  constructor(public store: Store<T, Entity<T>>, data: T) {
     this.value = data;
   }
 
@@ -34,8 +34,8 @@ export class Record<T extends object = object> {
   }
 }
 
-export type RecordFactoryClass<R extends Record> = {
-  toRaw?(): R;
-  default?(): R;
-  new (store: Store<R>, data: object): R;
+export type EntityFactoryClass<T extends object, E extends Entity<T>> = {
+  toRaw?(): T;
+  default?(): T;
+  new (store: Store<T, E>, data: T): E;
 };

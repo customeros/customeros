@@ -10,7 +10,7 @@ import { AllOrganizationsView } from './__views__/AllOrganizations.view';
 import { Organization, type OrganizationDatum } from './Organization.dto';
 import { OrganizationsService } from './__service__/Organizations.service';
 
-export class OrganizationsStore extends Store<Organization> {
+export class OrganizationsStore extends Store<OrganizationDatum> {
   private service: OrganizationsService;
 
   constructor(public root: RootStore, public transport: Transport) {

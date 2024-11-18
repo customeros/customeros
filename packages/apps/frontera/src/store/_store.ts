@@ -7,7 +7,7 @@ import { when, action, reaction, observable } from 'mobx';
 
 import type { RootStore } from './root';
 import type { Transport } from './transport';
-import type { Record, RecordFactoryClass } from './record';
+import type { Entity, EntityFactoryClass } from './record';
 
 import { Persister, PersisterInstance } from './persister';
 import {
@@ -17,15 +17,14 @@ import {
   GroupSyncPacket,
 } from './types';
 
-type ValueOf<R extends Record> = R['value'];
-
-type StoreOptions<R extends Record> = {
+type StoreOptions<T extends object> = {
   name: string;
-  factory: RecordFactoryClass<R>;
-  getId: (data: ValueOf<R>) => string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  factory: any;
+  getId: (data: T) => string;
 };
 
-export class Store<R extends Record> {
+export class Store<T extends object, E extends Entity<T> = Entity<T>> {
   @observable accessor size = 0;
   @observable accessor version = 0;
   @observable accessor totalElements = 0;
@@ -34,20 +33,20 @@ export class Store<R extends Record> {
   @observable accessor isBootstrapped = false;
   @observable accessor isBootstrapping = false;
   @observable accessor error: string | null = null;
-  @observable accessor value: Map<string, R> = new Map();
+  @observable accessor value: Map<string, E> = new Map();
   @observable accessor range: [startIndex: number, endIndex: number] = [0, 0];
 
   channel?: Channel;
-  options: StoreOptions<R>;
+  options: StoreOptions<T>;
   persister?: PersisterInstance;
 
-  private snapshots: Map<string, ValueOf<R>> = new Map();
-  @observable private accessor views: Map<string, R[]> = new Map();
+  private snapshots: Map<string, T> = new Map();
+  @observable private accessor views: Map<string, E[]> = new Map();
 
   constructor(
     public root: RootStore,
     public transport: Transport,
-    opts: StoreOptions<R>,
+    opts: StoreOptions<T>,
   ) {
     this.options = opts;
     when(
@@ -111,9 +110,7 @@ export class Store<R extends Record> {
     if (!ids.length) return removedIdsMap;
 
     try {
-      const items = await this.persister?.getItem<Map<string, ValueOf<R>>>(
-        'data',
-      );
+      const items = await this.persister?.getItem<Map<string, T>>('data');
 
       ids.forEach((id) => {
         removedIdsMap.set(id, true);
@@ -138,14 +135,12 @@ export class Store<R extends Record> {
     await this.drop(options?.idsToDrop ?? []);
 
     try {
-      const { factory } = this.options;
-      const persisted = await this.persister?.getItem<Map<string, ValueOf<R>>>(
-        'data',
-      );
+      const factory = this.options.factory as EntityFactoryClass<T, E>;
+      const persisted = await this.persister?.getItem<Map<string, T>>('data');
 
       if (!persisted) return;
 
-      const initialized = new Map<string, R>();
+      const initialized = new Map<string, E>();
 
       persisted.forEach((v, k) => {
         initialized.set(k, new factory(this, v));
@@ -212,7 +207,7 @@ export class Store<R extends Record> {
     match(operation.action)
       .with('APPEND', () => {
         operation.ids.forEach((id) => {
-          const { factory } = this.options;
+          const factory = this.options.factory as EntityFactoryClass<T, E>;
           const record = new factory(this, factory.default!());
 
           set(record, 'id', id);
@@ -260,7 +255,7 @@ export class Store<R extends Record> {
     return arr;
   }
 
-  public toComputedArray(compute: (arr: R[]) => R[]) {
+  public toComputedArray(compute: (arr: E[]) => E[]) {
     const arr = compute(this.toArray());
 
     return arr;
@@ -269,10 +264,10 @@ export class Store<R extends Record> {
   public getById(id: string) {
     const data = this.value.get(id);
 
-    return data as R;
+    return data;
   }
 
-  public snapshot(id: string, current: R) {
+  public snapshot(id: string, current: T) {
     if (this.hasSnapshot(id)) return;
 
     this.snapshots.set(id, current);
@@ -314,9 +309,7 @@ export class Store<R extends Record> {
       if (!record) return;
       const data = record.toRaw();
 
-      const persisted = await this.persister?.getItem<Map<string, ValueOf<R>>>(
-        'data',
-      );
+      const persisted = await this.persister?.getItem<Map<string, T>>('data');
 
       persisted?.set(id, data);
 
@@ -327,14 +320,14 @@ export class Store<R extends Record> {
   }
 
   public persistGroup() {
-    this.persister?.getItem<Map<string, ValueOf<R>>>('data', (err) => {
+    this.persister?.getItem<Map<string, T>>('data', (err) => {
       if (err) {
         console.error('Failed to get persisted data', err);
 
         return;
       }
 
-      const persisted = new Map<string, ValueOf<R>>();
+      const persisted = new Map<string, T>();
 
       this.value.forEach((v, k) => persisted.set(k, v.toRaw()));
 
@@ -371,11 +364,11 @@ export class Store<R extends Record> {
   }
 
   @action
-  public setView = (key: string, filterFn: (records: R[]) => R[]) => {
+  public setView = (key: string, filterFn: (records: E[]) => E[]) => {
     this.views.set(key, filterFn(this.toArray()));
   };
 
-  public findOne(selector: (object: R, idx: number, arr: R[]) => boolean) {
+  public findOne(selector: (object: E, idx: number, arr: E[]) => boolean) {
     const record = this.toArray().find(selector);
 
     if (!record) return null;
@@ -383,7 +376,7 @@ export class Store<R extends Record> {
     return record;
   }
 
-  public findMany(selector: (object: R, idx: number, arr: R[]) => boolean) {
+  public findMany(selector: (object: E, idx: number, arr: E[]) => boolean) {
     return this.toArray().filter(selector);
   }
 }

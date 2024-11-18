@@ -10,7 +10,7 @@ import { getOrganizationFilterFns } from './filterFns';
 
 // TODO: Cache filtered and sorted results for faster subsequent access
 export class AllOrganizationsView {
-  constructor(private store: Store<OrganizationDatum, Organization>) {
+  constructor(private store: Store<OrganizationDatum>) {
     reaction(() => this.store.size, this.update);
     reaction(() => this.store.version, this.update);
     reaction(() => {

@@ -1,7 +1,7 @@
 import type { UserStore } from '@store/Users/User.store';
 
 import { Store } from '@store/_store';
-import { Record } from '@store/record';
+import { Entity } from '@store/record';
 import { action, computed, runInAction } from 'mobx';
 import { countryMap } from '@assets/countries/countriesMap';
 
@@ -17,13 +17,12 @@ import {
   OpportunityRenewalLikelihood,
 } from '@graphql/types';
 
-import type { OrganizationsStore } from './Organizations.store';
 import type { OrganizationQuery } from './__service__/getOrganization.generated';
 
 export type OrganizationDatum = NonNullable<OrganizationQuery['organization']>;
 
-export class Organization extends Record<OrganizationDatum> {
-  constructor(store: OrganizationsStore, data: OrganizationDatum) {
+export class Organization extends Entity<OrganizationDatum> {
+  constructor(store: Store<OrganizationDatum>, data: OrganizationDatum) {
     super(store, data);
   }
 
