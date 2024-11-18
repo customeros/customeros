@@ -7,10 +7,6 @@ import (
 	"strings"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
-	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
@@ -18,6 +14,11 @@ import (
 	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
 
 type mailService struct {
@@ -27,6 +28,27 @@ type mailService struct {
 type MailService interface {
 	SendMail(ctx context.Context, emailMessage *entity.EmailMessage) error
 	ProcessSentEmail(ctx context.Context, tx *neo4j.ManagedTransaction, emailMessage *entity.EmailMessage) (*string, error)
+}
+
+func NewMailService(services *Services) MailService {
+	return &mailService{
+		services: services,
+	}
+}
+
+// Determines if an inbound email should be processed
+// Returns true/false and the reason if false
+// Reasons are autoresponder, bounce, or bulk
+func ProcessInboundEmailCheck(emailHeaders *map[string]interface{}) (bool, string) {
+	if detectAutoresponder(emailHeaders) {
+		return false, classifyAutoresponder(emailHeaders)
+	}
+
+	if detectBulkEmail(emailHeaders) {
+		return false, "bulk"
+	}
+
+	return true, ""
 }
 
 func (s *mailService) SendMail(ctx context.Context, emailMessage *entity.EmailMessage) error {
@@ -49,7 +71,7 @@ func (s *mailService) SendMail(ctx context.Context, emailMessage *entity.EmailMe
 	uniqueInternalIdentifier := utils.GenerateRandomString(64)
 	emailMessage.UniqueInternalIdentifier = &uniqueInternalIdentifier
 
-	//footer := `
+	// footer := `
 	//				<div>
 	//					<div style="font-size: 12px; font-weight: normal; font-family: Barlow, sans-serif; color: rgb(102, 112, 133); line-height: 32px;">
 	//						<img width="16px" src="https://customer-os.imgix.net/website/favicon.png" alt="CustomerOS" style="vertical-align: middle; margin-right: 5px; margin-bottom: 2px;" />
@@ -57,11 +79,11 @@ func (s *mailService) SendMail(ctx context.Context, emailMessage *entity.EmailMe
 	//					</div>
 	//				</div>
 	//				`
-	//emailMessage.Content += footer
+	// emailMessage.Content += footer
 
 	// Append an image tag pointing to the spy endpoint to the request content
-	//imgTag := "<img id=\"customer-os-email-track-open\" height=1 width=1 src=\"" + s.services.GlobalConfig.InternalServices.UserAdminApiPublicPath + "/mail/" + uniqueInternalIdentifier + "/track\" />"
-	//emailMessage.Content += imgTag
+	// imgTag := "<img id=\"customer-os-email-track-open\" height=1 width=1 src=\"" + s.services.GlobalConfig.InternalServices.UserAdminApiPublicPath + "/mail/" + uniqueInternalIdentifier + "/track\" />"
+	// emailMessage.Content += imgTag
 
 	subject := ""
 	inReplyTo := emailMessage.ProviderInReplyTo
@@ -169,7 +191,6 @@ func (s *mailService) ProcessSentEmail(ctx context.Context, tx *neo4j.ManagedTra
 	id, err := utils.ExecuteWriteInTransaction(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		return s.saveEmailInTx(ctx, tx, emailMessage)
 	})
-
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -239,7 +260,6 @@ func (s *mailService) saveEmailInTx(ctx context.Context, tx neo4j.ManagedTransac
 		sentTo = append(sentTo, InteractionEventParticipantData{
 			Email: &to,
 		})
-
 	}
 	for _, cc := range emailMessage.Cc {
 		sentCc = append(sentCc, InteractionEventParticipantData{
@@ -267,9 +287,9 @@ func (s *mailService) saveEmailInTx(ctx context.Context, tx neo4j.ManagedTransac
 			Identifier:                   emailMessage.ProviderMessageId,
 			CustomerOSInternalIdentifier: *emailMessage.UniqueInternalIdentifier,
 			Hide:                         false,
-			Source:                       "openline", //TODO
-			SourceOfTruth:                "openline", //TODO
-			AppSource:                    "TODO",     //TODO
+			Source:                       "openline", // TODO
+			SourceOfTruth:                "openline", // TODO
+			AppSource:                    "TODO",     // TODO
 		},
 		SentBy:            sentBy,
 		SentTo:            sentTo,
@@ -297,12 +317,6 @@ func (s *mailService) saveEmailInTx(ctx context.Context, tx neo4j.ManagedTransac
 	}
 
 	return interactionEventId, nil
-}
-
-func NewMailService(services *Services) MailService {
-	return &mailService{
-		services: services,
-	}
 }
 
 func detectAutoresponder(emailHeaders *map[string]interface{}) bool {
@@ -385,6 +399,41 @@ func detectBulkEmail(emailHeaders *map[string]interface{}) bool {
 	}
 
 	return false
+}
+
+func classifyAutoresponder(emailHeaders *map[string]interface{}) string {
+	subject, exists := getEmailHeaderValue(emailHeaders, "Subject")
+	if exists {
+		subject = strings.ToLower(subject)
+		if strings.Contains(subject, "delivery status notification") ||
+			strings.Contains(subject, "undeliver") ||
+			strings.Contains(subject, "delivery failure") ||
+			strings.Contains(subject, "failure notice") ||
+			strings.Contains(subject, "returned") {
+			return "bounce"
+		}
+	}
+
+	contentType, exists := getEmailHeaderValue(emailHeaders, "Content-Type")
+	if exists {
+		if strings.Contains(strings.ToLower(contentType), "message/delivery-status") {
+			return "bounce"
+		}
+	}
+
+	contentDesc, exists := getEmailHeaderValue(emailHeaders, "Content-Description")
+	if exists {
+		if strings.Contains(strings.ToLower(contentDesc), "delivery report") {
+			return "bounce"
+		}
+	}
+
+	_, failedRec := getEmailHeaderValue(emailHeaders, "X-Failed-Recipients")
+	if failedRec {
+		return "bounce"
+	}
+
+	return "autoresponder"
 }
 
 func getEmailHeaderValue(emailHeaders *map[string]interface{}, key string) (value string, exists bool) {
