@@ -1,6 +1,10 @@
 import { Page, expect } from '@playwright/test';
 
-import { assertWithRetry, clickLocatorsThatAreVisible } from '../../helper';
+import {
+  assertWithRetry,
+  clickLocatorThatIsVisible,
+  clickLocatorsThatAreVisible,
+} from '../../helper';
 
 export class ContactsPage {
   private page: Page;
@@ -14,6 +18,8 @@ export class ContactsPage {
   private orgActionsConfirmArchive =
     'button[data-test="org-actions-confirm-archive"]';
   private finderTableContacts = 'div[data-test="finder-table-CONTACTS"]';
+  private addContactToFlowConfirmation =
+    'button[data-test="add-contact-to-flow-confirmation"]';
   private contactNameInContactsTable =
     'p[data-test="contact-name-in-contacts-table"]';
   private flowName = 'div[data-test="flow-name"]';
@@ -100,6 +106,10 @@ export class ContactsPage {
 
     await contactFlowInContactsTable.pressSequentially(flowName);
     await contactFlowInContactsTable.press('Enter');
+    await clickLocatorThatIsVisible(
+      this.page,
+      this.addContactToFlowConfirmation,
+    );
 
     await expect(
       contactFlowInContactsTable,

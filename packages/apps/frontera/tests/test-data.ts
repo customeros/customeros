@@ -37,7 +37,7 @@ export const organizations = {
 
 export const flow = {
   create: {
-    status: FlowStatuses.NotStarted,
+    status: FlowStatuses.Stopped,
     onHold: '0',
     ready: '0',
     scheduled: '0',
@@ -46,9 +46,9 @@ export const flow = {
     goalAchieved: '0',
   },
   update: {
-    status: FlowStatuses.NotStarted,
-    onHold: '0',
-    ready: '1',
+    status: FlowStatuses.Stopped,
+    onHold: '1',
+    ready: '0',
     scheduled: '0',
     inProgress: '0',
     completed: '0',

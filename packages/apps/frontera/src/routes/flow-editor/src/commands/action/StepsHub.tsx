@@ -344,7 +344,10 @@ export const StepsHub = observer(() => {
           updateSelectedNode(FlowActionType.LINKEDIN_CONNECTION_REQUEST)
         }
       >
-        <span className='text-gray-700' data-test='flow-send-linkedin-message'>
+        <span
+          className='text-gray-700'
+          data-test='flow-send-linkedin-connection-request'
+        >
           Send connection request
         </span>
       </FlowCommandItem>

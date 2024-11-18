@@ -105,64 +105,69 @@ export class FlowsPage {
       status: FlowStatuses;
     },
   ) {
-    const flowNameInAllOrgsTable = this.page
-      .locator(
-        `${this.finderTableFlows} ${this.flowNameInFlowsTable}:has-text("${expectedFlowName}")`,
-      )
-      .locator('..')
-      .locator('..')
-      .locator('..')
-      .locator('..')
-      .locator('..');
+    for (let i = 0; i < 3; i++) {
+      try {
+        const flowNameInAllOrgsTable = this.page
+          .locator(
+            `${this.finderTableFlows} ${this.flowNameInFlowsTable}:has-text("${expectedFlowName}")`,
+          )
+          .locator('..')
+          .locator('..')
+          .locator('..')
+          .locator('..')
+          .locator('..');
 
-    await this.page.waitForSelector('[data-index="0"]', { timeout: 30000 });
+        await this.page.waitForSelector('[data-index="0"]', { timeout: 30000 });
 
-    const actualFlow = await flowNameInAllOrgsTable
-      .locator(this.flowNameInFlowsTable)
-      .innerText();
+        const actualFlow = await flowNameInAllOrgsTable
+          .locator(this.flowNameInFlowsTable)
+          .innerText();
 
-    const actualFlowStatusInAllOrgsTable = await flowNameInAllOrgsTable
-      .locator(this.flowStatusTextInFlowsTable)
-      .innerText();
+        const actualFlowStatusInAllOrgsTable = await flowNameInAllOrgsTable
+          .locator(this.flowStatusTextInFlowsTable)
+          .innerText();
 
-    const actualFlowOnHoldInFlowsTable = await flowNameInAllOrgsTable
-      .locator(this.flowOnHoldInFlowsTable)
-      .innerText();
+        const actualFlowOnHoldInFlowsTable = await flowNameInAllOrgsTable
+          .locator(this.flowOnHoldInFlowsTable)
+          .innerText();
 
-    const actualFlowReadyInFlowsTable = await flowNameInAllOrgsTable
-      .locator(this.flowReadyInFlowsTable)
-      .innerText();
+        const actualFlowReadyInFlowsTable = await flowNameInAllOrgsTable
+          .locator(this.flowReadyInFlowsTable)
+          .innerText();
 
-    const actualFlowScheduledInFlowsTable = await flowNameInAllOrgsTable
-      .locator(this.flowScheduledInFlowsTable)
-      .innerText();
+        const actualFlowScheduledInFlowsTable = await flowNameInAllOrgsTable
+          .locator(this.flowScheduledInFlowsTable)
+          .innerText();
 
-    const actualFlowInProgressInFlowsTable = await flowNameInAllOrgsTable
-      .locator(this.flowInProgressInFlowsTable)
-      .innerText();
+        const actualFlowInProgressInFlowsTable = await flowNameInAllOrgsTable
+          .locator(this.flowInProgressInFlowsTable)
+          .innerText();
 
-    const actualFlowCompletedInFlowsTable = await flowNameInAllOrgsTable
-      .locator(this.flowCompletedInFlowsTable)
-      .innerText();
+        const actualFlowCompletedInFlowsTable = await flowNameInAllOrgsTable
+          .locator(this.flowCompletedInFlowsTable)
+          .innerText();
 
-    const actualFlowGoalAchievedInFlowsTable = await flowNameInAllOrgsTable
-      .locator(this.flowGoalAchievedInFlowsTable)
-      .innerText();
+        const actualFlowGoalAchievedInFlowsTable = await flowNameInAllOrgsTable
+          .locator(this.flowGoalAchievedInFlowsTable)
+          .innerText();
 
-    await Promise.all([
-      expect.soft(actualFlow).toBe(expectedFlowName),
-      expect.soft(actualFlowStatusInAllOrgsTable).toBe(expectedFlow.status),
-      expect.soft(actualFlowOnHoldInFlowsTable).toBe(expectedFlow.onHold),
-      expect.soft(actualFlowReadyInFlowsTable).toBe(expectedFlow.ready),
-      expect.soft(actualFlowScheduledInFlowsTable).toBe(expectedFlow.scheduled),
-      expect
-        .soft(actualFlowInProgressInFlowsTable)
-        .toBe(expectedFlow.inProgress),
-      expect.soft(actualFlowCompletedInFlowsTable).toBe(expectedFlow.completed),
-      expect
-        .soft(actualFlowGoalAchievedInFlowsTable)
-        .toBe(expectedFlow.goalAchieved),
-    ]);
+        expect(actualFlow).toBe(expectedFlowName);
+        expect(actualFlowStatusInAllOrgsTable).toBe(expectedFlow.status);
+        expect(actualFlowOnHoldInFlowsTable).toBe(expectedFlow.onHold);
+        expect(actualFlowReadyInFlowsTable).toBe(expectedFlow.ready);
+        expect(actualFlowScheduledInFlowsTable).toBe(expectedFlow.scheduled);
+        expect(actualFlowInProgressInFlowsTable).toBe(expectedFlow.inProgress);
+        expect(actualFlowCompletedInFlowsTable).toBe(expectedFlow.completed);
+        expect(actualFlowGoalAchievedInFlowsTable).toBe(
+          expectedFlow.goalAchieved,
+        );
+        break;
+      } catch (e) {
+        if (i === 2) throw e;
+        await this.page.reload();
+        await this.page.waitForTimeout(10000);
+      }
+    }
   }
 
   async waitForPageLoad() {

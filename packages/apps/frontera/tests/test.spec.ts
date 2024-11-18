@@ -242,7 +242,7 @@ test('Assign contact to flow', async ({ page }, testInfo) => {
   await contactsPage.waitForPageLoad();
   await contactsPage.updateContactFlow(contact, flowName);
   await flowsPage.goToFlows();
-  // await flowsPage.checkNewFlowEntry(flowName, flow.update);
+  await flowsPage.checkNewFlowEntry(flowName, flow.update);
 });
 
 test('Create opportunities', async ({ page }, testInfo) => {

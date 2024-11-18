@@ -19,7 +19,9 @@ export class FlowPage {
   private saveFlow = 'button[data-test="save-flow"]';
   private startFlow = 'button[data-test="start-flow"]';
   private flowToggleSettings = 'button[data-test="flow-toggle-settings"]';
-  private flowTriggerBlock = 'span[data-test="flow-trigger-block"]';
+  private flowTriggerBlock = 'div[data-test="flow-trigger-block"]';
+  private flowTriggerBlockOptions =
+    'button[data-test="flow-trigger-block-options"]';
   private triggersHubInput = 'input[data-test="TriggersHub-input"]';
   private flowTriggerRecordAddedManually =
     'div[data-test="flow-trigger-record-added-manually"]';
@@ -36,6 +38,8 @@ export class FlowPage {
   private flowActionWait = 'div[data-test="flow-action-wait"]';
   private flowSendLinkedinMessage =
     'span[data-test="flow-send-linkedin-message"]';
+  private flowSendLinkedinConnectionRequest =
+    'span[data-test="flow-send-linkedin-connection-request"]';
   private flowCreateRecord = 'span[data-test="flow-create-record"]';
   private flowUpdateRecord = 'span[data-test="flow-update-record"]';
   private flowEnrichRecord = 'span[data-test="flow-enrich-record"]';
@@ -63,7 +67,7 @@ export class FlowPage {
       expect.soft(this.page.locator(this.flowTriggerBlock)).toBeEnabled(),
       expect
         .soft(this.page.locator(this.flowTriggerBlock))
-        .toHaveText('What should trigger this flow?'),
+        .toHaveText('Flow triggers when'),
       expect.soft(this.page.locator(this.flowAddStepOrTrigger)).toBeEnabled(),
       expect.soft(this.page.locator(this.flowEndFlow)).toBeEnabled(),
       expect.soft(this.page.locator(this.flowEndFlow)).toHaveText('End Flow'),
@@ -72,26 +76,27 @@ export class FlowPage {
       expect.soft(this.page.locator(this.flowFitToView)).toBeEnabled(),
       expect.soft(this.page.locator(this.flowTidyUp)).toBeEnabled(),
     ]);
-    await clickLocatorThatIsVisible(this.page, this.flowTriggerBlock);
+    await clickLocatorThatIsVisible(this.page, this.flowTriggerBlockOptions);
 
     await Promise.all([
-      expect(this.page.locator(this.triggersHubInput)).toHaveAttribute(
-        'placeholder',
-        'Search a trigger',
-      ),
-      expect(this.page.locator(this.flowTriggerRecordAddedManually)).toHaveText(
-        'Record added manually...',
-      ),
-      expect(this.page.locator(this.flowTriggerRecordCreated)).toHaveText(
-        'Record created',
-      ),
-      expect(this.page.locator(this.flowTriggerRecordUpdated)).toHaveText(
-        'Record updated',
-      ),
-      expect(
-        this.page.locator(this.flowTriggerRecordMatchesCondition),
-      ).toHaveText('Record matches condition'),
-      expect(this.page.locator(this.flowTriggerWebhook)).toHaveText('Webhook'),
+      expect
+        .soft(this.page.locator(this.triggersHubInput))
+        .toHaveAttribute('placeholder', 'Search a trigger'),
+      expect
+        .soft(this.page.locator(this.flowTriggerRecordAddedManually))
+        .toHaveText('Record is added to this flow'),
+      expect
+        .soft(this.page.locator(this.flowTriggerRecordCreated))
+        .toHaveText('Record is created'),
+      expect
+        .soft(this.page.locator(this.flowTriggerRecordUpdated))
+        .toHaveText('Record is updated'),
+      expect
+        .soft(this.page.locator(this.flowTriggerRecordMatchesCondition))
+        .toHaveText('Record matches condition'),
+      expect
+        .soft(this.page.locator(this.flowTriggerWebhook))
+        .toHaveText('Webhook is called'),
     ]);
 
     await this.page.keyboard.press('Escape');
@@ -109,6 +114,9 @@ export class FlowPage {
       expect(this.page.locator(this.flowSendLinkedinMessage)).toHaveText(
         'Send LinkedIn message',
       ),
+      expect(
+        this.page.locator(this.flowSendLinkedinConnectionRequest),
+      ).toHaveText('Send connection request'),
       expect(this.page.locator(this.flowCreateRecord)).toHaveText(
         'Create record',
       ),
@@ -128,7 +136,9 @@ export class FlowPage {
 
     await clickLocatorThatIsVisible(this.page, this.flowTidyUp);
     await Promise.all([
-      await expect(this.page.locator(this.saveFlow)).toHaveText('Save'),
+      await expect(this.page.locator(this.saveFlow)).toHaveText(
+        'Publish changes',
+      ),
       await expect(this.page.locator(this.saveFlow)).toBeEnabled(),
     ]);
 

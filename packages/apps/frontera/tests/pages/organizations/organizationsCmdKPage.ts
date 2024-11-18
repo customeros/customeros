@@ -157,8 +157,8 @@ export class OrganizationsCmdKPage {
     const organizationHubGrText = await organizationHubGr.textContent();
     const navigationItemTextSeven = await navigationItems[6].textContent();
 
-    const organizationHubGq = this.page.locator(this.organizationHubGf);
-    const organizationHubGqText = await organizationHubGq.textContent();
+    const organizationHubGf = this.page.locator(this.organizationHubGf);
+    const organizationHubGfText = await organizationHubGf.textContent();
     const navigationItemTextEight = await navigationItems[7].textContent();
 
     const organizationHubGs = this.page.locator(this.organizationHubGs);
@@ -177,7 +177,7 @@ export class OrganizationsCmdKPage {
       expect
         .soft(organizationHubAddNewOrgsText.trim())
         .toBe('Add new organizations...'),
-      expect.soft(navigationItems).toHaveLength(10),
+      expect.soft(navigationItems).toHaveLength(11),
       expect
         .soft(organizationHubGtText.trim())
         .toBe(navigationItemTextOne.trim()),
@@ -200,7 +200,7 @@ export class OrganizationsCmdKPage {
         .soft(organizationHubGrText.trim())
         .toBe(navigationItemTextSeven.trim()),
       expect
-        .soft(organizationHubGqText.trim())
+        .soft(organizationHubGfText.trim())
         .toBe(navigationItemTextEight.trim()),
       expect
         .soft(organizationHubGsText.trim())

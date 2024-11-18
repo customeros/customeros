@@ -58,8 +58,10 @@ export class OrganizationAboutPage {
 
     const input = this.page.locator(this.orgAboutWww);
 
+    await this.page.waitForTimeout(1000);
     await input.press('Meta+A');
     await input.press('Backspace');
+    await this.page.waitForTimeout(1000);
     await input.pressSequentially(website, { delay: 200 });
     await this.page.keyboard.press('Tab');
 
