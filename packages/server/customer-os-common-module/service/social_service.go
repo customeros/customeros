@@ -156,7 +156,10 @@ func (s *socialService) AddSocialToEntity(ctx context.Context, linkWith LinkWith
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialService.AddSocialToEntity")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("linkWith.id", linkWith.Id), log.String("linkWith.type", string(linkWith.Type)))
+	span.LogFields(
+		log.String("linkWith.id", linkWith.Id),
+		log.String("linkWith.type", string(linkWith.Type)),
+		log.String("socialEntity.url", socialEntity.Url))
 
 	// validate tenant
 	err := common.ValidateTenant(ctx)
