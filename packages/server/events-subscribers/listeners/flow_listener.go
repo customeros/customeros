@@ -148,7 +148,7 @@ func Handle_FlowParticipantSchedule(ctx context.Context, services *service.Servi
 		return err
 	}
 
-	flow, err := services.FlowService.FlowGetByParticipantId(ctx, flowParticipant.Id)
+	flow, err := services.FlowService.FlowGetByParticipantId(ctx, nil, flowParticipant.Id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err

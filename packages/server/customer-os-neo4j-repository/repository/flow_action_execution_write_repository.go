@@ -15,7 +15,7 @@ import (
 
 type FlowActionExecutionWriteRepository interface {
 	Merge(ctx context.Context, tx *neo4j.ManagedTransaction, entity *entity.FlowActionExecutionEntity) (*dbtype.Node, error)
-	Delete(ctx context.Context, id string) error
+	Delete(ctx context.Context, tx *neo4j.ManagedTransaction, id string) error
 	DeleteScheduledForFlow(ctx context.Context, flowId string) error
 }
 
@@ -105,8 +105,8 @@ func (r *flowActionExecutionWriteRepositoryImpl) Merge(ctx context.Context, tx *
 	return queryResult.(*neo4j.Node), nil
 }
 
-func (r *flowActionExecutionWriteRepositoryImpl) Delete(ctx context.Context, id string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CommonWriteRepository.Delete")
+func (r *flowActionExecutionWriteRepositoryImpl) Delete(ctx context.Context, tx *neo4j.ManagedTransaction, id string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionExecutionWriteRepository.Delete")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
@@ -114,7 +114,7 @@ func (r *flowActionExecutionWriteRepositoryImpl) Delete(ctx context.Context, id 
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	cypher := fmt.Sprintf(`MATCH (t:Tenant {name: $tenant})<-[r:BELONGS_TO_TENANT]-(fc:FlowParticipant_%s {id:$id}) delete r, fc`, tenant)
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name: $tenant})<-[r:BELONGS_TO_TENANT]-(fae:FlowActionExecution_%s {id:$id}) detach delete fae`, tenant)
 
 	params := map[string]any{
 		"tenant": tenant,
@@ -124,10 +124,7 @@ func (r *flowActionExecutionWriteRepositoryImpl) Delete(ctx context.Context, id 
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, cypher, params)
 		if err != nil {
 			return nil, err
@@ -143,7 +140,7 @@ func (r *flowActionExecutionWriteRepositoryImpl) Delete(ctx context.Context, id 
 }
 
 func (r *flowActionExecutionWriteRepositoryImpl) DeleteScheduledForFlow(ctx context.Context, flowId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CommonWriteRepository.DeleteScheduledForFlow")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionExecutionWriteRepository.DeleteScheduledForFlow")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 

@@ -236,7 +236,7 @@ func (s *flowExecutionService) ScheduleFlow(ctx context.Context, txWithPostCommi
 
 	now := utils.Now()
 
-	flow, err := s.services.FlowService.FlowGetByParticipantId(ctx, flowParticipant.Id)
+	flow, err := s.services.FlowService.FlowGetByParticipantId(ctx, txWithPostCommit.Tx, flowParticipant.Id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
