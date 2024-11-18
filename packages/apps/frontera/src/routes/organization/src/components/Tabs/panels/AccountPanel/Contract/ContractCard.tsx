@@ -1,6 +1,7 @@
 import { useMemo, useState, useEffect } from 'react';
 
 import { observer } from 'mobx-react-lite';
+import { ContractStore } from '@store/Contracts/Contract.store.ts';
 
 import { Input } from '@ui/form/Input';
 import { useStore } from '@shared/hooks/useStore';
@@ -28,7 +29,9 @@ interface ContractCardProps {
 export const ContractCard = observer(
   ({ organizationName, values }: ContractCardProps) => {
     const store = useStore();
-    const contractStore = store.contracts.value.get(values.metadata.id);
+    const contractStore = store.contracts.value.get(
+      values.metadata.id,
+    ) as ContractStore;
 
     const [isExpanded, setIsExpanded] = useState(
       !contractStore?.value?.contractSigned,
@@ -88,12 +91,20 @@ export const ContractCard = observer(
               value={contract?.contractName}
               placeholder='Add contract name'
               onFocus={(e) => e.target.select()}
+              onBlur={(e) => {
+                contractStore?.updateContractName(e.target.value);
+              }}
               className='font-semibold hover:border-none focus:border-none max-h-6 min-h-0 w-full overflow-hidden overflow-ellipsis border-0'
               onChange={(e) =>
-                contractStore?.update((prev) => ({
-                  ...prev,
-                  contractName: e.target.value,
-                }))
+                contractStore?.update(
+                  (prev) => ({
+                    ...prev,
+                    contractName: e.target.value,
+                  }),
+                  {
+                    mutate: false,
+                  },
+                )
               }
             />
 
