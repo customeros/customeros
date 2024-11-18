@@ -10,23 +10,6 @@ import { useStore } from '@shared/hooks/useStore';
 import { Command, CommandCancelButton } from '@ui/overlay/CommandMenu';
 import { OrganizationStage, OrganizationRelationship } from '@graphql/types';
 
-function isValidURL(url: string) {
-  const urlPattern =
-    /^(https?:\/\/)?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,6}(\/[a-zA-Z0-9#]+)*\/?$/;
-
-  if (urlPattern.test(url)) {
-    try {
-      const parsedURL = new URL(url, 'http://example.com');
-
-      return parsedURL.hostname.length > 0;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  return false;
-}
-
 export const AddNewOrganization = observer(() => {
   const store = useStore();
   const [allowSubmit, setAllowSubmit] = useState(false);
@@ -59,7 +42,7 @@ export const AddNewOrganization = observer(() => {
 
     setValidation(false);
 
-    if (website && !isValidURL(website)) {
+    if (website && !URL.canParse(website)) {
       setValidation(true);
       setAllowSubmit(true);
 
