@@ -167,17 +167,24 @@ export class OrganizationPeoplePage {
     );
 
     await page.keyboard.press('Enter');
-    await clickLocatorsThatAreVisible(page, this.orgPeopleContactPersonas);
+    await clickLocatorsThatAreVisible(
+      page,
+      this.orgPeopleContactClose,
+      this.orgPeopleContactTitle,
+    );
+
+    const contactLinkedInProfile = 'www.linkedin.com/in/' + randomUUID();
+
     page = await writeTextInLocator(
       this.page,
       this.orgPeopleContactSocialLink,
-      'www.linkedin.com/in/test',
+      contactLinkedInProfile,
     );
 
     const requestPromise = createRequestPromise(
       this.page,
       'url',
-      'www.linkedin.com/in/test',
+      contactLinkedInProfile,
     );
 
     const responsePromise = createResponsePromise(

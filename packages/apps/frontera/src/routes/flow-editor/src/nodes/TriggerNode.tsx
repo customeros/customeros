@@ -35,7 +35,10 @@ export const TriggerNode = (
       <div
         className={`h-[83px] w-[300px] bg-white border border-grayModern-300 rounded-lg group relative cursor-pointer flex flex-col items-center`}
       >
-        <div className='px-4 bg-gray-25 text-xs h-full flex items-center w-full rounded-t-lg justify-center border-b border-dashed border-gray-300 text-gray-500'>
+        <div
+          data-test={'flow-trigger-block'}
+          className='px-4 bg-gray-25 text-xs h-full flex items-center w-full rounded-t-lg justify-center border-b border-dashed border-gray-300 text-gray-500'
+        >
           Flow triggers when
         </div>
 
@@ -61,7 +64,6 @@ export const TriggerNode = (
                 role={'button'}
                 onClick={handleOpen}
                 className='text-gray-400'
-                data-test={'flow-trigger-block'}
               >
                 Choose a trigger…
               </span>
@@ -75,6 +77,7 @@ export const TriggerNode = (
               aria-label='Edit'
               onClick={handleOpen}
               icon={<ChevronDown />}
+              dataTest={'flow-trigger-block-options'}
               className='ml-2 opacity-0 group-hover:opacity-100 pointer-events-all'
             />
           )}
