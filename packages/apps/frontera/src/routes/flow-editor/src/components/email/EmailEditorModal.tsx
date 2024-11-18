@@ -91,6 +91,7 @@ export const EmailEditorModal = observer(
                   usePlainText
                   ref={inputRef}
                   placeholder='Subject'
+                  variableOptions={variables}
                   namespace='flow-email-editor-subject'
                   onChange={(html) => setSubject(extractPlainText(html))}
                   defaultHtmlValue={convertPlainTextToHtml(subject ?? '')}
