@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
+
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
@@ -300,5 +302,116 @@ func (s *mailService) saveEmailInTx(ctx context.Context, tx neo4j.ManagedTransac
 func NewMailService(services *Services) MailService {
 	return &mailService{
 		services: services,
+	}
+}
+
+func detectAutoresponder(emailHeaders *map[string]interface{}) bool {
+	// Return-Path checks
+	returnPath, exists := getEmailHeaderValue(emailHeaders, "Return-Path")
+	if exists {
+		stripBrackets(&returnPath)
+		if returnPath == "" || strings.EqualFold(returnPath, "mailer-daemon") {
+			return true
+		}
+	}
+
+	// From checks
+	from, exists := getEmailHeaderValue(emailHeaders, "From")
+	if exists {
+		parseEmailFromBrackets(&from)
+		if strings.Contains(from, "mailer-daemon") ||
+			strings.Contains(from, "postmaster") ||
+			strings.Contains(from, "auto@") {
+			return true
+		}
+	}
+
+	autoreply, exists := getEmailHeaderValue(emailHeaders, "X-Autoreply")
+	if exists && strings.ToLower(autoreply) == "yes" {
+		return true
+	}
+
+	autoresponse, exists := getEmailHeaderValue(emailHeaders, "X-Auto-Response-Suppress")
+	if exists && strings.EqualFold(autoresponse, "All") {
+		return true
+	}
+
+	_, autoSubmit := getEmailHeaderValue(emailHeaders, "Auto-Submitted")
+	if autoSubmit {
+		return true
+	}
+
+	_, xloop := getEmailHeaderValue(emailHeaders, "X-Loop")
+	if xloop {
+		return true
+	}
+
+	precedence, exists := getEmailHeaderValue(emailHeaders, "Precedence")
+	if exists && strings.EqualFold(precedence, "auto_reply") {
+		return true
+	}
+
+	return false
+}
+
+func detectBulkEmail(emailHeaders *map[string]interface{}) bool {
+	// Check if From == ReturnPath
+	from, exists := getEmailHeaderValue(emailHeaders, "From")
+	if !exists {
+		return false
+	}
+
+	returnPath, exists := getEmailHeaderValue(emailHeaders, "Return-Path")
+	if !exists {
+		return false
+	}
+
+	stripBrackets(&returnPath)
+	parseEmailFromBrackets(&from)
+
+	if !strings.EqualFold(from, returnPath) {
+		return true
+	}
+
+	// Other checks
+	precedence, exists := getEmailHeaderValue(emailHeaders, "Precedence")
+	if exists && strings.EqualFold(precedence, "bulk") {
+		return true
+	}
+
+	_, unsubscribe := getEmailHeaderValue(emailHeaders, "List-Unsubscribe")
+	if unsubscribe {
+		return true
+	}
+
+	return false
+}
+
+func getEmailHeaderValue(emailHeaders *map[string]interface{}, key string) (value string, exists bool) {
+	for header, value := range *emailHeaders {
+		if strings.EqualFold(header, key) {
+			if value == nil {
+				return "", true
+			}
+			val, ok := value.(string)
+			if ok {
+				return val, true
+			}
+		}
+	}
+	return "", false
+}
+
+func stripBrackets(s *string) {
+	*s = strings.TrimPrefix(*s, "<")
+	*s = strings.TrimSuffix(*s, ">")
+}
+
+func parseEmailFromBrackets(s *string) {
+	strings.ToLower(*s)
+	if i := strings.LastIndex(*s, "<"); i >= 0 {
+		if j := strings.LastIndex(*s, ">"); j > i {
+			*s = (*s)[i+1 : j]
+		}
 	}
 }
