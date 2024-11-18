@@ -7,23 +7,24 @@ import {
   OpportunityRenewalLikelihood,
 } from '@graphql/types';
 
-import type { Organization } from '../Organization';
+import type { Organization } from '../Organization.dto';
 
 export const getOrganizationSortFn = (columnId: string) =>
   match(columnId)
     .with(
       ColumnViewType.OrganizationsName,
-      () => (row: Organization) => row.name?.trim().toLocaleLowerCase() || null,
+      () => (row: Organization) =>
+        row.value.name?.trim().toLocaleLowerCase() || null,
     )
     .with(
       ColumnViewType.OrganizationsRelationship,
       () => (row: Organization) =>
-        row?.relationship === OrganizationRelationship.Customer,
+        row?.value.relationship === OrganizationRelationship.Customer,
     )
     .with(
       ColumnViewType.OrganizationsOnboardingStatus,
       () => (row: Organization) =>
-        match(row?.accountDetails?.onboarding?.status)
+        match(row?.value.accountDetails?.onboarding?.status)
           .with(OnboardingStatus.NotApplicable, () => null)
           .with(OnboardingStatus.NotStarted, () => 1)
           .with(OnboardingStatus.OnTrack, () => 2)
@@ -36,7 +37,7 @@ export const getOrganizationSortFn = (columnId: string) =>
     .with(
       ColumnViewType.OrganizationsRenewalLikelihood,
       () => (row: Organization) =>
-        match(row?.accountDetails?.renewalSummary?.renewalLikelihood)
+        match(row?.value.accountDetails?.renewalSummary?.renewalLikelihood)
           .with(OpportunityRenewalLikelihood.HighRenewal, () => 3)
           .with(OpportunityRenewalLikelihood.MediumRenewal, () => 2)
           .with(OpportunityRenewalLikelihood.LowRenewal, () => 1)
@@ -46,7 +47,8 @@ export const getOrganizationSortFn = (columnId: string) =>
     .with(
       ColumnViewType.OrganizationsRenewalDate,
       () => (row: Organization) => {
-        const value = row?.accountDetails?.renewalSummary?.nextRenewalDate;
+        const value =
+          row?.value.accountDetails?.renewalSummary?.nextRenewalDate;
 
         return value ? new Date(value) : null;
       },
@@ -54,12 +56,12 @@ export const getOrganizationSortFn = (columnId: string) =>
     .with(
       ColumnViewType.OrganizationsForecastArr,
       () => (row: Organization) =>
-        row?.accountDetails?.renewalSummary?.arrForecast,
+        row?.value.accountDetails?.renewalSummary?.arrForecast,
     )
     .with(ColumnViewType.OrganizationsOwner, () => (row: Organization) => {
       const name = row?.owner?.name ?? '';
-      const firstName = row?.owner?.firstName ?? '';
-      const lastName = row?.owner?.lastName ?? '';
+      const firstName = row?.owner?.value.firstName ?? '';
+      const lastName = row?.owner?.value.lastName ?? '';
 
       const fullName = (name ?? `${firstName} ${lastName}`).trim();
 
@@ -67,29 +69,31 @@ export const getOrganizationSortFn = (columnId: string) =>
     })
     .with(
       ColumnViewType.OrganizationsLeadSource,
-      () => (row: Organization) => row?.leadSource,
+      () => (row: Organization) => row?.value.leadSource,
     )
     .with(
       ColumnViewType.OrganizationsCreatedDate,
       () => (row: Organization) =>
-        row?.metadata?.created ? new Date(row?.metadata?.created) : null,
+        row?.value.metadata?.created
+          ? new Date(row?.value.metadata?.created)
+          : null,
     )
     .with(
       ColumnViewType.OrganizationsYearFounded,
-      () => (row: Organization) => row?.yearFounded,
+      () => (row: Organization) => row?.value.yearFounded,
     )
     .with(
       ColumnViewType.OrganizationsEmployeeCount,
-      () => (row: Organization) => row?.employees,
+      () => (row: Organization) => row?.value.employees,
     )
     .with(
       ColumnViewType.OrganizationsSocials,
-      () => (row: Organization) => row?.socialMedia?.[0]?.url,
+      () => (row: Organization) => row?.value.socialMedia?.[0]?.url,
     )
     .with(
       ColumnViewType.OrganizationsLastTouchpoint,
       () => (row: Organization) => {
-        const value = row?.lastTouchpoint?.lastTouchPointAt;
+        const value = row?.value.lastTouchpoint?.lastTouchPointAt;
 
         if (!value) return null;
 
@@ -99,32 +103,32 @@ export const getOrganizationSortFn = (columnId: string) =>
     .with(
       ColumnViewType.OrganizationsLastTouchpointDate,
       () => (row: Organization) => {
-        const value = row?.lastTouchpoint?.lastTouchPointAt;
+        const value = row?.value.lastTouchpoint?.lastTouchPointAt;
 
         return value ? new Date(value) : null;
       },
     )
     .with(ColumnViewType.OrganizationsChurnDate, () => (row: Organization) => {
-      const value = row?.accountDetails?.churned;
+      const value = row?.value.accountDetails?.churned;
 
       return value ? new Date(value) : null;
     })
     .with(
       ColumnViewType.OrganizationsLtv,
-      () => (row: Organization) => row?.accountDetails?.ltv,
+      () => (row: Organization) => row?.value.accountDetails?.ltv,
     )
     .with(
       ColumnViewType.OrganizationsIndustry,
-      () => (row: Organization) => row?.industry,
+      () => (row: Organization) => row?.value.industry,
     )
     .with(
       ColumnViewType.OrganizationsContactCount,
-      () => (row: Organization) => row?.contacts?.content?.length,
+      () => (row: Organization) => row?.value.contacts?.content?.length,
     )
     .with(
       ColumnViewType.OrganizationsLinkedinFollowerCount,
       () => (row: Organization) =>
-        row.socialMedia.find((e) => e?.url?.includes('linkedin'))
+        row.value.socialMedia.find((e) => e?.url?.includes('linkedin'))
           ?.followersCount,
     )
     .with(
@@ -135,21 +139,22 @@ export const getOrganizationSortFn = (columnId: string) =>
     )
     .with(
       ColumnViewType.OrganizationsIsPublic,
-      () => (row: Organization) => row.public,
+      () => (row: Organization) => row.value.public,
     )
     .with(
       ColumnViewType.OrganizationsStage,
-      () => (row: Organization) => row.stage?.toLowerCase(),
+      () => (row: Organization) => row.value.stage?.toLowerCase(),
     )
     .with(ColumnViewType.OrganizationsTags, () => (row: Organization) => {
-      return row?.tags?.[0]?.name?.trim().toLowerCase() || null;
+      return row?.value.tags?.[0]?.name?.trim().toLowerCase() || null;
     })
     .with(
       ColumnViewType.OrganizationsParentOrganization,
       () => (row: Organization) => {
         return (
-          row?.parentCompanies?.[0]?.organization?.name.trim().toLowerCase() ||
-          null
+          row?.value.parentCompanies?.[0]?.organization?.name
+            .trim()
+            .toLowerCase() || null
         );
       },
     )

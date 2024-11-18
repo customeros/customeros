@@ -1,16 +1,16 @@
-import type { Store } from '@store/active-record';
+import type { Store } from '@store/_store';
 
 import { reaction } from 'mobx';
 import { inPlaceSort } from 'fast-sort';
 
-import type { Organization } from '../Organization';
+import type { Organization, OrganizationDatum } from '../Organization.dto';
 
 import { getOrganizationSortFn } from './sortFns';
 import { getOrganizationFilterFns } from './filterFns';
 
 // TODO: Cache filtered and sorted results for faster subsequent access
 export class AllOrganizationsView {
-  constructor(private store: Store<Organization>) {
+  constructor(private store: Store<OrganizationDatum, Organization>) {
     reaction(() => this.store.size, this.update);
     reaction(() => this.store.version, this.update);
     reaction(() => {
@@ -45,31 +45,37 @@ export class AllOrganizationsView {
       const columnId = sorting?.id as string;
       const isDesc = sorting?.desc as boolean;
 
-      const filteredIdsWithSortValues = data.reduce((acc, curr) => {
-        if (!curr) return acc;
+      const filteredIdsWithSortValues = (data as Organization[]).reduce(
+        (acc, curr) => {
+          if (!curr) return acc;
 
-        if (
-          defaultFilters.every((fn) => fn(curr)) &&
-          activeFilters.every((fn) => fn(curr))
-        ) {
-          const sortValue = getOrganizationSortFn(columnId)(curr);
+          if (
+            defaultFilters.every((fn) => fn(curr)) &&
+            activeFilters.every((fn) => fn(curr))
+          ) {
+            const sortValue = getOrganizationSortFn(columnId)(curr);
 
-          acc.push({ id: this.store.options.getId(curr), sortValue });
-        }
+            acc.push({ record: curr, sortValue });
+          }
 
-        return acc;
-      }, [] as { id: string; sortValue: string | number | boolean | Date | null | undefined }[]);
-
-      const sortedIds = inPlaceSort(filteredIdsWithSortValues)
-        [isDesc ? 'desc' : 'asc']((entry) => entry.sortValue)
-        .map((entry) => entry.id);
-
-      const splicedIds = sortedIds.splice(
-        this.store.range[0],
-        this.store.range[1] + 1,
+          return acc;
+        },
+        [] as {
+          record: Organization;
+          sortValue: string | number | boolean | Date | null | undefined;
+        }[],
       );
 
-      return splicedIds;
+      const sorted = inPlaceSort(filteredIdsWithSortValues)
+        [isDesc ? 'desc' : 'asc']((entry) => entry.sortValue)
+        .map((entry) => entry.record);
+
+      // const splicedIds = sortedIds.splice(
+      //   this.store.range[0],
+      //   this.store.range[1] + 1,
+      // );
+
+      return sorted;
     });
   };
 }

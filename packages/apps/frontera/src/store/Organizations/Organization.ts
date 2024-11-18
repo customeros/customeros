@@ -74,7 +74,6 @@ export class OrganizationDTO {
   }
 
   set owner(user: User) {
-    console.log('Setez pla', user);
     this._owner = user;
   }
 

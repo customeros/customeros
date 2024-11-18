@@ -1,16 +1,13 @@
 import type { RootStore } from '@store/root';
 import type { Transport } from '@store/transport';
 
-import { Store } from '@store/active-record';
+import { Store } from '@store/_store';
 import { action, computed, runInAction } from 'mobx';
 
-import {
-  SortingDirection,
-  ComparisonOperator,
-} from '@shared/types/__generated__/graphql.types';
+import { SortingDirection, ComparisonOperator } from '@graphql/types';
 
-import { OrganizationDTO, type Organization } from './Organization';
 import { AllOrganizationsView } from './__views__/AllOrganizations.view';
+import { Organization, type OrganizationDatum } from './Organization.dto';
 import { OrganizationsService } from './__service__/Organizations.service';
 
 export class OrganizationsStore extends Store<Organization> {
@@ -19,8 +16,8 @@ export class OrganizationsStore extends Store<Organization> {
   constructor(public root: RootStore, public transport: Transport) {
     super(root, transport, {
       name: 'Organizations',
-      getId: (data) => data!.metadata.id,
-      factory: OrganizationDTO,
+      getId: (data) => data?.metadata?.id,
+      factory: Organization,
     });
 
     this.service = OrganizationsService.getInstance(this.transport);
@@ -85,16 +82,16 @@ export class OrganizationsStore extends Store<Organization> {
       }
 
       const data =
-        (dashboardView_Organizations?.content as Organization[]) ?? [];
+        (dashboardView_Organizations?.content as OrganizationDatum[]) ?? [];
 
       runInAction(() => {
         this.size = this.value.size;
         data.forEach((raw) => {
           if (!raw) return;
 
-          const organization = OrganizationDTO.of(this.root, raw);
+          const record = new Organization(this, raw);
 
-          this.value.set(organization.id, organization);
+          this.value.set(record.id, record);
         });
       });
     } catch (e) {
@@ -125,17 +122,16 @@ export class OrganizationsStore extends Store<Organization> {
           },
         });
 
-      const data =
-        (dashboardView_Organizations?.content as Organization[]) ?? [];
+      const data = dashboardView_Organizations?.content ?? [];
       const totalElements = dashboardView_Organizations?.totalElements;
 
       runInAction(() => {
         data.forEach((raw) => {
           if (!raw) return;
 
-          const organization = OrganizationDTO.of(this.root, raw);
+          const record = new Organization(this, raw);
 
-          this.value.set(organization.id, organization);
+          this.value.set(record.id, record);
         });
 
         this.size = this.value.size;
@@ -144,7 +140,7 @@ export class OrganizationsStore extends Store<Organization> {
           this.totalElements = totalElements;
         }
       });
-      await this.bootstrapRest();
+      // await this.bootstrapRest();
     } catch (e) {
       runInAction(() => {
         this.error = (e as Error)?.message;
@@ -156,27 +152,17 @@ export class OrganizationsStore extends Store<Organization> {
 
   @action
   async bootstrap() {
-    if (this.root.demoMode) {
-      // this.load(
-      //   mock.data.dashboardView_Organizations
-      //     .content as unknown as Organization[],
-      //   { getId: (data) => data.metadata.id },
-      // );
-      // this.totalElements = mock.data.dashboardView_Organizations.totalElements;
-
-      return;
-    }
-
     if (this.isLoading) return;
 
     try {
-      const canHydrate = await this.checkIfCanHydrate();
-
-      if (canHydrate) {
-        this.getRecentChanges();
-      } else {
-        this.getAllData();
-      }
+      // const canHydrate = await this.checkIfCanHydrate();
+      //
+      // if (canHydrate) {
+      //   this.getRecentChanges();
+      // } else {
+      //   this.getAllData();
+      // }
+      this.getAllData();
     } catch (e) {
       runInAction(() => {
         this.error = (e as Error)?.message;
@@ -200,8 +186,7 @@ export class OrganizationsStore extends Store<Organization> {
             },
           });
 
-        const data =
-          (dashboardView_Organizations?.content as Organization[]) ?? [];
+        const data = dashboardView_Organizations?.content ?? [];
 
         page++;
 
@@ -209,9 +194,9 @@ export class OrganizationsStore extends Store<Organization> {
           data.forEach((raw) => {
             if (!raw) return;
 
-            const organization = OrganizationDTO.of(this.root, raw);
+            const record = new Organization(this, raw);
 
-            this.value.set(organization.id, organization);
+            this.value.set(record.id, record);
           });
 
           this.size = this.value.size;
@@ -233,17 +218,15 @@ export class OrganizationsStore extends Store<Organization> {
   @action
   public async invalidate(id: string) {
     try {
-      const { organization } = await this.service.getOrganization(id);
+      const { organization: raw } = await this.service.getOrganization(id);
 
-      if (!organization) return;
+      if (!raw) return;
 
       runInAction(() => {
-        this.value.set(id, OrganizationDTO.of(this.root, organization));
+        const record = this.value.get(id);
 
-        if (this.active.has(id)) {
-          const active = this.active.get(id);
-
-          Object.assign(active as Organization, organization);
+        if (record) {
+          Object.assign(record, raw);
         }
       });
     } catch (e) {

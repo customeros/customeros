@@ -19,14 +19,14 @@ export const ParentOrgInput = observer(
   ({ id, isReadOnly }: ParentOrgInputProps) => {
     const store = useStore();
     const data = store.organizations?.findMany(
-      (org) => org.id !== id && org.name.length > 0,
+      (org) => org.id !== id && org.value.name.length > 0,
     );
 
     const organization = store.organizations.getById(id);
 
     const options = data.map((org) => ({
-      value: org.metadata?.id,
-      label: org.name,
+      value: org.value.metadata?.id,
+      label: org.value.name,
     }));
 
     const parentCompany =
@@ -70,7 +70,7 @@ export const ParentOrgInput = observer(
                       ?.metadata?.id;
 
                   // organization.value!.parentCompanies = [];
-                  organization.value.clearParentCompanies();
+                  organization.clearParentCompanies();
                   organization.commit();
 
                   const parentCompany = store.organizations.getById(parentId!);
@@ -82,7 +82,7 @@ export const ParentOrgInput = observer(
                   //     (s) => s.metadata.id !== organization.id,
                   //   ) ?? [];
 
-                  parentCompany.value.removeSubsidiary(organization.id);
+                  parentCompany.removeSubsidiary(organization.id);
                   parentCompany.commit();
                 } else {
                   const currentParentId =
@@ -106,30 +106,30 @@ export const ParentOrgInput = observer(
                     //   );
                     // }
 
-                    currentParent.value.removeSubsidiary(organization.id);
+                    currentParent.removeSubsidiary(organization.id);
                     currentParent.commit();
 
                     // organization.value!.parentCompanies = [];
-                    organization.value.clearParentCompanies();
+                    organization.clearParentCompanies();
                     organization.commit();
                   }
 
                   // newParent.value?.subsidiaries?.push({
                   //   organization: organization.value,
                   // });
-                  newParent.value.addSubsidiary(organization.id);
+                  newParent.addSubsidiary(organization.id);
                   newParent.commit();
 
-                  // if (!Array.isArray(!organization.value?.parentCompanies)) {
-                  //   organization.value!.parentCompanies = [];
-                  // }
-                  //
-                  // if (newParent?.value) {
-                  //   organization.value.parentCompanies[0] = newParent.value;
-                  // }
+                  if (!Array.isArray(!organization.value?.parentCompanies)) {
+                    organization.value!.parentCompanies = [];
+                    organization.clearParentCompanies();
+                  }
 
-                  organization.value.addSubsidiary(newParent.id);
-                  organization.commit();
+                  //
+                  if (newParent?.value) {
+                    organization.addParent(newParent.id);
+                    organization.commit();
+                  }
                 }
               });
             }}

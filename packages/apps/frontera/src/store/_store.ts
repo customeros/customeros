@@ -3,37 +3,29 @@ import type { Channel } from 'phoenix';
 import set from 'lodash/set';
 import { match } from 'ts-pattern';
 import { getDiff, applyDiff } from 'recursive-diff';
-import {
-  when,
-  toJS,
-  action,
-  reaction,
-  computed,
-  intercept,
-  observable,
-  isObservable,
-  makeAutoObservable,
-} from 'mobx';
+import { when, action, reaction, observable } from 'mobx';
 
 import type { RootStore } from './root';
 import type { Transport } from './transport';
+import type { Record, RecordFactoryClass } from './record';
 
 import { Persister, PersisterInstance } from './persister';
 import {
   Operation,
   SyncPacket,
   GroupOperation,
-  DTOFactoryClass,
   GroupSyncPacket,
 } from './types';
 
-type StoreOptions<T extends object> = {
+type ValueOf<R extends Record> = R['value'];
+
+type StoreOptions<R extends Record> = {
   name: string;
-  getId: (data: T) => string;
-  factory: DTOFactoryClass<T & object>;
+  factory: RecordFactoryClass<R>;
+  getId: (data: ValueOf<R>) => string;
 };
 
-export class Store<T extends object> {
+export class Store<R extends Record> {
   @observable accessor size = 0;
   @observable accessor version = 0;
   @observable accessor totalElements = 0;
@@ -42,28 +34,20 @@ export class Store<T extends object> {
   @observable accessor isBootstrapped = false;
   @observable accessor isBootstrapping = false;
   @observable accessor error: string | null = null;
-  @observable accessor active: Map<string, T> = new Map();
+  @observable accessor value: Map<string, R> = new Map();
   @observable accessor range: [startIndex: number, endIndex: number] = [0, 0];
 
   channel?: Channel;
-  options: StoreOptions<T>;
+  options: StoreOptions<R>;
   persister?: PersisterInstance;
-  value: Map<string, T> = new Map();
 
-  private snapshots: Map<string, T> = new Map();
-  @observable private accessor views: Map<string, string[]> = new Map();
-
-  @computed
-  get activeArray() {
-    return this.toArray()
-      .slice(this.range[0], this.range[1] + 1)
-      .map((obj) => new ActiveRecord(this, obj));
-  }
+  private snapshots: Map<string, ValueOf<R>> = new Map();
+  @observable private accessor views: Map<string, R[]> = new Map();
 
   constructor(
     public root: RootStore,
     public transport: Transport,
-    opts: StoreOptions<T>,
+    opts: StoreOptions<R>,
   ) {
     this.options = opts;
     when(
@@ -96,7 +80,7 @@ export class Store<T extends object> {
     reaction(
       () => this.size,
       () => {
-        if (this.active.size === 0) {
+        if (this.value.size === 0) {
           this.setActiveRange(0, 99);
         }
         this.persistGroup();
@@ -111,9 +95,7 @@ export class Store<T extends object> {
   public getViewById(id: string) {
     const view = this.views.get(id);
 
-    return (view ?? []).map(
-      (id) => new ActiveRecord(this, this.value.get(id) as T),
-    );
+    return view ?? [];
   }
 
   @action
@@ -129,7 +111,9 @@ export class Store<T extends object> {
     if (!ids.length) return removedIdsMap;
 
     try {
-      const items = await this.persister?.getItem<Map<string, T>>('data');
+      const items = await this.persister?.getItem<Map<string, ValueOf<R>>>(
+        'data',
+      );
 
       ids.forEach((id) => {
         removedIdsMap.set(id, true);
@@ -154,14 +138,17 @@ export class Store<T extends object> {
     await this.drop(options?.idsToDrop ?? []);
 
     try {
-      const persisted = await this.persister?.getItem<Map<string, T>>('data');
+      const { factory } = this.options;
+      const persisted = await this.persister?.getItem<Map<string, ValueOf<R>>>(
+        'data',
+      );
 
       if (!persisted) return;
 
-      const initialized = new Map<string, T>();
+      const initialized = new Map<string, R>();
 
       persisted.forEach((v, k) => {
-        initialized.set(k, this.options.factory.of(this.root, v));
+        initialized.set(k, new factory(this, v));
       });
 
       this.value = initialized;
@@ -217,12 +204,6 @@ export class Store<T extends object> {
 
     applyDiff(target, diff);
 
-    if (this.active.has(targetId)) {
-      const activeRecord = this.active.get(targetId);
-
-      applyDiff(activeRecord, diff);
-    }
-
     this.version++;
   }
 
@@ -232,10 +213,10 @@ export class Store<T extends object> {
       .with('APPEND', () => {
         operation.ids.forEach((id) => {
           const { factory } = this.options;
-          const dto = factory.of(this.root, factory.default());
+          const record = new factory(this, factory.default!());
 
-          set(dto, 'id', id);
-          this.value.set(id, dto);
+          set(record, 'id', id);
+          this.value.set(id, record);
 
           this.size++;
 
@@ -246,11 +227,9 @@ export class Store<T extends object> {
       })
       .with('DELETE', () => {
         operation.ids.forEach((id) => {
-          this.active.delete(id);
           this.value.delete(id);
           this.size--;
         });
-        // this.version++;
       })
       .with('INVALIDATE', () => {
         operation.ids.forEach((id) => {
@@ -281,7 +260,7 @@ export class Store<T extends object> {
     return arr;
   }
 
-  public toComputedArray(compute: (arr: T[]) => T[]): T[] {
+  public toComputedArray(compute: (arr: R[]) => R[]) {
     const arr = compute(this.toArray());
 
     return arr;
@@ -290,10 +269,10 @@ export class Store<T extends object> {
   public getById(id: string) {
     const data = this.value.get(id);
 
-    return new ActiveRecord(this, data!);
+    return data as R;
   }
 
-  public snapshot(id: string, current: T) {
+  public snapshot(id: string, current: R) {
     if (this.hasSnapshot(id)) return;
 
     this.snapshots.set(id, current);
@@ -330,39 +309,36 @@ export class Store<T extends object> {
 
   private async persist(id: string) {
     try {
-      const { factory } = this.options;
-      const instance = toJS(this.value.get(id));
+      const record = this.value.get(id);
 
-      if (!instance) return;
-      const current = factory.toPersistable(instance);
+      if (!record) return;
+      const data = record.toRaw();
 
-      const persistedData = await this.persister?.getItem<Map<string, T>>(
+      const persisted = await this.persister?.getItem<Map<string, ValueOf<R>>>(
         'data',
       );
 
-      persistedData?.set(id, current);
+      persisted?.set(id, data);
 
-      await this.persister?.setItem('data', persistedData);
+      await this.persister?.setItem('data', persisted);
     } catch (e) {
       console.error('Failed to persist', e);
     }
   }
 
   public persistGroup() {
-    this.persister?.getItem<Map<string, T>>('data', (err) => {
+    this.persister?.getItem<Map<string, ValueOf<R>>>('data', (err) => {
       if (err) {
         console.error('Failed to get persisted data', err);
 
         return;
       }
 
-      const payload = new Map<string, T>();
+      const persisted = new Map<string, ValueOf<R>>();
 
-      this.value.forEach((v, k) =>
-        payload.set(k, this.options.factory.toPersistable(v)),
-      );
+      this.value.forEach((v, k) => persisted.set(k, v.toRaw()));
 
-      this.persister?.setItem('data', payload, (err) => {
+      this.persister?.setItem('data', persisted, (err) => {
         if (err) {
           console.error('Failed to persist store data', err);
         }
@@ -377,9 +353,8 @@ export class Store<T extends object> {
   };
 
   private makeChangesetOperation(id: string) {
-    const { factory } = this.options;
-    const lhs = factory.toPersistable(this.snapshots.get(id)!);
-    const rhs = factory.toPersistable(toJS(this.value.get(id)!));
+    const lhs = this.snapshots.get(id)!;
+    const rhs = this.value.get(id)!.toRaw();
 
     const diff = getDiff(lhs, rhs, true);
 
@@ -396,73 +371,19 @@ export class Store<T extends object> {
   }
 
   @action
-  public setView = (key: string, filterFn: (data: T[]) => string[]) => {
+  public setView = (key: string, filterFn: (records: R[]) => R[]) => {
     this.views.set(key, filterFn(this.toArray()));
   };
 
-  public findOne(selector: (object: T, idx: number, arr: T[]) => boolean) {
+  public findOne(selector: (object: R, idx: number, arr: R[]) => boolean) {
     const record = this.toArray().find(selector);
 
     if (!record) return null;
 
-    return new ActiveRecord(this, record);
+    return record;
   }
 
-  public findMany(selector: (object: T, idx: number, arr: T[]) => boolean) {
+  public findMany(selector: (object: R, idx: number, arr: R[]) => boolean) {
     return this.toArray().filter(selector);
-  }
-
-  public findManyActive(
-    selector: (object: T, idx: number, arr: T[]) => boolean,
-  ) {
-    return this.toArray()
-      .filter(selector)
-      .map((record) => new ActiveRecord(this, record));
-  }
-}
-
-export class ActiveRecord<T extends object> {
-  private _value: T;
-
-  constructor(private store: Store<T>, data: T) {
-    const id = this.store.options.getId(data);
-
-    if (!isObservable(data)) {
-      if (!this.store.active.has(id)) {
-        this.store.active.set(id, makeAutoObservable(data));
-      }
-    }
-
-    this._value = data;
-
-    if (isObservable(this._value)) {
-      intercept(this._value!, (change) => {
-        if (!this.store.hasSnapshot(id)) {
-          const current = toJS(this._value);
-
-          this.store.snapshot(id, current);
-        }
-
-        return change;
-      });
-    }
-  }
-
-  get value() {
-    return this._value;
-  }
-
-  get id() {
-    return this.store.options.getId(this.value);
-  }
-
-  public commit(
-    opts: {
-      syncOnly?: boolean;
-      onFailled?: () => void;
-      onCompleted?: () => void;
-    } = { syncOnly: false },
-  ) {
-    this.store.commit(this.id, opts);
   }
 }

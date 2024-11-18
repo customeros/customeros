@@ -52,6 +52,7 @@ query Organization($id: ID!) {
       url
       followersCount
     }
+    slackChannelId
     employees
     yearFounded
     public

@@ -11,7 +11,7 @@ import {
   OrganizationRelationship,
 } from '@graphql/types';
 
-import type { Organization } from '../Organization';
+import type { Organization } from '../Organization.dto';
 
 const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
   const noop = (_row: Organization) => true;
@@ -24,7 +24,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
 
       if (!filterValues) return false;
 
-      return filterValues.includes(row?.stage);
+      return filterValues.includes(row?.value.stage);
     })
     .with({ property: 'IS_CUSTOMER' }, (filter) => (row: Organization) => {
       const filterValues = filter?.value;
@@ -32,7 +32,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
       if (!filterValues) return false;
 
       return filterValues.includes(
-        row?.relationship === OrganizationRelationship.Customer,
+        row?.value.relationship === OrganizationRelationship.Customer,
       );
     })
     .with({ property: 'OWNER_ID' }, (filter) => (row: Organization) => {
@@ -48,14 +48,14 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
 
       if (!filterValues) return false;
 
-      return filterValues.includes(row?.relationship);
+      return filterValues.includes(row?.value.relationship);
     })
     .with(
       { property: ColumnViewType.OrganizationsCreatedDate },
       (filter) => (row: Organization) => {
         if (!filter.active) return true;
 
-        const value = row?.metadata.created;
+        const value = row?.value.metadata.created;
 
         return filterTypeDate(filter, value);
       },
@@ -65,7 +65,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
       (filter) => (row: Organization) => {
         if (!filter.active) return true;
 
-        const values = row?.name?.toLowerCase();
+        const values = row?.value.name?.toLowerCase();
 
         return filterTypeText(filter, values);
       },
@@ -76,7 +76,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
         if (!filter.active) return true;
 
         const values =
-          row?.parentCompanies?.[0]?.organization.name?.toLowerCase();
+          row?.value.parentCompanies?.[0]?.organization.name?.toLowerCase();
 
         return filterTypeText(filter, values);
       },
@@ -85,7 +85,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
       { property: ColumnViewType.OrganizationsWebsite },
       (filter) => (row: Organization) => {
         if (!filter.active) return true;
-        const value = row?.website || '';
+        const value = row?.value.website || '';
 
         return filterTypeText(filter, value);
       },
@@ -95,7 +95,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
       (filter) => (row: Organization) => {
         if (!filter.active) return true;
 
-        const values = row?.relationship;
+        const values = row?.value.relationship;
 
         if (!values)
           return (
@@ -113,7 +113,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
       { property: ColumnViewType.OrganizationsStage },
       (filter) => (row: Organization) => {
         if (!filter.active) return true;
-        const values = row?.stage;
+        const values = row?.value.stage;
 
         if (!values)
           return (
@@ -131,7 +131,8 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
       { property: ColumnViewType.OrganizationsForecastArr },
       (filter) => (row: Organization) => {
         if (!filter.active) return true;
-        const forecastValue = row?.accountDetails?.renewalSummary?.arrForecast;
+        const forecastValue =
+          row?.value.accountDetails?.renewalSummary?.arrForecast;
 
         if (!forecastValue) return false;
 
@@ -143,7 +144,9 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
       (filter) => (row: Organization) => {
         if (!filter.active) return true;
         const nextRenewalDate =
-          row?.accountDetails?.renewalSummary?.nextRenewalDate?.split('T')[0];
+          row?.value.accountDetails?.renewalSummary?.nextRenewalDate?.split(
+            'T',
+          )[0];
 
         return filterTypeDate(filter, nextRenewalDate);
       },
@@ -152,7 +155,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
       { property: ColumnViewType.OrganizationsOnboardingStatus },
       (filter) => (row: Organization) => {
         if (!filter.active) return true;
-        const values = row?.accountDetails?.onboarding?.status;
+        const values = row?.value.accountDetails?.onboarding?.status;
 
         if (!values)
           return (
@@ -170,7 +173,8 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
       { property: ColumnViewType.OrganizationsRenewalLikelihood },
       (filter) => (row: Organization) => {
         if (!filter.active) return true;
-        const values = row?.accountDetails?.renewalSummary?.renewalLikelihood;
+        const values =
+          row?.value.accountDetails?.renewalSummary?.renewalLikelihood;
 
         if (!values) return filter.operation === ComparisonOperator.IsEmpty;
 
@@ -203,7 +207,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
       { property: ColumnViewType.OrganizationsLastTouchpoint },
       (filter) => (row: Organization) => {
         if (!filter.active) return true;
-        const lastTouchpoint = row?.lastTouchpoint?.lastTouchPointType;
+        const lastTouchpoint = row?.value.lastTouchpoint?.lastTouchPointType;
 
         if (!lastTouchpoint)
           return (
@@ -221,7 +225,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
       { property: ColumnViewType.OrganizationsChurnDate },
       (filter) => (row: Organization) => {
         if (!filter.active) return true;
-        const churned = row?.accountDetails?.churned;
+        const churned = row?.value.accountDetails?.churned;
 
         if (!churned) return false;
 
@@ -233,7 +237,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
       (filter) => (row: Organization) => {
         if (!filter.active) return true;
 
-        const linkedInUrl = row?.socialMedia?.find((v) =>
+        const linkedInUrl = row?.value.socialMedia?.find((v) =>
           v.url.includes('linkedin'),
         )?.url;
 
@@ -244,7 +248,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
       { property: ColumnViewType.OrganizationsLastTouchpointDate },
       (filter) => (row: Organization) => {
         if (!filter.active) return true;
-        const lastTouchpointAt = row?.lastTouchpoint?.lastTouchPointAt;
+        const lastTouchpointAt = row?.value.lastTouchpoint?.lastTouchPointAt;
 
         return filterTypeDate(filter, lastTouchpointAt);
       },
@@ -254,7 +258,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
       (filter) => (row: Organization) => {
         if (!filter.active) return true;
 
-        const employees = row?.employees;
+        const employees = row?.value.employees;
 
         return filterTypeNumber(filter, employees);
       },
@@ -263,7 +267,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
       { property: ColumnViewType.OrganizationsContactCount },
       (filter) => (row: Organization) => {
         if (!filter.active) return true;
-        const contactsCount = row?.contacts.content.length;
+        const contactsCount = row?.value.contacts.content.length;
 
         return filterTypeNumber(filter, contactsCount);
       },
@@ -273,7 +277,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
       (filter) => (row: Organization) => {
         if (!filter.active) return true;
 
-        const followers = row?.socialMedia.find((e) =>
+        const followers = row?.value.socialMedia.find((e) =>
           e?.url?.includes('linkedin'),
         )?.followersCount;
 
@@ -285,7 +289,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
       (filter) => (row: Organization) => {
         if (!filter.active) return true;
 
-        const value = row?.leadSource;
+        const value = row?.value.leadSource;
 
         if (!value)
           return (
@@ -300,7 +304,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
       { property: ColumnViewType.OrganizationsIndustry },
       (filter) => (row: Organization) => {
         if (!filter.active) return true;
-        const value = row?.industry;
+        const value = row?.value.industry;
 
         if (!value)
           return (
@@ -315,7 +319,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
       { property: ColumnViewType.OrganizationsLtv },
       (filter) => (row: Organization) => {
         if (!filter.active) return true;
-        const ltv = row?.accountDetails?.ltv;
+        const ltv = row?.value.accountDetails?.ltv;
 
         if (!ltv) return false;
 
@@ -325,7 +329,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
     .with({ property: ColumnViewType.OrganizationsHeadquarters }, (filter) => {
       return (row: Organization) => {
         if (!filter.active) return true;
-        const locations = row?.locations;
+        const locations = row?.value.locations;
         const country = locations?.[0]?.countryCodeA2;
 
         if (!country)
@@ -345,7 +349,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
       (filter) => (row: Organization) => {
         if (!filter.active) return true;
 
-        const isPublic = row?.public === true ? 'Public' : 'Private';
+        const isPublic = row?.value.public === true ? 'Public' : 'Private';
 
         return filterTypeList(
           filter,
@@ -358,7 +362,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
       (filter) => (row: Organization) => {
         if (!filter.active) return true;
 
-        const yearFounded = row?.yearFounded;
+        const yearFounded = row?.value.yearFounded;
 
         if (!yearFounded) return false;
 
@@ -369,7 +373,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
       { property: ColumnViewType.OrganizationsTags },
       (filter) => (row: Organization) => {
         if (!filter.active) return true;
-        const values = row?.tags?.map((l) => l.id);
+        const values = row?.value.tags?.map((l) => l.id);
 
         if (!values)
           return (
