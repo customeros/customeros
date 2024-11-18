@@ -267,28 +267,28 @@ export const EmailSettingsPanel = observer(() => {
             />
           </div>
         </div>
-          <Button
-              size='lg'
-              variant='ghost'
-              colorScheme='primary'
-              leftIcon={<MailAdd className='text-inherit size-4' />}
-              className='text-primary-700 w-full text-sm absolute bottom-0 py-4 rounded-none border-t border-solid border-gray-200'
-              onClick={() => {
-                  ui.commandMenu.setOpen(true, {
-                      type: 'SendTestEmail',
-                      context: {
-                          entity: 'Flow',
-                          ids: [flowId],
-                          meta: {
-                              subject,
-                              bodyTemplate,
-                          },
-                      },
-                  });
-              }}
-          >
-              Set up a test email...
-          </Button>
+        <Button
+          size='lg'
+          variant='ghost'
+          colorScheme='primary'
+          leftIcon={<MailAdd className='text-inherit size-4' />}
+          className='text-primary-700 w-full text-sm absolute bottom-0 py-4 rounded-none border-t border-solid border-gray-200'
+          onClick={() => {
+            ui.commandMenu.setOpen(true, {
+              type: 'SendTestEmail',
+              context: {
+                entity: 'Flow',
+                ids: [flowId],
+                meta: {
+                  subject,
+                  bodyTemplate,
+                },
+              },
+            });
+          }}
+        >
+          Set up a test email...
+        </Button>
         <EmailEditorModal
           flowName={flow}
           subject={subject}
