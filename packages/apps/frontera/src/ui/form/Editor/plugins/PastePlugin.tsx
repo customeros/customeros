@@ -11,16 +11,6 @@ import {
   $createParagraphNode,
 } from 'lexical';
 
-function isValidUrl(string: string) {
-  try {
-    new URL(string);
-
-    return true;
-  } catch (_) {
-    return false;
-  }
-}
-
 const ALLOWED_TAGS = [
   'ul',
   'ol',
@@ -50,7 +40,7 @@ export function LinkPastePlugin() {
         const pastedData = clipboardData?.getData('text/plain');
         const selectedText = selection.getTextContent().trim();
 
-        if (selectedText.length && isValidUrl(pastedData)) {
+        if (selectedText.length && URL.canParse(pastedData)) {
           editor.update(() => {
             const linkNode = $createLinkNode(pastedData);
             const textNode = $createTextNode(selectedText || pastedData);
