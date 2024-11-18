@@ -9,6 +9,7 @@ export const toastSuccess = (text: string, id: string) => {
   return toast.success(text, {
     toastId: id,
     icon: CheckWaves,
+    autoClose: 5000,
     closeButton: ({ closeToast }) => (
       <IconButton
         variant='ghost'
