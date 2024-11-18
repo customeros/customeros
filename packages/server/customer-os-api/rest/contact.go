@@ -6,7 +6,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -20,9 +19,9 @@ import (
 	"strings"
 )
 
-func CreateContact(services *service.Services, grpcClients *grpc_client.Clients) gin.HandlerFunc {
+func CreateContactsFromCsvUpload(services *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "CreateContact", c.Request.Header)
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "CreateContactsFromCsvUpload", c.Request.Header)
 		defer span.Finish()
 		tracing.TagComponentRest(span)
 		tracing.TagTenant(span, common.GetTenantFromContext(ctx))
@@ -59,7 +58,7 @@ func CreateContact(services *service.Services, grpcClients *grpc_client.Clients)
 		}
 
 		if headers[0] != "email" && headers[1] != "linkedin_url" {
-			c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Invalid headers"})
+			c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Invalid headers, must be 'email' and 'linkedin_url'"})
 			return
 		}
 
@@ -74,19 +73,28 @@ func CreateContact(services *service.Services, grpcClients *grpc_client.Clients)
 				return
 			}
 
-			contactEmail := record[0]
-			contactSocialUrl := record[1]
+			inputEmail := record[0]
+			inputSocialUrl := record[1]
 
-			emailEntity, err := services.EmailService.GetByEmailAddress(ctx, contactEmail)
-			if err != nil {
-				span.LogFields(tracingLog.String("result", "Failed to get email entity"))
-				c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Failed to get email entity"})
-				return
+			if inputEmail == "" && inputSocialUrl == "" {
+				continue
+			}
+
+			// if email provided, check if email exists in db
+			var emailEntity *neo4jentity.EmailEntity
+			if inputEmail != "" {
+				emailEntity, err = services.EmailService.GetByEmailAddress(ctx, inputEmail)
+				if err != nil {
+					span.LogFields(tracingLog.String("result", "Failed to get email entity"))
+					c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Failed to get email entity"})
+					return
+				}
 			}
 
 			emailId := ""
 			contactId := ""
 
+			// if email exists, get contact id associated with email
 			if emailEntity != nil {
 				emailId = emailEntity.Id
 				contactsWithEmail, err := services.ContactService.GetContactsForEmails(ctx, []string{emailEntity.Id})
@@ -101,19 +109,20 @@ func CreateContact(services *service.Services, grpcClients *grpc_client.Clients)
 				}
 			}
 
+			// if contact not exists, create new contact
 			if contactId == "" {
-				contactId, err = services.CommonServices.ContactService.SaveContact(ctx, nil, neo4jrepo.ContactFields{}, contactSocialUrl, neo4jmodel.ExternalSystem{})
+				contactId, err = services.CommonServices.ContactService.SaveContact(ctx, nil, neo4jrepo.ContactFields{}, inputSocialUrl, neo4jmodel.ExternalSystem{})
 				if err != nil {
-					span.LogFields(tracingLog.String("result", "Failed to save contact"))
-					c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Failed to save contact"})
-					return
+					tracing.TraceErr(span, errors.Wrap(err, "failed to save contact"))
+					continue
 				}
 			}
 
-			if emailId == "" {
+			// associate email with created contact if email address provided
+			if emailId == "" && inputEmail != "" {
 				_, err := services.CommonServices.EmailService.Merge(ctx, tenant,
 					commonservice.EmailFields{
-						Email:     contactEmail,
+						Email:     inputEmail,
 						Source:    neo4jentity.DataSourceOpenline,
 						AppSource: constants.AppSourceCustomerOsApiRest,
 					}, &commonservice.LinkWith{
