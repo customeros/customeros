@@ -8,7 +8,6 @@ import { cn } from '@ui/utils/cn';
 import { Mail01 } from '@ui/media/icons/Mail01';
 import { Edit03 } from '@ui/media/icons/Edit03';
 import { IconButton } from '@ui/form/IconButton';
-import { useStore } from '@shared/hooks/useStore';
 import { MailReply } from '@ui/media/icons/MailReply';
 
 const iconMap: Record<string, ReactElement> = {
@@ -23,7 +22,6 @@ const colorMap: Record<string, string> = {
 
 export const EmailActionNode = ({
   data,
-  ...rest
 }: NodeProps & {
   data: {
     subject: string;
@@ -32,8 +30,6 @@ export const EmailActionNode = ({
     action: FlowActionType;
   };
 }) => {
-  const { ui } = useStore();
-
   const color = colorMap?.[data.action];
 
   const parsedTemplate = useMemo(
@@ -68,25 +64,13 @@ export const EmailActionNode = ({
           </span>
         </div>
 
+        {/* this is just visual guidance, clicking on the whole node performs actual action*/}
         <IconButton
           size='xxs'
           variant='ghost'
           aria-label='Edit'
           icon={<Edit03 />}
           className='ml-2 opacity-0 group-hover:opacity-100 pointer-events-all'
-          onClick={(e) => {
-            e.stopPropagation();
-            ui.flowActionSidePanel.setOpen(true, {
-              context: {
-                // @ts-expect-error to do improve types on flowActionSidePanel
-                node: {
-                  ...rest,
-                  data,
-                },
-                id: rest?.id,
-              },
-            });
-          }}
         />
       </div>
     </>
