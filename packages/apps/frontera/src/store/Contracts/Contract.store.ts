@@ -211,6 +211,30 @@ export class ContractStore implements Store<Contract> {
       });
   }
 
+  // this is needed because the path is not coming through correctly when contract name is updated with mutate false and then send on blur
+  // this is a fix that will work correctly until the store is migrated to the new approach - now we do not have time to do it
+  async updateContractName(contractName: string) {
+    try {
+      this.isLoading = true;
+
+      await this.service.updateContract({
+        input: {
+          contractName,
+          contractId: this.id,
+          patch: true,
+        },
+      });
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error)?.message;
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+      });
+    }
+  }
+
   async updateContractValues() {
     try {
       this.isLoading = true;
