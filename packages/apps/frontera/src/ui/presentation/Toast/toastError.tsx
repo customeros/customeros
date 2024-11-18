@@ -9,6 +9,7 @@ export const toastError = (text: string, id: string) => {
   return toast.error(text, {
     toastId: id,
     icon: ExclamationWaves,
+    autoClose: 5000,
     closeButton: ({ closeToast }) => (
       <IconButton
         variant='ghost'
