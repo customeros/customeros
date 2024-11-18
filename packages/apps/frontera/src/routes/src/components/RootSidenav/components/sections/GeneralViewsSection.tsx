@@ -1,4 +1,5 @@
 import React from 'react';
+import { useLocation } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
 import { TableViewDefStore } from '@store/TableViewDefs/TableViewDef.store.ts';
@@ -36,6 +37,8 @@ export const GeneralViewsSection = observer(
     checkIsActive,
   }: GeneralViewsSectionProps) => {
     const store = useStore();
+    const { pathname } = useLocation();
+
     const tableViewDefsList = store.tableViewDefs.toArray();
     const allOrganizationsView = tableViewDefsList.filter(
       (c) => c.value.tableId === TableIdType.Organizations && c.value.isPreset,
@@ -64,6 +67,8 @@ export const GeneralViewsSection = observer(
     const upcomingInvoices = invoicesViews[0];
     const allOrganizationsActivePreset = [allOrganizationsView?.[0]?.value?.id];
     const showInvoices = store.settings.tenant.value?.billingEnabled;
+
+    const isFlowEditorActive = pathname.includes('flow-editor');
 
     return (
       <CollapsibleSection
@@ -181,9 +186,11 @@ export const GeneralViewsSection = observer(
               onClick={() =>
                 handleItemClick(`finder?preset=${flowSequencesView?.value?.id}`)
               }
-              isActive={checkIsActive('finder', {
-                preset: flowSequencesView?.value?.id ?? '',
-              })}
+              isActive={
+                checkIsActive('finder', {
+                  preset: flowSequencesView?.value?.id ?? '',
+                }) || isFlowEditorActive
+              }
               icon={(isActive) => (
                 <Shuffle01
                   className={cn(
