@@ -227,7 +227,7 @@ export class OrganizationAccountPage {
 
     await this.page.waitForTimeout(1000);
 
-    await this.page.reload();
+    // await this.page.reload();
 
     await expect(editor).toBeVisible({ timeout: 30000 });
 
