@@ -568,7 +568,8 @@ func (r *organizationReadRepository) GetOrganizationsByLinkedIn(ctx context.Cont
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("url", url), log.String("alias", alias))
 
-	if !strings.Contains(url, "linkedin.com") == false {
+	if !strings.Contains(url, "linkedin.com") {
+		span.LogFields(log.Int("result.count", 0))
 		return nil, nil
 	}
 
@@ -610,6 +611,7 @@ func (r *organizationReadRepository) GetOrganizationsByLinkedIn(ctx context.Cont
 		}
 	})
 	if err != nil {
+		span.LogFields(log.Int("result.count", 0))
 		return nil, err
 	}
 	nodes := result.([]*dbtype.Node)
