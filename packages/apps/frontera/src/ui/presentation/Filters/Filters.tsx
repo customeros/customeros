@@ -1,5 +1,7 @@
 import { useRef, useState, useEffect } from 'react';
 
+import { useKeys } from 'rooks';
+
 import { Combobox } from '@ui/form/Combobox';
 import { Button } from '@ui/form/Button/Button';
 import { IconButton } from '@ui/form/IconButton';
@@ -105,20 +107,10 @@ export const Filters = ({
     }
   }, [isOpen]);
 
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'f') {
-        setIsOpen(true);
-        event.preventDefault();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, []);
+  useKeys(['Shift', 'F'], (e) => {
+    e.preventDefault();
+    setIsOpen(true);
+  });
 
   const handleChangeOperator = (
     operation: string,
