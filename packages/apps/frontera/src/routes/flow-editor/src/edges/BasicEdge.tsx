@@ -1,5 +1,5 @@
-import { MouseEventHandler } from 'react';
 import { useParams } from 'react-router-dom';
+import { FC, MouseEventHandler } from 'react';
 
 import { observer } from 'mobx-react-lite';
 import {
@@ -16,7 +16,7 @@ import { useStore } from '@shared/hooks/useStore';
 
 import { StepViewportPortal } from './StepViewportPortal';
 
-export const BasicEdge: React.FC<
+export const BasicEdge: FC<
   EdgeProps & { data: Record<string, boolean | string> }
 > = observer(({ id, data, ...props }) => {
   const [edgePath, labelX, labelY] = getSmoothStepPath({
@@ -27,6 +27,10 @@ export const BasicEdge: React.FC<
   const flowWasStarted = flows.value.get(flowId)?.value?.firstStartedAt;
 
   const toggleOpen: MouseEventHandler<HTMLButtonElement> = (e) => {
+    // do not open when  flow actions panel is open
+    if (ui.flowActionSidePanel.isOpen) {
+      return;
+    }
     e.stopPropagation();
 
     if (flowWasStarted) {

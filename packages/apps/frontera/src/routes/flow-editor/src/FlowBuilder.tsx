@@ -346,6 +346,7 @@ export const FlowBuilder = observer(
           onSelectionDragStart={onSelectionDragStart}
           defaultViewport={{ zoom: 0.4, x: 50, y: 0 }}
           preventScrolling={!ui.flowCommandMenu.isOpen}
+          elementsSelectable={!ui.flowActionSidePanel.isOpen}
           proOptions={{
             hideAttribution: true,
           }}
@@ -366,6 +367,20 @@ export const FlowBuilder = observer(
 
             instance.fitView(fitViewOptions);
           }}
+          onEdgeClick={() => {
+            if (ui.flowActionSidePanel.isOpen) {
+              if (ui.flowActionSidePanel.context.hasUnsavedChanges) {
+                ui.commandMenu.setType('ConfirmEmailContentChanges');
+                ui.commandMenu.setOpen(true);
+
+                return;
+              }
+
+              ui.flowActionSidePanel.setOpen(false);
+
+              return;
+            }
+          }}
           onEdgesChange={(changes) => {
             // this is hack to prevent removing initial edges automatically for some unknown yet reason
 
@@ -377,6 +392,30 @@ export const FlowBuilder = observer(
               return;
             }
             onEdgesChange(changes);
+          }}
+          onNodeDoubleClick={(_event, node) => {
+            if (node.type === 'wait') {
+              setNodes((nds) =>
+                nds.map((n) =>
+                  n.id === node.id
+                    ? { ...n, data: { ...n.data, isEditing: true } }
+                    : n,
+                ),
+              );
+
+              return;
+            }
+
+            if (node.type === 'trigger') {
+              ui.flowCommandMenu.setOpen(true);
+              ui.flowCommandMenu.setType('TriggersHub');
+              ui.flowCommandMenu.setContext({
+                id: node.id,
+                entity: 'Trigger',
+              });
+
+              return;
+            }
           }}
           onClick={() => {
             // this behaves as click outside
@@ -397,26 +436,30 @@ export const FlowBuilder = observer(
               }
 
               ui.flowActionSidePanel.setOpen(false);
+
+              return;
             }
 
             if (showSidePanel) {
               onToggleSidePanel(false);
             }
           }}
-          onNodeDoubleClick={(_event, node) => {
-            if (node.type === 'wait') {
-              setNodes((nds) =>
-                nds.map((n) =>
-                  n.id === node.id
-                    ? { ...n, data: { ...n.data, isEditing: true } }
-                    : n,
-                ),
-              );
+          onNodeClick={(event, node) => {
+            if (ui.flowActionSidePanel.isOpen) {
+              if (ui.flowActionSidePanel.context.hasUnsavedChanges) {
+                ui.commandMenu.setType('ConfirmEmailContentChanges');
+                ui.commandMenu.setOpen(true);
+
+                return;
+              }
+
+              ui.flowActionSidePanel.setOpen(false);
 
               return;
             }
 
             if (node.type === 'action') {
+              event.stopPropagation();
               store.ui.flowActionSidePanel.setOpen(true, {
                 type: 'EmailAction',
                 context: {
@@ -424,17 +467,6 @@ export const FlowBuilder = observer(
                   // @ts-expect-error to do improve types on flowActionSidePanel
                   node: node,
                 },
-              });
-
-              return;
-            }
-
-            if (node.type === 'trigger') {
-              ui.flowCommandMenu.setOpen(true);
-              ui.flowCommandMenu.setType('TriggersHub');
-              ui.flowCommandMenu.setContext({
-                id: node.id,
-                entity: 'Trigger',
               });
 
               return;
@@ -447,7 +479,6 @@ export const FlowBuilder = observer(
           />
           <Background />
           <FlowBuilderToolbar />
-
           {/* todo explore way to merge that with flow settings panel*/}
           {store.ui.flowActionSidePanel.isOpen && <EmailSettingsPanel />}
         </ReactFlow>

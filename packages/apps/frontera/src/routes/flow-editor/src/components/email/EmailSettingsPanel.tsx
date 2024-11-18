@@ -57,8 +57,6 @@ export const EmailSettingsPanel = observer(() => {
   const flow = flows.value.get(flowId)?.value?.name;
 
   useEffect(() => {
-    ui.commandMenu.setCallback(handleSave);
-
     const isSubjectChanged = subject !== data?.subject;
     const plainTextBodyBefore =
       data?.bodyTemplate && extractPlainText(data?.bodyTemplate)?.trim();
@@ -117,7 +115,10 @@ export const EmailSettingsPanel = observer(() => {
           };
         }
 
-        if (node.data?.replyTo === sidePanelStore.context.node?.id) {
+        if (
+          !!node.data?.replyTo &&
+          node.data?.replyTo === sidePanelStore.context.node?.id
+        ) {
           return {
             ...node,
             data: {
@@ -138,7 +139,7 @@ export const EmailSettingsPanel = observer(() => {
 
       if (emailContent?.html) {
         handleEmailDataChange({
-          subject: subject,
+          subject,
           bodyTemplate: emailContent.html,
         });
       }
@@ -155,129 +156,137 @@ export const EmailSettingsPanel = observer(() => {
     }
   };
 
-  const handleCancel = () => {
+  useEffect(() => {
+    ui.commandMenu.setCallback(handleSave);
+  }, [handleSave]);
+
+  const handleCancelChanges = () => {
     ui.commandMenu.clearContext();
     sidePanelStore.clearContext();
     sidePanelStore.setOpen(false);
   };
 
   return (
-    <article
+    <div
       onClick={(e) => e.stopPropagation()}
       onKeyDown={(e) => e.stopPropagation()}
-      className='fixed z-50 top-[0px] bottom-0 right-0 w-[400px] bg-white  border-l flex flex-col gap-4 animate-slideLeft'
+      className='pl-4 -ml-4 fixed z-50 top-[0px] bottom-0 right-0 w-[400px] h-full  '
     >
-      <div className='flex justify-between items-center border-b border-gray-200 p-4 y-2 h-[41px]'>
-        <div className='flex items-center gap-2'>
-          <h1 className='font-medium'>Email {}</h1>
-          <Tooltip label='Focus mode'>
-            <IconButton
-              size='xs'
-              variant='ghost'
-              icon={<ZenCircle />}
-              aria-label={'Focus mode'}
-              onClick={() => setFocusMode(true)}
-            />
-          </Tooltip>
+      <article className=' h-full bg-white  border-l flex flex-col gap-1 animate-slideLeft'>
+        <div className='flex justify-between items-center border-b border-gray-200 p-4 y-2 h-[41px]'>
+          <div className='flex items-center gap-2'>
+            <h1 className='font-medium'>Email {}</h1>
+            <Tooltip label='Focus mode'>
+              <IconButton
+                size='xs'
+                variant='ghost'
+                icon={<ZenCircle />}
+                aria-label={'Focus mode'}
+                onClick={() => setFocusMode(true)}
+              />
+            </Tooltip>
+          </div>
+
+          <div className='flex gap-2'>
+            <div>
+              <Button size='xs' variant='ghost' onClick={handleCancelChanges}>
+                Cancel changes
+              </Button>
+            </div>
+            <div>
+              <Button size='xs' variant='outline' onClick={handleSave}>
+                Done
+              </Button>
+            </div>
+          </div>
         </div>
 
-        <div className='flex gap-2'>
-          <div>
-            <Button size='xs' variant='ghost' onClick={handleCancel}>
-              Cancel changes
-            </Button>
-          </div>
-          <div>
-            <Button size='xs' variant='outline' onClick={handleSave}>
-              Save email
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      <div className='px-4'>
-        <Tooltip
-          align='start'
-          label={
-            data?.action === FlowActionType.EMAIL_REPLY
-              ? `Reply to email subjects can't be edited`
-              : ''
-          }
-        >
-          <div
-            className={cn({
-              'cursor-not-allowed': data?.action === FlowActionType.EMAIL_REPLY,
-            })}
+        <div className='px-4 overflow-y-auto min-h-[50%] h-full'>
+          <Tooltip
+            align='start'
+            label={
+              data?.action === FlowActionType.EMAIL_REPLY
+                ? `Reply to email subjects can't be edited`
+                : ''
+            }
           >
+            <div
+              className={cn({
+                'cursor-not-allowed':
+                  data?.action === FlowActionType.EMAIL_REPLY,
+              })}
+            >
+              <Editor
+                size='md'
+                usePlainText
+                ref={inputRef}
+                placeholder='Subject'
+                variableOptions={variables}
+                namespace='flow-email-editor-subject'
+                onChange={(html) => setSubject(extractPlainText(html))}
+                defaultHtmlValue={convertPlainTextToHtml(subject ?? '')}
+                onKeyDown={(e) => {
+                  if (e.key === 'Tab') {
+                    e.preventDefault();
+                    editorRef.current?.focus();
+                  }
+                }}
+                placeholderClassName={cn(
+                  'text-sm font-medium h-auto cursor-text ',
+                  {
+                    'pointer-events-none text-gray-400':
+                      data?.action === FlowActionType.EMAIL_REPLY,
+                  },
+                )}
+                className={cn(
+                  `text-sm font-medium h-auto cursor-text email-editor-subject`,
+                  {
+                    'pointer-events-none text-gray-400':
+                      data?.action === FlowActionType.EMAIL_REPLY,
+                  },
+                )}
+              />
+            </div>
+          </Tooltip>
+          <div className='min-h-[60vh] mb-2'>
             <Editor
-              size='md'
-              usePlainText
-              ref={inputRef}
-              placeholder='Subject'
+              ref={editorRef}
+              placeholder={placeholder}
               variableOptions={variables}
-              namespace='flow-email-editor-subject'
-              onChange={(html) => setSubject(extractPlainText(html))}
-              defaultHtmlValue={convertPlainTextToHtml(subject ?? '')}
-              onKeyDown={(e) => {
-                if (e.key === 'Tab') {
-                  e.preventDefault();
-                  editorRef.current?.focus();
-                }
-              }}
-              placeholderClassName={cn(
-                'text-sm font-medium h-auto cursor-text',
-                {
-                  'pointer-events-none text-gray-400':
-                    data?.action === FlowActionType.EMAIL_REPLY,
-                },
-              )}
-              className={cn(
-                `text-sm font-medium h-auto cursor-text email-editor-subject`,
-                {
-                  'pointer-events-none text-gray-400':
-                    data?.action === FlowActionType.EMAIL_REPLY,
-                },
-              )}
+              dataTest='flow-email-editor'
+              namespace='flow-email-editor'
+              defaultHtmlValue={bodyTemplate}
+              placeholderClassName='text-sm '
+              onChange={(e) => setBodyTemplate(e)}
+              className='text-sm cursor-text email-editor h-full'
             />
           </div>
-        </Tooltip>
-
-        <Editor
-          ref={editorRef}
+        </div>
+        {/*<Button*/}
+        {/*  size='lg'*/}
+        {/*  isDisabled*/}
+        {/*  variant='ghost'*/}
+        {/*  colorScheme='primary'*/}
+        {/*  leftIcon={<MailAdd className='text-inherit size-4' />}*/}
+        {/*  className='text-primary-700 w-full text-sm absolute bottom-0 py-4 rounded-none border-t border-solid border-gray-200'*/}
+        {/*>*/}
+        {/*  Set up a test email...*/}
+        {/*</Button>*/}
+        <EmailEditorModal
+          flowName={flow}
+          subject={subject}
+          action={data?.action}
+          variables={variables}
+          setSubject={setSubject}
+          handleSave={handleSave}
+          isEditorOpen={focusMode}
           placeholder={placeholder}
-          variableOptions={variables}
-          dataTest='flow-email-editor'
-          namespace='flow-email-editor'
-          defaultHtmlValue={bodyTemplate}
-          placeholderClassName='text-sm '
-          onChange={(e) => setBodyTemplate(e)}
-          className='text-sm cursor-text email-editor h-full'
+          bodyTemplate={bodyTemplate}
+          setBodyTemplate={setBodyTemplate}
+          handleCancel={() => setFocusMode(false)}
         />
-      </div>
-      {/*<Button*/}
-      {/*  size='lg'*/}
-      {/*  isDisabled*/}
-      {/*  variant='ghost'*/}
-      {/*  colorScheme='primary'*/}
-      {/*  leftIcon={<MailAdd className='text-inherit size-4' />}*/}
-      {/*  className='text-primary-700 w-full text-sm absolute bottom-0 py-4 rounded-none border-t border-solid border-gray-200'*/}
-      {/*>*/}
-      {/*  Set up a test email...*/}
-      {/*</Button>*/}
-      <EmailEditorModal
-        flowName={flow}
-        subject={subject}
-        action={data?.action}
-        variables={variables}
-        setSubject={setSubject}
-        handleSave={handleSave}
-        isEditorOpen={focusMode}
-        placeholder={placeholder}
-        bodyTemplate={bodyTemplate}
-        setBodyTemplate={setBodyTemplate}
-        handleCancel={() => setFocusMode(false)}
-      />
-    </article>
+      </article>
+    </div>
   );
 });
 

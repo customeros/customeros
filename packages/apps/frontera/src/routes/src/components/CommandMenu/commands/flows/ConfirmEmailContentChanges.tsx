@@ -16,11 +16,16 @@ export const ConfirmEmailContentChanges = observer(() => {
     store.ui.commandMenu.clearContext();
     store.ui.commandMenu.setOpen(false);
     store.ui.commandMenu.clearCallback();
+
+    store.ui.flowActionSidePanel.setOpen(false);
+    store.ui.flowActionSidePanel.clearContext();
   };
 
   const handleConfirm = () => {
     context?.callback?.();
-    handleClose();
+    store.ui.commandMenu.clearContext();
+    store.ui.commandMenu.setOpen(false);
+    store.ui.commandMenu.clearCallback();
   };
 
   return (
