@@ -1,0 +1,28 @@
+extend type Query {
+    mailstack_DomainPurchaseSuggestions(domain: String!, limit: Int): [String!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    mailstack_Domains: [String!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    mailstack_CheckUnavailableDomains(domain: [String!]!): [String!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+
+    mailstack_Mailboxes: [Mailbox!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+
+extend type Mutation {
+    mailstack_RegisterDomains(domains: [String!]!): [String!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    mailstack_CreateMailboxes(input: [MailboxInput!]!): [Mailbox!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    mailstack_SetUser(mailbox: String!, userId: ID!): Mailbox! @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+
+type Mailbox {
+    domain:             String!
+    mailbox:            String!
+    created:            Time!
+    userId:             ID
+    scheduledEmails:    Int64!
+    dailyEmailLimit:    Int64!
+    currentFlowIds:     [ID!]
+}
+
+input MailboxInput {
+    mailboxDomain:      String!
+    mailboxUsername:    String!
+}

@@ -1613,6 +1613,21 @@ type LogEntryUpdateInput struct {
 	StartedAt   *time.Time `json:"startedAt,omitempty"`
 }
 
+type Mailbox struct {
+	Domain          string    `json:"domain"`
+	Mailbox         string    `json:"mailbox"`
+	Created         time.Time `json:"created"`
+	UserID          *string   `json:"userId,omitempty"`
+	ScheduledEmails int64     `json:"scheduledEmails"`
+	DailyEmailLimit int64     `json:"dailyEmailLimit"`
+	CurrentFlowIds  []string  `json:"currentFlowIds,omitempty"`
+}
+
+type MailboxInput struct {
+	MailboxDomain   string `json:"mailboxDomain"`
+	MailboxUsername string `json:"mailboxUsername"`
+}
+
 type Meeting struct {
 	ID                 string               `json:"id"`
 	Name               *string              `json:"name,omitempty"`
