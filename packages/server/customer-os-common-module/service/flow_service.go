@@ -22,7 +22,7 @@ type FlowService interface {
 	FlowGetList(ctx context.Context) (*neo4jentity.FlowEntities, error)
 	FlowGetById(ctx context.Context, id string) (*neo4jentity.FlowEntity, error)
 	FlowGetByActionId(ctx context.Context, flowActionId string) (*neo4jentity.FlowEntity, error)
-	FlowGetByParticipantId(ctx context.Context, flowParticipantId string) (*neo4jentity.FlowEntity, error)
+	FlowGetByParticipantId(ctx context.Context, tx *neo4j.ManagedTransaction, flowParticipantId string) (*neo4jentity.FlowEntity, error)
 	FlowsGetListWithParticipant(ctx context.Context, entityIds []string, entityType model.EntityType) (*neo4jentity.FlowEntities, error)
 	FlowsGetListWithSender(ctx context.Context, senderIds []string) (*neo4jentity.FlowEntities, error)
 	FlowMerge(ctx context.Context, tx *neo4j.ManagedTransaction, entity *neo4jentity.FlowEntity) (*neo4jentity.FlowEntity, error)
@@ -112,14 +112,14 @@ func (s *flowService) FlowGetByActionId(ctx context.Context, flowActionId string
 	return mapper.MapDbNodeToFlowEntity(node), nil
 }
 
-func (s *flowService) FlowGetByParticipantId(ctx context.Context, flowParticipantId string) (*neo4jentity.FlowEntity, error) {
+func (s *flowService) FlowGetByParticipantId(ctx context.Context, tx *neo4j.ManagedTransaction, flowParticipantId string) (*neo4jentity.FlowEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowGetByParticipantId")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	span.LogFields(log.String("flowParticipantId", flowParticipantId))
 
-	node, err := s.services.Neo4jRepositories.FlowReadRepository.GetWithParticipant(ctx, flowParticipantId)
+	node, err := s.services.Neo4jRepositories.FlowReadRepository.GetWithParticipant(ctx, tx, flowParticipantId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -920,18 +920,18 @@ func (s *flowService) FlowParticipantDelete(ctx context.Context, flowParticipant
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	entity, err := s.FlowParticipantById(ctx, flowParticipantId)
+	flowparticipant, err := s.FlowParticipantById(ctx, flowParticipantId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 
-	if entity == nil {
+	if flowparticipant == nil {
 		tracing.TraceErr(span, errors.New("flow participant not found"))
 		return errors.New("flow participant not found")
 	}
 
-	flow, err := s.FlowGetByParticipantId(ctx, entity.Id)
+	flow, err := s.FlowGetByParticipantId(ctx, nil, flowparticipant.Id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -943,11 +943,25 @@ func (s *flowService) FlowParticipantDelete(ctx context.Context, flowParticipant
 
 	_, err = utils.ExecuteWriteInTransaction(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, nil, func(tx neo4j.ManagedTransaction) (any, error) {
 
+		flowActionExecutions, err := s.services.FlowExecutionService.GetFlowActionExecutionsForParticipant(ctx, &tx, flow.Id, flowparticipant.EntityId, flowparticipant.EntityType)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range flowActionExecutions {
+			if v.Status == neo4jentity.FlowActionExecutionStatusScheduled {
+				err := s.services.Neo4jRepositories.FlowActionExecutionWriteRepository.Delete(ctx, &tx, v.Id)
+				if err != nil {
+					return nil, err
+				}
+			}
+		}
+
 		err = s.services.Neo4jRepositories.CommonWriteRepository.Unlink(ctx, &tx, tenant, repository.LinkDetails{
 			FromEntityId:   flow.Id,
 			FromEntityType: model.FLOW,
 			Relationship:   model.HAS,
-			ToEntityId:     entity.Id,
+			ToEntityId:     flowparticipant.Id,
 			ToEntityType:   model.FLOW_PARTICIPANT,
 		})
 		if err != nil {
@@ -955,28 +969,29 @@ func (s *flowService) FlowParticipantDelete(ctx context.Context, flowParticipant
 		}
 
 		err = s.services.Neo4jRepositories.CommonWriteRepository.Unlink(ctx, &tx, tenant, repository.LinkDetails{
-			FromEntityId:   entity.Id,
+			FromEntityId:   flowparticipant.Id,
 			FromEntityType: model.FLOW_PARTICIPANT,
 			Relationship:   model.HAS,
-			ToEntityId:     entity.EntityId,
-			ToEntityType:   entity.EntityType,
+			ToEntityId:     flowparticipant.EntityId,
+			ToEntityType:   flowparticipant.EntityType,
 		})
 		if err != nil {
 			return nil, err
 		}
 
-		err = s.services.Neo4jRepositories.FlowParticipantWriteRepository.Delete(ctx, &tx, entity.Id)
+		err = s.services.Neo4jRepositories.FlowParticipantWriteRepository.Delete(ctx, &tx, flowparticipant.Id)
 		if err != nil {
 			return nil, err
 		}
 
-		//TODO
-		//remove scheduled events???
-
 		return nil, nil
 	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
 
-	s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, entity.Id, model.FLOW_PARTICIPANT, utils.NewEventCompletedDetails().WithDelete())
+	s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, flowparticipant.Id, model.FLOW_PARTICIPANT, utils.NewEventCompletedDetails().WithDelete())
 
 	return nil
 }
