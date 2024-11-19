@@ -9,6 +9,7 @@ import { Shuffle01 } from '@ui/media/icons/Shuffle01.tsx';
 import { Certificate02 } from '@ui/media/icons/Certificate02';
 import { ArrowBlockUp } from '@ui/media/icons/ArrowBlockUp.tsx';
 import { Kbd, CommandKbd, CommandItem } from '@ui/overlay/CommandMenu';
+import { AddContactFlowSubItemGroup } from '@shared/components/CommandMenu/commands/contacts/AddContactFlowSubItemGroup.tsx';
 
 import { CommandsContainer } from './shared';
 
@@ -48,6 +49,8 @@ export const ContactBulkCommands = observer(() => {
         >
           Add to flow...
         </CommandItem>
+        <AddContactFlowSubItemGroup />
+
         <CommandItem
           leftAccessory={<Certificate02 />}
           keywords={contactKeywords.edit_job_title}
