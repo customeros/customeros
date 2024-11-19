@@ -16,9 +16,12 @@ WORKDIR /app
 COPY package.json .
 
 RUN npm cache clean --force
-RUN npm install --verbose
+RUN npm ci --ignore-scripts
 
 COPY . .
+
+RUN touch .env.production
+RUN printenv > .env.production
 
 RUN npm run build
 
