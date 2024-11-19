@@ -4,20 +4,22 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"regexp"
+	"strings"
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/config"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/entity"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/repository"
 	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/sirupsen/logrus"
-	"regexp"
-	"strings"
-	"time"
+
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/config"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/entity"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/repository"
 )
 
 type emailService struct {
@@ -285,8 +287,8 @@ func (s *emailService) syncEmail(tenant string, emailId uuid.UUID) (entity.RawSt
 
 		emailidList := []string{}
 
-		//from
-		//check if domain exists for tenant by email. if so, link the email to the user otherwise create a contact and link the email to the contact
+		// from
+		// check if domain exists for tenant by email. if so, link the email to the user otherwise create a contact and link the email to the contact
 		fromEmailId, err := s.services.SyncService.GetEmailIdForEmail(ctx, tx, tenant, from, now, rawEmail.ExternalSystem)
 		if err != nil {
 			logrus.Errorf("unable to retrieve email id for tenant: %v", err)
@@ -304,7 +306,7 @@ func (s *emailService) syncEmail(tenant string, emailId uuid.UUID) (entity.RawSt
 		}
 		emailidList = append(emailidList, fromEmailId)
 
-		//to
+		// to
 		for _, toEmail := range to {
 			toEmailId, err := s.services.SyncService.GetEmailIdForEmail(ctx, tx, tenant, toEmail, now, rawEmail.ExternalSystem)
 			if err != nil {
@@ -327,7 +329,7 @@ func (s *emailService) syncEmail(tenant string, emailId uuid.UUID) (entity.RawSt
 			emailidList = append(emailidList, toEmailId)
 		}
 
-		//cc
+		// cc
 		for _, ccEmail := range cc {
 			if ccEmail == "" {
 				continue
@@ -353,7 +355,7 @@ func (s *emailService) syncEmail(tenant string, emailId uuid.UUID) (entity.RawSt
 			emailidList = append(emailidList, ccEmailId)
 		}
 
-		//bcc
+		// bcc
 		for _, bccEmail := range bcc {
 			if bccEmail == "" {
 				continue
