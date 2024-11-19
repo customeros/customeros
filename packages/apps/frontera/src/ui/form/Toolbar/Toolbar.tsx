@@ -16,10 +16,12 @@ export const ToolbarSeparator = (props: Toolbar.ToolbarSeparatorProps) => {
   return <Toolbar.Separator {...props} />;
 };
 
-export const ToolbarToggleGroup = (props: Toolbar.ToggleGroupProps) => {
+export const ToolbarToggleGroup = (
+  props: Toolbar.ToolbarToggleGroupSingleProps,
+) => {
   return <Toolbar.ToggleGroup {...props} />;
 };
 
-export const ToolbarToggleItem = (props: Toolbar.ToggleGroupItemProps) => {
+export const ToolbarToggleItem = (props: Toolbar.ToolbarToggleItemProps) => {
   return <Toolbar.ToggleItem {...props} />;
 };

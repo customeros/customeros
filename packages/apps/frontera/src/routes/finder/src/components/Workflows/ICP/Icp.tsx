@@ -50,32 +50,39 @@ export const Icp = observer(() => {
     workFlow?.getFilter(`${ColumnViewType.OrganizationsEmployeeCount}`)
       ?.operation === ComparisonOperator.Between
       ? 'between'
-      : ComparisonOperator.Lt ===
-        workFlow?.getFilter(`${ColumnViewType.OrganizationsEmployeeCount}`)
-          ?.operation
+      : workFlow?.getFilter(`${ColumnViewType.OrganizationsEmployeeCount}`)
+          ?.operation === ComparisonOperator.Lt
       ? 'less than'
-      : 'more than' ?? options[1],
+      : workFlow?.getFilter(`${ColumnViewType.OrganizationsEmployeeCount}`)
+          ?.operation === ComparisonOperator.Gt
+      ? 'more than'
+      : options[1],
   );
   const [followersFilter, setFollowersFilter] = useState(
     workFlow?.getFilter(`${ColumnViewType.OrganizationsLinkedinFollowerCount}`)
       ?.operation === ComparisonOperator.Between
       ? 'between'
-      : ComparisonOperator.Lt ===
-        workFlow?.getFilter(
+      : workFlow?.getFilter(
           `${ColumnViewType.OrganizationsLinkedinFollowerCount}`,
-        )?.operation
+        )?.operation === ComparisonOperator.Lt
       ? 'less than'
-      : 'more than' ?? options[1],
+      : workFlow?.getFilter(
+          `${ColumnViewType.OrganizationsLinkedinFollowerCount}`,
+        )?.operation === ComparisonOperator.Gt
+      ? 'more than'
+      : options[1],
   );
   const [yearsFilter, setYearsFilter] = useState(
     workFlow?.getFilter(`${ColumnViewType.OrganizationsYearFounded}`)
       ?.operation === ComparisonOperator.Between
       ? 'between'
-      : ComparisonOperator.Lt ===
-        workFlow?.getFilter(`${ColumnViewType.OrganizationsYearFounded}`)
-          ?.operation
+      : workFlow?.getFilter(`${ColumnViewType.OrganizationsYearFounded}`)
+          ?.operation === ComparisonOperator.Lt
       ? 'less than'
-      : 'more than' ?? options[1],
+      : workFlow?.getFilter(`${ColumnViewType.OrganizationsYearFounded}`)
+          ?.operation === ComparisonOperator.Gt
+      ? 'more than'
+      : options[1],
   );
 
   const handleEmployeesFilter = () => {

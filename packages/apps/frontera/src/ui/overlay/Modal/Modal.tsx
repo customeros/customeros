@@ -5,7 +5,7 @@ import type {
   DialogContentProps,
   DialogTriggerProps,
   DialogOverlayProps,
-} from '@radix-ui/react-alert-dialog';
+} from '@radix-ui/react-dialog';
 
 import { forwardRef } from 'react';
 

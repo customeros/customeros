@@ -71,7 +71,9 @@ export const AddContactsToFlow = observer(() => {
                 handleSelect(contactStore as ContactStore);
               }}
               value={
-                `${contactStore.name} ${contactStore.value.metadata.id}` ?? ''
+                contactStore.name || contactStore.value.metadata.id
+                  ? `${contactStore.name} ${contactStore.value.metadata.id}`
+                  : ''
               }
             >
               <div className='flex justify-between w-full'>

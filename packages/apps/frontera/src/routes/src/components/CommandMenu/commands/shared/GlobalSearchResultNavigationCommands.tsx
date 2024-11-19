@@ -94,7 +94,9 @@ export const GlobalSearchResultNavigationCommands = observer(() => {
             key={contactStore.value.metadata.id}
             onSelect={() => handleGoTo(contactStore.organizationId, 'people')}
             value={
-              `${contactStore.name} ${contactStore.value.metadata.id}` ?? ''
+              contactStore.name || contactStore.value.metadata.id
+                ? `${contactStore.name} ${contactStore.value.metadata.id}`
+                : ''
             }
           >
             <div className='flex items-center'>

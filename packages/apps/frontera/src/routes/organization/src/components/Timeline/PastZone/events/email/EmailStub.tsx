@@ -71,7 +71,9 @@ export const EmailStub: FC<{ email: InteractionEventWithDate }> = ({
             <p className='line-clamp-1 leading-[21px]'>
               <span className='font-medium leading-[21px]'>
                 {getEmailParticipantsName(
-                  ([email?.sentBy?.[0]] as unknown as EmailParticipant[]) || [],
+                  email?.sentBy?.[0]
+                    ? [email.sentBy[0] as EmailParticipant]
+                    : [],
                 )}
               </span>{' '}
               <span className='text-[#6C757D]'>emailed</span>{' '}
