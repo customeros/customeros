@@ -27,6 +27,7 @@ export type CommandMenuType =
   | 'ContactHub'
   | 'ContactCommands'
   | 'EditEmail'
+  | 'CreateNewContact'
   | 'EditName'
   | 'EditPhoneNumber'
   | 'EditJobTitle'

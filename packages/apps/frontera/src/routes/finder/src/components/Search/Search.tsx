@@ -116,6 +116,19 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
     )
     .otherwise(() => 'by organization name...');
 
+  const createNewEntityModalType:
+    | null
+    | 'CreateNewFlow'
+    | 'CreateNewContact'
+    | 'AddNewOrganization' = match(tableType)
+    .with(TableViewType.Flow, (): 'CreateNewFlow' => 'CreateNewFlow')
+    .with(TableViewType.Contacts, (): 'CreateNewContact' => 'CreateNewContact')
+    .with(
+      TableViewType.Organizations,
+      (): 'AddNewOrganization' => 'AddNewOrganization',
+    )
+    .otherwise(() => null);
+
   const handleToogleFlow = () => {
     if (open) {
       onClose();
@@ -178,8 +191,13 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
             }
 
             if (e.key === 'Enter' && allowCreation) {
-              store.ui.commandMenu.setType('AddNewOrganization');
-              store.ui.commandMenu.setOpen(true);
+              e.stopPropagation();
+              e.preventDefault();
+
+              if (createNewEntityModalType) {
+                store.ui.commandMenu.setType(createNewEntityModalType);
+                store.ui.commandMenu.setOpen(true);
+              }
             }
             e.stopPropagation();
           }}
