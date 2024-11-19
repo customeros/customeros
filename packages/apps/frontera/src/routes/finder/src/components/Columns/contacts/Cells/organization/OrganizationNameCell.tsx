@@ -9,12 +9,16 @@ import { Combobox } from '@ui/form/Combobox';
 import { Edit03 } from '@ui/media/icons/Edit03';
 import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
-import { Organization } from '@shared/types/__generated__/graphql.types';
 import {
   Popover,
   PopoverTrigger,
   PopoverContent,
 } from '@ui/overlay/Popover/Popover';
+import {
+  JobRole,
+  Metadata,
+  Organization,
+} from '@shared/types/__generated__/graphql.types';
 
 interface OrganizationNameCellProps {
   org: string;
@@ -81,32 +85,33 @@ export const OrganizationNameCell = observer(
             <Combobox
               options={options}
               onChange={(value) => {
-                contactStore?.value.organizations.content.map((org) => {
-                  if (org.metadata.id === value.value) return;
-                  contactStore.value.organizations.content.push({
-                    metadata: {
-                      id: value.value,
-                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    } as any,
+                contactStore?.value.organizations.content.push({
+                  metadata: {
                     id: value.value,
-                    name: value.label,
-                  } as Organization);
-                });
-                contactStore?.commit();
+                  } as Metadata,
+                  id: value.value,
+                  name: value.label,
+                } as Organization);
 
-                if (contactStore?.value.latestOrganizationWithJobRole) {
-                  contactStore.value.latestOrganizationWithJobRole.organization =
-                    {
+                contactStore?.commit({ syncOnly: true });
+
+                if (contactStore) {
+                  contactStore.value.latestOrganizationWithJobRole = {
+                    organization: {
                       metadata: {
                         id: value.value,
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                      } as any,
+                      } as Metadata,
                       id: value.value,
                       name: value.label,
-                    } as Organization;
+                    } as Organization,
+                    jobRole: {
+                      id: '',
+                    } as JobRole,
+                  };
                 }
+
+                contactStore?.commit();
                 setIsOpen(false);
-                contactStore?.commit({ syncOnly: true });
               }}
             />
           </PopoverContent>
