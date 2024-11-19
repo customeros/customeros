@@ -7,7 +7,7 @@ import { RootStore } from './root';
 import { ContactService } from './Contacts/__service__/Contacts.service';
 import { InvoicesService } from './Invoices/__service__/Invoices.service';
 import { OrganizationsService } from './Organizations/__service__/Organizations.service';
-import { CustomFieldsService } from './Settings/__service__/customFields/CustomFields.service';
+import { CustomFieldsService } from './Settings/__service__/CustomFields/CustomFields.service';
 
 export class GraphqlService {
   private organizationsService: OrganizationsService;
