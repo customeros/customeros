@@ -25,6 +25,7 @@ func (p *emailInService) SyncEmail(tenant string, emailId uuid.UUID) (postgresen
 	span.LogFields(log.String("emailId", emailId.String()))
 
 	emailIdString := emailId.String()
+    var reason string
 
 	rawEmail, err := p.services.PostgresRepositories.RawEmailRepository.GetEmailForSync(emailId)
 	if err != nil {
@@ -41,6 +42,21 @@ func (p *emailInService) SyncEmail(tenant string, emailId uuid.UUID) (postgresen
 	if email.Identifiers.MessageId == "" {
 		return postgresentity.ERROR, nil, fmt.Errorf("email message ID is empty")
 	}
+
+    check := p.ProcessEmailCheck(&email)
+    if !check.ProcessEmail {
+        if check.IsBounce {
+            reason = "email bounced"
+        }
+        if check.IsAutoResponder {
+            reason = "email autoresponder"
+        }
+        if check.IsBulkMail {
+            reason = "bulk email"
+        }
+    }
+        return postgresentity.SKIPPED, &reason, nil 
+    }
 
 	interactionEventId, err := p.services.Neo4jRepositories.InteractionEventRepository.GetInteractionEventIdByExternalId(ctx, tenant, rawEmail.ExternalSystem, rawEmail.MessageId)
 	if err != nil {
