@@ -7,10 +7,10 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func GetEmailMessageData(rawEmail string) (EmailMessageData, error) {
+func (l *emailService) LoadEmail(rawEmail string) (EmailMessageData, error) {
 	email := EmailMessageData{}
 
-	emailData, err := getRawEmailData(rawEmail)
+	emailData, err := l.getRawEmailData(rawEmail)
 	if err != nil {
 		return email, err
 	}
@@ -25,18 +25,18 @@ func GetEmailMessageData(rawEmail string) (EmailMessageData, error) {
 	email.Content.Html = emailData.Html
 	email.Content.Text = emailData.Text
 
-	email.Participants.From = parseEmailAndName(emailData.From)
-	email.Participants.To = parseParticipants(emailData.To)
-	email.Participants.Cc = parseParticipants(emailData.Cc)
-	email.Participants.Bcc = parseParticipants(emailData.Bcc)
-	email.Participants.InReplyTo = parseEmailAndName(emailData.InReplyTo)
+	email.Participants.From = l.parseEmailAndName(emailData.From)
+	email.Participants.To = l.parseParticipants(emailData.To)
+	email.Participants.Cc = l.parseParticipants(emailData.Cc)
+	email.Participants.Bcc = l.parseParticipants(emailData.Bcc)
+	email.Participants.InReplyTo = l.parseEmailAndName(emailData.InReplyTo)
 
-	email.Headers = parseHeaders(emailData.Headers)
+	email.Headers = l.parseHeaders(emailData.Headers)
 
 	return email, nil
 }
 
-func getRawEmailData(rawEmail string) (EmailRawData, error) {
+func (l *emailService) getRawEmailData(rawEmail string) (EmailRawData, error) {
 	rawEmailData := EmailRawData{}
 	err := json.Unmarshal([]byte(rawEmail), &rawEmailData)
 	if err != nil {
@@ -47,7 +47,8 @@ func getRawEmailData(rawEmail string) (EmailRawData, error) {
 	return rawEmailData, nil
 }
 
-func parseEmailAndName(s string) EmailParticipant {
+func (l *emailService) parseEmailAndName(s string) EmailParticipant {
+	s = strings.ToLower(s)
 	results := EmailParticipant{}
 
 	// Handle bare email case
@@ -57,7 +58,7 @@ func parseEmailAndName(s string) EmailParticipant {
 	}
 
 	// Extract email
-	results.Email = extractEmailFromBrackets(s)
+	results.Email = l.extractEmailFromBrackets(s)
 
 	// Extract name part
 	namePart := strings.TrimSpace(strings.Split(s, "<")[0])
@@ -74,7 +75,8 @@ func parseEmailAndName(s string) EmailParticipant {
 	return results
 }
 
-func parseParticipants(s string) []EmailParticipant {
+func (l *emailService) parseParticipants(s string) []EmailParticipant {
+	s = strings.ToLower(s)
 	participants := []EmailParticipant{}
 
 	// Split on commas
@@ -82,14 +84,15 @@ func parseParticipants(s string) []EmailParticipant {
 
 	for _, part := range parts {
 		part = strings.TrimSpace(part)
-		participant := parseEmailAndName(part)
+		participant := l.parseEmailAndName(part)
 		participants = append(participants, participant)
 	}
 
 	return participants
 }
 
-func extractEmailFromBrackets(s string) string {
+func (l *emailService) extractEmailFromBrackets(s string) string {
+	s = strings.ToLower(s)
 	if start := strings.LastIndex(s, "<"); start >= 0 {
 		if end := strings.LastIndex(s, ">"); end > start {
 			return s[start+1 : end]
@@ -98,7 +101,7 @@ func extractEmailFromBrackets(s string) string {
 	return s
 }
 
-func parseHeaders(headers map[string]string) EmailHeaders {
+func (l *emailService) parseHeaders(headers map[string]string) EmailHeaders {
 	eh := EmailHeaders{}
 
 	// Store raw headers
@@ -123,7 +126,7 @@ func parseHeaders(headers map[string]string) EmailHeaders {
 			eh.Precedence = value
 		}
 		if strings.EqualFold(header, "Return-Path") {
-			eh.ReturnPath = extractEmailFromBrackets(value)
+			eh.ReturnPath = l.extractEmailFromBrackets(value)
 		}
 		if strings.EqualFold(header, "X-Autoreply") {
 			eh.XAutoreply = value

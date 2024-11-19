@@ -1,72 +1,82 @@
 package service
 
-import (
-	"encoding/json"
+import "strings"
 
-	"github.com/sirupsen/logrus"
-)
+// TODO parse SMTP status code from message/deliver-status
+// and classify bounced email as hard or soft bounce
 
-type EmailAnalyzer interface {
-	Analyze(email EmailMessageData) HeaderAnalysis
-}
-
-type emailAnalyzer struct{}
-
-func NewEmailAnalyzer() EmailAnalyzer {
-	return &emailAnalyzer{}
-}
-
-func (a *emailAnalyzer) ProcessCheck(email EmailMessageData) HeaderAnalysis {
+func (a *emailService) ProcessEmailCheck(email *EmailMessageData) HeaderAnalysis {
 	analysis := HeaderAnalysis{
-		ShouldProcess: true, // Default to processing
+		ProcessEmail: true, // Default to processing
+	}
+
+	// Check bounce
+	if a.isBounce(email.Headers, email.Content.Subject, email.Participants.From.Email) {
+		analysis.IsBounce = true
+		analysis.ProcessEmail = false
+		return analysis
 	}
 
 	// Check auto-responder first
 	if a.isAutoResponder(email.Headers) {
 		analysis.IsAutoResponder = true
-		analysis.ShouldProcess = false
-		return analysis
-	}
-
-	// Check bounce
-	if a.isBounce(email.Headers) {
-		analysis.IsBounce = true
-		analysis.ShouldProcess = false
+		analysis.ProcessEmail = false
 		return analysis
 	}
 
 	// Check bulk mail
 	if a.isBulkMail(email.Headers) {
 		analysis.IsBulkMail = true
-		analysis.ShouldProcess = false
-		return analysis
+		analysis.ProcessEmail = false
 	}
 
 	return analysis
 }
 
-func (a *emailAnalyzer) isAutoResponder(headers EmailHeaders) bool {
+func (a *emailService) isAutoResponder(headers EmailHeaders) bool {
 	return headers.XAutoreply != "" ||
 		headers.XAutoresponse != "" ||
 		headers.AutoSubmitted ||
 		headers.XLoop ||
-		headers.Precedence == "auto_reply"
+		strings.EqualFold(headers.Precedence, "auto_reply")
 }
 
-func (a *emailAnalyzer) isBounce(headers EmailHeaders) bool {
+func (a *emailService) isBounce(headers EmailHeaders, subject, from string) bool {
 	return headers.XFailedRecepients ||
 		headers.DeliveryStatus ||
-		headers.ContentDescription == "delivery report" ||
-		a.isReturnPathBounce(headers.ReturnPath)
+		strings.EqualFold(headers.ContentDescription, "delivery report") ||
+		a.isReturnPathBounce(headers.ReturnPath) ||
+		a.isReturnPathBounce(from) ||
+		a.isBounceSubject(subject)
 }
 
-func (a *emailAnalyzer) isBulkMail(headers EmailHeaders) bool {
+func (a *emailService) isBulkMail(headers EmailHeaders) bool {
 	return headers.ListUnsubscribe ||
-		headers.Precedence == "bulk"
+		strings.EqualFold(headers.Precedence, "bulk")
 }
 
-func (a *emailAnalyzer) isReturnPathBounce(returnPath string) bool {
+func (a *emailService) isReturnPathBounce(returnPath string) bool {
 	return returnPath == "" ||
-		returnPath == "mailer-daemon" ||
-		returnPath == "postmaster"
+		strings.Contains(returnPath, "mailer-daemon") ||
+		strings.Contains(returnPath, "postmaster")
+}
+
+func (a *emailService) isBounceSubject(subject string) bool {
+	subject = strings.ToLower(subject)
+	keywords := []string{
+		"delivery status notification",
+		"undeliverable",
+		"undelivered",
+		"delivery failure",
+		"failure notice",
+		"returned mail",
+		"returned to sender",
+	}
+	for _, phrase := range keywords {
+		if strings.Contains(subject, phrase) {
+			return true
+		}
+	}
+
+	return false
 }
