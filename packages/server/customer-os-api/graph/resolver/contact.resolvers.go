@@ -894,7 +894,7 @@ func (r *mutationResolver) ContactRemoveTag(ctx context.Context, input model.Con
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	err := r.Services.CommonServices.TagService.RemoveTag(ctx, nil, tenant, input.ContactID, commonmodel.CONTACT, utils.StringOrEmpty(input.Tag.ID), constants.AppSourceCustomerOsApi)
+	err := r.Services.CommonServices.TagService.RemoveTagFromEntity(ctx, nil, tenant, input.ContactID, commonmodel.CONTACT, utils.StringOrEmpty(input.Tag.ID), constants.AppSourceCustomerOsApi)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Error removing tag from organization")

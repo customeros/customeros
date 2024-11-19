@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
@@ -15,7 +16,7 @@ type TagReadRepository interface {
 	GetById(ctx context.Context, tenant, tagId string) (*dbtype.Node, error)
 	GetAll(ctx context.Context, tenant string) ([]*dbtype.Node, error)
 	GetByNameOptional(ctx context.Context, tenant, name string) (*dbtype.Node, error)
-	GetForContact(ctx context.Context, tenant, contactId string) ([]*dbtype.Node, error)
+	GetAllByEntityType(ctx context.Context, tenant string, entityType commonmodel.EntityType) ([]*dbtype.Node, error)
 	GetForContacts(ctx context.Context, tenant string, contactIds []string) ([]*utils.DbNodeWithRelationAndId, error)
 	GetForLogEntries(ctx context.Context, tenant string, logEntryIds []string) ([]*utils.DbNodeWithRelationAndId, error)
 	GetForIssues(ctx context.Context, tenant string, issueIds []string) ([]*utils.DbNodeWithRelationAndId, error)
@@ -278,18 +279,18 @@ func (r *tagReadRepository) GetForOrganizations(ctx context.Context, tenant stri
 	return result.([]*utils.DbNodeWithRelationAndId), err
 }
 
-func (r *tagReadRepository) GetForContact(ctx context.Context, tenant, contactId string) ([]*dbtype.Node, error) {
+func (r *tagReadRepository) GetAllByEntityType(ctx context.Context, tenant string, entityType commonmodel.EntityType) ([]*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TagRepository.GetAll")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
 	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("contactId", contactId))
+	span.LogFields(log.String("entityType", entityType.String()))
 
-	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id:$contactId})-[rel:TAGGED]->(tag:Tag)
-			RETURN tag ORDER BY rel.taggedAt, tag.name`
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag {entityType:$entityType})
+			RETURN tag ORDER BY tag.name`
 	params := map[string]any{
-		"tenant":    tenant,
-		"contactId": contactId,
+		"tenant":     tenant,
+		"entityType": entityType.String(),
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -298,8 +299,8 @@ func (r *tagReadRepository) GetForContact(ctx context.Context, tenant, contactId
 	defer session.Close(ctx)
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, cypher, params)
-		return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
+		resultWithContext, err := tx.Run(ctx, cypher, params)
+		return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, resultWithContext, err)
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)

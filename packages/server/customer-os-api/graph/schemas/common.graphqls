@@ -23,4 +23,6 @@ enum EntityType {
     OPPORTUNITY
     CONTACT
     LOG_ENTRY
+    ISSUE
+    CONTRACT
 }

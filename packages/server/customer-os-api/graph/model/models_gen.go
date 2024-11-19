@@ -1719,10 +1719,11 @@ func (this MeetingsPage) GetTotalPages() int { return this.TotalPages }
 func (this MeetingsPage) GetTotalElements() int64 { return this.TotalElements }
 
 type Metadata struct {
-	ID            string     `json:"id"`
-	Created       time.Time  `json:"created"`
-	LastUpdated   time.Time  `json:"lastUpdated"`
-	Source        DataSource `json:"source"`
+	ID          string     `json:"id"`
+	Created     time.Time  `json:"created"`
+	LastUpdated time.Time  `json:"lastUpdated"`
+	Source      DataSource `json:"source"`
+	// Deprecated
 	SourceOfTruth DataSource `json:"sourceOfTruth"`
 	AppSource     string     `json:"appSource"`
 	// Aggregate version from event store db
@@ -2559,13 +2560,14 @@ type TableViewDefUpdateInput struct {
 }
 
 type Tag struct {
-	Metadata  *Metadata  `json:"metadata"`
-	ID        string     `json:"id"`
-	Name      string     `json:"name"`
-	CreatedAt time.Time  `json:"createdAt"`
-	UpdatedAt time.Time  `json:"updatedAt"`
-	Source    DataSource `json:"source"`
-	AppSource string     `json:"appSource"`
+	Metadata   *Metadata  `json:"metadata"`
+	ID         string     `json:"id"`
+	Name       string     `json:"name"`
+	CreatedAt  time.Time  `json:"createdAt"`
+	UpdatedAt  time.Time  `json:"updatedAt"`
+	Source     DataSource `json:"source"`
+	AppSource  string     `json:"appSource"`
+	EntityType EntityType `json:"entityType"`
 }
 
 type TagIDOrNameInput struct {
@@ -2574,8 +2576,9 @@ type TagIDOrNameInput struct {
 }
 
 type TagInput struct {
-	Name      string  `json:"name"`
-	AppSource *string `json:"appSource,omitempty"`
+	Name       string      `json:"name"`
+	AppSource  *string     `json:"appSource,omitempty"`
+	EntityType *EntityType `json:"entityType,omitempty"`
 }
 
 type TagUpdateInput struct {
@@ -4031,6 +4034,8 @@ const (
 	EntityTypeOpportunity  EntityType = "OPPORTUNITY"
 	EntityTypeContact      EntityType = "CONTACT"
 	EntityTypeLogEntry     EntityType = "LOG_ENTRY"
+	EntityTypeIssue        EntityType = "ISSUE"
+	EntityTypeContract     EntityType = "CONTRACT"
 )
 
 var AllEntityType = []EntityType{
@@ -4038,11 +4043,13 @@ var AllEntityType = []EntityType{
 	EntityTypeOpportunity,
 	EntityTypeContact,
 	EntityTypeLogEntry,
+	EntityTypeIssue,
+	EntityTypeContract,
 }
 
 func (e EntityType) IsValid() bool {
 	switch e {
-	case EntityTypeOrganization, EntityTypeOpportunity, EntityTypeContact, EntityTypeLogEntry:
+	case EntityTypeOrganization, EntityTypeOpportunity, EntityTypeContact, EntityTypeLogEntry, EntityTypeIssue, EntityTypeContract:
 		return true
 	}
 	return false

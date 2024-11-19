@@ -491,11 +491,13 @@ func MapDbNodeToTagEntity(dbNode *dbtype.Node) *entity.TagEntity {
 	}
 	props := utils.GetPropsFromNode(*dbNode)
 	tag := entity.TagEntity{
-		Id:        utils.GetStringPropOrEmpty(props, "id"),
-		Name:      utils.GetStringPropOrEmpty(props, "name"),
-		CreatedAt: utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt: utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Source:    entity.DataSource(utils.GetStringPropOrEmpty(props, "source")),
+		Id:         utils.GetStringPropOrEmpty(props, string(entity.TagPropertyId)),
+		Name:       utils.GetStringPropOrEmpty(props, string(entity.TagPropertyName)),
+		CreatedAt:  utils.GetTimePropOrEpochStart(props, string(entity.TagPropertyCreatedAt)),
+		UpdatedAt:  utils.GetTimePropOrEpochStart(props, string(entity.TagPropertyUpdatedAt)),
+		Source:     entity.DataSource(utils.GetStringPropOrEmpty(props, string(entity.TagPropertySource))),
+		AppSource:  utils.GetStringPropOrEmpty(props, string(entity.TagPropertyAppSource)),
+		EntityType: model.DecodeEntityType(utils.GetStringPropOrEmpty(props, string(entity.TagPropertyEntityType))),
 	}
 	return &tag
 }

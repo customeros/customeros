@@ -46,7 +46,7 @@ func (r *mutationResolver) RemoveTag(ctx context.Context, input model.RemoveTagI
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	err := r.Services.CommonServices.TagService.RemoveTag(ctx, nil, tenant, input.EntityID, commonModel.DecodeEntityType(input.EntityType.String()), input.TagID, constants.AppSourceCustomerOsApi)
+	err := r.Services.CommonServices.TagService.RemoveTagFromEntity(ctx, nil, tenant, input.EntityID, commonModel.DecodeEntityType(input.EntityType.String()), input.TagID, constants.AppSourceCustomerOsApi)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Error adding tag to entity")

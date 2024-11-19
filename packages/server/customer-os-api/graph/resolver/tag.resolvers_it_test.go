@@ -6,6 +6,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
+	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
@@ -148,4 +149,46 @@ func TestQueryResolver_Tags(t *testing.T) {
 	require.Equal(t, "tag A", tags[0].Name)
 	require.Equal(t, tagId1, tags[1].ID)
 	require.Equal(t, "tag B", tags[1].Name)
+}
+
+func TestQueryResolver_TagsByEntityType(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	neo4jtest.CreateTenant(ctx, driver, "other")
+	tagId1 := neo4jtest.CreateTag(ctx, driver, tenantName, neo4jentity.TagEntity{
+		Name:       "tag B",
+		CreatedAt:  utils.Now(),
+		UpdatedAt:  utils.Now(),
+		Source:     neo4jentity.DataSourceOpenline,
+		EntityType: commonmodel.ORGANIZATION,
+	})
+	neo4jtest.CreateTag(ctx, driver, tenantName, neo4jentity.TagEntity{
+		Name:       "tag A",
+		CreatedAt:  utils.Now(),
+		UpdatedAt:  utils.Now(),
+		Source:     neo4jentity.DataSourceOpenline,
+		EntityType: commonmodel.CONTACT,
+	})
+	neo4jtest.CreateTag(ctx, driver, "other", neo4jentity.TagEntity{
+		Name:       "contact type for other tenant",
+		EntityType: commonmodel.ORGANIZATION,
+	})
+
+	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Tag"))
+
+	rawResponse, err := c.RawPost(getQuery("tag/get_tags_by_entity_type"))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var tagStruct struct {
+		Tags []model.Tag
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &tagStruct)
+	tags := tagStruct.Tags
+	require.Nil(t, err)
+	require.Equal(t, 1, len(tags))
+	require.Equal(t, tagId1, tags[1].Metadata.ID)
+	require.Equal(t, "tag B", tags[0].Name)
+	require.Equal(t, model.EntityTypeOrganization, tags[0].EntityType)
 }
