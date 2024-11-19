@@ -3,6 +3,9 @@ package service
 import (
 	"context"
 	"fmt"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"strings"
 	"time"
 
@@ -16,7 +19,7 @@ import (
 
 const AppSource = "sync-email"
 
-func (p *emailService) syncEmail(tenant string, emailId uuid.UUID) (entity.RawState, *string, error) {
+func (p *emailInService) syncEmail(tenant string, emailId uuid.UUID) (entity.RawState, *string, error) {
 	ctx := context.Background()
 	span, ctx := tracing.StartTracerSpan(ctx, "EmailService.syncEmail")
 	defer span.Finish()
@@ -40,7 +43,7 @@ func (p *emailService) syncEmail(tenant string, emailId uuid.UUID) (entity.RawSt
 		return entity.ERROR, nil, fmt.Errorf("email message ID is empty")
 	}
 
-	interactionEventId, err := p.repositories.InteractionEventRepository.GetInteractionEventIdByExternalId(ctx, tenant, rawEmail.ExternalSystem, rawEmail.MessageId)
+	interactionEventId, err := p.services.Neo4jRepositories.InteractionEventRepository.GetInteractionEventIdByExternalId(ctx, tenant, rawEmail.ExternalSystem, rawEmail.MessageId)
 	if err != nil {
 		logrus.Errorf("failed to check if interaction event exists for external id %v for tenant %v :%v", rawEmail.MessageId, tenant, err)
 		return entity.ERROR, nil, err
@@ -49,13 +52,13 @@ func (p *emailService) syncEmail(tenant string, emailId uuid.UUID) (entity.RawSt
 	now := time.Now().UTC()
 
 	sentAt, err := convertToUTC(email.Content.SentDate)
-	email.CreatedAt, err = p.validateDates(sentAt)
+	email.CreatedAt = sentAt
 	if err != nil {
 		logrus.Errorf("%v :%v", err, emailId.String())
 		return entity.ERROR, nil, err
 	}
 
-	if p.warmingEmailCheck(email) {
+	if p.warmingEmailCheck(tenant, email) {
 		reason := "warming email"
 		return entity.SKIPPED, &reason, nil
 	}
@@ -81,7 +84,7 @@ func (p *emailService) syncEmail(tenant string, emailId uuid.UUID) (entity.RawSt
 
 }
 
-func (p *emailService) processInboundEmail(ctx context.Context, tenant string, email *EmailMessageData, rawEmail *entity.RawEmail, ts time.Time) (entity.RawState, *string, error) {
+func (p *emailInService) processInboundEmail(ctx context.Context, tenant string, email *EmailMessageData, rawEmail *entity.RawEmail, ts time.Time) (entity.RawState, *string, error) {
 	session := utils.NewNeo4jWriteSession(ctx, *p.services.Neo4jRepositories.Neo4jDriver)
 	defer session.Close(ctx)
 
@@ -104,25 +107,25 @@ func (p *emailService) processInboundEmail(ctx context.Context, tenant string, e
 
 }
 
-func (p *emailService) processSessionAndEvents(ctx context.Context, tx neo4j.ExplicitTransaction, tenant string, email *EmailMessageData, rawEmail *entity.RawEmail, ts time.Time) error {
+func (p *emailInService) processSessionAndEvents(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, email *EmailMessageData, rawEmail *entity.RawEmail, ts time.Time) error {
 
 	// get EmailForCustomerOS
-	cosEmail := p.buildEmailForCustomerOS(email, rawEmail)
+	cosEmail := p.buildEmailForCustomerOS(email, rawEmail.ExternalSystem)
 
 	// Create session
-	sessionId, err := p.repositories.InteractionEventRepository.MergeInteractionSession(ctx, tx, tenant, email.Identifiers.EmailThreadId, ts, cosEmail, rawEmail.ExternalSystem, AppSource)
+	sessionId, err := p.services.Neo4jRepositories.InteractionEventRepository.MergeInteractionSession(ctx, tx, tenant, email.Identifiers.EmailThreadId, ts, cosEmail, rawEmail.ExternalSystem, AppSource)
 	if err != nil {
 		return fmt.Errorf("failed merge interaction session: %v", err)
 	}
 
 	// Create event
-	eventId, err := p.repositories.InteractionEventRepository.MergeEmailInteractionEvent(ctx, tx, tenant, ts, email, rawEmail.ExternalSystem, AppSource)
+	eventId, err := p.services.Neo4jRepositories.InteractionEventRepository.MergeEmailInteractionEvent(ctx, tx, tenant, ts, cosEmail, rawEmail.ExternalSystem, AppSource)
 	if err != nil {
 		return fmt.Errorf("failed merge interaction event: %v", err)
 	}
 
 	// Link event to session
-	if err := p.repositories.InteractionEventRepository.LinkInteractionEventToSession(ctx, tx, tenant, eventId, sessionId); err != nil {
+	if err := p.services.Neo4jRepositories.InteractionEventRepository.LinkInteractionEventToSession(ctx, tx, tenant, eventId, sessionId); err != nil {
 		return fmt.Errorf("failed to link event to session: %v", err)
 	}
 
@@ -135,13 +138,13 @@ func (p *emailService) processSessionAndEvents(ctx context.Context, tx neo4j.Exp
 
 }
 
-func (p *emailService) buildEmailForCustomerOS(email *EmailMessageData, rawEmail *entity.RawEmail) SaveEmailMessage {
-	save := SaveEmailMessage{
+func (p *emailInService) buildEmailForCustomerOS(email *EmailMessageData, externalSystem string) model.SaveEmailMessage {
+	save := model.SaveEmailMessage{
 		Html:           email.Content.Html,
 		Text:           email.Content.Text,
 		Subject:        email.Content.Subject,
 		CreatedAt:      email.CreatedAt,
-		ExternalSystem: rawEmail.ExternalSystem,
+		ExternalSystem: externalSystem,
 		ExternalId:     email.Identifiers.ExternalId,
 		EmailThreadId:  email.Identifiers.EmailThreadId,
 		Channel:        "EMAIL",
@@ -150,7 +153,7 @@ func (p *emailService) buildEmailForCustomerOS(email *EmailMessageData, rawEmail
 	return save
 }
 
-func (p *emailService) linkParticipants(ctx context.Context, tx neo4j.ExplicitTransaction, tenant string, eventId string, participants *EmailParticipants, now time.Time, externalSystem string) error {
+func (p *emailInService) linkParticipants(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, eventId string, participants *EmailParticipants, now time.Time, externalSystem string) error {
 	emailIds := make(map[string]string)
 
 	// Link From participant
@@ -158,29 +161,29 @@ func (p *emailService) linkParticipants(ctx context.Context, tx neo4j.ExplicitTr
 	if err != nil {
 		return err
 	}
-	if err := p.repositories.InteractionEventRepository.InteractionEventSentByEtail(ctx, tx, tenant, eventId, fromId); err != nil {
+	if err := p.services.Neo4jRepositories.InteractionEventRepository.InteractionEventSentByEmail(ctx, tx, tenant, eventId, fromId); err != nil {
 		return err
 	}
 
 	// Link To participants
-	if err := p.linkEmailGroup(ctx, tx, tenant, eventId, "TO", participants.To, now, externalSystem, emailIds); err != nil {
+	if err := p.linkEmailGroup(ctx, tx, tenant, eventId, "TO", participants.GetToEmailAddresses(), now, externalSystem, emailIds); err != nil {
 		return err
 	}
 
 	// Link CC participants
-	if err := p.linkEmailGroup(ctx, tx, tenant, eventId, "CC", participants.Cc, now, externalSystem, emailIds); err != nil {
+	if err := p.linkEmailGroup(ctx, tx, tenant, eventId, "CC", participants.GetCcEmailAddresses(), now, externalSystem, emailIds); err != nil {
 		return err
 	}
 
 	// Link BCC participants
-	if err := p.linkEmailGroup(ctx, tx, tenant, eventId, "BCC", participants.Bcc, now, externalSystem, emailIds); err != nil {
+	if err := p.linkEmailGroup(ctx, tx, tenant, eventId, "BCC", participants.GetBccEmailAddresses(), now, externalSystem, emailIds); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (p *emailService) linkEmailGroup(ctx context.Context, tx neo4j.Transaction, tenant string, eventId string, groupType string, emails []string, now time.Time, externalSystem string, emailIds map[string]string) error {
+func (p *emailInService) linkEmailGroup(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, eventId string, groupType string, emails []string, now time.Time, externalSystem string, emailIds map[string]string) error {
 	var groupEmailIds []string
 
 	for _, email := range emails {
@@ -199,13 +202,13 @@ func (p *emailService) linkEmailGroup(ctx context.Context, tx neo4j.Transaction,
 	}
 
 	if len(groupEmailIds) > 0 {
-		return p.repositories.InteractionEventRepository.InteractionEventSentToEmails(ctx, tx, tenant, eventId, groupType, groupEmailIds)
+		return p.services.Neo4jRepositories.InteractionEventRepository.InteractionEventSentToEmails(ctx, tx, tenant, eventId, groupType, groupEmailIds)
 	}
 
 	return nil
 }
 
-func (p *emailService) getOrCreateEmailId(ctx context.Context, tx neo4j.Transaction, tenant string, email string, now time.Time, externalSystem string, emailIds map[string]string) (string, error) {
+func (p *emailInService) getOrCreateEmailId(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, email string, now time.Time, externalSystem string, emailIds map[string]string) (string, error) {
 	if id, exists := emailIds[email]; exists {
 		return id, nil
 	}
@@ -222,8 +225,8 @@ func (p *emailService) getOrCreateEmailId(ctx context.Context, tx neo4j.Transact
 	return id, nil
 }
 
-func (p *emailService) buildChannelData(email *EmailMessageData) error {
-	channelData, err := neo4jentity.BuildEmailChannelData(email.Identifiers.ProviderMessageId, email.Identifiers.EmailThreadId, email.Content.Subject, strings.Join(email.Participants.InReplyTo.Email, " "), strings.Join(email.Identifiers.References, " "))
+func (p *emailInService) buildChannelData(email *EmailMessageData) error {
+	channelData, err := neo4jentity.BuildEmailChannelData(email.Identifiers.ProviderMessageId, email.Identifiers.EmailThreadId, email.Content.Subject, strings.Join(email.Participants.GetInReplyToEmailAddresses(), " "), strings.Join(email.Identifiers.References, " "))
 	if err != nil {
 		return err
 	}
@@ -233,69 +236,23 @@ func (p *emailService) buildChannelData(email *EmailMessageData) error {
 	return nil
 }
 
-func (p *emailService) validateDates(sent time.Time) (time.Time, error) {
-	emailSentDate, err := p.services.SyncService.ConvertToUTC(sent)
-	if err != nil {
-		return time.Time{}, fmt.Errorf("failed to convert sent date to UTC: %v", err)
-	}
-	return emailSentDate, nil
-}
-
-func (p *emailService) warmingEmailCheck(email EmailMessageData) bool {
-
+func (p *emailInService) warmingEmailCheck(tenant string, email EmailMessageData) bool {
 	emailExclusion := p.services.Cache.GetEmailExclusion(tenant)
 
 	for _, exclusion := range emailExclusion {
 		if exclusion.ExcludeSubject != nil {
-			if strings.Contains(rawEmailData.Subject, *exclusion.ExcludeSubject) {
-				reason := "excluded by subject"
-				return entity.SKIPPED, &reason, nil
+			if strings.Contains(email.Content.Subject, *exclusion.ExcludeSubject) {
+				return true
 			}
 		}
 		if exclusion.ExcludeBody != nil {
-			if strings.Contains(rawEmailData.Html, *exclusion.ExcludeBody) {
-				reason := "excluded by html body"
-				return entity.SKIPPED, &reason, nil
+			if strings.Contains(email.Content.Html, *exclusion.ExcludeBody) {
+				return true
 			}
-			if strings.Contains(rawEmailData.Text, *exclusion.ExcludeBody) {
-				reason := "excluded by text body"
-				return entity.SKIPPED, &reason, nil
+			if strings.Contains(email.Content.Text, *exclusion.ExcludeBody) {
+				return true
 			}
 		}
 	}
-}
-
-func convertToUTC(datetimeStr string) (time.Time, error) {
-	var err error
-
-	layouts := []string{
-		"2006-01-02T15:04:05Z07:00",
-
-		"Mon, 2 Jan 2006 15:04:05 -0700 (MST)",
-
-		"Mon, 2 Jan 2006 15:04:05 MST",
-
-		"Mon, 2 Jan 2006 15:04:05 -0700",
-
-		"Mon, 2 Jan 2006 15:04:05 +0000 (GMT)",
-
-		"Mon, 2 Jan 2006 15:04:05 -0700 (MST)",
-
-		"2 Jan 2006 15:04:05 -0700",
-	}
-	var parsedTime time.Time
-
-	// Try parsing with each layout until successful
-	for _, layout := range layouts {
-		parsedTime, err = time.Parse(layout, datetimeStr)
-		if err == nil {
-			break
-		}
-	}
-
-	if err != nil {
-		return time.Time{}, fmt.Errorf("unable to parse datetime string: %s", datetimeStr)
-	}
-
-	return parsedTime.UTC(), nil
+	return false
 }

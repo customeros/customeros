@@ -18,7 +18,6 @@ type RawEmailRepository interface {
 	CountForUsername(ctx context.Context, externalSystem, tenant, username string) (int64, error)
 	EmailExistsByMessageId(ctx context.Context, externalSystem, tenant, username, messageId string) (bool, error)
 	Store(ctx context.Context, externalSystem, tenant, username, providerMessageId, messageId, rawEmail string, sentAt time.Time, state entity.EmailImportState) error
-	GetDistinctUsersForImport() ([]entity.RawEmail, error)
 	GetEmailsIdsForSync(externalSystem, tenantName string) ([]entity.RawEmail, error)
 	GetEmailsIdsForUserForSync(tenantName, userSource string) ([]entity.RawEmail, error)
 	GetEmailForSync(id uuid.UUID) (*entity.RawEmail, error)

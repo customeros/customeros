@@ -5,7 +5,7 @@ import "strings"
 // TODO parse SMTP status code from message/deliver-status
 // and classify bounced email as hard or soft bounce
 
-func (a *emailService) ProcessEmailCheck(email *EmailMessageData) HeaderAnalysis {
+func (a *emailInService) ProcessEmailCheck(email *EmailMessageData) HeaderAnalysis {
 	analysis := HeaderAnalysis{
 		ProcessEmail: true, // Default to processing
 	}
@@ -33,7 +33,7 @@ func (a *emailService) ProcessEmailCheck(email *EmailMessageData) HeaderAnalysis
 	return analysis
 }
 
-func (a *emailService) isAutoResponder(headers EmailHeaders) bool {
+func (a *emailInService) isAutoResponder(headers EmailHeaders) bool {
 	return headers.XAutoreply != "" ||
 		headers.XAutoresponse != "" ||
 		headers.AutoSubmitted ||
@@ -41,7 +41,7 @@ func (a *emailService) isAutoResponder(headers EmailHeaders) bool {
 		strings.EqualFold(headers.Precedence, "auto_reply")
 }
 
-func (a *emailService) isBounce(headers EmailHeaders, subject, from string) bool {
+func (a *emailInService) isBounce(headers EmailHeaders, subject, from string) bool {
 	return headers.XFailedRecepients ||
 		headers.DeliveryStatus ||
 		strings.EqualFold(headers.ContentDescription, "delivery report") ||
@@ -50,18 +50,18 @@ func (a *emailService) isBounce(headers EmailHeaders, subject, from string) bool
 		a.isBounceSubject(subject)
 }
 
-func (a *emailService) isBulkMail(headers EmailHeaders) bool {
+func (a *emailInService) isBulkMail(headers EmailHeaders) bool {
 	return headers.ListUnsubscribe ||
 		strings.EqualFold(headers.Precedence, "bulk")
 }
 
-func (a *emailService) isReturnPathBounce(returnPath string) bool {
+func (a *emailInService) isReturnPathBounce(returnPath string) bool {
 	return returnPath == "" ||
 		strings.Contains(returnPath, "mailer-daemon") ||
 		strings.Contains(returnPath, "postmaster")
 }
 
-func (a *emailService) isBounceSubject(subject string) bool {
+func (a *emailInService) isBounceSubject(subject string) bool {
 	subject = strings.ToLower(subject)
 	keywords := []string{
 		"delivery status notification",

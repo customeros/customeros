@@ -1,7 +1,9 @@
 package service
 
+import postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+
 type EmailInService interface {
-	LoadEmail(rawEmail string) (*EmailMessageData, error)
+	LoadEmail(rawEmail *postgresentity.RawEmail) (EmailMessageData, error)
 	ProcessEmailCheck(email *EmailMessageData) HeaderAnalysis
 }
 

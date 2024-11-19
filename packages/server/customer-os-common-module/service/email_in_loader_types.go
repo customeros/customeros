@@ -1,6 +1,9 @@
 package service
 
-import "time"
+import (
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"time"
+)
 
 // Email Raw Data
 type EmailRawData struct {
@@ -40,8 +43,48 @@ type EmailParticipants struct {
 	To        []EmailParticipant
 	Cc        []EmailParticipant
 	Bcc       []EmailParticipant
-	InReplyTo EmailParticipant
+	InReplyTo []EmailParticipant
 	AllEmails []string
+}
+
+func (ep EmailParticipants) GetToEmailAddresses() []string {
+	output := make([]string, 0)
+	for _, email := range ep.To {
+		if email.Email != "" {
+			output = append(output, email.Email)
+		}
+	}
+	return utils.RemoveDuplicates(output)
+}
+
+func (ep EmailParticipants) GetCcEmailAddresses() []string {
+	output := make([]string, 0)
+	for _, email := range ep.Cc {
+		if email.Email != "" {
+			output = append(output, email.Email)
+		}
+	}
+	return utils.RemoveDuplicates(output)
+}
+
+func (ep EmailParticipants) GetBccEmailAddresses() []string {
+	output := make([]string, 0)
+	for _, email := range ep.Bcc {
+		if email.Email != "" {
+			output = append(output, email.Email)
+		}
+	}
+	return utils.RemoveDuplicates(output)
+}
+
+func (ep EmailParticipants) GetInReplyToEmailAddresses() []string {
+	output := make([]string, 0)
+	for _, email := range ep.InReplyTo {
+		if email.Email != "" {
+			output = append(output, email.Email)
+		}
+	}
+	return utils.RemoveDuplicates(output)
 }
 
 // identifiers
