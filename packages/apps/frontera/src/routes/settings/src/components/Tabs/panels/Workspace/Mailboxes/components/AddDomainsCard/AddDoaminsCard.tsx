@@ -27,6 +27,9 @@ export const AddDomainsCard = () => {
     [],
   );
 
+  const [_selectedAdditionalDomains, setSelectedAdditionalDomains] =
+    useLocalStorage<string[]>('selectedAdditionalDomains', []);
+
   function generateDomainVariations(baseName: string) {
     if (!baseName) return [];
     const variations = [
@@ -108,9 +111,18 @@ export const AddDomainsCard = () => {
                   aria-label='add to cart'
                   icon={<ShoppingCartAdd className='text-primary-700' />}
                   onClick={() => {
-                    setStoredBrandName((prev) => {
-                      return [...prev, domain];
-                    });
+                    if (_storedBrandName.length <= 4) {
+                      setStoredBrandName((prev) => {
+                        return [...prev, domain];
+                      });
+                    }
+
+                    if (_storedBrandName.length === 5) {
+                      setSelectedAdditionalDomains((prev) => {
+                        return [...prev, domain];
+                      });
+                    }
+
                     setDomainVariations((prev) => {
                       const foundIndex = prev.findIndex(
                         (item) => item === domain,

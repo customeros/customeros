@@ -1,101 +1,77 @@
-import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 
 import { useLocalStorage } from 'usehooks-ts';
 
-import { cn } from '@ui/utils/cn';
-import { IconButton } from '@ui/form/IconButton';
-import { MinusCircle } from '@ui/media/icons/MinusCircle';
-import { ChevronExpand } from '@ui/media/icons/ChevronExpand';
-import { Card, CardHeader, CardContent } from '@ui/presentation/Card/Card';
+import { Button } from '@ui/form/Button/Button';
+import { CheckCircle } from '@ui/media/icons/CheckCircle';
+import { ChevronRight } from '@ui/media/icons/ChevronRight';
+import { Card, CardFooter, CardContent } from '@ui/presentation/Card/Card';
+
+const formatNumberWithComma = (num: number): string => {
+  return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+};
 
 export const CheckoutCard = () => {
-  const [expanded, setExpanded] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+
   const [storedBrandName, _setStoredBrandName] = useLocalStorage<string[]>(
     'brandName',
     [],
   );
+
   const [storeUserName, _setStoreUserName] = useLocalStorage<string[]>(
     'userName',
     [],
   );
 
+  const [selectedAdditionalDomains] = useLocalStorage<string[]>(
+    'selectedAdditionalDomains',
+    [],
+  );
+
+  const handlePaymentView = () => {
+    const params = new URLSearchParams(searchParams.toString() ?? '');
+
+    params.set('checkout', 'mailboxes');
+    setSearchParams(params.toString());
+  };
+
+  const noOfMailboxes =
+    storedBrandName.length +
+    selectedAdditionalDomains.length * storeUserName.length;
+
+  const noOfEmails = formatNumberWithComma(noOfMailboxes * 1200);
+
+  const total = (199.99 + selectedAdditionalDomains.length * 18.99).toFixed(2);
+
   return (
-    <Card className='py-2 px-3 bg-white'>
-      <CardHeader className='flex items-center justify-between font-medium text-sm'>
-        <span>Base Boundle</span>
-        <span>$199.99</span>
-      </CardHeader>
-      <CardContent className='p-0'>
-        <span>{storedBrandName.length} of 5 domains</span>
-
-        {storedBrandName.map((name, index) => (
-          <div
-            key={`${name}-${index}`}
-            className='flex items-center justify-between mt-1 bg-gray-100 rounded-[4px] py-1 px-2'
-          >
-            <span className='text-sm'>{name}</span>
-            <IconButton
-              size='xxs'
-              variant='ghost'
-              icon={<MinusCircle />}
-              aria-label='remove-domain'
-              onClick={() => {
-                _setStoredBrandName((prev) => {
-                  return prev.filter((item) => item !== name);
-                });
-              }}
-            />
+    <>
+      <Card className='py-2 px-3 bg-white mt-2'>
+        <CardContent className='p-0'>
+          <div className='flex items-center gap-1 bg-gray-50 rounded-lg py-1 px-2 leading-4'>
+            <CheckCircle className='size-7 text-gray-500' />
+            <p>
+              With{' '}
+              <span className='font-medium'>{`${noOfMailboxes} mailboxes`}</span>{' '}
+              you can send up to
+              <span className='font-medium'> {`${noOfEmails} emails`}</span> per
+              month
+            </p>
           </div>
-        ))}
-        {Array.from({ length: 5 - storedBrandName.length }).map((_, index) => (
-          <div
-            key={`placeholder-${index}`}
-            className='flex items-center justify-between mt-1 border-dotted border border-gray-300 text-gray-400  rounded-[4px] py-1 px-2'
+        </CardContent>
+        <CardFooter className='p-0 mt-3 items-center justify-center'>
+          <Button
+            className='w-full'
+            colorScheme='primary'
+            rightIcon={<ChevronRight />}
+            onClick={() => {
+              handlePaymentView();
+            }}
           >
-            <span className='text-sm'>
-              Domain {storedBrandName.length + index + 1}
-            </span>
-          </div>
-        ))}
-        {storeUserName.length > 0 && (
-          <CardHeader className='mt-2 flex justify-between items-center'>
-            <span className='font-medium'>
-              {storeUserName.length * storedBrandName.length} of 10 mailboxes
-            </span>
-            <IconButton
-              size='xxs'
-              variant='ghost'
-              aria-label='Expand'
-              icon={<ChevronExpand />}
-              onClick={() => setExpanded(!expanded)}
-            />
-          </CardHeader>
-        )}
-        {expanded &&
-          storeUserName.map((user, userIndex) =>
-            storedBrandName.map((brand, brandIndex) => {
-              const isLastTwo =
-                userIndex === storeUserName.length - 1 &&
-                brandIndex >= storedBrandName.length - 2;
-
-              return (
-                <div
-                  key={`${user}-${brand}-${userIndex}-${brandIndex}`}
-                  className={cn(
-                    'flex items-center justify-between mt-1',
-                    !isLastTwo &&
-                      (userIndex * storedBrandName.length + brandIndex) % 2 ===
-                        1
-                      ? 'mb-3'
-                      : '',
-                  )}
-                >
-                  <span className='text-sm'>{`${user}@${brand}`}</span>
-                </div>
-              );
-            }),
-          )}
-      </CardContent>
-    </Card>
+            {`Checkout: $${total}/month`}
+          </Button>
+        </CardFooter>
+      </Card>
+    </>
   );
 };
