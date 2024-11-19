@@ -10,6 +10,7 @@ import (
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -20,139 +21,32 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
 
-func (s *mailService) SendMail(ctx context.Context, emailMessage *entity.EmailMessage) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "MailService.SendMail")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-
+func (s *mailService) SendMail(ctx context.Context, emailMessage *postgresentity.EmailMessage) error {
+	span, ctx := s.InitializeTracing(ctx, "MailService.ProcessSentEmail")
 	span.LogFields(tracingLog.Object("emailMessage", emailMessage))
+	defer span.Finish()
 
-	tenant := emailMessage.Tenant
-
-	var err error
-
-	oauthToken, err := s.services.PostgresRepositories.OAuthTokenRepository.GetByEmail(ctx, tenant, emailMessage.FromProvider, emailMessage.From)
+	oauthToken, err := s.getOAuthToken(ctx, span, emailMessage)
 	if err != nil {
-		tracing.TraceErr(span, err)
-		return fmt.Errorf("unable to retrieve oauth token for %s: %v", emailMessage.From, err)
-	}
-
-	uniqueInternalIdentifier := utils.GenerateRandomString(64)
-	emailMessage.UniqueInternalIdentifier = &uniqueInternalIdentifier
-
-	// footer := `
-	//				<div>
-	//					<div style="font-size: 12px; font-weight: normal; font-family: Barlow, sans-serif; color: rgb(102, 112, 133); line-height: 32px;">
-	//						<img width="16px" src="https://customer-os.imgix.net/website/favicon.png" alt="CustomerOS" style="vertical-align: middle; margin-right: 5px; margin-bottom: 2px;" />
-	//						Sent from <a href="https://customeros.ai/?utm_content=timeline_email&utm_medium=email" style="text-decoration: underline; color: rgb(102, 112, 133);">CustomerOS</a>
-	//					</div>
-	//				</div>
-	//				`
-	// emailMessage.Content += footer
-
-	// Append an image tag pointing to the spy endpoint to the request content
-	// imgTag := "<img id=\"customer-os-email-track-open\" height=1 width=1 src=\"" + s.services.GlobalConfig.InternalServices.UserAdminApiPublicPath + "/mail/" + uniqueInternalIdentifier + "/track\" />"
-	// emailMessage.Content += imgTag
-
-	subject := ""
-	inReplyTo := emailMessage.ProviderInReplyTo
-	references := emailMessage.ProviderReferences
-
-	if emailMessage.ReplyTo != nil {
-		interactionEventNode, err := s.services.Neo4jRepositories.CommonReadRepository.GetById(ctx, tenant, *emailMessage.ReplyTo, commonModel.NodeLabelInteractionEvent)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
-		interactionEvent := neo4jmapper.MapDbNodeToInteractionEventEntity(interactionEventNode)
-
-		emailChannelData := neo4jentity.EmailChannelData{}
-		err = json.Unmarshal([]byte(interactionEvent.ChannelData), &emailChannelData)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return fmt.Errorf("unable to parse email channel data for %s", *emailMessage.ReplyTo)
-		}
-
-		subject = emailChannelData.Subject
-		if len(emailChannelData.Subject) < 3 || emailChannelData.Subject[:3] != "Re:" {
-			subject = "Re: " + emailChannelData.Subject
-		}
-
-		if emailChannelData.Reference != "" {
-			references = emailChannelData.Reference + " " + emailChannelData.ProviderMessageId
-		} else {
-			references = emailChannelData.ProviderMessageId
-		}
-
-		inReplyTo = emailChannelData.ProviderMessageId
-	} else {
-		subject = emailMessage.Subject
-	}
-
-	emailMessage.Subject = subject
-	emailMessage.ProviderInReplyTo = inReplyTo
-	emailMessage.ProviderReferences = references
-
-	userNode, err := s.services.Neo4jRepositories.UserReadRepository.GetFirstUserByEmail(ctx, tenant, emailMessage.From)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to get first user by email"))
 		return err
 	}
 
-	if userNode == nil {
-		tracing.TraceErr(span, errors.New("user not found"))
+	if err := s.prepareEmailMessage(ctx, span, emailMessage); err != nil {
 		return err
 	}
 
-	user := neo4jmapper.MapDbNodeToUserEntity(userNode)
-
-	emailMessage.FromName = user.FirstName + " " + user.LastName
-
-	if oauthToken == nil {
-		mailbox, err := s.services.PostgresRepositories.TenantSettingsMailboxRepository.GetByMailbox(ctx, emailMessage.From)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
-
-		if mailbox == nil {
-			return fmt.Errorf("mailbox not found for %s", emailMessage.From)
-		}
-
-		err = s.services.OpenSrsService.SendEmail(ctx, emailMessage)
-	} else {
-		if oauthToken.NeedsManualRefresh {
-			tracing.TraceErr(span, errors.New("oauth token needs manual refresh"))
-			return fmt.Errorf("oauth token needs manual refresh: %v", err)
-		}
-
-		if oauthToken.Provider == "google" {
-			err = s.services.GoogleService.SendEmail(ctx, emailMessage)
-		} else if oauthToken.Provider == "azure-ad" {
-			err = s.services.AzureService.SendEmail(ctx, emailMessage)
-		} else {
-			return fmt.Errorf("provider %s not supported", oauthToken.Provider)
-		}
+	if err := s.setFromName(ctx, span, emailMessage); err != nil {
+		return err
 	}
 
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return fmt.Errorf("failed to send email: %v", err)
+	if err := s.sendEmailBasedOnProvider(ctx, span, emailMessage, oauthToken); err != nil {
+		return err
 	}
 
-	emailMessage.Status = entity.EmailMessageStatusSent
-	emailMessage.SentAt = utils.TimePtr(utils.Now())
-
-	err = s.services.PostgresRepositories.EmailMessageRepository.Store(ctx, tenant, emailMessage)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return fmt.Errorf("failed to store email message: %v", err)
-	}
-
-	return nil
+	return s.storeEmailMessage(ctx, span, emailMessage)
 }
 
-func (s *mailService) ProcessSentEmail(ctx context.Context, tx *neo4j.ManagedTransaction, emailMessage *entity.EmailMessage) (*string, error) {
+func (s *mailService) ProcessSentEmail(ctx context.Context, tx *neo4j.ManagedTransaction, emailMessage *postgresentity.EmailMessage) (*string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "MailService.ProcessSentEmail")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -165,7 +59,7 @@ func (s *mailService) ProcessSentEmail(ctx context.Context, tx *neo4j.ManagedTra
 		return nil, err
 	}
 
-	emailMessage.Status = entity.EmailMessageStatusProcessed
+	emailMessage.Status = postgresentity.EmailMessageStatusProcessed
 	err = s.services.PostgresRepositories.EmailMessageRepository.Store(ctx, emailMessage.Tenant, emailMessage)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -175,79 +69,271 @@ func (s *mailService) ProcessSentEmail(ctx context.Context, tx *neo4j.ManagedTra
 	return id.(*string), nil
 }
 
-func (s *mailService) saveEmailInTx(ctx context.Context, tx neo4j.ManagedTransaction, emailMessage *entity.EmailMessage) (any, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "MailService.saveEmailInTx")
-	defer span.Finish()
+func (s *mailService) InitializeTracing(ctx context.Context, operationName string) (opentracing.Span, context.Context) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, operationName)
 	tracing.SetDefaultServiceSpanTags(ctx, span)
+	return span, ctx
+}
 
-	tenant := common.GetTenantFromContext(ctx)
-
-	interactionSessionId := ""
-	threadId := emailMessage.ProviderThreadId
-	span.LogFields(tracingLog.String("threadId", threadId))
-
-	interactionSessionNode, err := s.services.Neo4jRepositories.InteractionSessionReadRepository.GetByIdentifierAndChannel(ctx, tenant, threadId, "EMAIL")
+func (s *mailService) getOAuthToken(ctx context.Context, span opentracing.Span, emailMessage *postgresentity.EmailMessage) (*postgresentity.OAuthTokenEntity, error) {
+	oauthToken, err := s.services.PostgresRepositories.OAuthTokenRepository.GetByEmail(
+		ctx,
+		emailMessage.Tenant,
+		emailMessage.FromProvider,
+		emailMessage.From,
+	)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return nil, fmt.Errorf("failed to get interaction session: %v", err)
+		return nil, fmt.Errorf("unable to retrieve oauth token for %s: %v", emailMessage.From, err)
 	}
-	if interactionSessionNode != nil {
-		interactionSessionId = neo4jmapper.MapDbNodeToInteractionSessionEntity(interactionSessionNode).Id
-	}
+	return oauthToken, nil
+}
 
-	if interactionSessionId == "" {
-		sessionIdCreated, err := s.services.InteractionSessionService.CreateInTx(ctx, tx, &neo4jentity.InteractionSessionEntity{
-			Status:     "ACTIVE",
-			Type:       "THREAD",
-			Channel:    "EMAIL",
-			Identifier: threadId,
-			Name:       emailMessage.Subject,
-		})
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil, err
-		}
+func (s *mailService) prepareEmailMessage(ctx context.Context, span opentracing.Span, emailMessage *postgresentity.EmailMessage) error {
+	uniqueInternalIdentifier := utils.GenerateRandomString(64)
+	emailMessage.UniqueInternalIdentifier = &uniqueInternalIdentifier
 
-		if sessionIdCreated == nil {
-			tracing.TraceErr(span, errors.New("session id is empty"))
-			return nil, fmt.Errorf("session id is empty")
-		} else {
-			interactionSessionId = *sessionIdCreated
-		}
+	if emailMessage.ReplyTo == nil {
+		emailMessage.Subject = emailMessage.Subject
+		return nil
 	}
 
-	sentBy := make([]InteractionEventParticipantData, 0)
-	sentTo := make([]InteractionEventParticipantData, 0)
-	sentCc := make([]InteractionEventParticipantData, 0)
-	sentBcc := make([]InteractionEventParticipantData, 0)
+	return s.handleReplyToEmail(ctx, span, emailMessage)
+}
 
-	sentBy = append(sentBy, InteractionEventParticipantData{
+func (s *mailService) handleReplyToEmail(ctx context.Context, span opentracing.Span, emailMessage *postgresentity.EmailMessage) error {
+	interactionEventNode, err := s.services.Neo4jRepositories.CommonReadRepository.GetById(
+		ctx,
+		emailMessage.Tenant,
+		*emailMessage.ReplyTo,
+		commonModel.NodeLabelInteractionEvent,
+	)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	interactionEvent := neo4jmapper.MapDbNodeToInteractionEventEntity(interactionEventNode)
+	emailChannelData := neo4jentity.EmailChannelData{}
+	if err := json.Unmarshal([]byte(interactionEvent.ChannelData), &emailChannelData); err != nil {
+		tracing.TraceErr(span, err)
+		return fmt.Errorf("unable to parse email channel data for %s", *emailMessage.ReplyTo)
+	}
+
+	s.setReplySubject(emailMessage, emailChannelData)
+	s.setReplyReferences(emailMessage, emailChannelData)
+	return nil
+}
+
+func (s *mailService) setReplySubject(emailMessage *postgresentity.EmailMessage, emailChannelData neo4jentity.EmailChannelData) {
+	subject := emailChannelData.Subject
+	if len(subject) < 3 || subject[:3] != "Re:" {
+		subject = "Re: " + subject
+	}
+	emailMessage.Subject = subject
+}
+
+func (s *mailService) setReplyReferences(emailMessage *postgresentity.EmailMessage, emailChannelData neo4jentity.EmailChannelData) {
+	if emailChannelData.Reference != "" {
+		emailMessage.ProviderReferences = emailChannelData.Reference + " " + emailChannelData.ProviderMessageId
+	} else {
+		emailMessage.ProviderReferences = emailChannelData.ProviderMessageId
+	}
+	emailMessage.ProviderInReplyTo = emailChannelData.ProviderMessageId
+}
+
+func (s *mailService) setFromName(ctx context.Context, span opentracing.Span, emailMessage *postgresentity.EmailMessage) error {
+	userNode, err := s.services.Neo4jRepositories.UserReadRepository.GetFirstUserByEmail(ctx, emailMessage.Tenant, emailMessage.From)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to get first user by email"))
+		return err
+	}
+	if userNode == nil {
+		err := errors.New("user not found")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	user := neo4jmapper.MapDbNodeToUserEntity(userNode)
+	emailMessage.FromName = user.FirstName + " " + user.LastName
+	return nil
+}
+
+func (s *mailService) sendEmailBasedOnProvider(ctx context.Context, span opentracing.Span, emailMessage *postgresentity.EmailMessage, oauthToken *entity.OAuthTokenEntity) error {
+	if oauthToken == nil {
+		return s.sendEmailViaOpenSrs(ctx, span, emailMessage)
+	}
+	return s.sendEmailViaOAuth(ctx, span, emailMessage, oauthToken)
+}
+
+func (s *mailService) sendEmailViaOpenSrs(ctx context.Context, span opentracing.Span, emailMessage *postgresentity.EmailMessage) error {
+	mailbox, err := s.services.PostgresRepositories.TenantSettingsMailboxRepository.GetByMailbox(ctx, emailMessage.From)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	if mailbox == nil {
+		return fmt.Errorf("mailbox not found for %s", emailMessage.From)
+	}
+	return s.services.OpenSrsService.SendEmail(ctx, emailMessage)
+}
+
+func (s *mailService) sendEmailViaOAuth(ctx context.Context, span opentracing.Span, emailMessage *entity.EmailMessage, oauthToken *postgresentity.OAuthTokenEntity) error {
+	if oauthToken.NeedsManualRefresh {
+		err := errors.New("oauth token needs manual refresh")
+		tracing.TraceErr(span, err)
+		return fmt.Errorf("oauth token needs manual refresh: %v", err)
+	}
+
+	switch oauthToken.Provider {
+	case "google":
+		return s.services.GoogleService.SendEmail(ctx, emailMessage)
+	case "azure-ad":
+		return s.services.AzureService.SendEmail(ctx, emailMessage)
+	default:
+		return fmt.Errorf("provider %s not supported", oauthToken.Provider)
+	}
+}
+
+func (s *mailService) storeEmailMessage(ctx context.Context, span opentracing.Span, emailMessage *postgresentity.EmailMessage) error {
+	emailMessage.Status = entity.EmailMessageStatusSent
+	emailMessage.SentAt = utils.TimePtr(utils.Now())
+
+	if err := s.services.PostgresRepositories.EmailMessageRepository.Store(ctx, emailMessage.Tenant, emailMessage); err != nil {
+		tracing.TraceErr(span, err)
+		return fmt.Errorf("failed to store email message: %v", err)
+	}
+	return nil
+}
+
+func (s *mailService) saveEmailInTx(ctx context.Context, tx neo4j.ManagedTransaction, emailMessage *postgresentity.EmailMessage) (any, error) {
+	span, ctx := s.InitializeTracing(ctx, "MailService.saveEmailInTx")
+	defer span.Finish()
+
+	tenant := common.GetTenantFromContext(ctx)
+	span.LogFields(tracingLog.String("threadId", emailMessage.ProviderThreadId))
+
+	sessionID, err := s.getOrCreateInteractionSession(ctx, tx, span, tenant, emailMessage)
+	if err != nil {
+		return nil, err
+	}
+
+	participants := s.buildParticipantLists(emailMessage)
+
+	eventID, err := s.createInteractionEvent(ctx, tx, span, emailMessage, sessionID, participants)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := s.linkEventToSession(ctx, tx, span, tenant, eventID, sessionID); err != nil {
+		return nil, err
+	}
+
+	return eventID, nil
+}
+
+func (s *mailService) getOrCreateInteractionSession(ctx context.Context, tx neo4j.ManagedTransaction, span opentracing.Span, tenant string, emailMessage *postgresentity.EmailMessage) (string, error) {
+	// Try to get existing session
+	sessionNode, err := s.services.Neo4jRepositories.InteractionSessionReadRepository.GetByIdentifierAndChannel(
+		ctx, tenant, emailMessage.ProviderThreadId, "EMAIL")
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", fmt.Errorf("failed to get interaction session: %v", err)
+	}
+
+	if sessionNode != nil {
+		return neo4jmapper.MapDbNodeToInteractionSessionEntity(sessionNode).Id, nil
+	}
+
+	// Create new session if none exists
+	sessionID, err := s.services.InteractionSessionService.CreateInTx(ctx, tx, &neo4jentity.InteractionSessionEntity{
+		Status:     "ACTIVE",
+		Type:       "THREAD",
+		Channel:    "EMAIL",
+		Identifier: emailMessage.ProviderThreadId,
+		Name:       emailMessage.Subject,
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+
+	if sessionID == nil {
+		err := errors.New("session id is empty")
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+
+	return *sessionID, nil
+}
+
+func (s *mailService) buildParticipantLists(emailMessage *postgresentity.EmailMessage) *struct {
+	sentBy  []InteractionEventParticipantData
+	sentTo  []InteractionEventParticipantData
+	sentCc  []InteractionEventParticipantData
+	sentBcc []InteractionEventParticipantData
+} {
+	result := &struct {
+		sentBy  []InteractionEventParticipantData
+		sentTo  []InteractionEventParticipantData
+		sentCc  []InteractionEventParticipantData
+		sentBcc []InteractionEventParticipantData
+	}{
+		sentBy:  make([]InteractionEventParticipantData, 0),
+		sentTo:  make([]InteractionEventParticipantData, 0),
+		sentCc:  make([]InteractionEventParticipantData, 0),
+		sentBcc: make([]InteractionEventParticipantData, 0),
+	}
+
+	result.sentBy = append(result.sentBy, InteractionEventParticipantData{
 		Email: &emailMessage.From,
 	})
 
 	for _, to := range emailMessage.To {
-		sentTo = append(sentTo, InteractionEventParticipantData{
+		result.sentTo = append(result.sentTo, InteractionEventParticipantData{
 			Email: &to,
 		})
 	}
 	for _, cc := range emailMessage.Cc {
-		sentCc = append(sentCc, InteractionEventParticipantData{
+		result.sentCc = append(result.sentCc, InteractionEventParticipantData{
 			Email: &cc,
 		})
 	}
 	for _, bcc := range emailMessage.Bcc {
-		sentBcc = append(sentBcc, InteractionEventParticipantData{
+		result.sentBcc = append(result.sentBcc, InteractionEventParticipantData{
 			Email: &bcc,
 		})
 	}
 
-	emailChannelData, err := neo4jentity.BuildEmailChannelData(emailMessage.ProviderMessageId, emailMessage.ProviderThreadId, emailMessage.Subject, emailMessage.ProviderInReplyTo, emailMessage.ProviderReferences)
+	return result
+}
+
+func (s *mailService) createInteractionEvent(
+	ctx context.Context,
+	tx neo4j.ManagedTransaction,
+	span opentracing.Span,
+	emailMessage *postgresentity.EmailMessage,
+	sessionID string,
+	participants *struct {
+		sentBy  []InteractionEventParticipantData
+		sentTo  []InteractionEventParticipantData
+		sentCc  []InteractionEventParticipantData
+		sentBcc []InteractionEventParticipantData
+	},
+) (*string, error) {
+	emailChannelData, err := neo4jentity.BuildEmailChannelData(
+		emailMessage.ProviderMessageId,
+		emailMessage.ProviderThreadId,
+		emailMessage.Subject,
+		emailMessage.ProviderInReplyTo,
+		emailMessage.ProviderReferences,
+	)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
-	interactionEventId, err := s.services.InteractionEventService.CreateInTx(ctx, tx, &InteractionEventCreateData{
+	eventID, err := s.services.InteractionEventService.CreateInTx(ctx, tx, &InteractionEventCreateData{
 		InteractionEventEntity: &neo4jentity.InteractionEventEntity{
 			Content:                      emailMessage.Content,
 			ContentType:                  "text/html",
@@ -260,30 +346,40 @@ func (s *mailService) saveEmailInTx(ctx context.Context, tx neo4j.ManagedTransac
 			SourceOfTruth:                "openline", // TODO
 			AppSource:                    "TODO",     // TODO
 		},
-		SentBy:            sentBy,
-		SentTo:            sentTo,
-		SentCc:            sentCc,
-		SentBcc:           sentBcc,
+		SentBy:            participants.sentBy,
+		SentTo:            participants.sentTo,
+		SentCc:            participants.sentCc,
+		SentBcc:           participants.sentBcc,
 		RepliesTo:         emailMessage.ReplyTo,
-		SessionIdentifier: &interactionSessionId,
+		SessionIdentifier: &sessionID,
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, fmt.Errorf("failed to create interaction event: %v", err)
 	}
 
-	err = s.services.Neo4jRepositories.CommonWriteRepository.Link(ctx, &tx, tenant, repository.LinkDetails{
-		FromEntityId:           *interactionEventId,
+	return eventID, nil
+}
+
+func (s *mailService) linkEventToSession(
+	ctx context.Context,
+	tx neo4j.ManagedTransaction,
+	span opentracing.Span,
+	tenant string,
+	eventID *string,
+	sessionID string,
+) error {
+	err := s.services.Neo4jRepositories.CommonWriteRepository.Link(ctx, &tx, tenant, repository.LinkDetails{
+		FromEntityId:           *eventID,
 		FromEntityType:         commonModel.INTERACTION_EVENT,
 		Relationship:           commonModel.PART_OF,
 		RelationshipProperties: nil,
-		ToEntityId:             interactionSessionId,
+		ToEntityId:             sessionID,
 		ToEntityType:           commonModel.INTERACTION_SESSION,
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return nil, fmt.Errorf("failed to link interaction event with interaction session: %v", err)
+		return fmt.Errorf("failed to link interaction event with interaction session: %v", err)
 	}
-
-	return interactionEventId, nil
+	return nil
 }

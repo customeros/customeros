@@ -1,11 +1,13 @@
 package service
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestParseEmailAndName(t *testing.T) {
+	svc := &mailService{}
 	tests := []struct {
 		name     string
 		input    string
@@ -56,13 +58,14 @@ func TestParseEmailAndName(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := parseEmailAndName(tt.input)
+			result := svc.parseEmailAndName(tt.input)
 			assert.Equal(t, tt.expected, result)
 		})
 	}
 }
 
 func TestParseParticipants(t *testing.T) {
+	svc := &mailService{}
 	tests := []struct {
 		name     string
 		input    string
@@ -108,13 +111,14 @@ func TestParseParticipants(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := parseParticipants(tt.input)
+			result := svc.parseParticipants(tt.input)
 			assert.Equal(t, tt.expected, result)
 		})
 	}
 }
 
 func TestParseHeaders(t *testing.T) {
+	svc := &mailService{}
 	tests := []struct {
 		name     string
 		headers  map[string]string
@@ -159,7 +163,7 @@ func TestParseHeaders(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := parseHeaders(tt.headers)
+			result := svc.parseHeaders(tt.headers)
 			tt.expected.RawHeaders = tt.headers // Set expected raw headers
 			assert.Equal(t, tt.expected, result)
 		})

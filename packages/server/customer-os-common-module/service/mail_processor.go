@@ -58,10 +58,14 @@ func (p *mailService) SyncEmail(tenant string, emailId uuid.UUID) (postgresentit
 		return postgresentity.SKIPPED, &reason, nil
 	}
 
-	interactionEventId, err := p.services.Neo4jRepositories.InteractionEventRepository.GetInteractionEventIdByExternalId(ctx, tenant, rawEmail.ExternalSystem, rawEmail.MessageId)
-	if err != nil {
-		logrus.Errorf("failed to check if interaction event exists for external id %v for tenant %v :%v", rawEmail.MessageId, tenant, err)
-		return postgresentity.ERROR, nil, err
+	if len(email.Participants.AllEmails) == 0 {
+		reason := "no email address belongs to a workspace domain"
+		return postgresentity.SKIPPED, &reason, nil
+	}
+
+	if p.warmingEmailCheck(tenant, email) {
+		reason := "warming email"
+		return postgresentity.SKIPPED, &reason, nil
 	}
 
 	now := utils.Now()
@@ -73,19 +77,15 @@ func (p *mailService) SyncEmail(tenant string, emailId uuid.UUID) (postgresentit
 		return postgresentity.ERROR, nil, err
 	}
 
-	if p.warmingEmailCheck(tenant, email) {
-		reason := "warming email"
-		return postgresentity.SKIPPED, &reason, nil
+	interactionEventId, err := p.services.Neo4jRepositories.InteractionEventRepository.GetInteractionEventIdByExternalId(ctx, tenant, rawEmail.ExternalSystem, rawEmail.MessageId)
+	if err != nil {
+		logrus.Errorf("failed to check if interaction event exists for external id %v for tenant %v :%v", rawEmail.MessageId, tenant, err)
+		return postgresentity.ERROR, nil, err
 	}
 
-	if interactionEventId != "" { // TODO move up
+	if interactionEventId != "" {
 		logrus.Infof("interaction event already exists for raw email id %v", emailId.String())
 		reason := "interaction event already exists"
-		return postgresentity.SKIPPED, &reason, nil
-	}
-
-	if len(email.Participants.AllEmails) == 0 {
-		reason := "no email address belongs to a workspace domain"
 		return postgresentity.SKIPPED, &reason, nil
 	}
 

@@ -1,12 +1,13 @@
 package service
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestProcessEmailCheck(t *testing.T) {
-	svc := &emailService{}
+	svc := &mailService{}
 
 	tests := []struct {
 		name     string
@@ -77,7 +78,7 @@ func TestProcessEmailCheck(t *testing.T) {
 }
 
 func TestIsAutoResponder(t *testing.T) {
-	svc := &emailService{}
+	svc := &mailService{}
 
 	tests := []struct {
 		name     string
@@ -114,7 +115,7 @@ func TestIsAutoResponder(t *testing.T) {
 }
 
 func TestIsBounce(t *testing.T) {
-	svc := &emailService{}
+	svc := &mailService{}
 
 	tests := []struct {
 		name     string
@@ -160,7 +161,7 @@ func TestIsBounce(t *testing.T) {
 }
 
 func TestIsBounceSubject(t *testing.T) {
-	svc := &emailService{}
+	svc := &mailService{}
 
 	tests := []struct {
 		name     string
