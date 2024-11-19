@@ -15,12 +15,9 @@ WORKDIR /app
 
 COPY package.json .
 
-RUN npm i --ignore-scripts
+RUN npm install --package-lock-only
 
 COPY . .
-
-RUN touch .env.production
-RUN printenv > .env.production
 
 RUN npm run build
 
