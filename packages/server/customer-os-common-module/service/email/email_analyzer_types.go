@@ -11,42 +11,51 @@ type HeaderAnalysis struct {
 
 // Core message content
 type EmailContent struct {
-	Html    string
-	Text    string
-	Subject string
+	Html     string
+	Text     string
+	Subject  string
+	SentDate string
+}
+
+type EmailParticipant struct {
+	Email     string
+	FirstName string
+	LastName  string
 }
 
 // Message routing/delivery information
 type EmailParticipants struct {
-	FromEmail     string
-	FromFirstName string
-	FromLastName  string
-	ToEmail       []string
-	CcEmail       []string
-	BccEmail      []string
+	From      EmailParticipant
+	To        []EmailParticipant
+	Cc        []EmailParticipant
+	Bcc       []EmailParticipant
+	InReplyTo EmailParticipant
 }
 
-// External system identifiers
+// identifiers
 type EmailIdentifiers struct {
 	EmailThreadId       string
 	ExternalId          string
 	ExternalSystem      string
 	ContactsExternalIds []string
 	UserExternalId      string
+	ProviderMessageId   string
+	MessageId           string
+	Reference           string
 }
 
 // Headers
 type EmailHeaders struct {
+	AutoSubmitted      bool
+	ContentDescription string
+	DeliveryStatus     bool
+	ListUnsubscribe    bool
+	Precedence         string
 	ReturnPath         string
 	XAutoreply         string
 	XAutoresponse      string
-	AutoSubmitted      bool
 	XLoop              bool
-	Precedence         string
-	ListUnsubscribe    bool
 	XFailedRecepients  bool
-	ContentDescription string
-	DeliveryStatus     bool
 	RawHeaders         string
 }
 
@@ -59,22 +68,4 @@ type EmailMessageData struct {
 	CreatedAt    time.Time
 	Channel      string
 	ChannelData  *string
-}
-
-// Email Raw Data
-type EmailRawData struct {
-	ProviderMessageId string            `json:"ProviderMessageId"`
-	MessageId         string            `json:"MessageId"`
-	Sent              string            `json:"Sent"`
-	Subject           string            `json:"Subject"`
-	From              string            `json:"From"`
-	To                string            `json:"To"`
-	Cc                string            `json:"Cc"`
-	Bcc               string            `json:"Bcc"`
-	Html              string            `json:"Html"`
-	Text              string            `json:"Text"`
-	ThreadId          string            `json:"ThreadId"`
-	InReplyTo         string            `json:"InReplyTo"`
-	Reference         string            `json:"Reference"`
-	Headers           map[string]string `json:"Headers"`
 }
