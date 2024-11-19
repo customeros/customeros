@@ -188,9 +188,9 @@ func TestQueryResolver_Contact_WithTags_ById(t *testing.T) {
 
 	tags := contact.Tags
 	require.Equal(t, 2, len(tags))
-	require.Equal(t, tagId1, tags[0].ID)
+	require.Equal(t, tagId1, tags[0].Metadata.ID)
 	require.Equal(t, "tag1", tags[0].Name)
-	require.Equal(t, tagId2, tags[1].ID)
+	require.Equal(t, tagId2, tags[1].Metadata.ID)
 	require.Equal(t, "tag2", tags[1].Name)
 }
 

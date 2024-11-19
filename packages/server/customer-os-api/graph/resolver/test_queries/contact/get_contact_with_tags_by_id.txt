@@ -2,12 +2,14 @@ query GetContactById($contactId: ID!){
   contact(id: $contactId) {
     id
     tags {
-        id
+        metadata {
+            id
+            created
+            lastUpdated
+            source
+            appSource
+        }
         name
-        createdAt
-        updatedAt
-        source
-        appSource
     }
   }
 }
