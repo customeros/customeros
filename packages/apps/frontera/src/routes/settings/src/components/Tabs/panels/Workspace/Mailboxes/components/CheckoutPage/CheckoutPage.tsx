@@ -8,7 +8,8 @@ import {
   PaymentElement,
 } from '@stripe/react-stripe-js';
 
-import { Input } from '@ui/form/Input';
+import { Button } from '@ui/form/Button/Button';
+import { ChevronRight } from '@ui/media/icons/ChevronRight';
 
 export const CheckoutForm = () => {
   const stripe = useStripe();
@@ -23,17 +24,14 @@ export const CheckoutForm = () => {
       return;
     }
 
-    // Trigger form validation and wallet collection
     const { error: submitError } = await elements.submit();
 
     if (submitError) {
-      // Show error to your customer
       setErrorMessage(submitError.message || 'An unknown error occurred');
 
       return;
     }
 
-    // Create the PaymentIntent and obtain clientSecret from your server endpoint
     const res = await fetch('/create-intent', {
       method: 'POST',
     });
@@ -47,7 +45,6 @@ export const CheckoutForm = () => {
     }
 
     const { error } = await stripe.confirmPayment({
-      //`Elements` instance that was used to create the Payment Element
       elements,
       clientSecret,
       confirmParams: {
@@ -59,7 +56,7 @@ export const CheckoutForm = () => {
       // This point will only be reached if there is an immediate error when
       // confirming the payment. Show error to your customer (for example, payment
       // details incomplete)
-      setErrorMessage(error.message);
+      // setErrorMessage(error?.message);
     } else {
       // Your customer will be redirected to your `return_url`. For some payment
       // methods like iDEAL, your customer will be redirected to an intermediate
@@ -70,50 +67,62 @@ export const CheckoutForm = () => {
   return (
     <>
       <form onSubmit={handleSubmit}>
-        <label>Email</label>
-        <Input placeholder='email' />
         <PaymentElement
-          className='mt-2 flex'
           options={{
-            paymentMethodOrder: ['card'],
             business: { name: 'CustomerOS' },
             terms: { card: 'always' },
-            fields: {
-              billingDetails: {
-                email: 'auto',
-                name: 'auto',
-              },
-            },
           }}
         />
-        <button type='submit' disabled={!stripe || !elements}>
+        <Button
+          typeof='submit'
+          variant='solid'
+          colorScheme='blue'
+          className='w-full mt-4'
+          isDisabled={!stripe || !elements}
+        >
           Pay
-        </button>
+        </Button>
         {errorMessage && <div>{errorMessage}</div>}
       </form>
     </>
   );
 };
 
-const stripePromise = loadStripe('pk_test_6pRNASCoBOKtIshFeQd4XMUh');
+const stripePromise = loadStripe(
+  'pk_live_51NmzLnEVwE7CWhpkO3Cp5V2BHo6FHSaYLDm62YEDQi5w6HEKyqDSY0w3AIOxhbTTLuXwmOLRTlMcmnAnpII0qMLU00dssbGeSi',
+);
 
 const options: StripeElementsOptions = {
   mode: 'payment',
   amount: 1099,
   currency: 'usd',
-
-  // Fully customizable with appearance API.
   appearance: {
     disableAnimations: true,
     rules: {
-      AnimateSinglePresence: {
-        display: 'none !important',
+      '.Input': {
+        width: '600px',
       },
     },
   },
 };
 export const CheckoutPage = () => (
-  <Elements stripe={stripePromise} options={options as StripeElementsOptions}>
-    <CheckoutForm />
-  </Elements>
+  <div className='py-2 px-4 w-[full] border-r-[1px]'>
+    <div className='flex items-center justify-start gap-1 mb-4'>
+      <span
+        onClick={() => {}}
+        className='font-semibold text-gray-500 hover:text-gray-700 hover:cursor-pointer'
+      >
+        Mailboxes
+      </span>
+      <ChevronRight className='mt-0.5 text-gray-400 size-3' />
+      <span className='font-semibold text-gray-500 hover:text-gray-700 hover:cursor-pointer'>
+        Add new
+      </span>
+      <ChevronRight className='mt-0.5 text-gray-400 size-3' />
+      <span className='font-semibold'>Pay</span>
+    </div>
+    <Elements stripe={stripePromise} options={options as StripeElementsOptions}>
+      <CheckoutForm />
+    </Elements>
+  </div>
 );

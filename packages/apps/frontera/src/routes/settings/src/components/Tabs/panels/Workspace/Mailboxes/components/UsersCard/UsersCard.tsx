@@ -15,8 +15,8 @@ export const UsersCard = () => {
   return (
     <Card className='py-2 px-3 bg-white'>
       <CardHeader className='flex flex-col'>
-        <div className='flex items-end gap-1'>
-          <span className='font-medium'>Add 2 usernames</span>
+        <div className='flex items-end gap-1 pb-1'>
+          <span className='font-medium text-sm '>Add 2 usernames</span>
           <IconButton
             size='xxs'
             variant='ghost'
@@ -24,10 +24,12 @@ export const UsersCard = () => {
             icon={<InfoCircle />}
           />
         </div>
-        <span>Your usernames will apply to all selected domains</span>
+        <span className='text-sm'>
+          Your usernames will apply to all selected domains
+        </span>
       </CardHeader>
 
-      <CardContent className='flex flex-col gap-2 p-0 '>
+      <CardContent className='flex flex-col p-0 '>
         <Input
           size='sm'
           variant='outline'
@@ -43,12 +45,13 @@ export const UsersCard = () => {
             }
           }}
         />
+        <span className='text-[12px] ml-[9px] text-error-400'>error</span>
         <Input
           size='sm'
           variant='outline'
-          className='w-full'
           value={userName[1]}
           placeholder='E.g. melinda'
+          className='w-full mt-[2px]'
           onChange={(e) => setUser2(e.target.value)}
           onBlur={() => {
             const foundIndex = userName.findIndex((item) => item === user2);

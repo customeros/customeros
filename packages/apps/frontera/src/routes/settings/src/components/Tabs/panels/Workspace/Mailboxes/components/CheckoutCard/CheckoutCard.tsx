@@ -49,8 +49,8 @@ export const CheckoutCard = () => {
       <Card className='py-2 px-3 bg-white mt-2'>
         <CardContent className='p-0'>
           <div className='flex items-center gap-1 bg-gray-50 rounded-lg py-1 px-2 leading-4'>
-            <CheckCircle className='size-7 text-gray-500' />
-            <p>
+            <CheckCircle className='size-7 text-gray-500 mr-2' />
+            <p className='text-sm'>
               With{' '}
               <span className='font-medium'>{`${noOfMailboxes} mailboxes`}</span>{' '}
               you can send up to

@@ -27,7 +27,7 @@ export const AdditionalDomainsCard = () => {
   return (
     <Card className='py-2 px-3 bg-white'>
       <CardHeader className='font-medium'>
-        <div className='flex items-center justify-between'>
+        <div className='flex items-center justify-between text-sm'>
           Additional domains
           {selectedAdditionalDomains.length > 0 && (
             <span className='text-sm ml-2'>
@@ -58,11 +58,11 @@ export const AdditionalDomainsCard = () => {
           </div>
         ))}
         {selectedAdditionalDomains.length === 0 && (
-          <p> Add more domains at $18.99 each(53% off)</p>
+          <p className='text-sm'> Add more domains at $18.99 each(53% off)</p>
         )}
         {storeUserName.length > 0 && selectedAdditionalDomains.length > 0 && (
           <CardHeader className='mt-2 flex justify-between items-center'>
-            <span className='font-medium'>
+            <span className='font-medium text-sm'>
               {storeUserName.length * selectedAdditionalDomains.length}{' '}
               mailboxes
             </span>
@@ -83,7 +83,7 @@ export const AdditionalDomainsCard = () => {
                   <div
                     key={`${user}-${brand}-${userIndex}-${brandIndex}`}
                     className={cn(
-                      'flex items-center justify-between mt-1',
+                      'flex items-center justify-between ml-2',
                       (brandIndex * storeUserName.length + userIndex) % 2 === 1
                         ? 'mb-3'
                         : '',

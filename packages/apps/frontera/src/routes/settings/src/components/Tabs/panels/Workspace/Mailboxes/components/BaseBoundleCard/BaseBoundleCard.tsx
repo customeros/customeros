@@ -23,11 +23,13 @@ export const BaseBoundleCard = () => {
   return (
     <Card className='py-2 px-3 bg-white'>
       <CardHeader className='flex items-center justify-between font-medium text-sm'>
-        <span>Base Boundle</span>
+        <span>Base bundle</span>
         <span>$199.99</span>
       </CardHeader>
       <CardContent className='p-0'>
-        <span>{storedBrandName.length} of 5 domains</span>
+        <span className='text-sm font-medium'>
+          {storedBrandName.length} of 5 domains
+        </span>
 
         {storedBrandName.map((name, index) => (
           <div
@@ -60,7 +62,7 @@ export const BaseBoundleCard = () => {
         ))}
         {storeUserName.length > 0 && (
           <CardHeader className='mt-2 flex justify-between items-center'>
-            <span className='font-medium'>
+            <span className='font-medium text-sm'>
               {storeUserName.length * storedBrandName.length} of 10 mailboxes
             </span>
             <IconButton
@@ -79,7 +81,7 @@ export const BaseBoundleCard = () => {
                 <div
                   key={`${user}-${brand}-${userIndex}-${brandIndex}`}
                   className={cn(
-                    'flex items-center justify-between mt-1',
+                    'flex items-center justify-between ml-2 ',
                     (brandIndex * storeUserName.length + userIndex) % 2 === 1
                       ? 'mb-3'
                       : '',

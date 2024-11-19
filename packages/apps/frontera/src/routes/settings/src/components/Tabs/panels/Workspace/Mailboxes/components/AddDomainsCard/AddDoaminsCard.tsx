@@ -7,6 +7,7 @@ import { Input } from '@ui/form/Input';
 import { Button } from '@ui/form/Button/Button';
 import { IconButton } from '@ui/form/IconButton';
 import { SearchSm } from '@ui/media/icons/SearchSm';
+import { InfoCircle } from '@ui/media/icons/InfoCircle';
 import { RefreshCw01 } from '@ui/media/icons/RefreshCw01';
 import { ShoppingCartAdd } from '@ui/media/icons/ShopingCartAdd';
 import {
@@ -79,8 +80,14 @@ export const AddDomainsCard = () => {
 
   return (
     <Card className='py-2 px-3 bg-white'>
-      <CardHeader className='flex items-center justify-between font-medium'>
+      <CardHeader className='flex items-end font-medium text-sm gap-1'>
         Add outbound domains
+        <IconButton
+          size='xxs'
+          variant='ghost'
+          aria-label='info'
+          icon={<InfoCircle />}
+        />
       </CardHeader>
       <CardContent className='p-0 text-sm'>
         Search and add your ideal outbound domains based on your brand
@@ -101,7 +108,7 @@ export const AddDomainsCard = () => {
               onMouseLeave={() => setIsHovered(null)}
               key={`${domain}-${crypto.randomUUID()}`}
               onMouseEnter={() => setIsHovered(index)}
-              className='flex items-center justify-between py-1'
+              className='flex items-center justify-between py-1 ml-[9px]'
             >
               <span className='text-sm'>{domain}</span>
               {isHovered === index && (
@@ -145,6 +152,7 @@ export const AddDomainsCard = () => {
             variant='ghost'
             colorScheme='primary'
             onClick={toggleDisplay}
+            className='ml-[3px] mt-1'
             leftIcon={<RefreshCw01 />}
           >
             Suggest new
