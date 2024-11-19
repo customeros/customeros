@@ -15,7 +15,8 @@ WORKDIR /app
 
 COPY package.json .
 
-RUN npm install --package-lock-only
+RUN npm cache clean --force
+RUN npm install --verbose
 
 COPY . .
 
