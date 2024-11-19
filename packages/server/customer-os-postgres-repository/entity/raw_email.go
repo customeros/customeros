@@ -50,7 +50,6 @@ type RawState string
 
 const (
 	PENDING   RawState = "PENDING"
-	SENT      RawState = "SENT"
 	SKIPPED   RawState = "SKIPPED"
 	ERROR     RawState = "ERROR"
 	PROCESSED RawState = "PROCESSED"

@@ -24,8 +24,7 @@ func (p *emailInService) SyncEmail(tenant string, emailId uuid.UUID) (postgresen
 	defer span.Finish()
 	span.LogFields(log.String("emailId", emailId.String()))
 
-	emailIdString := emailId.String()
-    var reason string
+	var reason string
 
 	rawEmail, err := p.services.PostgresRepositories.RawEmailRepository.GetEmailForSync(emailId)
 	if err != nil {
@@ -43,20 +42,19 @@ func (p *emailInService) SyncEmail(tenant string, emailId uuid.UUID) (postgresen
 		return postgresentity.ERROR, nil, fmt.Errorf("email message ID is empty")
 	}
 
-    check := p.ProcessEmailCheck(&email)
-    if !check.ProcessEmail {
-        if check.IsBounce {
-            reason = "email bounced"
-        }
-        if check.IsAutoResponder {
-            reason = "email autoresponder"
-        }
-        if check.IsBulkMail {
-            reason = "bulk email"
-        }
-    }
-        return postgresentity.SKIPPED, &reason, nil 
-    }
+	check := p.ProcessEmailCheck(&email)
+	if !check.ProcessEmail {
+		if check.IsBounce {
+			reason = "email bounced"
+		}
+		if check.IsAutoResponder {
+			reason = "email autoresponder"
+		}
+		if check.IsBulkMail {
+			reason = "bulk email"
+		}
+		return postgresentity.SKIPPED, &reason, nil
+	}
 
 	interactionEventId, err := p.services.Neo4jRepositories.InteractionEventRepository.GetInteractionEventIdByExternalId(ctx, tenant, rawEmail.ExternalSystem, rawEmail.MessageId)
 	if err != nil {
@@ -64,7 +62,7 @@ func (p *emailInService) SyncEmail(tenant string, emailId uuid.UUID) (postgresen
 		return postgresentity.ERROR, nil, err
 	}
 
-	now := time.Now().UTC()
+	now := utils.Now()
 
 	sentAt, err := convertToUTC(email.Content.SentDate)
 	email.CreatedAt = sentAt
@@ -78,8 +76,8 @@ func (p *emailInService) SyncEmail(tenant string, emailId uuid.UUID) (postgresen
 		return postgresentity.SKIPPED, &reason, nil
 	}
 
-	if interactionEventId != "" {
-		logrus.Infof("interaction event already exists for raw email id %v", emailIdString)
+	if interactionEventId != "" { // TODO move up
+		logrus.Infof("interaction event already exists for raw email id %v", emailId.String())
 		reason := "interaction event already exists"
 		return postgresentity.SKIPPED, &reason, nil
 	}
@@ -91,7 +89,7 @@ func (p *emailInService) SyncEmail(tenant string, emailId uuid.UUID) (postgresen
 
 	chanErr := p.buildChannelData(&email)
 	if chanErr != nil {
-		logrus.Errorf("failed to build email channel data for email with id %v: %v", emailIdString, chanErr)
+		logrus.Errorf("failed to build email channel data for email with id %v: %v", emailId.String(), chanErr)
 		return postgresentity.ERROR, nil, chanErr
 	}
 

@@ -3,6 +3,7 @@ package repository
 import (
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/entity"
+	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
@@ -13,8 +14,7 @@ type RawEmailRepository interface {
 	GetEmailsIdsForUserForSync(tenantName, userSource string) ([]entity.RawEmail, error)
 	GetEmailForSync(id uuid.UUID) (*entity.RawEmail, error)
 	GetEmailForSyncByMessageId(tenant, usernameSource, messageId string) (*entity.RawEmail, error)
-	// TODO refactor, no more event store
-	MarkSentToEventStore(id uuid.UUID, sentToEventStoreState entity.RawState, reason, error *string) error
+	MarkSentToEventStore(id uuid.UUID, sentToEventStoreState postgresentity.RawState, reason, error *string) error
 }
 
 type rawEmailRepositoryImpl struct {
@@ -86,7 +86,7 @@ func (repo *rawEmailRepositoryImpl) GetEmailForSyncByMessageId(tenant, usernameS
 	return &result, nil
 }
 
-func (repo *rawEmailRepositoryImpl) MarkSentToEventStore(id uuid.UUID, sentToEventStoreState entity.RawState, reason, error *string) error {
+func (repo *rawEmailRepositoryImpl) MarkSentToEventStore(id uuid.UUID, sentToEventStoreState postgresentity.RawState, reason, error *string) error {
 	tx := repo.gormDb.Model(&entity.RawEmail{}).Where("id = ?", id)
 
 	tx.Update("sent_to_event_store_state", sentToEventStoreState)

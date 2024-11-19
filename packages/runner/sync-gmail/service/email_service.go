@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"regexp"
 	"strings"
 	"time"
@@ -31,8 +32,8 @@ type emailService struct {
 type EmailService interface {
 	FindEmailsForUser(tenant, userId string) ([]*neo4jentity.EmailEntity, error)
 	SyncEmailsForUser(tenant, userSource string)
-	SyncEmailByEmailRawId(tenant string, emailId uuid.UUID) (entity.RawState, *string, error)
-	SyncEmailByMessageId(tenant, usernameSource, messageId string) (entity.RawState, *string, error)
+	SyncEmailByEmailRawId(tenant string, emailId uuid.UUID) (postgresentity.RawState, *string, error)
+	SyncEmailByMessageId(tenant, usernameSource, messageId string) (postgresentity.RawState, *string, error)
 }
 
 func (s *emailService) FindEmailsForUser(tenant, userId string) ([]*neo4jentity.EmailEntity, error) {
@@ -90,19 +91,19 @@ func (s *emailService) SyncEmailsForUser(tenant string, userSource string) {
 	s.syncEmails(tenant, emailsIdsForSync)
 }
 
-func (s *emailService) SyncEmailByEmailRawId(tenant string, emailId uuid.UUID) (entity.RawState, *string, error) {
+func (s *emailService) SyncEmailByEmailRawId(tenant string, emailId uuid.UUID) (postgresentity.RawState, *string, error) {
 	return s.syncEmail(tenant, emailId)
 }
 
-func (s *emailService) SyncEmailByMessageId(tenant, usernameSource, messageId string) (entity.RawState, *string, error) {
+func (s *emailService) SyncEmailByMessageId(tenant, usernameSource, messageId string) (postgresentity.RawState, *string, error) {
 	rawEmail, err := s.repositories.RawEmailRepository.GetEmailForSyncByMessageId(tenant, usernameSource, messageId)
 	if err != nil {
 		logrus.Errorf("failed to get emails for sync: %v", err)
-		return entity.ERROR, nil, err
+		return postgresentity.ERROR, nil, err
 	}
 
 	if rawEmail == nil {
-		return entity.ERROR, nil, fmt.Errorf("email with message id %v not found", messageId)
+		return postgresentity.ERROR, nil, fmt.Errorf("email with message id %v not found", messageId)
 	}
 
 	return s.syncEmail(tenant, rawEmail.ID)
@@ -120,7 +121,7 @@ func (s *emailService) syncEmails(tenant string, emails []entity.RawEmail) {
 			errMessage = &s2
 		}
 
-		err = s.repositories.RawEmailRepository.MarkSentToEventStore(email.ID, entity.DecodeRawState(state.String()), reason, errMessage)
+		err = s.repositories.RawEmailRepository.MarkSentToEventStore(email.ID, state, reason, errMessage)
 		if err != nil {
 			logrus.Errorf("unable to mark email as sent to event store: %v", err)
 		}
@@ -129,7 +130,7 @@ func (s *emailService) syncEmails(tenant string, emails []entity.RawEmail) {
 	}
 }
 
-func (s *emailService) syncEmail(tenant string, emailId uuid.UUID) (entity.RawState, *string, error) {
+func (s *emailService) syncEmail(tenant string, emailId uuid.UUID) (postgresentity.RawState, *string, error) {
 	ctx := context.Background()
 	span, ctx := tracing.StartTracerSpan(ctx, "EmailService.syncEmail")
 	defer span.Finish()
@@ -140,18 +141,18 @@ func (s *emailService) syncEmail(tenant string, emailId uuid.UUID) (entity.RawSt
 	rawEmail, err := s.repositories.RawEmailRepository.GetEmailForSync(emailId)
 	if err != nil {
 		logrus.Errorf("failed to get emails for sync: %v", err)
-		return entity.ERROR, nil, err
+		return postgresentity.ERROR, nil, err
 	}
 
 	if rawEmail.MessageId == "" {
-		return entity.ERROR, nil, fmt.Errorf("message id is empty")
+		return postgresentity.ERROR, nil, fmt.Errorf("message id is empty")
 	}
 
 	rawEmailData := EmailRawData{}
 	err = json.Unmarshal([]byte(rawEmail.Data), &rawEmailData)
 	if err != nil {
 		logrus.Errorf("failed to unmarshal raw email data: %v", err)
-		return entity.ERROR, nil, err
+		return postgresentity.ERROR, nil, err
 	}
 
 	emailExclusion := s.services.Cache.GetEmailExclusion(tenant)
@@ -160,17 +161,17 @@ func (s *emailService) syncEmail(tenant string, emailId uuid.UUID) (entity.RawSt
 		if exclusion.ExcludeSubject != nil {
 			if strings.Contains(rawEmailData.Subject, *exclusion.ExcludeSubject) {
 				reason := "excluded by subject"
-				return entity.SKIPPED, &reason, nil
+				return postgresentity.SKIPPED, &reason, nil
 			}
 		}
 		if exclusion.ExcludeBody != nil {
 			if strings.Contains(rawEmailData.Html, *exclusion.ExcludeBody) {
 				reason := "excluded by html body"
-				return entity.SKIPPED, &reason, nil
+				return postgresentity.SKIPPED, &reason, nil
 			}
 			if strings.Contains(rawEmailData.Text, *exclusion.ExcludeBody) {
 				reason := "excluded by text body"
-				return entity.SKIPPED, &reason, nil
+				return postgresentity.SKIPPED, &reason, nil
 			}
 		}
 	}
@@ -178,7 +179,7 @@ func (s *emailService) syncEmail(tenant string, emailId uuid.UUID) (entity.RawSt
 	interactionEventId, err := s.repositories.InteractionEventRepository.GetInteractionEventIdByExternalId(ctx, tenant, rawEmail.ExternalSystem, rawEmail.MessageId)
 	if err != nil {
 		logrus.Errorf("failed to check if interaction event exists for external id %v for tenant %v :%v", rawEmail.MessageId, tenant, err)
-		return entity.ERROR, nil, err
+		return postgresentity.ERROR, nil, err
 	}
 
 	if interactionEventId == "" {
@@ -188,7 +189,7 @@ func (s *emailService) syncEmail(tenant string, emailId uuid.UUID) (entity.RawSt
 		emailSentDate, err := s.services.SyncService.ConvertToUTC(rawEmailData.Sent)
 		if err != nil {
 			logrus.Errorf("failed to convert email sent date to UTC for email with id %v :%v", emailIdString, err)
-			return entity.ERROR, nil, err
+			return postgresentity.ERROR, nil, err
 		}
 
 		froms := s.extractEmailAddresses(rawEmailData.From)
@@ -199,7 +200,7 @@ func (s *emailService) syncEmail(tenant string, emailId uuid.UUID) (entity.RawSt
 		}
 		if from == "" {
 			logrus.Errorf("from email is empty for email with id %v", emailIdString)
-			return entity.ERROR, nil, fmt.Errorf("from email not identified from raw input: %s", rawEmailData.From)
+			return postgresentity.ERROR, nil, fmt.Errorf("from email not identified from raw input: %s", rawEmailData.From)
 		}
 
 		to := s.extractEmailAddresses(rawEmailData.To)
@@ -212,14 +213,14 @@ func (s *emailService) syncEmail(tenant string, emailId uuid.UUID) (entity.RawSt
 		allEmailsString, err := s.services.SyncService.BuildEmailsListExcludingPersonalEmails(rawEmail.Username, from, to, cc, bcc)
 		if err != nil {
 			logrus.Errorf("failed to build emails list: %v", err)
-			return entity.ERROR, nil, err
+			return postgresentity.ERROR, nil, err
 		}
 
 		allEmailsString = utils.RemoveDuplicates(allEmailsString)
 		allEmailsString = utils.RemoveEmpties(allEmailsString)
 		if len(allEmailsString) == 0 {
 			reason := "no emails address belongs to a workspace domain"
-			return entity.SKIPPED, &reason, nil
+			return postgresentity.SKIPPED, &reason, nil
 		}
 
 		// Create a map to store the domain counts
@@ -235,13 +236,13 @@ func (s *emailService) syncEmail(tenant string, emailId uuid.UUID) (entity.RawSt
 
 		if len(domainCount) > 5 {
 			reason := "more than 5 domains belongs to a workspace domain"
-			return entity.SKIPPED, &reason, nil
+			return postgresentity.SKIPPED, &reason, nil
 		}
 
 		channelData, err := neo4jentity.BuildEmailChannelData(rawEmailData.ProviderMessageId, rawEmailData.ThreadId, rawEmailData.Subject, strings.Join(inReplyTo, " "), strings.Join(references, " "))
 		if err != nil {
 			logrus.Errorf("failed to build email channel data for email with id %v: %v", emailIdString, err)
-			return entity.ERROR, nil, err
+			return postgresentity.ERROR, nil, err
 		}
 
 		emailForCustomerOS := entity.EmailMessageData{
@@ -264,25 +265,25 @@ func (s *emailService) syncEmail(tenant string, emailId uuid.UUID) (entity.RawSt
 
 		if err != nil {
 			logrus.Errorf("failed to start transaction for email with id %v: %v", emailIdString, err)
-			return entity.ERROR, nil, err
+			return postgresentity.ERROR, nil, err
 		}
 
 		sessionId, err := s.repositories.InteractionEventRepository.MergeInteractionSession(ctx, tx, tenant, emailForCustomerOS.EmailThreadId, now, emailForCustomerOS, rawEmail.ExternalSystem, AppSource)
 		if err != nil {
 			logrus.Errorf("failed merge interaction session for raw email id %v :%v", emailIdString, err)
-			return entity.ERROR, nil, err
+			return postgresentity.ERROR, nil, err
 		}
 
 		interactionEventId, err = s.repositories.InteractionEventRepository.MergeEmailInteractionEvent(ctx, tx, tenant, now, emailForCustomerOS, rawEmail.ExternalSystem, AppSource)
 		if err != nil {
 			logrus.Errorf("failed merge interaction event for raw email id %v :%v", emailIdString, err)
-			return entity.ERROR, nil, err
+			return postgresentity.ERROR, nil, err
 		}
 
 		err = s.repositories.InteractionEventRepository.LinkInteractionEventToSession(ctx, tx, tenant, interactionEventId, sessionId)
 		if err != nil {
 			logrus.Errorf("failed to associate interaction event to session for raw email id %v :%v", emailIdString, err)
-			return entity.ERROR, nil, err
+			return postgresentity.ERROR, nil, err
 		}
 
 		emailidList := []string{}
@@ -292,17 +293,17 @@ func (s *emailService) syncEmail(tenant string, emailId uuid.UUID) (entity.RawSt
 		fromEmailId, err := s.services.SyncService.GetEmailIdForEmail(ctx, tx, tenant, from, now, rawEmail.ExternalSystem)
 		if err != nil {
 			logrus.Errorf("unable to retrieve email id for tenant: %v", err)
-			return entity.ERROR, nil, err
+			return postgresentity.ERROR, nil, err
 		}
 		if fromEmailId == "" {
 			logrus.Errorf("unable to retrieve email id for tenant %s and email %s", tenant, from)
-			return entity.ERROR, nil, err
+			return postgresentity.ERROR, nil, err
 		}
 
 		err = s.repositories.InteractionEventRepository.InteractionEventSentByEmail(ctx, tx, tenant, interactionEventId, fromEmailId)
 		if err != nil {
 			logrus.Errorf("unable to link email to interaction event: %v", err)
-			return entity.ERROR, nil, err
+			return postgresentity.ERROR, nil, err
 		}
 		emailidList = append(emailidList, fromEmailId)
 
@@ -311,11 +312,11 @@ func (s *emailService) syncEmail(tenant string, emailId uuid.UUID) (entity.RawSt
 			toEmailId, err := s.services.SyncService.GetEmailIdForEmail(ctx, tx, tenant, toEmail, now, rawEmail.ExternalSystem)
 			if err != nil {
 				logrus.Errorf("unable to retrieve email id for tenant: %v", err)
-				return entity.ERROR, nil, err
+				return postgresentity.ERROR, nil, err
 			}
 			if toEmailId == "" {
 				logrus.Errorf("unable to retrieve email id for tenant %s and email %s", tenant, toEmail)
-				return entity.ERROR, nil, err
+				return postgresentity.ERROR, nil, err
 			}
 			if utils.Contains(emailidList, toEmailId) {
 				continue
@@ -324,7 +325,7 @@ func (s *emailService) syncEmail(tenant string, emailId uuid.UUID) (entity.RawSt
 			err = s.repositories.InteractionEventRepository.InteractionEventSentToEmails(ctx, tx, tenant, interactionEventId, "TO", []string{toEmailId})
 			if err != nil {
 				logrus.Errorf("unable to link email to interaction event: %v", err)
-				return entity.ERROR, nil, err
+				return postgresentity.ERROR, nil, err
 			}
 			emailidList = append(emailidList, toEmailId)
 		}
@@ -337,11 +338,11 @@ func (s *emailService) syncEmail(tenant string, emailId uuid.UUID) (entity.RawSt
 			ccEmailId, err := s.services.SyncService.GetEmailIdForEmail(ctx, tx, tenant, ccEmail, now, rawEmail.ExternalSystem)
 			if err != nil {
 				logrus.Errorf("unable to retrieve email id for tenant: %v", err)
-				return entity.ERROR, nil, err
+				return postgresentity.ERROR, nil, err
 			}
 			if ccEmailId == "" {
 				logrus.Errorf("unable to retrieve email id for tenant %s and email %s", tenant, ccEmail)
-				return entity.ERROR, nil, err
+				return postgresentity.ERROR, nil, err
 			}
 			if utils.Contains(emailidList, ccEmailId) {
 				continue
@@ -350,7 +351,7 @@ func (s *emailService) syncEmail(tenant string, emailId uuid.UUID) (entity.RawSt
 			err = s.repositories.InteractionEventRepository.InteractionEventSentToEmails(ctx, tx, tenant, interactionEventId, "CC", []string{ccEmailId})
 			if err != nil {
 				logrus.Errorf("unable to link email to interaction event: %v", err)
-				return entity.ERROR, nil, err
+				return postgresentity.ERROR, nil, err
 			}
 			emailidList = append(emailidList, ccEmailId)
 		}
@@ -364,11 +365,11 @@ func (s *emailService) syncEmail(tenant string, emailId uuid.UUID) (entity.RawSt
 			bccEmailId, err := s.services.SyncService.GetEmailIdForEmail(ctx, tx, tenant, bccEmail, now, rawEmail.ExternalSystem)
 			if err != nil {
 				logrus.Errorf("unable to retrieve email id for tenant: %v", err)
-				return entity.ERROR, nil, err
+				return postgresentity.ERROR, nil, err
 			}
 			if bccEmailId == "" {
 				logrus.Errorf("unable to retrieve email id for tenant %s and email %s", tenant, bccEmail)
-				return entity.ERROR, nil, err
+				return postgresentity.ERROR, nil, err
 			}
 			if utils.Contains(emailidList, bccEmailId) {
 				continue
@@ -377,7 +378,7 @@ func (s *emailService) syncEmail(tenant string, emailId uuid.UUID) (entity.RawSt
 			err = s.repositories.InteractionEventRepository.InteractionEventSentToEmails(ctx, tx, tenant, interactionEventId, "BCC", []string{bccEmailId})
 			if err != nil {
 				logrus.Errorf("unable to link email to interaction event: %v", err)
-				return entity.ERROR, nil, err
+				return postgresentity.ERROR, nil, err
 			}
 
 			emailidList = append(emailidList, bccEmailId)
@@ -386,16 +387,16 @@ func (s *emailService) syncEmail(tenant string, emailId uuid.UUID) (entity.RawSt
 		err = tx.Commit(ctx)
 		if err != nil {
 			logrus.Errorf("failed to commit transaction: %v", err)
-			return entity.ERROR, nil, err
+			return postgresentity.ERROR, nil, err
 		}
 
 	} else {
 		logrus.Infof("interaction event already exists for raw email id %v", emailIdString)
 		reason := "interaction event already exists"
-		return entity.SKIPPED, &reason, nil
+		return postgresentity.SKIPPED, &reason, nil
 	}
 
-	return entity.SENT, nil, err
+	return postgresentity.PROCESSED, nil, err
 }
 
 func extractLines(input string) []string {

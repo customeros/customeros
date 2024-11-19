@@ -3,6 +3,7 @@ package repository
 import (
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/entity"
+	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
@@ -10,7 +11,7 @@ import (
 type RawCalendarEventRepository interface {
 	GetCalendarEventsIdsForSync(externalSystem, tenant string) ([]entity.RawCalendarEvent, error)
 	GetCalendarEventForSync(id uuid.UUID) (*entity.RawCalendarEvent, error)
-	MarkSentToEventStore(id uuid.UUID, sentToEventStoreState entity.RawState, reason, error *string) error
+	MarkSentToEventStore(id uuid.UUID, sentToEventStoreState postgresentity.RawState, reason, error *string) error
 }
 
 type rawCalendarEventRepositoryImpl struct {
@@ -45,7 +46,7 @@ func (repo *rawCalendarEventRepositoryImpl) GetCalendarEventForSync(id uuid.UUID
 	return &result, nil
 }
 
-func (repo *rawCalendarEventRepositoryImpl) MarkSentToEventStore(id uuid.UUID, sentToEventStoreState entity.RawState, reason, error *string) error {
+func (repo *rawCalendarEventRepositoryImpl) MarkSentToEventStore(id uuid.UUID, sentToEventStoreState postgresentity.RawState, reason, error *string) error {
 	tx := repo.gormDb.Model(&entity.RawCalendarEvent{}).Where("id = ?", id)
 
 	tx.Update("sent_to_event_store_state", sentToEventStoreState)
