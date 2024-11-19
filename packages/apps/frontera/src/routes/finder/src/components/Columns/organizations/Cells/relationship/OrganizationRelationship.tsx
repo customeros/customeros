@@ -96,9 +96,6 @@ export const OrganizationRelationshipCell = observer(
               .filter(
                 (option) =>
                   !(
-                    value?.label === 'Customer' && option.label === 'Prospect'
-                  ) &&
-                  !(
                     value?.label === 'Not a Fit' && option.label === 'Prospect'
                   ),
               )
