@@ -13,7 +13,7 @@ import {
 } from '@shared/types/__generated__/graphql.types';
 
 import { CustomFieldStore } from './CustomField.store';
-import { CustomFieldsService } from './__service__/customFields/CustomFields.service';
+import { CustomFieldsService } from './__service__/CustomFields/CustomFields.service';
 
 export class CustomFieldsStore extends SyncableGroup<
   CustomField,
@@ -65,8 +65,8 @@ export class CustomFieldsStore extends SyncableGroup<
       const response = await this.service.saveCustomField({
         validValues: payload.validValues,
         name: payload.name,
-        entityType: payload.entityType,
         type: payload.type,
+        entityType: payload.entityType,
       });
 
       const customField: CustomFieldTemplateInput = {
@@ -130,7 +130,7 @@ export class CustomFieldsStore extends SyncableGroup<
   }
 
   get channelName() {
-    return 'customFields';
+    return 'CustomFields';
   }
 
   get persisterKey() {
