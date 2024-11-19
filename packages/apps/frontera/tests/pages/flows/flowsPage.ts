@@ -163,7 +163,7 @@ export class FlowsPage {
         );
         break;
       } catch (e) {
-        if (i === 2) throw e;
+        if (i === 4) throw e;
         await this.page.reload();
         await this.page.waitForTimeout(10000);
       }
