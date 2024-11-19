@@ -16,6 +16,7 @@ query getOrganizations(
       metadata {
         id
         created
+        lastUpdated
       }
       contracts {
         metadata {
@@ -141,97 +142,8 @@ query getOrganizations(
         }
       }
       lastTouchpoint {
-        lastTouchPointTimelineEventId
         lastTouchPointAt
         lastTouchPointType
-        lastTouchPointTimelineEvent {
-          __typename
-          ... on PageView {
-            id
-          }
-          ... on Issue {
-            id
-            createdAt
-            updatedAt
-          }
-          ... on LogEntry {
-            id
-            createdBy {
-              lastName
-              firstName
-            }
-          }
-          ... on Note {
-            id
-            createdBy {
-              firstName
-              lastName
-            }
-          }
-          ... on InteractionEvent {
-            id
-            channel
-            eventType
-            externalLinks {
-              type
-            }
-            sentBy {
-              __typename
-              ... on EmailParticipant {
-                type
-                emailParticipant {
-                  id
-                  email
-                  rawEmail
-                }
-              }
-              ... on ContactParticipant {
-                contactParticipant {
-                  id
-                  name
-                  firstName
-                  lastName
-                }
-              }
-              ... on JobRoleParticipant {
-                jobRoleParticipant {
-                  contact {
-                    id
-                    name
-                    firstName
-                    lastName
-                  }
-                }
-              }
-              ... on UserParticipant {
-                userParticipant {
-                  id
-                  firstName
-                  lastName
-                }
-              }
-            }
-          }
-          ... on Meeting {
-            id
-            name
-            attendedBy {
-              __typename
-            }
-          }
-          ... on Action {
-            id
-            actionType
-            createdAt
-            source
-            actionType
-            createdBy {
-              id
-              firstName
-              lastName
-            }
-          }
-        }
       }
 
       contracts {

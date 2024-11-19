@@ -48,6 +48,7 @@ export const contactsOptionsMap: Record<InvoicesColumnType | string, string> = {
   [ColumnViewType.ContactsPrimaryEmail]: 'Primary Email',
   [ColumnViewType.ContactsFlowStatus]: 'Status in Flow',
   [ColumnViewType.ContactsFlowNextAction]: 'Next Flow Action',
+  [ColumnViewType.ContactsUpdatedAt]: 'Last Updated',
 };
 
 export const invoicesHelperTextMap: Record<
@@ -110,6 +111,7 @@ export const organizationsOptionsMap: Record<
   [ColumnViewType.OrganizationsContactCount]: 'Contacts',
   [ColumnViewType.OrganizationsHeadquarters]: 'Country',
   [ColumnViewType.OrganizationsParentOrganization]: 'Parent Org',
+  [ColumnViewType.OrganizationsUpdatedDate]: 'Last Updated',
 };
 
 export const organizationsHelperTextMap: Record<
@@ -143,6 +145,7 @@ export const organizationsHelperTextMap: Record<
   [ColumnViewType.OrganizationsLtv]: 'E.g. $109,280',
   [ColumnViewType.OrganizationsHeadquarters]: 'E.g. Germany',
   [ColumnViewType.OrganizationsParentOrganization]: 'E.g. Alphabet',
+  [ColumnViewType.OrganizationsUpdatedDate]: 'E.g. 16 Sep 2024',
 };
 
 export const contactsHelperTextMap: Record<string, string> = {
@@ -169,6 +172,7 @@ export const contactsHelperTextMap: Record<string, string> = {
   [ColumnViewType.ContactsPrimaryEmail]: 'E.g. steph@acme.com',
   [ColumnViewType.ContactsFlowStatus]: 'E.g. Completed',
   [ColumnViewType.ContactsFlowNextAction]: ' E.g. Step 2/3',
+  [ColumnViewType.ContactsUpdatedAt]: 'E.g. 16 Sep 2024',
 };
 
 export const contractsMap: Record<string, string> = {

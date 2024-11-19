@@ -23,7 +23,12 @@ export type OrganizationQuery = {
     employees?: any | null;
     yearFounded?: any | null;
     public?: boolean | null;
-    metadata: { __typename?: 'Metadata'; id: string; created: any };
+    metadata: {
+      __typename?: 'Metadata';
+      id: string;
+      created: any;
+      lastUpdated: any;
+    };
     parentCompanies: Array<{
       __typename?: 'LinkedOrganization';
       organization: {

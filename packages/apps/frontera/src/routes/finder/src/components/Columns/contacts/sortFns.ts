@@ -60,5 +60,8 @@ export const getContactSortFn = (columnId: string) =>
     .with(ColumnViewType.ContactsCreatedAt, () => (row: ContactStore) => {
       return row.value.createdAt;
     })
+    .with(ColumnViewType.ContactsUpdatedAt, () => (row: ContactStore) => {
+      return row.value.updatedAt;
+    })
 
     .otherwise(() => (_row: ContactStore) => false);
