@@ -202,10 +202,21 @@ export const ChangeTags = observer(() => {
           {filteredTags?.map((tag) => (
             <CommandItem
               key={tag.id}
-              onSelect={handleSelect(tag.value)}
+              onSelect={() => {
+                handleSelect(tag.value);
+              }}
               rightAccessory={
                 newSelectedTags.has(tag.value.name) ? <Check /> : null
               }
+              onKeyDown={(e) => {
+                if (e.metaKey && e.key === 'Enter') {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  store.ui.commandMenu.setOpen(false);
+
+                  return;
+                }
+              }}
             >
               {tag.value.name}
             </CommandItem>
