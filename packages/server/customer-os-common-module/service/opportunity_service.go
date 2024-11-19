@@ -140,6 +140,7 @@ func (s *opportunityService) Save(ctx context.Context, tx *neo4j.ManagedTransact
 
 	var err error
 	var existing *neo4jentity.OpportunityEntity
+	createFlow := false
 
 	if organizationId == nil && opportunityId == nil {
 		err := fmt.Errorf("(OpportunityService.Save) organizationId and opportunityId are nil")
@@ -174,10 +175,14 @@ func (s *opportunityService) Save(ctx context.Context, tx *neo4j.ManagedTransact
 	}
 
 	if opportunityId == nil {
-
+		createFlow = true
 		if input.InternalType == "" {
 			input.InternalType = neo4jenum.OpportunityInternalTypeNBO.String()
 			input.UpdateInternalType = true
+		}
+		if input.InternalStage == "" {
+			input.InternalStage = neo4jenum.OpportunityInternalStageOpen.String()
+			input.UpdateInternalStage = true
 		}
 
 		if input.Currency == "" {
@@ -196,10 +201,14 @@ func (s *opportunityService) Save(ctx context.Context, tx *neo4j.ManagedTransact
 			return nil, err
 		}
 		opportunityId = &generatedId
+		span.LogKV("flow", "create")
+	} else {
+		span.LogKV("flow", "update")
 	}
+	tracing.TagEntity(span, *opportunityId)
 
 	// Changing external stage should set internal stage back to OPEN
-	if existing != nil && input.ExternalStage != "" && existing.ExternalStage != input.ExternalStage && existing.InternalStage != neo4jenum.OpportunityInternalStageOpen {
+	if !createFlow && input.ExternalStage != "" && existing.ExternalStage != input.ExternalStage && existing.InternalStage != neo4jenum.OpportunityInternalStageOpen {
 		input.InternalStage = neo4jenum.OpportunityInternalStageOpen.String()
 		input.UpdateInternalStage = true
 	}
@@ -301,7 +310,7 @@ func (s *opportunityService) Save(ctx context.Context, tx *neo4j.ManagedTransact
 	//if input.AppSource != constants.AppSourceCustomerOsApi {
 	details := utils.NewEventCompletedDetails()
 
-	if existing == nil {
+	if createFlow {
 		details.WithCreate()
 	} else {
 		details.WithUpdate()
