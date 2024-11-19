@@ -54,7 +54,7 @@ export const TriggerNode = (
                 <span className='capitalize mr-1'>
                   {props.data.entity?.toLowerCase() ?? 'Record'}
                 </span>
-                added manually
+                is added to this flow
               </span>
             ) : (
               <span
