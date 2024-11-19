@@ -19,7 +19,7 @@ export const AddContactFlowSubItemGroup = observer(() => {
     id: string,
     type: 'ConfirmBulkFlowEdit' | 'ConfirmSingleFlowEdit',
   ) => {
-    ui.commandMenu.toggle(type);
+    ui.commandMenu.setType(type);
     ui.commandMenu.setContext({
       ...ui.commandMenu.context,
       property: id,
@@ -28,14 +28,14 @@ export const AddContactFlowSubItemGroup = observer(() => {
   };
 
   const handleSelect = (opt: FlowStore) => {
-    if (!context.ids?.[0] || !contact) return;
+    if (!selectedIds.length || !contact) return;
 
     if (selectedIds?.length === 1) {
-      handleOpenConfirmDialog(opt.id, 'ConfirmSingleFlowEdit');
+      return handleOpenConfirmDialog(opt.id, 'ConfirmSingleFlowEdit');
     }
 
     if (selectedIds?.length > 1) {
-      handleOpenConfirmDialog(opt.id, 'ConfirmBulkFlowEdit');
+      return handleOpenConfirmDialog(opt.id, 'ConfirmBulkFlowEdit');
     }
 
     ui.commandMenu.setOpen(false);
