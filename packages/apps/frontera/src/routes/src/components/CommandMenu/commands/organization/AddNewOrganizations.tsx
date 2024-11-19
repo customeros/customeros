@@ -6,6 +6,7 @@ import { useDidMount, useKeyBindings } from 'rooks';
 
 import { Input } from '@ui/form/Input';
 import { Button } from '@ui/form/Button/Button';
+import { isValidUrl } from '@utils/urlValidation';
 import { useStore } from '@shared/hooks/useStore';
 import { Command, CommandCancelButton } from '@ui/overlay/CommandMenu';
 import { OrganizationStage, OrganizationRelationship } from '@graphql/types';
@@ -42,7 +43,7 @@ export const AddNewOrganization = observer(() => {
 
     setValidation(false);
 
-    if (website && !URL.canParse(website)) {
+    if (website && !isValidUrl(website)) {
       setValidation(true);
       setAllowSubmit(true);
 
