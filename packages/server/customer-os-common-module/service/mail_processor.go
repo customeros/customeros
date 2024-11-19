@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go/log"
@@ -96,6 +97,83 @@ func (p *mailService) SyncEmail(tenant string, emailId uuid.UUID) (postgresentit
 	}
 
 	return p.processInboundEmail(ctx, tenant, &email, rawEmail, now)
+}
+
+func (p *mailService) SyncEmailsForUser(tenant string, userSource string) {
+	emailsIdsForSync, err := p.services.PostgresRepositories.RawEmailRepository.GetEmailsIdsForUserForSync(tenant, userSource)
+	if err != nil {
+		logrus.Errorf("failed to get emails for sync: %v", err)
+	}
+
+	if len(emailsIdsForSync) == 0 {
+		return
+	}
+
+	distinctExternalSystems := make([]string, 0)
+	for _, email := range emailsIdsForSync {
+		if !utils.Contains(distinctExternalSystems, email.ExternalSystem) {
+			distinctExternalSystems = append(distinctExternalSystems, email.ExternalSystem)
+		}
+	}
+
+	externalSystemStr := ""
+	if len(distinctExternalSystems) > 0 {
+		externalSystemStr = distinctExternalSystems[0]
+	}
+
+	_, err = p.createUserSourceAsEmailNode(tenant, userSource, externalSystemStr)
+	if err != nil {
+		logrus.Errorf("failed to create user source as email node: %v", err)
+		return
+	}
+
+	for _, externalSystem := range distinctExternalSystems {
+		err = p.services.Neo4jRepositories.ExternalSystemWriteRepository.CreateIfNotExists(context.Background(), tenant, externalSystem, externalSystem)
+		if err != nil {
+			return
+		}
+	}
+
+	p.syncEmails(tenant, emailsIdsForSync)
+}
+
+func (p *mailService) SyncEmailByMessageId(tenant, usernameSource, messageId string) (postgresentity.RawState, *string, error) {
+	rawEmail, err := p.services.PostgresRepositories.RawEmailRepository.GetEmailForSyncByMessageId(tenant, usernameSource, messageId)
+	if err != nil {
+		logrus.Errorf("failed to get emails for sync: %v", err)
+		return postgresentity.ERROR, nil, err
+	}
+
+	if rawEmail == nil {
+		return postgresentity.ERROR, nil, fmt.Errorf("email with message id %v not found", messageId)
+	}
+
+	return p.SyncEmail(tenant, rawEmail.ID)
+}
+
+func (p *mailService) SyncEmailByEmailRawId(tenant string, emailId uuid.UUID) (postgresentity.RawState, *string, error) {
+	return p.SyncEmail(tenant, emailId)
+}
+
+func (p *mailService) syncEmails(tenant string, emails []postgresentity.RawEmail) {
+	for _, email := range emails {
+		// TODO here is control to call new service !!!
+		// state, reason, err := s.syncEmail(tenant, email.ID)
+		state, reason, err := p.SyncEmail(tenant, email.ID)
+
+		var errMessage *string
+		if err != nil {
+			s2 := err.Error()
+			errMessage = &s2
+		}
+
+		err = p.services.PostgresRepositories.RawEmailRepository.MarkSentToEventStore(email.ID, state, reason, errMessage)
+		if err != nil {
+			logrus.Errorf("unable to mark email as sent to event store: %v", err)
+		}
+
+		fmt.Println("raw email processed: " + email.ID.String())
+	}
 }
 
 func (p *mailService) processInboundEmail(ctx context.Context, tenant string, email *EmailMessageData, rawEmail *postgresentity.RawEmail, ts time.Time) (postgresentity.RawState, *string, error) {
@@ -266,4 +344,29 @@ func (p *mailService) warmingEmailCheck(tenant string, email EmailMessageData) b
 		}
 	}
 	return false
+}
+
+func (p *mailService) createUserSourceAsEmailNode(tenant, userSource, externalSystem string) (string, error) {
+	ctx := context.Background()
+
+	emailId, err := p.services.EmailService.Merge(ctx, tenant, EmailFields{
+		Email:     userSource,
+		AppSource: AppSource,
+		Source:    neo4jentity.DecodeDataSource(externalSystem),
+	}, nil)
+	if err != nil {
+		return "", fmt.Errorf("unable to create email: %v", err)
+	}
+
+	return *emailId, nil
+}
+
+func (p *mailService) mapDbNodeToEmailEntity(node dbtype.Node) *neo4jentity.EmailEntity {
+	props := utils.GetPropsFromNode(node)
+	result := neo4jentity.EmailEntity{
+		Id:       utils.GetStringPropOrEmpty(props, "id"),
+		Email:    utils.GetStringPropOrEmpty(props, "email"),
+		RawEmail: utils.GetStringPropOrEmpty(props, "rawEmail"),
+	}
+	return &result
 }

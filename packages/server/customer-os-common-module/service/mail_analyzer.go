@@ -1,6 +1,11 @@
 package service
 
-import "strings"
+import (
+	"regexp"
+	"strings"
+
+	"github.com/customeros/mailsherpa/mailvalidate"
+)
 
 type HeaderAnalysis struct {
 	ProcessEmail    bool
@@ -86,4 +91,60 @@ func (a *mailService) isBounceSubject(subject string) bool {
 	}
 
 	return false
+}
+
+func (a *mailService) extractEmailAddresses(input string) []string {
+	if input == "" {
+		return []string{""}
+	}
+	// Regular expression pattern to match email addresses between <>
+	emailPattern := `<(.*?)>`
+
+	emails := make([]string, 0)
+	emailAddresses := make([]string, 0)
+
+	if strings.Contains(input, ",") {
+		split := strings.Split(input, ",")
+
+		for _, email := range split {
+			email = strings.TrimSpace(email)
+			email = strings.ToLower(email)
+			emails = append(emails, email)
+		}
+	} else {
+		emails = append(emails, input)
+	}
+
+	for _, email := range emails {
+		email = strings.TrimSpace(email)
+		email = strings.ToLower(email)
+		if strings.Contains(email, "<") && strings.Contains(email, ">") {
+			// Extract email addresses using the regular expression pattern
+			re := regexp.MustCompile(emailPattern)
+			matches := re.FindAllStringSubmatch(email, -1)
+
+			// Create a map to store unique email addresses
+			emailMap := make(map[string]bool)
+			for _, match := range matches {
+				email := match[1]
+				emailMap[email] = true
+			}
+
+			// Convert the map keys to an array of email addresses
+			for email := range emailMap {
+				if mailvalidate.ValidateEmailSyntax(email).IsValid {
+					emailAddresses = append(emailAddresses, email)
+				}
+			}
+
+		} else if mailvalidate.ValidateEmailSyntax(email).IsValid {
+			emailAddresses = append(emailAddresses, email)
+		}
+	}
+
+	if len(emailAddresses) > 0 {
+		return emailAddresses
+	}
+
+	return []string{input}
 }
