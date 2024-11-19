@@ -225,7 +225,7 @@ describe('OrganizationsService - Integration Tests', () => {
 
     await organizationsService.updateSocial({
       input: {
-        id: organization_Save.metadata.id,
+        id: organization_AddSocial.id,
         url: organization_subsequent_social_url,
       },
     });
@@ -348,7 +348,7 @@ describe('OrganizationsService - Integration Tests', () => {
     await sleep(500);
 
     let retrieved_organizations = await organizationsService.getOrganizations({
-      pagination: { limit: 1000, page: 0 },
+      pagination: { limit: 100, page: 0 },
       sort: {
         by: 'LAST_TOUCHPOINT',
         caseSensitive: false,
@@ -383,7 +383,7 @@ describe('OrganizationsService - Integration Tests', () => {
     });
 
     retrieved_organizations = await organizationsService.getOrganizations({
-      pagination: { limit: 1000, page: 0 },
+      pagination: { limit: 100, page: 0 },
       sort: {
         by: 'LAST_TOUCHPOINT',
         caseSensitive: false,

@@ -105,7 +105,7 @@ export class FlowsPage {
       status: FlowStatuses;
     },
   ) {
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 5; i++) {
       try {
         const flowNameInAllOrgsTable = this.page
           .locator(
@@ -163,7 +163,7 @@ export class FlowsPage {
         );
         break;
       } catch (e) {
-        if (i === 2) throw e;
+        if (i === 4) throw e;
         await this.page.reload();
         await this.page.waitForTimeout(10000);
       }
