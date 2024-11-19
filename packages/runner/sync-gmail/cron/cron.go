@@ -72,6 +72,8 @@ func syncEmails(services *service.Services) {
 
 	for _, dt := range distinctUsersForImport {
 
+		// TODO add local caching per tenant for external systems
+
 		err = services.Repositories.Neo4jRepositories.ExternalSystemWriteRepository.CreateIfNotExists(ctx, dt.Tenant, neo4jenum.GMail.String(), neo4jenum.GMail.String())
 		if err != nil {
 			logrus.Errorf("failed to merge external system: %s", err.Error())

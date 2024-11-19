@@ -30,9 +30,7 @@ type emailService struct {
 
 type EmailService interface {
 	FindEmailsForUser(tenant, userId string) ([]*neo4jentity.EmailEntity, error)
-
 	SyncEmailsForUser(tenant, userSource string)
-
 	SyncEmailByEmailRawId(tenant string, emailId uuid.UUID) (entity.RawState, *string, error)
 	SyncEmailByMessageId(tenant, usernameSource, messageId string) (entity.RawState, *string, error)
 }
@@ -112,7 +110,9 @@ func (s *emailService) SyncEmailByMessageId(tenant, usernameSource, messageId st
 
 func (s *emailService) syncEmails(tenant string, emails []entity.RawEmail) {
 	for _, email := range emails {
-		state, reason, err := s.syncEmail(tenant, email.ID)
+		// TODO here is control to call new service !!!
+		//state, reason, err := s.syncEmail(tenant, email.ID)
+		state, reason, err := s.services.CommonServices.EmailInService.SyncEmail(tenant, email.ID)
 
 		var errMessage *string
 		if err != nil {
@@ -120,7 +120,7 @@ func (s *emailService) syncEmails(tenant string, emails []entity.RawEmail) {
 			errMessage = &s2
 		}
 
-		err = s.repositories.RawEmailRepository.MarkSentToEventStore(email.ID, state, reason, errMessage)
+		err = s.repositories.RawEmailRepository.MarkSentToEventStore(email.ID, entity.DecodeRawState(state.String()), reason, errMessage)
 		if err != nil {
 			logrus.Errorf("unable to mark email as sent to event store: %v", err)
 		}

@@ -3,23 +3,22 @@ package service
 import (
 	"context"
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	"strings"
-	"time"
-
 	"github.com/google/uuid"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/sirupsen/logrus"
+	"strings"
+	"time"
 )
 
 const AppSource = "sync-email"
 
-func (p *emailInService) syncEmail(tenant string, emailId uuid.UUID) (entity.RawState, *string, error) {
+func (p *emailInService) SyncEmail(tenant string, emailId uuid.UUID) (postgresentity.RawState, *string, error) {
 	ctx := context.Background()
 	span, ctx := tracing.StartTracerSpan(ctx, "EmailService.syncEmail")
 	defer span.Finish()
@@ -30,23 +29,23 @@ func (p *emailInService) syncEmail(tenant string, emailId uuid.UUID) (entity.Raw
 	rawEmail, err := p.services.PostgresRepositories.RawEmailRepository.GetEmailForSync(emailId)
 	if err != nil {
 		logrus.Errorf("failed to get raw email for sync: %v", err)
-		return entity.ERROR, nil, err
+		return postgresentity.ERROR, nil, err
 	}
 
 	email, err := p.LoadEmail(rawEmail)
 	if err != nil {
 		logrus.Errorf("failed to load email for sync: %v", err)
-		return entity.ERROR, nil, err
+		return postgresentity.ERROR, nil, err
 	}
 
 	if email.Identifiers.MessageId == "" {
-		return entity.ERROR, nil, fmt.Errorf("email message ID is empty")
+		return postgresentity.ERROR, nil, fmt.Errorf("email message ID is empty")
 	}
 
 	interactionEventId, err := p.services.Neo4jRepositories.InteractionEventRepository.GetInteractionEventIdByExternalId(ctx, tenant, rawEmail.ExternalSystem, rawEmail.MessageId)
 	if err != nil {
 		logrus.Errorf("failed to check if interaction event exists for external id %v for tenant %v :%v", rawEmail.MessageId, tenant, err)
-		return entity.ERROR, nil, err
+		return postgresentity.ERROR, nil, err
 	}
 
 	now := time.Now().UTC()
@@ -55,59 +54,59 @@ func (p *emailInService) syncEmail(tenant string, emailId uuid.UUID) (entity.Raw
 	email.CreatedAt = sentAt
 	if err != nil {
 		logrus.Errorf("%v :%v", err, emailId.String())
-		return entity.ERROR, nil, err
+		return postgresentity.ERROR, nil, err
 	}
 
 	if p.warmingEmailCheck(tenant, email) {
 		reason := "warming email"
-		return entity.SKIPPED, &reason, nil
+		return postgresentity.SKIPPED, &reason, nil
 	}
 
 	if interactionEventId != "" {
 		logrus.Infof("interaction event already exists for raw email id %v", emailIdString)
 		reason := "interaction event already exists"
-		return entity.SKIPPED, &reason, nil
+		return postgresentity.SKIPPED, &reason, nil
 	}
 
 	if len(email.Participants.AllEmails) == 0 {
 		reason := "no email address belongs to a workspace domain"
-		return entity.SKIPPED, &reason, nil
+		return postgresentity.SKIPPED, &reason, nil
 	}
 
 	chanErr := p.buildChannelData(&email)
 	if chanErr != nil {
 		logrus.Errorf("failed to build email channel data for email with id %v: %v", emailIdString, chanErr)
-		return entity.ERROR, nil, chanErr
+		return postgresentity.ERROR, nil, chanErr
 	}
 
 	return p.processInboundEmail(ctx, tenant, &email, rawEmail, now)
 
 }
 
-func (p *emailInService) processInboundEmail(ctx context.Context, tenant string, email *EmailMessageData, rawEmail *entity.RawEmail, ts time.Time) (entity.RawState, *string, error) {
+func (p *emailInService) processInboundEmail(ctx context.Context, tenant string, email *EmailMessageData, rawEmail *postgresentity.RawEmail, ts time.Time) (postgresentity.RawState, *string, error) {
 	session := utils.NewNeo4jWriteSession(ctx, *p.services.Neo4jRepositories.Neo4jDriver)
 	defer session.Close(ctx)
 
 	tx, err := session.BeginTransaction(ctx)
 	if err != nil {
-		return entity.ERROR, nil, fmt.Errorf("failed to start transaction: %v", err)
+		return postgresentity.ERROR, nil, fmt.Errorf("failed to start transaction: %v", err)
 	}
 	defer tx.Close(ctx)
 
 	// Process session and events
 	if err := p.processSessionAndEvents(ctx, tx, tenant, email, rawEmail, ts); err != nil {
-		return entity.ERROR, nil, err
+		return postgresentity.ERROR, nil, err
 	}
 
 	if err := tx.Commit(ctx); err != nil {
-		return entity.ERROR, nil, fmt.Errorf("failed to commit transaction: %v", err)
+		return postgresentity.ERROR, nil, fmt.Errorf("failed to commit transaction: %v", err)
 	}
 
-	return entity.PROCESSED, nil, nil
+	return postgresentity.PROCESSED, nil, nil
 
 }
 
-func (p *emailInService) processSessionAndEvents(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, email *EmailMessageData, rawEmail *entity.RawEmail, ts time.Time) error {
+func (p *emailInService) processSessionAndEvents(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, email *EmailMessageData, rawEmail *postgresentity.RawEmail, ts time.Time) error {
 
 	// get EmailForCustomerOS
 	cosEmail := p.buildEmailForCustomerOS(email, rawEmail.ExternalSystem)

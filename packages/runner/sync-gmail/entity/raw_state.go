@@ -12,3 +12,18 @@ const (
 func (rawState RawState) String() string {
 	return string(rawState)
 }
+
+func DecodeRawState(rawState string) RawState {
+	switch rawState {
+	case "PENDING":
+		return PENDING
+	case "SENT":
+		return SENT
+	case "SKIPPED":
+		return SKIPPED
+	case "ERROR":
+		return ERROR
+	default:
+		return PENDING
+	}
+}

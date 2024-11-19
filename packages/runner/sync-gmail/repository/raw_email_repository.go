@@ -13,6 +13,7 @@ type RawEmailRepository interface {
 	GetEmailsIdsForUserForSync(tenantName, userSource string) ([]entity.RawEmail, error)
 	GetEmailForSync(id uuid.UUID) (*entity.RawEmail, error)
 	GetEmailForSyncByMessageId(tenant, usernameSource, messageId string) (*entity.RawEmail, error)
+	// TODO refactor, no more event store
 	MarkSentToEventStore(id uuid.UUID, sentToEventStoreState entity.RawState, reason, error *string) error
 }
 
