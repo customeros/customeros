@@ -1,5 +1,7 @@
 import { it, expect, describe } from 'vitest';
 
+import { EmailLabel } from '@graphql/types';
+
 import { Transport } from '../../transport';
 import { ContactService } from '../../Contacts/__service__/Contacts.service';
 import { OrganizationsService } from '../../Organizations/__service__/Organizations.service';
@@ -20,6 +22,32 @@ describe('ContactsService - Integration Tests', () => {
     expect(contact?.socials.length).toBe(1);
     expect(contact?.socials[0].url).toBe(contact_social_url);
     expect(contact?.createdAt).not.toBeNull();
+    expect(contact?.firstName).toBe('');
+    expect(contact?.lastName).toBe('');
+    expect(contact?.name).toBe('');
+    expect(contact?.createdAt).not.toBe('');
+    expect(contact?.prefix).toBe('');
+    expect(contact?.description).toBe('');
+    expect(contact?.timezone).toBe('');
+    expect(contact?.metadata.id).toBe(contact_Create);
+    expect(contact?.tags).toBeNull();
+    expect(contact?.flows.length).toBe(0);
+    expect(contact?.organizations.content.length).toBe(0);
+    expect(contact?.jobRoles.length).toBe(0);
+    expect(contact?.primaryEmail).toBeNull();
+    expect(contact?.latestOrganizationWithJobRole).toBeNull();
+    expect(contact?.locations.length).toBe(0);
+    expect(contact?.phoneNumbers.length).toBe(0);
+    expect(contact?.emails.length).toBe(0);
+    expect(contact?.connectedUsers.length).toBe(0);
+    expect(contact?.updatedAt).not.toBeNull();
+    expect(contact?.enrichDetails.enrichedAt).toBeNull();
+    expect(contact?.enrichDetails.failedAt).toBeNull();
+    expect(contact?.enrichDetails.requestedAt).toBeNull();
+    expect(contact?.enrichDetails.emailEnrichedAt).toBeNull();
+    expect(contact?.enrichDetails.emailFound).toBeNull();
+    expect(contact?.enrichDetails.emailRequestedAt).toBeNull();
+    expect(contact?.profilePhotoUrl).toBe('');
   });
 
   it('create contact for organization', async () => {
@@ -188,17 +216,17 @@ describe('ContactsService - Integration Tests', () => {
     expect(contactBeforeFirstJobRole.contact?.jobRoles[0].startedAt).toBeNull();
     expect(contactBeforeFirstJobRole.contact?.jobRoles[0].endedAt).toBeNull();
 
-    const jobRoleOneDescription = 'IT_' + crypto.randomUUID();
-    const jobRoleOneTitle = 'IT_' + crypto.randomUUID();
-    const jobRoleOneStartedAt = new Date().toISOString();
+    const jobRoleCreateOneDescription = 'IT_' + crypto.randomUUID();
+    const jobRoleCreateOneTitle = 'IT_' + crypto.randomUUID();
+    const jobRoleCreateOneStartedAt = new Date().toISOString();
 
-    await contactService.addJobRole({
+    const { jobRole_Create } = await contactService.addJobRole({
       contactId: contactBeforeFirstJobRole.contact!.metadata.id,
       input: {
-        description: jobRoleOneDescription,
-        jobTitle: jobRoleOneTitle,
+        description: jobRoleCreateOneDescription,
+        jobTitle: jobRoleCreateOneTitle,
         organizationId: organization_Save.metadata.id,
-        startedAt: jobRoleOneStartedAt,
+        startedAt: jobRoleCreateOneStartedAt,
       },
     });
 
@@ -208,13 +236,10 @@ describe('ContactsService - Integration Tests', () => {
 
     expect(contactAfterFirstJobRole.contact?.jobRoles.length).toBe(2);
     expect(contactAfterFirstJobRole.contact?.jobRoles[1].jobTitle).toBe(
-      jobRoleOneTitle,
-    );
-    expect(contactAfterFirstJobRole.contact?.jobRoles[1].jobTitle).toBe(
-      jobRoleOneTitle,
+      jobRoleCreateOneTitle,
     );
     expect(contactAfterFirstJobRole.contact?.jobRoles[1].description).toBe(
-      jobRoleOneDescription,
+      jobRoleCreateOneDescription,
     );
     expect(contactAfterFirstJobRole.contact?.jobRoles[1].primary).toBe(false);
     expect(contactAfterFirstJobRole.contact?.jobRoles[1].company).toBeNull();
@@ -222,7 +247,238 @@ describe('ContactsService - Integration Tests', () => {
       new Date(
         contactAfterFirstJobRole.contact?.jobRoles[1].startedAt,
       ).getTime(),
-    ).toBe(new Date(jobRoleOneStartedAt).getTime());
+    ).toBe(new Date(jobRoleCreateOneStartedAt).getTime());
     expect(contactAfterFirstJobRole.contact?.jobRoles[0].endedAt).toBeNull();
+
+    const jobRoleUpdateDescription = 'IT_' + crypto.randomUUID();
+    const jobRoleUpdateTitle = 'IT_' + crypto.randomUUID();
+    const jobRoleUpdateStartedAt = new Date().toISOString();
+    const jobRoleUpdateCompany = new Date().toISOString();
+
+    await new Promise((resolve) => setTimeout(resolve, 1000)); // 1 second delay to have different endedAt
+
+    const jobRoleUpdateEndedAt = new Date().toISOString();
+
+    await contactService.updateJobRole({
+      contactId: contactBeforeFirstJobRole.contact!.metadata.id,
+      input: {
+        id: jobRole_Create.id,
+        description: jobRoleUpdateDescription,
+        jobTitle: jobRoleUpdateTitle,
+        organizationId: organization_Save.metadata.id,
+        startedAt: jobRoleUpdateStartedAt,
+        company: jobRoleUpdateCompany,
+        endedAt: jobRoleUpdateEndedAt,
+        primary: true,
+      },
+    });
+
+    const contactAfterUpdateJobRole = await contactService.getContact(
+      contact_CreateForOrganization.id,
+    );
+
+    expect(contactAfterUpdateJobRole.contact?.jobRoles.length).toBe(2);
+    expect(contactAfterUpdateJobRole.contact?.jobRoles[1].jobTitle).toBe(
+      jobRoleUpdateTitle,
+    );
+    expect(contactAfterUpdateJobRole.contact?.jobRoles[1].description).toBe(
+      jobRoleUpdateDescription,
+    );
+    expect(contactAfterUpdateJobRole.contact?.jobRoles[1].primary).toBe(true);
+    expect(contactAfterUpdateJobRole.contact?.jobRoles[1].company).toBe(
+      jobRoleUpdateCompany,
+    );
+    expect(
+      new Date(
+        contactAfterUpdateJobRole.contact?.jobRoles[1].startedAt,
+      ).getTime(),
+    ).toBe(new Date(jobRoleUpdateStartedAt).getTime());
+    expect(
+      new Date(
+        contactAfterUpdateJobRole.contact?.jobRoles[1].endedAt,
+      ).getTime(),
+    ).toBe(new Date(jobRoleUpdateEndedAt).getTime());
+  });
+
+  it('links contact to organization', async () => {
+    const organization_name = 'IT_' + crypto.randomUUID();
+    const { organization_Save } = await organizationsService.saveOrganization({
+      input: { name: organization_name },
+    });
+    const { contact_Create } = await contactService.createContact({
+      contactInput: {},
+    });
+
+    await organizationsService.getOrganization(organization_Save.metadata.id);
+    expect(
+      (await contactService.getContact(contact_Create)).contact?.organizations
+        .content.length,
+    ).toBe(0);
+
+    await contactService.linkOrganization({
+      input: {
+        contactId: contact_Create,
+        organizationId: organization_Save.metadata.id,
+      },
+    });
+
+    expect(
+      (await contactService.getContact(contact_Create)).contact?.organizations
+        .content.length,
+    ).toBe(1);
+    expect(
+      (await contactService.getContact(contact_Create)).contact?.organizations
+        .content[0].id,
+    ).toBe(organization_Save.metadata.id);
+    expect(
+      (await contactService.getContact(contact_Create)).contact?.organizations
+        .content[0].name,
+    ).toBe(organization_name);
+  });
+
+  it('updates contact email', async () => {
+    const { contact_Create } = await contactService.createContact({
+      contactInput: {},
+    });
+    const emailOne = 'IT_' + crypto.randomUUID() + '@example.com';
+
+    await contactService.updateContactEmail({
+      contactId: contact_Create,
+      previousEmail: '',
+      input: {
+        email: emailOne,
+        appSource: 'IT_test',
+        label: EmailLabel.Personal,
+      },
+    });
+
+    const contactAfterEmailUpdate = await contactService.getContact(
+      contact_Create,
+    );
+
+    expect(contactAfterEmailUpdate.contact?.emails.length).toBe(1);
+    expect(contactAfterEmailUpdate.contact?.emails[0].id).not.toBeNull();
+    expect(contactAfterEmailUpdate.contact?.emails[0].email).toBe(emailOne);
+    expect(contactAfterEmailUpdate.contact?.emails[0].primary).toBe(true);
+    expect(
+      contactAfterEmailUpdate.contact?.emails[0].emailValidationDetails
+        .verified,
+    ).toBe(false);
+    expect(
+      contactAfterEmailUpdate.contact?.emails[0].emailValidationDetails
+        .verifyingCheckAll,
+    ).toBe(false);
+    expect(
+      contactAfterEmailUpdate.contact?.emails[0].emailValidationDetails
+        .isValidSyntax,
+    ).toBeNull();
+    expect(
+      contactAfterEmailUpdate.contact?.emails[0].emailValidationDetails.isRisky,
+    ).toBeNull();
+    expect(
+      contactAfterEmailUpdate.contact?.emails[0].emailValidationDetails
+        .isFirewalled,
+    ).toBeNull();
+    expect(
+      contactAfterEmailUpdate.contact?.emails[0].emailValidationDetails
+        .provider,
+    ).toBeNull();
+    expect(
+      contactAfterEmailUpdate.contact?.emails[0].emailValidationDetails
+        .firewall,
+    ).toBeNull();
+    expect(
+      contactAfterEmailUpdate.contact?.emails[0].emailValidationDetails
+        .isCatchAll,
+    ).toBeNull();
+    expect(
+      contactAfterEmailUpdate.contact?.emails[0].emailValidationDetails
+        .canConnectSmtp,
+    ).toBeNull();
+    expect(
+      contactAfterEmailUpdate.contact?.emails[0].emailValidationDetails
+        .deliverable,
+    ).toBeNull();
+    expect(
+      contactAfterEmailUpdate.contact?.emails[0].emailValidationDetails
+        .isMailboxFull,
+    ).toBeNull();
+    expect(
+      contactAfterEmailUpdate.contact?.emails[0].emailValidationDetails
+        .isRoleAccount,
+    ).toBeNull();
+    expect(
+      contactAfterEmailUpdate.contact?.emails[0].emailValidationDetails
+        .isFreeAccount,
+    ).toBeNull();
+    expect(
+      contactAfterEmailUpdate.contact?.emails[0].emailValidationDetails
+        .smtpSuccess,
+    ).toBeNull();
+
+    const emailTwo = 'IT_' + crypto.randomUUID() + '@example.com';
+
+    await contactService.updateContactEmail({
+      contactId: contact_Create,
+      previousEmail: '',
+      input: {
+        email: emailTwo,
+        appSource: 'IT_test',
+        label: EmailLabel.Work,
+      },
+    });
+
+    const contactAfterSecondEmailUpdate = await contactService.getContact(
+      contact_Create,
+    );
+
+    expect(contactAfterSecondEmailUpdate.contact?.emails.length).toBe(2);
+
+    let emailOneEntry = contactAfterSecondEmailUpdate.contact?.emails.find(
+      (email) => email.email === emailOne,
+    );
+    let emailTwoEntry = contactAfterSecondEmailUpdate.contact?.emails.find(
+      (email) => email.email === emailTwo,
+    );
+
+    expect(emailOneEntry).toBeDefined();
+    expect(emailTwoEntry).toBeDefined();
+
+    expect(emailOneEntry?.id).not.toBeNull();
+    expect(emailOneEntry?.primary).toBe(true);
+
+    expect(emailTwoEntry?.id).not.toBeNull();
+    expect(emailTwoEntry?.primary).toBe(false);
+
+    await contactService.setPrimaryEmail({
+      contactId: contact_Create,
+      email: emailTwo,
+    });
+
+    const contactAfterSecondEmailSetPrimary = await contactService.getContact(
+      contact_Create,
+    );
+
+    expect(contactAfterSecondEmailSetPrimary.contact?.emails.length).toBe(2);
+
+    emailOneEntry = contactAfterSecondEmailSetPrimary.contact?.emails.find(
+      (email) => email.email === emailOne,
+    );
+    emailTwoEntry = contactAfterSecondEmailSetPrimary.contact?.emails.find(
+      (email) => email.email === emailTwo,
+    );
+
+    expect(emailOneEntry).toBeDefined();
+    expect(emailTwoEntry).toBeDefined();
+
+    expect(emailOneEntry?.id).not.toBeNull();
+    expect(emailOneEntry?.primary, 'The first email is still primary').toBe(
+      false,
+    );
+
+    expect(emailTwoEntry?.id).not.toBeNull();
+    expect(emailTwoEntry?.primary, 'The first email is still primary').toBe(
+      true,
+    );
   });
 });

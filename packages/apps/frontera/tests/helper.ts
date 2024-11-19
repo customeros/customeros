@@ -33,10 +33,10 @@ export async function retryOperation(
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     try {
       await operation();
-      break; // Success, exit the loop
+      break;
     } catch (error) {
       if (attempt === maxAttempts - 1) {
-        throw error; // If it's the last attempt, throw the error
+        throw error;
       }
 
       console.error(
