@@ -259,8 +259,11 @@
   > * + * {
     margin-top: 0.75em;
   }
-  outline: none;
-  min-height: 100px;
+
+  & {
+    outline: none;
+    min-height: 100px;
+  }
 }
 
 .tiptap .is-editor-empty:first-child::before {
@@ -408,7 +411,7 @@
 }
 
 .editor-link {
-  color: #0000EE;
+  color: #0000ee;
   text-decoration: underline;
   cursor: pointer;
 }

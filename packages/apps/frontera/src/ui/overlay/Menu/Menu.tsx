@@ -63,7 +63,7 @@ export const MenuList = forwardRef<HTMLDivElement, MenuListProps>(
 
 export const MenuLabel = forwardRef<
   HTMLDivElement,
-  DropdownMenuPrimitive.MenuLabelProps
+  DropdownMenuPrimitive.DropdownMenuLabelProps
 >(({ className, ...props }, ref) => {
   return (
     <DropdownMenuPrimitive.Label
