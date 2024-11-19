@@ -25,8 +25,8 @@ export class CustomFieldStore extends Syncable<CustomField> {
     makeObservable<CustomFieldStore>(this, {
       id: override,
       save: override,
-      getId: override,
       setId: override,
+      getId: override,
       invalidate: action,
       getCustomFields: action,
       getChannelName: override,

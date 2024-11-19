@@ -65,8 +65,8 @@ export class CustomFieldsStore extends SyncableGroup<
       const response = await this.service.saveCustomField({
         validValues: payload.validValues,
         name: payload.name,
-        entityType: payload.entityType,
         type: payload.type,
+        entityType: payload.entityType,
       });
 
       const customField: CustomFieldTemplateInput = {
