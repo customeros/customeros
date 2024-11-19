@@ -1,9 +1,11 @@
 query {
   tags {
-    id
+    metadata {
+        id
+        source
+        created
+        lastUpdated
+    }
     name
-    createdAt
-    updatedAt
-    source
   }
 }

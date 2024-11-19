@@ -15248,7 +15248,7 @@ type Tag {
 input TagInput {
     name:           String!
     appSource:      String
-    entityType:     EntityType
+    entityType:     EntityType = ORGANIZATION
 }
 
 input TagUpdateInput {
@@ -15257,8 +15257,9 @@ input TagUpdateInput {
 }
 
 input TagIdOrNameInput {
-    id:     ID
-    name:   String
+    id:         ID
+    name:       String
+    entityType: EntityType
 }`, BuiltIn: false},
 	{Name: "../schemas/tenant.graphqls", Input: `extend type Query {
     tenant: String!
@@ -106282,7 +106283,7 @@ func (ec *executionContext) unmarshalInputTagIdOrNameInput(ctx context.Context, 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "name"}
+	fieldsInOrder := [...]string{"id", "name", "entityType"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -106303,6 +106304,13 @@ func (ec *executionContext) unmarshalInputTagIdOrNameInput(ctx context.Context, 
 				return it, err
 			}
 			it.Name = data
+		case "entityType":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("entityType"))
+			data, err := ec.unmarshalOEntityType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEntityType(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EntityType = data
 		}
 	}
 
@@ -106314,6 +106322,10 @@ func (ec *executionContext) unmarshalInputTagInput(ctx context.Context, obj inte
 	asMap := map[string]interface{}{}
 	for k, v := range obj.(map[string]interface{}) {
 		asMap[k] = v
+	}
+
+	if _, present := asMap["entityType"]; !present {
+		asMap["entityType"] = "ORGANIZATION"
 	}
 
 	fieldsInOrder := [...]string{"name", "appSource", "entityType"}

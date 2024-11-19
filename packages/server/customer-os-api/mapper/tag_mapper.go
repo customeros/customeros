@@ -2,6 +2,7 @@ package mapper
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 )
 
@@ -9,6 +10,9 @@ func MapTagInputToEntity(input model.TagInput) *neo4jentity.TagEntity {
 	tagEntity := neo4jentity.TagEntity{
 		Name:   input.Name,
 		Source: neo4jentity.DataSourceOpenline,
+	}
+	if input.EntityType != nil {
+		tagEntity.EntityType = commonmodel.DecodeEntityType(input.EntityType.String())
 	}
 	return &tagEntity
 }

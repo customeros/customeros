@@ -2571,8 +2571,9 @@ type Tag struct {
 }
 
 type TagIDOrNameInput struct {
-	ID   *string `json:"id,omitempty"`
-	Name *string `json:"name,omitempty"`
+	ID         *string     `json:"id,omitempty"`
+	Name       *string     `json:"name,omitempty"`
+	EntityType *EntityType `json:"entityType,omitempty"`
 }
 
 type TagInput struct {

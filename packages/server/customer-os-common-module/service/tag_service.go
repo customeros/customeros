@@ -5,6 +5,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -14,20 +15,19 @@ import (
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+	"github.com/pkg/errors"
 	"strings"
 )
 
 type TagService interface {
-	Merge(ctx context.Context, tx *neo4j.ManagedTransaction, tag *neo4jentity.TagEntity) (*neo4jentity.TagEntity, error)
-	AddTag(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, entityId string, entityType model.EntityType, tagId, tagName, appSource string) (string, error)
-	RemoveTagFromEntity(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, entityId string, entityType model.EntityType, tagId, appSource string) error
+	Save(ctx context.Context, tx *neo4j.ManagedTransaction, inputTag *neo4jentity.TagEntity) (*neo4jentity.TagEntity, error)
+	AddTagToEntity(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, entityId string, entityType model.EntityType, tagId, tagName string) (string, error)
+	RemoveTagFromEntity(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, entityId string, entityType model.EntityType, tagId string) error
 	Update(ctx context.Context, tagId, name string) error
 	UnlinkAndDelete(ctx context.Context, id string) (bool, error)
 	GetAll(ctx context.Context) (*neo4jentity.TagEntities, error)
 	GetById(ctx context.Context, tagId string) (*neo4jentity.TagEntity, error)
 	GetTagsByEntityType(ctx context.Context, entityType model.EntityType) (*neo4jentity.TagEntities, error)
-	// TODO refactor below method to accept entity type as parameter
-	GetByNameOptional(ctx context.Context, tagName string) (*neo4jentity.TagEntity, error)
 	GetTagsForContacts(ctx context.Context, contactIds []string) (*neo4jentity.TagEntities, error)
 	GetTagsForIssues(ctx context.Context, issueIds []string) (*neo4jentity.TagEntities, error)
 	GetTagsForOrganizations(ctx context.Context, organizationIds []string) (*neo4jentity.TagEntities, error)
@@ -47,63 +47,115 @@ func NewTagService(log logger.Logger, services *Services) TagService {
 	}
 }
 
-func (s *tagService) Merge(ctx context.Context, tx *neo4j.ManagedTransaction, tag *neo4jentity.TagEntity) (*neo4jentity.TagEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TagService.Merge")
+func (s *tagService) Save(ctx context.Context, tx *neo4j.ManagedTransaction, inputTag *neo4jentity.TagEntity) (*neo4jentity.TagEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TagService.Save")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("tag", tag))
+	span.LogFields(log.Object("inputTag", inputTag))
 
-	if tag.Source == "" {
-		tag.Source = constants.SourceOpenline
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+
+	if inputTag.Source == "" {
+		inputTag.Source = constants.SourceOpenline
+	}
+	if inputTag.AppSource == "" {
+		inputTag.AppSource = common.GetAppSourceFromContext(ctx)
 	}
 
-	tagNodePtr, err := s.services.Neo4jRepositories.TagWriteRepository.Merge(ctx, tx, common.GetTenantFromContext(ctx), *tag)
+	tagNodePtr, err := s.services.Neo4jRepositories.TagWriteRepository.Merge(ctx, tx, tenant, *inputTag)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
 	return neo4jmapper.MapDbNodeToTagEntity(tagNodePtr), nil
 }
 
-func (s *tagService) AddTag(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, entityId string, entityType model.EntityType, tagId, tagName, appSource string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TagService.AddTag")
+func (s *tagService) AddTagToEntity(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, entityId string, entityType model.EntityType, tagId, tagName string) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TagService.AddTagToEntity")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.SetTag(tracing.SpanTagEntityId, entityId)
+	tracing.TagEntity(span, entityId)
+	span.LogFields(log.String("tagId", tagId), log.String("tagName", tagName), log.String("entityType", entityType.String()))
 
 	if tagId == "" {
-		tagEntity, _ := s.Merge(ctx, tx, &neo4jentity.TagEntity{Name: tagName, Source: constants.SourceOpenline})
+		tagEntity, err := s.Save(ctx, tx, &neo4jentity.TagEntity{
+			Name:       tagName,
+			Source:     constants.SourceOpenline,
+			AppSource:  common.GetTenantFromContext(ctx),
+			EntityType: entityType,
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return "", err
+		}
 		if tagEntity != nil {
 			tagId = tagEntity.Id
 		}
 	}
 
-	err := s.services.Neo4jRepositories.TagWriteRepository.LinkTagByIdToEntity(ctx, tx, tenant, tagId, entityId, entityType)
+	tagEntity, err := s.GetById(ctx, tagId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+	if tagEntity.EntityType != entityType {
+		err = errors.New("tag entity type mismatch")
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+
+	err = s.services.Neo4jRepositories.TagWriteRepository.LinkTagByIdToEntity(ctx, tx, tenant, tagId, entityId, entityType)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return "", err
 	}
 
-	if appSource != constants.AppSourceCustomerOsApi {
+	// event for tag added
+	err = s.services.RabbitMQService.PublishEvent(ctx, entityId, entityType, dto.NewAddTagEvent(tagId, tagName))
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message AddTagEvent"))
+	}
+
+	if common.GetAppSourceFromContext(ctx) != constants.AppSourceCustomerOsApi {
 		utils.EventCompleted(ctx, tenant, entityType.String(), entityId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
 	}
 
 	return tagId, nil
 }
 
-func (s *tagService) RemoveTagFromEntity(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, entityId string, entityType model.EntityType, tagId, appSource string) error {
+func (s *tagService) RemoveTagFromEntity(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, entityId string, entityType model.EntityType, tagId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TagService.RemoveTagFromEntity")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.SetTag(tracing.SpanTagEntityId, entityId)
+	tracing.TagEntity(span, entityId)
+	span.LogFields(log.String("tagId", tagId), log.String("entityType", entityType.String()))
 
-	err := s.services.Neo4jRepositories.TagWriteRepository.UnlinkTagByIdFromEntity(ctx, tx, tenant, tagId, entityId, entityType)
+	tagEntity, err := s.GetById(ctx, tagId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "unable to get tag by id"))
 		return err
 	}
 
-	if appSource != constants.AppSourceCustomerOsApi {
+	err = s.services.Neo4jRepositories.TagWriteRepository.UnlinkTagByIdFromEntity(ctx, tx, tenant, tagId, entityId, entityType)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "unable to unlink tag from entity"))
+		return err
+	}
+
+	// event for tag removed
+	err = s.services.RabbitMQService.PublishEvent(ctx, entityId, entityType, dto.NewRemoveTagEvent(tagId, tagEntity.Name))
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message RemoveTagEvent"))
+	}
+
+	if common.GetAppSourceFromContext(ctx) != constants.AppSourceCustomerOsApi {
 		utils.EventCompleted(ctx, tenant, entityType.String(), entityId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
 	}
 
@@ -117,7 +169,8 @@ func (s *tagService) Update(ctx context.Context, tagId, name string) error {
 	span.LogFields(log.String("tagId", tagId), log.String("name", name))
 
 	if name == "" {
-		return nil
+		err := errors.New("name is required")
+		tracing.TraceErr(span, err)
 	}
 
 	err := s.services.Neo4jRepositories.TagWriteRepository.UpdateName(ctx, common.GetTenantFromContext(ctx), tagId, name)
@@ -246,23 +299,6 @@ func (s *tagService) GetById(ctx context.Context, tagId string) (*neo4jentity.Ta
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
-	}
-	return neo4jmapper.MapDbNodeToTagEntity(tagDbNode), nil
-}
-
-func (s *tagService) GetByNameOptional(ctx context.Context, tagName string) (*neo4jentity.TagEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TagService.GetByNameOptional")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("tagName", tagName))
-
-	tagDbNode, err := s.services.Neo4jRepositories.TagReadRepository.GetByNameOptional(ctx, common.GetTenantFromContext(ctx), tagName)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-	if tagDbNode == nil {
-		return nil, nil
 	}
 	return neo4jmapper.MapDbNodeToTagEntity(tagDbNode), nil
 }

@@ -23,11 +23,19 @@ func (r *mutationResolver) TagCreate(ctx context.Context, input model.TagInput) 
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "request.input", input)
 
-	createdTag, err := r.Services.CommonServices.TagService.Merge(ctx, nil, mapper.MapTagInputToEntity(input))
+	tagEntityInput := mapper.MapTagInputToEntity(input)
+	if tagEntityInput.EntityType.String() == "" {
+		err := pkgerrors.New("entity type is required")
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Missing entity type")
+		return nil, nil
+	}
+
+	createdTag, err := r.Services.CommonServices.TagService.Save(ctx, nil, tagEntityInput)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to create tag %s", input.Name)
-		return nil, err
+		return nil, nil
 	}
 	return mapper.MapEntityToTag(createdTag), nil
 }
@@ -97,11 +105,11 @@ func (r *queryResolver) TagsByEntityType(ctx context.Context, entityType model.E
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 
-	tags, err := r.Services.CommonServices.TagService.GetTagsByEntityType(ctx, commonmodel.DecodeEntityType(entityType.String()))
+	tagEntities, err := r.Services.CommonServices.TagService.GetTagsByEntityType(ctx, commonmodel.DecodeEntityType(entityType.String()))
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to fetch tags for entity type %s", entityType)
 		return nil, nil
 	}
-	return mapper.MapEntitiesToTags(tags), nil
+	return mapper.MapEntitiesToTags(tagEntities), nil
 }

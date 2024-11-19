@@ -42,19 +42,21 @@ func (r *tagWriteRepository) Merge(ctx context.Context, tx *neo4j.ManagedTransac
 	defer session.Close(ctx)
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}) 
-		 MERGE (t)<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag {name:$name}) 
+		 MERGE (t)<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag {name:$name, entityType:$entityType}) 
 		 ON CREATE SET 
 		  tag.id=randomUUID(),
-		  tag.createdAt=$now,
+		  tag.createdAt=datetime(),
 		  tag.updatedAt=datetime(),
 		  tag.source=$source,
+		  tag.appSource=$appSource
 		  tag:Tag_%s
 		 RETURN tag`, tenant)
 	params := map[string]any{
-		"tenant": tenant,
-		"name":   tag.Name,
-		"source": tag.Source,
-		"now":    utils.Now(),
+		"tenant":     tenant,
+		"name":       tag.Name,
+		"source":     tag.Source,
+		"appSource":  tag.AppSource,
+		"entityType": tag.EntityType.String(),
 	}
 
 	span.LogFields(log.String("cypher", cypher))

@@ -15,7 +15,6 @@ import (
 type TagReadRepository interface {
 	GetById(ctx context.Context, tenant, tagId string) (*dbtype.Node, error)
 	GetAll(ctx context.Context, tenant string) ([]*dbtype.Node, error)
-	GetByNameOptional(ctx context.Context, tenant, name string) (*dbtype.Node, error)
 	GetAllByEntityType(ctx context.Context, tenant string, entityType commonmodel.EntityType) ([]*dbtype.Node, error)
 	GetForContacts(ctx context.Context, tenant string, contactIds []string) ([]*utils.DbNodeWithRelationAndId, error)
 	GetForLogEntries(ctx context.Context, tenant string, logEntryIds []string) ([]*utils.DbNodeWithRelationAndId, error)
@@ -95,40 +94,6 @@ func (r *tagReadRepository) GetAll(ctx context.Context, tenant string) ([]*dbtyp
 
 	span.LogFields(log.Int("result.count", len(result.([]*dbtype.Node))))
 	return result.([]*dbtype.Node), err
-}
-
-func (r *tagReadRepository) GetByNameOptional(ctx context.Context, tenant, name string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TagReadRepository.GetByNameOptional")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-
-	cypher := `MATCH (t:Tenant {name:$tenant})<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag {name:$name}) return tag limit 1`
-	params := map[string]any{
-		"name":   name,
-		"tenant": tenant,
-	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
-
-	session := r.prepareReadSession(ctx)
-	defer session.Close(ctx)
-
-	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, cypher, params)
-		return utils.ExtractFirstRecordFirstValueAsDbNodePtr(ctx, queryResult, err)
-	})
-	if err != nil {
-		span.LogFields(log.Bool("result.found", false))
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-	if result == nil {
-		span.LogFields(log.Bool("result.found", false))
-		return nil, nil
-	}
-	span.LogFields(log.Bool("result.found", result != nil))
-	return result.(*dbtype.Node), nil
 }
 
 func (r *tagReadRepository) GetForIssues(ctx context.Context, tenant string, issueIds []string) ([]*utils.DbNodeWithRelationAndId, error) {

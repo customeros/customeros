@@ -3,11 +3,13 @@ mutation UpdateTag($tagId: ID!, $tagName: String!) {
                                 id: $tagId
                                 name: $tagName
                             }) {
-      id
+      metadata {
+        id
+        created
+        lastUpdated
+        source
+        appSource
+      }
       name
-      createdAt
-      updatedAt
-      source
-      appSource
     }
 }
