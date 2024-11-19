@@ -6,7 +6,13 @@ import { FlowStore } from '@store/Flows/Flow.store';
 import { countryMap } from '@assets/countries/countriesMap';
 import { action, override, runInAction, makeObservable } from 'mobx';
 
-import { Contact, DataSource } from '@shared/types/__generated__/graphql.types';
+import {
+  Contact,
+  JobRole,
+  DataSource,
+  Organization,
+  OrganizationWithJobRole,
+} from '@shared/types/__generated__/graphql.types';
 
 import { ContactService } from './__service__/Contacts.service';
 
@@ -337,6 +343,11 @@ export class ContactStore extends Syncable<Contact> {
       jobRoles: [],
       lastName: '',
       locations: [],
+      latestOrganizationWithJobRole: {
+        jobRole: {} as JobRole,
+        organization: {} as Organization,
+      } as OrganizationWithJobRole,
+
       phoneNumbers: [],
       profilePhotoUrl: '',
       organizations: {
@@ -387,6 +398,11 @@ const getDefaultValue = (): Contact => ({
   locations: [],
   phoneNumbers: [],
   profilePhotoUrl: '',
+  latestOrganizationWithJobRole: {
+    jobRole: {} as JobRole,
+    organization: {} as Organization,
+  } as OrganizationWithJobRole,
+
   organizations: {
     content: [],
     totalPages: 0,

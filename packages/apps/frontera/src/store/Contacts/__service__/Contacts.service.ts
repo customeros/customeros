@@ -283,16 +283,16 @@ class ContactService {
     }
 
     match(path)
-      .with(['organizations', 'content', ...P.array()], () => {
-        if (type === 'add') {
-          this.linkOrganization({
-            input: {
-              contactId: contactId!,
-              organizationId: value.metadata.id,
-            },
-          });
-        }
+      .with(['latestOrganizationWithJobRole', ...P.array()], () => {
+        this.linkOrganization({
+          input: {
+            contactId: contactId!,
+            organizationId:
+              value.organization?.metadata?.id || store.organizationId,
+          },
+        });
       })
+
       .with(['phoneNumbers', 0, ...P.array()], () => {
         if (type === 'add') {
           this.addPhoneNumber({
