@@ -32,13 +32,13 @@ func TestMutationResolver_TagCreate(t *testing.T) {
 	createdTag := tag.Tag_Create
 	require.Nil(t, err)
 	require.NotNil(t, createdTag)
-	require.NotNil(t, createdTag.ID)
-	require.NotNil(t, createdTag.CreatedAt)
-	require.NotEqual(t, utils.GetEpochStart(), createdTag.CreatedAt)
-	require.NotNil(t, createdTag.UpdatedAt)
-	require.NotEqual(t, utils.GetEpochStart(), createdTag.UpdatedAt)
+	require.NotNil(t, createdTag.Metadata.ID)
+	require.NotNil(t, createdTag.Metadata.Created)
+	require.NotEqual(t, utils.GetEpochStart(), createdTag.Metadata.Created)
+	require.NotNil(t, createdTag.Metadata.LastUpdated)
+	require.NotEqual(t, utils.GetEpochStart(), createdTag.Metadata.LastUpdated)
 	require.Equal(t, "the tag", createdTag.Name)
-	require.Equal(t, model.DataSourceOpenline, createdTag.Source)
+	require.Equal(t, model.DataSourceOpenline, createdTag.Metadata.Source)
 
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Tag"))
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Tag_"+tenantName))
@@ -71,10 +71,10 @@ func TestMutationResolver_TagUpdate(t *testing.T) {
 	updatedTag := tag.Tag_Update
 	require.Nil(t, err)
 	require.NotNil(t, updatedTag)
-	require.NotNil(t, updatedTag.UpdatedAt)
-	require.NotEqual(t, utils.GetEpochStart(), updatedTag.UpdatedAt)
-	require.NotEqual(t, updatedTag.UpdatedAt, updatedTag.CreatedAt)
-	require.Equal(t, tagId, updatedTag.ID)
+	require.NotNil(t, updatedTag.Metadata.LastUpdated)
+	require.NotEqual(t, utils.GetEpochStart(), updatedTag.Metadata.LastUpdated)
+	require.NotEqual(t, updatedTag.UpdatedAt, updatedTag.Metadata.LastUpdated)
+	require.Equal(t, tagId, updatedTag.Metadata.ID)
 	require.Equal(t, "new tag name", updatedTag.Name)
 
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Tag"))
@@ -145,9 +145,9 @@ func TestQueryResolver_Tags(t *testing.T) {
 	tags := tagStruct.Tags
 	require.Nil(t, err)
 	require.Equal(t, 2, len(tags))
-	require.Equal(t, tagId2, tags[0].ID)
+	require.Equal(t, tagId2, tags[0].Metadata.ID)
 	require.Equal(t, "tag A", tags[0].Name)
-	require.Equal(t, tagId1, tags[1].ID)
+	require.Equal(t, tagId1, tags[1].Metadata.ID)
 	require.Equal(t, "tag B", tags[1].Name)
 }
 
@@ -188,7 +188,7 @@ func TestQueryResolver_TagsByEntityType(t *testing.T) {
 	tags := tagStruct.Tags_ByEntityType
 	require.Nil(t, err)
 	require.Equal(t, 1, len(tags))
-	require.Equal(t, tagId1, tags[1].Metadata.ID)
+	require.Equal(t, tagId1, tags[0].Metadata.ID)
 	require.Equal(t, "tag B", tags[0].Name)
 	require.Equal(t, model.EntityTypeOrganization, tags[0].EntityType)
 }
