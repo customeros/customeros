@@ -14,7 +14,7 @@ ENV CI=true
 WORKDIR /app
 
 COPY package.json .
-COPY  .
+COPY .
 
 RUN npm ci --ignore-scripts
 
