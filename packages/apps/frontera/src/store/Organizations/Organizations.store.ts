@@ -512,24 +512,10 @@ export class OrganizationsStore extends SyncableGroup<
     relationship: OrganizationRelationship,
     mutate = true,
   ) => {
-    let invalidCustomerStageCount = 0;
-
     ids.forEach((id) => {
       const organization = this.value.get(id);
 
       if (!organization) return;
-
-      if (
-        organization.value.relationship === OrganizationRelationship.Customer &&
-        ![
-          OrganizationRelationship.FormerCustomer,
-          OrganizationRelationship.NotAFit,
-        ].includes(relationship)
-      ) {
-        invalidCustomerStageCount++;
-
-        return; // Do not update if current is customer and new is not formet customer or not a fit
-      }
 
       organization.value.relationship = relationship;
       organization.value.stage =
@@ -537,15 +523,6 @@ export class OrganizationsStore extends SyncableGroup<
 
       organization.commit({ syncOnly: !mutate });
     });
-
-    if (invalidCustomerStageCount) {
-      this.root.ui.toastError(
-        `${invalidCustomerStageCount} customer${
-          invalidCustomerStageCount > 1 ? 's' : ''
-        } remain unchanged`,
-        'stage-update-failed-due-to-relationship-mismatch',
-      );
-    }
   };
 
   updateHealth = (

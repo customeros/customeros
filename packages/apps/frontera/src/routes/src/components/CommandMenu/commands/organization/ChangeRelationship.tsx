@@ -94,10 +94,6 @@ export const ChangeRelationship = observer(() => {
       relationshipOptions.filter(
         (option) =>
           !(
-            selectedRelationshipOption?.label === 'Customer' &&
-            option.label === 'Prospect'
-          ) &&
-          !(
             selectedRelationshipOption?.label === 'Not a fit' &&
             option.label === 'Prospect'
           ),
