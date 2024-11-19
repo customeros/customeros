@@ -105,7 +105,7 @@ func (r *mutationResolver) LogEntryCreateForOrganization(ctx context.Context, or
 	}
 
 	for _, tag := range input.Tags {
-		_, err := r.Services.CommonServices.TagService.AddTag(ctx, nil, tenant, logEntryId, commonmodel.LOG_ENTRY, utils.StringOrEmpty(tag.ID), utils.StringOrEmpty(tag.Name), constants.AppSourceCustomerOsApi)
+		_, err := r.Services.CommonServices.TagService.AddTagToEntity(ctx, nil, tenant, logEntryId, commonmodel.LOG_ENTRY, utils.StringOrEmpty(tag.ID), utils.StringOrEmpty(tag.Name))
 		if err != nil {
 			tracing.TraceErr(span, err)
 			graphql.AddErrorf(ctx, "Error adding tag to log entry")
@@ -173,7 +173,7 @@ func (r *mutationResolver) LogEntryResetTags(ctx context.Context, id string, inp
 
 	newTagIds := []string{}
 	for _, inputTag := range input {
-		tagId, err := r.Services.CommonServices.TagService.AddTag(ctx, nil, tenant, id, commonmodel.LOG_ENTRY, utils.StringOrEmpty(inputTag.ID), utils.StringOrEmpty(inputTag.Name), constants.AppSourceCustomerOsApi)
+		tagId, err := r.Services.CommonServices.TagService.AddTagToEntity(ctx, nil, tenant, id, commonmodel.LOG_ENTRY, utils.StringOrEmpty(inputTag.ID), utils.StringOrEmpty(inputTag.Name))
 		if err != nil {
 			tracing.TraceErr(span, err)
 			graphql.AddErrorf(ctx, "Error adding tag to organization")
@@ -187,7 +187,7 @@ func (r *mutationResolver) LogEntryResetTags(ctx context.Context, id string, inp
 	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	for _, currentTagId := range currentTagIds {
 		if !utils.Contains(newTagIds, currentTagId) {
-			err := r.Services.CommonServices.TagService.RemoveTagFromEntity(ctx, nil, tenant, id, commonmodel.LOG_ENTRY, currentTagId, constants.AppSourceCustomerOsApi)
+			err := r.Services.CommonServices.TagService.RemoveTagFromEntity(ctx, nil, tenant, id, commonmodel.LOG_ENTRY, currentTagId)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				graphql.AddErrorf(ctx, "Error removing tag from organization")
@@ -209,7 +209,7 @@ func (r *mutationResolver) LogEntryAddTag(ctx context.Context, id string, input 
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	_, err := r.Services.CommonServices.TagService.AddTag(ctx, nil, tenant, id, commonmodel.LOG_ENTRY, utils.StringOrEmpty(input.ID), utils.StringOrEmpty(input.Name), constants.AppSourceCustomerOsApi)
+	_, err := r.Services.CommonServices.TagService.AddTagToEntity(ctx, nil, tenant, id, commonmodel.LOG_ENTRY, utils.StringOrEmpty(input.ID), utils.StringOrEmpty(input.Name))
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Error adding tag to log entry")
@@ -229,7 +229,7 @@ func (r *mutationResolver) LogEntryRemoveTag(ctx context.Context, id string, inp
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	err := r.Services.CommonServices.TagService.RemoveTagFromEntity(ctx, nil, tenant, id, commonmodel.LOG_ENTRY, utils.StringOrEmpty(input.ID), constants.AppSourceCustomerOsApi)
+	err := r.Services.CommonServices.TagService.RemoveTagFromEntity(ctx, nil, tenant, id, commonmodel.LOG_ENTRY, utils.StringOrEmpty(input.ID))
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Error removing tag from organization")

@@ -181,11 +181,11 @@ func TestQueryResolver_TagsByEntityType(t *testing.T) {
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	var tagStruct struct {
-		Tags []model.Tag
+		Tags_ByEntityType []model.Tag
 	}
 
 	err = decode.Decode(rawResponse.Data.(map[string]any), &tagStruct)
-	tags := tagStruct.Tags
+	tags := tagStruct.Tags_ByEntityType
 	require.Nil(t, err)
 	require.Equal(t, 1, len(tags))
 	require.Equal(t, tagId1, tags[1].Metadata.ID)

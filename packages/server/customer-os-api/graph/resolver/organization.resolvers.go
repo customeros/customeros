@@ -681,7 +681,7 @@ func (r *mutationResolver) OrganizationAddTag(ctx context.Context, input model.O
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	_, err := r.Services.CommonServices.TagService.AddTag(ctx, nil, tenant, input.OrganizationID, commonmodel.ORGANIZATION, utils.StringOrEmpty(input.Tag.ID), utils.StringOrEmpty(input.Tag.Name), constants.AppSourceCustomerOsApi)
+	_, err := r.Services.CommonServices.TagService.AddTagToEntity(ctx, nil, tenant, input.OrganizationID, commonmodel.ORGANIZATION, utils.StringOrEmpty(input.Tag.ID), utils.StringOrEmpty(input.Tag.Name))
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Error adding tag to organization")
@@ -700,7 +700,7 @@ func (r *mutationResolver) OrganizationRemoveTag(ctx context.Context, input mode
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	err := r.Services.CommonServices.TagService.RemoveTagFromEntity(ctx, nil, tenant, input.OrganizationID, commonmodel.ORGANIZATION, utils.StringOrEmpty(input.Tag.ID), constants.AppSourceCustomerOsApi)
+	err := r.Services.CommonServices.TagService.RemoveTagFromEntity(ctx, nil, tenant, input.OrganizationID, commonmodel.ORGANIZATION, utils.StringOrEmpty(input.Tag.ID))
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Error removing tag from organization")

@@ -14,7 +14,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/constants"
 	"github.com/opentracing/opentracing-go/log"
 )
 
@@ -27,7 +26,7 @@ func (r *mutationResolver) AddTag(ctx context.Context, input model.AddTagInput) 
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	tagId, err := r.Services.CommonServices.TagService.AddTag(ctx, nil, tenant, input.EntityID, commonModel.DecodeEntityType(input.EntityType.String()), utils.StringOrEmpty(input.Tag.ID), utils.StringOrEmpty(input.Tag.Name), constants.AppSourceCustomerOsApi)
+	tagId, err := r.Services.CommonServices.TagService.AddTagToEntity(ctx, nil, tenant, input.EntityID, commonModel.DecodeEntityType(input.EntityType.String()), utils.StringOrEmpty(input.Tag.ID), utils.StringOrEmpty(input.Tag.Name))
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Error adding tag to entity")
@@ -46,7 +45,7 @@ func (r *mutationResolver) RemoveTag(ctx context.Context, input model.RemoveTagI
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	err := r.Services.CommonServices.TagService.RemoveTagFromEntity(ctx, nil, tenant, input.EntityID, commonModel.DecodeEntityType(input.EntityType.String()), input.TagID, constants.AppSourceCustomerOsApi)
+	err := r.Services.CommonServices.TagService.RemoveTagFromEntity(ctx, nil, tenant, input.EntityID, commonModel.DecodeEntityType(input.EntityType.String()), input.TagID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Error adding tag to entity")

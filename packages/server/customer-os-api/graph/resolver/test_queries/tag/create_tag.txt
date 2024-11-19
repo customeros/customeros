@@ -2,11 +2,13 @@ mutation {
   tag_Create(input: {
                         name: "the tag"
                     }) {
-      id
+      metadata {
+        id
+        created
+        lastUpdated
+        source
+        appSource
+      }
       name
-      createdAt
-      updatedAt
-      source
-      appSource
     }
 }
