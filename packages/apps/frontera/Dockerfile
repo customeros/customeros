@@ -14,8 +14,8 @@ ENV CI=true
 WORKDIR /app
 
 COPY package.json .
+COPY package-lock.json .
 
-RUN npm cache clean --force
 RUN npm ci --ignore-scripts
 
 COPY . .
