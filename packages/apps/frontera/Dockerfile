@@ -14,7 +14,7 @@ ENV CI=true
 WORKDIR /app
 
 COPY package.json .
-COPY .
+COPY package-lock.json .
 
 RUN npm ci --ignore-scripts
 
@@ -23,7 +23,7 @@ COPY . .
 RUN touch .env.production
 RUN printenv > .env.production
 
-RUN npm run build
+# RUN npm run build
 
 FROM nginx:latest@sha256:32e76d4f34f80e479964a0fbd4c5b4f6967b5322c8d004e9cf0cb81c93510766 as prod
 
