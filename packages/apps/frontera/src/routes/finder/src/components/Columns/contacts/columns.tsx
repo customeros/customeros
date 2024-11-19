@@ -1,6 +1,7 @@
 import { ContactStore } from '@store/Contacts/Contact.store';
 import { ColumnDef as ColumnDefinition } from '@tanstack/react-table';
 import { CountryCell } from '@finder/components/Columns/Cells/country';
+import { DateCell } from '@finder/components/Columns/shared/Cells/DateCell';
 import { TextCell } from '@finder/components/Columns/shared/Cells/TextCell';
 import { JobTitleCell } from '@finder/components/Columns/contacts/Cells/jobTitle';
 import { ContactFlowCell } from '@finder/components/Columns/contacts/Cells/contactFlow';
@@ -556,6 +557,27 @@ const columns: Record<string, Column> = {
       <THead<HTMLInputElement>
         title='Region'
         id={ColumnViewType.ContactsRegion}
+        {...getTHeadProps<ContactStore>(props)}
+      />
+    ),
+    skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
+  }),
+  [ColumnViewType.ContactsUpdatedAt]: columnHelper.accessor('value.updatedAt', {
+    id: ColumnViewType.ContactsUpdatedAt,
+    minSize: 150,
+    maxSize: 600,
+    enableResizing: true,
+    enableColumnFilter: false,
+    enableSorting: true,
+    cell: (props) => {
+      const lastUpdatedAt = props.getValue();
+
+      return <DateCell value={lastUpdatedAt} />;
+    },
+    header: (props) => (
+      <THead<HTMLInputElement>
+        title='Last Updated'
+        id={ColumnViewType.ContactsUpdatedAt}
         {...getTHeadProps<ContactStore>(props)}
       />
     ),

@@ -79,6 +79,13 @@ export const getOrganizationSortFn = (columnId: string) =>
           : null,
     )
     .with(
+      ColumnViewType.OrganizationsUpdatedDate,
+      () => (row: OrganizationStore) =>
+        row.value?.metadata?.lastUpdated
+          ? new Date(row.value?.metadata?.lastUpdated)
+          : null,
+    )
+    .with(
       ColumnViewType.OrganizationsYearFounded,
       () => (row: OrganizationStore) => row.value?.yearFounded,
     )

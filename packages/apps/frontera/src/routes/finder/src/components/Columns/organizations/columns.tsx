@@ -1,20 +1,20 @@
 import { CountryCell } from '@finder/components/Columns/Cells/country';
 import { OrganizationStore } from '@store/Organizations/Organization.store';
 import { OrganizationStageCell } from '@finder/components/Columns/Cells/stage';
+import { DateCell } from '@finder/components/Columns/shared/Cells/DateCell/DateCell';
 import {
   ColumnDef,
   ColumnDef as ColumnDefinition,
 } from '@tanstack/react-table';
 import { AvatarHeader } from '@finder/components/Columns/organizations/Headers/Avatar';
-import { DateCell } from '@finder/components/Columns/shared/Cells/DateCell/DateCell.tsx';
-import { getColumnConfig } from '@finder/components/Columns/shared/util/getColumnConfig.ts';
+import { getColumnConfig } from '@finder/components/Columns/shared/util/getColumnConfig';
 
-import { cn } from '@ui/utils/cn.ts';
+import { cn } from '@ui/utils/cn';
+import { Skeleton } from '@ui/feedback/Skeleton/Skeleton';
 import { createColumnHelper } from '@ui/presentation/Table';
-import { Skeleton } from '@ui/feedback/Skeleton/Skeleton.tsx';
-import { formatCurrency } from '@utils/getFormattedCurrencyNumber.ts';
+import { formatCurrency } from '@utils/getFormattedCurrencyNumber';
+import THead, { getTHeadProps } from '@ui/presentation/Table/THead';
 import { Social, TableViewDef, ColumnViewType } from '@graphql/types';
-import THead, { getTHeadProps } from '@ui/presentation/Table/THead.tsx';
 
 import {
   OwnerCell,
@@ -789,6 +789,30 @@ export const columns: Record<string, Column> = {
         <THead<HTMLInputElement>
           title='Parent Org'
           id={ColumnViewType.OrganizationsParentOrganization}
+          {...getTHeadProps<OrganizationStore>(props)}
+        />
+      ),
+      skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
+    },
+  ),
+  [ColumnViewType.OrganizationsUpdatedDate]: columnHelper.accessor(
+    'value.metadata.lastUpdated',
+    {
+      id: ColumnViewType.OrganizationsUpdatedDate,
+      minSize: 150,
+      maxSize: 600,
+      enableResizing: true,
+      enableColumnFilter: false,
+      enableSorting: true,
+      cell: (props) => {
+        const lastUpdatedAt = props.getValue();
+
+        return <DateCell value={lastUpdatedAt} />;
+      },
+      header: (props) => (
+        <THead<HTMLInputElement>
+          title='Last Updated'
+          id={ColumnViewType.OrganizationsUpdatedDate}
           {...getTHeadProps<OrganizationStore>(props)}
         />
       ),

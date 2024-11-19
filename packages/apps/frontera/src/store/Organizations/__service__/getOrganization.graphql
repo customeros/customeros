@@ -4,6 +4,7 @@ query Organization($id: ID!) {
     metadata {
       id
       created
+      lastUpdated
     }
     parentCompanies {
       organization {
