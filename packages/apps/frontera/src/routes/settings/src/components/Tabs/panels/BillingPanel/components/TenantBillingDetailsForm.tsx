@@ -193,10 +193,10 @@ export const TenantBillingPanelDetailsForm = ({
         <Tooltip label='This email is configured by CustomerOS'>
           <FormInput
             label='From'
-            placeholder=''
             formId={formId}
             autoComplete='off'
             name='sendInvoicesFrom'
+            placeholder='From email address'
             onFocus={() => setIsInvoiceProviderFocused(true)}
             labelProps={{
               className: 'text-sm mb-0 font-semibold inline-block pt-4',
@@ -208,10 +208,10 @@ export const TenantBillingPanelDetailsForm = ({
           label='BCC'
           type='email'
           formId={formId}
-          placeholder='BCC'
           autoComplete='off'
           name='sendInvoicesBcc'
           className='overflow-ellipsis'
+          placeholder='BCC email address'
           labelProps={{
             className: 'text-sm mb-0 font-semibold inline-block pt-4',
           }}
