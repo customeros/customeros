@@ -38,9 +38,6 @@ jobs:
           node-version: "18"
           cache: "npm"
 
-      - name: Install dependencies
-        run: npm cache clean --force
-
       - name: Log in to the Container registry
         uses: docker/login-action@v3.3.0
         with:
