@@ -3,20 +3,21 @@ package service
 import (
 	"context"
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/config"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/entity"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/repository"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/tracing"
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/pkg/errors"
-	"net/mail"
-	"strings"
-	"time"
+
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/config"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/entity"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/repository"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/tracing"
 )
 
 const AppSource = "sync-email"
@@ -31,7 +32,6 @@ type SyncService interface {
 	GetEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTransaction, tenant, email string, now time.Time, source string) (string, error)
 	BuildEmailsListExcludingPersonalEmails(usernameSource, from string, to []string, cc []string, bcc []string) ([]string, error)
 	ConvertToUTC(datetimeStr string) (time.Time, error)
-	IsValidEmailSyntax(email string) bool
 }
 
 func (s *syncService) BuildEmailsListExcludingPersonalEmails(usernameSource, from string, to []string, cc []string, bcc []string) ([]string, error) {
@@ -85,11 +85,6 @@ func (s *syncService) ConvertToUTC(datetimeStr string) (time.Time, error) {
 	return parsedTime.UTC(), nil
 }
 
-func (s *syncService) IsValidEmailSyntax(email string) bool {
-	_, err := mail.ParseAddress(email)
-	return err == nil
-}
-
 func hasPersonalEmailProvider(providers []string, domain string) bool {
 	for _, provider := range providers {
 		if provider == domain {
@@ -121,7 +116,7 @@ func (s *syncService) GetEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTr
 		return emailId, nil
 	}
 
-	//if it's a personal email, we create just the email node in tenant
+	// if it's a personal email, we create just the email node in tenant
 	domain := utils.ExtractDomainFromEmail(email)
 	if domain == "" {
 		err = errors.New("unable to extract domain from email: " + email)
@@ -204,7 +199,7 @@ func (s *syncService) GetEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTr
 	firstName := ""
 	lastname := ""
 
-	//split email address by @ and take the first part to determine first name and last name
+	// split email address by @ and take the first part to determine first name and last name
 	emailParts := strings.Split(email, "@")
 	if len(emailParts) > 0 {
 		firstPart := emailParts[0]
