@@ -288,7 +288,9 @@ class ContactService {
           input: {
             contactId: contactId!,
             organizationId:
-              value.organization?.metadata?.id || store.organizationId,
+              value.organization?.metadata?.id ||
+              store.value.latestOrganizationWithJobRole?.organization.metadata
+                .id,
           },
         });
       })
