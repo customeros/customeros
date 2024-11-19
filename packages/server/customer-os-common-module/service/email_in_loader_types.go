@@ -41,6 +41,7 @@ type EmailParticipants struct {
 	Cc        []EmailParticipant
 	Bcc       []EmailParticipant
 	InReplyTo EmailParticipant
+	AllEmails []string
 }
 
 // identifiers
@@ -52,7 +53,7 @@ type EmailIdentifiers struct {
 	UserExternalId      string
 	ProviderMessageId   string
 	MessageId           string
-	Reference           string
+	References          []string
 }
 
 // Headers

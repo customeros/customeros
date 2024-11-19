@@ -45,3 +45,17 @@ type EmailRawData struct {
 	Reference         string            `json:"Reference"`
 	Headers           map[string]string `json:"Headers"`
 }
+
+type RawState string
+
+const (
+	PENDING   RawState = "PENDING"
+	SENT      RawState = "SENT"
+	SKIPPED   RawState = "SKIPPED"
+	ERROR     RawState = "ERROR"
+	PROCESSED RawState = "PROCESSED"
+)
+
+func (rawState RawState) String() string {
+	return string(rawState)
+}

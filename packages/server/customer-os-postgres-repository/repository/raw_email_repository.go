@@ -2,19 +2,28 @@ package repository
 
 import (
 	"errors"
+	"time"
+
+	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	"gorm.io/gorm"
-	"time"
 )
 
 type RawEmailRepository interface {
 	CountForUsername(ctx context.Context, externalSystem, tenant, username string) (int64, error)
 	EmailExistsByMessageId(ctx context.Context, externalSystem, tenant, username, messageId string) (bool, error)
 	Store(ctx context.Context, externalSystem, tenant, username, providerMessageId, messageId, rawEmail string, sentAt time.Time, state entity.EmailImportState) error
+	GetDistinctUsersForImport() ([]entity.RawEmail, error)
+	GetEmailsIdsForSync(externalSystem, tenantName string) ([]entity.RawEmail, error)
+	GetEmailsIdsForUserForSync(tenantName, userSource string) ([]entity.RawEmail, error)
+	GetEmailForSync(id uuid.UUID) (*entity.RawEmail, error)
+	GetEmailForSyncByMessageId(tenant, usernameSource, messageId string) (*entity.RawEmail, error)
+	MarkSentToEventStore(id uuid.UUID, sentToEventStoreState entity.RawState, reason, error *string) error
 }
 
 type rawEmailRepositoryImpl struct {
@@ -94,6 +103,71 @@ func (repo *rawEmailRepositoryImpl) Store(ctx context.Context, externalSystem, t
 	err = repo.gormDb.Save(&result).Error
 	if err != nil {
 		tracing.TraceErr(span, err)
+		return err
+	}
+
+	return nil
+}
+
+func (repo *rawEmailRepositoryImpl) GetEmailsIdsForSync(externalSystem, tenantName string) ([]entity.RawEmail, error) {
+	result := []entity.RawEmail{}
+	err := repo.gormDb.Order("sent_at desc").Select([]string{"id"}).Limit(25).Find(&result, "external_system = ? AND tenant = ? AND sent_to_event_store_state = 'PENDING'", externalSystem, tenantName).Error
+
+	if err != nil {
+		logrus.Errorf("Failed getting rawEmails: %s; %s", externalSystem, tenantName)
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func (repo *rawEmailRepositoryImpl) GetEmailsIdsForUserForSync(tenantName, userSource string) ([]entity.RawEmail, error) {
+	result := []entity.RawEmail{}
+	err := repo.gormDb.Order("sent_at desc").Select([]string{"id", "external_system"}).Limit(25).Find(&result, "tenant = ? AND username = ? AND sent_to_event_store_state = 'PENDING'", tenantName, userSource).Error
+
+	if err != nil {
+		logrus.Errorf("Failed getting rawEmails: %s; %s", tenantName, userSource)
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func (repo *rawEmailRepositoryImpl) GetEmailForSync(id uuid.UUID) (*entity.RawEmail, error) {
+	result := entity.RawEmail{}
+	err := repo.gormDb.First(&result, id).Error
+
+	if err != nil {
+		logrus.Errorf("Failed getting rawEmail: %s", id)
+		return nil, err
+	}
+
+	return &result, nil
+}
+
+func (repo *rawEmailRepositoryImpl) GetEmailForSyncByMessageId(tenant, usernameSource, messageId string) (*entity.RawEmail, error) {
+	var result entity.RawEmail
+	err := repo.gormDb.Where("tenant = ? AND username = ? AND message_id = ?", tenant, usernameSource, messageId).Find(&result).Error
+
+	if err != nil {
+		logrus.Errorf("GetEmailForSyncByMessageId - failed: %s; %s; %s", tenant, usernameSource, messageId)
+		return nil, err
+	}
+
+	return &result, nil
+}
+
+func (repo *rawEmailRepositoryImpl) MarkSentToEventStore(id uuid.UUID, sentToEventStoreState entity.RawState, reason, error *string) error {
+	tx := repo.gormDb.Model(&entity.RawEmail{}).Where("id = ?", id)
+
+	tx.Update("sent_to_event_store_state", sentToEventStoreState)
+	tx.Update("sent_to_event_store_reason", reason)
+	tx.Update("sent_to_event_store_error", error)
+
+	err := tx.Error
+
+	if err != nil {
+		logrus.Errorf("Failed marking email as sent to event store: %v", id)
 		return err
 	}
 
