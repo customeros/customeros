@@ -397,6 +397,7 @@ export enum ColumnViewType {
   OrganizationsSocials = 'ORGANIZATIONS_SOCIALS',
   OrganizationsStage = 'ORGANIZATIONS_STAGE',
   OrganizationsTags = 'ORGANIZATIONS_TAGS',
+  OrganizationsUpdatedDate = 'ORGANIZATIONS_UPDATED_DATE',
   OrganizationsWebsite = 'ORGANIZATIONS_WEBSITE',
   OrganizationsYearFounded = 'ORGANIZATIONS_YEAR_FOUNDED',
 }
@@ -1642,6 +1643,7 @@ export type FlowParticipant = MetadataInterface & {
 
 export enum FlowParticipantStatus {
   Completed = 'COMPLETED',
+  Error = 'ERROR',
   GoalAchieved = 'GOAL_ACHIEVED',
   InProgress = 'IN_PROGRESS',
   OnHold = 'ON_HOLD',
@@ -2196,6 +2198,22 @@ export type LogEntryUpdateInput = {
   startedAt?: InputMaybe<Scalars['Time']['input']>;
 };
 
+export type Mailbox = {
+  __typename?: 'Mailbox';
+  created: Scalars['Time']['output'];
+  currentFlowIds?: Maybe<Array<Scalars['ID']['output']>>;
+  dailyEmailLimit: Scalars['Int64']['output'];
+  domain: Scalars['String']['output'];
+  mailbox: Scalars['String']['output'];
+  scheduledEmails: Scalars['Int64']['output'];
+  userId?: Maybe<Scalars['ID']['output']>;
+};
+
+export type MailboxInput = {
+  mailboxDomain: Scalars['String']['input'];
+  mailboxUsername: Scalars['String']['input'];
+};
+
 export enum Market {
   B2B = 'B2B',
   B2C = 'B2C',
@@ -2376,6 +2394,7 @@ export type Mutation = {
   emailSetPrimaryForContact: Result;
   email_Validate: ActionResponse;
   externalSystem_Create: Scalars['ID']['output'];
+  flowEmailActionTest: Result;
   flowParticipant_Add: FlowParticipant;
   flowParticipant_AddBulk: Result;
   flowParticipant_Delete: Result;
@@ -2383,6 +2402,7 @@ export type Mutation = {
   flowSender_Delete: Result;
   flowSender_Merge: FlowSender;
   flow_ChangeStatus: Flow;
+  flow_Dummy_1Email: Result;
   flow_Merge: Flow;
   interactionEvent_LinkAttachment: Result;
   invoice_NextDryRunForContract: Scalars['ID']['output'];
@@ -2402,6 +2422,9 @@ export type Mutation = {
   logEntry_RemoveTag: Scalars['ID']['output'];
   logEntry_ResetTags: Scalars['ID']['output'];
   logEntry_Update: Scalars['ID']['output'];
+  mailstack_CreateMailboxes: Array<Mailbox>;
+  mailstack_RegisterDomains: Array<Scalars['String']['output']>;
+  mailstack_SetUser: Mailbox;
   meeting_AddNewLocation: Meeting;
   meeting_AddNote: Meeting;
   meeting_Create: Meeting;
@@ -2747,6 +2770,12 @@ export type MutationExternalSystem_CreateArgs = {
   input: ExternalSystemInput;
 };
 
+export type MutationFlowEmailActionTestArgs = {
+  bodyTemplate: Scalars['String']['input'];
+  sendToEmailAddress: Scalars['String']['input'];
+  subject: Scalars['String']['input'];
+};
+
 export type MutationFlowParticipant_AddArgs = {
   entityId: Scalars['ID']['input'];
   entityType: FlowEntityType;
@@ -2779,6 +2808,13 @@ export type MutationFlowSender_MergeArgs = {
 export type MutationFlow_ChangeStatusArgs = {
   id: Scalars['ID']['input'];
   status: FlowStatus;
+};
+
+export type MutationFlow_Dummy_1EmailArgs = {
+  contactsCount: Scalars['Int']['input'];
+  flowsCount: Scalars['Int']['input'];
+  mailboxForEachUserCount: Scalars['Int']['input'];
+  userCount: Scalars['Int']['input'];
 };
 
 export type MutationFlow_MergeArgs = {
@@ -2862,6 +2898,19 @@ export type MutationLogEntry_ResetTagsArgs = {
 export type MutationLogEntry_UpdateArgs = {
   id: Scalars['ID']['input'];
   input: LogEntryUpdateInput;
+};
+
+export type MutationMailstack_CreateMailboxesArgs = {
+  input: Array<MailboxInput>;
+};
+
+export type MutationMailstack_RegisterDomainsArgs = {
+  domains: Array<Scalars['String']['input']>;
+};
+
+export type MutationMailstack_SetUserArgs = {
+  mailbox: Scalars['String']['input'];
+  userId: Scalars['ID']['input'];
 };
 
 export type MutationMeeting_AddNewLocationArgs = {
@@ -3922,6 +3971,7 @@ export type Query = {
   flow: Flow;
   flowParticipant: FlowParticipant;
   flow_emailVariables: Array<EmailVariableEntity>;
+  flow_testEmailSender: Scalars['String']['output'];
   flows: Array<Flow>;
   gcli_Search: Array<GCliItem>;
   global_Cache: GlobalCache;
@@ -3931,6 +3981,10 @@ export type Query = {
   invoices: InvoicesPage;
   issue: Issue;
   logEntry: LogEntry;
+  mailstack_CheckUnavailableDomains: Array<Scalars['String']['output']>;
+  mailstack_DomainPurchaseSuggestions: Array<Scalars['String']['output']>;
+  mailstack_Domains: Array<Scalars['String']['output']>;
+  mailstack_Mailboxes: Array<Mailbox>;
   meeting: Meeting;
   opportunities_LinkedToOrganizations: OpportunityPage;
   opportunity?: Maybe<Opportunity>;
@@ -4084,6 +4138,15 @@ export type QueryIssueArgs = {
 
 export type QueryLogEntryArgs = {
   id: Scalars['ID']['input'];
+};
+
+export type QueryMailstack_CheckUnavailableDomainsArgs = {
+  domain: Array<Scalars['String']['input']>;
+};
+
+export type QueryMailstack_DomainPurchaseSuggestionsArgs = {
+  domain: Scalars['String']['input'];
+  limit?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type QueryMeetingArgs = {

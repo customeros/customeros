@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, ReactElement } from 'react';
 
 import { observer } from 'mobx-react-lite';
 
@@ -19,7 +19,7 @@ interface ContactNameCellProps {
   contactId: string;
 }
 
-const icons = {
+const icons: Record<string, ReactElement> = {
   [FlowParticipantStatus.OnHold]: <SlashCircle01 className='size-3' />,
   [FlowParticipantStatus.Ready]: <Rocket02 className='size-3' />,
   [FlowParticipantStatus.Scheduled]: <CalendarCheck01 className='size-3' />,

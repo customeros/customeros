@@ -469,10 +469,6 @@ export const columns: Record<string, Column> = {
           lastTouchPointType={
             props.row.original?.value?.lastTouchpoint?.lastTouchPointType
           }
-          lastTouchPointTimelineEvent={
-            props.row.original?.value?.lastTouchpoint
-              ?.lastTouchPointTimelineEvent
-          }
         />
       ),
       header: (props) => (

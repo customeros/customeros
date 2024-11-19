@@ -116,16 +116,6 @@ describe('OrganizationsService - Integration Tests', () => {
           organization.organization?.lastTouchpoint?.lastTouchPointAt,
         ).not.toBeNull();
         expect
-          .soft(
-            organization.organization?.lastTouchpoint
-              ?.lastTouchPointTimelineEvent,
-          )
-          .not.toBeNull();
-        expect(
-          organization.organization?.lastTouchpoint
-            ?.lastTouchPointTimelineEventId,
-        ).not.toBeNull();
-        expect
           .soft(organization.organization?.lastTouchpoint?.lastTouchPointType)
           .not.toBeNull();
         expect.soft(organization.organization?.leadSource).toBe('');
