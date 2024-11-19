@@ -353,10 +353,8 @@ export const getDefaultValue = (): Organization => ({
   lastFundingAmount: '',
   lastFundingRound: FundingRound.PreSeed,
   lastTouchpoint: {
-    lastTouchPointTimelineEventId: crypto.randomUUID(),
     lastTouchPointAt: new Date().toISOString(),
     lastTouchPointType: LastTouchpointType.ActionCreated,
-    lastTouchPointTimelineEvent: ActionStore.getDefaultValue(),
   }, // nested defaults ignored for now -> should be converted into a Store
   lastTouchPointTimelineEventId: '',
   leadSource: '',
