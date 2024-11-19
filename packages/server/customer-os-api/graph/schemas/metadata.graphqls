@@ -3,10 +3,13 @@ type Metadata implements SourceFieldsInterface & Node {
     created:        Time!
     lastUpdated:    Time!
     source:         DataSource!
-    sourceOfTruth:  DataSource!
+    """
+    Deprecated
+    """
+    sourceOfTruth:  DataSource! @deprecated(reason: "Use source")
     appSource:      String!
     """
     Aggregate version from event store db
     """
-    version:        Int64
+    version:        Int64 @deprecated
 }

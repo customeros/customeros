@@ -20,14 +20,14 @@ import (
 type TagService interface {
 	Merge(ctx context.Context, tx *neo4j.ManagedTransaction, tag *neo4jentity.TagEntity) (*neo4jentity.TagEntity, error)
 	AddTag(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, entityId string, entityType model.EntityType, tagId, tagName, appSource string) (string, error)
-	RemoveTag(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, entityId string, entityType model.EntityType, tagId, appSource string) error
+	RemoveTagFromEntity(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, entityId string, entityType model.EntityType, tagId, appSource string) error
 	Update(ctx context.Context, tagId, name string) error
 	UnlinkAndDelete(ctx context.Context, id string) (bool, error)
-
 	GetAll(ctx context.Context) (*neo4jentity.TagEntities, error)
 	GetById(ctx context.Context, tagId string) (*neo4jentity.TagEntity, error)
+	GetTagsByEntityType(ctx context.Context, entityType model.EntityType) (*neo4jentity.TagEntities, error)
+	// TODO refactor below method to accept entity type as parameter
 	GetByNameOptional(ctx context.Context, tagName string) (*neo4jentity.TagEntity, error)
-	GetTagsForContact(ctx context.Context, contactId string) (*neo4jentity.TagEntities, error)
 	GetTagsForContacts(ctx context.Context, contactIds []string) (*neo4jentity.TagEntities, error)
 	GetTagsForIssues(ctx context.Context, issueIds []string) (*neo4jentity.TagEntities, error)
 	GetTagsForOrganizations(ctx context.Context, organizationIds []string) (*neo4jentity.TagEntities, error)
@@ -91,8 +91,8 @@ func (s *tagService) AddTag(ctx context.Context, tx *neo4j.ManagedTransaction, t
 	return tagId, nil
 }
 
-func (s *tagService) RemoveTag(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, entityId string, entityType model.EntityType, tagId, appSource string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TagService.RemoveTag")
+func (s *tagService) RemoveTagFromEntity(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, entityId string, entityType model.EntityType, tagId, appSource string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TagService.RemoveTagFromEntity")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.SetTag(tracing.SpanTagEntityId, entityId)
@@ -147,18 +147,6 @@ func (s *tagService) GetAll(ctx context.Context) (*neo4jentity.TagEntities, erro
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	tagDbNodes, err := s.services.Neo4jRepositories.TagReadRepository.GetAll(ctx, common.GetTenantFromContext(ctx))
-	if err != nil {
-		return nil, err
-	}
-	tagEntities := make(neo4jentity.TagEntities, 0, len(tagDbNodes))
-	for _, dbNodePtr := range tagDbNodes {
-		tagEntities = append(tagEntities, *neo4jmapper.MapDbNodeToTagEntity(dbNodePtr))
-	}
-	return &tagEntities, nil
-}
-
-func (s *tagService) GetTagsForContact(ctx context.Context, contactId string) (*neo4jentity.TagEntities, error) {
-	tagDbNodes, err := s.services.Neo4jRepositories.TagReadRepository.GetForContact(ctx, common.GetTenantFromContext(ctx), contactId)
 	if err != nil {
 		return nil, err
 	}
@@ -306,4 +294,21 @@ func (s *tagService) GetTagId(ctx context.Context, tagId, tagName *string) strin
 		}
 	}
 	return outputTagId
+}
+
+func (s *tagService) GetTagsByEntityType(ctx context.Context, entityType model.EntityType) (*neo4jentity.TagEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TagService.GetTagsByEntityType")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("entityType", entityType.String()))
+
+	tagDbNodes, err := s.services.Neo4jRepositories.TagReadRepository.GetAllByEntityType(ctx, common.GetTenantFromContext(ctx), entityType)
+	if err != nil {
+		return nil, err
+	}
+	tagEntities := make(neo4jentity.TagEntities, 0, len(tagDbNodes))
+	for _, dbNodePtr := range tagDbNodes {
+		tagEntities = append(tagEntities, *neo4jmapper.MapDbNodeToTagEntity(dbNodePtr))
+	}
+	return &tagEntities, nil
 }

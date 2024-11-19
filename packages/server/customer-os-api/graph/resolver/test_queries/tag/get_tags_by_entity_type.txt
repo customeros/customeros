@@ -1,0 +1,12 @@
+query {
+  tags_ByEntityType(entityType: ORGANIZATION) {
+    metadata {
+        id
+        created
+        lastUpdated
+        source
+    }
+    name
+    entityType
+  }
+}

@@ -11,6 +11,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
+	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/opentracing/opentracing-go/log"
 	pkgerrors "github.com/pkg/errors"
 )
@@ -88,4 +89,19 @@ func (r *queryResolver) Tags(ctx context.Context) ([]*model.Tag, error) {
 		return nil, err
 	}
 	return mapper.MapEntitiesToTags(tags), err
+}
+
+// TagsByEntityType is the resolver for the tags_ByEntityType field.
+func (r *queryResolver) TagsByEntityType(ctx context.Context, entityType model.EntityType) ([]*model.Tag, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.TagsByEntityType", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	tags, err := r.Services.CommonServices.TagService.GetTagsByEntityType(ctx, commonmodel.DecodeEntityType(entityType.String()))
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to fetch tags for entity type %s", entityType)
+		return nil, nil
+	}
+	return mapper.MapEntitiesToTags(tags), nil
 }
