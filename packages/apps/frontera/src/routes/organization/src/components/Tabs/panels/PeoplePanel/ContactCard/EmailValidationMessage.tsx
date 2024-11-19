@@ -43,6 +43,11 @@ const emailStatuses = {
     icon: <HelpCircle className='text-gray-500 size-3' />,
     value: EmailVerificationStatus.NotVerified,
   },
+  UNABLE_TO_VALIDATE: {
+    message: "Don't know • Unable to validate",
+    icon: <HelpCircle className='text-gray-500 size-3' />,
+    value: EmailVerificationStatus.UnableToValidate,
+  },
   VERIFICATION_IN_PROGRESS: {
     message: "Don't know • Verification in progress",
     icon: <ClockFastForward className='text-primary-600 size-3' />,
@@ -80,46 +85,30 @@ function checkEmailStatus(emailData?: EmailValidationDetails, email?: string) {
     const isValidSyntax = isValidEmail(email);
 
     if (!isValidSyntax) return emailStatuses.INCORRECT_FORMAT;
-
-    return emailStatuses.NOT_VERIFIED;
   }
 
-  if (!emailData?.verified) {
-    return emailStatuses.NOT_VERIFIED;
-  }
+  if (emailData?.deliverable === EmailDeliverable.Deliverable) {
+    if (emailData.isFirewalled) return emailStatuses.DELIVERABLE_FIREWALL;
+    if (emailData.isFreeAccount) return emailStatuses.DELIVERABLE_FREE_ACCOUNT;
 
-  if (emailData?.verifyingCheckAll)
-    return emailStatuses.VERIFICATION_IN_PROGRESS;
-
-  if (!emailData?.isValidSyntax) {
-    return emailStatuses.INCORRECT_FORMAT;
-  }
-
-  if (
-    emailData?.deliverable === EmailDeliverable.Deliverable &&
-    emailData?.verified
-  ) {
-    if (!emailData?.isRisky) return emailStatuses.DELIVERABLE_NO_RISK;
-    if (emailData?.isFirewalled) return emailStatuses.DELIVERABLE_FIREWALL;
-    if (emailData?.isFreeAccount) return emailStatuses.DELIVERABLE_FREE_ACCOUNT;
-
-    //todo: need to be reviewed
     return emailStatuses.DELIVERABLE_NO_RISK;
   }
 
-  if (
-    emailData?.deliverable !== EmailDeliverable.Deliverable &&
-    emailData?.verified
-  ) {
-    if (emailData?.isMailboxFull) return emailStatuses.MAILBOX_FULL;
-    if (!emailData?.canConnectSmtp) return emailStatuses.INVALID_MAILBOX;
-  }
-
   if (emailData?.deliverable === EmailDeliverable.Unknown) {
-    if (emailData?.isCatchAll) return emailStatuses.CATCH_ALL;
+    return emailData.isCatchAll
+      ? emailStatuses.CATCH_ALL
+      : emailStatuses.UNABLE_TO_VALIDATE;
   }
 
-  return null;
+  if (emailData?.deliverable === EmailDeliverable.Undeliverable) {
+    if (emailData.isMailboxFull) return emailStatuses.MAILBOX_FULL;
+
+    return emailStatuses.INVALID_MAILBOX;
+  }
+
+  if (emailData?.verified === false) return emailStatuses.NOT_VERIFIED;
+  if (emailData?.verifyingCheckAll)
+    return emailStatuses.VERIFICATION_IN_PROGRESS;
 }
 
 export const EmailValidationMessage = observer(

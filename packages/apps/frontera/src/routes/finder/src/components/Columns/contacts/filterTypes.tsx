@@ -435,6 +435,7 @@ export enum EmailVerificationStatus {
   IncorrectFormat = 'incorrect_format',
   CatchAll = 'catch_all',
   NotVerified = 'not_verified',
+  UnableToValidate = 'unable_to_validate',
   VerificationInProgress = 'verification_in_progress',
 }
 
