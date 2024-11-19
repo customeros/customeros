@@ -16,7 +16,10 @@ export const ConfirmEmailContentChanges = observer(() => {
     store.ui.commandMenu.clearContext();
     store.ui.commandMenu.setOpen(false);
     store.ui.commandMenu.clearCallback();
+  };
 
+  const handleCancelChanges = () => {
+    handleClose();
     store.ui.flowActionSidePanel.setOpen(false);
     store.ui.flowActionSidePanel.clearContext();
   };
@@ -47,12 +50,12 @@ export const ConfirmEmailContentChanges = observer(() => {
             size='sm'
             variant='outline'
             className='w-full'
-            onClick={handleClose}
+            onClick={handleCancelChanges}
             data-test={'email-content-leave-without-saving'}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 e.stopPropagation();
-                handleClose();
+                handleCancelChanges();
               }
             }}
           >
