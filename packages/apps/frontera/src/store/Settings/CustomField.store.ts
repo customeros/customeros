@@ -9,7 +9,7 @@ import {
   CustomFieldDataType,
 } from '@shared/types/__generated__/graphql.types';
 
-import { CustomFieldsService } from './__service__/customFields/CustomFields.service';
+import { CustomFieldsService } from './__service__/CustomFields/CustomFields.service';
 
 export class CustomFieldStore extends Syncable<CustomField> {
   private service: CustomFieldsService;
@@ -46,7 +46,7 @@ export class CustomFieldStore extends Syncable<CustomField> {
   }
 
   getChannelName(): string {
-    return 'customFields';
+    return 'CustomFields';
   }
 
   static getDefaultValue(): CustomFieldInput {
