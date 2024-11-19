@@ -70,7 +70,7 @@ export const TriggerNode = (
             )}
           </div>
 
-          {!flowWasStarted && (
+          {!flowWasStarted && !ui.flowActionSidePanel.isOpen && (
             <IconButton
               size='xxs'
               variant='ghost'
