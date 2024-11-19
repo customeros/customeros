@@ -2,10 +2,17 @@ package service
 
 import "strings"
 
+type HeaderAnalysis struct {
+	ProcessEmail    bool
+	IsBounce        bool
+	IsAutoResponder bool
+	IsBulkMail      bool
+}
+
 // TODO parse SMTP status code from message/deliver-status
 // and classify bounced email as hard or soft bounce
 
-func (a *emailInService) ProcessEmailCheck(email *EmailMessageData) HeaderAnalysis {
+func (a *mailService) ProcessEmailCheck(email *EmailMessageData) HeaderAnalysis {
 	analysis := HeaderAnalysis{
 		ProcessEmail: true, // Default to processing
 	}
@@ -33,7 +40,7 @@ func (a *emailInService) ProcessEmailCheck(email *EmailMessageData) HeaderAnalys
 	return analysis
 }
 
-func (a *emailInService) isAutoResponder(headers EmailHeaders) bool {
+func (a *mailService) isAutoResponder(headers EmailHeaders) bool {
 	return headers.XAutoreply != "" ||
 		headers.XAutoresponse != "" ||
 		headers.AutoSubmitted ||
@@ -41,7 +48,7 @@ func (a *emailInService) isAutoResponder(headers EmailHeaders) bool {
 		strings.EqualFold(headers.Precedence, "auto_reply")
 }
 
-func (a *emailInService) isBounce(headers EmailHeaders, subject, from string) bool {
+func (a *mailService) isBounce(headers EmailHeaders, subject, from string) bool {
 	return headers.XFailedRecepients ||
 		headers.DeliveryStatus ||
 		strings.EqualFold(headers.ContentDescription, "delivery report") ||
@@ -50,18 +57,18 @@ func (a *emailInService) isBounce(headers EmailHeaders, subject, from string) bo
 		a.isBounceSubject(subject)
 }
 
-func (a *emailInService) isBulkMail(headers EmailHeaders) bool {
+func (a *mailService) isBulkMail(headers EmailHeaders) bool {
 	return headers.ListUnsubscribe ||
 		strings.EqualFold(headers.Precedence, "bulk")
 }
 
-func (a *emailInService) isReturnPathBounce(returnPath string) bool {
+func (a *mailService) isReturnPathBounce(returnPath string) bool {
 	return returnPath == "" ||
 		strings.Contains(returnPath, "mailer-daemon") ||
 		strings.Contains(returnPath, "postmaster")
 }
 
-func (a *emailInService) isBounceSubject(subject string) bool {
+func (a *mailService) isBounceSubject(subject string) bool {
 	subject = strings.ToLower(subject)
 	keywords := []string{
 		"delivery status notification",

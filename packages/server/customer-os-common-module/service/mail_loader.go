@@ -9,7 +9,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func (l *emailInService) LoadEmail(rawEmail *entity.RawEmail) (EmailMessageData, error) {
+func (l *mailService) LoadEmail(rawEmail *entity.RawEmail) (EmailMessageData, error) {
 	email := EmailMessageData{}
 
 	emailData, err := l.getRawEmailData(rawEmail)
@@ -39,7 +39,7 @@ func (l *emailInService) LoadEmail(rawEmail *entity.RawEmail) (EmailMessageData,
 	return email, nil
 }
 
-func (l *emailInService) getRawEmailData(rawEmail *entity.RawEmail) (EmailRawData, error) {
+func (l *mailService) getRawEmailData(rawEmail *entity.RawEmail) (EmailRawData, error) {
 	rawEmailData := EmailRawData{}
 	err := json.Unmarshal([]byte(rawEmail.Data), &rawEmailData)
 	if err != nil {
@@ -50,7 +50,7 @@ func (l *emailInService) getRawEmailData(rawEmail *entity.RawEmail) (EmailRawDat
 	return rawEmailData, nil
 }
 
-func (l *emailInService) getAllEmails(contacts *EmailParticipants) {
+func (l *mailService) getAllEmails(contacts *EmailParticipants) {
 	var all []string
 	all = append(all, contacts.From.Email)
 
@@ -75,7 +75,7 @@ func (l *emailInService) getAllEmails(contacts *EmailParticipants) {
 	contacts.AllEmails = all
 }
 
-func (l *emailInService) parseEmailAndName(s string) EmailParticipant {
+func (l *mailService) parseEmailAndName(s string) EmailParticipant {
 	s = strings.ToLower(s)
 	results := EmailParticipant{}
 
@@ -103,7 +103,7 @@ func (l *emailInService) parseEmailAndName(s string) EmailParticipant {
 	return results
 }
 
-func (l *emailInService) parseParticipants(s string) []EmailParticipant {
+func (l *mailService) parseParticipants(s string) []EmailParticipant {
 	s = strings.ToLower(s)
 	participants := []EmailParticipant{}
 
@@ -119,7 +119,7 @@ func (l *emailInService) parseParticipants(s string) []EmailParticipant {
 	return participants
 }
 
-func (l *emailInService) extractEmailFromBrackets(s string) string {
+func (l *mailService) extractEmailFromBrackets(s string) string {
 	s = strings.ToLower(s)
 	if start := strings.LastIndex(s, "<"); start >= 0 {
 		if end := strings.LastIndex(s, ">"); end > start {
@@ -129,7 +129,7 @@ func (l *emailInService) extractEmailFromBrackets(s string) string {
 	return s
 }
 
-func (l *emailInService) parseHeaders(headers map[string]string) EmailHeaders {
+func (l *mailService) parseHeaders(headers map[string]string) EmailHeaders {
 	eh := EmailHeaders{}
 
 	// Store raw headers

@@ -3,22 +3,24 @@ package service
 import (
 	"context"
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/sirupsen/logrus"
-	"strings"
-	"time"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
 
 const AppSource = "sync-email"
 
-func (p *emailInService) SyncEmail(tenant string, emailId uuid.UUID) (postgresentity.RawState, *string, error) {
+func (p *mailService) SyncEmail(tenant string, emailId uuid.UUID) (postgresentity.RawState, *string, error) {
 	ctx := context.Background()
 	span, ctx := tracing.StartTracerSpan(ctx, "EmailService.syncEmail")
 	defer span.Finish()
@@ -94,10 +96,9 @@ func (p *emailInService) SyncEmail(tenant string, emailId uuid.UUID) (postgresen
 	}
 
 	return p.processInboundEmail(ctx, tenant, &email, rawEmail, now)
-
 }
 
-func (p *emailInService) processInboundEmail(ctx context.Context, tenant string, email *EmailMessageData, rawEmail *postgresentity.RawEmail, ts time.Time) (postgresentity.RawState, *string, error) {
+func (p *mailService) processInboundEmail(ctx context.Context, tenant string, email *EmailMessageData, rawEmail *postgresentity.RawEmail, ts time.Time) (postgresentity.RawState, *string, error) {
 	session := utils.NewNeo4jWriteSession(ctx, *p.services.Neo4jRepositories.Neo4jDriver)
 	defer session.Close(ctx)
 
@@ -117,11 +118,9 @@ func (p *emailInService) processInboundEmail(ctx context.Context, tenant string,
 	}
 
 	return postgresentity.PROCESSED, nil, nil
-
 }
 
-func (p *emailInService) processSessionAndEvents(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, email *EmailMessageData, rawEmail *postgresentity.RawEmail, ts time.Time) error {
-
+func (p *mailService) processSessionAndEvents(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, email *EmailMessageData, rawEmail *postgresentity.RawEmail, ts time.Time) error {
 	// get EmailForCustomerOS
 	cosEmail := p.buildEmailForCustomerOS(email, rawEmail.ExternalSystem)
 
@@ -148,10 +147,9 @@ func (p *emailInService) processSessionAndEvents(ctx context.Context, tx neo4j.M
 	}
 
 	return nil
-
 }
 
-func (p *emailInService) buildEmailForCustomerOS(email *EmailMessageData, externalSystem string) model.SaveEmailMessage {
+func (p *mailService) buildEmailForCustomerOS(email *EmailMessageData, externalSystem string) model.SaveEmailMessage {
 	save := model.SaveEmailMessage{
 		Html:           email.Content.Html,
 		Text:           email.Content.Text,
@@ -166,7 +164,7 @@ func (p *emailInService) buildEmailForCustomerOS(email *EmailMessageData, extern
 	return save
 }
 
-func (p *emailInService) linkParticipants(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, eventId string, participants *EmailParticipants, now time.Time, externalSystem string) error {
+func (p *mailService) linkParticipants(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, eventId string, participants *EmailParticipants, now time.Time, externalSystem string) error {
 	emailIds := make(map[string]string)
 
 	// Link From participant
@@ -196,7 +194,7 @@ func (p *emailInService) linkParticipants(ctx context.Context, tx neo4j.ManagedT
 	return nil
 }
 
-func (p *emailInService) linkEmailGroup(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, eventId string, groupType string, emails []string, now time.Time, externalSystem string, emailIds map[string]string) error {
+func (p *mailService) linkEmailGroup(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, eventId string, groupType string, emails []string, now time.Time, externalSystem string, emailIds map[string]string) error {
 	var groupEmailIds []string
 
 	for _, email := range emails {
@@ -221,7 +219,7 @@ func (p *emailInService) linkEmailGroup(ctx context.Context, tx neo4j.ManagedTra
 	return nil
 }
 
-func (p *emailInService) getOrCreateEmailId(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, email string, now time.Time, externalSystem string, emailIds map[string]string) (string, error) {
+func (p *mailService) getOrCreateEmailId(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, email string, now time.Time, externalSystem string, emailIds map[string]string) (string, error) {
 	if id, exists := emailIds[email]; exists {
 		return id, nil
 	}
@@ -238,7 +236,7 @@ func (p *emailInService) getOrCreateEmailId(ctx context.Context, tx neo4j.Manage
 	return id, nil
 }
 
-func (p *emailInService) buildChannelData(email *EmailMessageData) error {
+func (p *mailService) buildChannelData(email *EmailMessageData) error {
 	channelData, err := neo4jentity.BuildEmailChannelData(email.Identifiers.ProviderMessageId, email.Identifiers.EmailThreadId, email.Content.Subject, strings.Join(email.Participants.GetInReplyToEmailAddresses(), " "), strings.Join(email.Identifiers.References, " "))
 	if err != nil {
 		return err
@@ -249,7 +247,7 @@ func (p *emailInService) buildChannelData(email *EmailMessageData) error {
 	return nil
 }
 
-func (p *emailInService) warmingEmailCheck(tenant string, email EmailMessageData) bool {
+func (p *mailService) warmingEmailCheck(tenant string, email EmailMessageData) bool {
 	emailExclusion := p.services.Cache.GetEmailExclusion(tenant)
 
 	for _, exclusion := range emailExclusion {

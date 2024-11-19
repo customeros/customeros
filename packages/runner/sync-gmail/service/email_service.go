@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"regexp"
 	"strings"
 	"time"
@@ -15,6 +14,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/sirupsen/logrus"
 
@@ -112,7 +112,7 @@ func (s *emailService) SyncEmailByMessageId(tenant, usernameSource, messageId st
 func (s *emailService) syncEmails(tenant string, emails []entity.RawEmail) {
 	for _, email := range emails {
 		// TODO here is control to call new service !!!
-		//state, reason, err := s.syncEmail(tenant, email.ID)
+		// state, reason, err := s.syncEmail(tenant, email.ID)
 		state, reason, err := s.services.CommonServices.EmailInService.SyncEmail(tenant, email.ID)
 
 		var errMessage *string
