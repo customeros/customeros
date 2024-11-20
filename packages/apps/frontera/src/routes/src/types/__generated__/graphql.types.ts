@@ -1463,6 +1463,8 @@ export type EnrichDetails = {
 
 export enum EntityType {
   Contact = 'CONTACT',
+  Contract = 'CONTRACT',
+  Issue = 'ISSUE',
   LogEntry = 'LOG_ENTRY',
   Opportunity = 'OPPORTUNITY',
   Organization = 'ORGANIZATION',
@@ -2325,8 +2327,15 @@ export type Metadata = Node &
     id: Scalars['ID']['output'];
     lastUpdated: Scalars['Time']['output'];
     source: DataSource;
+    /**
+     * Deprecated
+     * @deprecated Use source
+     */
     sourceOfTruth: DataSource;
-    /** Aggregate version from event store db */
+    /**
+     * Aggregate version from event store db
+     * @deprecated No longer supported
+     */
     version?: Maybe<Scalars['Int64']['output']>;
   };
 
@@ -4001,7 +4010,9 @@ export type Query = {
   serviceLineItem: ServiceLineItem;
   slack_Channels: SlackChannelPage;
   tableViewDefs: Array<TableViewDef>;
+  /** @deprecated Use tags_ByEntityType */
   tags: Array<Tag>;
+  tags_ByEntityType: Array<Tag>;
   tenant: Scalars['String']['output'];
   tenantBillingProfile: TenantBillingProfile;
   tenantBillingProfiles: Array<TenantBillingProfile>;
@@ -4206,6 +4217,10 @@ export type QueryServiceLineItemArgs = {
 
 export type QuerySlack_ChannelsArgs = {
   pagination?: InputMaybe<Pagination>;
+};
+
+export type QueryTags_ByEntityTypeArgs = {
+  entityType: EntityType;
 };
 
 export type QueryTenantBillingProfileArgs = {
@@ -4539,22 +4554,30 @@ export enum TableViewType {
 
 export type Tag = {
   __typename?: 'Tag';
+  /** @deprecated Use metadata.appSource */
   appSource: Scalars['String']['output'];
+  /** @deprecated Use metadata.created */
   createdAt: Scalars['Time']['output'];
+  entityType: EntityType;
+  /** @deprecated Use metadata.id */
   id: Scalars['ID']['output'];
   metadata: Metadata;
   name: Scalars['String']['output'];
+  /** @deprecated Use metadata.source */
   source: DataSource;
+  /** @deprecated Use metadata.lastUpdated */
   updatedAt: Scalars['Time']['output'];
 };
 
 export type TagIdOrNameInput = {
+  entityType?: InputMaybe<EntityType>;
   id?: InputMaybe<Scalars['ID']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type TagInput = {
   appSource?: InputMaybe<Scalars['String']['input']>;
+  entityType?: InputMaybe<EntityType>;
   name: Scalars['String']['input'];
 };
 

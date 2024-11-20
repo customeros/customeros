@@ -8,7 +8,11 @@ import { Transport } from '@store/transport';
 import { Store, makeAutoSyncable } from '@store/store';
 import { makeAutoSyncableGroup } from '@store/group-store';
 
-import { Tag, DataSource } from '@shared/types/__generated__/graphql.types';
+import {
+  Tag,
+  DataSource,
+  EntityType,
+} from '@shared/types/__generated__/graphql.types';
 
 import { TagService } from './Tag.service';
 
@@ -31,7 +35,7 @@ export class TagStore implements Store<Tag> {
     makeAutoSyncable(this, {
       channelName: 'Tag',
       mutator: this.save,
-      getId: (item) => item?.id,
+      getId: (item) => item?.metadata.id,
     });
     this.service = new TagService(transport);
   }
@@ -47,11 +51,11 @@ export class TagStore implements Store<Tag> {
   }
 
   get id() {
-    return this.value.id;
+    return this.value.id || this.value.metadata.id;
   }
 
   set id(id: string) {
-    this.value.id = id;
+    this.value.metadata.id = id;
   }
 
   async bootstrap() {}
@@ -62,7 +66,7 @@ export class TagStore implements Store<Tag> {
     try {
       await this.service.updateTag({
         input: {
-          id: this.value.id,
+          id: this.value.metadata.id,
           name: this.value.name,
         },
       });
@@ -92,6 +96,7 @@ const defaultValue: Tag = {
   createdAt: '',
   appSource: '',
   updatedAt: '',
+  entityType: '' as EntityType,
   metadata: {
     id: crypto.randomUUID(),
     source: DataSource.Openline,

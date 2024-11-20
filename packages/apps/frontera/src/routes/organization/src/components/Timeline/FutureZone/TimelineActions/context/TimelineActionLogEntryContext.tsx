@@ -13,8 +13,13 @@ import { useQueryClient, UseMutationOptions } from '@tanstack/react-query';
 import { useStore } from '@shared/hooks/useStore';
 import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { LogEntry, DataSource, LogEntryInput } from '@graphql/types';
 import { LogEntryWithAliases } from '@organization/components/Timeline/types';
+import {
+  LogEntry,
+  DataSource,
+  EntityType,
+  LogEntryInput,
+} from '@graphql/types';
 import { useInfiniteGetTimelineQuery } from '@organization/graphql/getTimeline.generated';
 import { useTimelineRefContext } from '@organization/components/Timeline/context/TimelineRefContext';
 import { useUpdateCacheWithNewEvent } from '@organization/components/Timeline/PastZone/hooks/updateCacheWithNewEvent';
@@ -244,6 +249,7 @@ function makeEmptyLogEntryWithAliases(
       __typename: 'Tag',
       createdAt: '',
       source: DataSource.Na,
+      entityType: EntityType.LogEntry,
       updatedAt: '',
       metadata: {
         id: t.value,
