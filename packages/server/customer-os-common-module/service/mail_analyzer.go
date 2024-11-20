@@ -181,19 +181,21 @@ func (a *mailService) extractEmailAddresses(input string) []string {
 		for _, match := range matches {
 			// match[1] is from <...>, match[2] is raw email
 			if email := match[1]; email != "" {
-				if mailvalidate.ValidateEmailSyntax(email).IsValid {
-					uniqueEmails[email] = struct{}{}
+				emailValidation := mailvalidate.ValidateEmailSyntax(email)
+				if emailValidation.IsValid {
+					uniqueEmails[emailValidation.CleanEmail] = struct{}{}
 				}
 			} else if email := match[2]; email != "" {
-				if mailvalidate.ValidateEmailSyntax(email).IsValid {
-					uniqueEmails[email] = struct{}{}
+				emailValidation := mailvalidate.ValidateEmailSyntax(email)
+				if emailValidation.IsValid {
+					uniqueEmails[emailValidation.CleanEmail] = struct{}{}
 				}
 			}
 		}
 	}
 
 	if len(uniqueEmails) == 0 {
-		return []string{input}
+		return []string{}
 	}
 
 	result := make([]string, 0, len(uniqueEmails))
