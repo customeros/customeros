@@ -119,6 +119,10 @@ export default {
           '0%': { opacity: '0' },
           '100%': { opacity: '1' },
         },
+        fadeOut: {
+          '0%': { opacity: '1' },
+          '100%': { opacity: '0' },
+        },
         focus: {
           from: { background: colors.primary['50'] },
           to: { background: 'transparent' },
@@ -153,6 +157,7 @@ export default {
         slideUp: 'slideUp 400ms cubic-bezier(0.16, 1, 0.3, 1)',
         slideDown: 'slideDown 400ms cubic-bezier(0.16, 1, 0.3, 1)',
         fadeIn: 'fadeIn 500ms ease-in-out',
+        fadeOut: 'fadeOut 300ms ease-in-out',
         focus: 'focus 1000ms ease-in-out',
         slideLeft: 'slideLeft 400ms cubic-bezier(0.16, 1, 0.3, 1)',
       },

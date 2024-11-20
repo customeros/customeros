@@ -65,15 +65,15 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
     tableViewDef?.setSorting(next[0]?.id, next[0]?.desc);
   };
 
-  const data = store.organizations.getViewById(preset ?? '');
+  // const data = store.organizations.getViewById(preset ?? '');
 
-  // const data = computeFinderData(store, filtersV2, {
-  //   sorting,
-  //   tableViewDef,
-  //   urlParams: params,
-  //   searchTerm: searchTerm ?? '',
-  // });
-  //
+  const data = computeFinderData(store, {
+    sorting,
+    tableViewDef,
+    urlParams: params,
+    searchTerm: searchTerm ?? '',
+  });
+
   const isCommandMenuPrompted = store.ui.commandMenu.isOpen;
   const handleColumnSizing = useColumnSizing(columns, tableViewDef);
 

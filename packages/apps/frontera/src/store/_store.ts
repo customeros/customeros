@@ -186,6 +186,18 @@ export class Store<T extends object, E extends Entity<T> = Entity<T>> {
     });
   }
 
+  public sync = (operation: GroupOperation) => {
+    const op = {
+      ...operation,
+      ref: this.transport.refId,
+    };
+
+    this?.channel
+      ?.push('sync_group_packet', { payload: { operation: op } })
+      ?.receive('ok', () => {});
+  };
+
+  @action
   private applyOperation(packet: SyncPacket) {
     const targetId = packet.operation.entityId;
 
@@ -264,13 +276,17 @@ export class Store<T extends object, E extends Entity<T> = Entity<T>> {
   public getById(id: string) {
     const data = this.value.get(id);
 
-    return data;
+    return data as E;
   }
 
   public snapshot(id: string, current: T) {
     if (this.hasSnapshot(id)) return;
 
     this.snapshots.set(id, current);
+  }
+
+  public getSnapshot(id: string) {
+    return this.snapshots.get(id);
   }
 
   public hasSnapshot(id: string) {
@@ -293,6 +309,8 @@ export class Store<T extends object, E extends Entity<T> = Entity<T>> {
     } = { syncOnly: false },
   ) {
     const operation = this.makeChangesetOperation(id);
+
+    // console.log(operation);
 
     this.clearSnapshot(id);
 

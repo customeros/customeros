@@ -69,7 +69,7 @@ export const ParentOrgInput = observer(
                     organization.value?.parentCompanies?.[0]?.organization
                       ?.metadata?.id;
 
-                  // organization.value!.parentCompanies = [];
+                  organization.draft();
                   organization.clearParentCompanies();
                   organization.commit();
 
@@ -77,11 +77,7 @@ export const ParentOrgInput = observer(
 
                   if (!parentCompany) return;
 
-                  // parentCompany.value.subsidiaries =
-                  //   parentCompany.value?.subsidiaries?.filter(
-                  //     (s) => s.metadata.id !== organization.id,
-                  //   ) ?? [];
-
+                  parentCompany.draft();
                   parentCompany.removeSubsidiary(organization.id);
                   parentCompany.commit();
                 } else {
@@ -94,38 +90,25 @@ export const ParentOrgInput = observer(
                   );
 
                   if (currentParent) {
-                    // const subsidiaryIndex =
-                    //   currentParent.value?.subsidiaries.findIndex(
-                    //     (s) => s.metadata.id === organization.id,
-                    //   );
-                    //
-                    // if (subsidiaryIndex) {
-                    //   currentParent.value?.subsidiaries?.splice(
-                    //     subsidiaryIndex,
-                    //     1,
-                    //   );
-                    // }
-
+                    currentParent.draft();
                     currentParent.removeSubsidiary(organization.id);
                     currentParent.commit();
 
-                    // organization.value!.parentCompanies = [];
+                    organization.draft();
                     organization.clearParentCompanies();
                     organization.commit();
                   }
 
-                  // newParent.value?.subsidiaries?.push({
-                  //   organization: organization.value,
-                  // });
+                  newParent.draft();
                   newParent.addSubsidiary(organization.id);
                   newParent.commit();
 
+                  organization.draft();
+
                   if (!Array.isArray(!organization.value?.parentCompanies)) {
-                    organization.value!.parentCompanies = [];
                     organization.clearParentCompanies();
                   }
 
-                  //
                   if (newParent?.value) {
                     organization.addParent(newParent.id);
                     organization.commit();

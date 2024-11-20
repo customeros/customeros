@@ -1,4 +1,4 @@
-import { reaction } from 'mobx';
+import { autorun } from 'mobx';
 import { inPlaceSort } from 'fast-sort';
 
 import type { Organization } from '../Organization.dto';
@@ -8,26 +8,20 @@ import { getOrganizationFilterFns } from './filterFns';
 import { OrganizationsStore } from '../Organizations.store';
 
 // TODO: Cache filtered and sorted results for faster subsequent access
-export class AllOrganizationsView {
+export class CustomView {
   constructor(private store: OrganizationsStore) {
-    reaction(() => this.store.value.size, this.update);
-    reaction(() => this.store.version, this.update);
-    reaction(() => {
-      const preset = this.store.root.tableViewDefs.organizationsPreset;
+    autorun(() => {
+      const p = this.store.root.tableViewDefs.customPresets;
 
-      if (!preset) return '';
+      p.forEach((v) => {
+        const id = v.value.id;
 
-      const viewDef = this.store.root.tableViewDefs.getById(preset);
-
-      return `${viewDef?.value.filters ?? ''}-${
-        viewDef?.value.defaultFilters ?? ''
-      }-${viewDef?.value.sorting}`;
-    }, this.update);
+        this.update(id);
+      });
+    });
   }
 
-  public update = () => {
-    const preset = this.store.root.tableViewDefs.organizationsPreset;
-
+  public update = (preset: string) => {
     if (!preset) return;
 
     const viewDef = this.store.root.tableViewDefs.getById(preset);

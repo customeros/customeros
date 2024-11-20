@@ -43,7 +43,7 @@ export class ActionStore implements Store<Action> {
     this.value.id = id;
   }
 
-  static getDefaultValue(): Action {
+  static getDefaultValue(): Action & { __typename: 'Action' } {
     return {
       id: crypto.randomUUID(),
       actionType: ActionType.Created,

@@ -175,41 +175,31 @@ export const columns: Record<string, Column> = {
       ),
     },
   ),
-  [ColumnViewType.OrganizationsRenewalLikelihood]: columnHelper.accessor(
-    'value.accountDetails',
-    {
-      id: ColumnViewType.OrganizationsRenewalLikelihood,
-      minSize: 110,
-      size: 110,
-      maxSize: 400,
-      enableColumnFilter: false,
-      enableResizing: true,
-      enableSorting: true,
-      cell: (props) => {
-        const value = props.getValue()?.renewalSummary?.renewalLikelihood;
-
-        return (
-          <RenewalLikelihoodCell
-            value={value}
-            id={props.row.original.value.metadata?.id}
-          />
-        );
-      },
-      header: (props) => (
-        <THead
-          title='Health'
-          data-test='renewal-likelihood'
-          id={ColumnViewType.OrganizationsRenewalLikelihood}
-          {...getTHeadProps<OrganizationStore>(props)}
-        />
-      ),
-      skeleton: () => (
-        <div className='flex flex-col gap-1'>
-          <Skeleton className='w-[25%] h-[14px]' />
-        </div>
-      ),
+  [ColumnViewType.OrganizationsRenewalLikelihood]: columnHelper.accessor('id', {
+    id: ColumnViewType.OrganizationsRenewalLikelihood,
+    minSize: 110,
+    size: 110,
+    maxSize: 400,
+    enableColumnFilter: false,
+    enableResizing: true,
+    enableSorting: true,
+    cell: (props) => {
+      return <RenewalLikelihoodCell id={props.getValue()} />;
     },
-  ),
+    header: (props) => (
+      <THead
+        title='Health'
+        data-test='renewal-likelihood'
+        id={ColumnViewType.OrganizationsRenewalLikelihood}
+        {...getTHeadProps<OrganizationStore>(props)}
+      />
+    ),
+    skeleton: () => (
+      <div className='flex flex-col gap-1'>
+        <Skeleton className='w-[25%] h-[14px]' />
+      </div>
+    ),
+  }),
   [ColumnViewType.OrganizationsRenewalDate]: columnHelper.accessor(
     'value.accountDetails',
     {

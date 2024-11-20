@@ -1,9 +1,10 @@
 import type { UserStore } from '@store/Users/User.store';
 
-import { Store } from '@store/_store';
+import merge from 'lodash/merge';
 import { Entity } from '@store/record';
-import { action, computed, runInAction } from 'mobx';
 import { countryMap } from '@assets/countries/countriesMap';
+import { action, computed, observable, runInAction } from 'mobx';
+import { ActionStore } from '@store/TimelineEvents/Actions/Action.store';
 
 import {
   Market,
@@ -14,16 +15,21 @@ import {
   OrganizationStage,
   LastTouchpointType,
   OrganizationRelationship,
-  OpportunityRenewalLikelihood,
 } from '@graphql/types';
 
 import type { OrganizationQuery } from './__service__/getOrganization.generated';
+import type { SaveOrganizationMutationVariables } from './__service__/saveOrganization.generated';
+
+import { OrganizationsStore } from './Organizations.store';
 
 export type OrganizationDatum = NonNullable<OrganizationQuery['organization']>;
 
 export class Organization extends Entity<OrganizationDatum> {
-  constructor(store: Store<OrganizationDatum>, data: OrganizationDatum) {
-    super(store, data);
+  @observable accessor value: OrganizationDatum = Organization.default();
+
+  constructor(store: OrganizationsStore, data: OrganizationDatum) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    super(store as any, data);
   }
 
   @computed
@@ -39,7 +45,10 @@ export class Organization extends Entity<OrganizationDatum> {
 
   @computed
   get owner(): UserStore | null {
-    const user = this.store.root.users.value.get(this.owner?.id as string);
+    if (!this.value.owner) return null;
+    const user = this.store.root.users.value.get(
+      this.value?.owner.id as string,
+    );
 
     return user ?? null;
   }
@@ -158,72 +167,86 @@ export class Organization extends Entity<OrganizationDatum> {
     this.value.owner = null;
   }
 
-  static default(): OrganizationDatum {
-    return {
-      name: 'Unnamed',
-      metadata: {
-        id: crypto.randomUUID(),
-        created: new Date().toISOString(),
-      },
-      owner: null,
-      contacts: {
-        content: [],
-      },
-      icon: '',
-      referenceId: '',
-      yearFounded: '',
-      enrichDetails: {
-        failedAt: '',
-        enrichedAt: '',
-        requestedAt: '',
-      },
-      customerOsId: '',
-      domains: [],
-      industry: '',
-      locations: [],
-      parentCompanies: [],
-      socialMedia: [],
-      stage: OrganizationStage.Target,
-      tags: [],
-      subsidiaries: [],
-      website: '',
-      accountDetails: {
-        onboarding: {
-          status: OnboardingStatus.NotStarted,
-          comments: '',
-          updatedAt: '',
+  @action
+  public addSocial(url: string) {
+    this.value.socialMedia.push({
+      id: crypto.randomUUID(),
+      url,
+      followersCount: 0,
+      __typename: 'Social',
+    });
+  }
+
+  static default(
+    payload?: OrganizationDatum | SaveOrganizationMutationVariables['input'],
+  ): OrganizationDatum {
+    return merge(
+      {
+        name: 'Unnamed',
+        metadata: {
+          id: crypto.randomUUID(),
+          created: new Date().toISOString(),
         },
-        ltv: 0,
-        churned: new Date().toISOString(),
-        renewalSummary: {
-          arrForecast: 0,
-          maxArrForecast: 0,
-          renewalLikelihood: OpportunityRenewalLikelihood.HighRenewal,
-          nextRenewalDate: '',
+        owner: null,
+        contacts: {
+          content: [],
         },
+        icon: '',
+        referenceId: '',
+        yearFounded: '',
+        enrichDetails: {
+          failedAt: '',
+          enrichedAt: '',
+          requestedAt: '',
+        },
+        customerOsId: '',
+        domains: [],
+        industry: '',
+        locations: [],
+        parentCompanies: [],
+        socialMedia: [],
+        stage: OrganizationStage.Target,
+        tags: [],
+        subsidiaries: [],
+        website: '',
+        accountDetails: {
+          onboarding: {
+            status: OnboardingStatus.NotStarted,
+            comments: '',
+            updatedAt: '',
+          },
+          ltv: 0,
+          churned: null,
+          renewalSummary: {
+            arrForecast: null,
+            maxArrForecast: null,
+            renewalLikelihood: null,
+            nextRenewalDate: '',
+          },
+        },
+        contracts: [],
+        description: '',
+        employees: 0,
+        isCustomer: false,
+        logo: '',
+        lastFundingRound: FundingRound.PreSeed,
+        lastTouchpoint: {
+          lastTouchPointTimelineEventId: crypto.randomUUID(),
+          lastTouchPointAt: new Date().toISOString(),
+          lastTouchPointType: LastTouchpointType.ActionCreated,
+          lastTouchPointTimelineEvent: ActionStore.getDefaultValue(),
+        }, // nested defaults ignored for now -> should be converted into a Store
+        leadSource: '',
+        market: Market.B2B,
+        public: false,
+        relationship: OrganizationRelationship.Prospect,
+        // slackChannelId: '',
+        // stageLastUpdated: '',
+        // subIndustry: '',
+        // targetAudience: '',
+        valueProposition: '',
       },
-      contracts: [],
-      description: '',
-      employees: 0,
-      isCustomer: false,
-      logo: '',
-      lastFundingRound: FundingRound.PreSeed,
-      lastTouchpoint: {
-        lastTouchPointTimelineEventId: crypto.randomUUID(),
-        lastTouchPointAt: new Date().toISOString(),
-        lastTouchPointType: LastTouchpointType.ActionCreated,
-        // @ts-expect-error ignore for now
-        lastTouchPointTimelineEvent: ActionStore.getDefaultValue(),
-      }, // nested defaults ignored for now -> should be converted into a Store
-      leadSource: '',
-      market: Market.B2B,
-      public: false,
-      relationship: OrganizationRelationship.Prospect,
-      // slackChannelId: '',
-      // stageLastUpdated: '',
-      // subIndustry: '',
-      // targetAudience: '',
-      valueProposition: '',
-    };
+      payload ?? {},
+    );
   }
 }

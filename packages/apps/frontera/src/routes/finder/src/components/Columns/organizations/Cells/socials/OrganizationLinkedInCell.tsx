@@ -4,7 +4,6 @@ import { observer } from 'mobx-react-lite';
 
 import { useStore } from '@shared/hooks/useStore';
 import { getFormattedLink } from '@utils/getExternalLink';
-import { Social } from '@shared/types/__generated__/graphql.types';
 
 import {
   LinkedInInput,
@@ -42,11 +41,8 @@ export const OrganizationLinkedInCell = observer(
           ? getFormattedLink(url).replace(/^linkedin\.com\//, '')
           : `in/${url}`;
 
-      organization.value?.socialMedia.push({
-        id: crypto.randomUUID(),
-        url: `linkedin.com/${formattedValue}`,
-      } as Social);
-
+      organization.draft();
+      organization.addSocial(`linkedin.com/${formattedValue}`);
       organization.commit();
 
       setIsEdit(false);
@@ -63,6 +59,8 @@ export const OrganizationLinkedInCell = observer(
       const idx = organization.value?.socialMedia.findIndex(
         (s) => s.id === linkedinId,
       );
+
+      organization.draft();
 
       if (idx !== -1) {
         const formattedValue =
@@ -87,7 +85,7 @@ export const OrganizationLinkedInCell = observer(
       social.url.includes('linkedin'),
     );
 
-    if (!organization.value?.socialMedia?.length || !linkedIn) {
+    if (!organization?.value?.socialMedia?.length || !linkedIn) {
       return (
         <LinkedInInput
           type='company'

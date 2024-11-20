@@ -8,12 +8,12 @@ import { getOrganizationFilterFns } from './filterFns';
 import { OrganizationsStore } from '../Organizations.store';
 
 // TODO: Cache filtered and sorted results for faster subsequent access
-export class AllOrganizationsView {
+export class CustomersView {
   constructor(private store: OrganizationsStore) {
     reaction(() => this.store.value.size, this.update);
     reaction(() => this.store.version, this.update);
     reaction(() => {
-      const preset = this.store.root.tableViewDefs.organizationsPreset;
+      const preset = this.store.root.tableViewDefs.defaultPreset;
 
       if (!preset) return '';
 
@@ -26,7 +26,7 @@ export class AllOrganizationsView {
   }
 
   public update = () => {
-    const preset = this.store.root.tableViewDefs.organizationsPreset;
+    const preset = this.store.root.tableViewDefs.defaultPreset;
 
     if (!preset) return;
 

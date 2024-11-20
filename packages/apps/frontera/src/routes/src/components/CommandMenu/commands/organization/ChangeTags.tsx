@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react';
 import { match } from 'ts-pattern';
 import { CommandGroup } from 'cmdk';
 import { observer } from 'mobx-react-lite';
-import { OrganizationStore } from '@store/Organizations/Organization.store';
+import { Organization } from '@store/Organizations/Organization.dto';
 
 import { Plus } from '@ui/media/icons/Plus.tsx';
 import { Check } from '@ui/media/icons/Check.tsx';
@@ -17,22 +17,22 @@ export const ChangeTags = observer(() => {
   const context = store.ui.commandMenu.context;
 
   const entity = match(context.entity)
-    .returnType<OrganizationStore | OrganizationStore[] | undefined>()
+    .returnType<Organization | Organization[] | undefined>()
     .with('Organization', () =>
-      store.organizations.value.get(context.ids?.[0] as string),
+      store.organizations.getById(context.ids?.[0] as string),
     )
     .with(
       'Organizations',
       () =>
         context.ids?.map((e: string) =>
-          store.organizations.value.get(e),
-        ) as OrganizationStore[],
+          store.organizations.getById(e),
+        ) as Organization[],
     )
     .otherwise(() => undefined);
   const label = match(context.entity)
     .with(
       'Organization',
-      () => `Organization - ${(entity as OrganizationStore)?.value?.name}`,
+      () => `Organization - ${(entity as Organization)?.value?.name}`,
     )
     .with('Organizations', () => `${context.ids?.length} organizations`)
     .otherwise(() => '');
@@ -46,11 +46,13 @@ export const ChangeTags = observer(() => {
 
     match(context.entity)
       .with('Organization', () => {
-        const organization = entity as OrganizationStore;
+        const organization = entity as Organization;
 
         const foundIndex = organization.value.tags?.findIndex(
           (e) => e.metadata.id === t.metadata.id,
         );
+
+        organization.draft();
 
         if (typeof foundIndex !== 'undefined' && foundIndex > -1) {
           organization.value.tags?.splice(foundIndex, 1);
@@ -79,24 +81,15 @@ export const ChangeTags = observer(() => {
 
     match(context.entity)
       .with('Organization', () => {
-        const organization = entity as OrganizationStore;
+        const organization = entity as Organization;
 
         organization?.value.tags?.push({
           id: value,
           name: value,
-          metadata: {
-            id: value,
-            source: DataSource.Openline,
-            sourceOfTruth: DataSource.Openline,
-            appSource: 'organization',
-            created: new Date().toISOString(),
-            lastUpdated: new Date().toISOString(),
-          },
           appSource: 'organization',
           entityType: EntityType.Organization,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
-          source: DataSource.Openline,
         });
       })
       .with('Organizations', () => {
@@ -130,13 +123,11 @@ export const ChangeTags = observer(() => {
       'Organization',
       () =>
         new Set(
-          ((entity as OrganizationStore)?.value?.tags ?? []).map(
-            (tag) => tag?.name,
-          ),
+          ((entity as Organization)?.value?.tags ?? []).map((tag) => tag?.name),
         ),
     )
     .with('Organizations', () => {
-      const mappedTags = (entity as OrganizationStore[])
+      const mappedTags = (entity as Organization[])
         .map((e) => e.value?.tags)
         .flat()
         .filter((e) => Boolean(e));
@@ -151,13 +142,13 @@ export const ChangeTags = observer(() => {
         'Organization',
         () =>
           new Set(
-            ((entity as OrganizationStore)?.value?.tags ?? []).map(
+            ((entity as Organization)?.value?.tags ?? []).map(
               (tag) => tag?.name,
             ),
           ),
       )
       .with('Organizations', () => {
-        const mappedTags = (entity as OrganizationStore[])
+        const mappedTags = (entity as Organization[])
           .map((e) => e.value?.tags)
           .flat()
           .filter((e) => Boolean(e));

@@ -1,7 +1,8 @@
+import type { Organization } from '@store/Organizations/Organization.dto';
+
 import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
 import { OpportunityStore } from '@store/Opportunities/Opportunity.store.ts';
-import { OrganizationStore } from '@store/Organizations/Organization.store.ts';
 
 import { Check } from '@ui/media/icons/Check.tsx';
 import { useStore } from '@shared/hooks/useStore';
@@ -17,20 +18,22 @@ export const OwnerSubItemGroup = observer(() => {
   const entity = match(context.entity)
     .returnType<
       | OpportunityStore
-      | OrganizationStore
-      | OrganizationStore[]
+      | Organization
+      | Organization[]
       | OpportunityStore[]
       | undefined
     >()
     .with('Opportunity', () =>
       store.opportunities.value.get((context.ids as string[])?.[0]),
     )
-    .with(
-      'Organizations',
-      () =>
-        context.ids?.map((e: string) =>
-          store.organizations.value.get(e),
-        ) as OrganizationStore[],
+    .with('Organizations', () =>
+      context.ids?.reduce((acc, id) => {
+        const record = store.organizations.getById(id);
+
+        if (record) acc.push(record);
+
+        return acc;
+      }, [] as Organization[]),
     )
     .with(
       'Opportunities',
@@ -66,32 +69,18 @@ export const OwnerSubItemGroup = observer(() => {
       })
       .with('Organization', () => {
         if (!entity) return;
-        (entity as OrganizationStore)?.update((value) => {
-          if (!value.owner) {
-            Object.assign(value, { owner: user.value });
+        const record = entity as Organization;
 
-            return value;
-          }
-
-          Object.assign(value.owner, user.value);
-
-          return value;
-        });
+        record.setOwner(userId);
+        record.commit();
       })
       .with('Organizations', () => {
-        if (!(entity as OrganizationStore[])?.length) return;
-        (entity as OrganizationStore[]).forEach((org) => {
-          org.update((value) => {
-            if (!value.owner) {
-              Object.assign(value, { owner: user.value });
+        if (!entity) return;
+        const records = entity as Organization[];
 
-              return value;
-            }
-
-            Object.assign(value.owner, user.value);
-
-            return value;
-          });
+        records.forEach((record) => {
+          record.setOwner(userId);
+          record.commit();
         });
       })
       .with('Opportunities', () => {
@@ -128,7 +117,7 @@ export const OwnerSubItemGroup = observer(() => {
           }}
           rightAccessory={
             user.id ===
-            (entity as OrganizationStore | OpportunityStore)?.owner?.id ? (
+            (entity as Organization | OpportunityStore)?.owner?.id ? (
               <Check />
             ) : null
           }

@@ -24,6 +24,7 @@ export type OrganizationQuery = {
     leadSource?: string | null;
     referenceId?: string | null;
     valueProposition?: string | null;
+    slackChannelId?: string | null;
     employees?: any | null;
     yearFounded?: any | null;
     public?: boolean | null;

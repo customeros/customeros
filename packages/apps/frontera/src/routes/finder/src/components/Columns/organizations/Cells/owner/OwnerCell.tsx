@@ -56,9 +56,9 @@ export const OwnerCell = observer(({ id, owner, ownerId: _ }: OwnerProps) => {
     if (!organization) return;
 
     if (userId) {
-      organization.value.setOwner(userId);
+      organization.setOwner(userId);
     } else {
-      organization.value.clearOwner();
+      organization.clearOwner();
     }
 
     organization.commit();

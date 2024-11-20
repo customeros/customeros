@@ -1,12 +1,19 @@
-import { toJS, computed, observable } from 'mobx';
+import { toJS, computed, intercept, observable } from 'mobx';
 
 import type { Store } from './_store';
 
 export class Entity<T extends object> {
-  @observable accessor value: T;
+  @observable.deep accessor value: T;
 
   constructor(public store: Store<T, Entity<T>>, data: T) {
     this.value = data;
+
+    // obs: this only has effect on first level own properties
+    intercept(this.value, (change) => {
+      this.draft();
+
+      return change;
+    });
   }
 
   @computed
@@ -22,6 +29,18 @@ export class Entity<T extends object> {
     } = { syncOnly: false },
   ) {
     this.store.commit(this.id, opts);
+  }
+
+  /**
+   * Registers a snapshot based on the current `value`
+   * necessary for computing the changeset when calling the `.commit()` method.
+   */
+  public draft() {
+    if (!this.store.hasSnapshot(this.id)) {
+      const current = toJS(this.value);
+
+      this.store.snapshot(this.id, current);
+    }
   }
 
   public toRaw() {

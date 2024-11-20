@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ToastContainer } from 'react-toastify';
+import { cssTransition, ToastContainer } from 'react-toastify';
 
 import { RecoilRoot } from 'recoil';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
@@ -46,6 +46,11 @@ export const Providers = ({ children, isProduction }: ProvidersProps) => {
                       closeOnClick={true}
                       hideProgressBar={true}
                       position='bottom-right'
+                      transition={cssTransition({
+                        enter: 'animate-slideDownAndFade',
+                        exit: 'animate-fadeOut',
+                        collapse: false,
+                      })}
                     />
                   </AnalyticsProvider>
                 </NotificationsProvider>
