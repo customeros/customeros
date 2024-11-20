@@ -368,9 +368,9 @@ func TestQueryResolver_Organizations_WithTags(t *testing.T) {
 	require.Equal(t, int64(3), organizations.TotalElements)
 	require.Equal(t, 2, len(organizations.Content[0].Tags))
 	require.ElementsMatch(t, []string{tag1, tag2},
-		[]*string{organizations.Content[0].Tags[0].ID, organizations.Content[0].Tags[1].ID})
+		[]string{organizations.Content[0].Tags[0].Metadata.ID, organizations.Content[0].Tags[1].Metadata.ID})
 	require.Equal(t, 1, len(organizations.Content[1].Tags))
-	require.Equal(t, tag1, organizations.Content[1].Tags[0].ID)
+	require.Equal(t, tag1, organizations.Content[1].Tags[0].Metadata.ID)
 	require.Equal(t, 0, len(organizations.Content[2].Tags))
 }
 
