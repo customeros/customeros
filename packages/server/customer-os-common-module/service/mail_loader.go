@@ -16,8 +16,8 @@ import (
 
 func (l *mailService) LoadEmail(ctx context.Context, rawEmail *entity.RawEmail) (EmailMessageData, error) {
 	span, ctx := l.initializeTracing(ctx, "MailService.LoadEmail")
-	span.LogFields(tracingLog.Object("rawEmail", rawEmail))
 	defer span.Finish()
+	span.LogFields(tracingLog.Object("rawEmail", rawEmail))
 
 	email := EmailMessageData{}
 
@@ -27,6 +27,8 @@ func (l *mailService) LoadEmail(ctx context.Context, rawEmail *entity.RawEmail) 
 		tracing.TraceErr(span, err)
 		return email, err
 	}
+
+	email.Headers = l.parseHeaders(emailData.Headers)
 
 	email.Identifiers.ProviderMessageId = emailData.ProviderMessageId
 	email.Identifiers.MessageId = emailData.MessageId
@@ -42,10 +44,8 @@ func (l *mailService) LoadEmail(ctx context.Context, rawEmail *entity.RawEmail) 
 	email.Participants.To = l.parseParticipants(emailData.To)
 	email.Participants.Cc = l.parseParticipants(emailData.Cc)
 	email.Participants.Bcc = l.parseParticipants(emailData.Bcc)
-	email.Participants.InReplyTo = []EmailParticipant{l.parseEmailAndName(emailData.InReplyTo)}
+	email.Participants.ReplyTo = []EmailParticipant{l.parseEmailAndName(email.Headers.ReplyTo)}
 	l.getAllEmails(&email.Participants)
-
-	email.Headers = l.parseHeaders(emailData.Headers)
 
 	return email, nil
 }
@@ -179,6 +179,12 @@ func (l *mailService) parseHeaders(headers map[string]string) EmailHeaders {
 		}
 		if strings.EqualFold(header, "X-Failed-Recipients") {
 			eh.XFailedRecepients = true
+		}
+		if strings.EqualFold(header, "Reply-To") {
+			eh.ReplyTo = value
+		}
+		if strings.EqualFold(header, "Sender") {
+			eh.ReturnPath = l.extractEmailFromBrackets(value)
 		}
 	}
 

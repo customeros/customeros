@@ -19,6 +19,9 @@ type HeaderAnalysis struct {
 // and classify bounced email as hard or soft bounce
 
 func (a *mailService) ProcessEmailCheck(ctx context.Context, email *EmailMessageData) HeaderAnalysis {
+	span, ctx := a.initializeTracing(ctx, "MailService.ProcessEmailCheck")
+	defer span.Finish()
+
 	analysis := HeaderAnalysis{
 		ProcessEmail: true, // Default to processing
 	}
@@ -38,7 +41,7 @@ func (a *mailService) ProcessEmailCheck(ctx context.Context, email *EmailMessage
 	}
 
 	// Check bulk mail
-	if a.isBulkMail(email.Headers) {
+	if a.isBulkMail(email.Headers, email.Participants.From.Email, email.Participants.ReplyTo) {
 		analysis.IsBulkMail = true
 		analysis.ProcessEmail = false
 	}
@@ -63,15 +66,34 @@ func (a *mailService) isBounce(headers EmailHeaders, subject, from string) bool 
 		a.isBounceSubject(subject)
 }
 
-func (a *mailService) isBulkMail(headers EmailHeaders) bool {
-	return headers.ListUnsubscribe ||
-		strings.EqualFold(headers.Precedence, "bulk")
+func (a *mailService) isBulkMail(headers EmailHeaders, from string, replyTo []EmailParticipant) bool {
+	matchReplyTo := false
+	for _, replyToParticipant := range replyTo {
+		if replyToParticipant.Email == from {
+			matchReplyTo = true
+			break
+		}
+	}
+
+	return !matchReplyTo ||
+		headers.ListUnsubscribe ||
+		strings.EqualFold(headers.Precedence, "bulk") ||
+		headers.ReturnPath == "" ||
+		headers.ReturnPath != from ||
+		(headers.Sender != "" && headers.Sender != from) ||
+		a.isRoleAccount(from)
 }
 
 func (a *mailService) isReturnPathBounce(returnPath string) bool {
-	return returnPath == "" ||
-		strings.Contains(returnPath, "mailer-daemon") ||
-		strings.Contains(returnPath, "postmaster")
+	return strings.Contains(returnPath, "mailer-daemon")
+}
+
+func (a *mailService) isRoleAccount(from string) bool {
+	if from == "" {
+		return false
+	}
+	syntaxValidation := mailvalidate.ValidateEmailSyntax(from)
+	return syntaxValidation.IsRoleAccount
 }
 
 func (a *mailService) isBounceSubject(subject string) bool {

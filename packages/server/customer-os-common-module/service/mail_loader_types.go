@@ -43,7 +43,7 @@ type EmailParticipants struct {
 	To        []EmailParticipant
 	Cc        []EmailParticipant
 	Bcc       []EmailParticipant
-	InReplyTo []EmailParticipant
+	ReplyTo   []EmailParticipant
 	AllEmails []string
 }
 
@@ -77,9 +77,9 @@ func (ep EmailParticipants) GetBccEmailAddresses() []string {
 	return utils.RemoveDuplicates(output)
 }
 
-func (ep EmailParticipants) GetInReplyToEmailAddresses() []string {
+func (ep EmailParticipants) GetReplyToEmailAddresses() []string {
 	output := make([]string, 0)
-	for _, email := range ep.InReplyTo {
+	for _, email := range ep.ReplyTo {
 		if email.Email != "" {
 			output = append(output, email.Email)
 		}
@@ -90,7 +90,6 @@ func (ep EmailParticipants) GetInReplyToEmailAddresses() []string {
 // identifiers
 type EmailIdentifiers struct {
 	EmailThreadId       string
-	ExternalId          string
 	ExternalSystem      string
 	ContactsExternalIds []string
 	UserExternalId      string
@@ -111,6 +110,8 @@ type EmailHeaders struct {
 	XAutoresponse      string
 	XLoop              bool
 	XFailedRecepients  bool
+	ReplyTo            string
+	Sender             string
 	RawHeaders         map[string]string
 }
 

@@ -230,17 +230,17 @@ func (s *mailService) processSessionAndEvents(
 	ctx context.Context,
 	tx neo4j.ManagedTransaction,
 	tenant string,
-	email *EmailMessageData,
+	emailMessageData *EmailMessageData,
 	rawEmail *postgresentity.RawEmail,
 	ts time.Time,
 	span opentracing.Span,
 ) error {
 	// get EmailForCustomerOS
-	cosEmail := s.buildEmailForCustomerOS(email, rawEmail.ExternalSystem)
+	cosEmail := s.buildEmailForCustomerOS(emailMessageData, rawEmail.ExternalSystem)
 
 	// Create session
 	sessionId, err := s.services.Neo4jRepositories.InteractionEventRepository.MergeInteractionSession(
-		ctx, tx, tenant, email.Identifiers.EmailThreadId, ts, cosEmail, rawEmail.ExternalSystem, AppSource,
+		ctx, tx, tenant, emailMessageData.Identifiers.EmailThreadId, ts, cosEmail, rawEmail.ExternalSystem, AppSource,
 	)
 	if err != nil {
 		err = fmt.Errorf("failed merge interaction session: %v", err)
@@ -268,7 +268,7 @@ func (s *mailService) processSessionAndEvents(
 	}
 
 	// Process participants
-	if err := s.linkParticipants(ctx, tx, tenant, eventId, &email.Participants, ts, rawEmail.ExternalSystem, span); err != nil {
+	if err := s.linkParticipants(ctx, tx, tenant, eventId, &emailMessageData.Participants, ts, rawEmail.ExternalSystem, span); err != nil {
 		err = fmt.Errorf("failed to link participants: %v", err)
 		tracing.TraceErr(span, err)
 		return err
@@ -284,7 +284,7 @@ func (s *mailService) buildEmailForCustomerOS(email *EmailMessageData, externalS
 		Subject:        email.Content.Subject,
 		CreatedAt:      email.CreatedAt,
 		ExternalSystem: externalSystem,
-		ExternalId:     email.Identifiers.ExternalId,
+		ExternalId:     email.Identifiers.MessageId,
 		EmailThreadId:  email.Identifiers.EmailThreadId,
 		Channel:        "EMAIL",
 		ChannelData:    email.ChannelData,
@@ -416,7 +416,7 @@ func (s *mailService) buildChannelData(email *EmailMessageData, span opentracing
 		email.Identifiers.ProviderMessageId,
 		email.Identifiers.EmailThreadId,
 		email.Content.Subject,
-		strings.Join(email.Participants.GetInReplyToEmailAddresses(), " "),
+		strings.Join(email.Participants.GetReplyToEmailAddresses(), " "),
 		strings.Join(email.Identifiers.References, " "),
 	)
 	if err != nil {

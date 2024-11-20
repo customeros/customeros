@@ -1,6 +1,7 @@
 package service
 
 import (
+	"golang.org/x/net/context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -71,7 +72,7 @@ func TestProcessEmailCheck(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := svc.ProcessEmailCheck(tt.email)
+			result := svc.ProcessEmailCheck(context.Background(), tt.email)
 			assert.Equal(t, tt.expected, result)
 		})
 	}
