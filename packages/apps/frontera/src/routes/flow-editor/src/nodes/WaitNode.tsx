@@ -1,98 +1,88 @@
 import { useRef, useState, useEffect } from 'react';
 
-import { useKey } from 'rooks';
+import { MaskElement } from 'imask';
 import { observer } from 'mobx-react-lite';
 import { NodeProps, useNodesData, useReactFlow } from '@xyflow/react';
 
-import { Edit03 } from '@ui/media/icons/Edit03';
+import { Button } from '@ui/form/Button/Button';
 import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
-import { Button } from '@ui/form/Button/Button.tsx';
+import { Trash01 } from '@ui/media/icons/Trash01';
 import { Hourglass02 } from '@ui/media/icons/Hourglass02';
 import { MaskedResizableInput } from '@ui/form/Input/MaskedResizableInput';
 
 import { Handle } from '../components';
 
-const MINUTES_PER_DAY = 1440;
-const MINUTES_PER_HOUR = 60;
-
 type DurationUnit = 'minutes' | 'hours' | 'days';
-const waitDurationOptions: DurationUnit[] = ['minutes', 'hours', 'days'];
 
-const unitDisplayText: Record<
-  DurationUnit,
-  { plural: string; singular: string }
-> = {
+const UNITS: Record<DurationUnit, { plural: string; singular: string }> = {
   minutes: { singular: 'min', plural: 'min' },
   hours: { singular: 'hour', plural: 'hours' },
   days: { singular: 'day', plural: 'days' },
 };
 
-const convertFromMinutes = (minutes: number, unit: DurationUnit): number => {
-  switch (unit) {
-    case 'days':
-      return minutes / MINUTES_PER_DAY;
-    case 'hours':
-      return minutes / MINUTES_PER_HOUR;
-    case 'minutes':
-    default:
-      return minutes;
-  }
+const CONVERSION_RATES = {
+  days: 1440, // minutes per day
+  hours: 60, // minutes per hour
+  minutes: 1,
 };
 
-const convertToMinutes = (value: number, unit: DurationUnit): number => {
-  switch (unit) {
-    case 'days':
-      return value * MINUTES_PER_DAY;
-    case 'hours':
-      return value * MINUTES_PER_HOUR;
-    case 'minutes':
-    default:
-      return value;
-  }
-};
-
-const getUnitDisplay = (value: number, unit: DurationUnit): string => {
-  return value === 1
-    ? unitDisplayText[unit].singular
-    : unitDisplayText[unit].plural;
-};
-
-// TODO - FE should not be responsible for handling duration unit related logic COS-5474
 export const WaitNode = observer(
   ({
     id,
     data,
   }: NodeProps & { data: Record<string, string | number | boolean> }) => {
-    const { setNodes, getNode } = useReactFlow();
+    const { setNodes, getNode, deleteElements } = useReactFlow();
     const { ui } = useStore();
     const nodeData = useNodesData(id);
-    const containerRef = useRef<HTMLDivElement | null>(null);
+    const inputRef = useRef<MaskElement>();
 
-    const [displayDurationUnit, setDisplayDurationUnit] =
-      useState<DurationUnit>(
-        (data.fe_waitDurationUnit as DurationUnit) || 'days',
-      );
-
-    const initialMinutes = (data.waitDuration as number) || 0;
-    const [durationInMinutes, setDurationInMinutes] =
-      useState<number>(initialMinutes);
-
-    const [editingValue, setEditingValue] = useState<string>('');
+    const [unit, setUnit] = useState<DurationUnit>(
+      (data.fe_waitDurationUnit as DurationUnit) || 'days',
+    );
+    const [minutes, setMinutes] = useState<number>(
+      (data.waitDuration as number) || 0,
+    );
+    const [editValue, setEditValue] = useState<string>('');
 
     const isEditing = nodeData?.data?.isEditing;
     const selected = getNode(id)?.selected;
 
-    const updateNodes = (minutes: number, unit: DurationUnit) => {
-      setNodes((nds) => {
-        const updatedNodes = nds.map((node) => {
+    const convertDuration = (
+      value: number,
+      fromUnit: DurationUnit,
+      toUnit: DurationUnit,
+    ) => (value * CONVERSION_RATES[fromUnit]) / CONVERSION_RATES[toUnit];
+
+    const formatNumber = (value: number) =>
+      new Intl.NumberFormat('en-US', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: unit === 'minutes' ? 0 : 2,
+      }).format(value);
+
+    const cycleUnit = (direction: 'up' | 'down') => {
+      if (!isEditing) return;
+      const units = Object.keys(UNITS) as DurationUnit[];
+      const currentIndex = units.indexOf(unit);
+      const newIndex =
+        direction === 'up'
+          ? (currentIndex + 1) % units.length
+          : (currentIndex - 1 + units.length) % units.length;
+
+      setUnit(units[newIndex]);
+    };
+
+    const updateNodes = (newMinutes: number, newUnit: DurationUnit) => {
+      setNodes((nodes) => {
+        const nodeIndex = nodes.findIndex((node) => node.id === id);
+        const updatedNodes = nodes.map((node) => {
           if (node.id === id) {
             return {
               ...node,
               data: {
                 ...node.data,
-                waitDuration: minutes,
-                fe_waitDurationUnit: unit,
+                waitDuration: newMinutes,
+                fe_waitDurationUnit: newUnit,
               },
             };
           }
@@ -100,18 +90,12 @@ export const WaitNode = observer(
           return node;
         });
 
-        const currentNodeIndex = updatedNodes.findIndex(
-          (node) => node.id === id,
-        );
-
-        if (currentNodeIndex < updatedNodes.length - 1) {
-          const nextNode = updatedNodes[currentNodeIndex + 1];
-
-          updatedNodes[currentNodeIndex + 1] = {
-            ...nextNode,
+        if (nodeIndex < nodes.length - 1) {
+          updatedNodes[nodeIndex + 1] = {
+            ...updatedNodes[nodeIndex + 1],
             data: {
-              ...nextNode.data,
-              waitBefore: minutes,
+              ...updatedNodes[nodeIndex + 1].data,
+              waitBefore: newMinutes,
             },
           };
         }
@@ -120,101 +104,41 @@ export const WaitNode = observer(
       });
     };
 
-    const handleDurationChange = (newValue: string) => {
-      setEditingValue(newValue);
-    };
+    useEffect(() => {
+      if (nodeData?.data?.isEditing) {
+        const value = formatNumber(convertDuration(minutes, 'minutes', unit));
 
-    const cycleUnit = (direction: 'up' | 'down') => {
-      if (!isEditing) return;
+        setEditValue(value);
+        inputRef.current?.select(0, value.length);
+      }
+    }, [data.waitDuration, nodeData?.data?.isEditing]);
 
-      const currentIndex = waitDurationOptions.indexOf(displayDurationUnit);
-      const newUnit =
-        direction === 'up'
-          ? waitDurationOptions[(currentIndex + 1) % waitDurationOptions.length]
-          : waitDurationOptions[
-              (currentIndex - 1 + waitDurationOptions.length) %
-                waitDurationOptions.length
-            ];
-
-      setDisplayDurationUnit(newUnit);
-    };
-
-    const toggleEditing = () => {
-      const displayValue = convertFromMinutes(
-        durationInMinutes,
-        displayDurationUnit,
-      );
-
-      setEditingValue(displayValue.toString());
-
-      setNodes((nds) =>
-        nds.map((n) =>
-          n.id === id
-            ? { ...n, selected: true, data: { ...n.data, isEditing: true } }
-            : n,
-        ),
-      );
-    };
-
-    // Handle exiting edit mode
     useEffect(() => {
       if (isEditing && !selected) {
-        // Convert the current editing value to minutes based on the final unit
-        const parsedValue = parseFloat(editingValue) || 0;
-        const finalMinutes = Math.round(
-          convertToMinutes(parsedValue, displayDurationUnit),
+        const newMinutes = Math.round(
+          convertDuration(parseFloat(editValue) || 0, unit, 'minutes'),
         );
 
-        setDurationInMinutes(finalMinutes);
-        updateNodes(finalMinutes, displayDurationUnit);
-
-        setNodes((nds) =>
-          nds.map((n) =>
+        setMinutes(newMinutes);
+        updateNodes(newMinutes, unit);
+        setNodes((nodes) =>
+          nodes.map((n) =>
             n.id === id ? { ...n, data: { ...n.data, isEditing: false } } : n,
           ),
         );
       }
-    }, [selected, id, setNodes, isEditing, displayDurationUnit, editingValue]);
+    }, [selected, isEditing]);
 
-    useKey(
-      ['ArrowUp'],
-      (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        cycleUnit('up');
-      },
-      { target: containerRef },
-    );
-
-    useKey(
-      ['ArrowDown'],
-      (e) => {
-        e.preventDefault();
-        cycleUnit('down');
-      },
-      { target: containerRef },
-    );
-
-    // Format display value
     const displayValue = isEditing
-      ? editingValue
-      : durationInMinutes === 0
+      ? editValue
+      : minutes === 0
       ? '0'
-      : new Intl.NumberFormat('en-US', {
-          minimumFractionDigits: 0,
-          maximumFractionDigits: displayDurationUnit === 'minutes' ? 0 : 2,
-        }).format(convertFromMinutes(durationInMinutes, displayDurationUnit));
-
-    const unitDisplay = getUnitDisplay(
-      parseFloat(displayValue) || 0,
-      displayDurationUnit,
-    );
+      : formatNumber(convertDuration(minutes, 'minutes', unit));
+    const unitDisplay =
+      UNITS[unit][parseFloat(displayValue) === 1 ? 'singular' : 'plural'];
 
     return (
-      <div
-        ref={containerRef}
-        className='relative w-[156px] h-[56px] bg-white border border-grayModern-300 p-4 rounded-lg group cursor-pointer flex items-center'
-      >
+      <div className='relative w-[156px] h-[56px] bg-white border border-grayModern-300 p-4 rounded-lg group cursor-pointer flex items-center'>
         <div className='truncate text-sm flex items-center justify-between w-full'>
           <div className='flex items-center'>
             <div className='size-6 mr-2 bg-gray-50 border border-gray-100 rounded flex items-center justify-center'>
@@ -224,29 +148,29 @@ export const WaitNode = observer(
             {isEditing ? (
               <div className='flex mr-1 items-baseline'>
                 <MaskedResizableInput
+                  unmask
                   size='xs'
                   autoFocus
-                  mask={`num`}
-                  unmask={true}
-                  placeholder={'0'}
+                  mask='num'
+                  placeholder='0'
                   variant='unstyled'
+                  // @ts-expect-error - unmask is not in the types
+                  inputRef={inputRef}
                   value={displayValue}
                   onFocus={(e) => e.target.select()}
                   className='min-w-2.5 min-h-0 max-h-4'
-                  onAccept={(_val, maskRef) => {
-                    const unmaskedValue = maskRef._unmaskedValue;
-
-                    handleDurationChange(unmaskedValue);
-                  }}
+                  onAccept={(_val, maskRef) =>
+                    setEditValue(maskRef._unmaskedValue)
+                  }
                   blocks={{
                     num: {
                       mask: Number,
                       radix: '.',
                       scale: 3,
                       max: 9990,
+                      min: 0,
                       mapToRadix: [','],
                       lazy: false,
-                      min: 0,
                       placeholderChar: '#',
                       thousandsSeparator: ',',
                       normalizeZeros: true,
@@ -274,9 +198,12 @@ export const WaitNode = observer(
             <IconButton
               size='xxs'
               variant='ghost'
-              aria-label='Edit'
-              icon={<Edit03 />}
-              onClick={toggleEditing}
+              icon={<Trash01 />}
+              aria-label='Delete'
+              onClick={(e) => {
+                e.stopPropagation();
+                deleteElements({ nodes: [{ id }] });
+              }}
               className={`ml-2 opacity-0 group-hover:opacity-100 pointer-events-all ${
                 isEditing ? 'opacity-0 group-hover:opacity-0' : ''
               }`}

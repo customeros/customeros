@@ -1,4 +1,3 @@
-import { MouseEventHandler } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
@@ -19,16 +18,6 @@ export const TriggerNode = (
   const { ui, flows } = useStore();
   const flowId = useParams()?.id as string;
   const flowWasStarted = flows.value.get(flowId)?.value?.firstStartedAt;
-
-  const handleOpen: MouseEventHandler<HTMLButtonElement> = (e) => {
-    e.stopPropagation();
-    ui.flowCommandMenu.setOpen(true);
-    ui.flowCommandMenu.setType('TriggersHub');
-    ui.flowCommandMenu.setContext({
-      id: props.id,
-      entity: 'Trigger',
-    });
-  };
 
   return (
     <>
@@ -60,13 +49,7 @@ export const TriggerNode = (
                 is added to this flow
               </span>
             ) : (
-              <span
-                role={'button'}
-                onClick={handleOpen}
-                className='text-gray-400'
-              >
-                Choose a trigger…
-              </span>
+              <span className='text-gray-400'>Choose a trigger…</span>
             )}
           </div>
 
@@ -75,7 +58,6 @@ export const TriggerNode = (
               size='xxs'
               variant='ghost'
               aria-label='Edit'
-              onClick={handleOpen}
               icon={<ChevronDown />}
               dataTest={'flow-trigger-block-options'}
               className='ml-2 opacity-0 group-hover:opacity-100 pointer-events-all'

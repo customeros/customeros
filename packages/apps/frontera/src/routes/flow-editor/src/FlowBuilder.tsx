@@ -330,6 +330,7 @@ export const FlowBuilder = observer(
           edges={edges}
           minZoom={0.1}
           fitView={true}
+          deleteKeyCode={null}
           onConnect={onConnect}
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
@@ -393,30 +394,6 @@ export const FlowBuilder = observer(
             }
             onEdgesChange(changes);
           }}
-          onNodeDoubleClick={(_event, node) => {
-            if (node.type === 'wait') {
-              setNodes((nds) =>
-                nds.map((n) =>
-                  n.id === node.id
-                    ? { ...n, data: { ...n.data, isEditing: true } }
-                    : n,
-                ),
-              );
-
-              return;
-            }
-
-            if (node.type === 'trigger') {
-              ui.flowCommandMenu.setOpen(true);
-              ui.flowCommandMenu.setType('TriggersHub');
-              ui.flowCommandMenu.setContext({
-                id: node.id,
-                entity: 'Trigger',
-              });
-
-              return;
-            }
-          }}
           onClick={() => {
             // this behaves as click outside
             if (ui.flowCommandMenu.isOpen) {
@@ -458,15 +435,44 @@ export const FlowBuilder = observer(
               return;
             }
 
-            if (node.type === 'action') {
+            if (node.type === 'wait') {
+              setNodes((nds) =>
+                nds.map((n) =>
+                  n.id === node.id
+                    ? { ...n, data: { ...n.data, isEditing: true } }
+                    : n,
+                ),
+              );
+
+              return;
+            }
+
+            if (node.type === 'trigger') {
               event.stopPropagation();
-              store.ui.flowActionSidePanel.setOpen(true, {
-                type: 'EmailAction',
-                context: {
-                  id: node.id,
-                  // @ts-expect-error to do improve types on flowActionSidePanel
-                  node: node,
-                },
+              ui.flowCommandMenu.setOpen(true);
+              ui.flowCommandMenu.setType('TriggersHub');
+              ui.flowCommandMenu.setContext({
+                id: node.id,
+                entity: 'Trigger',
+              });
+
+              return;
+            }
+
+            if (
+              node.type === 'action' &&
+              node.data.action &&
+              ['EMAIL_NEW', 'EMAIL_REPLY'].includes(node.data.action as string)
+            ) {
+              event.stopPropagation();
+              store.ui.flowActionSidePanel.setOpen(true);
+              store.ui.flowActionSidePanel.setType('EmailAction');
+              store.ui.flowActionSidePanel.setContext({
+                ...store.ui.flowActionSidePanel.context,
+                id: node.id,
+                // @ts-expect-error to do improve types on flowActionSidePanel
+
+                node: node,
               });
 
               return;
