@@ -1,6 +1,7 @@
 package service
 
 import (
+	"encoding/json"
 	"time"
 )
 
@@ -52,6 +53,47 @@ type MicrosoftRawEmailResponse struct {
 		} `json:"emailAddress"`
 	} `json:"bccRecipients"`
 	ReplyTo []interface{} `json:"replyTo"`
+}
+
+type MicrosoftEmailHeaderResponse struct {
+	OdataContext           string            `json:"@odata.context"`
+	OdataEtag              string            `json:"@odata.etag"`
+	ID                     string            `json:"id"`
+	InternetMessageHeaders map[string]string `json:"internetMessageHeaders"`
+}
+
+// Custom unmarshaler to handle the array of header objects
+func (m *MicrosoftEmailHeaderResponse) UnmarshalJSON(data []byte) error {
+	// Temporary struct to handle the original format
+	type HeaderItem struct {
+		Name  string `json:"name"`
+		Value string `json:"value"`
+	}
+
+	type TempResponse struct {
+		OdataContext           string       `json:"@odata.context"`
+		OdataEtag              string       `json:"@odata.etag"`
+		ID                     string       `json:"id"`
+		InternetMessageHeaders []HeaderItem `json:"internetMessageHeaders"`
+	}
+
+	var temp TempResponse
+	if err := json.Unmarshal(data, &temp); err != nil {
+		return err
+	}
+
+	// Convert to our desired format
+	m.OdataContext = temp.OdataContext
+	m.OdataEtag = temp.OdataEtag
+	m.ID = temp.ID
+	m.InternetMessageHeaders = make(map[string]string)
+
+	// Convert array of header items to map
+	for _, header := range temp.InternetMessageHeaders {
+		m.InternetMessageHeaders[header.Name] = header.Value
+	}
+
+	return nil
 }
 
 type RefreshTokenResponse struct {
