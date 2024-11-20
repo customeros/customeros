@@ -7,7 +7,9 @@ query GetOrganizations($page: Int!, $limit: Int!){
       id
       name
       tags {
-        id
+        metadata {
+            id
+        }
         name
       }
     }
