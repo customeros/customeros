@@ -145,10 +145,8 @@ export const Header = observer(
                 <>
                   <ChevronRight className='text-gray-400' />
                   <span className='font-medium cursor-default'>
-                    {`${flow?.value?.participants?.length} ${
-                      flow?.value?.participants?.length === 1
-                        ? 'Contact'
-                        : 'Contacts'
+                    {`${store.ui.searchCount} ${
+                      store.ui.searchCount === 1 ? 'Contact' : 'Contacts'
                     }`}
                   </span>
                 </>
