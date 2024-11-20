@@ -142,7 +142,7 @@ func TestExtractEmailAddresses(t *testing.T) {
 		{
 			name:     "Empty input",
 			input:    "",
-			expected: []string{""},
+			expected: []string{},
 		},
 		{
 			name:     "Invalid email",

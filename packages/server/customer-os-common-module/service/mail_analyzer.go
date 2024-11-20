@@ -164,56 +164,41 @@ func (a *mailService) isBounceSubject(subject string) bool {
 
 func (a *mailService) extractEmailAddresses(input string) []string {
 	if input == "" {
-		return []string{""}
+		return []string{}
 	}
-	// Regular expression pattern to match email addresses between <>
-	emailPattern := `<(.*?)>`
 
-	emails := make([]string, 0)
-	emailAddresses := make([]string, 0)
+	// Compile regex
+	emailRegex := regexp.MustCompile(`<([^>]+)>|([^\s,<>]+@[^\s,<>]+)`)
 
-	if strings.Contains(input, ",") {
-		split := strings.Split(input, ",")
+	// Split, clean and normalize input
+	emails := strings.Split(strings.ToLower(input), ",")
 
-		for _, email := range split {
-			email = strings.TrimSpace(email)
-			email = strings.ToLower(email)
-			emails = append(emails, email)
-		}
-	} else {
-		emails = append(emails, input)
-	}
+	// Use a map for deduplication
+	uniqueEmails := make(map[string]struct{})
 
 	for _, email := range emails {
-		email = strings.TrimSpace(email)
-		email = strings.ToLower(email)
-		if strings.Contains(email, "<") && strings.Contains(email, ">") {
-			// Extract email addresses using the regular expression pattern
-			re := regexp.MustCompile(emailPattern)
-			matches := re.FindAllStringSubmatch(email, -1)
-
-			// Create a map to store unique email addresses
-			emailMap := make(map[string]bool)
-			for _, match := range matches {
-				email := match[1]
-				emailMap[email] = true
-			}
-
-			// Convert the map keys to an array of email addresses
-			for email := range emailMap {
+		matches := emailRegex.FindAllStringSubmatch(strings.TrimSpace(email), -1)
+		for _, match := range matches {
+			// match[1] is from <...>, match[2] is raw email
+			if email := match[1]; email != "" {
 				if mailvalidate.ValidateEmailSyntax(email).IsValid {
-					emailAddresses = append(emailAddresses, email)
+					uniqueEmails[email] = struct{}{}
+				}
+			} else if email := match[2]; email != "" {
+				if mailvalidate.ValidateEmailSyntax(email).IsValid {
+					uniqueEmails[email] = struct{}{}
 				}
 			}
-
-		} else if mailvalidate.ValidateEmailSyntax(email).IsValid {
-			emailAddresses = append(emailAddresses, email)
 		}
 	}
 
-	if len(emailAddresses) > 0 {
-		return emailAddresses
+	if len(uniqueEmails) == 0 {
+		return []string{input}
 	}
 
-	return []string{input}
+	result := make([]string, 0, len(uniqueEmails))
+	for email := range uniqueEmails {
+		result = append(result, email)
+	}
+	return result
 }
