@@ -167,3 +167,7 @@ func OrganizationStageAndRelationshipCompatible(stageStr, relationshipStr string
 	}
 	return true
 }
+
+func (o OrganizationEntity) IsHidden() bool {
+	return o.Hide
+}

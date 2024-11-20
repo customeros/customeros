@@ -527,19 +527,22 @@ func (c *contactListenerImpl) enrichContactWithScrapInEnrichDetails(ctx context.
 		}
 	}
 
+	// Create main company of the linked in response if missing
 	if scrapinContactResponse.Company != nil {
 		var organizationDbNode *dbtype.Node
 
 		// step1 - check org exists by linkedin url
-		organizationDbNode, err = c.services.Neo4jRepositories.OrganizationReadRepository.GetOrganizationBySocialUrl(ctx, tenant, scrapinContactResponse.Company.LinkedInUrl)
+		organizationDbNodes, err := c.services.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsByLinkedIn(ctx, tenant, scrapinContactResponse.Company.LinkedInUrl, scrapinContactResponse.Company.UniversalName, scrapinContactResponse.Company.LinkedInId)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "OrganizationReadRepository.GetOrganizationBySocialUrl"))
+			tracing.TraceErr(span, errors.Wrap(err, "OrganizationReadRepository.GetOrganizationsByLinkedIn"))
 			c.log.Errorf("Error getting organization by social url: %s", err.Error())
 		}
+		if len(organizationDbNodes) > 0 {
+			organizationDbNode = organizationDbNodes[0]
+		}
 
-		// step 2 - check org exists by social url
-		if organizationDbNode == nil {
-			// step 2 - find by domain
+		// step 2 - check org exists by domain
+		if organizationDbNodes == nil {
 			domain, _ := c.services.DomainService.GetPrimaryDomainForOrganizationWebsite(ctx, scrapinContactResponse.Company.WebsiteUrl)
 			span.LogFields(log.String("extractedDomainFromWebsite", domain))
 			if domain != "" {
@@ -550,12 +553,21 @@ func (c *contactListenerImpl) enrichContactWithScrapInEnrichDetails(ctx context.
 					return err
 				}
 				if organizationDbNode != nil {
-					orgId := utils.GetStringPropOrEmpty(organizationDbNode.Props, "id")
+					organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
+					if organizationEntity.IsHidden() {
+						err = c.services.OrganizationService.Show(ctx, nil, tenant, organizationEntity.ID)
+						if err != nil {
+							tracing.TraceErr(span, errors.Wrap(err, "OrganizationService.Show"))
+							return err
+						}
+					}
 					_, err = c.services.SocialService.AddSocialToEntity(ctx, service.LinkWith{
-						Id:   orgId,
+						Id:   organizationEntity.ID,
 						Type: model.ORGANIZATION,
 					}, neo4jentity.SocialEntity{
 						Url:            scrapinContactResponse.Company.LinkedInUrl,
+						Alias:          scrapinContactResponse.Company.UniversalName,
+						ExternalId:     scrapinContactResponse.Company.LinkedInId,
 						FollowersCount: int64(scrapinContactResponse.Company.FollowerCount),
 					})
 					if err != nil {
@@ -594,6 +606,8 @@ func (c *contactListenerImpl) enrichContactWithScrapInEnrichDetails(ctx context.
 					Type: model.ORGANIZATION,
 				}, neo4jentity.SocialEntity{
 					Url:            scrapinContactResponse.Company.LinkedInUrl,
+					Alias:          scrapinContactResponse.Company.UniversalName,
+					ExternalId:     scrapinContactResponse.Company.LinkedInId,
 					FollowersCount: int64(scrapinContactResponse.Company.FollowerCount),
 				})
 				if err != nil {
@@ -605,20 +619,29 @@ func (c *contactListenerImpl) enrichContactWithScrapInEnrichDetails(ctx context.
 	}
 
 	//minimize the impact on the batch processing
-	time.Sleep(3 * time.Second)
+	time.Sleep(1 * time.Second)
 
 	if len(scrapinContactResponse.Person.Positions.PositionHistory) > 0 {
 		positionName := ""
 		var positionStartedAt, positionEndedAt *time.Time
 		for _, position := range scrapinContactResponse.Person.Positions.PositionHistory {
+
 			// find organization by linkedin url
-			orgByLinkedinUrlNode, err := c.services.Neo4jRepositories.OrganizationReadRepository.GetOrganizationBySocialUrl(ctx, tenant, position.LinkedInUrl)
+			organizationDbNodes, err := c.services.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsByLinkedIn(ctx, tenant, position.LinkedInUrl, "", position.LinkedInId)
 			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "OrganizationReadRepository.GetOrganizationBySocialUrl"))
+				tracing.TraceErr(span, errors.Wrap(err, "OrganizationReadRepository.GetOrganizationsByLinkedIn"))
 				c.log.Errorf("Error getting organization by social url: %s", err.Error())
-				continue
 			}
-			if orgByLinkedinUrlNode != nil {
+			if len(organizationDbNodes) > 0 {
+				organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNodes[0])
+				if organizationEntity.IsHidden() {
+					err = c.services.OrganizationService.Show(ctx, nil, tenant, organizationEntity.ID)
+					if err != nil {
+						tracing.TraceErr(span, errors.Wrap(err, "OrganizationService.Show"))
+						return err
+					}
+				}
+
 				positionName = position.Title
 				if position.StartEndDate.Start != nil {
 					positionStartedAt = utils.TimePtr(utils.FirstTimeOfMonth(position.StartEndDate.Start.Year, position.StartEndDate.Start.Month))
@@ -626,9 +649,9 @@ func (c *contactListenerImpl) enrichContactWithScrapInEnrichDetails(ctx context.
 				if position.StartEndDate.End != nil {
 					positionEndedAt = utils.TimePtr(utils.FirstTimeOfMonth(position.StartEndDate.End.Year, position.StartEndDate.End.Month))
 				}
-				organizationId := utils.GetStringPropOrEmpty(orgByLinkedinUrlNode.Props, "id")
+
 				// link contact with organization
-				err = c.services.ContactService.LinkContactWithOrganization(ctx, contact.Id, organizationId, positionName, "",
+				err = c.services.ContactService.LinkContactWithOrganization(ctx, contact.Id, organizationEntity.ID, positionName, "",
 					neo4jentity.DataSourceOpenline.String(), false, positionStartedAt, positionEndedAt)
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "ContactClient.LinkWithOrganization"))
