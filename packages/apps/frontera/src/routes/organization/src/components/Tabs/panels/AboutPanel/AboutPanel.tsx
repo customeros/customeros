@@ -2,7 +2,6 @@ import { useRef } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { match } from 'ts-pattern';
-import { toJS, isObservable } from 'mobx';
 import { observer } from 'mobx-react-lite';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
 
@@ -201,11 +200,10 @@ export const AboutPanel = observer(() => {
             onBlur={() => {
               organization.commit();
             }}
-            className='font-semibold text-[16px] mt-0.5 border-none overflow-hidden overflow-ellipsis'
             onChange={(e) => {
-              console.log(e.target.value);
               organization.value.name = e.target.value;
             }}
+            className='font-semibold text-[16px] mt-0.5 border-none overflow-hidden overflow-ellipsis'
           />
           {organization.value?.referenceId && (
             <div className='h-full ml-4'>
