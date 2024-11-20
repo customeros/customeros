@@ -73,9 +73,9 @@ func TestQueryResolver_LogEntry(t *testing.T) {
 	require.Equal(t, userId, logEntry.CreatedBy.ID)
 	require.Equal(t, 2, len(logEntry.Tags))
 	firstTag := logEntry.Tags[0]
-	require.Equal(t, tagId1, firstTag.ID)
+	require.Equal(t, tagId1, firstTag.Metadata.ID)
 	require.Equal(t, "red", firstTag.Name)
 	secondTag := logEntry.Tags[1]
-	require.Equal(t, tagId2, secondTag.ID)
+	require.Equal(t, tagId2, secondTag.Metadata.ID)
 	require.Equal(t, "blue", secondTag.Name)
 }

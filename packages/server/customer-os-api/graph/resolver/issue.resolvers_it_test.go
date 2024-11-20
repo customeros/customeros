@@ -79,7 +79,7 @@ func TestQueryResolver_Issue(t *testing.T) {
 	require.Equal(t, "testDescription", *issue.Description)
 	require.Equal(t, "testPriority", *issue.Priority)
 	require.Equal(t, 2, len(issue.Tags))
-	require.ElementsMatch(t, []string{tagId1, tagId2}, []*string{issue.Tags[0].ID, issue.Tags[1].ID})
+	require.ElementsMatch(t, []string{tagId1, tagId2}, []string{issue.Tags[0].Metadata.ID, issue.Tags[1].Metadata.ID})
 	require.ElementsMatch(t, []string{"critical", "issue-tag"}, []string{issue.Tags[0].Name, issue.Tags[1].Name})
 	// check interaction events
 	require.Equal(t, 1, len(issue.InteractionEvents))
