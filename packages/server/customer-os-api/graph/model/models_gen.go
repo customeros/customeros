@@ -2611,14 +2611,14 @@ type TableViewDefUpdateInput struct {
 }
 
 type Tag struct {
-	Metadata   *Metadata  `json:"metadata"`
-	ID         string     `json:"id"`
-	Name       string     `json:"name"`
-	CreatedAt  time.Time  `json:"createdAt"`
-	UpdatedAt  time.Time  `json:"updatedAt"`
-	Source     DataSource `json:"source"`
-	AppSource  string     `json:"appSource"`
-	EntityType EntityType `json:"entityType"`
+	Metadata   *Metadata   `json:"metadata"`
+	Name       string      `json:"name"`
+	EntityType EntityType  `json:"entityType"`
+	ID         *string     `json:"id,omitempty"`
+	CreatedAt  *time.Time  `json:"createdAt,omitempty"`
+	UpdatedAt  *time.Time  `json:"updatedAt,omitempty"`
+	Source     *DataSource `json:"source,omitempty"`
+	AppSource  *string     `json:"appSource,omitempty"`
 }
 
 type TagIDOrNameInput struct {
