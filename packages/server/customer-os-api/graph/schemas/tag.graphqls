@@ -11,13 +11,13 @@ extend type Mutation {
 
 type Tag {
     metadata:   Metadata!
-    id:         ID! @deprecated(reason: "Use metadata.id")
     name:       String!
-    createdAt:  Time! @deprecated(reason: "Use metadata.created")
-    updatedAt:  Time! @deprecated(reason: "Use metadata.lastUpdated")
-    source:     DataSource! @deprecated(reason: "Use metadata.source")
-    appSource:  String! @deprecated(reason: "Use metadata.appSource")
     entityType: EntityType!
+    id:         ID @deprecated(reason: "Use metadata.id")
+    createdAt:  Time @deprecated(reason: "Use metadata.created")
+    updatedAt:  Time @deprecated(reason: "Use metadata.lastUpdated")
+    source:     DataSource @deprecated(reason: "Use metadata.source")
+    appSource:  String @deprecated(reason: "Use metadata.appSource")
 }
 
 input TagInput {

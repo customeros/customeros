@@ -262,7 +262,7 @@
       "name": "Contact",
       "queries": [
         {
-          "name": "check_contact_node_labels",
+          "name": "Contact nodes with wrong labels",
           "query": "MATCH (t:Tenant)<-[:CONTACT_BELONGS_TO_TENANT]-(n:Contact) WHERE size(labels(n)) <> 2 OR NOT 'Contact_'+t.name in labels(n) return count(n)"
         },
         {
@@ -280,6 +280,10 @@
         {
           "name": "Percentage of contacts without linked in",
           "query": "MATCH (c:Contact) WHERE c.hide = false OR c.hide = NULL WITH c OPTIONAL MATCH (c)-[:HAS]->(s:Social) WHERE s.url CONTAINS 'linkedin.com' WITH c, COLLECT(s) AS linkedinSocials WITH COUNT(c) AS totalContacts, COUNT(CASE WHEN SIZE(linkedinSocials) = 0 THEN c END) AS contactsWithoutLinkedIn RETURN toInteger(ROUND(100.0 * contactsWithoutLinkedIn / totalContacts)) AS percentageWithoutLinkedIn"
+        },
+        {
+          "name": "Contacts with multiple primary emails",
+          "query": "MATCH (e:Email)<-[r:HAS {primary:true}]-(c:Contact) WITH c, count(e) AS countPrimaryEmails WHERE countPrimaryEmails > 1 RETURN count(c)"
         }
       ]
     },

@@ -435,9 +435,9 @@ func (r *emailWriteRepository) SetPrimaryForEntity(ctx context.Context, tenant, 
 				WHERE e.email = $email OR e.rawEmail = $email
 				SET rel.primary = true,
 					entity.updatedAt = datetime()
-				WITH entity
+				WITH entity, e LIMIT 1
 				MATCH (entity)-[r:HAS]->(oe:Email)
-				WHERE oe.email <> $email AND oe.rawEmail <> $email
+				WHERE oe.id <> e.id 
 				SET r.primary = false`, entityType.Neo4jLabel()+"_"+tenant)
 
 	params := map[string]any{

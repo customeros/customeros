@@ -3,6 +3,7 @@ package mapper
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 )
 
@@ -29,11 +30,11 @@ func MapEntityToTag(entity *neo4jentity.TagEntity) *model.Tag {
 			AppSource:   entity.AppSource,
 			Source:      MapDataSourceToModel(entity.Source),
 		},
-		ID:         entity.Id,
-		CreatedAt:  entity.CreatedAt,
-		UpdatedAt:  entity.UpdatedAt,
-		Source:     MapDataSourceToModel(entity.Source),
-		AppSource:  entity.AppSource,
+		ID:         utils.StringPtr(entity.Id),
+		CreatedAt:  utils.TimePtr(entity.CreatedAt),
+		UpdatedAt:  utils.TimePtr(entity.UpdatedAt),
+		Source:     utils.ToPtr(MapDataSourceToModel(entity.Source)),
+		AppSource:  utils.StringPtr(entity.AppSource),
 		Name:       entity.Name,
 		EntityType: model.EntityType(entity.EntityType.String()),
 	}
