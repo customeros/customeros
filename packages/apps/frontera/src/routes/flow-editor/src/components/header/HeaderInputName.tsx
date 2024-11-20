@@ -26,7 +26,7 @@ export const HeaderInputName = observer(() => {
         variant='unstyled'
         readOnly={showFinder}
         data-test='flows-flow-name-input'
-        onClick={(e) => (showFinder ? navigate(-1) : null)}
+        onClick={() => (showFinder ? navigate(-1) : null)}
         value={store.flows.isLoading ? 'Loading flow…' : name}
         onChange={(e) => {
           setName(e.target.value);
