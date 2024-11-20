@@ -1,17 +1,13 @@
 import { useState } from 'react';
 
+import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
 
 import { useStore } from '@shared/hooks/useStore';
-import { getExternalUrl } from '@utils/getExternalLink.ts';
+import { getExternalUrl } from '@utils/getExternalLink';
+import { validLinkedInProfileUrl } from '@utils/linkedinValidation';
 import { Command, CommandItem, CommandInput } from '@ui/overlay/CommandMenu';
 
-function validateLinkedInProfileUrl(url: string): boolean {
-  const linkedInProfileRegex =
-    /^(https:\/\/)?(www\.)?linkedin\.com\/in\/([a-zA-Z0-9\-%]{3,100})\/?$/;
-
-  return linkedInProfileRegex.test(url);
-}
 export const AddContactViaLinkedInUrl = observer(() => {
   const store = useStore();
   const context = store.ui.commandMenu.context;
@@ -19,25 +15,39 @@ export const AddContactViaLinkedInUrl = observer(() => {
   const [validationError, setValidationError] = useState(false);
 
   const entity = store.organizations.value.get((context.ids as string[])?.[0]);
-  const label = `Organization - ${entity?.value?.name}`;
+
+  const label = match(context.entity)
+    .with('Organization', () => `Organization - ${entity?.value?.name}`)
+    .with('Contact', () => 'Contact')
+    .otherwise(() => '');
 
   const handleConfirm = () => {
     setValidationError(false);
 
-    const isValidUrl = validateLinkedInProfileUrl(url);
+    const isValidUrl = validLinkedInProfileUrl(url);
 
     if (isValidUrl) {
       const formattedUrl = getExternalUrl(url);
 
-      store.contacts.createWithSocial({
-        socialUrl: formattedUrl,
-        organizationId: (context.ids as string[])?.[0],
-      });
+      match(context.entity)
+        .with('Organization', () => {
+          store.contacts.createWithSocial({
+            socialUrl: formattedUrl,
+            organizationId: (context.ids as string[])?.[0],
+          });
+          store.ui.commandMenu.setOpen(false);
+          store.ui.commandMenu.setType('OrganizationCommands');
+        })
+        .with('Contact', () => {
+          store.contacts.createWithoutOrg({
+            socialUrl: formattedUrl,
+          });
+
+          store.ui.commandMenu.setOpen(false);
+          store.ui.commandMenu.setType('ContactCommands');
+        });
 
       setUrl('');
-
-      store.ui.commandMenu.setOpen(false);
-      store.ui.commandMenu.setType('OrganizationCommands');
 
       return;
     }

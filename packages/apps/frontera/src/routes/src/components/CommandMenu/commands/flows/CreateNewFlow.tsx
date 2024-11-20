@@ -23,7 +23,9 @@ export const CreateNewFlow = observer(() => {
   const handleConfirm = () => {
     setIsSaving(true);
 
-    flows.create(flowName, {
+    const name = flowName.trim().length > 0 ? flowName.trim() : 'Unnamed';
+
+    flows.create(name, {
       onSuccess: (id) => {
         setIsSaving(false);
 

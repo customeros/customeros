@@ -255,25 +255,6 @@
   }
 }
 
-.tiptap {
-  > * + * {
-    margin-top: 0.75em;
-  }
-
-  & {
-    outline: none;
-    min-height: 100px;
-  }
-}
-
-.tiptap .is-editor-empty:first-child::before {
-  color: #adb5bd;
-  content: attr(data-placeholder);
-  float: left;
-  height: 0;
-  pointer-events: none;
-}
-
 .scrollbar *::-webkit-scrollbar {
   width: 8px;
 }
