@@ -17,7 +17,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 )
 
-type MailboxRequest struct {
+type AddMailboxRequest struct {
 	Domain            string
 	Username          string
 	Password          string
@@ -28,7 +28,13 @@ type MailboxRequest struct {
 }
 
 type MailboxService interface {
-	AddMailbox(ctx context.Context, request MailboxRequest) error
+	AddMailbox(ctx context.Context, request AddMailboxRequest) error
+	BuildAddMailboxRequest(
+		ctx context.Context,
+		domain, username, password, linkedUserEmail string,
+		forwardingEnabled, webmailEnabled bool,
+		forwardingTo []string,
+	) AddMailboxRequest
 }
 
 type mailboxService struct {
@@ -45,7 +51,25 @@ func NewMailboxService(log logger.Logger, services *Services) MailboxService {
 	}
 }
 
-func (s *mailboxService) AddMailbox(ctx context.Context, request MailboxRequest) error {
+func (s *mailboxService) BuildAddMailboxRequest(
+	ctx context.Context,
+	domain, username, password, linkedUserEmail string,
+	forwardingEnabled, webmailEnabled bool,
+	forwardingTo []string,
+) AddMailboxRequest {
+	r := AddMailboxRequest{
+		Domain:            domain,
+		Username:          username,
+		Password:          password,
+		LinkedUserEmail:   linkedUserEmail,
+		ForwardingEnabled: forwardingEnabled,
+		WebmailEnabled:    webmailEnabled,
+		ForwardingTo:      forwardingTo,
+	}
+	return r
+}
+
+func (s *mailboxService) AddMailbox(ctx context.Context, request AddMailboxRequest) error {
 	span, ctx := s.initializeTracing(ctx, request)
 	defer span.Finish()
 
@@ -90,7 +114,7 @@ func (s *mailboxService) AddMailbox(ctx context.Context, request MailboxRequest)
 	return nil
 }
 
-func (s *mailboxService) initializeTracing(ctx context.Context, request MailboxRequest) (opentracing.Span, context.Context) {
+func (s *mailboxService) initializeTracing(ctx context.Context, request AddMailboxRequest) (opentracing.Span, context.Context) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "MailboxService.AddMailbox")
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(
@@ -157,7 +181,7 @@ func (s *mailboxService) verifyMailboxNotExists(ctx context.Context, span opentr
 	return nil
 }
 
-func (s *mailboxService) setupMailbox(ctx context.Context, span opentracing.Span, request MailboxRequest, mailboxEmail string) error {
+func (s *mailboxService) setupMailbox(ctx context.Context, span opentracing.Span, request AddMailboxRequest, mailboxEmail string) error {
 	tenant := common.GetTenantFromContext(ctx)
 	err := s.services.OpenSrsService.SetupMailbox(
 		ctx,
@@ -176,7 +200,7 @@ func (s *mailboxService) setupMailbox(ctx context.Context, span opentracing.Span
 	return nil
 }
 
-func (s *mailboxService) saveMailboxSettings(ctx context.Context, span opentracing.Span, request MailboxRequest, mailboxEmail string, linkedUserFound bool) error {
+func (s *mailboxService) saveMailboxSettings(ctx context.Context, span opentracing.Span, request AddMailboxRequest, mailboxEmail string, linkedUserFound bool) error {
 	tenant := common.GetTenantFromContext(ctx)
 	tenantSettingsMailbox := entity.TenantSettingsMailbox{
 		Domain:                  request.Domain,
