@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"fmt"
-	"github.com/pkg/errors"
 	"strings"
 	"time"
 
@@ -14,6 +13,7 @@ import (
 	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+	"github.com/pkg/errors"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
@@ -78,8 +78,6 @@ func (s *mailService) ProcessEmail(ctx context.Context, tenant string, rawEmailI
 	defer span.Finish()
 	span.LogFields(log.String("rawEmailId", rawEmailId.String()))
 
-	var reason string
-
 	rawEmail, err := s.services.PostgresRepositories.RawEmailRepository.GetEmailForProcess(rawEmailId)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to get email for process"))
@@ -98,16 +96,7 @@ func (s *mailService) ProcessEmail(ctx context.Context, tenant string, rawEmailI
 
 	check := s.ProcessEmailCheck(ctx, &emailMessageData)
 	if !check.ProcessEmail {
-		if check.IsBounce {
-			reason = "email bounced"
-		}
-		if check.IsAutoResponder {
-			reason = "email autoresponder"
-		}
-		if check.IsBulkMail {
-			reason = "bulk email"
-		}
-		return postgresentity.SKIPPED, &reason, nil
+		return postgresentity.SKIPPED, &check.SkipReason, nil
 	}
 
 	if len(emailMessageData.Participants.AllEmails) == 0 {

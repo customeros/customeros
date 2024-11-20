@@ -1,11 +1,12 @@
 package service
 
 import (
-	"golang.org/x/net/context"
 	"regexp"
 	"strings"
 
+	"github.com/customeros/mailsherpa/domaincheck"
 	"github.com/customeros/mailsherpa/mailvalidate"
+	"golang.org/x/net/context"
 )
 
 type HeaderAnalysis struct {
@@ -13,6 +14,7 @@ type HeaderAnalysis struct {
 	IsBounce        bool
 	IsAutoResponder bool
 	IsBulkMail      bool
+	SkipReason      string
 }
 
 // TODO parse SMTP status code from message/deliver-status
@@ -27,46 +29,67 @@ func (a *mailService) ProcessEmailCheck(ctx context.Context, email *EmailMessage
 	}
 
 	// Check bounce
-	if a.isBounce(email.Headers, email.Content.Subject, email.Participants.From.Email) {
+	bounce, reason := a.isBounce(email.Headers, email.Content.Subject, email.Participants.From.Email)
+	if bounce {
 		analysis.IsBounce = true
 		analysis.ProcessEmail = false
+		analysis.SkipReason = reason
 		return analysis
 	}
 
 	// Check auto-responder first
-	if a.isAutoResponder(email.Headers) {
+	autoresp, reason := a.isAutoResponder(email.Headers)
+	if autoresp {
 		analysis.IsAutoResponder = true
 		analysis.ProcessEmail = false
+		analysis.SkipReason = reason
 		return analysis
 	}
 
 	// Check bulk mail
-	if a.isBulkMail(email.Headers, email.Participants.From.Email, email.Participants.ReplyTo) {
+	bulk, reason := a.isBulkMail(email.Headers, email.Participants.From.Email, email.Participants.ReplyTo)
+	if bulk {
 		analysis.IsBulkMail = true
 		analysis.ProcessEmail = false
+		analysis.SkipReason = reason
 	}
 
 	return analysis
 }
 
-func (a *mailService) isAutoResponder(headers EmailHeaders) bool {
-	return headers.XAutoreply != "" ||
-		headers.XAutoresponse != "" ||
-		headers.AutoSubmitted ||
-		headers.XLoop ||
-		strings.EqualFold(headers.Precedence, "auto_reply")
+func (a *mailService) isAutoResponder(headers EmailHeaders) (bool, string) {
+	switch {
+	case headers.XAutoreply != "":
+		return true, "Autoresponder: X-Autoreply"
+	case headers.XAutoresponse != "":
+		return true, "Autoresponder: X-Autoresponse"
+	case headers.XLoop:
+		return true, "Autoresponder: X-Loop"
+	case strings.EqualFold(headers.Precedence, "auto_reply"):
+		return true, "Autoresponder: Precedence: auto_reply"
+	default:
+		return false, ""
+	}
 }
 
-func (a *mailService) isBounce(headers EmailHeaders, subject, from string) bool {
-	return headers.XFailedRecepients ||
-		headers.DeliveryStatus ||
-		strings.EqualFold(headers.ContentDescription, "delivery report") ||
-		a.isReturnPathBounce(headers.ReturnPath) ||
-		a.isReturnPathBounce(from) ||
-		a.isBounceSubject(subject)
+func (a *mailService) isBounce(headers EmailHeaders, subject, from string) (bool, string) {
+	switch {
+	case headers.XFailedRecepients:
+		return true, "Bounce: X-Failed-Recipients"
+	case strings.EqualFold(headers.ContentDescription, "delivery report"):
+		return true, "Bounce: Content-Description: Delivery Report"
+	case a.isReturnPathBounce(headers.ReturnPath):
+		return true, "Bounce: Return-Path containts bounce keywords"
+	case a.isReturnPathBounce(from):
+		return true, "Bounce: From contains bounce keywords"
+	case a.isBounceSubject(subject):
+		return true, "Bounce: Subject contains bounce keywords"
+	default:
+		return false, ""
+	}
 }
 
-func (a *mailService) isBulkMail(headers EmailHeaders, from string, replyTo []EmailParticipant) bool {
+func (a *mailService) isBulkMail(headers EmailHeaders, from string, replyTo []EmailParticipant) (bool, string) {
 	matchReplyTo := false
 	for _, replyToParticipant := range replyTo {
 		if replyToParticipant.Email == from {
@@ -75,25 +98,48 @@ func (a *mailService) isBulkMail(headers EmailHeaders, from string, replyTo []Em
 		}
 	}
 
-	return !matchReplyTo ||
-		headers.ListUnsubscribe ||
-		strings.EqualFold(headers.Precedence, "bulk") ||
-		headers.ReturnPath == "" ||
-		headers.ReturnPath != from ||
-		(headers.Sender != "" && headers.Sender != from) ||
-		a.isRoleAccount(from)
+	switch {
+	case !matchReplyTo:
+		return true, "Bulk: Reply-To != From"
+	case headers.ListUnsubscribe:
+		return true, "Bulk: Unsubscribe"
+	case strings.EqualFold(headers.Precedence, "bulk"):
+		return true, "Bulk: Precidence: Bulk"
+	case headers.ReturnPath == "":
+		return true, "Bulk: Empty Return-Path"
+	case headers.ReturnPath != from:
+		return true, "Bulk: Return-Path != From"
+	case (headers.Sender != "" && headers.Sender != from):
+		return true, "Bulk: Sender != From"
+	default:
+		return a.mailsherpaChecks(from)
+	}
 }
 
 func (a *mailService) isReturnPathBounce(returnPath string) bool {
 	return strings.Contains(returnPath, "mailer-daemon")
 }
 
-func (a *mailService) isRoleAccount(from string) bool {
+func (a *mailService) mailsherpaChecks(from string) (failedCheck bool, reason string) {
 	if from == "" {
-		return false
+		return true, "No From email"
 	}
 	syntaxValidation := mailvalidate.ValidateEmailSyntax(from)
-	return syntaxValidation.IsRoleAccount
+	if syntaxValidation.IsRoleAccount {
+		return true, "Bulk: From Role Account"
+	}
+
+	if syntaxValidation.IsSystemGenerated {
+		return true, "Bulk: System generated"
+	}
+
+	primaryDomainCheck, _ := domaincheck.PrimaryDomainCheck(syntaxValidation.Domain)
+
+	if !primaryDomainCheck {
+		return true, "Bulk: From non-primary domain"
+	}
+
+	return false, ""
 }
 
 func (a *mailService) isBounceSubject(subject string) bool {
