@@ -69,7 +69,12 @@ export const ChangeTags = observer(() => {
   };
 
   const handleCreateOption = (value: string) => {
-    if (store.tags.toArray().find((e) => e.value.name === value)) return;
+    if (
+      store.tags
+        .getByEntityType(EntityType.Organization)
+        .find((e) => e.value.name === value)
+    )
+      return;
     store.tags?.create({ name: value });
 
     match(context.entity)
@@ -163,7 +168,7 @@ export const ChangeTags = observer(() => {
   }, []);
 
   const sortedTags = store.tags
-    ?.toArray()
+    ?.getByEntityType(EntityType.Organization)
     .filter((e) => !!e.value.name)
     .sort((a, b) => {
       const aInOrg = orgTags.has(a.value.name);

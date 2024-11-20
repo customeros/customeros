@@ -5,11 +5,11 @@ import { observer } from 'mobx-react-lite';
 import { OrganizationStore } from '@store/Organizations/Organization.store';
 
 import { Tag01 } from '@ui/media/icons/Tag01';
-import { Tag as TagType } from '@graphql/types';
 import { Check } from '@ui/media/icons/Check.tsx';
 import { useStore } from '@shared/hooks/useStore';
 import { useModKey } from '@shared/hooks/useModKey';
 import { CommandSubItem } from '@ui/overlay/CommandMenu';
+import { EntityType, Tag as TagType } from '@graphql/types';
 
 export const AddTagSubItemGroup = observer(() => {
   const store = useStore();
@@ -98,7 +98,7 @@ export const AddTagSubItemGroup = observer(() => {
   }, []);
 
   const sortedTags = store.tags
-    ?.toArray()
+    ?.getByEntityType(EntityType.Organization)
     .filter((e) => !!e.value.name)
     .sort((a, b) => {
       const aInOrg = orgTags.has(a.value.name);

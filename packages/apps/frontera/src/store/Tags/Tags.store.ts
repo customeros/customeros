@@ -174,6 +174,12 @@ export class TagsStore implements GroupStore<Tag> {
   getById(id: string) {
     return this.value.get(id);
   }
+
+  getByEntityType(entityType: EntityType) {
+    const tags = this.toArray();
+
+    return tags.filter((tag) => tag.value.entityType === entityType);
+  }
 }
 
 type CREATE_TAG_PAYLOAD = {

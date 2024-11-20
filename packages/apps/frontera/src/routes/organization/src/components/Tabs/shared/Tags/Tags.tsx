@@ -2,6 +2,7 @@ import { observer } from 'mobx-react-lite';
 
 import { useStore } from '@shared/hooks/useStore';
 import { SelectOption } from '@shared/types/SelectOptions';
+import { EntityType } from '@shared/types/__generated__/graphql.types';
 import {
   CreatableSelect,
   CreatableSelectProps,
@@ -41,7 +42,7 @@ export const Tags = observer(
 
     const options = store.tags
       ? store.tags
-          .toArray()
+          .getByEntityType(EntityType.Contact)
           .filter((t) => t.value.name !== '')
           .map(
             (tag) =>
