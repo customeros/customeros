@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, createRef, useEffect } from 'react';
 
 import { observer } from 'mobx-react-lite';
 
@@ -16,6 +16,14 @@ import { ChevronCollapse } from '@ui/media/icons/ChevronCollapse';
 import { Tag, EntityType } from '@shared/types/__generated__/graphql.types';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
 
+const entityTypes = {
+  [EntityType.Organization]: { label: 'organizations' },
+  [EntityType.Contact]: { label: 'contacts' },
+  [EntityType.LogEntry]: { label: 'log entries' },
+  [EntityType.Opportunity]: { label: 'opportunities' },
+  [EntityType.Contract]: { label: 'contracts' },
+  [EntityType.Issue]: { label: 'issues' },
+};
 export const TagsManager = observer(() => {
   const store = useStore();
   const [newTag, setNewTag] = useState('');
@@ -29,6 +37,7 @@ export const TagsManager = observer(() => {
   } | null>(null);
 
   const [deletingTag, setDeletingTag] = useState<Tag | null>(null);
+  const inputRef = createRef<HTMLInputElement>();
   const { open: isOpen, onOpen, onClose } = useDisclosure();
 
   const handleNewTagSubmit = (entityType: EntityType) => {
@@ -70,6 +79,7 @@ export const TagsManager = observer(() => {
       });
     }
     setEditingTag(null);
+    setNewTag('');
   };
 
   const handleDeleteTag = (tagId: string) => {
@@ -123,34 +133,20 @@ export const TagsManager = observer(() => {
     return tag.value.entityType === EntityType.LogEntry;
   });
 
-  const organizationTagCount = deletingTag?.metadata.id
-    ? store.organizations.toComputedArray((arr) => {
-        return arr.filter((org) =>
-          org.value.tags?.some((tag) => tag.id === deletingTag.metadata.id),
-        );
-      }).length
-    : 0;
-
-  const contactTagCount = deletingTag?.metadata.id
-    ? store.contacts.toComputedArray((arr) => {
-        return arr.filter((contact) =>
-          contact.value.tags?.some(
-            (persona) => persona.id === deletingTag.metadata.id,
-          ),
-        );
-      }).length
-    : 0;
-
-  const totalTagCount = organizationTagCount + contactTagCount;
-
-  const deleteTagDescription =
-    totalTagCount > 1
-      ? `Deleting this tag will remove it from ${totalTagCount} contacts or organizations.`
-      : totalTagCount === 1
-      ? `Deleting this tag will remove it from ${totalTagCount} contact or organization.`
-      : 'Deleting this tag will not affect any contacts or organizations, as it is not currently added to any';
+  const deleteTagDescription = `Deleting this tag will remove it from all ${
+    deletingTag?.entityType
+      ? entityTypes[deletingTag.entityType].label
+      : entityTypes[EntityType.Organization].label
+  } where it’s currently used.`;
 
   const tags = store.tags.toArray().length;
+
+  useEffect(() => {
+    if (editingTag && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [editingTag]);
 
   const TagList = ({
     tags,
@@ -171,6 +167,7 @@ export const TagsManager = observer(() => {
             {tags.length > 0 && (
               <IconButton
                 size='xxs'
+                variant='ghost'
                 aria-label='collapse the list'
                 onClick={() => setIsCollapsed(!isCollapsed)}
                 icon={!isCollapsed ? <ChevronCollapse /> : <ChevronExpand />}
@@ -234,12 +231,10 @@ export const TagsManager = observer(() => {
                         <Input
                           autoFocus
                           size='xs'
+                          ref={inputRef}
                           variant='unstyled'
                           className='mb-[1px]'
-                          defaultValue={tag.value.name}
-                          onFocus={(e) => {
-                            e.target.select();
-                          }}
+                          defaultValue={newTag || tag.value.name}
                           onChange={(e) => {
                             const trimmedValue = e.target.value.trim();
 
@@ -339,21 +334,27 @@ export const TagsManager = observer(() => {
             </div>
           ) : (
             <>
-              <TagList
-                tags={organizationTags}
-                title='Organization Tags'
-                entityType={EntityType.Organization}
-              />
-              <TagList
-                tags={contactTags}
-                title='Contact Tags'
-                entityType={EntityType.Contact}
-              />
-              <TagList
-                tags={logEntryTags}
-                title='Log Entry Tags'
-                entityType={EntityType.LogEntry}
-              />
+              {organizationTags.length > 0 && (
+                <TagList
+                  tags={organizationTags}
+                  title='Organization Tags'
+                  entityType={EntityType.Organization}
+                />
+              )}
+              {contactTags.length > 0 && (
+                <TagList
+                  tags={contactTags}
+                  title='Contact Tags'
+                  entityType={EntityType.Contact}
+                />
+              )}
+              {logEntryTags.length > 0 && (
+                <TagList
+                  tags={logEntryTags}
+                  title='Log Entry Tags'
+                  entityType={EntityType.LogEntry}
+                />
+              )}
             </>
           )}
         </div>
@@ -366,8 +367,8 @@ export const TagsManager = observer(() => {
         description={deleteTagDescription}
         label={`Delete '${deletingTag?.name}'?`}
         onConfirm={() => {
-          if (deletingTag?.id) {
-            handleDeleteTag(deletingTag.id);
+          if (deletingTag?.metadata.id) {
+            handleDeleteTag(deletingTag.metadata.id);
           }
         }}
         body={
