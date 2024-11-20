@@ -8,7 +8,11 @@ import { GroupOperation } from '@store/types';
 import { runInAction, makeAutoObservable } from 'mobx';
 import { GroupStore, makeAutoSyncableGroup } from '@store/group-store';
 
-import { Tag, TagInput } from '@shared/types/__generated__/graphql.types';
+import {
+  Tag,
+  TagInput,
+  EntityType,
+} from '@shared/types/__generated__/graphql.types';
 
 import { TagStore } from './Tag.store';
 import { TagService } from './Tag.service';
@@ -145,6 +149,12 @@ export class TagsStore implements GroupStore<Tag> {
 
   getById(id: string) {
     return this.value.get(id);
+  }
+
+  getByEntityType(entityType: EntityType) {
+    const tags = this.toArray();
+
+    return tags.filter((tag) => tag.value.entityType === entityType);
   }
 }
 

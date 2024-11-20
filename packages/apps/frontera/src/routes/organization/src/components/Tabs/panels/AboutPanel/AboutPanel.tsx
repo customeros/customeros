@@ -29,6 +29,7 @@ import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
 import {
   Social,
   DataSource,
+  EntityType,
   Tag as TagType,
   OrganizationStage,
   OrganizationRelationship,
@@ -165,6 +166,7 @@ export const AboutPanel = observer(() => {
           appSource: 'organization',
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
+          entityType: EntityType.Organization,
           source: DataSource.Openline,
         },
       ];
@@ -269,16 +271,18 @@ export const AboutPanel = observer(() => {
           onCreate={handleCreateOption}
           placeholder='Organization tags'
           leftAccessory={<Tag01 className='mr-3 text-gray-500' />}
-          options={store.tags.toArray().map((t) => ({
-            value: t.id,
-            label: t.value?.name,
-          }))}
           value={
             organization.value.tags?.map((t) => ({
               value: t.id,
               label: t.name,
             })) ?? []
           }
+          options={store.tags
+            .getByEntityType(EntityType.Organization)
+            .map((t) => ({
+              value: t.id,
+              label: t.value?.name,
+            }))}
           onChange={(selection) => {
             const tags = selection
               .map((o) => store.tags.getById(o.value)?.value)

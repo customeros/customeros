@@ -1,7 +1,11 @@
 import { gql } from 'graphql-request';
 import { Transport } from '@store/transport';
 
-import { Tag, TagUpdateInput } from '@shared/types/__generated__/graphql.types';
+import {
+  Tag,
+  EntityType,
+  TagUpdateInput,
+} from '@shared/types/__generated__/graphql.types';
 
 class TagService {
   private static instance: TagService | null = null;
@@ -35,6 +39,14 @@ class TagService {
 
   async getTags(): Promise<TAG_QUERY_RESPONSE> {
     return this.transport.graphql.request(TAG_QUERY);
+  }
+
+  async getTagsByEntityType(
+    entityType: EntityType,
+  ): Promise<TAG_QUERY_RESPONSE> {
+    return this.transport.graphql.request(TAG_QUERY_BY_ENTITY_TYPE, {
+      entityType,
+    });
   }
 }
 
@@ -88,9 +100,26 @@ const TAG_QUERY = gql`
       id
       name
       source
+      entityType
       updatedAt
       createdAt
       appSource
+    }
+  }
+`;
+
+const TAG_QUERY_BY_ENTITY_TYPE = gql`
+  query getTagsByEntityType($entityType: EntityType!) {
+    tags_ByEntityType(entityType: $entityType) {
+      metadata {
+        id
+        source
+        appSource
+        created
+        lastUpdated
+      }
+      name
+      entityType
     }
   }
 `;

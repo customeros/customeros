@@ -357,7 +357,11 @@ export class OrganizationsService {
             await this.addTag({
               input: {
                 organizationId,
-                tag: { id: value.id, name: value.name },
+                tag: {
+                  id: value.id,
+                  name: value.name,
+                  entityType: value.entityType,
+                },
               },
             });
           })

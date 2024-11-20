@@ -24,10 +24,10 @@ import { SelectOption } from '@shared/types/SelectOptions';
 import { IconButton } from '@ui/form/IconButton/IconButton';
 import { Tags } from '@organization/components/Tabs/shared/';
 import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
-import { Tag, Social, Contact, DataSource } from '@graphql/types';
 import { PhoneOutgoing02 } from '@ui/media/icons/PhoneOutgoing02';
 import { useOutsideClick } from '@ui/utils/hooks/useOutsideClick';
 import { Card, CardHeader, CardContent } from '@ui/presentation/Card/Card';
+import { Tag, Social, Contact, DataSource, EntityType } from '@graphql/types';
 import { useContactCardMeta } from '@organization/state/ContactCardMeta.atom';
 import { SocialIconInput } from '@organization/components/Tabs/shared/SocialIconInput';
 import {
@@ -193,8 +193,10 @@ export const ContactCard = observer(
           lastUpdated: new Date().toISOString(),
         },
         appSource: 'organization',
+        entityType: EntityType.Contact,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
+
         source: DataSource.Openline,
       });
       contactStore?.commit();
@@ -423,7 +425,7 @@ export const ContactCard = observer(
                 value={
                   contactStore?.value?.tags?.map((t) => ({
                     label: t.name,
-                    value: t.id,
+                    value: t.metadata.id,
                   })) ?? []
                 }
                 onChange={(e) => {

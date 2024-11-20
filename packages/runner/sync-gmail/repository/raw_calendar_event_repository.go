@@ -3,6 +3,7 @@ package repository
 import (
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/entity"
+	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
@@ -10,7 +11,7 @@ import (
 type RawCalendarEventRepository interface {
 	GetCalendarEventsIdsForSync(externalSystem, tenant string) ([]entity.RawCalendarEvent, error)
 	GetCalendarEventForSync(id uuid.UUID) (*entity.RawCalendarEvent, error)
-	MarkSentToEventStore(id uuid.UUID, sentToEventStoreState entity.RawState, reason, error *string) error
+	MarkSentToEventStore(id uuid.UUID, sentToEventStoreState postgresentity.RawState, reason, error *string) error
 }
 
 type rawCalendarEventRepositoryImpl struct {
@@ -23,7 +24,7 @@ func NewRawCalendarEventRepository(gormDb *gorm.DB) RawCalendarEventRepository {
 
 func (repo *rawCalendarEventRepositoryImpl) GetCalendarEventsIdsForSync(externalSystem, tenant string) ([]entity.RawCalendarEvent, error) {
 	result := []entity.RawCalendarEvent{}
-	err := repo.gormDb.Distinct("provider_id").Select([]string{"id", "provider_id"}).Limit(25).Find(&result, "external_system = ? AND tenant_name = ? AND sent_to_event_store_state = 'PENDING'", externalSystem, tenant).Error
+	err := repo.gormDb.Distinct("provider_id").Select([]string{"id", "provider_id"}).Limit(25).Find(&result, "external_system = ? AND tenant_name = ? AND status = 'PENDING'", externalSystem, tenant).Error
 
 	if err != nil {
 		logrus.Errorf("Failed getting rawCalendarEvents: %s; %s", externalSystem, tenant)
@@ -45,12 +46,12 @@ func (repo *rawCalendarEventRepositoryImpl) GetCalendarEventForSync(id uuid.UUID
 	return &result, nil
 }
 
-func (repo *rawCalendarEventRepositoryImpl) MarkSentToEventStore(id uuid.UUID, sentToEventStoreState entity.RawState, reason, error *string) error {
+func (repo *rawCalendarEventRepositoryImpl) MarkSentToEventStore(id uuid.UUID, sentToEventStoreState postgresentity.RawState, reason, error *string) error {
 	tx := repo.gormDb.Model(&entity.RawCalendarEvent{}).Where("id = ?", id)
 
-	tx.Update("sent_to_event_store_state", sentToEventStoreState)
-	tx.Update("sent_to_event_store_reason", reason)
-	tx.Update("sent_to_event_store_error", error)
+	tx.Update("status", sentToEventStoreState)
+	tx.Update("reason", reason)
+	tx.Update("error", error)
 
 	err := tx.Error
 

@@ -9,7 +9,7 @@ import { Plus } from '@ui/media/icons/Plus.tsx';
 import { Check } from '@ui/media/icons/Check.tsx';
 import { useStore } from '@shared/hooks/useStore';
 import { useModKey } from '@shared/hooks/useModKey';
-import { DataSource, Tag as TagType } from '@graphql/types';
+import { DataSource, EntityType, Tag as TagType } from '@graphql/types';
 import { Command, CommandItem, CommandInput } from '@ui/overlay/CommandMenu';
 
 export const ChangeTags = observer(() => {
@@ -39,7 +39,7 @@ export const ChangeTags = observer(() => {
 
   const [search, setSearch] = useState('');
 
-  const handleSelect = (t: TagType) => () => {
+  const handleSelect = (t: TagType) => {
     if (!context.ids?.[0]) return;
 
     if (!entity) return;
@@ -49,7 +49,7 @@ export const ChangeTags = observer(() => {
         const organization = entity as OrganizationStore;
 
         const foundIndex = organization.value.tags?.findIndex(
-          (e) => e.id === t.id,
+          (e) => e.metadata.id === t.metadata.id,
         );
 
         if (typeof foundIndex !== 'undefined' && foundIndex > -1) {
@@ -69,7 +69,12 @@ export const ChangeTags = observer(() => {
   };
 
   const handleCreateOption = (value: string) => {
-    if (store.tags.toArray().find((e) => e.value.name === value)) return;
+    if (
+      store.tags
+        .getByEntityType(EntityType.Organization)
+        .find((e) => e.value.name === value)
+    )
+      return;
     store.tags?.create({ name: value });
 
     match(context.entity)
@@ -88,6 +93,7 @@ export const ChangeTags = observer(() => {
             lastUpdated: new Date().toISOString(),
           },
           appSource: 'organization',
+          entityType: EntityType.Organization,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
           source: DataSource.Openline,
@@ -107,6 +113,7 @@ export const ChangeTags = observer(() => {
               lastUpdated: new Date().toISOString(),
             },
             appSource: 'organization',
+            entityType: EntityType.Organization,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
             source: DataSource.Openline,
@@ -161,7 +168,7 @@ export const ChangeTags = observer(() => {
   }, []);
 
   const sortedTags = store.tags
-    ?.toArray()
+    ?.getByEntityType(EntityType.Organization)
     .filter((e) => !!e.value.name)
     .sort((a, b) => {
       const aInOrg = orgTags.has(a.value.name);

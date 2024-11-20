@@ -19,9 +19,9 @@ type RawCalendarEvent struct {
 	ProviderId string `gorm:"size:255;not null;index:idx_raw_email_external_system"`
 	ICalUID    string `gorm:"size:255;not null;"`
 
-	SentToEventStoreState  string  `gorm:"size:50;not null"`
-	SentToEventStoreReason *string `gorm:"type:text"`
-	SentToEventStoreError  *string `gorm:"type:text"`
+	Status string  `gorm:"column:status;size:50;not null"`
+	Reason *string `gorm:"column:reason;type:text"`
+	Error  *string `gorm:"column:error;type:text"`
 
 	Data string `gorm:"type:text"`
 }

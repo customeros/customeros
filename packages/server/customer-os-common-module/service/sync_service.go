@@ -3,35 +3,35 @@ package service
 import (
 	"context"
 	"fmt"
-	"strings"
-	"time"
-
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
-	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/pkg/errors"
-
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/config"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/entity"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/repository"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/tracing"
+	"net/mail"
+	"strings"
+	"time"
 )
 
-const AppSource = "sync-email"
+const AppSourceSyncEmail = "sync-email"
 
 type syncService struct {
-	cfg          *config.Config
-	repositories *repository.Repositories
-	services     *Services
+	services *Services
 }
 
 type SyncService interface {
 	GetEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTransaction, tenant, email string, now time.Time, source string) (string, error)
 	BuildEmailsListExcludingPersonalEmails(usernameSource, from string, to []string, cc []string, bcc []string) ([]string, error)
 	ConvertToUTC(datetimeStr string) (time.Time, error)
+	IsValidEmailSyntax(email string) bool
+}
+
+func NewSyncService(services *Services) SyncService {
+	return &syncService{
+		services: services,
+	}
 }
 
 func (s *syncService) BuildEmailsListExcludingPersonalEmails(usernameSource, from string, to []string, cc []string, bcc []string) ([]string, error) {
@@ -85,6 +85,11 @@ func (s *syncService) ConvertToUTC(datetimeStr string) (time.Time, error) {
 	return parsedTime.UTC(), nil
 }
 
+func (s *syncService) IsValidEmailSyntax(email string) bool {
+	_, err := mail.ParseAddress(email)
+	return err == nil
+}
+
 func hasPersonalEmailProvider(providers []string, domain string) bool {
 	for _, provider := range providers {
 		if provider == domain {
@@ -107,7 +112,7 @@ func (s *syncService) GetEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTr
 		return "", nil
 	}
 
-	emailId, err := s.repositories.Neo4jRepositories.EmailReadRepository.GetEmailIdIfExists(ctx, tenant, email)
+	emailId, err := s.services.Neo4jRepositories.EmailReadRepository.GetEmailIdIfExists(ctx, tenant, email)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "unable to retrieve email id"))
 		return "", fmt.Errorf("unable to retrieve email id for tenant: %v", err)
@@ -116,7 +121,7 @@ func (s *syncService) GetEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTr
 		return emailId, nil
 	}
 
-	// if it's a personal email, we create just the email node in tenant
+	//if it's a personal email, we create just the email node in tenant
 	domain := utils.ExtractDomainFromEmail(email)
 	if domain == "" {
 		err = errors.New("unable to extract domain from email: " + email)
@@ -124,10 +129,10 @@ func (s *syncService) GetEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTr
 		return "", err
 	}
 	if utils.Contains(s.services.Cache.GetPersonalEmailProviders(), domain) {
-		emailIdPtr, err := s.services.CommonServices.EmailService.Merge(ctx, tenant, commonservice.EmailFields{
+		emailIdPtr, err := s.services.EmailService.Merge(ctx, tenant, EmailFields{
 			Email:     email,
 			Source:    neo4jentity.DecodeDataSource(source),
-			AppSource: AppSource,
+			AppSource: AppSourceSyncEmail,
 		}, nil)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "unable to create email"))
@@ -141,18 +146,18 @@ func (s *syncService) GetEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTr
 	var organizationNode *neo4j.Node
 	var organizationId string
 
-	domainNode, err = s.repositories.DomainRepository.GetDomainInTx(ctx, tx, domain)
+	domainNode, err = s.services.Neo4jRepositories.DomainRepository.GetDomainInTx(ctx, tx, domain)
 	if err != nil {
 		return "", fmt.Errorf("unable to retrieve domain for tenant: %v", err)
 	}
 
 	if domainNode == nil {
-		domainNode, err = s.repositories.DomainRepository.CreateDomainInTx(ctx, tx, domain, source, AppSource, now)
+		domainNode, err = s.services.Neo4jRepositories.DomainRepository.CreateDomainInTx(ctx, tx, domain, source, AppSourceSyncEmail, now)
 		if err != nil {
 			return "", fmt.Errorf("unable to create domain: %v", err)
 		}
 	}
-	organizationNode, err = s.repositories.OrganizationRepository.GetOrganizationWithDomain(ctx, tx, tenant, utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*domainNode), "domain"))
+	organizationNode, err = s.services.Neo4jRepositories.OrganizationRepository.GetOrganizationWithDomain(ctx, tx, tenant, utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*domainNode), "domain"))
 	if err != nil {
 		return "", fmt.Errorf("unable to retrieve organization for tenant: %v", err)
 	}
@@ -176,19 +181,19 @@ func (s *syncService) GetEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTr
 			leadSource = "Email"
 		}
 
-		organizationNode, err = s.repositories.OrganizationRepository.CreateOrganization(ctx, tx, tenant, organizationName, relationship, stage, leadSource, source, "openline", AppSource, now, hide)
+		organizationNode, err = s.services.Neo4jRepositories.OrganizationRepository.CreateOrganization(ctx, tx, tenant, organizationName, relationship, stage, leadSource, source, "openline", AppSourceSyncEmail, now, hide)
 		if err != nil {
 			return "", fmt.Errorf("unable to create organization for tenant: %v", err)
 		}
 
 		organizationId = utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*organizationNode), "id")
 		domainName := utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*domainNode), "domain")
-		err = s.repositories.OrganizationRepository.LinkDomainToOrganization(ctx, tx, tenant, domainName, organizationId)
+		err = s.services.Neo4jRepositories.OrganizationRepository.LinkDomainToOrganization(ctx, tx, tenant, domainName, organizationId)
 		if err != nil {
 			return "", fmt.Errorf("unable to link domain to organization: %v", err)
 		}
 
-		_, err := s.repositories.ActionRepository.Create(ctx, tx, tenant, organizationId, commonModel.ORGANIZATION, entity.ActionCreated, source, AppSource)
+		_, err := s.services.Neo4jRepositories.ActionRepository.Create(ctx, tx, tenant, organizationId, commonModel.ORGANIZATION, neo4jenum.ActionCreated, source, AppSourceSyncEmail)
 		if err != nil {
 			return "", fmt.Errorf("unable to create action: %v", err)
 		}
@@ -199,7 +204,7 @@ func (s *syncService) GetEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTr
 	firstName := ""
 	lastname := ""
 
-	// split email address by @ and take the first part to determine first name and last name
+	//split email address by @ and take the first part to determine first name and last name
 	emailParts := strings.Split(email, "@")
 	if len(emailParts) > 0 {
 		firstPart := emailParts[0]
@@ -212,19 +217,11 @@ func (s *syncService) GetEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTr
 		}
 	}
 
-	emailId, err = s.repositories.EmailRepository.CreateContactWithEmailLinkedToOrganization(ctx, tx, tenant, organizationId, email, firstName, lastname, source, AppSource)
+	emailId, err = s.services.Neo4jRepositories.EmailRepository.CreateContactWithEmailLinkedToOrganization(ctx, tx, tenant, organizationId, email, firstName, lastname, source, AppSourceSyncEmail)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "unable to create contact linked to organization"))
 		return "", fmt.Errorf("unable to create contact linked to organization: %s", err.Error())
 	}
 
 	return emailId, nil
-}
-
-func NewSyncService(cfg *config.Config, repositories *repository.Repositories, services *Services) SyncService {
-	return &syncService{
-		cfg:          cfg,
-		repositories: repositories,
-		services:     services,
-	}
 }

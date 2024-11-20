@@ -3,11 +3,11 @@ import { useMemo } from 'react';
 import { observer } from 'mobx-react-lite';
 
 import { Tag01 } from '@ui/media/icons/Tag01';
-import { Tag as TagType } from '@graphql/types';
 import { Check } from '@ui/media/icons/Check.tsx';
 import { useStore } from '@shared/hooks/useStore';
 import { useModKey } from '@shared/hooks/useModKey';
 import { CommandSubItem } from '@ui/overlay/CommandMenu';
+import { EntityType, Tag as TagType } from '@graphql/types';
 
 export const AddPersonaTagSubItemGroup = observer(() => {
   const store = useStore();
@@ -64,7 +64,7 @@ export const AddPersonaTagSubItemGroup = observer(() => {
   );
 
   const sortedTags = store.tags
-    ?.toArray()
+    ?.getByEntityType(EntityType.Contact)
     .filter((e) => !!e.value.name)
     .sort((a, b) => {
       const aInOrg = contactTags.has(a.value.name);
