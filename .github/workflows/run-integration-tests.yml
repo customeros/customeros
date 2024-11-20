@@ -1,0 +1,134 @@
+name: Vitest Tests
+
+on:
+  workflow_dispatch:
+  repository_dispatch:
+    types:
+      - frontera-app * deployed
+      - frontera-middleware * deployed
+      - realtime-api * deployed
+
+concurrency:
+  group: ${{ github.workflow }}-global
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        if: steps.npm-cache.outputs.cache-hit != 'true'
+        run: npm ci
+        working-directory: ./packages/apps/frontera
+        env:
+          VITEST_SKIP_INSTALL_CHECKS: 1
+
+      - name: Run Vitest tests
+        working-directory: ./packages/apps/frontera
+        env:
+          VITE_TEST_API_URL: ${{ PROD_VITE_TEST_API_URL }}
+          VITE_TEST_API_KEY: ${{ PROD_VITE_TEST_API_KEY }}
+          VITE_TEST_USERNAME: ${{ PROD_VITE_TEST_USERNAME }}
+          VITE_REALTIME_WS_API_KEY: ${{ PROD_VITE_REALTIME_WS_API_KEY }}
+          VITE_REALTIME_WS_PATH: ${{ PROD_VITE_TEST_DUMMY_VITE_REALTIME_WS_PATH }}
+        run: |
+          set -o pipefail  # Ensure pipe status is propagated
+          npm run test:integration 2>&1 | tee test-output.txt
+          TEST_EXIT_CODE=$?
+          echo "Test run completed with exit code $TEST_EXIT_CODE"
+          exit $TEST_EXIT_CODE
+      - name: Parse Vitest results
+        working-directory: ./packages/apps/frontera
+        id: parse_results
+        if: always()  # Run this step even if tests fail
+        run: |
+          # Ensure the test-output.txt file exists
+          if [ ! -f "test-output.txt" ]; then
+            echo "Error: test-output.txt not found."
+            exit 1
+          fi
+          
+          # Look for the final test summary line
+          SUMMARY_LINE=$(grep -E "Tests.*\([0-9]+\)" test-output.txt | tail -n 1)
+          
+          if [ -z "$SUMMARY_LINE" ]; then
+            echo "Error: Could not find test summary line in output."
+            exit 1
+          fi
+          
+          echo "Found summary line: $SUMMARY_LINE"
+          
+          # Initialize variables
+          FAILED_TESTS=0
+          PASSED_TESTS=0
+          
+          # Extract the total tests (number in parentheses)
+          TOTAL_TESTS=$(echo "$SUMMARY_LINE" | grep -oP '\((\d+)\)' | grep -oP '\d+')
+          
+          # Check if there are failed tests
+          if echo "$SUMMARY_LINE" | grep -q "failed"; then
+            FAILED_COUNT=$(echo "$SUMMARY_LINE" | grep -oP '\d+(?=\sfailed)')
+            FAILED_TESTS=${FAILED_COUNT:-0}
+          
+            # Check if there are also passed tests
+            if echo "$SUMMARY_LINE" | grep -q "passed"; then
+              PASSED_COUNT=$(echo "$SUMMARY_LINE" | grep -oP '\d+(?=\spassed)')
+              PASSED_TESTS=${PASSED_COUNT:-0}
+            else
+              # All tests failed
+              PASSED_TESTS=0
+            fi
+          else
+            # Check if there are passed tests
+            if echo "$SUMMARY_LINE" | grep -q "passed"; then
+              PASSED_COUNT=$(echo "$SUMMARY_LINE" | grep -oP '\d+(?=\spassed)')
+              PASSED_TESTS=${PASSED_COUNT:-0}
+              FAILED_TESTS=0
+            else
+              echo "Error: Cannot determine pass/fail counts from summary line: $SUMMARY_LINE"
+              exit 1
+            fi
+          fi
+          
+          # Validate the numbers
+          if [ -z "$TOTAL_TESTS" ]; then
+            echo "Error: Failed to parse total test count from summary line: $SUMMARY_LINE"
+            exit 1
+          fi
+          
+          # Verify that passed + failed equals total
+          CALCULATED_TOTAL=$((PASSED_TESTS + FAILED_TESTS))
+          if [ "$CALCULATED_TOTAL" -ne "$TOTAL_TESTS" ]; then
+            echo "Warning: Mismatch in test counts. Passed ($PASSED_TESTS) + Failed ($FAILED_TESTS) = $CALCULATED_TOTAL, but reported total was $TOTAL_TESTS"
+            # Use calculated total for consistency
+            TOTAL_TESTS=$CALCULATED_TOTAL
+          fi
+          
+          echo "Tests detected - Total: $TOTAL_TESTS, Passed: $PASSED_TESTS, Failed: $FAILED_TESTS"
+          
+          # Output results for further use
+          echo "total_tests=$TOTAL_TESTS" >> $GITHUB_ENV
+          echo "passed_tests=$PASSED_TESTS" >> $GITHUB_ENV
+          echo "failed_tests=$FAILED_TESTS" >> $GITHUB_ENV
+      - name: Send test results to Slack
+        if: always()
+        env:
+          TOTAL_TESTS: ${{ env.total_tests }}
+          PASSED_TESTS: ${{ env.passed_tests }}
+          FAILED_TESTS: ${{ env.failed_tests }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_FE_TESTS_WEBHOOK_URL }}
+        run: |
+          BUILD_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          SUMMARY="<$BUILD_URL|Vitest Test Results>:\n✅ $PASSED_TESTS passed, ❌ $FAILED_TESTS failed ($TOTAL_TESTS total)"
+          
+          curl --fail -X POST -H "Content-type: application/json" --data "{
+            \"text\": \"$SUMMARY\"
+          }" ${{ secrets.SLACK_FE_TESTS_WEBHOOK_URL }}
