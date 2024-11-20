@@ -45,6 +45,7 @@ jobs:
           TEST_EXIT_CODE=$?
           echo "Test run completed with exit code $TEST_EXIT_CODE"
           exit $TEST_EXIT_CODE
+
       - name: Parse Vitest results
         working-directory: ./packages/apps/frontera
         id: parse_results
@@ -118,6 +119,7 @@ jobs:
           echo "total_tests=$TOTAL_TESTS" >> $GITHUB_ENV
           echo "passed_tests=$PASSED_TESTS" >> $GITHUB_ENV
           echo "failed_tests=$FAILED_TESTS" >> $GITHUB_ENV
+
       - name: Send test results to Slack
         if: always()
         env:
