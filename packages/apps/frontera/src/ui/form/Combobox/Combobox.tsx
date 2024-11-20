@@ -46,6 +46,10 @@ export const Combobox = ({
         valueContainer: () => '!cursor-text',
       }}
       {...props}
+      onKeyDown={(e) => {
+        e.stopPropagation();
+        props?.onKeyDown?.(e);
+      }}
     />
   );
 };
