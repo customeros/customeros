@@ -2,18 +2,20 @@ package restmailstack
 
 import (
 	"fmt"
+	"net/http"
+	"regexp"
+	"strings"
+
 	"github.com/gin-gonic/gin"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/coserrors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-	"net/http"
-	"regexp"
-	"strings"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
 
 // RegisterNewMailbox registers a new mailbox for the given domain
@@ -122,7 +124,11 @@ func RegisterNewMailbox(services *service.Services) gin.HandlerFunc {
 			ForwardingEnabled: forwardingEnabled,
 			ForwardingTo:      forwardingTo,
 		}
-		err := services.CommonServices.MailboxService.AddMailbox(ctx, domain, username, password, mailboxRequest.LinkedUser, forwardingEnabled, mailboxRequest.WebmailEnabled, forwardingTo)
+
+		addMailboxReq := services.CommonServices.MailboxService.BuildAddMailboxRequest(
+			ctx, domain, username, password, mailboxRequest.LinkedUser, forwardingEnabled, mailboxRequest.WebmailEnabled, forwardingTo)
+
+		err := services.CommonServices.MailboxService.AddMailbox(ctx, addMailboxReq)
 		if err != nil {
 			if errors.Is(err, coserrors.ErrDomainNotFound) {
 				c.JSON(http.StatusNotFound,
@@ -162,7 +168,7 @@ func RegisterNewMailbox(services *service.Services) gin.HandlerFunc {
 
 func validateMailboxUsername(username string) error {
 	// Regular expression for a valid username (allows alphanumeric, dots, underscores, hyphens)
-	var re = regexp.MustCompile(`^[a-zA-Z0-9._-]+$`)
+	re := regexp.MustCompile(`^[a-zA-Z0-9._-]+$`)
 	if !re.MatchString(username) {
 		return errors.New("invalid username format: only alphanumeric characters, dots, underscores, and hyphens are allowed")
 	}
