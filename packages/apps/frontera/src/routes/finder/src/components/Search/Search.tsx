@@ -119,10 +119,13 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
   const createNewEntityModalType:
     | null
     | 'CreateNewFlow'
-    | 'CreateNewContact'
+    | 'AddContactViaLinkedInUrl'
     | 'AddNewOrganization' = match(tableType)
     .with(TableViewType.Flow, (): 'CreateNewFlow' => 'CreateNewFlow')
-    .with(TableViewType.Contacts, (): 'CreateNewContact' => 'CreateNewContact')
+    .with(
+      TableViewType.Contacts,
+      (): 'AddContactViaLinkedInUrl' => 'AddContactViaLinkedInUrl',
+    )
     .with(
       TableViewType.Organizations,
       (): 'AddNewOrganization' => 'AddNewOrganization',
