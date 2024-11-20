@@ -17,6 +17,7 @@ import { Settings03 } from '@ui/media/icons/Settings03';
 import { UserPlus01 } from '@ui/media/icons/UserPlus01';
 import { ChevronRight } from '@ui/media/icons/ChevronRight';
 
+import { HeaderInputName } from './components/header';
 import { FlowStatusMenu, FlowMoreActionsMenu } from './components';
 
 import '@xyflow/react/dist/style.css';
@@ -129,18 +130,8 @@ export const Header = observer(
                 Flows
               </span>
               <ChevronRight className='text-gray-400' />
-              <span
-                data-test='flows-flow-name'
-                onClick={() => (showFinder ? navigate(-1) : null)}
-                className={cn({
-                  'text-gray-500 cursor-pointer hover:text-gray-700':
-                    showFinder,
-                })}
-              >
-                {store.flows.isLoading
-                  ? 'Loading flow…'
-                  : flow?.value?.name || 'Unnamed'}
-              </span>
+
+              <HeaderInputName />
               {!showFinder && <FlowMoreActionsMenu id={id} />}
               {showFinder ? (
                 <>

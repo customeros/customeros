@@ -1,8 +1,6 @@
-import React from 'react';
-
 import { observer } from 'mobx-react-lite';
 import { useReactFlow } from '@xyflow/react';
-import { FlowActionType } from '@store/Flows/types.ts';
+import { FlowActionType } from '@store/Flows/types';
 
 import { FlowStatus } from '@graphql/types';
 import { Play } from '@ui/media/icons/Play';
