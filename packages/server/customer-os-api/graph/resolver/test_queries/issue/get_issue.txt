@@ -8,7 +8,9 @@ query GetIssue($issueId: ID!){
        priority
        description
        tags {
-            id
+            metadata {
+                id
+            }
             name
        }
        interactionEvents {

@@ -7,7 +7,9 @@ query GetLogEntry($id: ID!){
     content
     contentType
     tags {
-        id
+        metadata {
+            id
+        }
         name
     }
     createdBy {
