@@ -2,6 +2,7 @@ export * from './StopFlow';
 export * from './StartFlow';
 export * from './RenameFlow';
 export * from './CreateNewFlow';
+export * from './DuplicateFlow';
 export * from './ChangeFlowStatus';
 export * from './AddContactsToFlow';
 export * from './ActiveFlowUpdateInfo';

@@ -4,3 +4,4 @@ export { FlowStatusMenu } from './FlowStatusMenu';
 export { FlowBuilderToolbar } from './FlowBuilderToolbar';
 export { HelperLines } from './HelperLines';
 export { FlowSettingsPanel } from './settings';
+export { FlowMoreActionsMenu } from './FlowMoreActionsMenu';
