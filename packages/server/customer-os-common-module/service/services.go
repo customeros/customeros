@@ -54,12 +54,11 @@ type Services struct {
 	TagService                 TagService
 	RegistrationService        RegistrationService
 	MailboxService             MailboxService
-	EmailInService             EmailInService
+	MailService                MailService
 
 	GoogleService   GoogleService
 	AzureService    AzureService
 	OpenSrsService  OpenSrsService
-	MailService     MailService
 	PostmarkService PostmarkService
 	NovuService     NovuService
 
@@ -119,7 +118,7 @@ func InitServices(globalConfig *config.GlobalConfig, db *gorm.DB, driver *neo4j.
 	services.WorkspaceService = NewWorkspaceService(services)
 	services.RegistrationService = NewRegistrationService(services)
 	services.MailboxService = NewMailboxService(log, services)
-	services.EmailInService = NewEmailInService(services)
+	services.MailService = NewMailService(services)
 
 	// TODO remove, and refactor
 	services.SyncService = NewSyncService(services)

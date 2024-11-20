@@ -1,6 +1,7 @@
 package service
 
 import (
+	"golang.org/x/net/context"
 	"regexp"
 	"strings"
 
@@ -17,7 +18,7 @@ type HeaderAnalysis struct {
 // TODO parse SMTP status code from message/deliver-status
 // and classify bounced email as hard or soft bounce
 
-func (a *mailService) ProcessEmailCheck(email *EmailMessageData) HeaderAnalysis {
+func (a *mailService) ProcessEmailCheck(ctx context.Context, email *EmailMessageData) HeaderAnalysis {
 	analysis := HeaderAnalysis{
 		ProcessEmail: true, // Default to processing
 	}

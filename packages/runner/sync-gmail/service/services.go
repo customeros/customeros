@@ -22,7 +22,6 @@ type Services struct {
 	Cache       *caches.Cache
 
 	SyncService    SyncService
-	EmailService   EmailService
 	MeetingService MeetingService
 }
 
@@ -36,7 +35,6 @@ func InitServices(cfg *config.Config, driver *neo4j.DriverWithContext, gormDb *g
 	services.Repositories = repositories
 
 	services.SyncService = NewSyncService(cfg, repositories, services)
-	services.EmailService = NewEmailService(cfg, repositories, services)
 	services.MeetingService = NewMeetingService(cfg, repositories, services)
 
 	services.CommonServices = commonService.InitServices(&config2.GlobalConfig{

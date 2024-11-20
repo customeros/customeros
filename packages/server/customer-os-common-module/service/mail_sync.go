@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"github.com/pkg/errors"
 	"strings"
 	"time"
 
@@ -14,42 +15,88 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
 
-const AppSource = "sync-email"
+const AppSource = constants.AppSourceSyncEmail
 
-func (s *mailService) SyncEmail(tenant string, emailId uuid.UUID) (postgresentity.RawState, *string, error) {
-	ctx := context.Background()
-	span, ctx := s.initializeTracing(ctx, "MailService.SyncEmail")
+func (s *mailService) SyncEmailsForUser(ctx context.Context, tenant string, userEmailAddress string) {
+	span, ctx := s.initializeTracing(ctx, "MailService.SyncEmailsForUser")
 	defer span.Finish()
-	span.LogFields(
-		log.String("emailId", emailId.String()),
-		log.String("tenant", tenant))
+	span.LogKV("userEmailAddress", userEmailAddress)
+
+	rawEmailsIdsForProcess, err := s.services.PostgresRepositories.RawEmailRepository.GetEmailsIdsForUserForSync(tenant, userEmailAddress)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to get emails for sync"))
+		return
+	}
+
+	if len(rawEmailsIdsForProcess) == 0 {
+		err = fmt.Errorf("no emails found for sync")
+		tracing.TraceErr(span, err)
+		return
+	}
+
+	distinctExternalSystems := make([]string, 0)
+	for _, email := range rawEmailsIdsForProcess {
+		if !utils.Contains(distinctExternalSystems, email.ExternalSystem) {
+			distinctExternalSystems = append(distinctExternalSystems, email.ExternalSystem)
+		}
+	}
+
+	externalSystemStr := ""
+	if len(distinctExternalSystems) > 0 {
+		externalSystemStr = distinctExternalSystems[0]
+	}
+
+	// Create email node in neo4j
+	err = s.createUserEmailAddressAsNode(ctx, tenant, userEmailAddress, externalSystemStr, span)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to create user source as email node"))
+		return
+	}
+
+	for _, externalSystem := range distinctExternalSystems {
+		// TODO alexb add caching for each tenant of external systems
+		err = s.services.Neo4jRepositories.ExternalSystemWriteRepository.CreateIfNotExists(
+			ctx, tenant, externalSystem, externalSystem,
+		)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to merge external system"))
+			return
+		}
+	}
+
+	s.processRawEmails(ctx, tenant, rawEmailsIdsForProcess, span)
+}
+
+func (s *mailService) ProcessEmail(ctx context.Context, tenant string, rawEmailId uuid.UUID) (postgresentity.RawState, *string, error) {
+	span, ctx := s.initializeTracing(ctx, "MailService.ProcessEmail")
+	defer span.Finish()
+	span.LogFields(log.String("rawEmailId", rawEmailId.String()))
 
 	var reason string
 
-	rawEmail, err := s.services.PostgresRepositories.RawEmailRepository.GetEmailForSync(emailId)
+	rawEmail, err := s.services.PostgresRepositories.RawEmailRepository.GetEmailForProcess(rawEmailId)
 	if err != nil {
-		err = fmt.Errorf("failed to get raw email for sync: %w", err)
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "failed to get email for process"))
 		return postgresentity.ERROR, nil, err
 	}
 
-	email, err := s.LoadEmail(ctx, rawEmail)
+	emailMessageData, err := s.LoadEmail(ctx, rawEmail)
 	if err != nil {
-		err = fmt.Errorf("failed to load email for sync: %w", err)
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "failed to load email"))
 		return postgresentity.ERROR, nil, err
 	}
 
-	if email.Identifiers.MessageId == "" {
+	if emailMessageData.Identifiers.MessageId == "" {
 		return postgresentity.ERROR, nil, fmt.Errorf("email message ID is empty")
 	}
 
-	check := s.ProcessEmailCheck(&email)
+	check := s.ProcessEmailCheck(ctx, &emailMessageData)
 	if !check.ProcessEmail {
 		if check.IsBounce {
 			reason = "email bounced"
@@ -63,23 +110,20 @@ func (s *mailService) SyncEmail(tenant string, emailId uuid.UUID) (postgresentit
 		return postgresentity.SKIPPED, &reason, nil
 	}
 
-	if len(email.Participants.AllEmails) == 0 {
+	if len(emailMessageData.Participants.AllEmails) == 0 {
 		reason := "no email address belongs to a workspace domain"
 		return postgresentity.SKIPPED, &reason, nil
 	}
 
-	if s.warmingEmailCheck(tenant, email) {
+	if s.warmingEmailCheck(tenant, emailMessageData) {
 		reason := "warming email"
 		return postgresentity.SKIPPED, &reason, nil
 	}
 
-	now := utils.Now()
-
-	sentAt, err := convertToUTC(email.Content.SentDate)
-	email.CreatedAt = sentAt
+	sentAt, err := convertToUTC(emailMessageData.Content.SentDate)
+	emailMessageData.CreatedAt = sentAt
 	if err != nil {
-		err = fmt.Errorf("%v :%v", err, emailId.String())
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "failed to convert email sent date to UTC"))
 		return postgresentity.ERROR, nil, err
 	}
 
@@ -87,83 +131,29 @@ func (s *mailService) SyncEmail(tenant string, emailId uuid.UUID) (postgresentit
 		ctx, tenant, rawEmail.ExternalSystem, rawEmail.MessageId,
 	)
 	if err != nil {
-		err = fmt.Errorf("failed to check if interaction event exists for external id %v for tenant %v :%v", rawEmail.MessageId, tenant, err)
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "failed to check if interaction event exists"))
 		return postgresentity.ERROR, nil, err
 	}
 
 	if interactionEventId != "" {
-		err = fmt.Errorf("interaction event already exists for raw email id %v", emailId.String())
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "interaction event already exists"))
 		reason := "interaction event already exists"
 		return postgresentity.SKIPPED, &reason, nil
 	}
 
-	chanErr := s.buildChannelData(&email, span)
+	chanErr := s.buildChannelData(&emailMessageData, span)
 	if chanErr != nil {
-		err = fmt.Errorf("failed to build email channel data for email with id %v: %v", emailId.String(), chanErr)
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(chanErr, "failed to build channel data"))
 		return postgresentity.ERROR, nil, chanErr
 	}
 
-	return s.processInboundEmail(ctx, tenant, &email, rawEmail, now, span)
+	return s.processInboundEmail(ctx, tenant, &emailMessageData, rawEmail, utils.Now(), span)
 }
 
-func (s *mailService) SyncEmailsForUser(tenant string, userSource string) {
-	ctx := context.Background()
-	span, ctx := s.initializeTracing(ctx, "MailService.SyncEmailsForUser")
+func (s *mailService) ProcessEmailByMessageId(ctx context.Context, tenant, usernameSource, messageId string) (postgresentity.RawState, *string, error) {
+	span, ctx := s.initializeTracing(ctx, "MailService.ProcessEmailByMessageId")
 	defer span.Finish()
 	span.LogFields(
-		log.String("tenant", tenant),
-		log.String("userSource", userSource))
-
-	emailsIdsForSync, err := s.services.PostgresRepositories.RawEmailRepository.GetEmailsIdsForUserForSync(tenant, userSource)
-	if err != nil {
-		err = fmt.Errorf("failed to get emails for sync: %v", err)
-		tracing.TraceErr(span, err)
-	}
-
-	if len(emailsIdsForSync) == 0 {
-		return
-	}
-
-	distinctExternalSystems := make([]string, 0)
-	for _, email := range emailsIdsForSync {
-		if !utils.Contains(distinctExternalSystems, email.ExternalSystem) {
-			distinctExternalSystems = append(distinctExternalSystems, email.ExternalSystem)
-		}
-	}
-
-	externalSystemStr := ""
-	if len(distinctExternalSystems) > 0 {
-		externalSystemStr = distinctExternalSystems[0]
-	}
-
-	_, err = s.createUserSourceAsEmailNode(tenant, userSource, externalSystemStr, span)
-	if err != nil {
-		err = fmt.Errorf("failed to create user source as email node: %v", err)
-		tracing.TraceErr(span, err)
-		return
-	}
-
-	for _, externalSystem := range distinctExternalSystems {
-		err = s.services.Neo4jRepositories.ExternalSystemWriteRepository.CreateIfNotExists(
-			context.Background(), tenant, externalSystem, externalSystem,
-		)
-		if err != nil {
-			return
-		}
-	}
-
-	s.syncEmails(tenant, emailsIdsForSync, span)
-}
-
-func (s *mailService) SyncEmailByMessageId(tenant, usernameSource, messageId string) (postgresentity.RawState, *string, error) {
-	ctx := context.Background()
-	span, ctx := s.initializeTracing(ctx, "MailService.SyncEmailByMessageId")
-	defer span.Finish()
-	span.LogFields(
-		log.String("tenant", tenant),
 		log.String("userSource", usernameSource),
 		log.String("messageId", messageId))
 
@@ -178,32 +168,26 @@ func (s *mailService) SyncEmailByMessageId(tenant, usernameSource, messageId str
 		return postgresentity.ERROR, nil, fmt.Errorf("email with message id %v not found", messageId)
 	}
 
-	return s.SyncEmail(tenant, rawEmail.ID)
+	return s.ProcessEmail(ctx, tenant, rawEmail.ID)
 }
 
-func (s *mailService) SyncEmailByEmailRawId(tenant string, emailId uuid.UUID) (postgresentity.RawState, *string, error) {
-	return s.SyncEmail(tenant, emailId)
+func (s *mailService) ProcessEmailByEmailRawId(ctx context.Context, tenant string, emailId uuid.UUID) (postgresentity.RawState, *string, error) {
+	return s.ProcessEmail(ctx, tenant, emailId)
 }
 
-func (s *mailService) syncEmails(tenant string, emails []postgresentity.RawEmail, span opentracing.Span) {
-	for _, email := range emails {
-		// TODO here is control to call new service !!!
-		// state, reason, err := s.syncEmail(tenant, email.ID)
-		state, reason, err := s.SyncEmail(tenant, email.ID)
-
+func (s *mailService) processRawEmails(ctx context.Context, tenant string, rawEmails []postgresentity.RawEmail, span opentracing.Span) {
+	for _, rawEmail := range rawEmails {
+		state, reason, err := s.ProcessEmail(ctx, tenant, rawEmail.ID)
 		var errMessage *string
 		if err != nil {
 			s2 := err.Error()
 			errMessage = &s2
 		}
 
-		err = s.services.PostgresRepositories.RawEmailRepository.MarkSentToEventStore(email.ID, state, reason, errMessage)
+		err = s.services.PostgresRepositories.RawEmailRepository.MarkProcessed(rawEmail.ID, state, reason, errMessage)
 		if err != nil {
-			fmt.Errorf("unable to mark email as sent to event store: %v", err)
-			tracing.TraceErr(span, err)
+			tracing.TraceErr(span, errors.Wrap(err, "failed to mark raw email as processed in postgres"))
 		}
-
-		fmt.Println("raw email processed: " + email.ID.String())
 	}
 }
 
@@ -467,21 +451,19 @@ func (s *mailService) warmingEmailCheck(tenant string, email EmailMessageData) b
 	return false
 }
 
-func (s *mailService) createUserSourceAsEmailNode(tenant, userSource, externalSystem string, span opentracing.Span) (string, error) {
-	ctx := context.Background()
-
-	emailId, err := s.services.EmailService.Merge(ctx, tenant, EmailFields{
-		Email:     userSource,
+func (s *mailService) createUserEmailAddressAsNode(ctx context.Context, tenant, userEmailAddress, externalSystem string, span opentracing.Span) error {
+	_, err := s.services.EmailService.Merge(ctx, tenant, EmailFields{
+		Email:     userEmailAddress,
 		AppSource: AppSource,
 		Source:    neo4jentity.DecodeDataSource(externalSystem),
 	}, nil)
 	if err != nil {
 		err = fmt.Errorf("unable to create email: %v", err)
 		tracing.TraceErr(span, err)
-		return "", err
+		return err
 	}
 
-	return *emailId, nil
+	return nil
 }
 
 func (s *mailService) mapDbNodeToEmailEntity(node dbtype.Node) *neo4jentity.EmailEntity {

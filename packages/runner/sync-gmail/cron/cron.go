@@ -7,6 +7,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/logger"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	commonconstants "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/constants"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/robfig/cron"
@@ -67,13 +69,16 @@ func syncEmails(services *service.Services) {
 		return
 	}
 
+	if len(distinctUsersForImport) == 0 {
+		logrus.Infof("no distinct users for import")
+		return
+	}
+
 	var wg sync.WaitGroup
 	wg.Add(len(distinctUsersForImport))
 
 	for _, dt := range distinctUsersForImport {
-
-		// TODO add local caching per tenant for external systems
-
+		// TODO alexb add local caching per tenant for external systems
 		err = services.Repositories.Neo4jRepositories.ExternalSystemWriteRepository.CreateIfNotExists(ctx, dt.Tenant, neo4jenum.GMail.String(), neo4jenum.GMail.String())
 		if err != nil {
 			logrus.Errorf("failed to merge external system: %s", err.Error())
@@ -97,7 +102,12 @@ func syncEmails(services *service.Services) {
 
 			logrus.Infof("syncing emails for %s in tenant %s", distinctUser.Tenant, distinctUser.Username)
 
-			services.EmailService.SyncEmailsForUser(distinctUser.Tenant, distinctUser.Username)
+			userCtx := common.WithCustomContext(ctx, &common.CustomContext{
+				Tenant:    distinctUser.Tenant,
+				AppSource: commonconstants.AppSourceSyncEmail,
+			})
+
+			services.CommonServices.MailService.SyncEmailsForUser(userCtx, distinctUser.Tenant, distinctUser.Username)
 
 			logrus.Infof("syncing emails for user: %s in tenant: %s completed", distinctUser.Tenant, distinctUser.Username)
 		}(dt)
