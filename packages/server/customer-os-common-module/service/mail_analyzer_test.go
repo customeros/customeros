@@ -1,10 +1,10 @@
 package service
 
 import (
-	"golang.org/x/net/context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/net/context"
 )
 
 func TestProcessEmailCheck(t *testing.T) {
@@ -122,7 +122,7 @@ func TestIsAutoResponder(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := svc.isAutoResponder(tt.headers)
+			result, _ := svc.isAutoResponder(tt.headers)
 			assert.Equal(t, tt.expected, result)
 		})
 	}
@@ -168,7 +168,7 @@ func TestIsBounce(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := svc.isBounce(tt.headers, tt.subject, tt.from)
+			result, _ := svc.isBounce(tt.headers, tt.subject, tt.from)
 			assert.Equal(t, tt.expected, result)
 		})
 	}
