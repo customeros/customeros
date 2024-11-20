@@ -425,7 +425,7 @@ export const ContactCard = observer(
                 value={
                   contactStore?.value?.tags?.map((t) => ({
                     label: t.name,
-                    value: t.id,
+                    value: t.metadata.id,
                   })) ?? []
                 }
                 onChange={(e) => {
