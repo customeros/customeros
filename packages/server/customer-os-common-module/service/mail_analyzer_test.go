@@ -8,73 +8,94 @@ import (
 )
 
 func TestProcessEmailCheck(t *testing.T) {
-	svc := &mailService{}
-
 	tests := []struct {
 		name     string
 		email    *EmailMessageData
 		expected HeaderAnalysis
 	}{
 		{
-			name: "Bounce email",
+			name: "Bounce - Failed Recipients",
 			email: &EmailMessageData{
-				Headers: EmailHeaders{
-					DeliveryStatus: true,
-				},
-				Content: EmailContent{
-					Subject: "Delivery Status Notification (Failure)",
-				},
-				Participants: EmailParticipants{
-					From: EmailParticipant{
-						Email: "mailer-daemon@example.com",
-					},
-				},
+				Headers: EmailHeaders{XFailedRecepients: true},
 			},
 			expected: HeaderAnalysis{
 				ProcessEmail: false,
 				IsBounce:     true,
+				SkipReason:   "Bounce: X-Failed-Recipients",
 			},
 		},
 		{
-			name: "Auto-responder email",
+			name: "Bounce - Delivery Report",
 			email: &EmailMessageData{
-				Headers: EmailHeaders{
-					AutoSubmitted: true,
-				},
+				Headers: EmailHeaders{ContentDescription: "delivery report"},
+			},
+			expected: HeaderAnalysis{
+				ProcessEmail: false,
+				IsBounce:     true,
+				SkipReason:   "Bounce: Content-Description: Delivery Report",
+			},
+		},
+		{
+			name: "Autoresponder - X-Autoreply",
+			email: &EmailMessageData{
+				Headers: EmailHeaders{XAutoreply: "yes"},
 			},
 			expected: HeaderAnalysis{
 				ProcessEmail:    false,
 				IsAutoResponder: true,
+				SkipReason:      "Autoresponder: X-Autoreply",
 			},
 		},
 		{
-			name: "Bulk mail",
+			name: "Autoresponder - X-Loop",
 			email: &EmailMessageData{
-				Headers: EmailHeaders{
-					ListUnsubscribe: true,
+				Headers: EmailHeaders{XLoop: true},
+			},
+			expected: HeaderAnalysis{
+				ProcessEmail:    false,
+				IsAutoResponder: true,
+				SkipReason:      "Autoresponder: X-Loop",
+			},
+		},
+		{
+			name: "Bulk - List Unsubscribe",
+			email: &EmailMessageData{
+				Headers: EmailHeaders{ListUnsubscribe: true},
+				Participants: EmailParticipants{
+					From:    EmailParticipant{Email: "sender@example.com"},
+					ReplyTo: []EmailParticipant{{Email: "sender@example.com"}},
 				},
 			},
 			expected: HeaderAnalysis{
 				ProcessEmail: false,
 				IsBulkMail:   true,
+				SkipReason:   "Bulk: Unsubscribe",
 			},
 		},
 		{
-			name: "Normal email",
+			name: "Bulk - Different Reply-To",
 			email: &EmailMessageData{
 				Participants: EmailParticipants{
-					From: EmailParticipant{
-						Email: "matt@customeros.ai",
-					},
-					ReplyTo: []EmailParticipant{
-						{
-							Email: "matt@customeros.ai",
-						},
-					},
+					From:    EmailParticipant{Email: "sender@example.com"},
+					ReplyTo: []EmailParticipant{{Email: "different@example.com"}},
+				},
+			},
+			expected: HeaderAnalysis{
+				ProcessEmail: false,
+				IsBulkMail:   true,
+				SkipReason:   "Bulk: Reply-To != From",
+			},
+		},
+		{
+			name: "Normal Email",
+			email: &EmailMessageData{
+				Participants: EmailParticipants{
+					From:    EmailParticipant{Email: "sender@example.com"},
+					ReplyTo: []EmailParticipant{{Email: "sender@example.com"}},
 				},
 				Headers: EmailHeaders{
-					ReturnPath: "matt@customeros.ai",
-					ReplyTo:    "matt@customeros.ai",
+					ReturnPath: "sender@example.com",
+					Sender:     "sender@example.com",
 				},
 			},
 			expected: HeaderAnalysis{
@@ -83,6 +104,7 @@ func TestProcessEmailCheck(t *testing.T) {
 		},
 	}
 
+	svc := &mailService{}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := svc.ProcessEmailCheck(context.Background(), tt.email)
@@ -91,99 +113,61 @@ func TestProcessEmailCheck(t *testing.T) {
 	}
 }
 
-func TestIsAutoResponder(t *testing.T) {
-	svc := &mailService{}
-
+func TestExtractEmailAddresses(t *testing.T) {
 	tests := []struct {
 		name     string
-		headers  EmailHeaders
-		expected bool
+		input    string
+		expected []string
 	}{
 		{
-			name: "X-Autoreply header",
-			headers: EmailHeaders{
-				XAutoreply: "yes",
-			},
-			expected: true,
+			name:     "Simple email",
+			input:    "user@example.com",
+			expected: []string{"user@example.com"},
 		},
 		{
-			name: "Auto-Submitted header",
-			headers: EmailHeaders{
-				AutoSubmitted: true,
-			},
-			expected: true,
+			name:     "Email with display name",
+			input:    "User Name <user@example.com>",
+			expected: []string{"user@example.com"},
 		},
 		{
-			name:     "Not auto-response",
-			headers:  EmailHeaders{},
-			expected: false,
+			name:     "Multiple emails",
+			input:    "first@example.com, second@example.com",
+			expected: []string{"first@example.com", "second@example.com"},
+		},
+		{
+			name:     "Multiple emails with display names",
+			input:    "First User <first@example.com>, Second User <second@example.com>",
+			expected: []string{"first@example.com", "second@example.com"},
+		},
+		{
+			name:     "Empty input",
+			input:    "",
+			expected: []string{""},
+		},
+		{
+			name:     "Invalid email",
+			input:    "not-an-email",
+			expected: []string{},
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result, _ := svc.isAutoResponder(tt.headers)
-			assert.Equal(t, tt.expected, result)
-		})
-	}
-}
-
-func TestIsBounce(t *testing.T) {
 	svc := &mailService{}
-
-	tests := []struct {
-		name     string
-		headers  EmailHeaders
-		subject  string
-		from     string
-		expected bool
-	}{
-		{
-			name: "Delivery Status header",
-			headers: EmailHeaders{
-				DeliveryStatus: true,
-			},
-			expected: true,
-		},
-		{
-			name:     "Bounce subject",
-			headers:  EmailHeaders{},
-			subject:  "Delivery Status Notification (Failure)",
-			expected: true,
-		},
-		{
-			name:     "Mailer daemon from",
-			headers:  EmailHeaders{},
-			from:     "mailer-daemon@example.com",
-			expected: true,
-		},
-		{
-			name:     "Not bounce",
-			headers:  EmailHeaders{},
-			subject:  "Hello",
-			from:     "user@example.com",
-			expected: false,
-		},
-	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, _ := svc.isBounce(tt.headers, tt.subject, tt.from)
+			result := svc.extractEmailAddresses(tt.input)
 			assert.Equal(t, tt.expected, result)
 		})
 	}
 }
 
 func TestIsBounceSubject(t *testing.T) {
-	svc := &mailService{}
-
 	tests := []struct {
 		name     string
 		subject  string
 		expected bool
 	}{
 		{
-			name:     "Delivery status notification",
+			name:     "Delivery Status Notification",
 			subject:  "Delivery Status Notification (Failure)",
 			expected: true,
 		},
@@ -193,12 +177,28 @@ func TestIsBounceSubject(t *testing.T) {
 			expected: true,
 		},
 		{
-			name:     "Normal subject",
-			subject:  "Hello",
+			name:     "Delivery Failure",
+			subject:  "Delivery Failure Notice",
+			expected: true,
+		},
+		{
+			name:     "Returned Mail",
+			subject:  "Returned mail: User unknown",
+			expected: true,
+		},
+		{
+			name:     "Normal Subject",
+			subject:  "Meeting Tomorrow",
+			expected: false,
+		},
+		{
+			name:     "Empty Subject",
+			subject:  "",
 			expected: false,
 		},
 	}
 
+	svc := &mailService{}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := svc.isBounceSubject(tt.subject)
