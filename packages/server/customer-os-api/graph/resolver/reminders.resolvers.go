@@ -98,7 +98,7 @@ func (r *reminderResolver) Owner(ctx context.Context, obj *model.Reminder) (*mod
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 
-	ownerEntity, err := r.Services.UserService.GetReminderOwner(ctx, obj.Metadata.ID)
+	ownerEntity, err := r.Services.CommonServices.UserService.GetReminderOwner(ctx, obj.Metadata.ID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to fetch user with id %s", obj.Metadata.ID)

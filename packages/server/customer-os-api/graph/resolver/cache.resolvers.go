@@ -35,13 +35,13 @@ func (r *queryResolver) GlobalCache(ctx context.Context) (*model.GlobalCache, er
 	}
 	response.User = mapper.MapEntityToUser(user)
 
-	isOwner, err := r.Services.UserService.IsOwner(ctx, user.Id)
+	isOwner, err := r.Services.CommonServices.UserService.IsOwner(ctx, user.Id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "failed GlobalCache - is owner")
 		return nil, nil
 	}
-	response.IsOwner = *isOwner
+	response.IsOwner = isOwner
 
 	if userEmail != "" {
 		privateKey, err := r.Services.CommonServices.PostgresRepositories.GoogleServiceAccountKeyRepository.GetApiKeyByTenantService(ctx, tenantName, postgresEntity.GSUITE_SERVICE_PRIVATE_KEY)

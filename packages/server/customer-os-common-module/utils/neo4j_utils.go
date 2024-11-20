@@ -25,6 +25,11 @@ type PairDbNodesWithTotalCount struct {
 	Count int64
 }
 
+type StringsWithTotalCount struct {
+	Strings []string
+	Count   int64
+}
+
 type RecordsWithTotalCount struct {
 	Records []*db.Record
 	Count   int64

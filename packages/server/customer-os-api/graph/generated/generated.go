@@ -1264,6 +1264,57 @@ type ComplexityRoot struct {
 		Type                    func(childComplexity int) int
 	}
 
+	OrganizationSearchResult struct {
+		Ids            func(childComplexity int) int
+		TotalAvailable func(childComplexity int) int
+		TotalElements  func(childComplexity int) int
+	}
+
+	OrganizationUiDetails struct {
+		ChurnedAt                       func(childComplexity int) int
+		Contacts                        func(childComplexity int) int
+		Contracts                       func(childComplexity int) int
+		CreatedAt                       func(childComplexity int) int
+		Description                     func(childComplexity int) int
+		Employees                       func(childComplexity int) int
+		EnrichedAt                      func(childComplexity int) int
+		EnrichedFailedAt                func(childComplexity int) int
+		EnrichedRequestedAt             func(childComplexity int) int
+		ID                              func(childComplexity int) int
+		IconURL                         func(childComplexity int) int
+		Industry                        func(childComplexity int) int
+		LastFundingRound                func(childComplexity int) int
+		LastTouchPointAt                func(childComplexity int) int
+		LastTouchPointType              func(childComplexity int) int
+		LeadSource                      func(childComplexity int) int
+		Locations                       func(childComplexity int) int
+		LogoURL                         func(childComplexity int) int
+		Ltv                             func(childComplexity int) int
+		Market                          func(childComplexity int) int
+		Name                            func(childComplexity int) int
+		Notes                           func(childComplexity int) int
+		OnboardingComments              func(childComplexity int) int
+		OnboardingStatus                func(childComplexity int) int
+		OnboardingStatusUpdatedAt       func(childComplexity int) int
+		Owner                           func(childComplexity int) int
+		ParentID                        func(childComplexity int) int
+		ParentName                      func(childComplexity int) int
+		Public                          func(childComplexity int) int
+		Relationship                    func(childComplexity int) int
+		RenewalSummaryArrForecast       func(childComplexity int) int
+		RenewalSummaryMaxArrForecast    func(childComplexity int) int
+		RenewalSummaryNextRenewalAt     func(childComplexity int) int
+		RenewalSummaryRenewalLikelihood func(childComplexity int) int
+		SlackChannelID                  func(childComplexity int) int
+		SocialMedia                     func(childComplexity int) int
+		Stage                           func(childComplexity int) int
+		Subsidiaries                    func(childComplexity int) int
+		Tags                            func(childComplexity int) int
+		ValueProposition                func(childComplexity int) int
+		Website                         func(childComplexity int) int
+		YearFounded                     func(childComplexity int) int
+	}
+
 	OrganizationWithJobRole struct {
 		JobRole      func(childComplexity int) int
 		Organization func(childComplexity int) int
@@ -1371,6 +1422,8 @@ type ComplexityRoot struct {
 		TenantBillingProfiles              func(childComplexity int) int
 		TenantSettings                     func(childComplexity int) int
 		TimelineEvents                     func(childComplexity int, ids []string) int
+		UIOrganizations                    func(childComplexity int, ids []string) int
+		UIOrganizationsSearch              func(childComplexity int, limit *int, where *model.Filter, sort *model.SortBy) int
 		User                               func(childComplexity int, id string) int
 		UserByEmail                        func(childComplexity int, email string) int
 		Users                              func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
@@ -2006,6 +2059,8 @@ type QueryResolver interface {
 	OrganizationDistinctOwners(ctx context.Context) ([]*model.User, error)
 	OrganizationCheckWebsite(ctx context.Context, website string) (*model.WebsiteDetails, error)
 	OrganizationsHiddenAfter(ctx context.Context, date time.Time) ([]string, error)
+	UIOrganizations(ctx context.Context, ids []string) ([]*model.OrganizationUIDetails, error)
+	UIOrganizationsSearch(ctx context.Context, limit *int, where *model.Filter, sort *model.SortBy) (*model.OrganizationSearchResult, error)
 	PhoneNumber(ctx context.Context, id string) (*model.PhoneNumber, error)
 	Reminder(ctx context.Context, id string) (*model.Reminder, error)
 	RemindersForOrganization(ctx context.Context, organizationID string, dismissed *bool) ([]*model.Reminder, error)
@@ -9348,6 +9403,321 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.OrganizationParticipant.Type(childComplexity), true
 
+	case "OrganizationSearchResult.ids":
+		if e.complexity.OrganizationSearchResult.Ids == nil {
+			break
+		}
+
+		return e.complexity.OrganizationSearchResult.Ids(childComplexity), true
+
+	case "OrganizationSearchResult.totalAvailable":
+		if e.complexity.OrganizationSearchResult.TotalAvailable == nil {
+			break
+		}
+
+		return e.complexity.OrganizationSearchResult.TotalAvailable(childComplexity), true
+
+	case "OrganizationSearchResult.totalElements":
+		if e.complexity.OrganizationSearchResult.TotalElements == nil {
+			break
+		}
+
+		return e.complexity.OrganizationSearchResult.TotalElements(childComplexity), true
+
+	case "OrganizationUiDetails.churnedAt":
+		if e.complexity.OrganizationUiDetails.ChurnedAt == nil {
+			break
+		}
+
+		return e.complexity.OrganizationUiDetails.ChurnedAt(childComplexity), true
+
+	case "OrganizationUiDetails.contacts":
+		if e.complexity.OrganizationUiDetails.Contacts == nil {
+			break
+		}
+
+		return e.complexity.OrganizationUiDetails.Contacts(childComplexity), true
+
+	case "OrganizationUiDetails.contracts":
+		if e.complexity.OrganizationUiDetails.Contracts == nil {
+			break
+		}
+
+		return e.complexity.OrganizationUiDetails.Contracts(childComplexity), true
+
+	case "OrganizationUiDetails.createdAt":
+		if e.complexity.OrganizationUiDetails.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.OrganizationUiDetails.CreatedAt(childComplexity), true
+
+	case "OrganizationUiDetails.description":
+		if e.complexity.OrganizationUiDetails.Description == nil {
+			break
+		}
+
+		return e.complexity.OrganizationUiDetails.Description(childComplexity), true
+
+	case "OrganizationUiDetails.employees":
+		if e.complexity.OrganizationUiDetails.Employees == nil {
+			break
+		}
+
+		return e.complexity.OrganizationUiDetails.Employees(childComplexity), true
+
+	case "OrganizationUiDetails.enrichedAt":
+		if e.complexity.OrganizationUiDetails.EnrichedAt == nil {
+			break
+		}
+
+		return e.complexity.OrganizationUiDetails.EnrichedAt(childComplexity), true
+
+	case "OrganizationUiDetails.enrichedFailedAt":
+		if e.complexity.OrganizationUiDetails.EnrichedFailedAt == nil {
+			break
+		}
+
+		return e.complexity.OrganizationUiDetails.EnrichedFailedAt(childComplexity), true
+
+	case "OrganizationUiDetails.enrichedRequestedAt":
+		if e.complexity.OrganizationUiDetails.EnrichedRequestedAt == nil {
+			break
+		}
+
+		return e.complexity.OrganizationUiDetails.EnrichedRequestedAt(childComplexity), true
+
+	case "OrganizationUiDetails.id":
+		if e.complexity.OrganizationUiDetails.ID == nil {
+			break
+		}
+
+		return e.complexity.OrganizationUiDetails.ID(childComplexity), true
+
+	case "OrganizationUiDetails.iconUrl":
+		if e.complexity.OrganizationUiDetails.IconURL == nil {
+			break
+		}
+
+		return e.complexity.OrganizationUiDetails.IconURL(childComplexity), true
+
+	case "OrganizationUiDetails.industry":
+		if e.complexity.OrganizationUiDetails.Industry == nil {
+			break
+		}
+
+		return e.complexity.OrganizationUiDetails.Industry(childComplexity), true
+
+	case "OrganizationUiDetails.lastFundingRound":
+		if e.complexity.OrganizationUiDetails.LastFundingRound == nil {
+			break
+		}
+
+		return e.complexity.OrganizationUiDetails.LastFundingRound(childComplexity), true
+
+	case "OrganizationUiDetails.lastTouchPointAt":
+		if e.complexity.OrganizationUiDetails.LastTouchPointAt == nil {
+			break
+		}
+
+		return e.complexity.OrganizationUiDetails.LastTouchPointAt(childComplexity), true
+
+	case "OrganizationUiDetails.lastTouchPointType":
+		if e.complexity.OrganizationUiDetails.LastTouchPointType == nil {
+			break
+		}
+
+		return e.complexity.OrganizationUiDetails.LastTouchPointType(childComplexity), true
+
+	case "OrganizationUiDetails.leadSource":
+		if e.complexity.OrganizationUiDetails.LeadSource == nil {
+			break
+		}
+
+		return e.complexity.OrganizationUiDetails.LeadSource(childComplexity), true
+
+	case "OrganizationUiDetails.locations":
+		if e.complexity.OrganizationUiDetails.Locations == nil {
+			break
+		}
+
+		return e.complexity.OrganizationUiDetails.Locations(childComplexity), true
+
+	case "OrganizationUiDetails.logoUrl":
+		if e.complexity.OrganizationUiDetails.LogoURL == nil {
+			break
+		}
+
+		return e.complexity.OrganizationUiDetails.LogoURL(childComplexity), true
+
+	case "OrganizationUiDetails.ltv":
+		if e.complexity.OrganizationUiDetails.Ltv == nil {
+			break
+		}
+
+		return e.complexity.OrganizationUiDetails.Ltv(childComplexity), true
+
+	case "OrganizationUiDetails.market":
+		if e.complexity.OrganizationUiDetails.Market == nil {
+			break
+		}
+
+		return e.complexity.OrganizationUiDetails.Market(childComplexity), true
+
+	case "OrganizationUiDetails.name":
+		if e.complexity.OrganizationUiDetails.Name == nil {
+			break
+		}
+
+		return e.complexity.OrganizationUiDetails.Name(childComplexity), true
+
+	case "OrganizationUiDetails.notes":
+		if e.complexity.OrganizationUiDetails.Notes == nil {
+			break
+		}
+
+		return e.complexity.OrganizationUiDetails.Notes(childComplexity), true
+
+	case "OrganizationUiDetails.onboardingComments":
+		if e.complexity.OrganizationUiDetails.OnboardingComments == nil {
+			break
+		}
+
+		return e.complexity.OrganizationUiDetails.OnboardingComments(childComplexity), true
+
+	case "OrganizationUiDetails.onboardingStatus":
+		if e.complexity.OrganizationUiDetails.OnboardingStatus == nil {
+			break
+		}
+
+		return e.complexity.OrganizationUiDetails.OnboardingStatus(childComplexity), true
+
+	case "OrganizationUiDetails.onboardingStatusUpdatedAt":
+		if e.complexity.OrganizationUiDetails.OnboardingStatusUpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.OrganizationUiDetails.OnboardingStatusUpdatedAt(childComplexity), true
+
+	case "OrganizationUiDetails.owner":
+		if e.complexity.OrganizationUiDetails.Owner == nil {
+			break
+		}
+
+		return e.complexity.OrganizationUiDetails.Owner(childComplexity), true
+
+	case "OrganizationUiDetails.parentId":
+		if e.complexity.OrganizationUiDetails.ParentID == nil {
+			break
+		}
+
+		return e.complexity.OrganizationUiDetails.ParentID(childComplexity), true
+
+	case "OrganizationUiDetails.parentName":
+		if e.complexity.OrganizationUiDetails.ParentName == nil {
+			break
+		}
+
+		return e.complexity.OrganizationUiDetails.ParentName(childComplexity), true
+
+	case "OrganizationUiDetails.public":
+		if e.complexity.OrganizationUiDetails.Public == nil {
+			break
+		}
+
+		return e.complexity.OrganizationUiDetails.Public(childComplexity), true
+
+	case "OrganizationUiDetails.relationship":
+		if e.complexity.OrganizationUiDetails.Relationship == nil {
+			break
+		}
+
+		return e.complexity.OrganizationUiDetails.Relationship(childComplexity), true
+
+	case "OrganizationUiDetails.renewalSummaryArrForecast":
+		if e.complexity.OrganizationUiDetails.RenewalSummaryArrForecast == nil {
+			break
+		}
+
+		return e.complexity.OrganizationUiDetails.RenewalSummaryArrForecast(childComplexity), true
+
+	case "OrganizationUiDetails.renewalSummaryMaxArrForecast":
+		if e.complexity.OrganizationUiDetails.RenewalSummaryMaxArrForecast == nil {
+			break
+		}
+
+		return e.complexity.OrganizationUiDetails.RenewalSummaryMaxArrForecast(childComplexity), true
+
+	case "OrganizationUiDetails.renewalSummaryNextRenewalAt":
+		if e.complexity.OrganizationUiDetails.RenewalSummaryNextRenewalAt == nil {
+			break
+		}
+
+		return e.complexity.OrganizationUiDetails.RenewalSummaryNextRenewalAt(childComplexity), true
+
+	case "OrganizationUiDetails.renewalSummaryRenewalLikelihood":
+		if e.complexity.OrganizationUiDetails.RenewalSummaryRenewalLikelihood == nil {
+			break
+		}
+
+		return e.complexity.OrganizationUiDetails.RenewalSummaryRenewalLikelihood(childComplexity), true
+
+	case "OrganizationUiDetails.slackChannelId":
+		if e.complexity.OrganizationUiDetails.SlackChannelID == nil {
+			break
+		}
+
+		return e.complexity.OrganizationUiDetails.SlackChannelID(childComplexity), true
+
+	case "OrganizationUiDetails.socialMedia":
+		if e.complexity.OrganizationUiDetails.SocialMedia == nil {
+			break
+		}
+
+		return e.complexity.OrganizationUiDetails.SocialMedia(childComplexity), true
+
+	case "OrganizationUiDetails.stage":
+		if e.complexity.OrganizationUiDetails.Stage == nil {
+			break
+		}
+
+		return e.complexity.OrganizationUiDetails.Stage(childComplexity), true
+
+	case "OrganizationUiDetails.subsidiaries":
+		if e.complexity.OrganizationUiDetails.Subsidiaries == nil {
+			break
+		}
+
+		return e.complexity.OrganizationUiDetails.Subsidiaries(childComplexity), true
+
+	case "OrganizationUiDetails.tags":
+		if e.complexity.OrganizationUiDetails.Tags == nil {
+			break
+		}
+
+		return e.complexity.OrganizationUiDetails.Tags(childComplexity), true
+
+	case "OrganizationUiDetails.valueProposition":
+		if e.complexity.OrganizationUiDetails.ValueProposition == nil {
+			break
+		}
+
+		return e.complexity.OrganizationUiDetails.ValueProposition(childComplexity), true
+
+	case "OrganizationUiDetails.website":
+		if e.complexity.OrganizationUiDetails.Website == nil {
+			break
+		}
+
+		return e.complexity.OrganizationUiDetails.Website(childComplexity), true
+
+	case "OrganizationUiDetails.yearFounded":
+		if e.complexity.OrganizationUiDetails.YearFounded == nil {
+			break
+		}
+
+		return e.complexity.OrganizationUiDetails.YearFounded(childComplexity), true
+
 	case "OrganizationWithJobRole.jobRole":
 		if e.complexity.OrganizationWithJobRole.JobRole == nil {
 			break
@@ -10240,6 +10610,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.TimelineEvents(childComplexity, args["ids"].([]string)), true
+
+	case "Query.ui_organizations":
+		if e.complexity.Query.UIOrganizations == nil {
+			break
+		}
+
+		args, err := ec.field_Query_ui_organizations_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.UIOrganizations(childComplexity, args["ids"].([]string)), true
+
+	case "Query.ui_organizations_search":
+		if e.complexity.Query.UIOrganizationsSearch == nil {
+			break
+		}
+
+		args, err := ec.field_Query_ui_organizations_search_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.UIOrganizationsSearch(childComplexity, args["limit"].(*int), args["where"].(*model.Filter), args["sort"].(*model.SortBy)), true
 
 	case "Query.user":
 		if e.complexity.Query.User == nil {
@@ -14795,6 +15189,75 @@ enum OrganizationStage {
     TARGET
     TRIAL
     UNQUALIFIED
+}`, BuiltIn: false},
+	{Name: "../schemas/organizationV2.graphqls", Input: `extend type Query {
+    ui_organizations(ids: [ID!]): [OrganizationUiDetails!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    ui_organizations_search(limit: Int, where: Filter, sort: SortBy): OrganizationSearchResult! @hasRole(roles: [ADMIN, USER]) @hasTenant
+
+    # initial load of page -> request 100 orgs with filters and sorting
+    # when a filter is applied, call ui_organizations_search, get IDs back and request just those specific orgs
+    # when you scroll down -> request more orgs with the same filters and sorting
+}
+
+type OrganizationSearchResult{
+    ids: [ID!]!
+    totalElements: Int64! # length of the id array
+    totalAvailable: Int64! # everyting in db
+}
+
+type OrganizationUiDetails {
+    # organizations props on node
+    id:                     ID!
+    createdAt:              Time!
+
+    name:                   String!
+    notes:                  String
+    description:            String
+    industry:               String
+    market:                 Market
+    website:                String
+    logoUrl:                String
+    iconUrl:                String
+    stage:                  OrganizationStage
+    relationship:           OrganizationRelationship
+    lastFundingRound:       FundingRound
+    leadSource:             String
+    valueProposition:       String
+    slackChannelId:         String
+    public:                 Boolean
+    employees:              Int64
+    yearFounded:            Int64
+
+    enrichedAt: Time
+    enrichedFailedAt: Time
+    enrichedRequestedAt: Time
+
+    ltv:            Float
+    churnedAt:      Time
+
+    renewalSummaryArrForecast:       Float
+    renewalSummaryMaxArrForecast:    Float
+    renewalSummaryRenewalLikelihood: OpportunityRenewalLikelihood
+    renewalSummaryNextRenewalAt:   Time
+
+    onboardingStatus: OnboardingStatus!
+    onboardingStatusUpdatedAt: Time
+    onboardingComments: String
+
+    lastTouchPointAt:  Time
+    lastTouchPointType: LastTouchpointType
+
+    # data from associated entities
+    contracts:            [String!]!
+    contacts:             [String!]!
+    socialMedia:          [Social!]!
+    tags:                 [Tag!]!
+    locations:            [Location!]!
+    owner:                User
+
+    parentId:              ID
+    parentName:            String
+    subsidiaries:         [String!]!
 }`, BuiltIn: false},
 	{Name: "../schemas/page_view.graphqls", Input: `type PageView implements Node & SourceFields {
     id: ID!
@@ -26041,6 +26504,124 @@ func (ec *executionContext) field_Query_timelineEvents_argsIds(
 	}
 
 	var zeroVal []string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_ui_organizations_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	arg0, err := ec.field_Query_ui_organizations_argsIds(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["ids"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Query_ui_organizations_argsIds(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) ([]string, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["ids"]
+	if !ok {
+		var zeroVal []string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("ids"))
+	if tmp, ok := rawArgs["ids"]; ok {
+		return ec.unmarshalOID2ᚕstringᚄ(ctx, tmp)
+	}
+
+	var zeroVal []string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_ui_organizations_search_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	arg0, err := ec.field_Query_ui_organizations_search_argsLimit(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["limit"] = arg0
+	arg1, err := ec.field_Query_ui_organizations_search_argsWhere(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["where"] = arg1
+	arg2, err := ec.field_Query_ui_organizations_search_argsSort(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["sort"] = arg2
+	return args, nil
+}
+func (ec *executionContext) field_Query_ui_organizations_search_argsLimit(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (*int, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["limit"]
+	if !ok {
+		var zeroVal *int
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
+	if tmp, ok := rawArgs["limit"]; ok {
+		return ec.unmarshalOInt2ᚖint(ctx, tmp)
+	}
+
+	var zeroVal *int
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_ui_organizations_search_argsWhere(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (*model.Filter, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["where"]
+	if !ok {
+		var zeroVal *model.Filter
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("where"))
+	if tmp, ok := rawArgs["where"]; ok {
+		return ec.unmarshalOFilter2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFilter(ctx, tmp)
+	}
+
+	var zeroVal *model.Filter
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_ui_organizations_search_argsSort(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (*model.SortBy, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["sort"]
+	if !ok {
+		var zeroVal *model.SortBy
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("sort"))
+	if tmp, ok := rawArgs["sort"]; ok {
+		return ec.unmarshalOSortBy2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortBy(ctx, tmp)
+	}
+
+	var zeroVal *model.SortBy
 	return zeroVal, nil
 }
 
@@ -81988,6 +82569,2034 @@ func (ec *executionContext) fieldContext_OrganizationParticipant_type(_ context.
 	return fc, nil
 }
 
+func (ec *executionContext) _OrganizationSearchResult_ids(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationSearchResult) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationSearchResult_ids(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Ids, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]string)
+	fc.Result = res
+	return ec.marshalNID2ᚕstringᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationSearchResult_ids(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationSearchResult",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationSearchResult_totalElements(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationSearchResult) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationSearchResult_totalElements(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TotalElements, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationSearchResult_totalElements(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationSearchResult",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationSearchResult_totalAvailable(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationSearchResult) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationSearchResult_totalAvailable(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TotalAvailable, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationSearchResult_totalAvailable(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationSearchResult",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationUiDetails_id(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationUiDetails_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationUiDetails_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationUiDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationUiDetails_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationUiDetails_createdAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationUiDetails_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationUiDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationUiDetails_name(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationUiDetails_name(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationUiDetails_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationUiDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationUiDetails_notes(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationUiDetails_notes(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Notes, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationUiDetails_notes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationUiDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationUiDetails_description(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationUiDetails_description(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Description, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationUiDetails_description(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationUiDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationUiDetails_industry(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationUiDetails_industry(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Industry, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationUiDetails_industry(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationUiDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationUiDetails_market(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationUiDetails_market(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Market, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Market)
+	fc.Result = res
+	return ec.marshalOMarket2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMarket(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationUiDetails_market(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationUiDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Market does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationUiDetails_website(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationUiDetails_website(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Website, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationUiDetails_website(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationUiDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationUiDetails_logoUrl(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationUiDetails_logoUrl(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LogoURL, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationUiDetails_logoUrl(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationUiDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationUiDetails_iconUrl(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationUiDetails_iconUrl(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IconURL, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationUiDetails_iconUrl(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationUiDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationUiDetails_stage(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationUiDetails_stage(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Stage, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.OrganizationStage)
+	fc.Result = res
+	return ec.marshalOOrganizationStage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationStage(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationUiDetails_stage(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationUiDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type OrganizationStage does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationUiDetails_relationship(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationUiDetails_relationship(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Relationship, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.OrganizationRelationship)
+	fc.Result = res
+	return ec.marshalOOrganizationRelationship2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationRelationship(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationUiDetails_relationship(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationUiDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type OrganizationRelationship does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationUiDetails_lastFundingRound(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationUiDetails_lastFundingRound(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LastFundingRound, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.FundingRound)
+	fc.Result = res
+	return ec.marshalOFundingRound2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFundingRound(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationUiDetails_lastFundingRound(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationUiDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type FundingRound does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationUiDetails_leadSource(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationUiDetails_leadSource(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LeadSource, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationUiDetails_leadSource(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationUiDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationUiDetails_valueProposition(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationUiDetails_valueProposition(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ValueProposition, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationUiDetails_valueProposition(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationUiDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationUiDetails_slackChannelId(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationUiDetails_slackChannelId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SlackChannelID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationUiDetails_slackChannelId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationUiDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationUiDetails_public(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationUiDetails_public(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Public, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationUiDetails_public(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationUiDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationUiDetails_employees(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationUiDetails_employees(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Employees, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int64)
+	fc.Result = res
+	return ec.marshalOInt642ᚖint64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationUiDetails_employees(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationUiDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationUiDetails_yearFounded(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationUiDetails_yearFounded(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.YearFounded, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int64)
+	fc.Result = res
+	return ec.marshalOInt642ᚖint64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationUiDetails_yearFounded(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationUiDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationUiDetails_enrichedAt(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationUiDetails_enrichedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.EnrichedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationUiDetails_enrichedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationUiDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationUiDetails_enrichedFailedAt(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationUiDetails_enrichedFailedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.EnrichedFailedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationUiDetails_enrichedFailedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationUiDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationUiDetails_enrichedRequestedAt(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationUiDetails_enrichedRequestedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.EnrichedRequestedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationUiDetails_enrichedRequestedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationUiDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationUiDetails_ltv(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationUiDetails_ltv(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Ltv, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*float64)
+	fc.Result = res
+	return ec.marshalOFloat2ᚖfloat64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationUiDetails_ltv(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationUiDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationUiDetails_churnedAt(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationUiDetails_churnedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ChurnedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationUiDetails_churnedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationUiDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationUiDetails_renewalSummaryArrForecast(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationUiDetails_renewalSummaryArrForecast(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RenewalSummaryArrForecast, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*float64)
+	fc.Result = res
+	return ec.marshalOFloat2ᚖfloat64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationUiDetails_renewalSummaryArrForecast(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationUiDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationUiDetails_renewalSummaryMaxArrForecast(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationUiDetails_renewalSummaryMaxArrForecast(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RenewalSummaryMaxArrForecast, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*float64)
+	fc.Result = res
+	return ec.marshalOFloat2ᚖfloat64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationUiDetails_renewalSummaryMaxArrForecast(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationUiDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationUiDetails_renewalSummaryRenewalLikelihood(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationUiDetails_renewalSummaryRenewalLikelihood(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RenewalSummaryRenewalLikelihood, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.OpportunityRenewalLikelihood)
+	fc.Result = res
+	return ec.marshalOOpportunityRenewalLikelihood2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOpportunityRenewalLikelihood(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationUiDetails_renewalSummaryRenewalLikelihood(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationUiDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type OpportunityRenewalLikelihood does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationUiDetails_renewalSummaryNextRenewalAt(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationUiDetails_renewalSummaryNextRenewalAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RenewalSummaryNextRenewalAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationUiDetails_renewalSummaryNextRenewalAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationUiDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationUiDetails_onboardingStatus(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationUiDetails_onboardingStatus(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.OnboardingStatus, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.OnboardingStatus)
+	fc.Result = res
+	return ec.marshalNOnboardingStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOnboardingStatus(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationUiDetails_onboardingStatus(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationUiDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type OnboardingStatus does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationUiDetails_onboardingStatusUpdatedAt(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationUiDetails_onboardingStatusUpdatedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.OnboardingStatusUpdatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationUiDetails_onboardingStatusUpdatedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationUiDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationUiDetails_onboardingComments(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationUiDetails_onboardingComments(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.OnboardingComments, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationUiDetails_onboardingComments(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationUiDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationUiDetails_lastTouchPointAt(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationUiDetails_lastTouchPointAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LastTouchPointAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationUiDetails_lastTouchPointAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationUiDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationUiDetails_lastTouchPointType(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationUiDetails_lastTouchPointType(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LastTouchPointType, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.LastTouchpointType)
+	fc.Result = res
+	return ec.marshalOLastTouchpointType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐLastTouchpointType(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationUiDetails_lastTouchPointType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationUiDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type LastTouchpointType does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationUiDetails_contracts(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationUiDetails_contracts(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Contracts, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]string)
+	fc.Result = res
+	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationUiDetails_contracts(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationUiDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationUiDetails_contacts(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationUiDetails_contacts(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Contacts, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]string)
+	fc.Result = res
+	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationUiDetails_contacts(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationUiDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationUiDetails_socialMedia(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationUiDetails_socialMedia(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SocialMedia, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Social)
+	fc.Result = res
+	return ec.marshalNSocial2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSocialᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationUiDetails_socialMedia(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationUiDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "metadata":
+				return ec.fieldContext_Social_metadata(ctx, field)
+			case "id":
+				return ec.fieldContext_Social_id(ctx, field)
+			case "url":
+				return ec.fieldContext_Social_url(ctx, field)
+			case "alias":
+				return ec.fieldContext_Social_alias(ctx, field)
+			case "followersCount":
+				return ec.fieldContext_Social_followersCount(ctx, field)
+			case "externalId":
+				return ec.fieldContext_Social_externalId(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Social_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Social_updatedAt(ctx, field)
+			case "source":
+				return ec.fieldContext_Social_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Social_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Social_appSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Social", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationUiDetails_tags(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationUiDetails_tags(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Tags, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Tag)
+	fc.Result = res
+	return ec.marshalNTag2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTagᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationUiDetails_tags(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationUiDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "metadata":
+				return ec.fieldContext_Tag_metadata(ctx, field)
+			case "id":
+				return ec.fieldContext_Tag_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Tag_name(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Tag_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Tag_updatedAt(ctx, field)
+			case "source":
+				return ec.fieldContext_Tag_source(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Tag_appSource(ctx, field)
+			case "entityType":
+				return ec.fieldContext_Tag_entityType(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Tag", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationUiDetails_locations(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationUiDetails_locations(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Locations, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Location)
+	fc.Result = res
+	return ec.marshalNLocation2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐLocationᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationUiDetails_locations(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationUiDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Location_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Location_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Location_updatedAt(ctx, field)
+			case "source":
+				return ec.fieldContext_Location_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Location_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Location_appSource(ctx, field)
+			case "name":
+				return ec.fieldContext_Location_name(ctx, field)
+			case "rawAddress":
+				return ec.fieldContext_Location_rawAddress(ctx, field)
+			case "country":
+				return ec.fieldContext_Location_country(ctx, field)
+			case "countryCodeA2":
+				return ec.fieldContext_Location_countryCodeA2(ctx, field)
+			case "countryCodeA3":
+				return ec.fieldContext_Location_countryCodeA3(ctx, field)
+			case "region":
+				return ec.fieldContext_Location_region(ctx, field)
+			case "district":
+				return ec.fieldContext_Location_district(ctx, field)
+			case "locality":
+				return ec.fieldContext_Location_locality(ctx, field)
+			case "street":
+				return ec.fieldContext_Location_street(ctx, field)
+			case "address":
+				return ec.fieldContext_Location_address(ctx, field)
+			case "address2":
+				return ec.fieldContext_Location_address2(ctx, field)
+			case "zip":
+				return ec.fieldContext_Location_zip(ctx, field)
+			case "addressType":
+				return ec.fieldContext_Location_addressType(ctx, field)
+			case "houseNumber":
+				return ec.fieldContext_Location_houseNumber(ctx, field)
+			case "postalCode":
+				return ec.fieldContext_Location_postalCode(ctx, field)
+			case "plusFour":
+				return ec.fieldContext_Location_plusFour(ctx, field)
+			case "commercial":
+				return ec.fieldContext_Location_commercial(ctx, field)
+			case "predirection":
+				return ec.fieldContext_Location_predirection(ctx, field)
+			case "latitude":
+				return ec.fieldContext_Location_latitude(ctx, field)
+			case "longitude":
+				return ec.fieldContext_Location_longitude(ctx, field)
+			case "timeZone":
+				return ec.fieldContext_Location_timeZone(ctx, field)
+			case "utcOffset":
+				return ec.fieldContext_Location_utcOffset(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Location", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationUiDetails_owner(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationUiDetails_owner(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Owner, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.User)
+	fc.Result = res
+	return ec.marshalOUser2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationUiDetails_owner(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationUiDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_User_id(ctx, field)
+			case "firstName":
+				return ec.fieldContext_User_firstName(ctx, field)
+			case "lastName":
+				return ec.fieldContext_User_lastName(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
+			case "internal":
+				return ec.fieldContext_User_internal(ctx, field)
+			case "bot":
+				return ec.fieldContext_User_bot(ctx, field)
+			case "test":
+				return ec.fieldContext_User_test(ctx, field)
+			case "timezone":
+				return ec.fieldContext_User_timezone(ctx, field)
+			case "profilePhotoUrl":
+				return ec.fieldContext_User_profilePhotoUrl(ctx, field)
+			case "roles":
+				return ec.fieldContext_User_roles(ctx, field)
+			case "emails":
+				return ec.fieldContext_User_emails(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_User_phoneNumbers(ctx, field)
+			case "mailboxes":
+				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "hasLinkedInToken":
+				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_User_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_User_updatedAt(ctx, field)
+			case "jobRoles":
+				return ec.fieldContext_User_jobRoles(ctx, field)
+			case "calendars":
+				return ec.fieldContext_User_calendars(ctx, field)
+			case "source":
+				return ec.fieldContext_User_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_User_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_User_appSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationUiDetails_parentId(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationUiDetails_parentId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ParentID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOID2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationUiDetails_parentId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationUiDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationUiDetails_parentName(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationUiDetails_parentName(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ParentName, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationUiDetails_parentName(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationUiDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationUiDetails_subsidiaries(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationUiDetails_subsidiaries(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Subsidiaries, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]string)
+	fc.Result = res
+	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationUiDetails_subsidiaries(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationUiDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _OrganizationWithJobRole_organization(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationWithJobRole) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_OrganizationWithJobRole_organization(ctx, field)
 	if err != nil {
@@ -88663,6 +91272,278 @@ func (ec *executionContext) fieldContext_Query_organizations_HiddenAfter(ctx con
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_organizations_HiddenAfter_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_ui_organizations(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_ui_organizations(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().UIOrganizations(rctx, fc.Args["ids"].([]string))
+		}
+
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				var zeroVal []*model.OrganizationUIDetails
+				return zeroVal, err
+			}
+			if ec.directives.HasRole == nil {
+				var zeroVal []*model.OrganizationUIDetails
+				return zeroVal, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				var zeroVal []*model.OrganizationUIDetails
+				return zeroVal, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*model.OrganizationUIDetails); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.OrganizationUIDetails`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.OrganizationUIDetails)
+	fc.Result = res
+	return ec.marshalNOrganizationUiDetails2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationUIDetailsᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_ui_organizations(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_OrganizationUiDetails_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_OrganizationUiDetails_createdAt(ctx, field)
+			case "name":
+				return ec.fieldContext_OrganizationUiDetails_name(ctx, field)
+			case "notes":
+				return ec.fieldContext_OrganizationUiDetails_notes(ctx, field)
+			case "description":
+				return ec.fieldContext_OrganizationUiDetails_description(ctx, field)
+			case "industry":
+				return ec.fieldContext_OrganizationUiDetails_industry(ctx, field)
+			case "market":
+				return ec.fieldContext_OrganizationUiDetails_market(ctx, field)
+			case "website":
+				return ec.fieldContext_OrganizationUiDetails_website(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_OrganizationUiDetails_logoUrl(ctx, field)
+			case "iconUrl":
+				return ec.fieldContext_OrganizationUiDetails_iconUrl(ctx, field)
+			case "stage":
+				return ec.fieldContext_OrganizationUiDetails_stage(ctx, field)
+			case "relationship":
+				return ec.fieldContext_OrganizationUiDetails_relationship(ctx, field)
+			case "lastFundingRound":
+				return ec.fieldContext_OrganizationUiDetails_lastFundingRound(ctx, field)
+			case "leadSource":
+				return ec.fieldContext_OrganizationUiDetails_leadSource(ctx, field)
+			case "valueProposition":
+				return ec.fieldContext_OrganizationUiDetails_valueProposition(ctx, field)
+			case "slackChannelId":
+				return ec.fieldContext_OrganizationUiDetails_slackChannelId(ctx, field)
+			case "public":
+				return ec.fieldContext_OrganizationUiDetails_public(ctx, field)
+			case "employees":
+				return ec.fieldContext_OrganizationUiDetails_employees(ctx, field)
+			case "yearFounded":
+				return ec.fieldContext_OrganizationUiDetails_yearFounded(ctx, field)
+			case "enrichedAt":
+				return ec.fieldContext_OrganizationUiDetails_enrichedAt(ctx, field)
+			case "enrichedFailedAt":
+				return ec.fieldContext_OrganizationUiDetails_enrichedFailedAt(ctx, field)
+			case "enrichedRequestedAt":
+				return ec.fieldContext_OrganizationUiDetails_enrichedRequestedAt(ctx, field)
+			case "ltv":
+				return ec.fieldContext_OrganizationUiDetails_ltv(ctx, field)
+			case "churnedAt":
+				return ec.fieldContext_OrganizationUiDetails_churnedAt(ctx, field)
+			case "renewalSummaryArrForecast":
+				return ec.fieldContext_OrganizationUiDetails_renewalSummaryArrForecast(ctx, field)
+			case "renewalSummaryMaxArrForecast":
+				return ec.fieldContext_OrganizationUiDetails_renewalSummaryMaxArrForecast(ctx, field)
+			case "renewalSummaryRenewalLikelihood":
+				return ec.fieldContext_OrganizationUiDetails_renewalSummaryRenewalLikelihood(ctx, field)
+			case "renewalSummaryNextRenewalAt":
+				return ec.fieldContext_OrganizationUiDetails_renewalSummaryNextRenewalAt(ctx, field)
+			case "onboardingStatus":
+				return ec.fieldContext_OrganizationUiDetails_onboardingStatus(ctx, field)
+			case "onboardingStatusUpdatedAt":
+				return ec.fieldContext_OrganizationUiDetails_onboardingStatusUpdatedAt(ctx, field)
+			case "onboardingComments":
+				return ec.fieldContext_OrganizationUiDetails_onboardingComments(ctx, field)
+			case "lastTouchPointAt":
+				return ec.fieldContext_OrganizationUiDetails_lastTouchPointAt(ctx, field)
+			case "lastTouchPointType":
+				return ec.fieldContext_OrganizationUiDetails_lastTouchPointType(ctx, field)
+			case "contracts":
+				return ec.fieldContext_OrganizationUiDetails_contracts(ctx, field)
+			case "contacts":
+				return ec.fieldContext_OrganizationUiDetails_contacts(ctx, field)
+			case "socialMedia":
+				return ec.fieldContext_OrganizationUiDetails_socialMedia(ctx, field)
+			case "tags":
+				return ec.fieldContext_OrganizationUiDetails_tags(ctx, field)
+			case "locations":
+				return ec.fieldContext_OrganizationUiDetails_locations(ctx, field)
+			case "owner":
+				return ec.fieldContext_OrganizationUiDetails_owner(ctx, field)
+			case "parentId":
+				return ec.fieldContext_OrganizationUiDetails_parentId(ctx, field)
+			case "parentName":
+				return ec.fieldContext_OrganizationUiDetails_parentName(ctx, field)
+			case "subsidiaries":
+				return ec.fieldContext_OrganizationUiDetails_subsidiaries(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type OrganizationUiDetails", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_ui_organizations_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_ui_organizations_search(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_ui_organizations_search(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().UIOrganizationsSearch(rctx, fc.Args["limit"].(*int), fc.Args["where"].(*model.Filter), fc.Args["sort"].(*model.SortBy))
+		}
+
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				var zeroVal *model.OrganizationSearchResult
+				return zeroVal, err
+			}
+			if ec.directives.HasRole == nil {
+				var zeroVal *model.OrganizationSearchResult
+				return zeroVal, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				var zeroVal *model.OrganizationSearchResult
+				return zeroVal, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.OrganizationSearchResult); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.OrganizationSearchResult`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.OrganizationSearchResult)
+	fc.Result = res
+	return ec.marshalNOrganizationSearchResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationSearchResult(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_ui_organizations_search(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "ids":
+				return ec.fieldContext_OrganizationSearchResult_ids(ctx, field)
+			case "totalElements":
+				return ec.fieldContext_OrganizationSearchResult_totalElements(ctx, field)
+			case "totalAvailable":
+				return ec.fieldContext_OrganizationSearchResult_totalAvailable(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type OrganizationSearchResult", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_ui_organizations_search_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -118158,6 +121039,203 @@ func (ec *executionContext) _OrganizationParticipant(ctx context.Context, sel as
 	return out
 }
 
+var organizationSearchResultImplementors = []string{"OrganizationSearchResult"}
+
+func (ec *executionContext) _OrganizationSearchResult(ctx context.Context, sel ast.SelectionSet, obj *model.OrganizationSearchResult) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, organizationSearchResultImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("OrganizationSearchResult")
+		case "ids":
+			out.Values[i] = ec._OrganizationSearchResult_ids(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "totalElements":
+			out.Values[i] = ec._OrganizationSearchResult_totalElements(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "totalAvailable":
+			out.Values[i] = ec._OrganizationSearchResult_totalAvailable(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var organizationUiDetailsImplementors = []string{"OrganizationUiDetails"}
+
+func (ec *executionContext) _OrganizationUiDetails(ctx context.Context, sel ast.SelectionSet, obj *model.OrganizationUIDetails) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, organizationUiDetailsImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("OrganizationUiDetails")
+		case "id":
+			out.Values[i] = ec._OrganizationUiDetails_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createdAt":
+			out.Values[i] = ec._OrganizationUiDetails_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "name":
+			out.Values[i] = ec._OrganizationUiDetails_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "notes":
+			out.Values[i] = ec._OrganizationUiDetails_notes(ctx, field, obj)
+		case "description":
+			out.Values[i] = ec._OrganizationUiDetails_description(ctx, field, obj)
+		case "industry":
+			out.Values[i] = ec._OrganizationUiDetails_industry(ctx, field, obj)
+		case "market":
+			out.Values[i] = ec._OrganizationUiDetails_market(ctx, field, obj)
+		case "website":
+			out.Values[i] = ec._OrganizationUiDetails_website(ctx, field, obj)
+		case "logoUrl":
+			out.Values[i] = ec._OrganizationUiDetails_logoUrl(ctx, field, obj)
+		case "iconUrl":
+			out.Values[i] = ec._OrganizationUiDetails_iconUrl(ctx, field, obj)
+		case "stage":
+			out.Values[i] = ec._OrganizationUiDetails_stage(ctx, field, obj)
+		case "relationship":
+			out.Values[i] = ec._OrganizationUiDetails_relationship(ctx, field, obj)
+		case "lastFundingRound":
+			out.Values[i] = ec._OrganizationUiDetails_lastFundingRound(ctx, field, obj)
+		case "leadSource":
+			out.Values[i] = ec._OrganizationUiDetails_leadSource(ctx, field, obj)
+		case "valueProposition":
+			out.Values[i] = ec._OrganizationUiDetails_valueProposition(ctx, field, obj)
+		case "slackChannelId":
+			out.Values[i] = ec._OrganizationUiDetails_slackChannelId(ctx, field, obj)
+		case "public":
+			out.Values[i] = ec._OrganizationUiDetails_public(ctx, field, obj)
+		case "employees":
+			out.Values[i] = ec._OrganizationUiDetails_employees(ctx, field, obj)
+		case "yearFounded":
+			out.Values[i] = ec._OrganizationUiDetails_yearFounded(ctx, field, obj)
+		case "enrichedAt":
+			out.Values[i] = ec._OrganizationUiDetails_enrichedAt(ctx, field, obj)
+		case "enrichedFailedAt":
+			out.Values[i] = ec._OrganizationUiDetails_enrichedFailedAt(ctx, field, obj)
+		case "enrichedRequestedAt":
+			out.Values[i] = ec._OrganizationUiDetails_enrichedRequestedAt(ctx, field, obj)
+		case "ltv":
+			out.Values[i] = ec._OrganizationUiDetails_ltv(ctx, field, obj)
+		case "churnedAt":
+			out.Values[i] = ec._OrganizationUiDetails_churnedAt(ctx, field, obj)
+		case "renewalSummaryArrForecast":
+			out.Values[i] = ec._OrganizationUiDetails_renewalSummaryArrForecast(ctx, field, obj)
+		case "renewalSummaryMaxArrForecast":
+			out.Values[i] = ec._OrganizationUiDetails_renewalSummaryMaxArrForecast(ctx, field, obj)
+		case "renewalSummaryRenewalLikelihood":
+			out.Values[i] = ec._OrganizationUiDetails_renewalSummaryRenewalLikelihood(ctx, field, obj)
+		case "renewalSummaryNextRenewalAt":
+			out.Values[i] = ec._OrganizationUiDetails_renewalSummaryNextRenewalAt(ctx, field, obj)
+		case "onboardingStatus":
+			out.Values[i] = ec._OrganizationUiDetails_onboardingStatus(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "onboardingStatusUpdatedAt":
+			out.Values[i] = ec._OrganizationUiDetails_onboardingStatusUpdatedAt(ctx, field, obj)
+		case "onboardingComments":
+			out.Values[i] = ec._OrganizationUiDetails_onboardingComments(ctx, field, obj)
+		case "lastTouchPointAt":
+			out.Values[i] = ec._OrganizationUiDetails_lastTouchPointAt(ctx, field, obj)
+		case "lastTouchPointType":
+			out.Values[i] = ec._OrganizationUiDetails_lastTouchPointType(ctx, field, obj)
+		case "contracts":
+			out.Values[i] = ec._OrganizationUiDetails_contracts(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "contacts":
+			out.Values[i] = ec._OrganizationUiDetails_contacts(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "socialMedia":
+			out.Values[i] = ec._OrganizationUiDetails_socialMedia(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "tags":
+			out.Values[i] = ec._OrganizationUiDetails_tags(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "locations":
+			out.Values[i] = ec._OrganizationUiDetails_locations(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "owner":
+			out.Values[i] = ec._OrganizationUiDetails_owner(ctx, field, obj)
+		case "parentId":
+			out.Values[i] = ec._OrganizationUiDetails_parentId(ctx, field, obj)
+		case "parentName":
+			out.Values[i] = ec._OrganizationUiDetails_parentName(ctx, field, obj)
+		case "subsidiaries":
+			out.Values[i] = ec._OrganizationUiDetails_subsidiaries(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var organizationWithJobRoleImplementors = []string{"OrganizationWithJobRole"}
 
 func (ec *executionContext) _OrganizationWithJobRole(ctx context.Context, sel ast.SelectionSet, obj *model.OrganizationWithJobRole) graphql.Marshaler {
@@ -119584,6 +122662,50 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_organizations_HiddenAfter(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "ui_organizations":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_ui_organizations(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "ui_organizations_search":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_ui_organizations_search(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -125700,9 +128822,77 @@ func (ec *executionContext) unmarshalNOrganizationSaveInput2githubᚗcomᚋopenl
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) marshalNOrganizationSearchResult2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationSearchResult(ctx context.Context, sel ast.SelectionSet, v model.OrganizationSearchResult) graphql.Marshaler {
+	return ec._OrganizationSearchResult(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNOrganizationSearchResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationSearchResult(ctx context.Context, sel ast.SelectionSet, v *model.OrganizationSearchResult) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._OrganizationSearchResult(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNOrganizationTagInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationTagInput(ctx context.Context, v interface{}) (model.OrganizationTagInput, error) {
 	res, err := ec.unmarshalInputOrganizationTagInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNOrganizationUiDetails2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationUIDetailsᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.OrganizationUIDetails) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNOrganizationUiDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationUIDetails(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNOrganizationUiDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationUIDetails(ctx context.Context, sel ast.SelectionSet, v *model.OrganizationUIDetails) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._OrganizationUiDetails(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNOrganizationUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationUpdateInput(ctx context.Context, v interface{}) (model.OrganizationUpdateInput, error) {

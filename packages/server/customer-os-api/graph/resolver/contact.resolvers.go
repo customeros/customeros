@@ -224,7 +224,7 @@ func (r *contactResolver) Owner(ctx context.Context, obj *model.Contact) (*model
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", obj.ID))
 
-	owner, err := r.Services.UserService.GetContactOwner(ctx, obj.ID)
+	owner, err := r.Services.CommonServices.UserService.GetContactOwner(ctx, obj.ID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get owner for contact %s", obj.ID)

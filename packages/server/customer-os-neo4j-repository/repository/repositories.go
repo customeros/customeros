@@ -59,6 +59,7 @@ type Repositories struct {
 	IssueWriteRepository                     IssueWriteRepository
 	JobRoleReadRepository                    JobRoleReadRepository
 	JobRoleWriteRepository                   JobRoleWriteRepository
+	LocationReadRepository                   LocationReadRepository
 	LocationWriteRepository                  LocationWriteRepository
 	LogEntryReadRepository                   LogEntryReadRepository
 	LogEntryWriteRepository                  LogEntryWriteRepository
@@ -146,6 +147,7 @@ func InitNeo4jRepositories(driver *neo4j.DriverWithContext, neo4jDatabase string
 		IssueWriteRepository:                     NewIssueWriteRepository(driver, neo4jDatabase),
 		JobRoleReadRepository:                    NewJobRoleReadRepository(driver, neo4jDatabase),
 		JobRoleWriteRepository:                   NewJobRoleWriteRepository(driver, neo4jDatabase),
+		LocationReadRepository:                   NewLocationReadRepository(driver, neo4jDatabase),
 		LocationWriteRepository:                  NewLocationWriteRepository(driver, neo4jDatabase),
 		LogEntryReadRepository:                   NewLogEntryReadRepository(driver, neo4jDatabase),
 		LogEntryWriteRepository:                  NewLogEntryWriteRepository(driver, neo4jDatabase),

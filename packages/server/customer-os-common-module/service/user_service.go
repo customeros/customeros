@@ -9,13 +9,35 @@ import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 )
 
 type UserService interface {
+	CreateUser(ctx context.Context, userEntity neo4jentity.UserEntity) (string, error)
+
 	GetById(ctx context.Context, userId string) (*neo4jentity.UserEntity, error)
 	GetAllUsersForTenant(ctx context.Context, tenant string) ([]*neo4jentity.UserEntity, error)
 	FindUserByEmail(parentCtx context.Context, email string) (*neo4jentity.UserEntity, error)
-	CreateUser(ctx context.Context, userEntity neo4jentity.UserEntity) (string, error)
+	IsOwner(ctx context.Context, id string) (bool, error)
+	GetContactOwner(ctx context.Context, contactId string) (*neo4jentity.UserEntity, error)
+	GetNoteCreator(ctx context.Context, noteId string) (*neo4jentity.UserEntity, error)
+	GetUsersConnectedForContacts(ctx context.Context, contactIds []string) (*neo4jentity.UserEntities, error)
+	GetUsersForEmails(ctx context.Context, emailIds []string) (*neo4jentity.UserEntities, error)
+	GetUsersForPhoneNumbers(ctx context.Context, phoneNumberIds []string) (*neo4jentity.UserEntities, error)
+	GetUserOwnersForOrganizations(ctx context.Context, organizationIDs []string) (*neo4jentity.UserEntities, error)
+	GetUserOwnersForOpportunities(ctx context.Context, opportunityIds []string) (*neo4jentity.UserEntities, error)
+	GetUserCreatorsForOpportunities(ctx context.Context, opportunityIds []string) (*neo4jentity.UserEntities, error)
+	GetUserCreatorsForServiceLineItems(ctx context.Context, serviceLineItemIds []string) (*neo4jentity.UserEntities, error)
+	GetUsersWithMailboxes(ctx context.Context) (*neo4jentity.UserEntities, error)
+	GetUserCreatorsForContracts(ctx context.Context, contractIds []string) (*neo4jentity.UserEntities, error)
+	GetUserAuthorsForLogEntries(ctx context.Context, logEntryIDs []string) (*neo4jentity.UserEntities, error)
+	GetUserAuthorsForComments(ctx context.Context, commentIds []string) (*neo4jentity.UserEntities, error)
+	GetUserForFlowSenders(ctx context.Context, flowSenderIds []string) (*neo4jentity.UserEntities, error)
+	GetUsers(ctx context.Context, userIds []string) (*neo4jentity.UserEntities, error)
+	GetAllOwnersForOrganizations(ctx context.Context, organizationIds []string) (*neo4jentity.UserEntities, error)
+	GetDistinctOrganizationOwners(ctx context.Context) (*neo4jentity.UserEntities, error)
+	GetReminderOwner(ctx context.Context, reminderId string) (*neo4jentity.UserEntity, error)
+	GetContractOwner(ctx context.Context, contractId string) (*neo4jentity.UserEntity, error)
 }
 
 type userService struct {
@@ -26,6 +48,31 @@ func NewUserService(service *Services) UserService {
 	return &userService{
 		services: service,
 	}
+}
+
+func (s *userService) CreateUser(ctx context.Context, userEntity neo4jentity.UserEntity) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserService.CreateUser")
+	defer span.Finish()
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	userId, err := s.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, commonModel.NodeLabelUser)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+
+	userEntity.Id = userId
+	if userEntity.AppSource == "" {
+		userEntity.AppSource = common.GetAppSourceFromContext(ctx)
+	}
+	err = s.services.Neo4jRepositories.UserWriteRepository.CreateUser(ctx, userEntity)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+
+	return userId, nil
 }
 
 func (s *userService) GetById(parentCtx context.Context, userId string) (*neo4jentity.UserEntity, error) {
@@ -76,27 +123,371 @@ func (s *userService) FindUserByEmail(parentCtx context.Context, email string) (
 	return mapper.MapDbNodeToUserEntity(userDbNode), nil
 }
 
-func (s *userService) CreateUser(ctx context.Context, userEntity neo4jentity.UserEntity) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserService.CreateUser")
+func (s *userService) IsOwner(parentCtx context.Context, userId string) (bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.IsOwner")
 	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	isOwner, err := s.services.Neo4jRepositories.UserReadRepository.IsOwner(ctx, common.GetContext(ctx).Tenant, userId)
+
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return false, err
+	}
+	return isOwner, nil
+}
+
+func (s *userService) GetContactOwner(parentCtx context.Context, contactId string) (*neo4jentity.UserEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.GetContactOwner")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	ownerDbNode, err := s.services.Neo4jRepositories.UserReadRepository.GetOwnerForContact(ctx, common.GetContext(ctx).Tenant, contactId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return mapper.MapDbNodeToUserEntity(ownerDbNode), nil
+}
+
+func (s *userService) GetNoteCreator(parentCtx context.Context, noteId string) (*neo4jentity.UserEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.GetNoteCreator")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	userDbNode, err := s.services.Neo4jRepositories.UserReadRepository.GetCreatorForNote(ctx, common.GetContext(ctx).Tenant, noteId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return mapper.MapDbNodeToUserEntity(userDbNode), nil
+}
+
+func (s *userService) GetUsersConnectedForContacts(ctx context.Context, contactIds []string) (*neo4jentity.UserEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserService.GetUsersConnectedForContacts")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	users, err := s.services.Neo4jRepositories.UserReadRepository.GetUsersConnectedForContacts(ctx, common.GetTenantFromContext(ctx), contactIds)
+	if err != nil {
+		return nil, err
+	}
+	userEntities := make(neo4jentity.UserEntities, 0, len(users))
+	for _, v := range users {
+		userEntity := mapper.MapDbNodeToUserEntity(v.Node)
+		userEntity.DataloaderKey = v.LinkedNodeId
+		userEntities = append(userEntities, *userEntity)
+	}
+	return &userEntities, nil
+}
+
+func (s *userService) GetUsersForEmails(parentCtx context.Context, emailIds []string) (*neo4jentity.UserEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.GetUsersForEmails")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	users, err := s.services.Neo4jRepositories.UserReadRepository.GetAllForEmails(ctx, common.GetTenantFromContext(ctx), emailIds)
+	if err != nil {
+		return nil, err
+	}
+	userEntities := make(neo4jentity.UserEntities, 0, len(users))
+	for _, v := range users {
+		userEntity := mapper.MapDbNodeToUserEntity(v.Node)
+		userEntity.DataloaderKey = v.LinkedNodeId
+		userEntities = append(userEntities, *userEntity)
+	}
+	return &userEntities, nil
+}
+
+func (s *userService) GetUsersForPhoneNumbers(parentCtx context.Context, phoneNumberIds []string) (*neo4jentity.UserEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.GetUsersForPhoneNumbers")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	users, err := s.services.Neo4jRepositories.UserReadRepository.GetAllForPhoneNumbers(ctx, common.GetTenantFromContext(ctx), phoneNumberIds)
+	if err != nil {
+		return nil, err
+	}
+	userEntities := make(neo4jentity.UserEntities, 0, len(users))
+	for _, v := range users {
+		userEntity := mapper.MapDbNodeToUserEntity(v.Node)
+		userEntity.DataloaderKey = v.LinkedNodeId
+		userEntities = append(userEntities, *userEntity)
+	}
+	return &userEntities, nil
+}
+
+func (s *userService) GetUserOwnersForOrganizations(parentCtx context.Context, organizationIDs []string) (*neo4jentity.UserEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.GetUserOwnersForOrganizations")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("organizationIDs", organizationIDs))
+
+	users, err := s.services.Neo4jRepositories.UserReadRepository.GetAllOwnersForOrganizations(ctx, common.GetTenantFromContext(ctx), organizationIDs)
+	if err != nil {
+		return nil, err
+	}
+	userEntities := make(neo4jentity.UserEntities, 0, len(users))
+	for _, v := range users {
+		userEntity := mapper.MapDbNodeToUserEntity(v.Node)
+		userEntity.DataloaderKey = v.LinkedNodeId
+		userEntities = append(userEntities, *userEntity)
+	}
+	return &userEntities, nil
+}
+
+func (s *userService) GetUserOwnersForOpportunities(parentCtx context.Context, opportunityIds []string) (*neo4jentity.UserEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.GetUserOwnersForOpportunities")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("opportunityIds", opportunityIds))
+
+	users, err := s.services.Neo4jRepositories.UserReadRepository.GetAllOwnersForOpportunities(ctx, common.GetTenantFromContext(ctx), opportunityIds)
+	if err != nil {
+		return nil, err
+	}
+	userEntities := make(neo4jentity.UserEntities, 0, len(users))
+	for _, v := range users {
+		userEntity := mapper.MapDbNodeToUserEntity(v.Node)
+		userEntity.DataloaderKey = v.LinkedNodeId
+		userEntities = append(userEntities, *userEntity)
+	}
+	return &userEntities, nil
+}
+
+func (s *userService) GetUserCreatorsForOpportunities(parentCtx context.Context, opportunityIds []string) (*neo4jentity.UserEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.GetUserCreatorsForOpportunities")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("opportunityIds", opportunityIds))
+
+	users, err := s.services.Neo4jRepositories.UserReadRepository.GetAllCreatorsForOpportunities(ctx, common.GetTenantFromContext(ctx), opportunityIds)
+	if err != nil {
+		return nil, err
+	}
+	userEntities := make(neo4jentity.UserEntities, 0, len(users))
+	for _, v := range users {
+		userEntity := mapper.MapDbNodeToUserEntity(v.Node)
+		userEntity.DataloaderKey = v.LinkedNodeId
+		userEntities = append(userEntities, *userEntity)
+	}
+	return &userEntities, nil
+}
+func (s *userService) GetUserCreatorsForServiceLineItems(parentCtx context.Context, serviceLineItemIds []string) (*neo4jentity.UserEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.GetUserCreatorsForOpportunities")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("serviceLineItemIds", serviceLineItemIds))
+
+	users, err := s.services.Neo4jRepositories.UserReadRepository.GetAllCreatorsForServiceLineItems(ctx, common.GetTenantFromContext(ctx), serviceLineItemIds)
+	if err != nil {
+		return nil, err
+	}
+	userEntities := make(neo4jentity.UserEntities, 0, len(users))
+	for _, v := range users {
+		userEntity := mapper.MapDbNodeToUserEntity(v.Node)
+		userEntity.DataloaderKey = v.LinkedNodeId
+		userEntities = append(userEntities, *userEntity)
+	}
+	return &userEntities, nil
+}
+func (s *userService) GetUsersWithMailboxes(ctx context.Context) (*neo4jentity.UserEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserService.GetUsersWithMailboxes")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	userId, err := s.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, commonModel.NodeLabelUser)
+	mailboxes, err := s.services.PostgresRepositories.TenantSettingsMailboxRepository.GetAll(ctx)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return "", err
+		return nil, err
 	}
 
-	userEntity.Id = userId
-	if userEntity.AppSource == "" {
-		userEntity.AppSource = common.GetAppSourceFromContext(ctx)
+	// Create a map to store unique usernames
+	userEmailMap := make(map[string]struct{})
+	for _, mailbox := range mailboxes {
+		// Add the username to the map (map ensures uniqueness)
+		userEmailMap[mailbox.Username] = struct{}{}
 	}
-	err = s.services.Neo4jRepositories.UserWriteRepository.CreateUser(ctx, userEntity)
+
+	entities := make(neo4jentity.UserEntities, 0, len(userEmailMap))
+	for userEmail := range userEmailMap {
+		userNode, err := s.services.Neo4jRepositories.UserReadRepository.GetFirstUserByEmail(ctx, tenant, userEmail)
+		if err != nil {
+			return nil, err
+		}
+
+		if userNode != nil {
+			userEntity := mapper.MapDbNodeToUserEntity(userNode)
+			entities = append(entities, *userEntity)
+		}
+	}
+
+	return &entities, nil
+}
+func (s *userService) GetUserCreatorsForContracts(parentCtx context.Context, contractIds []string) (*neo4jentity.UserEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.GetUserCreatorsForContracts")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("contractIds", contractIds))
+
+	users, err := s.services.Neo4jRepositories.UserReadRepository.GetAllCreatorsForContracts(ctx, common.GetTenantFromContext(ctx), contractIds)
+	if err != nil {
+		return nil, err
+	}
+	userEntities := make(neo4jentity.UserEntities, 0, len(users))
+	for _, v := range users {
+		userEntity := mapper.MapDbNodeToUserEntity(v.Node)
+		userEntity.DataloaderKey = v.LinkedNodeId
+		userEntities = append(userEntities, *userEntity)
+	}
+	return &userEntities, nil
+}
+
+func (s *userService) GetUserAuthorsForLogEntries(parentCtx context.Context, logEntryIDs []string) (*neo4jentity.UserEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.GetUserAuthorsForLogEntries")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("logEntryIDs", logEntryIDs))
+
+	users, err := s.services.Neo4jRepositories.UserReadRepository.GetAllAuthorsForLogEntries(ctx, common.GetTenantFromContext(ctx), logEntryIDs)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return "", err
+		return nil, err
+	}
+	userEntities := make(neo4jentity.UserEntities, 0, len(users))
+	for _, v := range users {
+		userEntity := mapper.MapDbNodeToUserEntity(v.Node)
+		userEntity.DataloaderKey = v.LinkedNodeId
+		userEntities = append(userEntities, *userEntity)
+	}
+	return &userEntities, nil
+}
+
+func (s *userService) GetUserAuthorsForComments(ctx context.Context, commentIds []string) (*neo4jentity.UserEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserService.GetUserAuthorsForComments")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("commentIds", commentIds))
+
+	users, err := s.services.Neo4jRepositories.UserReadRepository.GetAllAuthorsForComments(ctx, common.GetTenantFromContext(ctx), commentIds)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	userEntities := make(neo4jentity.UserEntities, 0, len(users))
+	for _, v := range users {
+		userEntity := mapper.MapDbNodeToUserEntity(v.Node)
+		userEntity.DataloaderKey = v.LinkedNodeId
+		userEntities = append(userEntities, *userEntity)
+	}
+	return &userEntities, nil
+}
+
+func (s *userService) GetUserForFlowSenders(ctx context.Context, flowSenderIds []string) (*neo4jentity.UserEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserService.GetUserForFlowSenders")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("flowSenderIds", flowSenderIds))
+
+	users, err := s.services.Neo4jRepositories.UserReadRepository.GetAllSendersForFlowSenders(ctx, common.GetTenantFromContext(ctx), flowSenderIds)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	userEntities := make(neo4jentity.UserEntities, 0, len(users))
+	for _, v := range users {
+		userEntity := mapper.MapDbNodeToUserEntity(v.Node)
+		userEntity.DataloaderKey = v.LinkedNodeId
+		userEntities = append(userEntities, *userEntity)
+	}
+	return &userEntities, nil
+}
+
+func (s *userService) GetUsers(parentCtx context.Context, userIds []string) (*neo4jentity.UserEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.GetUsers")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("userIds", userIds))
+
+	userDbNodes, err := s.services.Neo4jRepositories.UserReadRepository.GetUsers(ctx, common.GetTenantFromContext(ctx), userIds)
+	if err != nil {
+		return nil, err
+	}
+	userEntities := make(neo4jentity.UserEntities, 0, len(userDbNodes))
+	for _, dbNode := range userDbNodes {
+		userEntity := mapper.MapDbNodeToUserEntity(dbNode)
+		userEntities = append(userEntities, *userEntity)
+	}
+	return &userEntities, nil
+}
+
+func (s *userService) GetAllOwnersForOrganizations(ctx context.Context, organizationIds []string) (*neo4jentity.UserEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserService.GetAllOwnersForOrganizations")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	dbNodes, err := s.services.Neo4jRepositories.UserReadRepository.GetAllOwnersForOrganizations(ctx, tenant, organizationIds)
+	if err != nil {
+		return nil, err
 	}
 
-	return userId, nil
+	userEntities := make(neo4jentity.UserEntities, 0, len(dbNodes))
+	for _, v := range dbNodes {
+		userEntity := mapper.MapDbNodeToUserEntity(v.Node)
+		userEntity.DataloaderKey = v.LinkedNodeId
+		userEntities = append(userEntities, *userEntity)
+	}
+	return &userEntities, nil
+}
+
+func (s *userService) GetDistinctOrganizationOwners(parentCtx context.Context) (*neo4jentity.UserEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.GetDistinctOrganizationOwners")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	dbNodes, err := s.services.Neo4jRepositories.UserReadRepository.GetDistinctOrganizationOwners(ctx, common.GetTenantFromContext(ctx))
+	if err != nil {
+		return nil, err
+	}
+
+	userEntities := make(neo4jentity.UserEntities, 0, len(dbNodes))
+	for _, dbNode := range dbNodes {
+		entity := mapper.MapDbNodeToUserEntity(dbNode)
+		userEntities = append(userEntities, *entity)
+	}
+	return &userEntities, nil
+}
+
+func (s *userService) GetReminderOwner(ctx context.Context, reminderId string) (*neo4jentity.UserEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserService.GetReminderOwner")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	ownerDbNode, err := s.services.Neo4jRepositories.UserReadRepository.GetOwnerForReminder(ctx, common.GetContext(ctx).Tenant, reminderId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return mapper.MapDbNodeToUserEntity(ownerDbNode), nil
+}
+
+func (s *userService) GetContractOwner(parentCtx context.Context, contractId string) (*neo4jentity.UserEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.GetContractOwner")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	ownerDbNode, err := s.services.Neo4jRepositories.UserReadRepository.GetOwnerForContract(ctx, common.GetContext(ctx).Tenant, contractId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return mapper.MapDbNodeToUserEntity(ownerDbNode), nil
 }
