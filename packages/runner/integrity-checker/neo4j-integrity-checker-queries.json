@@ -313,7 +313,7 @@
         },
         {
           "name": "Tags without entity type",
-          "query": "MATCH (:Tenant)<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag) with tag.entityType IS NULL OR tag.entityType = '' RETURN count(tag)"
+          "query": "MATCH (:Tenant)<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag) WHERE tag.entityType IS NULL OR tag.entityType = '' RETURN count(tag)"
         },
         {
           "name": "Tags linked with wrong entities",

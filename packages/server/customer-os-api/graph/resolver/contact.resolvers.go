@@ -668,6 +668,12 @@ func (r *mutationResolver) ContactFindWorkEmail(ctx context.Context, contactID s
 		orgDomain = *domain
 	}
 
+	if orgName == "" && orgDomain == "" {
+		tracing.TraceErr(span, errors.New("cannot find email for contact without organization"))
+		graphql.AddErrorf(ctx, "Missin organization for contact")
+		return &model.ActionResponse{Accepted: false}, nil
+	}
+
 	socials, err := r.Services.CommonServices.SocialService.GetAllForEntities(ctx, common.GetTenantFromContext(ctx), commonmodel.CONTACT, []string{contactID})
 	if err != nil {
 		tracing.TraceErr(span, err)
