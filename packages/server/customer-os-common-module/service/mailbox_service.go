@@ -35,6 +35,8 @@ type MailboxService interface {
 		forwardingEnabled, webmailEnabled bool,
 		forwardingTo []string,
 	) AddMailboxRequest
+	IsDomainAvailable(ctx context.Context, domain string) (ok, available bool)
+	RecommendOutboundDomains(ctx context.Context, domainRoot string, count int) []string
 }
 
 type mailboxService struct {
@@ -70,7 +72,15 @@ func (s *mailboxService) BuildAddMailboxRequest(
 }
 
 func (s *mailboxService) AddMailbox(ctx context.Context, request AddMailboxRequest) error {
-	span, ctx := s.initializeTracing(ctx, request)
+	span, ctx := s.initializeTracing(ctx, "MailboxService.AddMailbox")
+	span.LogFields(
+		log.String("linkedUserEmail", request.LinkedUserEmail),
+		log.String("domain", request.Domain),
+		log.String("username", request.Username),
+		log.Bool("forwardingEnabled", request.ForwardingEnabled),
+		log.Bool("webmailEnabled", request.WebmailEnabled),
+		log.Object("forwardingTo", request.ForwardingTo),
+	)
 	defer span.Finish()
 
 	if err := s.validateRequest(ctx, span, request.Domain); err != nil {
@@ -114,17 +124,9 @@ func (s *mailboxService) AddMailbox(ctx context.Context, request AddMailboxReque
 	return nil
 }
 
-func (s *mailboxService) initializeTracing(ctx context.Context, request AddMailboxRequest) (opentracing.Span, context.Context) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "MailboxService.AddMailbox")
+func (s *mailboxService) initializeTracing(ctx context.Context, methodName string) (opentracing.Span, context.Context) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, methodName)
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(
-		log.String("linkedUserEmail", request.LinkedUserEmail),
-		log.String("domain", request.Domain),
-		log.String("username", request.Username),
-		log.Bool("forwardingEnabled", request.ForwardingEnabled),
-		log.Bool("webmailEnabled", request.WebmailEnabled),
-		log.Object("forwardingTo", request.ForwardingTo),
-	)
 	return span, ctx
 }
 
