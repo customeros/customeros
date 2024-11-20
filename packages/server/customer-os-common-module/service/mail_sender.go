@@ -22,7 +22,7 @@ import (
 )
 
 func (s *mailService) SendMail(ctx context.Context, emailMessage *postgresentity.EmailMessage) error {
-	span, ctx := s.InitializeTracing(ctx, "MailService.ProcessSentEmail")
+	span, ctx := s.initializeTracing(ctx, "MailService.ProcessSentEmail")
 	span.LogFields(tracingLog.Object("emailMessage", emailMessage))
 	defer span.Finish()
 
@@ -69,7 +69,7 @@ func (s *mailService) ProcessSentEmail(ctx context.Context, tx *neo4j.ManagedTra
 	return id.(*string), nil
 }
 
-func (s *mailService) InitializeTracing(ctx context.Context, operationName string) (opentracing.Span, context.Context) {
+func (s *mailService) initializeTracing(ctx context.Context, operationName string) (opentracing.Span, context.Context) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, operationName)
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	return span, ctx
@@ -207,7 +207,7 @@ func (s *mailService) storeEmailMessage(ctx context.Context, span opentracing.Sp
 }
 
 func (s *mailService) saveEmailInTx(ctx context.Context, tx neo4j.ManagedTransaction, emailMessage *postgresentity.EmailMessage) (any, error) {
-	span, ctx := s.InitializeTracing(ctx, "MailService.saveEmailInTx")
+	span, ctx := s.initializeTracing(ctx, "MailService.saveEmailInTx")
 	defer span.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
