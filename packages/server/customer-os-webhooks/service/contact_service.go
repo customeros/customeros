@@ -189,7 +189,7 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 			createContact = false
 		}
 		if createContact {
-			contactId, err = s.services.CommonServices.ContactService.SaveContact(ctx, nil,
+			contactId, err = s.services.CommonServices.ContactService.Save(ctx, nil,
 				neo4jrepo.ContactFields{
 					Name:            contactInput.Name,
 					FirstName:       contactInput.FirstName,
@@ -259,7 +259,7 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 				contactFields.ProfilePhotoUrl = contactInput.ProfilePhotoUrl
 				contactFields.UpdateProfilePhotoUrl = true
 			}
-			_, err = s.services.CommonServices.ContactService.SaveContact(ctx, &contactId,
+			_, err = s.services.CommonServices.ContactService.Save(ctx, &contactId,
 				contactFields,
 				"",
 				neo4jmodel.ExternalSystem{

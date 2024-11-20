@@ -459,9 +459,9 @@ func (c *contactListenerImpl) enrichContactWithScrapInEnrichDetails(ctx context.
 	}
 
 	if updateContact {
-		_, err := c.services.ContactService.SaveContact(ctx, &contact.Id, contactFields, "", neo4jmodel.ExternalSystem{})
+		_, err := c.services.ContactService.Save(ctx, &contact.Id, contactFields, "", neo4jmodel.ExternalSystem{})
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "ContactService.SaveContact"))
+			tracing.TraceErr(span, errors.Wrap(err, "ContactService.Save"))
 			c.log.Errorf("Error updating contact: %s", err.Error())
 		}
 	}

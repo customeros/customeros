@@ -104,7 +104,7 @@ func (s *contactService) Create(ctx context.Context, contactDetails *ContactCrea
 		}
 	}
 
-	contactId, err := s.services.CommonServices.ContactService.SaveContact(ctx, nil,
+	contactId, err := s.services.CommonServices.ContactService.Save(ctx, nil,
 		neo4jrepository.ContactFields{
 			SourceFields: neo4jmodel.SourceFields{
 				Source:    string(contactDetails.Source),
@@ -429,7 +429,7 @@ func (s *contactService) CustomerContactCreate(ctx context.Context, data *Custom
 	result := &model.CustomerContact{}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	contactId, err := s.services.CommonServices.ContactService.SaveContact(ctx, nil,
+	contactId, err := s.services.CommonServices.ContactService.Save(ctx, nil,
 		neo4jrepository.ContactFields{
 			FirstName:   data.ContactEntity.FirstName,
 			LastName:    data.ContactEntity.LastName,

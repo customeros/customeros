@@ -22,7 +22,7 @@ import (
 )
 
 type ContactService interface {
-	SaveContact(ctx context.Context, id *string, contactFields neo4jrepository.ContactFields, socialUrl string, externalSystem neo4jmodel.ExternalSystem) (string, error)
+	Save(ctx context.Context, id *string, contactFields neo4jrepository.ContactFields, socialUrl string, externalSystem neo4jmodel.ExternalSystem) (string, error)
 	HideContact(ctx context.Context, contactId string) error
 	ShowContact(ctx context.Context, contactId string) error
 	GetContactById(ctx context.Context, contactId string) (*neo4jentity.ContactEntity, error)
@@ -43,8 +43,8 @@ func NewContactService(log logger.Logger, services *Services) ContactService {
 	}
 }
 
-func (s *contactService) SaveContact(ctx context.Context, id *string, contactFields neo4jrepository.ContactFields, socialUrl string, externalSystem neo4jmodel.ExternalSystem) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.SaveContact")
+func (s *contactService) Save(ctx context.Context, id *string, contactFields neo4jrepository.ContactFields, socialUrl string, externalSystem neo4jmodel.ExternalSystem) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.Save")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "contactFields", contactFields)
@@ -59,11 +59,6 @@ func (s *contactService) SaveContact(ctx context.Context, id *string, contactFie
 	}
 	tenant := common.GetTenantFromContext(ctx)
 
-	// set default values
-	if contactFields.SourceFields.AppSource != "" {
-		common.SetAppSourceInContext(ctx, contactFields.SourceFields.AppSource)
-	}
-
 	createFlow := false
 	contactId := ""
 
@@ -73,14 +68,32 @@ func (s *contactService) SaveContact(ctx context.Context, id *string, contactFie
 
 		// Reject contact creation if linked-in url is already used by another contact
 		if (neo4jentity.SocialEntity{Url: socialUrl}).IsLinkedin() {
-			linkedInUsed, existingContactId, err := s.services.ContactService.CheckContactExistsWithLinkedIn(ctx, socialUrl, "", "")
+			linkedinUsed, existingContactId, err := s.services.ContactService.CheckContactExistsWithLinkedIn(ctx, socialUrl, "", "")
 			if err != nil {
-				tracing.TraceErr(span, err)
+				tracing.TraceErr(span, errors.Wrap(err, "unable to check contact exists with linkedin"))
 				return "", err
 			}
-			if linkedInUsed {
-				err = errors.Errorf("linkedin url %s already used by contact %s", socialUrl, existingContactId)
-				return "", err
+			if linkedinUsed {
+				contactEntity, err := s.GetContactById(ctx, existingContactId)
+				if err != nil {
+					tracing.TraceErr(span, errors.Wrap(err, "unable to get contact by id"))
+					return "", err
+				}
+				if contactEntity.Hide {
+					err = s.ShowContact(ctx, existingContactId)
+					if err != nil {
+						tracing.TraceErr(span, errors.Wrap(err, "unable to show contact"))
+						return "", err
+					}
+				} else {
+					// just update contact' updatedAt
+					err = s.services.Neo4jRepositories.CommonWriteRepository.TouchEntity(ctx, tenant, model.NodeLabelContact, existingContactId)
+					if err != nil {
+						tracing.TraceErr(span, errors.Wrap(err, "error on updating contact updatedAt"))
+					}
+					utils.EventCompleted(ctx, tenant, model.CONTACT.String(), contactId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
+				}
+				return existingContactId, nil
 			}
 		}
 

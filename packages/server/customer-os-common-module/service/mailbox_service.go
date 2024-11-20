@@ -34,7 +34,7 @@ func NewMailboxService(log logger.Logger, services *Services) MailboxService {
 }
 
 func (s *mailboxService) AddMailbox(ctx context.Context, domain, username, password, linkedUserEmail string, forwardingEnabled, webmailEnabled bool, forwardingTo []string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "MailboxService.SaveContact")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MailboxService.AddMailbox")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("linkedUserEmail", linkedUserEmail), log.String("domain", domain), log.String("username", username), log.Bool("forwardingEnabled", forwardingEnabled), log.Bool("webmailEnabled", webmailEnabled), log.Object("forwardingTo", forwardingTo))

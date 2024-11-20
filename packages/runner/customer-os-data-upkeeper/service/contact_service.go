@@ -288,9 +288,9 @@ func (s *contactService) checkContacts(ctx context.Context) {
 			}
 
 			if saveContact {
-				_, err = s.commonServices.ContactService.SaveContact(innerCtx, &contactEntity.Id, contactFields, "", neo4jmodel.ExternalSystem{})
+				_, err = s.commonServices.ContactService.Save(innerCtx, &contactEntity.Id, contactFields, "", neo4jmodel.ExternalSystem{})
 				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "ContactService.SaveContact"))
+					tracing.TraceErr(span, errors.Wrap(err, "ContactService.Save"))
 					s.log.Errorf("Error updating contact {%s}: %s", contactEntity.Id, err.Error())
 				}
 			}
@@ -369,9 +369,9 @@ func (s *contactService) updateContactNamesFromEmails(ctx context.Context) {
 				saveContact = true
 			}
 			if saveContact {
-				_, err = s.commonServices.ContactService.SaveContact(innerCtx, &record.ContactId, contactFields, "", neo4jmodel.ExternalSystem{})
+				_, err = s.commonServices.ContactService.Save(innerCtx, &record.ContactId, contactFields, "", neo4jmodel.ExternalSystem{})
 				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "ContactService.SaveContact"))
+					tracing.TraceErr(span, errors.Wrap(err, "ContactService.Save"))
 					s.log.Errorf("Error updating contact {%s}: %s", record.ContactId, err.Error())
 				}
 			}
@@ -564,7 +564,7 @@ func (s *contactService) processLinkedInUrl(ctx context.Context, tenant, linkedi
 
 	var contactIds []string
 	if len(contactsWithLinkedin) == 0 {
-		contactId, err := s.commonServices.ContactService.SaveContact(ctx, nil, neo4jrepository.ContactFields{}, linkedinProfileUrl, neo4jmodel.ExternalSystem{})
+		contactId, err := s.commonServices.ContactService.Save(ctx, nil, neo4jrepository.ContactFields{}, linkedinProfileUrl, neo4jmodel.ExternalSystem{})
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
