@@ -162,7 +162,7 @@ func (s *registrationService) createMailboxIfNotExists(ctx context.Context, span
 	}
 
 	if mailbox == nil {
-		mailboxRequest := MailboxRequest{
+		mailboxRequest := AddMailboxRequest{
 			Domain:            TEST_MAILBOX_DOMAIN,
 			Username:          strings.ToLower(tenant),
 			Password:          utils.GenerateLowerAlpha(1) + utils.GenerateKey(11, false),
