@@ -5,138 +5,234 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
-	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
-	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
-	"github.com/opentracing/opentracing-go"
-
-	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
-	"io/ioutil"
-	"log"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
+	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
+	"github.com/opentracing/opentracing-go"
+	"github.com/pkg/errors"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
+	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 )
+
+const (
+	graphAPIBaseURL  = "https://graph.microsoft.com/v1.0/me"
+	tokenEndpoint    = "https://login.microsoftonline.com/common/oauth2/v2.0/token"
+	maxEmailsPerPage = 100
+	htmlContentType  = "html"
+	textContentType  = "text"
+)
+
+type AzureService interface {
+	ReadEmailsFromAzureAd(ctx context.Context, importState *postgresEntity.UserEmailImportState) ([]*postgresEntity.EmailRawData, string, error)
+	SendEmail(ctx context.Context, request *postgresEntity.EmailMessage) error
+}
 
 type azureService struct {
 	cfg          *config.AzureOAuthConfig
 	repositories *postgresRepository.Repositories
 	services     *Services
+	httpClient   *http.Client
 }
 
-type AzureService interface {
-	ReadEmailsFromAzureAd(ctx context.Context, importState *postgresEntity.UserEmailImportState) ([]*postgresEntity.EmailRawData, string, error)
-
-	SendEmail(ctx context.Context, request *postgresEntity.EmailMessage) error
+func NewAzureService(cfg *config.AzureOAuthConfig, repositories *postgresRepository.Repositories, services *Services) AzureService {
+	return &azureService{
+		cfg:          cfg,
+		repositories: repositories,
+		services:     services,
+		httpClient:   &http.Client{},
+	}
 }
 
 func (s *azureService) ReadEmailsFromAzureAd(ctx context.Context, importState *postgresEntity.UserEmailImportState) ([]*postgresEntity.EmailRawData, string, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "AzureService.ReadEmailsFromAzureAd")
+	span, ctx := s.initializeTracing(ctx, "AzureService.ReadEmailsFromAzureAd")
 	defer span.Finish()
 
-	var results []*postgresEntity.EmailRawData
-
-	var reqUrl string
-
-	oAuthTokenEntity, err := s.repositories.OAuthTokenRepository.GetByEmail(ctx, importState.Tenant, "azure-ad", importState.Username)
+	token, err := s.getValidToken(ctx, span, importState.Tenant, importState.Username)
 	if err != nil {
-		return nil, "", fmt.Errorf("unable to get token for user: %v", err)
+		tracing.TraceErr(span, errors.Wrap(err, "token error"))
+		return nil, "", fmt.Errorf("token error: %w", err)
 	}
 
-	if oAuthTokenEntity.ExpiresAt.Before(time.Now().Add(-time.Minute)) {
-
-		refreshTokenResponse, err := s.getNewAccessTokenWithARefreshToken(ctx, oAuthTokenEntity.RefreshToken)
-		if err != nil || refreshTokenResponse == nil {
-			err := s.repositories.OAuthTokenRepository.MarkForManualRefresh(ctx, oAuthTokenEntity.TenantName, oAuthTokenEntity.PlayerIdentityId, oAuthTokenEntity.Provider)
-			if err != nil {
-				log.Fatalf("Failed to mark token for manual refresh: %v", err)
-				return nil, "", err
-			}
-
-			return nil, "", err
-		}
-
-		oAuthTokenEntity, err = s.repositories.OAuthTokenRepository.Update(ctx, oAuthTokenEntity.TenantName, oAuthTokenEntity.PlayerIdentityId, oAuthTokenEntity.Provider, refreshTokenResponse.AccessToken, refreshTokenResponse.RefreshToken, time.Now().Add(time.Second*time.Duration(refreshTokenResponse.ExpiresIn)))
-		if err != nil {
-			log.Fatalf("Failed to update token: %v", err)
-			return nil, "", err
-		}
-	}
-
-	if importState.Cursor != "" {
-		reqUrl = importState.Cursor
-	} else {
-		reqUrl = "https://graph.microsoft.com/v1.0/me/messages"
-
-		queryParams := url.Values{}
-		queryParams.Add("$top", fmt.Sprintf("%d", 100))
-
-		reqUrl = reqUrl + "?" + queryParams.Encode()
-	}
-
-	client := &http.Client{}
-
-	req, _ := http.NewRequest("GET", reqUrl, nil)
-	req.Header.Set("Authorization", "Bearer "+oAuthTokenEntity.AccessToken)
-
-	resp, err := client.Do(req)
+	reqURL := s.buildEmailsRequestURL(importState.Cursor)
+	emails, nextLink, err := s.fetchEmails(ctx, span, reqURL, token)
 	if err != nil {
-		log.Fatalf("Failed to fetch emails: %v", err)
-	}
-	defer resp.Body.Close()
-
-	body, _ := ioutil.ReadAll(resp.Body)
-	if resp.StatusCode == http.StatusUnauthorized {
-
-		return nil, "", fmt.Errorf("failed to fetch emails: %v", resp.Status)
-	} else if resp.StatusCode == http.StatusOK {
-		var result MicrosoftRawEmailsResponse
-		err = json.Unmarshal(body, &result)
-		if err != nil {
-			log.Fatalf("Failed to parse response: %v", err)
-		}
-
-		results = convertToEmailRawData(result)
-
-		if nextLink := result.OdataNextLink; nextLink != "" {
-			return results, nextLink, nil
-		}
-
-		return results, "", nil
+		tracing.TraceErr(span, errors.Wrap(err, "fetch error"))
+		return nil, "", fmt.Errorf("fetch error: %w", err)
 	}
 
-	return nil, "", fmt.Errorf("failed to fetch emails: %v", resp.Status)
+	return emails, nextLink, nil
 }
 
 func (s *azureService) SendEmail(ctx context.Context, request *postgresEntity.EmailMessage) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "AzureService.SendEmail")
+	span, ctx := s.initializeTracing(ctx, "AzureService.SendEmail")
 	defer span.Finish()
 
-	tenant := common.GetTenantFromContext(ctx)
-
-	var err error
-
-	oAuthTokenEntity, err := s.repositories.OAuthTokenRepository.GetByEmail(ctx, tenant, "azure-ad", request.From)
+	token, err := s.getValidToken(ctx, span, common.GetTenantFromContext(ctx), request.From)
 	if err != nil {
-		return fmt.Errorf("unable to get token for user: %v", err)
-	}
-	if oAuthTokenEntity == nil {
-		return fmt.Errorf("unable to get token for user: %v", err)
-	}
-	if oAuthTokenEntity.NeedsManualRefresh {
-		return fmt.Errorf("oauth token needs manual refresh: %v", err)
+		tracing.TraceErr(span, errors.Wrap(err, "token error"))
+		return fmt.Errorf("token error: %w", err)
 	}
 
-	// build and send the email
-	var message MailRequest
-	message.Subject = request.Subject
-	message.Body.ContentType = "HTML"
-	message.Body.Content = request.Content
+	message := s.buildMailRequest(request)
+
+	var draftID string
+	if request.ReplyTo == nil {
+		draftID, err = s.createNewEmail(ctx, span, message, token)
+	} else {
+		draftID, err = s.createReplyEmail(ctx, span, message, *request.ReplyTo, token)
+	}
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "error creating email"))
+		return err
+	}
+
+	if err := s.sendDraft(ctx, span, draftID, token); err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "error sending draft"))
+		return err
+	}
+
+	messageID, threadID, err := s.getEmailMetadata(token, span, draftID)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "error getting email metadata"))
+		return err
+	}
+
+	request.ProviderMessageId = messageID
+	request.ProviderThreadId = threadID
+
+	return nil
+}
+
+func (s *azureService) getValidToken(ctx context.Context, span opentracing.Span, tenant, email string) (string, error) {
+	token, err := s.repositories.OAuthTokenRepository.GetByEmail(ctx, tenant, "azure-ad", email)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "error getting oauth token"))
+		return "", fmt.Errorf("get token error: %w", err)
+	}
+	if token == nil || token.NeedsManualRefresh {
+		tracing.TraceErr(span, errors.Wrap(err, "invalid token state"))
+		return "", fmt.Errorf("invalid token state")
+	}
+
+	if token.ExpiresAt.Before(time.Now().Add(-time.Minute)) {
+		refreshed, err := s.refreshToken(ctx, span, token)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "error refreshing token"))
+			return "", fmt.Errorf("refresh error: %w", err)
+		}
+		token = refreshed
+	}
+
+	return token.AccessToken, nil
+}
+
+func (s *azureService) refreshToken(ctx context.Context, span opentracing.Span, token *postgresEntity.OAuthTokenEntity) (*postgresEntity.OAuthTokenEntity, error) {
+	data := url.Values{
+		"client_id":     {s.cfg.ClientId},
+		"client_secret": {s.cfg.ClientSecret},
+		"refresh_token": {token.RefreshToken},
+		"grant_type":    {"refresh_token"},
+	}
+
+	resp, err := s.httpClient.PostForm(tokenEndpoint, data)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "token refresh request error"))
+		return nil, fmt.Errorf("refresh request error: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		if err := s.repositories.OAuthTokenRepository.MarkForManualRefresh(ctx, token.TenantName, token.PlayerIdentityId, token.Provider); err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "error marking for manual refresh"))
+			return nil, fmt.Errorf("mark for refresh error: %w", err)
+		}
+		tracing.TraceErr(span, fmt.Errorf("token refresh failed: %s", resp.Status))
+		return nil, fmt.Errorf("refresh failed: %s", resp.Status)
+	}
+
+	var refreshResp RefreshTokenResponse
+	if err := json.NewDecoder(resp.Body).Decode(&refreshResp); err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "error decoding token refresh response"))
+		return nil, fmt.Errorf("decode error: %w", err)
+	}
+
+	return s.repositories.OAuthTokenRepository.Update(
+		ctx,
+		token.TenantName,
+		token.PlayerIdentityId,
+		token.Provider,
+		refreshResp.AccessToken,
+		refreshResp.RefreshToken,
+		time.Now().Add(time.Second*time.Duration(refreshResp.ExpiresIn)),
+	)
+}
+
+func (s *azureService) buildEmailsRequestURL(cursor string) string {
+	if cursor != "" {
+		return cursor
+	}
+
+	params := url.Values{}
+	params.Add("$top", fmt.Sprintf("%d", maxEmailsPerPage))
+	return fmt.Sprintf("%s/messages?%s", graphAPIBaseURL, params.Encode())
+}
+
+func (s *azureService) fetchEmails(ctx context.Context, span opentracing.Span, reqURL string, token string) ([]*postgresEntity.EmailRawData, string, error) {
+	req, err := http.NewRequestWithContext(ctx, "GET", reqURL, nil)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed building new fetchEmails request"))
+		return nil, "", err
+	}
+	req.Header.Set("Authorization", "Bearer "+token)
+
+	resp, err := s.httpClient.Do(req)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed making fetchEmails request"))
+		return nil, "", err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed reading fetchEmails response"))
+		return nil, "", err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		tracing.TraceErr(span, fmt.Errorf("fetchEmails call failed: %s", resp.Status))
+		return nil, "", fmt.Errorf("API error: %s", resp.Status)
+	}
+
+	var result MicrosoftRawEmailsResponse
+	if err := json.Unmarshal(body, &result); err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal fetchEmail response"))
+		return nil, "", err
+	}
+
+	return convertToEmailRawData(result), result.OdataNextLink, nil
+}
+
+func (s *azureService) buildMailRequest(request *postgresEntity.EmailMessage) MailRequest {
+	message := MailRequest{
+		Subject: request.Subject,
+		Body: struct {
+			ContentType string `json:"contentType"`
+			Content     string `json:"content"`
+		}{
+			ContentType: "HTML",
+			Content:     request.Content,
+		},
+	}
 
 	if request.FromName != "" {
 		message.From.EmailAddress.Address = fmt.Sprintf("%s <%s>", request.FromName, request.From)
@@ -144,218 +240,176 @@ func (s *azureService) SendEmail(ctx context.Context, request *postgresEntity.Em
 		message.From.EmailAddress.Address = request.From
 	}
 
-	for _, to := range request.To {
-		message.ToRecipients = append(message.ToRecipients, Recipient{
-			EmailAddress: struct {
-				Address string `json:"address"`
-			}{Address: to},
-		})
-	}
+	message.ToRecipients = buildRecipients(request.To)
+	message.CcRecipients = buildRecipients(request.Cc)
+	message.BccRecipients = buildRecipients(request.Bcc)
 
-	for _, cc := range request.Cc {
-		message.CcRecipients = append(message.CcRecipients, Recipient{
-			EmailAddress: struct {
-				Address string `json:"address"`
-			}{Address: cc},
-		})
-	}
-
-	for _, bcc := range request.Bcc {
-		message.BccRecipients = append(message.BccRecipients, Recipient{
-			EmailAddress: struct {
-				Address string `json:"address"`
-			}{Address: bcc},
-		})
-	}
-
-	var req *http.Request
-
-	if request.ReplyTo == nil {
-		reqBody, err := json.Marshal(message)
-		if err != nil {
-			return fmt.Errorf("failed to marshal request body: %v", err)
-		}
-
-		req, err = http.NewRequest("POST", "https://graph.microsoft.com/v1.0/me/messages", bytes.NewBuffer(reqBody))
-		if err != nil {
-			return fmt.Errorf("failed to create request: %v", err)
-		}
-	} else {
-		interactionEventNode, err := s.services.Neo4jRepositories.CommonReadRepository.GetById(ctx, tenant, *request.ReplyTo, commonModel.NodeLabelInteractionEvent)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
-		interactionEvent := neo4jmapper.MapDbNodeToInteractionEventEntity(interactionEventNode)
-
-		emailChannelData := entity.EmailChannelData{}
-		err = json.Unmarshal([]byte(interactionEvent.ChannelData), &emailChannelData)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return fmt.Errorf("unable to parse email channel data for %s", *request.ReplyTo)
-		}
-
-		replyReq := ReplyRequest{
-			Message: message,
-		}
-
-		reqBody, err := json.Marshal(replyReq)
-		if err != nil {
-			return fmt.Errorf("failed to marshal request body: %v", err)
-		}
-
-		req, err = http.NewRequest("POST", fmt.Sprintf("https://graph.microsoft.com/v1.0/me/messages/%s/createReply", emailChannelData.ProviderMessageId), bytes.NewBuffer(reqBody))
-		if err != nil {
-			return fmt.Errorf("failed to create request: %v", err)
-		}
-	}
-
-	// Set the headers
-	req.Header.Set("Authorization", "Bearer "+oAuthTokenEntity.AccessToken)
-	req.Header.Set("Content-Type", "application/json")
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return fmt.Errorf("failed to send request: %v", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusCreated {
-		bodyBytes, _ := ioutil.ReadAll(resp.Body)
-		return fmt.Errorf("API request failed with status: %s, response: %s", resp.Status, bodyBytes)
-	} else {
-
-		var draftResponse DraftResponse
-		if err := json.NewDecoder(resp.Body).Decode(&draftResponse); err != nil {
-			return fmt.Errorf("failed to decode response body: %v", err)
-		}
-
-		sendDraftReq := SendDraftRequest{
-			SaveToSentItems: true,
-		}
-
-		reqBody, err := json.Marshal(sendDraftReq)
-		if err != nil {
-			return fmt.Errorf("failed to marshal request body: %v", err)
-		}
-
-		req, err := http.NewRequest("POST", fmt.Sprintf("https://graph.microsoft.com/v1.0/me/messages/%s/send", draftResponse.Id), bytes.NewBuffer(reqBody))
-		if err != nil {
-			return fmt.Errorf("failed to create request: %v", err)
-		}
-
-		req.Header.Set("Authorization", "Bearer "+oAuthTokenEntity.AccessToken)
-		req.Header.Set("Content-Type", "application/json")
-
-		client := &http.Client{}
-		resp, err := client.Do(req)
-		if err != nil {
-			return fmt.Errorf("failed to send request: %v", err)
-		}
-		defer resp.Body.Close()
-
-		if resp.StatusCode != http.StatusAccepted {
-			bodyBytes, _ := ioutil.ReadAll(resp.Body)
-			return fmt.Errorf("API request failed with status: %s, response: %s", resp.Status, bodyBytes)
-		}
-
-		messageId, threadId, err := getIdAndThreadIdForSentEmail(oAuthTokenEntity.AccessToken, draftResponse.Id)
-		if err != nil {
-			return fmt.Errorf("failed to get conversation id for sent email: %v", err)
-		}
-
-		request.ProviderMessageId = messageId
-		request.ProviderThreadId = threadId
-		//todo do we need references?
-	}
-
-	return nil
+	return message
 }
 
-func getIdAndThreadIdForSentEmail(token, messageId string) (string, string, error) {
-	url := fmt.Sprintf("https://graph.microsoft.com/v1.0/me/messages/%s", messageId)
-
-	req, err := http.NewRequest("GET", url, nil)
+func (s *azureService) createNewEmail(ctx context.Context, span opentracing.Span, message MailRequest, token string) (string, error) {
+	reqBody, err := json.Marshal(message)
 	if err != nil {
-		return "", "", fmt.Errorf("failed to create request: %v", err)
+		tracing.TraceErr(span, errors.Wrap(err, "failed to marshal json for createNewEmail"))
+		return "", fmt.Errorf("marshal error: %w", err)
+	}
+
+	return s.createEmailRequest(ctx, span, fmt.Sprintf("%s/messages", graphAPIBaseURL), reqBody, token)
+}
+
+func (s *azureService) createReplyEmail(ctx context.Context, span opentracing.Span, message MailRequest, replyToID string, token string) (string, error) {
+	emailData, err := s.getReplyEmailData(ctx, span, replyToID)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to get email reply data"))
+		return "", err
+	}
+
+	replyReq := ReplyRequest{
+		Message: message,
+	}
+
+	reqBody, err := json.Marshal(replyReq)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to marshal json for createReplyEmail"))
+		return "", fmt.Errorf("marshal error: %w", err)
+	}
+
+	return s.createEmailRequest(ctx, span, fmt.Sprintf("%s/messages/%s/createReply", graphAPIBaseURL, emailData.ProviderMessageId), reqBody, token)
+}
+
+func (s *azureService) createEmailRequest(ctx context.Context, span opentracing.Span, url string, body []byte, token string) (string, error) {
+	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(body))
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to createEmailRequest"))
+		return "", fmt.Errorf("create request error: %w", err)
 	}
 
 	req.Header.Set("Authorization", "Bearer "+token)
 	req.Header.Set("Content-Type", "application/json")
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	resp, err := s.httpClient.Do(req)
 	if err != nil {
-		return "", "", fmt.Errorf("failed to send request: %v", err)
+		tracing.TraceErr(span, errors.Wrap(err, "failed to make createEmailRequest call"))
+		return "", fmt.Errorf("do request error: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusCreated {
+		body, _ := io.ReadAll(resp.Body)
+		tracing.TraceErr(span, fmt.Errorf("API error: %s, response: %s", resp.Status, body))
+		return "", fmt.Errorf("API error: %s, response: %s", resp.Status, body)
+	}
+
+	var draftResponse DraftResponse
+	if err := json.NewDecoder(resp.Body).Decode(&draftResponse); err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to decode json response"))
+		return "", fmt.Errorf("decode error: %w", err)
+	}
+
+	return draftResponse.Id, nil
+}
+
+func (s *azureService) sendDraft(ctx context.Context, span opentracing.Span, draftID, token string) error {
+	sendReq := SendDraftRequest{SaveToSentItems: true}
+	reqBody, err := json.Marshal(sendReq)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to marshal json for sendDraft"))
+		return fmt.Errorf("marshal error: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "POST", fmt.Sprintf("%s/messages/%s/send", graphAPIBaseURL, draftID), bytes.NewBuffer(reqBody))
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to create request for sendDraft"))
+		return fmt.Errorf("create request error: %w", err)
+	}
+
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := s.httpClient.Do(req)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to send request for sendDraft"))
+		return fmt.Errorf("do request error: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusAccepted {
+		body, _ := io.ReadAll(resp.Body)
+		r := fmt.Errorf("API error: %s, response: %s", resp.Status, body)
+		tracing.TraceErr(span, r)
+		return r
+	}
+
+	return nil
+}
+
+func (s *azureService) getEmailMetadata(token string, span opentracing.Span, messageID string) (string, string, error) {
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/messages/%s", graphAPIBaseURL, messageID), nil)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to create request for getEmailMetadata"))
+		return "", "", fmt.Errorf("create request error: %w", err)
+	}
+
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := s.httpClient.Do(req)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to make request for getEmailMetadata"))
+		return "", "", fmt.Errorf("do request error: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		bodyBytes, _ := ioutil.ReadAll(resp.Body)
-		return "", "", fmt.Errorf("API request failed with status: %s, response: %s", resp.Status, bodyBytes)
+		body, _ := io.ReadAll(resp.Body)
+		r := fmt.Errorf("API error: %s, response: %s", resp.Status, body)
+		tracing.TraceErr(span, r)
+		return "", "", r
 	}
 
 	var emailResponse MicrosoftRawEmailResponse
 	if err := json.NewDecoder(resp.Body).Decode(&emailResponse); err != nil {
-		return "", "", fmt.Errorf("failed to decode response body: %v", err)
+		tracing.TraceErr(span, errors.Wrap(err, "failed to decode json"))
+		return "", "", fmt.Errorf("decode error: %w", err)
 	}
 
 	return emailResponse.Id, emailResponse.ConversationId, nil
 }
 
-type MicrosoftRawEmailsResponse struct {
-	OdataNextLink string                      `json:"@odata.nextLink"`
-	Value         []MicrosoftRawEmailResponse `json:"value"`
+func (s *azureService) getReplyEmailData(ctx context.Context, span opentracing.Span, replyToID string) (*entity.EmailChannelData, error) {
+	tenant := common.GetTenantFromContext(ctx)
+	interactionEventNode, err := s.services.Neo4jRepositories.CommonReadRepository.GetById(ctx, tenant, replyToID, commonModel.NodeLabelInteractionEvent)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to get interaction event"))
+		return nil, fmt.Errorf("get interaction event error: %w", err)
+	}
+
+	interactionEvent := neo4jmapper.MapDbNodeToInteractionEventEntity(interactionEventNode)
+	var emailData entity.EmailChannelData
+	if err := json.Unmarshal([]byte(interactionEvent.ChannelData), &emailData); err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to parse channel data"))
+		return nil, fmt.Errorf("parse channel data error: %w", err)
+	}
+
+	return &emailData, nil
 }
 
-type MicrosoftRawEmailResponse struct {
-	Id                      string    `json:"id"`
-	SentDateTime            time.Time `json:"sentDateTime"`
-	InternetMessageId       string    `json:"internetMessageId"`
-	Subject                 string    `json:"subject"`
-	ConversationId          string    `json:"conversationId"`
-	ConversationIndex       string    `json:"conversationIndex"`
-	InferenceClassification string    `json:"inferenceClassification"`
-	Body                    struct {
-		ContentType string `json:"contentType"`
-		Content     string `json:"content"`
-	} `json:"body"`
-	Sender struct {
-		EmailAddress struct {
-			Name    string `json:"name"`
-			Address string `json:"address"`
-		} `json:"emailAddress"`
-	} `json:"sender"`
-	From struct {
-		EmailAddress struct {
-			Name    string `json:"name"`
-			Address string `json:"address"`
-		} `json:"emailAddress"`
-	} `json:"from"`
-	ToRecipients []struct {
-		EmailAddress struct {
-			Name    string `json:"name"`
-			Address string `json:"address"`
-		} `json:"emailAddress"`
-	} `json:"toRecipients"`
-	CcRecipients []struct {
-		EmailAddress struct {
-			Name    string `json:"name"`
-			Address string `json:"address"`
-		} `json:"emailAddress"`
-	} `json:"ccRecipients"`
-	BccRecipients []struct {
-		EmailAddress struct {
-			Name    string `json:"name"`
-			Address string `json:"address"`
-		} `json:"emailAddress"`
-	} `json:"bccRecipients"`
-	ReplyTo []interface{} `json:"replyTo"`
+func buildRecipients(addresses []string) []Recipient {
+	recipients := make([]Recipient, len(addresses))
+	for i, addr := range addresses {
+		recipients[i] = Recipient{
+			EmailAddress: struct {
+				Address string `json:"address"`
+			}{
+				Address: addr,
+			},
+		}
+	}
+	return recipients
 }
 
 func convertToEmailRawData(microsoftEmails MicrosoftRawEmailsResponse) []*postgresEntity.EmailRawData {
-	var emails []*postgresEntity.EmailRawData
+	emails := make([]*postgresEntity.EmailRawData, 0, len(microsoftEmails.Value))
 	for _, me := range microsoftEmails.Value {
 		email := &postgresEntity.EmailRawData{
 			ProviderMessageId: me.Id,
@@ -366,12 +420,12 @@ func convertToEmailRawData(microsoftEmails MicrosoftRawEmailsResponse) []*postgr
 			To:                concatenateEmailAddresses(me.ToRecipients),
 			Cc:                concatenateEmailAddresses(me.CcRecipients),
 			Bcc:               concatenateEmailAddresses(me.BccRecipients),
-			Html:              getBodyContent(me.Body, "html"),
-			Text:              getBodyContent(me.Body, "text"),
+			Html:              getBodyContent(me.Body, htmlContentType),
+			Text:              getBodyContent(me.Body, textContentType),
 			ThreadId:          me.ConversationId,
-			InReplyTo:         "",                      // This field is not provided in the response
-			Reference:         "",                      // This field is not provided in the response
-			Headers:           make(map[string]string), // Assuming headers are not available in this response
+			InReplyTo:         "",
+			Reference:         "",
+			Headers:           make(map[string]string),
 		}
 		emails = append(emails, email)
 	}
@@ -383,8 +437,9 @@ func concatenateEmailAddresses(recipients []struct {
 		Name    string `json:"name"`
 		Address string `json:"address"`
 	} `json:"emailAddress"`
-}) string {
-	var addresses []string
+},
+) string {
+	addresses := make([]string, 0, len(recipients))
 	for _, recipient := range recipients {
 		address := fmt.Sprintf("%s <%s>", recipient.EmailAddress.Name, recipient.EmailAddress.Address)
 		addresses = append(addresses, address)
@@ -395,110 +450,16 @@ func concatenateEmailAddresses(recipients []struct {
 func getBodyContent(body struct {
 	ContentType string `json:"contentType"`
 	Content     string `json:"content"`
-}, contentType string) string {
-	if body.ContentType == contentType {
+}, contentType string,
+) string {
+	if strings.EqualFold(body.ContentType, contentType) {
 		return body.Content
 	}
 	return ""
 }
 
-func (s *azureService) getNewAccessTokenWithARefreshToken(ctx context.Context, refreshToken string) (*RefreshTokenResponse, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "AzureService.getNewAccessTokenWithARefreshToken")
-	defer span.Finish()
-
-	data := url.Values{}
-	data.Set("client_id", s.cfg.ClientId)
-	data.Set("client_secret", s.cfg.ClientSecret)
-	data.Set("refresh_token", refreshToken)
-	data.Set("grant_type", "refresh_token")
-
-	req, err := http.NewRequest("POST", "https://login.microsoftonline.com/common/oauth2/v2.0/token", strings.NewReader(data.Encode()))
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	var tokenResponse RefreshTokenResponse
-	err = json.Unmarshal(body, &tokenResponse)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	return &tokenResponse, nil
-}
-
-type RefreshTokenResponse struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
-	ExpiresIn    int    `json:"expires_in"`
-	Scope        string `json:"scope"`
-}
-
-type MailRequest struct {
-	Subject string `json:"subject"`
-	Body    struct {
-		ContentType string `json:"contentType"`
-		Content     string `json:"content"`
-	} `json:"body"`
-	From struct {
-		EmailAddress struct {
-			Address string `json:"address"`
-		} `json:"emailAddress"`
-	} `json:"from"`
-	ToRecipients  []Recipient `json:"toRecipients"`
-	CcRecipients  []Recipient `json:"ccRecipients,omitempty"`
-	BccRecipients []Recipient `json:"bccRecipients,omitempty"`
-}
-
-type Recipient struct {
-	EmailAddress struct {
-		Address string `json:"address"`
-	} `json:"emailAddress"`
-}
-
-type CreateDraftRequest struct {
-	Message MailRequest `json:"message"`
-}
-
-type DraftResponse struct {
-	Id string `json:"id"`
-}
-
-type SendDraftRequest struct {
-	SaveToSentItems bool `json:"saveToSentItems"`
-}
-
-type ReplyRequest struct {
-	Message MailRequest `json:"message"`
-	Comment string      `json:"comment"`
-}
-
-func NewAzureService(cfg *config.AzureOAuthConfig, repositories *postgresRepository.Repositories, services *Services) AzureService {
-	return &azureService{
-		cfg:          cfg,
-		repositories: repositories,
-		services:     services,
-	}
+func (s *azureService) initializeTracing(ctx context.Context, operationName string) (opentracing.Span, context.Context) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, operationName)
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	return span, ctx
 }
