@@ -28,7 +28,7 @@ export const ContactAvatarHeader = observer(() => {
           icon={<Plus className='text-gray-400 size-5' />}
           className={cn('size-6', enableFeature ? 'visible' : 'hidden')}
           onClick={() => {
-            store.ui.commandMenu.setType('CreateNewContact');
+            store.ui.commandMenu.setType('AddContactViaLinkedInUrl');
             store.ui.commandMenu.setOpen(true);
           }}
         />
