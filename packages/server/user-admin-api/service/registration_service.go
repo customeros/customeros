@@ -96,7 +96,7 @@ func (s *registrationService) CreateOrganizationAndContact(ctx context.Context, 
 		}
 
 		if contactNode == nil {
-			contactId, err = s.services.CommonServices.ContactService.SaveContact(ctx, nil, repository.ContactFields{}, "", neo4jmodel.ExternalSystem{})
+			contactId, err = s.services.CommonServices.ContactService.Save(ctx, nil, repository.ContactFields{}, "", neo4jmodel.ExternalSystem{})
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return nil, nil, err

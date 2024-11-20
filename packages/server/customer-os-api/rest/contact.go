@@ -111,7 +111,7 @@ func CreateContactsFromCsvUpload(services *service.Services) gin.HandlerFunc {
 
 			// if contact not exists, create new contact
 			if contactId == "" {
-				contactId, err = services.CommonServices.ContactService.SaveContact(ctx, nil, neo4jrepo.ContactFields{}, inputSocialUrl, neo4jmodel.ExternalSystem{})
+				contactId, err = services.CommonServices.ContactService.Save(ctx, nil, neo4jrepo.ContactFields{}, inputSocialUrl, neo4jmodel.ExternalSystem{})
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "failed to save contact"))
 					continue

@@ -374,7 +374,7 @@ func (r *mutationResolver) ContactUpdate(ctx context.Context, input model.Contac
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "request.input", input)
 
-	contactId, err := r.Services.CommonServices.ContactService.SaveContact(ctx, utils.StringPtr(input.ID), mapper.MapContactUpdateInputToContactFields(input), "", neo4jmodel.ExternalSystem{})
+	contactId, err := r.Services.CommonServices.ContactService.Save(ctx, utils.StringPtr(input.ID), mapper.MapContactUpdateInputToContactFields(input), "", neo4jmodel.ExternalSystem{})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to update contact %s", input.ID)

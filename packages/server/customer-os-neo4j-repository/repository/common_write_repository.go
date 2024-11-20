@@ -34,6 +34,7 @@ type CommonWriteRepository interface {
 	UpdateStringProperty(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, nodeLabel, entityId, property string, value string) error
 	IncrementProperty(ctx context.Context, tenant, nodeLabel, entityId, property string) error
 	RemoveProperty(ctx context.Context, tenant, nodeLabel, entityId, property string) error
+	TouchEntity(ctx context.Context, tenant, nodeLabel, entityId string) error
 }
 
 type commonWriteRepository struct {
@@ -168,7 +169,7 @@ func (r *commonWriteRepository) Delete(ctx context.Context, tx *neo4j.ManagedTra
 }
 
 func (r *commonWriteRepository) UpdateTimeProperty(ctx context.Context, tenant, nodeLabel, entityId, property string, value *time.Time) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactWriteRepository.UpdateTimeProperty")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CommonWriteRepository.UpdateTimeProperty")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
@@ -192,7 +193,7 @@ func (r *commonWriteRepository) UpdateTimeProperty(ctx context.Context, tenant, 
 }
 
 func (r *commonWriteRepository) UpdateInt64Property(ctx context.Context, tenant, nodeLabel, entityId, property string, value int64) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactWriteRepository.UpdateInt64Property")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CommonWriteRepository.UpdateInt64Property")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
@@ -216,7 +217,7 @@ func (r *commonWriteRepository) UpdateInt64Property(ctx context.Context, tenant,
 }
 
 func (r *commonWriteRepository) UpdateBoolProperty(ctx context.Context, tenant, nodeLabel, entityId, property string, value bool) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactWriteRepository.UpdateBoolProperty")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CommonWriteRepository.UpdateBoolProperty")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	tracing.TagTenant(span, tenant)
@@ -239,7 +240,7 @@ func (r *commonWriteRepository) UpdateBoolProperty(ctx context.Context, tenant, 
 }
 
 func (r *commonWriteRepository) UpdateStringProperty(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, nodeLabel, entityId, property string, value string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactWriteRepository.UpdateStringProperty")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CommonWriteRepository.UpdateStringProperty")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	tracing.TagTenant(span, tenant)
@@ -270,7 +271,7 @@ func (r *commonWriteRepository) UpdateStringProperty(ctx context.Context, tx *ne
 }
 
 func (r *commonWriteRepository) IncrementProperty(ctx context.Context, tenant, nodeLabel, entityId, property string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactWriteRepository.IncrementProperty")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CommonWriteRepository.IncrementProperty")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
@@ -295,7 +296,7 @@ func (r *commonWriteRepository) IncrementProperty(ctx context.Context, tenant, n
 }
 
 func (r *commonWriteRepository) RemoveProperty(ctx context.Context, tenant, nodeLabel, entityId, property string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactWriteRepository.RemoveProperty")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CommonWriteRepository.RemoveProperty")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
@@ -304,6 +305,28 @@ func (r *commonWriteRepository) RemoveProperty(ctx context.Context, tenant, node
 	span.LogFields(log.String("property", property), log.String("nodeLabel", nodeLabel))
 
 	cypher := fmt.Sprintf(`MATCH (n:%s_%s {id: $entityId}) REMOVE n.%s SET n.updatedAt=datetime()`, nodeLabel, tenant, property)
+	params := map[string]any{
+		"entityId": entityId,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+// update the updatedAt property of the entity to current time
+func (r *commonWriteRepository) TouchEntity(ctx context.Context, tenant, nodeLabel, entityId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CommonWriteRepository.TouchEntity")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	tracing.TagEntity(span, entityId)
+	span.LogKV("nodeLabel", nodeLabel)
+
+	cypher := fmt.Sprintf(`MATCH (n:%s_%s {id: $entityId}) SET n.updatedAt=datetime()`, nodeLabel, tenant)
 	params := map[string]any{
 		"entityId": entityId,
 	}
