@@ -10,6 +10,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -42,6 +44,11 @@ type Location struct {
 }
 
 type LocationService interface {
+	GetAllForContact(ctx context.Context, contactId string) (*neo4jentity.LocationEntities, error)
+	GetAllForContacts(ctx context.Context, contactIds []string) (*neo4jentity.LocationEntities, error)
+	GetAllForOrganization(ctx context.Context, organizationId string) (*neo4jentity.LocationEntities, error)
+	GetAllForOrganizations(ctx context.Context, organizationIds []string) (*neo4jentity.LocationEntities, error)
+
 	ExtractAndEnrichLocation(ctx context.Context, tenant, address string) (*Location, error)
 }
 
@@ -63,6 +70,60 @@ func NewLocationService(log logger.Logger, services *Services) LocationService {
 			},
 		}),
 	}
+}
+
+func (s *locationService) GetAllForContact(ctx context.Context, contactId string) (*neo4jentity.LocationEntities, error) {
+	dbNodes, err := s.services.Neo4jRepositories.LocationReadRepository.GetAllForContact(ctx, common.GetTenantFromContext(ctx), contactId)
+	if err != nil {
+		return nil, err
+	}
+
+	locationEntities := neo4jentity.LocationEntities{}
+	for _, dbNode := range dbNodes {
+		locationEntities = append(locationEntities, *neo4jmapper.MapDbNodeToLocationEntity(dbNode))
+	}
+	return &locationEntities, nil
+}
+
+func (s *locationService) GetAllForContacts(ctx context.Context, contactIds []string) (*neo4jentity.LocationEntities, error) {
+	locations, err := s.services.Neo4jRepositories.LocationReadRepository.GetAllForContacts(ctx, common.GetTenantFromContext(ctx), contactIds)
+	if err != nil {
+		return nil, err
+	}
+	locationEntities := neo4jentity.LocationEntities{}
+	for _, v := range locations {
+		locationEntity := neo4jmapper.MapDbNodeToLocationEntity(v.Node)
+		locationEntity.DataloaderKey = v.LinkedNodeId
+		locationEntities = append(locationEntities, *locationEntity)
+	}
+	return &locationEntities, nil
+}
+
+func (s *locationService) GetAllForOrganization(ctx context.Context, organizationId string) (*neo4jentity.LocationEntities, error) {
+	dbNodes, err := s.services.Neo4jRepositories.LocationReadRepository.GetAllForOrganization(ctx, common.GetContext(ctx).Tenant, organizationId)
+	if err != nil {
+		return nil, err
+	}
+
+	locationEntities := neo4jentity.LocationEntities{}
+	for _, dbNode := range dbNodes {
+		locationEntities = append(locationEntities, *neo4jmapper.MapDbNodeToLocationEntity(dbNode))
+	}
+	return &locationEntities, nil
+}
+
+func (s *locationService) GetAllForOrganizations(ctx context.Context, organizationIds []string) (*neo4jentity.LocationEntities, error) {
+	locations, err := s.services.Neo4jRepositories.LocationReadRepository.GetAllForOrganizations(ctx, common.GetTenantFromContext(ctx), organizationIds)
+	if err != nil {
+		return nil, err
+	}
+	locationEntities := neo4jentity.LocationEntities{}
+	for _, v := range locations {
+		locationEntity := neo4jmapper.MapDbNodeToLocationEntity(v.Node)
+		locationEntity.DataloaderKey = v.LinkedNodeId
+		locationEntities = append(locationEntities, *locationEntity)
+	}
+	return &locationEntities, nil
 }
 
 func (s *locationService) ExtractAndEnrichLocation(ctx context.Context, tenant, address string) (*Location, error) {

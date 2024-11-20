@@ -16,10 +16,6 @@ import (
 )
 
 type LocationRepository interface {
-	GetAllForContact(ctx context.Context, tenant, contactId string) ([]*dbtype.Node, error)
-	GetAllForContacts(ctx context.Context, tenant string, contactIds []string) ([]*utils.DbNodeAndId, error)
-	GetAllForOrganization(ctx context.Context, tenant, organizationId string) ([]*dbtype.Node, error)
-	GetAllForOrganizations(ctx context.Context, tenant string, organizationIds []string) ([]*utils.DbNodeAndId, error)
 	CreateLocationForEntity(ctx context.Context, fromContext string, entityType model.EntityType, id string, source entity.SourceFields) (*dbtype.Node, error)
 	Update(ctx context.Context, tenant string, locationEntity neo4jentity.LocationEntity) (*dbtype.Node, error)
 	RemoveRelationshipAndDeleteOrphans(ctx context.Context, entityType model.EntityType, entityId, locationId string) error
@@ -33,110 +29,6 @@ func NewLocationRepository(driver *neo4j.DriverWithContext) LocationRepository {
 	return &locationRepository{
 		driver: driver,
 	}
-}
-
-func (r *locationRepository) GetAllForContact(ctx context.Context, tenant, contactId string) ([]*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationRepository.GetAllForContact")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	session := utils.NewNeo4jReadSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, `
-			MATCH (:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(:Contact {id:$contactId})-[:ASSOCIATED_WITH]->(loc:Location)
-			RETURN loc`,
-			map[string]any{
-				"tenant":    tenant,
-				"contactId": contactId,
-			}); err != nil {
-			return nil, err
-		} else {
-			return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
-		}
-	})
-	return result.([]*dbtype.Node), err
-}
-
-func (r *locationRepository) GetAllForContacts(ctx context.Context, tenant string, contactIds []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationRepository.GetAllForContacts")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	session := utils.NewNeo4jReadSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, `
-			MATCH (t:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)-[:ASSOCIATED_WITH]->(loc:Location)-[:LOCATION_BELONGS_TO_TENANT]->(t)
-			WHERE c.id IN $contactIds
-			RETURN loc, c.id as contactId ORDER BY loc.name`,
-			map[string]any{
-				"tenant":     tenant,
-				"contactIds": contactIds,
-			}); err != nil {
-			return nil, err
-		} else {
-			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
-		}
-	})
-	if err != nil {
-		return nil, err
-	}
-	return result.([]*utils.DbNodeAndId), err
-}
-
-func (r *locationRepository) GetAllForOrganization(ctx context.Context, tenant, organizationId string) ([]*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationRepository.GetAllForOrganization")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	session := utils.NewNeo4jReadSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, `
-			MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(:Organization {id:$organizationId})-[:ASSOCIATED_WITH]->(loc:Location)
-			RETURN loc`,
-			map[string]any{
-				"tenant":         tenant,
-				"organizationId": organizationId,
-			}); err != nil {
-			return nil, err
-		} else {
-			return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
-		}
-	})
-	return result.([]*dbtype.Node), err
-}
-
-func (r *locationRepository) GetAllForOrganizations(ctx context.Context, tenant string, organizationIds []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationRepository.GetAllForOrganizations")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	session := utils.NewNeo4jReadSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, `
-			MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:ASSOCIATED_WITH]->(loc:Location)-[:LOCATION_BELONGS_TO_TENANT]->(t)
-			WHERE o.id IN $organizationIds
-			RETURN loc, o.id as organizationId ORDER BY loc.name`,
-			map[string]any{
-				"tenant":          tenant,
-				"organizationIds": organizationIds,
-			}); err != nil {
-			return nil, err
-		} else {
-			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
-		}
-	})
-	if err != nil {
-		return nil, err
-	}
-	return result.([]*utils.DbNodeAndId), err
 }
 
 func (r *locationRepository) CreateLocationForEntity(ctx context.Context, tenant string, entityType model.EntityType, entityId string, source entity.SourceFields) (*dbtype.Node, error) {

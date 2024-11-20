@@ -39,7 +39,7 @@ func (b *locationBatcher) getLocationsForContacts(ctx context.Context, keys data
 
 	ids, keyOrder := sortKeys(keys)
 
-	locationEntitiesPtr, err := b.locationService.GetAllForContacts(ctx, ids)
+	locationEntitiesPtr, err := b.locationCommonService.GetAllForContacts(ctx, ids)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred
@@ -89,7 +89,7 @@ func (b *locationBatcher) getLocationsForOrganizations(ctx context.Context, keys
 
 	ids, keyOrder := sortKeys(keys)
 
-	locationEntitiesPtr, err := b.locationService.GetAllForOrganizations(ctx, ids)
+	locationEntitiesPtr, err := b.locationCommonService.GetAllForOrganizations(ctx, ids)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred

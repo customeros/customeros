@@ -17,10 +17,6 @@ import (
 )
 
 type LocationService interface {
-	GetAllForContact(ctx context.Context, contactId string) (*neo4jentity.LocationEntities, error)
-	GetAllForContacts(ctx context.Context, contactIds []string) (*neo4jentity.LocationEntities, error)
-	GetAllForOrganization(ctx context.Context, organizationId string) (*neo4jentity.LocationEntities, error)
-	GetAllForOrganizations(ctx context.Context, organizationIds []string) (*neo4jentity.LocationEntities, error)
 	CreateLocationForEntity(ctx context.Context, entityType commonModel.EntityType, entityId string, source entity.SourceFields) (*neo4jentity.LocationEntity, error)
 	Update(ctx context.Context, entity neo4jentity.LocationEntity) (*neo4jentity.LocationEntity, error)
 	DetachFromEntity(ctx context.Context, entityType commonModel.EntityType, entityId, locationId string) error
@@ -40,60 +36,6 @@ func NewLocationService(log logger.Logger, repositories *repository.Repositories
 
 func (s *locationService) getNeo4jDriver() neo4j.DriverWithContext {
 	return *s.repositories.Drivers.Neo4jDriver
-}
-
-func (s *locationService) GetAllForContact(ctx context.Context, contactId string) (*neo4jentity.LocationEntities, error) {
-	dbNodes, err := s.repositories.LocationRepository.GetAllForContact(ctx, common.GetTenantFromContext(ctx), contactId)
-	if err != nil {
-		return nil, err
-	}
-
-	locationEntities := neo4jentity.LocationEntities{}
-	for _, dbNode := range dbNodes {
-		locationEntities = append(locationEntities, *neo4jmapper.MapDbNodeToLocationEntity(dbNode))
-	}
-	return &locationEntities, nil
-}
-
-func (s *locationService) GetAllForContacts(ctx context.Context, contactIds []string) (*neo4jentity.LocationEntities, error) {
-	locations, err := s.repositories.LocationRepository.GetAllForContacts(ctx, common.GetTenantFromContext(ctx), contactIds)
-	if err != nil {
-		return nil, err
-	}
-	locationEntities := neo4jentity.LocationEntities{}
-	for _, v := range locations {
-		locationEntity := neo4jmapper.MapDbNodeToLocationEntity(v.Node)
-		locationEntity.DataloaderKey = v.LinkedNodeId
-		locationEntities = append(locationEntities, *locationEntity)
-	}
-	return &locationEntities, nil
-}
-
-func (s *locationService) GetAllForOrganization(ctx context.Context, organizationId string) (*neo4jentity.LocationEntities, error) {
-	dbNodes, err := s.repositories.LocationRepository.GetAllForOrganization(ctx, common.GetContext(ctx).Tenant, organizationId)
-	if err != nil {
-		return nil, err
-	}
-
-	locationEntities := neo4jentity.LocationEntities{}
-	for _, dbNode := range dbNodes {
-		locationEntities = append(locationEntities, *neo4jmapper.MapDbNodeToLocationEntity(dbNode))
-	}
-	return &locationEntities, nil
-}
-
-func (s *locationService) GetAllForOrganizations(ctx context.Context, organizationIds []string) (*neo4jentity.LocationEntities, error) {
-	locations, err := s.repositories.LocationRepository.GetAllForOrganizations(ctx, common.GetTenantFromContext(ctx), organizationIds)
-	if err != nil {
-		return nil, err
-	}
-	locationEntities := neo4jentity.LocationEntities{}
-	for _, v := range locations {
-		locationEntity := neo4jmapper.MapDbNodeToLocationEntity(v.Node)
-		locationEntity.DataloaderKey = v.LinkedNodeId
-		locationEntities = append(locationEntities, *locationEntity)
-	}
-	return &locationEntities, nil
 }
 
 func (s *locationService) CreateLocationForEntity(ctx context.Context, entityType commonModel.EntityType, entityId string, source entity.SourceFields) (*neo4jentity.LocationEntity, error) {

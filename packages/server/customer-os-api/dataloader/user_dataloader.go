@@ -42,16 +42,6 @@ func (i *Loaders) GetUsersForPhoneNumber(ctx context.Context, phoneNumberID stri
 	return &resultObj, nil
 }
 
-func (i *Loaders) GetUsersForPlayer(ctx context.Context, playerID string) (*neo4jentity.UserEntities, error) {
-	thunk := i.UsersForPlayer.Load(ctx, dataloader.StringKey(playerID))
-	result, err := thunk()
-	if err != nil {
-		return nil, err
-	}
-	resultObj := result.(neo4jentity.UserEntities)
-	return &resultObj, nil
-}
-
 func (i *Loaders) GetUserOwnerForOrganization(ctx context.Context, organizationID string) (*neo4jentity.UserEntity, error) {
 	thunk := i.UserOwnerForOrganization.Load(ctx, dataloader.StringKey(organizationID))
 	result, err := thunk()
@@ -168,7 +158,7 @@ func (b *userBatcher) getUsersConnectedForContact(ctx context.Context, keys data
 
 	ids, keyOrder := sortKeys(keys)
 
-	userEntitiesPtr, err := b.userService.GetUsersConnectedForContacts(ctx, ids)
+	userEntitiesPtr, err := b.userCommonService.GetUsersConnectedForContacts(ctx, ids)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred
@@ -217,7 +207,7 @@ func (b *userBatcher) getUsersForEmails(ctx context.Context, keys dataloader.Key
 
 	ids, keyOrder := sortKeys(keys)
 
-	userEntitiesPtr, err := b.userService.GetUsersForEmails(ctx, ids)
+	userEntitiesPtr, err := b.userCommonService.GetUsersForEmails(ctx, ids)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred
@@ -265,7 +255,7 @@ func (b *userBatcher) getUsersForPhoneNumbers(ctx context.Context, keys dataload
 
 	ids, keyOrder := sortKeys(keys)
 
-	userEntitiesPtr, err := b.userService.GetUsersForPhoneNumbers(ctx, ids)
+	userEntitiesPtr, err := b.userCommonService.GetUsersForPhoneNumbers(ctx, ids)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred
@@ -306,55 +296,6 @@ func (b *userBatcher) getUsersForPhoneNumbers(ctx context.Context, keys dataload
 	return results
 }
 
-func (b *userBatcher) getUsersForPlayers(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserDataLoader.getUsersForPlayers")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
-
-	ids, keyOrder := sortKeys(keys)
-
-	userEntitiesPtr, err := b.userService.GetUsersForPlayers(ctx, ids)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		// check if context deadline exceeded error occurred
-		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
-			return []*dataloader.Result{{Data: nil, Error: errors.Wrap(err, "context deadline exceeded")}}
-		}
-		return []*dataloader.Result{{Data: nil, Error: err}}
-	}
-
-	userEntitiesByPlayerId := make(map[string]neo4jentity.UserEntities)
-	for _, val := range *userEntitiesPtr {
-		if list, ok := userEntitiesByPlayerId[val.DataloaderKey]; ok {
-			userEntitiesByPlayerId[val.DataloaderKey] = append(list, val)
-		} else {
-			userEntitiesByPlayerId[val.DataloaderKey] = neo4jentity.UserEntities{val}
-		}
-	}
-
-	// construct an output array of dataloader results
-	results := make([]*dataloader.Result, len(keys))
-	for phoneNumberId, record := range userEntitiesByPlayerId {
-		if ix, ok := keyOrder[phoneNumberId]; ok {
-			results[ix] = &dataloader.Result{Data: record, Error: nil}
-			delete(keyOrder, phoneNumberId)
-		}
-	}
-	for _, ix := range keyOrder {
-		results[ix] = &dataloader.Result{Data: neo4jentity.UserEntities{}, Error: nil}
-	}
-
-	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.UserEntities{})); err != nil {
-		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
-	}
-
-	span.LogFields(log.Object("output - results_length", len(results)))
-
-	return results
-}
-
 func (b *userBatcher) getUserOwnersForOrganizations(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "UserDataLoader.getUserOwnersForOrganizations")
 	defer span.Finish()
@@ -363,7 +304,7 @@ func (b *userBatcher) getUserOwnersForOrganizations(ctx context.Context, keys da
 
 	ids, keyOrder := sortKeys(keys)
 
-	userEntities, err := b.userService.GetUserOwnersForOrganizations(ctx, ids)
+	userEntities, err := b.userCommonService.GetUserOwnersForOrganizations(ctx, ids)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred
@@ -412,7 +353,7 @@ func (b *userBatcher) getUserOwnersForOpportunities(ctx context.Context, keys da
 	ctx, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 
-	userEntities, err := b.userService.GetUserOwnersForOpportunities(ctx, ids)
+	userEntities, err := b.userCommonService.GetUserOwnersForOpportunities(ctx, ids)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred
@@ -461,7 +402,7 @@ func (b *userBatcher) getUserCreatorsForOpportunities(ctx context.Context, keys 
 	ctx, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 
-	userEntities, err := b.userService.GetUserCreatorsForOpportunities(ctx, ids)
+	userEntities, err := b.userCommonService.GetUserCreatorsForOpportunities(ctx, ids)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred
@@ -510,7 +451,7 @@ func (b *userBatcher) getUserCreatorsForServiceLineItems(ctx context.Context, ke
 	ctx, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 
-	userEntities, err := b.userService.GetUserCreatorsForServiceLineItems(ctx, ids)
+	userEntities, err := b.userCommonService.GetUserCreatorsForServiceLineItems(ctx, ids)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred
@@ -559,7 +500,7 @@ func (b *userBatcher) getUserCreatorsForContracts(ctx context.Context, keys data
 	ctx, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 
-	userEntities, err := b.userService.GetUserCreatorsForOpportunities(ctx, ids)
+	userEntities, err := b.userCommonService.GetUserCreatorsForOpportunities(ctx, ids)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred
@@ -605,7 +546,7 @@ func (b *userBatcher) getUsers(ctx context.Context, keys dataloader.Keys) []*dat
 
 	ids, keyOrder := sortKeys(keys)
 
-	userEntities, err := b.userService.GetUsers(ctx, ids)
+	userEntities, err := b.userCommonService.GetUsers(ctx, ids)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred
@@ -654,7 +595,7 @@ func (b *userBatcher) getUserAuthorsForLogEntries(ctx context.Context, keys data
 	ctx, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 
-	userEntities, err := b.userService.GetUserAuthorsForLogEntries(ctx, ids)
+	userEntities, err := b.userCommonService.GetUserAuthorsForLogEntries(ctx, ids)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred
@@ -703,7 +644,7 @@ func (b *userBatcher) getUserAuthorsForComments(ctx context.Context, keys datalo
 	ctx, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 
-	userEntities, err := b.userService.GetUserAuthorsForComments(ctx, ids)
+	userEntities, err := b.userCommonService.GetUserAuthorsForComments(ctx, ids)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred
@@ -752,7 +693,7 @@ func (b *userBatcher) getUserForFlowSenders(ctx context.Context, keys dataloader
 	ctx, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 
-	userEntities, err := b.userService.GetUserForFlowSenders(ctx, ids)
+	userEntities, err := b.userCommonService.GetUserForFlowSenders(ctx, ids)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred

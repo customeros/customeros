@@ -46,7 +46,6 @@ type Loaders struct {
 	UsersConnectedForContact                    *dataloader.Loader
 	UsersForEmail                               *dataloader.Loader
 	UsersForPhoneNumber                         *dataloader.Loader
-	UsersForPlayer                              *dataloader.Loader
 	UserOwnerForOrganization                    *dataloader.Loader
 	UserOwnerForOpportunity                     *dataloader.Loader
 	UserCreatorForOpportunity                   *dataloader.Loader
@@ -129,7 +128,8 @@ type emailBatcher struct {
 	commonEmailService commonservice.EmailService
 }
 type locationBatcher struct {
-	locationService service.LocationService
+	locationService       service.LocationService
+	locationCommonService commonservice.LocationService
 }
 type socialBatcher struct {
 	socialService commonservice.SocialService
@@ -165,7 +165,8 @@ type notedEntityBatcher struct {
 	noteService service.NoteService
 }
 type userBatcher struct {
-	userService service.UserService
+	userService       service.UserService
+	userCommonService commonservice.UserService
 }
 type contactBatcher struct {
 	contactService service.ContactService
@@ -234,7 +235,8 @@ func NewDataLoader(services *service.Services) *Loaders {
 		commonEmailService: services.CommonServices.EmailService,
 	}
 	locationBatcher := &locationBatcher{
-		locationService: services.LocationService,
+		locationService:       services.LocationService,
+		locationCommonService: services.CommonServices.LocationService,
 	}
 	socialBatcher := &socialBatcher{
 		socialService: services.CommonServices.SocialService,
@@ -273,7 +275,8 @@ func NewDataLoader(services *service.Services) *Loaders {
 		phoneNumberService: services.PhoneNumberService,
 	}
 	userBatcher := &userBatcher{
-		userService: services.UserService,
+		userService:       services.UserService,
+		userCommonService: services.CommonServices.UserService,
 	}
 	contactBatcher := &contactBatcher{
 		contactService: services.ContactService,
@@ -356,7 +359,6 @@ func NewDataLoader(services *service.Services) *Loaders {
 		UsersConnectedForContact:                    dataloader.NewBatchedLoader(userBatcher.getUsersConnectedForContact, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		UsersForEmail:                               dataloader.NewBatchedLoader(userBatcher.getUsersForEmails, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		UsersForPhoneNumber:                         dataloader.NewBatchedLoader(userBatcher.getUsersForPhoneNumbers, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
-		UsersForPlayer:                              dataloader.NewBatchedLoader(userBatcher.getUsersForPlayers, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		UserOwnerForOrganization:                    dataloader.NewBatchedLoader(userBatcher.getUserOwnersForOrganizations, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		UserOwnerForOpportunity:                     dataloader.NewBatchedLoader(userBatcher.getUserOwnersForOpportunities, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		UserCreatorForOpportunity:                   dataloader.NewBatchedLoader(userBatcher.getUserCreatorsForOpportunities, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),

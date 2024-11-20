@@ -1204,7 +1204,7 @@ func (r *queryResolver) OrganizationDistinctOwners(ctx context.Context) ([]*mode
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 
-	userEntities, err := r.Services.UserService.GetDistinctOrganizationOwners(ctx)
+	userEntities, err := r.Services.CommonServices.UserService.GetDistinctOrganizationOwners(ctx)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Error fetching organization owners")

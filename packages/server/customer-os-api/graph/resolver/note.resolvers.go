@@ -100,7 +100,7 @@ func (r *noteResolver) CreatedBy(ctx context.Context, obj *model.Note) (*model.U
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.noteID", obj.ID))
 
-	creator, err := r.Services.UserService.GetNoteCreator(ctx, obj.ID)
+	creator, err := r.Services.CommonServices.UserService.GetNoteCreator(ctx, obj.ID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get creator for note %s", obj.ID)

@@ -2121,9 +2121,60 @@ type OrganizationSaveInput struct {
 	OwnerID            *string                   `json:"ownerId,omitempty"`
 }
 
+type OrganizationSearchResult struct {
+	Ids            []string `json:"ids"`
+	TotalElements  int64    `json:"totalElements"`
+	TotalAvailable int64    `json:"totalAvailable"`
+}
+
 type OrganizationTagInput struct {
 	OrganizationID string            `json:"organizationId"`
 	Tag            *TagIDOrNameInput `json:"tag"`
+}
+
+type OrganizationUIDetails struct {
+	ID                              string                        `json:"id"`
+	CreatedAt                       time.Time                     `json:"createdAt"`
+	Name                            string                        `json:"name"`
+	Notes                           *string                       `json:"notes,omitempty"`
+	Description                     *string                       `json:"description,omitempty"`
+	Industry                        *string                       `json:"industry,omitempty"`
+	Market                          *Market                       `json:"market,omitempty"`
+	Website                         *string                       `json:"website,omitempty"`
+	LogoURL                         *string                       `json:"logoUrl,omitempty"`
+	IconURL                         *string                       `json:"iconUrl,omitempty"`
+	Stage                           *OrganizationStage            `json:"stage,omitempty"`
+	Relationship                    *OrganizationRelationship     `json:"relationship,omitempty"`
+	LastFundingRound                *FundingRound                 `json:"lastFundingRound,omitempty"`
+	LeadSource                      *string                       `json:"leadSource,omitempty"`
+	ValueProposition                *string                       `json:"valueProposition,omitempty"`
+	SlackChannelID                  *string                       `json:"slackChannelId,omitempty"`
+	Public                          *bool                         `json:"public,omitempty"`
+	Employees                       *int64                        `json:"employees,omitempty"`
+	YearFounded                     *int64                        `json:"yearFounded,omitempty"`
+	EnrichedAt                      *time.Time                    `json:"enrichedAt,omitempty"`
+	EnrichedFailedAt                *time.Time                    `json:"enrichedFailedAt,omitempty"`
+	EnrichedRequestedAt             *time.Time                    `json:"enrichedRequestedAt,omitempty"`
+	Ltv                             *float64                      `json:"ltv,omitempty"`
+	ChurnedAt                       *time.Time                    `json:"churnedAt,omitempty"`
+	RenewalSummaryArrForecast       *float64                      `json:"renewalSummaryArrForecast,omitempty"`
+	RenewalSummaryMaxArrForecast    *float64                      `json:"renewalSummaryMaxArrForecast,omitempty"`
+	RenewalSummaryRenewalLikelihood *OpportunityRenewalLikelihood `json:"renewalSummaryRenewalLikelihood,omitempty"`
+	RenewalSummaryNextRenewalAt     *time.Time                    `json:"renewalSummaryNextRenewalAt,omitempty"`
+	OnboardingStatus                OnboardingStatus              `json:"onboardingStatus"`
+	OnboardingStatusUpdatedAt       *time.Time                    `json:"onboardingStatusUpdatedAt,omitempty"`
+	OnboardingComments              *string                       `json:"onboardingComments,omitempty"`
+	LastTouchPointAt                *time.Time                    `json:"lastTouchPointAt,omitempty"`
+	LastTouchPointType              *LastTouchpointType           `json:"lastTouchPointType,omitempty"`
+	Contracts                       []string                      `json:"contracts"`
+	Contacts                        []string                      `json:"contacts"`
+	SocialMedia                     []*Social                     `json:"socialMedia"`
+	Tags                            []*Tag                        `json:"tags"`
+	Locations                       []*Location                   `json:"locations"`
+	Owner                           *User                         `json:"owner,omitempty"`
+	ParentID                        *string                       `json:"parentId,omitempty"`
+	ParentName                      *string                       `json:"parentName,omitempty"`
+	Subsidiaries                    []string                      `json:"subsidiaries"`
 }
 
 type OrganizationUpdateInput struct {
