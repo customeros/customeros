@@ -200,7 +200,7 @@ func (s *socialService) AddSocialToEntity(ctx context.Context, linkWith LinkWith
 				// use identifier as alias
 				alias = socialEntity.ExtractLinkedinCompanyIdentifierFromUrl()
 			}
-			orgs, err := s.services.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsByLinkedIn(ctx, tenant, socialUrl, alias)
+			orgs, err := s.services.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsByLinkedIn(ctx, tenant, socialUrl, alias, socialEntity.ExternalId)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return "", err

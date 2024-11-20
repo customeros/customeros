@@ -44,7 +44,7 @@ type OrganizationReadRepository interface {
 	GetOrganizationByIdOrCustomerOsId(ctx context.Context, tenant, id string) (*dbtype.Node, error)
 	GetOrganizationByDomain(ctx context.Context, tenant, domain string) (*dbtype.Node, error)
 	GetOrganizationBySocialUrl(ctx context.Context, tenant, socialUrl string) (*dbtype.Node, error)
-	GetOrganizationsByLinkedIn(ctx context.Context, tenant, url, alias string) ([]*dbtype.Node, error)
+	GetOrganizationsByLinkedIn(ctx context.Context, tenant, url, alias, externalId string) ([]*dbtype.Node, error)
 	GetForApiCache(ctx context.Context, tenant string, skip, limit int) ([]map[string]interface{}, error)
 	GetPatchesForApiCache(ctx context.Context, tenant string, lastPatchTimestamp time.Time) ([]map[string]interface{}, error)
 	GetAllForInvoices(ctx context.Context, tenant string, invoiceIds []string) ([]*utils.DbNodeAndId, error)
@@ -562,11 +562,11 @@ func (r *organizationReadRepository) GetOrganizationBySocialUrl(ctx context.Cont
 	return result.(*dbtype.Node), err
 }
 
-func (r *organizationReadRepository) GetOrganizationsByLinkedIn(ctx context.Context, tenant, url, alias string) ([]*dbtype.Node, error) {
+func (r *organizationReadRepository) GetOrganizationsByLinkedIn(ctx context.Context, tenant, url, alias, externalId string) ([]*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganizationsByLinkedIn")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.String("url", url), log.String("alias", alias))
+	span.LogFields(log.String("url", url), log.String("alias", alias), log.String("externalId", externalId))
 
 	if !strings.Contains(url, "linkedin.com") {
 		span.LogFields(log.Int("result.count", 0))
@@ -584,17 +584,21 @@ func (r *organizationReadRepository) GetOrganizationsByLinkedIn(ctx context.Cont
 	}
 	minimizedUrlWithSlash := minimizedUrl + "/"
 
-	cypher := `MATCH (:Tenant {name:$tenant})--(o:Organization)-[:HAS]->(s:Social)
+	cypher := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS]->(s:Social)
 				WHERE s.url ENDS WITH $url OR s.url ENDS WITH $urlWithSlash `
 	if alias != "" {
 		cypher += ` OR s.alias = $alias `
 	}
-	cypher += ` RETURN o`
+	if externalId != "" {
+		cypher += ` OR s.externalId = $externalId `
+	}
+	cypher += ` RETURN o ORDER by o.createdAt`
 	params := map[string]any{
 		"tenant":       tenant,
 		"url":          minimizedUrl,
 		"urlWithSlash": minimizedUrlWithSlash,
 		"alias":        alias,
+		"externalId":   externalId,
 	}
 
 	span.LogFields(log.String("cypher", cypher))
