@@ -18,8 +18,8 @@ func TestParseEmailAndName(t *testing.T) {
 			input: "John Smith <john@example.com>",
 			expected: EmailParticipant{
 				Email:     "john@example.com",
-				FirstName: "John",
-				LastName:  "Smith",
+				FirstName: "john",
+				LastName:  "smith",
 			},
 		},
 		{
@@ -41,8 +41,8 @@ func TestParseEmailAndName(t *testing.T) {
 			input: "John van Smith <john@example.com>",
 			expected: EmailParticipant{
 				Email:     "john@example.com",
-				FirstName: "John",
-				LastName:  "van Smith",
+				FirstName: "john",
+				LastName:  "van smith",
 			},
 		},
 		{
@@ -50,8 +50,8 @@ func TestParseEmailAndName(t *testing.T) {
 			input: "Google Workspace Alerts <google-workspace-alerts-noreply@google.com>",
 			expected: EmailParticipant{
 				Email:     "google-workspace-alerts-noreply@google.com",
-				FirstName: "Google",
-				LastName:  "Workspace Alerts",
+				FirstName: "google",
+				LastName:  "workspace alerts",
 			},
 		},
 	}
@@ -77,13 +77,13 @@ func TestParseParticipants(t *testing.T) {
 			expected: []EmailParticipant{
 				{
 					Email:     "john@example.com",
-					FirstName: "John",
-					LastName:  "Smith",
+					FirstName: "john",
+					LastName:  "smith",
 				},
 				{
 					Email:     "jane@example.com",
-					FirstName: "Jane",
-					LastName:  "Doe",
+					FirstName: "jane",
+					LastName:  "doe",
 				},
 			},
 		},
@@ -93,8 +93,8 @@ func TestParseParticipants(t *testing.T) {
 			expected: []EmailParticipant{
 				{
 					Email:     "john@example.com",
-					FirstName: "John",
-					LastName:  "Smith",
+					FirstName: "john",
+					LastName:  "smith",
 				},
 			},
 		},

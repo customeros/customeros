@@ -62,7 +62,20 @@ func TestProcessEmailCheck(t *testing.T) {
 		{
 			name: "Normal email",
 			email: &EmailMessageData{
-				Headers: EmailHeaders{},
+				Participants: EmailParticipants{
+					From: EmailParticipant{
+						Email: "matt@customeros.ai",
+					},
+					ReplyTo: []EmailParticipant{
+						{
+							Email: "matt@customeros.ai",
+						},
+					},
+				},
+				Headers: EmailHeaders{
+					ReturnPath: "matt@customeros.ai",
+					ReplyTo:    "matt@customeros.ai",
+				},
 			},
 			expected: HeaderAnalysis{
 				ProcessEmail: true,
