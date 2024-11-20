@@ -54,7 +54,7 @@ func (repo *rawCalendarEventRepositoryImpl) SaveOrUpdate(externalSystem, tenantN
 
 	result.UpdatedAt = time.Now().UTC()
 	result.Data = rawCalendarEvent
-	result.SentToEventStoreState = "PENDING"
+	result.Status = "PENDING"
 
 	err = repo.gormDb.Save(&result).Error
 	if err != nil {
