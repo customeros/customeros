@@ -1,13 +1,11 @@
-import React from 'react';
-
 import { Node } from '@xyflow/react';
 import { FlowActionType } from '@store/Flows/types';
 
 import { IconButton } from '@ui/form/IconButton';
 import { Settings03 } from '@ui/media/icons/Settings03';
 
+import { FlowStatusMenu } from '../header';
 import { SenderSettings } from './SenderSettings';
-import { FlowStatusMenu } from '../FlowStatusMenu';
 import { NoEmailNodesPanel } from './NoEmailNodesPanel';
 
 export const FlowSettingsPanel = ({
