@@ -36,7 +36,7 @@ export class TagsStore implements GroupStore<Tag> {
     makeAutoObservable(this);
     makeAutoSyncableGroup(this, {
       channelName: 'Tags',
-      getItemId: (item) => item?.metadata.id,
+      getItemId: (item) => item?.id,
       ItemStore: TagStore,
     });
   }
@@ -46,29 +46,6 @@ export class TagsStore implements GroupStore<Tag> {
       this.isLoading = true;
 
       const { tags } = await this.service.getTags();
-
-      runInAction(() => {
-        this.load(tags);
-        this.isBootstrapped = true;
-      });
-    } catch (e) {
-      runInAction(() => {
-        this.error = (e as Error)?.message;
-      });
-    } finally {
-      runInAction(() => {
-        this.isLoading = false;
-      });
-    }
-  }
-
-  async getTagsByEntityType(entityType: EntityType) {
-    try {
-      this.isLoading = true;
-
-      const { tags } = await this.service.getTagsByEntityType(
-        entityType as EntityType,
-      );
 
       runInAction(() => {
         this.load(tags);
@@ -96,7 +73,7 @@ export class TagsStore implements GroupStore<Tag> {
     options?: { onSucces?: (serverId: string) => void },
   ) => {
     const newTag = new TagStore(this.root, this.transport);
-    const tempId = newTag.value.metadata.id;
+    const tempId = newTag.value.id;
     let serverId = '';
 
     if (payload) {
@@ -112,14 +89,13 @@ export class TagsStore implements GroupStore<Tag> {
       >(CREATE_TAG_MUTATION, {
         input: {
           name: payload?.name || '',
-          entityType: payload?.entityType,
         },
       });
 
       runInAction(() => {
-        serverId = tag_Create.metadata.id;
+        serverId = tag_Create.id;
 
-        newTag.value.metadata.id = serverId;
+        newTag.value.id = serverId;
 
         this.value.set(serverId, newTag);
         this.value.delete(tempId);
@@ -173,6 +149,12 @@ export class TagsStore implements GroupStore<Tag> {
 
   getById(id: string) {
     return this.value.get(id);
+  }
+
+  getByEntityType(entityType: EntityType) {
+    const tags = this.toArray();
+
+    return tags.filter((tag) => tag.value.entityType === entityType);
   }
 }
 

@@ -13,6 +13,7 @@ export const EditEmail = observer(() => {
   const selectedId = store.ui.selectionId;
 
   const contact = store.contacts.value.get(context.ids?.[0] as string);
+
   const oldEmail = useMemo(
     () =>
       contact?.value?.emails?.[selectedId ?? 0]?.email ||

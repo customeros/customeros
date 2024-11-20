@@ -271,16 +271,18 @@ export const AboutPanel = observer(() => {
           onCreate={handleCreateOption}
           placeholder='Organization tags'
           leftAccessory={<Tag01 className='mr-3 text-gray-500' />}
-          options={store.tags.toArray().map((t) => ({
-            value: t.id,
-            label: t.value?.name,
-          }))}
           value={
             organization.value.tags?.map((t) => ({
               value: t.id,
               label: t.name,
             })) ?? []
           }
+          options={store.tags
+            .getByEntityType(EntityType.Organization)
+            .map((t) => ({
+              value: t.id,
+              label: t.value?.name,
+            }))}
           onChange={(selection) => {
             const tags = selection
               .map((o) => store.tags.getById(o.value)?.value)

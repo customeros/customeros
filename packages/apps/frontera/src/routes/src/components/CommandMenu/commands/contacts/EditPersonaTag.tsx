@@ -80,7 +80,7 @@ export const EditPersonaTag = observer(() => {
   );
 
   const sortedTags = store.tags
-    ?.toArray()
+    ?.getByEntityType(EntityType.Contact)
     .filter((e) => !!e.value.name)
     .sort((a, b) => {
       const aInOrg = contactTags.has(a.value.name);
