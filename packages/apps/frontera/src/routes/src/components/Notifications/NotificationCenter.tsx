@@ -10,11 +10,13 @@ import { cn } from '@ui/utils/cn';
 import { DateTimeUtils } from '@utils/date';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { Avatar, AvatarBadge } from '@ui/media/Avatar/Avatar';
-import { CountButton } from '@shared/components/Notifications/CountButton';
+// import { CountButton } from '@shared/components/Notifications/CountButton';
 import { EmptyNotifications } from '@shared/components/Notifications/EmptyNotifications';
 import { NotificationsHeader } from '@shared/components/Notifications/NotificationsHeader';
 
 import './override.css';
+
+const CountButton = ({ count }: { count?: number }) => <span>{count}</span>;
 
 export const NotificationCenter = () => {
   const navigate = useNavigate();
@@ -47,7 +49,7 @@ export const NotificationCenter = () => {
         },
       }}
     >
-      {({ unseenCount }) => <CountButton unseenCount={unseenCount} />}
+      {({ unseenCount }) => <CountButton count={unseenCount} />}
     </PopoverNotificationCenter>
   );
 };
