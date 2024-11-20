@@ -3,15 +3,17 @@ package service
 import (
 	"context"
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"strings"
+
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
-	"strings"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
 
 type RegistrationService interface {
@@ -114,10 +116,17 @@ func (s *registrationService) ConfigureTestMailbox(ctx context.Context) error {
 
 	if mailbox == nil {
 		// Step 4 - Register mailbox in opensrs
-		password := utils.GenerateLowerAlpha(1) + utils.GenerateKey(11, false)
-		username := strings.ToLower(tenant)
-		forwardingTo := []string{fmt.Sprintf("bcc@%s.customeros.ai", strings.ToLower(tenant))}
-		err = s.services.MailboxService.AddMailbox(ctx, TEST_MAILBOX_DOMAIN, username, password, mailboxAddress, true, true, forwardingTo)
+		var mailboxRequest MailboxRequest
+
+		mailboxRequest.Domain = TEST_MAILBOX_DOMAIN
+		mailboxRequest.Username = strings.ToLower(tenant)
+		mailboxRequest.Password = utils.GenerateLowerAlpha(1) + utils.GenerateKey(11, false)
+		mailboxRequest.LinkedUserEmail = mailboxAddress
+		mailboxRequest.WebmailEnabled = true
+		mailboxRequest.ForwardingEnabled = true
+		mailboxRequest.ForwardingTo = []string{fmt.Sprintf("bcc@%s.customeros.ai", strings.ToLower(tenant))}
+
+		err = s.services.MailboxService.AddMailbox(ctx, mailboxRequest)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
