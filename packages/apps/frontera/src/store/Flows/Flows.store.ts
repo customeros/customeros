@@ -106,7 +106,7 @@ export class FlowsStore implements GroupStore<Flow> {
     this.isLoading = true;
 
     const newFlow = new FlowStore(this.root, this.transport);
-    const tempId = newFlow.value.metadata?.id;
+    const tempId = newFlow.value.metadata.id;
 
     newFlow.value = {
       ...newFlow.value,
@@ -128,13 +128,88 @@ export class FlowsStore implements GroupStore<Flow> {
 
       runInAction(() => {
         serverId = flow_Merge?.metadata.id;
-        newFlow.setId(serverId);
-        newFlow.value = {
-          ...newFlow.value,
-          nodes: flow_Merge?.nodes,
-          edges: flow_Merge?.edges,
-        };
-        this.value.set(serverId, newFlow);
+
+        if (serverId) {
+          newFlow.setId(serverId);
+          newFlow.value = {
+            ...newFlow.value,
+            nodes: flow_Merge.nodes,
+            edges: flow_Merge.edges,
+          };
+          this.value.set(serverId, newFlow);
+        }
+
+        this.value.delete(tempId);
+
+        this.sync({ action: 'APPEND', ids: [serverId] });
+        serverId && options?.onSuccess?.(serverId);
+        setTimeout(() => {
+          if (serverId) {
+            this.root.flows.bootstrap();
+            this.sync({
+              action: 'APPEND',
+              ids: [serverId],
+            });
+          }
+        }, 1000);
+      });
+    } catch (e) {
+      runInAction(() => {
+        this.error = (e as Error)?.message;
+        this.value.delete(tempId);
+      });
+    } finally {
+      this.isLoading = false;
+    }
+  }
+
+  async duplicate(
+    name: string,
+    id: string,
+    options?: { onSuccess?: (serverId: string) => void },
+  ) {
+    this.isLoading = true;
+
+    const originFlow = this.value.get(id);
+    const newFlow = new FlowStore(this.root, this.transport);
+    const tempId = newFlow.value.metadata.id;
+
+    if (!originFlow) {
+      throw new Error('Origin flow not found');
+    }
+
+    newFlow.value = {
+      ...newFlow.value,
+      nodes: originFlow.value.nodes,
+      edges: originFlow.value.edges,
+      name,
+    };
+
+    let serverId: string | undefined;
+
+    this.value.set(tempId, newFlow);
+
+    try {
+      const { flow_Merge } = await this.service.mergeFlow({
+        input: {
+          name,
+          nodes: newFlow.value.nodes,
+          edges: newFlow.value.edges,
+        },
+      });
+
+      runInAction(() => {
+        serverId = flow_Merge?.metadata.id;
+
+        if (serverId) {
+          newFlow.setId(serverId);
+          newFlow.value = {
+            ...newFlow.value,
+            nodes: flow_Merge.nodes,
+            edges: flow_Merge.edges,
+          };
+          this.value.set(serverId, newFlow);
+        }
         this.value.delete(tempId);
 
         this.sync({ action: 'APPEND', ids: [serverId] });

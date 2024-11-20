@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 
 import { useUnmount } from 'usehooks-ts';
@@ -14,10 +14,10 @@ import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { Settings03 } from '@ui/media/icons/Settings03';
-import { UserPlus01 } from '@ui/media/icons/UserPlus01.tsx';
+import { UserPlus01 } from '@ui/media/icons/UserPlus01';
 import { ChevronRight } from '@ui/media/icons/ChevronRight';
 
-import { FlowStatusMenu } from './components';
+import { FlowStatusMenu, FlowMoreActionsMenu } from './components';
 
 import '@xyflow/react/dist/style.css';
 
@@ -141,6 +141,7 @@ export const Header = observer(
                   ? 'Loading flow…'
                   : flow?.value?.name || 'Unnamed'}
               </span>
+              {!showFinder && <FlowMoreActionsMenu id={id} />}
               {showFinder ? (
                 <>
                   <ChevronRight className='text-gray-400' />
@@ -162,7 +163,6 @@ export const Header = observer(
                 >
                   <Button
                     size='xxs'
-                    className='ml-2'
                     variant='outline'
                     colorScheme='gray'
                     leftIcon={<User01 />}

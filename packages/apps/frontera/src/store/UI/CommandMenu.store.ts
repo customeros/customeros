@@ -38,6 +38,7 @@ export type CommandMenuType =
   | 'OpportunityBulkCommands'
   | 'ChangeBulkArrEstimate'
   | 'CreateNewFlow'
+  | 'DuplicateFlow'
   | 'RenameFlow'
   | 'FlowCommands'
   | 'ChangeFlowStatus'
