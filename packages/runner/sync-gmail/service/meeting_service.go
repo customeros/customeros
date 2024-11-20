@@ -12,6 +12,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/sirupsen/logrus"
 	"time"
 )
@@ -56,7 +57,7 @@ func (s *meetingService) syncCalendarEvents(externalSystemId, tenant string, cal
 	}
 }
 
-func (s *meetingService) syncCalendarEvent(externalSystemId, tenant string, rawCalendarId uuid.UUID) (entity.RawState, *string, error) {
+func (s *meetingService) syncCalendarEvent(externalSystemId, tenant string, rawCalendarId uuid.UUID) (postgresentity.RawState, *string, error) {
 	ctx := context.Background()
 
 	rawCalendarIdString := rawCalendarId.String()
@@ -64,14 +65,14 @@ func (s *meetingService) syncCalendarEvent(externalSystemId, tenant string, rawC
 	calendarEvent, err := s.repositories.RawCalendarEventRepository.GetCalendarEventForSync(rawCalendarId)
 	if err != nil {
 		logrus.Errorf("failed to get emails for sync: %v", err)
-		return entity.ERROR, nil, err
+		return postgresentity.ERROR, nil, err
 	}
 
 	rawCalendarEventData := CalendarEventRawData{}
 	err = json.Unmarshal([]byte(calendarEvent.Data), &rawCalendarEventData)
 	if err != nil {
 		logrus.Errorf("failed to unmarshal raw calendar event data: %v", err)
-		return entity.ERROR, nil, err
+		return postgresentity.ERROR, nil, err
 	}
 
 	session := utils.NewNeo4jWriteSession(ctx, *s.repositories.Neo4jDriver)
@@ -82,19 +83,19 @@ func (s *meetingService) syncCalendarEvent(externalSystemId, tenant string, rawC
 
 	if err != nil {
 		logrus.Errorf("failed to start transaction for calendar event with id %v: %v", rawCalendarIdString, err)
-		return entity.ERROR, nil, err
+		return postgresentity.ERROR, nil, err
 	}
 
 	existingMeetingNode, err := s.repositories.MeetingRepository.GetByExternalId(ctx, tx, tenant, externalSystemId, calendarEvent.ProviderId)
 	if err != nil {
 		logrus.Errorf("failed to check if meeting exists for external id %v for tenant %v :%v", calendarEvent.ProviderId, tenant, err)
-		return entity.ERROR, nil, err
+		return postgresentity.ERROR, nil, err
 	}
 
 	if existingMeetingNode != nil {
 		//todo update / delete
 		reason := "implement update / delete"
-		return entity.SKIPPED, &reason, nil
+		return postgresentity.SKIPPED, &reason, nil
 	} else {
 
 		now := time.Now().UTC()
@@ -102,19 +103,19 @@ func (s *meetingService) syncCalendarEvent(externalSystemId, tenant string, rawC
 		createdAt, err := s.services.SyncService.ConvertToUTC(rawCalendarEventData.Created)
 		if err != nil {
 			logrus.Errorf("failed to convert created date to utc for email with id %v: %v", rawCalendarIdString, err)
-			return entity.ERROR, nil, err
+			return postgresentity.ERROR, nil, err
 		}
 
 		startedAt, err := getDate(rawCalendarEventData.Start)
 		if err != nil {
 			logrus.Errorf("failed to convert start date to utc for email with id %v: %v", rawCalendarIdString, err)
-			return entity.ERROR, nil, err
+			return postgresentity.ERROR, nil, err
 		}
 
 		endedAt, err := getDate(rawCalendarEventData.End)
 		if err != nil {
 			logrus.Errorf("failed to convert end date to utc for email with id %v: %v", rawCalendarIdString, err)
-			return entity.ERROR, nil, err
+			return postgresentity.ERROR, nil, err
 		}
 
 		status := getMeetingStatus(rawCalendarEventData.Status)
@@ -138,7 +139,7 @@ func (s *meetingService) syncCalendarEvent(externalSystemId, tenant string, rawC
 		meetingNode, err := s.repositories.MeetingRepository.Create(ctx, tx, tenant, externalSystemId, rawCalendarEventData.Id, &meetingForCustomerOS, now)
 		if err != nil {
 			logrus.Errorf("failed merge meeting for raw calendar id %v :%v", rawCalendarIdString, err)
-			return entity.ERROR, nil, err
+			return postgresentity.ERROR, nil, err
 		}
 		meetingId := utils.GetStringPropOrNil(meetingNode.Props, "id")
 
@@ -146,12 +147,12 @@ func (s *meetingService) syncCalendarEvent(externalSystemId, tenant string, rawC
 		creatorEmailId, err := s.GetAttendeeEmailIdAndType(tx, tenant, *meetingId, rawCalendarEventData.Creator.Email, now)
 		if err != nil {
 			logrus.Errorf("failed to get creator email id for raw email id %v :%v", rawCalendarIdString, err)
-			return entity.ERROR, nil, err
+			return postgresentity.ERROR, nil, err
 		}
 		err = s.repositories.MeetingRepository.LinkWithEmailInTx(ctx, tx, tenant, *meetingId, *creatorEmailId, entity.CREATED_BY)
 		if err != nil {
 			logrus.Errorf("failed to link creator with meeting for raw email id %v :%v", rawCalendarIdString, err)
-			return entity.ERROR, nil, err
+			return postgresentity.ERROR, nil, err
 		}
 
 		//link meeting with attendees
@@ -160,12 +161,12 @@ func (s *meetingService) syncCalendarEvent(externalSystemId, tenant string, rawC
 			attendeeEmailId, err := s.GetAttendeeEmailIdAndType(tx, tenant, *meetingId, attendee.Email, now)
 			if err != nil {
 				logrus.Errorf("failed to get attendee email id for raw email id %v :%v", rawCalendarIdString, err)
-				return entity.ERROR, nil, err
+				return postgresentity.ERROR, nil, err
 			}
 			err = s.repositories.MeetingRepository.LinkWithEmailInTx(ctx, tx, tenant, *meetingId, *attendeeEmailId, entity.ATTENDED_BY)
 			if err != nil {
 				logrus.Errorf("failed to link attendee with meeting for raw email id %v :%v", rawCalendarIdString, err)
-				return entity.ERROR, nil, err
+				return postgresentity.ERROR, nil, err
 			}
 
 		}
@@ -173,12 +174,12 @@ func (s *meetingService) syncCalendarEvent(externalSystemId, tenant string, rawC
 		err = tx.Commit(ctx)
 		if err != nil {
 			logrus.Errorf("failed to commit transaction: %v", err)
-			return entity.ERROR, nil, err
+			return postgresentity.ERROR, nil, err
 		}
 
 	}
 
-	return entity.SENT, nil, err
+	return postgresentity.PROCESSED, nil, err
 }
 
 func (s *meetingService) GetAttendeeEmailIdAndType(tx neo4j.ManagedTransaction, tenant, meetingId, emailAddress string, now time.Time) (*string, error) {
