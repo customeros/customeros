@@ -1,19 +1,30 @@
 package service
 
 import (
+	"context"
 	"encoding/json"
+	"fmt"
 	"slices"
 	"strings"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
-	"github.com/sirupsen/logrus"
+	"github.com/opentracing/opentracing-go"
+	tracingLog "github.com/opentracing/opentracing-go/log"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 )
 
-func (l *mailService) LoadEmail(rawEmail *entity.RawEmail) (EmailMessageData, error) {
+func (l *mailService) LoadEmail(ctx context.Context, rawEmail *entity.RawEmail) (EmailMessageData, error) {
+	span, ctx := l.initializeTracing(ctx, "MailService.LoadEmail")
+	span.LogFields(tracingLog.Object("rawEmail", rawEmail))
+	defer span.Finish()
+
 	email := EmailMessageData{}
 
-	emailData, err := l.getRawEmailData(rawEmail)
+	emailData, err := l.getRawEmailData(rawEmail, span)
 	if err != nil {
+		err = fmt.Errorf("failed to get raw email data: %v", err)
+		tracing.TraceErr(span, err)
 		return email, err
 	}
 
@@ -39,11 +50,12 @@ func (l *mailService) LoadEmail(rawEmail *entity.RawEmail) (EmailMessageData, er
 	return email, nil
 }
 
-func (l *mailService) getRawEmailData(rawEmail *entity.RawEmail) (EmailRawData, error) {
+func (l *mailService) getRawEmailData(rawEmail *entity.RawEmail, span opentracing.Span) (EmailRawData, error) {
 	rawEmailData := EmailRawData{}
 	err := json.Unmarshal([]byte(rawEmail.Data), &rawEmailData)
 	if err != nil {
-		logrus.Errorf("Unmarshal Raw Email Data Failed: %v", err)
+		err = fmt.Errorf("Unmarshal Raw Email Data Failed: %v", err)
+		tracing.TraceErr(span, err)
 		return rawEmailData, err
 	}
 

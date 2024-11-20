@@ -11,6 +11,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
@@ -37,7 +38,7 @@ func (s *mailService) SyncEmail(tenant string, emailId uuid.UUID) (postgresentit
 		return postgresentity.ERROR, nil, err
 	}
 
-	email, err := s.LoadEmail(rawEmail)
+	email, err := s.LoadEmail(ctx, rawEmail)
 	if err != nil {
 		err = fmt.Errorf("failed to load email for sync: %w", err)
 		tracing.TraceErr(span, err)
@@ -82,7 +83,9 @@ func (s *mailService) SyncEmail(tenant string, emailId uuid.UUID) (postgresentit
 		return postgresentity.ERROR, nil, err
 	}
 
-	interactionEventId, err := s.services.Neo4jRepositories.InteractionEventRepository.GetInteractionEventIdByExternalId(ctx, tenant, rawEmail.ExternalSystem, rawEmail.MessageId)
+	interactionEventId, err := s.services.Neo4jRepositories.InteractionEventRepository.GetInteractionEventIdByExternalId(
+		ctx, tenant, rawEmail.ExternalSystem, rawEmail.MessageId,
+	)
 	if err != nil {
 		err = fmt.Errorf("failed to check if interaction event exists for external id %v for tenant %v :%v", rawEmail.MessageId, tenant, err)
 		tracing.TraceErr(span, err)
@@ -96,14 +99,14 @@ func (s *mailService) SyncEmail(tenant string, emailId uuid.UUID) (postgresentit
 		return postgresentity.SKIPPED, &reason, nil
 	}
 
-	chanErr := s.buildChannelData(&email)
+	chanErr := s.buildChannelData(&email, span)
 	if chanErr != nil {
 		err = fmt.Errorf("failed to build email channel data for email with id %v: %v", emailId.String(), chanErr)
 		tracing.TraceErr(span, err)
 		return postgresentity.ERROR, nil, chanErr
 	}
 
-	return s.processInboundEmail(ctx, tenant, &email, rawEmail, now)
+	return s.processInboundEmail(ctx, tenant, &email, rawEmail, now, span)
 }
 
 func (s *mailService) SyncEmailsForUser(tenant string, userSource string) {
@@ -136,7 +139,7 @@ func (s *mailService) SyncEmailsForUser(tenant string, userSource string) {
 		externalSystemStr = distinctExternalSystems[0]
 	}
 
-	_, err = s.createUserSourceAsEmailNode(tenant, userSource, externalSystemStr)
+	_, err = s.createUserSourceAsEmailNode(tenant, userSource, externalSystemStr, span)
 	if err != nil {
 		err = fmt.Errorf("failed to create user source as email node: %v", err)
 		tracing.TraceErr(span, err)
@@ -144,13 +147,15 @@ func (s *mailService) SyncEmailsForUser(tenant string, userSource string) {
 	}
 
 	for _, externalSystem := range distinctExternalSystems {
-		err = p.services.Neo4jRepositories.ExternalSystemWriteRepository.CreateIfNotExists(context.Background(), tenant, externalSystem, externalSystem)
+		err = s.services.Neo4jRepositories.ExternalSystemWriteRepository.CreateIfNotExists(
+			context.Background(), tenant, externalSystem, externalSystem,
+		)
 		if err != nil {
 			return
 		}
 	}
 
-	s.syncEmails(tenant, emailsIdsForSync)
+	s.syncEmails(tenant, emailsIdsForSync, span)
 }
 
 func (s *mailService) SyncEmailByMessageId(tenant, usernameSource, messageId string) (postgresentity.RawState, *string, error) {
@@ -180,13 +185,7 @@ func (s *mailService) SyncEmailByEmailRawId(tenant string, emailId uuid.UUID) (p
 	return s.SyncEmail(tenant, emailId)
 }
 
-func (s *mailService) syncEmails(tenant string, emails []postgresentity.RawEmail) {
-	ctx := context.Background()
-	span, ctx := s.initializeTracing(ctx, "MailService.syncEmails")
-	defer span.Finish()
-	span.LogFields(
-		log.String("tenant", tenant))
-
+func (s *mailService) syncEmails(tenant string, emails []postgresentity.RawEmail, span opentracing.Span) {
 	for _, email := range emails {
 		// TODO here is control to call new service !!!
 		// state, reason, err := s.syncEmail(tenant, email.ID)
@@ -208,52 +207,86 @@ func (s *mailService) syncEmails(tenant string, emails []postgresentity.RawEmail
 	}
 }
 
-func (s *mailService) processInboundEmail(ctx context.Context, tenant string, email *EmailMessageData, rawEmail *postgresentity.RawEmail, ts time.Time) (postgresentity.RawState, *string, error) {
+func (s *mailService) processInboundEmail(
+	ctx context.Context,
+	tenant string,
+	email *EmailMessageData,
+	rawEmail *postgresentity.RawEmail,
+	ts time.Time,
+	span opentracing.Span,
+) (postgresentity.RawState, *string, error) {
 	session := utils.NewNeo4jWriteSession(ctx, *s.services.Neo4jRepositories.Neo4jDriver)
 	defer session.Close(ctx)
 
 	tx, err := session.BeginTransaction(ctx)
 	if err != nil {
 		err = fmt.Errorf("failed to start transaction: %v", err)
+		tracing.TraceErr(span, err)
 		return postgresentity.ERROR, nil, err
 	}
 	defer tx.Close(ctx)
 
 	// Process session and events
-	if err := s.processSessionAndEvents(ctx, tx, tenant, email, rawEmail, ts); err != nil {
+	if err := s.processSessionAndEvents(ctx, tx, tenant, email, rawEmail, ts, span); err != nil {
+		err = fmt.Errorf("failed to process session and events: %v", err)
+		tracing.TraceErr(span, err)
 		return postgresentity.ERROR, nil, err
 	}
 
 	if err := tx.Commit(ctx); err != nil {
-		return postgresentity.ERROR, nil, fmt.Errorf("failed to commit transaction: %v", err)
+		err = fmt.Errorf("failed to commit transaction: %v", err)
+		tracing.TraceErr(span, err)
+		return postgresentity.ERROR, nil, err
 	}
 
 	return postgresentity.PROCESSED, nil, nil
 }
 
-func (s *mailService) processSessionAndEvents(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, email *EmailMessageData, rawEmail *postgresentity.RawEmail, ts time.Time) error {
+func (s *mailService) processSessionAndEvents(
+	ctx context.Context,
+	tx neo4j.ManagedTransaction,
+	tenant string,
+	email *EmailMessageData,
+	rawEmail *postgresentity.RawEmail,
+	ts time.Time,
+	span opentracing.Span,
+) error {
 	// get EmailForCustomerOS
 	cosEmail := s.buildEmailForCustomerOS(email, rawEmail.ExternalSystem)
 
 	// Create session
-	sessionId, err := s.services.Neo4jRepositories.InteractionEventRepository.MergeInteractionSession(ctx, tx, tenant, email.Identifiers.EmailThreadId, ts, cosEmail, rawEmail.ExternalSystem, AppSource)
+	sessionId, err := s.services.Neo4jRepositories.InteractionEventRepository.MergeInteractionSession(
+		ctx, tx, tenant, email.Identifiers.EmailThreadId, ts, cosEmail, rawEmail.ExternalSystem, AppSource,
+	)
 	if err != nil {
-		return fmt.Errorf("failed merge interaction session: %v", err)
+		err = fmt.Errorf("failed merge interaction session: %v", err)
+		tracing.TraceErr(span, err)
+		return err
 	}
 
 	// Create event
-	eventId, err := s.services.Neo4jRepositories.InteractionEventRepository.MergeEmailInteractionEvent(ctx, tx, tenant, ts, cosEmail, rawEmail.ExternalSystem, AppSource)
+	eventId, err := s.services.Neo4jRepositories.InteractionEventRepository.MergeEmailInteractionEvent(
+		ctx, tx, tenant, ts, cosEmail, rawEmail.ExternalSystem, AppSource,
+	)
 	if err != nil {
-		return fmt.Errorf("failed merge interaction event: %v", err)
+		err = fmt.Errorf("failed merge interaction event: %v", err)
+		tracing.TraceErr(span, err)
+		return err
 	}
 
 	// Link event to session
-	if err := s.services.Neo4jRepositories.InteractionEventRepository.LinkInteractionEventToSession(ctx, tx, tenant, eventId, sessionId); err != nil {
-		return fmt.Errorf("failed to link event to session: %v", err)
+	if err := s.services.Neo4jRepositories.InteractionEventRepository.LinkInteractionEventToSession(
+		ctx, tx, tenant, eventId, sessionId,
+	); err != nil {
+		err = fmt.Errorf("failed to link event to session: %v", err)
+		tracing.TraceErr(span, err)
+		return err
 	}
 
 	// Process participants
-	if err := s.linkParticipants(ctx, tx, tenant, eventId, &email.Participants, ts, rawEmail.ExternalSystem); err != nil {
+	if err := s.linkParticipants(ctx, tx, tenant, eventId, &email.Participants, ts, rawEmail.ExternalSystem, span); err != nil {
+		err = fmt.Errorf("failed to link participants: %v", err)
+		tracing.TraceErr(span, err)
 		return err
 	}
 
@@ -275,37 +308,67 @@ func (s *mailService) buildEmailForCustomerOS(email *EmailMessageData, externalS
 	return save
 }
 
-func (s *mailService) linkParticipants(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, eventId string, participants *EmailParticipants, now time.Time, externalSystem string) error {
+func (s *mailService) linkParticipants(
+	ctx context.Context,
+	tx neo4j.ManagedTransaction,
+	tenant string,
+	eventId string,
+	participants *EmailParticipants,
+	now time.Time,
+	externalSystem string,
+	span opentracing.Span,
+) error {
 	emailIds := make(map[string]string)
 
 	// Link From participant
-	fromId, err := s.getOrCreateEmailId(ctx, tx, tenant, participants.From.Email, now, externalSystem, emailIds)
+	fromId, err := s.getOrCreateEmailId(ctx, tx, tenant, participants.From.Email, now, externalSystem, emailIds, span)
 	if err != nil {
+		err = fmt.Errorf("failed to get or create email id: %v", err)
+		tracing.TraceErr(span, err)
 		return err
 	}
 	if err := s.services.Neo4jRepositories.InteractionEventRepository.InteractionEventSentByEmail(ctx, tx, tenant, eventId, fromId); err != nil {
+		err = fmt.Errorf("failed to create interaction event sent by email: %v", err)
+		tracing.TraceErr(span, err)
 		return err
 	}
 
 	// Link To participants
-	if err := s.linkEmailGroup(ctx, tx, tenant, eventId, "TO", participants.GetToEmailAddresses(), now, externalSystem, emailIds); err != nil {
+	if err := s.linkEmailGroup(ctx, tx, tenant, eventId, "TO", participants.GetToEmailAddresses(), now, externalSystem, emailIds, span); err != nil {
+		err = fmt.Errorf("failed to link email group for TO: %v", err)
+		tracing.TraceErr(span, err)
 		return err
 	}
 
 	// Link CC participants
-	if err := s.linkEmailGroup(ctx, tx, tenant, eventId, "CC", participants.GetCcEmailAddresses(), now, externalSystem, emailIds); err != nil {
+	if err := s.linkEmailGroup(ctx, tx, tenant, eventId, "CC", participants.GetCcEmailAddresses(), now, externalSystem, emailIds, span); err != nil {
+		err = fmt.Errorf("failed to link email group for CC: %v", err)
+		tracing.TraceErr(span, err)
 		return err
 	}
 
 	// Link BCC participants
-	if err := s.linkEmailGroup(ctx, tx, tenant, eventId, "BCC", participants.GetBccEmailAddresses(), now, externalSystem, emailIds); err != nil {
+	if err := s.linkEmailGroup(ctx, tx, tenant, eventId, "BCC", participants.GetBccEmailAddresses(), now, externalSystem, emailIds, span); err != nil {
+		err = fmt.Errorf("failed to link email group for BCC: %v", err)
+		tracing.TraceErr(span, err)
 		return err
 	}
 
 	return nil
 }
 
-func (s *mailService) linkEmailGroup(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, eventId string, groupType string, emails []string, now time.Time, externalSystem string, emailIds map[string]string) error {
+func (s *mailService) linkEmailGroup(
+	ctx context.Context,
+	tx neo4j.ManagedTransaction,
+	tenant string,
+	eventId string,
+	groupType string,
+	emails []string,
+	now time.Time,
+	externalSystem string,
+	emailIds map[string]string,
+	span opentracing.Span,
+) error {
 	var groupEmailIds []string
 
 	for _, email := range emails {
@@ -313,8 +376,10 @@ func (s *mailService) linkEmailGroup(ctx context.Context, tx neo4j.ManagedTransa
 			continue
 		}
 
-		emailId, err := s.getOrCreateEmailId(ctx, tx, tenant, email, now, externalSystem, emailIds)
+		emailId, err := s.getOrCreateEmailId(ctx, tx, tenant, email, now, externalSystem, emailIds, span)
 		if err != nil {
+			err = fmt.Errorf("failed to get or create email ID: %v", err)
+			tracing.TraceErr(span, err)
 			return err
 		}
 
@@ -324,32 +389,55 @@ func (s *mailService) linkEmailGroup(ctx context.Context, tx neo4j.ManagedTransa
 	}
 
 	if len(groupEmailIds) > 0 {
-		return s.services.Neo4jRepositories.InteractionEventRepository.InteractionEventSentToEmails(ctx, tx, tenant, eventId, groupType, groupEmailIds)
+		return s.services.Neo4jRepositories.InteractionEventRepository.InteractionEventSentToEmails(
+			ctx, tx, tenant, eventId, groupType, groupEmailIds,
+		)
 	}
 
 	return nil
 }
 
-func (s *mailService) getOrCreateEmailId(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, email string, now time.Time, externalSystem string, emailIds map[string]string) (string, error) {
+func (s *mailService) getOrCreateEmailId(
+	ctx context.Context,
+	tx neo4j.ManagedTransaction,
+	tenant string,
+	email string,
+	now time.Time,
+	externalSystem string,
+	emailIds map[string]string,
+	span opentracing.Span,
+) (string, error) {
 	if id, exists := emailIds[email]; exists {
 		return id, nil
 	}
 
 	id, err := s.services.SyncService.GetEmailIdForEmail(ctx, tx, tenant, email, now, externalSystem)
 	if err != nil {
-		return "", fmt.Errorf("failed to get email ID for %s: %v", email, err)
+		err = fmt.Errorf("failed to get email ID for %s: %v", email, err)
+		tracing.TraceErr(span, err)
+		return "", err
 	}
 	if id == "" {
-		return "", fmt.Errorf("no email ID found for %s", email)
+		err = fmt.Errorf("no email ID found for %s", email)
+		tracing.TraceErr(span, err)
+		return "", err
 	}
 
 	emailIds[email] = id
 	return id, nil
 }
 
-func (s *mailService) buildChannelData(email *EmailMessageData) error {
-	channelData, err := neo4jentity.BuildEmailChannelData(email.Identifiers.ProviderMessageId, email.Identifiers.EmailThreadId, email.Content.Subject, strings.Join(email.Participants.GetInReplyToEmailAddresses(), " "), strings.Join(email.Identifiers.References, " "))
+func (s *mailService) buildChannelData(email *EmailMessageData, span opentracing.Span) error {
+	channelData, err := neo4jentity.BuildEmailChannelData(
+		email.Identifiers.ProviderMessageId,
+		email.Identifiers.EmailThreadId,
+		email.Content.Subject,
+		strings.Join(email.Participants.GetInReplyToEmailAddresses(), " "),
+		strings.Join(email.Identifiers.References, " "),
+	)
 	if err != nil {
+		err = fmt.Errorf("building channel data failed: %v", err)
+		tracing.TraceErr(span, err)
 		return err
 	}
 	email.Channel = "EMAIL"
@@ -379,7 +467,7 @@ func (s *mailService) warmingEmailCheck(tenant string, email EmailMessageData) b
 	return false
 }
 
-func (s *mailService) createUserSourceAsEmailNode(tenant, userSource, externalSystem string) (string, error) {
+func (s *mailService) createUserSourceAsEmailNode(tenant, userSource, externalSystem string, span opentracing.Span) (string, error) {
 	ctx := context.Background()
 
 	emailId, err := s.services.EmailService.Merge(ctx, tenant, EmailFields{
@@ -388,7 +476,9 @@ func (s *mailService) createUserSourceAsEmailNode(tenant, userSource, externalSy
 		Source:    neo4jentity.DecodeDataSource(externalSystem),
 	}, nil)
 	if err != nil {
-		return "", fmt.Errorf("unable to create email: %v", err)
+		err = fmt.Errorf("unable to create email: %v", err)
+		tracing.TraceErr(span, err)
+		return "", err
 	}
 
 	return *emailId, nil
