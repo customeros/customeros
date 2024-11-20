@@ -44,6 +44,15 @@ type azureService struct {
 	httpClient   *http.Client
 }
 
+type azureApiCall struct {
+	method         string
+	url            string
+	token          string
+	body           []byte
+	expectedStatus int
+	response       interface{}
+}
+
 func NewAzureService(cfg *config.AzureOAuthConfig, repositories *postgresRepository.Repositories, services *Services) AzureService {
 	return &azureService{
 		cfg:          cfg,
@@ -66,11 +75,17 @@ func (s *azureService) ReadEmailsFromAzureAd(ctx context.Context, importState *p
 	reqURL := s.buildEmailsRequestURL(importState.Cursor)
 	emails, nextLink, err := s.fetchEmails(ctx, span, reqURL, token)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "fetch error"))
+		tracing.TraceErr(span, errors.Wrap(err, "fetch emails error"))
 		return nil, "", fmt.Errorf("fetch error: %w", err)
 	}
 
-	return emails, nextLink, nil
+	emailsWithHeaders, err := s.getEmailHeaders(ctx, span, emails, token)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "fetch email headers error"))
+		return nil, "", fmt.Errorf("fetch error: %w", err)
+	}
+
+	return emailsWithHeaders, nextLink, nil
 }
 
 func (s *azureService) SendEmail(ctx context.Context, request *postgresEntity.EmailMessage) error {
@@ -111,6 +126,140 @@ func (s *azureService) SendEmail(ctx context.Context, request *postgresEntity.Em
 	request.ProviderThreadId = threadID
 
 	return nil
+}
+
+func (s *azureService) getEmailHeaders(
+	ctx context.Context,
+	span opentracing.Span,
+	rawEmails []*postgresEntity.EmailRawData,
+	token string,
+) ([]*postgresEntity.EmailRawData, error) {
+	for _, rawEmail := range rawEmails {
+		url := fmt.Sprintf("%s/messages/%s/?$select=internetMessageHeaders",
+			graphAPIBaseURL, rawEmail.ProviderMessageId)
+
+		var response MicrosoftEmailHeaderResponse
+		apiErr := s.makeRequest(ctx, span, azureApiCall{
+			method:         "GET",
+			url:            url,
+			token:          token,
+			expectedStatus: http.StatusOK,
+			response:       &response,
+		})
+		if apiErr != nil {
+			return nil, apiErr
+		}
+
+		rawEmail.Headers = response.InternetMessageHeaders
+	}
+
+	return rawEmails, nil
+}
+
+// makeRequest is a generic function to handle Azure HTTP requests
+func (s *azureService) makeRequest(ctx context.Context, span opentracing.Span, opts azureApiCall) error {
+	var reqBody io.Reader
+	if opts.body != nil {
+		reqBody = bytes.NewBuffer(opts.body)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, opts.method, opts.url, reqBody)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed building new request"))
+		return fmt.Errorf("create request error: %w", err)
+	}
+
+	req.Header.Set("Authorization", "Bearer "+opts.token)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := s.httpClient.Do(req)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed making request"))
+		return fmt.Errorf("do request error: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != opts.expectedStatus {
+		body, _ := io.ReadAll(resp.Body)
+		err := fmt.Errorf("API error: %s, response: %s", resp.Status, body)
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	if opts.response != nil {
+		if err := json.NewDecoder(resp.Body).Decode(opts.response); err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to decode json"))
+			return fmt.Errorf("decode error: %w", err)
+		}
+	}
+
+	return nil
+}
+
+func (s *azureService) fetchEmails(ctx context.Context, span opentracing.Span, reqURL string, token string) ([]*postgresEntity.EmailRawData, string, error) {
+	var result MicrosoftRawEmailsResponse
+	err := s.makeRequest(ctx, span, azureApiCall{
+		method:         "GET",
+		url:            reqURL,
+		token:          token,
+		expectedStatus: http.StatusOK,
+		response:       &result,
+	})
+	if err != nil {
+		return nil, "", err
+	}
+	return convertToEmailRawData(result), result.OdataNextLink, nil
+}
+
+func (s *azureService) getEmailMetadata(token string, span opentracing.Span, messageID string) (string, string, error) {
+	var result MicrosoftRawEmailResponse
+	url := fmt.Sprintf("%s/messages/%s", graphAPIBaseURL, messageID)
+
+	err := s.makeRequest(context.Background(), span, azureApiCall{
+		method:         "GET",
+		url:            url,
+		token:          token,
+		expectedStatus: http.StatusOK,
+		response:       &result,
+	})
+	if err != nil {
+		return "", "", err
+	}
+
+	return result.Id, result.ConversationId, nil
+}
+
+func (s *azureService) createEmailRequest(ctx context.Context, span opentracing.Span, url string, body []byte, token string) (string, error) {
+	var result DraftResponse
+	err := s.makeRequest(ctx, span, azureApiCall{
+		method:         "POST",
+		url:            url,
+		token:          token,
+		body:           body,
+		expectedStatus: http.StatusCreated,
+		response:       &result,
+	})
+	if err != nil {
+		return "", err
+	}
+	return result.Id, nil
+}
+
+func (s *azureService) sendDraft(ctx context.Context, span opentracing.Span, draftID, token string) error {
+	sendReq := SendDraftRequest{SaveToSentItems: true}
+	reqBody, err := json.Marshal(sendReq)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to marshal json for sendDraft"))
+		return fmt.Errorf("marshal error: %w", err)
+	}
+
+	return s.makeRequest(ctx, span, azureApiCall{
+		method:         "POST",
+		url:            fmt.Sprintf("%s/messages/%s/send", graphAPIBaseURL, draftID),
+		token:          token,
+		body:           reqBody,
+		expectedStatus: http.StatusAccepted,
+	})
 }
 
 func (s *azureService) getValidToken(ctx context.Context, span opentracing.Span, tenant, email string) (string, error) {
@@ -187,41 +336,6 @@ func (s *azureService) buildEmailsRequestURL(cursor string) string {
 	return fmt.Sprintf("%s/messages?%s", graphAPIBaseURL, params.Encode())
 }
 
-func (s *azureService) fetchEmails(ctx context.Context, span opentracing.Span, reqURL string, token string) ([]*postgresEntity.EmailRawData, string, error) {
-	req, err := http.NewRequestWithContext(ctx, "GET", reqURL, nil)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed building new fetchEmails request"))
-		return nil, "", err
-	}
-	req.Header.Set("Authorization", "Bearer "+token)
-
-	resp, err := s.httpClient.Do(req)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed making fetchEmails request"))
-		return nil, "", err
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed reading fetchEmails response"))
-		return nil, "", err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		tracing.TraceErr(span, fmt.Errorf("fetchEmails call failed: %s", resp.Status))
-		return nil, "", fmt.Errorf("API error: %s", resp.Status)
-	}
-
-	var result MicrosoftRawEmailsResponse
-	if err := json.Unmarshal(body, &result); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal fetchEmail response"))
-		return nil, "", err
-	}
-
-	return convertToEmailRawData(result), result.OdataNextLink, nil
-}
-
 func (s *azureService) buildMailRequest(request *postgresEntity.EmailMessage) MailRequest {
 	message := MailRequest{
 		Subject: request.Subject,
@@ -275,105 +389,6 @@ func (s *azureService) createReplyEmail(ctx context.Context, span opentracing.Sp
 	}
 
 	return s.createEmailRequest(ctx, span, fmt.Sprintf("%s/messages/%s/createReply", graphAPIBaseURL, emailData.ProviderMessageId), reqBody, token)
-}
-
-func (s *azureService) createEmailRequest(ctx context.Context, span opentracing.Span, url string, body []byte, token string) (string, error) {
-	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(body))
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to createEmailRequest"))
-		return "", fmt.Errorf("create request error: %w", err)
-	}
-
-	req.Header.Set("Authorization", "Bearer "+token)
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := s.httpClient.Do(req)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to make createEmailRequest call"))
-		return "", fmt.Errorf("do request error: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusCreated {
-		body, _ := io.ReadAll(resp.Body)
-		tracing.TraceErr(span, fmt.Errorf("API error: %s, response: %s", resp.Status, body))
-		return "", fmt.Errorf("API error: %s, response: %s", resp.Status, body)
-	}
-
-	var draftResponse DraftResponse
-	if err := json.NewDecoder(resp.Body).Decode(&draftResponse); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to decode json response"))
-		return "", fmt.Errorf("decode error: %w", err)
-	}
-
-	return draftResponse.Id, nil
-}
-
-func (s *azureService) sendDraft(ctx context.Context, span opentracing.Span, draftID, token string) error {
-	sendReq := SendDraftRequest{SaveToSentItems: true}
-	reqBody, err := json.Marshal(sendReq)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to marshal json for sendDraft"))
-		return fmt.Errorf("marshal error: %w", err)
-	}
-
-	req, err := http.NewRequestWithContext(ctx, "POST", fmt.Sprintf("%s/messages/%s/send", graphAPIBaseURL, draftID), bytes.NewBuffer(reqBody))
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to create request for sendDraft"))
-		return fmt.Errorf("create request error: %w", err)
-	}
-
-	req.Header.Set("Authorization", "Bearer "+token)
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := s.httpClient.Do(req)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to send request for sendDraft"))
-		return fmt.Errorf("do request error: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusAccepted {
-		body, _ := io.ReadAll(resp.Body)
-		r := fmt.Errorf("API error: %s, response: %s", resp.Status, body)
-		tracing.TraceErr(span, r)
-		return r
-	}
-
-	return nil
-}
-
-func (s *azureService) getEmailMetadata(token string, span opentracing.Span, messageID string) (string, string, error) {
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s/messages/%s", graphAPIBaseURL, messageID), nil)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to create request for getEmailMetadata"))
-		return "", "", fmt.Errorf("create request error: %w", err)
-	}
-
-	req.Header.Set("Authorization", "Bearer "+token)
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := s.httpClient.Do(req)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to make request for getEmailMetadata"))
-		return "", "", fmt.Errorf("do request error: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
-		r := fmt.Errorf("API error: %s, response: %s", resp.Status, body)
-		tracing.TraceErr(span, r)
-		return "", "", r
-	}
-
-	var emailResponse MicrosoftRawEmailResponse
-	if err := json.NewDecoder(resp.Body).Decode(&emailResponse); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to decode json"))
-		return "", "", fmt.Errorf("decode error: %w", err)
-	}
-
-	return emailResponse.Id, emailResponse.ConversationId, nil
 }
 
 func (s *azureService) getReplyEmailData(ctx context.Context, span opentracing.Span, replyToID string) (*entity.EmailChannelData, error) {
