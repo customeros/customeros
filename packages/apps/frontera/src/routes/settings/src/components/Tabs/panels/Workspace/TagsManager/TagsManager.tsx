@@ -4,7 +4,6 @@ import { observer } from 'mobx-react-lite';
 
 import { Input } from '@ui/form/Input';
 import { Plus } from '@ui/media/icons/Plus';
-import { Button } from '@ui/form/Button/Button';
 import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
 import { Trash01 } from '@ui/media/icons/Trash01';
@@ -12,14 +11,18 @@ import { SearchSm } from '@ui/media/icons/SearchSm';
 import { Tumbleweed } from '@ui/media/icons/Tumbleweed';
 import { InputGroup, LeftElement } from '@ui/form/InputGroup';
 import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
-import { Tag } from '@shared/types/__generated__/graphql.types';
+import { ChevronExpand } from '@ui/media/icons/ChevronExpand';
+import { ChevronCollapse } from '@ui/media/icons/ChevronCollapse';
+import { Tag, EntityType } from '@shared/types/__generated__/graphql.types';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
 
 export const TagsManager = observer(() => {
   const store = useStore();
   const [newTag, setNewTag] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
-  const [showNewTagInput, setShowNewTagInput] = useState(false);
+  const [showNewTagInput, setShowNewTagInput] = useState<EntityType | null>(
+    null,
+  );
   const [editingTag, setEditingTag] = useState<{
     id: string;
     name: string;
@@ -28,14 +31,10 @@ export const TagsManager = observer(() => {
   const [deletingTag, setDeletingTag] = useState<Tag | null>(null);
   const { open: isOpen, onOpen, onClose } = useDisclosure();
 
-  const handleAddNewTag = () => {
-    setShowNewTagInput(true);
-  };
-
-  const handleNewTagSubmit = () => {
+  const handleNewTagSubmit = (entityType: EntityType) => {
     if (newTag) {
       store.tags.create(
-        { name: newTag },
+        { name: newTag, entityType },
         {
           onSucces: (serverId) => {
             const newTagStore = store.tags.value.get(serverId);
@@ -55,7 +54,7 @@ export const TagsManager = observer(() => {
           },
         },
       );
-      setShowNewTagInput(false);
+      setShowNewTagInput(null);
       setNewTag('');
     }
   };
@@ -112,25 +111,37 @@ export const TagsManager = observer(() => {
     return arr;
   });
 
-  const organizationTagCount =
-    deletingTag &&
-    deletingTag.id &&
-    store.organizations.toComputedArray((arr) => {
-      return arr.filter((org) =>
-        org.value.tags?.some((tag) => tag.id === deletingTag.id),
-      );
-    }).length;
+  const organizationTags = filteredTags.filter((tag) => {
+    return tag.value.entityType === EntityType.Organization;
+  });
 
-  const contactTagCount =
-    deletingTag &&
-    deletingTag.id &&
-    store.contacts.toComputedArray((arr) => {
-      return arr.filter((contact) =>
-        contact.value.tags?.some((persona) => persona.id === deletingTag.id),
-      );
-    }).length;
+  const contactTags = filteredTags.filter((tag) => {
+    return tag.value.entityType === EntityType.Contact;
+  });
 
-  const totalTagCount = Number(organizationTagCount) + Number(contactTagCount);
+  const logEntryTags = filteredTags.filter((tag) => {
+    return tag.value.entityType === EntityType.LogEntry;
+  });
+
+  const organizationTagCount = deletingTag?.metadata.id
+    ? store.organizations.toComputedArray((arr) => {
+        return arr.filter((org) =>
+          org.value.tags?.some((tag) => tag.id === deletingTag.metadata.id),
+        );
+      }).length
+    : 0;
+
+  const contactTagCount = deletingTag?.metadata.id
+    ? store.contacts.toComputedArray((arr) => {
+        return arr.filter((contact) =>
+          contact.value.tags?.some(
+            (persona) => persona.id === deletingTag.metadata.id,
+          ),
+        );
+      }).length
+    : 0;
+
+  const totalTagCount = organizationTagCount + contactTagCount;
 
   const deleteTagDescription =
     totalTagCount > 1
@@ -141,15 +152,159 @@ export const TagsManager = observer(() => {
 
   const tags = store.tags.toArray().length;
 
+  const TagList = ({
+    tags,
+    title,
+    entityType,
+  }: {
+    title: string;
+    entityType?: EntityType;
+    tags: typeof filteredTags;
+  }) => {
+    const [isCollapsed, setIsCollapsed] = useState(false);
+
+    return (
+      <div className='mb-6'>
+        <div className='flex justify-between mb-2'>
+          <div className='flex gap-2'>
+            <p className='text-sm font-medium text-gray-700 '>{title}</p>
+            {tags.length > 0 && (
+              <IconButton
+                size='xxs'
+                aria-label='collapse the list'
+                onClick={() => setIsCollapsed(!isCollapsed)}
+                icon={!isCollapsed ? <ChevronCollapse /> : <ChevronExpand />}
+              />
+            )}
+          </div>
+          {entityType && (
+            <IconButton
+              size='xxs'
+              icon={<Plus />}
+              aria-label='add new tag'
+              onClick={() => {
+                setShowNewTagInput(entityType);
+                setNewTag('');
+              }}
+            />
+          )}
+        </div>
+
+        {showNewTagInput === entityType && (
+          <div className='border border-gray-200 rounded-md mb-2'>
+            <Input
+              autoFocus
+              size='sm'
+              value={newTag}
+              variant='unstyled'
+              placeholder='Enter new tag name...'
+              className='pl-6 placeholder:text-sm text-sm'
+              onChange={(e) => {
+                setNewTag(e.target.value);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleNewTagSubmit(entityType);
+                }
+              }}
+              onBlur={() => {
+                if (newTag) {
+                  handleNewTagSubmit(entityType);
+                } else {
+                  setShowNewTagInput(null);
+                }
+              }}
+            />
+          </div>
+        )}
+
+        {!isCollapsed && (
+          <>
+            {tags.length === 0 ? (
+              <p className='text-sm text-gray-500 ml-6'>No tags yet</p>
+            ) : (
+              tags.map((tag) => (
+                <div
+                  key={tag.value.metadata.id}
+                  className='py-1 max-h-[32px] mb-1 border rounded-md border-gray-200 flex justify-between items-center group'
+                >
+                  <div className='flex-grow'>
+                    {editingTag?.id === tag.value.metadata.id ? (
+                      <div className='ml-6 overflow-hidden'>
+                        <Input
+                          autoFocus
+                          size='xs'
+                          variant='unstyled'
+                          className='mb-[1px]'
+                          defaultValue={tag.value.name}
+                          onFocus={(e) => {
+                            e.target.select();
+                          }}
+                          onChange={(e) => {
+                            const trimmedValue = e.target.value.trim();
+
+                            if (trimmedValue.length > 0) {
+                              setNewTag(trimmedValue);
+                            }
+                          }}
+                          onBlur={() => {
+                            handleEditTag(
+                              tag.value.metadata.id,
+                              newTag || tag.value.name,
+                            );
+                            setEditingTag(null);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              handleEditTag(
+                                tag.value.metadata.id,
+                                e.currentTarget.value,
+                              );
+                            }
+                          }}
+                        />
+                      </div>
+                    ) : (
+                      <span
+                        className='cursor-pointer ml-6 text-sm break-all line-clamp-1'
+                        onClick={() =>
+                          setEditingTag({
+                            id: tag.value.metadata.id,
+                            name: tag.value.name,
+                          })
+                        }
+                      >
+                        {tag.value.name}
+                      </span>
+                    )}
+                  </div>
+                  <div className='flex items-center opacity-0 transition-opacity duration-200 group-hover:opacity-100 pr-3'>
+                    <IconButton
+                      size='xs'
+                      variant='ghost'
+                      aria-label='Delete tag'
+                      icon={<Trash01 className='w-4 h-4' />}
+                      onClick={() => {
+                        setDeletingTag(tag.value);
+                        onOpen();
+                      }}
+                    />
+                  </div>
+                </div>
+              ))
+            )}
+          </>
+        )}
+      </div>
+    );
+  };
+
   return (
     <>
-      <div className='px-6 pb-4 max-w-[500px] h-full overflow-y-auto  border-r border-gray-200'>
-        <div className='flex flex-col '>
-          <div className='flex justify-between items-center pt-[5px] sticky top-0 bg-gray-25 '>
+      <div className='px-6 pb-4 max-w-[500px] h-full overflow-y-auto border-r border-gray-200'>
+        <div className='flex flex-col'>
+          <div className='flex justify-between items-center pt-[5px] sticky top-0 bg-gray-25'>
             <p className='text-gray-700 font-semibold'>Tags</p>
-            <Button size='xs' leftIcon={<Plus />} onClick={handleAddNewTag}>
-              New Tag
-            </Button>
           </div>
           <p className='mb-4 text-sm'>Manage your workspace tags</p>
 
@@ -172,34 +327,7 @@ export const TagsManager = observer(() => {
             </div>
           )}
 
-          {showNewTagInput && (
-            <div className='border border-gray-200 rounded-md mb-1'>
-              <Input
-                autoFocus
-                size='sm'
-                value={newTag}
-                variant='unstyled'
-                placeholder='Enter new tag name...'
-                className='pl-6 placeholder:text-sm text-sm'
-                onChange={(e) => {
-                  setNewTag(e.target.value);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    handleNewTagSubmit();
-                  }
-                }}
-                onBlur={() => {
-                  if (newTag) {
-                    handleNewTagSubmit();
-                  } else {
-                    setShowNewTagInput(false);
-                  }
-                }}
-              />
-            </div>
-          )}
-          {filteredTags.length === 0 ? (
+          {filteredTags.length === 0 && searchTerm ? (
             <div className='flex justify-center items-center h-full'>
               <div className='flex flex-col items-center mt-4 gap-2'>
                 <Tumbleweed className='w-8 h-8 text-gray-400' />
@@ -210,69 +338,23 @@ export const TagsManager = observer(() => {
               </div>
             </div>
           ) : (
-            filteredTags.map((tag) => (
-              <div
-                key={tag.value.id}
-                className='py-1 max-h-[32px] mb-1 border rounded-md border-gray-200 flex justify-between items-center group'
-              >
-                <div className='flex-grow'>
-                  {editingTag?.id === tag.value.id ? (
-                    <div className='ml-6 overflow-hidden'>
-                      <Input
-                        autoFocus
-                        size='xs'
-                        variant='unstyled'
-                        className='mb-[1px]'
-                        defaultValue={tag.value.name}
-                        onFocus={(e) => {
-                          e.target.select();
-                        }}
-                        onBlur={() => {
-                          handleEditTag(tag.value.id, newTag || tag.value.name);
-                          setEditingTag(null);
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            handleEditTag(tag.value.id, e.currentTarget.value);
-                          }
-                        }}
-                        onChange={(e) => {
-                          const trimmedValue = e.target.value.trim();
-
-                          if (trimmedValue.length > 0) {
-                            setNewTag(trimmedValue);
-                          }
-                        }}
-                      />
-                    </div>
-                  ) : (
-                    <span
-                      className='cursor-pointer ml-6 text-sm break-all line-clamp-1'
-                      onClick={() =>
-                        setEditingTag({
-                          id: tag.value.id,
-                          name: tag.value.name,
-                        })
-                      }
-                    >
-                      {tag.value.name}
-                    </span>
-                  )}
-                </div>
-                <div className='flex items-center opacity-0 transition-opacity duration-200 group-hover:opacity-100 pr-3'>
-                  <IconButton
-                    size='xs'
-                    variant='ghost'
-                    aria-label='Delete tag'
-                    icon={<Trash01 className='w-4 h-4' />}
-                    onClick={() => {
-                      setDeletingTag(tag.value);
-                      onOpen();
-                    }}
-                  />
-                </div>
-              </div>
-            ))
+            <>
+              <TagList
+                tags={organizationTags}
+                title='Organization Tags'
+                entityType={EntityType.Organization}
+              />
+              <TagList
+                tags={contactTags}
+                title='Contact Tags'
+                entityType={EntityType.Contact}
+              />
+              <TagList
+                tags={logEntryTags}
+                title='Log Entry Tags'
+                entityType={EntityType.LogEntry}
+              />
+            </>
           )}
         </div>
       </div>

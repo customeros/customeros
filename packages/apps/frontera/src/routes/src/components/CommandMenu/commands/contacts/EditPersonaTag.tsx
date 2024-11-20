@@ -3,9 +3,9 @@ import { useMemo, useState } from 'react';
 import { CommandGroup } from 'cmdk';
 import { observer } from 'mobx-react-lite';
 
-import { Tag } from '@graphql/types';
 import { DataSource } from '@graphql/types';
 import { Plus } from '@ui/media/icons/Plus.tsx';
+import { Tag, EntityType } from '@graphql/types';
 import { Check } from '@ui/media/icons/Check.tsx';
 import { useStore } from '@shared/hooks/useStore';
 import { useModKey } from '@shared/hooks/useModKey';
@@ -62,6 +62,7 @@ export const EditPersonaTag = observer(() => {
       },
       appSource: 'organization',
       createdAt: new Date().toISOString(),
+      entityType: EntityType.Contact,
       updatedAt: new Date().toISOString(),
       source: DataSource.Openline,
     });

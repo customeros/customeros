@@ -8,7 +8,11 @@ import { GroupOperation } from '@store/types';
 import { runInAction, makeAutoObservable } from 'mobx';
 import { GroupStore, makeAutoSyncableGroup } from '@store/group-store';
 
-import { Tag, TagInput } from '@shared/types/__generated__/graphql.types';
+import {
+  Tag,
+  TagInput,
+  EntityType,
+} from '@shared/types/__generated__/graphql.types';
 
 import { TagStore } from './Tag.store';
 import { TagService } from './Tag.service';
@@ -32,7 +36,7 @@ export class TagsStore implements GroupStore<Tag> {
     makeAutoObservable(this);
     makeAutoSyncableGroup(this, {
       channelName: 'Tags',
-      getItemId: (item) => item?.id,
+      getItemId: (item) => item?.metadata.id,
       ItemStore: TagStore,
     });
   }
@@ -42,6 +46,29 @@ export class TagsStore implements GroupStore<Tag> {
       this.isLoading = true;
 
       const { tags } = await this.service.getTags();
+
+      runInAction(() => {
+        this.load(tags);
+        this.isBootstrapped = true;
+      });
+    } catch (e) {
+      runInAction(() => {
+        this.error = (e as Error)?.message;
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+      });
+    }
+  }
+
+  async getTagsByEntityType(entityType: EntityType) {
+    try {
+      this.isLoading = true;
+
+      const { tags } = await this.service.getTagsByEntityType(
+        entityType as EntityType,
+      );
 
       runInAction(() => {
         this.load(tags);
@@ -69,7 +96,7 @@ export class TagsStore implements GroupStore<Tag> {
     options?: { onSucces?: (serverId: string) => void },
   ) => {
     const newTag = new TagStore(this.root, this.transport);
-    const tempId = newTag.value.id;
+    const tempId = newTag.value.metadata.id;
     let serverId = '';
 
     if (payload) {
@@ -85,13 +112,14 @@ export class TagsStore implements GroupStore<Tag> {
       >(CREATE_TAG_MUTATION, {
         input: {
           name: payload?.name || '',
+          entityType: payload?.entityType,
         },
       });
 
       runInAction(() => {
-        serverId = tag_Create.id;
+        serverId = tag_Create.metadata.id;
 
-        newTag.value.id = serverId;
+        newTag.value.metadata.id = serverId;
 
         this.value.set(serverId, newTag);
         this.value.delete(tempId);

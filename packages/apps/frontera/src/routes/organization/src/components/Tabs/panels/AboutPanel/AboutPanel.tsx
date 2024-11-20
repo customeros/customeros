@@ -29,6 +29,7 @@ import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
 import {
   Social,
   DataSource,
+  EntityType,
   Tag as TagType,
   OrganizationStage,
   OrganizationRelationship,
@@ -165,6 +166,7 @@ export const AboutPanel = observer(() => {
           appSource: 'organization',
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
+          entityType: EntityType.Organization,
           source: DataSource.Openline,
         },
       ];

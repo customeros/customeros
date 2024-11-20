@@ -201,9 +201,7 @@ export class OrganizationsStore extends SyncableGroup<
         this.error = (e as Error)?.message;
       });
     } finally {
-      runInAction(() => {
-        this.isLoading = false;
-      });
+      this.isLoading = false;
     }
   }
 
@@ -407,7 +405,7 @@ export class OrganizationsStore extends SyncableGroup<
   }
 
   updateTags = async (ids: string[], tags: Tag[]) => {
-    const tagIdsToUpdate = new Set(tags.map((tag) => tag.id));
+    const tagIdsToUpdate = new Set(tags.map((tag) => tag.metadata.id));
 
     const shouldRemoveTags = ids.every((id) => {
       const organization = this.value.get(id);
@@ -415,7 +413,7 @@ export class OrganizationsStore extends SyncableGroup<
       if (!organization) return false;
 
       const organizationTagIds = new Set(
-        (organization.value.tags ?? []).map((tag) => tag.id),
+        (organization.value.tags ?? []).map((tag) => tag.metadata.id),
       );
 
       return Array.from(tagIdsToUpdate).every((tagId) =>
@@ -430,13 +428,13 @@ export class OrganizationsStore extends SyncableGroup<
 
       if (shouldRemoveTags) {
         organization.value.tags = organization.value.tags?.filter(
-          (t) => !tagIdsToUpdate.has(t.id),
+          (t) => !tagIdsToUpdate.has(t.metadata.id),
         );
       } else {
         const existingIds = new Set(
-          organization.value.tags?.map((t) => t.id) ?? [],
+          organization.value.tags?.map((t) => t.metadata.id) ?? [],
         );
-        const newTags = tags.filter((t) => !existingIds.has(t.id));
+        const newTags = tags.filter((t) => !existingIds.has(t.metadata.id));
 
         if (!Array.isArray(organization.value.tags)) {
           organization.value.tags = [];
