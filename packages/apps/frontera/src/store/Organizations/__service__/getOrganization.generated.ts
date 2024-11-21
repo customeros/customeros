@@ -50,11 +50,11 @@ export type OrganizationQuery = {
     } | null;
     tags?: Array<{
       __typename?: 'Tag';
-      id: string;
+      id?: string | null;
       name: string;
-      createdAt: any;
-      updatedAt: any;
-      appSource: string;
+      createdAt?: any | null;
+      updatedAt?: any | null;
+      appSource?: string | null;
     }> | null;
     socialMedia: Array<{
       __typename?: 'Social';

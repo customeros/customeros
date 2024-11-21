@@ -8,6 +8,7 @@ import { makePayload } from '@store/util';
 
 import {
   type Tag,
+  EntityType,
   OnboardingStatus,
   type OrganizationUpdateInput,
 } from '@graphql/types';
@@ -358,9 +359,8 @@ export class OrganizationsService {
               input: {
                 organizationId,
                 tag: {
-                  id: value.id,
-                  name: value.name,
-                  entityType: value.entityType,
+                  id: value.metadata.id,
+                  entityType: EntityType.Organization,
                 },
               },
             });
@@ -376,7 +376,7 @@ export class OrganizationsService {
                 await this.addTag({
                   input: {
                     organizationId,
-                    tag: { id: tag?.id, name: tag?.name },
+                    tag: { id: tag?.metadata.id, name: tag?.name },
                   },
                 });
               });

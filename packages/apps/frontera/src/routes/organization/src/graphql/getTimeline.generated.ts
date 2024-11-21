@@ -631,7 +631,7 @@ export type GetTimelineQuery = {
           }>;
           issueTags?: Array<{
             __typename?: 'Tag';
-            id: string;
+            id?: string | null;
             name: string;
           } | null> | null;
         }
@@ -656,7 +656,7 @@ export type GetTimelineQuery = {
               email?: string | null;
             }> | null;
           } | null;
-          tags: Array<{ __typename?: 'Tag'; id: string; name: string }>;
+          tags: Array<{ __typename?: 'Tag'; id?: string | null; name: string }>;
           externalLinks: Array<{
             __typename?: 'ExternalSystem';
             type: Types.ExternalSystemType;

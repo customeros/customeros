@@ -76,6 +76,7 @@ query getOrganizations(
         name
         createdAt
         updatedAt
+        entityType
         source
         appSource
         metadata {

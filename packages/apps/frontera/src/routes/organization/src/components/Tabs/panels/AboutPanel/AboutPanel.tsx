@@ -28,7 +28,7 @@ import { HorizontalBarChart03 } from '@ui/media/icons/HorizontalBarChart03';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
 import {
   Social,
-  DataSource,
+  Metadata,
   EntityType,
   Tag as TagType,
   OrganizationStage,
@@ -147,32 +147,23 @@ export const AboutPanel = observer(() => {
   };
 
   const handleCreateOption = (value: string) => {
-    store.tags?.create({ name: value });
-
-    organization?.update((org) => {
-      org.tags = [
-        ...(org.tags || []),
-        {
-          id: value,
-          name: value,
-          metadata: {
-            id: value,
-            source: DataSource.Openline,
-            sourceOfTruth: DataSource.Openline,
-            appSource: 'organization',
-            created: new Date().toISOString(),
-            lastUpdated: new Date().toISOString(),
-          },
-          appSource: 'organization',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          entityType: EntityType.Organization,
-          source: DataSource.Openline,
+    store.tags?.create(
+      { name: value, entityType: EntityType.Organization },
+      {
+        onSucces: (serverId: string) => {
+          organization?.value.tags?.push({
+            id: serverId,
+            name: value,
+            metadata: {
+              id: serverId,
+            } as Metadata,
+            entityType: EntityType.Organization,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          } as any);
+          organization.commit();
         },
-      ];
-
-      return org;
-    });
+      },
+    );
   };
 
   const enrichedOrg = organization?.value.enrichDetails;
@@ -273,7 +264,7 @@ export const AboutPanel = observer(() => {
           leftAccessory={<Tag01 className='mr-3 text-gray-500' />}
           value={
             organization.value.tags?.map((t) => ({
-              value: t.id,
+              value: t.metadata.id,
               label: t.name,
             })) ?? []
           }
@@ -289,6 +280,7 @@ export const AboutPanel = observer(() => {
               .filter(Boolean) as TagType[];
 
             organization.value.tags = tags;
+
             organization.commit();
           }}
         />

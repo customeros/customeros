@@ -2204,16 +2204,13 @@ export type Mailbox = {
   __typename?: 'Mailbox';
   created: Scalars['Time']['output'];
   currentFlowIds?: Maybe<Array<Scalars['ID']['output']>>;
-  dailyEmailLimit: Scalars['Int64']['output'];
   domain: Scalars['String']['output'];
   mailbox: Scalars['String']['output'];
+  rampUpCurrent: Scalars['Int']['output'];
+  rampUpMax: Scalars['Int']['output'];
+  rampUpRate: Scalars['Int']['output'];
   scheduledEmails: Scalars['Int64']['output'];
   userId?: Maybe<Scalars['ID']['output']>;
-};
-
-export type MailboxInput = {
-  mailboxDomain: Scalars['String']['input'];
-  mailboxUsername: Scalars['String']['input'];
 };
 
 export enum Market {
@@ -2431,9 +2428,8 @@ export type Mutation = {
   logEntry_RemoveTag: Scalars['ID']['output'];
   logEntry_ResetTags: Scalars['ID']['output'];
   logEntry_Update: Scalars['ID']['output'];
-  mailstack_CreateMailboxes: Array<Mailbox>;
-  mailstack_RegisterDomains: Array<Scalars['String']['output']>;
-  mailstack_SetUser: Mailbox;
+  mailstack_BuyDomainWithMailboxes: Array<Scalars['String']['output']>;
+  mailstack_SetUser: Result;
   meeting_AddNewLocation: Meeting;
   meeting_AddNote: Meeting;
   meeting_Create: Meeting;
@@ -2909,12 +2905,9 @@ export type MutationLogEntry_UpdateArgs = {
   input: LogEntryUpdateInput;
 };
 
-export type MutationMailstack_CreateMailboxesArgs = {
-  input: Array<MailboxInput>;
-};
-
-export type MutationMailstack_RegisterDomainsArgs = {
+export type MutationMailstack_BuyDomainWithMailboxesArgs = {
   domains: Array<Scalars['String']['input']>;
+  usernames: Array<Scalars['String']['input']>;
 };
 
 export type MutationMailstack_SetUserArgs = {
@@ -3704,6 +3697,13 @@ export type OrganizationSaveInput = {
   yearFounded?: InputMaybe<Scalars['Int64']['input']>;
 };
 
+export type OrganizationSearchResult = {
+  __typename?: 'OrganizationSearchResult';
+  ids: Array<Scalars['ID']['output']>;
+  totalAvailable: Scalars['Int64']['output'];
+  totalElements: Scalars['Int64']['output'];
+};
+
 export enum OrganizationStage {
   Engaged = 'ENGAGED',
   InitialValue = 'INITIAL_VALUE',
@@ -3721,6 +3721,53 @@ export enum OrganizationStage {
 export type OrganizationTagInput = {
   organizationId: Scalars['ID']['input'];
   tag: TagIdOrNameInput;
+};
+
+export type OrganizationUiDetails = {
+  __typename?: 'OrganizationUiDetails';
+  churnedAt?: Maybe<Scalars['Time']['output']>;
+  contactCount?: Maybe<Scalars['Int']['output']>;
+  contacts: Array<Scalars['String']['output']>;
+  contracts: Array<Scalars['String']['output']>;
+  createdAt: Scalars['Time']['output'];
+  description?: Maybe<Scalars['String']['output']>;
+  employees?: Maybe<Scalars['Int64']['output']>;
+  enrichedAt?: Maybe<Scalars['Time']['output']>;
+  enrichedFailedAt?: Maybe<Scalars['Time']['output']>;
+  enrichedRequestedAt?: Maybe<Scalars['Time']['output']>;
+  iconUrl?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  industry?: Maybe<Scalars['String']['output']>;
+  lastFundingRound?: Maybe<FundingRound>;
+  lastTouchPointAt?: Maybe<Scalars['Time']['output']>;
+  lastTouchPointType?: Maybe<LastTouchpointType>;
+  leadSource?: Maybe<Scalars['String']['output']>;
+  locations: Array<Location>;
+  logoUrl?: Maybe<Scalars['String']['output']>;
+  ltv?: Maybe<Scalars['Float']['output']>;
+  market?: Maybe<Market>;
+  name: Scalars['String']['output'];
+  notes?: Maybe<Scalars['String']['output']>;
+  onboardingComments?: Maybe<Scalars['String']['output']>;
+  onboardingStatus: OnboardingStatus;
+  onboardingStatusUpdatedAt?: Maybe<Scalars['Time']['output']>;
+  owner?: Maybe<User>;
+  parentId?: Maybe<Scalars['ID']['output']>;
+  parentName?: Maybe<Scalars['String']['output']>;
+  public?: Maybe<Scalars['Boolean']['output']>;
+  relationship?: Maybe<OrganizationRelationship>;
+  renewalSummaryArrForecast?: Maybe<Scalars['Float']['output']>;
+  renewalSummaryMaxArrForecast?: Maybe<Scalars['Float']['output']>;
+  renewalSummaryNextRenewalAt?: Maybe<Scalars['Time']['output']>;
+  renewalSummaryRenewalLikelihood?: Maybe<OpportunityRenewalLikelihood>;
+  slackChannelId?: Maybe<Scalars['String']['output']>;
+  socialMedia: Array<Social>;
+  stage?: Maybe<OrganizationStage>;
+  subsidiaries: Array<Scalars['String']['output']>;
+  tags: Array<Tag>;
+  valueProposition?: Maybe<Scalars['String']['output']>;
+  website?: Maybe<Scalars['String']['output']>;
+  yearFounded?: Maybe<Scalars['Int64']['output']>;
 };
 
 export type OrganizationUpdateInput = {
@@ -3994,6 +4041,7 @@ export type Query = {
   mailstack_DomainPurchaseSuggestions: Array<Scalars['String']['output']>;
   mailstack_Domains: Array<Scalars['String']['output']>;
   mailstack_Mailboxes: Array<Mailbox>;
+  mailstack_UniqueUsernames: Array<Scalars['String']['output']>;
   meeting: Meeting;
   opportunities_LinkedToOrganizations: OpportunityPage;
   opportunity?: Maybe<Opportunity>;
@@ -4018,6 +4066,9 @@ export type Query = {
   tenantBillingProfiles: Array<TenantBillingProfile>;
   tenantSettings: TenantSettings;
   timelineEvents: Array<TimelineEvent>;
+  ui_organization: OrganizationUiDetails;
+  ui_organizations: Array<OrganizationUiDetails>;
+  ui_organizations_search: OrganizationSearchResult;
   user: User;
   user_ByEmail: User;
   users: UserPage;
@@ -4152,12 +4203,11 @@ export type QueryLogEntryArgs = {
 };
 
 export type QueryMailstack_CheckUnavailableDomainsArgs = {
-  domain: Array<Scalars['String']['input']>;
+  domains: Array<Scalars['String']['input']>;
 };
 
 export type QueryMailstack_DomainPurchaseSuggestionsArgs = {
   domain: Scalars['String']['input'];
-  limit?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type QueryMeetingArgs = {
@@ -4229,6 +4279,20 @@ export type QueryTenantBillingProfileArgs = {
 
 export type QueryTimelineEventsArgs = {
   ids: Array<Scalars['ID']['input']>;
+};
+
+export type QueryUi_OrganizationArgs = {
+  ids: Scalars['ID']['input'];
+};
+
+export type QueryUi_OrganizationsArgs = {
+  ids?: InputMaybe<Array<Scalars['ID']['input']>>;
+};
+
+export type QueryUi_Organizations_SearchArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  sort?: InputMaybe<SortBy>;
+  where?: InputMaybe<Filter>;
 };
 
 export type QueryUserArgs = {
@@ -4555,18 +4619,18 @@ export enum TableViewType {
 export type Tag = {
   __typename?: 'Tag';
   /** @deprecated Use metadata.appSource */
-  appSource: Scalars['String']['output'];
+  appSource?: Maybe<Scalars['String']['output']>;
   /** @deprecated Use metadata.created */
-  createdAt: Scalars['Time']['output'];
+  createdAt?: Maybe<Scalars['Time']['output']>;
   entityType: EntityType;
   /** @deprecated Use metadata.id */
-  id: Scalars['ID']['output'];
+  id?: Maybe<Scalars['ID']['output']>;
   metadata: Metadata;
   name: Scalars['String']['output'];
   /** @deprecated Use metadata.source */
-  source: DataSource;
+  source?: Maybe<DataSource>;
   /** @deprecated Use metadata.lastUpdated */
-  updatedAt: Scalars['Time']['output'];
+  updatedAt?: Maybe<Scalars['Time']['output']>;
 };
 
 export type TagIdOrNameInput = {
