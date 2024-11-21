@@ -1,0 +1,5 @@
+query CheckUnavailableDomains($domains: [String!]!) {
+  mailstack_CheckUnavailableDomains(domains: $domains) {
+    unavailableDomains
+  }
+}

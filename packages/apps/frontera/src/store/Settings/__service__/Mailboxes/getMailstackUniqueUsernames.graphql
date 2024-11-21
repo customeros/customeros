@@ -1,0 +1,3 @@
+query mailstack_UniqueUsernames {
+  mailstack_UniqueUsernames
+}

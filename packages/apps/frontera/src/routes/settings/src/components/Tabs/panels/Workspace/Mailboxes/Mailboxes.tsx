@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import { useLocalStorage } from 'usehooks-ts'; // Import useSearchParams if applicable
+
 import { ChevronRight } from '@ui/media/icons/ChevronRight';
 
 import { CheckoutPage } from './components/CheckoutPage';
@@ -44,15 +45,16 @@ export const Mailboxes = () => {
                 <UsersCard />
               </div>
             </div>
-
-            <div className='py-[10px] px-6 flex flex-col h-full border-r-[1px]'>
-              <p className='mb-4 font-semibold'>Checkout</p>
-              <div className='flex flex-col gap-2'>
-                <BaseBoundleCard />
-                {noOfDomains === 5 && <AdditionalDomainsCard />}
-                {noOfDomains > 0 && <CheckoutCard />}
+            {noOfDomains > 0 && (
+              <div className='py-[10px] px-6 flex flex-col h-full border-r-[1px]'>
+                <p className='mb-4 font-semibold'>Checkout</p>
+                <div className='flex flex-col gap-2'>
+                  <BaseBoundleCard />
+                  {noOfDomains === 5 && <AdditionalDomainsCard />}
+                  {noOfDomains > 0 && <CheckoutCard />}
+                </div>
               </div>
-            </div>
+            )}
           </>
         ) : (
           <CheckoutPage />
