@@ -1,6 +1,6 @@
 import { it, expect, describe } from 'vitest';
 
-import { EmailLabel } from '@graphql/types';
+import { EmailLabel, PhoneNumberLabel } from '@graphql/types';
 
 import { Transport } from '../../transport';
 import { ContactService } from '../../Contacts/__service__/Contacts.service';
@@ -50,7 +50,7 @@ describe('ContactsService - Integration Tests', () => {
     expect(contact?.profilePhotoUrl).toBe('');
   });
 
-  it('create contact for organization', async () => {
+  it('creates contact for organization', async () => {
     const organization_name = 'IT_' + crypto.randomUUID();
     const { organization_Save } = await organizationsService.saveOrganization({
       input: { name: organization_name },
@@ -479,6 +479,165 @@ describe('ContactsService - Integration Tests', () => {
     expect(emailTwoEntry?.id).not.toBeNull();
     expect(emailTwoEntry?.primary, 'The first email is still primary').toBe(
       true,
+    );
+  });
+
+  it('checks successful response from better contact', async () => {
+    const organization_name = 'IT_' + crypto.randomUUID();
+    const { organization_Save } = await organizationsService.saveOrganization({
+      input: { name: organization_name },
+    });
+    const contact_social_url = 'IT_' + crypto.randomUUID();
+
+    const { contact_CreateForOrganization } =
+      await contactService.createContactForOrganization({
+        organizationId: organization_Save.metadata.id,
+        input: { socialUrl: contact_social_url },
+      });
+
+    await contactService.getContact(contact_CreateForOrganization.id);
+
+    const { contact_FindWorkEmail } = await contactService.findEmail({
+      contactId: contact_CreateForOrganization.id,
+      organizationId: organization_Save.metadata.id,
+    });
+
+    expect(
+      contact_FindWorkEmail.accepted,
+      'The findEmail mutation returned error',
+    ).toBe(true);
+  });
+
+  it('does CRUD ops for phone number', async () => {
+    const organization_name = 'IT_' + crypto.randomUUID();
+    const { organization_Save } = await organizationsService.saveOrganization({
+      input: { name: organization_name },
+    });
+    const contact_social_url = 'IT_' + crypto.randomUUID();
+
+    const { contact_CreateForOrganization } =
+      await contactService.createContactForOrganization({
+        organizationId: organization_Save.metadata.id,
+        input: { socialUrl: contact_social_url },
+      });
+
+    let contact = await contactService.getContact(
+      contact_CreateForOrganization.id,
+    );
+
+    expect(
+      contact.contact?.phoneNumbers.length,
+      'The contact has phone number before adding',
+    ).toBe(0);
+
+    const expectedCreateFirstPhoneNumber = (
+      Math.floor(Math.random() * 90000000) + 10000000
+    ).toString();
+    const expectedFirstPhoneNumberLabel = PhoneNumberLabel.Mobile;
+
+    const firstAddedNumber = await contactService.addPhoneNumber({
+      contactId: contact_CreateForOrganization.id,
+      input: {
+        phoneNumber: expectedCreateFirstPhoneNumber,
+        label: expectedFirstPhoneNumberLabel,
+        primary: false,
+        countryCodeA2: 'US',
+      },
+    });
+
+    expect(firstAddedNumber.phoneNumberMergeToContact.id).not.toBeNull();
+    expect(firstAddedNumber.phoneNumberMergeToContact.rawPhoneNumber).toBe(
+      expectedCreateFirstPhoneNumber,
+    );
+
+    contact = await contactService.getContact(contact_CreateForOrganization.id);
+
+    expect(
+      contact.contact?.phoneNumbers.length,
+      "The contact doesn't have exactly 1 phone number",
+    ).toBe(1);
+    expect(contact.contact?.phoneNumbers[0].id).toBe(
+      firstAddedNumber.phoneNumberMergeToContact.id,
+    );
+    expect(contact.contact?.phoneNumbers[0].label).toBe(
+      expectedFirstPhoneNumberLabel,
+    );
+    expect(contact.contact?.phoneNumbers[0].rawPhoneNumber).toBe(
+      expectedCreateFirstPhoneNumber,
+    );
+    expect(contact.contact?.phoneNumbers[0].e164).toBeNull();
+    expect(contact.contact?.phoneNumbers[0].primary).toBe(false);
+
+    const expectedUpdateFirstPhoneNumber = (
+      Math.floor(Math.random() * 90000000) + 10000000
+    ).toString();
+    const { phoneNumber_Update } = await contactService.updatePhoneNumber({
+      input: {
+        id: firstAddedNumber.phoneNumberMergeToContact.id,
+        phoneNumber: expectedUpdateFirstPhoneNumber,
+        countryCodeA2: 'RO',
+      },
+    });
+
+    expect(phoneNumber_Update.id).not.toBeNull();
+
+    contact = await contactService.getContact(contact_CreateForOrganization.id);
+
+    expect(
+      contact.contact?.phoneNumbers.length,
+      "The contact doesn't have exactly 1 phone number",
+    ).toBe(1);
+    expect(contact.contact?.phoneNumbers[0].id).toBe(
+      firstAddedNumber.phoneNumberMergeToContact.id,
+    );
+    expect(contact.contact?.phoneNumbers[0].label).toBe(
+      expectedFirstPhoneNumberLabel,
+    );
+    expect(contact.contact?.phoneNumbers[0].rawPhoneNumber).toBe(
+      expectedUpdateFirstPhoneNumber,
+    );
+    expect(contact.contact?.phoneNumbers[0].e164).toBeNull();
+    expect(contact.contact?.phoneNumbers[0].primary).toBe(false);
+
+    const expectedCreateSecondPhoneNumber = (
+      Math.floor(Math.random() * 90000000) + 10000000
+    ).toString();
+    const expectedSecondPhoneNumberLabel = PhoneNumberLabel.Mobile;
+
+    const secondAddedNumber = await contactService.addPhoneNumber({
+      contactId: contact_CreateForOrganization.id,
+      input: {
+        phoneNumber: expectedCreateSecondPhoneNumber,
+        label: expectedSecondPhoneNumberLabel,
+        primary: false,
+        countryCodeA2: 'US',
+      },
+    });
+
+    expect(secondAddedNumber.phoneNumberMergeToContact.id).not.toBeNull();
+    expect(secondAddedNumber.phoneNumberMergeToContact.rawPhoneNumber).toBe(
+      expectedCreateSecondPhoneNumber,
+    );
+
+    contact = await contactService.getContact(contact_CreateForOrganization.id);
+
+    expect(
+      contact.contact?.phoneNumbers.length,
+      "The contact doesn't have exactly 2 phone numbers",
+    ).toBe(2);
+
+    await contactService.removePhoneNumber({
+      contactId: contact_CreateForOrganization.id,
+      id: firstAddedNumber.phoneNumberMergeToContact.id,
+    });
+
+    contact = await contactService.getContact(contact_CreateForOrganization.id);
+    expect(
+      contact.contact?.phoneNumbers.length,
+      "The contact doesn't have exactly 1 phone numbers",
+    ).toBe(1);
+    expect(contact.contact?.phoneNumbers[0].rawPhoneNumber).toBe(
+      expectedCreateSecondPhoneNumber,
     );
   });
 });
