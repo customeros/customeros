@@ -20,8 +20,8 @@ type MailService interface {
 	GetEmailsForProcessingForUser(ctx context.Context, tenant, userEmailAddress string)
 	LoadEmail(ctx context.Context, rawEmail *postgresentity.RawEmail) (EmailMessageData, error)
 	ProcessEmailCheck(ctx context.Context, tenant string, email *EmailMessageData) HeaderAnalysis
-	ProcessEmail(ctx context.Context, tenant string, emailId uuid.UUID) (postgresentity.RawState, *string, error)
-	ProcessEmailByMessageId(ctx context.Context, tenant, usernameSource, messageId string) (postgresentity.RawState, *string, error)
+	ProcessEmail(ctx context.Context, tenant string, emailId uuid.UUID) entity.UpdateRawEmailTable
+	ProcessEmailByMessageId(ctx context.Context, tenant, usernameSource, messageId string) entity.UpdateRawEmailTable
 	SendMail(ctx context.Context, emailMessage *entity.EmailMessage) error
 	ProcessSentEmail(ctx context.Context, tx *neo4j.ManagedTransaction, emailMessage *entity.EmailMessage) (*string, error)
 }
