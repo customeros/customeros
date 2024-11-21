@@ -556,7 +556,7 @@ func (c *contactListenerImpl) enrichContactWithScrapInEnrichDetails(ctx context.
 				if organizationDbNode != nil {
 					organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
 					if organizationEntity.IsHidden() {
-						err = c.services.OrganizationService.Show(ctx, nil, tenant, organizationEntity.ID)
+						err = c.services.OrganizationService.Show(ctx, nil, organizationEntity.ID)
 						if err != nil {
 							tracing.TraceErr(span, errors.Wrap(err, "OrganizationService.Show"))
 							return err
@@ -629,7 +629,7 @@ func (c *contactListenerImpl) enrichContactWithScrapInEnrichDetails(ctx context.
 			if len(organizationDbNodes) > 0 {
 				organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNodes[0])
 				if organizationEntity.IsHidden() {
-					err = c.services.OrganizationService.Show(ctx, nil, tenant, organizationEntity.ID)
+					err = c.services.OrganizationService.Show(ctx, nil, organizationEntity.ID)
 					if err != nil {
 						tracing.TraceErr(span, errors.Wrap(err, "OrganizationService.Show"))
 						return err
