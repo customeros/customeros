@@ -76,9 +76,7 @@ func main() {
 
 	//testRequestGenerateSummaryRequest()
 	//testRequestGenerateActionItemsRequest()
-	//testCreateOrganization()
 	//testEnrichOrganization()
-	//testUpdateWithUpsertOrganization()
 	//testHideOrganization()
 	//testShowOrganization()
 	//testAddCustomField()
@@ -174,36 +172,6 @@ func testRequestGenerateActionItemsRequest() {
 	result, _ := clients.InteractionEventClient.RequestGenerateActionItems(context.Background(), &iepb.RequestGenerateActionItemsGrpcRequest{
 		Tenant:             tenant,
 		InteractionEventId: interactionEventId,
-	})
-	print(result)
-}
-
-func testCreateOrganization() {
-	userId := "697563a8-171c-4950-a067-1aaaaf2de1d8"
-	website := ""
-
-	result, err := clients.OrganizationClient.UpsertOrganization(context.Background(), &organizationpb.UpsertOrganizationGrpcRequest{
-		Tenant:         tenant,
-		Website:        website,
-		LoggedInUserId: userId,
-	})
-	if err != nil {
-		log.Fatalf("Failed: %v", err.Error())
-	}
-	log.Printf("Result: %v", result)
-}
-
-func testUpdateWithUpsertOrganization() {
-
-	organizationId := "cfaaf31f-ec3b-44d1-836e-4e50834632ae"
-	website := "xtz.com"
-	lastFoundingAmont := "1Million"
-
-	result, _ := clients.OrganizationClient.UpsertOrganization(context.Background(), &organizationpb.UpsertOrganizationGrpcRequest{
-		Tenant:            tenant,
-		Id:                organizationId,
-		Website:           website,
-		LastFundingAmount: lastFoundingAmont,
 	})
 	print(result)
 }

@@ -109,9 +109,6 @@ type OrganizationUpdateFields struct {
 
 type OrganizationWriteRepository interface {
 	Save(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId string, data data_fields.OrganizationFields) error
-
-	//Deprecated
-	ReserveOrganizationId(ctx context.Context, tenant, organizationId string) (string, error)
 	//Deprecated
 	CreateOrganization(ctx context.Context, tenant, organizationId string, data OrganizationCreateFields) error
 	//Deprecated
@@ -152,32 +149,6 @@ func NewOrganizationWriteRepository(driver *neo4j.DriverWithContext, database st
 
 func (r *organizationWriteRepository) prepareWriteSession(ctx context.Context) neo4j.SessionWithContext {
 	return utils.NewNeo4jWriteSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
-}
-
-func (r *organizationWriteRepository) ReserveOrganizationId(ctx context.Context, tenant, inputId string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.ReserveOrganizationId")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("organizationId", inputId))
-
-	orgId := utils.NewUUIDIfEmpty(inputId)
-
-	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}) 
-							MERGE (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization:Organization_%s {id:$id})
-							SET org.updatedAt = datetime()`, tenant)
-	params := map[string]any{
-		"id":     orgId,
-		"tenant": tenant,
-	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
-
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
-	if err != nil {
-		tracing.TraceErr(span, err)
-	}
-	return orgId, err
 }
 
 func (r *organizationWriteRepository) CreateOrganization(ctx context.Context, tenant, organizationId string, data OrganizationCreateFields) error {

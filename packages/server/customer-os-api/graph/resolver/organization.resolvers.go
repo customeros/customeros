@@ -7,6 +7,7 @@ package resolver
 import (
 	"context"
 	"errors"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -24,7 +25,6 @@ import (
 	commontracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -432,164 +432,66 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 		}, nil
 	}
 
-	fieldsMask := []organizationpb.OrganizationMaskField{}
-	if utils.IfNotNilString(input.Name) != "" {
-		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_NAME)
-	}
-	if input.ReferenceID != nil || input.CustomID != nil {
-		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_REFERENCE_ID)
-	}
-	if input.Description != nil {
-		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_DESCRIPTION)
-	}
-	if input.Website != nil {
-		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_WEBSITE)
-	}
-	if input.Industry != nil {
-		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_INDUSTRY)
-	}
-	if input.SubIndustry != nil {
-		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_SUB_INDUSTRY)
-	}
-	if input.IndustryGroup != nil {
-		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_INDUSTRY_GROUP)
-	}
-	if input.Market != nil {
-		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_MARKET)
-	}
-	if input.TargetAudience != nil {
-		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_TARGET_AUDIENCE)
-	}
-	if input.ValueProposition != nil {
-		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_VALUE_PROPOSITION)
-	}
-	if input.LastFundingAmount != nil {
-		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_LAST_FUNDING_AMOUNT)
-	}
-	if input.LastFundingRound != nil {
-		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_LAST_FUNDING_ROUND)
-	}
-	if input.YearFounded != nil {
-		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_YEAR_FOUNDED)
-	}
-	if input.Headquarters != nil {
-		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_HEADQUARTERS)
-	}
-	if input.LogoURL != nil || input.Logo != nil {
-		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_LOGO_URL)
-	}
-	if input.Icon != nil {
-		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_ICON_URL)
-	}
-	if input.EmployeeGrowthRate != nil {
-		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_EMPLOYEE_GROWTH_RATE)
-	}
-	if input.Note != nil || input.Notes != nil {
-		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_NOTE)
-	}
-	if input.SlackChannelID != nil {
-		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_SLACK_CHANNEL_ID)
-	}
-	if input.Public != nil {
-		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_IS_PUBLIC)
-	}
-	if input.Employees != nil {
-		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_EMPLOYEES)
-	}
-	if input.IcpFit != nil {
-		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_ICP_FIT)
+	organizationDataFields := data_fields.OrganizationFields{
+		Name:               input.Name,
+		ReferenceId:        input.ReferenceID,
+		Description:        input.Description,
+		Website:            input.Website,
+		Industry:           input.Industry,
+		SubIndustry:        input.SubIndustry,
+		IndustryGroup:      input.IndustryGroup,
+		IsPublic:           input.IsPublic,
+		Market:             utils.ToPtr(mapper.MapMarketFromModel(input.Market)),
+		Employees:          input.Employees,
+		TargetAudience:     input.TargetAudience,
+		ValueProposition:   input.ValueProposition,
+		LastFundingAmount:  input.LastFundingAmount,
+		LastFundingRound:   utils.ToPtr(enummapper.MapFundingRoundFromModel(input.LastFundingRound)),
+		Note:               input.Note,
+		YearFounded:        input.YearFounded,
+		LogoUrl:            input.LogoURL,
+		IconUrl:            input.Icon,
+		Headquarters:       input.Headquarters,
+		EmployeeGrowthRate: input.EmployeeGrowthRate,
+		IcpFit:             input.IcpFit,
 	}
 
-	upsertOrganizationRequest := organizationpb.UpsertOrganizationGrpcRequest{
-		Tenant:             common.GetTenantFromContext(ctx),
-		LoggedInUserId:     common.GetUserIdFromContext(ctx),
-		Id:                 input.ID,
-		Name:               utils.IfNotNilString(input.Name),
-		ReferenceId:        utils.IfNotNilString(input.ReferenceID),
-		Description:        utils.IfNotNilString(input.Description),
-		Website:            utils.IfNotNilString(input.Website),
-		Industry:           utils.IfNotNilString(input.Industry),
-		SubIndustry:        utils.IfNotNilString(input.SubIndustry),
-		IndustryGroup:      utils.IfNotNilString(input.IndustryGroup),
-		IsPublic:           utils.IfNotNilBool(input.IsPublic),
-		Market:             mapper.MapMarketFromModel(input.Market),
-		Employees:          utils.IfNotNilInt64(input.Employees),
-		TargetAudience:     utils.IfNotNilString(input.TargetAudience),
-		ValueProposition:   utils.IfNotNilString(input.ValueProposition),
-		LastFundingAmount:  utils.IfNotNilString(input.LastFundingAmount),
-		LastFundingRound:   enummapper.MapFundingRoundFromModel(input.LastFundingRound),
-		Note:               utils.IfNotNilString(input.Note),
-		YearFounded:        input.YearFounded,
-		LogoUrl:            utils.IfNotNilString(input.LogoURL),
-		IconUrl:            utils.IfNotNilString(input.Icon),
-		Headquarters:       utils.IfNotNilString(input.Headquarters),
-		EmployeeGrowthRate: utils.IfNotNilString(input.EmployeeGrowthRate),
-		SlackChannelId:     utils.IfNotNilString(input.SlackChannelID),
-		IcpFit:             utils.IfNotNilBool(input.IcpFit),
-		SourceFields: &commonpb.SourceFields{
-			Source:    string(neo4jentity.DataSourceOpenline),
-			AppSource: utils.IfNotNilString(constants.AppSourceCustomerOsApi),
-		},
-	}
 	// set stage if updated
 	if input.Stage != nil {
-		upsertOrganizationRequest.Stage = enummapper.MapStageFromModel(*input.Stage).String()
-		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_STAGE)
+		organizationDataFields.Stage = utils.ToPtr(enummapper.MapStageFromModel(*input.Stage))
 		// set default for relationship if stage is updated
 		if *input.Stage == model.OrganizationStageUnqualified {
-			upsertOrganizationRequest.Relationship = enummapper.MapRelationshipFromModel(model.OrganizationRelationshipNotAFit).String()
-			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_RELATIONSHIP)
+			organizationDataFields.Relationship = utils.ToPtr(enummapper.MapRelationshipFromModel(model.OrganizationRelationshipNotAFit))
 		} else if *input.Stage == model.OrganizationStageOnboarding {
-			upsertOrganizationRequest.Relationship = enummapper.MapRelationshipFromModel(model.OrganizationRelationshipCustomer).String()
-			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_RELATIONSHIP)
+			organizationDataFields.Relationship = utils.ToPtr(enummapper.MapRelationshipFromModel(model.OrganizationRelationshipCustomer))
 		} else if *input.Stage == model.OrganizationStagePendingChurn {
-			upsertOrganizationRequest.Relationship = enummapper.MapRelationshipFromModel(model.OrganizationRelationshipCustomer).String()
-			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_RELATIONSHIP)
+			organizationDataFields.Relationship = utils.ToPtr(enummapper.MapRelationshipFromModel(model.OrganizationRelationshipCustomer))
 		}
 	}
 	// if relationship is not set to default value, update it
-	if upsertOrganizationRequest.Relationship == "" {
+	if organizationDataFields.GetRelationshipStr() == "" {
 		if input.Relationship != nil {
-			upsertOrganizationRequest.Relationship = enummapper.MapRelationshipFromModel(*input.Relationship).String()
-			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_RELATIONSHIP)
+			organizationDataFields.Relationship = utils.ToPtr(enummapper.MapRelationshipFromModel(*input.Relationship))
 		} else if input.IsCustomer != nil && *input.IsCustomer {
-			upsertOrganizationRequest.Relationship = enummapper.MapRelationshipFromModel(model.OrganizationRelationshipCustomer).String()
-			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_RELATIONSHIP)
+			organizationDataFields.Relationship = utils.ToPtr(enummapper.MapRelationshipFromModel(model.OrganizationRelationshipCustomer))
 		}
 	}
 	// set stage if relationship is updated from current db value
-	if upsertOrganizationRequest.Stage == "" {
-		if upsertOrganizationRequest.Relationship != "" && upsertOrganizationRequest.Relationship != organizationEntity.Relationship.String() {
-			if upsertOrganizationRequest.Relationship == enummapper.MapRelationshipFromModel(model.OrganizationRelationshipNotAFit).String() {
-				upsertOrganizationRequest.Stage = enummapper.MapStageFromModel(model.OrganizationStageUnqualified).String()
-				fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_STAGE)
-			} else if upsertOrganizationRequest.Relationship == enummapper.MapRelationshipFromModel(model.OrganizationRelationshipCustomer).String() {
-				upsertOrganizationRequest.Stage = enummapper.MapStageFromModel(model.OrganizationStageOnboarding).String()
-				fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_STAGE)
-			} else if upsertOrganizationRequest.Relationship == enummapper.MapRelationshipFromModel(model.OrganizationRelationshipFormerCustomer).String() {
-				upsertOrganizationRequest.Stage = enummapper.MapStageFromModel(model.OrganizationStageTarget).String()
-				fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_STAGE)
+	if organizationDataFields.GetStageStr() == "" {
+		if organizationDataFields.GetRelationshipStr() != "" && organizationDataFields.GetRelationshipStr() != organizationEntity.Relationship.String() {
+			if organizationDataFields.GetRelationshipStr() == enummapper.MapRelationshipFromModel(model.OrganizationRelationshipNotAFit).String() {
+				organizationDataFields.Stage = utils.ToPtr(enummapper.MapStageFromModel(model.OrganizationStageUnqualified))
+			} else if organizationDataFields.GetRelationshipStr() == enummapper.MapRelationshipFromModel(model.OrganizationRelationshipCustomer).String() {
+				organizationDataFields.Stage = utils.ToPtr(enummapper.MapStageFromModel(model.OrganizationStageOnboarding))
+			} else if organizationDataFields.GetRelationshipStr() == enummapper.MapRelationshipFromModel(model.OrganizationRelationshipFormerCustomer).String() {
+				organizationDataFields.Stage = utils.ToPtr(enummapper.MapStageFromModel(model.OrganizationStageTarget))
 			}
 		}
 	}
 
-	if len(fieldsMask) == 0 {
-		span.LogFields(log.String("result", "No fields to update"))
-		organizationEntity, err := r.Services.CommonServices.OrganizationService.GetById(ctx, tenant, input.ID)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			graphql.AddErrorf(ctx, "Failed to fetch organization details")
-			return &model.Organization{
-				ID: input.ID,
-			}, nil
-		}
-		return mapper.MapEntityToOrganization(organizationEntity), nil
-	}
-	upsertOrganizationRequest.FieldsMask = fieldsMask
-
 	// validate relationship and stage compatibility
-	stage := utils.FirstNotEmptyString(upsertOrganizationRequest.Stage, organizationEntity.Stage.String())
-	relationship := utils.FirstNotEmptyString(upsertOrganizationRequest.Relationship, organizationEntity.Relationship.String())
+	stage := utils.FirstNotEmptyString(organizationDataFields.GetStageStr(), organizationEntity.Stage.String())
+	relationship := utils.FirstNotEmptyString(organizationDataFields.GetRelationshipStr(), organizationEntity.Relationship.String())
 	if !neo4jentity.OrganizationStageAndRelationshipCompatible(stage, relationship) {
 		err := errors.New("Stage and Relationship are not compatible")
 		tracing.TraceErr(span, err)
@@ -603,38 +505,35 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 	}
 
 	if input.Logo != nil {
-		upsertOrganizationRequest.LogoUrl = *input.Logo
-	}
-	if input.Icon != nil {
-		upsertOrganizationRequest.IconUrl = *input.Icon
+		organizationDataFields.LogoUrl = input.Logo
 	}
 	if input.Notes != nil {
-		upsertOrganizationRequest.Note = *input.Notes
+		organizationDataFields.Note = input.Notes
 	}
 	if input.CustomID != nil {
-		upsertOrganizationRequest.ReferenceId = *input.CustomID
+		organizationDataFields.ReferenceId = input.CustomID
 	}
 	if input.Public != nil {
-		upsertOrganizationRequest.IsPublic = *input.Public
+		organizationDataFields.IsPublic = input.Public
 	}
 
-	ctx = commontracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-		return r.Clients.OrganizationClient.UpsertOrganization(ctx, &upsertOrganizationRequest)
-	})
+	organizationId, err := r.Services.CommonServices.OrganizationService.Save(ctx, nil, &input.ID, organizationDataFields)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to update organization")
-		r.log.Errorf("Error from events processing %s", err.Error())
+		r.log.Errorf("Failed to update organization %s: %s", input.ID, err.Error())
 		return nil, nil
 	}
 
-	organizationEntity, err = r.Services.CommonServices.OrganizationService.GetById(ctx, tenant, response.Id)
+	organizationEntity, err = r.Services.CommonServices.OrganizationService.GetById(ctx, tenant, organizationId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to fetch organization details")
 		return &model.Organization{
-			ID: response.Id,
+			Metadata: &model.Metadata{
+				ID: organizationId,
+			},
+			ID: organizationId,
 		}, nil
 	}
 	return mapper.MapEntityToOrganization(organizationEntity), nil
