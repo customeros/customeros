@@ -94,9 +94,16 @@ func (l *mailService) parseEmailAndName(s string) EmailParticipant {
 	s = strings.ToLower(s)
 	results := EmailParticipant{}
 
+	if s == "" {
+		return results
+	}
+
 	// Handle bare email case
 	if !strings.Contains(s, "<") {
-		results.Email = strings.TrimSpace(s)
+		r := strings.TrimSpace(s)
+		if r != "" {
+			results.Email = r
+		}
 		return results
 	}
 
@@ -105,6 +112,9 @@ func (l *mailService) parseEmailAndName(s string) EmailParticipant {
 
 	// Extract name part
 	namePart := strings.TrimSpace(strings.Split(s, "<")[0])
+	if namePart == "" {
+		return results
+	}
 
 	// Split name into parts
 	names := strings.Fields(namePart)
