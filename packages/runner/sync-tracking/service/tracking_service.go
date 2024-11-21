@@ -8,12 +8,11 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-tracking/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-tracking/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
-	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
-	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	validationmodel "github.com/openline-ai/openline-customer-os/packages/server/validation-api/model"
 	"github.com/opentracing/opentracing-go"
@@ -186,34 +185,26 @@ func (s *trackingService) CreateOrganizationsFromTrackedData(ctx context.Context
 		if organizationByDomainNode == nil {
 
 			// Save organization
-			organizationFields := neo4jrepository.OrganizationSaveFields{
-				Name:               utils.StringOrEmpty(snitcherData.CompanyName),
-				Website:            utils.StringOrEmpty(snitcherData.CompanyWebsite),
-				LeadSource:         "Reveal AI",
-				Relationship:       neo4jenum.Prospect,
-				Stage:              neo4jenum.Lead,
-				Domains:            []string{*snitcherData.CompanyDomain},
-				UpdateName:         true,
-				UpdateWebsite:      true,
-				UpdateLeadSource:   true,
-				UpdateRelationship: true,
-				UpdateStage:        true,
-				SourceFields: neo4jmodel.SourceFields{
-					Source:    constants.SourceOpenline,
-					AppSource: constants.AppTracking,
-				},
+			organizationFields := data_fields.OrganizationFields{
+				Name:         snitcherData.CompanyName,
+				Website:      snitcherData.CompanyWebsite,
+				LeadSource:   utils.StringPtr("Reveal AI"),
+				Relationship: utils.ToPtr(neo4jenum.Prospect),
+				Stage:        utils.ToPtr(neo4jenum.Lead),
+				Domains:      []string{*snitcherData.CompanyDomain},
+				Source:       utils.StringPtr(constants.SourceOpenline),
 			}
-			orgIdPtr, err := s.services.CommonServices.OrganizationService.Save(innerCtx, nil, record.Tenant, nil, &organizationFields)
+			orgId, err := s.services.CommonServices.OrganizationService.Save(innerCtx, nil, nil, organizationFields)
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "failed to save organization"))
 				return err
 			}
-			if orgIdPtr == nil {
+			if orgId == "" {
 				tracing.TraceErr(span, errors.New("organization id is nil"))
 				return nil
 			}
 
-			err = s.services.CommonServices.PostgresRepositories.TrackingRepository.MarkAsOrganizationCreated(innerCtx, record.ID, *orgIdPtr, snitcherData.CompanyName, snitcherData.CompanyDomain, snitcherData.CompanyWebsite)
+			err = s.services.CommonServices.PostgresRepositories.TrackingRepository.MarkAsOrganizationCreated(innerCtx, record.ID, orgId, snitcherData.CompanyName, snitcherData.CompanyDomain, snitcherData.CompanyWebsite)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return err

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	constants "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -58,27 +59,22 @@ func (s *registrationService) CreateOrganizationAndContact(ctx context.Context, 
 		}
 
 		if organizationByDomain == nil {
-			orgId, err := s.services.CommonServices.OrganizationService.Save(ctx, nil, tenant, nil, &repository.OrganizationSaveFields{
-				Domains:            []string{domain},
-				Name:               domain,
-				Relationship:       enum.Prospect,
-				Stage:              enum.Trial,
-				LeadSource:         leadSource,
-				UpdateName:         true,
-				UpdateRelationship: true,
-				UpdateStage:        true,
-				UpdateLeadSource:   true,
+			organizationId, err = s.services.CommonServices.OrganizationService.Save(ctx, nil, nil, data_fields.OrganizationFields{
+				Domains:      []string{domain},
+				Name:         commonUtils.StringPtr(domain),
+				Relationship: commonUtils.ToPtr(enum.Prospect),
+				Stage:        commonUtils.ToPtr(enum.Trial),
+				LeadSource:   commonUtils.StringPtr(leadSource),
 			})
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return nil, nil, err
 			}
-			if orgId == nil {
+			if organizationId == "nil" {
 				e := errors.New("organization id empty")
 				tracing.TraceErr(span, e)
 				return nil, nil, e
 			}
-			organizationId = *orgId
 		} else {
 			organizationId = mapper.MapDbNodeToOrganizationEntity(organizationByDomain).ID
 		}
