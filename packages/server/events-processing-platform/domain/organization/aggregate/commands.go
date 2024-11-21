@@ -2,7 +2,6 @@ package aggregate
 
 import (
 	"context"
-	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
@@ -11,7 +10,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command"
 	localerror "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/errors"
 	organizationEvents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
@@ -242,71 +240,6 @@ func (a *OrganizationTempAggregate) HandleCommand(ctx context.Context, cmd event
 		tracing.TraceErr(span, eventstore.ErrInvalidCommandType)
 		return eventstore.ErrInvalidCommandType
 	}
-}
-
-func (a *OrganizationAggregate) CreateOrganization(ctx context.Context, organizationFields *model.OrganizationFields, userId string) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.CreateOrganization")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("AggregateVersion", a.GetVersion()))
-	tracing.LogObjectAsJson(span, "organizationFields", organizationFields)
-
-	createdAtNotNil := utils.IfNotNilTimeWithDefault(organizationFields.CreatedAt, utils.Now())
-	updatedAtNotNil := utils.IfNotNilTimeWithDefault(organizationFields.UpdatedAt, createdAtNotNil)
-	organizationFields.Source.SetDefaultValues()
-
-	if organizationFields.OrganizationDataFields.Relationship == "" && organizationFields.OrganizationDataFields.Stage == "" {
-		organizationFields.OrganizationDataFields.Stage = neo4jenum.Lead.String()
-		organizationFields.OrganizationDataFields.Relationship = neo4jenum.Prospect.String()
-	}
-
-	createEvent, err := organizationEvents.NewOrganizationCreateEvent(a, organizationFields, createdAtNotNil, updatedAtNotNil)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewOrganizationCreateEvent")
-	}
-	eventstore.EnrichEventWithMetadataExtended(&createEvent, span, eventstore.EventMetadata{
-		Tenant: a.Tenant,
-		UserId: userId,
-		App:    organizationFields.Source.AppSource,
-	})
-
-	return a.Apply(createEvent)
-}
-
-func (a *OrganizationAggregate) UpdateOrganization(ctx context.Context, organizationFields *model.OrganizationFields, loggedInUserId, enrichDomain, enrichSource string, fieldsMask []string) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.UpdateOrganization")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("AggregateVersion", a.GetVersion()), log.String("loggedInUserId", loggedInUserId), log.Object("fieldsMask", fieldsMask))
-	tracing.LogObjectAsJson(span, "organizationFields", organizationFields)
-
-	if eventstore.AllowCheckForNoChanges(organizationFields.Source.AppSource, loggedInUserId) {
-		if a.Organization.SkipUpdate(organizationFields) {
-			span.SetTag(tracing.SpanTagRedundantEventSkipped, true)
-			return nil
-		}
-	}
-
-	var eventsOnUpdate []eventstore.Event
-
-	updatedAtNotNil := utils.IfNotNilTimeWithDefault(organizationFields.UpdatedAt, utils.Now())
-
-	event, err := organizationEvents.NewOrganizationUpdateEvent(a, organizationFields, updatedAtNotNil, enrichDomain, enrichSource, fieldsMask)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewOrganizationUpdateEvent")
-	}
-	eventstore.EnrichEventWithMetadataExtended(&event, span, eventstore.EventMetadata{
-		Tenant: a.Tenant,
-		UserId: loggedInUserId,
-		App:    organizationFields.Source.AppSource,
-	})
-	eventsOnUpdate = append(eventsOnUpdate, event)
-
-	return a.ApplyAll(eventsOnUpdate)
 }
 
 func (a *OrganizationAggregate) linkPhoneNumber(ctx context.Context, cmd *command.LinkPhoneNumberCommand) error {

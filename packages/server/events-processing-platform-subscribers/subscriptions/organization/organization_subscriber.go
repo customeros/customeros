@@ -120,8 +120,6 @@ func (s *OrganizationSubscriber) When(ctx context.Context, evt eventstore.Event)
 	}
 
 	acceptedEventTypes := []string{
-		orgevts.OrganizationCreateV1,
-		orgevts.OrganizationUpdateV1,
 		orgevts.OrganizationAdjustIndustryV1,
 	}
 
@@ -133,12 +131,6 @@ func (s *OrganizationSubscriber) When(ctx context.Context, evt eventstore.Event)
 	defer span.Finish()
 
 	switch evt.GetEventType() {
-	case orgevts.OrganizationCreateV1:
-		_ = s.organizationEventHandler.AdjustNewOrganizationFields(ctx, evt)
-		return nil
-	case orgevts.OrganizationUpdateV1:
-		_ = s.organizationEventHandler.AdjustUpdatedOrganizationFields(ctx, evt)
-		return nil
 	case orgevts.OrganizationAdjustIndustryV1:
 		_ = s.organizationEventHandler.OnAdjustIndustry(ctx, evt)
 		return nil
