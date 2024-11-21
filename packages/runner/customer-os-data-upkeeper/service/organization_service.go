@@ -7,6 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
@@ -14,7 +15,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
-	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"github.com/pkg/errors"
 	"regexp"
@@ -531,7 +531,7 @@ func (s *organizationService) checkOrganizations(ctx context.Context) {
 			organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(record.Organization)
 
 			saveOrganization := false
-			organizationFields := neo4jrepository.OrganizationSaveFields{}
+			organizationFields := data_fields.OrganizationFields{}
 
 			name := strings.TrimSpace(organizationEntity.Name)
 
@@ -552,13 +552,12 @@ func (s *organizationService) checkOrganizations(ctx context.Context) {
 			cleanName := utils.CleanName(name)
 
 			if cleanName != organizationEntity.Name {
-				organizationFields.Name = cleanName
-				organizationFields.UpdateName = true
+				organizationFields.Name = utils.StringPtr(cleanName)
 				saveOrganization = true
 			}
 
 			if saveOrganization {
-				_, err = s.commonServices.OrganizationService.Save(innerCtx, nil, record.Tenant, &organizationEntity.ID, &organizationFields)
+				_, err = s.commonServices.OrganizationService.Save(innerCtx, nil, &organizationEntity.ID, organizationFields)
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "OrganizationService.Save"))
 					s.log.Errorf("Error updating organization {%s}: %s", organizationEntity.ID, err.Error())
