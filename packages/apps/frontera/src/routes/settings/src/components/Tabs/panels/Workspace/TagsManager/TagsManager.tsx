@@ -17,8 +17,8 @@ import { Tag, EntityType } from '@shared/types/__generated__/graphql.types';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
 
 const entityTypes = {
-  [EntityType.Organization]: { label: 'Organizations' },
-  [EntityType.Contact]: { label: 'Contacts' },
+  [EntityType.Organization]: { label: 'Organization' },
+  [EntityType.Contact]: { label: 'Contact' },
   [EntityType.LogEntry]: { label: 'Log entry' },
 };
 export const TagsManager = observer(() => {
@@ -161,7 +161,7 @@ export const TagsManager = observer(() => {
       <div className='mb-6'>
         <div className='flex justify-between mb-2'>
           <div className='flex gap-2'>
-            <p className='text-sm font-medium text-gray-700 '>{title}</p>
+            <p className='text-sm font-medium text-gray-700 '>{`${title} tags`}</p>
             {tags.length > 0 && (
               <IconButton
                 size='xxs'
@@ -217,7 +217,7 @@ export const TagsManager = observer(() => {
         {!isCollapsed && (
           <>
             {tags.length === 0 ? (
-              <p className='text-sm text-gray-500 ml-6'>No tags in sight</p>
+              <p className='text-sm text-gray-500'>No tags in sight</p>
             ) : (
               tags.map((tag) => (
                 <div
