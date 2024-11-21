@@ -6,14 +6,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	enrichmentmodel "github.com/openline-ai/openline-customer-os/packages/server/enrichment-api/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	locationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/location"
@@ -250,75 +249,61 @@ func (h *organizationEventHandler) updateOrganizationWithEnrichData(ctx context.
 	tracing.LogObjectAsJson(span, "data", data)
 	tracing.TagTenant(span, tenant)
 
-	orgFields := repository.OrganizationSaveFields{
-		SourceFields: neo4jmodel.SourceFields{
-			AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
-			Source:    constants.SourceOpenline,
-		},
-		EnrichDomain: domain,
-		EnrichSource: enrichSource,
+	orgFields := data_fields.OrganizationFields{
+		Source:       utils.StringPtr(constants.SourceOpenline),
+		EnrichDomain: utils.StringPtr(domain),
+		EnrichSource: utils.StringPtr(enrichSource),
 	}
+
 	if organizationEntity.Employees == 0 && data.Employees > 0 {
-		orgFields.Employees = data.Employees
-		orgFields.UpdateEmployees = true
+		orgFields.Employees = utils.Int64Ptr(data.Employees)
 	}
 	if (organizationEntity.YearFounded == nil || *organizationEntity.YearFounded < 1000) && data.FoundedYear > 0 {
-		orgFields.YearFounded = data.FoundedYear
-		orgFields.UpdateYearFounded = true
+		orgFields.YearFounded = utils.Int64Ptr(data.FoundedYear)
 	}
 	if organizationEntity.ValueProposition == "" && data.ShortDescription != "" {
-		orgFields.ValueProposition = data.ShortDescription
-		orgFields.UpdateValueProposition = true
+		orgFields.ValueProposition = utils.StringPtr(data.ShortDescription)
 	}
 	if organizationEntity.Description == "" && data.LongDescription != "" {
-		orgFields.Description = data.LongDescription
-		orgFields.UpdateDescription = true
+		orgFields.Description = utils.StringPtr(data.LongDescription)
 	}
 	if data.Public != nil {
-		orgFields.IsPublic = *data.Public
-		orgFields.UpdateIsPublic = true
+		orgFields.IsPublic = data.Public
 	}
 
 	// Set organization name
 	if data.Name != "" {
-		orgFields.Name = data.Name
-		orgFields.UpdateName = true
+		orgFields.Name = utils.StringPtr(data.Name)
 	} else if organizationEntity.Name == "" {
 		if data.Domain != "" {
 			domainPrefixCapitalized := utils.CapitalizeAllParts(utils.GetDomainWithoutTLD(data.Domain), []string{"-", "_", "."})
-			orgFields.Name = domainPrefixCapitalized
-			orgFields.UpdateName = true
+			orgFields.Name = utils.StringPtr(domainPrefixCapitalized)
 		}
 	}
 
 	// Set company website
 	if organizationEntity.Website == "" {
 		if data.Website != "" {
-			orgFields.Website = data.Website
-			orgFields.UpdateWebsite = true
+			orgFields.Website = utils.StringPtr(data.Website)
 		} else if data.Domain != "" {
-			orgFields.Website = data.Domain
-			orgFields.UpdateWebsite = true
+			orgFields.Website = utils.StringPtr(data.Domain)
 		}
 	}
 
 	// Set company logo and icon urls
 	if organizationEntity.LogoUrl == "" && len(data.Logos) > 0 {
-		orgFields.LogoUrl = data.Logos[0]
-		orgFields.UpdateLogoUrl = true
+		orgFields.LogoUrl = utils.StringPtr(data.Logos[0])
 	}
 	if organizationEntity.IconUrl == "" && len(data.Icons) > 0 {
-		orgFields.IconUrl = data.Icons[0]
-		orgFields.UpdateIconUrl = true
+		orgFields.IconUrl = utils.StringPtr(data.Icons[0])
 	}
 
 	// set industry
 	if organizationEntity.Industry == "" && data.Industry != "" {
-		orgFields.Industry = data.Industry
-		orgFields.UpdateIndustry = true
+		orgFields.Industry = utils.StringPtr(data.Industry)
 	}
 
-	_, err := h.services.CommonServices.OrganizationService.Save(ctx, nil, tenant, &organizationEntity.ID, &orgFields)
+	_, err := h.services.CommonServices.OrganizationService.Save(ctx, nil, &organizationEntity.ID, orgFields)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error updaing organization with enrich data: %s", err.Error())
@@ -479,15 +464,9 @@ func (h *organizationEventHandler) saveOrganizationIndustryAndMarket(ctx context
 	//delay to avoid updating organization before main event
 	time.Sleep(250 * time.Millisecond)
 
-	_, err := h.services.CommonServices.OrganizationService.Save(ctx, nil, tenant, &organizationId, &repository.OrganizationSaveFields{
-		SourceFields: neo4jmodel.SourceFields{
-			AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
-			Source:    constants.SourceOpenline,
-		},
-		Market:         market,
-		Industry:       industry,
-		UpdateMarket:   updateMarket,
-		UpdateIndustry: updateIndustry,
+	_, err := h.services.CommonServices.OrganizationService.Save(ctx, nil, &organizationId, data_fields.OrganizationFields{
+		Market:   utils.StringPtr(market),
+		Industry: utils.StringPtr(industry),
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -651,13 +630,8 @@ func (h *organizationEventHandler) OnAdjustIndustry(ctx context.Context, evt eve
 	industry := h.mapIndustryToGICS(innerCtx, eventData.Tenant, organizationId, organizationEntity.Industry)
 
 	if industry != "" && organizationEntity.Industry != industry {
-		_, err = h.services.CommonServices.OrganizationService.Save(innerCtx, nil, eventData.Tenant, &organizationId, &repository.OrganizationSaveFields{
-			SourceFields: neo4jmodel.SourceFields{
-				AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
-				Source:    constants.SourceOpenline,
-			},
-			Industry:       industry,
-			UpdateIndustry: true,
+		_, err = h.services.CommonServices.OrganizationService.Save(innerCtx, nil, &organizationId, data_fields.OrganizationFields{
+			Industry: utils.StringPtr(industry),
 		})
 		if err != nil {
 			tracing.TraceErr(span, err)

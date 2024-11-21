@@ -3,8 +3,10 @@ package service
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/config"
+	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/constants"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/logger"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 )
@@ -46,7 +48,11 @@ func (s *workflowService) ExecuteWorkflows() {
 
 	// execute all live workflows
 	for _, workflow := range liveWorkflows {
-		err = s.commonServices.WorkflowService.ExecuteWorkflow(ctx, workflow.Tenant, workflow.ID)
+		innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+			Tenant:    workflow.Tenant,
+			AppSource: constants.AppSourceDataUpkeeper,
+		})
+		err = s.commonServices.WorkflowService.ExecuteWorkflow(innerCtx, workflow.Tenant, workflow.ID)
 		if err != nil {
 			tracing.TraceErr(nil, err)
 			s.log.Errorf("Error executing workflow {%d}: %v", workflow.ID, err)

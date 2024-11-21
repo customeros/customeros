@@ -3,6 +3,7 @@ package graph
 import (
 	"context"
 	"fmt"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -614,13 +615,8 @@ func (h *OpportunityEventHandler) OnCloseLost(ctx context.Context, evt eventstor
 			organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
 			// Make organization target if it's not already
 			if organizationEntity.Relationship == neo4jenum.Prospect && organizationEntity.Stage == neo4jenum.Engaged {
-				_, err = h.services.CommonServices.OrganizationService.Save(ctx, nil, eventData.Tenant, &organizationEntity.ID, &neo4jrepository.OrganizationSaveFields{
-					Stage:       neo4jenum.Target,
-					UpdateStage: true,
-					SourceFields: neo4jmodel.SourceFields{
-						AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
-						Source:    constants.SourceOpenline,
-					},
+				_, err = h.services.CommonServices.OrganizationService.Save(ctx, nil, &organizationEntity.ID, data_fields.OrganizationFields{
+					Stage: utils.ToPtr(neo4jenum.Target),
 				})
 				if err != nil {
 					tracing.TraceErr(span, err)

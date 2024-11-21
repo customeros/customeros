@@ -4,11 +4,10 @@ import (
 	localentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	mapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper/enum"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/constants"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"time"
 )
 
@@ -122,121 +121,45 @@ func prepareOrganizationEnrichDetails(requestedAt, enrichedAt, failedAt *time.Ti
 	return &output
 }
 
-func MapOrganizationSaveInputToEntity(input model.OrganizationSaveInput) *repository.OrganizationSaveFields {
-	mapped := repository.OrganizationSaveFields{
-		SourceFields: neo4jmodel.SourceFields{
-			Source:        constants.SourceOpenline,
-			SourceOfTruth: constants.SourceOpenline,
-			AppSource:     constants.AppSourceCustomerOsApi,
-		},
-
-		Domains: input.Domains,
+func MapOrganizationSaveInputToEntity(input model.OrganizationSaveInput) *data_fields.OrganizationFields {
+	mapped := data_fields.OrganizationFields{
+		Source:             utils.StringPtr(constants.SourceOpenline),
+		AppSource:          utils.StringPtr(constants.AppSourceCustomerOsApi),
+		Domains:            input.Domains,
+		ReferenceId:        input.ReferenceID,
+		Name:               input.Name,
+		Description:        input.Description,
+		Website:            input.Website,
+		Industry:           input.Industry,
+		SubIndustry:        input.SubIndustry,
+		IndustryGroup:      input.IndustryGroup,
+		IsPublic:           input.Public,
+		Employees:          input.Employees,
+		Note:               input.Notes,
+		TargetAudience:     input.TargetAudience,
+		ValueProposition:   input.ValueProposition,
+		LogoUrl:            input.LogoURL,
+		YearFounded:        input.YearFounded,
+		EmployeeGrowthRate: input.EmployeeGrowthRate,
+		Headquarters:       input.Headquarters,
+		SlackChannelId:     input.SlackChannelID,
+		LeadSource:         input.LeadSource,
+		LastFundingAmount:  input.LastFundingAmount,
+		IcpFit:             input.IcpFit,
+		OwnerId:            input.OwnerID,
 	}
 
-	if input.ReferenceID != nil {
-		mapped.ReferenceId = *input.ReferenceID
-		mapped.UpdateReferenceId = true
-	}
-	if input.Name != nil {
-		mapped.Name = *input.Name
-		mapped.UpdateName = true
-	}
-	if input.Description != nil {
-		mapped.Description = *input.Description
-		mapped.UpdateDescription = true
-	}
-	if input.Website != nil {
-		mapped.Website = *input.Website
-		mapped.UpdateWebsite = true
-	}
-	if input.Industry != nil {
-		mapped.Industry = *input.Industry
-		mapped.UpdateIndustry = true
-	}
-	if input.SubIndustry != nil {
-		mapped.SubIndustry = *input.SubIndustry
-		mapped.UpdateSubIndustry = true
-	}
-	if input.IndustryGroup != nil {
-		mapped.IndustryGroup = *input.IndustryGroup
-		mapped.UpdateIndustryGroup = true
-	}
-	if input.Public != nil {
-		mapped.IsPublic = *input.Public
-		mapped.UpdateIsPublic = true
-	}
 	if input.Market != nil {
-		mapped.Market = MapMarketFromModel(input.Market)
-		mapped.UpdateMarket = true
-	}
-	if input.Employees != nil {
-		mapped.Employees = *input.Employees
-		mapped.UpdateEmployees = true
-	}
-	if input.Notes != nil {
-		mapped.Note = *input.Notes
-		mapped.UpdateNote = true
-	}
-	if input.TargetAudience != nil {
-		mapped.TargetAudience = *input.TargetAudience
-		mapped.UpdateTargetAudience = true
-	}
-	if input.ValueProposition != nil {
-		mapped.ValueProposition = *input.ValueProposition
-		mapped.UpdateValueProposition = true
-	}
-	if input.LogoURL != nil {
-		mapped.LogoUrl = *input.LogoURL
-		mapped.UpdateLogoUrl = true
-	}
-	if input.IconURL != nil {
-		mapped.IconUrl = *input.IconURL
-		mapped.UpdateIconUrl = true
-	}
-	if input.YearFounded != nil {
-		mapped.YearFounded = *input.YearFounded
-		mapped.UpdateYearFounded = true
-	}
-	if input.EmployeeGrowthRate != nil {
-		mapped.EmployeeGrowthRate = *input.EmployeeGrowthRate
-		mapped.UpdateEmployeeGrowthRate = true
-	}
-	if input.Headquarters != nil {
-		mapped.Headquarters = *input.Headquarters
-		mapped.UpdateHeadquarters = true
-	}
-	if input.SlackChannelID != nil {
-		mapped.SlackChannelId = *input.SlackChannelID
-		mapped.UpdateSlackChannelId = true
-	}
-	if input.LeadSource != nil {
-		mapped.LeadSource = *input.LeadSource
-		mapped.UpdateLeadSource = true
+		mapped.Market = utils.StringPtr(MapMarketFromModel(input.Market))
 	}
 	if input.Stage != nil {
-		mapped.Stage = mapper.MapStageFromModel(*input.Stage)
-		mapped.UpdateStage = true
+		mapped.Stage = utils.ToPtr(mapper.MapStageFromModel(*input.Stage))
 	}
 	if input.Relationship != nil {
-		mapped.Relationship = mapper.MapRelationshipFromModel(*input.Relationship)
-		mapped.UpdateRelationship = true
+		mapped.Relationship = utils.ToPtr(mapper.MapRelationshipFromModel(*input.Relationship))
 	}
 	if input.LastFundingRound != nil {
-		mapped.LastFundingRound = mapper.MapFundingRoundFromModel(input.LastFundingRound)
-		mapped.UpdateLastFundingRound = true
-	}
-	if input.LastFundingAmount != nil {
-		mapped.LastFundingAmount = *input.LastFundingAmount
-		mapped.UpdateLastFundingAmount = true
-	}
-	if input.IcpFit != nil {
-		mapped.IcpFit = *input.IcpFit
-		mapped.UpdateIcpFit = true
-	}
-
-	if input.OwnerID != nil {
-		mapped.OwnerId = *input.OwnerID
-		mapped.UpdateOwnerId = true
+		mapped.LastFundingRound = utils.ToPtr(mapper.MapFundingRoundFromModel(input.LastFundingRound))
 	}
 
 	return &mapped

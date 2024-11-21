@@ -58,21 +58,21 @@ func (r *mutationResolver) OrganizationSave(ctx context.Context, input model.Org
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	id, err := r.Services.CommonServices.OrganizationService.Save(ctx, nil, tenant, input.ID, mapper.MapOrganizationSaveInputToEntity(input))
+	organizationId, err := r.Services.CommonServices.OrganizationService.Save(ctx, nil, input.ID, *mapper.MapOrganizationSaveInputToEntity(input))
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to save organization")
 		return nil, err
 	}
 
-	e, err := r.Services.CommonServices.OrganizationService.GetById(ctx, tenant, *id)
+	organizationEntity, err := r.Services.CommonServices.OrganizationService.GetById(ctx, tenant, organizationId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to fetch organization details")
 		return nil, err
 	}
 
-	return mapper.MapEntityToOrganization(e), nil
+	return mapper.MapEntityToOrganization(organizationEntity), nil
 }
 
 // OrganizationHide is the resolver for the organization_Hide field.

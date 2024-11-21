@@ -2,12 +2,12 @@ package contract
 
 import (
 	"fmt"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
-	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
@@ -218,11 +218,9 @@ func (h *contractHandler) UpdateOrganizationRelationship(ctx context.Context, te
 		}
 
 		if !activeContractFound {
-			_, err = h.services.CommonServices.OrganizationService.Save(ctx, nil, tenant, &orgEntity.ID, &neo4jrepository.OrganizationSaveFields{
-				Relationship:       neo4jenum.FormerCustomer,
-				Stage:              neo4jenum.Target,
-				UpdateRelationship: true,
-				UpdateStage:        true,
+			_, err = h.services.CommonServices.OrganizationService.Save(ctx, nil, &orgEntity.ID, data_fields.OrganizationFields{
+				Relationship: utils.ToPtr(neo4jenum.FormerCustomer),
+				Stage:        utils.ToPtr(neo4jenum.Target),
 			})
 			if err != nil {
 				tracing.TraceErr(span, err)

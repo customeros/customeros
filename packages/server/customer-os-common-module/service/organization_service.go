@@ -7,6 +7,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -16,7 +17,6 @@ import (
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -27,7 +27,7 @@ import (
 type OrganizationService interface {
 	GetById(ctx context.Context, tenant, organizationId string) (*neo4jentity.OrganizationEntity, error)
 
-	Save(ctx context.Context, tx *neo4j.ManagedTransaction, tenant string, organizationId *string, input *repository.OrganizationSaveFields) (*string, error)
+	Save(ctx context.Context, tx *neo4j.ManagedTransaction, id *string, dataFields data_fields.OrganizationFields) (string, error)
 	LinkWithDomain(ctx context.Context, tx *neo4j.ManagedTransaction, organizationId, domain string) error
 
 	Hide(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId string) error
@@ -67,29 +67,29 @@ func (s *organizationService) GetById(ctx context.Context, tenant, organizationI
 	return neo4jmapper.MapDbNodeToOrganizationEntity(dbNode), nil
 }
 
-func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransaction, tenant string, organizationId *string, input *repository.OrganizationSaveFields) (*string, error) {
+func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransaction, id *string, input data_fields.OrganizationFields) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.Save")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "input", input)
-	if organizationId != nil {
-		tracing.TagEntity(span, *organizationId)
-	}
 
-	// TODO: check flows where tenant is missing on context
-	if common.GetTenantFromContext(ctx) == "" {
-		tracing.TraceErr(span, errors.New("missing tenant in context for organizationService.Save"))
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", err
 	}
+	tenant := common.GetTenantFromContext(ctx)
 
-	var err error
-	var existing *neo4jentity.OrganizationEntity
+	var existingOrganizationEntity *neo4jentity.OrganizationEntity
 	createFlow := false
+	organizationId := ""
 
 	// prepare primary domain from website
 	primaryDomainFromWebsite := ""
-	adjustedWebsite := input.Website
-	if input.UpdateWebsite && input.Website != "" {
-		primaryDomainFromWebsite, adjustedWebsite = s.services.DomainService.GetPrimaryDomainForOrganizationWebsite(ctx, input.Website)
+	adjustedWebsite := utils.IfNotNilString(input.Website)
+	if utils.IfNotNilString(input.Website) != "" {
+		primaryDomainFromWebsite, adjustedWebsite = s.services.DomainService.GetPrimaryDomainForOrganizationWebsite(ctx, *input.Website)
 		span.LogFields(log.String("primaryDomainFromWebsite", primaryDomainFromWebsite))
 		span.LogFields(log.String("adjustedWebsite", adjustedWebsite))
 	}
@@ -107,11 +107,11 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 	}
 
 	// if the org is new, we are looking for existing orgs with the same domain based on the website, we show it and we return it
-	if organizationId == nil {
+	if id == nil {
 		createFlow = true
 		span.LogFields(log.String("process.flow", "create"))
 		domains := input.Domains
-		if input.UpdateWebsite && input.Website != "" && primaryDomainFromWebsite != "" {
+		if utils.IfNotNilString(input.Website) != "" && primaryDomainFromWebsite != "" {
 			domains = append(domains, primaryDomainFromWebsite)
 		}
 		domains = utils.RemoveEmpties(domains)
@@ -125,7 +125,7 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 				orgDbNode, err := s.services.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByDomain(ctx, tenant, domain)
 				if err != nil {
 					tracing.TraceErr(span, err)
-					return nil, err
+					return "", err
 				}
 				// existing organization found
 				if orgDbNode != nil {
@@ -136,7 +136,7 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 						err = s.Show(ctx, tx, tenant, organizationEntity.ID)
 						if err != nil {
 							tracing.TraceErr(span, err)
-							return nil, nil
+							return "", nil
 						}
 					}
 
@@ -149,59 +149,56 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 
 					// send completion event for refresh
 					utils.EventCompleted(ctx, tenant, model.ORGANIZATION.String(), organizationEntity.ID, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
-					return &organizationEntity.ID, nil
+					return organizationEntity.ID, nil
 				}
 			}
 		}
 
-		// set source fields if not provided
-		if input.SourceFields.AppSource == "" {
-			input.SourceFields.AppSource = common.GetAppSourceFromContext(ctx)
-		}
-		if input.SourceFields.Source == "" {
-			if input.ExternalSystem.Available() {
-				input.SourceFields.Source = input.ExternalSystem.ExternalSystemId
-			} else {
-				input.SourceFields.Source = neo4jentity.DataSourceOpenline.String()
-			}
-		}
-	} else {
-		span.LogFields(log.String("process.flow", "update"))
-		existing, err = s.GetById(ctx, tenant, *organizationId)
+		generatedId, err := s.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelOrganization)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			return nil, err
+			return "", err
+		}
+		organizationId = generatedId
+
+	} else {
+		span.LogFields(log.String("process.flow", "update"))
+		organizationId = *id
+		existingOrganizationEntity, err = s.GetById(ctx, tenant, organizationId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return "", err
 		}
 	}
+	tracing.TagEntity(span, organizationId)
 
 	//validate stage and relationship combination all the time ( from input or existing computed )
-	stage := input.Stage.String()
-	relationship := input.Relationship.String()
-	if stage == "" && existing != nil && existing.Stage != "" {
-		stage = existing.Stage.String()
+	stage := input.GetStageStr()
+	relationship := input.GetRelationshipStr()
+	if stage == "" && existingOrganizationEntity != nil && existingOrganizationEntity.Stage != "" {
+		stage = existingOrganizationEntity.Stage.String()
 	}
-	if relationship == "" && existing != nil && existing.Relationship != "" {
-		relationship = existing.Relationship.String()
+	if relationship == "" && existingOrganizationEntity != nil && existingOrganizationEntity.Relationship != "" {
+		relationship = existingOrganizationEntity.Relationship.String()
 	}
 	if !neo4jentity.OrganizationStageAndRelationshipCompatible(stage, relationship) {
 		err := errors.New("Stage and Relationship are not compatible")
 		tracing.TraceErr(span, err)
-		return nil, err
+		return "", err
 	}
 
-	//generate customerOsId if not provided or if it is empty in the db
-	if createFlow || (existing != nil && existing.CustomerOsId == "") {
-		customerOsId, err := s.generateCustomerOSId(ctx, tenant)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil, err
-		}
-
-		input.CustomerOsId = customerOsId
-		input.UpdateCustomerOsId = true
-	}
-
+	// adapt fields for creating new organization
 	if createFlow {
+		if utils.IfNotNilString(input.AppSource) == "" {
+			input.AppSource = utils.StringPtr(common.GetAppSourceFromContext(ctx))
+		}
+		if utils.IfNotNilString(input.Source) == "" {
+			if input.ExternalSystemAvailable() {
+				input.Source = utils.StringPtr(input.ExternalSystem.ExternalSystemId)
+			} else {
+				input.Source = utils.StringPtr(neo4jentity.DataSourceOpenline.String())
+			}
+		}
 		//if no name is provided, we try to extract if from domain
 		if utils.IfNotNilString(input.Name) == "" {
 			domain := primaryDomainFromWebsite
@@ -209,37 +206,31 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 				domain = input.Domains[0]
 			}
 			if domain != "" {
-				input.Name = utils.CapitalizeAllParts(utils.GetDomainWithoutTLD(domain), []string{"-", "_", "."})
-				input.UpdateName = true
+				input.Name = utils.StringPtr(utils.CapitalizeAllParts(utils.GetDomainWithoutTLD(domain), []string{"-", "_", "."}))
 			}
 			// if still empty, extract from website
-			if input.Name == "" && input.Website != "" {
-				websiteDomain := utils.ExtractDomain(input.Website)
-				input.Name = utils.CapitalizeAllParts(utils.GetDomainWithoutTLD(websiteDomain), []string{"-", "_", "."})
-				input.UpdateName = true
+			if utils.IfNotNilString(input.Name) == "" && utils.IfNotNilString(input.Website) != "" {
+				websiteDomain := utils.ExtractDomain(utils.IfNotNilString(input.Website))
+				input.Name = utils.StringPtr(utils.CapitalizeAllParts(utils.GetDomainWithoutTLD(websiteDomain), []string{"-", "_", "."}))
 			}
 		}
+		input.Hide = utils.BoolPtr(false)
+	}
 
-		input.SourceFields.Source = constants.SourceOpenline
-
-		if !input.UpdateHide {
-			input.Hide = false
-			input.UpdateHide = true
-		}
-
-		generatedId, err := s.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelOrganization)
+	//generate customerOsId if not provided or if it is empty in the db
+	if createFlow || (existingOrganizationEntity != nil && existingOrganizationEntity.CustomerOsId == "") {
+		customerOsId, err := s.generateCustomerOSId(ctx, tenant)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			return nil, err
+			return "", err
 		}
-		organizationId = &generatedId
-		tracing.TagEntity(span, *organizationId)
+		input.CustomerOsId = utils.StringPtr(customerOsId)
 	}
 
 	// Clean and update organization name if not updated manually
 	if common.GetAppSourceFromContext(ctx) != constants.AppSourceCustomerOsApi {
-		if input.UpdateName {
-			input.Name = utils.CleanName(input.Name)
+		if input.Name != nil {
+			input.Name = utils.StringPtr(utils.CleanName(*input.Name))
 		}
 	}
 
@@ -247,25 +238,25 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 
 	_, err = utils.ExecuteWriteInTransaction(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 
-		err = s.services.Neo4jRepositories.OrganizationWriteRepository.Save(ctx, &tx, tenant, *organizationId, *input)
+		err = s.services.Neo4jRepositories.OrganizationWriteRepository.Save(ctx, &tx, tenant, organizationId, input)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err
 		}
 
-		if existing == nil {
-			_, err = s.services.Neo4jRepositories.ActionWriteRepository.MergeByActionType(ctx, &tx, tenant, *organizationId, model.ORGANIZATION, neo4jenum.ActionCreated, "", "", utils.Now(), input.SourceFields.AppSource)
+		if existingOrganizationEntity == nil {
+			_, err = s.services.Neo4jRepositories.ActionWriteRepository.MergeByActionType(ctx, &tx, tenant, organizationId, model.ORGANIZATION, neo4jenum.ActionCreated, "", "", utils.Now(), common.GetAppSourceFromContext(ctx))
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return nil, err
 			}
 		}
 
-		if input.UpdateWebsite && adjustedWebsite != "" {
-			input.Website = adjustedWebsite
+		if utils.IfNotNilString(input.Website) != "" && adjustedWebsite != "" {
+			input.Website = utils.StringPtr(adjustedWebsite)
 			if primaryDomainFromWebsite != "" {
 				newDomains = append(newDomains, primaryDomainFromWebsite)
-				err = s.LinkWithDomain(ctx, &tx, *organizationId, primaryDomainFromWebsite)
+				err = s.LinkWithDomain(ctx, &tx, organizationId, primaryDomainFromWebsite)
 				if err != nil {
 					tracing.TraceErr(span, err)
 					return nil, err
@@ -275,7 +266,7 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 
 		if input.Domains != nil && len(input.Domains) > 0 {
 			for _, domain := range input.Domains {
-				err = s.LinkWithDomain(ctx, &tx, *organizationId, domain)
+				err = s.LinkWithDomain(ctx, &tx, organizationId, domain)
 				if err != nil {
 					tracing.TraceErr(span, err)
 					return nil, err
@@ -293,15 +284,15 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 				ExternalSource:   input.ExternalSystem.ExternalSource,
 				SyncDate:         input.ExternalSystem.SyncDate,
 			}
-			err = s.services.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntityInTx(ctx, tx, tenant, *organizationId, model.NodeLabelOrganization, externalSystemData)
+			err = s.services.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntityInTx(ctx, tx, tenant, organizationId, model.NodeLabelOrganization, externalSystemData)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return nil, err
 			}
 		}
 
-		if input.UpdateOwnerId {
-			err = s.services.Neo4jRepositories.OrganizationWriteRepository.ReplaceOwner(ctx, &tx, tenant, *organizationId, input.OwnerId)
+		if utils.IfNotNilString(input.OwnerId) != "" {
+			err = s.services.Neo4jRepositories.OrganizationWriteRepository.ReplaceOwner(ctx, &tx, tenant, organizationId, *input.OwnerId)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return nil, err
@@ -313,23 +304,23 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return nil, err
+		return "", err
 	}
 
 	// create events section
 	if createFlow {
-		err = s.services.RabbitMQService.PublishEvent(ctx, *organizationId, model.ORGANIZATION, dto.New_CreateOrganization_From_OrganizationFields(*input))
+		err = s.services.RabbitMQService.PublishEvent(ctx, organizationId, model.ORGANIZATION, dto.CreateOrganization{input})
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateOrganization"))
 		}
-		utils.EventCompleted(ctx, tenant, model.ORGANIZATION.String(), *organizationId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithCreate())
+		utils.EventCompleted(ctx, tenant, model.ORGANIZATION.String(), organizationId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithCreate())
 	} else {
-		err = s.services.RabbitMQService.PublishEvent(ctx, *organizationId, model.ORGANIZATION, dto.New_UpdateOrganization_From_OrganizationFields(*input))
+		err = s.services.RabbitMQService.PublishEvent(ctx, organizationId, model.ORGANIZATION, dto.UpdateOrganization{input})
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateOrganization"))
 		}
-		if input.SourceFields.AppSource != constants.AppSourceCustomerOsApi {
-			utils.EventCompleted(ctx, tenant, model.ORGANIZATION.String(), *organizationId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
+		if common.GetAppSourceFromContext(ctx) != constants.AppSourceCustomerOsApi {
+			utils.EventCompleted(ctx, tenant, model.ORGANIZATION.String(), organizationId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
 		}
 	}
 
@@ -354,9 +345,9 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 		_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
 			return s.services.GrpcClients.OrganizationClient.EnrichOrganization(ctx, &organizationpb.EnrichOrganizationGrpcRequest{
 				Tenant:         tenant,
-				OrganizationId: *organizationId,
+				OrganizationId: organizationId,
 				LoggedInUserId: common.GetUserIdFromContext(ctx),
-				AppSource:      input.SourceFields.AppSource,
+				AppSource:      common.GetAppSourceFromContext(ctx),
 				Url:            primaryDomain,
 			})
 		})
@@ -367,7 +358,7 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 
 	// request last touchpoint refresh for new organizations
 	if createFlow {
-		err = s.RequestRefreshLastTouchpoint(ctx, *organizationId)
+		err = s.RequestRefreshLastTouchpoint(ctx, organizationId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 		}
@@ -393,7 +384,7 @@ func (s *organizationService) Hide(ctx context.Context, tx *neo4j.ManagedTransac
 		return err
 	}
 
-	fields := repository.OrganizationSaveFields{Hide: true, UpdateHide: true}
+	fields := data_fields.OrganizationFields{Hide: utils.BoolPtr(true)}
 	err = s.services.Neo4jRepositories.OrganizationWriteRepository.Save(ctx, tx, tenant, organizationId, fields)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -422,7 +413,7 @@ func (s *organizationService) Show(ctx context.Context, tx *neo4j.ManagedTransac
 		return err
 	}
 
-	fields := repository.OrganizationSaveFields{Hide: false, UpdateHide: true}
+	fields := data_fields.OrganizationFields{Hide: utils.BoolPtr(false)}
 	err = s.services.Neo4jRepositories.OrganizationWriteRepository.Save(ctx, tx, tenant, organizationId, fields)
 	if err != nil {
 		tracing.TraceErr(span, err)
