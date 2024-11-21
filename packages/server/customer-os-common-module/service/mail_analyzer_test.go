@@ -187,7 +187,7 @@ func TestIsBulkMail(t *testing.T) {
 				{Email: "sender@example.com"},
 			},
 			wantBool: true,
-			wantMsg:  "BULK | PRECIDENCE: BULK",
+			wantMsg:  "BULK | PRECEDENCE: BULK",
 		},
 		{
 			name: "Precedence BULK case insensitive",
@@ -200,7 +200,7 @@ func TestIsBulkMail(t *testing.T) {
 				{Email: "sender@example.com"},
 			},
 			wantBool: true,
-			wantMsg:  "BULK | PRECIDENCE: BULK",
+			wantMsg:  "BULK | PRECEDENCE: BULK",
 		},
 		{
 			name: "Empty Return-Path",
