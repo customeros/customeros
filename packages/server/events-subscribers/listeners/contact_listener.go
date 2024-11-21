@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
@@ -580,29 +581,22 @@ func (c *contactListenerImpl) enrichContactWithScrapInEnrichDetails(ctx context.
 
 		// step 3 if not found - create organization
 		if organizationDbNode == nil {
-			orgId, err := c.services.OrganizationService.Save(ctx, nil, tenant, nil, &neo4jrepository.OrganizationSaveFields{
-				Name:               scrapinContactResponse.Company.Name,
-				Website:            scrapinContactResponse.Company.WebsiteUrl,
-				Relationship:       neo4jenum.Prospect,
-				Stage:              neo4jenum.Lead,
-				UpdateName:         true,
-				UpdateWebsite:      true,
-				UpdateRelationship: true,
-				UpdateStage:        true,
-				SourceFields: neo4jmodel.SourceFields{
-					Source:    constants.SourceOpenline,
-					AppSource: constants.AppScrapin,
-				},
+			orgId, err := c.services.OrganizationService.Save(ctx, nil, nil, data_fields.OrganizationFields{
+				Name:         utils.StringPtr(scrapinContactResponse.Company.Name),
+				Website:      utils.StringPtr(scrapinContactResponse.Company.WebsiteUrl),
+				Relationship: utils.ToPtr(neo4jenum.Prospect),
+				Stage:        utils.ToPtr(neo4jenum.Lead),
+				AppSource:    utils.StringPtr(constants.AppScrapin),
 			})
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "OrganizationClient.UpsertOrganization"))
 				c.log.Errorf("Error creating organization: %s", err.Error())
-			} else if orgId == nil {
-				tracing.TraceErr(span, errors.New("organization id is nil"))
-				return errors.New("organization id is nil")
+			} else if orgId == "" {
+				tracing.TraceErr(span, errors.New("organization id is missing"))
+				return errors.New("organization id is missing")
 			} else {
 				_, err = c.services.SocialService.AddSocialToEntity(ctx, service.LinkWith{
-					Id:   *orgId,
+					Id:   orgId,
 					Type: model.ORGANIZATION,
 				}, neo4jentity.SocialEntity{
 					Url:            scrapinContactResponse.Company.LinkedInUrl,
