@@ -88,11 +88,8 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
     .with(
       { property: ColumnViewType.ContactsPrimaryEmail },
       (filter) => (row: ContactStore) => {
-        const filterValues = filter?.value;
-
         if (!filter.active) return true;
 
-        if (!filterValues) return true;
         const emails = row.value.primaryEmail?.email;
 
         return filterTypeText(filter, emails ?? undefined);
