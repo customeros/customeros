@@ -79,7 +79,7 @@ func TestIsBounce(t *testing.T) {
 	}{
 		{
 			name:     "X-Failed-Recipients",
-			headers:  EmailHeaders{XFailedRecepients: true},
+			headers:  EmailHeaders{XFailedRecepients: []string{"test@test.com"}},
 			wantBool: true,
 			wantMsg:  "BOUNCE | X-FAILED-RECIPIENTS",
 		},

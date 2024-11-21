@@ -1,8 +1,9 @@
 package entity
 
 import (
-	"github.com/google/uuid"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type RawEmail struct {
@@ -18,9 +19,10 @@ type RawEmail struct {
 	ProviderMessageId string           `gorm:"size:255;not null;"`
 	MessageId         string           `gorm:"size:255;not null;index:idx_raw_email_external_system"`
 
-	Status string  `gorm:"column:status;size:50;not null"`
-	Reason *string `gorm:"column:reason;type:text"`
-	Error  *string `gorm:"column:error;type:text"`
+	Status        string  `gorm:"column:status;size:50;not null"`
+	Reason        *string `gorm:"column:reason;type:text"`
+	Error         *string `gorm:"column:error;type:text"`
+	BouncedEmails *string `gorm:"column:bounced_emails;type:text"`
 
 	Data string `gorm:"type:text"`
 }
@@ -57,4 +59,11 @@ const (
 
 func (rawState RawState) String() string {
 	return string(rawState)
+}
+
+type UpdateRawEmailTable struct {
+	EmailProcessingStatus RawState
+	Reason                *string
+	BouncedEmails         *[]string
+	Error                 error
 }
