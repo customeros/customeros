@@ -35,12 +35,9 @@ export class FlowActionSidePanelStore {
 
   setOpen(
     open: boolean,
-    options: {
+    options?: {
       context: Context | null;
       type: FlowStepCommandMenuType | null;
-    } = {
-      type: null,
-      context: null,
     },
   ) {
     runInAction(() => {
