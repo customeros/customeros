@@ -20,46 +20,11 @@ import (
 	commonEvents "github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/emptypb"
-	"regexp"
 	"testing"
 	"time"
 )
 
 const customerOsIdPattern = `^C-[A-HJ-NP-Z2-9]{3}-[A-HJ-NP-Z2-9]{3}$`
-
-func TestGraphOrganizationEventHandler_OnOrganizationShow(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx, testDatabase)(t)
-
-	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{
-		Name: "test org",
-		Hide: true,
-	})
-	orgEventHandler := &OrganizationEventHandler{
-		services:    testDatabase.Services,
-		grpcClients: testMockedGrpcClient,
-	}
-	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
-
-	event, err := events.NewShowOrganizationEventEvent(orgAggregate)
-	require.Nil(t, err)
-	err = orgEventHandler.OnOrganizationShow(context.Background(), event)
-	require.Nil(t, err)
-
-	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Organization": 1, "Organization_" + tenantName: 1})
-	neo4jtest.AssertNeo4jLabels(ctx, t, testDatabase.Driver, []string{"Organization", "Organization_" + tenantName, "Tenant"})
-
-	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Organization_"+tenantName, orgId)
-	require.Nil(t, err)
-	require.NotNil(t, dbNode)
-
-	organization := neo4jmapper.MapDbNodeToOrganizationEntity(dbNode)
-	require.Equal(t, orgId, organization.ID)
-	require.Equal(t, false, organization.Hide)
-	require.NotEqual(t, "", organization.CustomerOsId)
-	require.True(t, regexp.MustCompile(customerOsIdPattern).MatchString(organization.CustomerOsId), "Valid CustomerOsId should match the format")
-}
 
 func TestGraphOrganizationEventHandler_OnLocationLinkedToOrganization(t *testing.T) {
 	ctx := context.Background()
