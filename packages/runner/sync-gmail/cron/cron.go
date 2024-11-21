@@ -2,29 +2,32 @@ package cron
 
 import (
 	"context"
+	"sync"
+	"time"
+
 	"github.com/google/uuid"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/config"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/entity"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/logger"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	commonconstants "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/constants"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/robfig/cron"
 	"github.com/sirupsen/logrus"
-	"sync"
-	"time"
+
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/config"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/entity"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/logger"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/service"
 )
 
-var jobLock1 sync.Mutex
-var jobLock2 sync.Mutex
+var (
+	jobLock1 sync.Mutex
+	jobLock2 sync.Mutex
+)
 
 func StartCron(config *config.Config, services *service.Services) *cron.Cron {
 	c := cron.New()
 
 	err := c.AddFunc(config.SyncData.CronSync, func() {
-
 		go func(jobLock *sync.Mutex) {
 			lockAndRunJob(jobLock, services, syncEmails)
 		}(&jobLock1)
@@ -32,7 +35,6 @@ func StartCron(config *config.Config, services *service.Services) *cron.Cron {
 		go func(jobLock *sync.Mutex) {
 			lockAndRunJob(jobLock, services, syncCalendarEvents)
 		}(&jobLock2)
-
 	})
 	if err != nil {
 		logrus.Fatalf("Could not add cron job: %v", err.Error())
@@ -107,7 +109,7 @@ func syncEmails(services *service.Services) {
 				AppSource: commonconstants.AppSourceSyncEmail,
 			})
 
-			services.CommonServices.MailService.SyncEmailsForUser(userCtx, distinctUser.Tenant, distinctUser.Username)
+			services.CommonServices.MailService.GetEmailsForProcessingForUser(userCtx, distinctUser.Tenant, distinctUser.Username)
 
 			logrus.Infof("syncing emails for user: %s in tenant: %s completed", distinctUser.Tenant, distinctUser.Username)
 		}(dt)
@@ -134,7 +136,6 @@ func syncCalendarEvents(services *service.Services) {
 	wg.Add(len(tenants))
 
 	for _, tenant := range tenants {
-
 		go func(tenant neo4jentity.TenantEntity) {
 			defer wg.Done()
 

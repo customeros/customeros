@@ -85,7 +85,7 @@ func (a *mailService) isBounce(headers EmailHeaders, subject, from string) (bool
 	case strings.EqualFold(headers.ContentDescription, "delivery report"):
 		return true, "BOUNCE | CONTENT-DESCRIPTION: DELIVERY REPORT"
 	case a.isReturnPathBounce(headers.ReturnPath):
-		return true, "BOUNCE | RETURN-PATH CONTAINTS BOUNCE KEYWORDS"
+		return true, "BOUNCE | RETURN-PATH CONTAINS BOUNCE KEYWORDS"
 	case a.isReturnPathBounce(from):
 		return true, "BOUNCE | FROM CONTAINS BOUNCE KEYWORDS"
 	case a.isBounceSubject(subject):
@@ -110,7 +110,7 @@ func (a *mailService) isBulkMail(headers EmailHeaders, from string, replyTo []Em
 	case headers.ListUnsubscribe:
 		return true, "BULK | UNSUBSCRIBE"
 	case strings.EqualFold(headers.Precedence, "bulk"):
-		return true, "BULK | PRECIDENCE: BULK"
+		return true, "BULK | PRECEDENCE: BULK"
 	case headers.ReturnPath == "":
 		return true, "BULK | EMPTY RETURN-PATH"
 	case headers.ReturnPath != from:
