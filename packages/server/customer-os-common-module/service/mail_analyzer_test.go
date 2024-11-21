@@ -47,7 +47,7 @@ func TestProcessEmailCheck(t *testing.T) {
 			expected: HeaderAnalysis{
 				ProcessEmail: false,
 				IsBounce:     true,
-				SkipReason:   "BOUNCE | RETURN-PATH CONTAINTS BOUNCE KEYWORDS",
+				SkipReason:   "BOUNCE | RETURN-PATH CONTAINS BOUNCE KEYWORDS",
 			},
 		},
 		{
@@ -168,7 +168,7 @@ func TestProcessEmailCheck(t *testing.T) {
 			expected: HeaderAnalysis{
 				ProcessEmail: false,
 				IsBulkMail:   true,
-				SkipReason:   "BULK | PRECIDENCE: BULK",
+				SkipReason:   "BULK | PRECEDENCE: BULK",
 			},
 		},
 		{
