@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
@@ -12,12 +13,12 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
+	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/repository"
-	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -207,15 +208,6 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 		return NewSkippedSyncStatus("Missing domain while required")
 	}
 
-	// TODO whitelist domains are not used since all new organizations are leads
-	// Check if organization should be whitelisted
-	//orgHasWhitelistedDomain := false
-	//for _, domain := range orgInput.Domains {
-	//	if controlDomains.isWhitelistedDomain(domain) {
-	//		orgHasWhitelistedDomain = true
-	//	}
-	//}
-
 	// Use fallback name if applicable
 	if orgInput.Name == "" && orgInput.FallbackName != "" && !orgInput.HasDomains() {
 		orgInput.Name = orgInput.FallbackName
@@ -236,113 +228,73 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 		matchingOrganizationExists := organizationId != ""
 		span.LogFields(log.Bool("found matching organization", matchingOrganizationExists))
 
-		fieldsMask := make([]organizationpb.OrganizationMaskField, 0)
 		if orgInput.UpdateOnly {
 			if !matchingOrganizationExists {
 				span.LogFields(log.String("output", "skipped"))
 				return NewSkippedSyncStatus("Update only flag enabled and no matching organization found")
 			}
 		}
-		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_NAME)
-		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_DESCRIPTION)
-		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_WEBSITE)
-		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_INDUSTRY)
-		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_SUB_INDUSTRY)
-		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_INDUSTRY_GROUP)
-		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_IS_PUBLIC)
-		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_EMPLOYEES)
-		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_MARKET)
-		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_TARGET_AUDIENCE)
-		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_VALUE_PROPOSITION)
-		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_LAST_FUNDING_ROUND)
-		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_LAST_FUNDING_AMOUNT)
-		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_NOTE)
-		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_REFERENCE_ID)
-		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_LOGO_URL)
-		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_YEAR_FOUNDED)
-		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_HEADQUARTERS)
-		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_EMPLOYEE_GROWTH_RATE)
 
-		// Create new organization id if not found
-		organizationId = utils.NewUUIDIfEmpty(organizationId)
-		orgInput.Id = organizationId
-		span.LogFields(log.String("organizationId", organizationId))
-
-		// Create or update organization
-		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		upsertOrganizationGrpcRequest := organizationpb.UpsertOrganizationGrpcRequest{
-			Tenant:             tenant,
-			Id:                 organizationId,
-			LoggedInUserId:     "",
-			Name:               orgInput.Name,
-			Description:        orgInput.Description,
-			Website:            orgInput.Website,
-			Industry:           orgInput.Industry,
-			IsPublic:           orgInput.IsPublic,
-			Employees:          orgInput.Employees,
-			Market:             orgInput.Market,
-			CreatedAt:          utils.ConvertTimeToTimestampPtr(orgInput.CreatedAt),
-			UpdatedAt:          utils.ConvertTimeToTimestampPtr(orgInput.UpdatedAt),
-			SubIndustry:        orgInput.SubIndustry,
-			IndustryGroup:      orgInput.IndustryGroup,
-			TargetAudience:     orgInput.TargetAudience,
-			ValueProposition:   orgInput.ValueProposition,
-			LastFundingRound:   orgInput.LastFundingRound,
-			LastFundingAmount:  orgInput.LastFundingAmount,
-			Note:               orgInput.Note,
-			ReferenceId:        orgInput.ReferenceId,
-			LogoUrl:            orgInput.LogoUrl,
-			YearFounded:        orgInput.YearFounded,
-			Headquarters:       orgInput.Headquarters,
-			EmployeeGrowthRate: orgInput.EmployeeGrowthRate,
-			SourceFields: &commonpb.SourceFields{
-				Source:    utils.StringFirstNonEmpty(orgInput.ExternalSystem, orgInput.Source),
-				AppSource: appSource,
-			},
-			LeadSource: utils.StringFirstNonEmpty(orgInput.ExternalSystem, orgInput.Source),
+		organizationDataFields := data_fields.OrganizationFields{
+			AppSource: utils.StringPtr(appSource),
+			Source:    utils.StringPtr(utils.StringFirstNonEmpty(orgInput.ExternalSystem, orgInput.Source)),
 		}
-		if orgInput.IsCustomer {
-			upsertOrganizationGrpcRequest.Relationship = neo4jenum.Customer.String()
-			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_RELATIONSHIP)
-		} else {
-			if !matchingOrganizationExists {
-				upsertOrganizationGrpcRequest.Stage = neo4jenum.Lead.String()
-				upsertOrganizationGrpcRequest.Relationship = neo4jenum.Prospect.String()
-				fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_STAGE)
-				fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_RELATIONSHIP)
+		if !matchingOrganizationExists {
+			organizationDataFields.Name = utils.StringPtr(orgInput.Name)
+			organizationDataFields.Description = utils.StringPtr(orgInput.Description)
+			organizationDataFields.Website = utils.StringPtr(orgInput.Website)
+			organizationDataFields.Industry = utils.StringPtr(orgInput.Industry)
+			organizationDataFields.IsPublic = utils.BoolPtr(orgInput.IsPublic)
+			organizationDataFields.Employees = utils.Int64Ptr(orgInput.Employees)
+			organizationDataFields.Market = utils.StringPtr(orgInput.Market)
+			organizationDataFields.SubIndustry = utils.StringPtr(orgInput.SubIndustry)
+			organizationDataFields.IndustryGroup = utils.StringPtr(orgInput.IndustryGroup)
+			organizationDataFields.TargetAudience = utils.StringPtr(orgInput.TargetAudience)
+			organizationDataFields.ValueProposition = utils.StringPtr(orgInput.ValueProposition)
+			organizationDataFields.LastFundingRound = utils.StringPtr(orgInput.LastFundingRound)
+			organizationDataFields.LastFundingAmount = utils.StringPtr(orgInput.LastFundingAmount)
+			organizationDataFields.Note = utils.StringPtr(orgInput.Note)
+			organizationDataFields.ReferenceId = utils.StringPtr(orgInput.ReferenceId)
+			organizationDataFields.LogoUrl = utils.StringPtr(orgInput.LogoUrl)
+			organizationDataFields.YearFounded = orgInput.YearFounded
+			organizationDataFields.Headquarters = utils.StringPtr(orgInput.Headquarters)
+			organizationDataFields.EmployeeGrowthRate = utils.StringPtr(orgInput.EmployeeGrowthRate)
+			organizationDataFields.LeadSource = utils.StringPtr(utils.StringFirstNonEmpty(orgInput.ExternalSystem, orgInput.Source))
+			if orgInput.IsCustomer {
+				organizationDataFields.Relationship = utils.ToPtr(neo4jenum.Customer)
+			} else {
+				if !matchingOrganizationExists {
+					organizationDataFields.Stage = utils.ToPtr(neo4jenum.Trial)
+					organizationDataFields.Relationship = utils.ToPtr(neo4jenum.Prospect)
+				}
 			}
 		}
-		upsertOrganizationGrpcRequest.FieldsMask = fieldsMask
 
 		if orgInput.ExternalSystem != "" {
-			upsertOrganizationGrpcRequest.ExternalSystemFields = &commonpb.ExternalSystemFields{
+			organizationDataFields.ExternalSystem = &neo4jmodel.ExternalSystem{
 				ExternalSystemId: orgInput.ExternalSystem,
 				ExternalId:       orgInput.ExternalId,
 				ExternalUrl:      orgInput.ExternalUrl,
 				ExternalIdSecond: orgInput.ExternalIdSecond,
 				ExternalSource:   orgInput.ExternalSourceEntity,
-				SyncDate:         utils.ConvertTimeToTimestampPtr(&syncDate),
+				SyncDate:         &syncDate,
 			}
 		}
-		_, err = CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-			return s.grpcClients.OrganizationClient.UpsertOrganization(ctx, &upsertOrganizationGrpcRequest)
-		})
+		var orgIdPtr *string
+		if organizationId != "" {
+			orgIdPtr = &organizationId
+		}
+
+		savedOrgId, err := s.services.CommonServices.OrganizationService.Save(ctx, nil, orgIdPtr, organizationDataFields)
 		if err != nil {
 			failedSync = true
-			tracing.TraceErr(span, err, log.String("grpcFunction", "UpsertOrganization"))
-			reason = fmt.Sprintf("failed sending event to upsert organization  with external reference %s for tenant %s :%s", orgInput.ExternalId, tenant, err)
+			tracing.TraceErr(span, pkgerrors.Wrap(err, "failed to save organization"))
+			reason = fmt.Sprintf("failed to save organization  with external reference %s for tenant %s :%s", orgInput.ExternalId, tenant, err)
 			s.log.Error(reason)
 		}
-		// Wait for organization to be created in neo4j
-		if !failedSync && !matchingOrganizationExists {
-			for i := 1; i <= constants.MaxRetryCheckDataInNeo4jAfterEventRequest; i++ {
-				organization, findErr := s.repositories.OrganizationRepository.GetById(ctx, tenant, organizationId)
-				if organization != nil && findErr == nil {
-					break
-				}
-				time.Sleep(utils.BackOffExponentialDelay(i))
-			}
-		}
+		organizationId = savedOrgId
+		orgInput.Id = organizationId
+		span.LogFields(log.String("organizationId", organizationId))
 	}
 	if !failedSync && orgInput.HasDomains() {
 		for _, domain := range orgInput.Domains {

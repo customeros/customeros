@@ -7,14 +7,13 @@ import (
 	enummapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
-	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
-	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"net/http"
@@ -116,82 +115,46 @@ func CreateOrganization(services *service.Services) gin.HandlerFunc {
 			}
 		}
 
-		// step 4 reserve org id
-		newOrgId, err := services.Repositories.Neo4jRepositories.OrganizationWriteRepository.ReserveOrganizationId(ctx, tenant, "")
-		if err != nil {
-			tracing.TraceErr(span, err)
-			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Failed to create organization"})
-			return
-		}
-		span.SetTag(tracing.SpanTagEntityId, newOrgId)
-
 		// step 5 create organization
 		orgName := request.Name
 		if orgName == "" {
 			orgName = websiteDomain
 		}
-		upsertOrganizationRequest := organizationpb.UpsertOrganizationGrpcRequest{
-			Id:             newOrgId,
-			Tenant:         common.GetTenantFromContext(ctx),
-			LoggedInUserId: common.GetUserIdFromContext(ctx),
-			Name:           orgName,
-			ReferenceId:    request.CustomId,
-			Website:        request.Website,
-			SourceFields: &commonpb.SourceFields{
-				Source:    string(neo4jentity.DataSourceOpenline),
-				AppSource: constants.AppSourceCustomerOsApiRest,
-			},
-			LeadSource: request.LeadSource,
-			IcpFit:     request.IcpFit,
+		organizationFields := data_fields.OrganizationFields{
+			Name:        utils.StringPtr(orgName),
+			ReferenceId: utils.StringPtr(request.CustomId),
+			Website:     utils.StringPtr(request.Website),
+			Source:      utils.StringPtr(string(neo4jentity.DataSourceOpenline)),
+			AppSource:   utils.StringPtr(constants.AppSourceCustomerOsApiRest),
+			LeadSource:  utils.StringPtr(request.LeadSource),
+			IcpFit:      utils.BoolPtr(request.IcpFit),
 		}
+		if request.LinkedinUrl != "" {
+			organizationFields.LinkedInUrl = utils.StringPtr(request.LinkedinUrl)
+		}
+
 		relationship := model.OrganizationRelationshipProspect
 		if request.Relationship != "" && model.OrganizationRelationship(request.Relationship).IsValid() {
 			relationship = model.OrganizationRelationship(request.Relationship)
 		}
-		upsertOrganizationRequest.Relationship = enummapper.MapRelationshipFromModel(relationship).String()
+		organizationFields.Relationship = utils.ToPtr(enummapper.MapRelationshipFromModel(relationship))
 
-		if upsertOrganizationRequest.Relationship == enummapper.MapRelationshipFromModel(model.OrganizationRelationshipCustomer).String() {
-			upsertOrganizationRequest.Stage = enummapper.MapStageFromModel(model.OrganizationStageOnboarding).String()
-		} else if upsertOrganizationRequest.Relationship == enummapper.MapRelationshipFromModel(model.OrganizationRelationshipProspect).String() {
-			upsertOrganizationRequest.Stage = enummapper.MapStageFromModel(model.OrganizationStageLead).String()
-		} else if upsertOrganizationRequest.Relationship == enummapper.MapRelationshipFromModel(model.OrganizationRelationshipNotAFit).String() {
-			upsertOrganizationRequest.Stage = enummapper.MapStageFromModel(model.OrganizationStageUnqualified).String()
-		} else if upsertOrganizationRequest.Relationship == enummapper.MapRelationshipFromModel(model.OrganizationRelationshipFormerCustomer).String() {
-			upsertOrganizationRequest.Stage = enummapper.MapStageFromModel(model.OrganizationStageTarget).String()
+		if relationship.String() == enummapper.MapRelationshipFromModel(model.OrganizationRelationshipCustomer).String() {
+			organizationFields.Stage = utils.ToPtr(enummapper.MapStageFromModel(model.OrganizationStageOnboarding))
+		} else if relationship.String() == enummapper.MapRelationshipFromModel(model.OrganizationRelationshipProspect).String() {
+			organizationFields.Stage = utils.ToPtr(enummapper.MapStageFromModel(model.OrganizationStageLead))
+		} else if relationship.String() == enummapper.MapRelationshipFromModel(model.OrganizationRelationshipNotAFit).String() {
+			organizationFields.Stage = utils.ToPtr(enummapper.MapStageFromModel(model.OrganizationStageUnqualified))
+		} else if relationship.String() == enummapper.MapRelationshipFromModel(model.OrganizationRelationshipFormerCustomer).String() {
+			organizationFields.Stage = utils.ToPtr(enummapper.MapStageFromModel(model.OrganizationStageTarget))
 		}
 
-		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-			return services.CommonServices.GrpcClients.OrganizationClient.UpsertOrganization(ctx, &upsertOrganizationRequest)
-		})
+		organizationId, err := services.CommonServices.OrganizationService.Save(ctx, nil, nil, organizationFields)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "Failed to create organization"))
 			services.Log.Error(ctx, "Failed to create organization", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Failed to create organization"})
 			return
-		}
-
-		if request.LinkedinUrl != "" {
-			_, err = services.CommonServices.SocialService.AddSocialToEntity(ctx, commonservice.LinkWith{
-				Id:   newOrgId,
-				Type: commonmodel.ORGANIZATION,
-			}, neo4jentity.SocialEntity{
-				Url:       request.LinkedinUrl,
-				Source:    neo4jentity.DataSourceOpenline,
-				AppSource: constants.AppSourceCustomerOsApiRest,
-			})
-			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "Failed to add linkedin url"))
-				services.Log.Error(ctx, "Failed to add linkedin url", err)
-				// partial saving of data
-				c.JSON(http.StatusPartialContent,
-					CreateOrganizationResponse{
-						Status:         "partial_success",
-						Message:        "Failed to add linkedin url",
-						ID:             newOrgId,
-						PartialSuccess: true,
-					})
-			}
 		}
 
 		// Prepare and send the response
@@ -200,7 +163,7 @@ func CreateOrganization(services *service.Services) gin.HandlerFunc {
 			CreateOrganizationResponse{
 				Status:  "success",
 				Message: "Organization created successfully",
-				ID:      newOrgId,
+				ID:      organizationId,
 			})
 	}
 }
