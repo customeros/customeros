@@ -384,6 +384,23 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 		return organizationId, err
 	}
 
+	// set slack channel id for unthreaded issues
+	if !createFlow && input.SlackChannelId != nil {
+		if existingOrganizationEntity.SlackChannelId != utils.IfNotNilString(input.SlackChannelId) {
+			if utils.IfNotNilString(input.SlackChannelId) == "" {
+				err := s.services.Neo4jRepositories.IssueWriteRepository.RemoveReportedByOrganizationWithGroupId(ctx, tenant, organizationId, existingOrganizationEntity.SlackChannelId)
+				if err != nil {
+					tracing.TraceErr(span, err)
+				}
+			} else {
+				err := s.services.Neo4jRepositories.IssueWriteRepository.ReportedByOrganizationWithGroupId(ctx, tenant, organizationId, utils.IfNotNilString(input.SlackChannelId))
+				if err != nil {
+					tracing.TraceErr(span, err)
+				}
+			}
+		}
+	}
+
 	// request enrich organization by primary domain if not enriched
 	if latestOrganizationEntity.EnrichDetails.EnrichedAt == nil {
 		// select primary domain from new domains

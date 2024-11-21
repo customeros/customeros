@@ -217,6 +217,8 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		tenantevent.TenantUpdateBillingProfileV1,
 		logentryevents.LogEntryCreateV1,
 		logentryevents.LogEntryUpdateV1,
+		orgevents.OrganizationCreateV1,
+		orgevents.OrganizationUpdateV1,
 		contractevent.ContractUpdateV1:
 
 		return nil
@@ -256,12 +258,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return nil
 	case contactevent.ContactLocationLinkV1:
 		_ = s.contactEventHandler.OnLocationLinkToContact(ctx, evt)
-		return nil
-	case orgevents.OrganizationCreateV1:
-		_ = s.organizationEventHandler.OnOrganizationCreate(ctx, evt)
-		return nil
-	case orgevents.OrganizationUpdateV1:
-		_ = s.organizationEventHandler.OnOrganizationUpdate(ctx, evt)
 		return nil
 	case orgevents.OrganizationPhoneNumberLinkV1:
 		_ = s.organizationEventHandler.OnPhoneNumberLinkedToOrganization(ctx, evt)

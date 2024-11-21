@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -374,13 +375,9 @@ func (s *opportunityService) CloseWon(ctx context.Context, tx *neo4j.ManagedTran
 				organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
 				// Make organization customer if it's not already
 				if organizationEntity.Relationship != neo4jenum.Customer && organizationEntity.Stage != neo4jenum.Trial {
-
-					//TODO use TX
-					err := s.services.Neo4jRepositories.OrganizationWriteRepository.UpdateOrganization(ctx, tenant, organizationEntity.ID, repository.OrganizationUpdateFields{
-						Relationship:       neo4jenum.Customer,
-						Stage:              neo4jenum.Customer.DefaultStage(),
-						UpdateRelationship: true,
-						UpdateStage:        true,
+					_, err := s.services.OrganizationService.Save(ctx, &tx, &organizationEntity.ID, data_fields.OrganizationFields{
+						Relationship: utils.ToPtr(neo4jenum.Customer),
+						Stage:        utils.ToPtr(neo4jenum.Customer.DefaultStage()),
 					})
 					if err != nil {
 						tracing.TraceErr(span, err)

@@ -9,77 +9,10 @@ import "location.proto";
 
 option go_package = "api/grpc/v1/organization;organization_grpc_service";
 
-enum OrganizationMaskField {
-  ORGANIZATION_PROPERTY_NONE = 0; // No property, ignored by the server
-  ORGANIZATION_PROPERTY_ALL = 1; // All properties, if present in the list all other properties are ignored
-  ORGANIZATION_PROPERTY_NAME = 2;
-  ORGANIZATION_PROPERTY_VALUE_PROPOSITION = 3;
-  ORGANIZATION_PROPERTY_TARGET_AUDIENCE = 4;
-  ORGANIZATION_PROPERTY_REFERENCE_ID = 5;
-  ORGANIZATION_PROPERTY_IS_PUBLIC = 7;
-  ORGANIZATION_PROPERTY_HIDE = 8;
-  ORGANIZATION_PROPERTY_DESCRIPTION = 9;
-  ORGANIZATION_PROPERTY_WEBSITE = 10;
-  ORGANIZATION_PROPERTY_INDUSTRY = 11;
-  ORGANIZATION_PROPERTY_SUB_INDUSTRY = 12;
-  ORGANIZATION_PROPERTY_INDUSTRY_GROUP = 13;
-  ORGANIZATION_PROPERTY_MARKET = 14;
-  ORGANIZATION_PROPERTY_EMPLOYEES = 15;
-  ORGANIZATION_PROPERTY_LAST_FUNDING_ROUND = 16;
-  ORGANIZATION_PROPERTY_LAST_FUNDING_AMOUNT = 17;
-  ORGANIZATION_PROPERTY_NOTE = 18;
-  ORGANIZATION_PROPERTY_YEAR_FOUNDED = 19;
-  ORGANIZATION_PROPERTY_LOGO_URL = 20;
-  ORGANIZATION_PROPERTY_HEADQUARTERS = 21;
-  ORGANIZATION_PROPERTY_EMPLOYEE_GROWTH_RATE = 22;
-  ORGANIZATION_PROPERTY_SLACK_CHANNEL_ID = 23;
-  ORGANIZATION_PROPERTY_RELATIONSHIP = 24;
-  ORGANIZATION_PROPERTY_STAGE = 25;
-  ORGANIZATION_PROPERTY_ICON_URL = 26;
-  ORGANIZATION_PROPERTY_ICP_FIT = 27;
-}
-
 enum BillingProfileFieldMask {
   BILLING_PROFILE_PROPERTY_NONE = 0; // No property, ignored by the server
   BILLING_PROFILE_PROPERTY_LEGAL_NAME = 2;
   BILLING_PROFILE_PROPERTY_TAX_ID = 3;
-}
-
-message UpsertOrganizationGrpcRequest {
-  string id = 1;
-  string tenant = 2;
-  string name = 3;
-  string description = 4;
-  string website = 5;
-  string industry = 6;
-  bool isPublic = 7;
-  int64 employees = 8;
-  string market = 9;
-  google.protobuf.Timestamp  createdAt = 13;
-  google.protobuf.Timestamp  updatedAt = 14;
-  string subIndustry = 15;
-  string industryGroup = 16;
-  string targetAudience = 17;
-  string valueProposition = 18;
-  string lastFundingRound = 19;
-  string lastFundingAmount = 20;
-  bool hide = 22;
-  string note = 23;
-  SourceFields sourceFields = 25;
-  ExternalSystemFields externalSystemFields = 26;
-  string loggedInUserId = 27;
-  string referenceId = 28;
-  repeated OrganizationMaskField fieldsMask = 31;
-  string logoUrl = 32;
-  string headquarters = 33;
-  string employeeGrowthRate = 34;
-  optional int64 yearFounded = 35;
-  string slackChannelId = 36;
-  string relationship = 37;
-  string stage = 38;
-  string leadSource = 39;
-  string iconUrl = 40;
-  bool icpFit = 41;
 }
 
 message OrganizationIdGrpcRequest {
@@ -322,7 +255,6 @@ message BillingProfileIdGrpcResponse {
 }
 
 service organizationGrpcService {
-  rpc UpsertOrganization(UpsertOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc EnrichOrganization(EnrichOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc LinkPhoneNumberToOrganization(LinkPhoneNumberToOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc LinkLocationToOrganization(LinkLocationToOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);

@@ -13,7 +13,9 @@ import (
 )
 
 const (
-	OrganizationCreateV1          = "V1_ORGANIZATION_CREATE"
+	// Deprecated
+	OrganizationCreateV1 = "V1_ORGANIZATION_CREATE"
+	// Deprecated
 	OrganizationUpdateV1          = "V1_ORGANIZATION_UPDATE"
 	OrganizationPhoneNumberLinkV1 = "V1_ORGANIZATION_PHONE_NUMBER_LINK"
 	// Deprecated

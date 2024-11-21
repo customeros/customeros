@@ -23,7 +23,6 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type OrganizationGrpcServiceClient interface {
-	UpsertOrganization(ctx context.Context, in *UpsertOrganizationGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	EnrichOrganization(ctx context.Context, in *EnrichOrganizationGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	LinkPhoneNumberToOrganization(ctx context.Context, in *LinkPhoneNumberToOrganizationGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	LinkLocationToOrganization(ctx context.Context, in *LinkLocationToOrganizationGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
@@ -54,15 +53,6 @@ type organizationGrpcServiceClient struct {
 
 func NewOrganizationGrpcServiceClient(cc grpc.ClientConnInterface) OrganizationGrpcServiceClient {
 	return &organizationGrpcServiceClient{cc}
-}
-
-func (c *organizationGrpcServiceClient) UpsertOrganization(ctx context.Context, in *UpsertOrganizationGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error) {
-	out := new(OrganizationIdGrpcResponse)
-	err := c.cc.Invoke(ctx, "/organizationGrpcService/UpsertOrganization", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
 }
 
 func (c *organizationGrpcServiceClient) EnrichOrganization(ctx context.Context, in *EnrichOrganizationGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error) {
@@ -267,7 +257,6 @@ func (c *organizationGrpcServiceClient) AdjustIndustry(ctx context.Context, in *
 // All implementations should embed UnimplementedOrganizationGrpcServiceServer
 // for forward compatibility
 type OrganizationGrpcServiceServer interface {
-	UpsertOrganization(context.Context, *UpsertOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	EnrichOrganization(context.Context, *EnrichOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	LinkPhoneNumberToOrganization(context.Context, *LinkPhoneNumberToOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	LinkLocationToOrganization(context.Context, *LinkLocationToOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error)
@@ -296,9 +285,6 @@ type OrganizationGrpcServiceServer interface {
 type UnimplementedOrganizationGrpcServiceServer struct {
 }
 
-func (UnimplementedOrganizationGrpcServiceServer) UpsertOrganization(context.Context, *UpsertOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpsertOrganization not implemented")
-}
 func (UnimplementedOrganizationGrpcServiceServer) EnrichOrganization(context.Context, *EnrichOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method EnrichOrganization not implemented")
 }
@@ -375,24 +361,6 @@ type UnsafeOrganizationGrpcServiceServer interface {
 
 func RegisterOrganizationGrpcServiceServer(s grpc.ServiceRegistrar, srv OrganizationGrpcServiceServer) {
 	s.RegisterService(&OrganizationGrpcService_ServiceDesc, srv)
-}
-
-func _OrganizationGrpcService_UpsertOrganization_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpsertOrganizationGrpcRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(OrganizationGrpcServiceServer).UpsertOrganization(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/organizationGrpcService/UpsertOrganization",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OrganizationGrpcServiceServer).UpsertOrganization(ctx, req.(*UpsertOrganizationGrpcRequest))
-	}
-	return interceptor(ctx, in, info, handler)
 }
 
 func _OrganizationGrpcService_EnrichOrganization_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -798,10 +766,6 @@ var OrganizationGrpcService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "organizationGrpcService",
 	HandlerType: (*OrganizationGrpcServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "UpsertOrganization",
-			Handler:    _OrganizationGrpcService_UpsertOrganization_Handler,
-		},
 		{
 			MethodName: "EnrichOrganization",
 			Handler:    _OrganizationGrpcService_EnrichOrganization_Handler,
