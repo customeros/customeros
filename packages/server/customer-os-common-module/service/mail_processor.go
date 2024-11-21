@@ -23,7 +23,7 @@ import (
 
 const AppSource = constants.AppSourceSyncEmail
 
-func (s *mailService) SyncEmailsForUser(ctx context.Context, tenant string, userEmailAddress string) {
+func (s *mailService) GetEmailsForProcessingForUser(ctx context.Context, tenant, userEmailAddress string) {
 	span, ctx := s.initializeTracing(ctx, "MailService.SyncEmailsForUser")
 	defer span.Finish()
 	span.LogKV("userEmailAddress", userEmailAddress)
@@ -94,19 +94,14 @@ func (s *mailService) ProcessEmail(ctx context.Context, tenant string, rawEmailI
 		return postgresentity.ERROR, nil, fmt.Errorf("email message ID is empty")
 	}
 
-	check := s.ProcessEmailCheck(ctx, &emailMessageData)
-	if !check.ProcessEmail {
-		return postgresentity.SKIPPED, &check.SkipReason, nil
-	}
-
 	if len(emailMessageData.Participants.AllEmails) == 0 {
 		reason := "no email address belongs to a workspace domain"
 		return postgresentity.SKIPPED, &reason, nil
 	}
 
-	if s.warmingEmailCheck(tenant, emailMessageData) {
-		reason := "warming email"
-		return postgresentity.SKIPPED, &reason, nil
+	check := s.ProcessEmailCheck(ctx, tenant, &emailMessageData)
+	if !check.ProcessEmail {
+		return postgresentity.SKIPPED, &check.SkipReason, nil
 	}
 
 	sentAt, err := convertToUTC(emailMessageData.Content.SentDate)
@@ -417,27 +412,6 @@ func (s *mailService) buildChannelData(email *EmailMessageData, span opentracing
 	email.ChannelData = channelData
 
 	return nil
-}
-
-func (s *mailService) warmingEmailCheck(tenant string, email EmailMessageData) bool {
-	emailExclusion := s.services.Cache.GetEmailExclusion(tenant)
-
-	for _, exclusion := range emailExclusion {
-		if exclusion.ExcludeSubject != nil {
-			if strings.Contains(email.Content.Subject, *exclusion.ExcludeSubject) {
-				return true
-			}
-		}
-		if exclusion.ExcludeBody != nil {
-			if strings.Contains(email.Content.Html, *exclusion.ExcludeBody) {
-				return true
-			}
-			if strings.Contains(email.Content.Text, *exclusion.ExcludeBody) {
-				return true
-			}
-		}
-	}
-	return false
 }
 
 func (s *mailService) createUserEmailAddressAsNode(ctx context.Context, tenant, userEmailAddress, externalSystem string, span opentracing.Span) error {

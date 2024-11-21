@@ -4,9 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"slices"
+	"sort"
 	"strings"
 
+	"github.com/customeros/mailsherpa/mailvalidate"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
@@ -98,7 +101,7 @@ func (l *mailService) parseEmailAndName(s string) EmailParticipant {
 	}
 
 	// Extract email
-	results.Email = l.extractEmailFromBrackets(s)
+	results.Email = l.extractEmail(s)
 
 	// Extract name part
 	namePart := strings.TrimSpace(strings.Split(s, "<")[0])
@@ -131,16 +134,6 @@ func (l *mailService) parseParticipants(s string) []EmailParticipant {
 	return participants
 }
 
-func (l *mailService) extractEmailFromBrackets(s string) string {
-	s = strings.ToLower(s)
-	if start := strings.LastIndex(s, "<"); start >= 0 {
-		if end := strings.LastIndex(s, ">"); end > start {
-			return s[start+1 : end]
-		}
-	}
-	return s
-}
-
 func (l *mailService) parseHeaders(headers map[string]string) EmailHeaders {
 	eh := EmailHeaders{}
 
@@ -166,7 +159,7 @@ func (l *mailService) parseHeaders(headers map[string]string) EmailHeaders {
 			eh.Precedence = value
 		}
 		if strings.EqualFold(header, "Return-Path") {
-			eh.ReturnPath = l.extractEmailFromBrackets(value)
+			eh.ReturnPath = l.extractEmail(value)
 		}
 		if strings.EqualFold(header, "X-Autoreply") {
 			eh.XAutoreply = value
@@ -184,7 +177,7 @@ func (l *mailService) parseHeaders(headers map[string]string) EmailHeaders {
 			eh.ReplyTo = value
 		}
 		if strings.EqualFold(header, "Sender") {
-			eh.ReturnPath = l.extractEmailFromBrackets(value)
+			eh.Sender = l.extractEmail(value)
 		}
 	}
 
@@ -194,4 +187,60 @@ func (l *mailService) parseHeaders(headers map[string]string) EmailHeaders {
 func extractLines(input string) []string {
 	lines := strings.Fields(input)
 	return lines
+}
+
+func (l *mailService) extractEmail(s string) string {
+	// Use the more comprehensive approach for single email extraction
+	emails := l.extractEmails(s)
+	if len(emails) > 0 {
+		return emails[0]
+	}
+	return ""
+}
+
+func (l *mailService) extractEmails(input string) []string {
+	if input == "" {
+		return []string{}
+	}
+
+	// Compile regex to match both bracketed and raw emails
+	emailRegex := regexp.MustCompile(`<([^>]+)>|([^\s,<>]+@[^\s,<>]+)`)
+
+	// Split, clean and normalize input
+	emails := strings.Split(strings.ToLower(input), ",")
+
+	// Use a map for deduplication
+	uniqueEmails := make(map[string]struct{})
+
+	for _, email := range emails {
+		matches := emailRegex.FindAllStringSubmatch(strings.TrimSpace(email), -1)
+		for _, match := range matches {
+			// match[1] is from <...>, match[2] is raw email
+			var emailToValidate string
+			if match[1] != "" {
+				emailToValidate = match[1]
+			} else if match[2] != "" {
+				emailToValidate = match[2]
+			}
+
+			if emailToValidate != "" {
+				emailValidation := mailvalidate.ValidateEmailSyntax(emailToValidate)
+				if emailValidation.IsValid {
+					uniqueEmails[emailValidation.CleanEmail] = struct{}{}
+				}
+			}
+		}
+	}
+
+	if len(uniqueEmails) == 0 {
+		return []string{}
+	}
+
+	result := make([]string, 0, len(uniqueEmails))
+	for email := range uniqueEmails {
+		result = append(result, email)
+	}
+
+	sort.Strings(result) // Add deterministic ordering
+	return result
 }
