@@ -226,7 +226,7 @@ export const ContractDetailsModal = observer(
                   ...prev,
                   metadata: {
                     ...prev.metadata,
-                    id: e.metadata.id.replace('new', ''),
+                    id: e.metadata.id.replace('new', 'closed'),
                   },
                   serviceEnded: new Date(-1).toISOString(),
                   closed: true,
@@ -234,14 +234,20 @@ export const ContractDetailsModal = observer(
                 { mutate: false },
               );
             }
-          } else if (e.metadata.id.includes('new') && !e.parentId) {
+          } else if (
+            e.metadata.id.includes('new') &&
+            !itemStore.tempValue?.parentId?.length
+          ) {
             promises.push(
               contractLineItemsStore.createNewServiceLineItem(
                 itemStore?.tempValue,
                 contractId,
               ),
             );
-          } else if (e.metadata.id.includes('new') && !!e.parentId) {
+          } else if (
+            e.metadata.id.includes('new') &&
+            !!itemStore.tempValue?.parentId.length
+          ) {
             promises.push(
               contractLineItemsStore.createNewVersion(
                 itemStore?.tempValue,

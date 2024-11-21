@@ -106,9 +106,9 @@ export class ContractLineItemsStore implements GroupStore<ServiceLineItem> {
       runInAction(() => {
         this.root.contractLineItems.value.delete(tempId);
         this.root.ui.toastError(
-          `We couldn't create the '${payload.description}' line item`,
+          `We couldn't create new version of '${payload.description}' line item`,
 
-          'failed-to-create-service-line-item',
+          'failed-to-create-new-version-service-line-item',
         );
         this.error = (err as Error).message;
       });
