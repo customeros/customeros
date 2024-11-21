@@ -70,7 +70,7 @@ func (s *registrationService) CreateOrganizationAndContact(ctx context.Context, 
 				tracing.TraceErr(span, err)
 				return nil, nil, err
 			}
-			if organizationId == "nil" {
+			if organizationId == "" {
 				e := errors.New("organization id empty")
 				tracing.TraceErr(span, e)
 				return nil, nil, e
