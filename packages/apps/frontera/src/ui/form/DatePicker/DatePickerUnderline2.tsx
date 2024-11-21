@@ -48,7 +48,11 @@ export const DatePickerUnderline2 = ({
 
   return (
     <div ref={containerRef} className='flex flex-start items-center'>
-      <Popover open={isOpen} onOpenChange={(value) => setIsOpen(value)}>
+      <Popover
+        modal={true}
+        open={isOpen}
+        onOpenChange={(value) => setIsOpen(value)}
+      >
         <PopoverTrigger className='data-[state=open]:text-gray-700 data-[state=closed]:text-gray-500'>
           <span
             className={cn(
