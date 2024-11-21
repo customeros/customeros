@@ -7,11 +7,13 @@ package resolver
 import (
 	"context"
 	"fmt"
-	"strings"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	opentracing "github.com/opentracing/opentracing-go"
+	"strings"
 )
 
 // MailstackBuyDomainWithMailboxes is the resolver for the mailstack_BuyDomainWithMailboxes field.
@@ -20,8 +22,40 @@ func (r *mutationResolver) MailstackBuyDomainWithMailboxes(ctx context.Context, 
 }
 
 // MailstackSetUser is the resolver for the mailstack_SetUser field.
-func (r *mutationResolver) MailstackSetUser(ctx context.Context, mailbox string, userID string) (*model.Mailbox, error) {
-	panic(fmt.Errorf("not implemented: MailstackSetUser - mailstack_SetUser"))
+func (r *mutationResolver) MailstackSetUser(ctx context.Context, mailbox string, userID string) (*model.Result, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.MailstackSetUser", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogKV("request.mailbox", mailbox)
+	span.LogKV("request.userID", userID)
+
+	mailboxEntity, err := r.Services.Repositories.PostgresRepositories.TenantSettingsMailboxRepository.GetByMailbox(ctx, mailbox)
+	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		r.log.Errorf("Failed to get mailbox %s", mailbox)
+		graphql.AddErrorf(ctx, "Failed to get mailbox %s", mailbox)
+		return &model.Result{Result: false}, nil
+	}
+
+	if mailboxEntity == nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		r.log.Errorf("Mailbox %s not found", mailbox)
+		graphql.AddErrorf(ctx, "Mailbox %s not found", mailbox)
+		return &model.Result{Result: false}, nil
+	}
+
+	mailboxEntity.UserId = userID
+
+	err = r.Services.Repositories.PostgresRepositories.TenantSettingsMailboxRepository.Merge(ctx, mailboxEntity)
+
+	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		r.log.Errorf("Failed to merge mailbox %s", mailbox)
+		graphql.AddErrorf(ctx, "Failed to merge mailbox %s", mailbox)
+		return &model.Result{Result: false}, nil
+	}
+
+	return &model.Result{Result: true}, nil
 }
 
 // MailstackDomainPurchaseSuggestions is the resolver for the mailstack_DomainPurchaseSuggestions field.
@@ -40,21 +74,104 @@ func (r *queryResolver) MailstackDomainPurchaseSuggestions(ctx context.Context, 
 
 // MailstackDomains is the resolver for the mailstack_Domains field.
 func (r *queryResolver) MailstackDomains(ctx context.Context) ([]string, error) {
-	panic(fmt.Errorf("not implemented: MailstackDomains - mailstack_Domains"))
-	//query
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.MailstackDomains", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	domains, err := r.Services.Repositories.PostgresRepositories.MailStackDomainRepository.GetActiveDomains(ctx, tenant)
+	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		r.log.Errorf("Failed to get active domains for tenant %s", tenant)
+		graphql.AddErrorf(ctx, "Failed to get active domains for tenant %s", tenant)
+		return nil, nil
+	}
+
+	var domainNames []string
+	for _, domain := range domains {
+		domainNames = append(domainNames, domain.Domain)
+	}
+
+	return domainNames, nil
 }
 
 // MailstackCheckUnavailableDomains is the resolver for the mailstack_CheckUnavailableDomains field.
-func (r *queryResolver) MailstackCheckUnavailableDomains(ctx context.Context, domain []string) ([]string, error) {
-	panic(fmt.Errorf("not implemented: MailstackCheckUnavailableDomains - mailstack_CheckUnavailableDomains"))
+func (r *queryResolver) MailstackCheckUnavailableDomains(ctx context.Context, domains []string) ([]string, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.MailstackCheckUnavailableDomains", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogKV("request.domain", domains)
+
+	unaivalableDomains := []string{}
+	for _, domain := range domains {
+		isAvailable, isPremium, err := r.Services.NamecheapService.CheckDomainAvailability(ctx, domain)
+		if err != nil {
+			tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+			r.log.Errorf("Failed to check domain %s availability", domain)
+			graphql.AddErrorf(ctx, "Failed to check domain %s availability", domain)
+			return nil, nil
+		}
+
+		if !isAvailable || isPremium {
+			unaivalableDomains = append(unaivalableDomains, domain)
+		}
+	}
+
+	return unaivalableDomains, nil
 }
 
 // MailstackUniqueUsernames is the resolver for the mailstack_UniqueUsernames field.
 func (r *queryResolver) MailstackUniqueUsernames(ctx context.Context) ([]string, error) {
-	panic(fmt.Errorf("not implemented: MailstackUniqueUsernames - mailstack_UniqueUsernames"))
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.MailstackUniqueUsernames", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	usernames := []string{}
+
+	allMailboxes, err := r.Services.Repositories.PostgresRepositories.TenantSettingsMailboxRepository.GetAll(ctx)
+	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		r.log.Errorf("Failed to get all mailboxes")
+		graphql.AddErrorf(ctx, "Failed to get all mailboxes")
+		return nil, nil
+	}
+
+	for _, mailbox := range allMailboxes {
+		usernames = append(usernames, strings.Split(mailbox.MailboxUsername, "@")[0])
+	}
+
+	return utils.RemoveDuplicates(usernames), nil
 }
 
 // MailstackMailboxes is the resolver for the mailstack_Mailboxes field.
 func (r *queryResolver) MailstackMailboxes(ctx context.Context) ([]*model.Mailbox, error) {
-	panic(fmt.Errorf("not implemented: MailstackMailboxes - mailstack_Mailboxes"))
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.MailstackMailboxes", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	allMailboxes, err := r.Services.Repositories.PostgresRepositories.TenantSettingsMailboxRepository.GetAll(ctx)
+	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		r.log.Errorf("Failed to get all mailboxes")
+		graphql.AddErrorf(ctx, "Failed to get all mailboxes")
+		return nil, nil
+	}
+
+	response := []*model.Mailbox{}
+	for _, mailbox := range allMailboxes {
+		response = append(response, &model.Mailbox{
+			Domain:          mailbox.Domain,
+			Mailbox:         mailbox.MailboxUsername,
+			Created:         mailbox.CreatedAt,
+			UserID:          &mailbox.UserId,
+			RampUpCurrent:   mailbox.RampUpCurrent,
+			RampUpMax:       mailbox.RampUpMax,
+			RampUpRate:      mailbox.RampUpRate,
+			CurrentFlowIds:  []string{},
+			ScheduledEmails: 0,
+		})
+	}
+
+	return response, nil
 }

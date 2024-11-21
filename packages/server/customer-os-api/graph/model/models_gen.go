@@ -1617,9 +1617,11 @@ type Mailbox struct {
 	Domain          string    `json:"domain"`
 	Mailbox         string    `json:"mailbox"`
 	Created         time.Time `json:"created"`
+	RampUpRate      int       `json:"rampUpRate"`
+	RampUpMax       int       `json:"rampUpMax"`
+	RampUpCurrent   int       `json:"rampUpCurrent"`
 	UserID          *string   `json:"userId,omitempty"`
 	ScheduledEmails int64     `json:"scheduledEmails"`
-	DailyEmailLimit int64     `json:"dailyEmailLimit"`
 	CurrentFlowIds  []string  `json:"currentFlowIds,omitempty"`
 }
 
