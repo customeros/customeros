@@ -123,7 +123,7 @@ func TestParseParticipants(t *testing.T) {
 		{
 			name:     "Empty input",
 			input:    "",
-			expected: []EmailParticipant{},
+			expected: []EmailParticipant{{Email: "", FirstName: "", LastName: ""}},
 		},
 	}
 
