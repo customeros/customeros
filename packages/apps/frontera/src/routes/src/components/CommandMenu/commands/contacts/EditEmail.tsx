@@ -29,7 +29,9 @@ export const EditEmail = observer(() => {
 
   const handleSaveEmail = () => {
     if (selectedId !== null && !store.ui.focusRow) {
-      contact?.updateEmail(oldEmail ?? '', selectedId ?? 0);
+      contact?.updateEmail(oldEmail ?? '', selectedId ?? 0, '', {
+        onError: console.error,
+      });
     }
 
     if (selectedId === null) {

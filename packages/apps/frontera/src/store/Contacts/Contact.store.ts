@@ -155,28 +155,35 @@ export class ContactStore extends Syncable<Contact> {
   }
 
   async updateEmail(
-    previousEmail: string,
-    index?: number,
-    primary: boolean = false,
+    payload: {
+      index?: number;
+      primary: boolean;
+      previousEmail: string;
+    } = { previousEmail: '', index: 0, primary: false },
+    options?: { onError?: (error: string) => void },
   ) {
-    const email = this.value.emails?.[index ?? 0]?.email ?? '';
+    const email = this.value.emails?.[payload.index ?? 0]?.email ?? '';
 
     try {
       this.isLoading = true;
+
       await this.service.updateContactEmail({
         contactId: this.getId(),
         input: {
           email,
-          primary: primary,
+          primary: payload.primary,
         },
-        previousEmail,
+        previousEmail: payload.previousEmail,
       });
+
       runInAction(() => {
         this.isLoading = false;
       });
     } catch (e) {
       runInAction(() => {
         this.error = (e as Error).message;
+
+        if (options?.onError) options.onError(this.error);
       });
     } finally {
       this.invalidate();
@@ -397,54 +404,3 @@ export class ContactStore extends Syncable<Contact> {
     };
   }
 }
-
-const getDefaultValue = (): Contact => ({
-  id: crypto.randomUUID(),
-  createdAt: '',
-  customFields: [],
-  emails: [],
-  firstName: '',
-  jobRoles: [],
-  lastName: '',
-  locations: [],
-  phoneNumbers: [],
-  profilePhotoUrl: '',
-  latestOrganizationWithJobRole: {
-    jobRole: {} as JobRole,
-    organization: {} as Organization,
-  } as OrganizationWithJobRole,
-
-  organizations: {
-    content: [],
-    totalPages: 0,
-    totalElements: 0,
-    totalAvailable: 0,
-  },
-  flows: [],
-  socials: [],
-  timezone: '',
-  source: DataSource.Openline,
-  timelineEvents: [],
-  timelineEventsTotalCount: 0,
-  updatedAt: '',
-  appSource: DataSource.Openline,
-  description: '',
-  prefix: '',
-  name: '',
-  owner: null,
-  tags: [],
-  connectedUsers: [],
-  metadata: {
-    source: DataSource.Openline,
-    appSource: DataSource.Openline,
-    id: crypto.randomUUID(),
-    created: '',
-    lastUpdated: new Date().toISOString(),
-    sourceOfTruth: DataSource.Openline,
-  },
-  enrichDetails: {
-    enrichedAt: '',
-    failedAt: '',
-    requestedAt: '',
-  },
-});
