@@ -146,7 +146,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
       { property: ColumnViewType.ContactsPersona },
       (filter) => (row: ContactStore) => {
         if (!filter.active) return true;
-        const tags = row.value.tags?.map((l: Tag) => l.id);
+        const tags = row.value.tags?.map((l: Tag) => l.metadata.id);
 
         if (!tags)
           return (

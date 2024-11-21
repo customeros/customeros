@@ -13,7 +13,9 @@ afterAll(async () => {
   const tagIds = await tagService
     .getTags()
     .then((res) =>
-      res.tags.filter((tag) => tag.name.includes('IT_')).map((tag) => tag.id),
+      res.tags
+        .filter((tag) => tag.name.includes('IT_'))
+        .map((tag) => tag.metadata.id),
     );
 
   for (const tagId of tagIds) {

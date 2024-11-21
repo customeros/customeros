@@ -314,7 +314,9 @@ export class ContactStore extends Syncable<Contact> {
 
   async removeAllTagsFromContact() {
     const tags =
-      this.value?.tags?.map((tag) => this.removeTagFromContact(tag.id)) || [];
+      this.value?.tags?.map((tag) =>
+        this.removeTagFromContact(tag.metadata.id),
+      ) || [];
 
     try {
       await Promise.all(tags);

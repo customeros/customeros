@@ -379,7 +379,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
       { property: ColumnViewType.OrganizationsTags },
       (filter) => (row: OrganizationStore) => {
         if (!filter.active) return true;
-        const values = row.value.tags?.map((l: Tag) => l.id);
+        const values = row.value.tags?.map((l: Tag) => l.metadata.id);
 
         if (!values)
           return (
