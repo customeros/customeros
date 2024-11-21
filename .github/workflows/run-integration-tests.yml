@@ -34,11 +34,11 @@ jobs:
       - name: Run Vitest tests
         working-directory: ./packages/apps/frontera
         env:
-          VITE_TEST_API_URL: ${{ PROD_VITE_TEST_API_URL }}
-          VITE_TEST_API_KEY: ${{ PROD_VITE_TEST_API_KEY }}
-          VITE_TEST_USERNAME: ${{ PROD_VITE_TEST_USERNAME }}
-          VITE_REALTIME_WS_API_KEY: ${{ PROD_VITE_REALTIME_WS_API_KEY }}
-          VITE_REALTIME_WS_PATH: ${{ PROD_VITE_TEST_DUMMY_VITE_REALTIME_WS_PATH }}
+          VITE_TEST_API_URL: ${{ secrets.PROD_VITE_TEST_API_URL }}
+          VITE_TEST_API_KEY: ${{ secrets.PROD_VITE_TEST_API_KEY }}
+          VITE_TEST_USERNAME: ${{ secrets.PROD_VITE_TEST_USERNAME }}
+          VITE_REALTIME_WS_API_KEY: ${{ secrets.PROD_VITE_REALTIME_WS_API_KEY }}
+          VITE_REALTIME_WS_PATH: ${{ secrets.PROD_VITE_TEST_DUMMY_VITE_REALTIME_WS_PATH }}
         run: |
           set -o pipefail  # Ensure pipe status is propagated
           npm run test:integration 2>&1 | tee test-output.txt
@@ -126,7 +126,6 @@ jobs:
           TOTAL_TESTS: ${{ env.total_tests }}
           PASSED_TESTS: ${{ env.passed_tests }}
           FAILED_TESTS: ${{ env.failed_tests }}
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_FE_TESTS_WEBHOOK_URL }}
         run: |
           BUILD_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           SUMMARY="<$BUILD_URL|Vitest Test Results>:\n✅ $PASSED_TESTS passed, ❌ $FAILED_TESTS failed ($TOTAL_TESTS total)"
