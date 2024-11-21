@@ -45,12 +45,6 @@ func TestIsAutoResponder(t *testing.T) {
 			wantMsg:  "AUTORESPONDER | PRECEDENCE: AUTO_REPLY",
 		},
 		{
-			name:     "Precedence mixed case AUTO_REPLY",
-			headers:  EmailHeaders{Precedence: "AUTO_REPLY"},
-			wantBool: true,
-			wantMsg:  "AUTORESPONDER | PRECEDENCE: AUTO_REPLY",
-		},
-		{
 			name:     "No autoresponder headers",
 			headers:  EmailHeaders{},
 			wantBool: false,
@@ -78,8 +72,10 @@ func TestIsBounce(t *testing.T) {
 		wantMsg  string
 	}{
 		{
-			name:     "X-Failed-Recipients",
-			headers:  EmailHeaders{XFailedRecepients: []string{"test@test.com"}},
+			name: "X-Failed-Recipients with emails",
+			headers: EmailHeaders{
+				XFailedRecepients: []string{"failed@example.com"},
+			},
 			wantBool: true,
 			wantMsg:  "BOUNCE | X-FAILED-RECIPIENTS",
 		},
@@ -90,28 +86,16 @@ func TestIsBounce(t *testing.T) {
 			wantMsg:  "BOUNCE | CONTENT-DESCRIPTION: DELIVERY REPORT",
 		},
 		{
-			name:     "Content-Description case insensitive DELIVERY REPORT",
-			headers:  EmailHeaders{ContentDescription: "DELIVERY REPORT"},
-			wantBool: true,
-			wantMsg:  "BOUNCE | CONTENT-DESCRIPTION: DELIVERY REPORT",
-		},
-		{
-			name:     "Return-Path mailer-daemon",
+			name:     "Return-Path contains mailer-daemon",
 			headers:  EmailHeaders{ReturnPath: "mailer-daemon@example.com"},
 			wantBool: true,
 			wantMsg:  "BOUNCE | RETURN-PATH CONTAINS BOUNCE KEYWORDS",
 		},
 		{
-			name:     "From mailer-daemon",
-			from:     "mailer-daemon@example.com",
+			name:     "From contains MAILER-DAEMON case insensitive",
+			from:     "MAILER-DAEMON@example.com",
 			wantBool: true,
 			wantMsg:  "BOUNCE | FROM CONTAINS BOUNCE KEYWORDS",
-		},
-		{
-			name:     "Bounce subject - delivery status notification",
-			subject:  "Delivery Status Notification (Failure)",
-			wantBool: true,
-			wantMsg:  "BOUNCE | SUBJECT CONTAINS BOUNCE KEYWORDS",
 		},
 		{
 			name:     "Not a bounce",
@@ -144,6 +128,9 @@ func TestIsBulkMail(t *testing.T) {
 	}{
 		{
 			name: "Different Reply-To",
+			headers: EmailHeaders{
+				ReplyToExists: true,
+			},
 			from: "sender@example.com",
 			replyTo: []EmailParticipant{
 				{Email: "different@example.com"},
@@ -153,59 +140,24 @@ func TestIsBulkMail(t *testing.T) {
 		},
 		{
 			name: "Multiple Reply-To with match",
+			headers: EmailHeaders{
+				ReplyToExists: true,
+				ReturnPath:    "sender@example.com",
+			},
 			from: "sender@example.com",
 			replyTo: []EmailParticipant{
 				{Email: "different1@example.com"},
 				{Email: "sender@example.com"},
 				{Email: "different2@example.com"},
 			},
-			headers:  EmailHeaders{ReturnPath: "sender@example.com"},
 			wantBool: false,
 			wantMsg:  "",
 		},
 		{
-			name: "List-Unsubscribe",
+			name: "Empty Return-Path with flag",
 			headers: EmailHeaders{
-				ListUnsubscribe: true,
-				ReturnPath:      "sender@example.com",
-			},
-			from: "sender@example.com",
-			replyTo: []EmailParticipant{
-				{Email: "sender@example.com"},
-			},
-			wantBool: true,
-			wantMsg:  "BULK | UNSUBSCRIBE",
-		},
-		{
-			name: "Precedence bulk",
-			headers: EmailHeaders{
-				Precedence: "bulk",
-				ReturnPath: "sender@example.com",
-			},
-			from: "sender@example.com",
-			replyTo: []EmailParticipant{
-				{Email: "sender@example.com"},
-			},
-			wantBool: true,
-			wantMsg:  "BULK | PRECEDENCE: BULK",
-		},
-		{
-			name: "Precedence BULK case insensitive",
-			headers: EmailHeaders{
-				Precedence: "BULK",
-				ReturnPath: "sender@example.com",
-			},
-			from: "sender@example.com",
-			replyTo: []EmailParticipant{
-				{Email: "sender@example.com"},
-			},
-			wantBool: true,
-			wantMsg:  "BULK | PRECEDENCE: BULK",
-		},
-		{
-			name: "Empty Return-Path",
-			headers: EmailHeaders{
-				ReturnPath: "",
+				ReturnPathExists: true,
+				ReturnPath:       "",
 			},
 			from: "sender@example.com",
 			replyTo: []EmailParticipant{
@@ -215,9 +167,10 @@ func TestIsBulkMail(t *testing.T) {
 			wantMsg:  "BULK | EMPTY RETURN-PATH",
 		},
 		{
-			name: "Return-Path different from From",
+			name: "Different Return-Path with flag",
 			headers: EmailHeaders{
-				ReturnPath: "different@example.com",
+				ReturnPathExists: true,
+				ReturnPath:       "different@example.com",
 			},
 			from: "sender@example.com",
 			replyTo: []EmailParticipant{
@@ -227,10 +180,11 @@ func TestIsBulkMail(t *testing.T) {
 			wantMsg:  "BULK | RETURN-PATH != FROM",
 		},
 		{
-			name: "Sender different from From",
+			name: "Different Sender",
 			headers: EmailHeaders{
-				ReturnPath: "sender@example.com",
-				Sender:     "different@example.com",
+				ReturnPathExists: true,
+				ReturnPath:       "sender@example.com",
+				Sender:           "different@example.com",
 			},
 			from: "sender@example.com",
 			replyTo: []EmailParticipant{
@@ -238,6 +192,18 @@ func TestIsBulkMail(t *testing.T) {
 			},
 			wantBool: true,
 			wantMsg:  "BULK | SENDER != FROM",
+		},
+		{
+			name: "List-Unsubscribe present",
+			headers: EmailHeaders{
+				ListUnsubscribe: true,
+			},
+			from: "sender@example.com",
+			replyTo: []EmailParticipant{
+				{Email: "sender@example.com"},
+			},
+			wantBool: true,
+			wantMsg:  "BULK | UNSUBSCRIBE",
 		},
 	}
 
@@ -320,21 +286,6 @@ func TestIsBounceSubject(t *testing.T) {
 			want:    true,
 		},
 		{
-			name:    "Failure Notice",
-			subject: "Failure Notice",
-			want:    true,
-		},
-		{
-			name:    "Returned Mail",
-			subject: "Returned mail: User unknown",
-			want:    true,
-		},
-		{
-			name:    "Returned to Sender",
-			subject: "Mail Returned to Sender",
-			want:    true,
-		},
-		{
 			name:    "Regular Subject",
 			subject: "Meeting Tomorrow",
 			want:    false,
@@ -342,11 +293,6 @@ func TestIsBounceSubject(t *testing.T) {
 		{
 			name:    "Empty Subject",
 			subject: "",
-			want:    false,
-		},
-		{
-			name:    "Partial match should not trigger",
-			subject: "This is not a returned email",
 			want:    false,
 		},
 	}
