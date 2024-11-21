@@ -1,13 +1,13 @@
 package service
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
-	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
@@ -110,13 +110,10 @@ func (s *workflowService) executeOrganizationAction(ctx context.Context, tenant 
 
 	switch workflowType {
 	case postgresentity.WorkflowTypeIdealCustomerProfile:
-		_, err := s.services.OrganizationService.Save(ctx, nil, tenant, &organizationId, &neo4jrepository.OrganizationSaveFields{
-			SourceFields: neo4jmodel.SourceFields{
-				AppSource: string(workflowType),
-				Source:    neo4jentity.DataSourceOpenline.String(),
-			},
-			Stage:       neo4jenum.Target,
-			UpdateStage: true,
+		_, err := s.services.OrganizationService.Save(ctx, nil, &organizationId, data_fields.OrganizationFields{
+			AppSource: utils.StringPtr(string(workflowType)),
+			Source:    utils.StringPtr(neo4jentity.DataSourceOpenline.String()),
+			Stage:     utils.ToPtr(neo4jenum.Target),
 		})
 		if err != nil {
 			tracing.TraceErr(span, err)

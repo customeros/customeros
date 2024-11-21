@@ -3,6 +3,7 @@ package repository
 import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/constants"
@@ -106,77 +107,8 @@ type OrganizationUpdateFields struct {
 	UpdateIcpFit             bool                               `json:"updateIcpFit"`
 }
 
-type OrganizationSaveFields struct {
-	SourceFields model.SourceFields `json:"sourceFields"`
-
-	//not stored directly in node
-	Domains        []string             `json:"domains"`
-	ExternalSystem model.ExternalSystem `json:"externalSystem"`
-
-	OwnerId       string `json:"ownerId"`
-	UpdateOwnerId bool   `json:"updateOwnerId"`
-
-	Hide               bool                               `json:"hide"`
-	Name               string                             `json:"name"`
-	Description        string                             `json:"description"`
-	Website            string                             `json:"website"`
-	Industry           string                             `json:"industry"`
-	SubIndustry        string                             `json:"subIndustry"`
-	IndustryGroup      string                             `json:"industryGroup"`
-	TargetAudience     string                             `json:"targetAudience"`
-	ValueProposition   string                             `json:"valueProposition"`
-	IsPublic           bool                               `json:"isPublic"`
-	Employees          int64                              `json:"employees"`
-	Market             string                             `json:"market"`
-	LastFundingRound   string                             `json:"lastFundingRound"`
-	LastFundingAmount  string                             `json:"lastFundingAmount"`
-	CustomerOsId       string                             `json:"customerOsId"`
-	ReferenceId        string                             `json:"referenceId"`
-	Note               string                             `json:"note"`
-	LogoUrl            string                             `json:"logoUrl"`
-	IconUrl            string                             `json:"iconUrl"`
-	Headquarters       string                             `json:"headquarters"`
-	YearFounded        int64                              `json:"yearFounded"`
-	EmployeeGrowthRate string                             `json:"employeeGrowthRate"`
-	SlackChannelId     string                             `json:"slackChannelId"`
-	EnrichDomain       string                             `json:"enrichDomain"`
-	EnrichSource       string                             `json:"enrichSource"`
-	LeadSource         string                             `json:"leadSource"`
-	Relationship       neo4jenum.OrganizationRelationship `json:"relationship"`
-	Stage              neo4jenum.OrganizationStage        `json:"stage"`
-	IcpFit             bool                               `json:"icpFit"`
-
-	UpdateHide               bool `json:"updateHide"`
-	UpdateName               bool `json:"updateName"`
-	UpdateDescription        bool `json:"updateDescription"`
-	UpdateWebsite            bool `json:"updateWebsite"`
-	UpdateIndustry           bool `json:"updateIndustry"`
-	UpdateSubIndustry        bool `json:"updateSubIndustry"`
-	UpdateIndustryGroup      bool `json:"updateIndustryGroup"`
-	UpdateTargetAudience     bool `json:"updateTargetAudience"`
-	UpdateValueProposition   bool `json:"updateValueProposition"`
-	UpdateLastFundingRound   bool `json:"updateLastFundingRound"`
-	UpdateLastFundingAmount  bool `json:"updateLastFundingAmount"`
-	UpdateCustomerOsId       bool `json:"updateCustomerOsId"`
-	UpdateReferenceId        bool `json:"updateReferenceId"`
-	UpdateNote               bool `json:"updateNote"`
-	UpdateIsPublic           bool `json:"updateIsPublic"`
-	UpdateEmployees          bool `json:"updateEmployees"`
-	UpdateMarket             bool `json:"updateMarket"`
-	UpdateYearFounded        bool `json:"updateYearFounded"`
-	UpdateHeadquarters       bool `json:"updateHeadquarters"`
-	UpdateLogoUrl            bool `json:"updateLogoUrl"`
-	UpdateIconUrl            bool `json:"updateIconUrl"`
-	UpdateEmployeeGrowthRate bool `json:"updateEmployeeGrowthRate"`
-	UpdateSlackChannelId     bool `json:"updateSlackChannelId"`
-	UpdateLeadSource         bool `json:"updateLeadSource"`
-	UpdateRelationship       bool `json:"updateRelationship"`
-	UpdateStage              bool `json:"updateStage"`
-	UpdateIcpFit             bool `json:"updateIcpFit"`
-}
-
 type OrganizationWriteRepository interface {
-	Save(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId string, data OrganizationSaveFields) error
+	Save(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId string, data data_fields.OrganizationFields) error
 
 	//Deprecated
 	ReserveOrganizationId(ctx context.Context, tenant, organizationId string) (string, error)
@@ -532,7 +464,7 @@ func (r *organizationWriteRepository) UpdateOrganization(ctx context.Context, te
 	return err
 }
 
-func (r *organizationWriteRepository) Save(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId string, data OrganizationSaveFields) error {
+func (r *organizationWriteRepository) Save(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId string, data data_fields.OrganizationFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.Save")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
@@ -556,8 +488,8 @@ func (r *organizationWriteRepository) Save(ctx context.Context, tx *neo4j.Manage
 		paramsCreate := map[string]any{
 			"tenant":           tenant,
 			"organizationId":   organizationId,
-			"source":           data.SourceFields.Source,
-			"appSource":        data.SourceFields.AppSource,
+			"source":           utils.IfNotNilString(data.Source),
+			"appSource":        utils.IfNotNilString(data.AppSource),
 			"onboardingStatus": string(neo4jenum.OnboardingStatusNotApplicable),
 		}
 
@@ -578,120 +510,120 @@ func (r *organizationWriteRepository) Save(ctx context.Context, tx *neo4j.Manage
 
 		cypherUpdate := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization:Organization_%s {id:$organizationId}) SET `, tenant)
 
-		if data.UpdateName {
+		if data.Name != nil {
 			cypherUpdate += `org.name = $name,`
-			paramsUpdate["name"] = data.Name
+			paramsUpdate["name"] = *data.Name
 		}
-		if data.UpdateDescription {
+		if data.Description != nil {
 			cypherUpdate += `org.description = $description,`
-			paramsUpdate["description"] = data.Description
+			paramsUpdate["description"] = *data.Description
 		}
-		if data.UpdateHide {
+		if data.Hide != nil {
 			cypherUpdate += `org.hide = $hide,`
 			cypherUpdate += `org.hiddenAt = CASE WHEN $hide = true THEN datetime() ELSE null END,`
-			paramsUpdate["hide"] = data.Hide
+			paramsUpdate["hide"] = *data.Hide
 		}
-		if data.UpdateWebsite {
+		if data.Website != nil {
 			cypherUpdate += `org.website = $website,`
-			paramsUpdate["website"] = data.Website
+			paramsUpdate["website"] = *data.Website
 		}
-		if data.UpdateIndustry {
+		if data.Industry != nil {
 			cypherUpdate += `org.industry = $industry,`
-			paramsUpdate["industry"] = data.Industry
+			paramsUpdate["industry"] = *data.Industry
 		}
-		if data.UpdateSubIndustry {
+		if data.SubIndustry != nil {
 			cypherUpdate += `org.subIndustry = $subIndustry,`
-			paramsUpdate["subIndustry"] = data.SubIndustry
+			paramsUpdate["subIndustry"] = *data.SubIndustry
 		}
-		if data.UpdateIndustryGroup {
+		if data.IndustryGroup != nil {
 			cypherUpdate += `org.industryGroup = $industryGroup,`
-			paramsUpdate["industryGroup"] = data.IndustryGroup
+			paramsUpdate["industryGroup"] = *data.IndustryGroup
 		}
-		if data.UpdateTargetAudience {
+		if data.TargetAudience != nil {
 			cypherUpdate += `org.targetAudience = $targetAudience,`
-			paramsUpdate["targetAudience"] = data.TargetAudience
+			paramsUpdate["targetAudience"] = *data.TargetAudience
 		}
-		if data.UpdateValueProposition {
+		if data.ValueProposition != nil {
 			cypherUpdate += `org.valueProposition = $valueProposition,`
 			paramsUpdate["valueProposition"] = data.ValueProposition
 		}
-		if data.UpdateLastFundingRound {
+		if data.LastFundingRound != nil {
 			cypherUpdate += `org.lastFundingRound = $lastFundingRound,`
-			paramsUpdate["lastFundingRound"] = data.LastFundingRound
+			paramsUpdate["lastFundingRound"] = *data.LastFundingRound
 		}
-		if data.UpdateLastFundingAmount {
+		if data.LastFundingAmount != nil {
 			cypherUpdate += `org.lastFundingAmount = $lastFundingAmount,`
-			paramsUpdate["lastFundingAmount"] = data.LastFundingAmount
+			paramsUpdate["lastFundingAmount"] = *data.LastFundingAmount
 		}
-		if data.UpdateCustomerOsId {
+		if data.CustomerOsId != nil {
 			cypherUpdate += `org.customerOsId = $customerOsId,`
-			paramsUpdate["customerOsId"] = data.CustomerOsId
+			paramsUpdate["customerOsId"] = *data.CustomerOsId
 		}
-		if data.UpdateReferenceId {
+		if data.ReferenceId != nil {
 			cypherUpdate += `org.referenceId = $referenceId,`
-			paramsUpdate["referenceId"] = data.ReferenceId
+			paramsUpdate["referenceId"] = *data.ReferenceId
 		}
-		if data.UpdateNote {
+		if data.Note != nil {
 			cypherUpdate += `org.note = $note,`
-			paramsUpdate["note"] = data.Note
+			paramsUpdate["note"] = *data.Note
 		}
-		if data.UpdateIsPublic {
+		if data.IsPublic != nil {
 			cypherUpdate += `org.isPublic = $isPublic,`
-			paramsUpdate["isPublic"] = data.IsPublic
+			paramsUpdate["isPublic"] = *data.IsPublic
 		}
-		if data.UpdateEmployees {
+		if data.Employees != nil {
 			cypherUpdate += `org.employees = $employees,`
-			paramsUpdate["employees"] = data.Employees
+			paramsUpdate["employees"] = *data.Employees
 		}
-		if data.UpdateMarket {
+		if data.Market != nil {
 			cypherUpdate += `org.market = $market,`
-			paramsUpdate["market"] = data.Market
+			paramsUpdate["market"] = *data.Market
 		}
-		if data.UpdateYearFounded {
+		if data.YearFounded != nil {
 			cypherUpdate += `org.yearFounded = $yearFounded,`
-			paramsUpdate["yearFounded"] = data.YearFounded
+			paramsUpdate["yearFounded"] = *data.YearFounded
 		}
-		if data.UpdateHeadquarters {
+		if data.Headquarters != nil {
 			cypherUpdate += `org.headquarters = $headquarters,`
-			paramsUpdate["headquarters"] = data.Headquarters
+			paramsUpdate["headquarters"] = *data.Headquarters
 		}
-		if data.UpdateLogoUrl {
+		if data.LogoUrl != nil {
 			cypherUpdate += `org.logoUrl = $logoUrl,`
-			paramsUpdate["logoUrl"] = data.LogoUrl
+			paramsUpdate["logoUrl"] = *data.LogoUrl
 		}
-		if data.UpdateIconUrl {
+		if data.IconUrl != nil {
 			cypherUpdate += `org.iconUrl = $iconUrl,`
-			paramsUpdate["iconUrl"] = data.IconUrl
+			paramsUpdate["iconUrl"] = *data.IconUrl
 		}
-		if data.UpdateEmployeeGrowthRate {
+		if data.EmployeeGrowthRate != nil {
 			cypherUpdate += `org.employeeGrowthRate = $employeeGrowthRate,`
-			paramsUpdate["employeeGrowthRate"] = data.EmployeeGrowthRate
+			paramsUpdate["employeeGrowthRate"] = *data.EmployeeGrowthRate
 		}
-		if data.UpdateSlackChannelId {
+		if data.SlackChannelId != nil {
 			cypherUpdate += `org.slackChannelId = $slackChannelId,`
-			paramsUpdate["slackChannelId"] = data.SlackChannelId
+			paramsUpdate["slackChannelId"] = *data.SlackChannelId
 		}
-		if data.UpdateRelationship {
+		if data.Relationship != nil {
 			cypherUpdate += `org.relationship = $relationship,`
 			paramsUpdate["relationship"] = data.Relationship.String()
 		}
-		if data.UpdateStage {
+		if data.Stage != nil {
 			cypherUpdate += `org.stage = $stage,`
 			cypherUpdate += `org.stageUpdatedAt = CASE WHEN (org.stage is null OR org.stage = '') AND (org.stage is null OR org.stage <> $stage) THEN $now ELSE org.stageUpdatedAt END,`
 			paramsUpdate["stage"] = data.Stage.String()
 		}
-		if data.UpdateLeadSource {
+		if data.LeadSource != nil {
 			cypherUpdate += `org.leadSource = $leadSource,`
-			paramsUpdate["leadSource"] = data.LeadSource
+			paramsUpdate["leadSource"] = *data.LeadSource
 		}
-		if data.UpdateIcpFit {
+		if data.IcpFit != nil {
 			cypherUpdate += `org.icpFit = $icpFit,`
-			paramsUpdate["icpFit"] = data.IcpFit
+			paramsUpdate["icpFit"] = *data.IcpFit
 		}
-		if data.EnrichDomain != "" && data.EnrichSource != "" {
+		if utils.IfNotNilString(data.EnrichDomain) != "" && utils.IfNotNilString(data.EnrichSource) != "" {
 			cypherUpdate += `org.enrichDomain = $enrichDomain, org.enrichSource = $enrichSource, org.enrichedAt = $enrichedAt,`
-			paramsUpdate["enrichDomain"] = data.EnrichDomain
-			paramsUpdate["enrichSource"] = data.EnrichSource
+			paramsUpdate["enrichDomain"] = *data.EnrichDomain
+			paramsUpdate["enrichSource"] = *data.EnrichSource
 			paramsUpdate["enrichedAt"] = utils.Now()
 		}
 		cypherUpdate += `org.updatedAt = datetime()`
