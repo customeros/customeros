@@ -36,16 +36,6 @@ func NewLinkLocationCommand(organizationId, tenant, userId, locationId string) *
 	}
 }
 
-type ShowOrganizationCommand struct {
-	eventstore.BaseCommand
-}
-
-func NewShowOrganizationCommand(tenant, orgId, userId string) *ShowOrganizationCommand {
-	return &ShowOrganizationCommand{
-		BaseCommand: eventstore.NewBaseCommand(orgId, tenant, userId),
-	}
-}
-
 type UpsertCustomFieldCommand struct {
 	eventstore.BaseCommand
 	Source          common.Source

@@ -219,6 +219,7 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		logentryevents.LogEntryUpdateV1,
 		orgevents.OrganizationCreateV1,
 		orgevents.OrganizationUpdateV1,
+		orgevents.OrganizationShowV1,
 		contractevent.ContractUpdateV1:
 
 		return nil
@@ -270,9 +271,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return nil
 	case orgevents.OrganizationRemoveSocialV1:
 		_ = s.organizationEventHandler.OnSocialRemovedFromOrganization(ctx, evt)
-		return nil
-	case orgevents.OrganizationShowV1:
-		_ = s.organizationEventHandler.OnOrganizationShow(ctx, evt)
 		return nil
 	case orgevents.OrganizationRefreshArrV1:
 		_ = s.organizationEventHandler.OnRefreshArr(ctx, evt)

@@ -260,7 +260,6 @@ service organizationGrpcService {
   rpc LinkLocationToOrganization(LinkLocationToOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc UnlinkDomainFromOrganization(UnLinkDomainFromOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc UpsertCustomFieldToOrganization(CustomFieldForOrganizationGrpcRequest) returns (CustomFieldIdGrpcResponse);
-  rpc ShowOrganization(OrganizationIdGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc RefreshRenewalSummary(RefreshRenewalSummaryGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc RefreshDerivedData(RefreshDerivedDataGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc RefreshArr(OrganizationIdGrpcRequest) returns (OrganizationIdGrpcResponse);
