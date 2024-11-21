@@ -309,7 +309,7 @@
         },
         {
           "name": "Duplicate tags",
-          "query": "MATCH (t:Tenant)<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag) with t.name as tenant, tag.name as tag_name, count(tag) as size_tags where size_tags > 1 return count(tag_name) as cnt"
+          "query": "MATCH (t:Tenant)<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag) WITH t, tag.name as tag_name, tag.entityType as entity_type, count(tag) as size_tags where size_tags > 1 return count(tag_name)"
         },
         {
           "name": "Tags without entity type",
@@ -317,7 +317,7 @@
         },
         {
           "name": "Tags linked with wrong entities",
-          "query": "CALL{MATCH (tag:Tag {entityType:'ISSUE'})<-[:TAGGED]-(n) WHERE not n:Issue RETURN count(tag) as cnt UNION ALL MATCH (tag:Tag {entityType:'ORGANIZATION'})<-[:TAGGED]-(n) WHERE not n:Organization RETURN count(tag) as cnt UNION ALL MATCH (tag:Tag {entityType:'CONTACT'})<-[:TAGGED]-(n) WHERE not n:Contact RETURN count(tag) as cnt UNION ALL MATCH (tag:Tag {entityType:'LOG_ENTRY'})<-[:TAGGED]-(n) WHERE not n:LogEntry RETURN count(tag) as cnt} RETURN sum(cnt)"
+          "query": "CALL{MATCH (tag:Tag {entityType:'ISSUE'})<-[:TAGGED]-(n) WHERE not n:Issue RETURN count(tag) as cnt UNION ALL MATCH (tag:Tag {entityType:'ORGANIZATION'})<-[:TAGGED]-(n) WHERE NOT n:Organization AND NOT n:MergedOrganization RETURN count(tag) as cnt UNION ALL MATCH (tag:Tag {entityType:'CONTACT'})<-[:TAGGED]-(n) WHERE NOT n:Contact AND NOT n:MergedContact RETURN count(tag) as cnt UNION ALL MATCH (tag:Tag {entityType:'LOG_ENTRY'})<-[:TAGGED]-(n) WHERE not n:LogEntry RETURN count(tag) as cnt} RETURN sum(cnt)"
         }
       ]
     },
