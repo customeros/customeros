@@ -154,6 +154,40 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 			}
 		}
 
+		// Dedup organization by linked in url
+		if utils.IfNotNilString(input.LinkedInUrl) != "" {
+			linkedInUrl := utils.IfNotNilString(input.LinkedInUrl)
+			if (neo4jentity.SocialEntity{Url: linkedInUrl}).IsLinkedin() {
+				linkedInAlreadyUsed, existingOrganizationId, err := s.services.ContactService.CheckContactExistsWithLinkedIn(ctx, linkedInUrl, "", "")
+				if err != nil {
+					tracing.TraceErr(span, errors.Wrap(err, "unable to check organization exists with linkedIn"))
+					return "", err
+				}
+				if linkedInAlreadyUsed {
+					organizationEntity, err := s.GetById(ctx, tenant, existingOrganizationId)
+					if err != nil {
+						tracing.TraceErr(span, errors.Wrap(err, "unable to get organization by id"))
+						return "", err
+					}
+					if organizationEntity.Hide {
+						err = s.Show(ctx, tx, tenant, existingOrganizationId)
+						if err != nil {
+							tracing.TraceErr(span, errors.Wrap(err, "error on showing organization"))
+							return "", err
+						}
+					} else {
+						// just update organization' updatedAt
+						err = s.services.Neo4jRepositories.CommonWriteRepository.TouchEntity(ctx, tenant, model.NodeLabelOrganization, existingOrganizationId)
+						if err != nil {
+							tracing.TraceErr(span, errors.Wrap(err, "error on updating organization updatedAt"))
+						}
+						utils.EventCompleted(ctx, tenant, model.ORGANIZATION.String(), organizationId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
+					}
+					return existingOrganizationId, nil
+				}
+			}
+		}
+
 		generatedId, err := s.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelOrganization)
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -324,35 +358,64 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 		}
 	}
 
-	// select primary domain from new domains
-	primaryDomain := primaryDomainFromWebsite
-	if primaryDomain == "" && len(newDomains) > 0 {
-		newDomains = utils.RemoveEmpties(newDomains)
-		newDomains = utils.RemoveDuplicates(newDomains)
-		for _, domain := range newDomains {
-			domainEntity, err := s.services.DomainService.GetDomain(ctx, domain)
+	// if linked in provided, merge social with organization
+	if createFlow && utils.IfNotNilString(input.LinkedInUrl) != "" {
+		linkedInUrl := utils.IfNotNilString(input.LinkedInUrl)
+		if (neo4jentity.SocialEntity{Url: linkedInUrl}).IsLinkedin() {
+			_, err := s.services.SocialService.AddSocialToEntity(ctx,
+				LinkWith{
+					Id:   organizationId,
+					Type: model.ORGANIZATION,
+				},
+				neo4jentity.SocialEntity{
+					Url:       linkedInUrl,
+					Source:    neo4jentity.DecodeDataSource(utils.IfNotNilString(input.Source)),
+					AppSource: utils.IfNotNilString(input.AppSource),
+				})
 			if err != nil {
-				tracing.TraceErr(span, err)
-			} else if domainEntity != nil && domainEntity.IsPrimary != nil && *domainEntity.IsPrimary {
-				primaryDomain = domain
-				break
+				tracing.TraceErr(span, errors.Wrap(err, "failed to merge social with organization"))
 			}
 		}
 	}
 
-	if primaryDomain != "" {
-		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-			return s.services.GrpcClients.OrganizationClient.EnrichOrganization(ctx, &organizationpb.EnrichOrganizationGrpcRequest{
-				Tenant:         tenant,
-				OrganizationId: organizationId,
-				LoggedInUserId: common.GetUserIdFromContext(ctx),
-				AppSource:      common.GetAppSourceFromContext(ctx),
-				Url:            primaryDomain,
+	latestOrganizationEntity, err := s.GetById(ctx, tenant, organizationId)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "unable to get organization by id"))
+		return organizationId, err
+	}
+
+	// request enrich organization by primary domain if not enriched
+	if latestOrganizationEntity.EnrichDetails.EnrichedAt == nil {
+		// select primary domain from new domains
+		primaryDomain := primaryDomainFromWebsite
+		if primaryDomain == "" && len(newDomains) > 0 {
+			newDomains = utils.RemoveEmpties(newDomains)
+			newDomains = utils.RemoveDuplicates(newDomains)
+			for _, domain := range newDomains {
+				domainEntity, err := s.services.DomainService.GetDomain(ctx, domain)
+				if err != nil {
+					tracing.TraceErr(span, err)
+				} else if domainEntity != nil && domainEntity.IsPrimary != nil && *domainEntity.IsPrimary {
+					primaryDomain = domain
+					break
+				}
+			}
+		}
+		// invoke enrich organization by domain
+		if primaryDomain != "" {
+			ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+			_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+				return s.services.GrpcClients.OrganizationClient.EnrichOrganization(ctx, &organizationpb.EnrichOrganizationGrpcRequest{
+					Tenant:         tenant,
+					OrganizationId: organizationId,
+					LoggedInUserId: common.GetUserIdFromContext(ctx),
+					AppSource:      common.GetAppSourceFromContext(ctx),
+					Url:            primaryDomain,
+				})
 			})
-		})
-		if err != nil {
-			tracing.TraceErr(span, err)
+			if err != nil {
+				tracing.TraceErr(span, err)
+			}
 		}
 	}
 

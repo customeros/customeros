@@ -139,7 +139,7 @@ func (r *contactWriteRepository) ResetEnrichAttempts(ctx context.Context, tenant
 	tracing.TagEntity(span, contactId)
 
 	cypher := `MATCH (t:Tenant {name: $tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id: $contactId})
-	WHERE c.enrichedAt IS NOT NULL
+	WHERE c.enrichedAt IS NULL
 	REMOVE c.techEnrichAttempts, c.techEnrichRequestedAt`
 	params := map[string]any{
 		"tenant":    tenant,
