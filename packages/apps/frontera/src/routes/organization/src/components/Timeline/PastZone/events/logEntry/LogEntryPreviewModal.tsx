@@ -4,12 +4,12 @@ import { useSearchParams } from 'react-router-dom';
 import copy from 'copy-to-clipboard';
 import noteImg from '@assets/images/note-img-preview.png';
 
-import { Tag, User } from '@graphql/types';
 import { Link03 } from '@ui/media/icons/Link03';
 import { XClose } from '@ui/media/icons/XClose';
 import { Editor } from '@ui/form/Editor/Editor';
 import { useStore } from '@shared/hooks/useStore';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
+import { Tag, User, EntityType } from '@graphql/types';
 import { IconButton } from '@ui/form/IconButton/IconButton';
 import { LogEntryWithAliases } from '@organization/components/Timeline/types';
 import { HtmlContentRenderer } from '@ui/presentation/HtmlContentRenderer/HtmlContentRenderer';
@@ -48,11 +48,14 @@ export const LogEntryPreviewModal = ({
   const logEntry = store.timelineEvents.logEntries.value.get(logEntryId);
 
   const hashtags = store.tags
-    .toArray()
-    .map((t) => ({ value: t.value.id, label: t.value.name }))
+    .getByEntityType(EntityType.LogEntry)
+    .map((t) => ({
+      label: t.value.name,
+      value: t.value.metadata.id,
+    }))
     .filter((t) =>
       hashtagsQuery
-        ? t.label.toLowerCase().includes(hashtagsQuery?.toLowerCase())
+        ? t.label.toLowerCase().includes(hashtagsQuery.toLowerCase())
         : true,
     );
 

@@ -17,12 +17,9 @@ import { Tag, EntityType } from '@shared/types/__generated__/graphql.types';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
 
 const entityTypes = {
-  [EntityType.Organization]: { label: 'organizations' },
-  [EntityType.Contact]: { label: 'contacts' },
-  [EntityType.LogEntry]: { label: 'log entries' },
-  [EntityType.Opportunity]: { label: 'opportunities' },
-  [EntityType.Contract]: { label: 'contracts' },
-  [EntityType.Issue]: { label: 'issues' },
+  [EntityType.Organization]: { label: 'Organization' },
+  [EntityType.Contact]: { label: 'Contact' },
+  [EntityType.LogEntry]: { label: 'Log entry' },
 };
 export const TagsManager = observer(() => {
   const store = useStore();
@@ -121,21 +118,22 @@ export const TagsManager = observer(() => {
     return arr;
   });
 
-  const organizationTags = filteredTags.filter((tag) => {
-    return tag.value.entityType === EntityType.Organization;
-  });
+  const filteredTagsByType = (entityType: EntityType) => {
+    const allTags = store.tags.getByEntityType(entityType);
 
-  const contactTags = filteredTags.filter((tag) => {
-    return tag.value.entityType === EntityType.Contact;
-  });
+    if (searchTerm) {
+      return allTags.filter((tag) =>
+        tag.value.name.toLowerCase().includes(searchTerm),
+      );
+    }
 
-  const logEntryTags = filteredTags.filter((tag) => {
-    return tag.value.entityType === EntityType.LogEntry;
-  });
+    return allTags;
+  };
 
   const deleteTagDescription = `Deleting this tag will remove it from all ${
     deletingTag?.entityType
-      ? entityTypes[deletingTag.entityType].label
+      ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (entityTypes as any)[deletingTag.entityType].label
       : entityTypes[EntityType.Organization].label
   } where it’s currently used.`;
 
@@ -163,7 +161,7 @@ export const TagsManager = observer(() => {
       <div className='mb-6'>
         <div className='flex justify-between mb-2'>
           <div className='flex gap-2'>
-            <p className='text-sm font-medium text-gray-700 '>{title}</p>
+            <p className='text-sm font-medium text-gray-700 '>{`${title} tags`}</p>
             {tags.length > 0 && (
               <IconButton
                 size='xxs'
@@ -195,7 +193,7 @@ export const TagsManager = observer(() => {
               value={newTag}
               variant='unstyled'
               placeholder='Enter new tag name...'
-              className='pl-6 placeholder:text-sm text-sm'
+              className='pl-6 placeholder:text-sm text-sm bg-white'
               onChange={(e) => {
                 setNewTag(e.target.value);
               }}
@@ -203,6 +201,7 @@ export const TagsManager = observer(() => {
                 if (e.key === 'Enter') {
                   handleNewTagSubmit(entityType);
                 }
+                e.stopPropagation();
               }}
               onBlur={() => {
                 if (newTag) {
@@ -218,14 +217,14 @@ export const TagsManager = observer(() => {
         {!isCollapsed && (
           <>
             {tags.length === 0 ? (
-              <p className='text-sm text-gray-500 ml-6'>No tags yet</p>
+              <p className='text-sm text-gray-500'>No tags in sight</p>
             ) : (
               tags.map((tag) => (
                 <div
                   key={tag.value.metadata.id}
-                  className='py-1 max-h-[32px] mb-1 border rounded-md border-gray-200 flex justify-between items-center group'
+                  className='py-1 max-h-[32px] mb-1 border rounded-md border-gray-200 flex justify-between items-center group bg-white'
                 >
-                  <div className='flex-grow'>
+                  <div className='flex-grow '>
                     {editingTag?.id === tag.value.metadata.id ? (
                       <div className='ml-6 overflow-hidden'>
                         <Input
@@ -233,21 +232,22 @@ export const TagsManager = observer(() => {
                           size='xs'
                           ref={inputRef}
                           variant='unstyled'
-                          className='mb-[1px]'
+                          className='mb-[1px] bg-white'
                           defaultValue={newTag || tag.value.name}
-                          onChange={(e) => {
-                            const trimmedValue = e.target.value.trim();
-
-                            if (trimmedValue.length > 0) {
-                              setNewTag(trimmedValue);
-                            }
-                          }}
                           onBlur={() => {
                             handleEditTag(
                               tag.value.metadata.id,
                               newTag || tag.value.name,
                             );
                             setEditingTag(null);
+                          }}
+                          onChange={(e) => {
+                            const trimmedValue = e.target.value.trim();
+
+                            if (trimmedValue.length > 0) {
+                              setNewTag(trimmedValue);
+                            }
+                            e.stopPropagation();
                           }}
                           onKeyDown={(e) => {
                             if (e.key === 'Enter') {
@@ -256,12 +256,13 @@ export const TagsManager = observer(() => {
                                 e.currentTarget.value,
                               );
                             }
+                            e.stopPropagation();
                           }}
                         />
                       </div>
                     ) : (
                       <span
-                        className='cursor-pointer ml-6 text-sm break-all line-clamp-1'
+                        className='cursor-pointer ml-6 text-sm break-all line-clamp-1 '
                         onClick={() =>
                           setEditingTag({
                             id: tag.value.metadata.id,
@@ -275,7 +276,7 @@ export const TagsManager = observer(() => {
                   </div>
                   <div className='flex items-center opacity-0 transition-opacity duration-200 group-hover:opacity-100 pr-3'>
                     <IconButton
-                      size='xs'
+                      size='xxs'
                       variant='ghost'
                       aria-label='Delete tag'
                       icon={<Trash01 className='w-4 h-4' />}
@@ -298,7 +299,7 @@ export const TagsManager = observer(() => {
     <>
       <div className='px-6 pb-4 max-w-[500px] h-full overflow-y-auto border-r border-gray-200'>
         <div className='flex flex-col'>
-          <div className='flex justify-between items-center pt-[5px] sticky top-0 bg-gray-25'>
+          <div className='flex justify-between items-center pt-2 sticky top-0 bg-gray-25'>
             <p className='text-gray-700 font-semibold'>Tags</p>
           </div>
           <p className='mb-4 text-sm'>Manage your workspace tags</p>
@@ -314,8 +315,12 @@ export const TagsManager = observer(() => {
                   className='w-full'
                   variant='unstyled'
                   placeholder='Search tags...'
+                  onKeyDown={(e) => {
+                    e.stopPropagation();
+                  }}
                   onChange={(e) => {
                     setSearchTerm(e.target.value.toLowerCase());
+                    e.stopPropagation();
                   }}
                 />
               </InputGroup>
@@ -334,27 +339,14 @@ export const TagsManager = observer(() => {
             </div>
           ) : (
             <>
-              {organizationTags.length > 0 && (
+              {Object.entries(entityTypes).map(([type, meta]) => (
                 <TagList
-                  tags={organizationTags}
-                  title='Organization Tags'
-                  entityType={EntityType.Organization}
+                  key={type}
+                  title={meta.label}
+                  entityType={type as EntityType}
+                  tags={filteredTagsByType(type as EntityType)}
                 />
-              )}
-              {contactTags.length > 0 && (
-                <TagList
-                  tags={contactTags}
-                  title='Contact Tags'
-                  entityType={EntityType.Contact}
-                />
-              )}
-              {logEntryTags.length > 0 && (
-                <TagList
-                  tags={logEntryTags}
-                  title='Log Entry Tags'
-                  entityType={EntityType.LogEntry}
-                />
-              )}
+              ))}
             </>
           )}
         </div>

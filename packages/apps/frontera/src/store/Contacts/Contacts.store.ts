@@ -450,7 +450,7 @@ export class ContactsStore extends SyncableGroup<Contact, ContactStore> {
   }
 
   updateTags = (ids: string[], tags: Tag[]) => {
-    const tagIdsToUpdate = new Set(tags?.map((tag) => tag.id));
+    const tagIdsToUpdate = new Set(tags?.map((tag) => tag.metadata.id));
 
     const shouldRemoveTags = ids.every((id) => {
       const contact = this.value.get(id);
@@ -458,7 +458,7 @@ export class ContactsStore extends SyncableGroup<Contact, ContactStore> {
       if (!contact) return false;
 
       const contactIdsTags = new Set(
-        (contact.value.tags ?? []).map((tag) => tag.id),
+        (contact.value.tags ?? []).map((tag) => tag.metadata.id),
       );
 
       return Array.from(tagIdsToUpdate).every((tagId) =>
@@ -473,11 +473,13 @@ export class ContactsStore extends SyncableGroup<Contact, ContactStore> {
 
       if (shouldRemoveTags) {
         contact.value.tags = contact.value.tags?.filter(
-          (t) => !tagIdsToUpdate.has(t.id),
+          (t) => !tagIdsToUpdate.has(t.metadata.id),
         );
       } else {
-        const existingIds = new Set(contact.value.tags?.map((t) => t.id) ?? []);
-        const newTags = tags.filter((t) => !existingIds.has(t.id));
+        const existingIds = new Set(
+          contact.value.tags?.map((t) => t.metadata.id) ?? [],
+        );
+        const newTags = tags.filter((t) => !existingIds.has(t.metadata.id));
 
         if (!Array.isArray(contact.value.tags)) {
           contact.value.tags = [];

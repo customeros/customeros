@@ -7,6 +7,7 @@ import noteIcon from '@assets/images/event-ill-log.png';
 import { Button } from '@ui/form/Button/Button';
 import { Editor } from '@ui/form/Editor/Editor';
 import { useStore } from '@shared/hooks/useStore';
+import { EntityType } from '@shared/types/__generated__/graphql.types';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
 import { useTimelineActionLogEntryContext } from '@organization/components/Timeline/FutureZone/TimelineActions/context/TimelineActionLogEntryContext';
 
@@ -40,7 +41,10 @@ export const Logger = observer(({ hide }: LoggerProps) => {
     onCreateLogEntry({
       payload: {
         content: value,
-        tags: hashags.map((t) => ({ name: t })),
+        tags: hashags.map((t) => ({
+          name: t,
+          entityType: EntityType.LogEntry,
+        })),
         contentType: 'text/html',
       },
       onSuccess: () => {
@@ -74,8 +78,8 @@ export const Logger = observer(({ hide }: LoggerProps) => {
   };
 
   const hashtags = store.tags
-    .toArray()
-    .map((t) => ({ value: t.value.id, label: t.value.name }))
+    .getByEntityType(EntityType.LogEntry)
+    .map((t) => ({ value: t.value.metadata.id, label: t.value.name }))
     .filter((t) =>
       hashtagSearch
         ? t.label.toLowerCase().includes(hashtagSearch?.toLowerCase())

@@ -35,8 +35,8 @@ export const EditPersonaTag = observer(() => {
         (e) => e.metadata.id === t.metadata.id,
       );
 
-      if (foundIndex !== -1) {
-        contact.value.tags?.splice(foundIndex || 0, 1);
+      if (typeof foundIndex !== 'undefined' && foundIndex > -1) {
+        contact.value.tags?.splice(foundIndex, 1);
       } else {
         contact.value.tags = contact.value.tags ?? [];
         contact.value.tags.push(t);
@@ -48,7 +48,14 @@ export const EditPersonaTag = observer(() => {
   };
 
   const handleCreateOption = (value: string) => {
-    store.tags?.create({ name: value });
+    if (
+      store.tags
+        .getByEntityType(EntityType.Contact)
+        .find((e) => e.value.name === value)
+    )
+      return;
+
+    store.tags?.create({ name: value, entityType: EntityType.Contact });
     contact?.value.tags?.push({
       id: value,
       name: value,

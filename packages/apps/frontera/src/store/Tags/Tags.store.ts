@@ -89,13 +89,14 @@ export class TagsStore implements GroupStore<Tag> {
       >(CREATE_TAG_MUTATION, {
         input: {
           name: payload?.name || '',
+          entityType: payload?.entityType,
         },
       });
 
       runInAction(() => {
         serverId = tag_Create.id;
 
-        newTag.value.id = serverId;
+        newTag.value.metadata.id = serverId;
 
         this.value.set(serverId, newTag);
         this.value.delete(tempId);
