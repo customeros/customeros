@@ -160,9 +160,14 @@ export class ContactStore extends Syncable<Contact> {
       primary: boolean;
       previousEmail: string;
     } = { previousEmail: '', index: 0, primary: false },
-    options?: { onError?: (error: string) => void },
+    options?: {
+      invalidate?: boolean;
+      onError?: (error: string) => void;
+    },
   ) {
     const email = this.value.emails?.[payload.index ?? 0]?.email ?? '';
+
+    options = { invalidate: true, ...options };
 
     try {
       this.isLoading = true;
@@ -183,10 +188,14 @@ export class ContactStore extends Syncable<Contact> {
       runInAction(() => {
         this.error = (e as Error).message;
 
-        if (options?.onError) options.onError(this.error);
+        if (options?.onError) {
+          options?.onError((e as Error).message);
+        }
       });
     } finally {
-      this.invalidate();
+      if (options?.invalidate) {
+        this.invalidate();
+      }
     }
   }
 
@@ -404,3 +413,54 @@ export class ContactStore extends Syncable<Contact> {
     };
   }
 }
+
+export const getDefaultValue = (): Contact => ({
+  id: crypto.randomUUID(),
+  createdAt: '',
+  customFields: [],
+  emails: [],
+  firstName: '',
+  jobRoles: [],
+  lastName: '',
+  locations: [],
+  latestOrganizationWithJobRole: {
+    jobRole: {} as JobRole,
+    organization: {} as Organization,
+  } as OrganizationWithJobRole,
+
+  phoneNumbers: [],
+  profilePhotoUrl: '',
+  organizations: {
+    content: [],
+    totalPages: 0,
+    totalElements: 0,
+    totalAvailable: 0,
+  },
+  flows: [],
+  socials: [],
+  timezone: '',
+  source: DataSource.Openline,
+  timelineEvents: [],
+  timelineEventsTotalCount: 0,
+  updatedAt: '',
+  appSource: DataSource.Openline,
+  description: '',
+  prefix: '',
+  name: '',
+  owner: null,
+  tags: [],
+  connectedUsers: [],
+  metadata: {
+    source: DataSource.Openline,
+    appSource: DataSource.Openline,
+    id: crypto.randomUUID(),
+    created: '',
+    lastUpdated: new Date().toISOString(),
+    sourceOfTruth: DataSource.Openline,
+  },
+  enrichDetails: {
+    enrichedAt: '',
+    failedAt: '',
+    requestedAt: '',
+  },
+});
