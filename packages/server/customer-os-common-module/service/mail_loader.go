@@ -37,6 +37,7 @@ func (l *mailService) LoadEmail(ctx context.Context, rawEmail *entity.RawEmail) 
 	email.Identifiers.MessageId = emailData.MessageId
 	email.Identifiers.EmailThreadId = emailData.ThreadId
 	email.Identifiers.References = extractLines(emailData.Reference)
+	email.Identifiers.ExternalSystem = rawEmail.ExternalSystem
 
 	email.Content.SentDate = emailData.Sent
 	email.Content.Subject = emailData.Subject
