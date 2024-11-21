@@ -888,9 +888,11 @@ type ComplexityRoot struct {
 	Mailbox struct {
 		Created         func(childComplexity int) int
 		CurrentFlowIds  func(childComplexity int) int
-		DailyEmailLimit func(childComplexity int) int
 		Domain          func(childComplexity int) int
 		Mailbox         func(childComplexity int) int
+		RampUpCurrent   func(childComplexity int) int
+		RampUpMax       func(childComplexity int) int
+		RampUpRate      func(childComplexity int) int
 		ScheduledEmails func(childComplexity int) int
 		UserID          func(childComplexity int) int
 	}
@@ -1395,7 +1397,7 @@ type ComplexityRoot struct {
 		Invoices                           func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy, organizationID *string) int
 		Issue                              func(childComplexity int, id string) int
 		LogEntry                           func(childComplexity int, id string) int
-		MailstackCheckUnavailableDomains   func(childComplexity int, domain []string) int
+		MailstackCheckUnavailableDomains   func(childComplexity int, domains []string) int
 		MailstackDomainPurchaseSuggestions func(childComplexity int, domain string) int
 		MailstackDomains                   func(childComplexity int) int
 		MailstackMailboxes                 func(childComplexity int) int
@@ -1871,7 +1873,7 @@ type MutationResolver interface {
 	LogEntryAddTag(ctx context.Context, id string, input model.TagIDOrNameInput) (string, error)
 	LogEntryRemoveTag(ctx context.Context, id string, input model.TagIDOrNameInput) (string, error)
 	MailstackBuyDomainWithMailboxes(ctx context.Context, domains []string, usernames []string) ([]string, error)
-	MailstackSetUser(ctx context.Context, mailbox string, userID string) (*model.Mailbox, error)
+	MailstackSetUser(ctx context.Context, mailbox string, userID string) (*model.Result, error)
 	MeetingCreate(ctx context.Context, meeting model.MeetingInput) (*model.Meeting, error)
 	MeetingUpdate(ctx context.Context, meetingID string, meeting model.MeetingUpdateInput) (*model.Meeting, error)
 	MeetingLinkAttendedBy(ctx context.Context, meetingID string, participant model.MeetingParticipantInput) (*model.Meeting, error)
@@ -2047,7 +2049,7 @@ type QueryResolver interface {
 	LogEntry(ctx context.Context, id string) (*model.LogEntry, error)
 	MailstackDomainPurchaseSuggestions(ctx context.Context, domain string) ([]string, error)
 	MailstackDomains(ctx context.Context) ([]string, error)
-	MailstackCheckUnavailableDomains(ctx context.Context, domain []string) ([]string, error)
+	MailstackCheckUnavailableDomains(ctx context.Context, domains []string) ([]string, error)
 	MailstackUniqueUsernames(ctx context.Context) ([]string, error)
 	MailstackMailboxes(ctx context.Context) ([]*model.Mailbox, error)
 	Meeting(ctx context.Context, id string) (*model.Meeting, error)
@@ -6221,13 +6223,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mailbox.CurrentFlowIds(childComplexity), true
 
-	case "Mailbox.dailyEmailLimit":
-		if e.complexity.Mailbox.DailyEmailLimit == nil {
-			break
-		}
-
-		return e.complexity.Mailbox.DailyEmailLimit(childComplexity), true
-
 	case "Mailbox.domain":
 		if e.complexity.Mailbox.Domain == nil {
 			break
@@ -6241,6 +6236,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mailbox.Mailbox(childComplexity), true
+
+	case "Mailbox.rampUpCurrent":
+		if e.complexity.Mailbox.RampUpCurrent == nil {
+			break
+		}
+
+		return e.complexity.Mailbox.RampUpCurrent(childComplexity), true
+
+	case "Mailbox.rampUpMax":
+		if e.complexity.Mailbox.RampUpMax == nil {
+			break
+		}
+
+		return e.complexity.Mailbox.RampUpMax(childComplexity), true
+
+	case "Mailbox.rampUpRate":
+		if e.complexity.Mailbox.RampUpRate == nil {
+			break
+		}
+
+		return e.complexity.Mailbox.RampUpRate(childComplexity), true
 
 	case "Mailbox.scheduledEmails":
 		if e.complexity.Mailbox.ScheduledEmails == nil {
@@ -10335,7 +10351,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.MailstackCheckUnavailableDomains(childComplexity, args["domain"].([]string)), true
+		return e.complexity.Query.MailstackCheckUnavailableDomains(childComplexity, args["domains"].([]string)), true
 
 	case "Query.mailstack_DomainPurchaseSuggestions":
 		if e.complexity.Query.MailstackDomainPurchaseSuggestions == nil {
@@ -14417,7 +14433,7 @@ input LogEntryUpdateInput {
 	{Name: "../schemas/mailstack.graphqls", Input: `extend type Query {
     mailstack_DomainPurchaseSuggestions(domain: String!): [String!]! @hasRole(roles: [ADMIN, USER]) @hasTenant #suggest domains based on a domain
     mailstack_Domains: [String!]! @hasRole(roles: [ADMIN, USER]) @hasTenant #domains owned by tenant
-    mailstack_CheckUnavailableDomains(domain: [String!]!): [String!]! @hasRole(roles: [ADMIN, USER]) @hasTenant #check if a domain is still available
+    mailstack_CheckUnavailableDomains(domains: [String!]!): [String!]! @hasRole(roles: [ADMIN, USER]) @hasTenant #check if a domain is still available
 
     mailstack_UniqueUsernames: [String!]! @hasRole(roles: [ADMIN, USER]) @hasTenant #unique usernames from mailboxes
     mailstack_Mailboxes: [Mailbox!]! @hasRole(roles: [ADMIN, USER]) @hasTenant #mailboxes owned by tenant
@@ -14425,16 +14441,20 @@ input LogEntryUpdateInput {
 
 extend type Mutation {
     mailstack_BuyDomainWithMailboxes(domains: [String!]!, usernames: [String!]!): [String!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    mailstack_SetUser(mailbox: String!, userId: ID!): Mailbox! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    mailstack_SetUser(mailbox: String!, userId: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type Mailbox {
     domain:             String!
     mailbox:            String!
     created:            Time!
+
+    rampUpRate:         Int!
+    rampUpMax:          Int!
+    rampUpCurrent:      Int!
+
     userId:             ID
     scheduledEmails:    Int64!
-    dailyEmailLimit:    Int64!
     currentFlowIds:     [ID!]
 }`, BuiltIn: false},
 	{Name: "../schemas/meeting.graphqls", Input: `"""
@@ -25802,28 +25822,28 @@ func (ec *executionContext) field_Query_logEntry_argsID(
 func (ec *executionContext) field_Query_mailstack_CheckUnavailableDomains_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	arg0, err := ec.field_Query_mailstack_CheckUnavailableDomains_argsDomain(ctx, rawArgs)
+	arg0, err := ec.field_Query_mailstack_CheckUnavailableDomains_argsDomains(ctx, rawArgs)
 	if err != nil {
 		return nil, err
 	}
-	args["domain"] = arg0
+	args["domains"] = arg0
 	return args, nil
 }
-func (ec *executionContext) field_Query_mailstack_CheckUnavailableDomains_argsDomain(
+func (ec *executionContext) field_Query_mailstack_CheckUnavailableDomains_argsDomains(
 	ctx context.Context,
 	rawArgs map[string]interface{},
 ) ([]string, error) {
 	// We won't call the directive if the argument is null.
 	// Set call_argument_directives_with_null to true to call directives
 	// even if the argument is null.
-	_, ok := rawArgs["domain"]
+	_, ok := rawArgs["domains"]
 	if !ok {
 		var zeroVal []string
 		return zeroVal, nil
 	}
 
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("domain"))
-	if tmp, ok := rawArgs["domain"]; ok {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("domains"))
+	if tmp, ok := rawArgs["domains"]; ok {
 		return ec.unmarshalNString2ᚕstringᚄ(ctx, tmp)
 	}
 
@@ -55398,6 +55418,138 @@ func (ec *executionContext) fieldContext_Mailbox_created(_ context.Context, fiel
 	return fc, nil
 }
 
+func (ec *executionContext) _Mailbox_rampUpRate(ctx context.Context, field graphql.CollectedField, obj *model.Mailbox) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mailbox_rampUpRate(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RampUpRate, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mailbox_rampUpRate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mailbox",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mailbox_rampUpMax(ctx context.Context, field graphql.CollectedField, obj *model.Mailbox) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mailbox_rampUpMax(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RampUpMax, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mailbox_rampUpMax(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mailbox",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mailbox_rampUpCurrent(ctx context.Context, field graphql.CollectedField, obj *model.Mailbox) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mailbox_rampUpCurrent(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RampUpCurrent, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mailbox_rampUpCurrent(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mailbox",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mailbox_userId(ctx context.Context, field graphql.CollectedField, obj *model.Mailbox) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mailbox_userId(ctx, field)
 	if err != nil {
@@ -55471,50 +55623,6 @@ func (ec *executionContext) _Mailbox_scheduledEmails(ctx context.Context, field 
 }
 
 func (ec *executionContext) fieldContext_Mailbox_scheduledEmails(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mailbox",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int64 does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mailbox_dailyEmailLimit(ctx context.Context, field graphql.CollectedField, obj *model.Mailbox) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mailbox_dailyEmailLimit(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.DailyEmailLimit, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int64)
-	fc.Result = res
-	return ec.marshalNInt642int64(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mailbox_dailyEmailLimit(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mailbox",
 		Field:      field,
@@ -65480,18 +65588,18 @@ func (ec *executionContext) _Mutation_mailstack_SetUser(ctx context.Context, fie
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
 			if err != nil {
-				var zeroVal *model.Mailbox
+				var zeroVal *model.Result
 				return zeroVal, err
 			}
 			if ec.directives.HasRole == nil {
-				var zeroVal *model.Mailbox
+				var zeroVal *model.Result
 				return zeroVal, errors.New("directive hasRole is not implemented")
 			}
 			return ec.directives.HasRole(ctx, nil, directive0, roles)
 		}
 		directive2 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.HasTenant == nil {
-				var zeroVal *model.Mailbox
+				var zeroVal *model.Result
 				return zeroVal, errors.New("directive hasTenant is not implemented")
 			}
 			return ec.directives.HasTenant(ctx, nil, directive1)
@@ -65504,10 +65612,10 @@ func (ec *executionContext) _Mutation_mailstack_SetUser(ctx context.Context, fie
 		if tmp == nil {
 			return nil, nil
 		}
-		if data, ok := tmp.(*model.Mailbox); ok {
+		if data, ok := tmp.(*model.Result); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.Mailbox`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.Result`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -65519,9 +65627,9 @@ func (ec *executionContext) _Mutation_mailstack_SetUser(ctx context.Context, fie
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.Mailbox)
+	res := resTmp.(*model.Result)
 	fc.Result = res
-	return ec.marshalNMailbox2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMailbox(ctx, field.Selections, res)
+	return ec.marshalNResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_mailstack_SetUser(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -65532,22 +65640,10 @@ func (ec *executionContext) fieldContext_Mutation_mailstack_SetUser(ctx context.
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "domain":
-				return ec.fieldContext_Mailbox_domain(ctx, field)
-			case "mailbox":
-				return ec.fieldContext_Mailbox_mailbox(ctx, field)
-			case "created":
-				return ec.fieldContext_Mailbox_created(ctx, field)
-			case "userId":
-				return ec.fieldContext_Mailbox_userId(ctx, field)
-			case "scheduledEmails":
-				return ec.fieldContext_Mailbox_scheduledEmails(ctx, field)
-			case "dailyEmailLimit":
-				return ec.fieldContext_Mailbox_dailyEmailLimit(ctx, field)
-			case "currentFlowIds":
-				return ec.fieldContext_Mailbox_currentFlowIds(ctx, field)
+			case "result":
+				return ec.fieldContext_Result_result(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type Mailbox", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type Result", field.Name)
 		},
 	}
 	defer func() {
@@ -89545,7 +89641,7 @@ func (ec *executionContext) _Query_mailstack_CheckUnavailableDomains(ctx context
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().MailstackCheckUnavailableDomains(rctx, fc.Args["domain"].([]string))
+			return ec.resolvers.Query().MailstackCheckUnavailableDomains(rctx, fc.Args["domains"].([]string))
 		}
 
 		directive1 := func(ctx context.Context) (interface{}, error) {
@@ -89776,12 +89872,16 @@ func (ec *executionContext) fieldContext_Query_mailstack_Mailboxes(_ context.Con
 				return ec.fieldContext_Mailbox_mailbox(ctx, field)
 			case "created":
 				return ec.fieldContext_Mailbox_created(ctx, field)
+			case "rampUpRate":
+				return ec.fieldContext_Mailbox_rampUpRate(ctx, field)
+			case "rampUpMax":
+				return ec.fieldContext_Mailbox_rampUpMax(ctx, field)
+			case "rampUpCurrent":
+				return ec.fieldContext_Mailbox_rampUpCurrent(ctx, field)
 			case "userId":
 				return ec.fieldContext_Mailbox_userId(ctx, field)
 			case "scheduledEmails":
 				return ec.fieldContext_Mailbox_scheduledEmails(ctx, field)
-			case "dailyEmailLimit":
-				return ec.fieldContext_Mailbox_dailyEmailLimit(ctx, field)
 			case "currentFlowIds":
 				return ec.fieldContext_Mailbox_currentFlowIds(ctx, field)
 			}
@@ -117794,15 +117894,25 @@ func (ec *executionContext) _Mailbox(ctx context.Context, sel ast.SelectionSet, 
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "rampUpRate":
+			out.Values[i] = ec._Mailbox_rampUpRate(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "rampUpMax":
+			out.Values[i] = ec._Mailbox_rampUpMax(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "rampUpCurrent":
+			out.Values[i] = ec._Mailbox_rampUpCurrent(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "userId":
 			out.Values[i] = ec._Mailbox_userId(ctx, field, obj)
 		case "scheduledEmails":
 			out.Values[i] = ec._Mailbox_scheduledEmails(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "dailyEmailLimit":
-			out.Values[i] = ec._Mailbox_dailyEmailLimit(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -128503,10 +128613,6 @@ func (ec *executionContext) unmarshalNLogEntryInput2githubᚗcomᚋopenlineᚑai
 func (ec *executionContext) unmarshalNLogEntryUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐLogEntryUpdateInput(ctx context.Context, v interface{}) (model.LogEntryUpdateInput, error) {
 	res, err := ec.unmarshalInputLogEntryUpdateInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNMailbox2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMailbox(ctx context.Context, sel ast.SelectionSet, v model.Mailbox) graphql.Marshaler {
-	return ec._Mailbox(ctx, sel, &v)
 }
 
 func (ec *executionContext) marshalNMailbox2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMailboxᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Mailbox) graphql.Marshaler {

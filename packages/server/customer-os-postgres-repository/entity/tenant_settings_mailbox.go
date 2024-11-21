@@ -10,7 +10,9 @@ type TenantSettingsMailbox struct {
 	MailboxUsername string    `gorm:"column:mailbox_username;type:varchar(255)" json:"mailboxUsername"`
 	MailboxPassword string    `gorm:"column:mailbox_password;type:varchar(255)" json:"mailboxPassword"`
 	Domain          string    `gorm:"column:domain;type:varchar(255)" json:"domain"`
-	Username        string    `gorm:"column:user_name;type:varchar(255)" json:"userName"`
+
+	Username string `gorm:"column:user_name;type:varchar(255)" json:"userName"` //Deprecated
+	UserId   string `gorm:"column:user_id;type:varchar(255)" json:"userId"`
 
 	LastRampUpAt  time.Time `gorm:"column:last_ramp_up_at;type:timestamp" json:"lastRampUpAt"`
 	RampUpRate    int       `gorm:"type:integer" json:"rampUpRate"`
