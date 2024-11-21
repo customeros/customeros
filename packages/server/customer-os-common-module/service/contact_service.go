@@ -43,13 +43,13 @@ func NewContactService(log logger.Logger, services *Services) ContactService {
 	}
 }
 
-func (s *contactService) Save(ctx context.Context, id *string, contactFields neo4jrepository.ContactFields, socialUrl string, externalSystem neo4jmodel.ExternalSystem) (string, error) {
+func (s *contactService) Save(ctx context.Context, id *string, contactFields neo4jrepository.ContactFields, linkedInUrl string, externalSystem neo4jmodel.ExternalSystem) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.Save")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "contactFields", contactFields)
 	tracing.LogObjectAsJson(span, "externalSystem", externalSystem)
-	span.LogKV("socialUrl", socialUrl)
+	span.LogKV("linkedInUrl", linkedInUrl)
 
 	// validate tenant
 	err := common.ValidateTenant(ctx)
@@ -67,8 +67,8 @@ func (s *contactService) Save(ctx context.Context, id *string, contactFields neo
 		span.LogKV("flow", "create")
 
 		// Reject contact creation if linked-in url is already used by another contact
-		if (neo4jentity.SocialEntity{Url: socialUrl}).IsLinkedin() {
-			linkedinUsed, existingContactId, err := s.services.ContactService.CheckContactExistsWithLinkedIn(ctx, socialUrl, "", "")
+		if (neo4jentity.SocialEntity{Url: linkedInUrl}).IsLinkedin() {
+			linkedinUsed, existingContactId, err := s.services.ContactService.CheckContactExistsWithLinkedIn(ctx, linkedInUrl, "", "")
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "unable to check contact exists with linkedin"))
 				return "", err
@@ -173,19 +173,21 @@ func (s *contactService) Save(ctx context.Context, id *string, contactFields neo
 		}
 	}
 
-	if createFlow && socialUrl != "" {
-		_, err := s.services.SocialService.AddSocialToEntity(ctx,
-			LinkWith{
-				Id:   contactId,
-				Type: model.CONTACT,
-			},
-			neo4jentity.SocialEntity{
-				Url:       socialUrl,
-				Source:    neo4jentity.DecodeDataSource(contactFields.SourceFields.Source),
-				AppSource: contactFields.SourceFields.AppSource,
-			})
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to merge social with contact"))
+	if createFlow && linkedInUrl != "" {
+		if (neo4jentity.SocialEntity{Url: linkedInUrl}).IsLinkedin() {
+			_, err := s.services.SocialService.AddSocialToEntity(ctx,
+				LinkWith{
+					Id:   contactId,
+					Type: model.CONTACT,
+				},
+				neo4jentity.SocialEntity{
+					Url:       linkedInUrl,
+					Source:    neo4jentity.DecodeDataSource(contactFields.SourceFields.Source),
+					AppSource: contactFields.SourceFields.AppSource,
+				})
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "failed to merge social with contact"))
+			}
 		}
 	}
 

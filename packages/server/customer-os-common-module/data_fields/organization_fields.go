@@ -40,6 +40,7 @@ type OrganizationFields struct {
 	EnrichDomain       *string                             `json:"enrichDomain,omitempty"`
 	EnrichSource       *string                             `json:"enrichSource,omitempty"`
 	OwnerId            *string                             `json:"ownerId,omitempty"`
+	LinkedInUrl        *string                             `json:"linkedInUrl,omitempty"`
 }
 
 func (fields OrganizationFields) ExternalSystemAvailable() bool {

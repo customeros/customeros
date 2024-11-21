@@ -290,7 +290,9 @@ func (s *socialService) AddSocialToEntity(ctx context.Context, linkWith LinkWith
 	switch linkWith.Type {
 	case model.CONTACT:
 		// reset contact enrich attempts
-		_ = s.services.Neo4jRepositories.ContactWriteRepository.ResetEnrichAttempts(ctx, tenant, linkWith.Id)
+		if socialEntity.IsLinkedin() {
+			_ = s.services.Neo4jRepositories.ContactWriteRepository.ResetEnrichAttempts(ctx, tenant, linkWith.Id)
+		}
 		err = s.services.RabbitMQService.PublishEvent(ctx, linkWith.Id, model.CONTACT, dto.AddSocialToContact{
 			SocialId: socialId,
 			Social:   socialUrl,
@@ -300,6 +302,10 @@ func (s *socialService) AddSocialToEntity(ctx context.Context, linkWith LinkWith
 		}
 		utils.EventCompleted(ctx, tenant, model.CONTACT.String(), linkWith.Id, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
 	case model.ORGANIZATION:
+		// reset contact enrich attempts
+		if socialEntity.IsLinkedin() {
+			_ = s.services.Neo4jRepositories.OrganizationWriteRepository.ResetEnrichAttempts(ctx, tenant, linkWith.Id)
+		}
 		err = s.services.RabbitMQService.PublishEvent(ctx, linkWith.Id, model.ORGANIZATION, dto.AddSocialToOrganization{
 			SocialId: socialId,
 			Social:   socialUrl,
