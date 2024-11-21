@@ -246,7 +246,7 @@ export const ContractDetailsModal = observer(
             );
           } else if (
             e.metadata.id.includes('new') &&
-            itemStore.tempValue?.parentId.length > 0
+            itemStore.tempValue?.parentId?.length > 0
           ) {
             promises.push(
               contractLineItemsStore.createNewVersion(

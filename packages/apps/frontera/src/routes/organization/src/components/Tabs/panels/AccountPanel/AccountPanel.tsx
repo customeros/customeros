@@ -37,7 +37,7 @@ const AccountPanelComponent = observer(() => {
   const organizationStore = store.organizations.value.get(id);
   const organization = organizationStore?.value;
 
-  if (store.organizations.isLoading) {
+  if (store.organizations.isLoading && !organization) {
     return <AccountPanelSkeleton />;
   }
 
