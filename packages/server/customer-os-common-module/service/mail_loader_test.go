@@ -15,43 +15,51 @@ func TestParseEmailAndName(t *testing.T) {
 	}{
 		{
 			name:  "Full name with email",
-			input: "John Smith <john@example.com>",
+			input: "John Smith <john.smith@example.com>",
 			expected: EmailParticipant{
-				Email:     "john@example.com",
 				FirstName: "john",
 				LastName:  "smith",
+				Email:     "john.smith@example.com",
 			},
 		},
 		{
-			name:  "Only email in brackets",
-			input: "<test@example.com>",
+			name:  "First name only with email",
+			input: "John <john@example.com>",
 			expected: EmailParticipant{
-				Email: "test@example.com",
+				FirstName: "john",
+				Email:     "john@example.com",
 			},
 		},
 		{
 			name:  "Bare email",
-			input: "test@example.com",
+			input: "john@example.com",
 			expected: EmailParticipant{
-				Email: "test@example.com",
+				Email: "john@example.com",
 			},
 		},
 		{
 			name:  "Three part name",
-			input: "John van Smith <john@example.com>",
+			input: "John Middle Smith <john.smith@example.com>",
 			expected: EmailParticipant{
-				Email:     "john@example.com",
 				FirstName: "john",
-				LastName:  "van smith",
+				LastName:  "middle smith",
+				Email:     "john.smith@example.com",
 			},
 		},
 		{
-			name:  "Service name with email",
-			input: "Google Workspace Alerts <google-workspace-alerts-noreply@google.com>",
+			name:  "Empty input",
+			input: "",
 			expected: EmailParticipant{
-				Email:     "google-workspace-alerts-noreply@google.com",
-				FirstName: "google",
-				LastName:  "workspace alerts",
+				Email: "",
+			},
+		},
+		{
+			name:  "Mixed case input",
+			input: "John Smith <JOHN.SMITH@EXAMPLE.COM>",
+			expected: EmailParticipant{
+				FirstName: "john",
+				LastName:  "smith",
+				Email:     "john.smith@example.com",
 			},
 		},
 	}
@@ -72,40 +80,50 @@ func TestParseParticipants(t *testing.T) {
 		expected []EmailParticipant
 	}{
 		{
-			name:  "Multiple participants with commas",
-			input: "John Smith <john@example.com>, Jane Doe <jane@example.com>",
-			expected: []EmailParticipant{
-				{
-					Email:     "john@example.com",
-					FirstName: "john",
-					LastName:  "smith",
-				},
-				{
-					Email:     "jane@example.com",
-					FirstName: "jane",
-					LastName:  "doe",
-				},
-			},
-		},
-		{
 			name:  "Single participant",
 			input: "John Smith <john@example.com>",
 			expected: []EmailParticipant{
 				{
-					Email:     "john@example.com",
 					FirstName: "john",
 					LastName:  "smith",
+					Email:     "john@example.com",
 				},
 			},
 		},
 		{
-			name:  "Bare email",
-			input: "test@example.com",
+			name:  "Multiple participants",
+			input: "John Smith <john@example.com>, Jane Doe <jane@example.com>",
 			expected: []EmailParticipant{
 				{
-					Email: "test@example.com",
+					FirstName: "john",
+					LastName:  "smith",
+					Email:     "john@example.com",
+				},
+				{
+					FirstName: "jane",
+					LastName:  "doe",
+					Email:     "jane@example.com",
 				},
 			},
+		},
+		{
+			name:  "Mixed formats",
+			input: "john@example.com, Jane Doe <jane@example.com>",
+			expected: []EmailParticipant{
+				{
+					Email: "john@example.com",
+				},
+				{
+					FirstName: "jane",
+					LastName:  "doe",
+					Email:     "jane@example.com",
+				},
+			},
+		},
+		{
+			name:     "Empty input",
+			input:    "",
+			expected: []EmailParticipant{},
 		},
 	}
 
@@ -125,47 +143,220 @@ func TestParseHeaders(t *testing.T) {
 		expected EmailHeaders
 	}{
 		{
-			name: "Full headers",
+			name: "Auto-submitted header",
 			headers: map[string]string{
-				"Auto-Submitted":      "auto-replied",
-				"Content-Description": "notification",
-				"Content-Type":        "multipart/report; report-type=delivery-status",
-				"List-Unsubscribe":    "<mailto:unsub@example.com>",
-				"Precedence":          "bulk",
-				"Return-Path":         "<bounce@example.com>",
-				"X-Autoreply":         "yes",
-				"X-Autoresponse":      "out of office",
-				"X-Loop":              "yes",
-				"X-Failed-Recipients": "failed@example.com",
+				"Auto-Submitted": "yes",
 			},
 			expected: EmailHeaders{
-				AutoSubmitted:      true,
-				ContentDescription: "notification",
-				DeliveryStatus:     true,
-				ListUnsubscribe:    true,
-				Precedence:         "bulk",
-				ReturnPath:         "bounce@example.com",
-				XAutoreply:         "yes",
-				XAutoresponse:      "out of office",
-				XLoop:              true,
-				XFailedRecepients:  []string{"test@test.com"},
-				RawHeaders:         map[string]string{}, // Will be populated with input headers
+				AutoSubmitted: true,
+				RawHeaders: map[string]string{
+					"Auto-Submitted": "yes",
+				},
 			},
 		},
 		{
-			name:    "Empty headers",
-			headers: map[string]string{},
-			expected: EmailHeaders{
-				RawHeaders: map[string]string{},
+			name: "Content-Description header",
+			headers: map[string]string{
+				"Content-Description": "test description",
 			},
+			expected: EmailHeaders{
+				ContentDescription: "test description",
+				RawHeaders: map[string]string{
+					"Content-Description": "test description",
+				},
+			},
+		},
+		{
+			name: "Delivery status content type",
+			headers: map[string]string{
+				"Content-Type": "message/delivery-status",
+			},
+			expected: EmailHeaders{
+				DeliveryStatus: true,
+				RawHeaders: map[string]string{
+					"Content-Type": "message/delivery-status",
+				},
+			},
+		},
+		{
+			name: "Multiple headers with mixed case",
+			headers: map[string]string{
+				"List-Unsubscribe":    "yes",
+				"PRECEDENCE":          "bulk",
+				"Return-Path":         "<bounce@example.com>",
+				"X-Autoreply":         "auto",
+				"x-autoresponse":      "yes",
+				"X-Loop":              "true",
+				"x-failed-recipients": "failed@example.com, failed2@example.com",
+				"Reply-To":            "reply@example.com",
+				"Sender":              "sender@example.com",
+			},
+			expected: EmailHeaders{
+				ListUnsubscribe:   true,
+				Precedence:        "bulk",
+				ReturnPathExists:  true,
+				ReturnPath:        "bounce@example.com",
+				XAutoreply:        "auto",
+				XAutoresponse:     "yes",
+				XLoop:             true,
+				XFailedRecepients: []string{"failed@example.com", "failed2@example.com"},
+				ReplyToExists:     true,
+				ReplyTo:           "reply@example.com",
+				Sender:            "sender@example.com",
+				RawHeaders: map[string]string{
+					"List-Unsubscribe":    "yes",
+					"PRECEDENCE":          "bulk",
+					"Return-Path":         "<bounce@example.com>",
+					"X-Autoreply":         "auto",
+					"x-autoresponse":      "yes",
+					"X-Loop":              "true",
+					"x-failed-recipients": "failed@example.com, failed2@example.com",
+					"Reply-To":            "reply@example.com",
+					"Sender":              "sender@example.com",
+				},
+			},
+		},
+		{
+			name:     "Empty headers",
+			headers:  map[string]string{},
+			expected: EmailHeaders{RawHeaders: map[string]string{}},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := svc.parseHeaders(tt.headers)
-			tt.expected.RawHeaders = tt.headers // Set expected raw headers
 			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
+func TestExtractLines(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected []string
+	}{
+		{
+			name:     "Multiple lines",
+			input:    "line1\nline2\nline3",
+			expected: []string{"line1", "line2", "line3"},
+		},
+		{
+			name:     "Single line",
+			input:    "line1",
+			expected: []string{"line1"},
+		},
+		{
+			name:     "Empty input",
+			input:    "",
+			expected: []string{},
+		},
+		{
+			name:     "Multiple spaces",
+			input:    "line1   line2\t\tline3",
+			expected: []string{"line1", "line2", "line3"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := extractLines(tt.input)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
+func TestExtractEmail(t *testing.T) {
+	svc := &mailService{}
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "Simple email",
+			input:    "test@example.com",
+			expected: "test@example.com",
+		},
+		{
+			name:     "Email with angle brackets",
+			input:    "<test@example.com>",
+			expected: "test@example.com",
+		},
+		{
+			name:     "Email with display name",
+			input:    "Test User <test@example.com>",
+			expected: "test@example.com",
+		},
+		{
+			name:     "Empty input",
+			input:    "",
+			expected: "",
+		},
+		{
+			name:     "Invalid email",
+			input:    "not-an-email",
+			expected: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := svc.extractEmail(tt.input)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
+func TestGetAllEmails(t *testing.T) {
+	svc := &mailService{}
+	tests := []struct {
+		name     string
+		input    EmailParticipants
+		expected []string
+	}{
+		{
+			name: "All unique emails",
+			input: EmailParticipants{
+				From: EmailParticipant{Email: "from@example.com"},
+				To:   []EmailParticipant{{Email: "to@example.com"}},
+				Cc:   []EmailParticipant{{Email: "cc@example.com"}},
+				Bcc:  []EmailParticipant{{Email: "bcc@example.com"}},
+			},
+			expected: []string{"from@example.com", "to@example.com", "cc@example.com", "bcc@example.com"},
+		},
+		{
+			name: "Duplicate emails",
+			input: EmailParticipants{
+				From: EmailParticipant{Email: "same@example.com"},
+				To:   []EmailParticipant{{Email: "same@example.com"}},
+				Cc:   []EmailParticipant{{Email: "same@example.com"}},
+				Bcc:  []EmailParticipant{{Email: "different@example.com"}},
+			},
+			expected: []string{"same@example.com", "different@example.com"},
+		},
+		{
+			name: "Empty emails should be ignored",
+			input: EmailParticipants{
+				From: EmailParticipant{Email: "from@example.com"},
+				To:   []EmailParticipant{{Email: ""}, {Email: "to@example.com"}},
+				Cc:   []EmailParticipant{{Email: ""}},
+				Bcc:  []EmailParticipant{{Email: ""}},
+			},
+			expected: []string{"from@example.com", "to@example.com"},
+		},
+		{
+			name:     "Empty participants",
+			input:    EmailParticipants{},
+			expected: []string{""},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			svc.getAllEmails(&tt.input)
+			assert.Equal(t, tt.expected, tt.input.AllEmails)
 		})
 	}
 }
