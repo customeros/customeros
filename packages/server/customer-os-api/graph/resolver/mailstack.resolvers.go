@@ -146,7 +146,7 @@ func (r *queryResolver) MailstackUniqueUsernames(ctx context.Context) ([]string,
 
 // MailstackMailboxes is the resolver for the mailstack_Mailboxes field.
 func (r *queryResolver) MailstackMailboxes(ctx context.Context) ([]*model.Mailbox, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.MailstackUniqueUsernames", graphql.GetOperationContext(ctx))
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.MailstackMailboxes", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 
