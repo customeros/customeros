@@ -148,7 +148,7 @@ func TestParseHeaders(t *testing.T) {
 				XAutoreply:         "yes",
 				XAutoresponse:      "out of office",
 				XLoop:              true,
-				XFailedRecepients:  true,
+				XFailedRecepients:  []string{"test@test.com"},
 				RawHeaders:         map[string]string{}, // Will be populated with input headers
 			},
 		},

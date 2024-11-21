@@ -1,8 +1,9 @@
 package service
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"time"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
 
 // Email Raw Data
@@ -106,11 +107,13 @@ type EmailHeaders struct {
 	ListUnsubscribe    bool
 	Precedence         string
 	ReturnPath         string
+	ReturnPathExists   bool
 	XAutoreply         string
 	XAutoresponse      string
 	XLoop              bool
-	XFailedRecepients  bool
+	XFailedRecepients  []string
 	ReplyTo            string
+	ReplyToExists      bool
 	Sender             string
 	RawHeaders         map[string]string
 }

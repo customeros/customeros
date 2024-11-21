@@ -10,6 +10,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -73,7 +74,9 @@ func (s *mailService) GetEmailsForProcessingForUser(ctx context.Context, tenant,
 	s.processRawEmails(ctx, tenant, rawEmailsIdsForProcess, span)
 }
 
-func (s *mailService) ProcessEmail(ctx context.Context, tenant string, rawEmailId uuid.UUID) (postgresentity.RawState, *string, error) {
+func (s *mailService) ProcessEmail(ctx context.Context, tenant string, rawEmailId uuid.UUID) entity.UpdateRawEmailTable {
+	var db entity.UpdateRawEmailTable
+
 	span, ctx := s.initializeTracing(ctx, "MailService.ProcessEmail")
 	defer span.Finish()
 	span.LogFields(log.String("rawEmailId", rawEmailId.String()))
@@ -81,34 +84,47 @@ func (s *mailService) ProcessEmail(ctx context.Context, tenant string, rawEmailI
 	rawEmail, err := s.services.PostgresRepositories.RawEmailRepository.GetEmailForProcess(rawEmailId)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to get email for process"))
-		return postgresentity.ERROR, nil, err
+		db.EmailProcessingStatus = postgresentity.ERROR
+		db.Error = err
+		return db
 	}
 
 	emailMessageData, err := s.LoadEmail(ctx, rawEmail)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to load email"))
-		return postgresentity.ERROR, nil, err
+		db.EmailProcessingStatus = postgresentity.ERROR
+		db.Error = err
+		return db
 	}
 
 	if emailMessageData.Identifiers.MessageId == "" {
-		return postgresentity.ERROR, nil, fmt.Errorf("email message ID is empty")
+		db.EmailProcessingStatus = postgresentity.ERROR
+		db.Error = fmt.Errorf("email message id is empty")
+		return db
 	}
 
 	if len(emailMessageData.Participants.AllEmails) == 0 {
 		reason := "no email address belongs to a workspace domain"
-		return postgresentity.SKIPPED, &reason, nil
+		db.EmailProcessingStatus = postgresentity.SKIPPED
+		db.Reason = &reason
+		return db
 	}
 
 	check := s.ProcessEmailCheck(ctx, tenant, &emailMessageData)
 	if !check.ProcessEmail {
-		return postgresentity.SKIPPED, &check.SkipReason, nil
+		db.EmailProcessingStatus = postgresentity.SKIPPED
+		db.Reason = &check.SkipReason
+		db.BouncedEmails = &check.BouncedEmails
+		return db
 	}
 
 	sentAt, err := convertToUTC(emailMessageData.Content.SentDate)
 	emailMessageData.CreatedAt = sentAt
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to convert email sent date to UTC"))
-		return postgresentity.ERROR, nil, err
+		db.EmailProcessingStatus = postgresentity.ERROR
+		db.Error = err
+		return db
 	}
 
 	interactionEventId, err := s.services.Neo4jRepositories.InteractionEventRepository.GetInteractionEventIdByExternalId(
@@ -116,25 +132,33 @@ func (s *mailService) ProcessEmail(ctx context.Context, tenant string, rawEmailI
 	)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to check if interaction event exists"))
-		return postgresentity.ERROR, nil, err
+		db.EmailProcessingStatus = postgresentity.ERROR
+		db.Error = err
+		return db
 	}
 
 	if interactionEventId != "" {
 		tracing.TraceErr(span, errors.Wrap(err, "interaction event already exists"))
 		reason := "interaction event already exists"
-		return postgresentity.SKIPPED, &reason, nil
+		db.EmailProcessingStatus = postgresentity.SKIPPED
+		db.Reason = &reason
+		return db
 	}
 
 	chanErr := s.buildChannelData(&emailMessageData, span)
 	if chanErr != nil {
 		tracing.TraceErr(span, errors.Wrap(chanErr, "failed to build channel data"))
-		return postgresentity.ERROR, nil, chanErr
+		db.EmailProcessingStatus = postgresentity.ERROR
+		db.Error = err
+		return db
 	}
 
 	return s.processInboundEmail(ctx, tenant, &emailMessageData, rawEmail, utils.Now(), span)
 }
 
-func (s *mailService) ProcessEmailByMessageId(ctx context.Context, tenant, usernameSource, messageId string) (postgresentity.RawState, *string, error) {
+func (s *mailService) ProcessEmailByMessageId(ctx context.Context, tenant, usernameSource, messageId string) entity.UpdateRawEmailTable {
+	var db entity.UpdateRawEmailTable
+
 	span, ctx := s.initializeTracing(ctx, "MailService.ProcessEmailByMessageId")
 	defer span.Finish()
 	span.LogFields(
@@ -145,30 +169,29 @@ func (s *mailService) ProcessEmailByMessageId(ctx context.Context, tenant, usern
 	if err != nil {
 		err = fmt.Errorf("failed to get emails for sync: %v", err)
 		tracing.TraceErr(span, err)
-		return postgresentity.ERROR, nil, err
+		db.EmailProcessingStatus = postgresentity.ERROR
+		db.Error = err
+		return db
 	}
 
 	if rawEmail == nil {
-		return postgresentity.ERROR, nil, fmt.Errorf("email with message id %v not found", messageId)
+		db.EmailProcessingStatus = postgresentity.ERROR
+		db.Error = fmt.Errorf("email with message id %v not found", messageId)
+		return db
 	}
 
 	return s.ProcessEmail(ctx, tenant, rawEmail.ID)
 }
 
-func (s *mailService) ProcessEmailByEmailRawId(ctx context.Context, tenant string, emailId uuid.UUID) (postgresentity.RawState, *string, error) {
+func (s *mailService) ProcessEmailByEmailRawId(ctx context.Context, tenant string, emailId uuid.UUID) entity.UpdateRawEmailTable {
 	return s.ProcessEmail(ctx, tenant, emailId)
 }
 
 func (s *mailService) processRawEmails(ctx context.Context, tenant string, rawEmails []postgresentity.RawEmail, span opentracing.Span) {
 	for _, rawEmail := range rawEmails {
-		state, reason, err := s.ProcessEmail(ctx, tenant, rawEmail.ID)
-		var errMessage *string
-		if err != nil {
-			s2 := err.Error()
-			errMessage = &s2
-		}
+		dbUpdateRecord := s.ProcessEmail(ctx, tenant, rawEmail.ID)
 
-		err = s.services.PostgresRepositories.RawEmailRepository.MarkProcessed(rawEmail.ID, state, reason, errMessage)
+		err := s.services.PostgresRepositories.RawEmailRepository.UpdateRawEmailTable(rawEmail.ID, dbUpdateRecord)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to mark raw email as processed in postgres"))
 		}
@@ -182,7 +205,9 @@ func (s *mailService) processInboundEmail(
 	rawEmail *postgresentity.RawEmail,
 	ts time.Time,
 	span opentracing.Span,
-) (postgresentity.RawState, *string, error) {
+) entity.UpdateRawEmailTable {
+	var db entity.UpdateRawEmailTable
+
 	session := utils.NewNeo4jWriteSession(ctx, *s.services.Neo4jRepositories.Neo4jDriver)
 	defer session.Close(ctx)
 
@@ -190,7 +215,9 @@ func (s *mailService) processInboundEmail(
 	if err != nil {
 		err = fmt.Errorf("failed to start transaction: %v", err)
 		tracing.TraceErr(span, err)
-		return postgresentity.ERROR, nil, err
+		db.EmailProcessingStatus = postgresentity.ERROR
+		db.Error = fmt.Errorf("email with message id %v not found", email.Identifiers.MessageId)
+		return db
 	}
 	defer tx.Close(ctx)
 
@@ -198,16 +225,21 @@ func (s *mailService) processInboundEmail(
 	if err := s.processSessionAndEvents(ctx, tx, tenant, email, rawEmail, ts, span); err != nil {
 		err = fmt.Errorf("failed to process session and events: %v", err)
 		tracing.TraceErr(span, err)
-		return postgresentity.ERROR, nil, err
+		db.EmailProcessingStatus = postgresentity.ERROR
+		db.Error = fmt.Errorf("email with message id %v not found", email.Identifiers.MessageId)
+		return db
 	}
 
 	if err := tx.Commit(ctx); err != nil {
 		err = fmt.Errorf("failed to commit transaction: %v", err)
 		tracing.TraceErr(span, err)
-		return postgresentity.ERROR, nil, err
+		db.EmailProcessingStatus = postgresentity.ERROR
+		db.Error = fmt.Errorf("email with message id %v not found", email.Identifiers.MessageId)
+		return db
 	}
 
-	return postgresentity.PROCESSED, nil, nil
+	db.EmailProcessingStatus = postgresentity.PROCESSED
+	return db
 }
 
 func (s *mailService) processSessionAndEvents(

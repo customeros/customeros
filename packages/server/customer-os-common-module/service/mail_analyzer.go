@@ -14,6 +14,7 @@ type HeaderAnalysis struct {
 	IsAutoResponder bool
 	IsBulkMail      bool
 	SkipReason      string
+	BouncedEmails   []string
 }
 
 // TODO parse SMTP status code from message/deliver-status
@@ -33,6 +34,11 @@ func (a *mailService) ProcessEmailCheck(ctx context.Context, tenant string, emai
 		analysis.IsBounce = true
 		analysis.ProcessEmail = false
 		analysis.SkipReason = reason
+
+		if emailData.Identifiers.ExternalSystem == "outlook" && len(emailData.Headers.XFailedRecepients) == 0 {
+			emailData.Headers.XFailedRecepients = emailData.Participants.GetToEmailAddresses()
+		}
+		analysis.BouncedEmails = emailData.Headers.XFailedRecepients
 		return analysis
 	}
 
@@ -80,7 +86,7 @@ func (a *mailService) isAutoResponder(headers EmailHeaders) (bool, string) {
 
 func (a *mailService) isBounce(headers EmailHeaders, subject, from string) (bool, string) {
 	switch {
-	case headers.XFailedRecepients:
+	case len(headers.XFailedRecepients) > 0:
 		return true, "BOUNCE | X-FAILED-RECIPIENTS"
 	case strings.EqualFold(headers.ContentDescription, "delivery report"):
 		return true, "BOUNCE | CONTENT-DESCRIPTION: DELIVERY REPORT"
@@ -105,15 +111,15 @@ func (a *mailService) isBulkMail(headers EmailHeaders, from string, replyTo []Em
 	}
 
 	switch {
-	case !matchReplyTo:
+	case (headers.ReplyToExists && !matchReplyTo):
 		return true, "BULK | REPLY-TO != FROM"
 	case headers.ListUnsubscribe:
 		return true, "BULK | UNSUBSCRIBE"
 	case strings.EqualFold(headers.Precedence, "bulk"):
 		return true, "BULK | PRECEDENCE: BULK"
-	case headers.ReturnPath == "":
+	case (headers.ReturnPathExists && headers.ReturnPath == ""):
 		return true, "BULK | EMPTY RETURN-PATH"
-	case headers.ReturnPath != from:
+	case (headers.ReturnPathExists && headers.ReturnPath != from):
 		return true, "BULK | RETURN-PATH != FROM"
 	case (headers.Sender != "" && headers.Sender != from):
 		return true, "BULK | SENDER != FROM"

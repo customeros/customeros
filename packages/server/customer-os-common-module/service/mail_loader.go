@@ -159,6 +159,7 @@ func (l *mailService) parseHeaders(headers map[string]string) EmailHeaders {
 			eh.Precedence = value
 		}
 		if strings.EqualFold(header, "Return-Path") {
+			eh.ReplyToExists = true
 			eh.ReturnPath = l.extractEmail(value)
 		}
 		if strings.EqualFold(header, "X-Autoreply") {
@@ -171,9 +172,10 @@ func (l *mailService) parseHeaders(headers map[string]string) EmailHeaders {
 			eh.XLoop = true
 		}
 		if strings.EqualFold(header, "X-Failed-Recipients") {
-			eh.XFailedRecepients = true
+			eh.XFailedRecepients = l.extractEmails(value)
 		}
 		if strings.EqualFold(header, "Reply-To") {
+			eh.ReplyToExists = true
 			eh.ReplyTo = value
 		}
 		if strings.EqualFold(header, "Sender") {
