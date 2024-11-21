@@ -123,7 +123,7 @@ func (a *mailService) isBulkMail(headers EmailHeaders, from string, replyTo []Em
 }
 
 func (a *mailService) isReturnPathBounce(returnPath string) bool {
-	return strings.Contains(returnPath, "mailer-daemon")
+	return strings.Contains(strings.ToLower(returnPath), "mailer-daemon")
 }
 
 func (a *mailService) mailsherpaChecks(from string) (failedCheck bool, reason string) {
