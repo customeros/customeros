@@ -1,7 +1,6 @@
 package service
 
 import (
-	"regexp"
 	"strings"
 
 	"github.com/customeros/mailsherpa/domaincheck"
@@ -20,7 +19,7 @@ type HeaderAnalysis struct {
 // TODO parse SMTP status code from message/deliver-status
 // and classify bounced email as hard or soft bounce
 
-func (a *mailService) ProcessEmailCheck(ctx context.Context, email *EmailMessageData) HeaderAnalysis {
+func (a *mailService) ProcessEmailCheck(ctx context.Context, tenant string, emailData *EmailMessageData) HeaderAnalysis {
 	span, ctx := a.initializeTracing(ctx, "MailService.ProcessEmailCheck")
 	defer span.Finish()
 
@@ -29,7 +28,7 @@ func (a *mailService) ProcessEmailCheck(ctx context.Context, email *EmailMessage
 	}
 
 	// Check bounce
-	bounce, reason := a.isBounce(email.Headers, email.Content.Subject, email.Participants.From.Email)
+	bounce, reason := a.isBounce(emailData.Headers, emailData.Content.Subject, emailData.Participants.From.Email)
 	if bounce {
 		analysis.IsBounce = true
 		analysis.ProcessEmail = false
@@ -37,8 +36,15 @@ func (a *mailService) ProcessEmailCheck(ctx context.Context, email *EmailMessage
 		return analysis
 	}
 
+	// Check warming email
+	if a.isWarmingEmail(tenant, emailData) {
+		analysis.ProcessEmail = false
+		analysis.SkipReason = "WARMING"
+		return analysis
+	}
+
 	// Check auto-responder first
-	autoresp, reason := a.isAutoResponder(email.Headers)
+	autoresp, reason := a.isAutoResponder(emailData.Headers)
 	if autoresp {
 		analysis.IsAutoResponder = true
 		analysis.ProcessEmail = false
@@ -47,7 +53,7 @@ func (a *mailService) ProcessEmailCheck(ctx context.Context, email *EmailMessage
 	}
 
 	// Check bulk mail
-	bulk, reason := a.isBulkMail(email.Headers, email.Participants.From.Email, email.Participants.ReplyTo)
+	bulk, reason := a.isBulkMail(emailData.Headers, emailData.Participants.From.Email, emailData.Participants.ReplyTo)
 	if bulk {
 		analysis.IsBulkMail = true
 		analysis.ProcessEmail = false
@@ -60,13 +66,13 @@ func (a *mailService) ProcessEmailCheck(ctx context.Context, email *EmailMessage
 func (a *mailService) isAutoResponder(headers EmailHeaders) (bool, string) {
 	switch {
 	case headers.XAutoreply != "":
-		return true, "Autoresponder: X-Autoreply"
+		return true, "AUTORESPONDER | X-AUTOREPLY"
 	case headers.XAutoresponse != "":
-		return true, "Autoresponder: X-Autoresponse"
+		return true, "AUTORESPONDER | X-AUTORESPONSE"
 	case headers.XLoop:
-		return true, "Autoresponder: X-Loop"
+		return true, "AUTORESPONDER | X-LOOP"
 	case strings.EqualFold(headers.Precedence, "auto_reply"):
-		return true, "Autoresponder: Precedence: auto_reply"
+		return true, "AUTORESPONDER | PRECEDENCE: AUTO_REPLY"
 	default:
 		return false, ""
 	}
@@ -75,15 +81,15 @@ func (a *mailService) isAutoResponder(headers EmailHeaders) (bool, string) {
 func (a *mailService) isBounce(headers EmailHeaders, subject, from string) (bool, string) {
 	switch {
 	case headers.XFailedRecepients:
-		return true, "Bounce: X-Failed-Recipients"
+		return true, "BOUNCE | X-FAILED-RECIPIENTS"
 	case strings.EqualFold(headers.ContentDescription, "delivery report"):
-		return true, "Bounce: Content-Description: Delivery Report"
+		return true, "BOUNCE | CONTENT-DESCRIPTION: DELIVERY REPORT"
 	case a.isReturnPathBounce(headers.ReturnPath):
-		return true, "Bounce: Return-Path containts bounce keywords"
+		return true, "BOUNCE | RETURN-PATH CONTAINTS BOUNCE KEYWORDS"
 	case a.isReturnPathBounce(from):
-		return true, "Bounce: From contains bounce keywords"
+		return true, "BOUNCE | FROM CONTAINS BOUNCE KEYWORDS"
 	case a.isBounceSubject(subject):
-		return true, "Bounce: Subject contains bounce keywords"
+		return true, "BOUNCE | SUBJECT CONTAINS BOUNCE KEYWORDS"
 	default:
 		return false, ""
 	}
@@ -100,17 +106,17 @@ func (a *mailService) isBulkMail(headers EmailHeaders, from string, replyTo []Em
 
 	switch {
 	case !matchReplyTo:
-		return true, "Bulk: Reply-To != From"
+		return true, "BULK | REPLY-TO != FROM"
 	case headers.ListUnsubscribe:
-		return true, "Bulk: Unsubscribe"
+		return true, "BULK | UNSUBSCRIBE"
 	case strings.EqualFold(headers.Precedence, "bulk"):
-		return true, "Bulk: Precidence: Bulk"
+		return true, "BULK | PRECIDENCE: BULK"
 	case headers.ReturnPath == "":
-		return true, "Bulk: Empty Return-Path"
+		return true, "BULK | EMPTY RETURN-PATH"
 	case headers.ReturnPath != from:
-		return true, "Bulk: Return-Path != From"
+		return true, "BULK | RETURN-PATH != FROM"
 	case (headers.Sender != "" && headers.Sender != from):
-		return true, "Bulk: Sender != From"
+		return true, "BULK | SENDER != FROM"
 	default:
 		return a.mailsherpaChecks(from)
 	}
@@ -122,21 +128,21 @@ func (a *mailService) isReturnPathBounce(returnPath string) bool {
 
 func (a *mailService) mailsherpaChecks(from string) (failedCheck bool, reason string) {
 	if from == "" {
-		return true, "No From email"
+		return true, "NO FROM EMAIL"
 	}
 	syntaxValidation := mailvalidate.ValidateEmailSyntax(from)
 	if syntaxValidation.IsRoleAccount {
-		return true, "Bulk: From Role Account"
+		return true, "BULK | FROM ROLE ACCOUNT"
 	}
 
 	if syntaxValidation.IsSystemGenerated {
-		return true, "Bulk: System generated"
+		return true, "BULK | SYSTEM GENERATED"
 	}
 
-	primaryDomainCheck, _ := domaincheck.PrimaryDomainCheck(syntaxValidation.Domain)
+	isPrimaryDomain, _ := domaincheck.PrimaryDomainCheck(syntaxValidation.Domain)
 
-	if !primaryDomainCheck {
-		return true, "Bulk: From non-primary domain"
+	if !isPrimaryDomain {
+		return true, "BULK | FROM NON-PRIMARY DOMAIN"
 	}
 
 	return false, ""
@@ -162,45 +168,23 @@ func (a *mailService) isBounceSubject(subject string) bool {
 	return false
 }
 
-func (a *mailService) extractEmailAddresses(input string) []string {
-	if input == "" {
-		return []string{}
-	}
+func (s *mailService) isWarmingEmail(tenant string, email *EmailMessageData) bool {
+	emailExclusion := s.services.Cache.GetEmailExclusion(tenant)
 
-	// Compile regex
-	emailRegex := regexp.MustCompile(`<([^>]+)>|([^\s,<>]+@[^\s,<>]+)`)
-
-	// Split, clean and normalize input
-	emails := strings.Split(strings.ToLower(input), ",")
-
-	// Use a map for deduplication
-	uniqueEmails := make(map[string]struct{})
-
-	for _, email := range emails {
-		matches := emailRegex.FindAllStringSubmatch(strings.TrimSpace(email), -1)
-		for _, match := range matches {
-			// match[1] is from <...>, match[2] is raw email
-			if email := match[1]; email != "" {
-				emailValidation := mailvalidate.ValidateEmailSyntax(email)
-				if emailValidation.IsValid {
-					uniqueEmails[emailValidation.CleanEmail] = struct{}{}
-				}
-			} else if email := match[2]; email != "" {
-				emailValidation := mailvalidate.ValidateEmailSyntax(email)
-				if emailValidation.IsValid {
-					uniqueEmails[emailValidation.CleanEmail] = struct{}{}
-				}
+	for _, exclusion := range emailExclusion {
+		if exclusion.ExcludeSubject != nil {
+			if strings.Contains(email.Content.Subject, *exclusion.ExcludeSubject) {
+				return true
+			}
+		}
+		if exclusion.ExcludeBody != nil {
+			if strings.Contains(email.Content.Html, *exclusion.ExcludeBody) {
+				return true
+			}
+			if strings.Contains(email.Content.Text, *exclusion.ExcludeBody) {
+				return true
 			}
 		}
 	}
-
-	if len(uniqueEmails) == 0 {
-		return []string{}
-	}
-
-	result := make([]string, 0, len(uniqueEmails))
-	for email := range uniqueEmails {
-		result = append(result, email)
-	}
-	return result
+	return false
 }

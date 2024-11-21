@@ -17,9 +17,9 @@ type mailService struct {
 }
 
 type MailService interface {
-	SyncEmailsForUser(ctx context.Context, tenant, userEmailAddress string)
+	GetEmailsForProcessingForUser(ctx context.Context, tenant, userEmailAddress string)
 	LoadEmail(ctx context.Context, rawEmail *postgresentity.RawEmail) (EmailMessageData, error)
-	ProcessEmailCheck(ctx context.Context, email *EmailMessageData) HeaderAnalysis
+	ProcessEmailCheck(ctx context.Context, tenant string, email *EmailMessageData) HeaderAnalysis
 	ProcessEmail(ctx context.Context, tenant string, emailId uuid.UUID) (postgresentity.RawState, *string, error)
 	ProcessEmailByMessageId(ctx context.Context, tenant, usernameSource, messageId string) (postgresentity.RawState, *string, error)
 	SendMail(ctx context.Context, emailMessage *entity.EmailMessage) error
