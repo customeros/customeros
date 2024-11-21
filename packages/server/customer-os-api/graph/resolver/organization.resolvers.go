@@ -88,7 +88,7 @@ func (r *mutationResolver) OrganizationHide(ctx context.Context, id string) (str
 		return "", nil
 	}
 
-	err := r.Services.CommonServices.OrganizationService.Hide(ctx, nil, common.GetTenantFromContext(ctx), id)
+	err := r.Services.CommonServices.OrganizationService.Hide(ctx, nil, id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to hide organization %s", id)
@@ -107,7 +107,7 @@ func (r *mutationResolver) OrganizationHideAll(ctx context.Context, ids []string
 
 	ctx = commontracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	for _, orgId := range ids {
-		err := r.Services.CommonServices.OrganizationService.Hide(ctx, nil, common.GetTenantFromContext(ctx), orgId)
+		err := r.Services.CommonServices.OrganizationService.Hide(ctx, nil, orgId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			graphql.AddErrorf(ctx, "Failed to hide organization %s", orgId)
@@ -126,25 +126,18 @@ func (r *mutationResolver) OrganizationShow(ctx context.Context, id string) (str
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.organizationId", id))
 
-	ctx = commontracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-		return r.Clients.OrganizationClient.ShowOrganization(ctx, &organizationpb.OrganizationIdGrpcRequest{
-			Tenant:         common.GetTenantFromContext(ctx),
-			OrganizationId: id,
-			LoggedInUserId: common.GetUserIdFromContext(ctx),
-		})
-	})
+	err := r.Services.CommonServices.OrganizationService.Show(ctx, nil, id)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to hide organization %s", id)
-		return response.Id, nil
+		graphql.AddErrorf(ctx, "Failed to show organization %s", id)
+		return id, nil
 	}
 	err = r.Services.CommonServices.OrganizationService.RequestRefreshLastTouchpoint(ctx, id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
 
-	return response.Id, nil
+	return id, nil
 }
 
 // OrganizationShowAll is the resolver for the organization_ShowAll field.
@@ -154,15 +147,8 @@ func (r *mutationResolver) OrganizationShowAll(ctx context.Context, ids []string
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.Object("request.organizationIds", ids))
 
-	ctx = commontracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	for _, orgId := range ids {
-		_, err := utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-			return r.Clients.OrganizationClient.ShowOrganization(ctx, &organizationpb.OrganizationIdGrpcRequest{
-				Tenant:         common.GetTenantFromContext(ctx),
-				OrganizationId: orgId,
-				LoggedInUserId: common.GetUserIdFromContext(ctx),
-			})
-		})
+		err := r.Services.CommonServices.OrganizationService.Show(ctx, nil, orgId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			graphql.AddErrorf(ctx, "Failed to show organization %s", orgId)

@@ -168,8 +168,6 @@ func (a *OrganizationAggregate) When(event eventstore.Event) error {
 		return a.onPhoneNumberLink(event)
 	case organizationEvents.OrganizationLocationLinkV1:
 		return a.onLocationLink(event)
-	case organizationEvents.OrganizationShowV1:
-		return a.onShow(event)
 	case organizationEvents.OrganizationUpsertCustomFieldV1:
 		return a.onUpsertCustomField(event)
 	case organizationEvents.OrganizationAddParentV1:
@@ -255,15 +253,6 @@ func (a *OrganizationAggregate) onAddLocation(event eventstore.Event) error {
 		Latitude:      eventData.Latitude,
 		Longitude:     eventData.Longitude,
 	}
-	return nil
-}
-
-func (a *OrganizationAggregate) onShow(event eventstore.Event) error {
-	var eventData organizationEvents.ShowOrganizationEvent
-	if err := event.GetJsonData(&eventData); err != nil {
-		return errors.Wrap(err, "GetJsonData")
-	}
-	a.Organization.Hide = false
 	return nil
 }
 

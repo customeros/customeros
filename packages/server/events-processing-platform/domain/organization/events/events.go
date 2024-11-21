@@ -44,6 +44,7 @@ const (
 	OrganizationRequestScrapeByWebsiteV1 = "V1_ORGANIZATION_SCRAPE_BY_WEBSITE_REQUEST"
 	//Deprecated
 	OrganizationHideV1 = "V1_ORGANIZATION_HIDE"
+	//Deprecated
 	OrganizationShowV1 = "V1_ORGANIZATION_SHOW"
 	//Deprecated
 	OrganizationRefreshLastTouchpointV1            = "V1_ORGANIZATION_REFRESH_LAST_TOUCHPOINT"
@@ -119,26 +120,6 @@ func NewOrganizationLinkLocationEvent(aggregate eventstore.Aggregate, locationId
 	event := eventstore.NewBaseEvent(aggregate, OrganizationLocationLinkV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationLinkLocationEvent")
-	}
-	return event, nil
-}
-
-type ShowOrganizationEvent struct {
-	Tenant string `json:"tenant" validate:"required"`
-}
-
-func NewShowOrganizationEventEvent(aggregate eventstore.Aggregate) (eventstore.Event, error) {
-	eventData := ShowOrganizationEvent{
-		Tenant: aggregate.GetTenant(),
-	}
-
-	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "failed to validate ShowOrganizationEvent")
-	}
-
-	event := eventstore.NewBaseEvent(aggregate, OrganizationShowV1)
-	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "error setting json data for ShowOrganizationEvent")
 	}
 	return event, nil
 }

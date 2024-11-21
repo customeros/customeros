@@ -11,7 +11,6 @@ import (
 type CommandHandlers struct {
 	LinkPhoneNumberCommand   LinkPhoneNumberCommandHandler
 	LinkLocationCommand      LinkLocationCommandHandler
-	ShowOrganizationCommand  ShowOrganizationCommandHandler
 	UpsertCustomFieldCommand UpsertCustomFieldCommandHandler
 	AddParentCommand         AddParentCommandHandler
 	RemoveParentCommand      RemoveParentCommandHandler
@@ -24,7 +23,6 @@ func NewCommandHandlers(log logger.Logger, cfg *config.Config, es eventstore.Agg
 	return &CommandHandlers{
 		LinkPhoneNumberCommand:   NewLinkPhoneNumberCommandHandler(log, es),
 		LinkLocationCommand:      NewLinkLocationCommandHandler(log, es),
-		ShowOrganizationCommand:  NewShowOrganizationCommandHandler(log, es),
 		UpsertCustomFieldCommand: NewUpsertCustomFieldCommandHandler(log, es),
 		AddParentCommand:         NewAddParentCommandHandler(log, es),
 		RemoveParentCommand:      NewRemoveParentCommandHandler(log, es),

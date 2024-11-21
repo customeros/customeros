@@ -205,8 +205,6 @@ func (a *OrganizationAggregate) HandleCommand(ctx context.Context, cmd eventstor
 	defer span.Finish()
 
 	switch c := cmd.(type) {
-	case *command.ShowOrganizationCommand:
-		return a.showOrganization(ctx, c)
 	case *command.UpsertCustomFieldCommand:
 		return a.upsertCustomField(ctx, c)
 	case *command.LinkPhoneNumberCommand:
@@ -319,26 +317,6 @@ func (a *OrganizationAggregate) linkLocation(ctx context.Context, cmd *command.L
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOrganizationLinkLocationEvent")
-	}
-
-	eventstore.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
-
-	return a.Apply(event)
-}
-
-func (a *OrganizationAggregate) showOrganization(ctx context.Context, cmd *command.ShowOrganizationCommand) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.showOrganization")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.SetTag(tracing.SpanTagEntityId, cmd.ObjectID)
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
-	tracing.LogObjectAsJson(span, "command", cmd)
-
-	event, err := organizationEvents.NewShowOrganizationEventEvent(a)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewShowOrganizationEventEvent")
 	}
 
 	eventstore.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)

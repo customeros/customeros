@@ -182,35 +182,6 @@ func (h *OrganizationEventHandler) OnSocialRemovedFromOrganization(ctx context.C
 	return nil
 }
 
-func (h *OrganizationEventHandler) OnOrganizationShow(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnOrganizationShow")
-	defer span.Finish()
-	setEventSpanTagsAndLogFields(span, evt)
-
-	var eventData events.ShowOrganizationEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "evt.GetJsonData")
-	}
-
-	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.services.CommonServices.Neo4jRepositories.OrganizationWriteRepository.SetVisibility(ctx, eventData.Tenant, organizationId, false)
-	if err != nil {
-		tracing.TraceErr(span, err)
-	}
-
-	// set customer os id
-	customerOsErr := h.setCustomerOsId(ctx, eventData.Tenant, organizationId)
-	if customerOsErr != nil {
-		tracing.TraceErr(span, customerOsErr)
-		h.log.Errorf("Failed to set customer os id for tenant %s organization %s", eventData.Tenant, organizationId)
-	}
-
-	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, h.grpcClients, utils.NewEventCompletedDetails().WithUpdate())
-
-	return err
-}
-
 func (h *OrganizationEventHandler) OnRefreshArr(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnRefreshArr")
 	defer span.Finish()

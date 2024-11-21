@@ -30,8 +30,8 @@ type OrganizationService interface {
 	Save(ctx context.Context, tx *neo4j.ManagedTransaction, id *string, dataFields data_fields.OrganizationFields) (string, error)
 	LinkWithDomain(ctx context.Context, tx *neo4j.ManagedTransaction, organizationId, domain string) error
 
-	Hide(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId string) error
-	Show(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId string) error
+	Hide(ctx context.Context, tx *neo4j.ManagedTransaction, organizationId string) error
+	Show(ctx context.Context, tx *neo4j.ManagedTransaction, organizationId string) error
 
 	GetLatestOrganizationsWithJobRolesForContacts(ctx context.Context, contactIds []string) (*neo4jentity.OrganizationWithJobRoleEntities, error)
 
@@ -133,7 +133,7 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 					span.LogFields(log.String("result.duplicate.orgId", orgDbNode.Props["id"].(string)))
 					organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(orgDbNode)
 					if organizationEntity.Hide {
-						err = s.Show(ctx, tx, tenant, organizationEntity.ID)
+						err = s.Show(ctx, tx, organizationEntity.ID)
 						if err != nil {
 							tracing.TraceErr(span, err)
 							return "", nil
@@ -170,7 +170,7 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 						return "", err
 					}
 					if organizationEntity.Hide {
-						err = s.Show(ctx, tx, tenant, existingOrganizationId)
+						err = s.Show(ctx, tx, existingOrganizationId)
 						if err != nil {
 							tracing.TraceErr(span, errors.Wrap(err, "error on showing organization"))
 							return "", err
@@ -447,11 +447,19 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 	return organizationId, nil
 }
 
-func (s *organizationService) Hide(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId string) error {
+func (s *organizationService) Hide(ctx context.Context, tx *neo4j.ManagedTransaction, organizationId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.Hide")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.SetTag(tracing.SpanTagEntityId, organizationId)
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	tenant := common.GetTenantFromContext(ctx)
 
 	organization, err := s.GetById(ctx, tenant, organizationId)
 	if err != nil {
@@ -476,11 +484,19 @@ func (s *organizationService) Hide(ctx context.Context, tx *neo4j.ManagedTransac
 	return nil
 }
 
-func (s *organizationService) Show(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId string) error {
+func (s *organizationService) Show(ctx context.Context, tx *neo4j.ManagedTransaction, organizationId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.Show")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.SetTag(tracing.SpanTagEntityId, organizationId)
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	tenant := common.GetTenantFromContext(ctx)
 
 	organization, err := s.GetById(ctx, tenant, organizationId)
 	if err != nil {
@@ -501,6 +517,11 @@ func (s *organizationService) Show(ctx context.Context, tx *neo4j.ManagedTransac
 	}
 
 	utils.EventCompleted(ctx, tenant, model.ORGANIZATION.String(), organizationId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithCreate())
+
+	err = s.RequestRefreshLastTouchpoint(ctx, organizationId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
 
 	return nil
 }

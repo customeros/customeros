@@ -78,7 +78,6 @@ func main() {
 	//testRequestGenerateActionItemsRequest()
 	//testEnrichOrganization()
 	//testHideOrganization()
-	//testShowOrganization()
 	//testAddCustomField()
 	//testCreatePhoneNumber()
 	//testAddParentOrganization()
@@ -172,17 +171,6 @@ func testRequestGenerateActionItemsRequest() {
 	result, _ := clients.InteractionEventClient.RequestGenerateActionItems(context.Background(), &iepb.RequestGenerateActionItemsGrpcRequest{
 		Tenant:             tenant,
 		InteractionEventId: interactionEventId,
-	})
-	print(result)
-}
-
-func testShowOrganization() {
-
-	organizationId := "ccc"
-
-	result, _ := clients.OrganizationClient.ShowOrganization(context.Background(), &organizationpb.OrganizationIdGrpcRequest{
-		Tenant:         tenant,
-		OrganizationId: organizationId,
 	})
 	print(result)
 }
