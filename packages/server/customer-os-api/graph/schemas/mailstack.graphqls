@@ -1,14 +1,14 @@
 extend type Query {
-    mailstack_DomainPurchaseSuggestions(domain: String!, limit: Int): [String!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    mailstack_Domains: [String!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    mailstack_CheckUnavailableDomains(domain: [String!]!): [String!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    mailstack_DomainPurchaseSuggestions(domain: String!): [String!]! @hasRole(roles: [ADMIN, USER]) @hasTenant #suggest domains based on a domain
+    mailstack_Domains: [String!]! @hasRole(roles: [ADMIN, USER]) @hasTenant #domains owned by tenant
+    mailstack_CheckUnavailableDomains(domain: [String!]!): [String!]! @hasRole(roles: [ADMIN, USER]) @hasTenant #check if a domain is still available
 
-    mailstack_Mailboxes: [Mailbox!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    mailstack_UniqueUsernames: [String!]! @hasRole(roles: [ADMIN, USER]) @hasTenant #unique usernames from mailboxes
+    mailstack_Mailboxes: [Mailbox!]! @hasRole(roles: [ADMIN, USER]) @hasTenant #mailboxes owned by tenant
 }
 
 extend type Mutation {
-    mailstack_RegisterDomains(domains: [String!]!): [String!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    mailstack_CreateMailboxes(input: [MailboxInput!]!): [Mailbox!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    mailstack_BuyDomainWithMailboxes(domains: [String!]!, usernames: [String!]!): [String!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
     mailstack_SetUser(mailbox: String!, userId: ID!): Mailbox! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
@@ -20,9 +20,4 @@ type Mailbox {
     scheduledEmails:    Int64!
     dailyEmailLimit:    Int64!
     currentFlowIds:     [ID!]
-}
-
-input MailboxInput {
-    mailboxDomain:      String!
-    mailboxUsername:    String!
 }

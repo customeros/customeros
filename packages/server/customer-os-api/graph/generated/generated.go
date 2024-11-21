@@ -1021,8 +1021,7 @@ type ComplexityRoot struct {
 		LogEntryRemoveTag                          func(childComplexity int, id string, input model.TagIDOrNameInput) int
 		LogEntryResetTags                          func(childComplexity int, id string, input []*model.TagIDOrNameInput) int
 		LogEntryUpdate                             func(childComplexity int, id string, input model.LogEntryUpdateInput) int
-		MailstackCreateMailboxes                   func(childComplexity int, input []*model.MailboxInput) int
-		MailstackRegisterDomains                   func(childComplexity int, domains []string) int
+		MailstackBuyDomainWithMailboxes            func(childComplexity int, domains []string, usernames []string) int
 		MailstackSetUser                           func(childComplexity int, mailbox string, userID string) int
 		MeetingAddNewLocation                      func(childComplexity int, meetingID string) int
 		MeetingAddNote                             func(childComplexity int, meetingID string, note *model.NoteInput) int
@@ -1272,6 +1271,7 @@ type ComplexityRoot struct {
 
 	OrganizationUiDetails struct {
 		ChurnedAt                       func(childComplexity int) int
+		ContactCount                    func(childComplexity int) int
 		Contacts                        func(childComplexity int) int
 		Contracts                       func(childComplexity int) int
 		CreatedAt                       func(childComplexity int) int
@@ -1396,9 +1396,10 @@ type ComplexityRoot struct {
 		Issue                              func(childComplexity int, id string) int
 		LogEntry                           func(childComplexity int, id string) int
 		MailstackCheckUnavailableDomains   func(childComplexity int, domain []string) int
-		MailstackDomainPurchaseSuggestions func(childComplexity int, domain string, limit *int) int
+		MailstackDomainPurchaseSuggestions func(childComplexity int, domain string) int
 		MailstackDomains                   func(childComplexity int) int
 		MailstackMailboxes                 func(childComplexity int) int
+		MailstackUniqueUsernames           func(childComplexity int) int
 		Meeting                            func(childComplexity int, id string) int
 		OpportunitiesLinkedToOrganizations func(childComplexity int, pagination *model.Pagination) int
 		Opportunity                        func(childComplexity int, id string) int
@@ -1422,6 +1423,7 @@ type ComplexityRoot struct {
 		TenantBillingProfiles              func(childComplexity int) int
 		TenantSettings                     func(childComplexity int) int
 		TimelineEvents                     func(childComplexity int, ids []string) int
+		UIOrganization                     func(childComplexity int, ids string) int
 		UIOrganizations                    func(childComplexity int, ids []string) int
 		UIOrganizationsSearch              func(childComplexity int, limit *int, where *model.Filter, sort *model.SortBy) int
 		User                               func(childComplexity int, id string) int
@@ -1868,8 +1870,7 @@ type MutationResolver interface {
 	LogEntryResetTags(ctx context.Context, id string, input []*model.TagIDOrNameInput) (string, error)
 	LogEntryAddTag(ctx context.Context, id string, input model.TagIDOrNameInput) (string, error)
 	LogEntryRemoveTag(ctx context.Context, id string, input model.TagIDOrNameInput) (string, error)
-	MailstackRegisterDomains(ctx context.Context, domains []string) ([]string, error)
-	MailstackCreateMailboxes(ctx context.Context, input []*model.MailboxInput) ([]*model.Mailbox, error)
+	MailstackBuyDomainWithMailboxes(ctx context.Context, domains []string, usernames []string) ([]string, error)
 	MailstackSetUser(ctx context.Context, mailbox string, userID string) (*model.Mailbox, error)
 	MeetingCreate(ctx context.Context, meeting model.MeetingInput) (*model.Meeting, error)
 	MeetingUpdate(ctx context.Context, meetingID string, meeting model.MeetingUpdateInput) (*model.Meeting, error)
@@ -2044,9 +2045,10 @@ type QueryResolver interface {
 	InvoiceByNumber(ctx context.Context, number string) (*model.Invoice, error)
 	Issue(ctx context.Context, id string) (*model.Issue, error)
 	LogEntry(ctx context.Context, id string) (*model.LogEntry, error)
-	MailstackDomainPurchaseSuggestions(ctx context.Context, domain string, limit *int) ([]string, error)
+	MailstackDomainPurchaseSuggestions(ctx context.Context, domain string) ([]string, error)
 	MailstackDomains(ctx context.Context) ([]string, error)
 	MailstackCheckUnavailableDomains(ctx context.Context, domain []string) ([]string, error)
+	MailstackUniqueUsernames(ctx context.Context) ([]string, error)
 	MailstackMailboxes(ctx context.Context) ([]*model.Mailbox, error)
 	Meeting(ctx context.Context, id string) (*model.Meeting, error)
 	ExternalMeetings(ctx context.Context, externalSystemID string, externalID *string, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.MeetingsPage, error)
@@ -2059,6 +2061,7 @@ type QueryResolver interface {
 	OrganizationDistinctOwners(ctx context.Context) ([]*model.User, error)
 	OrganizationCheckWebsite(ctx context.Context, website string) (*model.WebsiteDetails, error)
 	OrganizationsHiddenAfter(ctx context.Context, date time.Time) ([]string, error)
+	UIOrganization(ctx context.Context, ids string) (*model.OrganizationUIDetails, error)
 	UIOrganizations(ctx context.Context, ids []string) ([]*model.OrganizationUIDetails, error)
 	UIOrganizationsSearch(ctx context.Context, limit *int, where *model.Filter, sort *model.SortBy) (*model.OrganizationSearchResult, error)
 	PhoneNumber(ctx context.Context, id string) (*model.PhoneNumber, error)
@@ -7490,29 +7493,17 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.LogEntryUpdate(childComplexity, args["id"].(string), args["input"].(model.LogEntryUpdateInput)), true
 
-	case "Mutation.mailstack_CreateMailboxes":
-		if e.complexity.Mutation.MailstackCreateMailboxes == nil {
+	case "Mutation.mailstack_BuyDomainWithMailboxes":
+		if e.complexity.Mutation.MailstackBuyDomainWithMailboxes == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_mailstack_CreateMailboxes_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_mailstack_BuyDomainWithMailboxes_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.MailstackCreateMailboxes(childComplexity, args["input"].([]*model.MailboxInput)), true
-
-	case "Mutation.mailstack_RegisterDomains":
-		if e.complexity.Mutation.MailstackRegisterDomains == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_mailstack_RegisterDomains_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.MailstackRegisterDomains(childComplexity, args["domains"].([]string)), true
+		return e.complexity.Mutation.MailstackBuyDomainWithMailboxes(childComplexity, args["domains"].([]string), args["usernames"].([]string)), true
 
 	case "Mutation.mailstack_SetUser":
 		if e.complexity.Mutation.MailstackSetUser == nil {
@@ -9431,6 +9422,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.OrganizationUiDetails.ChurnedAt(childComplexity), true
 
+	case "OrganizationUiDetails.contactCount":
+		if e.complexity.OrganizationUiDetails.ContactCount == nil {
+			break
+		}
+
+		return e.complexity.OrganizationUiDetails.ContactCount(childComplexity), true
+
 	case "OrganizationUiDetails.contacts":
 		if e.complexity.OrganizationUiDetails.Contacts == nil {
 			break
@@ -10349,7 +10347,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.MailstackDomainPurchaseSuggestions(childComplexity, args["domain"].(string), args["limit"].(*int)), true
+		return e.complexity.Query.MailstackDomainPurchaseSuggestions(childComplexity, args["domain"].(string)), true
 
 	case "Query.mailstack_Domains":
 		if e.complexity.Query.MailstackDomains == nil {
@@ -10364,6 +10362,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.MailstackMailboxes(childComplexity), true
+
+	case "Query.mailstack_UniqueUsernames":
+		if e.complexity.Query.MailstackUniqueUsernames == nil {
+			break
+		}
+
+		return e.complexity.Query.MailstackUniqueUsernames(childComplexity), true
 
 	case "Query.meeting":
 		if e.complexity.Query.Meeting == nil {
@@ -10610,6 +10615,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.TimelineEvents(childComplexity, args["ids"].([]string)), true
+
+	case "Query.ui_organization":
+		if e.complexity.Query.UIOrganization == nil {
+			break
+		}
+
+		args, err := ec.field_Query_ui_organization_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.UIOrganization(childComplexity, args["ids"].(string)), true
 
 	case "Query.ui_organizations":
 		if e.complexity.Query.UIOrganizations == nil {
@@ -11885,7 +11902,6 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputLocationUpdateInput,
 		ec.unmarshalInputLogEntryInput,
 		ec.unmarshalInputLogEntryUpdateInput,
-		ec.unmarshalInputMailboxInput,
 		ec.unmarshalInputMeetingInput,
 		ec.unmarshalInputMeetingParticipantInput,
 		ec.unmarshalInputMeetingUpdateInput,
@@ -14399,16 +14415,16 @@ input LogEntryUpdateInput {
     startedAt: Time
 }`, BuiltIn: false},
 	{Name: "../schemas/mailstack.graphqls", Input: `extend type Query {
-    mailstack_DomainPurchaseSuggestions(domain: String!, limit: Int): [String!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    mailstack_Domains: [String!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    mailstack_CheckUnavailableDomains(domain: [String!]!): [String!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    mailstack_DomainPurchaseSuggestions(domain: String!): [String!]! @hasRole(roles: [ADMIN, USER]) @hasTenant #suggest domains based on a domain
+    mailstack_Domains: [String!]! @hasRole(roles: [ADMIN, USER]) @hasTenant #domains owned by tenant
+    mailstack_CheckUnavailableDomains(domain: [String!]!): [String!]! @hasRole(roles: [ADMIN, USER]) @hasTenant #check if a domain is still available
 
-    mailstack_Mailboxes: [Mailbox!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    mailstack_UniqueUsernames: [String!]! @hasRole(roles: [ADMIN, USER]) @hasTenant #unique usernames from mailboxes
+    mailstack_Mailboxes: [Mailbox!]! @hasRole(roles: [ADMIN, USER]) @hasTenant #mailboxes owned by tenant
 }
 
 extend type Mutation {
-    mailstack_RegisterDomains(domains: [String!]!): [String!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    mailstack_CreateMailboxes(input: [MailboxInput!]!): [Mailbox!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    mailstack_BuyDomainWithMailboxes(domains: [String!]!, usernames: [String!]!): [String!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
     mailstack_SetUser(mailbox: String!, userId: ID!): Mailbox! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
@@ -14420,11 +14436,6 @@ type Mailbox {
     scheduledEmails:    Int64!
     dailyEmailLimit:    Int64!
     currentFlowIds:     [ID!]
-}
-
-input MailboxInput {
-    mailboxDomain:      String!
-    mailboxUsername:    String!
 }`, BuiltIn: false},
 	{Name: "../schemas/meeting.graphqls", Input: `"""
 Specifies how many pages of meeting information has been returned in the query response.
@@ -15191,6 +15202,7 @@ enum OrganizationStage {
     UNQUALIFIED
 }`, BuiltIn: false},
 	{Name: "../schemas/organizationV2.graphqls", Input: `extend type Query {
+    ui_organization(ids: ID!): OrganizationUiDetails! @hasRole(roles: [ADMIN, USER]) @hasTenant
     ui_organizations(ids: [ID!]): [OrganizationUiDetails!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
     ui_organizations_search(limit: Int, where: Filter, sort: SortBy): OrganizationSearchResult! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
@@ -15248,15 +15260,16 @@ type OrganizationUiDetails {
     lastTouchPointType: LastTouchpointType
 
     # data from associated entities
-    contracts:            [String!]!
-    contacts:             [String!]!
+    contracts:            [String!]! # in profile
+    contacts:             [String!]! # in profile
+    contactCount:         Int        # in table
     socialMedia:          [Social!]!
     tags:                 [Tag!]!
     locations:            [Location!]!
     owner:                User
 
-    parentId:              ID
-    parentName:            String
+    parentId:             ID
+    parentName:           String
     subsidiaries:         [String!]!
 }`, BuiltIn: false},
 	{Name: "../schemas/page_view.graphqls", Input: `type PageView implements Node & SourceFields {
@@ -20722,49 +20735,22 @@ func (ec *executionContext) field_Mutation_logEntry_Update_argsInput(
 	return zeroVal, nil
 }
 
-func (ec *executionContext) field_Mutation_mailstack_CreateMailboxes_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_mailstack_BuyDomainWithMailboxes_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	arg0, err := ec.field_Mutation_mailstack_CreateMailboxes_argsInput(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["input"] = arg0
-	return args, nil
-}
-func (ec *executionContext) field_Mutation_mailstack_CreateMailboxes_argsInput(
-	ctx context.Context,
-	rawArgs map[string]interface{},
-) ([]*model.MailboxInput, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["input"]
-	if !ok {
-		var zeroVal []*model.MailboxInput
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNMailboxInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMailboxInputᚄ(ctx, tmp)
-	}
-
-	var zeroVal []*model.MailboxInput
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Mutation_mailstack_RegisterDomains_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	arg0, err := ec.field_Mutation_mailstack_RegisterDomains_argsDomains(ctx, rawArgs)
+	arg0, err := ec.field_Mutation_mailstack_BuyDomainWithMailboxes_argsDomains(ctx, rawArgs)
 	if err != nil {
 		return nil, err
 	}
 	args["domains"] = arg0
+	arg1, err := ec.field_Mutation_mailstack_BuyDomainWithMailboxes_argsUsernames(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["usernames"] = arg1
 	return args, nil
 }
-func (ec *executionContext) field_Mutation_mailstack_RegisterDomains_argsDomains(
+func (ec *executionContext) field_Mutation_mailstack_BuyDomainWithMailboxes_argsDomains(
 	ctx context.Context,
 	rawArgs map[string]interface{},
 ) ([]string, error) {
@@ -20779,6 +20765,28 @@ func (ec *executionContext) field_Mutation_mailstack_RegisterDomains_argsDomains
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("domains"))
 	if tmp, ok := rawArgs["domains"]; ok {
+		return ec.unmarshalNString2ᚕstringᚄ(ctx, tmp)
+	}
+
+	var zeroVal []string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_mailstack_BuyDomainWithMailboxes_argsUsernames(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) ([]string, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["usernames"]
+	if !ok {
+		var zeroVal []string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("usernames"))
+	if tmp, ok := rawArgs["usernames"]; ok {
 		return ec.unmarshalNString2ᚕstringᚄ(ctx, tmp)
 	}
 
@@ -25831,11 +25839,6 @@ func (ec *executionContext) field_Query_mailstack_DomainPurchaseSuggestions_args
 		return nil, err
 	}
 	args["domain"] = arg0
-	arg1, err := ec.field_Query_mailstack_DomainPurchaseSuggestions_argsLimit(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["limit"] = arg1
 	return args, nil
 }
 func (ec *executionContext) field_Query_mailstack_DomainPurchaseSuggestions_argsDomain(
@@ -25857,28 +25860,6 @@ func (ec *executionContext) field_Query_mailstack_DomainPurchaseSuggestions_args
 	}
 
 	var zeroVal string
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Query_mailstack_DomainPurchaseSuggestions_argsLimit(
-	ctx context.Context,
-	rawArgs map[string]interface{},
-) (*int, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["limit"]
-	if !ok {
-		var zeroVal *int
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
-	if tmp, ok := rawArgs["limit"]; ok {
-		return ec.unmarshalOInt2ᚖint(ctx, tmp)
-	}
-
-	var zeroVal *int
 	return zeroVal, nil
 }
 
@@ -26504,6 +26485,38 @@ func (ec *executionContext) field_Query_timelineEvents_argsIds(
 	}
 
 	var zeroVal []string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_ui_organization_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	arg0, err := ec.field_Query_ui_organization_argsIds(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["ids"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Query_ui_organization_argsIds(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (string, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["ids"]
+	if !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("ids"))
+	if tmp, ok := rawArgs["ids"]; ok {
+		return ec.unmarshalNID2string(ctx, tmp)
+	}
+
+	var zeroVal string
 	return zeroVal, nil
 }
 
@@ -65357,8 +65370,8 @@ func (ec *executionContext) fieldContext_Mutation_logEntry_RemoveTag(ctx context
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_mailstack_RegisterDomains(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_mailstack_RegisterDomains(ctx, field)
+func (ec *executionContext) _Mutation_mailstack_BuyDomainWithMailboxes(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_mailstack_BuyDomainWithMailboxes(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -65372,7 +65385,7 @@ func (ec *executionContext) _Mutation_mailstack_RegisterDomains(ctx context.Cont
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().MailstackRegisterDomains(rctx, fc.Args["domains"].([]string))
+			return ec.resolvers.Mutation().MailstackBuyDomainWithMailboxes(rctx, fc.Args["domains"].([]string), fc.Args["usernames"].([]string))
 		}
 
 		directive1 := func(ctx context.Context) (interface{}, error) {
@@ -65422,7 +65435,7 @@ func (ec *executionContext) _Mutation_mailstack_RegisterDomains(ctx context.Cont
 	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_mailstack_RegisterDomains(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_mailstack_BuyDomainWithMailboxes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -65439,112 +65452,7 @@ func (ec *executionContext) fieldContext_Mutation_mailstack_RegisterDomains(ctx 
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_mailstack_RegisterDomains_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_mailstack_CreateMailboxes(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_mailstack_CreateMailboxes(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().MailstackCreateMailboxes(rctx, fc.Args["input"].([]*model.MailboxInput))
-		}
-
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
-			if err != nil {
-				var zeroVal []*model.Mailbox
-				return zeroVal, err
-			}
-			if ec.directives.HasRole == nil {
-				var zeroVal []*model.Mailbox
-				return zeroVal, errors.New("directive hasRole is not implemented")
-			}
-			return ec.directives.HasRole(ctx, nil, directive0, roles)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.HasTenant == nil {
-				var zeroVal []*model.Mailbox
-				return zeroVal, errors.New("directive hasTenant is not implemented")
-			}
-			return ec.directives.HasTenant(ctx, nil, directive1)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.([]*model.Mailbox); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.Mailbox`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*model.Mailbox)
-	fc.Result = res
-	return ec.marshalNMailbox2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMailboxᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_mailstack_CreateMailboxes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "domain":
-				return ec.fieldContext_Mailbox_domain(ctx, field)
-			case "mailbox":
-				return ec.fieldContext_Mailbox_mailbox(ctx, field)
-			case "created":
-				return ec.fieldContext_Mailbox_created(ctx, field)
-			case "userId":
-				return ec.fieldContext_Mailbox_userId(ctx, field)
-			case "scheduledEmails":
-				return ec.fieldContext_Mailbox_scheduledEmails(ctx, field)
-			case "dailyEmailLimit":
-				return ec.fieldContext_Mailbox_dailyEmailLimit(ctx, field)
-			case "currentFlowIds":
-				return ec.fieldContext_Mailbox_currentFlowIds(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Mailbox", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_mailstack_CreateMailboxes_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_mailstack_BuyDomainWithMailboxes_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -84154,6 +84062,47 @@ func (ec *executionContext) fieldContext_OrganizationUiDetails_contacts(_ contex
 	return fc, nil
 }
 
+func (ec *executionContext) _OrganizationUiDetails_contactCount(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationUiDetails_contactCount(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ContactCount, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int)
+	fc.Result = res
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationUiDetails_contactCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationUiDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _OrganizationUiDetails_socialMedia(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_OrganizationUiDetails_socialMedia(ctx, field)
 	if err != nil {
@@ -84263,10 +84212,12 @@ func (ec *executionContext) fieldContext_OrganizationUiDetails_tags(_ context.Co
 			switch field.Name {
 			case "metadata":
 				return ec.fieldContext_Tag_metadata(ctx, field)
-			case "id":
-				return ec.fieldContext_Tag_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Tag_name(ctx, field)
+			case "entityType":
+				return ec.fieldContext_Tag_entityType(ctx, field)
+			case "id":
+				return ec.fieldContext_Tag_id(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Tag_createdAt(ctx, field)
 			case "updatedAt":
@@ -84275,8 +84226,6 @@ func (ec *executionContext) fieldContext_OrganizationUiDetails_tags(_ context.Co
 				return ec.fieldContext_Tag_source(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Tag_appSource(ctx, field)
-			case "entityType":
-				return ec.fieldContext_Tag_entityType(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Tag", field.Name)
 		},
@@ -89429,7 +89378,7 @@ func (ec *executionContext) _Query_mailstack_DomainPurchaseSuggestions(ctx conte
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().MailstackDomainPurchaseSuggestions(rctx, fc.Args["domain"].(string), fc.Args["limit"].(*int))
+			return ec.resolvers.Query().MailstackDomainPurchaseSuggestions(rctx, fc.Args["domain"].(string))
 		}
 
 		directive1 := func(ctx context.Context) (interface{}, error) {
@@ -89666,6 +89615,84 @@ func (ec *executionContext) fieldContext_Query_mailstack_CheckUnavailableDomains
 	if fc.Args, err = ec.field_Query_mailstack_CheckUnavailableDomains_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_mailstack_UniqueUsernames(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_mailstack_UniqueUsernames(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().MailstackUniqueUsernames(rctx)
+		}
+
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				var zeroVal []string
+				return zeroVal, err
+			}
+			if ec.directives.HasRole == nil {
+				var zeroVal []string
+				return zeroVal, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				var zeroVal []string
+				return zeroVal, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]string); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []string`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]string)
+	fc.Result = res
+	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_mailstack_UniqueUsernames(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
 	}
 	return fc, nil
 }
@@ -91278,6 +91305,183 @@ func (ec *executionContext) fieldContext_Query_organizations_HiddenAfter(ctx con
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_ui_organization(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_ui_organization(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().UIOrganization(rctx, fc.Args["ids"].(string))
+		}
+
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				var zeroVal *model.OrganizationUIDetails
+				return zeroVal, err
+			}
+			if ec.directives.HasRole == nil {
+				var zeroVal *model.OrganizationUIDetails
+				return zeroVal, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				var zeroVal *model.OrganizationUIDetails
+				return zeroVal, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.OrganizationUIDetails); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.OrganizationUIDetails`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.OrganizationUIDetails)
+	fc.Result = res
+	return ec.marshalNOrganizationUiDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationUIDetails(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_ui_organization(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_OrganizationUiDetails_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_OrganizationUiDetails_createdAt(ctx, field)
+			case "name":
+				return ec.fieldContext_OrganizationUiDetails_name(ctx, field)
+			case "notes":
+				return ec.fieldContext_OrganizationUiDetails_notes(ctx, field)
+			case "description":
+				return ec.fieldContext_OrganizationUiDetails_description(ctx, field)
+			case "industry":
+				return ec.fieldContext_OrganizationUiDetails_industry(ctx, field)
+			case "market":
+				return ec.fieldContext_OrganizationUiDetails_market(ctx, field)
+			case "website":
+				return ec.fieldContext_OrganizationUiDetails_website(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_OrganizationUiDetails_logoUrl(ctx, field)
+			case "iconUrl":
+				return ec.fieldContext_OrganizationUiDetails_iconUrl(ctx, field)
+			case "stage":
+				return ec.fieldContext_OrganizationUiDetails_stage(ctx, field)
+			case "relationship":
+				return ec.fieldContext_OrganizationUiDetails_relationship(ctx, field)
+			case "lastFundingRound":
+				return ec.fieldContext_OrganizationUiDetails_lastFundingRound(ctx, field)
+			case "leadSource":
+				return ec.fieldContext_OrganizationUiDetails_leadSource(ctx, field)
+			case "valueProposition":
+				return ec.fieldContext_OrganizationUiDetails_valueProposition(ctx, field)
+			case "slackChannelId":
+				return ec.fieldContext_OrganizationUiDetails_slackChannelId(ctx, field)
+			case "public":
+				return ec.fieldContext_OrganizationUiDetails_public(ctx, field)
+			case "employees":
+				return ec.fieldContext_OrganizationUiDetails_employees(ctx, field)
+			case "yearFounded":
+				return ec.fieldContext_OrganizationUiDetails_yearFounded(ctx, field)
+			case "enrichedAt":
+				return ec.fieldContext_OrganizationUiDetails_enrichedAt(ctx, field)
+			case "enrichedFailedAt":
+				return ec.fieldContext_OrganizationUiDetails_enrichedFailedAt(ctx, field)
+			case "enrichedRequestedAt":
+				return ec.fieldContext_OrganizationUiDetails_enrichedRequestedAt(ctx, field)
+			case "ltv":
+				return ec.fieldContext_OrganizationUiDetails_ltv(ctx, field)
+			case "churnedAt":
+				return ec.fieldContext_OrganizationUiDetails_churnedAt(ctx, field)
+			case "renewalSummaryArrForecast":
+				return ec.fieldContext_OrganizationUiDetails_renewalSummaryArrForecast(ctx, field)
+			case "renewalSummaryMaxArrForecast":
+				return ec.fieldContext_OrganizationUiDetails_renewalSummaryMaxArrForecast(ctx, field)
+			case "renewalSummaryRenewalLikelihood":
+				return ec.fieldContext_OrganizationUiDetails_renewalSummaryRenewalLikelihood(ctx, field)
+			case "renewalSummaryNextRenewalAt":
+				return ec.fieldContext_OrganizationUiDetails_renewalSummaryNextRenewalAt(ctx, field)
+			case "onboardingStatus":
+				return ec.fieldContext_OrganizationUiDetails_onboardingStatus(ctx, field)
+			case "onboardingStatusUpdatedAt":
+				return ec.fieldContext_OrganizationUiDetails_onboardingStatusUpdatedAt(ctx, field)
+			case "onboardingComments":
+				return ec.fieldContext_OrganizationUiDetails_onboardingComments(ctx, field)
+			case "lastTouchPointAt":
+				return ec.fieldContext_OrganizationUiDetails_lastTouchPointAt(ctx, field)
+			case "lastTouchPointType":
+				return ec.fieldContext_OrganizationUiDetails_lastTouchPointType(ctx, field)
+			case "contracts":
+				return ec.fieldContext_OrganizationUiDetails_contracts(ctx, field)
+			case "contacts":
+				return ec.fieldContext_OrganizationUiDetails_contacts(ctx, field)
+			case "contactCount":
+				return ec.fieldContext_OrganizationUiDetails_contactCount(ctx, field)
+			case "socialMedia":
+				return ec.fieldContext_OrganizationUiDetails_socialMedia(ctx, field)
+			case "tags":
+				return ec.fieldContext_OrganizationUiDetails_tags(ctx, field)
+			case "locations":
+				return ec.fieldContext_OrganizationUiDetails_locations(ctx, field)
+			case "owner":
+				return ec.fieldContext_OrganizationUiDetails_owner(ctx, field)
+			case "parentId":
+				return ec.fieldContext_OrganizationUiDetails_parentId(ctx, field)
+			case "parentName":
+				return ec.fieldContext_OrganizationUiDetails_parentName(ctx, field)
+			case "subsidiaries":
+				return ec.fieldContext_OrganizationUiDetails_subsidiaries(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type OrganizationUiDetails", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_ui_organization_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_ui_organizations(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_ui_organizations(ctx, field)
 	if err != nil {
@@ -91421,6 +91625,8 @@ func (ec *executionContext) fieldContext_Query_ui_organizations(ctx context.Cont
 				return ec.fieldContext_OrganizationUiDetails_contracts(ctx, field)
 			case "contacts":
 				return ec.fieldContext_OrganizationUiDetails_contacts(ctx, field)
+			case "contactCount":
+				return ec.fieldContext_OrganizationUiDetails_contactCount(ctx, field)
 			case "socialMedia":
 				return ec.fieldContext_OrganizationUiDetails_socialMedia(ctx, field)
 			case "tags":
@@ -106537,40 +106743,6 @@ func (ec *executionContext) unmarshalInputLogEntryUpdateInput(ctx context.Contex
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputMailboxInput(ctx context.Context, obj interface{}) (model.MailboxInput, error) {
-	var it model.MailboxInput
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
-		asMap[k] = v
-	}
-
-	fieldsInOrder := [...]string{"mailboxDomain", "mailboxUsername"}
-	for _, k := range fieldsInOrder {
-		v, ok := asMap[k]
-		if !ok {
-			continue
-		}
-		switch k {
-		case "mailboxDomain":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("mailboxDomain"))
-			data, err := ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.MailboxDomain = data
-		case "mailboxUsername":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("mailboxUsername"))
-			data, err := ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.MailboxUsername = data
-		}
-	}
-
-	return it, nil
-}
-
 func (ec *executionContext) unmarshalInputMeetingInput(ctx context.Context, obj interface{}) (model.MeetingInput, error) {
 	var it model.MeetingInput
 	asMap := map[string]interface{}{}
@@ -118672,16 +118844,9 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "mailstack_RegisterDomains":
+		case "mailstack_BuyDomainWithMailboxes":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_mailstack_RegisterDomains(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "mailstack_CreateMailboxes":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_mailstack_CreateMailboxes(ctx, field)
+				return ec._Mutation_mailstack_BuyDomainWithMailboxes(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -121172,6 +121337,8 @@ func (ec *executionContext) _OrganizationUiDetails(ctx context.Context, sel ast.
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "contactCount":
+			out.Values[i] = ec._OrganizationUiDetails_contactCount(ctx, field, obj)
 		case "socialMedia":
 			out.Values[i] = ec._OrganizationUiDetails_socialMedia(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -122407,6 +122574,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "mailstack_UniqueUsernames":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_mailstack_UniqueUsernames(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "mailstack_Mailboxes":
 			field := field
 
@@ -122647,6 +122836,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_organizations_HiddenAfter(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "ui_organization":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_ui_organization(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -128352,28 +128563,6 @@ func (ec *executionContext) marshalNMailbox2ᚖgithubᚗcomᚋopenlineᚑaiᚋop
 	return ec._Mailbox(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNMailboxInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMailboxInputᚄ(ctx context.Context, v interface{}) ([]*model.MailboxInput, error) {
-	var vSlice []interface{}
-	if v != nil {
-		vSlice = graphql.CoerceList(v)
-	}
-	var err error
-	res := make([]*model.MailboxInput, len(vSlice))
-	for i := range vSlice {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNMailboxInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMailboxInput(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
-}
-
-func (ec *executionContext) unmarshalNMailboxInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMailboxInput(ctx context.Context, v interface{}) (*model.MailboxInput, error) {
-	res, err := ec.unmarshalInputMailboxInput(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
 func (ec *executionContext) marshalNMeeting2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeeting(ctx context.Context, sel ast.SelectionSet, v model.Meeting) graphql.Marshaler {
 	return ec._Meeting(ctx, sel, &v)
 }
@@ -128809,6 +128998,10 @@ func (ec *executionContext) marshalNOrganizationSearchResult2ᚖgithubᚗcomᚋo
 func (ec *executionContext) unmarshalNOrganizationTagInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationTagInput(ctx context.Context, v interface{}) (model.OrganizationTagInput, error) {
 	res, err := ec.unmarshalInputOrganizationTagInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNOrganizationUiDetails2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationUIDetails(ctx context.Context, sel ast.SelectionSet, v model.OrganizationUIDetails) graphql.Marshaler {
+	return ec._OrganizationUiDetails(ctx, sel, &v)
 }
 
 func (ec *executionContext) marshalNOrganizationUiDetails2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationUIDetailsᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.OrganizationUIDetails) graphql.Marshaler {

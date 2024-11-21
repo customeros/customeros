@@ -22,6 +22,7 @@ type SocialReadRepository interface {
 	GetDuplicatedSocialsForEntityType(ctx context.Context, linkedEntityNodeLabel string, minutesSinceLastUpdate, limit int) ([]TenantSocialIdAndEntityId, error)
 	GetEmptySocialsForEntityType(ctx context.Context, linkedEntityNodeLabel string, minutesSinceLastUpdate, limit int) ([]TenantSocialIdAndEntityId, error)
 	GetAllForEntities(ctx context.Context, tenant string, linkedEntityType neo4jenum.EntityType, linkedEntityIds []string) ([]*utils.DbNodeAndId, error)
+	GetAllLinkedinForEntities(ctx context.Context, tenant string, linkedEntityType neo4jenum.EntityType, linkedEntityIds []string) ([]*utils.DbNodeAndId, error)
 	GetById(ctx context.Context, tenant, socialId string) (*dbtype.Node, error)
 }
 
@@ -170,6 +171,39 @@ func (r *socialReadRepository) GetAllForEntities(ctx context.Context, tenant str
 
 	cypher := fmt.Sprintf(`MATCH (e:%s)-[:HAS]->(soc:Social)
 			WHERE e.id IN $entityIds
+			RETURN soc, e.id as entityId ORDER BY soc.url`, linkedEntityType.Neo4jLabel()+"_"+tenant)
+	params := map[string]any{
+		"entityIds": linkedEntityIds,
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	dbNodeAndIds := result.([]*utils.DbNodeAndId)
+	span.LogFields(log.Int("result.count", len(dbNodeAndIds)))
+	return dbNodeAndIds, err
+}
+
+func (r *socialReadRepository) GetAllLinkedinForEntities(ctx context.Context, tenant string, linkedEntityType neo4jenum.EntityType, linkedEntityIds []string) ([]*utils.DbNodeAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialReadRepository.GetAllLinkedinForEntities")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	cypher := fmt.Sprintf(`MATCH (e:%s)-[:HAS]->(soc:Social)
+			WHERE e.id IN $entityIds and soc.url contains 'linkedin.com'
 			RETURN soc, e.id as entityId ORDER BY soc.url`, linkedEntityType.Neo4jLabel()+"_"+tenant)
 	params := map[string]any{
 		"entityIds": linkedEntityIds,

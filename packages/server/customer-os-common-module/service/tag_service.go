@@ -251,7 +251,6 @@ func (s *tagService) GetTagsForIssues(ctx context.Context, issueIds []string) (*
 func (s *tagService) GetTagsForOrganizations(ctx context.Context, organizationIDs []string) (*neo4jentity.TagEntities, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TagService.GetTagsForOrganizations")
 	defer span.Finish()
-	span.LogFields(log.Object("organizationIDs", organizationIDs))
 
 	tags, err := s.services.Neo4jRepositories.TagReadRepository.GetForOrganizations(ctx, common.GetTenantFromContext(ctx), organizationIDs)
 	if err != nil {
