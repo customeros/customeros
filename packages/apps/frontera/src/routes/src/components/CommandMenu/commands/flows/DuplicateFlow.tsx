@@ -30,11 +30,15 @@ export const DuplicateFlow = observer(() => {
       return;
     }
 
-    flows.duplicate(flowName, flow.id, {
+    const duplicateName = !flowName.trim()?.length
+      ? `${flow?.value?.name} - Take two`
+      : flowName;
+
+    flows.duplicate(duplicateName, flow.id, {
       onSuccess: (id) => {
         setIsSaving(false);
         ui.toastSuccess(
-          `${flowName} created`,
+          `${duplicateName} created`,
           `flow-duplication-success-${id}`,
         );
         ui.commandMenu.toggle('DuplicateFlow');
