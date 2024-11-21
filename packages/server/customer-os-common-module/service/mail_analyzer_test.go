@@ -4,315 +4,357 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"golang.org/x/net/context"
 )
 
-func TestProcessEmailCheck(t *testing.T) {
+func TestIsAutoResponder(t *testing.T) {
+	svc := &mailService{}
 	tests := []struct {
 		name     string
-		tenant   string
-		email    *EmailMessageData
-		expected HeaderAnalysis
+		headers  EmailHeaders
+		wantBool bool
+		wantMsg  string
 	}{
 		{
-			name:   "Bounce - Failed Recipients",
-			tenant: "test-tenant",
-			email: &EmailMessageData{
-				Headers: EmailHeaders{XFailedRecepients: true},
-			},
-			expected: HeaderAnalysis{
-				ProcessEmail: false,
-				IsBounce:     true,
-				SkipReason:   "BOUNCE | X-FAILED-RECIPIENTS",
-			},
+			name:     "X-Autoreply present",
+			headers:  EmailHeaders{XAutoreply: "yes"},
+			wantBool: true,
+			wantMsg:  "AUTORESPONDER | X-AUTOREPLY",
 		},
 		{
-			name:   "Bounce - Delivery Report",
-			tenant: "test-tenant",
-			email: &EmailMessageData{
-				Headers: EmailHeaders{ContentDescription: "delivery report"},
-			},
-			expected: HeaderAnalysis{
-				ProcessEmail: false,
-				IsBounce:     true,
-				SkipReason:   "BOUNCE | CONTENT-DESCRIPTION: DELIVERY REPORT",
-			},
+			name:     "X-Autoreply empty string",
+			headers:  EmailHeaders{XAutoreply: ""},
+			wantBool: false,
+			wantMsg:  "",
 		},
 		{
-			name:   "Bounce - Return Path Contains Mailer Daemon",
-			tenant: "test-tenant",
-			email: &EmailMessageData{
-				Headers: EmailHeaders{ReturnPath: "mailer-daemon@example.com"},
-			},
-			expected: HeaderAnalysis{
-				ProcessEmail: false,
-				IsBounce:     true,
-				SkipReason:   "BOUNCE | RETURN-PATH CONTAINS BOUNCE KEYWORDS",
-			},
+			name:     "X-Autoresponse present",
+			headers:  EmailHeaders{XAutoresponse: "yes"},
+			wantBool: true,
+			wantMsg:  "AUTORESPONDER | X-AUTORESPONSE",
 		},
 		{
-			name:   "Bounce - From Contains Mailer Daemon",
-			tenant: "test-tenant",
-			email: &EmailMessageData{
-				Participants: EmailParticipants{
-					From: EmailParticipant{Email: "mailer-daemon@example.com"},
-				},
-			},
-			expected: HeaderAnalysis{
-				ProcessEmail: false,
-				IsBounce:     true,
-				SkipReason:   "BOUNCE | FROM CONTAINS BOUNCE KEYWORDS",
-			},
+			name:     "X-Loop present",
+			headers:  EmailHeaders{XLoop: true},
+			wantBool: true,
+			wantMsg:  "AUTORESPONDER | X-LOOP",
 		},
 		{
-			name:   "Bounce - Subject Contains Bounce Keywords",
-			tenant: "test-tenant",
-			email: &EmailMessageData{
-				Content: EmailContent{Subject: "Delivery Status Notification (Failure)"},
-			},
-			expected: HeaderAnalysis{
-				ProcessEmail: false,
-				IsBounce:     true,
-				SkipReason:   "BOUNCE | SUBJECT CONTAINS BOUNCE KEYWORDS",
-			},
+			name:     "Precedence auto_reply",
+			headers:  EmailHeaders{Precedence: "auto_reply"},
+			wantBool: true,
+			wantMsg:  "AUTORESPONDER | PRECEDENCE: AUTO_REPLY",
 		},
 		{
-			name:   "Autoresponder - X-Autoreply",
-			tenant: "test-tenant",
-			email: &EmailMessageData{
-				Headers: EmailHeaders{XAutoreply: "yes"},
-			},
-			expected: HeaderAnalysis{
-				ProcessEmail:    false,
-				IsAutoResponder: true,
-				SkipReason:      "AUTORESPONDER | X-AUTOREPLY",
-			},
+			name:     "Precedence mixed case AUTO_REPLY",
+			headers:  EmailHeaders{Precedence: "AUTO_REPLY"},
+			wantBool: true,
+			wantMsg:  "AUTORESPONDER | PRECEDENCE: AUTO_REPLY",
 		},
 		{
-			name:   "Autoresponder - X-Autoresponse",
-			tenant: "test-tenant",
-			email: &EmailMessageData{
-				Headers: EmailHeaders{XAutoresponse: "yes"},
-			},
-			expected: HeaderAnalysis{
-				ProcessEmail:    false,
-				IsAutoResponder: true,
-				SkipReason:      "AUTORESPONDER | X-AUTORESPONSE",
-			},
-		},
-		{
-			name:   "Autoresponder - X-Loop",
-			tenant: "test-tenant",
-			email: &EmailMessageData{
-				Headers: EmailHeaders{XLoop: true},
-			},
-			expected: HeaderAnalysis{
-				ProcessEmail:    false,
-				IsAutoResponder: true,
-				SkipReason:      "AUTORESPONDER | X-LOOP",
-			},
-		},
-		{
-			name:   "Autoresponder - Precedence Auto Reply",
-			tenant: "test-tenant",
-			email: &EmailMessageData{
-				Headers: EmailHeaders{Precedence: "auto_reply"},
-			},
-			expected: HeaderAnalysis{
-				ProcessEmail:    false,
-				IsAutoResponder: true,
-				SkipReason:      "AUTORESPONDER | PRECEDENCE: AUTO_REPLY",
-			},
-		},
-		{
-			name:   "Bulk - Different Reply-To",
-			tenant: "test-tenant",
-			email: &EmailMessageData{
-				Participants: EmailParticipants{
-					From:    EmailParticipant{Email: "sender@example.com"},
-					ReplyTo: []EmailParticipant{{Email: "different@example.com"}},
-				},
-			},
-			expected: HeaderAnalysis{
-				ProcessEmail: false,
-				IsBulkMail:   true,
-				SkipReason:   "BULK | REPLY-TO != FROM",
-			},
-		},
-		{
-			name:   "Bulk - List Unsubscribe",
-			tenant: "test-tenant",
-			email: &EmailMessageData{
-				Headers: EmailHeaders{ListUnsubscribe: true},
-				Participants: EmailParticipants{
-					From:    EmailParticipant{Email: "sender@example.com"},
-					ReplyTo: []EmailParticipant{{Email: "sender@example.com"}},
-				},
-			},
-			expected: HeaderAnalysis{
-				ProcessEmail: false,
-				IsBulkMail:   true,
-				SkipReason:   "BULK | UNSUBSCRIBE",
-			},
-		},
-		{
-			name:   "Bulk - Precedence Bulk",
-			tenant: "test-tenant",
-			email: &EmailMessageData{
-				Headers: EmailHeaders{Precedence: "bulk"},
-				Participants: EmailParticipants{
-					From:    EmailParticipant{Email: "sender@example.com"},
-					ReplyTo: []EmailParticipant{{Email: "sender@example.com"}},
-				},
-			},
-			expected: HeaderAnalysis{
-				ProcessEmail: false,
-				IsBulkMail:   true,
-				SkipReason:   "BULK | PRECEDENCE: BULK",
-			},
-		},
-		{
-			name:   "Bulk - Empty Return Path",
-			tenant: "test-tenant",
-			email: &EmailMessageData{
-				Headers: EmailHeaders{ReturnPath: ""},
-				Participants: EmailParticipants{
-					From:    EmailParticipant{Email: "sender@example.com"},
-					ReplyTo: []EmailParticipant{{Email: "sender@example.com"}},
-				},
-			},
-			expected: HeaderAnalysis{
-				ProcessEmail: false,
-				IsBulkMail:   true,
-				SkipReason:   "BULK | EMPTY RETURN-PATH",
-			},
-		},
-		{
-			name:   "Bulk - Return Path Different From From",
-			tenant: "test-tenant",
-			email: &EmailMessageData{
-				Headers: EmailHeaders{ReturnPath: "different@example.com"},
-				Participants: EmailParticipants{
-					From:    EmailParticipant{Email: "sender@example.com"},
-					ReplyTo: []EmailParticipant{{Email: "sender@example.com"}},
-				},
-			},
-			expected: HeaderAnalysis{
-				ProcessEmail: false,
-				IsBulkMail:   true,
-				SkipReason:   "BULK | RETURN-PATH != FROM",
-			},
-		},
-		{
-			name:   "Bulk - Sender Different From From",
-			tenant: "test-tenant",
-			email: &EmailMessageData{
-				Headers: EmailHeaders{
-					Sender:     "different@example.com",
-					ReturnPath: "sender@example.com",
-				},
-				Participants: EmailParticipants{
-					From:    EmailParticipant{Email: "sender@example.com"},
-					ReplyTo: []EmailParticipant{{Email: "sender@example.com"}},
-				},
-			},
-			expected: HeaderAnalysis{
-				ProcessEmail: false,
-				IsBulkMail:   true,
-				SkipReason:   "BULK | SENDER != FROM",
-			},
-		},
-		{
-			name:   "Normal Email",
-			tenant: "test-tenant",
-			email: &EmailMessageData{
-				Headers: EmailHeaders{
-					ReturnPath: "sender@example.com",
-					Sender:     "sender@example.com",
-				},
-				Participants: EmailParticipants{
-					From:    EmailParticipant{Email: "sender@example.com"},
-					ReplyTo: []EmailParticipant{{Email: "sender@example.com"}},
-				},
-			},
-			expected: HeaderAnalysis{
-				ProcessEmail: true,
-			},
+			name:     "No autoresponder headers",
+			headers:  EmailHeaders{},
+			wantBool: false,
+			wantMsg:  "",
 		},
 	}
 
-	svc := &mailService{}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := svc.ProcessEmailCheck(context.Background(), tt.tenant, tt.email)
-			assert.Equal(t, tt.expected, result)
+			gotBool, gotMsg := svc.isAutoResponder(tt.headers)
+			assert.Equal(t, tt.wantBool, gotBool)
+			assert.Equal(t, tt.wantMsg, gotMsg)
+		})
+	}
+}
+
+func TestIsBounce(t *testing.T) {
+	svc := &mailService{}
+	tests := []struct {
+		name     string
+		headers  EmailHeaders
+		subject  string
+		from     string
+		wantBool bool
+		wantMsg  string
+	}{
+		{
+			name:     "X-Failed-Recipients",
+			headers:  EmailHeaders{XFailedRecepients: true},
+			wantBool: true,
+			wantMsg:  "BOUNCE | X-FAILED-RECIPIENTS",
+		},
+		{
+			name:     "Content-Description delivery report",
+			headers:  EmailHeaders{ContentDescription: "delivery report"},
+			wantBool: true,
+			wantMsg:  "BOUNCE | CONTENT-DESCRIPTION: DELIVERY REPORT",
+		},
+		{
+			name:     "Content-Description case insensitive DELIVERY REPORT",
+			headers:  EmailHeaders{ContentDescription: "DELIVERY REPORT"},
+			wantBool: true,
+			wantMsg:  "BOUNCE | CONTENT-DESCRIPTION: DELIVERY REPORT",
+		},
+		{
+			name:     "Return-Path mailer-daemon",
+			headers:  EmailHeaders{ReturnPath: "mailer-daemon@example.com"},
+			wantBool: true,
+			wantMsg:  "BOUNCE | RETURN-PATH CONTAINS BOUNCE KEYWORDS",
+		},
+		{
+			name:     "From mailer-daemon",
+			from:     "mailer-daemon@example.com",
+			wantBool: true,
+			wantMsg:  "BOUNCE | FROM CONTAINS BOUNCE KEYWORDS",
+		},
+		{
+			name:     "Bounce subject - delivery status notification",
+			subject:  "Delivery Status Notification (Failure)",
+			wantBool: true,
+			wantMsg:  "BOUNCE | SUBJECT CONTAINS BOUNCE KEYWORDS",
+		},
+		{
+			name:     "Not a bounce",
+			headers:  EmailHeaders{},
+			subject:  "Regular subject",
+			from:     "user@example.com",
+			wantBool: false,
+			wantMsg:  "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotBool, gotMsg := svc.isBounce(tt.headers, tt.subject, tt.from)
+			assert.Equal(t, tt.wantBool, gotBool)
+			assert.Equal(t, tt.wantMsg, gotMsg)
+		})
+	}
+}
+
+func TestIsBulkMail(t *testing.T) {
+	svc := &mailService{}
+	tests := []struct {
+		name     string
+		headers  EmailHeaders
+		from     string
+		replyTo  []EmailParticipant
+		wantBool bool
+		wantMsg  string
+	}{
+		{
+			name: "Different Reply-To",
+			from: "sender@example.com",
+			replyTo: []EmailParticipant{
+				{Email: "different@example.com"},
+			},
+			wantBool: true,
+			wantMsg:  "BULK | REPLY-TO != FROM",
+		},
+		{
+			name: "Multiple Reply-To with match",
+			from: "sender@example.com",
+			replyTo: []EmailParticipant{
+				{Email: "different1@example.com"},
+				{Email: "sender@example.com"},
+				{Email: "different2@example.com"},
+			},
+			headers:  EmailHeaders{ReturnPath: "sender@example.com"},
+			wantBool: false,
+			wantMsg:  "",
+		},
+		{
+			name: "List-Unsubscribe",
+			headers: EmailHeaders{
+				ListUnsubscribe: true,
+				ReturnPath:      "sender@example.com",
+			},
+			from: "sender@example.com",
+			replyTo: []EmailParticipant{
+				{Email: "sender@example.com"},
+			},
+			wantBool: true,
+			wantMsg:  "BULK | UNSUBSCRIBE",
+		},
+		{
+			name: "Precedence bulk",
+			headers: EmailHeaders{
+				Precedence: "bulk",
+				ReturnPath: "sender@example.com",
+			},
+			from: "sender@example.com",
+			replyTo: []EmailParticipant{
+				{Email: "sender@example.com"},
+			},
+			wantBool: true,
+			wantMsg:  "BULK | PRECIDENCE: BULK",
+		},
+		{
+			name: "Precedence BULK case insensitive",
+			headers: EmailHeaders{
+				Precedence: "BULK",
+				ReturnPath: "sender@example.com",
+			},
+			from: "sender@example.com",
+			replyTo: []EmailParticipant{
+				{Email: "sender@example.com"},
+			},
+			wantBool: true,
+			wantMsg:  "BULK | PRECIDENCE: BULK",
+		},
+		{
+			name: "Empty Return-Path",
+			headers: EmailHeaders{
+				ReturnPath: "",
+			},
+			from: "sender@example.com",
+			replyTo: []EmailParticipant{
+				{Email: "sender@example.com"},
+			},
+			wantBool: true,
+			wantMsg:  "BULK | EMPTY RETURN-PATH",
+		},
+		{
+			name: "Return-Path different from From",
+			headers: EmailHeaders{
+				ReturnPath: "different@example.com",
+			},
+			from: "sender@example.com",
+			replyTo: []EmailParticipant{
+				{Email: "sender@example.com"},
+			},
+			wantBool: true,
+			wantMsg:  "BULK | RETURN-PATH != FROM",
+		},
+		{
+			name: "Sender different from From",
+			headers: EmailHeaders{
+				ReturnPath: "sender@example.com",
+				Sender:     "different@example.com",
+			},
+			from: "sender@example.com",
+			replyTo: []EmailParticipant{
+				{Email: "sender@example.com"},
+			},
+			wantBool: true,
+			wantMsg:  "BULK | SENDER != FROM",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotBool, gotMsg := svc.isBulkMail(tt.headers, tt.from, tt.replyTo)
+			assert.Equal(t, tt.wantBool, gotBool, "test: %s", tt.name)
+			assert.Equal(t, tt.wantMsg, gotMsg, "test: %s", tt.name)
+		})
+	}
+}
+
+func TestIsReturnPathBounce(t *testing.T) {
+	svc := &mailService{}
+	tests := []struct {
+		name       string
+		returnPath string
+		want       bool
+	}{
+		{
+			name:       "Contains mailer-daemon",
+			returnPath: "mailer-daemon@example.com",
+			want:       true,
+		},
+		{
+			name:       "Contains MAILER-DAEMON case insensitive",
+			returnPath: "MAILER-DAEMON@example.com",
+			want:       true,
+		},
+		{
+			name:       "Normal return path",
+			returnPath: "user@example.com",
+			want:       false,
+		},
+		{
+			name:       "Empty return path",
+			returnPath: "",
+			want:       false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := svc.isReturnPathBounce(tt.returnPath)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }
 
 func TestIsBounceSubject(t *testing.T) {
+	svc := &mailService{}
 	tests := []struct {
-		name     string
-		subject  string
-		expected bool
+		name    string
+		subject string
+		want    bool
 	}{
 		{
-			name:     "Delivery Status Notification",
-			subject:  "Delivery Status Notification (Failure)",
-			expected: true,
+			name:    "Delivery Status Notification",
+			subject: "Delivery Status Notification (Failure)",
+			want:    true,
 		},
 		{
-			name:     "Undeliverable",
-			subject:  "Undeliverable: Your message",
-			expected: true,
+			name:    "DELIVERY STATUS NOTIFICATION case insensitive",
+			subject: "DELIVERY STATUS NOTIFICATION (FAILURE)",
+			want:    true,
 		},
 		{
-			name:     "Undelivered",
-			subject:  "Undelivered Mail Returned to Sender",
-			expected: true,
+			name:    "Undeliverable",
+			subject: "Undeliverable: Your message",
+			want:    true,
 		},
 		{
-			name:     "Delivery Failure",
-			subject:  "Delivery Failure Notice",
-			expected: true,
+			name:    "Undelivered",
+			subject: "Undelivered Mail Returned",
+			want:    true,
 		},
 		{
-			name:     "Failure Notice",
-			subject:  "Failure Notice: Unable to deliver",
-			expected: true,
+			name:    "Delivery Failure",
+			subject: "Delivery Failure Notice",
+			want:    true,
 		},
 		{
-			name:     "Returned Mail",
-			subject:  "Returned mail: User unknown",
-			expected: true,
+			name:    "Failure Notice",
+			subject: "Failure Notice",
+			want:    true,
 		},
 		{
-			name:     "Returned to Sender",
-			subject:  "Mail Returned to Sender",
-			expected: true,
+			name:    "Returned Mail",
+			subject: "Returned mail: User unknown",
+			want:    true,
 		},
 		{
-			name:     "Case Insensitive",
-			subject:  "DELIVERY STATUS NOTIFICATION",
-			expected: true,
+			name:    "Returned to Sender",
+			subject: "Mail Returned to Sender",
+			want:    true,
 		},
 		{
-			name:     "Normal Subject",
-			subject:  "Meeting Tomorrow",
-			expected: false,
+			name:    "Regular Subject",
+			subject: "Meeting Tomorrow",
+			want:    false,
 		},
 		{
-			name:     "Empty Subject",
-			subject:  "",
-			expected: false,
+			name:    "Empty Subject",
+			subject: "",
+			want:    false,
+		},
+		{
+			name:    "Partial match should not trigger",
+			subject: "This is not a returned email",
+			want:    false,
 		},
 	}
 
-	svc := &mailService{}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := svc.isBounceSubject(tt.subject)
-			assert.Equal(t, tt.expected, result)
+			got := svc.isBounceSubject(tt.subject)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }
