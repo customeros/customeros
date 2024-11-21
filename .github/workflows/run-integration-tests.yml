@@ -126,7 +126,6 @@ jobs:
           TOTAL_TESTS: ${{ env.total_tests }}
           PASSED_TESTS: ${{ env.passed_tests }}
           FAILED_TESTS: ${{ env.failed_tests }}
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_FE_TESTS_WEBHOOK_URL }}
         run: |
           BUILD_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           SUMMARY="<$BUILD_URL|Vitest Test Results>:\n✅ $PASSED_TESTS passed, ❌ $FAILED_TESTS failed ($TOTAL_TESTS total)"
