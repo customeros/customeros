@@ -7,18 +7,16 @@ package resolver
 import (
 	"context"
 	"fmt"
+	"strings"
 
+	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 )
 
-// MailstackRegisterDomains is the resolver for the mailstack_RegisterDomains field.
-func (r *mutationResolver) MailstackRegisterDomains(ctx context.Context, domains []string) ([]string, error) {
-	panic(fmt.Errorf("not implemented: MailstackRegisterDomains - mailstack_RegisterDomains"))
-}
-
-// MailstackCreateMailboxes is the resolver for the mailstack_CreateMailboxes field.
-func (r *mutationResolver) MailstackCreateMailboxes(ctx context.Context, input []*model.MailboxInput) ([]*model.Mailbox, error) {
-	panic(fmt.Errorf("not implemented: MailstackCreateMailboxes - mailstack_CreateMailboxes"))
+// MailstackBuyDomainWithMailboxes is the resolver for the mailstack_BuyDomainWithMailboxes field.
+func (r *mutationResolver) MailstackBuyDomainWithMailboxes(ctx context.Context, domains []string, usernames []string) ([]string, error) {
+	panic(fmt.Errorf("not implemented: MailstackBuyDomainWithMailboxes - mailstack_BuyDomainWithMailboxes"))
 }
 
 // MailstackSetUser is the resolver for the mailstack_SetUser field.
@@ -27,18 +25,33 @@ func (r *mutationResolver) MailstackSetUser(ctx context.Context, mailbox string,
 }
 
 // MailstackDomainPurchaseSuggestions is the resolver for the mailstack_DomainPurchaseSuggestions field.
-func (r *queryResolver) MailstackDomainPurchaseSuggestions(ctx context.Context, domain string, limit *int) ([]string, error) {
-	panic(fmt.Errorf("not implemented: MailstackDomainPurchaseSuggestions - mailstack_DomainPurchaseSuggestions"))
+func (r *queryResolver) MailstackDomainPurchaseSuggestions(ctx context.Context, domain string) ([]string, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.MailstackDomainPurchaseSuggestions", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogKV("request.domain", domain)
+
+	if strings.Contains(domain, ".") {
+		domain = strings.Split(domain, ".")[0]
+	}
+
+	return r.Services.CommonServices.MailboxService.RecommendOutboundDomains(ctx, domain, 100), nil
 }
 
 // MailstackDomains is the resolver for the mailstack_Domains field.
 func (r *queryResolver) MailstackDomains(ctx context.Context) ([]string, error) {
 	panic(fmt.Errorf("not implemented: MailstackDomains - mailstack_Domains"))
+	//query
 }
 
 // MailstackCheckUnavailableDomains is the resolver for the mailstack_CheckUnavailableDomains field.
 func (r *queryResolver) MailstackCheckUnavailableDomains(ctx context.Context, domain []string) ([]string, error) {
 	panic(fmt.Errorf("not implemented: MailstackCheckUnavailableDomains - mailstack_CheckUnavailableDomains"))
+}
+
+// MailstackUniqueUsernames is the resolver for the mailstack_UniqueUsernames field.
+func (r *queryResolver) MailstackUniqueUsernames(ctx context.Context) ([]string, error) {
+	panic(fmt.Errorf("not implemented: MailstackUniqueUsernames - mailstack_UniqueUsernames"))
 }
 
 // MailstackMailboxes is the resolver for the mailstack_Mailboxes field.

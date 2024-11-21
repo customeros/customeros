@@ -1,4 +1,5 @@
 extend type Query {
+    ui_organization(ids: ID!): OrganizationUiDetails! @hasRole(roles: [ADMIN, USER]) @hasTenant
     ui_organizations(ids: [ID!]): [OrganizationUiDetails!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
     ui_organizations_search(limit: Int, where: Filter, sort: SortBy): OrganizationSearchResult! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
@@ -56,14 +57,15 @@ type OrganizationUiDetails {
     lastTouchPointType: LastTouchpointType
 
     # data from associated entities
-    contracts:            [String!]!
-    contacts:             [String!]!
+    contracts:            [String!]! # in profile
+    contacts:             [String!]! # in profile
+    contactCount:         Int        # in table
     socialMedia:          [Social!]!
     tags:                 [Tag!]!
     locations:            [Location!]!
     owner:                User
 
-    parentId:              ID
-    parentName:            String
+    parentId:             ID
+    parentName:           String
     subsidiaries:         [String!]!
 }

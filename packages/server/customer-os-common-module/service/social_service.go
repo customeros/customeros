@@ -25,6 +25,7 @@ type SocialService interface {
 	Update(ctx context.Context, entity neo4jentity.SocialEntity) (*neo4jentity.SocialEntity, error)
 	PermanentlyDelete(ctx context.Context, tenant, socialId string) error
 	GetAllForEntities(ctx context.Context, tenant string, linkedEntityType model.EntityType, linkedEntityIds []string) (*neo4jentity.SocialEntities, error)
+	GetAllLinkedinForEntities(ctx context.Context, tenant string, linkedEntityType model.EntityType, linkedEntityIds []string) (*neo4jentity.SocialEntities, error)
 }
 
 type socialService struct {
@@ -46,6 +47,26 @@ func (s *socialService) GetAllForEntities(ctx context.Context, tenant string, li
 	span.LogFields(log.String("linkedEntityType", string(linkedEntityType)), log.Object("linkedEntityIds", linkedEntityIds))
 
 	socials, err := s.services.Neo4jRepositories.SocialReadRepository.GetAllForEntities(ctx, tenant, linkedEntityType, linkedEntityIds)
+	if err != nil {
+		return nil, err
+	}
+	socialEntities := make(neo4jentity.SocialEntities, 0)
+	for _, v := range socials {
+		socialEntity := neo4jmapper.MapDbNodeToSocialEntity(v.Node)
+		socialEntity.DataloaderKey = v.LinkedNodeId
+		socialEntities = append(socialEntities, *socialEntity)
+	}
+	return &socialEntities, nil
+}
+
+func (s *socialService) GetAllLinkedinForEntities(ctx context.Context, tenant string, linkedEntityType model.EntityType, linkedEntityIds []string) (*neo4jentity.SocialEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialService.GetAllLinkedinForEntities")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	span.LogFields(log.String("linkedEntityType", string(linkedEntityType)), log.Object("linkedEntityIds", linkedEntityIds))
+
+	socials, err := s.services.Neo4jRepositories.SocialReadRepository.GetAllLinkedinForEntities(ctx, tenant, linkedEntityType, linkedEntityIds)
 	if err != nil {
 		return nil, err
 	}

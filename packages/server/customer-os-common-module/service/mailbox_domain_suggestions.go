@@ -6,6 +6,7 @@ import (
 	"net"
 	"os/exec"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/opentracing/opentracing-go"
@@ -44,47 +45,77 @@ func (s *mailboxService) RecommendOutboundDomains(ctx context.Context, domainRoo
 	span.LogFields(log.String("domainRoot", domainRoot))
 	defer span.Finish()
 
-	var results []string
-	c := 0
+	var (
+		prefixResults       []string
+		suffixResults       []string
+		prefixSuffixResults []string
+		mu                  sync.Mutex
+		wg                  sync.WaitGroup
+	)
+
 	pre := getDomainPrefix()
 	suf := getDomainSuffix()
 
-	for _, prefix := range pre {
-		if c == count {
-			return results
-		}
-		newDomain := fmt.Sprintf("%s%s%s", prefix, domainRoot, ".com")
-		_, avaliable := s.IsDomainAvailable(ctx, newDomain)
-		if avaliable {
-			c++
-			results = append(results, newDomain)
+	// Helper function to safely append to results
+	appendResult := func(result *([]string), newDomain string) {
+		mu.Lock()
+		defer mu.Unlock()
+		if len(*result) < count {
+			*result = append(*result, newDomain)
 		}
 	}
 
-	for _, suffix := range suf {
-		if c == count {
-			return results
-		}
-		newDomain := fmt.Sprintf("%s%s%s", domainRoot, suffix, ".com")
-		_, available := s.IsDomainAvailable(ctx, newDomain)
-		if available {
-			c++
-			results = append(results, newDomain)
-		}
-	}
-
+	// Prefix-only domains
 	for _, prefix := range pre {
-		for _, suffix := range suf {
-			if c == count {
-				return results
-			}
-			newDomain := fmt.Sprintf("%s%s%s%s", prefix, domainRoot, suffix, ".com")
+		wg.Add(1)
+		go func(prefix string) {
+			defer wg.Done()
+			newDomain := fmt.Sprintf("%s%s%s", prefix, domainRoot, ".com")
 			_, available := s.IsDomainAvailable(ctx, newDomain)
 			if available {
-				c++
-				results = append(results, newDomain)
+				appendResult(&prefixResults, newDomain)
 			}
+		}(prefix)
+	}
+
+	// Suffix-only domains
+	for _, suffix := range suf {
+		wg.Add(1)
+		go func(suffix string) {
+			defer wg.Done()
+			newDomain := fmt.Sprintf("%s%s%s", domainRoot, suffix, ".com")
+			_, available := s.IsDomainAvailable(ctx, newDomain)
+			if available {
+				appendResult(&suffixResults, newDomain)
+			}
+		}(suffix)
+	}
+
+	// Prefix+Suffix domains
+	for _, prefix := range pre {
+		for _, suffix := range suf {
+			wg.Add(1)
+			go func(prefix, suffix string) {
+				defer wg.Done()
+				newDomain := fmt.Sprintf("%s%s%s%s", prefix, domainRoot, suffix, ".com")
+				_, available := s.IsDomainAvailable(ctx, newDomain)
+				if available {
+					appendResult(&prefixSuffixResults, newDomain)
+				}
+			}(prefix, suffix)
 		}
+	}
+
+	// Wait for all goroutines to finish
+	wg.Wait()
+
+	// Merge results in the desired order
+	results := append(prefixResults, suffixResults...)
+	results = append(results, prefixSuffixResults...)
+
+	// Ensure we only return up to the requested count
+	if len(results) > count {
+		return results[:count]
 	}
 
 	return results
@@ -206,7 +237,6 @@ func getDomainPrefix() []string {
 		"by",
 		"at",
 		"get",
-		"try",
 		"try",
 		"use",
 		"run",

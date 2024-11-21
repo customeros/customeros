@@ -1623,11 +1623,6 @@ type Mailbox struct {
 	CurrentFlowIds  []string  `json:"currentFlowIds,omitempty"`
 }
 
-type MailboxInput struct {
-	MailboxDomain   string `json:"mailboxDomain"`
-	MailboxUsername string `json:"mailboxUsername"`
-}
-
 type Meeting struct {
 	ID                 string               `json:"id"`
 	Name               *string              `json:"name,omitempty"`
@@ -2168,6 +2163,7 @@ type OrganizationUIDetails struct {
 	LastTouchPointType              *LastTouchpointType           `json:"lastTouchPointType,omitempty"`
 	Contracts                       []string                      `json:"contracts"`
 	Contacts                        []string                      `json:"contacts"`
+	ContactCount                    *int                          `json:"contactCount,omitempty"`
 	SocialMedia                     []*Social                     `json:"socialMedia"`
 	Tags                            []*Tag                        `json:"tags"`
 	Locations                       []*Location                   `json:"locations"`
