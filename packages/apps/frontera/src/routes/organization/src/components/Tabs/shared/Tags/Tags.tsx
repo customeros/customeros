@@ -47,7 +47,7 @@ export const Tags = observer(
           .map(
             (tag) =>
               ({
-                value: tag.value.id,
+                value: tag.value.metadata.id,
                 label: tag.value.name,
               } as SelectOption),
           )

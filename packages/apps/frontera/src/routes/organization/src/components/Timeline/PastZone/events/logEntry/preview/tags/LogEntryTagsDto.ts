@@ -18,7 +18,7 @@ export class LogEntryTagsDto implements LogEntryTagsForm {
   constructor(data?: Pick<LogEntry, 'tags'>) {
     this.tags = (data?.tags ?? [])?.map((e) => ({
       label: e.name,
-      value: e.id,
+      value: e.metadata.id,
     }));
   }
 

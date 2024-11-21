@@ -36,7 +36,7 @@ export class TagsStore implements GroupStore<Tag> {
     makeAutoObservable(this);
     makeAutoSyncableGroup(this, {
       channelName: 'Tags',
-      getItemId: (item) => item?.id,
+      getItemId: (item) => item?.metadata.id,
       ItemStore: TagStore,
     });
   }
@@ -73,7 +73,7 @@ export class TagsStore implements GroupStore<Tag> {
     options?: { onSucces?: (serverId: string) => void },
   ) => {
     const newTag = new TagStore(this.root, this.transport);
-    const tempId = newTag.value.id;
+    const tempId = newTag.value.metadata.id;
     let serverId = '';
 
     if (payload) {
@@ -94,7 +94,7 @@ export class TagsStore implements GroupStore<Tag> {
       });
 
       runInAction(() => {
-        serverId = tag_Create.id;
+        serverId = tag_Create.metadata.id;
 
         newTag.value.metadata.id = serverId;
 
@@ -172,6 +172,9 @@ const CREATE_TAG_MUTATION = gql`
     tag_Create(input: $input) {
       name
       id
+      metadata {
+        id
+      }
     }
   }
 `;

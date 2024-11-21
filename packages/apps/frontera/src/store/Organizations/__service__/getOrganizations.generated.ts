@@ -80,12 +80,13 @@ export type GetOrganizationsQuery = {
       }>;
       tags?: Array<{
         __typename?: 'Tag';
-        id: string;
+        id?: string | null;
         name: string;
-        createdAt: any;
-        updatedAt: any;
-        source: Types.DataSource;
-        appSource: string;
+        createdAt?: any | null;
+        updatedAt?: any | null;
+        entityType: Types.EntityType;
+        source?: Types.DataSource | null;
+        appSource?: string | null;
         metadata: {
           __typename?: 'Metadata';
           id: string;

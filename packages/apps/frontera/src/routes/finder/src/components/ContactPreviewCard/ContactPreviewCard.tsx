@@ -279,7 +279,7 @@ export const ContactPreviewCard = observer(() => {
               placeholder='No tags yet'
               value={
                 contact?.value?.tags?.map((tag: Tag) => ({
-                  value: tag.id,
+                  value: tag.metadata.id,
                   label: tag.name,
                 })) || []
               }

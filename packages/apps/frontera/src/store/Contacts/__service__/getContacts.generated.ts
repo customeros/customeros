@@ -29,12 +29,12 @@ export type ContactsQuery = {
       }>;
       tags?: Array<{
         __typename?: 'Tag';
-        id: string;
+        id?: string | null;
         name: string;
-        source: Types.DataSource;
-        updatedAt: any;
-        createdAt: any;
-        appSource: string;
+        source?: Types.DataSource | null;
+        updatedAt?: any | null;
+        createdAt?: any | null;
+        appSource?: string | null;
         metadata: {
           __typename?: 'Metadata';
           id: string;
