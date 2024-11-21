@@ -37,14 +37,21 @@ func (r *mutationResolver) MailstackSetUser(ctx context.Context, mailbox string,
 		return &model.Result{Result: false}, nil
 	}
 
+	if mailboxEntity == nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		r.log.Errorf("Mailbox %s not found", mailbox)
+		graphql.AddErrorf(ctx, "Mailbox %s not found", mailbox)
+		return &model.Result{Result: false}, nil
+	}
+
 	mailboxEntity.UserId = userID
 
 	err = r.Services.Repositories.PostgresRepositories.TenantSettingsMailboxRepository.Merge(ctx, mailboxEntity)
 
 	if err != nil {
 		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
-		r.log.Errorf("Failed to get mailbox %s", mailbox)
-		graphql.AddErrorf(ctx, "Failed to get mailbox %s", mailbox)
+		r.log.Errorf("Failed to merge mailbox %s", mailbox)
+		graphql.AddErrorf(ctx, "Failed to merge mailbox %s", mailbox)
 		return &model.Result{Result: false}, nil
 	}
 
