@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	mailsherpa "github.com/customeros/mailsherpa/mailvalidate"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
@@ -28,7 +27,7 @@ type OrganizationService interface {
 	GetById(ctx context.Context, tenant, organizationId string) (*neo4jentity.OrganizationEntity, error)
 
 	Save(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, id *string, dataFields data_fields.OrganizationFields) (string, error)
-	LinkWithDomain(ctx context.Context, tx *neo4j.ManagedTransaction, organizationId, domain string) error // TODO alexb replace with txWithPostCommit
+	LinkWithDomain(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, organizationId, domain string) error
 
 	Hide(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, organizationId string) error
 	Show(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, organizationId string) error
@@ -309,7 +308,7 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 			input.Website = utils.StringPtr(adjustedWebsite)
 			if primaryDomainFromWebsite != "" {
 				newDomains = append(newDomains, primaryDomainFromWebsite)
-				err = s.LinkWithDomain(ctx, txWithPostCommit.Tx, organizationId, primaryDomainFromWebsite)
+				err = s.LinkWithDomain(ctx, txWithPostCommit, organizationId, primaryDomainFromWebsite)
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "failed to link with domain"))
 					return nil, err
@@ -319,7 +318,7 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 
 		if input.Domains != nil && len(input.Domains) > 0 {
 			for _, domain := range input.Domains {
-				err = s.LinkWithDomain(ctx, txWithPostCommit.Tx, organizationId, domain)
+				err = s.LinkWithDomain(ctx, txWithPostCommit, organizationId, domain)
 				if err != nil {
 					tracing.TraceErr(span, err)
 					return nil, err
@@ -610,7 +609,7 @@ func (s *organizationService) GetLatestOrganizationsWithJobRolesForContacts(ctx 
 	return &orgWithJobRoleEntities, nil
 }
 
-func (s *organizationService) LinkWithDomain(ctx context.Context, tx *neo4j.ManagedTransaction, organizationId, domain string) error {
+func (s *organizationService) LinkWithDomain(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, organizationId, domain string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.LinkWithDomain")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -629,38 +628,49 @@ func (s *organizationService) LinkWithDomain(ctx context.Context, tx *neo4j.Mana
 		return nil
 	}
 
-	domainLinkedToOrg, err := s.services.Neo4jRepositories.OrganizationWriteRepository.LinkWithDomain(ctx, tx, tenant, organizationId, domain)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to link domain in neo4j"))
-		return err
-	}
+	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
 
-	// execute only if not in transaction and domain was linked with org
-	if tx == nil && domainLinkedToOrg {
-		// send event to rabbitmq
-		err = s.services.RabbitMQService.PublishEvent(ctx, organizationId, model.ORGANIZATION, dto.NewAddDomainEvent(domain))
+		domainLinkedSuccessfully, err := s.services.Neo4jRepositories.OrganizationWriteRepository.LinkWithDomain(ctx, txWithPostCommit.Tx, tenant, organizationId, domain)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to publish event AddDomain"))
+			tracing.TraceErr(span, errors.Wrap(err, "failed to link domain in neo4j"))
+			return nil, err
 		}
 
-		// send event to events platform
-		utils.EventCompleted(ctx, tenant, model.ORGANIZATION.String(), organizationId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
-
-		// send organization enrich request
-		_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-			return s.services.GrpcClients.OrganizationClient.EnrichOrganization(ctx, &organizationpb.EnrichOrganizationGrpcRequest{
-				Tenant:         tenant,
-				OrganizationId: organizationId,
-				Url:            domain,
-				AppSource:      common.GetAppSourceFromContext(ctx),
+		if domainLinkedSuccessfully {
+			txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
+				// send organization enrich request
+				_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+					return s.services.GrpcClients.OrganizationClient.EnrichOrganization(ctx, &organizationpb.EnrichOrganizationGrpcRequest{
+						Tenant:         tenant,
+						OrganizationId: organizationId,
+						Url:            domain,
+						AppSource:      common.GetAppSourceFromContext(ctx),
+					})
+				})
+				if err != nil {
+					tracing.TraceErr(span, errors.Wrap(err, "failed to request enrich organization"))
+				}
+				return nil
 			})
-		})
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to request enrich organization"))
-		}
-	}
 
-	return nil
+			txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
+				// send event to rabbitmq
+				err = s.services.RabbitMQService.PublishEvent(ctx, organizationId, model.ORGANIZATION, dto.NewAddDomainEvent(domain))
+				if err != nil {
+					tracing.TraceErr(span, errors.Wrap(err, "failed to publish event AddDomain"))
+				}
+
+				// send event to events platform
+				utils.EventCompleted(ctx, tenant, model.ORGANIZATION.String(), organizationId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
+
+				return nil
+			})
+		}
+
+		return nil, nil
+	})
+
+	return err
 }
 
 func (s *organizationService) GetHiddenOrganizationIds(ctx context.Context, hiddenAfter time.Time) ([]string, error) {
