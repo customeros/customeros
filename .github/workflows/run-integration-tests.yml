@@ -23,12 +23,16 @@ jobs:
         with:
           node-version: '18'
 
-      - name: Determine trigger source
+      - name: Determine trigger source and versions
         id: trigger
         run: |
           if [[ "${{ github.event_name }}" == "repository_dispatch" ]]; then
             TRIGGER_SOURCE=$(echo "${{ github.event.action }}" | cut -d ' ' -f 1)
+            NEW_VERSION=$(echo "${{ github.event.client_payload.version }}")
+            OLD_VERSION=$(echo "${{ github.event.client_payload.old_version }}")
             echo "trigger_source=$TRIGGER_SOURCE" >> $GITHUB_ENV
+            echo "new_version=$NEW_VERSION" >> $GITHUB_ENV
+            echo "old_version=$OLD_VERSION" >> $GITHUB_ENV
           else
             echo "trigger_source=manual" >> $GITHUB_ENV
           fi
@@ -136,13 +140,19 @@ jobs:
           PASSED_TESTS: ${{ env.passed_tests }}
           FAILED_TESTS: ${{ env.failed_tests }}
           TRIGGER_SOURCE: ${{ env.trigger_source }}
+          NEW_VERSION: ${{ env.new_version }}
+          OLD_VERSION: ${{ env.old_version }}
         run: |
           BUILD_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           
-          # Create trigger message
+          # Create trigger message with version information
           TRIGGER_MSG=""
           if [ "$TRIGGER_SOURCE" != "manual" ]; then
-            TRIGGER_MSG="\nTriggered by \`$TRIGGER_SOURCE\`"
+            VERSION_INFO=""
+            if [ ! -z "$NEW_VERSION" ] && [ ! -z "$OLD_VERSION" ]; then
+              VERSION_INFO=" - new version: v$NEW_VERSION / old version: v$OLD_VERSION"
+            fi
+            TRIGGER_MSG="\nTriggered by \`$TRIGGER_SOURCE\`$VERSION_INFO"
           fi
           
           SUMMARY="<$BUILD_URL|Vitest Test Results>:\n✅ $PASSED_TESTS passed, ❌ $FAILED_TESTS failed ($TOTAL_TESTS total)$TRIGGER_MSG"
