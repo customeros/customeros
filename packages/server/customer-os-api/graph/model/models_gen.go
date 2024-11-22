@@ -1625,6 +1625,16 @@ type Mailbox struct {
 	CurrentFlowIds  []string  `json:"currentFlowIds,omitempty"`
 }
 
+type MailstackDomain struct {
+	Domain string          `json:"domain"`
+	Status MailstackStatus `json:"status"`
+}
+
+type MailstackMailbox struct {
+	Mailbox string          `json:"mailbox"`
+	Status  MailstackStatus `json:"status"`
+}
+
 type Meeting struct {
 	ID                 string               `json:"id"`
 	Name               *string              `json:"name,omitempty"`
@@ -2332,6 +2342,20 @@ type PhoneNumberUpdateInput struct {
 }
 
 type Query struct {
+}
+
+type RegisterBuyDomainWithMailboxes struct {
+	ID           string                  `json:"id"`
+	ClientSecret string                  `json:"clientSecret"`
+	Status       RegisterMailstackStatus `json:"status"`
+}
+
+type RegisteredBuyDomainWithMailboxes struct {
+	ID        string              `json:"id"`
+	Domain    *MailstackDomain    `json:"domain"`
+	Mailboxes []*MailstackMailbox `json:"mailboxes"`
+	CreatedAt time.Time           `json:"createdAt"`
+	Status    string              `json:"status"`
 }
 
 type Reminder struct {
@@ -4551,6 +4575,49 @@ func (e LastTouchpointType) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
+type MailstackStatus string
+
+const (
+	MailstackStatusPending   MailstackStatus = "PENDING"
+	MailstackStatusCompleted MailstackStatus = "COMPLETED"
+	MailstackStatusFailed    MailstackStatus = "FAILED"
+)
+
+var AllMailstackStatus = []MailstackStatus{
+	MailstackStatusPending,
+	MailstackStatusCompleted,
+	MailstackStatusFailed,
+}
+
+func (e MailstackStatus) IsValid() bool {
+	switch e {
+	case MailstackStatusPending, MailstackStatusCompleted, MailstackStatusFailed:
+		return true
+	}
+	return false
+}
+
+func (e MailstackStatus) String() string {
+	return string(e)
+}
+
+func (e *MailstackStatus) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = MailstackStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid MailstackStatus", str)
+	}
+	return nil
+}
+
+func (e MailstackStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
 type Market string
 
 const (
@@ -4937,6 +5004,51 @@ func (e *PhoneNumberLabel) UnmarshalGQL(v interface{}) error {
 }
 
 func (e PhoneNumberLabel) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type RegisterMailstackStatus string
+
+const (
+	RegisterMailstackStatusAwaitingPayment RegisterMailstackStatus = "AWAITING_PAYMENT"
+	RegisterMailstackStatusPending         RegisterMailstackStatus = "PENDING"
+	RegisterMailstackStatusCompleted       RegisterMailstackStatus = "COMPLETED"
+	RegisterMailstackStatusFailed          RegisterMailstackStatus = "FAILED"
+)
+
+var AllRegisterMailstackStatus = []RegisterMailstackStatus{
+	RegisterMailstackStatusAwaitingPayment,
+	RegisterMailstackStatusPending,
+	RegisterMailstackStatusCompleted,
+	RegisterMailstackStatusFailed,
+}
+
+func (e RegisterMailstackStatus) IsValid() bool {
+	switch e {
+	case RegisterMailstackStatusAwaitingPayment, RegisterMailstackStatusPending, RegisterMailstackStatusCompleted, RegisterMailstackStatusFailed:
+		return true
+	}
+	return false
+}
+
+func (e RegisterMailstackStatus) String() string {
+	return string(e)
+}
+
+func (e *RegisterMailstackStatus) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = RegisterMailstackStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid RegisterMailstackStatus", str)
+	}
+	return nil
+}
+
+func (e RegisterMailstackStatus) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 

@@ -7,18 +7,24 @@ package resolver
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	opentracing "github.com/opentracing/opentracing-go"
-	"strings"
 )
 
-// MailstackBuyDomainWithMailboxes is the resolver for the mailstack_BuyDomainWithMailboxes field.
-func (r *mutationResolver) MailstackBuyDomainWithMailboxes(ctx context.Context, domains []string, usernames []string) ([]string, error) {
-	panic(fmt.Errorf("not implemented: MailstackBuyDomainWithMailboxes - mailstack_BuyDomainWithMailboxes"))
+// MailstackRegisterBuyDomainsWithMailboxes is the resolver for the mailstack_RegisterBuyDomainsWithMailboxes field.
+func (r *mutationResolver) MailstackRegisterBuyDomainsWithMailboxes(ctx context.Context, domains []string, usernames []string, amount *float64) (*model.RegisterBuyDomainWithMailboxes, error) {
+	panic(fmt.Errorf("not implemented: MailstackRegisterBuyDomainsWithMailboxes - mailstack_RegisterBuyDomainsWithMailboxes"))
+}
+
+// MailstackRegisteredBuyDomainsWithMailboxesPaid is the resolver for the mailstack_RegisteredBuyDomainsWithMailboxesPaid field.
+func (r *mutationResolver) MailstackRegisteredBuyDomainsWithMailboxesPaid(ctx context.Context, id string) (*model.Result, error) {
+	panic(fmt.Errorf("not implemented: MailstackRegisteredBuyDomainsWithMailboxesPaid - mailstack_RegisteredBuyDomainsWithMailboxesPaid"))
 }
 
 // MailstackSetUser is the resolver for the mailstack_SetUser field.
@@ -175,3 +181,20 @@ func (r *queryResolver) MailstackMailboxes(ctx context.Context) ([]*model.Mailbo
 
 	return response, nil
 }
+
+// MailstackRegisteredBuyDomainsWithMailboxes is the resolver for the mailstack_RegisteredBuyDomainsWithMailboxes field.
+func (r *queryResolver) MailstackRegisteredBuyDomainsWithMailboxes(ctx context.Context) ([]*model.RegisteredBuyDomainWithMailboxes, error) {
+	panic(fmt.Errorf("not implemented: MailstackRegisteredBuyDomainsWithMailboxes - mailstack_RegisteredBuyDomainsWithMailboxes"))
+}
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//    it when you're done.
+//  - You have helper methods in this file. Move them out to keep these resolver files clean.
+/*
+	func (r *mutationResolver) MailstackCreatePaymentIntent(ctx context.Context, amount *float64) (string, error) {
+	panic(fmt.Errorf("not implemented: MailstackCreatePaymentIntent - mailstack_CreatePaymentIntent"))
+}
+*/
