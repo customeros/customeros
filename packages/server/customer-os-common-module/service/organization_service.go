@@ -30,7 +30,7 @@ type OrganizationService interface {
 	Save(ctx context.Context, tx *neo4j.ManagedTransaction, id *string, dataFields data_fields.OrganizationFields) (string, error)
 	LinkWithDomain(ctx context.Context, tx *neo4j.ManagedTransaction, organizationId, domain string) error
 
-	Hide(ctx context.Context, tx *neo4j.ManagedTransaction, organizationId string) error
+	Hide(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, organizationId string) error
 	Show(ctx context.Context, tx *neo4j.ManagedTransaction, organizationId string) error
 
 	GetLatestOrganizationsWithJobRolesForContacts(ctx context.Context, contactIds []string) (*neo4jentity.OrganizationWithJobRoleEntities, error)
@@ -447,7 +447,7 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 	return organizationId, nil
 }
 
-func (s *organizationService) Hide(ctx context.Context, tx *neo4j.ManagedTransaction, organizationId string) error {
+func (s *organizationService) Hide(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, organizationId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.Hide")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -472,16 +472,22 @@ func (s *organizationService) Hide(ctx context.Context, tx *neo4j.ManagedTransac
 		return err
 	}
 
-	fields := data_fields.OrganizationFields{Hide: utils.BoolPtr(true)}
-	err = s.services.Neo4jRepositories.OrganizationWriteRepository.Save(ctx, tx, tenant, organizationId, fields)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
+	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
+		fields := data_fields.OrganizationFields{Hide: utils.BoolPtr(true)}
+		err = s.services.Neo4jRepositories.OrganizationWriteRepository.Save(ctx, txWithPostCommit.Tx, tenant, organizationId, fields)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
 
-	utils.EventCompleted(ctx, tenant, model.ORGANIZATION.String(), organizationId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithDelete())
+		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
+			utils.EventCompleted(ctx, tenant, model.ORGANIZATION.String(), organizationId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithDelete())
+			return nil
+		})
+		return nil, nil
+	})
 
-	return nil
+	return err
 }
 
 func (s *organizationService) Show(ctx context.Context, tx *neo4j.ManagedTransaction, organizationId string) error {
