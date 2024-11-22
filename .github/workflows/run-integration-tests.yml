@@ -5,8 +5,7 @@ on:
   repository_dispatch:
     types:
       - frontera-app * deployed
-      - frontera-middleware * deployed
-      - realtime-api * deployed
+      - customer-os-api * deployed
 
 concurrency:
   group: ${{ github.workflow }}-global
