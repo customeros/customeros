@@ -7,7 +7,6 @@ package resolver
 import (
 	"context"
 	"errors"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -20,6 +19,7 @@ import (
 	enummapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	commontracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
