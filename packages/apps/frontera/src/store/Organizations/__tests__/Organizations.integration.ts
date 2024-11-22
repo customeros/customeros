@@ -1,4 +1,5 @@
 import { it, expect, describe } from 'vitest';
+import { VitestHelper } from '@store/vitest-helper.ts';
 
 import {
   Currency,
@@ -10,7 +11,6 @@ import {
 
 import { Transport } from '../../transport';
 import { UserService } from '../../Users/User.service';
-import { trackOrganization } from './organizationsTestState';
 import { ContractService } from '../../Contracts/Contract.service';
 import { OrganizationsService } from '../__service__/Organizations.service';
 import { ContractLineItemService } from '../../ContractLineItems/ContractLineItem.service';
@@ -44,12 +44,8 @@ describe('OrganizationsService - Integration Tests', () => {
   });
 
   it('checks create empty organization', async () => {
-    const organization_name = 'IT_' + crypto.randomUUID();
-    const { organization_Save } = await organizationsService.saveOrganization({
-      input: { name: organization_name },
-    });
-
-    trackOrganization(organization_Save.metadata.id);
+    const { organization_Save, organization_name } =
+      await VitestHelper.createOrganizationForTest(organizationsService);
 
     const sleep = (ms: number) =>
       new Promise((resolve) => setTimeout(resolve, ms));
@@ -149,13 +145,11 @@ describe('OrganizationsService - Integration Tests', () => {
   });
 
   it('adds tags to organization', async () => {
-    const organization_name = 'IT_' + crypto.randomUUID();
-    const organization_tag_name = 'IT_' + crypto.randomUUID();
-    const { organization_Save } = await organizationsService.saveOrganization({
-      input: { name: organization_name },
-    });
+    const { organization_Save } = await VitestHelper.createOrganizationForTest(
+      organizationsService,
+    );
 
-    trackOrganization(organization_Save.metadata.id);
+    const organization_tag_name = 'IT_' + crypto.randomUUID();
 
     await organizationsService.addTag({
       input: {
@@ -193,16 +187,12 @@ describe('OrganizationsService - Integration Tests', () => {
   });
 
   it('adds social to organization', async () => {
-    const organization_name = 'IT_' + crypto.randomUUID();
+    const { organization_Save } = await VitestHelper.createOrganizationForTest(
+      organizationsService,
+    );
+
     const organization_initial_social_url =
       'www.IT_' + crypto.randomUUID() + '.com';
-
-    const { organization_Save } = await organizationsService.saveOrganization({
-      input: { name: organization_name },
-    });
-
-    trackOrganization(organization_Save.metadata.id);
-
     const { organization_AddSocial } = await organizationsService.addSocial({
       organizationId: organization_Save.metadata.id,
       input: {
@@ -250,26 +240,18 @@ describe('OrganizationsService - Integration Tests', () => {
   });
 
   it('adds subsidiary to organization', async () => {
-    const parent_organization_name = 'IT_' + crypto.randomUUID();
-    const subsidiary_organization_name = 'IT_' + crypto.randomUUID();
-    const parent_organization = await organizationsService.saveOrganization({
-      input: { name: parent_organization_name },
-    });
-
-    trackOrganization(parent_organization.organization_Save.metadata.id);
-
-    const subsidiary_organization = await organizationsService.saveOrganization(
-      {
-        input: { name: subsidiary_organization_name },
-      },
+    const parent_organization = await VitestHelper.createOrganizationForTest(
+      organizationsService,
     );
-
-    trackOrganization(subsidiary_organization.organization_Save.metadata.id);
+    const {
+      organization_Save: subsidiary_organization,
+      organization_name: subsidiary_organization_name,
+    } = await VitestHelper.createOrganizationForTest(organizationsService);
 
     await organizationsService.addSubsidiary({
       input: {
         organizationId: parent_organization.organization_Save.metadata.id,
-        subsidiaryId: subsidiary_organization.organization_Save.metadata.id,
+        subsidiaryId: subsidiary_organization.metadata.id,
       },
     });
 
@@ -306,7 +288,7 @@ describe('OrganizationsService - Integration Tests', () => {
 
     await organizationsService.removeSubsidiary({
       organizationId: parent_organization.organization_Save.metadata.id,
-      subsidiaryId: subsidiary_organization.organization_Save.metadata.id,
+      subsidiaryId: subsidiary_organization.metadata.id,
     });
 
     while (retries < maxRetries && !assertionsPassed) {
@@ -335,12 +317,10 @@ describe('OrganizationsService - Integration Tests', () => {
   it('retrieve archived organizations', async () => {
     const testStartDate = new Date().toISOString();
 
-    const organization_name = 'IT_' + crypto.randomUUID();
-    const new_organization = await organizationsService.saveOrganization({
-      input: { name: organization_name },
-    });
-
-    trackOrganization(new_organization.organization_Save.metadata.id);
+    const {
+      organization_name: organization_name,
+      organization_Save: new_organization,
+    } = await VitestHelper.createOrganizationForTest(organizationsService);
 
     const sleep = (ms: number) =>
       new Promise((resolve) => setTimeout(resolve, ms));
@@ -374,12 +354,12 @@ describe('OrganizationsService - Integration Tests', () => {
 
     expect(
       archived_organizations.organizations_HiddenAfter.includes(
-        new_organization.organization_Save.metadata.id,
+        new_organization.metadata.id,
       ),
     ).toBe(false);
 
     await organizationsService.hideOrganizations({
-      ids: [new_organization.organization_Save.metadata.id],
+      ids: [new_organization.metadata.id],
     });
 
     retrieved_organizations = await organizationsService.getOrganizations({
@@ -409,19 +389,15 @@ describe('OrganizationsService - Integration Tests', () => {
 
     expect(
       archived_organizations.organizations_HiddenAfter.includes(
-        new_organization.organization_Save.metadata.id,
+        new_organization.metadata.id,
       ),
     ).toBe(true);
   });
 
   it('updates onboarding status to organization', async () => {
-    const organization_name = 'IT_' + crypto.randomUUID();
-
-    const { organization_Save } = await organizationsService.saveOrganization({
-      input: { name: organization_name },
-    });
-
-    trackOrganization(organization_Save.metadata.id);
+    const { organization_Save } = await VitestHelper.createOrganizationForTest(
+      organizationsService,
+    );
 
     let organization;
 
@@ -447,13 +423,9 @@ describe('OrganizationsService - Integration Tests', () => {
   });
 
   it('updates updateAllOpportunityRenewals', async () => {
-    const organization_name = 'IT_' + crypto.randomUUID();
-
-    const { organization_Save } = await organizationsService.saveOrganization({
-      input: { name: organization_name },
-    });
-
-    trackOrganization(organization_Save.metadata.id);
+    const { organization_Save } = await VitestHelper.createOrganizationForTest(
+      organizationsService,
+    );
 
     const contract_name = 'IT_' + crypto.randomUUID();
     const threeMonthsAgo = new Date();
@@ -521,12 +493,9 @@ describe('OrganizationsService - Integration Tests', () => {
   });
 
   it('adds updates owner of the organization', async () => {
-    const organization_name = 'IT_' + crypto.randomUUID();
-    const { organization_Save } = await organizationsService.saveOrganization({
-      input: { name: organization_name },
-    });
-
-    trackOrganization(organization_Save.metadata.id);
+    const { organization_Save } = await VitestHelper.createOrganizationForTest(
+      organizationsService,
+    );
 
     let organization = await organizationsService.getOrganization(
       organization_Save.metadata.id,
