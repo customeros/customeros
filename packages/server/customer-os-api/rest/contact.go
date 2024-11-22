@@ -112,12 +112,23 @@ func validateAndOpenFile(c *gin.Context) (multipart.File, error) {
 func validateHeaders(c *gin.Context, reader *csv.Reader) error {
 	headers, err := reader.Read()
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Failed to read file"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to read file"})
 		return err
 	}
 
-	if headers[0] != "email" && headers[1] != "linkedin_url" {
-		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Invalid headers, must be 'email' and 'linkedin_url'"})
+	hasEmail := false
+	hasLinkedIn := false
+	for _, header := range headers {
+		if header == "email" {
+			hasEmail = true
+		}
+		if header == "linkedin_url" {
+			hasLinkedIn = true
+		}
+	}
+
+	if !hasEmail || !hasLinkedIn {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing required headers: email, linkedin_url"})
 		return errors.New("invalid headers")
 	}
 	return nil
@@ -192,6 +203,7 @@ func createNewContact(c *gin.Context, ctx context.Context, span opentracing.Span
 	contactId, err := services.CommonServices.ContactService.Save(ctx, nil, neo4jrepo.ContactFields{}, linkedInURL, neo4jmodel.ExternalSystem{})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to save contact"))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save contact"})
 		return ""
 	}
 	return contactId
