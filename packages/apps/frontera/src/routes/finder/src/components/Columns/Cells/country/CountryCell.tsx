@@ -14,10 +14,13 @@ export const CountryCell = observer(({ id, type }: ContactNameCellProps) => {
   const { organizations, contacts } = useStore();
   const store: ContactsStore | OrganizationsStore =
     type === 'contact' ? contacts : organizations;
-  const itemStore = store.value.get(id);
+  const itemStore =
+    type === 'contact'
+      ? store.value.get(id)
+      : (store as OrganizationsStore).getById(id);
   const country = itemStore?.country;
 
-  const enrichedItem = itemStore?.value.enrichDetails;
+  const enrichedItem = itemStore?.value?.enrichDetails;
 
   const enrichingStatus =
     !enrichedItem?.enrichedAt &&

@@ -1,7 +1,7 @@
 import set from 'lodash/set';
 import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
-import { OrganizationStore } from '@store/Organizations/Organization.store';
+import { Organization } from '@store/Organizations/Organization.dto';
 
 import { Check } from '@ui/media/icons/Check';
 import { useStore } from '@shared/hooks/useStore';
@@ -13,7 +13,7 @@ export const UpdateHealthStatus = observer(() => {
   const context = store.ui.commandMenu.context;
 
   const entity = match(context.entity)
-    .returnType<OrganizationStore | OrganizationStore[] | undefined>()
+    .returnType<Organization | Organization[] | undefined>()
 
     .with('Organization', () =>
       store.organizations.value.get(context.ids?.[0] as string),
@@ -23,14 +23,14 @@ export const UpdateHealthStatus = observer(() => {
       () =>
         context.ids?.map((e: string) =>
           store.organizations.value.get(e),
-        ) as OrganizationStore[],
+        ) as Organization[],
     )
     .otherwise(() => undefined);
 
   const label = match(context.entity)
     .with(
       'Organization',
-      () => `Organization - ${(entity as OrganizationStore)?.value?.name}`,
+      () => `Organization - ${(entity as Organization)?.value?.name}`,
     )
     .with('Organizations', () => `${context.ids?.length} organizations`)
 
@@ -44,7 +44,7 @@ export const UpdateHealthStatus = observer(() => {
 
       match(context.entity)
         .with('Organization', () => {
-          const organization = entity as OrganizationStore;
+          const organization = entity as Organization;
           const potentialAmount =
             organization.value.accountDetails?.renewalSummary?.maxArrForecast ??
             0;
@@ -85,7 +85,7 @@ export const UpdateHealthStatus = observer(() => {
 
   const healthStatus =
     context.entity === 'Organization' &&
-    (entity as OrganizationStore)?.value.accountDetails?.renewalSummary
+    (entity as Organization)?.value.accountDetails?.renewalSummary
       ?.renewalLikelihood;
 
   return (

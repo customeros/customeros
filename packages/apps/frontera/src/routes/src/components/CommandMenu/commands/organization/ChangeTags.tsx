@@ -2,55 +2,61 @@ import { useMemo, useState } from 'react';
 
 import { match } from 'ts-pattern';
 import { CommandGroup } from 'cmdk';
+import unionBy from 'lodash/unionBy';
 import { observer } from 'mobx-react-lite';
-import { OrganizationStore } from '@store/Organizations/Organization.store';
+import { TagDatum } from '@store/Tags/Tag.store';
+import { Organization } from '@store/Organizations/Organization.dto';
 
+import { EntityType } from '@graphql/types';
 import { Plus } from '@ui/media/icons/Plus.tsx';
 import { Check } from '@ui/media/icons/Check.tsx';
 import { useStore } from '@shared/hooks/useStore';
 import { useModKey } from '@shared/hooks/useModKey';
-import { DataSource, EntityType, Tag as TagType } from '@graphql/types';
 import { Command, CommandItem, CommandInput } from '@ui/overlay/CommandMenu';
 
 export const ChangeTags = observer(() => {
   const store = useStore();
   const context = store.ui.commandMenu.context;
+  const [newTags, setNewTags] = useState<TagDatum[]>([]);
 
   const entity = match(context.entity)
-    .returnType<OrganizationStore | OrganizationStore[] | undefined>()
+    .returnType<Organization | Organization[] | undefined>()
     .with('Organization', () =>
-      store.organizations.value.get(context.ids?.[0] as string),
+      store.organizations.getById(context.ids?.[0] as string),
     )
     .with(
       'Organizations',
       () =>
         context.ids?.map((e: string) =>
-          store.organizations.value.get(e),
-        ) as OrganizationStore[],
+          store.organizations.getById(e),
+        ) as Organization[],
     )
     .otherwise(() => undefined);
   const label = match(context.entity)
     .with(
       'Organization',
-      () => `Organization - ${(entity as OrganizationStore)?.value?.name}`,
+      () => `Organization - ${(entity as Organization)?.value?.name}`,
     )
     .with('Organizations', () => `${context.ids?.length} organizations`)
     .otherwise(() => '');
 
   const [search, setSearch] = useState('');
 
-  const handleSelect = (t: TagType) => {
+  const handleSelect = (t?: TagDatum | null) => {
+    if (!t) return;
     if (!context.ids?.[0]) return;
 
     if (!entity) return;
 
     match(context.entity)
       .with('Organization', () => {
-        const organization = entity as OrganizationStore;
+        const organization = entity as Organization;
 
         const foundIndex = organization.value.tags?.findIndex(
           (e) => e.metadata.id === t.metadata.id,
         );
+
+        organization.draft();
 
         if (typeof foundIndex !== 'undefined' && foundIndex > -1) {
           organization.value.tags?.splice(foundIndex, 1);
@@ -69,60 +75,45 @@ export const ChangeTags = observer(() => {
   };
 
   const handleCreateOption = (value: string) => {
-    if (
-      store.tags
-        .getByEntityType(EntityType.Organization)
-        .find((e) => e.value.name === value)
-    )
-      return;
-    store.tags?.create({ name: value });
+    if (store.tags.toArray().find((e) => e.value.name === value)) return;
+    store.tags?.create(
+      { name: value, entityType: EntityType.Organization },
+      {
+        onSucces: (id) => {
+          setNewTags((prev) => [store.tags.getById(id)!.value, ...prev]);
 
-    match(context.entity)
-      .with('Organization', () => {
-        const organization = entity as OrganizationStore;
+          match(context.entity)
+            .with('Organization', () => {
+              const organization = entity as Organization;
 
-        organization?.value.tags?.push({
-          id: value,
-          name: value,
-          metadata: {
-            id: value,
-            source: DataSource.Openline,
-            sourceOfTruth: DataSource.Openline,
-            appSource: 'organization',
-            created: new Date().toISOString(),
-            lastUpdated: new Date().toISOString(),
-          },
-          appSource: 'organization',
-          entityType: EntityType.Organization,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          source: DataSource.Openline,
-        });
-      })
-      .with('Organizations', () => {
-        store.organizations.updateTags(context.ids as string[], [
-          {
-            id: value,
-            name: value,
-            metadata: {
-              id: value,
-              source: DataSource.Openline,
-              sourceOfTruth: DataSource.Openline,
-              appSource: 'organization',
-              created: new Date().toISOString(),
-              lastUpdated: new Date().toISOString(),
-            },
-            appSource: 'organization',
-            entityType: EntityType.Organization,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            source: DataSource.Openline,
-          },
-        ]);
-      });
+              organization.draft();
 
-    // clear search
-    setSearch('');
+              organization?.value.tags?.push({
+                name: value,
+                metadata: {
+                  id,
+                },
+                entityType: EntityType.Organization,
+              });
+
+              organization.commit();
+            })
+            .with('Organizations', () => {
+              store.organizations.updateTags(context.ids as string[], [
+                {
+                  name: value,
+                  entityType: EntityType.Organization,
+                  metadata: {
+                    id: value,
+                  },
+                },
+              ]);
+            });
+
+          setSearch('');
+        },
+      },
+    );
   };
 
   const newSelectedTags = match(context.entity)
@@ -130,13 +121,11 @@ export const ChangeTags = observer(() => {
       'Organization',
       () =>
         new Set(
-          ((entity as OrganizationStore)?.value?.tags ?? []).map(
-            (tag) => tag?.name,
-          ),
+          ((entity as Organization)?.value?.tags ?? []).map((tag) => tag?.name),
         ),
     )
     .with('Organizations', () => {
-      const mappedTags = (entity as OrganizationStore[])
+      const mappedTags = (entity as Organization[])
         .map((e) => e.value?.tags)
         .flat()
         .filter((e) => Boolean(e));
@@ -145,48 +134,38 @@ export const ChangeTags = observer(() => {
     })
     .otherwise(() => new Set([]));
 
-  const orgTags = useMemo(() => {
-    return match(context.entity)
-      .with(
-        'Organization',
-        () =>
-          new Set(
-            ((entity as OrganizationStore)?.value?.tags ?? []).map(
-              (tag) => tag?.name,
-            ),
-          ),
-      )
-      .with('Organizations', () => {
-        const mappedTags = (entity as OrganizationStore[])
-          .map((e) => e.value?.tags)
-          .flat()
-          .filter((e) => Boolean(e));
+  const selectedTags = useMemo(
+    () =>
+      match(context.entity)
+        .with('Organization', () =>
+          ((entity as Organization)?.value?.tags ?? []).slice().reverse(),
+        )
+        .with('Organizations', () => {
+          const mappedTags = (entity as Organization[])
+            .map((e) => e.value?.tags)
+            .reverse()
+            .flat()
+            .filter((e) => Boolean(e));
 
-        return new Set(mappedTags.map((tag) => tag?.name));
-      })
-      .otherwise(() => new Set([]));
-  }, []);
+          return mappedTags;
+        })
+        .otherwise(() => []),
+    [],
+  );
 
-  const sortedTags = store.tags
-    ?.getByEntityType(EntityType.Organization)
-    .filter((e) => !!e.value.name)
-    .sort((a, b) => {
-      const aInOrg = orgTags.has(a.value.name);
-      const bInOrg = orgTags.has(b.value.name);
+  const allTags = store.tags
+    .getByEntityType(EntityType.Organization)
+    .map((s) => s.value);
 
-      if (aInOrg && !bInOrg) return -1;
-      if (!aInOrg && bInOrg) return 1;
-
-      return 0;
-    });
+  const uniqueTags = unionBy(newTags, selectedTags, allTags, 'metadata.id');
 
   useModKey('Enter', () => {
     store.ui.commandMenu.setOpen(false);
   });
 
-  const filteredTags = sortedTags?.filter((tag) =>
-    tag.value.name.toLowerCase().includes(search.toLowerCase()),
-  );
+  const filteredTags = uniqueTags?.filter((tag) => {
+    return tag?.name.toLowerCase().includes(search.toLowerCase());
+  });
 
   return (
     <Command shouldFilter={false} label='Change or add tags...'>
@@ -198,9 +177,6 @@ export const ChangeTags = observer(() => {
         onKeyDownCapture={(e) => {
           if (e.metaKey && e.key === 'Enter') {
             store.ui.commandMenu.setOpen(false);
-          } else {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            handleSelect(search as any);
           }
         }}
       />
@@ -208,13 +184,11 @@ export const ChangeTags = observer(() => {
         <Command.List>
           {filteredTags?.map((tag) => (
             <CommandItem
-              key={tag.id}
+              key={tag?.metadata.id}
+              rightAccessory={newSelectedTags.has(tag?.name) ? <Check /> : null}
               onSelect={() => {
-                handleSelect(tag.value);
+                handleSelect(tag);
               }}
-              rightAccessory={
-                newSelectedTags.has(tag.value.name) ? <Check /> : null
-              }
               onKeyDown={(e) => {
                 if (e.metaKey && e.key === 'Enter') {
                   e.stopPropagation();
@@ -225,13 +199,15 @@ export const ChangeTags = observer(() => {
                 }
               }}
             >
-              {tag.value.name}
+              {tag?.name}
             </CommandItem>
           ))}
           {search && (
             <CommandItem
               leftAccessory={<Plus />}
-              onSelect={() => handleCreateOption(search)}
+              onSelect={() => {
+                handleCreateOption(search);
+              }}
             >
               <span className='text-gray-700 ml-1'>Create new tag:</span>
               <span className='text-gray-500 ml-1'>{search}</span>

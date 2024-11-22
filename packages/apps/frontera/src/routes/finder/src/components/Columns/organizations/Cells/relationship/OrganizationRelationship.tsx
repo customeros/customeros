@@ -23,9 +23,9 @@ export const OrganizationRelationshipCell = observer(
     const store = useStore();
     const [isEditing, setIsEditing] = useState(false);
 
-    const organization = store.organizations.value.get(id);
+    const organization = store.organizations.getById(id);
 
-    const enrichedOrg = organization?.value.enrichDetails;
+    const enrichedOrg = organization?.value?.enrichDetails;
     const enrichingStatus =
       !enrichedOrg?.enrichedAt &&
       enrichedOrg?.requestedAt &&

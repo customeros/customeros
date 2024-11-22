@@ -5,10 +5,9 @@ import Fuse from 'fuse.js';
 import { useCommandState } from 'cmdk';
 import { observer } from 'mobx-react-lite';
 import { ContactStore } from '@store/Contacts/Contact.store.ts';
-import { OrganizationStore } from '@store/Organizations/Organization.store.ts';
+import { Organization } from '@store/Organizations/Organization.dto';
 
 import { Avatar } from '@ui/media/Avatar';
-import { Organization } from '@graphql/types';
 import { useStore } from '@shared/hooks/useStore';
 import { Command } from '@ui/overlay/CommandMenu';
 import { User03 } from '@ui/media/icons/User03.tsx';
@@ -16,7 +15,7 @@ import { User03 } from '@ui/media/icons/User03.tsx';
 const isContact = (
   item:
     | { type: string; item: ContactStore }
-    | { type: string; item: OrganizationStore },
+    | { type: string; item: Organization },
 ): item is { type: 'contact'; item: ContactStore } => {
   return item.type === 'contact';
 };
@@ -24,8 +23,8 @@ const isContact = (
 const isOrganization = (
   item:
     | { type: string; item: ContactStore }
-    | { type: string; item: OrganizationStore },
-): item is { type: 'organization'; item: OrganizationStore } => {
+    | { type: string; item: Organization },
+): item is { item: Organization; type: 'organization' } => {
   return item.type === 'organization';
 };
 export const GlobalSearchResultNavigationCommands = observer(() => {
@@ -59,7 +58,7 @@ export const GlobalSearchResultNavigationCommands = observer(() => {
     const results = fuseCombined.search(search, { limit: 10 });
     const { filteredContacts, filteredOrgs } = results.reduce<{
       filteredContacts: ContactStore[];
-      filteredOrgs: OrganizationStore['value'][];
+      filteredOrgs: Organization['value'][];
     }>(
       (acc, result) => {
         if (isContact(result.item)) {
@@ -67,7 +66,9 @@ export const GlobalSearchResultNavigationCommands = observer(() => {
         }
 
         if (isOrganization(result.item)) {
-          acc.filteredOrgs.push(result.item.item.value as Organization);
+          acc.filteredOrgs.push(
+            result.item.item.value as Organization['value'],
+          );
         }
 
         return acc;

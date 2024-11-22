@@ -18,7 +18,7 @@ export const ContractCell = observer(({ contractId }: ContractCellProps) => {
   const contract = store.contracts.value.get(contractId);
   const id = store.organizations
     .toArray()
-    .find((e) => e.contracts.find((c) => c.metadata.id === contractId))?.id;
+    .find((e) => e?.contracts?.find((c) => c.metadata.id === contractId))?.id;
 
   const linkRef = useRef<HTMLParagraphElement>(null);
 

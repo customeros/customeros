@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 
 import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
+import { TagDatum } from '@store/Tags/Tag.store';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
 
 import { Input } from '@ui/form/Input';
@@ -28,9 +29,7 @@ import { HorizontalBarChart03 } from '@ui/media/icons/HorizontalBarChart03';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
 import {
   Social,
-  Metadata,
   EntityType,
-  Tag as TagType,
   OrganizationStage,
   OrganizationRelationship,
 } from '@graphql/types';
@@ -74,20 +73,20 @@ export const AboutPanel = observer(() => {
   );
   const orgNameReadOnly = useFeatureIsOn('org-name-readonly');
 
-  const organization = store.organizations.value.get(id);
+  const organization = store.organizations.getById(id);
 
-  if (!organization) return null;
+  if (!organization || !organization?.value) return null;
 
   const selectedRelationshipOption = relationshipOptions.find(
-    (option) => option.value === organization?.value.relationship,
+    (option) => option.value === organization.value?.relationship,
   );
 
   const selectedStageOption = stageOptions.find(
-    (option) => option.value === organization?.value.stage,
+    (option) => option.value === organization.value?.stage,
   );
 
   const applicableStageOptions = getStageOptions(
-    organization?.value?.relationship,
+    organization.value?.relationship,
   );
 
   const handleSocialChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -95,11 +94,11 @@ export const AboutPanel = observer(() => {
     const value = e.target.value;
 
     if (organization) {
-      const idx = organization?.value.socialMedia.findIndex((s) => s.id === id);
+      const idx = organization.value?.socialMedia.findIndex((s) => s.id === id);
 
-      if (idx < 0) return;
+      if (!idx || idx < 0) return;
 
-      organization.value.socialMedia[idx].url = value;
+      organization.value!.socialMedia[idx].url = value;
     }
   };
 
@@ -109,9 +108,11 @@ export const AboutPanel = observer(() => {
   ) => {
     const id = (e.target as HTMLInputElement).id;
 
-    const idx = organization?.value.socialMedia.findIndex((s) => s.id === id);
+    const idx = organization.value?.socialMedia.findIndex((s) => s.id === id);
 
-    if (organization.value.socialMedia[idx].url === '') {
+    if (!idx || idx < 0) return;
+
+    if (organization.value?.socialMedia[idx].url === '') {
       organization.value.socialMedia.splice(idx, 1);
       newInputRef.current?.focus();
     }
@@ -125,13 +126,15 @@ export const AboutPanel = observer(() => {
   ) => {
     const id = (e.target as HTMLInputElement).id;
 
-    const idx = organization.value.socialMedia.findIndex((s) => s.id === id);
-    const social = organization.value.socialMedia[idx];
+    const idx = organization.value?.socialMedia.findIndex((s) => s.id === id);
+
+    if (!idx || idx < 0) return;
+    const social = organization.value?.socialMedia[idx];
 
     if (!social) return;
 
     if (social.url === '') {
-      organization.value.socialMedia.splice(idx, 1);
+      organization.value?.socialMedia.splice(idx, 1);
       newInputRef.current?.focus();
     }
 
@@ -139,7 +142,7 @@ export const AboutPanel = observer(() => {
   };
 
   const handleCreateSocial = (value: string) => {
-    organization.value.socialMedia.push({
+    organization.value?.socialMedia.push({
       id: crypto.randomUUID(),
       url: value,
     } as Social);
@@ -148,18 +151,17 @@ export const AboutPanel = observer(() => {
 
   const handleCreateOption = (value: string) => {
     store.tags?.create(
-      { name: value, entityType: EntityType.Organization },
+      { name: value },
       {
-        onSucces: (serverId: string) => {
-          organization?.value.tags?.push({
-            id: serverId,
+        onSucces: (id) => {
+          organization.draft();
+          organization?.value?.tags?.push({
             name: value,
             metadata: {
-              id: serverId,
-            } as Metadata,
+              id,
+            },
             entityType: EntityType.Organization,
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          } as any);
+          });
           organization.commit();
         },
       },
@@ -207,7 +209,7 @@ export const AboutPanel = observer(() => {
             }}
             className='font-semibold text-[16px] mt-0.5 border-none overflow-hidden overflow-ellipsis'
           />
-          {organization?.value.referenceId && (
+          {organization.value?.referenceId && (
             <div className='h-full ml-4'>
               <Tooltip asChild={false} label={'Copy ID'}>
                 <Tag
@@ -216,12 +218,12 @@ export const AboutPanel = observer(() => {
                   className='rounded-full cursor-pointer'
                   onClick={() => {
                     copyToClipboard(
-                      organization?.value.referenceId ?? '',
+                      organization.value?.referenceId ?? '',
                       'Reference ID copied ',
                     );
                   }}
                 >
-                  <TagLabel>{organization?.value.referenceId}</TagLabel>
+                  <TagLabel>{organization.value?.referenceId}</TagLabel>
                 </Tag>
               </Tooltip>
             </div>
@@ -232,12 +234,12 @@ export const AboutPanel = observer(() => {
           autoComplete='off'
           placeholder='www.'
           dataTest='org-about-www'
-          value={organization?.value?.website || ''}
+          value={organization.value?.website || ''}
           onBlur={() => {
             organization.commit();
           }}
           onChange={(e) => {
-            organization.value.website = e.target.value;
+            organization.value!.website = e.target.value;
           }}
         />
         <Textarea
@@ -247,12 +249,12 @@ export const AboutPanel = observer(() => {
           name='valueProposition'
           data-test='org-about-description'
           placeholder={placeholders.valueProposition}
-          value={organization?.value?.valueProposition || ''}
+          value={organization.value?.valueProposition || ''}
           onBlur={() => {
             organization.commit();
           }}
           onChange={(e) => {
-            organization.value.valueProposition = e.target.value;
+            organization.value!.valueProposition = e.target.value;
           }}
         />
         <Tags
@@ -277,10 +279,10 @@ export const AboutPanel = observer(() => {
           onChange={(selection) => {
             const tags = selection
               .map((o) => store.tags.getById(o.value)?.value)
-              .filter(Boolean) as TagType[];
+              .filter(Boolean);
 
-            organization.value.tags = tags;
-
+            organization.draft();
+            organization.value.tags = tags as TagDatum[];
             organization.commit();
           }}
         />
@@ -326,8 +328,8 @@ export const AboutPanel = observer(() => {
                         option.label === 'Prospect'
                       }
                       onClick={() => {
-                        organization.value.relationship = option.value;
-                        organization.value.stage = match(option.value)
+                        organization.value!.relationship = option.value;
+                        organization.value!.stage = match(option.value)
                           .with(
                             OrganizationRelationship.Prospect,
                             () => OrganizationStage.Lead,
@@ -376,7 +378,7 @@ export const AboutPanel = observer(() => {
                     <MenuItem
                       key={option.value}
                       onClick={() => {
-                        organization.value.stage = option.value;
+                        organization.value!.stage = option.value;
                         organization.commit();
                       }}
                     >
@@ -398,7 +400,7 @@ export const AboutPanel = observer(() => {
             dataTest='org-about-industry'
             leftElement={<Building07 className='text-gray-500 mr-3' />}
             onChange={(option) => {
-              organization.value.industry = option?.value;
+              organization.value!.industry = option?.value;
               organization.commit();
             }}
             value={
@@ -419,13 +421,13 @@ export const AboutPanel = observer(() => {
             options={businessTypeOptions}
             dataTest='org-about-business-type'
             leftElement={<Briefcase02 className='text-gray-500 mr-3' />}
+            value={businessTypeOptions.map((option) =>
+              option.value === organization.value!.market ? option : null,
+            )}
             onChange={(option) => {
-              organization.value.market = option?.value;
+              organization.value!.market = option?.value;
               organization.commit();
             }}
-            value={businessTypeOptions.map((option) =>
-              option.value === organization?.value.market ? option : null,
-            )}
           />
 
           <div className='flex items-center justify-center w-full'>
@@ -440,11 +442,11 @@ export const AboutPanel = observer(() => {
                   <HorizontalBarChart03 className='text-gray-500 mr-3' />
                 }
                 onChange={(option) => {
-                  organization.value.lastFundingRound = option?.value;
+                  organization.value!.lastFundingRound = option?.value;
                   organization.commit();
                 }}
                 value={lastFundingRoundOptions.map((option) =>
-                  option.value === organization?.value.lastFundingRound
+                  option.value === organization.value!.lastFundingRound
                     ? option
                     : null,
                 )}
@@ -460,10 +462,10 @@ export const AboutPanel = observer(() => {
             dataTest='org-about-number-of-employees'
             leftElement={<Users03 className='text-gray-500 mr-3' />}
             value={employeesOptions.map((option) =>
-              option.value === organization?.value.employees ? option : null,
+              option.value === organization.value?.employees ? option : null,
             )}
             onChange={(option) => {
-              organization.value.employees = option.value;
+              organization.value!.employees = option.value;
               organization.commit();
             }}
           />
@@ -489,7 +491,7 @@ export const AboutPanel = observer(() => {
           />
 
           {showParentRelationshipSelector &&
-            organization?.subsidiaries?.length > 0 && (
+            organization?.value?.subsidiaries?.length > 0 && (
               <Branches id={id} isReadOnly={parentRelationshipReadOnly} />
             )}
         </div>
@@ -499,7 +501,7 @@ export const AboutPanel = observer(() => {
               className='py-3 w-fit text-gray-400 cursor-pointer'
               onClick={() =>
                 copyToClipboard(
-                  organization?.value.customerOsId ?? '',
+                  organization.value?.customerOsId ?? '',
                   'CustomerOS ID copied',
                 )
               }

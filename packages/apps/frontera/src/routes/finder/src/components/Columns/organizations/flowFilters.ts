@@ -1,5 +1,5 @@
 import { match } from 'ts-pattern';
-import { OrganizationStore } from '@store/Organizations/Organization.store.ts';
+import { Organization } from '@store/Organizations/Organization.dto';
 
 import {
   Filter,
@@ -9,14 +9,14 @@ import {
 } from '@graphql/types';
 
 export const getFlowFilters = (filter: FilterItem | undefined | null) => {
-  const noop = (_row: OrganizationStore) => true;
+  const noop = (_row: Organization) => true;
 
   if (!filter) return noop;
 
   return match(filter)
     .with(
       { property: ColumnViewType.OrganizationsIndustry },
-      (filter) => (row: OrganizationStore) => {
+      (filter) => (row: Organization) => {
         const filterValues = filter?.value;
 
         if (!filterValues) return false;
@@ -26,7 +26,7 @@ export const getFlowFilters = (filter: FilterItem | undefined | null) => {
     )
     .with(
       { property: ColumnViewType.OrganizationsIsPublic },
-      (filter) => (row: OrganizationStore) => {
+      (filter) => (row: Organization) => {
         const filterValues = filter?.value;
 
         return row.value?.public === filterValues;
@@ -34,7 +34,7 @@ export const getFlowFilters = (filter: FilterItem | undefined | null) => {
     )
     .with(
       { property: ColumnViewType.OrganizationsEmployeeCount },
-      (filter) => (row: OrganizationStore) => {
+      (filter) => (row: Organization) => {
         const filterValues = filter?.value;
         const filterType = filter?.operation;
         const employees = row.value?.employees;
@@ -60,19 +60,19 @@ export const getFlowFilters = (filter: FilterItem | undefined | null) => {
     )
     .with(
       { property: ColumnViewType.OrganizationsTags },
-      (filter) => (row: OrganizationStore) => {
+      (filter) => (row: Organization) => {
         const filterValues = filter?.value;
 
         if (!filterValues) return false;
 
         return filterValues.every((value: string) =>
-          row.value.tags?.some((obj) => obj.id === value),
+          row.value.tags?.some((obj) => obj.metadata.id === value),
         );
       },
     )
     .with(
       { property: ColumnViewType.OrganizationsYearFounded },
-      (filter) => (row: OrganizationStore) => {
+      (filter) => (row: Organization) => {
         const filterValues = filter?.value;
         const filterType = filter?.operation;
 
@@ -100,7 +100,7 @@ export const getFlowFilters = (filter: FilterItem | undefined | null) => {
 
     .with(
       { property: ColumnViewType.OrganizationsLinkedinFollowerCount },
-      (filter) => (row: OrganizationStore) => {
+      (filter) => (row: Organization) => {
         const filterValues = filter?.value;
         const filterType = filter?.operation;
         const followersCount = row.value?.socialMedia.find((s) =>
@@ -125,7 +125,7 @@ export const getFlowFilters = (filter: FilterItem | undefined | null) => {
     )
     .with(
       { property: ColumnViewType.OrganizationsHeadquarters },
-      (filter) => (row: OrganizationStore) => {
+      (filter) => (row: Organization) => {
         const filterValues = filter?.value;
 
         if (!filterValues) return false;

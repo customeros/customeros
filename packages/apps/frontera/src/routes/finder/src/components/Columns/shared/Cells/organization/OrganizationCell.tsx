@@ -13,7 +13,7 @@ interface OrganizationCellProps {
 
 export const OrganizationCell = observer(({ id }: OrganizationCellProps) => {
   const store = useStore();
-  const orgName = store.organizations.value.get(id)?.value?.name;
+  const orgName = store.organizations.getById(id)?.value?.name;
   const [tabs] = useLocalStorage<{
     [key: string]: string;
   }>(`customeros-player-last-position`, { root: 'organization' });

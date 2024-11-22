@@ -1,5 +1,5 @@
+import { Organization } from '@store/Organizations/Organization.dto';
 import { CountryCell } from '@finder/components/Columns/Cells/country';
-import { OrganizationStore } from '@store/Organizations/Organization.store';
 import { OrganizationStageCell } from '@finder/components/Columns/Cells/stage';
 import { DateCell } from '@finder/components/Columns/shared/Cells/DateCell/DateCell';
 import {
@@ -33,7 +33,7 @@ import {
   OrganizationRelationshipCell,
 } from './Cells';
 
-type ColumnDatum = OrganizationStore;
+type ColumnDatum = Organization;
 
 // REASON: we do not care about exhaustively typing this TValue type
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -90,7 +90,7 @@ export const columns: Record<string, Column> = {
       <THead<HTMLInputElement>
         title='Organization'
         id={ColumnViewType.OrganizationsName}
-        {...getTHeadProps<OrganizationStore>(props)}
+        {...getTHeadProps<Organization>(props)}
       />
     ),
     skeleton: () => <Skeleton className='w-[100px] h-[14px]' />,
@@ -113,7 +113,7 @@ export const columns: Record<string, Column> = {
         <THead<HTMLInputElement>
           title='Website'
           id={ColumnViewType.OrganizationsWebsite}
-          {...getTHeadProps<OrganizationStore>(props)}
+          {...getTHeadProps<Organization>(props)}
         />
       ),
       skeleton: () => <Skeleton className='w-[50%] h-[14px]' />,
@@ -131,7 +131,7 @@ export const columns: Record<string, Column> = {
         <THead
           title='Relationship'
           id={ColumnViewType.OrganizationsRelationship}
-          {...getTHeadProps<OrganizationStore>(props)}
+          {...getTHeadProps<Organization>(props)}
         />
       ),
       cell: (props) => {
@@ -165,7 +165,7 @@ export const columns: Record<string, Column> = {
         <THead
           title='Onboarding'
           id={ColumnViewType.OrganizationsOnboardingStatus}
-          {...getTHeadProps<OrganizationStore>(props)}
+          {...getTHeadProps<Organization>(props)}
         />
       ),
       skeleton: () => (
@@ -175,41 +175,31 @@ export const columns: Record<string, Column> = {
       ),
     },
   ),
-  [ColumnViewType.OrganizationsRenewalLikelihood]: columnHelper.accessor(
-    'value.accountDetails',
-    {
-      id: ColumnViewType.OrganizationsRenewalLikelihood,
-      minSize: 110,
-      size: 110,
-      maxSize: 400,
-      enableColumnFilter: false,
-      enableResizing: true,
-      enableSorting: true,
-      cell: (props) => {
-        const value = props.getValue()?.renewalSummary?.renewalLikelihood;
-
-        return (
-          <RenewalLikelihoodCell
-            value={value}
-            id={props.row.original.value.metadata?.id}
-          />
-        );
-      },
-      header: (props) => (
-        <THead
-          title='Health'
-          data-test='renewal-likelihood'
-          id={ColumnViewType.OrganizationsRenewalLikelihood}
-          {...getTHeadProps<OrganizationStore>(props)}
-        />
-      ),
-      skeleton: () => (
-        <div className='flex flex-col gap-1'>
-          <Skeleton className='w-[25%] h-[14px]' />
-        </div>
-      ),
+  [ColumnViewType.OrganizationsRenewalLikelihood]: columnHelper.accessor('id', {
+    id: ColumnViewType.OrganizationsRenewalLikelihood,
+    minSize: 110,
+    size: 110,
+    maxSize: 400,
+    enableColumnFilter: false,
+    enableResizing: true,
+    enableSorting: true,
+    cell: (props) => {
+      return <RenewalLikelihoodCell id={props.getValue()} />;
     },
-  ),
+    header: (props) => (
+      <THead
+        title='Health'
+        data-test='renewal-likelihood'
+        id={ColumnViewType.OrganizationsRenewalLikelihood}
+        {...getTHeadProps<Organization>(props)}
+      />
+    ),
+    skeleton: () => (
+      <div className='flex flex-col gap-1'>
+        <Skeleton className='w-[25%] h-[14px]' />
+      </div>
+    ),
+  }),
   [ColumnViewType.OrganizationsRenewalDate]: columnHelper.accessor(
     'value.accountDetails',
     {
@@ -231,7 +221,7 @@ export const columns: Record<string, Column> = {
         <THead
           title='Renewal Date'
           id={ColumnViewType.OrganizationsRenewalDate}
-          {...getTHeadProps<OrganizationStore>(props)}
+          {...getTHeadProps<Organization>(props)}
         />
       ),
       skeleton: () => <Skeleton className='w-[50%] h-[14px]' />,
@@ -264,7 +254,7 @@ export const columns: Record<string, Column> = {
         <THead<HTMLInputElement>
           title='ARR Forecast'
           id={ColumnViewType.OrganizationsForecastArr}
-          {...getTHeadProps<OrganizationStore>(props)}
+          {...getTHeadProps<Organization>(props)}
         />
       ),
       skeleton: () => (
@@ -275,7 +265,7 @@ export const columns: Record<string, Column> = {
       ),
     },
   ),
-  [ColumnViewType.OrganizationsOwner]: columnHelper.accessor('value.owner', {
+  [ColumnViewType.OrganizationsOwner]: columnHelper.accessor((row) => row, {
     id: ColumnViewType.OrganizationsOwner,
     minSize: 154,
     size: 154,
@@ -283,18 +273,18 @@ export const columns: Record<string, Column> = {
     enableColumnFilter: false,
     enableResizing: true,
     cell: (props) => {
-      return (
-        <OwnerCell
-          owner={props.getValue()}
-          id={props.row.original.value.metadata?.id}
-        />
-      );
+      const row = props.getValue();
+
+      const owner = row?.value?.owner;
+      const orgId = row?.id;
+
+      return <OwnerCell id={orgId} owner={owner} />;
     },
     header: (props) => (
       <THead<HTMLInputElement>
         title='Owner'
         id={ColumnViewType.OrganizationsOwner}
-        {...getTHeadProps<OrganizationStore>(props)}
+        {...getTHeadProps<Organization>(props)}
       />
     ),
     skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
@@ -323,7 +313,7 @@ export const columns: Record<string, Column> = {
         <THead<HTMLInputElement>
           title='Source'
           id={ColumnViewType.OrganizationsLeadSource}
-          {...getTHeadProps<OrganizationStore>(props)}
+          {...getTHeadProps<Organization>(props)}
         />
       ),
       skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
@@ -347,7 +337,7 @@ export const columns: Record<string, Column> = {
         <THead<HTMLInputElement>
           title='Created Date'
           id={ColumnViewType.OrganizationsCreatedDate}
-          {...getTHeadProps<OrganizationStore>(props)}
+          {...getTHeadProps<Organization>(props)}
         />
       ),
       skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
@@ -384,7 +374,7 @@ export const columns: Record<string, Column> = {
         <THead<HTMLInputElement>
           title='Founded'
           id={ColumnViewType.OrganizationsYearFounded}
-          {...getTHeadProps<OrganizationStore>(props)}
+          {...getTHeadProps<Organization>(props)}
         />
       ),
       skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
@@ -422,7 +412,7 @@ export const columns: Record<string, Column> = {
         <THead<HTMLInputElement>
           title='Employees'
           id={ColumnViewType.OrganizationsEmployeeCount}
-          {...getTHeadProps<OrganizationStore>(props)}
+          {...getTHeadProps<Organization>(props)}
         />
       ),
       skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
@@ -445,7 +435,7 @@ export const columns: Record<string, Column> = {
         <THead<HTMLInputElement>
           title='LinkedIn'
           id={ColumnViewType.OrganizationsSocials}
-          {...getTHeadProps<OrganizationStore>(props)}
+          {...getTHeadProps<Organization>(props)}
         />
       ),
       skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
@@ -475,7 +465,7 @@ export const columns: Record<string, Column> = {
         <THead<HTMLInputElement>
           title='Last Touchpoint'
           id={ColumnViewType.OrganizationsLastTouchpoint}
-          {...getTHeadProps<OrganizationStore>(props)}
+          {...getTHeadProps<Organization>(props)}
         />
       ),
       skeleton: () => (
@@ -507,7 +497,7 @@ export const columns: Record<string, Column> = {
         <THead<HTMLInputElement>
           title='Last Interacted'
           id={ColumnViewType.OrganizationsLastTouchpointDate}
-          {...getTHeadProps<OrganizationStore>(props)}
+          {...getTHeadProps<Organization>(props)}
         />
       ),
       skeleton: () => (
@@ -537,7 +527,7 @@ export const columns: Record<string, Column> = {
         <THead<HTMLInputElement>
           title='Churn Date'
           id={ColumnViewType.OrganizationsChurnDate}
-          {...getTHeadProps<OrganizationStore>(props)}
+          {...getTHeadProps<Organization>(props)}
         />
       ),
       skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
@@ -572,7 +562,7 @@ export const columns: Record<string, Column> = {
         <THead<HTMLInputElement>
           title='LTV'
           id={ColumnViewType.OrganizationsLtv}
-          {...getTHeadProps<OrganizationStore>(props)}
+          {...getTHeadProps<Organization>(props)}
         />
       ),
       skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
@@ -599,7 +589,7 @@ export const columns: Record<string, Column> = {
         <THead<HTMLInputElement>
           title='Industry'
           id={ColumnViewType.OrganizationsIndustry}
-          {...getTHeadProps<OrganizationStore>(props)}
+          {...getTHeadProps<Organization>(props)}
         />
       ),
       skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
@@ -625,7 +615,7 @@ export const columns: Record<string, Column> = {
         title='Contacts'
         filterWidth='auto'
         id={ColumnViewType.OrganizationsContactCount}
-        {...getTHeadProps<OrganizationStore>(props)}
+        {...getTHeadProps<Organization>(props)}
       />
     ),
     skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
@@ -656,7 +646,7 @@ export const columns: Record<string, Column> = {
         <THead<HTMLInputElement>
           title='LinkedIn Followers'
           id={ColumnViewType.OrganizationsLinkedinFollowerCount}
-          {...getTHeadProps<OrganizationStore>(props)}
+          {...getTHeadProps<Organization>(props)}
         />
       ),
       skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
@@ -679,7 +669,7 @@ export const columns: Record<string, Column> = {
         title='Tags'
         filterWidth='auto'
         id={ColumnViewType.OrganizationsTags}
-        {...getTHeadProps<OrganizationStore>(props)}
+        {...getTHeadProps<Organization>(props)}
       />
     ),
     skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
@@ -704,7 +694,7 @@ export const columns: Record<string, Column> = {
       <THead<HTMLInputElement>
         title='Ownership Type'
         id={ColumnViewType.OrganizationsIsPublic}
-        {...getTHeadProps<OrganizationStore>(props)}
+        {...getTHeadProps<Organization>(props)}
       />
     ),
     skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
@@ -727,7 +717,7 @@ export const columns: Record<string, Column> = {
         title='Stage'
         filterWidth='auto'
         id={ColumnViewType.OrganizationsStage}
-        {...getTHeadProps<OrganizationStore>(props)}
+        {...getTHeadProps<Organization>(props)}
       />
     ),
     skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
@@ -753,7 +743,7 @@ export const columns: Record<string, Column> = {
           title='Country'
           filterWidth='auto'
           id={ColumnViewType.OrganizationsHeadquarters}
-          {...getTHeadProps<OrganizationStore>(props)}
+          {...getTHeadProps<Organization>(props)}
         />
       ),
       skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
@@ -789,7 +779,7 @@ export const columns: Record<string, Column> = {
         <THead<HTMLInputElement>
           title='Parent Org'
           id={ColumnViewType.OrganizationsParentOrganization}
-          {...getTHeadProps<OrganizationStore>(props)}
+          {...getTHeadProps<Organization>(props)}
         />
       ),
       skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
@@ -813,7 +803,7 @@ export const columns: Record<string, Column> = {
         <THead<HTMLInputElement>
           title='Last Updated'
           id={ColumnViewType.OrganizationsUpdatedDate}
-          {...getTHeadProps<OrganizationStore>(props)}
+          {...getTHeadProps<Organization>(props)}
         />
       ),
       skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,

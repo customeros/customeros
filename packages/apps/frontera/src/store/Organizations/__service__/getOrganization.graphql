@@ -26,21 +26,27 @@ query Organization($id: ID!) {
       name
     }
     stage
+    lastFundingRound
+    customerOsId
     description
+    market
     industry
     website
     domains
     isCustomer
     logo
     icon
+    notes
+    hide
     relationship
     leadSource
+    referenceId
     tags {
-      id
       name
-      createdAt
-      updatedAt
-      appSource
+      entityType
+      metadata {
+        id
+      }
     }
     valueProposition
     socialMedia {
@@ -48,27 +54,15 @@ query Organization($id: ID!) {
       url
       followersCount
     }
+    slackChannelId
     employees
     yearFounded
     public
-    tags {
-      id
-      name
-      createdAt
-      updatedAt
-      entityType
-      source
-      appSource
-      metadata {
-        id
-        created
-        lastUpdated
-        source
-        sourceOfTruth
-        appSource
-      }
+    enrichDetails {
+      enrichedAt
+      failedAt
+      requestedAt
     }
-
     accountDetails {
       churned
       ltv
@@ -98,6 +92,14 @@ query Organization($id: ID!) {
       locality
       countryCodeA2
       countryCodeA3
+    }
+    contacts(pagination: { page: 0, limit: 100 }) {
+      content {
+        id
+        metadata {
+          id
+        }
+      }
     }
     subsidiaries {
       organization {

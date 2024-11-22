@@ -10,9 +10,8 @@ query getOrganizations(
   ) {
     content {
       name
-      note
       notes
-
+      hide
       metadata {
         id
         created
@@ -72,22 +71,13 @@ query getOrganizations(
       }
       employees
       tags {
-        id
         name
-        createdAt
-        updatedAt
         entityType
-        source
-        appSource
         metadata {
           id
-          created
-          lastUpdated
-          source
-          sourceOfTruth
-          appSource
         }
       }
+      customerOsId
       yearFounded
       accountDetails {
         ltv

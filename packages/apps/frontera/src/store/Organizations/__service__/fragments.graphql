@@ -1,0 +1,75 @@
+fragment OrganizationPlain on OrganizationUiDetails {
+  id
+  name
+  notes
+  description
+  industry
+  market
+  website
+  logoUrl
+  iconUrl
+  public
+  stage
+  relationship
+  lastFundingRound
+  leadSource
+  valueProposition
+  slackChannelId
+  employees
+  yearFounded
+  enrichedAt
+  enrichedFailedAt
+  enrichedRequestedAt
+  ltv
+  churnedAt
+  renewalSummaryArrForecast
+  renewalSummaryMaxArrForecast
+  renewalSummaryRenewalLikelihood
+  renewalSummaryNextRenewalAt
+  onboardingStatus
+  onboardingStatusUpdatedAt
+  onboardingComments
+  lastTouchPointAt
+  contactCount
+  parentId
+  parentName
+}
+
+fragment OrganizationNested on OrganizationUiDetails {
+  contracts
+  contacts
+  subsidiaries
+  socialMedia {
+    id
+    url
+    alias
+    followersCount
+  }
+  tags {
+    name
+    entityType
+    metadata {
+      id
+    }
+  }
+  locations {
+    id
+    name
+    country
+    region
+    locality
+    zip
+    street
+    postalCode
+    houseNumber
+    rawAddress
+    countryCodeA2
+    countryCodeA3
+  }
+  owner {
+    id
+    firstName
+    lastName
+    name
+  }
+}

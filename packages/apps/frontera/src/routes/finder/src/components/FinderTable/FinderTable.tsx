@@ -1,5 +1,11 @@
-import { useRef, useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
+import {
+  useRef,
+  useState,
+  useEffect,
+  type Dispatch,
+  type SetStateAction,
+} from 'react';
 
 import { match } from 'ts-pattern';
 import { useKeyBindings } from 'rooks';
@@ -56,6 +62,19 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
     tableType,
     currentPreset: preset,
   });
+
+  const handleSortChange: Dispatch<SetStateAction<SortingState>> = (
+    updaterOrValue,
+  ) => {
+    const next =
+      typeof updaterOrValue === 'function'
+        ? updaterOrValue(sorting)
+        : updaterOrValue;
+
+    setSorting(updaterOrValue);
+
+    tableViewDef?.setSorting(next[0]?.id, next[0]?.desc);
+  };
 
   const data = computeFinderData(store, {
     sorting,
@@ -167,7 +186,7 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
 
   const [targetInvoiceNumber, targetInvoiceEmail] = match(tableType)
     .with(TableViewType.Invoices, () => {
-      const invoice = data?.find((i) => i.value.metadata?.id === targetId)
+      const invoice = data?.find((i) => i.value!.metadata.id === targetId)
         ?.value as Invoice;
 
       const targetInvoiceNumber = invoice?.invoiceNumber || '';
@@ -305,13 +324,15 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
       {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
       <Table<any>
         data={data}
+        canFetchMore
         manualFiltering
         sorting={sorting}
         columns={columns}
         tableRef={tableRef}
         getRowId={(row) => row.id}
         enableColumnResizing={true}
-        onSortingChange={setSorting}
+        totalItems={data.length ?? 40}
+        onSortingChange={handleSortChange}
         onResizeColumn={handleColumnSizing}
         onSelectionChange={onSelectionChange}
         onFocusedRowChange={handleSetFocused}
@@ -319,10 +340,15 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
         dataTest={`finder-table-${tableType}`}
         isLoading={store.organizations.isLoading}
         fullRowSelection={tableType === TableViewType.Invoices}
-        totalItems={store.organizations.isLoading ? 40 : data.length}
         enableKeyboardShortcuts={
           !isEditing && !isFiltering && !isCommandMenuPrompted
         }
+        onFetchMore={() => {
+          store.organizations.setActiveRange(
+            0,
+            store.organizations.range[1] + 40,
+          );
+        }}
         enableTableActions={
           tableType &&
           [TableViewType.Invoices, TableViewType.Contracts].includes(tableType)

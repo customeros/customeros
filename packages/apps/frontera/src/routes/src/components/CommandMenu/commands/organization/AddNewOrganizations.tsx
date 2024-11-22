@@ -51,14 +51,11 @@ export const AddNewOrganization = observer(() => {
     }
     const payload = defaultValuesNewOrganization(tableViewName ?? '');
 
-    organizations.create(
-      {
-        ...payload,
-        website,
-        name,
-      },
-      {},
-    );
+    organizations.create({
+      ...payload,
+      website,
+      name: name || 'Unnamed',
+    });
 
     store.ui.commandMenu.toggle('AddNewOrganization');
   };

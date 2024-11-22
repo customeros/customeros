@@ -38,6 +38,7 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
   const floatingActionPropmterRef = useRef<HTMLDivElement>(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const preset = searchParams.get('preset');
+  const timeoutRef = useRef<NodeJS.Timeout>();
 
   const displayIcp = useFeatureIsOn('icp');
   const { lastSearchForPreset } = useSearchPersistence();
@@ -57,6 +58,8 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
       },
       { replace: true },
     );
+    preset &&
+      store.organizations.setSearchTerm(lastSearchForPreset?.[preset], preset);
 
     if (preset && inputRef?.current) {
       inputRef.current.value = lastSearchForPreset[preset] ?? '';
@@ -72,6 +75,13 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     startTransition(() => {
       const value = event.target.value;
+
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      timeoutRef.current = setTimeout(() => {
+        preset && store.organizations.setSearchTerm(value, preset);
+      }, 200);
 
       setSearchParams(
         (prev) => {

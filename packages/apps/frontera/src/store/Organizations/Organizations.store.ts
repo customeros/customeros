@@ -1,113 +1,67 @@
-import set from 'lodash/set';
-import merge from 'lodash/merge';
-import { RootStore } from '@store/root';
-import { Transport } from '@store/transport';
-import { SyncableGroup } from '@store/syncable-group';
-import {
-  action,
-  computed,
-  override,
-  observable,
-  runInAction,
-  makeObservable,
-} from 'mobx';
+import type { RootStore } from '@store/root';
+import type { Transport } from '@store/transport';
+
+import { Store } from '@store/_store';
+import { TagDatum } from '@store/Tags/Tag.store';
+import { set, action, computed, runInAction } from 'mobx';
 
 import {
   relationshipStageMap,
   stageRelationshipMap,
   validRelationshipsForStage,
-} from '@utils/orgStageAndRelationshipStatusMap.ts';
+} from '@utils/orgStageAndRelationshipStatusMap';
 import {
-  Tag,
-  Organization,
   SortingDirection,
-  OrganizationInput,
   OrganizationStage,
   ComparisonOperator,
   OrganizationRelationship,
   OpportunityRenewalLikelihood,
 } from '@graphql/types';
 
-import mock from './mock.json';
-import { OrganizationStore } from './Organization.store';
+import type { SaveOrganizationMutationVariables } from './__service__/saveOrganization.generated';
+
+import { TeamViews } from './__views__/Team.view';
+import { CustomView } from './__views__/Custom.view';
+import { TargetsView } from './__views__/Targets.view';
+import { CustomersView } from './__views__/Customers.view';
+import { AllOrganizationsView } from './__views__/AllOrganizations.view';
+import { Organization, type OrganizationDatum } from './Organization.dto';
 import { OrganizationsService } from './__service__/Organizations.service';
 
-export class OrganizationsStore extends SyncableGroup<
-  Organization,
-  OrganizationStore
-> {
-  totalElements = 0;
+export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
   private service: OrganizationsService;
 
   constructor(public root: RootStore, public transport: Transport) {
-    super(root, transport, OrganizationStore);
+    super(root, transport, {
+      name: 'Organizations',
+      getId: (data) => data?.metadata?.id,
+      factory: Organization,
+    });
+
     this.service = OrganizationsService.getInstance(this.transport);
 
-    makeObservable(this, {
-      maxLtv: computed,
-      hide: action.bound,
-      merge: action.bound,
-      create: action.bound,
-      channelName: override,
-      isFullyLoaded: computed,
-      updateStage: action.bound,
-      totalElements: observable,
-      getRecentChanges: override,
-    });
+    new CustomersView(this);
+    new TargetsView(this);
+    new AllOrganizationsView(this);
+    new CustomView(this);
+    new TeamViews(this);
   }
 
-  get channelName() {
-    return 'Organizations';
-  }
-
-  get persisterKey() {
-    return 'Organizations';
-  }
-
-  get maxLtv() {
-    return Math.max(
-      ...this.toArray().map(
-        (org) => Math.round(org.value.accountDetails?.ltv ?? 0) + 1,
-      ),
-    );
-  }
-
+  @computed
   get isFullyLoaded() {
     return this.totalElements === this.value.size;
   }
 
-  async bootstrapStream() {
-    try {
-      await this.transport.stream<Organization>('/organizations', {
-        onData: (data) => {
-          runInAction(() => {
-            this.load([data], { getId: (data) => data.metadata.id });
-          });
-        },
-      });
-
-      runInAction(() => {
-        this.isBootstrapped = true;
-      });
-    } catch (e) {
-      runInAction(() => {
-        console.error(e);
-        this.error = (e as Error)?.message;
-      });
-    } finally {
-      runInAction(() => {
-        this.isLoading = false;
-      });
-    }
-  }
-
+  @action
   async getRecentChanges() {
     try {
       if (this.root.demoMode || this.isBootstrapping) {
         return;
       }
 
-      this.isLoading = true;
+      runInAction(() => {
+        this.isLoading = true;
+      });
 
       const lastActiveAtUTC = this.root.windowManager
         .getLastActiveAtUTC()
@@ -146,19 +100,21 @@ export class OrganizationsStore extends SyncableGroup<
       } else {
         await this.hydrate({
           idsToDrop,
-          getId: (data) => data.metadata.id,
         });
       }
 
       const data =
-        (dashboardView_Organizations?.content as Organization[]) ?? [];
-      const totalElements = dashboardView_Organizations?.totalElements;
+        (dashboardView_Organizations?.content as OrganizationDatum[]) ?? [];
 
-      this.load(data, {
-        getId: (item) => item.metadata.id,
-      });
       runInAction(() => {
-        this.totalElements = totalElements;
+        this.size = this.value.size;
+        data.forEach((raw) => {
+          if (!raw) return;
+
+          const record = new Organization(this, raw);
+
+          this.value.set(record.id, record);
+        });
       });
     } catch (e) {
       runInAction(() => {
@@ -171,10 +127,19 @@ export class OrganizationsStore extends SyncableGroup<
     }
   }
 
+  @action
   async getAllData() {
-    this.isBootstrapping = true;
+    runInAction(() => {
+      this.isBootstrapping = true;
+    });
 
     try {
+      // const { ui_organizations } = await this.service.getOrganizationsByIds({
+      //   ids: [],
+      // });
+      //
+      // console.log(ui_organizations);
+
       const { dashboardView_Organizations } =
         await this.service.getOrganizations({
           pagination: { limit: 1000, page: 0 },
@@ -185,15 +150,23 @@ export class OrganizationsStore extends SyncableGroup<
           },
         });
 
-      const data =
-        (dashboardView_Organizations?.content as Organization[]) ?? [];
+      const data = dashboardView_Organizations?.content ?? [];
       const totalElements = dashboardView_Organizations?.totalElements;
 
-      this.load(data, {
-        getId: (item) => item.metadata.id,
-      });
       runInAction(() => {
-        this.totalElements = totalElements;
+        data.forEach((raw) => {
+          if (!raw) return;
+
+          const record = new Organization(this, raw);
+
+          this.value.set(record.id, record);
+        });
+
+        this.size = this.value.size;
+
+        if (this.totalElements !== totalElements) {
+          this.totalElements = totalElements;
+        }
       });
       await this.bootstrapRest();
     } catch (e) {
@@ -205,28 +178,19 @@ export class OrganizationsStore extends SyncableGroup<
     }
   }
 
+  @action
   async bootstrap() {
-    if (this.root.demoMode) {
-      this.load(
-        mock.data.dashboardView_Organizations
-          .content as unknown as Organization[],
-        { getId: (data) => data.metadata.id },
-      );
-      this.totalElements = mock.data.dashboardView_Organizations.totalElements;
-
-      return;
-    }
-
     if (this.isLoading) return;
 
     try {
-      const canHydrate = await this.checkIfCanHydrate();
-
-      if (canHydrate) {
-        this.getRecentChanges();
-      } else {
-        this.getAllData();
-      }
+      // const canHydrate = await this.checkIfCanHydrate();
+      //
+      // if (canHydrate) {
+      //   this.getRecentChanges();
+      // } else {
+      //   this.getAllData();
+      // }
+      this.getAllData();
     } catch (e) {
       runInAction(() => {
         this.error = (e as Error)?.message;
@@ -234,6 +198,7 @@ export class OrganizationsStore extends SyncableGroup<
     }
   }
 
+  @action
   async bootstrapRest() {
     let page = 1;
 
@@ -249,11 +214,20 @@ export class OrganizationsStore extends SyncableGroup<
             },
           });
 
+        const data = dashboardView_Organizations?.content ?? [];
+
+        page++;
+
         runInAction(() => {
-          page++;
-          this.load(dashboardView_Organizations?.content as Organization[], {
-            getId: (data) => data.metadata.id,
+          data.forEach((raw) => {
+            if (!raw) return;
+
+            const record = new Organization(this, raw);
+
+            this.value.set(record.id, record);
           });
+
+          this.size = this.value.size;
         });
       } catch (e) {
         runInAction(() => {
@@ -263,90 +237,82 @@ export class OrganizationsStore extends SyncableGroup<
       }
     }
 
-    this.isBootstrapped = this.totalElements === this.value.size;
-    this.isBootstrapping = false;
+    runInAction(() => {
+      this.isBootstrapped = this.totalElements === this.value.size;
+      this.isBootstrapping = false;
+    });
   }
 
-  toArray() {
-    return Array.from(this.value.values());
+  @action
+  public async invalidate(id: string) {
+    try {
+      const { organization: raw } = await this.service.getOrganization(id);
+
+      if (!raw) return;
+
+      runInAction(() => {
+        const record = this.value.get(id);
+
+        if (record) {
+          Object.assign(record, raw);
+        }
+      });
+    } catch (e) {
+      console.error('Failed invalidating organization with ID: ' + id);
+    }
   }
 
-  toComputedArray<T extends OrganizationStore>(
-    compute: (arr: OrganizationStore[]) => T[],
+  @action
+  public async create(
+    payload: SaveOrganizationMutationVariables['input'],
+    opts?: { onSucces?: (serverId: string) => void },
   ) {
-    const arr = this.toArray();
-
-    return compute(arr);
-  }
-
-  async create(
-    payload?: OrganizationInput,
-    options?: { onSucces?: (serverId: string) => void },
-  ) {
-    const newOrganization = new OrganizationStore(
-      this.root,
-      this.transport,
-      merge(OrganizationStore.getDefaultValue(), payload),
-    );
-    const tempId = newOrganization.id;
-    let serverId = '';
-
-    this.value.set(tempId, newOrganization);
-    this.isLoading = true;
+    let tempId = '';
 
     try {
+      const record = new Organization(this, Organization.default(payload));
+
+      this.value.set(record.id, record);
+      tempId = record.id;
+
       const { organization_Save } = await this.service.saveOrganization({
-        input: {
-          website: payload?.website ?? '',
-          name: payload?.name ?? 'Unnamed',
-          relationship: newOrganization.value.relationship,
-          stage: newOrganization.value.stage,
-        },
+        input: payload,
       });
 
       runInAction(() => {
-        serverId = organization_Save.metadata.id;
+        record.id = organization_Save.metadata.id;
 
-        newOrganization.setId(serverId);
-
-        this.value.set(serverId, newOrganization);
+        this.value.set(record.id, record);
         this.value.delete(tempId);
+
+        tempId = record.id;
 
         this.sync({
           action: 'APPEND',
-          ids: [serverId],
+          ids: [record.id],
         });
-      });
-    } catch (err) {
-      runInAction(() => {
-        this.error = (err as Error).message;
-      });
-    } finally {
-      this.isLoading = false;
+        opts?.onSucces?.(record.id);
 
-      if (serverId) {
-        // Invalidate the cache after 1 second to allow the server to process the data
-        // invalidating immediately would cause the server to return the organization data without
-        // lastTouchpoint properties populated
-        setTimeout(() => {
-          this.value.get(serverId)?.invalidate();
-          options?.onSucces?.(serverId);
-        }, 1000);
-      }
+        this.root.ui.toastSuccess(
+          'Organization created successfully!',
+          record.id,
+        );
+      });
+    } catch (error) {
+      runInAction(() => {
+        this.value.delete(tempId);
+        this.root.ui.toastError(
+          'Failed to create organization.',
+          'create-org-faillure',
+        );
+      });
     }
   }
 
   async hide(ids: string[]) {
-    const persisted = await this.persister?.getItem<Map<string, Organization>>(
-      'data',
-    );
-
     ids.forEach((id) => {
       this.value.delete(id);
-      persisted?.delete(id);
     });
-
-    await this.persister?.setItem('data', persisted);
 
     try {
       this.isLoading = true;
@@ -354,10 +320,23 @@ export class OrganizationsStore extends SyncableGroup<
 
       runInAction(() => {
         this.sync({ action: 'DELETE', ids });
+
+        this.root.ui.toastSuccess(
+          `Successfully archived ${ids.length} ${
+            ids.length > 1 ? 'organizations' : 'organization'
+          }`,
+          crypto.randomUUID(),
+        );
       });
     } catch (err) {
       runInAction(() => {
         this.error = (err as Error).message;
+        this.root.ui.toastError(
+          `Failed archiving ${
+            ids.length > 1 ? 'organizations' : 'organization'
+          }`,
+          crypto.randomUUID(),
+        );
       });
     } finally {
       runInAction(() => {
@@ -371,15 +350,9 @@ export class OrganizationsStore extends SyncableGroup<
     mergeIds: string[],
     callback?: (id: string) => void,
   ) {
-    const persisted = await this.persister?.getItem<Map<string, Organization>>(
-      'data',
-    );
-
     mergeIds.forEach((id) => {
       this.value.delete(id);
-      persisted?.delete(id);
     });
-    await this.persister?.setItem('data', persisted);
     callback?.(primaryId);
 
     try {
@@ -391,11 +364,24 @@ export class OrganizationsStore extends SyncableGroup<
 
       runInAction(() => {
         this.sync({ action: 'DELETE', ids: mergeIds });
-        this.sync({ action: 'INVALIDATE', ids: mergeIds });
+        this.sync({ action: 'INVALIDATE', ids: [primaryId] });
+
+        this.root.ui.toastSuccess(
+          `Successfully merged ${mergeIds.length} ${
+            mergeIds.length > 1 ? 'organizations' : 'organization'
+          }`,
+          primaryId,
+        );
       });
     } catch (err) {
       runInAction(() => {
         this.error = (err as Error).message;
+        this.root.ui.toastSuccess(
+          `Failed merging ${mergeIds.length} ${
+            mergeIds.length > 1 ? 'organizations' : 'organization'
+          }`,
+          primaryId,
+        );
       });
     } finally {
       runInAction(() => {
@@ -404,7 +390,7 @@ export class OrganizationsStore extends SyncableGroup<
     }
   }
 
-  updateTags = async (ids: string[], tags: Tag[]) => {
+  updateTags = (ids: string[], tags: TagDatum[]) => {
     const tagIdsToUpdate = new Set(tags.map((tag) => tag.metadata.id));
 
     const shouldRemoveTags = ids.every((id) => {
@@ -510,10 +496,24 @@ export class OrganizationsStore extends SyncableGroup<
     relationship: OrganizationRelationship,
     mutate = true,
   ) => {
+    let invalidCustomerStageCount = 0;
+
     ids.forEach((id) => {
       const organization = this.value.get(id);
 
       if (!organization) return;
+
+      if (
+        organization.value.relationship === OrganizationRelationship.Customer &&
+        ![
+          OrganizationRelationship.FormerCustomer,
+          OrganizationRelationship.NotAFit,
+        ].includes(relationship)
+      ) {
+        invalidCustomerStageCount++;
+
+        return; // Do not update if current is customer and new is not formet customer or not a fit
+      }
 
       organization.value.relationship = relationship;
       organization.value.stage =
@@ -521,6 +521,15 @@ export class OrganizationsStore extends SyncableGroup<
 
       organization.commit({ syncOnly: !mutate });
     });
+
+    if (invalidCustomerStageCount) {
+      this.root.ui.toastError(
+        `${invalidCustomerStageCount} customer${
+          invalidCustomerStageCount > 1 ? 's' : ''
+        } remain unchanged`,
+        'stage-update-failed-due-to-relationship-mismatch',
+      );
+    }
   };
 
   updateHealth = (
@@ -542,26 +551,4 @@ export class OrganizationsStore extends SyncableGroup<
       organization.commit({ syncOnly: !mutate });
     });
   };
-
-  async getById(id: string) {
-    try {
-      this.isLoading = true;
-
-      const { organization } = await this.service.getOrganization(id);
-
-      if (!organization) return;
-
-      this.load([organization as Organization], {
-        getId: (d) => d.metadata.id,
-      });
-    } catch (err) {
-      runInAction(() => {
-        this.error = (err as Error)?.message;
-      });
-    } finally {
-      runInAction(() => {
-        this.isLoading = false;
-      });
-    }
-  }
 }

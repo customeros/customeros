@@ -154,14 +154,11 @@ export class ContractsStore implements GroupStore<Contract> {
 
     this.value.set(tempId, newContract);
 
-    this.root.organizations.value.get(payload.organizationId)?.update(
-      (org) => {
-        org.contracts?.unshift(newContract.value);
+    const record = this.root.organizations.getById(payload.organizationId);
 
-        return org;
-      },
-      { mutate: false },
-    );
+    record.draft();
+    record.value.contracts?.unshift(newContract.value);
+    record.commit({ syncOnly: true });
 
     try {
       const { contract_Create } = await this.service.createContract({
@@ -210,16 +207,19 @@ export class ContractsStore implements GroupStore<Contract> {
   };
 
   delete = async (contractId: string, organizationId: string) => {
-    this.root.organizations.value.get(organizationId)?.update(
-      (org) => {
-        org.contracts = org?.contracts?.filter(
-          (c) => c.metadata.id !== contractId,
-        );
+    const record = this.root.organizations.getById(organizationId);
 
-        return org;
-      },
-      { mutate: false },
+    record.draft();
+
+    const idx = record?.contracts?.findIndex(
+      (c) => c.metadata.id === contractId,
     );
+
+    if (typeof idx === 'undefined' || idx < 0) return;
+
+    record?.value.contracts?.splice(idx, 1);
+    record.commit({ syncOnly: true });
+
     this.value.delete(contractId);
 
     try {

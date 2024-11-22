@@ -21,7 +21,7 @@ export const OrganizationSidenav = observer(() => {
   const [searchParams, setSearchParams] = useSearchParams();
   const store = useStore();
 
-  const organization = store.organizations.value.get(params?.id as string);
+  const organization = store.organizations.getById(params?.id as string);
 
   const [lastActivePosition, setLastActivePosition] = useLocalStorage(
     `customeros-player-last-position`,
@@ -42,7 +42,7 @@ export const OrganizationSidenav = observer(() => {
     setSearchParams(urlSearchParams);
   };
 
-  const parentOrg = organization?.parentCompanies?.[0];
+  const parentOrg = organization?.value?.parentCompanies?.[0]?.organization;
   const parentOrgName = parentOrg?.name;
   const parentOrgId = parentOrg?.metadata?.id;
 
@@ -87,9 +87,9 @@ export const OrganizationSidenav = observer(() => {
               {parentOrgName}
             </span>
           )}
-          <Tooltip label={organization?.value.name ?? ''}>
+          <Tooltip label={organization?.value?.name ?? ''}>
             <span className='max-w-150px  font-semibold text-gray-700 truncate whitespace-nowrap '>
-              {organization?.value.name || 'Organization'}
+              {organization?.value?.name || 'Organization'}
             </span>
           </Tooltip>
         </div>

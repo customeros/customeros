@@ -100,7 +100,7 @@ export const OnboardingStatus = observer(({ id }: OnboardingStatusProps) => {
           <div className='flex'>
             <span className='ml-1 mr-1 font-semibold'>Onboarding</span>
             <span className='text-gray-500'>{`${label} ${
-              organization?.isLoading ? '' : timeElapsed
+              store.organizations?.isLoading ? '' : timeElapsed
             }`}</span>
           </div>
           {reason && (

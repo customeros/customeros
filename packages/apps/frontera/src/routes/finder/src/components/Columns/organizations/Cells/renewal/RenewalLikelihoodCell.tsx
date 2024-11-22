@@ -14,28 +14,34 @@ import { getLikelihoodColor, getRenewalLikelihoodLabel } from './utils';
 
 interface RenewalLikelihoodCellProps {
   id: string;
-  value?: OpportunityRenewalLikelihood | null;
 }
 
 export const RenewalLikelihoodCell = observer(
-  ({ id, value }: RenewalLikelihoodCellProps) => {
+  ({ id }: RenewalLikelihoodCellProps) => {
     const store = useStore();
     const [isEditing, setIsEditing] = useState(false);
+    const organization = store.organizations.getById(id);
+    const value =
+      organization?.value?.accountDetails?.renewalSummary?.renewalLikelihood;
+
     const colors = value ? getLikelihoodColor(value) : 'text-gray-400';
 
     const handleClick = (value: OpportunityRenewalLikelihood) => {
-      const organization = store.organizations.value.get(id);
+      const organization = store.organizations.getById(id);
 
       if (!organization) return;
 
       const potentialAmount =
         organization.value.accountDetails?.renewalSummary?.maxArrForecast ?? 0;
 
+      organization.draft();
+
       set(
         organization.value,
         'accountDetails.renewalSummary.renewalLikelihood',
         value,
       );
+
       set(
         organization.value,
         'accountDetails.renewalSummary.arrForecast',
@@ -56,9 +62,11 @@ export const RenewalLikelihoodCell = observer(
       organization.commit();
     };
 
+    const canUpdate = organization.value.contracts?.length;
+
     return (
       <div className='flex gap-1 items-center group/likelihood'>
-        <Menu open={isEditing} onOpenChange={setIsEditing}>
+        <Menu onOpenChange={setIsEditing} open={canUpdate ? isEditing : false}>
           <MenuButton asChild disabled>
             <span
               className={cn('cursor-default', colors)}
@@ -93,19 +101,21 @@ export const RenewalLikelihoodCell = observer(
           </MenuList>
         </Menu>
 
-        <IconButton
-          size='xxs'
-          variant='ghost'
-          aria-label='edit renewal likelihood'
-          icon={<Edit03 className='text-gray-500' />}
-          onClick={() => {
-            setIsEditing(true);
-          }}
-          className={cn(
-            'rounded-md opacity-0 group-hover/likelihood:opacity-100',
-            isEditing && 'opacity-100',
-          )}
-        />
+        {!!canUpdate && (
+          <IconButton
+            size='xxs'
+            variant='ghost'
+            aria-label='edit renewal likelihood'
+            icon={<Edit03 className='text-gray-500' />}
+            onClick={() => {
+              setIsEditing(true);
+            }}
+            className={cn(
+              'rounded-md opacity-0 group-hover/likelihood:opacity-100',
+              isEditing && 'opacity-100',
+            )}
+          />
+        )}
       </div>
     );
   },

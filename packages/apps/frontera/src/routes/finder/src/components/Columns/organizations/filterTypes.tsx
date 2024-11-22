@@ -352,8 +352,8 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.IsNotEmpty,
       ],
       icon: <Building05 />,
-      options: uniqBy(store?.organizations.toArray(), 'value.industry')
-        .map((v) => v.value.industry)
+      options: uniqBy(store?.organizations.toArray(), 'industry')
+        .map((v) => v?.value.industry)
         .filter(Boolean)
         .sort((a, b) => (a && b ? a?.localeCompare(b) : -1))
         .map((industry) => ({

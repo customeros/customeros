@@ -8,16 +8,16 @@ import { Transport } from '@store/transport';
 import { Store, makeAutoSyncable } from '@store/store';
 import { makeAutoSyncableGroup } from '@store/group-store';
 
-import {
-  Tag,
-  DataSource,
-  EntityType,
-} from '@shared/types/__generated__/graphql.types';
+import { GetTagsQuery } from './__service__/getTags.generated';
 
-import { TagService } from './Tag.service';
+export type TagDatum = NonNullable<GetTagsQuery['tags'][number]>;
 
-export class TagStore implements Store<Tag> {
-  value: Tag = defaultValue;
+import { EntityType } from '@graphql/types';
+
+import { TagService } from './__service__/Tag.service';
+
+export class TagStore implements Store<TagDatum> {
+  value: TagDatum = defaultValue;
   version: number = 0;
   isLoading = false;
   history: Operation[] = [];
@@ -26,8 +26,8 @@ export class TagStore implements Store<Tag> {
   channel?: Channel | undefined;
   subscribe = makeAutoSyncable.subscribe;
   sync = makeAutoSyncableGroup.sync;
-  load = makeAutoSyncable.load<Tag>();
-  update = makeAutoSyncable.update<Tag>();
+  load = makeAutoSyncable.load<TagDatum>();
+  update = makeAutoSyncable.update<TagDatum>();
   private service: TagService;
 
   constructor(public root: RootStore, public transport: Transport) {
@@ -40,7 +40,7 @@ export class TagStore implements Store<Tag> {
     this.service = new TagService(transport);
   }
 
-  init(data: Tag): Tag {
+  init(data: TagDatum): TagDatum {
     this.value = data;
 
     return data;
@@ -51,7 +51,7 @@ export class TagStore implements Store<Tag> {
   }
 
   get id() {
-    return this.value.id || this.value.metadata.id;
+    return this.value.metadata.id;
   }
 
   set id(id: string) {
@@ -89,20 +89,10 @@ export class TagStore implements Store<Tag> {
   }
 }
 
-const defaultValue: Tag = {
-  id: crypto.randomUUID(),
+const defaultValue: TagDatum = {
   name: '',
-  source: DataSource.Na,
-  createdAt: '',
-  appSource: '',
-  updatedAt: '',
-  entityType: '' as EntityType,
+  entityType: EntityType.Organization,
   metadata: {
     id: crypto.randomUUID(),
-    source: DataSource.Openline,
-    sourceOfTruth: DataSource.Openline,
-    appSource: 'organization',
-    created: new Date().toISOString(),
-    lastUpdated: new Date().toISOString(),
   },
 };

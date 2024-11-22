@@ -10,16 +10,23 @@ export type OrganizationQuery = {
     __typename?: 'Organization';
     name: string;
     stage?: Types.OrganizationStage | null;
+    lastFundingRound?: Types.FundingRound | null;
+    customerOsId: string;
     description?: string | null;
+    market?: Types.Market | null;
     industry?: string | null;
     website?: string | null;
     domains: Array<string>;
     isCustomer?: boolean | null;
     logo?: string | null;
     icon?: string | null;
+    notes?: string | null;
+    hide: boolean;
     relationship?: Types.OrganizationRelationship | null;
     leadSource?: string | null;
+    referenceId?: string | null;
     valueProposition?: string | null;
+    slackChannelId?: string | null;
     employees?: any | null;
     yearFounded?: any | null;
     public?: boolean | null;
@@ -50,11 +57,9 @@ export type OrganizationQuery = {
     } | null;
     tags?: Array<{
       __typename?: 'Tag';
-      id?: string | null;
       name: string;
-      createdAt?: any | null;
-      updatedAt?: any | null;
-      appSource?: string | null;
+      entityType: Types.EntityType;
+      metadata: { __typename?: 'Metadata'; id: string };
     }> | null;
     socialMedia: Array<{
       __typename?: 'Social';
@@ -62,6 +67,12 @@ export type OrganizationQuery = {
       url: string;
       followersCount: any;
     }>;
+    enrichDetails: {
+      __typename?: 'EnrichDetails';
+      enrichedAt?: any | null;
+      failedAt?: any | null;
+      requestedAt?: any | null;
+    };
     accountDetails?: {
       __typename?: 'OrgAccountDetails';
       churned?: any | null;
@@ -95,6 +106,14 @@ export type OrganizationQuery = {
       countryCodeA2?: string | null;
       countryCodeA3?: string | null;
     }>;
+    contacts: {
+      __typename?: 'ContactsPage';
+      content: Array<{
+        __typename?: 'Contact';
+        id: string;
+        metadata: { __typename?: 'Metadata'; id: string };
+      }>;
+    };
     subsidiaries: Array<{
       __typename?: 'LinkedOrganization';
       organization: {

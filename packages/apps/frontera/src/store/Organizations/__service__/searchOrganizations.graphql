@@ -1,0 +1,7 @@
+query searchOrganizations($limit: Int, $where: Filter, $sort: SortBy) {
+  ui_organizations_search(limit: $limit, where: $where, sort: $sort) {
+    ids
+    totalElements
+    totalAvailable
+  }
+}

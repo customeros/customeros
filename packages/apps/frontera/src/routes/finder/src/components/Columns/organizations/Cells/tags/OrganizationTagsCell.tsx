@@ -2,6 +2,8 @@ import { useState } from 'react';
 
 import { observer } from 'mobx-react-lite';
 
+import type { Tag } from '@graphql/types';
+
 import { Edit01 } from '@ui/media/icons/Edit01';
 import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
@@ -29,7 +31,7 @@ export const OrganizationsTagsCell = observer(({ id }: OrgCardProps) => {
         store.ui.commandMenu.setOpen(true);
       }}
     >
-      <TagsCell tags={tags ?? []} isHovered={isHovered} />
+      <TagsCell isHovered={isHovered} tags={(tags ?? []) as Tag[]} />
       {isHovered && (
         <IconButton
           size='xxs'

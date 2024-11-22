@@ -47,3 +47,14 @@ export type LatestDiff = {
 
 export type FilterItem = ServerFilterItem & { active?: boolean };
 export type Filter = Omit<ServerFilter, 'filter'> & { filter?: FilterItem };
+
+export type DTOFactoryClass<T extends object> = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  default(): any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  new (...args: any[]): any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  toPersistable(instance: T): any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  of(...args: ConstructorParameters<new (...args: any[]) => T>): any;
+};

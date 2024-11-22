@@ -17,7 +17,7 @@ export const ContractCell = observer(
     const store = useStore();
     const itemRef = useRef<HTMLAnchorElement>(null);
 
-    const organization = store.organizations?.value?.get(organizationId)?.value;
+    const organization = store.organizations?.getById(organizationId)?.value;
     const contract = store.contracts?.value?.get(contractId)?.value;
     const name = contract?.contractName || `${organization?.name}'s contract`;
     const orgName = organization?.name;

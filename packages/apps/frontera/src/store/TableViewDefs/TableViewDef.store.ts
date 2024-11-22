@@ -158,6 +158,18 @@ export class TableViewDefStore implements Store<TableViewDef> {
     }
   }
 
+  getSorting() {
+    try {
+      return match(this.value.sorting)
+        .with(P.string.includes('id'), (data) => JSON.parse(data))
+        .otherwise(() => null);
+    } catch (err) {
+      console.error('Error parsing sorting', err);
+
+      return null;
+    }
+  }
+
   getDefaultFilters() {
     try {
       return match(this.value.defaultFilters)
@@ -361,6 +373,21 @@ export class TableViewDefStore implements Store<TableViewDef> {
       }
 
       return value;
+    });
+  }
+
+  setSorting(columndId: string, isDesc: boolean) {
+    this.update((values) => {
+      const sorting = this.getFilters() as { id: string; desc: boolean };
+
+      if (!sorting) return values;
+
+      sorting.id = columndId;
+      sorting.desc = isDesc;
+
+      values.sorting = JSON.stringify(sorting);
+
+      return values;
     });
   }
 

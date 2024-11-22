@@ -34,25 +34,23 @@ export const OrganizationStageCell = observer(
     const [metaKey, setMetaKey] = useState(false);
 
     const store = useStore();
-    const organization = store.organizations.value.get(id);
+    const organization = store.organizations.getById(id);
 
     useEffect(() => {
       store.ui.setIsEditingTableCell(isEdit);
     }, [isEdit, store.ui]);
 
     const selectedStageOption = stageOptions.find(
-      (option) => option.value === organization?.value.stage,
+      (option) => option.value === organization?.value?.stage,
     );
     const applicableStageOptions = getStageOptions(
       organization?.value?.relationship,
     );
 
     const menuHandleChange = (value: OrganizationStage) => {
-      organization?.update((org) => {
-        org.stage = value;
-
-        return org;
-      });
+      organization.draft();
+      organization.value!.stage = value;
+      organization.commit();
     };
 
     return (

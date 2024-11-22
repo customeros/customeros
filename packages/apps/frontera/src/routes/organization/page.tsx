@@ -34,11 +34,7 @@ export const OrganizationPage = observer(() => {
       !store.organizations.isFullyLoaded
     ) {
       setIsLoading(true);
-      store.organizations.getById(id).then(() => {
-        setIsLoading(false);
-      });
-
-      return;
+      store.organizations.invalidate(id);
     }
     setIsLoading(false);
   }, []);

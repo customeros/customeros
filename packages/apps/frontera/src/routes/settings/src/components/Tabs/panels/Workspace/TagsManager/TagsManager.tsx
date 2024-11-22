@@ -1,6 +1,7 @@
 import { useState, createRef, useEffect } from 'react';
 
 import { observer } from 'mobx-react-lite';
+import { TagDatum } from '@store/Tags/Tag.store';
 
 import { Input } from '@ui/form/Input';
 import { Plus } from '@ui/media/icons/Plus';
@@ -13,7 +14,7 @@ import { InputGroup, LeftElement } from '@ui/form/InputGroup';
 import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
 import { ChevronExpand } from '@ui/media/icons/ChevronExpand';
 import { ChevronCollapse } from '@ui/media/icons/ChevronCollapse';
-import { Tag, EntityType } from '@shared/types/__generated__/graphql.types';
+import { EntityType } from '@shared/types/__generated__/graphql.types';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
 
 const entityTypes = {
@@ -33,7 +34,7 @@ export const TagsManager = observer(() => {
     name: string;
   } | null>(null);
 
-  const [deletingTag, setDeletingTag] = useState<Tag | null>(null);
+  const [deletingTag, setDeletingTag] = useState<TagDatum | null>(null);
   const inputRef = createRef<HTMLInputElement>();
   const { open: isOpen, onOpen, onClose } = useDisclosure();
 

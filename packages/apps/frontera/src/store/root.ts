@@ -23,8 +23,8 @@ import { WorkFlowsStore } from './WorkFlows/WorkFlows.store';
 import { CustomFieldsStore } from './Settings/CustomFields.store';
 import { GlobalCacheStore } from './GlobalCache/GlobalCache.store';
 import { TableViewDefsStore } from './TableViewDefs/TableViewDefs.store';
-import { OrganizationsStore } from './Organizations/Organizations.store';
 import { OpportunitiesStore } from './Opportunities/Opportunities.store';
+import { OrganizationsStore } from './Organizations/Organizations.store';
 import { TimelineEventsStore } from './TimelineEvents/TimelineEvents.store';
 import { ContractLineItemsStore } from './ContractLineItems/ContractLineItems.store';
 import { FlowEmailVariablesStore } from './FlowEmailVariables/FlowEmailVariables.store';
@@ -72,7 +72,6 @@ export class RootStore {
     this.tags = new TagsStore(this, this.transport);
     this.files = new FilesStore(this, this.transport);
     this.users = new UsersStore(this, this.transport);
-    this.flows = new FlowsStore(this, this.transport);
     this.flows = new FlowsStore(this, this.transport);
     this.session = new SessionStore(this, this.transport);
     this.settings = new SettingsStore(this, this.transport);
@@ -124,7 +123,6 @@ export class RootStore {
       this.globalCache.bootstrap(),
       this.settings.bootstrap(),
       this.customFields.bootstrap(),
-      // this.organizations.bootstrapStream(),
       this.organizations.bootstrap(),
       this.tags.bootstrap(),
       this.opportunities.bootstrap(),

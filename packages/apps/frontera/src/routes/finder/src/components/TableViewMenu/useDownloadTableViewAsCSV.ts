@@ -1,7 +1,7 @@
 import { useSearchParams } from 'react-router-dom';
 
 import { ContactStore } from '@store/Contacts/Contact.store.ts';
-import { OrganizationStore } from '@store/Organizations/Organization.store.ts';
+import { Organization } from '@store/Organizations/Organization.dto';
 import { csvDataMapper as contactCsvDataMapper } from '@finder/components/Columns/contacts';
 import { csvDataMapper as orgCsvDataMapper } from '@finder/components/Columns/organizations';
 
@@ -110,9 +110,9 @@ export const useDownloadCsv = () => {
     const data =
       store.ui.filteredTable?.map((row) => {
         return visibleColumns?.map((column) => {
-          const mapper: (d: OrganizationStore | ContactStore) => string =
+          const mapper: (d: Organization | ContactStore) => string =
             csvDataMapper?.[column.columnType as keyof typeof csvDataMapper];
-          const rowData = row as ContactStore | OrganizationStore;
+          const rowData = row as ContactStore | Organization;
 
           return mapper ? mapper?.(rowData) : '';
         }) as Array<string>;

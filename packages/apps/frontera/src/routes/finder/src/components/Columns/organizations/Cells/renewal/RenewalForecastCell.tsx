@@ -34,8 +34,8 @@ export const RenewalForecastCell = observer(
     const store = useStore();
     const [isEditing, setIsEditing] = useState(false);
 
-    const organization = store.organizations.value.get(id);
-    const contractCount = organization?.value.contracts?.length;
+    const organization = store.organizations.getById(id);
+    const contractCount = organization?.value?.contracts?.length;
 
     if (!contractCount) {
       return (
@@ -49,9 +49,9 @@ export const RenewalForecastCell = observer(
     }
 
     const amount =
-      organization?.value.accountDetails?.renewalSummary?.arrForecast ?? null;
+      organization?.value?.accountDetails?.renewalSummary?.arrForecast ?? null;
     const potentialAmount =
-      organization?.value.accountDetails?.renewalSummary?.maxArrForecast ??
+      organization?.value?.accountDetails?.renewalSummary?.maxArrForecast ??
       null;
 
     const initialValue = (() => {
@@ -86,12 +86,12 @@ export const RenewalForecastCell = observer(
     });
 
     const handleChange = (value: number) => {
-      const organization = store.organizations.value.get(id);
+      const organization = store.organizations.getById(id);
 
       if (!organization) return;
 
       set(
-        organization.value,
+        organization?.value,
         'accountDetails.renewalSummary.renewalLikelihood',
         (() => {
           if (value <= 25) return OpportunityRenewalLikelihood.LowRenewal;
@@ -102,12 +102,12 @@ export const RenewalForecastCell = observer(
         })(),
       );
       set(
-        organization.value,
+        organization?.value,
         'accountDetails.renewalSummary.arrForecast',
         (potentialAmount ?? 0) * (value / 100),
       );
 
-      organization.commit();
+      // organization.commit();
     };
 
     useEffect(() => {

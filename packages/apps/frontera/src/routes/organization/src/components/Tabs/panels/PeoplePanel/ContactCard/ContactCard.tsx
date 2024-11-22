@@ -179,27 +179,32 @@ export const ContactCard = observer(
     };
 
     const handleCreateOption = (value: string) => {
-      store.tags?.create({ name: value });
+      store.tags?.create(
+        { name: value },
+        {
+          onSucces: (id) => {
+            contactStore?.value.tags?.push({
+              id,
+              name: value,
+              metadata: {
+                id,
+                source: DataSource.Openline,
+                sourceOfTruth: DataSource.Openline,
+                appSource: 'organization',
+                created: new Date().toISOString(),
+                lastUpdated: new Date().toISOString(),
+              },
+              appSource: 'organization',
+              entityType: EntityType.Contact,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
 
-      contactStore?.value.tags?.push({
-        id: value,
-        name: value,
-        metadata: {
-          id: value,
-          source: DataSource.Openline,
-          sourceOfTruth: DataSource.Openline,
-          appSource: 'organization',
-          created: new Date().toISOString(),
-          lastUpdated: new Date().toISOString(),
+              source: DataSource.Openline,
+            });
+            contactStore?.commit();
+          },
         },
-        appSource: 'organization',
-        entityType: EntityType.Contact,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-
-        source: DataSource.Openline,
-      });
-      contactStore?.commit();
+      );
     };
 
     const enrichedContact = contactStore?.value.enrichDetails;

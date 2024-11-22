@@ -135,7 +135,7 @@ export const Icp = observer(() => {
 
   const tagsOptions = store.tags
     .toArray()
-    .map((tag) => ({ value: tag.value.id, label: tag.value.name }));
+    .map((tag) => ({ value: tag.value.metadata.id, label: tag.value.name }));
 
   const handleChange = useCallback(
     (selectedOptions: SelectOption[], property: string) => {

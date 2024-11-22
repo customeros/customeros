@@ -5,9 +5,9 @@ import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
 import { FlowStore } from '@store/Flows/Flow.store';
 import { ContactStore } from '@store/Contacts/Contact.store';
+import { Organization } from '@store/Organizations/Organization.dto';
 import { OpportunityStore } from '@store/Opportunities/Opportunity.store';
 import { TableViewDefStore } from '@store/TableViewDefs/TableViewDef.store';
-import { OrganizationStore } from '@store/Organizations/Organization.store';
 
 import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
@@ -29,7 +29,7 @@ export const DeleteConfirmationModal = observer(() => {
   const entity = match(context.entity)
     .returnType<
       | OpportunityStore
-      | OrganizationStore
+      | Organization
       | TableViewDefStore
       | ContactStore
       | FlowStore
@@ -162,8 +162,7 @@ export const DeleteConfirmationModal = observer(() => {
   const title = match(context.entity)
     .with(
       'Organization',
-      () =>
-        `Archive ${(entity as OrganizationStore)?.value.name || 'Unnamed'}?`,
+      () => `Archive ${(entity as Organization)?.value.name || 'Unnamed'}?`,
     )
     .with(
       'Organizations',

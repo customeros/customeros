@@ -3,7 +3,7 @@ import { OrganizationsService } from '@store/Organizations/__service__/Organizat
 import { organizationsTestState } from '@store/Organizations/__tests__/organizationsTestState.ts';
 
 import { Transport } from './transport';
-import { TagService } from './Tags/Tag.service';
+import { TagService } from './Tags/__service__/Tag.service';
 
 const transport = new Transport();
 const organizationsService = OrganizationsService.getInstance(transport);
