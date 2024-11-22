@@ -426,14 +426,16 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 		if !orgInput.HasSocials() {
 			for _, social := range orgInput.Socials {
 				// Link social to organization
-				_, err = s.services.CommonServices.SocialService.AddSocialToEntity(ctx, commonservice.LinkWith{
-					Id:   organizationId,
-					Type: commonmodel.ORGANIZATION,
-				}, neo4jentity.SocialEntity{
-					Url:       social.URL,
-					Source:    neo4jentity.DecodeDataSource(orgInput.ExternalSystem),
-					AppSource: appSource,
-				})
+				_, err = s.services.CommonServices.SocialService.AddSocialToEntity(ctx,
+					nil,
+					commonservice.LinkWith{
+						Id:   organizationId,
+						Type: commonmodel.ORGANIZATION,
+					}, neo4jentity.SocialEntity{
+						Url:       social.URL,
+						Source:    neo4jentity.DecodeDataSource(orgInput.ExternalSystem),
+						AppSource: appSource,
+					})
 				if err != nil {
 					tracing.TraceErr(span, err)
 					reason = fmt.Sprintf("Failed to link social %s with organization %s: %s", social.URL, organizationId, err.Error())

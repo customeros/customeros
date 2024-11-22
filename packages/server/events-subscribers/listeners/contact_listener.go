@@ -509,6 +509,7 @@ func (c *contactListenerImpl) enrichContactWithScrapInEnrichDetails(ctx context.
 		}
 
 		_, err = c.services.SocialService.AddSocialToEntity(ctx,
+			nil,
 			service.LinkWith{
 				Id:   contact.Id,
 				Type: model.CONTACT,
@@ -562,7 +563,7 @@ func (c *contactListenerImpl) enrichContactWithScrapInEnrichDetails(ctx context.
 							return err
 						}
 					}
-					_, err = c.services.SocialService.AddSocialToEntity(ctx, service.LinkWith{
+					_, err = c.services.SocialService.AddSocialToEntity(ctx, nil, service.LinkWith{
 						Id:   organizationEntity.ID,
 						Type: model.ORGANIZATION,
 					}, neo4jentity.SocialEntity{
@@ -595,7 +596,7 @@ func (c *contactListenerImpl) enrichContactWithScrapInEnrichDetails(ctx context.
 				tracing.TraceErr(span, errors.New("organization id is missing"))
 				return errors.New("organization id is missing")
 			} else {
-				_, err = c.services.SocialService.AddSocialToEntity(ctx, service.LinkWith{
+				_, err = c.services.SocialService.AddSocialToEntity(ctx, nil, service.LinkWith{
 					Id:   orgId,
 					Type: model.ORGANIZATION,
 				}, neo4jentity.SocialEntity{
