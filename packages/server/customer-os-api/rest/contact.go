@@ -6,8 +6,10 @@ import (
 	"io"
 	"mime/multipart"
 	"net/http"
+	"regexp"
 	"strings"
 
+	"github.com/customeros/mailsherpa/mailvalidate"
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
@@ -64,7 +66,7 @@ func createContactsFromCsvUpload(c *gin.Context, ctx context.Context, span opent
 	defer file.Close()
 
 	reader := csv.NewReader(file)
-	if err := validateHeaders(c, reader); err != nil {
+	if err := validateFileHeaders(c, reader); err != nil {
 		return
 	}
 
@@ -78,6 +80,29 @@ func createContactFromJson(c *gin.Context, ctx context.Context, span opentracing
 	if err := c.BindJSON(&record); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
+	}
+
+	if record.Email == "" && record.LinkedInURL == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "must pass a valid email or linkedinUrl"})
+		return
+	}
+
+	if record.Email != "" {
+		emailSyntax := mailvalidate.ValidateEmailSyntax(record.Email)
+		switch {
+		case !emailSyntax.IsValid:
+			c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "email is not valid"})
+		case emailSyntax.IsRoleAccount:
+			c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "email is a role account and does not belong to a contact"})
+		case emailSyntax.IsSystemGenerated:
+			c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "email is system generated and does not belong to a contact"})
+		default:
+			record.Email = emailSyntax.CleanEmail
+		}
+	}
+
+	if record.LinkedInURL != "" && !isValidLinkedinUrl(record.LinkedInURL) {
+		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "linkedUrl is not valid"})
 	}
 
 	processContact(c, ctx, span, services, tenant, record)
@@ -109,7 +134,7 @@ func validateAndOpenFile(c *gin.Context) (multipart.File, error) {
 	return file, nil
 }
 
-func validateHeaders(c *gin.Context, reader *csv.Reader) error {
+func validateFileHeaders(c *gin.Context, reader *csv.Reader) error {
 	headers, err := reader.Read()
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to read file"})
@@ -132,6 +157,23 @@ func validateHeaders(c *gin.Context, reader *csv.Reader) error {
 		return errors.New("invalid headers")
 	}
 	return nil
+}
+
+func isValidLinkedinUrl(s string) bool {
+	s = strings.TrimSpace(s)
+	if !strings.HasPrefix(s, "http") {
+		s = "https://" + s
+	}
+
+	pattern := `^https?:\/\/(www\.)?linkedin\.com\/in\/[a-zA-Z0-9\-_.]{3,100}\/?$`
+	matched, err := regexp.MatchString(pattern, s)
+	if err != nil {
+		return false
+	}
+	if !matched {
+		return false
+	}
+	return true
 }
 
 func processRecords(c *gin.Context, ctx context.Context, span opentracing.Span, reader *csv.Reader, services *service.Services, tenant string) {
