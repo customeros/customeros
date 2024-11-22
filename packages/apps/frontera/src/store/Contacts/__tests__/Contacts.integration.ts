@@ -509,18 +509,21 @@ describe('ContactsService - Integration Tests', () => {
         input: { socialUrl: contact_social_url },
       });
 
-    let contact = await contactService.getContact(
+    const contactBeforeAddingPhoneNumber = await contactService.getContact(
       contact_CreateForOrganization.id,
     );
 
     expect(
-      contact.contact?.phoneNumbers.length,
+      contactBeforeAddingPhoneNumber.contact?.phoneNumbers.length,
       'The contact has phone number before adding',
     ).toBe(0);
 
-    const expectedCreateFirstPhoneNumber = (
-      Math.floor(Math.random() * 90000000) + 10000000
-    ).toString();
+    const expectedCreateFirstPhoneNumber = Array.from(
+      crypto.getRandomValues(new Uint32Array(1)),
+    )[0]
+      .toString()
+      .slice(-8)
+      .padStart(8, '0');
     const expectedFirstPhoneNumberLabel = PhoneNumberLabel.Mobile;
 
     const firstAddedNumber = await contactService.addPhoneNumber({
@@ -538,27 +541,37 @@ describe('ContactsService - Integration Tests', () => {
       expectedCreateFirstPhoneNumber,
     );
 
-    contact = await contactService.getContact(contact_CreateForOrganization.id);
+    const contactAfterAddingFirstPhoneNumber = await contactService.getContact(
+      contact_CreateForOrganization.id,
+    );
 
     expect(
-      contact.contact?.phoneNumbers.length,
+      contactAfterAddingFirstPhoneNumber.contact?.phoneNumbers.length,
       "The contact doesn't have exactly 1 phone number",
     ).toBe(1);
-    expect(contact.contact?.phoneNumbers[0].id).toBe(
+    expect(contactAfterAddingFirstPhoneNumber.contact?.phoneNumbers[0].id).toBe(
       firstAddedNumber.phoneNumberMergeToContact.id,
     );
-    expect(contact.contact?.phoneNumbers[0].label).toBe(
-      expectedFirstPhoneNumberLabel,
-    );
-    expect(contact.contact?.phoneNumbers[0].rawPhoneNumber).toBe(
-      expectedCreateFirstPhoneNumber,
-    );
-    expect(contact.contact?.phoneNumbers[0].e164).toBeNull();
-    expect(contact.contact?.phoneNumbers[0].primary).toBe(false);
+    expect(
+      contactAfterAddingFirstPhoneNumber.contact?.phoneNumbers[0].label,
+    ).toBe(expectedFirstPhoneNumberLabel);
+    expect(
+      contactAfterAddingFirstPhoneNumber.contact?.phoneNumbers[0]
+        .rawPhoneNumber,
+    ).toBe(expectedCreateFirstPhoneNumber);
+    expect(
+      contactAfterAddingFirstPhoneNumber.contact?.phoneNumbers[0].e164,
+    ).toBeNull();
+    expect(
+      contactAfterAddingFirstPhoneNumber.contact?.phoneNumbers[0].primary,
+    ).toBe(false);
 
-    const expectedUpdateFirstPhoneNumber = (
-      Math.floor(Math.random() * 90000000) + 10000000
-    ).toString();
+    const expectedUpdateFirstPhoneNumber = Array.from(
+      crypto.getRandomValues(new Uint32Array(1)),
+    )[0]
+      .toString()
+      .slice(-8)
+      .padStart(8, '0');
     const { phoneNumber_Update } = await contactService.updatePhoneNumber({
       input: {
         id: firstAddedNumber.phoneNumberMergeToContact.id,
@@ -569,27 +582,36 @@ describe('ContactsService - Integration Tests', () => {
 
     expect(phoneNumber_Update.id).not.toBeNull();
 
-    contact = await contactService.getContact(contact_CreateForOrganization.id);
+    const contactAfterUpdatingFirstPhoneNumber =
+      await contactService.getContact(contact_CreateForOrganization.id);
 
     expect(
-      contact.contact?.phoneNumbers.length,
+      contactAfterUpdatingFirstPhoneNumber.contact?.phoneNumbers.length,
       "The contact doesn't have exactly 1 phone number",
     ).toBe(1);
-    expect(contact.contact?.phoneNumbers[0].id).toBe(
-      firstAddedNumber.phoneNumberMergeToContact.id,
-    );
-    expect(contact.contact?.phoneNumbers[0].label).toBe(
-      expectedFirstPhoneNumberLabel,
-    );
-    expect(contact.contact?.phoneNumbers[0].rawPhoneNumber).toBe(
-      expectedUpdateFirstPhoneNumber,
-    );
-    expect(contact.contact?.phoneNumbers[0].e164).toBeNull();
-    expect(contact.contact?.phoneNumbers[0].primary).toBe(false);
+    expect(
+      contactAfterUpdatingFirstPhoneNumber.contact?.phoneNumbers[0].id,
+    ).toBe(firstAddedNumber.phoneNumberMergeToContact.id);
+    expect(
+      contactAfterUpdatingFirstPhoneNumber.contact?.phoneNumbers[0].label,
+    ).toBe(expectedFirstPhoneNumberLabel);
+    expect(
+      contactAfterUpdatingFirstPhoneNumber.contact?.phoneNumbers[0]
+        .rawPhoneNumber,
+    ).toBe(expectedUpdateFirstPhoneNumber);
+    expect(
+      contactAfterUpdatingFirstPhoneNumber.contact?.phoneNumbers[0].e164,
+    ).toBeNull();
+    expect(
+      contactAfterUpdatingFirstPhoneNumber.contact?.phoneNumbers[0].primary,
+    ).toBe(false);
 
-    const expectedCreateSecondPhoneNumber = (
-      Math.floor(Math.random() * 90000000) + 10000000
-    ).toString();
+    const expectedCreateSecondPhoneNumber = Array.from(
+      crypto.getRandomValues(new Uint32Array(1)),
+    )[0]
+      .toString()
+      .slice(-8)
+      .padStart(8, '0');
     const expectedSecondPhoneNumberLabel = PhoneNumberLabel.Mobile;
 
     const secondAddedNumber = await contactService.addPhoneNumber({
@@ -607,10 +629,12 @@ describe('ContactsService - Integration Tests', () => {
       expectedCreateSecondPhoneNumber,
     );
 
-    contact = await contactService.getContact(contact_CreateForOrganization.id);
+    const contactAfterAddingSecondPhoneNumber = await contactService.getContact(
+      contact_CreateForOrganization.id,
+    );
 
     expect(
-      contact.contact?.phoneNumbers.length,
+      contactAfterAddingSecondPhoneNumber.contact?.phoneNumbers.length,
       "The contact doesn't have exactly 2 phone numbers",
     ).toBe(2);
 
@@ -619,15 +643,18 @@ describe('ContactsService - Integration Tests', () => {
       id: firstAddedNumber.phoneNumberMergeToContact.id,
     });
 
-    contact = await contactService.getContact(contact_CreateForOrganization.id);
+    const contactAfterRemovingFirstPhoneNumber =
+      await contactService.getContact(contact_CreateForOrganization.id);
+
     expect(
-      contact.contact?.phoneNumbers.length,
+      contactAfterRemovingFirstPhoneNumber.contact?.phoneNumbers.length,
       "The contact doesn't have exactly 1 phone numbers",
     ).toBe(1);
 
-    expect(contact.contact?.phoneNumbers[0].rawPhoneNumber).toBe(
-      expectedCreateSecondPhoneNumber,
-    );
+    expect(
+      contactAfterRemovingFirstPhoneNumber.contact?.phoneNumbers[0]
+        .rawPhoneNumber,
+    ).toBe(expectedCreateSecondPhoneNumber);
   });
 
   it('creates and updates social for contact', async () => {
