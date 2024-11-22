@@ -636,6 +636,7 @@ describe('ContactsService - Integration Tests', () => {
       contact.contact?.phoneNumbers.length,
       "The contact doesn't have exactly 1 phone numbers",
     ).toBe(1);
+
     expect(contact.contact?.phoneNumbers[0].rawPhoneNumber).toBe(
       expectedCreateSecondPhoneNumber,
     );
