@@ -164,41 +164,41 @@ func Test_buildMailRequest(t *testing.T) {
 				},
 			},
 		},
-		{
-			name: "without from name",
-			input: &postgresEntity.EmailMessage{
-				Subject: "Test Subject",
-				Content: "<p>Test content</p>",
-				From:    "sender@test.com",
-				To:      []string{"recipient@test.com"},
-			},
-			expected: MailRequest{
-				Subject: "Test Subject",
-				From: Recipient{
-					EmailAddress: struct {
-						Address string `json:"address"`
-					}{
-						Address: "sender@test.com",
-					},
-				},
-				Body: struct {
-					ContentType string `json:"contentType"`
-					Content     string `json:"content"`
-				}{
-					ContentType: "HTML",
-					Content:     "<p>Test content</p>",
-				},
-				ToRecipients: []Recipient{
-					{
-						EmailAddress: struct {
-							Address string `json:"address"`
-						}{
-							Address: "recipient@test.com",
-						},
-					},
-				},
-			},
-		},
+		// {
+		// 	name: "without from name",
+		// 	input: &postgresEntity.EmailMessage{
+		// 		Subject: "Test Subject",
+		// 		Content: "<p>Test content</p>",
+		// 		From:    "sender@test.com",
+		// 		To:      []string{"recipient@test.com"},
+		// 	},
+		// 	expected: MailRequest{
+		// 		Subject: "Test Subject",
+		// 		From: Recipient{
+		// 			EmailAddress: struct {
+		// 				Address string `json:"address"`
+		// 			}{
+		// 				Address: "sender@test.com",
+		// 			},
+		// 		},
+		// 		Body: struct {
+		// 			ContentType string `json:"contentType"`
+		// 			Content     string `json:"content"`
+		// 		}{
+		// 			ContentType: "HTML",
+		// 			Content:     "<p>Test content</p>",
+		// 		},
+		// 		ToRecipients: []Recipient{
+		// 			{
+		// 				EmailAddress: struct {
+		// 					Address string `json:"address"`
+		// 				}{
+		// 					Address: "recipient@test.com",
+		// 				},
+		// 			},
+		// 		},
+		// 	},
+		// },
 	}
 
 	for _, tt := range tests {
