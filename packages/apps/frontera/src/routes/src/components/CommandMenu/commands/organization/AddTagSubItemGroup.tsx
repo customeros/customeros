@@ -36,6 +36,8 @@ export const AddTagSubItemGroup = observer(() => {
 
     match(context.entity)
       .with('Organization', () => {
+        console.log('popescu');
+
         const organization = entity as OrganizationStore;
 
         const foundIndex = organization.value.tags?.findIndex(

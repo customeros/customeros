@@ -55,11 +55,9 @@ export type OrganizationQuery = {
     } | null;
     tags?: Array<{
       __typename?: 'Tag';
-      id?: string | null;
       name: string;
-      createdAt?: any | null;
-      updatedAt?: any | null;
-      appSource?: string | null;
+      entityType: Types.EntityType;
+      metadata: { __typename?: 'Metadata'; id: string };
     }> | null;
     socialMedia: Array<{
       __typename?: 'Social';

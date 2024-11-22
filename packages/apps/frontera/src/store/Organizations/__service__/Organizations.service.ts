@@ -13,8 +13,9 @@ import {
   type OrganizationUpdateInput,
 } from '@graphql/types';
 
+import type { Organization } from '../Organization.dto';
+
 import AddTagDocument from './addTag.graphql';
-import { Organization } from '../Organization.dto';
 import AddSocialDocument from './addSocial.graphql';
 import RemoveTagDocument from './removeTag.graphql';
 import UpdateSocialDocument from './updateSocial.graphql';
@@ -27,6 +28,8 @@ import RemoveSubsidiaryDocument from './removeSubsidiary.graphql';
 import HideOrganizationsDocument from './hideOrganizations.graphql';
 import MergeOrganizationsDocument from './mergeOrganizations.graphql';
 import UpdateOrganizationDocument from './updateOrganization.graphql';
+import SearchOrganizationsDocument from './searchOrganizations.graphql';
+import GetOrganizationsByIdsDocument from './getOrganizationsByIds.graphql';
 import UpdateOnboardingStatusDocument from './updateOnboardingStatus.graphql';
 import GetArchivedOrganizationsAfterDocument from './getArchivedOrganizations.graphql';
 import UpdateAllOpportunityRenewalsDocument from './updateAllOpportunityRenewals.graphql';
@@ -59,6 +62,10 @@ import {
   AddTagsToOrganizationMutationVariables,
 } from './addTag.generated';
 import {
+  SearchOrganizationsQuery,
+  SearchOrganizationsQueryVariables,
+} from './searchOrganizations.generated';
+import {
   HideOrganizationsMutation,
   HideOrganizationsMutationVariables,
 } from './hideOrganizations.generated';
@@ -70,6 +77,10 @@ import {
   UpdateOrganizationMutation,
   UpdateOrganizationMutationVariables,
 } from './updateOrganization.generated';
+import {
+  GetOrganizationsByIdsQuery,
+  GetOrganizationsByIdsQueryVariables,
+} from './getOrganizationsByIds.generated';
 import {
   RemoveTagFromOrganizationMutation,
   RemoveTagFromOrganizationMutationVariables,
@@ -111,6 +122,13 @@ export class OrganizationsService {
     return OrganizationsService.instance;
   }
 
+  async searchOrganizations(payload: SearchOrganizationsQueryVariables) {
+    return this.transport.graphql.request<
+      SearchOrganizationsQuery,
+      SearchOrganizationsQueryVariables
+    >(SearchOrganizationsDocument, payload);
+  }
+
   async getOrganization(id: string) {
     return this.transport.graphql.request<
       OrganizationQuery,
@@ -123,6 +141,13 @@ export class OrganizationsService {
       GetOrganizationsQuery,
       GetOrganizationsQueryVariables
     >(GetOrganizationsDocument, payload);
+  }
+
+  async getOrganizationsByIds(payload: GetOrganizationsByIdsQueryVariables) {
+    return this.transport.graphql.request<
+      GetOrganizationsByIdsQuery,
+      GetOrganizationsByIdsQueryVariables
+    >(GetOrganizationsByIdsDocument, payload);
   }
 
   async getArchivedOrganizationsAfter(
@@ -366,26 +391,62 @@ export class OrganizationsService {
           })
           .with('delete', async () => {
             await this.removeTag({
-              input: { organizationId, tag: { id: oldValue.id } },
+              input: { organizationId, tag: { id: oldValue.metadata.id } },
             });
           })
           .with('update', async () => {
-            if (!oldValue) {
-              (value as Array<Tag>)?.forEach(async (tag) => {
-                await this.addTag({
-                  input: {
-                    organizationId,
-                    tag: { id: tag?.metadata.id, name: tag?.name },
+            match(operation.diff)
+              .with(
+                [
+                  { op: 'update', path: ['tags', P.number, 'name'] },
+                  {
+                    op: 'update',
+                    path: ['tags', P.number, 'metadata', 'id'],
                   },
-                });
-              });
-            }
+                  ...P.array(),
+                  {
+                    op: 'delete',
+                    path: ['tags', P.number],
+                  },
+                ],
+                async () => {
+                  const oldValue = (
+                    operation.diff[1] as rdiffResult & {
+                      oldVal: unknown;
+                    }
+                  )?.oldVal;
 
-            if (oldValue) {
-              await this.removeTag({
-                input: { organizationId, tag: { id: oldValue.id } },
+                  await this.removeTag({
+                    input: {
+                      organizationId,
+                      tag: {
+                        id: oldValue,
+                      },
+                    },
+                  });
+                },
+              )
+              .otherwise(async () => {
+                if (!oldValue) {
+                  (value as Array<Tag>)?.forEach(async (tag) => {
+                    await this.addTag({
+                      input: {
+                        organizationId,
+                        tag: { id: tag?.metadata.id, name: tag?.name },
+                      },
+                    });
+                  });
+                }
+
+                if (oldValue) {
+                  await this.removeTag({
+                    input: {
+                      organizationId,
+                      tag: { id: oldValue.metadata.id },
+                    },
+                  });
+                }
               });
-            }
           });
       })
       .otherwise(async () => {

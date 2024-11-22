@@ -177,6 +177,15 @@ export class Organization extends Entity<OrganizationDatum> {
     });
   }
 
+  @action
+  public deleteTag(id: string) {
+    const idx = this.value.tags?.findIndex((t) => t.metadata.id === id);
+
+    if (!idx || idx === -1) return;
+
+    this.value.tags?.splice(idx, 1);
+  }
+
   static default(
     payload?: OrganizationDatum | SaveOrganizationMutationVariables['input'],
   ): OrganizationDatum {
@@ -185,6 +194,7 @@ export class Organization extends Entity<OrganizationDatum> {
         name: 'Unnamed',
         metadata: {
           id: crypto.randomUUID(),
+          lastUpdated: new Date().toString(),
           created: new Date().toISOString(),
         },
         owner: null,

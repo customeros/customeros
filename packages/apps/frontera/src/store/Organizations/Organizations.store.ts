@@ -2,6 +2,7 @@ import type { RootStore } from '@store/root';
 import type { Transport } from '@store/transport';
 
 import { Store } from '@store/_store';
+import { TagDatum } from '@store/Tags/Tag.store';
 import { set, action, computed, runInAction } from 'mobx';
 
 import {
@@ -10,7 +11,6 @@ import {
   validRelationshipsForStage,
 } from '@utils/orgStageAndRelationshipStatusMap';
 import {
-  Tag,
   SortingDirection,
   OrganizationStage,
   ComparisonOperator,
@@ -132,6 +132,12 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
     });
 
     try {
+      // const { ui_organizations } = await this.service.getOrganizationsByIds({
+      //   ids: [],
+      // });
+      //
+      // console.log(ui_organizations);
+
       const { dashboardView_Organizations } =
         await this.service.getOrganizations({
           pagination: { limit: 1000, page: 0 },
@@ -382,8 +388,8 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
     }
   }
 
-  updateTags = (ids: string[], tags: Tag[]) => {
-    const tagIdsToUpdate = new Set(tags.map((tag) => tag.id));
+  updateTags = (ids: string[], tags: TagDatum[]) => {
+    const tagIdsToUpdate = new Set(tags.map((tag) => tag.metadata.id));
 
     const shouldRemoveTags = ids.every((id) => {
       const organization = this.value.get(id);
@@ -391,7 +397,7 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
       if (!organization) return false;
 
       const organizationTagIds = new Set(
-        (organization.value.tags ?? []).map((tag) => tag.id),
+        (organization.value.tags ?? []).map((tag) => tag.metadata.id),
       );
 
       return Array.from(tagIdsToUpdate).every((tagId) =>
@@ -406,13 +412,13 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
 
       if (shouldRemoveTags) {
         organization.value.tags = organization.value.tags?.filter(
-          (t) => !tagIdsToUpdate.has(t.id),
+          (t) => !tagIdsToUpdate.has(t.metadata.id),
         );
       } else {
         const existingIds = new Set(
-          organization.value.tags?.map((t) => t.id) ?? [],
+          organization.value.tags?.map((t) => t.metadata.id) ?? [],
         );
-        const newTags = tags.filter((t) => !existingIds.has(t.id));
+        const newTags = tags.filter((t) => !existingIds.has(t.metadata.id));
 
         if (!Array.isArray(organization.value.tags)) {
           organization.value.tags = [];

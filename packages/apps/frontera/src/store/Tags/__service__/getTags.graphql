@@ -1,0 +1,9 @@
+query getTags {
+  tags {
+    name
+    entityType
+    metadata {
+      id
+    }
+  }
+}

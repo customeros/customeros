@@ -1,23 +1,18 @@
 import { merge } from 'lodash';
 import { Channel } from 'phoenix';
 import { Store } from '@store/store';
-import { gql } from 'graphql-request';
 import { RootStore } from '@store/root';
 import { Transport } from '@store/transport';
 import { GroupOperation } from '@store/types';
 import { runInAction, makeAutoObservable } from 'mobx';
 import { GroupStore, makeAutoSyncableGroup } from '@store/group-store';
 
-import {
-  Tag,
-  TagInput,
-  EntityType,
-} from '@shared/types/__generated__/graphql.types';
+import { TagInput, EntityType } from '@graphql/types';
 
-import { TagStore } from './Tag.store';
-import { TagService } from './Tag.service';
+import { TagStore, type TagDatum } from './Tag.store';
+import { TagService } from './__service__/Tag.service';
 
-export class TagsStore implements GroupStore<Tag> {
+export class TagsStore implements GroupStore<TagDatum> {
   channel?: Channel | undefined;
   error: string | null = null;
   history: GroupOperation[] = [];
@@ -27,7 +22,7 @@ export class TagsStore implements GroupStore<Tag> {
   totalElements: number = 0;
   value: Map<string, TagStore> = new Map();
   sync = makeAutoSyncableGroup.sync;
-  load = makeAutoSyncableGroup.load<Tag>();
+  load = makeAutoSyncableGroup.load<TagDatum>();
   subscribe = makeAutoSyncableGroup.subscribe;
   private service: TagService;
 
@@ -62,6 +57,29 @@ export class TagsStore implements GroupStore<Tag> {
     }
   }
 
+  async getTagsByEntityType(entityType: EntityType) {
+    try {
+      this.isLoading = true;
+
+      const { tags_ByEntityType } = await this.service.getTagsByEntityType(
+        entityType as EntityType,
+      );
+
+      runInAction(() => {
+        this.load(tags_ByEntityType);
+        this.isBootstrapped = true;
+      });
+    } catch (e) {
+      runInAction(() => {
+        this.error = (e as Error)?.message;
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+      });
+    }
+  }
+
   async bootstrap() {
     if (this.isBootstrapped || this.isLoading) return;
 
@@ -83,10 +101,7 @@ export class TagsStore implements GroupStore<Tag> {
     this.value.set(tempId, newTag);
 
     try {
-      const { tag_Create } = await this.transport.graphql.request<
-        CREATE_TAG_RESPONSE,
-        CREATE_TAG_PAYLOAD
-      >(CREATE_TAG_MUTATION, {
+      const { tag_Create } = await this.service.createTag({
         input: {
           name: payload?.name || '',
           entityType: payload?.entityType,
@@ -142,7 +157,7 @@ export class TagsStore implements GroupStore<Tag> {
     return Array.from(this.value.values());
   }
 
-  toComputedArray<T extends Store<Tag>>(compute: (arr: Store<Tag>[]) => T[]) {
+  toComputedArray(compute: (arr: Store<TagDatum>[]) => Store<TagDatum>[]) {
     const arr = this.toArray();
 
     return compute(arr);
@@ -158,23 +173,3 @@ export class TagsStore implements GroupStore<Tag> {
     return tags.filter((tag) => tag.value.entityType === entityType);
   }
 }
-
-type CREATE_TAG_PAYLOAD = {
-  input: TagInput;
-};
-
-type CREATE_TAG_RESPONSE = {
-  tag_Create: Tag;
-};
-
-const CREATE_TAG_MUTATION = gql`
-  mutation createTag($input: TagInput!) {
-    tag_Create(input: $input) {
-      name
-      id
-      metadata {
-        id
-      }
-    }
-  }
-`;

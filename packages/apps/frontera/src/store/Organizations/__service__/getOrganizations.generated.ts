@@ -81,22 +81,9 @@ export type GetOrganizationsQuery = {
       }>;
       tags?: Array<{
         __typename?: 'Tag';
-        id?: string | null;
         name: string;
-        createdAt?: any | null;
-        updatedAt?: any | null;
         entityType: Types.EntityType;
-        source?: Types.DataSource | null;
-        appSource?: string | null;
-        metadata: {
-          __typename?: 'Metadata';
-          id: string;
-          created: any;
-          lastUpdated: any;
-          source: Types.DataSource;
-          sourceOfTruth: Types.DataSource;
-          appSource: string;
-        };
+        metadata: { __typename?: 'Metadata'; id: string };
       }> | null;
       accountDetails?: {
         __typename?: 'OrgAccountDetails';

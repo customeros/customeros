@@ -40,11 +40,11 @@ query Organization($id: ID!) {
     leadSource
     referenceId
     tags {
-      id
       name
-      createdAt
-      updatedAt
-      appSource
+      entityType
+      metadata {
+        id
+      }
     }
     valueProposition
     socialMedia {

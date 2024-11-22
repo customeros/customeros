@@ -1,0 +1,9 @@
+query getTagsByEntityType($entityType: EntityType!) {
+  tags_ByEntityType(entityType: $entityType) {
+    name
+    entityType
+    metadata {
+      id
+    }
+  }
+}

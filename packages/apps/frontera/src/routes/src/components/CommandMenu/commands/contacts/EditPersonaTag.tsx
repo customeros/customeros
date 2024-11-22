@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 
 import { CommandGroup } from 'cmdk';
 import { observer } from 'mobx-react-lite';
+import { TagDatum } from '@store/Tags/Tag.store';
 
 import { DataSource } from '@graphql/types';
 import { Plus } from '@ui/media/icons/Plus.tsx';
@@ -25,7 +26,7 @@ export const EditPersonaTag = observer(() => {
       ? `Contact - ${contact?.name}`
       : `${selectedIds?.length} contacts`;
 
-  const handleSelect = (t: Tag) => () => {
+  const handleSelect = (t: TagDatum) => () => {
     if (!context.ids?.[0]) return;
 
     if (!contact) return;
@@ -39,43 +40,42 @@ export const EditPersonaTag = observer(() => {
         contact.value.tags?.splice(foundIndex, 1);
       } else {
         contact.value.tags = contact.value.tags ?? [];
-        contact.value.tags.push(t);
+        contact.value.tags.push(t as Tag);
       }
       contact.commit();
     } else {
-      store.contacts.updateTags(selectedIds, [t]);
+      store.contacts.updateTags(selectedIds, [t as Tag]);
     }
   };
 
   const handleCreateOption = (value: string) => {
-    if (
-      store.tags
-        .getByEntityType(EntityType.Contact)
-        .find((e) => e.value.name === value)
-    )
-      return;
+    store.tags?.create(
+      { name: value },
+      {
+        onSucces: () => {
+          contact?.value.tags?.push({
+            id: value,
+            name: value,
+            metadata: {
+              id: value,
+              source: DataSource.Openline,
+              sourceOfTruth: DataSource.Openline,
+              appSource: 'organization',
+              created: new Date().toISOString(),
+              lastUpdated: new Date().toISOString(),
+            },
+            appSource: 'organization',
+            createdAt: new Date().toISOString(),
+            entityType: EntityType.Contact,
+            updatedAt: new Date().toISOString(),
+            source: DataSource.Openline,
+          });
+          contact?.commit();
 
-    store.tags?.create({ name: value, entityType: EntityType.Contact });
-    contact?.value.tags?.push({
-      id: value,
-      name: value,
-      metadata: {
-        id: value,
-        source: DataSource.Openline,
-        sourceOfTruth: DataSource.Openline,
-        appSource: 'organization',
-        created: new Date().toISOString(),
-        lastUpdated: new Date().toISOString(),
+          setSearch('');
+        },
       },
-      appSource: 'organization',
-      createdAt: new Date().toISOString(),
-      entityType: EntityType.Contact,
-      updatedAt: new Date().toISOString(),
-      source: DataSource.Openline,
-    });
-    contact?.commit();
-
-    setSearch('');
+    );
   };
 
   const newSelectedTags = new Set(

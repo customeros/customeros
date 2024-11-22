@@ -72,20 +72,10 @@ query getOrganizations(
       }
       employees
       tags {
-        id
         name
-        createdAt
-        updatedAt
         entityType
-        source
-        appSource
         metadata {
           id
-          created
-          lastUpdated
-          source
-          sourceOfTruth
-          appSource
         }
       }
       customerOsId

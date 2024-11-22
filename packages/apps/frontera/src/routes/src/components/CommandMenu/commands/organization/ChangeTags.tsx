@@ -3,13 +3,14 @@ import { useMemo, useState } from 'react';
 import { match } from 'ts-pattern';
 import { CommandGroup } from 'cmdk';
 import { observer } from 'mobx-react-lite';
+import { TagDatum } from '@store/Tags/Tag.store';
 import { Organization } from '@store/Organizations/Organization.dto';
 
+import { EntityType } from '@graphql/types';
 import { Plus } from '@ui/media/icons/Plus.tsx';
 import { Check } from '@ui/media/icons/Check.tsx';
 import { useStore } from '@shared/hooks/useStore';
 import { useModKey } from '@shared/hooks/useModKey';
-import { DataSource, EntityType, Tag as TagType } from '@graphql/types';
 import { Command, CommandItem, CommandInput } from '@ui/overlay/CommandMenu';
 
 export const ChangeTags = observer(() => {
@@ -39,7 +40,7 @@ export const ChangeTags = observer(() => {
 
   const [search, setSearch] = useState('');
 
-  const handleSelect = (t: TagType) => {
+  const handleSelect = (t: TagDatum) => {
     if (!context.ids?.[0]) return;
 
     if (!entity) return;
@@ -71,51 +72,43 @@ export const ChangeTags = observer(() => {
   };
 
   const handleCreateOption = (value: string) => {
-    if (
-      store.tags
-        .getByEntityType(EntityType.Organization)
-        .find((e) => e.value.name === value)
-    )
-      return;
-    store.tags?.create({ name: value });
+    if (store.tags.toArray().find((e) => e.value.name === value)) return;
+    store.tags?.create(
+      { name: value },
+      {
+        onSucces: (id) => {
+          match(context.entity)
+            .with('Organization', () => {
+              const organization = entity as Organization;
 
-    match(context.entity)
-      .with('Organization', () => {
-        const organization = entity as Organization;
+              organization.draft();
 
-        organization?.value.tags?.push({
-          id: value,
-          name: value,
-          appSource: 'organization',
-          entityType: EntityType.Organization,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        });
-      })
-      .with('Organizations', () => {
-        store.organizations.updateTags(context.ids as string[], [
-          {
-            id: value,
-            name: value,
-            metadata: {
-              id: value,
-              source: DataSource.Openline,
-              sourceOfTruth: DataSource.Openline,
-              appSource: 'organization',
-              created: new Date().toISOString(),
-              lastUpdated: new Date().toISOString(),
-            },
-            appSource: 'organization',
-            entityType: EntityType.Organization,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            source: DataSource.Openline,
-          },
-        ]);
-      });
+              organization?.value.tags?.push({
+                name: value,
+                metadata: {
+                  id,
+                },
+                entityType: EntityType.Organization,
+              });
 
-    // clear search
-    setSearch('');
+              organization.commit();
+            })
+            .with('Organizations', () => {
+              store.organizations.updateTags(context.ids as string[], [
+                {
+                  name: value,
+                  entityType: EntityType.Organization,
+                  metadata: {
+                    id: value,
+                  },
+                },
+              ]);
+            });
+
+          setSearch('');
+        },
+      },
+    );
   };
 
   const newSelectedTags = match(context.entity)
@@ -175,9 +168,12 @@ export const ChangeTags = observer(() => {
     store.ui.commandMenu.setOpen(false);
   });
 
-  const filteredTags = sortedTags?.filter((tag) =>
-    tag.value.name.toLowerCase().includes(search.toLowerCase()),
-  );
+  const filteredTags = sortedTags?.filter((tag) => {
+    return (
+      tag.value.entityType === EntityType.Organization &&
+      tag.value.name.toLowerCase().includes(search.toLowerCase())
+    );
+  });
 
   return (
     <Command shouldFilter={false} label='Change or add tags...'>

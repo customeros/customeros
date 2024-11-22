@@ -1,0 +1,42 @@
+fragment OrganizationPlain on OrganizationUiDetails {
+  id
+  name
+  notes
+  description
+  industry
+  market
+  website
+  logoUrl
+  iconUrl
+  public
+  stage
+  relationship
+  lastFundingRound
+  leadSource
+  valueProposition
+  slackChannelId
+  employees
+  yearFounded
+  enrichedAt
+  enrichedFailedAt
+  enrichedRequestedAt
+  ltv
+  churnedAt
+  renewalSummaryArrForecast
+  renewalSummaryMaxArrForecast
+  renewalSummaryRenewalLikelihood
+  renewalSummaryNextRenewalAt
+  onboardingStatus
+  onboardingStatusUpdatedAt
+  onboardingComments
+  lastTouchPointAt
+  contactCount
+  parentId
+  parentName
+}
+
+query getOrganizationsByIds($ids: [ID!]) {
+  ui_organizations(ids: $ids) {
+    ...OrganizationPlain
+  }
+}

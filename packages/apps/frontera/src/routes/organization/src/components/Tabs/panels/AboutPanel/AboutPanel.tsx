@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 
 import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
+import { TagDatum } from '@store/Tags/Tag.store';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
 
 import { Input } from '@ui/form/Input';
@@ -28,9 +29,7 @@ import { HorizontalBarChart03 } from '@ui/media/icons/HorizontalBarChart03';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
 import {
   Social,
-  Metadata,
   EntityType,
-  Tag as TagType,
   OrganizationStage,
   OrganizationRelationship,
 } from '@graphql/types';
@@ -151,17 +150,22 @@ export const AboutPanel = observer(() => {
   };
 
   const handleCreateOption = (value: string) => {
-    store.tags?.create({ name: value });
+    store.tags?.create(
+      { name: value },
+      {
+        onSucces: (id) => {
+          organization?.value?.tags?.push({
+            name: value,
+            metadata: {
+              id,
+            },
+            entityType: EntityType.Organization,
+          });
 
-    organization?.value?.tags?.push({
-      id: value,
-      name: value,
-      appSource: 'organization',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    });
-
-    organization.commit({ syncOnly: true });
+          organization.commit({ syncOnly: true });
+        },
+      },
+    );
   };
 
   const enrichedOrg = organization?.value.enrichDetails;
@@ -267,7 +271,8 @@ export const AboutPanel = observer(() => {
             })) ?? []
           }
           options={store.tags
-            .getByEntityType(EntityType.Organization)
+            .toArray()
+            .filter((t) => t.value.entityType === EntityType.Organization)
             .map((t) => ({
               value: t.id,
               label: t.value?.name,
@@ -275,9 +280,10 @@ export const AboutPanel = observer(() => {
           onChange={(selection) => {
             const tags = selection
               .map((o) => store.tags.getById(o.value)?.value)
-              .filter(Boolean) as TagType[];
+              .filter(Boolean);
 
-            organization.value!.tags = tags;
+            organization.draft();
+            organization.value.tags = tags as TagDatum[];
             organization.commit();
           }}
         />
