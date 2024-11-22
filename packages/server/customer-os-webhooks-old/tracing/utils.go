@@ -2,12 +2,10 @@ package tracing
 
 import (
 	"context"
-
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/opentracing/opentracing-go"
-
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/constants"
+	"github.com/opentracing/opentracing-go"
 )
 
 const (
