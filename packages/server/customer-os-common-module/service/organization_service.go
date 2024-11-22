@@ -309,7 +309,7 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 			}
 		}
 
-		if input.ExternalSystem.Available() {
+		if input.ExternalSystemAvailable() {
 			externalSystemData := neo4jmodel.ExternalSystem{
 				ExternalSystemId: input.ExternalSystem.ExternalSystemId,
 				ExternalUrl:      input.ExternalSystem.ExternalUrl,
