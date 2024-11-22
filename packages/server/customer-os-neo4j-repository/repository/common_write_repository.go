@@ -34,7 +34,7 @@ type CommonWriteRepository interface {
 	UpdateStringProperty(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, nodeLabel, entityId, property string, value string) error
 	IncrementProperty(ctx context.Context, tenant, nodeLabel, entityId, property string) error
 	RemoveProperty(ctx context.Context, tenant, nodeLabel, entityId, property string) error
-	TouchEntity(ctx context.Context, tenant, nodeLabel, entityId string) error
+	TouchEntity(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, nodeLabel, entityId string) error
 }
 
 type commonWriteRepository struct {
@@ -319,7 +319,7 @@ func (r *commonWriteRepository) RemoveProperty(ctx context.Context, tenant, node
 }
 
 // update the updatedAt property of the entity to current time
-func (r *commonWriteRepository) TouchEntity(ctx context.Context, tenant, nodeLabel, entityId string) error {
+func (r *commonWriteRepository) TouchEntity(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, nodeLabel, entityId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CommonWriteRepository.TouchEntity")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
@@ -333,9 +333,16 @@ func (r *commonWriteRepository) TouchEntity(ctx context.Context, tenant, nodeLab
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
+
 	return err
 }

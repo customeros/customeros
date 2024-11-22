@@ -43,8 +43,8 @@ type IssueWriteRepository interface {
 	AddUserFollower(ctx context.Context, tenant, issueId, userId string) error
 	RemoveUserFollower(ctx context.Context, tenant, issueId, userId string) error
 
-	ReportedByOrganizationWithGroupId(ctx context.Context, tenant, organizationId, groupId string) error
-	RemoveReportedByOrganizationWithGroupId(ctx context.Context, tenant, organizationId, groupId string) error
+	ReportedByOrganizationWithGroupId(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId, groupId string) error
+	RemoveReportedByOrganizationWithGroupId(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId, groupId string) error
 
 	LinkUnthreadIssuesToOrganizationByGroupId(ctx context.Context) error
 }
@@ -284,7 +284,7 @@ func (r *issueWriteRepository) RemoveUserFollower(ctx context.Context, tenant, i
 	return err
 }
 
-func (r *issueWriteRepository) ReportedByOrganizationWithGroupId(ctx context.Context, tenant, organizationId, groupId string) error {
+func (r *issueWriteRepository) ReportedByOrganizationWithGroupId(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId, groupId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueWriteRepository.ReportedByOrganizationWithGroupId")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
@@ -303,14 +303,21 @@ func (r *issueWriteRepository) ReportedByOrganizationWithGroupId(ctx context.Con
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
+
 	return err
 }
 
-func (r *issueWriteRepository) RemoveReportedByOrganizationWithGroupId(ctx context.Context, tenant, organizationId, groupId string) error {
+func (r *issueWriteRepository) RemoveReportedByOrganizationWithGroupId(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId, groupId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueWriteRepository.RemoveReportedByOrganizationWithGroupId")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
@@ -328,10 +335,17 @@ func (r *issueWriteRepository) RemoveReportedByOrganizationWithGroupId(ctx conte
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
+
 	return err
 }
 

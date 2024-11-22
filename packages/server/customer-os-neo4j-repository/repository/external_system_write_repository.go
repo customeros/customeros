@@ -14,7 +14,7 @@ import (
 type ExternalSystemWriteRepository interface {
 	CreateIfNotExists(ctx context.Context, tenant, externalSystemId, externalSystemName string) error
 	LinkWithEntity(ctx context.Context, tenant, linkedEntityId, linkedEntityNodeLabel string, externalSystem model.ExternalSystem) error
-	LinkWithEntityInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, linkedEntityId, linkedEntityNodeLabel string, externalSystem model.ExternalSystem) error
+	LinkWithEntityInTx(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, linkedEntityId, linkedEntityNodeLabel string, externalSystem model.ExternalSystem) error
 	SetProperty(ctx context.Context, tenant, externalSystemId, propertyName string, propertyValue any) error
 	SetPrimaryExternalId(ctx context.Context, tenant, externalSystemId string, externalId, linkedEntityNodeLabel, linkedEntityId string) error
 }
@@ -73,12 +73,12 @@ func (r *externalSystemWriteRepository) LinkWithEntity(ctx context.Context, tena
 	defer session.Close(ctx)
 
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		return nil, r.LinkWithEntityInTx(ctx, tx, tenant, linkedEntityId, linkedEntityNodeLabel, externalSystem)
+		return nil, r.LinkWithEntityInTx(ctx, &tx, tenant, linkedEntityId, linkedEntityNodeLabel, externalSystem)
 	})
 	return err
 }
 
-func (r *externalSystemWriteRepository) LinkWithEntityInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, linkedEntityId, linkedEntityNodeLabel string, externalSystem model.ExternalSystem) error {
+func (r *externalSystemWriteRepository) LinkWithEntityInTx(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, linkedEntityId, linkedEntityNodeLabel string, externalSystem model.ExternalSystem) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemWriteRepository.LinkWithEntityInTx")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
@@ -110,7 +110,18 @@ func (r *externalSystemWriteRepository) LinkWithEntityInTx(ctx context.Context, 
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	return utils.ExecuteQueryInTx(ctx, tx, cypher, params)
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+
+	return err
 }
 
 func (r *externalSystemWriteRepository) SetProperty(ctx context.Context, tenant, externalSystemId, propertyName string, propertyValue any) error {

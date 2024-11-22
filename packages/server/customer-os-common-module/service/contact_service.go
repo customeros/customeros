@@ -87,7 +87,7 @@ func (s *contactService) Save(ctx context.Context, id *string, contactFields neo
 					}
 				} else {
 					// just update contact' updatedAt
-					err = s.services.Neo4jRepositories.CommonWriteRepository.TouchEntity(ctx, tenant, model.NodeLabelContact, existingContactId)
+					err = s.services.Neo4jRepositories.CommonWriteRepository.TouchEntity(ctx, nil, tenant, model.NodeLabelContact, existingContactId)
 					if err != nil {
 						tracing.TraceErr(span, errors.Wrap(err, "error on updating contact updatedAt"))
 					}

@@ -21,7 +21,7 @@ import (
 
 type SocialService interface {
 	GetById(ctx context.Context, socialId string) (*neo4jentity.SocialEntity, error)
-	AddSocialToEntity(ctx context.Context, linkWith LinkWith, socialEntity neo4jentity.SocialEntity) (string, error)
+	AddSocialToEntity(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, linkWith LinkWith, socialEntity neo4jentity.SocialEntity) (string, error)
 	Update(ctx context.Context, entity neo4jentity.SocialEntity) (*neo4jentity.SocialEntity, error)
 	PermanentlyDelete(ctx context.Context, tenant, socialId string) error
 	GetAllForEntities(ctx context.Context, tenant string, linkedEntityType model.EntityType, linkedEntityIds []string) (*neo4jentity.SocialEntities, error)
@@ -173,7 +173,8 @@ func (s *socialService) PermanentlyDelete(ctx context.Context, tenant string, so
 	return err
 }
 
-func (s *socialService) AddSocialToEntity(ctx context.Context, linkWith LinkWith, socialEntity neo4jentity.SocialEntity) (string, error) {
+// TODO alexb2 implement txWithPostCommit
+func (s *socialService) AddSocialToEntity(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, linkWith LinkWith, socialEntity neo4jentity.SocialEntity) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialService.AddSocialToEntity")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
