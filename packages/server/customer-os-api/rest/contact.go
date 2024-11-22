@@ -92,10 +92,13 @@ func createContactFromJson(c *gin.Context, ctx context.Context, span opentracing
 		switch {
 		case !emailSyntax.IsValid:
 			c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "email is not valid"})
+			return
 		case emailSyntax.IsRoleAccount:
 			c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "email is a role account and does not belong to a contact"})
+			return
 		case emailSyntax.IsSystemGenerated:
 			c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "email is system generated and does not belong to a contact"})
+			return
 		default:
 			record.Email = emailSyntax.CleanEmail
 		}
@@ -103,6 +106,7 @@ func createContactFromJson(c *gin.Context, ctx context.Context, span opentracing
 
 	if record.LinkedInURL != "" && !isValidLinkedinUrl(record.LinkedInURL) {
 		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "linkedUrl is not valid"})
+		return
 	}
 
 	processContact(c, ctx, span, services, tenant, record)
