@@ -23,13 +23,13 @@ import (
 )
 
 type OpportunityService interface {
-	GetById(ctx context.Context, tenant, opportunityId string) (*neo4jentity.OpportunityEntity, error)
+	GetById(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, opportunityId string) (*neo4jentity.OpportunityEntity, error)
 	GetOpportunitiesForContracts(ctx context.Context, tenant string, contractIds []string) (*neo4jentity.OpportunityEntities, error)
 	GetOpportunitiesForOrganizations(ctx context.Context, tenant string, organizationIds []string) (*neo4jentity.OpportunityEntities, error)
 	GetPaginatedOrganizationOpportunities(ctx context.Context, tenant string, page int, limit int) (*utils.Pagination, error)
 
 	Save(ctx context.Context, tx *neo4j.ManagedTransaction, tenant string, organizationId, opportunityId *string, input *repository.OpportunitySaveFields) (*string, error)
-	CloseWon(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, opportunityId string) error
+	CloseWon(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, tenant, opportunityId string) error
 	CloseLost(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, opportunityId string) error
 	Archive(ctx context.Context, tenant, opportunityId string) error
 }
@@ -46,7 +46,7 @@ func NewOpportunityService(log logger.Logger, services *Services) OpportunitySer
 	}
 }
 
-func (s *opportunityService) GetById(ctx context.Context, tenant, opportunityId string) (*neo4jentity.OpportunityEntity, error) {
+func (s *opportunityService) GetById(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, opportunityId string) (*neo4jentity.OpportunityEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityService.GetById")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -56,7 +56,7 @@ func (s *opportunityService) GetById(ctx context.Context, tenant, opportunityId 
 		tracing.TagTenant(span, tenant)
 	}
 
-	if opportunityDbNode, err := s.services.Neo4jRepositories.OpportunityReadRepository.GetOpportunityById(ctx, tenant, opportunityId); err != nil {
+	if opportunityDbNode, err := s.services.Neo4jRepositories.OpportunityReadRepository.GetOpportunityById(ctx, tx, tenant, opportunityId); err != nil {
 		tracing.TraceErr(span, err)
 		wrappedErr := errors.Wrap(err, fmt.Sprintf("opportunity with id {%s} not found", opportunityId))
 		return nil, wrappedErr
@@ -163,7 +163,7 @@ func (s *opportunityService) Save(ctx context.Context, tx *neo4j.ManagedTransact
 	}
 
 	if opportunityId != nil {
-		existing, err = s.GetById(ctx, tenant, *opportunityId)
+		existing, err = s.GetById(ctx, nil, tenant, *opportunityId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err
@@ -254,22 +254,6 @@ func (s *opportunityService) Save(ctx context.Context, tx *neo4j.ManagedTransact
 			}
 		}
 
-		if input.UpdateInternalStage {
-			if input.InternalStage == neo4jenum.OpportunityInternalStageClosedWon.String() {
-				err := s.CloseWon(ctx, &tx, tenant, *opportunityId)
-				if err != nil {
-					tracing.TraceErr(span, err)
-					return nil, err
-				}
-			} else if input.InternalStage == neo4jenum.OpportunityInternalStageClosedLost.String() {
-				err := s.CloseLost(ctx, &tx, tenant, *opportunityId)
-				if err != nil {
-					tracing.TraceErr(span, err)
-					return nil, err
-				}
-			}
-		}
-
 		//TODO when we migrate the renewal opportunities to the new model, we will need to uncomment this
 		//if (input.UpdateAmount || input.UpdateMaxAmount) && existing.InternalType == neo4jenum.OpportunityInternalTypeRenewal {
 		//	// if amount changed, recalculate organization combined ARR forecast
@@ -302,6 +286,22 @@ func (s *opportunityService) Save(ctx context.Context, tx *neo4j.ManagedTransact
 		return nil, nil
 	})
 
+	if input.UpdateInternalStage {
+		if input.InternalStage == neo4jenum.OpportunityInternalStageClosedWon.String() {
+			err := s.CloseWon(ctx, nil, tenant, *opportunityId)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return nil, err
+			}
+		} else if input.InternalStage == neo4jenum.OpportunityInternalStageClosedLost.String() {
+			err := s.CloseLost(ctx, nil, tenant, *opportunityId)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return nil, err
+			}
+		}
+	}
+
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -323,40 +323,39 @@ func (s *opportunityService) Save(ctx context.Context, tx *neo4j.ManagedTransact
 	return opportunityId, nil
 }
 
-// alexb2 move to txWithPostCommit
-func (s *opportunityService) CloseWon(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, opportunityId string) error {
+func (s *opportunityService) CloseWon(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, tenant, opportunityId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityService.CloseWon")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.SetTag(tracing.SpanTagEntityId, opportunityId)
 
-	opportunity, err := s.GetById(ctx, tenant, opportunityId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-	if opportunity == nil {
-		err = fmt.Errorf("opportunity not found")
-		tracing.TraceErr(span, err)
-		return err
-	}
+	_, err := utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
+		opportunityEntity, err := s.GetById(ctx, txWithPostCommit.Tx, tenant, opportunityId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+		if opportunityEntity == nil {
+			err = fmt.Errorf("opportunity not found")
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
 
-	// check opportunity is not already closed won
-	if opportunity.InternalStage == neo4jenum.OpportunityInternalStageClosedWon {
-		return nil
-	}
+		// check opportunity is not already closed won
+		if opportunityEntity.InternalStage == neo4jenum.OpportunityInternalStageClosedWon {
+			return nil, nil
+		}
 
-	_, err = utils.ExecuteWriteInTransaction(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
-
-		err = s.services.Neo4jRepositories.OpportunityWriteRepository.CloseWon(ctx, &tx, tenant, opportunityId, utils.Now())
+		// Set opportunity as closed won
+		err = s.services.Neo4jRepositories.OpportunityWriteRepository.CloseWon(ctx, txWithPostCommit.Tx, tenant, opportunityId, utils.Now())
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err
 		}
 
 		// clean external stage
-		if opportunity.InternalType == neo4jenum.OpportunityInternalTypeNBO && opportunity.ExternalStage != "" {
-			err = s.services.Neo4jRepositories.OpportunityWriteRepository.Save(ctx, &tx, tenant, opportunityId, repository.OpportunitySaveFields{
+		if opportunityEntity.IsNBO() && opportunityEntity.ExternalStage != "" {
+			err = s.services.Neo4jRepositories.OpportunityWriteRepository.Save(ctx, txWithPostCommit.Tx, tenant, opportunityId, repository.OpportunitySaveFields{
 				ExternalStage:       "",
 				UpdateExternalStage: true,
 			})
@@ -366,8 +365,8 @@ func (s *opportunityService) CloseWon(ctx context.Context, tx *neo4j.ManagedTran
 			}
 		}
 
-		// set organization as customer
-		if opportunity.InternalType == neo4jenum.OpportunityInternalTypeNBO {
+		// For NBO set organization as customer
+		if opportunityEntity.IsNBO() {
 			organizationDbNode, err := s.services.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByOpportunityId(ctx, tenant, opportunityId)
 			if err != nil {
 				tracing.TraceErr(span, err)
@@ -376,7 +375,7 @@ func (s *opportunityService) CloseWon(ctx context.Context, tx *neo4j.ManagedTran
 				organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
 				// Make organization customer if it's not already
 				if organizationEntity.Relationship != neo4jenum.Customer && organizationEntity.Stage != neo4jenum.Trial {
-					_, err := s.services.OrganizationService.Save(ctx, nil, &organizationEntity.ID, data_fields.OrganizationFields{
+					_, err := s.services.OrganizationService.Save(ctx, txWithPostCommit, &organizationEntity.ID, data_fields.OrganizationFields{
 						Relationship: utils.ToPtr(neo4jenum.Customer),
 						Stage:        utils.ToPtr(neo4jenum.Customer.DefaultStage()),
 					})
@@ -388,39 +387,46 @@ func (s *opportunityService) CloseWon(ctx context.Context, tx *neo4j.ManagedTran
 			}
 		}
 
-		// create new renewal opportunity
-		if opportunity.InternalType == neo4jenum.OpportunityInternalTypeRenewal {
-			// get contract id for opportunity
-			contractDbNode, err := s.services.Neo4jRepositories.ContractReadRepository.GetContractByOpportunityId(ctx, tenant, opportunityId)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				return nil, err
-			}
-			contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
+		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
 			// create new renewal opportunity
-			_, err = utils.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
-				return s.services.GrpcClients.OpportunityClient.CreateRenewalOpportunity(ctx, &opportunitypb.CreateRenewalOpportunityGrpcRequest{
-					Tenant:     tenant,
-					ContractId: contractEntity.Id,
-					SourceFields: &commonpb.SourceFields{
-						Source:    constants.SourceOpenline,
-						AppSource: common.GetAppSourceFromContext(ctx),
-					},
+			if opportunityEntity.IsRenewal() {
+				// get contract id for opportunity
+				contractDbNode, err := s.services.Neo4jRepositories.ContractReadRepository.GetContractByOpportunityId(ctx, tenant, opportunityId)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					return err
+				}
+				contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
+				// create new renewal opportunity
+				_, err = utils.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
+					return s.services.GrpcClients.OpportunityClient.CreateRenewalOpportunity(ctx, &opportunitypb.CreateRenewalOpportunityGrpcRequest{
+						Tenant:     tenant,
+						ContractId: contractEntity.Id,
+						SourceFields: &commonpb.SourceFields{
+							Source:    constants.SourceOpenline,
+							AppSource: common.GetAppSourceFromContext(ctx),
+						},
+					})
 				})
-			})
-			if err != nil {
-				tracing.TraceErr(span, err)
-				return nil, err
+				if err != nil {
+					tracing.TraceErr(span, err)
+					return err
+				}
 			}
-		}
+
+			return nil
+		})
+
+		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
+			utils.EventCompleted(ctx, tenant, commonModel.OPPORTUNITY.String(), opportunityId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
+			s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, opportunityId, commonModel.OPPORTUNITY, utils.NewEventCompletedDetails().WithUpdate())
+			return nil
+		})
 
 		return nil, nil
 	})
 
-	utils.EventCompleted(ctx, tenant, commonModel.OPPORTUNITY.String(), opportunityId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
-	s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, opportunityId, commonModel.OPPORTUNITY, utils.NewEventCompletedDetails().WithUpdate())
-
-	return nil
+	return err
 }
 
 func (s *opportunityService) CloseLost(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, opportunityId string) error {
@@ -429,7 +435,7 @@ func (s *opportunityService) CloseLost(ctx context.Context, tx *neo4j.ManagedTra
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.SetTag(tracing.SpanTagEntityId, opportunityId)
 
-	opportunity, err := s.GetById(ctx, tenant, opportunityId)
+	opportunity, err := s.GetById(ctx, nil, tenant, opportunityId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -463,7 +469,7 @@ func (s *opportunityService) Archive(ctx context.Context, tenant, opportunityId 
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.SetTag(tracing.SpanTagEntityId, opportunityId)
 
-	opportunity, err := s.GetById(ctx, tenant, opportunityId)
+	opportunity, err := s.GetById(ctx, nil, tenant, opportunityId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err

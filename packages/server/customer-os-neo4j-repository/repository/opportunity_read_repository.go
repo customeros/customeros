@@ -18,7 +18,7 @@ type TenantAndOpportunityId struct {
 }
 
 type OpportunityReadRepository interface {
-	GetOpportunityById(ctx context.Context, tenant, opportunityId string) (*dbtype.Node, error)
+	GetOpportunityById(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, opportunityId string) (*dbtype.Node, error)
 	GetActiveRenewalOpportunityForContract(ctx context.Context, tenant, contractId string) (*dbtype.Node, error)
 	GetActiveRenewalOpportunitiesForOrganization(ctx context.Context, tenant, organizationId string, includeDraftContracts bool) ([]*dbtype.Node, error)
 	GetRenewalOpportunitiesForClosingAsLost(ctx context.Context, limit int) ([]TenantAndOpportunityId, error)
@@ -82,7 +82,7 @@ func (r *opportunityReadRepository) prepareReadSession(ctx context.Context) neo4
 	return utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 }
 
-func (r *opportunityReadRepository) GetOpportunityById(ctx context.Context, tenant, opportunityId string) (*dbtype.Node, error) {
+func (r *opportunityReadRepository) GetOpportunityById(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, opportunityId string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityReadRepository.GetOpportunityById")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
@@ -96,10 +96,7 @@ func (r *opportunityReadRepository) GetOpportunityById(ctx context.Context, tena
 	span.LogFields(log.String("query", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	session := r.prepareReadSession(ctx)
-	defer session.Close(ctx)
-
-	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+	result, err := utils.ExecuteReadInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
 			return nil, err
 		} else {
