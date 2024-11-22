@@ -37,7 +37,7 @@ func (r *mutationResolver) OpportunitySave(ctx context.Context, input model.Oppo
 		return nil, err
 	}
 
-	e, err := r.Services.CommonServices.OpportunityService.GetById(ctx, tenant, *id)
+	e, err := r.Services.CommonServices.OpportunityService.GetById(ctx, nil, tenant, *id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to fetch opportunity details")
@@ -80,7 +80,7 @@ func (r *mutationResolver) OpportunityRenewalUpdate(ctx context.Context, input m
 		graphql.AddErrorf(ctx, "Failed to update opportunity renewal %s", input.OpportunityID)
 		return &model.Opportunity{ID: input.OpportunityID}, nil
 	}
-	opportunityEntity, err := r.Services.CommonServices.OpportunityService.GetById(ctx, tenant, input.OpportunityID)
+	opportunityEntity, err := r.Services.CommonServices.OpportunityService.GetById(ctx, nil, tenant, input.OpportunityID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed fetching opportunity details. Opportunity id: %s", input.OpportunityID)
@@ -182,7 +182,7 @@ func (r *queryResolver) Opportunity(ctx context.Context, id string) (*model.Oppo
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	opportunityEntity, err := r.Services.CommonServices.OpportunityService.GetById(ctx, tenant, id)
+	opportunityEntity, err := r.Services.CommonServices.OpportunityService.GetById(ctx, nil, tenant, id)
 	if err != nil || opportunityEntity == nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Opportunity with id %s not found", id)

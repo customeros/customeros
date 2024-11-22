@@ -337,7 +337,7 @@ func (h *OpportunityEventHandler) OnUpdate(ctx context.Context, evt eventstore.E
 
 	opportunityId := aggregate.GetOpportunityObjectID(evt.GetAggregateID(), eventData.Tenant)
 
-	opportunityDbNode, err := h.services.CommonServices.Neo4jRepositories.OpportunityReadRepository.GetOpportunityById(ctx, eventData.Tenant, opportunityId)
+	opportunityDbNode, err := h.services.CommonServices.Neo4jRepositories.OpportunityReadRepository.GetOpportunityById(ctx, nil, eventData.Tenant, opportunityId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while getting opportunity %s: %s", opportunityId, err.Error())
@@ -410,7 +410,7 @@ func (h *OpportunityEventHandler) OnUpdate(ctx context.Context, evt eventstore.E
 		}
 	}
 
-	opportunityDbNode, err = h.services.CommonServices.Neo4jRepositories.OpportunityReadRepository.GetOpportunityById(ctx, eventData.Tenant, opportunityId)
+	opportunityDbNode, err = h.services.CommonServices.Neo4jRepositories.OpportunityReadRepository.GetOpportunityById(ctx, nil, eventData.Tenant, opportunityId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while getting opportunity %s: %s", opportunityId, err.Error())
@@ -451,7 +451,7 @@ func (h *OpportunityEventHandler) OnUpdateRenewal(ctx context.Context, evt event
 	}
 
 	opportunityId := aggregate.GetOpportunityObjectID(evt.GetAggregateID(), eventData.Tenant)
-	opportunityDbNode, err := h.services.CommonServices.Neo4jRepositories.OpportunityReadRepository.GetOpportunityById(ctx, eventData.Tenant, opportunityId)
+	opportunityDbNode, err := h.services.CommonServices.Neo4jRepositories.OpportunityReadRepository.GetOpportunityById(ctx, nil, eventData.Tenant, opportunityId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while getting opportunity %s: %s", opportunityId, err.Error())
@@ -568,7 +568,7 @@ func (h *OpportunityEventHandler) OnCloseLost(ctx context.Context, evt eventstor
 		return err
 	}
 
-	opportunityDbNode, err := h.services.CommonServices.Neo4jRepositories.OpportunityReadRepository.GetOpportunityById(ctx, eventData.Tenant, opportunityId)
+	opportunityDbNode, err := h.services.CommonServices.Neo4jRepositories.OpportunityReadRepository.GetOpportunityById(ctx, nil, eventData.Tenant, opportunityId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil
