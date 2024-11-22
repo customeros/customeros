@@ -19,3 +19,5 @@ type Config struct {
 	Jaeger tracing.JaegerConfig
 	Logger logger.Config
 }
+
+const MAX_EMAILS_PER_RUN = 50

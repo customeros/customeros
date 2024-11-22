@@ -19,7 +19,7 @@ func Test_buildEmailsRequestURL(t *testing.T) {
 		{
 			name:     "with empty cursor",
 			cursor:   "",
-			expected: "https://graph.microsoft.com/v1.0/me/messages?$top=100",
+			expected: "https://graph.microsoft.com/v1.0/me/messages?%24top=100",
 		},
 		{
 			name:     "with existing cursor",
