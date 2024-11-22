@@ -92,12 +92,12 @@ const columns: Record<string, Column> = {
     cell: (props) => {
       const lasOrganizationId =
         props.row.original.value.latestOrganizationWithJobRole?.organization
-          .metadata.id;
+          ?.metadata?.id;
       const contactId = props.row.original.value.metadata.id;
 
       const org =
         props.row.original.value.latestOrganizationWithJobRole?.organization
-          .name;
+          ?.name;
 
       return (
         <OrganizationNameCell

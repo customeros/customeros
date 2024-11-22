@@ -39,7 +39,7 @@ export const EmailCell = observer(
     const ref = useRef(null);
 
     const orgActive =
-      contactStore?.value.latestOrganizationWithJobRole?.organization.name;
+      contactStore?.value.latestOrganizationWithJobRole?.organization?.name;
 
     const email = contactStore?.value?.primaryEmail?.email;
 
