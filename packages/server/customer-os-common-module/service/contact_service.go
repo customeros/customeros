@@ -144,7 +144,7 @@ func (s *contactService) Save(ctx context.Context, id *string, contactFields neo
 			return nil, innerErr
 		}
 		if externalSystem.Available() {
-			innerErr = s.services.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntityInTx(ctx, tx, tenant, contactId, model.NodeLabelContact, externalSystem)
+			innerErr = s.services.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntityInTx(ctx, &tx, tenant, contactId, model.NodeLabelContact, externalSystem)
 			if err != nil {
 				s.log.Errorf("Error while link contact %s with external system %s: %s", contactId, externalSystem.ExternalSystemId, err.Error())
 				return nil, innerErr
@@ -175,7 +175,7 @@ func (s *contactService) Save(ctx context.Context, id *string, contactFields neo
 
 	if createFlow && linkedInUrl != "" {
 		if (neo4jentity.SocialEntity{Url: linkedInUrl}).IsLinkedin() {
-			_, err := s.services.SocialService.AddSocialToEntity(ctx,
+			_, err := s.services.SocialService.AddSocialToEntity(ctx, nil,
 				LinkWith{
 					Id:   contactId,
 					Type: model.CONTACT,
@@ -352,7 +352,7 @@ func (s *contactService) LinkContactWithOrganization(ctx context.Context, contac
 	}
 
 	// reset contact enrich attempts
-	_ = s.services.Neo4jRepositories.ContactWriteRepository.ResetEnrichAttempts(ctx, tenant, contactId)
+	_ = s.services.Neo4jRepositories.ContactWriteRepository.ResetEnrichAttempts(ctx, nil, tenant, contactId)
 
 	utils.EventCompleted(ctx, tenant, model.CONTACT.String(), contactId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
 	utils.EventCompleted(ctx, tenant, model.ORGANIZATION.String(), organizationId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())

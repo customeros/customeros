@@ -323,6 +323,7 @@ func (s *opportunityService) Save(ctx context.Context, tx *neo4j.ManagedTransact
 	return opportunityId, nil
 }
 
+// alexb2 move to txWithPostCommit
 func (s *opportunityService) CloseWon(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, opportunityId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityService.CloseWon")
 	defer span.Finish()
@@ -375,7 +376,7 @@ func (s *opportunityService) CloseWon(ctx context.Context, tx *neo4j.ManagedTran
 				organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
 				// Make organization customer if it's not already
 				if organizationEntity.Relationship != neo4jenum.Customer && organizationEntity.Stage != neo4jenum.Trial {
-					_, err := s.services.OrganizationService.Save(ctx, &tx, &organizationEntity.ID, data_fields.OrganizationFields{
+					_, err := s.services.OrganizationService.Save(ctx, nil, &organizationEntity.ID, data_fields.OrganizationFields{
 						Relationship: utils.ToPtr(neo4jenum.Customer),
 						Stage:        utils.ToPtr(neo4jenum.Customer.DefaultStage()),
 					})

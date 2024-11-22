@@ -116,7 +116,7 @@ func (s *logEntryService) Save(ctx context.Context, id *string, logEntryFields d
 			}
 		}
 		if logEntryFields.ExternalSystemAvailable() {
-			innerErr := s.services.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntityInTx(ctx, tx, tenant, logEntryId, model.NodeLabelLogEntry, *logEntryFields.ExternalSystem)
+			innerErr := s.services.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntityInTx(ctx, &tx, tenant, logEntryId, model.NodeLabelLogEntry, *logEntryFields.ExternalSystem)
 			if err != nil {
 				s.log.Errorf("Error while link log entry %s with external system %s: %s", logEntryId, logEntryFields.ExternalSystem.ExternalSystemId, err.Error())
 				return nil, innerErr

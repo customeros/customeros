@@ -288,7 +288,7 @@ func (s *interactionEventService) CreateInTx(ctx context.Context, tx neo4j.Manag
 		}
 	}
 	if newInteractionEvent.ExternalSystem != nil && newInteractionEvent.ExternalSystem.ExternalSystemId != "" && newInteractionEvent.ExternalSystem.Relationship.ExternalId != "" {
-		err := s.services.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntityInTx(ctx, tx, tenant, interactionEventId, commonModel.NodeLabelInteractionEvent, neo4jmodel.ExternalSystem{
+		err := s.services.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntityInTx(ctx, &tx, tenant, interactionEventId, commonModel.NodeLabelInteractionEvent, neo4jmodel.ExternalSystem{
 			ExternalId:       newInteractionEvent.ExternalSystem.Relationship.ExternalId,
 			ExternalSystemId: newInteractionEvent.ExternalSystem.ExternalSystemId.String(),
 		})
