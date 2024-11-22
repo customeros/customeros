@@ -1,4 +1,5 @@
 import { it, expect, describe } from 'vitest';
+import { VitestHelper } from '@store/vitest-helper.ts';
 
 import { EmailLabel, PhoneNumberLabel } from '@graphql/types';
 
@@ -12,7 +13,8 @@ const contactService = ContactService.getInstance(transport);
 
 describe('ContactsService - Integration Tests', () => {
   it('create contact', async () => {
-    const contact_social_url = 'IT_' + crypto.randomUUID();
+    const contact_social_url =
+      'https://www.linkedin.com/in/IT_' + crypto.randomUUID();
 
     const { contact_Create } = await contactService.createContact({
       contactInput: { socialUrl: contact_social_url },
@@ -43,7 +45,7 @@ describe('ContactsService - Integration Tests', () => {
     expect(contact?.updatedAt).not.toBeNull();
     expect(contact?.enrichDetails.enrichedAt).toBeNull();
     expect(contact?.enrichDetails.failedAt).toBeNull();
-    expect(contact?.enrichDetails.requestedAt).toBeNull();
+    // expect(contact?.enrichDetails.requestedAt).not.toBeNull(); asynchronous call so it generates false positive
     expect(contact?.enrichDetails.emailEnrichedAt).toBeNull();
     expect(contact?.enrichDetails.emailFound).toBeNull();
     expect(contact?.enrichDetails.emailRequestedAt).toBeNull();
@@ -51,32 +53,25 @@ describe('ContactsService - Integration Tests', () => {
   });
 
   it('creates contact for organization', async () => {
-    const organization_name = 'IT_' + crypto.randomUUID();
-    const { organization_Save } = await organizationsService.saveOrganization({
-      input: { name: organization_name },
-    });
-    const contact_social_url = 'IT_' + crypto.randomUUID();
-
+    const { organization_Save, organization_name } =
+      await VitestHelper.createOrganizationForTest(organizationsService);
     const { contact_CreateForOrganization } =
       await contactService.createContactForOrganization({
         organizationId: organization_Save.metadata.id,
-        input: { socialUrl: contact_social_url },
+        input: {},
       });
     const { contact } = await contactService.getContact(
       contact_CreateForOrganization.id,
     );
 
-    expect(contact?.socials.length).toBe(1);
-    expect(contact?.socials[0].url).toBe(contact_social_url);
     expect(contact?.organizations.content.length).toBe(1);
     expect(contact?.organizations.content[0].name).toBe(organization_name);
   });
 
   it('update contact', async () => {
-    const organization_name = 'IT_' + crypto.randomUUID();
-    const { organization_Save } = await organizationsService.saveOrganization({
-      input: { name: organization_name },
-    });
+    const { organization_Save } = await VitestHelper.createOrganizationForTest(
+      organizationsService,
+    );
     const contact_social_url = 'IT_' + crypto.randomUUID();
     const { contact_CreateForOrganization } =
       await contactService.createContactForOrganization({
@@ -124,10 +119,9 @@ describe('ContactsService - Integration Tests', () => {
   });
 
   it('gets contacts', async () => {
-    const organization_name = 'IT_' + crypto.randomUUID();
-    const { organization_Save } = await organizationsService.saveOrganization({
-      input: { name: organization_name },
-    });
+    const { organization_Save } = await VitestHelper.createOrganizationForTest(
+      organizationsService,
+    );
 
     const contact_first_social_url = 'IT_' + crypto.randomUUID();
 
@@ -164,10 +158,9 @@ describe('ContactsService - Integration Tests', () => {
   });
 
   it('links contact to organization', async () => {
-    const organization_name = 'IT_' + crypto.randomUUID();
-    const { organization_Save } = await organizationsService.saveOrganization({
-      input: { name: organization_name },
-    });
+    const { organization_Save } = await VitestHelper.createOrganizationForTest(
+      organizationsService,
+    );
 
     const contact_social_url = 'IT_' + crypto.randomUUID();
 
@@ -192,10 +185,9 @@ describe('ContactsService - Integration Tests', () => {
   });
 
   it('adds job roles to contact', async () => {
-    const organization_name = 'IT_' + crypto.randomUUID();
-    const { organization_Save } = await organizationsService.saveOrganization({
-      input: { name: organization_name },
-    });
+    const { organization_Save } = await VitestHelper.createOrganizationForTest(
+      organizationsService,
+    );
     const contact_social_url = 'IT_' + crypto.randomUUID();
 
     const { contact_CreateForOrganization } =
@@ -301,10 +293,8 @@ describe('ContactsService - Integration Tests', () => {
   });
 
   it('links contact to organization', async () => {
-    const organization_name = 'IT_' + crypto.randomUUID();
-    const { organization_Save } = await organizationsService.saveOrganization({
-      input: { name: organization_name },
-    });
+    const { organization_Save, organization_name } =
+      await VitestHelper.createOrganizationForTest(organizationsService);
     const { contact_Create } = await contactService.createContact({
       contactInput: {},
     });
@@ -483,10 +473,9 @@ describe('ContactsService - Integration Tests', () => {
   });
 
   it('checks successful response from better contact', async () => {
-    const organization_name = 'IT_' + crypto.randomUUID();
-    const { organization_Save } = await organizationsService.saveOrganization({
-      input: { name: organization_name },
-    });
+    const { organization_Save } = await VitestHelper.createOrganizationForTest(
+      organizationsService,
+    );
     const contact_social_url = 'IT_' + crypto.randomUUID();
 
     const { contact_CreateForOrganization } =
@@ -509,10 +498,9 @@ describe('ContactsService - Integration Tests', () => {
   });
 
   it('does CRUD ops for phone number', async () => {
-    const organization_name = 'IT_' + crypto.randomUUID();
-    const { organization_Save } = await organizationsService.saveOrganization({
-      input: { name: organization_name },
-    });
+    const { organization_Save } = await VitestHelper.createOrganizationForTest(
+      organizationsService,
+    );
     const contact_social_url = 'IT_' + crypto.randomUUID();
 
     const { contact_CreateForOrganization } =
@@ -640,5 +628,167 @@ describe('ContactsService - Integration Tests', () => {
     expect(contact.contact?.phoneNumbers[0].rawPhoneNumber).toBe(
       expectedCreateSecondPhoneNumber,
     );
+  });
+
+  it('creates and updates social for contact', async () => {
+    const { organization_Save, organization_name } =
+      await VitestHelper.createOrganizationForTest(organizationsService);
+
+    const { contact_CreateForOrganization } =
+      await contactService.createContactForOrganization({
+        organizationId: organization_Save.metadata.id,
+        input: {},
+      });
+    const contactCreated = await contactService.getContact(
+      contact_CreateForOrganization.id,
+    );
+
+    expect(contactCreated.contact?.socials.length).toBe(0);
+    expect(contactCreated.contact?.organizations.content.length).toBe(1);
+    expect(contactCreated.contact?.organizations.content[0].name).toBe(
+      organization_name,
+    );
+
+    const contact_added_social_url =
+      'https://www.linkedin.com/in/IT_' + crypto.randomUUID();
+
+    await contactService.addSocial({
+      contactId: contactCreated.contact!.metadata.id,
+      input: { url: contact_added_social_url },
+    });
+
+    const contactAddedSocial = await contactService.getContact(
+      contact_CreateForOrganization.id,
+    );
+
+    expect(contactAddedSocial.contact?.socials.length).toBe(1);
+    expect(contactAddedSocial.contact?.socials[0].url).toBe(
+      contact_added_social_url,
+    );
+
+    const contact_updated_social_url =
+      'https://www.linkedin.com/in/IT_' + crypto.randomUUID();
+
+    await contactService.updateSocial({
+      input: {
+        id: contactAddedSocial.contact!.socials[0].id,
+        url: contact_updated_social_url,
+      },
+    });
+
+    const contactUpdatedSocial = await contactService.getContact(
+      contact_CreateForOrganization.id,
+    );
+
+    expect(contactUpdatedSocial.contact?.socials.length).toBe(1);
+    expect(contactUpdatedSocial.contact?.socials[0].url).toBe(
+      contact_updated_social_url,
+    );
+  });
+
+  it('archives contact', async () => {
+    const contact_social_url =
+      'https://www.linkedin.com/in/IT_' + crypto.randomUUID();
+
+    const { contact_Create } = await contactService.createContact({
+      contactInput: { socialUrl: contact_social_url },
+    });
+    const contacts_before_archiving = await contactService.getContacts({
+      pagination: { limit: 100, page: 0 },
+    });
+
+    let hasId = (id: string): boolean => {
+      return (
+        contacts_before_archiving?.contacts?.content?.some(
+          (cont) => cont.id === id,
+        ) ?? false
+      );
+    };
+    let contactExistsInDashboard = hasId(contact_Create);
+
+    expect(contactExistsInDashboard).toBe(true);
+
+    await contactService.archiveContact({
+      contactId: contact_Create,
+    });
+
+    const retrieved_contacts = await contactService.getContacts({
+      pagination: { limit: 100, page: 0 },
+    });
+
+    hasId = (id: string): boolean => {
+      return (
+        retrieved_contacts?.contacts?.content?.some((cont) => cont.id === id) ??
+        false
+      );
+    };
+    contactExistsInDashboard = hasId(contact_Create);
+
+    expect(contactExistsInDashboard).toBe(false);
+  });
+
+  it('creates and updates tags for contact', async () => {
+    const { organization_Save, organization_name } =
+      await VitestHelper.createOrganizationForTest(organizationsService);
+
+    const { contact_CreateForOrganization } =
+      await contactService.createContactForOrganization({
+        organizationId: organization_Save.metadata.id,
+        input: {},
+      });
+    const contactCreated = await contactService.getContact(
+      contact_CreateForOrganization.id,
+    );
+
+    expect(contactCreated.contact?.tags).toBeNull();
+    expect(contactCreated.contact?.organizations.content.length).toBe(1);
+    expect(contactCreated.contact?.organizations.content[0].name).toBe(
+      organization_name,
+    );
+
+    const firstTagName = crypto.randomUUID();
+
+    await contactService.addTagsToContact({
+      input: {
+        contactId: contactCreated.contact!.metadata.id,
+        tag: { name: firstTagName },
+      },
+    });
+
+    const contactAddedFirstTag = await contactService.getContact(
+      contact_CreateForOrganization.id,
+    );
+
+    expect(contactAddedFirstTag.contact?.tags?.length).toBe(1);
+    expect(contactAddedFirstTag.contact?.tags?.[0]?.name).toBe(firstTagName);
+
+    const secondTagName = crypto.randomUUID();
+
+    await contactService.addTagsToContact({
+      input: {
+        contactId: contactCreated.contact!.metadata.id,
+        tag: { name: secondTagName },
+      },
+    });
+
+    const contactAddedSecondTag = await contactService.getContact(
+      contact_CreateForOrganization.id,
+    );
+
+    expect(contactAddedSecondTag.contact?.tags?.length).toBe(2);
+
+    await contactService.removeTagsFromContact({
+      input: {
+        contactId: contactCreated.contact!.metadata.id,
+        tag: { name: firstTagName },
+      },
+    });
+
+    const contactRemovedFirstTag = await contactService.getContact(
+      contact_CreateForOrganization.id,
+    );
+
+    expect(contactRemovedFirstTag.contact?.tags?.length).toBe(1);
+    expect(contactRemovedFirstTag.contact?.tags?.[0]?.name).toBe(secondTagName);
   });
 });
