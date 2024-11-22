@@ -27,8 +27,8 @@ import (
 type OrganizationService interface {
 	GetById(ctx context.Context, tenant, organizationId string) (*neo4jentity.OrganizationEntity, error)
 
-	Save(ctx context.Context, tx *neo4j.ManagedTransaction, id *string, dataFields data_fields.OrganizationFields) (string, error)
-	LinkWithDomain(ctx context.Context, tx *neo4j.ManagedTransaction, organizationId, domain string) error
+	Save(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, id *string, dataFields data_fields.OrganizationFields) (string, error)
+	LinkWithDomain(ctx context.Context, tx *neo4j.ManagedTransaction, organizationId, domain string) error // TODO alexb replace with txWithPostCommit
 
 	Hide(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, organizationId string) error
 	Show(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, organizationId string) error
@@ -40,6 +40,7 @@ type OrganizationService interface {
 	RequestRefreshLastTouchpoint(ctx context.Context, organizationId string) error
 	RefreshLastTouchpoint(ctx context.Context, organizationId string) error
 	CheckOrganizationExistsWithEmail(ctx context.Context, email string) (bool, string, error)
+	CheckOrganizationExistsWithLinkedIn(ctx context.Context, url, alias, externalId string) (bool, string, error)
 }
 
 type organizationService struct {
@@ -67,7 +68,7 @@ func (s *organizationService) GetById(ctx context.Context, tenant, organizationI
 	return neo4jmapper.MapDbNodeToOrganizationEntity(dbNode), nil
 }
 
-func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransaction, id *string, input data_fields.OrganizationFields) (string, error) {
+func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, id *string, input data_fields.OrganizationFields) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.Save")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -90,8 +91,8 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 	adjustedWebsite := utils.IfNotNilString(input.Website)
 	if utils.IfNotNilString(input.Website) != "" {
 		primaryDomainFromWebsite, adjustedWebsite = s.services.DomainService.GetPrimaryDomainForOrganizationWebsite(ctx, *input.Website)
-		span.LogFields(log.String("primaryDomainFromWebsite", primaryDomainFromWebsite))
-		span.LogFields(log.String("adjustedWebsite", adjustedWebsite))
+		span.LogFields(log.String("process.primaryDomainFromWebsite", primaryDomainFromWebsite))
+		span.LogFields(log.String("process.adjustedWebsite", adjustedWebsite))
 	}
 
 	// prepare domains in advance
@@ -106,10 +107,14 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 		}
 	}
 
-	// if the org is new, we are looking for existing orgs with the same domain based on the website, we show it and we return it
 	if id == nil {
 		createFlow = true
 		span.LogFields(log.String("process.flow", "create"))
+	} else {
+		span.LogFields(log.String("process.flow", "update"))
+	}
+
+	if createFlow {
 		domains := input.Domains
 		if utils.IfNotNilString(input.Website) != "" && primaryDomainFromWebsite != "" {
 			domains = append(domains, primaryDomainFromWebsite)
@@ -117,39 +122,45 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 		domains = utils.RemoveEmpties(domains)
 		domains = utils.RemoveDuplicates(domains)
 
-		// Dedup organizations by domain on creation
+		// Dedup organizations by domain
 		if len(domains) > 0 {
 			// for each domain check that no org exists with that domain
 			// if exist reject creation and return existing org id
 			for _, domain := range domains {
-				orgDbNode, err := s.services.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByDomain(ctx, tenant, domain)
+				orgByDomainDbNode, err := s.services.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByDomain(ctx, tenant, domain)
 				if err != nil {
-					tracing.TraceErr(span, err)
+					tracing.TraceErr(span, errors.Wrap(err, "Error fetching organization by domain"))
 					return "", err
 				}
-				// existing organization found
-				if orgDbNode != nil {
+				// organization by domain found
+				if orgByDomainDbNode != nil {
+					organizationByDomainEntity := neo4jmapper.MapDbNodeToOrganizationEntity(orgByDomainDbNode)
 					span.LogFields(log.String("result.duplicate.domain", domain))
-					span.LogFields(log.String("result.duplicate.orgId", orgDbNode.Props["id"].(string)))
-					organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(orgDbNode)
-					if organizationEntity.Hide {
-						err = s.Show(ctx, nil, organizationEntity.ID) //TODO alexb pass txWithPostCommit
-						if err != nil {
-							tracing.TraceErr(span, err)
-							return "", nil
+					span.LogFields(log.String("result.duplicate.orgId", organizationByDomainEntity.ID))
+
+					_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
+						if organizationByDomainEntity.IsHidden() {
+							err = s.Show(ctx, txWithPostCommit, organizationByDomainEntity.ID)
+							if err != nil {
+								tracing.TraceErr(span, err)
+								return nil, nil
+							}
+						} else {
+							// just update organization updatedAt
+							err = s.services.Neo4jRepositories.CommonWriteRepository.TouchEntity(ctx, txWithPostCommit.Tx, tenant, model.NodeLabelOrganization, organizationByDomainEntity.ID)
+							if err != nil {
+								tracing.TraceErr(span, err)
+								s.services.Logger.Errorf("Failed to update organization updated at property: %v", err.Error())
+							}
+							txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
+								utils.EventCompleted(ctx, tenant, model.ORGANIZATION.String(), organizationByDomainEntity.ID, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
+								return nil
+							})
 						}
-					}
+						return nil, nil
+					})
 
-					// touch organization
-					err = s.services.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, tenant, model.NodeLabelOrganization, organizationEntity.ID, string(neo4jentity.OrganizationPropertyUpdatedAt), utils.NowPtr())
-					if err != nil {
-						tracing.TraceErr(span, err)
-						s.services.Logger.Errorf("Failed to update organization updated at property: %v", err.Error())
-					}
-
-					// send completion event for refresh
-					utils.EventCompleted(ctx, tenant, model.ORGANIZATION.String(), organizationEntity.ID, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
-					return organizationEntity.ID, nil
+					return organizationByDomainEntity.ID, nil
 				}
 			}
 		}
@@ -158,32 +169,41 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 		if utils.IfNotNilString(input.LinkedInUrl) != "" {
 			linkedInUrl := utils.IfNotNilString(input.LinkedInUrl)
 			if (neo4jentity.SocialEntity{Url: linkedInUrl}).IsLinkedin() {
-				linkedInAlreadyUsed, existingOrganizationId, err := s.services.ContactService.CheckContactExistsWithLinkedIn(ctx, linkedInUrl, "", "")
+				linkedInAlreadyUsed, existingOrganizationId, err := s.CheckOrganizationExistsWithLinkedIn(ctx, linkedInUrl, "", "")
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "unable to check organization exists with linkedIn"))
 					return "", err
 				}
 				if linkedInAlreadyUsed {
-					organizationEntity, err := s.GetById(ctx, tenant, existingOrganizationId)
+					organizationByLinkedInEntity, err := s.GetById(ctx, tenant, existingOrganizationId)
 					if err != nil {
 						tracing.TraceErr(span, errors.Wrap(err, "unable to get organization by id"))
 						return "", err
 					}
-					if organizationEntity.Hide {
-						err = s.Show(ctx, nil, existingOrganizationId) //TODO alexb pass txWithPostCommit
-						if err != nil {
-							tracing.TraceErr(span, errors.Wrap(err, "error on showing organization"))
-							return "", err
+
+					_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
+						if organizationByLinkedInEntity.IsHidden() {
+							err = s.Show(ctx, txWithPostCommit, organizationByLinkedInEntity.ID)
+							if err != nil {
+								tracing.TraceErr(span, err)
+								return nil, nil
+							}
+						} else {
+							// just update organization updatedAt
+							err = s.services.Neo4jRepositories.CommonWriteRepository.TouchEntity(ctx, txWithPostCommit.Tx, tenant, model.NodeLabelOrganization, organizationByLinkedInEntity.ID)
+							if err != nil {
+								tracing.TraceErr(span, err)
+								s.services.Logger.Errorf("Failed to update organization updated at property: %v", err.Error())
+							}
+							txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
+								utils.EventCompleted(ctx, tenant, model.ORGANIZATION.String(), organizationByLinkedInEntity.ID, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
+								return nil
+							})
 						}
-					} else {
-						// just update organization' updatedAt
-						err = s.services.Neo4jRepositories.CommonWriteRepository.TouchEntity(ctx, tenant, model.NodeLabelOrganization, existingOrganizationId)
-						if err != nil {
-							tracing.TraceErr(span, errors.Wrap(err, "error on updating organization updatedAt"))
-						}
-						utils.EventCompleted(ctx, tenant, model.ORGANIZATION.String(), organizationId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
-					}
-					return existingOrganizationId, nil
+						return nil, nil
+					})
+
+					return organizationByLinkedInEntity.ID, nil
 				}
 			}
 		}
@@ -196,7 +216,6 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 		organizationId = generatedId
 
 	} else {
-		span.LogFields(log.String("process.flow", "update"))
 		organizationId = *id
 		existingOrganizationEntity, err = s.GetById(ctx, tenant, organizationId)
 		if err != nil {
@@ -206,7 +225,7 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 	}
 	tracing.TagEntity(span, organizationId)
 
-	//validate stage and relationship combination all the time ( from input or existing computed )
+	//validate stage and relationship combination all the time (from input or existing computed )
 	stage := input.GetStageStr()
 	relationship := input.GetRelationshipStr()
 	if stage == "" && existingOrganizationEntity != nil && existingOrganizationEntity.Stage != "" {
@@ -270,18 +289,18 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 
 	newDomains := make([]string, 0)
 
-	_, err = utils.ExecuteWriteInTransaction(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
 
-		err = s.services.Neo4jRepositories.OrganizationWriteRepository.Save(ctx, &tx, tenant, organizationId, input)
+		err = s.services.Neo4jRepositories.OrganizationWriteRepository.Save(ctx, txWithPostCommit.Tx, tenant, organizationId, input)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			tracing.TraceErr(span, errors.Wrap(err, "failed to save organization"))
 			return nil, err
 		}
 
-		if existingOrganizationEntity == nil {
-			_, err = s.services.Neo4jRepositories.ActionWriteRepository.MergeByActionType(ctx, &tx, tenant, organizationId, model.ORGANIZATION, neo4jenum.ActionCreated, "", "", utils.Now(), common.GetAppSourceFromContext(ctx))
+		if createFlow {
+			_, err = s.services.Neo4jRepositories.ActionWriteRepository.MergeByActionType(ctx, txWithPostCommit.Tx, tenant, organizationId, model.ORGANIZATION, neo4jenum.ActionCreated, "", "", utils.Now(), common.GetAppSourceFromContext(ctx))
 			if err != nil {
-				tracing.TraceErr(span, err)
+				tracing.TraceErr(span, errors.Wrap(err, "failed to merge action"))
 				return nil, err
 			}
 		}
@@ -290,9 +309,9 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 			input.Website = utils.StringPtr(adjustedWebsite)
 			if primaryDomainFromWebsite != "" {
 				newDomains = append(newDomains, primaryDomainFromWebsite)
-				err = s.LinkWithDomain(ctx, &tx, organizationId, primaryDomainFromWebsite)
+				err = s.LinkWithDomain(ctx, txWithPostCommit.Tx, organizationId, primaryDomainFromWebsite)
 				if err != nil {
-					tracing.TraceErr(span, err)
+					tracing.TraceErr(span, errors.Wrap(err, "failed to link with domain"))
 					return nil, err
 				}
 			}
@@ -300,7 +319,7 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 
 		if input.Domains != nil && len(input.Domains) > 0 {
 			for _, domain := range input.Domains {
-				err = s.LinkWithDomain(ctx, &tx, organizationId, domain)
+				err = s.LinkWithDomain(ctx, txWithPostCommit.Tx, organizationId, domain)
 				if err != nil {
 					tracing.TraceErr(span, err)
 					return nil, err
@@ -318,7 +337,7 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 				ExternalSource:   input.ExternalSystem.ExternalSource,
 				SyncDate:         input.ExternalSystem.SyncDate,
 			}
-			err = s.services.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntityInTx(ctx, tx, tenant, organizationId, model.NodeLabelOrganization, externalSystemData)
+			err = s.services.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntityInTx(ctx, txWithPostCommit.Tx, tenant, organizationId, model.NodeLabelOrganization, externalSystemData)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return nil, err
@@ -326,122 +345,125 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 		}
 
 		if utils.IfNotNilString(input.OwnerId) != "" {
-			err = s.services.Neo4jRepositories.OrganizationWriteRepository.ReplaceOwner(ctx, &tx, tenant, organizationId, *input.OwnerId)
+			err = s.services.Neo4jRepositories.OrganizationWriteRepository.ReplaceOwner(ctx, txWithPostCommit.Tx, tenant, organizationId, *input.OwnerId)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return nil, err
 			}
 		}
 
+		// if linked in provided, merge social with organization in create only mode
+		if createFlow && utils.IfNotNilString(input.LinkedInUrl) != "" {
+			linkedInUrl := utils.IfNotNilString(input.LinkedInUrl)
+			if (neo4jentity.SocialEntity{Url: linkedInUrl}).IsLinkedin() {
+				_, err := s.services.SocialService.AddSocialToEntity(ctx, txWithPostCommit,
+					LinkWith{
+						Id:   organizationId,
+						Type: model.ORGANIZATION,
+					},
+					neo4jentity.SocialEntity{
+						Url:       linkedInUrl,
+						Source:    neo4jentity.DecodeDataSource(utils.IfNotNilString(input.Source)),
+						AppSource: utils.IfNotNilString(input.AppSource),
+					})
+				if err != nil {
+					tracing.TraceErr(span, errors.Wrap(err, "failed to merge social with organization"))
+				}
+			}
+		}
+
+		// in update only mode if slack channel changed, update reported relationship
+		if !createFlow && input.SlackChannelId != nil {
+			if existingOrganizationEntity.SlackChannelId != utils.IfNotNilString(input.SlackChannelId) {
+				if utils.IfNotNilString(input.SlackChannelId) == "" {
+					err := s.services.Neo4jRepositories.IssueWriteRepository.RemoveReportedByOrganizationWithGroupId(ctx, txWithPostCommit.Tx, tenant, organizationId, existingOrganizationEntity.SlackChannelId)
+					if err != nil {
+						tracing.TraceErr(span, err)
+					}
+				} else {
+					err := s.services.Neo4jRepositories.IssueWriteRepository.ReportedByOrganizationWithGroupId(ctx, txWithPostCommit.Tx, tenant, organizationId, utils.IfNotNilString(input.SlackChannelId))
+					if err != nil {
+						tracing.TraceErr(span, err)
+					}
+				}
+			}
+		}
+
+		// add post commit actions to send events
+		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
+			if createFlow {
+				err = s.services.RabbitMQService.PublishEvent(ctx, organizationId, model.ORGANIZATION, dto.CreateOrganization{input})
+				if err != nil {
+					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateOrganization"))
+				}
+				utils.EventCompleted(ctx, tenant, model.ORGANIZATION.String(), organizationId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithCreate())
+			} else {
+				err = s.services.RabbitMQService.PublishEvent(ctx, organizationId, model.ORGANIZATION, dto.UpdateOrganization{input})
+				if err != nil {
+					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateOrganization"))
+				}
+				if common.GetAppSourceFromContext(ctx) != constants.AppSourceCustomerOsApi {
+					utils.EventCompleted(ctx, tenant, model.ORGANIZATION.String(), organizationId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
+				}
+			}
+			return nil
+		})
+
+		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
+			// request enrich organization by primary domain if in creaate mode or organization not enriched yet
+			if createFlow || existingOrganizationEntity.EnrichDetails.EnrichedAt == nil {
+				// select primary domain from new domains
+				primaryDomain := primaryDomainFromWebsite
+				if primaryDomain == "" && len(newDomains) > 0 {
+					newDomains = utils.RemoveEmpties(newDomains)
+					newDomains = utils.RemoveDuplicates(newDomains)
+					for _, domain := range newDomains {
+						domainEntity, err := s.services.DomainService.GetDomain(ctx, domain)
+						if err != nil {
+							tracing.TraceErr(span, err)
+						} else if domainEntity != nil && domainEntity.IsPrimary != nil && *domainEntity.IsPrimary {
+							primaryDomain = domain
+							break
+						}
+					}
+				}
+				// invoke enrich organization by domain
+				if primaryDomain != "" {
+					ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+					_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+						return s.services.GrpcClients.OrganizationClient.EnrichOrganization(ctx, &organizationpb.EnrichOrganizationGrpcRequest{
+							Tenant:         tenant,
+							OrganizationId: organizationId,
+							LoggedInUserId: common.GetUserIdFromContext(ctx),
+							AppSource:      common.GetAppSourceFromContext(ctx),
+							Url:            primaryDomain,
+						})
+					})
+					if err != nil {
+						tracing.TraceErr(span, err)
+					}
+				}
+			}
+
+			return nil
+		})
+
+		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
+			// request last touchpoint refresh for new organizations
+			if createFlow {
+				err = s.RequestRefreshLastTouchpoint(ctx, organizationId)
+				if err != nil {
+					tracing.TraceErr(span, err)
+				}
+			}
+
+			return nil
+		})
 		return nil, nil
 	})
-
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return "", err
-	}
-
-	// create events section
-	if createFlow {
-		err = s.services.RabbitMQService.PublishEvent(ctx, organizationId, model.ORGANIZATION, dto.CreateOrganization{input})
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateOrganization"))
-		}
-		utils.EventCompleted(ctx, tenant, model.ORGANIZATION.String(), organizationId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithCreate())
-	} else {
-		err = s.services.RabbitMQService.PublishEvent(ctx, organizationId, model.ORGANIZATION, dto.UpdateOrganization{input})
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateOrganization"))
-		}
-		if common.GetAppSourceFromContext(ctx) != constants.AppSourceCustomerOsApi {
-			utils.EventCompleted(ctx, tenant, model.ORGANIZATION.String(), organizationId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
-		}
-	}
-
-	// if linked in provided, merge social with organization
-	if tx == nil && createFlow && utils.IfNotNilString(input.LinkedInUrl) != "" {
-		linkedInUrl := utils.IfNotNilString(input.LinkedInUrl)
-		if (neo4jentity.SocialEntity{Url: linkedInUrl}).IsLinkedin() {
-			_, err := s.services.SocialService.AddSocialToEntity(ctx,
-				LinkWith{
-					Id:   organizationId,
-					Type: model.ORGANIZATION,
-				},
-				neo4jentity.SocialEntity{
-					Url:       linkedInUrl,
-					Source:    neo4jentity.DecodeDataSource(utils.IfNotNilString(input.Source)),
-					AppSource: utils.IfNotNilString(input.AppSource),
-				})
-			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "failed to merge social with organization"))
-			}
-		}
-	}
-
-	latestOrganizationEntity, err := s.GetById(ctx, tenant, organizationId)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "unable to get organization by id"))
-		return organizationId, err
-	}
-
-	// set slack channel id for unthreaded issues
-	if !createFlow && input.SlackChannelId != nil {
-		if existingOrganizationEntity.SlackChannelId != utils.IfNotNilString(input.SlackChannelId) {
-			if utils.IfNotNilString(input.SlackChannelId) == "" {
-				err := s.services.Neo4jRepositories.IssueWriteRepository.RemoveReportedByOrganizationWithGroupId(ctx, tenant, organizationId, existingOrganizationEntity.SlackChannelId)
-				if err != nil {
-					tracing.TraceErr(span, err)
-				}
-			} else {
-				err := s.services.Neo4jRepositories.IssueWriteRepository.ReportedByOrganizationWithGroupId(ctx, tenant, organizationId, utils.IfNotNilString(input.SlackChannelId))
-				if err != nil {
-					tracing.TraceErr(span, err)
-				}
-			}
-		}
-	}
-
-	// request enrich organization by primary domain if not enriched
-	if latestOrganizationEntity.EnrichDetails.EnrichedAt == nil {
-		// select primary domain from new domains
-		primaryDomain := primaryDomainFromWebsite
-		if primaryDomain == "" && len(newDomains) > 0 {
-			newDomains = utils.RemoveEmpties(newDomains)
-			newDomains = utils.RemoveDuplicates(newDomains)
-			for _, domain := range newDomains {
-				domainEntity, err := s.services.DomainService.GetDomain(ctx, domain)
-				if err != nil {
-					tracing.TraceErr(span, err)
-				} else if domainEntity != nil && domainEntity.IsPrimary != nil && *domainEntity.IsPrimary {
-					primaryDomain = domain
-					break
-				}
-			}
-		}
-		// invoke enrich organization by domain
-		if primaryDomain != "" {
-			ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-			_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-				return s.services.GrpcClients.OrganizationClient.EnrichOrganization(ctx, &organizationpb.EnrichOrganizationGrpcRequest{
-					Tenant:         tenant,
-					OrganizationId: organizationId,
-					LoggedInUserId: common.GetUserIdFromContext(ctx),
-					AppSource:      common.GetAppSourceFromContext(ctx),
-					Url:            primaryDomain,
-				})
-			})
-			if err != nil {
-				tracing.TraceErr(span, err)
-			}
-		}
-	}
-
-	// request last touchpoint refresh for new organizations
-	if createFlow && tx == nil {
-		err = s.RequestRefreshLastTouchpoint(ctx, organizationId)
-		if err != nil {
-			tracing.TraceErr(span, err)
-		}
 	}
 
 	return organizationId, nil
@@ -849,6 +871,26 @@ func (s *organizationService) CheckOrganizationExistsWithEmail(ctx context.Conte
 	}
 
 	orgs, err := s.services.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsWithEmail(ctx, common.GetTenantFromContext(ctx), email)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return false, "", err
+	}
+	orgId := ""
+	if len(orgs) > 0 {
+		orgId = orgs[0].Props["id"].(string)
+	}
+	return len(orgs) > 0, orgId, nil
+}
+
+func (s *organizationService) CheckOrganizationExistsWithLinkedIn(ctx context.Context, url, alias, externalId string) (bool, string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.CheckOrganizationExistsWithLinkedIn")
+	defer span.Finish()
+
+	if alias == "" {
+		// use identifier as alias
+		alias = neo4jentity.SocialEntity{Url: url}.ExtractLinkedinPersonIdentifierFromUrl()
+	}
+	orgs, err := s.services.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsByLinkedIn(ctx, common.GetTenantFromContext(ctx), url, alias, externalId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return false, "", err
