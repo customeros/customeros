@@ -53,38 +53,34 @@ func CreateContact(services *service.Services) gin.HandlerFunc {
 	}
 }
 
-func createContactsFromCsvUpload(c *gin.Context, ctx context.Context, span opentracing.Span, services *service.Services, tenant string) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		tracing.TagComponentRest(span)
+func createContactsFromCsvUpload(c *gin.Context, ctx context.Context, span opentracing.Span, services *service.Services, tenant string) {
+	tracing.TagComponentRest(span)
 
-		file, err := validateAndOpenFile(c)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return
-		}
-		defer file.Close()
-
-		reader := csv.NewReader(file)
-		if err := validateHeaders(c, reader); err != nil {
-			return
-		}
-
-		processRecords(c, ctx, span, reader, services, tenant)
+	file, err := validateAndOpenFile(c)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return
 	}
+	defer file.Close()
+
+	reader := csv.NewReader(file)
+	if err := validateHeaders(c, reader); err != nil {
+		return
+	}
+
+	processRecords(c, ctx, span, reader, services, tenant)
 }
 
-func createContactFromJson(c *gin.Context, ctx context.Context, span opentracing.Span, services *service.Services, tenant string) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		tracing.TagComponentRest(span)
+func createContactFromJson(c *gin.Context, ctx context.Context, span opentracing.Span, services *service.Services, tenant string) {
+	tracing.TagComponentRest(span)
 
-		var record ContactRecord
-		if err := c.BindJSON(&record); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-
-		processContact(c, ctx, span, services, tenant, record)
+	var record ContactRecord
+	if err := c.BindJSON(&record); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
+
+	processContact(c, ctx, span, services, tenant, record)
 }
 
 func validateTenant(c *gin.Context, ctx context.Context, span opentracing.Span) string {
