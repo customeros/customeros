@@ -22,7 +22,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
 
-const AppSource = constants.AppSourceSyncEmail
+const (
+	AppSource         = constants.AppSourceSyncEmail
+	BCC_SLACK_CHANNEL = "https://hooks.slack.com/services/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"
+)
 
 func (s *mailService) GetEmailsForProcessingForUser(ctx context.Context, tenant, userEmailAddress string) {
 	span, ctx := s.initializeTracing(ctx, "MailService.SyncEmailsForUser")
@@ -115,6 +118,8 @@ func (s *mailService) ProcessEmail(ctx context.Context, tenant string, rawEmailI
 		db.EmailProcessingStatus = postgresentity.SKIPPED
 		db.Reason = &check.SkipReason
 		db.BouncedEmails = &check.BouncedEmails
+
+		s.sendInternalSlackNotification(ctx, span, &emailMessageData)
 		return db
 	}
 
@@ -154,6 +159,32 @@ func (s *mailService) ProcessEmail(ctx context.Context, tenant string, rawEmailI
 	}
 
 	return s.processInboundEmail(ctx, tenant, &emailMessageData, rawEmail, utils.Now(), span)
+}
+
+func (s *mailService) sendInternalSlackNotification(ctx context.Context, span opentracing.Span, emailData *EmailMessageData) {
+	var message string
+
+	message += fmt.Sprintln("*From:* %s | %s %s", emailData.Participants.From.Email, emailData.Participants.From.FirstName, emailData.Participants.From.LastName)
+	for _, v := range emailData.Participants.To {
+		message += fmt.Sprintln("*To:*   %s", v.Email)
+	}
+	for _, v := range emailData.Participants.Cc {
+		if v.Email != "" {
+			message += fmt.Sprintf("*cc:*   %s", v.Email)
+		}
+	}
+	for _, v := range emailData.Participants.Bcc {
+		if v.Email != "" {
+			message += fmt.Sprintf("*bcc:*  %s", v.Email)
+		}
+	}
+	message += "\n"
+	message += fmt.Sprintf("*Subject:* %s", emailData.Content.Subject)
+	message += "\n"
+	message += fmt.Sprintln("*Text:*")
+	message += fmt.Sprintln("%s", emailData.Content.Text)
+
+	utils.SendSlackMessage(ctx, BCC_SLACK_CHANNEL, message)
 }
 
 func (s *mailService) ProcessEmailByMessageId(ctx context.Context, tenant, usernameSource, messageId string) entity.UpdateRawEmailTable {

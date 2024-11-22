@@ -5,6 +5,11 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"io"
+	"net/http"
+	"regexp"
+	"strings"
+
 	"github.com/gin-gonic/gin"
 	commoncaches "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
@@ -17,15 +22,12 @@ import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	"github.com/opentracing/opentracing-go"
+	tracingLog "github.com/opentracing/opentracing-go/log"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/service"
-	"github.com/opentracing/opentracing-go"
-	tracingLog "github.com/opentracing/opentracing-go/log"
-	"io"
-	"net/http"
-	"regexp"
-	"strings"
 )
 
 func AddInteractionEventRoutes(ctx context.Context, route *gin.Engine, services *service.Services, cfg *config.Config, log logger.Logger, cache *commoncaches.Cache) {
@@ -34,16 +36,15 @@ func AddInteractionEventRoutes(ctx context.Context, route *gin.Engine, services 
 		syncPostmarkInteractionEventHandler(services, cfg, log))
 }
 
-//pending - contacts in flow that are not in the other stages
-//completed - contacts that have received the email
-//goal achieved - contacts that have received the sign-up email (Welcome to Embedd - Product Tips)
-
+// pending - contacts in flow that are not in the other stages
+// completed - contacts that have received the email
+// goal achieved - contacts that have received the sign-up email (Welcome to Embedd - Product Tips)
 func syncPostmarkInteractionEventHandler(services *service.Services, cfg *config.Config, log logger.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "syncPostmarkInteractionEventHandler", c.Request.Header)
 		defer span.Finish()
 
-		//check API key as param
+		// check API key as param
 		apiKey := c.Query(security.ApiKeyHeader)
 		if apiKey == "" {
 			c.JSON(http.StatusUnauthorized, gin.H{})
@@ -172,7 +173,7 @@ func syncPostmarkInteractionEventHandler(services *service.Services, cfg *config
 			}
 		}
 
-		//identify mailbox
+		// identify mailbox
 		username := ""
 		for _, p := range participants {
 			userByEmail, err := services.CommonServices.Neo4jRepositories.UserReadRepository.GetFirstUserByEmail(ctx, tenantByName, p)
@@ -202,7 +203,7 @@ func syncPostmarkInteractionEventHandler(services *service.Services, cfg *config
 			return
 		}
 
-		//TODO remove this hack
+		// TODO remove this hack
 		err = processEmailForFlows(ctx, services, tenantByName, postmarkEmailWebhookData.FromFull.Email, participants, postmarkEmailWebhookData.Subject, postmarkEmailWebhookData)
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -248,22 +249,6 @@ func syncPostmarkInteractionEventHandler(services *service.Services, cfg *config
 				return
 			}
 
-			if cfg.Slack.NotifyPostmarkEmail != "" {
-				slackMessageText := "*From:* " + postmarkEmailWebhookData.FromFull.Email + " - " + postmarkEmailWebhookData.FromFull.Name + "\n"
-				for _, t := range postmarkEmailWebhookData.ToFull {
-					slackMessageText += "*To:* " + t.Email + " - " + t.Name + "\n"
-				}
-				for _, t := range postmarkEmailWebhookData.CcFull {
-					slackMessageText += "*CC:* " + t.Email + " - " + t.Name + "\n"
-				}
-				for _, t := range postmarkEmailWebhookData.BccFull {
-					slackMessageText += "*BCC:* " + t.Email + " - " + t.Name + "\n"
-				}
-				slackMessageText += "*Subject:* " + postmarkEmailWebhookData.Subject + "\n"
-				slackMessageText += "*Body:* " + postmarkEmailWebhookData.HtmlBody
-
-				utils.SendSlackMessage(ctx, cfg.Slack.NotifyPostmarkEmail, slackMessageText)
-			}
 		}
 		c.JSON(http.StatusOK, gin.H{})
 	}
@@ -380,7 +365,7 @@ func mapPostmarkToEmailRawData(tenant string, pmData model.PostmarkEmailWebhookD
 	}, nil
 }
 
-//Deprecated
+// Deprecated
 
 // if the sender is a user in the system, it means that this is outbound communication
 // we mark the contacts that received this email as COMPLETED in the flows that they are in
@@ -474,8 +459,8 @@ func processMailstackReply(ctx context.Context, services *service.Services, tena
 
 		if mailstackEmail != nil && strings.Contains(mailstackEmail.ToString, input.FromFull.Email) && mailstackEmail.ProducerType == commonModel.NodeLabelFlowActionExecution {
 
-			//TODO check that it isn't an automatic reply
-			//header: Subject: Automatic reply: First restaurant killed by DoorDash reviews?
+			// TODO check that it isn't an automatic reply
+			// header: Subject: Automatic reply: First restaurant killed by DoorDash reviews?
 
 			flowActionExecution, err := services.CommonServices.FlowExecutionService.GetFlowActionExecutionById(ctx, mailstackEmail.ProducerId)
 			if err != nil {
