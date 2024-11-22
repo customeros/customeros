@@ -20,6 +20,9 @@ export const BaseBoundleCard = () => {
     [],
   );
 
+  const [_selectedAdditionalDomains, setSelectedAdditionalDomains] =
+    useLocalStorage<string[]>('selectedAdditionalDomains', []);
+
   return (
     <Card className='py-2 px-3 bg-white'>
       <CardHeader className='flex items-center justify-between font-medium text-sm'>
@@ -46,6 +49,10 @@ export const BaseBoundleCard = () => {
                 _setStoredBrandName((prev) => {
                   return prev.filter((item) => item !== name);
                 });
+
+                if (storedBrandName.length <= 5) {
+                  setSelectedAdditionalDomains([]);
+                }
               }}
             />
           </div>

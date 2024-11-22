@@ -40,7 +40,7 @@ export const AdditionalDomainsCard = () => {
       <CardContent className='p-0'>
         {selectedAdditionalDomains.map((domain, index) => (
           <div
-            key={`${name}-${index}`}
+            key={`${domain}-${index}`}
             className='flex items-center justify-between mt-1 bg-gray-100 rounded-[4px] py-1 px-2'
           >
             <span className='text-sm'>{domain}</span>

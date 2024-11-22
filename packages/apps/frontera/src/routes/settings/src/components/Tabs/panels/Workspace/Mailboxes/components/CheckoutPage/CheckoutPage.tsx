@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import { loadStripe, StripeElementsOptions } from '@stripe/stripe-js';
 import {
@@ -105,24 +106,32 @@ const options: StripeElementsOptions = {
     },
   },
 };
-export const CheckoutPage = () => (
-  <div className='py-2 px-4 w-[full] border-r-[1px]'>
-    <div className='flex items-center justify-start gap-1 mb-4'>
-      <span
-        onClick={() => {}}
-        className='font-semibold text-gray-500 hover:text-gray-700 hover:cursor-pointer'
+
+export const CheckoutPage = () => {
+  const navigate = useNavigate();
+
+  return (
+    <div className='py-2 px-4 w-[full] border-r-[1px]'>
+      <div className='flex items-center justify-start gap-1 mb-4'>
+        <span
+          onClick={() => navigate('/settings?tab=mailboxes')}
+          className='font-semibold text-gray-500 hover:text-gray-700 hover:cursor-pointer'
+        >
+          Mailboxes
+        </span>
+        <ChevronRight className='mt-0.5 text-gray-400 size-3' />
+        <span className='font-semibold text-gray-500 hover:text-gray-700 hover:cursor-pointer'>
+          Add new
+        </span>
+        <ChevronRight className='mt-0.5 text-gray-400 size-3' />
+        <span className='font-semibold'>Pay</span>
+      </div>
+      <Elements
+        stripe={stripePromise}
+        options={options as StripeElementsOptions}
       >
-        Mailboxes
-      </span>
-      <ChevronRight className='mt-0.5 text-gray-400 size-3' />
-      <span className='font-semibold text-gray-500 hover:text-gray-700 hover:cursor-pointer'>
-        Add new
-      </span>
-      <ChevronRight className='mt-0.5 text-gray-400 size-3' />
-      <span className='font-semibold'>Pay</span>
+        <CheckoutForm />
+      </Elements>
     </div>
-    <Elements stripe={stripePromise} options={options as StripeElementsOptions}>
-      <CheckoutForm />
-    </Elements>
-  </div>
-);
+  );
+};
