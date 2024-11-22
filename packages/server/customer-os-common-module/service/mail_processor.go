@@ -115,7 +115,22 @@ func (s *mailService) ProcessEmail(ctx context.Context, tenant string, rawEmailI
 		db.EmailProcessingStatus = postgresentity.SKIPPED
 		db.Reason = &check.SkipReason
 		db.BouncedEmails = &check.BouncedEmails
+		// set all bounced emails to undeliverable
+		for _, e := range *db.BouncedEmails {
+			err := s.services.Neo4jRepositories.EmailWriteRepository.SetDeliverableByEmailForAllTenants(ctx, e, "false")
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "failed to set deliverable by email for all tenants"))
+			}
+		}
 		return db
+	}
+
+	// set all non-bounced emails to deliverable
+	for _, e := range emailMessageData.Participants.AllEmails {
+		err := s.services.Neo4jRepositories.EmailWriteRepository.SetDeliverableByEmailForAllTenants(ctx, e, "true")
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to set deliverable by email for all tenants"))
+		}
 	}
 
 	sentAt, err := convertToUTC(emailMessageData.Content.SentDate)
