@@ -1,17 +1,15 @@
-package rest
+package customerbase
 
 import (
 	"context"
 	"encoding/csv"
 	"io"
-	"mime/multipart"
 	"net/http"
 	"regexp"
 	"strings"
 
 	"github.com/customeros/mailsherpa/mailvalidate"
 	"github.com/gin-gonic/gin"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -26,25 +24,20 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
 
-type ContactRecord struct {
-	Email       string `json:"email" csv:"email"`
-	LinkedInURL string `json:"linkedinUrl" csv:"linkedin_url"`
-}
-
-type ContactResult struct {
-	Status      string `json:"status"`              // success or error
-	Message     string `json:"message,omitempty"`   // error message or success details
-	ContactId   string `json:"contactId,omitempty"` // returned on successful contact creation/update
-	Email       string `json:"email,omitempty"`
-	LinkedInURL string `json:"linkedinUrl,omitempty"`
-}
-
-type ContactsResponse struct {
-	Status   string          `json:"status"`
-	Message  string          `json:"message,omitempty"`
-	Contacts []ContactResult `json:"contacts,omitempty"`
-}
-
+// @Summary Create a new contact
+// @Description Creates a contact from either JSON or CSV upload
+// @Tags CustomerBASE API
+// @Accept json,multipart/form-data
+// @Produce json
+// @Param file formData file false "CSV file with contact data"
+// @Param contact body ContactRecord false "Contact information"
+// @Success 200 {object} ContactResult
+// @Success 201 {object} ContactsResponse
+// @Failure 400 {object} BaseResponse
+// @Failure 401 {object} BaseResponse
+// @Failure 500 {object} BaseResponse
+// @Router /customerbase/v1/contacts [post]
+// @Security ApiKeyAuth
 func CreateContact(services *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "CreateContact", c.Request.Header)
@@ -82,21 +75,24 @@ func handleCSVUpload(c *gin.Context, ctx context.Context, span opentracing.Span,
 	}
 
 	results := processCSVRecords(c, ctx, span, reader, services, tenant)
-	c.JSON(http.StatusOK, ContactsResponse{
+	if len(results) == 0 {
+		sendError(c, http.StatusBadRequest, "No valid contacts found in file")
+		return
+	}
+
+	c.JSON(http.StatusCreated, ContactsResponse{
 		Status:   "success",
 		Contacts: results,
 	})
 }
 
 func handleJSONRequest(c *gin.Context, ctx context.Context, span opentracing.Span, services *service.Services, tenant string) {
-	// Try single contact first
+	// Try single contact
 	var singleContact ContactRecord
-	if err := c.BindJSON(&singleContact); err == nil {
-		if singleContact.Email != "" || singleContact.LinkedInURL != "" {
-			result := validateAndProcessContact(c, ctx, span, services, tenant, singleContact)
-			c.JSON(http.StatusOK, result)
-			return
-		}
+	if err := c.BindJSON(&singleContact); err == nil && (singleContact.Email != "" || singleContact.LinkedInURL != "") {
+		result := validateAndProcessContact(c, ctx, span, services, tenant, singleContact)
+		c.JSON(http.StatusOK, result)
+		return
 	}
 
 	// Try multiple contacts
@@ -120,75 +116,70 @@ func handleJSONRequest(c *gin.Context, ctx context.Context, span opentracing.Spa
 		results = append(results, result)
 	}
 
-	c.JSON(http.StatusOK, ContactsResponse{
+	c.JSON(http.StatusCreated, ContactsResponse{
 		Status:   "success",
 		Contacts: results,
 	})
 }
 
 func validateAndProcessContact(c *gin.Context, ctx context.Context, span opentracing.Span, services *service.Services, tenant string, record ContactRecord) ContactResult {
-	result := ContactResult{
-		Status:      "success",
+	if err := validateContact(&record); err != nil {
+		return ContactResult{
+			BaseResponse: BaseResponse{
+				Status:  "error",
+				Message: err.Error(),
+			},
+			Email:       record.Email,
+			LinkedInURL: record.LinkedInURL,
+		}
+	}
+
+	contactId := processContact(c, ctx, span, services, tenant, record)
+	if contactId == "" {
+		return ContactResult{
+			BaseResponse: BaseResponse{
+				Status:  "error",
+				Message: "Failed to process contact",
+			},
+			Email:       record.Email,
+			LinkedInURL: record.LinkedInURL,
+		}
+	}
+
+	return ContactResult{
+		BaseResponse: BaseResponse{
+			Status: "success",
+		},
+		ContactId:   contactId,
 		Email:       record.Email,
 		LinkedInURL: record.LinkedInURL,
 	}
+}
 
+func validateContact(record *ContactRecord) error {
 	if record.Email == "" && record.LinkedInURL == "" {
-		return createError("Must provide either email or LinkedIn URL")
+		return errors.New("must provide either email or LinkedIn URL")
 	}
 
 	if record.Email != "" {
 		emailSyntax := mailvalidate.ValidateEmailSyntax(record.Email)
 		switch {
 		case !emailSyntax.IsValid:
-			return createError("Invalid email format")
+			return errors.New("invalid email format")
 		case emailSyntax.IsRoleAccount:
-			return createError("Email is a role account")
+			return errors.New("email is a role account")
 		case emailSyntax.IsSystemGenerated:
-			return createError("Email is system generated")
+			return errors.New("email is system generated")
 		default:
 			record.Email = emailSyntax.CleanEmail
-			result.Email = emailSyntax.CleanEmail
 		}
 	}
 
 	if record.LinkedInURL != "" && !isValidLinkedinUrl(record.LinkedInURL) {
-		return createError("Invalid LinkedIn URL format")
+		return errors.New("invalid LinkedIn URL format")
 	}
 
-	contactId := processContact(c, ctx, span, services, tenant, record)
-	if contactId == "" {
-		return createError("Failed to process contact")
-	}
-
-	result.ContactId = contactId
-	return result
-}
-
-func validateTenant(c *gin.Context, ctx context.Context, span opentracing.Span) string {
-	tenant := common.GetTenantFromContext(ctx)
-	tracing.TagTenant(span, tenant)
-
-	if tenant == "" {
-		sendError(c, http.StatusUnauthorized, "API key invalid or expired")
-		return ""
-	}
-	return tenant
-}
-
-func validateAndOpenFile(c *gin.Context) (multipart.File, error) {
-	file, header, err := c.Request.FormFile("file")
-	if err != nil {
-		sendError(c, http.StatusBadRequest, "Failed to parse file")
-		return nil, err
-	}
-
-	if header.Header.Get("Content-Type") != "text/csv" && !strings.HasSuffix(header.Filename, ".csv") {
-		sendError(c, http.StatusBadRequest, "Invalid file type")
-		return nil, errors.New("invalid file type")
-	}
-
-	return file, nil
+	return nil
 }
 
 func validateFileHeaders(c *gin.Context, reader *csv.Reader) error {
@@ -225,7 +216,12 @@ func processCSVRecords(c *gin.Context, ctx context.Context, span opentracing.Spa
 			break
 		}
 		if err != nil {
-			results = append(results, createError("Failed to read record"))
+			results = append(results, ContactResult{
+				BaseResponse: BaseResponse{
+					Status:  "error",
+					Message: "Failed to read record",
+				},
+			})
 			continue
 		}
 
@@ -322,18 +318,4 @@ func isValidLinkedinUrl(s string) bool {
 		return false
 	}
 	return matched
-}
-
-func sendError(c *gin.Context, status int, message string) {
-	c.JSON(status, ContactResult{
-		Status:  "error",
-		Message: message,
-	})
-}
-
-func createError(message string) ContactResult {
-	return ContactResult{
-		Status:  "error",
-		Message: message,
-	}
 }
