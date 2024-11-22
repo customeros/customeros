@@ -359,7 +359,7 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 	}
 
 	// if linked in provided, merge social with organization
-	if createFlow && utils.IfNotNilString(input.LinkedInUrl) != "" {
+	if tx == nil && createFlow && utils.IfNotNilString(input.LinkedInUrl) != "" {
 		linkedInUrl := utils.IfNotNilString(input.LinkedInUrl)
 		if (neo4jentity.SocialEntity{Url: linkedInUrl}).IsLinkedin() {
 			_, err := s.services.SocialService.AddSocialToEntity(ctx,
@@ -437,7 +437,7 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 	}
 
 	// request last touchpoint refresh for new organizations
-	if createFlow {
+	if createFlow && tx == nil {
 		err = s.RequestRefreshLastTouchpoint(ctx, organizationId)
 		if err != nil {
 			tracing.TraceErr(span, err)
