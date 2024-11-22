@@ -164,25 +164,25 @@ func (s *mailService) ProcessEmail(ctx context.Context, tenant string, rawEmailI
 func (s *mailService) sendInternalSlackNotification(ctx context.Context, span opentracing.Span, emailData *EmailMessageData) {
 	var message string
 
-	message += fmt.Sprintln("*From:* %s | %s %s", emailData.Participants.From.Email, emailData.Participants.From.FirstName, emailData.Participants.From.LastName)
+	message += fmt.Sprintf("*From:* %s | %s %s\n", emailData.Participants.From.Email, emailData.Participants.From.FirstName, emailData.Participants.From.LastName)
 	for _, v := range emailData.Participants.To {
-		message += fmt.Sprintln("*To:*   %s", v.Email)
+		message += fmt.Sprintf("*To:*   %s\n", v.Email)
 	}
 	for _, v := range emailData.Participants.Cc {
 		if v.Email != "" {
-			message += fmt.Sprintf("*cc:*   %s", v.Email)
+			message += fmt.Sprintf("*cc:*   %s\n", v.Email)
 		}
 	}
 	for _, v := range emailData.Participants.Bcc {
 		if v.Email != "" {
-			message += fmt.Sprintf("*bcc:*  %s", v.Email)
+			message += fmt.Sprintf("*bcc:*  %s\n", v.Email)
 		}
 	}
 	message += "\n"
-	message += fmt.Sprintf("*Subject:* %s", emailData.Content.Subject)
+	message += fmt.Sprintf("*Subject:* %s\n", emailData.Content.Subject)
 	message += "\n"
-	message += fmt.Sprintln("*Text:*")
-	message += fmt.Sprintln("%s", emailData.Content.Text)
+	message += fmt.Sprintf("*Text:*\n")
+	message += fmt.Sprintf("%s", emailData.Content.Text)
 
 	utils.SendSlackMessage(ctx, BCC_SLACK_CHANNEL, message)
 }
