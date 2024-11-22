@@ -58,3 +58,7 @@ type RenewalDetails struct {
 }
 
 type OpportunityEntities []OpportunityEntity
+
+func (op OpportunityEntity) IsNBO() bool {
+	return op.InternalType == enum.OpportunityInternalTypeNBO
+}
