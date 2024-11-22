@@ -62,3 +62,7 @@ type OpportunityEntities []OpportunityEntity
 func (op OpportunityEntity) IsNBO() bool {
 	return op.InternalType == enum.OpportunityInternalTypeNBO
 }
+
+func (op OpportunityEntity) IsRenewal() bool {
+	return op.InternalType == enum.OpportunityInternalTypeRenewal
+}
