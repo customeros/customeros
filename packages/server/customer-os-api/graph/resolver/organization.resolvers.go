@@ -245,7 +245,7 @@ func (r *mutationResolver) OrganizationAddSocial(ctx context.Context, organizati
 	span.LogFields(log.String("request.organizationID", organizationID))
 	tracing.LogObjectAsJson(span, "request.input", input)
 
-	socialId, err := r.Services.CommonServices.SocialService.AddSocialToEntity(ctx, commonservice.LinkWith{
+	socialId, err := r.Services.CommonServices.SocialService.AddSocialToEntity(ctx, nil, commonservice.LinkWith{
 		Id:   organizationID,
 		Type: commonmodel.ORGANIZATION,
 	}, neo4jentity.SocialEntity{
