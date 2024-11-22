@@ -38,7 +38,7 @@ type ContactFields struct {
 
 type ContactWriteRepository interface {
 	SaveContactInTx(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, contactId string, data ContactFields) error
-	ResetEnrichAttempts(ctx context.Context, tenant, contactId string) error
+	ResetEnrichAttempts(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, contactId string) error
 }
 
 type contactWriteRepository struct {
@@ -131,7 +131,7 @@ func (r *contactWriteRepository) SaveContactInTx(ctx context.Context, tx *neo4j.
 	return err
 }
 
-func (r *contactWriteRepository) ResetEnrichAttempts(ctx context.Context, tenant, contactId string) error {
+func (r *contactWriteRepository) ResetEnrichAttempts(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, contactId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactWriteRepository.ResetEnrichAttempts")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
@@ -148,9 +148,16 @@ func (r *contactWriteRepository) ResetEnrichAttempts(ctx context.Context, tenant
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
+
 	return err
 }

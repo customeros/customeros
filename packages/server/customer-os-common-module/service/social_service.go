@@ -173,7 +173,6 @@ func (s *socialService) PermanentlyDelete(ctx context.Context, tenant string, so
 	return err
 }
 
-// TODO alexb2 implement txWithPostCommit
 func (s *socialService) AddSocialToEntity(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, linkWith LinkWith, socialEntity neo4jentity.SocialEntity) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialService.AddSocialToEntity")
 	defer span.Finish()
@@ -198,126 +197,141 @@ func (s *socialService) AddSocialToEntity(ctx context.Context, txWithPostCommit 
 		return "", err
 	}
 
-	// validate linked entity exists
-	exists, err := s.services.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, tenant, linkWith.Id, linkWith.Type.Neo4jLabel())
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to check linked entity exists"))
-		return "", err
-	}
-	if !exists {
-		err = errors.Errorf("linked entity %s with id %s not found", linkWith.Type.String(), linkWith.Id)
-		tracing.TraceErr(span, err)
-		return "", err
-	}
+	socialId := ""
 
-	// prepare social url
-	socialUrl := normalizeSocialUrl(socialEntity.Url)
-	span.LogFields(log.String("socialUrl.normalized", socialUrl))
+	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
+		// validate linked entity exists
+		exists, err := s.services.Neo4jRepositories.CommonReadRepository.ExistsByIdInTx(ctx, *txWithPostCommit.Tx, tenant, linkWith.Id, linkWith.Type.Neo4jLabel())
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to check linked entity exists"))
+			return nil, err
+		}
+		if !exists {
+			err = errors.Errorf("linked entity %s with id %s not found", linkWith.Type.String(), linkWith.Id)
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
 
-	// Check social not used by another entity
-	if socialEntity.IsLinkedin() {
-		if linkWith.Type == model.ORGANIZATION {
-			alias := socialEntity.Alias
-			if alias == "" {
-				// use identifier as alias
-				alias = socialEntity.ExtractLinkedinCompanyIdentifierFromUrl()
+		// prepare social url
+		socialUrl := normalizeSocialUrl(socialEntity.Url)
+		span.LogFields(log.String("socialUrl.normalized", socialUrl))
+
+		// Check social not used by another entity
+		if socialEntity.IsLinkedin() {
+			if linkWith.Type == model.ORGANIZATION {
+				alias := socialEntity.Alias
+				if alias == "" {
+					// use identifier as alias
+					alias = socialEntity.ExtractLinkedinCompanyIdentifierFromUrl()
+				}
+				orgs, err := s.services.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsByLinkedIn(ctx, tenant, socialUrl, alias, socialEntity.ExternalId)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					return "", err
+				}
+				if len(orgs) > 0 {
+					err = errors.Errorf("linkedin url %s already used by organization %s", socialUrl, orgs[0].Props["id"])
+					return "", err
+				}
+			} else if linkWith.Type == model.CONTACT {
+				linkedInUsed, existingContactId, err := s.services.ContactService.CheckContactExistsWithLinkedIn(ctx, socialUrl, socialEntity.Alias, socialEntity.ExternalId)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					return "", err
+				}
+				if linkedInUsed {
+					err = errors.Errorf("linkedin url %s already used by contact %s", socialUrl, existingContactId)
+					return "", err
+				}
 			}
-			orgs, err := s.services.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsByLinkedIn(ctx, tenant, socialUrl, alias, socialEntity.ExternalId)
+		}
+
+		// get or generate social entity id
+		createSocialFlow := false
+		socialId = socialEntity.Id
+		if socialId == "" {
+			createSocialFlow = true
+			socialId, err = s.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelSocial)
 			if err != nil {
-				tracing.TraceErr(span, err)
-				return "", err
-			}
-			if len(orgs) > 0 {
-				err = errors.Errorf("linkedin url %s already used by organization %s", socialUrl, orgs[0].Props["id"])
-				return "", err
-			}
-		} else if linkWith.Type == model.CONTACT {
-			linkedInUsed, existingContactId, err := s.services.ContactService.CheckContactExistsWithLinkedIn(ctx, socialUrl, socialEntity.Alias, socialEntity.ExternalId)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				return "", err
-			}
-			if linkedInUsed {
-				err = errors.Errorf("linkedin url %s already used by contact %s", socialUrl, existingContactId)
 				return "", err
 			}
 		}
-	}
+		tracing.TagEntity(span, socialId)
 
-	// get or generate social entity id
-	createSocialFlow := false
-	socialId := socialEntity.Id
-	if socialId == "" {
-		createSocialFlow = true
-		socialId, err = s.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelSocial)
+		// save social to neo4j
+		data := neo4jrepository.SocialFields{
+			SocialId:       socialId,
+			Url:            socialUrl,
+			Alias:          socialEntity.Alias,
+			ExternalId:     socialEntity.ExternalId,
+			FollowersCount: socialEntity.FollowersCount,
+			CreatedAt:      utils.NowIfZero(socialEntity.CreatedAt),
+			SourceFields: neo4jmodel.SourceFields{
+				Source:    neo4jmodel.GetSource(socialEntity.Source.String()),
+				AppSource: neo4jmodel.GetAppSource(socialEntity.AppSource),
+			},
+		}
+		err = s.services.Neo4jRepositories.SocialWriteRepository.MergeSocialForEntity(ctx, txWithPostCommit.Tx, tenant, linkWith.Id, linkWith.Type.Neo4jLabel(), data)
 		if err != nil {
+			tracing.TraceErr(span, err)
 			return "", err
 		}
-	}
-	tracing.TagEntity(span, socialId)
 
-	// save social to neo4j
-	data := neo4jrepository.SocialFields{
-		SocialId:       socialId,
-		Url:            socialUrl,
-		Alias:          socialEntity.Alias,
-		ExternalId:     socialEntity.ExternalId,
-		FollowersCount: socialEntity.FollowersCount,
-		CreatedAt:      utils.NowIfZero(socialEntity.CreatedAt),
-		SourceFields: neo4jmodel.SourceFields{
-			Source:    neo4jmodel.GetSource(socialEntity.Source.String()),
-			AppSource: neo4jmodel.GetAppSource(socialEntity.AppSource),
-		},
-	}
-	err = s.services.Neo4jRepositories.SocialWriteRepository.MergeSocialForEntity(ctx, tenant, linkWith.Id, linkWith.Type.Neo4jLabel(), data)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return "", err
-	}
-
-	if createSocialFlow {
-		err = s.services.RabbitMQService.PublishEvent(ctx, socialId, model.SOCIAL, dto.CreateSocial{
-			Url:           socialUrl,
-			Alias:         socialEntity.Alias,
-			ExtId:         socialEntity.ExternalId,
-			FollowerCount: socialEntity.FollowersCount,
-		})
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateSocial"))
-		}
-	}
-
-	// finally, notify linked entity
-	switch linkWith.Type {
-	case model.CONTACT:
 		// reset contact enrich attempts
 		if socialEntity.IsLinkedin() {
-			_ = s.services.Neo4jRepositories.ContactWriteRepository.ResetEnrichAttempts(ctx, tenant, linkWith.Id)
+			switch linkWith.Type {
+			case model.CONTACT:
+				_ = s.services.Neo4jRepositories.ContactWriteRepository.ResetEnrichAttempts(ctx, txWithPostCommit.Tx, tenant, linkWith.Id)
+			case model.ORGANIZATION:
+				_ = s.services.Neo4jRepositories.OrganizationWriteRepository.ResetEnrichAttempts(ctx, txWithPostCommit.Tx, tenant, linkWith.Id)
+			}
 		}
-		err = s.services.RabbitMQService.PublishEvent(ctx, linkWith.Id, model.CONTACT, dto.AddSocialToContact{
-			SocialId: socialId,
-			Social:   socialUrl,
-		})
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "unable to publish message AddSocialToContact"))
-		}
-		utils.EventCompleted(ctx, tenant, model.CONTACT.String(), linkWith.Id, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
-	case model.ORGANIZATION:
-		// reset contact enrich attempts
-		if socialEntity.IsLinkedin() {
-			_ = s.services.Neo4jRepositories.OrganizationWriteRepository.ResetEnrichAttempts(ctx, tenant, linkWith.Id)
-		}
-		err = s.services.RabbitMQService.PublishEvent(ctx, linkWith.Id, model.ORGANIZATION, dto.AddSocialToOrganization{
-			SocialId: socialId,
-			Social:   socialUrl,
-		})
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "unable to publish message AddSocialToOrganization"))
-		}
-		utils.EventCompleted(ctx, tenant, model.ORGANIZATION.String(), linkWith.Id, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
-	}
 
-	return socialId, nil
+		// send events for social entity
+		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
+			if createSocialFlow {
+				err = s.services.RabbitMQService.PublishEvent(ctx, socialId, model.SOCIAL, dto.CreateSocial{
+					Url:           socialUrl,
+					Alias:         socialEntity.Alias,
+					ExtId:         socialEntity.ExternalId,
+					FollowerCount: socialEntity.FollowersCount,
+				})
+				if err != nil {
+					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateSocial"))
+				}
+			}
+			return nil
+		})
+
+		// send events for linked entity
+		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
+			switch linkWith.Type {
+			case model.CONTACT:
+				err = s.services.RabbitMQService.PublishEvent(ctx, linkWith.Id, model.CONTACT, dto.AddSocialToContact{
+					SocialId: socialId,
+					Social:   socialUrl,
+				})
+				if err != nil {
+					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message AddSocialToContact"))
+				}
+				utils.EventCompleted(ctx, tenant, model.CONTACT.String(), linkWith.Id, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
+			case model.ORGANIZATION:
+				err = s.services.RabbitMQService.PublishEvent(ctx, linkWith.Id, model.ORGANIZATION, dto.AddSocialToOrganization{
+					SocialId: socialId,
+					Social:   socialUrl,
+				})
+				if err != nil {
+					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message AddSocialToOrganization"))
+				}
+				utils.EventCompleted(ctx, tenant, model.ORGANIZATION.String(), linkWith.Id, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
+			}
+			return nil
+		})
+
+		return nil, nil
+	})
+
+	return socialId, err
 }
 
 func normalizeSocialUrl(url string) string {

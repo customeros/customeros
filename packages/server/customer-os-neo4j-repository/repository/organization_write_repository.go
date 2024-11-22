@@ -34,7 +34,7 @@ type OrganizationWriteRepository interface {
 	UpdateFloatProperty(ctx context.Context, tenant, organizationId, property string, value float64) error
 	UpdateStringProperty(ctx context.Context, tenant, organizationId, property string, value string) error
 	Archive(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId string) error
-	ResetEnrichAttempts(ctx context.Context, tenant, organizationId string) error
+	ResetEnrichAttempts(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId string) error
 }
 
 type organizationWriteRepository struct {
@@ -723,7 +723,7 @@ func (r *organizationWriteRepository) Archive(ctx context.Context, tx *neo4j.Man
 	return nil
 }
 
-func (r *organizationWriteRepository) ResetEnrichAttempts(ctx context.Context, tenant, organizationId string) error {
+func (r *organizationWriteRepository) ResetEnrichAttempts(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.ResetEnrichAttempts")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
@@ -740,9 +740,16 @@ func (r *organizationWriteRepository) ResetEnrichAttempts(ctx context.Context, t
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
+
 	return err
 }

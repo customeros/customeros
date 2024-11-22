@@ -25,7 +25,7 @@ type SocialFields struct {
 }
 
 type SocialWriteRepository interface {
-	MergeSocialForEntity(ctx context.Context, tenant, linkedEntityId, linkedEntityNodeLabel string, data SocialFields) error
+	MergeSocialForEntity(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, linkedEntityId, linkedEntityNodeLabel string, data SocialFields) error
 	PermanentlyDelete(ctx context.Context, tenant, socialId string) error
 	RemoveSocialForEntityById(ctx context.Context, tenant, linkedEntityId, linkedEntityNodeLabel, socialId string) error
 	RemoveSocialForEntityByUrl(ctx context.Context, tenant, linkedEntityId, linkedEntityNodeLabel, socialUrl string) error
@@ -44,7 +44,7 @@ func NewSocialWriteRepository(driver *neo4j.DriverWithContext, database string) 
 	}
 }
 
-func (r *socialWriteRepository) MergeSocialForEntity(ctx context.Context, tenant, linkedEntityId, linkedEntityNodeLabel string, data SocialFields) error {
+func (r *socialWriteRepository) MergeSocialForEntity(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, linkedEntityId, linkedEntityNodeLabel string, data SocialFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialWriteRepository.MergeSocialForEntity")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
@@ -86,10 +86,17 @@ func (r *socialWriteRepository) MergeSocialForEntity(ctx context.Context, tenant
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
+
 	return err
 }
 
