@@ -2,17 +2,27 @@ package repository
 
 import (
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
-	"strings"
-	"time"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+)
+
+type EmailDeliverableStatus string
+
+const (
+	True    EmailDeliverableStatus = "true"
+	False   EmailDeliverableStatus = "false"
+	Unknown EmailDeliverableStatus = "unknown"
 )
 
 type EmailCreateFields struct {
@@ -57,6 +67,7 @@ type EmailWriteRepository interface {
 	UnlinkFromUser(ctx context.Context, tenant, usedId, email string) error
 	UnlinkFromContact(ctx context.Context, tenant, contactId, email string) error
 	UnlinkFromOrganization(ctx context.Context, tenant, organizationId, email string) error
+	SetDeliverableByEmailForAllTenants(ctx context.Context, email string, deliverable EmailDeliverableStatus) error
 	SetPrimaryForEntity(ctx context.Context, tenant, entityId, email string, entityType model.EntityType) error
 	DeleteEmail(ctx context.Context, tenant, emailId string) error
 }
@@ -443,6 +454,29 @@ func (r *emailWriteRepository) SetPrimaryForEntity(ctx context.Context, tenant, 
 	params := map[string]any{
 		"entityId": entityId,
 		"email":    email,
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *emailWriteRepository) SetDeliverableByEmailForAllTenants(ctx context.Context, email string, deliverable EmailDeliverableStatus) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailWriteRepository.SetDeliverableByEmailForAllTenants")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+	span.LogKV("email", email, "deliverable", deliverable)
+
+	cypher := `MATCH (e:Email) WHERE e.email = $email OR e.rawEmail = $email
+				SET e.deliverable = $deliverable, e.updatedAt = datetime()`
+	params := map[string]any{
+		"email":       email,
+		"deliverable": deliverable,
 	}
 
 	span.LogFields(log.String("cypher", cypher))
