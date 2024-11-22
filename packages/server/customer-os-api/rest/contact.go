@@ -17,7 +17,6 @@ import (
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	neo4jrepo "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
@@ -25,13 +24,13 @@ import (
 )
 
 type ContactRecord struct {
-	Email       string
-	LinkedInURL string
+	Email       string `json:"email" csv:"email"`
+	LinkedInURL string `json:"linkedinUrl" csv:"linkedin_url"`
 }
 
-func CreateContactsFromCsvUpload(services *service.Services) gin.HandlerFunc {
+func CreateContact(services *service.Services, contactRecord ContactRecord) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "CreateContactsFromCsvUpload", c.Request.Header)
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "CreateContact", c.Request.Header)
 		defer span.Finish()
 		tracing.TagComponentRest(span)
 
@@ -39,6 +38,23 @@ func CreateContactsFromCsvUpload(services *service.Services) gin.HandlerFunc {
 		if tenant == "" {
 			return
 		}
+
+		contentType := c.GetHeader("Content-Type")
+
+		switch {
+		case strings.HasPrefix(contentType, "multipart/form-data"):
+			createContactsFromCsvUpload(c, ctx, span, services)
+		case strings.HasPrefix(contentType, "application/json"):
+			createContactFromJson(c, ctx, span, services)
+		default:
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Unsupported Content-Type"})
+		}
+	}
+}
+
+func createContactsFromCsvUpload(c *gin.context, ctx context.context, span opentracing.span, services *service.Services, tenant string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		tracing.TagComponentRest(span)
 
 		file, err := validateAndOpenFile(c)
 		if err != nil {
@@ -56,7 +72,21 @@ func CreateContactsFromCsvUpload(services *service.Services) gin.HandlerFunc {
 	}
 }
 
-func validateTenant(c *gin.Context, ctx context.Context, span opentracing.Span) string {
+func createContactFromJson(c *gin.context, ctx context.context, span opentracing.span, services *service.Services, tenant string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		tracing.TagComponentRest(span)
+
+		var record ContactRecord
+		if err := c.BindJSON(&record); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		processContact(c, ctx, span, services, tenant, record)
+	}
+}
+
+func validateTenant(c *gin.context, ctx context.context, span opentracing.span) string {
 	tenant := common.GetTenantFromContext(ctx)
 	tracing.TagTenant(span, tenant)
 

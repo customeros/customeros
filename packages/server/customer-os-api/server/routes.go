@@ -3,7 +3,13 @@ package server
 import (
 	"context"
 	"fmt"
+
 	"github.com/gin-gonic/gin"
+	commoncaches "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	cosHandler "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
@@ -14,10 +20,6 @@ import (
 	restoutreach "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/outreach"
 	restverify "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/verify"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
-	commoncaches "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 )
 
 const (
@@ -79,7 +81,7 @@ func registerOrganizationRoutes(ctx context.Context, r *gin.Engine, services *se
 }
 
 func registerContactRoutes(ctx context.Context, r *gin.Engine, services *service.Services, grpcClients *grpc_client.Clients, cache *commoncaches.Cache) {
-	setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/contacts", customerBaseV1Path), services, cache, rest.CreateContactsFromCsvUpload(services))
+	setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/contacts", customerBaseV1Path), services, cache, rest.CreateContact(services))
 }
 
 func registerInvoiceRoutes(ctx context.Context, r *gin.Engine, services *service.Services, grpcClients *grpc_client.Clients, cache *commoncaches.Cache) {
