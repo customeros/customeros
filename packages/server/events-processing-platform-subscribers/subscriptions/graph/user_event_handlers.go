@@ -80,7 +80,7 @@ func (h *UserEventHandler) OnUserCreate(ctx context.Context, evt eventstore.Even
 				ExternalSource:   eventData.ExternalSystem.ExternalSource,
 				SyncDate:         eventData.ExternalSystem.SyncDate,
 			}
-			err = h.services.CommonServices.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntityInTx(ctx, tx, eventData.Tenant, userId, model.NodeLabelUser, externalSystemData)
+			err = h.services.CommonServices.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntityInTx(ctx, &tx, eventData.Tenant, userId, model.NodeLabelUser, externalSystemData)
 			if err != nil {
 				h.log.Errorf("Error while link user %s with external system %s: %s", userId, eventData.ExternalSystem.ExternalSystemId, err.Error())
 				return nil, err
@@ -138,7 +138,7 @@ func (h *UserEventHandler) OnUserUpdate(ctx context.Context, evt eventstore.Even
 					ExternalSource:   eventData.ExternalSystem.ExternalSource,
 					SyncDate:         eventData.ExternalSystem.SyncDate,
 				}
-				innerErr := h.services.CommonServices.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntityInTx(ctx, tx, eventData.Tenant, userId, model.NodeLabelUser, externalSystemData)
+				innerErr := h.services.CommonServices.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntityInTx(ctx, &tx, eventData.Tenant, userId, model.NodeLabelUser, externalSystemData)
 				if innerErr != nil {
 					h.log.Errorf("Error while link user %s with external system %s: %s", userId, eventData.ExternalSystem.ExternalSystemId, err.Error())
 					return nil, innerErr

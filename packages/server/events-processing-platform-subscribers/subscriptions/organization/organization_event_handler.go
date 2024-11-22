@@ -357,7 +357,7 @@ func (h *organizationEventHandler) addSocial(ctx context.Context, organizationId
 		Source:     neo4jentity.DataSourceOpenline,
 	}
 
-	_, err := h.services.CommonServices.SocialService.AddSocialToEntity(ctx, commonservice.LinkWith{
+	_, err := h.services.CommonServices.SocialService.AddSocialToEntity(ctx, nil, commonservice.LinkWith{
 		Id:   organizationId,
 		Type: commonmodel.ORGANIZATION,
 	}, socialEntity)
