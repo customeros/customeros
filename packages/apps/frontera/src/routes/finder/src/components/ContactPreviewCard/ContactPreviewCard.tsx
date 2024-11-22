@@ -55,7 +55,7 @@ export const ContactPreviewCard = observer(() => {
   const src = contact?.value?.profilePhotoUrl;
 
   const company =
-    contact?.value.latestOrganizationWithJobRole?.organization.name;
+    contact?.value.latestOrganizationWithJobRole?.organization?.name;
 
   const roleId = contact?.value.latestOrganizationWithJobRole?.jobRole.id;
 
