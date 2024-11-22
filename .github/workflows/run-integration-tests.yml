@@ -23,6 +23,16 @@ jobs:
         with:
           node-version: '18'
 
+      - name: Determine trigger source
+        id: trigger
+        run: |
+          if [[ "${{ github.event_name }}" == "repository_dispatch" ]]; then
+            TRIGGER_SOURCE=$(echo "${{ github.event.action }}" | cut -d ' ' -f 1)
+            echo "trigger_source=$TRIGGER_SOURCE" >> $GITHUB_ENV
+          else
+            echo "trigger_source=manual" >> $GITHUB_ENV
+          fi
+
       - name: Install dependencies
         if: steps.npm-cache.outputs.cache-hit != 'true'
         run: npm ci
@@ -125,9 +135,17 @@ jobs:
           TOTAL_TESTS: ${{ env.total_tests }}
           PASSED_TESTS: ${{ env.passed_tests }}
           FAILED_TESTS: ${{ env.failed_tests }}
+          TRIGGER_SOURCE: ${{ env.trigger_source }}
         run: |
           BUILD_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          SUMMARY="<$BUILD_URL|Vitest Test Results>:\n✅ $PASSED_TESTS passed, ❌ $FAILED_TESTS failed ($TOTAL_TESTS total)"
+          
+          # Create trigger message
+          TRIGGER_MSG=""
+          if [ "$TRIGGER_SOURCE" != "manual" ]; then
+            TRIGGER_MSG="\nTriggered by \`$TRIGGER_SOURCE\`"
+          fi
+          
+          SUMMARY="<$BUILD_URL|Vitest Test Results>:\n✅ $PASSED_TESTS passed, ❌ $FAILED_TESTS failed ($TOTAL_TESTS total)$TRIGGER_MSG"
           
           curl --fail -X POST -H "Content-type: application/json" --data "{
             \"text\": \"$SUMMARY\"
