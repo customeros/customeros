@@ -211,49 +211,45 @@ func (l *mailService) extractEmail(s string) string {
 	return ""
 }
 
-func (l *mailService) extractEmails(input string) []string {
-	if input == "" {
-		return []string{}
-	}
-
-	// Compile regex to match both bracketed and raw emails
+func (a *mailService) extractEmails(s string) []string {
+	// Regex to match bracketed and unbracketed email addresses
 	emailRegex := regexp.MustCompile(`<([^>]+)>|([^\s,<>]+@[^\s,<>]+)`)
 
-	// Split, clean and normalize input
-	emails := strings.Split(strings.ToLower(input), ",")
+	if s == "" {
+		return []string{}
+	}
 
 	// Use a map for deduplication
 	uniqueEmails := make(map[string]struct{})
 
-	for _, email := range emails {
-		matches := emailRegex.FindAllStringSubmatch(strings.TrimSpace(email), -1)
+	// Split input into lines or by delimiter
+	lines := strings.Split(strings.ToLower(s), "\n")
+	for _, line := range lines {
+		// Find all email matches in the line
+		matches := emailRegex.FindAllStringSubmatch(strings.TrimSpace(line), -1)
 		for _, match := range matches {
 			// match[1] is from <...>, match[2] is raw email
 			var emailToValidate string
-			if match[1] != "" {
+			if len(match) > 1 && match[1] != "" {
 				emailToValidate = match[1]
-			} else if match[2] != "" {
+			} else if len(match) > 2 && match[2] != "" {
 				emailToValidate = match[2]
 			}
 
 			if emailToValidate != "" {
-				emailValidation := mailvalidate.ValidateEmailSyntax(emailToValidate)
-				if emailValidation.IsValid {
-					uniqueEmails[emailValidation.CleanEmail] = struct{}{}
+				syntaxValidation := mailvalidate.ValidateEmailSyntax(strings.Trim(emailToValidate, "<>"))
+				if syntaxValidation.IsValid {
+					uniqueEmails[syntaxValidation.CleanEmail] = struct{}{}
 				}
 			}
 		}
 	}
 
-	if len(uniqueEmails) == 0 {
-		return []string{}
-	}
-
+	// Convert map to slice and sort for deterministic ordering
 	result := make([]string, 0, len(uniqueEmails))
 	for email := range uniqueEmails {
 		result = append(result, email)
 	}
-
-	sort.Strings(result) // Add deterministic ordering
+	sort.Strings(result)
 	return result
 }

@@ -19,7 +19,6 @@ type HeaderAnalysis struct {
 
 // TODO parse SMTP status code from message/deliver-status
 // and classify bounced email as hard or soft bounce
-
 func (a *mailService) ProcessEmailCheck(ctx context.Context, tenant string, emailData *EmailMessageData) HeaderAnalysis {
 	span, ctx := a.initializeTracing(ctx, "MailService.ProcessEmailCheck")
 	defer span.Finish()
@@ -35,10 +34,16 @@ func (a *mailService) ProcessEmailCheck(ctx context.Context, tenant string, emai
 		analysis.ProcessEmail = false
 		analysis.SkipReason = reason
 
-		if emailData.Identifiers.ExternalSystem == "outlook" && len(emailData.Headers.XFailedRecepients) == 0 {
-			emailData.Headers.XFailedRecepients = emailData.Participants.GetToEmailAddresses()
+		xFailedHeaderExists := len(emailData.Headers.XFailedRecepients) > 0
+		switch {
+		case !xFailedHeaderExists && emailData.Identifiers.ExternalSystem == "outlook":
+			analysis.BouncedEmails = emailData.Participants.GetToEmailAddresses()
+		case !xFailedHeaderExists && emailData.Identifiers.ExternalSystem == "mailstack":
+			analysis.BouncedEmails = a.extractEmails(emailData.Content.Text)
+		default:
+			analysis.BouncedEmails = emailData.Headers.XFailedRecepients
 		}
-		analysis.BouncedEmails = emailData.Headers.XFailedRecepients
+
 		return analysis
 	}
 
