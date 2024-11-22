@@ -91,7 +91,7 @@ export class TagStore implements Store<TagDatum> {
 
 const defaultValue: TagDatum = {
   name: '',
-  entityType: '' as EntityType,
+  entityType: EntityType.Organization,
   metadata: {
     id: crypto.randomUUID(),
   },

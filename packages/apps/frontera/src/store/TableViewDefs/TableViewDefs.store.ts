@@ -211,6 +211,10 @@ export class TableViewDefsStore implements GroupStore<TableViewDef> {
     return this.toArray().filter((p) => !p.value.isShared && !p.value.isPreset);
   }
 
+  get teamPresets() {
+    return this.toArray().filter((p) => p.value.isShared && !p.value.isPreset);
+  }
+
   createFavorite = async (
     {
       id,

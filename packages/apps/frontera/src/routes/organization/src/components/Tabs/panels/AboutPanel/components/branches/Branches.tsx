@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
+import { Organization } from '@store/Organizations/Organization.dto';
 
 import { Plus } from '@ui/media/icons/Plus';
 import { IconButton } from '@ui/form/IconButton';
@@ -16,7 +17,7 @@ export const Branches = observer(({ id, isReadOnly }: BranchesProps) => {
   const store = useStore();
 
   const navigate = useNavigate();
-  const organization = store.organizations?.value?.get(id);
+  const organization = store.organizations?.getById(id);
 
   if (!organization) return null;
 
@@ -33,15 +34,11 @@ export const Branches = observer(({ id, isReadOnly }: BranchesProps) => {
             aria-label='Add'
             icon={<Plus className='size-4' />}
             onClick={() => {
-              store.organizations.create(undefined, {
+              store.organizations.create(Organization.default(), {
                 onSucces(serverId) {
-                  const findOrg = store.organizations.value.get(serverId);
-
-                  if (!findOrg) return;
                   setTimeout(() => {
-                    organization?.value.subsidiaries.push({
-                      organization: findOrg.value,
-                    });
+                    organization.draft();
+                    organization.addSubsidiary(serverId);
                     organization?.commit();
                   }, 100);
 

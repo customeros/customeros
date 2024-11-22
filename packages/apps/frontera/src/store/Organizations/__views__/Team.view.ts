@@ -1,4 +1,4 @@
-import { reaction } from 'mobx';
+import { autorun } from 'mobx';
 import { inPlaceSort } from 'fast-sort';
 
 import type { Organization } from '../Organization.dto';
@@ -9,31 +9,21 @@ import { getOrganizationFilterFns } from './filterFns';
 import { OrganizationsStore } from '../Organizations.store';
 
 // TODO: Cache filtered and sorted results for faster subsequent access
-export class CustomersView {
+export class TeamViews {
   constructor(private store: OrganizationsStore) {
-    reaction(() => {
-      const preset = this.store.root.tableViewDefs.defaultPreset;
+    autorun(() => {
+      const p = this.store.root.tableViewDefs.teamPresets;
 
-      return preset ? this.store.getSearchTermByView(preset) : '';
-    }, this.update);
-    reaction(() => this.store.value.size, this.update);
-    reaction(() => this.store.version, this.update);
-    reaction(() => {
-      const preset = this.store.root.tableViewDefs.defaultPreset;
+      p.forEach((v) => {
+        const id = v.value.id;
+        const searchTerm = this.store.getSearchTermByView(id);
 
-      if (!preset) return '';
-
-      const viewDef = this.store.root.tableViewDefs.getById(preset);
-
-      return `${viewDef?.value.filters ?? ''}-${
-        viewDef?.value.defaultFilters ?? ''
-      }-${viewDef?.value.sorting}`;
-    }, this.update);
+        this.update(id, searchTerm);
+      });
+    });
   }
 
-  public update = () => {
-    const preset = this.store.root.tableViewDefs.defaultPreset;
-
+  public update = (preset: string, searchTerm?: string) => {
     if (!preset) return;
 
     const viewDef = this.store.root.tableViewDefs.getById(preset);
@@ -74,8 +64,6 @@ export class CustomersView {
       let sorted = inPlaceSort(filteredIdsWithSortValues)
         [isDesc ? 'desc' : 'asc']((entry) => entry.sortValue)
         .map((entry) => entry.record);
-
-      const searchTerm = this.store.getSearchTermByView(preset);
 
       if (searchTerm) {
         sorted = indexAndSearch(sorted, searchTerm);

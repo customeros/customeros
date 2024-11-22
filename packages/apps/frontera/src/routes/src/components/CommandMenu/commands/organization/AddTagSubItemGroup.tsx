@@ -2,43 +2,42 @@ import { useMemo } from 'react';
 
 import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
-import { OrganizationStore } from '@store/Organizations/Organization.store';
+import { TagDatum } from '@store/Tags/Tag.store';
+import { Organization } from '@store/Organizations/Organization.dto';
 
+import { EntityType } from '@graphql/types';
 import { Tag01 } from '@ui/media/icons/Tag01';
 import { Check } from '@ui/media/icons/Check.tsx';
 import { useStore } from '@shared/hooks/useStore';
 import { useModKey } from '@shared/hooks/useModKey';
 import { CommandSubItem } from '@ui/overlay/CommandMenu';
-import { EntityType, Tag as TagType } from '@graphql/types';
 
 export const AddTagSubItemGroup = observer(() => {
   const store = useStore();
   const context = store.ui.commandMenu.context;
 
   const entity = match(context.entity)
-    .returnType<OrganizationStore | OrganizationStore[] | undefined>()
+    .returnType<Organization | Organization[] | undefined>()
     .with('Organization', () =>
-      store.organizations.value.get(context.ids?.[0] as string),
+      store.organizations.getById(context.ids?.[0] as string),
     )
     .with(
       'Organizations',
       () =>
         context.ids?.map((e: string) =>
-          store.organizations.value.get(e),
-        ) as OrganizationStore[],
+          store.organizations.getById(e),
+        ) as Organization[],
     )
     .otherwise(() => undefined);
 
-  const handleSelect = (t: TagType) => () => {
+  const handleSelect = (t: TagDatum) => () => {
     if (!context.ids?.[0]) return;
 
     if (!entity) return;
 
     match(context.entity)
       .with('Organization', () => {
-        console.log('popescu');
-
-        const organization = entity as OrganizationStore;
+        const organization = entity as Organization;
 
         const foundIndex = organization.value.tags?.findIndex(
           (e) => e.name === t.name,
@@ -62,13 +61,11 @@ export const AddTagSubItemGroup = observer(() => {
       'Organization',
       () =>
         new Set(
-          ((entity as OrganizationStore)?.value?.tags ?? []).map(
-            (tag) => tag?.name,
-          ),
+          ((entity as Organization)?.value?.tags ?? []).map((tag) => tag?.name),
         ),
     )
     .with('Organizations', () => {
-      const mappedTags = (entity as OrganizationStore[])
+      const mappedTags = (entity as Organization[])
         .map((e) => e.value?.tags)
         .flat()
         .filter((e) => Boolean(e));
@@ -83,13 +80,13 @@ export const AddTagSubItemGroup = observer(() => {
         'Organization',
         () =>
           new Set(
-            ((entity as OrganizationStore)?.value?.tags ?? []).map(
+            ((entity as Organization)?.value?.tags ?? []).map(
               (tag) => tag?.name,
             ),
           ),
       )
       .with('Organizations', () => {
-        const mappedTags = (entity as OrganizationStore[])
+        const mappedTags = (entity as Organization[])
           .map((e) => e.value?.tags)
           .flat()
           .filter((e) => Boolean(e));

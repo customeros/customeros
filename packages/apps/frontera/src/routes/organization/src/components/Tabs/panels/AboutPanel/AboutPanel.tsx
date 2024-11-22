@@ -154,6 +154,7 @@ export const AboutPanel = observer(() => {
       { name: value },
       {
         onSucces: (id) => {
+          organization.draft();
           organization?.value?.tags?.push({
             name: value,
             metadata: {
@@ -161,8 +162,7 @@ export const AboutPanel = observer(() => {
             },
             entityType: EntityType.Organization,
           });
-
-          organization.commit({ syncOnly: true });
+          organization.commit();
         },
       },
     );
@@ -271,8 +271,7 @@ export const AboutPanel = observer(() => {
             })) ?? []
           }
           options={store.tags
-            .toArray()
-            .filter((t) => t.value.entityType === EntityType.Organization)
+            .getByEntityType(EntityType.Organization)
             .map((t) => ({
               value: t.id,
               label: t.value?.name,

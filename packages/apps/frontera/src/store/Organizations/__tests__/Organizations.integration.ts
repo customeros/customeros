@@ -173,11 +173,11 @@ describe('OrganizationsService - Integration Tests', () => {
       organization_tag_name,
     );
 
-    if (organization?.organization?.tags?.[0]?.id) {
+    if (organization?.organization?.tags?.[0]?.metadata.id) {
       await organizationsService.removeTag({
         input: {
           organizationId: organization_Save.metadata.id,
-          tag: { id: organization.organization.tags[0].id },
+          tag: { id: organization.organization.tags[0].metadata.id },
         },
       });
 

@@ -1,7 +1,4 @@
-import { useParams } from 'react-router-dom';
-
 import { observer } from 'mobx-react-lite';
-import { useIsRestoring } from '@tanstack/react-query';
 
 import { cn } from '@ui/utils/cn';
 import { useStore } from '@shared/hooks/useStore';
@@ -23,23 +20,13 @@ import { useARRInfoModalContext } from '@organization/components/Tabs/panels/Acc
 interface ARRForecastProps {
   name: string;
   currency?: string | null;
-  isInitialLoading?: boolean;
   contracts?: Contract[] | null;
   renewalSunnary?: RenewalSummary | null;
 }
 
 export const ARRForecast = observer(
-  ({
-    isInitialLoading,
-    renewalSunnary,
-    name,
-    currency = 'USD',
-  }: ARRForecastProps) => {
-    const isRestoring = useIsRestoring();
+  ({ renewalSunnary, name, currency = 'USD' }: ARRForecastProps) => {
     const store = useStore();
-    const id = useParams()?.id as string;
-
-    const organization = store.organizations.value.get(id);
 
     const { modal } = useARRInfoModalContext();
     const formattedMaxAmount = formatCurrency(
@@ -96,16 +83,15 @@ export const ARRForecast = observer(
               <div className='flex flex-col'>
                 <h2
                   className={cn(
-                    organization?.isLoading &&
-                      (!isInitialLoading || !isRestoring
-                        ? 'text-gray-400'
-                        : 'text-gray-700'),
+                    store.organizations.isLoading
+                      ? 'text-gray-400'
+                      : 'text-gray-700',
                     'text-2xl font-semibold transition-opacity duration-250 ease-in',
                   )}
                 >
                   {formattedAmount}
                 </h2>
-                {hasForecastChanged && !organization?.isLoading && (
+                {hasForecastChanged && !store.organizations?.isLoading && (
                   <p className='text-sm  text-right line-through'>
                     {formattedMaxAmount}
                   </p>

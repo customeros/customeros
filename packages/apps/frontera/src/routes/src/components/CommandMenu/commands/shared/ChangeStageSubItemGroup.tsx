@@ -1,7 +1,7 @@
 import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
+import { Organization } from '@store/Organizations/Organization.dto';
 import { OpportunityStore } from '@store/Opportunities/Opportunity.store';
-import { OrganizationStore } from '@store/Organizations/Organization.store';
 import { getStageFromColumn } from '@opportunities/components/ProspectsBoard/columns';
 
 import { Check } from '@ui/media/icons/Check';
@@ -34,8 +34,8 @@ export const ChangeStageSubItemGroup = observer(() => {
   const entity = match(context.entity)
     .returnType<
       | OpportunityStore
-      | OrganizationStore
-      | OrganizationStore[]
+      | Organization
+      | Organization[]
       | OpportunityStore[]
       | undefined
     >()
@@ -50,7 +50,7 @@ export const ChangeStageSubItemGroup = observer(() => {
       () =>
         context.ids?.map((e: string) =>
           store.organizations.value.get(e),
-        ) as OrganizationStore[],
+        ) as Organization[],
     )
     .with(
       'Opportunities',
@@ -64,7 +64,7 @@ export const ChangeStageSubItemGroup = observer(() => {
   const selectedStageOption = match(context.entity)
     .with('Organization', () =>
       stageOptions.find(
-        (option) => option.value === (entity as OrganizationStore)?.value.stage,
+        (option) => option.value === (entity as Organization)?.value.stage,
       ),
     )
     .with('Opportunity', () =>
@@ -85,7 +85,7 @@ export const ChangeStageSubItemGroup = observer(() => {
 
   const applicableStageOptions = match(context.entity)
     .with('Organization', () =>
-      getStageOptions((entity as OrganizationStore).value?.relationship),
+      getStageOptions((entity as Organization).value?.relationship),
     )
     .with('Organizations', () =>
       getStageOptions(OrganizationRelationship.Prospect),
@@ -101,11 +101,11 @@ export const ChangeStageSubItemGroup = observer(() => {
 
     match(context.entity)
       .with('Organization', () => {
-        (entity as OrganizationStore)?.update((org) => {
-          org.stage = value as OrganizationStage;
+        const organization = entity as Organization;
 
-          return org;
-        });
+        organization.draft();
+        organization.value.stage = value as OrganizationStage;
+        organization.commit();
       })
       .with('Organizations', () => {
         store.organizations.updateStage(

@@ -1,8 +1,9 @@
-import { reaction } from 'mobx';
 import { inPlaceSort } from 'fast-sort';
+import { action, reaction } from 'mobx';
 
 import type { Organization } from '../Organization.dto';
 
+import { indexAndSearch } from './util';
 import { getOrganizationSortFn } from './sortFns';
 import { getOrganizationFilterFns } from './filterFns';
 import { OrganizationsStore } from '../Organizations.store';
@@ -10,6 +11,11 @@ import { OrganizationsStore } from '../Organizations.store';
 // TODO: Cache filtered and sorted results for faster subsequent access
 export class AllOrganizationsView {
   constructor(private store: OrganizationsStore) {
+    reaction(() => {
+      const preset = this.store.root.tableViewDefs.organizationsPreset;
+
+      return preset ? this.store.getSearchTermByView(preset) : '';
+    }, this.update);
     reaction(() => this.store.value.size, this.update);
     reaction(() => this.store.version, this.update);
     reaction(() => {
@@ -25,6 +31,7 @@ export class AllOrganizationsView {
     }, this.update);
   }
 
+  @action
   public update = () => {
     const preset = this.store.root.tableViewDefs.organizationsPreset;
 
@@ -65,14 +72,15 @@ export class AllOrganizationsView {
         }[],
       );
 
-      const sorted = inPlaceSort(filteredIdsWithSortValues)
+      let sorted = inPlaceSort(filteredIdsWithSortValues)
         [isDesc ? 'desc' : 'asc']((entry) => entry.sortValue)
         .map((entry) => entry.record);
 
-      // const splicedIds = sortedIds.splice(
-      //   this.store.range[0],
-      //   this.store.range[1] + 1,
-      // );
+      const searchTerm = this.store.getSearchTermByView(preset);
+
+      if (searchTerm) {
+        sorted = indexAndSearch(sorted, searchTerm);
+      }
 
       return sorted;
     });

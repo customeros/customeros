@@ -1,5 +1,11 @@
-import { useRef, useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
+import {
+  useRef,
+  useState,
+  useEffect,
+  type Dispatch,
+  type SetStateAction,
+} from 'react';
 
 import { match } from 'ts-pattern';
 import { useKeyBindings } from 'rooks';
@@ -57,15 +63,18 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
     currentPreset: preset,
   });
 
-  const handleSortChange = (updater: (old: SortingState) => SortingState) => {
-    const next = updater(sorting);
+  const handleSortChange: Dispatch<SetStateAction<SortingState>> = (
+    updaterOrValue,
+  ) => {
+    const next =
+      typeof updaterOrValue === 'function'
+        ? updaterOrValue(sorting)
+        : updaterOrValue;
 
-    setSorting(updater);
+    setSorting(updaterOrValue);
 
     tableViewDef?.setSorting(next[0]?.id, next[0]?.desc);
   };
-
-  // const data = store.organizations.getViewById(preset ?? '');
 
   const data = computeFinderData(store, {
     sorting,

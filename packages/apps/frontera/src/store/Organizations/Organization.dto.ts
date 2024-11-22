@@ -119,6 +119,11 @@ export class Organization extends Entity<OrganizationDatum> {
     }, [] as OrganizationDatum[]);
   }
 
+  @computed
+  get tagCount() {
+    return this.value.tags?.length ?? 0;
+  }
+
   @action
   public addSubsidiary(id: string) {
     const record = this.store.getById(id);
@@ -197,6 +202,7 @@ export class Organization extends Entity<OrganizationDatum> {
           lastUpdated: new Date().toString(),
           created: new Date().toISOString(),
         },
+        hide: false,
         owner: null,
         contacts: {
           content: [],

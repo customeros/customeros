@@ -1,5 +1,5 @@
+import { Organization } from '@store/Organizations/Organization.dto';
 import { CountryCell } from '@finder/components/Columns/Cells/country';
-import { OrganizationStore } from '@store/Organizations/Organization.store';
 import { OrganizationStageCell } from '@finder/components/Columns/Cells/stage';
 import { DateCell } from '@finder/components/Columns/shared/Cells/DateCell/DateCell';
 import {
@@ -33,7 +33,7 @@ import {
   OrganizationRelationshipCell,
 } from './Cells';
 
-type ColumnDatum = OrganizationStore;
+type ColumnDatum = Organization;
 
 // REASON: we do not care about exhaustively typing this TValue type
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -90,7 +90,7 @@ export const columns: Record<string, Column> = {
       <THead<HTMLInputElement>
         title='Organization'
         id={ColumnViewType.OrganizationsName}
-        {...getTHeadProps<OrganizationStore>(props)}
+        {...getTHeadProps<Organization>(props)}
       />
     ),
     skeleton: () => <Skeleton className='w-[100px] h-[14px]' />,
@@ -113,7 +113,7 @@ export const columns: Record<string, Column> = {
         <THead<HTMLInputElement>
           title='Website'
           id={ColumnViewType.OrganizationsWebsite}
-          {...getTHeadProps<OrganizationStore>(props)}
+          {...getTHeadProps<Organization>(props)}
         />
       ),
       skeleton: () => <Skeleton className='w-[50%] h-[14px]' />,
@@ -131,7 +131,7 @@ export const columns: Record<string, Column> = {
         <THead
           title='Relationship'
           id={ColumnViewType.OrganizationsRelationship}
-          {...getTHeadProps<OrganizationStore>(props)}
+          {...getTHeadProps<Organization>(props)}
         />
       ),
       cell: (props) => {
@@ -165,7 +165,7 @@ export const columns: Record<string, Column> = {
         <THead
           title='Onboarding'
           id={ColumnViewType.OrganizationsOnboardingStatus}
-          {...getTHeadProps<OrganizationStore>(props)}
+          {...getTHeadProps<Organization>(props)}
         />
       ),
       skeleton: () => (
@@ -191,7 +191,7 @@ export const columns: Record<string, Column> = {
         title='Health'
         data-test='renewal-likelihood'
         id={ColumnViewType.OrganizationsRenewalLikelihood}
-        {...getTHeadProps<OrganizationStore>(props)}
+        {...getTHeadProps<Organization>(props)}
       />
     ),
     skeleton: () => (
@@ -221,7 +221,7 @@ export const columns: Record<string, Column> = {
         <THead
           title='Renewal Date'
           id={ColumnViewType.OrganizationsRenewalDate}
-          {...getTHeadProps<OrganizationStore>(props)}
+          {...getTHeadProps<Organization>(props)}
         />
       ),
       skeleton: () => <Skeleton className='w-[50%] h-[14px]' />,
@@ -254,7 +254,7 @@ export const columns: Record<string, Column> = {
         <THead<HTMLInputElement>
           title='ARR Forecast'
           id={ColumnViewType.OrganizationsForecastArr}
-          {...getTHeadProps<OrganizationStore>(props)}
+          {...getTHeadProps<Organization>(props)}
         />
       ),
       skeleton: () => (
@@ -284,7 +284,7 @@ export const columns: Record<string, Column> = {
       <THead<HTMLInputElement>
         title='Owner'
         id={ColumnViewType.OrganizationsOwner}
-        {...getTHeadProps<OrganizationStore>(props)}
+        {...getTHeadProps<Organization>(props)}
       />
     ),
     skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
@@ -313,7 +313,7 @@ export const columns: Record<string, Column> = {
         <THead<HTMLInputElement>
           title='Source'
           id={ColumnViewType.OrganizationsLeadSource}
-          {...getTHeadProps<OrganizationStore>(props)}
+          {...getTHeadProps<Organization>(props)}
         />
       ),
       skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
@@ -337,7 +337,7 @@ export const columns: Record<string, Column> = {
         <THead<HTMLInputElement>
           title='Created Date'
           id={ColumnViewType.OrganizationsCreatedDate}
-          {...getTHeadProps<OrganizationStore>(props)}
+          {...getTHeadProps<Organization>(props)}
         />
       ),
       skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
@@ -374,7 +374,7 @@ export const columns: Record<string, Column> = {
         <THead<HTMLInputElement>
           title='Founded'
           id={ColumnViewType.OrganizationsYearFounded}
-          {...getTHeadProps<OrganizationStore>(props)}
+          {...getTHeadProps<Organization>(props)}
         />
       ),
       skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
@@ -412,7 +412,7 @@ export const columns: Record<string, Column> = {
         <THead<HTMLInputElement>
           title='Employees'
           id={ColumnViewType.OrganizationsEmployeeCount}
-          {...getTHeadProps<OrganizationStore>(props)}
+          {...getTHeadProps<Organization>(props)}
         />
       ),
       skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
@@ -435,7 +435,7 @@ export const columns: Record<string, Column> = {
         <THead<HTMLInputElement>
           title='LinkedIn'
           id={ColumnViewType.OrganizationsSocials}
-          {...getTHeadProps<OrganizationStore>(props)}
+          {...getTHeadProps<Organization>(props)}
         />
       ),
       skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
@@ -465,7 +465,7 @@ export const columns: Record<string, Column> = {
         <THead<HTMLInputElement>
           title='Last Touchpoint'
           id={ColumnViewType.OrganizationsLastTouchpoint}
-          {...getTHeadProps<OrganizationStore>(props)}
+          {...getTHeadProps<Organization>(props)}
         />
       ),
       skeleton: () => (
@@ -497,7 +497,7 @@ export const columns: Record<string, Column> = {
         <THead<HTMLInputElement>
           title='Last Interacted'
           id={ColumnViewType.OrganizationsLastTouchpointDate}
-          {...getTHeadProps<OrganizationStore>(props)}
+          {...getTHeadProps<Organization>(props)}
         />
       ),
       skeleton: () => (
@@ -527,7 +527,7 @@ export const columns: Record<string, Column> = {
         <THead<HTMLInputElement>
           title='Churn Date'
           id={ColumnViewType.OrganizationsChurnDate}
-          {...getTHeadProps<OrganizationStore>(props)}
+          {...getTHeadProps<Organization>(props)}
         />
       ),
       skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
@@ -562,7 +562,7 @@ export const columns: Record<string, Column> = {
         <THead<HTMLInputElement>
           title='LTV'
           id={ColumnViewType.OrganizationsLtv}
-          {...getTHeadProps<OrganizationStore>(props)}
+          {...getTHeadProps<Organization>(props)}
         />
       ),
       skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
@@ -589,7 +589,7 @@ export const columns: Record<string, Column> = {
         <THead<HTMLInputElement>
           title='Industry'
           id={ColumnViewType.OrganizationsIndustry}
-          {...getTHeadProps<OrganizationStore>(props)}
+          {...getTHeadProps<Organization>(props)}
         />
       ),
       skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
@@ -615,7 +615,7 @@ export const columns: Record<string, Column> = {
         title='Contacts'
         filterWidth='auto'
         id={ColumnViewType.OrganizationsContactCount}
-        {...getTHeadProps<OrganizationStore>(props)}
+        {...getTHeadProps<Organization>(props)}
       />
     ),
     skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
@@ -646,7 +646,7 @@ export const columns: Record<string, Column> = {
         <THead<HTMLInputElement>
           title='LinkedIn Followers'
           id={ColumnViewType.OrganizationsLinkedinFollowerCount}
-          {...getTHeadProps<OrganizationStore>(props)}
+          {...getTHeadProps<Organization>(props)}
         />
       ),
       skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
@@ -669,7 +669,7 @@ export const columns: Record<string, Column> = {
         title='Tags'
         filterWidth='auto'
         id={ColumnViewType.OrganizationsTags}
-        {...getTHeadProps<OrganizationStore>(props)}
+        {...getTHeadProps<Organization>(props)}
       />
     ),
     skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
@@ -694,7 +694,7 @@ export const columns: Record<string, Column> = {
       <THead<HTMLInputElement>
         title='Ownership Type'
         id={ColumnViewType.OrganizationsIsPublic}
-        {...getTHeadProps<OrganizationStore>(props)}
+        {...getTHeadProps<Organization>(props)}
       />
     ),
     skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
@@ -717,7 +717,7 @@ export const columns: Record<string, Column> = {
         title='Stage'
         filterWidth='auto'
         id={ColumnViewType.OrganizationsStage}
-        {...getTHeadProps<OrganizationStore>(props)}
+        {...getTHeadProps<Organization>(props)}
       />
     ),
     skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
@@ -743,7 +743,7 @@ export const columns: Record<string, Column> = {
           title='Country'
           filterWidth='auto'
           id={ColumnViewType.OrganizationsHeadquarters}
-          {...getTHeadProps<OrganizationStore>(props)}
+          {...getTHeadProps<Organization>(props)}
         />
       ),
       skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
@@ -779,7 +779,7 @@ export const columns: Record<string, Column> = {
         <THead<HTMLInputElement>
           title='Parent Org'
           id={ColumnViewType.OrganizationsParentOrganization}
-          {...getTHeadProps<OrganizationStore>(props)}
+          {...getTHeadProps<Organization>(props)}
         />
       ),
       skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
@@ -803,7 +803,7 @@ export const columns: Record<string, Column> = {
         <THead<HTMLInputElement>
           title='Last Updated'
           id={ColumnViewType.OrganizationsUpdatedDate}
-          {...getTHeadProps<OrganizationStore>(props)}
+          {...getTHeadProps<Organization>(props)}
         />
       ),
       skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,

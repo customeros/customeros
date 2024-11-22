@@ -123,7 +123,7 @@ const AccountPanelComponent = observer(() => {
           </div>
         }
       >
-        <Contracts isLoading={isCreating} />
+        <Contracts />
       </OrganizationPanel>
     </>
   );

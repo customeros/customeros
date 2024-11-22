@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { observer } from 'mobx-react-lite';
 import { useKeys, useKeyBindings } from 'rooks';
 import { CommandMenuType } from '@store/UI/CommandMenu.store.ts';
-import { OrganizationStore } from '@store/Organizations/Organization.store';
+import { Organization } from '@store/Organizations/Organization.dto';
 import { ActionItem } from '@finder/components/Actions/components/ActionItem.tsx';
 
 import { X } from '@ui/media/icons/X';
@@ -24,7 +24,7 @@ interface TableActionsProps {
   focusedId?: string | null;
   isCommandMenuOpen: boolean;
   enableKeyboardShortcuts?: boolean;
-  table: TableInstance<OrganizationStore>;
+  table: TableInstance<Organization>;
 }
 
 export const OrganizationTableActions = observer(

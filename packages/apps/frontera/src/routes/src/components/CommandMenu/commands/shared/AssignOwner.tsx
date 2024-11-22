@@ -1,7 +1,7 @@
 import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
+import { Organization } from '@store/Organizations/Organization.dto';
 import { OpportunityStore } from '@store/Opportunities/Opportunity.store.ts';
-import { OrganizationStore } from '@store/Organizations/Organization.store.ts';
 
 import { Check } from '@ui/media/icons/Check.tsx';
 import { useStore } from '@shared/hooks/useStore';
@@ -17,8 +17,8 @@ export const AssignOwner = observer(() => {
   const entity = match(context.entity)
     .returnType<
       | OpportunityStore
-      | OrganizationStore
-      | OrganizationStore[]
+      | Organization
+      | Organization[]
       | OpportunityStore[]
       | undefined
     >()
@@ -30,7 +30,7 @@ export const AssignOwner = observer(() => {
       () =>
         context.ids?.map((e: string) =>
           store.organizations.value.get(e),
-        ) as OrganizationStore[],
+        ) as Organization[],
     )
     .with(
       'Opportunities',
@@ -50,7 +50,7 @@ export const AssignOwner = observer(() => {
     )
     .with(
       'Organization',
-      () => `Organization - ${(entity as OrganizationStore)?.value?.name}`,
+      () => `Organization - ${(entity as Organization)?.value?.name}`,
     )
     .with('Organizations', () => `${context.ids?.length} organizations`)
     .with('Opportunities', () => `${context.ids?.length} opportunities`)
@@ -79,7 +79,7 @@ export const AssignOwner = observer(() => {
       })
       .with('Organization', () => {
         if (!entity) return;
-        const organization = entity as OrganizationStore;
+        const organization = entity as Organization;
 
         organization.value.owner = user.value;
         organization.commit({
@@ -92,9 +92,9 @@ export const AssignOwner = observer(() => {
         });
       })
       .with('Organizations', () => {
-        if (!(entity as OrganizationStore[])?.length) return;
+        if (!(entity as Organization[])?.length) return;
 
-        const orgs = entity as OrganizationStore[];
+        const orgs = entity as Organization[];
 
         orgs.forEach((o) => {
           o.value.owner = user?.value;
@@ -138,7 +138,7 @@ export const AssignOwner = observer(() => {
             onSelect={handleSelect(user.id)}
             rightAccessory={
               user.id ===
-              (entity as OrganizationStore | OpportunityStore)?.owner?.id ? (
+              (entity as Organization | OpportunityStore)?.owner?.id ? (
                 <Check />
               ) : null
             }

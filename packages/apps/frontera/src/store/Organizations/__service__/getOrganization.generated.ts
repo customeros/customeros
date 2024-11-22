@@ -20,6 +20,8 @@ export type OrganizationQuery = {
     isCustomer?: boolean | null;
     logo?: string | null;
     icon?: string | null;
+    notes?: string | null;
+    hide: boolean;
     relationship?: Types.OrganizationRelationship | null;
     leadSource?: string | null;
     referenceId?: string | null;

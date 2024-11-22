@@ -43,6 +43,10 @@ export class Entity<T extends object> {
     }
   }
 
+  public invalidate() {
+    this.store.invalidate(this.id);
+  }
+
   public toRaw() {
     return toJS(this.value);
   }

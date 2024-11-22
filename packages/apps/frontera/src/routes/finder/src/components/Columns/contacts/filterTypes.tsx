@@ -220,7 +220,7 @@ export const getFilterTypes = (store?: RootStore) => {
         <Tag01 className='group-hover:text-gray-700 text-gray-500 mb-0.5' />
       ),
       options: store?.tags.toArray().map((tag) => ({
-        id: tag?.value?.id,
+        id: tag?.value?.metadata.id,
         label: tag?.value?.name,
       })),
     },

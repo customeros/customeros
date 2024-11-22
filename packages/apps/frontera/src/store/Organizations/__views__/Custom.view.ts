@@ -3,6 +3,7 @@ import { inPlaceSort } from 'fast-sort';
 
 import type { Organization } from '../Organization.dto';
 
+import { indexAndSearch } from './util';
 import { getOrganizationSortFn } from './sortFns';
 import { getOrganizationFilterFns } from './filterFns';
 import { OrganizationsStore } from '../Organizations.store';
@@ -16,12 +17,14 @@ export class CustomView {
       p.forEach((v) => {
         const id = v.value.id;
 
-        this.update(id);
+        const searchTerm = this.store.getSearchTermByView(id);
+
+        this.update(id, searchTerm);
       });
     });
   }
 
-  public update = (preset: string) => {
+  public update = (preset: string, searchTerm?: string) => {
     if (!preset) return;
 
     const viewDef = this.store.root.tableViewDefs.getById(preset);
@@ -59,14 +62,13 @@ export class CustomView {
         }[],
       );
 
-      const sorted = inPlaceSort(filteredIdsWithSortValues)
+      let sorted = inPlaceSort(filteredIdsWithSortValues)
         [isDesc ? 'desc' : 'asc']((entry) => entry.sortValue)
         .map((entry) => entry.record);
 
-      // const splicedIds = sortedIds.splice(
-      //   this.store.range[0],
-      //   this.store.range[1] + 1,
-      // );
+      if (searchTerm) {
+        sorted = indexAndSearch(sorted, searchTerm);
+      }
 
       return sorted;
     });

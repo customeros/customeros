@@ -1,6 +1,6 @@
 import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
-import { OrganizationStore } from '@store/Organizations/Organization.store';
+import { Organization } from '@store/Organizations/Organization.dto';
 
 import { Check } from '@ui/media/icons/Check.tsx';
 import { useStore } from '@shared/hooks/useStore';
@@ -23,7 +23,7 @@ export const ChangeRelationship = observer(() => {
   const context = store.ui.commandMenu.context;
 
   const entity = match(context.entity)
-    .returnType<OrganizationStore | OrganizationStore[] | undefined>()
+    .returnType<Organization | Organization[] | undefined>()
     .with('Organization', () =>
       store.organizations.value.get(context.ids?.[0] as string),
     )
@@ -32,13 +32,13 @@ export const ChangeRelationship = observer(() => {
       () =>
         context.ids?.map((e: string) =>
           store.organizations.value.get(e),
-        ) as OrganizationStore[],
+        ) as Organization[],
     )
     .otherwise(() => undefined);
   const label = match(context.entity)
     .with(
       'Organization',
-      () => `Organization - ${(entity as OrganizationStore)?.value?.name}`,
+      () => `Organization - ${(entity as Organization)?.value?.name}`,
     )
     .with('Organizations', () => `${context.ids?.length} organizations`)
     .otherwise(() => '');
@@ -50,7 +50,7 @@ export const ChangeRelationship = observer(() => {
 
     match(context.entity)
       .with('Organization', () => {
-        const organization = entity as OrganizationStore;
+        const organization = entity as Organization;
 
         organization.value.relationship = value;
         organization.value.stage = match(value)
@@ -83,7 +83,7 @@ export const ChangeRelationship = observer(() => {
     .with('Organization', () =>
       relationshipOptions.find(
         (option) =>
-          option.value === (entity as OrganizationStore)?.value.relationship,
+          option.value === (entity as Organization)?.value.relationship,
       ),
     )
     .with('Organizations', () => undefined)

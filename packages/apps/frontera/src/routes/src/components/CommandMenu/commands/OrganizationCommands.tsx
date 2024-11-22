@@ -248,6 +248,7 @@ export const OrganizationCommands = observer(() => {
           keywords={organizationKeywords.create_new_opportunity}
           onSelect={() => {
             store.opportunities.create({
+              // @ts-expect-error will be autofixed when opportunity store will use OpportunityDatum
               organization: organization?.value,
               name: `${organization?.value.name}'s opportunity`,
               internalType: InternalType.Nbo,

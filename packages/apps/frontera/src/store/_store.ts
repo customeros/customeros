@@ -42,6 +42,7 @@ export class Store<T extends object, E extends Entity<T> = Entity<T>> {
 
   private snapshots: Map<string, T> = new Map();
   @observable private accessor views: Map<string, E[]> = new Map();
+  @observable private accessor searchTerms: Map<string, string> = new Map();
 
   constructor(
     public root: RootStore,
@@ -298,6 +299,15 @@ export class Store<T extends object, E extends Entity<T> = Entity<T>> {
   }
 
   @action
+  public setSearchTerm(term: string, viewId: string) {
+    this.searchTerms.set(viewId, term);
+  }
+
+  public getSearchTermByView(viewId: string) {
+    return this.searchTerms.get(viewId);
+  }
+
+  @action
   public invalidate(_id: string) {}
 
   public commit(
@@ -309,8 +319,6 @@ export class Store<T extends object, E extends Entity<T> = Entity<T>> {
     } = { syncOnly: false },
   ) {
     const operation = this.makeChangesetOperation(id);
-
-    // console.log(operation);
 
     this.clearSnapshot(id);
 

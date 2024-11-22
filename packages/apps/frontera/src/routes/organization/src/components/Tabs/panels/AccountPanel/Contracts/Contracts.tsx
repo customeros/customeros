@@ -11,11 +11,9 @@ import { ContractModalStatusContextProvider } from '@organization/components/Tab
 
 import { Notes } from '../Notes';
 
-interface ContractsProps {
-  isLoading: boolean;
-}
+interface ContractsProps {}
 
-export const Contracts: FC<ContractsProps> = observer(({ isLoading }) => {
+export const Contracts: FC<ContractsProps> = observer(() => {
   const id = useParams()?.id as string;
   const store = useStore();
   const organizationStore = store.organizations.value.get(id);
@@ -24,7 +22,6 @@ export const Contracts: FC<ContractsProps> = observer(({ isLoading }) => {
   return (
     <>
       <ARRForecast
-        isInitialLoading={isLoading}
         name={organizationStore?.value.name || ''}
         currency={contracts?.[0]?.currency || 'USD'}
         renewalSunnary={organizationStore?.value.accountDetails?.renewalSummary}

@@ -15,8 +15,8 @@ export type GetOrganizationsQuery = {
     content: Array<{
       __typename?: 'Organization';
       name: string;
-      note?: string | null;
       notes?: string | null;
+      hide: boolean;
       stage?: Types.OrganizationStage | null;
       description?: string | null;
       industry?: string | null;

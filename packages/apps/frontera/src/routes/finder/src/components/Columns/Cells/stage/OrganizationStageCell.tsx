@@ -48,7 +48,8 @@ export const OrganizationStageCell = observer(
     );
 
     const menuHandleChange = (value: OrganizationStage) => {
-      // organization.value?.stage = value;
+      organization.draft();
+      organization.value!.stage = value;
       organization.commit();
     };
 

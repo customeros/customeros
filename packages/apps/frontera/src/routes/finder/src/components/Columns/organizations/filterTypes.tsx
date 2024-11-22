@@ -353,7 +353,7 @@ export const getFilterTypes = (store?: RootStore) => {
       ],
       icon: <Building05 />,
       options: uniqBy(store?.organizations.toArray(), 'industry')
-        .map((v) => v?.industry)
+        .map((v) => v?.value.industry)
         .filter(Boolean)
         .sort((a, b) => (a && b ? a?.localeCompare(b) : -1))
         .map((industry) => ({
@@ -409,8 +409,8 @@ export const getFilterTypes = (store?: RootStore) => {
       ),
       options: uniqBy(
         store?.organizations.toArray().map((org) => ({
-          id: org.locations?.[0]?.countryCodeA2,
-          label: org.locations?.[0]?.country,
+          id: org.value.locations?.[0]?.countryCodeA2,
+          label: org.value.locations?.[0]?.country,
         })),
         'id',
       ),

@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 
 import { match } from 'ts-pattern';
 import { CommandGroup } from 'cmdk';
+import unionBy from 'lodash/unionBy';
 import { observer } from 'mobx-react-lite';
 import { TagDatum } from '@store/Tags/Tag.store';
 import { Organization } from '@store/Organizations/Organization.dto';
@@ -16,6 +17,7 @@ import { Command, CommandItem, CommandInput } from '@ui/overlay/CommandMenu';
 export const ChangeTags = observer(() => {
   const store = useStore();
   const context = store.ui.commandMenu.context;
+  const [newTags, setNewTags] = useState<TagDatum[]>([]);
 
   const entity = match(context.entity)
     .returnType<Organization | Organization[] | undefined>()
@@ -40,7 +42,8 @@ export const ChangeTags = observer(() => {
 
   const [search, setSearch] = useState('');
 
-  const handleSelect = (t: TagDatum) => {
+  const handleSelect = (t?: TagDatum | null) => {
+    if (!t) return;
     if (!context.ids?.[0]) return;
 
     if (!entity) return;
@@ -74,9 +77,11 @@ export const ChangeTags = observer(() => {
   const handleCreateOption = (value: string) => {
     if (store.tags.toArray().find((e) => e.value.name === value)) return;
     store.tags?.create(
-      { name: value },
+      { name: value, entityType: EntityType.Organization },
       {
         onSucces: (id) => {
+          setNewTags((prev) => [store.tags.getById(id)!.value, ...prev]);
+
           match(context.entity)
             .with('Organization', () => {
               const organization = entity as Organization;
@@ -129,50 +134,37 @@ export const ChangeTags = observer(() => {
     })
     .otherwise(() => new Set([]));
 
-  const orgTags = useMemo(() => {
-    return match(context.entity)
-      .with(
-        'Organization',
-        () =>
-          new Set(
-            ((entity as Organization)?.value?.tags ?? []).map(
-              (tag) => tag?.name,
-            ),
-          ),
-      )
-      .with('Organizations', () => {
-        const mappedTags = (entity as Organization[])
-          .map((e) => e.value?.tags)
-          .flat()
-          .filter((e) => Boolean(e));
+  const selectedTags = useMemo(
+    () =>
+      match(context.entity)
+        .with('Organization', () =>
+          ((entity as Organization)?.value?.tags ?? []).slice().reverse(),
+        )
+        .with('Organizations', () => {
+          const mappedTags = (entity as Organization[])
+            .map((e) => e.value?.tags)
+            .reverse()
+            .flat()
+            .filter((e) => Boolean(e));
 
-        return new Set(mappedTags.map((tag) => tag?.name));
-      })
-      .otherwise(() => new Set([]));
-  }, []);
+          return mappedTags;
+        })
+        .otherwise(() => []),
+    [],
+  );
 
-  const sortedTags = store.tags
-    ?.getByEntityType(EntityType.Organization)
-    .filter((e) => !!e.value.name)
-    .sort((a, b) => {
-      const aInOrg = orgTags.has(a.value.name);
-      const bInOrg = orgTags.has(b.value.name);
+  const allTags = store.tags
+    .getByEntityType(EntityType.Organization)
+    .map((s) => s.value);
 
-      if (aInOrg && !bInOrg) return -1;
-      if (!aInOrg && bInOrg) return 1;
-
-      return 0;
-    });
+  const uniqueTags = unionBy(newTags, selectedTags, allTags, 'metadata.id');
 
   useModKey('Enter', () => {
     store.ui.commandMenu.setOpen(false);
   });
 
-  const filteredTags = sortedTags?.filter((tag) => {
-    return (
-      tag.value.entityType === EntityType.Organization &&
-      tag.value.name.toLowerCase().includes(search.toLowerCase())
-    );
+  const filteredTags = uniqueTags?.filter((tag) => {
+    return tag?.name.toLowerCase().includes(search.toLowerCase());
   });
 
   return (
@@ -185,9 +177,6 @@ export const ChangeTags = observer(() => {
         onKeyDownCapture={(e) => {
           if (e.metaKey && e.key === 'Enter') {
             store.ui.commandMenu.setOpen(false);
-          } else {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            handleSelect(search as any);
           }
         }}
       />
@@ -195,13 +184,11 @@ export const ChangeTags = observer(() => {
         <Command.List>
           {filteredTags?.map((tag) => (
             <CommandItem
-              key={tag.id}
+              key={tag?.metadata.id}
+              rightAccessory={newSelectedTags.has(tag?.name) ? <Check /> : null}
               onSelect={() => {
-                handleSelect(tag.value);
+                handleSelect(tag);
               }}
-              rightAccessory={
-                newSelectedTags.has(tag.value.name) ? <Check /> : null
-              }
               onKeyDown={(e) => {
                 if (e.metaKey && e.key === 'Enter') {
                   e.stopPropagation();
@@ -212,13 +199,15 @@ export const ChangeTags = observer(() => {
                 }
               }}
             >
-              {tag.value.name}
+              {tag?.name}
             </CommandItem>
           ))}
           {search && (
             <CommandItem
               leftAccessory={<Plus />}
-              onSelect={() => handleCreateOption(search)}
+              onSelect={() => {
+                handleCreateOption(search);
+              }}
             >
               <span className='text-gray-700 ml-1'>Create new tag:</span>
               <span className='text-gray-500 ml-1'>{search}</span>

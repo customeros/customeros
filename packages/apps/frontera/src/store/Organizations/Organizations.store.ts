@@ -20,6 +20,7 @@ import {
 
 import type { SaveOrganizationMutationVariables } from './__service__/saveOrganization.generated';
 
+import { TeamViews } from './__views__/Team.view';
 import { CustomView } from './__views__/Custom.view';
 import { TargetsView } from './__views__/Targets.view';
 import { CustomersView } from './__views__/Customers.view';
@@ -43,6 +44,7 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
     new TargetsView(this);
     new AllOrganizationsView(this);
     new CustomView(this);
+    new TeamViews(this);
   }
 
   @computed

@@ -2213,6 +2213,24 @@ export type Mailbox = {
   userId?: Maybe<Scalars['ID']['output']>;
 };
 
+export type MailstackDomain = {
+  __typename?: 'MailstackDomain';
+  domain: Scalars['String']['output'];
+  status: MailstackStatus;
+};
+
+export type MailstackMailbox = {
+  __typename?: 'MailstackMailbox';
+  mailbox: Scalars['String']['output'];
+  status: MailstackStatus;
+};
+
+export enum MailstackStatus {
+  Completed = 'COMPLETED',
+  Failed = 'FAILED',
+  Pending = 'PENDING',
+}
+
 export enum Market {
   B2B = 'B2B',
   B2C = 'B2C',
@@ -2428,7 +2446,8 @@ export type Mutation = {
   logEntry_RemoveTag: Scalars['ID']['output'];
   logEntry_ResetTags: Scalars['ID']['output'];
   logEntry_Update: Scalars['ID']['output'];
-  mailstack_BuyDomainWithMailboxes: Array<Scalars['String']['output']>;
+  mailstack_RegisterBuyDomainsWithMailboxes: RegisterBuyDomainWithMailboxes;
+  mailstack_RegisteredBuyDomainsWithMailboxesPaid: Result;
   mailstack_SetUser: Result;
   meeting_AddNewLocation: Meeting;
   meeting_AddNote: Meeting;
@@ -2905,9 +2924,14 @@ export type MutationLogEntry_UpdateArgs = {
   input: LogEntryUpdateInput;
 };
 
-export type MutationMailstack_BuyDomainWithMailboxesArgs = {
+export type MutationMailstack_RegisterBuyDomainsWithMailboxesArgs = {
+  amount?: InputMaybe<Scalars['Float']['input']>;
   domains: Array<Scalars['String']['input']>;
   usernames: Array<Scalars['String']['input']>;
+};
+
+export type MutationMailstack_RegisteredBuyDomainsWithMailboxesPaidArgs = {
+  id: Scalars['String']['input'];
 };
 
 export type MutationMailstack_SetUserArgs = {
@@ -4041,6 +4065,7 @@ export type Query = {
   mailstack_DomainPurchaseSuggestions: Array<Scalars['String']['output']>;
   mailstack_Domains: Array<Scalars['String']['output']>;
   mailstack_Mailboxes: Array<Mailbox>;
+  mailstack_RegisteredBuyDomainsWithMailboxes: Array<RegisteredBuyDomainWithMailboxes>;
   mailstack_UniqueUsernames: Array<Scalars['String']['output']>;
   meeting: Meeting;
   opportunities_LinkedToOrganizations: OpportunityPage;
@@ -4311,6 +4336,29 @@ export type QueryUsersArgs = {
 
 export type QueryWorkflow_ByTypeArgs = {
   workflowType: WorkflowType;
+};
+
+export type RegisterBuyDomainWithMailboxes = {
+  __typename?: 'RegisterBuyDomainWithMailboxes';
+  clientSecret: Scalars['String']['output'];
+  id: Scalars['String']['output'];
+  status: RegisterMailstackStatus;
+};
+
+export enum RegisterMailstackStatus {
+  AwaitingPayment = 'AWAITING_PAYMENT',
+  Completed = 'COMPLETED',
+  Failed = 'FAILED',
+  Pending = 'PENDING',
+}
+
+export type RegisteredBuyDomainWithMailboxes = {
+  __typename?: 'RegisteredBuyDomainWithMailboxes';
+  createdAt: Scalars['Time']['output'];
+  domain: MailstackDomain;
+  id: Scalars['String']['output'];
+  mailboxes: Array<MailstackMailbox>;
+  status: Scalars['String']['output'];
 };
 
 export type Reminder = MetadataInterface & {

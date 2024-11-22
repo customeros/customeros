@@ -1,6 +1,7 @@
 import { useParams } from 'react-router-dom';
 import { useRef, useMemo, useState, useEffect } from 'react';
 
+import set from 'lodash/set';
 import { observer } from 'mobx-react-lite';
 import { motion, Variants } from 'framer-motion';
 import { ContractStore } from '@store/Contracts/Contract.store.ts';
@@ -131,8 +132,7 @@ export const ContractDetailsModal = observer(
         { mutate: false },
       );
 
-      const organization = organizationStore?.value;
-      const contracts = organization?.contracts || [];
+      const contracts = organizationStore?.contracts || [];
 
       const totalArr = contracts.reduce(
         (acc, contract) => {
@@ -157,20 +157,20 @@ export const ContractDetailsModal = observer(
         { maxArrForecast: 0, arrForecast: 0 },
       );
 
-      organizationStore?.update(
-        (prev) => ({
-          ...prev,
-          accountDetails: {
-            ...prev.accountDetails,
-            renewalSummary: {
-              ...prev?.accountDetails?.renewalSummary,
-              arrForecast: totalArr.arrForecast,
-              maxArrForecast: totalArr.maxArrForecast,
-            },
-          },
-        }),
-        { mutate: false },
+      organizationStore?.draft();
+
+      set(
+        organizationStore!.value,
+        'accountDetails.renewalSummary.arrForecast',
+        totalArr?.arrForecast,
       );
+      set(
+        organizationStore!.value,
+        'accountDetails.renewalSummary.maxArrForecast',
+        totalArr.maxArrForecast,
+      );
+
+      organizationStore?.commit();
     };
 
     const handleCloseModal = () => {

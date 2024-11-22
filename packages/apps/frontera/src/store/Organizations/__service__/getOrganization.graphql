@@ -36,6 +36,8 @@ query Organization($id: ID!) {
     isCustomer
     logo
     icon
+    notes
+    hide
     relationship
     leadSource
     referenceId

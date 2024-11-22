@@ -10,9 +10,8 @@ query getOrganizations(
   ) {
     content {
       name
-      note
       notes
-
+      hide
       metadata {
         id
         created
