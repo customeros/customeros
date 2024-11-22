@@ -1,0 +1,14 @@
+query GetRegisteredBuyDomainsWithMailboxes {
+  mailstack_RegisteredBuyDomainsWithMailboxes {
+    id
+    domain {
+      domain
+      status
+    }
+    createdAt
+    mailboxes {
+      mailbox
+      status
+    }
+  }
+}

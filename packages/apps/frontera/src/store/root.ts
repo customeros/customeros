@@ -17,6 +17,7 @@ import { SessionStore } from './Session/Session.store';
 import { SettingsStore } from './Settings/Settings.store';
 import { InvoicesStore } from './Invoices/Invoices.store';
 import { ContactsStore } from './Contacts/Contacts.store';
+import { MailboxesStore } from './Settings/Mailboxes.store';
 import { ContractsStore } from './Contracts/Contracts.store';
 import { RemindersStore } from './Reminders/Reminders.store';
 import { WorkFlowsStore } from './WorkFlows/WorkFlows.store';
@@ -58,6 +59,7 @@ export class RootStore {
   timelineEvents: TimelineEventsStore;
   contractLineItems: ContractLineItemsStore;
   flowEmailVariables: FlowEmailVariablesStore;
+  mailboxes: MailboxesStore;
   externalSystemInstances: ExternalSystemInstancesStore;
 
   constructor(private transport: Transport, demoMode: boolean = false) {
@@ -75,6 +77,7 @@ export class RootStore {
     this.flows = new FlowsStore(this, this.transport);
     this.session = new SessionStore(this, this.transport);
     this.settings = new SettingsStore(this, this.transport);
+    this.mailboxes = new MailboxesStore(this, this.transport);
     this.invoices = new InvoicesStore(this, this.transport);
     this.contacts = new ContactsStore(this, this.transport);
     this.contracts = new ContractsStore(this, this.transport);
@@ -123,6 +126,8 @@ export class RootStore {
       this.globalCache.bootstrap(),
       this.settings.bootstrap(),
       this.customFields.bootstrap(),
+      this.mailboxes.bootstrap(),
+      // this.organizations.bootstrapStream(),
       this.organizations.bootstrap(),
       this.tags.bootstrap(),
       this.opportunities.bootstrap(),

@@ -1,11 +1,13 @@
 import { useState } from 'react';
 
 import _ from 'lodash';
+import { observer } from 'mobx-react-lite';
 import { useLocalStorage } from 'usehooks-ts';
 
 import { Input } from '@ui/form/Input';
 import { Button } from '@ui/form/Button/Button';
 import { IconButton } from '@ui/form/IconButton';
+import { useStore } from '@shared/hooks/useStore';
 import { SearchSm } from '@ui/media/icons/SearchSm';
 import { InfoCircle } from '@ui/media/icons/InfoCircle';
 import { RefreshCw01 } from '@ui/media/icons/RefreshCw01';
@@ -17,7 +19,8 @@ import {
   CardContent,
 } from '@ui/presentation/Card/Card';
 
-export const AddDomainsCard = () => {
+export const AddDomainsCard = observer(() => {
+  const store = useStore();
   const [brandName, setBrandName] = useState('');
   const [domainVariations, setDomainVariations] = useState<string[]>([]);
   const [isHovered, setIsHovered] = useState<number | null>(null);
@@ -31,41 +34,17 @@ export const AddDomainsCard = () => {
   const [_selectedAdditionalDomains, setSelectedAdditionalDomains] =
     useLocalStorage<string[]>('selectedAdditionalDomains', []);
 
-  function generateDomainVariations(baseName: string) {
-    if (!baseName) return [];
-    const variations = [
-      `get${baseName}`,
-      `${baseName}hq`,
-      `${baseName}shop`,
-      `try${baseName}`,
-      `${baseName}app`,
-      `join${baseName}`,
-      `${baseName}online`,
-      `${baseName}solutions`,
-      `${baseName}platform`,
-      `${baseName}labs`,
-      `${baseName}store`,
-      `my${baseName}`,
-      `${baseName}tech`,
-      `go${baseName}`,
-      `${baseName}systems`,
-      `${baseName}now`,
-      `${baseName}digital`,
-      `${baseName}inc`,
-      `${baseName}software`,
-      `${baseName}cloud`,
-    ].filter((item, i) => item !== _storedBrandName[i]);
-
-    return variations.map((variation) => `${variation}.com`);
-  }
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setBrandName(e.target.value);
   };
 
-  const handleInputBlur = () => {
+  const handleInputBlur = async () => {
     if (brandName.trim() !== '') {
-      setDomainVariations(generateDomainVariations(brandName));
+      const domainSuggestions = await store.mailboxes.getDomainsSuggestions(
+        brandName,
+      );
+
+      setDomainVariations(domainSuggestions || []);
       setShowSecondHalf(false);
     }
   };
@@ -161,4 +140,4 @@ export const AddDomainsCard = () => {
       </CardContent>
     </Card>
   );
-};
+});

@@ -11,7 +11,11 @@ const formatNumberWithComma = (num: number): string => {
   return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 };
 
-export const CheckoutCard = () => {
+interface CheckoutCardProps {
+  onCheckoutClick: (isCheckedOut: boolean) => void;
+}
+
+export const CheckoutCard = ({ onCheckoutClick }: CheckoutCardProps) => {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [storedBrandName, _setStoredBrandName] = useLocalStorage<string[]>(
@@ -30,10 +34,14 @@ export const CheckoutCard = () => {
   );
 
   const handlePaymentView = () => {
-    const params = new URLSearchParams(searchParams.toString() ?? '');
+    onCheckoutClick(true);
 
-    params.set('checkout', 'mailboxes');
-    setSearchParams(params.toString());
+    if (storeUserName.length > 1) {
+      const params = new URLSearchParams(searchParams.toString() ?? '');
+
+      params.set('checkout', 'mailboxes');
+      setSearchParams(params.toString());
+    }
   };
 
   const noOfMailboxes =

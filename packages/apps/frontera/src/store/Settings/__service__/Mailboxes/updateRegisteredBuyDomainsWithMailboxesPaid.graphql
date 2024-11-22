@@ -1,0 +1,5 @@
+mutation updateRegisteredBuyDomainsWithMailboxesPaid($id: String!) {
+  mailstack_RegisteredBuyDomainsWithMailboxesPaid(id: $id) {
+    result
+  }
+}

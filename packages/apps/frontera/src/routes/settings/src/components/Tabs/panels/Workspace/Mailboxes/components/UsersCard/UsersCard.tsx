@@ -7,14 +7,18 @@ import { IconButton } from '@ui/form/IconButton';
 import { InfoCircle } from '@ui/media/icons/InfoCircle';
 import { Card, CardHeader, CardContent } from '@ui/presentation/Card/Card';
 
-export const UsersCard = () => {
-  const [user1, setUser1] = useState('');
-  const [user2, setUser2] = useState('');
+interface UsersCardProps {
+  checkout: boolean;
+}
+
+export const UsersCard = ({ checkout }: UsersCardProps) => {
   const [userName, setUserName] = useLocalStorage<string[]>('userName', []);
   const [storedBrandName, _setStoredBrandName] = useLocalStorage<string[]>(
     'brandName',
     [],
   );
+  const [user1, setUser1] = useState<string>('');
+  const [user2, setUser2] = useState<string>('');
 
   return (
     storedBrandName.length > 0 && (
@@ -41,8 +45,12 @@ export const UsersCard = () => {
             className='w-full'
             value={userName[0]}
             placeholder='E.g. john'
-            onChange={(e) => setUser1(e.target.value)}
+            required={checkout && user1.length === 0}
+            onChange={(e) => {
+              setUser1(e.target.value.trim());
+            }}
             onBlur={() => {
+              if (user1?.length === 0) return;
               const foundIndex = userName.findIndex((item) => item === user1);
 
               if (foundIndex === -1) {
@@ -50,15 +58,23 @@ export const UsersCard = () => {
               }
             }}
           />
-          <span className='text-[12px] ml-[9px] text-error-400'>error</span>
+          {checkout && user1?.length === 0 && (
+            <span className='text-[12px] ml-[9px] text-error-400'>
+              Houston, we have a blank...
+            </span>
+          )}
           <Input
             size='sm'
             variant='outline'
             value={userName[1]}
             placeholder='E.g. melinda'
             className='w-full mt-[2px]'
-            onChange={(e) => setUser2(e.target.value)}
+            required={checkout && user2.length === 0 && user1.length === 0}
+            onChange={(e) => {
+              setUser2(e.target.value.trim());
+            }}
             onBlur={() => {
+              if (user2?.length === 0) return;
               const foundIndex = userName.findIndex((item) => item === user2);
 
               if (foundIndex === -1) {

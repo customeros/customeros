@@ -14,7 +14,8 @@ import { CheckoutCard } from './components/CheckoutCard/CheckoutCard';
 import { AdditionalDomainsCard } from './components/AdditionalDomainsCard';
 
 export const Mailboxes = () => {
-  const [isUpdated, setIsUpdated] = useState(true);
+  const [isUpdated, setIsUpdated] = useState<boolean>(true);
+  const [checkout, setCheckout] = useState<boolean>(false);
   const [storedBrandName] = useLocalStorage<string[]>('brandName', []);
   const [searchParams] = useSearchParams();
 
@@ -42,7 +43,7 @@ export const Mailboxes = () => {
               </div>
               <div className='space-y-4'>
                 <AddDomainsCard />
-                <UsersCard />
+                <UsersCard checkout={checkout} />
               </div>
             </div>
             {noOfDomains > 0 && (
@@ -51,7 +52,9 @@ export const Mailboxes = () => {
                 <div className='flex flex-col gap-2'>
                   <BaseBoundleCard />
                   {noOfDomains === 5 && <AdditionalDomainsCard />}
-                  {noOfDomains > 0 && <CheckoutCard />}
+                  {noOfDomains > 0 && (
+                    <CheckoutCard onCheckoutClick={() => setCheckout(true)} />
+                  )}
                 </div>
               </div>
             )}

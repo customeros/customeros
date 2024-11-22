@@ -1,0 +1,15 @@
+mutation RegisterBuyDomainsWithMailboxes(
+  $domains: [String!]!
+  $usernames: [String!]!
+  $amount: Float
+) {
+  mailstack_RegisterBuyDomainsWithMailboxes(
+    domains: $domains
+    usernames: $usernames
+    amount: $amount
+  ) {
+    id
+    clientSecret
+    status
+  }
+}
