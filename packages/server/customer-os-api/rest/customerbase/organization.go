@@ -15,7 +15,6 @@ import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
-	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
@@ -58,7 +57,14 @@ func CreateOrganization(services *service.Services) gin.HandlerFunc {
 			return
 		}
 
-		if err := validateOrganizationRequest(c, ctx, span, services, &request); err != nil {
+		httpContext := rest.HTTPContext{
+			GinContext:     c,
+			ServiceContext: &ctx,
+			Span:           span,
+			Services:       services,
+			Tenant:         tenant,
+		}
+		if err := validateOrganizationRequest(httpContext, &request); err != nil {
 			return
 		}
 
@@ -109,7 +115,15 @@ func GetOrganization(services *service.Services) gin.HandlerFunc {
 			return
 		}
 
-		result, statusCode := retrieveOrganization(c, ctx, span, services, orgID)
+		httpContext := rest.HTTPContext{
+			GinContext:     c,
+			ServiceContext: &ctx,
+			Span:           span,
+			Services:       services,
+			Tenant:         tenant,
+		}
+
+		result, statusCode := retrieveOrganization(httpContext, orgID)
 		c.JSON(statusCode, result)
 	}
 }
@@ -140,47 +154,55 @@ func SetPrimaryExternalSystemId(services *service.Services) gin.HandlerFunc {
 			return
 		}
 
-		result, statusCode := handleExternalSystemUpdate(c, ctx, span, services)
+		httpContext := rest.HTTPContext{
+			GinContext:     c,
+			ServiceContext: &ctx,
+			Span:           span,
+			Services:       services,
+			Tenant:         tenant,
+		}
+
+		result, statusCode := handleExternalSystemUpdate(httpContext)
 		c.JSON(statusCode, result)
 	}
 }
 
-func validateOrganizationRequest(c *gin.Context, ctx context.Context, span opentracing.Span, services *service.Services, request *CreateOrganizationRequest) error {
+func validateOrganizationRequest(ctx rest.HTTPContext, request *CreateOrganizationRequest) error {
 	if request.Name == "" && request.CustomId == "" && request.Website == "" && request.LinkedinUrl == "" {
-		rest.SendError(c, http.StatusBadRequest, "Missing organization input fields")
+		rest.SendError(ctx.GinContext, http.StatusBadRequest, "Missing organization input fields")
 		return errors.New("missing required fields")
 	}
 
 	// Validate website domain
-	websiteDomain, _ := services.CommonServices.DomainService.GetPrimaryDomainForOrganizationWebsite(ctx, request.Website)
+	websiteDomain, _ := ctx.Services.CommonServices.DomainService.GetPrimaryDomainForOrganizationWebsite(*ctx.ServiceContext, request.Website)
 	if websiteDomain != "" {
-		if exists, err := checkOrganizationExistsByDomain(ctx, services, websiteDomain); err != nil {
-			rest.SendError(c, http.StatusInternalServerError, "Failed to check organization domain")
+		if exists, err := checkOrganizationExistsByDomain(*ctx.ServiceContext, ctx.Services, websiteDomain); err != nil {
+			rest.SendError(ctx.GinContext, http.StatusInternalServerError, "Failed to check organization domain")
 			return err
 		} else if exists {
-			rest.SendError(c, http.StatusConflict, "Organization already exists with given domain")
+			rest.SendError(ctx.GinContext, http.StatusConflict, "Organization already exists with given domain")
 			return errors.New("organization exists")
 		}
 	}
 
 	// Validate custom ID
 	if request.CustomId != "" {
-		if exists, err := checkOrganizationExistsByCustomId(ctx, services, request.CustomId); err != nil {
-			rest.SendError(c, http.StatusInternalServerError, "Failed to check organization custom id")
+		if exists, err := checkOrganizationExistsByCustomId(*ctx.ServiceContext, ctx.Services, request.CustomId); err != nil {
+			rest.SendError(ctx.GinContext, http.StatusInternalServerError, "Failed to check organization custom id")
 			return err
 		} else if exists {
-			rest.SendError(c, http.StatusConflict, "Organization already exists with given custom id")
+			rest.SendError(ctx.GinContext, http.StatusConflict, "Organization already exists with given custom id")
 			return errors.New("organization exists")
 		}
 	}
 
 	// Validate LinkedIn URL
 	if request.LinkedinUrl != "" {
-		if exists, err := checkOrganizationExistsBySocialUrl(ctx, services, request.LinkedinUrl); err != nil {
-			rest.SendError(c, http.StatusInternalServerError, "Failed to check organization linkedin url")
+		if exists, err := checkOrganizationExistsBySocialUrl(*ctx.ServiceContext, ctx.Services, request.LinkedinUrl); err != nil {
+			rest.SendError(ctx.GinContext, http.StatusInternalServerError, "Failed to check organization linkedin url")
 			return err
 		} else if exists {
-			rest.SendError(c, http.StatusConflict, "Organization already exists with given linkedin url")
+			rest.SendError(ctx.GinContext, http.StatusConflict, "Organization already exists with given linkedin url")
 			return errors.New("organization exists")
 		}
 	}
@@ -230,10 +252,10 @@ func determineOrganizationStage(relationship model.OrganizationRelationship) *en
 	return utils.ToPtr(enummapper.MapStageFromModel(stage))
 }
 
-func retrieveOrganization(c *gin.Context, ctx context.Context, span opentracing.Span, services *service.Services, orgID string) (OrganizationResult, int) {
-	organizationDbNode, err := services.Repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByIdOrCustomerOsId(ctx, common.GetTenantFromContext(ctx), orgID)
+func retrieveOrganization(ctx rest.HTTPContext, orgID string) (OrganizationResult, int) {
+	organizationDbNode, err := ctx.Services.Repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByIdOrCustomerOsId(*ctx.ServiceContext, common.GetTenantFromContext(*ctx.ServiceContext), orgID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(ctx.Span, err)
 		return OrganizationResult{Status: "error", Message: "Organization not found"}, http.StatusNotFound
 	}
 	if organizationDbNode == nil {
@@ -245,10 +267,10 @@ func retrieveOrganization(c *gin.Context, ctx context.Context, span opentracing.
 
 	// Fetch additional data
 	partialSuccess := false
-	if err := enrichOrganizationWithDomains(ctx, services, &result, organizationEntity.ID); err != nil {
+	if err := enrichOrganizationWithDomains(*ctx.ServiceContext, ctx.Services, &result, organizationEntity.ID); err != nil {
 		partialSuccess = true
 	}
-	if err := enrichOrganizationWithExternalLinks(ctx, services, &result, organizationEntity.ID); err != nil {
+	if err := enrichOrganizationWithExternalLinks(*ctx.ServiceContext, ctx.Services, &result, organizationEntity.ID); err != nil {
 		partialSuccess = true
 	}
 
@@ -263,17 +285,17 @@ func retrieveOrganization(c *gin.Context, ctx context.Context, span opentracing.
 	return result, http.StatusOK
 }
 
-func handleExternalSystemUpdate(c *gin.Context, ctx context.Context, span opentracing.Span, services *service.Services) (ExternalSystemResult, int) {
-	orgId := c.Param("id")
-	externalSystem := strings.ToLower(c.Param("externalSystem"))
+func handleExternalSystemUpdate(ctx rest.HTTPContext) (ExternalSystemResult, int) {
+	orgId := ctx.GinContext.Param("id")
+	externalSystem := strings.ToLower(ctx.GinContext.Param("externalSystem"))
 
 	var request SetPrimaryExternalSystemIdRequest
-	if err := c.ShouldBindJSON(&request); err != nil {
+	if err := ctx.GinContext.ShouldBindJSON(&request); err != nil {
 		return ExternalSystemResult{Status: "error", Message: "Invalid request body"}, http.StatusBadRequest
 	}
 
 	// Validate organization exists
-	if exists, err := validateOrganizationExists(ctx, services, orgId); err != nil {
+	if exists, err := validateOrganizationExists(*ctx.ServiceContext, ctx.Services, orgId); err != nil {
 		return ExternalSystemResult{Status: "error", Message: "Failed to validate organization"}, http.StatusInternalServerError
 	} else if !exists {
 		return ExternalSystemResult{Status: "error", Message: "Organization not found"}, http.StatusNotFound
@@ -285,7 +307,7 @@ func handleExternalSystemUpdate(c *gin.Context, ctx context.Context, span opentr
 	}
 
 	// Set primary ID
-	err := services.CommonServices.ExternalSystemService.SetPrimaryExternalId(ctx, externalSystem, request.ExternalId,
+	err := ctx.Services.CommonServices.ExternalSystemService.SetPrimaryExternalId(*ctx.ServiceContext, externalSystem, request.ExternalId,
 		commonservice.LinkWith{
 			Type: commonModel.ORGANIZATION,
 			Id:   orgId,
