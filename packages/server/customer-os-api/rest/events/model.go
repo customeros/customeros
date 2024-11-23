@@ -5,8 +5,18 @@ import (
 	"time"
 )
 
+type Event struct {
+	ID             string
+	Content        string
+	EventTimestamp time.Time
+	Organizations  []string
+	Users          []string
+	Contacts       []string
+	Source         string
+}
+
 // FathomAISummaryZapier represents the webhook payload from Fathom via Zapier
-type FathomAISummaryZapier struct {
+type RawFathomAISummaryZapier struct {
 	// AI Summary fields
 	AISummaryHTMLFormatted             string `json:"ai_summary_html_formatted"`
 	AISummaryPlaintextFormatted        string `json:"ai_summary_plaintext_formatted"`
@@ -41,17 +51,17 @@ type FathomAISummaryZapier struct {
 }
 
 // Helper method to check if meeting has external participants
-func (f *FathomAISummaryZapier) HasExternalParticipants() bool {
+func (f *RawFathomAISummaryZapier) HasExternalParticipants() bool {
 	return strings.ToLower(f.HasExternal) == "true"
 }
 
 // Helper method to get meeting duration in minutes
-func (f *FathomAISummaryZapier) GetDurationMinutes() float64 {
+func (f *RawFathomAISummaryZapier) GetDurationMinutes() float64 {
 	return f.RecordingDuration
 }
 
 // Helper method to get external domains
-func (f *FathomAISummaryZapier) GetExternalDomains() []string {
+func (f *RawFathomAISummaryZapier) GetExternalDomains() []string {
 	if f.MeetingExternalDomains == "" {
 		return nil
 	}
@@ -59,7 +69,7 @@ func (f *FathomAISummaryZapier) GetExternalDomains() []string {
 }
 
 // Helper method to get invitee emails
-func (f *FathomAISummaryZapier) GetInviteeEmails() []string {
+func (f *RawFathomAISummaryZapier) GetInviteeEmails() []string {
 	if f.MeetingInviteeEmails == "" {
 		return nil
 	}
