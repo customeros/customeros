@@ -3,8 +3,6 @@ package customerbase
 import (
 	"context"
 	"encoding/csv"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"io"
 	"net/http"
 	"regexp"
@@ -282,7 +280,7 @@ func findExistingContact(c *gin.Context, ctx context.Context, span opentracing.S
 }
 
 func createNewContact(c *gin.Context, ctx context.Context, span opentracing.Span, services *service.Services, linkedInURL string) string {
-	contactId, err := services.CommonServices.ContactService.Save(ctx, nil, data_fields.ContactFields{LinkedInUrl: utils.StringPtr(linkedInURL)}, false)
+	contactId, err := services.CommonServices.ContactService.CreateContactByLinkedIn(ctx, linkedInURL)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to save contact"))
 		return ""
