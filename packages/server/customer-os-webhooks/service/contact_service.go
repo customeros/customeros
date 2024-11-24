@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
@@ -12,7 +13,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
-	neo4jrepo "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/model"
@@ -190,28 +190,27 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 		}
 		if createContact {
 			contactId, err = s.services.CommonServices.ContactService.Save(ctx, nil,
-				neo4jrepo.ContactFields{
-					Name:            contactInput.Name,
-					FirstName:       contactInput.FirstName,
-					LastName:        contactInput.LastName,
-					Description:     contactInput.Description,
-					Timezone:        contactInput.Timezone,
-					ProfilePhotoUrl: contactInput.ProfilePhotoUrl,
-					CreatedAt:       utils.TimeOrNowFromPtr(contactInput.CreatedAt),
-					SourceFields: neo4jmodel.SourceFields{
-						Source:    contactInput.ExternalSystem,
-						AppSource: appSource,
+				data_fields.ContactFields{
+					Name:            utils.StringPtr(contactInput.Name),
+					FirstName:       utils.StringPtr(contactInput.FirstName),
+					LastName:        utils.StringPtr(contactInput.LastName),
+					Description:     utils.StringPtr(contactInput.Description),
+					Timezone:        utils.StringPtr(contactInput.Timezone),
+					ProfilePhotoUrl: utils.StringPtr(contactInput.ProfilePhotoUrl),
+					CreatedAt:       contactInput.CreatedAt,
+					Source:          utils.StringPtr(contactInput.ExternalSystem),
+					AppSource:       utils.StringPtr(appSource),
+					ExternalSystem: &neo4jmodel.ExternalSystem{
+						ExternalSystemId: contactInput.ExternalSystem,
+						ExternalId:       contactInput.ExternalId,
+						ExternalUrl:      contactInput.ExternalUrl,
+						ExternalIdSecond: contactInput.ExternalIdSecond,
+						ExternalSource:   contactInput.ExternalSourceEntity,
+						SyncDate:         &syncDate,
 					},
 				},
-				"",
-				neo4jmodel.ExternalSystem{
-					ExternalSystemId: contactInput.ExternalSystem,
-					ExternalId:       contactInput.ExternalId,
-					ExternalUrl:      contactInput.ExternalUrl,
-					ExternalIdSecond: contactInput.ExternalIdSecond,
-					ExternalSource:   contactInput.ExternalSourceEntity,
-					SyncDate:         &syncDate,
-				})
+				true,
+			)
 			if err != nil {
 				failedSync = true
 				tracing.TraceErr(span, err)
@@ -229,47 +228,37 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 				reason = fmt.Sprintf("failed fetching contact with id %s for tenant %s :%s", contactId, tenant, err.Error())
 				s.log.Error(reason)
 			}
-			contactFields := neo4jrepo.ContactFields{
-				SourceFields: neo4jmodel.SourceFields{
-					Source:    contactInput.ExternalSystem,
-					AppSource: appSource,
-				},
+			contactFields := data_fields.ContactFields{
+				Source:    utils.StringPtr(contactInput.ExternalSystem),
+				AppSource: utils.StringPtr(appSource),
 			}
 			if contactEntity.Name == "" && contactInput.Name != "" {
-				contactFields.Name = contactInput.Name
-				contactFields.UpdateName = true
+				contactFields.Name = utils.StringPtr(contactInput.Name)
 			}
 			if contactEntity.FirstName == "" && contactInput.FirstName != "" {
-				contactFields.FirstName = contactInput.FirstName
-				contactFields.UpdateFirstName = true
+				contactFields.FirstName = utils.StringPtr(contactInput.FirstName)
 			}
 			if contactEntity.LastName == "" && contactInput.LastName != "" {
-				contactFields.LastName = contactInput.LastName
-				contactFields.UpdateLastName = true
+				contactFields.LastName = utils.StringPtr(contactInput.LastName)
 			}
 			if contactEntity.Description == "" && contactInput.Description != "" {
-				contactFields.Description = contactInput.Description
-				contactFields.UpdateDescription = true
+				contactFields.Description = utils.StringPtr(contactInput.Description)
 			}
 			if contactEntity.Timezone == "" && contactInput.Timezone != "" {
-				contactFields.Timezone = contactInput.Timezone
-				contactFields.UpdateTimezone = true
+				contactFields.Timezone = utils.StringPtr(contactInput.Timezone)
 			}
 			if contactEntity.ProfilePhotoUrl == "" && contactInput.ProfilePhotoUrl != "" {
-				contactFields.ProfilePhotoUrl = contactInput.ProfilePhotoUrl
-				contactFields.UpdateProfilePhotoUrl = true
+				contactFields.ProfilePhotoUrl = utils.StringPtr(contactInput.ProfilePhotoUrl)
 			}
-			_, err = s.services.CommonServices.ContactService.Save(ctx, &contactId,
-				contactFields,
-				"",
-				neo4jmodel.ExternalSystem{
-					ExternalSystemId: contactInput.ExternalSystem,
-					ExternalId:       contactInput.ExternalId,
-					ExternalUrl:      contactInput.ExternalUrl,
-					ExternalIdSecond: contactInput.ExternalIdSecond,
-					ExternalSource:   contactInput.ExternalSourceEntity,
-					SyncDate:         &syncDate,
-				})
+			contactFields.ExternalSystem = &neo4jmodel.ExternalSystem{
+				ExternalSystemId: contactInput.ExternalSystem,
+				ExternalId:       contactInput.ExternalId,
+				ExternalUrl:      contactInput.ExternalUrl,
+				ExternalIdSecond: contactInput.ExternalIdSecond,
+				ExternalSource:   contactInput.ExternalSourceEntity,
+				SyncDate:         &syncDate,
+			}
+			_, err = s.services.CommonServices.ContactService.Save(ctx, &contactId, contactFields, false)
 			if err != nil {
 				failedSync = true
 				tracing.TraceErr(span, err)

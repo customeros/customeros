@@ -12,8 +12,6 @@ import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
-	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"strings"
@@ -92,7 +90,7 @@ func (s *registrationService) CreateOrganizationAndContact(ctx context.Context, 
 		}
 
 		if contactNode == nil {
-			contactId, err = s.services.CommonServices.ContactService.Save(ctx, nil, repository.ContactFields{}, "", neo4jmodel.ExternalSystem{})
+			contactId, err = s.services.CommonServices.ContactService.Save(ctx, nil, data_fields.ContactFields{}, false)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return nil, nil, err

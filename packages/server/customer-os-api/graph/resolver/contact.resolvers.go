@@ -26,7 +26,6 @@ import (
 	commonTracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	postgresrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	opentracing "github.com/opentracing/opentracing-go"
@@ -374,7 +373,7 @@ func (r *mutationResolver) ContactUpdate(ctx context.Context, input model.Contac
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "request.input", input)
 
-	contactId, err := r.Services.CommonServices.ContactService.Save(ctx, utils.StringPtr(input.ID), mapper.MapContactUpdateInputToContactFields(input), "", neo4jmodel.ExternalSystem{})
+	contactId, err := r.Services.CommonServices.ContactService.Save(ctx, utils.StringPtr(input.ID), mapper.MapContactUpdateInputToContactFields(input), false)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to update contact %s", input.ID)

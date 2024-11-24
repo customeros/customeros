@@ -3,6 +3,8 @@ package customerbase
 import (
 	"context"
 	"encoding/csv"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"io"
 	"net/http"
 	"regexp"
@@ -14,8 +16,6 @@ import (
 	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
-	neo4jrepo "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -282,7 +282,7 @@ func findExistingContact(c *gin.Context, ctx context.Context, span opentracing.S
 }
 
 func createNewContact(c *gin.Context, ctx context.Context, span opentracing.Span, services *service.Services, linkedInURL string) string {
-	contactId, err := services.CommonServices.ContactService.Save(ctx, nil, neo4jrepo.ContactFields{}, linkedInURL, neo4jmodel.ExternalSystem{})
+	contactId, err := services.CommonServices.ContactService.Save(ctx, nil, data_fields.ContactFields{LinkedInUrl: utils.StringPtr(linkedInURL)}, false)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to save contact"))
 		return ""

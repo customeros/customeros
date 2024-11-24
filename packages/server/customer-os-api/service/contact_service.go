@@ -8,6 +8,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
@@ -17,7 +18,6 @@ import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
-	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -105,20 +105,19 @@ func (s *contactService) Create(ctx context.Context, contactDetails *ContactCrea
 	}
 
 	contactId, err := s.services.CommonServices.ContactService.Save(ctx, nil,
-		neo4jrepository.ContactFields{
-			SourceFields: neo4jmodel.SourceFields{
-				Source:    string(contactDetails.Source),
-				AppSource: utils.StringFirstNonEmpty(contactDetails.AppSource, constants.AppSourceCustomerOsApi),
-			},
-			FirstName:       contactDetails.ContactEntity.FirstName,
-			LastName:        contactDetails.ContactEntity.LastName,
-			Prefix:          contactDetails.ContactEntity.Prefix,
-			Description:     contactDetails.ContactEntity.Description,
-			ProfilePhotoUrl: contactDetails.ContactEntity.ProfilePhotoUrl,
-			Username:        contactDetails.ContactEntity.Username,
-			Name:            contactDetails.ContactEntity.Name,
-			Timezone:        contactDetails.ContactEntity.Timezone,
-		}, contactDetails.SocialUrl, externalSystem)
+		data_fields.ContactFields{
+			Source:          utils.StringPtr(string(contactDetails.Source)),
+			AppSource:       utils.StringPtr(utils.StringFirstNonEmpty(contactDetails.AppSource, constants.AppSourceCustomerOsApi)),
+			FirstName:       utils.StringPtr(contactDetails.ContactEntity.FirstName),
+			LastName:        utils.StringPtr(contactDetails.ContactEntity.LastName),
+			Prefix:          utils.StringPtr(contactDetails.ContactEntity.Prefix),
+			Description:     utils.StringPtr(contactDetails.ContactEntity.Description),
+			ProfilePhotoUrl: utils.StringPtr(contactDetails.ContactEntity.ProfilePhotoUrl),
+			Username:        utils.StringPtr(contactDetails.ContactEntity.Username),
+			Name:            utils.StringPtr(contactDetails.ContactEntity.Name),
+			Timezone:        utils.StringPtr(contactDetails.ContactEntity.Timezone),
+			LinkedInUrl:     utils.StringPtr(contactDetails.SocialUrl),
+		}, false)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Failed to create contact: %s", err.Error())
@@ -430,16 +429,14 @@ func (s *contactService) CustomerContactCreate(ctx context.Context, data *Custom
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	contactId, err := s.services.CommonServices.ContactService.Save(ctx, nil,
-		neo4jrepository.ContactFields{
-			FirstName:   data.ContactEntity.FirstName,
-			LastName:    data.ContactEntity.LastName,
-			Prefix:      data.ContactEntity.Prefix,
-			Description: data.ContactEntity.Description,
-			SourceFields: neo4jmodel.SourceFields{
-				Source:    string(data.ContactEntity.Source),
-				AppSource: data.ContactEntity.AppSource,
-			},
-		}, "", neo4jmodel.ExternalSystem{})
+		data_fields.ContactFields{
+			FirstName:   utils.StringPtr(data.ContactEntity.FirstName),
+			LastName:    utils.StringPtr(data.ContactEntity.LastName),
+			Prefix:      utils.StringPtr(data.ContactEntity.Prefix),
+			Description: utils.StringPtr(data.ContactEntity.Description),
+			Source:      utils.StringPtr(string(data.ContactEntity.Source)),
+			AppSource:   utils.StringPtr(data.ContactEntity.AppSource),
+		}, false)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
