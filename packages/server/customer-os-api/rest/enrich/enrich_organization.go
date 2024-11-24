@@ -1,3 +1,4 @@
+// todo update all API responses to standard format
 package restenrich
 
 import (
@@ -155,11 +156,7 @@ func EnrichOrganization(services *service.Services) gin.HandlerFunc {
 
 		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {
-			c.JSON(http.StatusUnauthorized,
-				rest.BaseResponse{
-					Status:  "error",
-					Message: "Unknown tenant",
-				})
+			rest.SendError(c, span, http.StatusUnauthorized, rest.ErrUnauthorized)
 			return
 		}
 
@@ -168,13 +165,10 @@ func EnrichOrganization(services *service.Services) gin.HandlerFunc {
 
 		// check linked in or email params are present
 		if strings.TrimSpace(linkedinUrl) == "" && strings.TrimSpace(domain) == "" {
-			c.JSON(http.StatusBadRequest,
-				rest.BaseResponse{
-					Status:  "error",
-					Message: "Missing required parameters linkedinUrl or domain",
-				})
+			rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Missing linkedinUrl or domain"))
 			return
 		}
+
 		span.LogFields(
 			log.String("request.domain", domain),
 			log.String("request.linkedinUrl", linkedinUrl))
@@ -182,19 +176,14 @@ func EnrichOrganization(services *service.Services) gin.HandlerFunc {
 		// Call enrichPerson API
 		enrichOrganizationApiResponse, err := callApiEnrichOrganization(ctx, services, span, linkedinUrl, domain)
 		if err != nil || enrichOrganizationApiResponse.Status == "error" {
-			c.JSON(http.StatusInternalServerError,
-				rest.BaseResponse{
-					Status:  "error",
-					Message: "Internal error",
-				})
+			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer)
 			return
 		}
 		if enrichOrganizationApiResponse.Success == false {
-			c.JSON(http.StatusOK,
-				rest.BaseResponse{
-					Status:  "warning",
-					Message: "Organization not found",
-				})
+			rest.SendError(c, span, http.StatusOK, &rest.ErrorResponse{
+				BaseResponse: rest.BuildBaseResponse(rest.StatusWarning),
+				Message:      "Organization not found",
+			})
 			return
 		}
 		// Compose the response

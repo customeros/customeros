@@ -33,6 +33,10 @@ var (
 		BaseResponse: BuildBaseResponse(StatusError),
 		Message:      "Resource not found",
 	}
+	ErrUnauthorized = &ErrorResponse{
+		BaseResponse: BuildBaseResponse(StatusError),
+		Message:      "Tenant not authorized for this service",
+	}
 	ErrUnsupportedContentType = &ErrorResponse{
 		BaseResponse: BuildBaseResponse(StatusError),
 		Message:      "Unsupported Content-Type",
