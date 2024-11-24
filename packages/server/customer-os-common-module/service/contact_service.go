@@ -24,6 +24,7 @@ import (
 
 type ContactService interface {
 	Save(ctx context.Context, id *string, contactFields data_fields.ContactFields, updateOnlyIfEmpty bool) (string, error)
+	CreateContactByLinkedIn(ctx context.Context, linkedInUrl string) (string, error)
 	HideContact(ctx context.Context, contactId string) error
 	ShowContact(ctx context.Context, contactId string) error
 	GetContactById(ctx context.Context, contactId string) (*neo4jentity.ContactEntity, error)
@@ -70,40 +71,6 @@ func (s *contactService) Save(ctx context.Context, id *string, contactFields dat
 	}
 
 	if createFlow {
-		// Reject contact creation if linked-in url is already used by another contact
-		if utils.IfNotNilString(contactFields.LinkedInUrl) != "" {
-			linkedInUrl := utils.IfNotNilString(contactFields.LinkedInUrl)
-			if (neo4jentity.SocialEntity{Url: linkedInUrl}).IsLinkedin() {
-				linkedinUsed, existingContactId, err := s.services.ContactService.CheckContactExistsWithLinkedIn(ctx, linkedInUrl, "", "")
-				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "unable to check contact exists with linkedin"))
-					return "", err
-				}
-				if linkedinUsed {
-					contactEntity, err := s.GetContactById(ctx, existingContactId)
-					if err != nil {
-						tracing.TraceErr(span, errors.Wrap(err, "unable to get contact by id"))
-						return "", err
-					}
-					if contactEntity.Hide {
-						err = s.ShowContact(ctx, existingContactId)
-						if err != nil {
-							tracing.TraceErr(span, errors.Wrap(err, "unable to show contact"))
-							return "", err
-						}
-					} else {
-						// just update contact' updatedAt
-						err = s.services.Neo4jRepositories.CommonWriteRepository.TouchEntity(ctx, nil, tenant, model.NodeLabelContact, existingContactId)
-						if err != nil {
-							tracing.TraceErr(span, errors.Wrap(err, "error on updating contact updatedAt"))
-						}
-						utils.EventCompleted(ctx, tenant, model.CONTACT.String(), contactId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
-					}
-					return existingContactId, nil
-				}
-			}
-		}
-
 		// generate id
 		contactId, err = s.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelContact)
 		if err != nil {
@@ -181,25 +148,6 @@ func (s *contactService) Save(ctx context.Context, id *string, contactFields dat
 		}
 		if common.GetAppSourceFromContext(ctx) != constants.AppSourceCustomerOsApi {
 			utils.EventCompleted(ctx, tenant, model.CONTACT.String(), contactId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
-		}
-	}
-
-	if createFlow && utils.IfNotNilString(contactFields.LinkedInUrl) != "" {
-		linkedInUrl := utils.IfNotNilString(contactFields.LinkedInUrl)
-		if (neo4jentity.SocialEntity{Url: linkedInUrl}).IsLinkedin() {
-			_, err := s.services.SocialService.AddSocialToEntity(ctx, nil,
-				LinkWith{
-					Id:   contactId,
-					Type: model.CONTACT,
-				},
-				neo4jentity.SocialEntity{
-					Url:       linkedInUrl,
-					Source:    neo4jentity.DecodeDataSource(utils.IfNotNilString(contactFields.Source)),
-					AppSource: utils.IfNotNilString(contactFields.AppSource),
-				})
-			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "failed to merge social with contact"))
-			}
 		}
 	}
 
@@ -435,4 +383,84 @@ func (s *contactService) CheckContactExistsWithEmail(ctx context.Context, email 
 		contactId = contacts[0].Props["id"].(string)
 	}
 	return len(contacts) > 0, contactId, nil
+}
+
+func (s *contactService) CreateContactByLinkedIn(ctx context.Context, linkedInUrl string) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.CreateContactByLinkedIn")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogKV("linkedInUrl", linkedInUrl)
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+
+	// check if linkedInUrl is valid
+	socialEntity := neo4jentity.SocialEntity{Url: linkedInUrl}
+	if !socialEntity.IsLinkedin() {
+		err := errors.New("not a valid linkedin url")
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+
+	// Reject contact creation if linked-in url is already used by another contact
+	if utils.IfNotNilString(linkedInUrl) != "" {
+		if (neo4jentity.SocialEntity{Url: linkedInUrl}).IsLinkedin() {
+			linkedinUsed, existingContactId, err := s.services.ContactService.CheckContactExistsWithLinkedIn(ctx, linkedInUrl, "", "")
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "unable to check contact exists with linkedin"))
+				return "", err
+			}
+			if linkedinUsed {
+				contactEntity, err := s.GetContactById(ctx, existingContactId)
+				if err != nil {
+					tracing.TraceErr(span, errors.Wrap(err, "unable to get contact by id"))
+					return "", err
+				}
+				if contactEntity.Hide {
+					err = s.ShowContact(ctx, existingContactId)
+					if err != nil {
+						tracing.TraceErr(span, errors.Wrap(err, "unable to show contact"))
+						return "", err
+					}
+				} else {
+					// just update contact' updatedAt
+					err = s.services.Neo4jRepositories.CommonWriteRepository.TouchEntity(ctx, nil, tenant, model.NodeLabelContact, existingContactId)
+					if err != nil {
+						tracing.TraceErr(span, errors.Wrap(err, "error on updating contact updatedAt"))
+					}
+					utils.EventCompleted(ctx, tenant, model.CONTACT.String(), existingContactId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
+				}
+				return existingContactId, nil
+			}
+		}
+	}
+
+	createdContactId, err := s.Save(ctx, nil, data_fields.ContactFields{}, false)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to create contact"))
+		return "", err
+	}
+
+	if (neo4jentity.SocialEntity{Url: linkedInUrl}).IsLinkedin() {
+		_, err := s.services.SocialService.AddSocialToEntity(ctx, nil,
+			LinkWith{
+				Id:   createdContactId,
+				Type: model.CONTACT,
+			},
+			neo4jentity.SocialEntity{
+				Url:       linkedInUrl,
+				Source:    neo4jentity.DecodeDataSource(neo4jentity.DataSourceOpenline.String()),
+				AppSource: common.GetAppSourceFromContext(ctx),
+			})
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to merge social with contact"))
+		}
+	}
+
+	return createdContactId, nil
 }

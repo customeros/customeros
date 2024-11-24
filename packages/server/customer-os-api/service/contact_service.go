@@ -103,25 +103,30 @@ func (s *contactService) Create(ctx context.Context, contactDetails *ContactCrea
 			externalSystem.SyncDate = contactDetails.ExternalReference.Relationship.SyncDate
 		}
 	}
+	contactId := ""
+	var err error
 
-	contactId, err := s.services.CommonServices.ContactService.Save(ctx, nil,
-		data_fields.ContactFields{
-			Source:          utils.StringPtr(string(contactDetails.Source)),
-			AppSource:       utils.StringPtr(utils.StringFirstNonEmpty(contactDetails.AppSource, constants.AppSourceCustomerOsApi)),
-			FirstName:       utils.StringPtr(contactDetails.ContactEntity.FirstName),
-			LastName:        utils.StringPtr(contactDetails.ContactEntity.LastName),
-			Prefix:          utils.StringPtr(contactDetails.ContactEntity.Prefix),
-			Description:     utils.StringPtr(contactDetails.ContactEntity.Description),
-			ProfilePhotoUrl: utils.StringPtr(contactDetails.ContactEntity.ProfilePhotoUrl),
-			Username:        utils.StringPtr(contactDetails.ContactEntity.Username),
-			Name:            utils.StringPtr(contactDetails.ContactEntity.Name),
-			Timezone:        utils.StringPtr(contactDetails.ContactEntity.Timezone),
-			LinkedInUrl:     utils.StringPtr(contactDetails.SocialUrl),
-		}, false)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("Failed to create contact: %s", err.Error())
-		return "", err
+	if (neo4jentity.SocialEntity{Url: contactDetails.SocialUrl}).IsLinkedin() {
+		contactId, err = s.services.CommonServices.ContactService.CreateContactByLinkedIn(ctx, contactDetails.SocialUrl)
+	} else {
+		contactId, err = s.services.CommonServices.ContactService.Save(ctx, nil,
+			data_fields.ContactFields{
+				Source:          utils.StringPtr(string(contactDetails.Source)),
+				AppSource:       utils.StringPtr(utils.StringFirstNonEmpty(contactDetails.AppSource, constants.AppSourceCustomerOsApi)),
+				FirstName:       utils.StringPtr(contactDetails.ContactEntity.FirstName),
+				LastName:        utils.StringPtr(contactDetails.ContactEntity.LastName),
+				Prefix:          utils.StringPtr(contactDetails.ContactEntity.Prefix),
+				Description:     utils.StringPtr(contactDetails.ContactEntity.Description),
+				ProfilePhotoUrl: utils.StringPtr(contactDetails.ContactEntity.ProfilePhotoUrl),
+				Username:        utils.StringPtr(contactDetails.ContactEntity.Username),
+				Name:            utils.StringPtr(contactDetails.ContactEntity.Name),
+				Timezone:        utils.StringPtr(contactDetails.ContactEntity.Timezone),
+			}, false)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Failed to create contact: %s", err.Error())
+			return "", err
+		}
 	}
 
 	if contactDetails.EmailEntity != nil {
