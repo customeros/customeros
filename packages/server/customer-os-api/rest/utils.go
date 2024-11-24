@@ -42,6 +42,7 @@ const (
 	StatusPartialSuccess Status = "partial success"
 	StatusProcessing     Status = "processing"
 	StatusSuccess        Status = "success"
+	StatusWarning        Status = "warning"
 )
 
 const requestIDLength = 16

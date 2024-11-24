@@ -1,3 +1,4 @@
+// todo update all API responses to standard format
 package billing
 
 import (
@@ -11,7 +12,6 @@ import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
-	tracingLog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
@@ -44,8 +44,7 @@ func GetInvoicesForOrganization(services *service.Services) gin.HandlerFunc {
 		// Extract organization ID from the path
 		orgID := c.Param("id")
 		if orgID == "" {
-			c.JSON(http.StatusBadRequest, rest.BaseResponse{Status: "error", Message: "Invalid organization ID"})
-			span.LogFields(tracingLog.String("result", "Invalid organization ID"))
+			rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Invalid organization ID"))
 			return
 		}
 
@@ -53,11 +52,11 @@ func GetInvoicesForOrganization(services *service.Services) gin.HandlerFunc {
 		organizationDbNode, err := services.Repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByIdOrCustomerOsId(ctx, tenant, orgID)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			c.JSON(http.StatusNotFound, rest.BaseResponse{Status: "error", Message: "Organization not found"})
+			rest.SendError(c, span, http.StatusNotFound, rest.ErrNotFound.WithMessage("Organization does not exist"))
 			return
 		}
 		if organizationDbNode == nil {
-			c.JSON(http.StatusNotFound, rest.BaseResponse{Status: "error", Message: "Organization not found"})
+			rest.SendError(c, span, http.StatusNotFound, rest.ErrNotFound.WithMessage("Organization does not exist"))
 			return
 		}
 		organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
@@ -65,7 +64,7 @@ func GetInvoicesForOrganization(services *service.Services) gin.HandlerFunc {
 		invoiceEntities, err := services.CommonServices.InvoiceService.GetNonDryRunInvoicesForOrganization(ctx, tenant, organizationEntity.ID)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			c.JSON(http.StatusInternalServerError, rest.BaseResponse{Status: "error", Message: "Internal server error"})
+			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer)
 			return
 		}
 
