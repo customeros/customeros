@@ -6,6 +6,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
@@ -22,7 +23,7 @@ import (
 )
 
 type ContactService interface {
-	Save(ctx context.Context, id *string, contactFields neo4jrepository.ContactFields, socialUrl string, externalSystem neo4jmodel.ExternalSystem) (string, error)
+	Save(ctx context.Context, id *string, contactFields data_fields.ContactFields, updateOnlyIfEmpty bool) (string, error)
 	HideContact(ctx context.Context, contactId string) error
 	ShowContact(ctx context.Context, contactId string) error
 	GetContactById(ctx context.Context, contactId string) (*neo4jentity.ContactEntity, error)
@@ -43,13 +44,12 @@ func NewContactService(log logger.Logger, services *Services) ContactService {
 	}
 }
 
-func (s *contactService) Save(ctx context.Context, id *string, contactFields neo4jrepository.ContactFields, linkedInUrl string, externalSystem neo4jmodel.ExternalSystem) (string, error) {
+func (s *contactService) Save(ctx context.Context, id *string, contactFields data_fields.ContactFields, updateOnlyIfEmpty bool) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.Save")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "contactFields", contactFields)
-	tracing.LogObjectAsJson(span, "externalSystem", externalSystem)
-	span.LogKV("linkedInUrl", linkedInUrl)
+	span.LogFields(log.Bool("updateOnlyIfEmpty", updateOnlyIfEmpty))
 
 	// validate tenant
 	err := common.ValidateTenant(ctx)
@@ -65,55 +65,66 @@ func (s *contactService) Save(ctx context.Context, id *string, contactFields neo
 	if id == nil || *id == "" {
 		createFlow = true
 		span.LogKV("flow", "create")
+	} else {
+		span.LogKV("flow", "update")
+	}
 
+	if createFlow {
 		// Reject contact creation if linked-in url is already used by another contact
-		if (neo4jentity.SocialEntity{Url: linkedInUrl}).IsLinkedin() {
-			linkedinUsed, existingContactId, err := s.services.ContactService.CheckContactExistsWithLinkedIn(ctx, linkedInUrl, "", "")
-			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "unable to check contact exists with linkedin"))
-				return "", err
-			}
-			if linkedinUsed {
-				contactEntity, err := s.GetContactById(ctx, existingContactId)
+		if utils.IfNotNilString(contactFields.LinkedInUrl) != "" {
+			linkedInUrl := utils.IfNotNilString(contactFields.LinkedInUrl)
+			if (neo4jentity.SocialEntity{Url: linkedInUrl}).IsLinkedin() {
+				linkedinUsed, existingContactId, err := s.services.ContactService.CheckContactExistsWithLinkedIn(ctx, linkedInUrl, "", "")
 				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "unable to get contact by id"))
+					tracing.TraceErr(span, errors.Wrap(err, "unable to check contact exists with linkedin"))
 					return "", err
 				}
-				if contactEntity.Hide {
-					err = s.ShowContact(ctx, existingContactId)
+				if linkedinUsed {
+					contactEntity, err := s.GetContactById(ctx, existingContactId)
 					if err != nil {
-						tracing.TraceErr(span, errors.Wrap(err, "unable to show contact"))
+						tracing.TraceErr(span, errors.Wrap(err, "unable to get contact by id"))
 						return "", err
 					}
-				} else {
-					// just update contact' updatedAt
-					err = s.services.Neo4jRepositories.CommonWriteRepository.TouchEntity(ctx, nil, tenant, model.NodeLabelContact, existingContactId)
-					if err != nil {
-						tracing.TraceErr(span, errors.Wrap(err, "error on updating contact updatedAt"))
+					if contactEntity.Hide {
+						err = s.ShowContact(ctx, existingContactId)
+						if err != nil {
+							tracing.TraceErr(span, errors.Wrap(err, "unable to show contact"))
+							return "", err
+						}
+					} else {
+						// just update contact' updatedAt
+						err = s.services.Neo4jRepositories.CommonWriteRepository.TouchEntity(ctx, nil, tenant, model.NodeLabelContact, existingContactId)
+						if err != nil {
+							tracing.TraceErr(span, errors.Wrap(err, "error on updating contact updatedAt"))
+						}
+						utils.EventCompleted(ctx, tenant, model.CONTACT.String(), contactId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
 					}
-					utils.EventCompleted(ctx, tenant, model.CONTACT.String(), contactId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
+					return existingContactId, nil
 				}
-				return existingContactId, nil
 			}
 		}
 
+		// generate id
 		contactId, err = s.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelContact)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return "", err
 		}
+
 		// prepare missing fields
-		contactFields.CreatedAt = utils.NowIfZero(contactFields.CreatedAt)
-		if contactFields.SourceFields.Source == "" {
-			contactFields.SourceFields.Source = neo4jentity.DataSourceOpenline.String()
+		if contactFields.CreatedAt == nil {
+			contactFields.CreatedAt = utils.NowPtr()
+		} else {
+			contactFields.CreatedAt = utils.TimePtr(utils.NowIfZero(*contactFields.CreatedAt))
 		}
-		if contactFields.SourceFields.AppSource == "" {
-			contactFields.SourceFields.AppSource = common.GetAppSourceFromContext(ctx)
+		if utils.IfNotNilString(contactFields.Source) == "" {
+			contactFields.Source = utils.StringPtr(neo4jentity.DataSourceOpenline.String())
+		}
+		if utils.IfNotNilString(contactFields.AppSource) == "" {
+			contactFields.AppSource = utils.StringPtr(common.GetAppSourceFromContext(ctx))
 		}
 	} else {
-		span.LogKV("flow", "update")
 		contactId = *id
-
 		// validate contact exists
 		exists, err := s.services.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, tenant, contactId, model.NodeLabelContact)
 		if err != nil || !exists {
@@ -126,27 +137,27 @@ func (s *contactService) Save(ctx context.Context, id *string, contactFields neo
 
 	// Clean and update contact names if not updated manually
 	if common.GetAppSourceFromContext(ctx) != constants.AppSourceCustomerOsApi {
-		if contactFields.UpdateName {
-			contactFields.Name = utils.CleanName(contactFields.Name)
+		if contactFields.Name != nil {
+			contactFields.Name = utils.StringPtr(utils.CleanName(*contactFields.Name))
 		}
-		if contactFields.UpdateFirstName {
-			contactFields.FirstName = utils.CleanName(contactFields.FirstName)
+		if contactFields.FirstName != nil {
+			contactFields.FirstName = utils.StringPtr(utils.CleanName(*contactFields.FirstName))
 		}
-		if contactFields.UpdateLastName {
-			contactFields.LastName = utils.CleanName(contactFields.LastName)
+		if contactFields.LastName != nil {
+			contactFields.LastName = utils.StringPtr(utils.CleanName(*contactFields.LastName))
 		}
 	}
 
 	_, err = utils.ExecuteWriteInTransaction(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, nil, func(tx neo4j.ManagedTransaction) (any, error) {
-		innerErr := s.services.Neo4jRepositories.ContactWriteRepository.SaveContactInTx(ctx, &tx, tenant, contactId, contactFields)
+		innerErr := s.services.Neo4jRepositories.ContactWriteRepository.SaveContactInTx(ctx, &tx, tenant, contactId, contactFields, updateOnlyIfEmpty)
 		if innerErr != nil {
 			s.log.Errorf("Error while saving contact %s: %s", contactId, err.Error())
 			return nil, innerErr
 		}
-		if externalSystem.Available() {
-			innerErr = s.services.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntityInTx(ctx, &tx, tenant, contactId, model.NodeLabelContact, externalSystem)
+		if contactFields.ExternalSystemAvailable() {
+			innerErr = s.services.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntityInTx(ctx, &tx, tenant, contactId, model.NodeLabelContact, *contactFields.ExternalSystem)
 			if err != nil {
-				s.log.Errorf("Error while link contact %s with external system %s: %s", contactId, externalSystem.ExternalSystemId, err.Error())
+				s.log.Errorf("Error while link contact %s with external system %s: %s", contactId, contactFields.ExternalSystem.ExternalSystemId, err.Error())
 				return nil, innerErr
 			}
 		}
@@ -158,22 +169,23 @@ func (s *contactService) Save(ctx context.Context, id *string, contactFields neo
 	}
 
 	if createFlow {
-		err = s.services.RabbitMQService.PublishEvent(ctx, contactId, model.CONTACT, dto.New_CreateContact_From_ContactFields(contactFields, externalSystem))
+		err = s.services.RabbitMQService.PublishEvent(ctx, contactId, model.CONTACT, dto.CreateContact{contactFields})
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateContact"))
 		}
 		utils.EventCompleted(ctx, tenant, model.CONTACT.String(), contactId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithCreate())
 	} else {
-		err = s.services.RabbitMQService.PublishEvent(ctx, contactId, model.CONTACT, dto.New_UpdateContact_From_ContactFields(contactFields, externalSystem))
+		err = s.services.RabbitMQService.PublishEvent(ctx, contactId, model.CONTACT, dto.UpdateContact{contactFields})
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateContact"))
 		}
-		if contactFields.SourceFields.AppSource != constants.AppSourceCustomerOsApi {
+		if common.GetAppSourceFromContext(ctx) != constants.AppSourceCustomerOsApi {
 			utils.EventCompleted(ctx, tenant, model.CONTACT.String(), contactId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
 		}
 	}
 
-	if createFlow && linkedInUrl != "" {
+	if createFlow && utils.IfNotNilString(contactFields.LinkedInUrl) != "" {
+		linkedInUrl := utils.IfNotNilString(contactFields.LinkedInUrl)
 		if (neo4jentity.SocialEntity{Url: linkedInUrl}).IsLinkedin() {
 			_, err := s.services.SocialService.AddSocialToEntity(ctx, nil,
 				LinkWith{
@@ -182,8 +194,8 @@ func (s *contactService) Save(ctx context.Context, id *string, contactFields neo
 				},
 				neo4jentity.SocialEntity{
 					Url:       linkedInUrl,
-					Source:    neo4jentity.DecodeDataSource(contactFields.SourceFields.Source),
-					AppSource: contactFields.SourceFields.AppSource,
+					Source:    neo4jentity.DecodeDataSource(utils.IfNotNilString(contactFields.Source)),
+					AppSource: utils.IfNotNilString(contactFields.AppSource),
 				})
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "failed to merge social with contact"))

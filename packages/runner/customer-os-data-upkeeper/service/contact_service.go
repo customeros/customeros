@@ -11,6 +11,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/constants"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
@@ -19,7 +20,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
-	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	postgresrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
@@ -270,25 +270,22 @@ func (s *contactService) checkContacts(ctx context.Context) {
 			cleanName := utils.CleanName(contactEntity.Name)
 
 			saveContact := false
-			contactFields := neo4jrepository.ContactFields{}
+			contactFields := data_fields.ContactFields{}
 			if cleanFirstName != contactEntity.FirstName {
-				contactFields.FirstName = cleanFirstName
-				contactFields.UpdateFirstName = true
+				contactFields.FirstName = utils.StringPtr(cleanFirstName)
 				saveContact = true
 			}
 			if cleanLastName != contactEntity.LastName {
-				contactFields.LastName = cleanLastName
-				contactFields.UpdateLastName = true
+				contactFields.LastName = utils.StringPtr(cleanLastName)
 				saveContact = true
 			}
 			if cleanName != contactEntity.Name {
-				contactFields.Name = cleanName
-				contactFields.UpdateName = true
+				contactFields.Name = utils.StringPtr(cleanName)
 				saveContact = true
 			}
 
 			if saveContact {
-				_, err = s.commonServices.ContactService.Save(innerCtx, &contactEntity.Id, contactFields, "", neo4jmodel.ExternalSystem{})
+				_, err = s.commonServices.ContactService.Save(innerCtx, &contactEntity.Id, contactFields, false)
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "ContactService.Save"))
 					s.log.Errorf("Error updating contact {%s}: %s", contactEntity.Id, err.Error())
@@ -357,19 +354,17 @@ func (s *contactService) updateContactNamesFromEmails(ctx context.Context) {
 			}
 
 			saveContact := false
-			contactFields := neo4jrepository.ContactFields{}
+			contactFields := data_fields.ContactFields{}
 			if parsedEmail.FirstName != "" {
-				contactFields.FirstName = utils.CleanName(parsedEmail.FirstName)
-				contactFields.UpdateFirstName = true
+				contactFields.FirstName = utils.StringPtr(utils.CleanName(parsedEmail.FirstName))
 				saveContact = true
 			}
 			if parsedEmail.LastName != "" {
-				contactFields.LastName = utils.CleanName(parsedEmail.LastName)
-				contactFields.UpdateLastName = true
+				contactFields.LastName = utils.StringPtr(utils.CleanName(parsedEmail.LastName))
 				saveContact = true
 			}
 			if saveContact {
-				_, err = s.commonServices.ContactService.Save(innerCtx, &record.ContactId, contactFields, "", neo4jmodel.ExternalSystem{})
+				_, err = s.commonServices.ContactService.Save(innerCtx, &record.ContactId, contactFields, false)
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "ContactService.Save"))
 					s.log.Errorf("Error updating contact {%s}: %s", record.ContactId, err.Error())
@@ -564,7 +559,7 @@ func (s *contactService) processLinkedInUrl(ctx context.Context, tenant, linkedi
 
 	var contactIds []string
 	if len(contactsWithLinkedin) == 0 {
-		contactId, err := s.commonServices.ContactService.Save(ctx, nil, neo4jrepository.ContactFields{}, linkedinProfileUrl, neo4jmodel.ExternalSystem{})
+		contactId, err := s.commonServices.ContactService.Save(ctx, nil, data_fields.ContactFields{LinkedInUrl: utils.StringPtr(linkedinProfileUrl)}, false)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err

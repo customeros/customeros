@@ -372,26 +372,22 @@ func (c *contactListenerImpl) enrichContactWithScrapInEnrichDetails(ctx context.
 	}
 
 	updateContact := false
-	contactFields := neo4jrepository.ContactFields{}
+	contactFields := data_fields.ContactFields{}
 	if scrapinContactResponse.Person.FirstName != "" {
 		updateContact = true
-		contactFields.FirstName = scrapinContactResponse.Person.FirstName
-		contactFields.UpdateFirstName = true
+		contactFields.FirstName = utils.StringPtr(scrapinContactResponse.Person.FirstName)
 	}
 	if scrapinContactResponse.Person.LastName != "" {
 		updateContact = true
-		contactFields.LastName = scrapinContactResponse.Person.LastName
-		contactFields.UpdateLastName = true
+		contactFields.LastName = utils.StringPtr(scrapinContactResponse.Person.LastName)
 	}
 	if strings.TrimSpace(contact.ProfilePhotoUrl) == "" && scrapinContactResponse.Person.PhotoUrl != "" {
 		updateContact = true
-		contactFields.ProfilePhotoUrl = scrapinContactResponse.Person.PhotoUrl
-		contactFields.UpdateProfilePhotoUrl = true
+		contactFields.ProfilePhotoUrl = utils.StringPtr(scrapinContactResponse.Person.PhotoUrl)
 	}
 	if strings.TrimSpace(contact.Description) == "" && scrapinContactResponse.Person.Summary != "" {
 		updateContact = true
-		contactFields.Description = scrapinContactResponse.Person.Summary
-		contactFields.UpdateDescription = true
+		contactFields.Description = utils.StringPtr(scrapinContactResponse.Person.Summary)
 	}
 
 	// add location
@@ -453,14 +449,13 @@ func (c *contactListenerImpl) enrichContactWithScrapInEnrichDetails(ctx context.
 			// update timezone on contact
 			if contact.Timezone != "" && contactLocation.TimeZone != "" {
 				updateContact = true
-				contactFields.Timezone = contactLocation.TimeZone
-				contactFields.UpdateTimezone = true
+				contactFields.Timezone = utils.StringPtr(contactLocation.TimeZone)
 			}
 		}
 	}
 
 	if updateContact {
-		_, err := c.services.ContactService.Save(ctx, &contact.Id, contactFields, "", neo4jmodel.ExternalSystem{})
+		_, err := c.services.ContactService.Save(ctx, &contact.Id, contactFields, false)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "ContactService.Save"))
 			c.log.Errorf("Error updating contact: %s", err.Error())
