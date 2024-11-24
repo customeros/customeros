@@ -75,6 +75,7 @@ func registerCustomerBaseRoutes(ctx context.Context, r *gin.Engine, services *se
 
 func registerEventsRoutes(ctx context.Context, r *gin.Engine, services *service.Services, cache *commoncaches.Cache) {
 	setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/fathom", eventsV1Path), services, cache, restevents.Fathom(services))
+	// setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/grain", eventsV1Path), services, cache, restevents.Grain(services))
 }
 
 func registerBillingRoutes(ctx context.Context, r *gin.Engine, services *service.Services, grpcClients *grpc_client.Clients, cache *commoncaches.Cache) {
@@ -83,12 +84,17 @@ func registerBillingRoutes(ctx context.Context, r *gin.Engine, services *service
 
 func registerOrganizationRoutes(ctx context.Context, r *gin.Engine, services *service.Services, grpcClients *grpc_client.Clients, cache *commoncaches.Cache) {
 	setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/organizations", customerBaseV1Path), services, cache, restcustomerbase.CreateOrganization(services))
-	setupRestRoute(ctx, r, "PUT", fmt.Sprintf("%s/organizations/:id/links/:externalSystem/primary", customerBaseV1Path), services, cache, restcustomerbase.SetPrimaryExternalSystemId(services))
+	// setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/organizations/bulk", customerBaseV1Path), services, cache, restcustomerbase.CreateBulkOrganizations(services))
+	// setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/organizations/import", customerBaseV1Path), services, cache, restcustomerbase.ImportOrganizations(services))
 	setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/organizations/:id", customerBaseV1Path), services, cache, restcustomerbase.GetOrganization(services))
+	setupRestRoute(ctx, r, "PUT", fmt.Sprintf("%s/organizations/:id/links/:externalSystem/primary", customerBaseV1Path), services, cache, restcustomerbase.SetPrimaryExternalSystemId(services))
 }
 
 func registerContactRoutes(ctx context.Context, r *gin.Engine, services *service.Services, grpcClients *grpc_client.Clients, cache *commoncaches.Cache) {
 	setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/contacts", customerBaseV1Path), services, cache, restcustomerbase.CreateContact(services))
+	// setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/contacts/:id", customerBaseV1Path), services, cache, restcustomerbase.GetContact(services))
+	setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/contacts/bulk", customerBaseV1Path), services, cache, restcustomerbase.CreateBulkContacts(services))
+	setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/contacts/import", customerBaseV1Path), services, cache, restcustomerbase.ImportContacts(services))
 }
 
 func registerInvoiceRoutes(ctx context.Context, r *gin.Engine, services *service.Services, grpcClients *grpc_client.Clients, cache *commoncaches.Cache) {
@@ -101,8 +107,9 @@ func registerOutreachRoutes(ctx context.Context, r *gin.Engine, services *servic
 
 func registerMailStackRoutes(ctx context.Context, r *gin.Engine, services *service.Services, cache *commoncaches.Cache) {
 	setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/domains", mailStackV1Path), services, cache, restmailstack.RegisterNewDomain(services))
-	setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/domains/configure", mailStackV1Path), services, cache, restmailstack.ConfigureDomain(services))
 	setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/domains", mailStackV1Path), services, cache, restmailstack.GetDomains(services))
+	// setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/domains/recommendations", mailStackV1Path), services, cache, restmailstack.GetDomainRecommendations(services))
+	setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/domains/configure", mailStackV1Path), services, cache, restmailstack.ConfigureDomain(services))
 
 	setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/domains/:domain/mailboxes", mailStackV1Path), services, cache, restmailstack.RegisterNewMailbox(services))
 	setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/domains/:domain/mailboxes", mailStackV1Path), services, cache, restmailstack.GetMailboxes(services))

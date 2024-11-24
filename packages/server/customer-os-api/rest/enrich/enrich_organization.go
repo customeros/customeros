@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"strings"
+
 	"github.com/gin-gonic/gin"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	commontracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -19,8 +19,10 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
-	"net/http"
-	"strings"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 )
 
 // EnrichOrganizationResponse represents the response for the organization enrichment API.
@@ -154,9 +156,9 @@ func EnrichOrganization(services *service.Services) gin.HandlerFunc {
 		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {
 			c.JSON(http.StatusUnauthorized,
-				rest.ErrorResponse{
+				rest.BaseResponse{
 					Status:  "error",
-					Message: "Missing tenant context",
+					Message: "Unknown tenant",
 				})
 			return
 		}
@@ -167,7 +169,7 @@ func EnrichOrganization(services *service.Services) gin.HandlerFunc {
 		// check linked in or email params are present
 		if strings.TrimSpace(linkedinUrl) == "" && strings.TrimSpace(domain) == "" {
 			c.JSON(http.StatusBadRequest,
-				rest.ErrorResponse{
+				rest.BaseResponse{
 					Status:  "error",
 					Message: "Missing required parameters linkedinUrl or domain",
 				})
@@ -181,7 +183,7 @@ func EnrichOrganization(services *service.Services) gin.HandlerFunc {
 		enrichOrganizationApiResponse, err := callApiEnrichOrganization(ctx, services, span, linkedinUrl, domain)
 		if err != nil || enrichOrganizationApiResponse.Status == "error" {
 			c.JSON(http.StatusInternalServerError,
-				rest.ErrorResponse{
+				rest.BaseResponse{
 					Status:  "error",
 					Message: "Internal error",
 				})
@@ -189,7 +191,7 @@ func EnrichOrganization(services *service.Services) gin.HandlerFunc {
 		}
 		if enrichOrganizationApiResponse.Success == false {
 			c.JSON(http.StatusOK,
-				rest.ErrorResponse{
+				rest.BaseResponse{
 					Status:  "warning",
 					Message: "Organization not found",
 				})
