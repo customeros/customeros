@@ -559,7 +559,7 @@ func (s *contactService) processLinkedInUrl(ctx context.Context, tenant, linkedi
 
 	var contactIds []string
 	if len(contactsWithLinkedin) == 0 {
-		contactId, err := s.commonServices.ContactService.Save(ctx, nil, data_fields.ContactFields{LinkedInUrl: utils.StringPtr(linkedinProfileUrl)}, false)
+		contactId, err := s.commonServices.ContactService.CreateContactByLinkedIn(ctx, linkedinProfileUrl)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
