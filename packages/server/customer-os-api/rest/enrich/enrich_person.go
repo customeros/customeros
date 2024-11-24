@@ -1,3 +1,4 @@
+// todo refactor success responses to standard format
 package restenrich
 
 import (
@@ -172,11 +173,7 @@ func EnrichPerson(services *service.Services) gin.HandlerFunc {
 
 		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {
-			c.JSON(http.StatusUnauthorized,
-				rest.BaseResponse{
-					Status:  "error",
-					Message: "Missing tenant context",
-				})
+			rest.SendError(c, span, http.StatusUnauthorized, rest.ErrUnauthorized)
 			return
 		}
 
@@ -190,11 +187,7 @@ func EnrichPerson(services *service.Services) gin.HandlerFunc {
 
 		// check linked in or email params are present
 		if strings.TrimSpace(linkedinUrl) == "" && strings.TrimSpace(email) == "" {
-			c.JSON(http.StatusBadRequest,
-				rest.BaseResponse{
-					Status:  "error",
-					Message: "Missing required parameters linkedinUrl or email",
-				})
+			rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Missing linkedinUrl or email"))
 			return
 		}
 
@@ -208,18 +201,14 @@ func EnrichPerson(services *service.Services) gin.HandlerFunc {
 		// Call enrichPerson API
 		enrichPersonApiResponse, err := callApiEnrichPerson(ctx, services, span, email, linkedinUrl, firstName, lastName)
 		if err != nil || enrichPersonApiResponse == nil || enrichPersonApiResponse.Status == "error" {
-			c.JSON(http.StatusInternalServerError,
-				rest.BaseResponse{
-					Status:  "error",
-					Message: "Internal error",
-				})
+			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer)
 			return
 		}
 		if enrichPersonApiResponse.Data == nil || enrichPersonApiResponse.PersonFound == false {
 			c.JSON(http.StatusOK,
-				rest.BaseResponse{
-					Status:  "warning",
-					Message: "Person not found",
+				rest.ErrorResponse{
+					BaseResponse: rest.BuildBaseResponse(rest.StatusWarning),
+					Message:      "Person not found",
 				})
 			return
 		}
@@ -241,11 +230,7 @@ func EnrichPerson(services *service.Services) gin.HandlerFunc {
 		findWorkEmailApiResponse, err := services.EnrichmentService.CallApiFindWorkEmail(ctx, enrichPersonApiResponse.Data.PersonProfile.Person.FirstName, enrichPersonApiResponse.Data.PersonProfile.Person.LastName,
 			companyName, companyDomain, enrichPersonApiResponse.Data.PersonProfile.Person.LinkedInUrl, enrichPhoneNumber)
 		if err != nil || findWorkEmailApiResponse == nil {
-			c.JSON(http.StatusInternalServerError,
-				rest.BaseResponse{
-					Status:  "error",
-					Message: "Internal error",
-				})
+			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer)
 			return
 		}
 
@@ -266,11 +251,7 @@ func EnrichPerson(services *service.Services) gin.HandlerFunc {
 			})
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "failed to create temp result"))
-				c.JSON(http.StatusInternalServerError,
-					rest.BaseResponse{
-						Status:  "error",
-						Message: "Internal error",
-					})
+				rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer)
 				return
 			}
 			response.IsComplete = false
@@ -379,11 +360,7 @@ func EnrichPersonCallback(services *service.Services) gin.HandlerFunc {
 
 		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {
-			c.JSON(http.StatusUnauthorized,
-				rest.BaseResponse{
-					Status:  "error",
-					Message: "Missing tenant context",
-				})
+			rest.SendError(c, span, http.StatusUnauthorized, rest.ErrUnauthorized)
 			return
 		}
 
@@ -393,19 +370,11 @@ func EnrichPersonCallback(services *service.Services) gin.HandlerFunc {
 		getTempRecord, err := services.CommonServices.PostgresRepositories.CosApiEnrichPersonTempResultRepository.GetById(ctx, tempId, tenant)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to get temp record"))
-			c.JSON(http.StatusInternalServerError,
-				rest.BaseResponse{
-					Status:  "error",
-					Message: "Internal error",
-				})
+			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer)
 			return
 		}
 		if getTempRecord == nil {
-			c.JSON(http.StatusNotFound,
-				rest.BaseResponse{
-					Status:  "error",
-					Message: "Record not found",
-				})
+			rest.SendError(c, span, http.StatusNotFound, rest.ErrNotFound)
 			return
 		}
 
@@ -413,40 +382,24 @@ func EnrichPersonCallback(services *service.Services) gin.HandlerFunc {
 		scrapInDbRecord, err := services.CommonServices.PostgresRepositories.EnrichDetailsScrapInRepository.GetById(ctx, getTempRecord.ScrapinRecordId)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to get scrapin record"))
-			c.JSON(http.StatusInternalServerError,
-				rest.BaseResponse{
-					Status:  "error",
-					Message: "Internal error",
-				})
+			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer)
 			return
 		}
 		if scrapInDbRecord == nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to get scrapin record"))
-			c.JSON(http.StatusNotFound,
-				rest.BaseResponse{
-					Status:  "error",
-					Message: "Record not found",
-				})
+			rest.SendError(c, span, http.StatusNotFound, rest.ErrNotFound)
 			return
 		}
 
 		betterContactDbRecord, err := services.CommonServices.PostgresRepositories.EnrichDetailsBetterContactRepository.GetById(ctx, getTempRecord.BettercontactRecordId)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to get bettercontact record"))
-			c.JSON(http.StatusInternalServerError,
-				rest.BaseResponse{
-					Status:  "error",
-					Message: "Internal error",
-				})
+			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer)
 			return
 		}
 		if betterContactDbRecord == nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to get bettercontact record"))
-			c.JSON(http.StatusNotFound,
-				rest.BaseResponse{
-					Status:  "error",
-					Message: "Record not found",
-				})
+			rest.SendError(c, span, http.StatusNotFound, rest.ErrNotFound)
 			return
 		}
 
@@ -460,11 +413,7 @@ func EnrichPersonCallback(services *service.Services) gin.HandlerFunc {
 		err = json.Unmarshal([]byte(scrapInDbRecord.Data), &scrapInPersonResponse)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal scrapin record"))
-			c.JSON(http.StatusInternalServerError,
-				rest.BaseResponse{
-					Status:  "error",
-					Message: "Internal error",
-				})
+			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer)
 			return
 		}
 		enrichedPersonData := mapPersonScrapInData(&scrapInPersonResponse)
@@ -479,11 +428,7 @@ func EnrichPersonCallback(services *service.Services) gin.HandlerFunc {
 			err = json.Unmarshal([]byte(betterContactDbRecord.Response), &betterContactResponseBody)
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal bettercontact record"))
-				c.JSON(http.StatusInternalServerError,
-					rest.BaseResponse{
-						Status:  "error",
-						Message: "Internal error",
-					})
+				rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer)
 				return
 			}
 		}
