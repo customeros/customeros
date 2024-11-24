@@ -134,7 +134,7 @@ func handleBulkJSONRequest(ctx rest.HTTPContext) {
 		ctx.GinContext.JSON(http.StatusCreated, resp)
 	case fail == 1:
 		resp := BulkResponse{
-			BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
+			BaseResponse: rest.BuildBaseResponse(rest.StatusPartialSuccess),
 			Summary: BulkSummary{
 				Total:   total,
 				Success: total - fail,
@@ -150,7 +150,7 @@ func handleBulkJSONRequest(ctx rest.HTTPContext) {
 		rest.SendError(ctx.GinContext, ctx.Span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("No valid contacts found in request"))
 	default:
 		resp := BulkResponseMultipleErrors{
-			BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
+			BaseResponse: rest.BuildBaseResponse(rest.StatusPartialSuccess),
 			Summary: BulkSummary{
 				Total:   total,
 				Success: total - fail,
@@ -163,7 +163,7 @@ func handleBulkJSONRequest(ctx rest.HTTPContext) {
 }
 
 func handleCSVUpload(ctx rest.HTTPContext) {
-	file, err := rest.ValidateAndOpenCsvFile(ctx.GinContext)
+	file, err := rest.ValidateAndOpenCsvFile(ctx.GinContext, ctx.Span)
 	if err != nil {
 		tracing.TraceErr(ctx.Span, err)
 		return
