@@ -2,10 +2,13 @@ package rest
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"errors"
+	"fmt"
 	"mime/multipart"
-	"net/http"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
@@ -18,11 +21,9 @@ import (
 // BaseResponse represents the standard API response structure
 // @Description Standard response structure for API operations
 type BaseResponse struct {
+	RequestID string `json:"requestId" example:"1234567890abcdef"`
 	// Status indicates the result of the operation ("success" or "error")
 	Status string `json:"status" example:"success"`
-
-	// Message provides additional information about the operation
-	Message string `json:"message,omitempty" example:"Operation completed successfully"`
 }
 
 type HTTPContext struct {
@@ -33,12 +34,29 @@ type HTTPContext struct {
 	Tenant         string
 }
 
+type Status string
+
+const (
+	StatusSuccess    Status = "success"
+	StatusError      Status = "error"
+	StatusProcessing Status = "processing"
+)
+
+const requestIDLength = 16
+
+func BuildBaseResponse(status Status) BaseResponse {
+	return BaseResponse{
+		RequestID: generateRequestID(),
+		Status:    string(status),
+	}
+}
+
 func ValidateTenant(c *gin.Context, ctx context.Context, span opentracing.Span) string {
 	tenant := common.GetTenantFromContext(ctx)
 	tracing.TagTenant(span, tenant)
 
 	if tenant == "" {
-		SendError(c, http.StatusUnauthorized, "API key invalid or expired")
+		SendError(c, ErrInvalidAPIKey)
 		return ""
 	}
 	return tenant
@@ -47,42 +65,23 @@ func ValidateTenant(c *gin.Context, ctx context.Context, span opentracing.Span) 
 func ValidateAndOpenCsvFile(c *gin.Context) (multipart.File, error) {
 	file, header, err := c.Request.FormFile("file")
 	if err != nil {
-		SendError(c, http.StatusBadRequest, "Failed to parse file")
+		SendError(c, ErrBadRequest.WithMessage("Unable to parse file"))
 		return nil, err
 	}
 
 	if header.Header.Get("Content-Type") != "text/csv" && !strings.HasSuffix(header.Filename, ".csv") {
-		SendError(c, http.StatusBadRequest, "Invalid file type")
+		SendError(c, ErrBadRequest.WithMessage("Invalid file type"))
 		return nil, errors.New("invalid file type")
 	}
 
 	return file, nil
 }
 
-func SendError(c *gin.Context, status int, message string) {
-	c.JSON(status, BaseResponse{
-		Status:  "error",
-		Message: message,
-	})
-}
-
-func SendSuccess(c *gin.Context, status int, message string) {
-	c.JSON(status, BaseResponse{
-		Status:  "success",
-		Message: message,
-	})
-}
-
-func CreateError(message string) BaseResponse {
-	return BaseResponse{
-		Status:  "error",
-		Message: message,
+func generateRequestID() string {
+	bytes := make([]byte, requestIDLength/2)
+	if _, err := rand.Read(bytes); err != nil {
+		// Fallback to timestamp if crypto/rand fails
+		return fmt.Sprintf("%x", time.Now().UnixNano())[:requestIDLength]
 	}
-}
-
-func CreateSuccess(message string) BaseResponse {
-	return BaseResponse{
-		Status:  "success",
-		Message: message,
-	}
+	return hex.EncodeToString(bytes)
 }

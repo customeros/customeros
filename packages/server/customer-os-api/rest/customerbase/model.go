@@ -5,6 +5,9 @@ import "github.com/openline-ai/openline-customer-os/packages/server/customer-os-
 // ContactRecord represents the request structure for creating a contact
 // @Description Request to create a contact
 type ContactRecord struct {
+	// Contact's unique identifier
+	ContactId string `json:"contactId,omitempty" example:"contact-123"`
+
 	// Contact's email address
 	Email string `json:"email" example:"john@example.com" csv:"email"`
 
@@ -14,31 +17,11 @@ type ContactRecord struct {
 
 // ContactResult represents detailed contact information
 // @Description Detailed contact information returned by API operations
-type ContactResult struct {
+type SingleContactResponse struct {
 	// Inherits standard response fields
 	rest.BaseResponse
 
-	// Contact's unique identifier
-	ContactId string `json:"contactId,omitempty" example:"contact-123"`
-
-	// Contact's email address
-	Email string `json:"email,omitempty" example:"john@example.com"`
-
-	// Contact's LinkedIn profile URL
-	LinkedInURL string `json:"linkedinUrl,omitempty" example:"https://linkedin.com/in/john-doe"`
-}
-
-// ContactsResponse represents a response containing multiple contacts
-// @Description Response structure for operations returning multiple contacts
-type ContactsResponse struct {
-	// Status of the operation
-	Status string `json:"status" example:"success"`
-
-	// Additional information about the operation
-	Message string `json:"message,omitempty" example:"Contacts processed successfully"`
-
-	// List of contacts
-	Contacts []ContactResult `json:"contacts,omitempty"`
+	Contact ContactRecord `json:"contact,omitempty"`
 }
 
 // CreateOrganizationRequest represents the request body for creating a new organization

@@ -1,8 +1,7 @@
 package customerbase
 
 import (
-	"encoding/csv"
-	"io"
+	"fmt"
 	"net/http"
 	"regexp"
 	"strings"
@@ -54,196 +53,55 @@ func CreateContact(services *service.Services) gin.HandlerFunc {
 			Tenant:         tenant,
 		}
 
-		contentType := c.GetHeader("Content-Type")
-		switch {
-		case strings.HasPrefix(contentType, "multipart/form-data"):
-			handleCSVUpload(httpContext)
-		case strings.HasPrefix(contentType, "application/json"):
-			handleJSONRequest(httpContext)
-		default:
-			rest.SendError(c, http.StatusBadRequest, "Unsupported Content-Type")
-		}
+		handleJSONRequest(httpContext)
 	}
-}
-
-func handleCSVUpload(ctx rest.HTTPContext) {
-	file, err := rest.ValidateAndOpenCsvFile(ctx.GinContext)
-	if err != nil {
-		tracing.TraceErr(ctx.Span, err)
-		return
-	}
-	defer file.Close()
-
-	reader := csv.NewReader(file)
-	if err := validateFileHeaders(ctx.GinContext, reader); err != nil {
-		return
-	}
-
-	results := processCSVRecords(ctx, reader)
-	if len(results) == 0 {
-		rest.SendError(ctx.GinContext, http.StatusBadRequest, "No valid contacts found in file")
-		return
-	}
-
-	ctx.GinContext.JSON(http.StatusCreated, ContactsResponse{
-		Status:   "success",
-		Contacts: results,
-	})
 }
 
 func handleJSONRequest(ctx rest.HTTPContext) {
 	// Try single contact
-	var singleContact ContactRecord
-	if err := ctx.GinContext.BindJSON(&singleContact); err == nil && (singleContact.Email != "" || singleContact.LinkedInURL != "") {
-		result := validateAndProcessContact(ctx, singleContact)
-		ctx.GinContext.JSON(http.StatusOK, result)
-		return
-	}
+	var contact ContactRecord
+	if err := ctx.GinContext.BindJSON(&contact); err == nil && (contact.Email != "" || contact.LinkedInURL != "") {
+		err, errValue := validateContact(&contact)
+		if err != nil {
+			errMessage := fmt.Sprintf("%s | %s", errValue, err)
+			rest.SendError(ctx.GinContext, http.StatusBadRequest, rest.ErrBadRequest.WithMessage(errMessage))
 
-	// Try multiple contacts
-	var request struct {
-		Contacts []ContactRecord `json:"contacts"`
-	}
-
-	if err := ctx.GinContext.ShouldBindJSON(&request); err != nil {
-		rest.SendError(ctx.GinContext, http.StatusBadRequest, "Invalid request format")
-		return
-	}
-
-	if len(request.Contacts) == 0 {
-		rest.SendError(ctx.GinContext, http.StatusBadRequest, "No contacts provided")
-		return
-	}
-
-	results := make([]ContactResult, 0, len(request.Contacts))
-	for _, record := range request.Contacts {
-		result := validateAndProcessContact(ctx, record)
-		results = append(results, result)
-	}
-
-	ctx.GinContext.JSON(http.StatusCreated, ContactsResponse{
-		Status:   "success",
-		Contacts: results,
-	})
-}
-
-func validateAndProcessContact(ctx rest.HTTPContext, record ContactRecord) ContactResult {
-	if err := validateContact(&record); err != nil {
-		return ContactResult{
-			BaseResponse: rest.BaseResponse{
-				Status:  "error",
-				Message: err.Error(),
-			},
-			Email:       record.Email,
-			LinkedInURL: record.LinkedInURL,
 		}
-	}
-
-	contactId := processContact(ctx, record)
-	if contactId == "" {
-		return ContactResult{
-			BaseResponse: rest.BaseResponse{
-				Status:  "error",
-				Message: "Failed to process contact",
-			},
-			Email:       record.Email,
-			LinkedInURL: record.LinkedInURL,
-		}
-	}
-
-	return ContactResult{
-		BaseResponse: rest.BaseResponse{
-			Status: "success",
-		},
-		ContactId:   contactId,
-		Email:       record.Email,
-		LinkedInURL: record.LinkedInURL,
+		ctx.GinContext.JSON(http.StatusOK, SingleContactResponse{
+			BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
+			Contact:      contact,
+		})
+		return
 	}
 }
 
-func validateContact(record *ContactRecord) error {
+func validateContact(record *ContactRecord) (error, string) {
+	var errValue string
 	if record.Email == "" && record.LinkedInURL == "" {
-		return errors.New("must provide either email or LinkedIn URL")
+		return errors.New("must provide either email or LinkedIn URL"), errValue
 	}
 
 	if record.Email != "" {
+		errValue = record.Email
 		emailSyntax := mailvalidate.ValidateEmailSyntax(record.Email)
 		switch {
 		case !emailSyntax.IsValid:
-			return errors.New("invalid email format")
+			return errors.New("invalid email format"), errValue
 		case emailSyntax.IsRoleAccount:
-			return errors.New("email is a role account")
+			return errors.New("email is a role account"), errValue
 		case emailSyntax.IsSystemGenerated:
-			return errors.New("email is system generated")
+			return errors.New("email is system generated"), errValue
 		default:
 			record.Email = emailSyntax.CleanEmail
 		}
 	}
 
-	if record.LinkedInURL != "" && !isValidLinkedinUrl(record.LinkedInURL) {
-		return errors.New("invalid LinkedIn URL format")
+	if record.LinkedInURL != "" && !isValidLinkedinContactUrl(record.LinkedInURL) {
+		errValue = record.LinkedInURL
+		return errors.New("invalid LinkedIn URL format"), errValue
 	}
 
-	return nil
-}
-
-func validateFileHeaders(c *gin.Context, reader *csv.Reader) error {
-	headers, err := reader.Read()
-	if err != nil {
-		rest.SendError(c, http.StatusBadRequest, "Failed to read file")
-		return err
-	}
-
-	hasEmail := false
-	hasLinkedIn := false
-	for _, header := range headers {
-		if header == "email" {
-			hasEmail = true
-		}
-		if header == "linkedin_url" {
-			hasLinkedIn = true
-		}
-	}
-
-	if !hasEmail || !hasLinkedIn {
-		rest.SendError(c, http.StatusBadRequest, "Missing required headers: email, linkedin_url")
-		return errors.New("invalid headers")
-	}
-	return nil
-}
-
-func processCSVRecords(ctx rest.HTTPContext, reader *csv.Reader) []ContactResult {
-	results := make([]ContactResult, 0)
-
-	for {
-		record, err := reader.Read()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			results = append(results, ContactResult{
-				BaseResponse: rest.BaseResponse{
-					Status:  "error",
-					Message: "Failed to read record",
-				},
-			})
-			continue
-		}
-
-		contactRecord := ContactRecord{
-			Email:       record[0],
-			LinkedInURL: record[1],
-		}
-
-		if contactRecord.Email == "" && contactRecord.LinkedInURL == "" {
-			continue
-		}
-
-		result := validateAndProcessContact(ctx, contactRecord)
-		results = append(results, result)
-	}
-
-	return results
+	return nil, errValue
 }
 
 func processContact(ctx rest.HTTPContext, record ContactRecord) string {
@@ -310,7 +168,7 @@ func associateEmail(ctx rest.HTTPContext, email, contactId string) {
 	}
 }
 
-func isValidLinkedinUrl(s string) bool {
+func isValidLinkedinContactUrl(s string) bool {
 	s = strings.TrimSpace(s)
 	if !strings.HasPrefix(s, "http") {
 		s = "https://" + s

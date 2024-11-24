@@ -4,11 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"strings"
+
 	"github.com/gin-gonic/gin"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
-	restverify "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/verify"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	commontracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -20,8 +19,11 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
-	"net/http"
-	"strings"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
+	restverify "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/verify"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 )
 
 const (
@@ -171,7 +173,7 @@ func EnrichPerson(services *service.Services) gin.HandlerFunc {
 		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {
 			c.JSON(http.StatusUnauthorized,
-				rest.ErrorResponse{
+				rest.BaseResponse{
 					Status:  "error",
 					Message: "Missing tenant context",
 				})
@@ -189,7 +191,7 @@ func EnrichPerson(services *service.Services) gin.HandlerFunc {
 		// check linked in or email params are present
 		if strings.TrimSpace(linkedinUrl) == "" && strings.TrimSpace(email) == "" {
 			c.JSON(http.StatusBadRequest,
-				rest.ErrorResponse{
+				rest.BaseResponse{
 					Status:  "error",
 					Message: "Missing required parameters linkedinUrl or email",
 				})
@@ -207,7 +209,7 @@ func EnrichPerson(services *service.Services) gin.HandlerFunc {
 		enrichPersonApiResponse, err := callApiEnrichPerson(ctx, services, span, email, linkedinUrl, firstName, lastName)
 		if err != nil || enrichPersonApiResponse == nil || enrichPersonApiResponse.Status == "error" {
 			c.JSON(http.StatusInternalServerError,
-				rest.ErrorResponse{
+				rest.BaseResponse{
 					Status:  "error",
 					Message: "Internal error",
 				})
@@ -215,7 +217,7 @@ func EnrichPerson(services *service.Services) gin.HandlerFunc {
 		}
 		if enrichPersonApiResponse.Data == nil || enrichPersonApiResponse.PersonFound == false {
 			c.JSON(http.StatusOK,
-				rest.ErrorResponse{
+				rest.BaseResponse{
 					Status:  "warning",
 					Message: "Person not found",
 				})
@@ -240,7 +242,7 @@ func EnrichPerson(services *service.Services) gin.HandlerFunc {
 			companyName, companyDomain, enrichPersonApiResponse.Data.PersonProfile.Person.LinkedInUrl, enrichPhoneNumber)
 		if err != nil || findWorkEmailApiResponse == nil {
 			c.JSON(http.StatusInternalServerError,
-				rest.ErrorResponse{
+				rest.BaseResponse{
 					Status:  "error",
 					Message: "Internal error",
 				})
@@ -265,7 +267,7 @@ func EnrichPerson(services *service.Services) gin.HandlerFunc {
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "failed to create temp result"))
 				c.JSON(http.StatusInternalServerError,
-					rest.ErrorResponse{
+					rest.BaseResponse{
 						Status:  "error",
 						Message: "Internal error",
 					})
@@ -378,7 +380,7 @@ func EnrichPersonCallback(services *service.Services) gin.HandlerFunc {
 		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {
 			c.JSON(http.StatusUnauthorized,
-				rest.ErrorResponse{
+				rest.BaseResponse{
 					Status:  "error",
 					Message: "Missing tenant context",
 				})
@@ -392,7 +394,7 @@ func EnrichPersonCallback(services *service.Services) gin.HandlerFunc {
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to get temp record"))
 			c.JSON(http.StatusInternalServerError,
-				rest.ErrorResponse{
+				rest.BaseResponse{
 					Status:  "error",
 					Message: "Internal error",
 				})
@@ -400,7 +402,7 @@ func EnrichPersonCallback(services *service.Services) gin.HandlerFunc {
 		}
 		if getTempRecord == nil {
 			c.JSON(http.StatusNotFound,
-				rest.ErrorResponse{
+				rest.BaseResponse{
 					Status:  "error",
 					Message: "Record not found",
 				})
@@ -412,7 +414,7 @@ func EnrichPersonCallback(services *service.Services) gin.HandlerFunc {
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to get scrapin record"))
 			c.JSON(http.StatusInternalServerError,
-				rest.ErrorResponse{
+				rest.BaseResponse{
 					Status:  "error",
 					Message: "Internal error",
 				})
@@ -421,7 +423,7 @@ func EnrichPersonCallback(services *service.Services) gin.HandlerFunc {
 		if scrapInDbRecord == nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to get scrapin record"))
 			c.JSON(http.StatusNotFound,
-				rest.ErrorResponse{
+				rest.BaseResponse{
 					Status:  "error",
 					Message: "Record not found",
 				})
@@ -432,7 +434,7 @@ func EnrichPersonCallback(services *service.Services) gin.HandlerFunc {
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to get bettercontact record"))
 			c.JSON(http.StatusInternalServerError,
-				rest.ErrorResponse{
+				rest.BaseResponse{
 					Status:  "error",
 					Message: "Internal error",
 				})
@@ -441,7 +443,7 @@ func EnrichPersonCallback(services *service.Services) gin.HandlerFunc {
 		if betterContactDbRecord == nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to get bettercontact record"))
 			c.JSON(http.StatusNotFound,
-				rest.ErrorResponse{
+				rest.BaseResponse{
 					Status:  "error",
 					Message: "Record not found",
 				})
@@ -459,7 +461,7 @@ func EnrichPersonCallback(services *service.Services) gin.HandlerFunc {
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal scrapin record"))
 			c.JSON(http.StatusInternalServerError,
-				rest.ErrorResponse{
+				rest.BaseResponse{
 					Status:  "error",
 					Message: "Internal error",
 				})
@@ -478,7 +480,7 @@ func EnrichPersonCallback(services *service.Services) gin.HandlerFunc {
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal bettercontact record"))
 				c.JSON(http.StatusInternalServerError,
-					rest.ErrorResponse{
+					rest.BaseResponse{
 						Status:  "error",
 						Message: "Internal error",
 					})
@@ -619,7 +621,7 @@ func mapPersonScrapInData(source *postgresentity.ScrapInResponseBody) *EnrichPer
 			Company:         position.CompanyName,
 			CompanyLinkedin: position.LinkedInUrl,
 			IsCurrent:       position.StartEndDate.End == nil,
-			//Seniority:       position.Seniority, // TODO will be implemented later after clarifications
+			// Seniority:       position.Seniority, // TODO will be implemented later after clarifications
 		}
 		if position.StartEndDate.Start != nil {
 			enrichPersonJob.Duration.StartMonth = &position.StartEndDate.Start.Month
@@ -651,10 +653,10 @@ func mapPersonScrapInData(source *postgresentity.ScrapInResponseBody) *EnrichPer
 
 	// set location // TODO implement AI lookup to get details
 	output.Location = EnrichPersonLocation{
-		//City: source.Data.PersonProfile.Person.Location,
+		// City: source.Data.PersonProfile.Person.Location,
 		Region: source.Person.Location,
-		//Country:  source.Data.PersonProfile.Person.Country,
-		//Timezone: source.Data.PersonProfile.Person.Timezone,
+		// Country:  source.Data.PersonProfile.Person.Country,
+		// Timezone: source.Data.PersonProfile.Person.Timezone,
 	}
 
 	// set phone numbers
