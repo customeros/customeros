@@ -236,33 +236,32 @@ func (s *flowExecutionService) ScheduleFlow(ctx context.Context, txWithPostCommi
 
 	now := utils.Now()
 
-	flow, err := s.services.FlowService.FlowGetByParticipantId(ctx, txWithPostCommit.Tx, flowParticipant.Id)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
+	_, err := utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (interface{}, error) {
 
-	if flow.Status != entity.FlowStatusOn {
-		return nil
-	}
+		flow, err := s.services.FlowService.FlowGetByParticipantId(ctx, txWithPostCommit.Tx, flowParticipant.Id)
+		if err != nil {
+			return nil, err
+		}
 
-	//check if the participant meets flow requirements
-	flowRequirements, err := s.services.FlowExecutionService.GetFlowRequirements(ctx, flowId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "failed to get flow requirements")
-	}
+		if flow.Status != entity.FlowStatusOn {
+			return nil, nil
+		}
 
-	err = s.UpdateParticipantFlowRequirements(ctx, txWithPostCommit, flowParticipant, flowRequirements)
-	if err != nil {
-		return errors.Wrap(err, "failed to update participant flow requirements")
-	}
+		//check if the participant meets flow requirements
+		flowRequirements, err := s.services.FlowExecutionService.GetFlowRequirements(ctx, flowId)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to get flow requirements")
+		}
 
-	if flowParticipant.Status != entity.FlowParticipantStatusReady {
-		return nil
-	}
+		err = s.UpdateParticipantFlowRequirements(ctx, txWithPostCommit, flowParticipant, flowRequirements)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to update participant flow requirements")
+		}
 
-	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (interface{}, error) {
+		if flowParticipant.Status != entity.FlowParticipantStatusReady {
+			return nil, nil
+		}
+
 		flowExecutions, err := s.GetFlowActionExecutionsForParticipant(ctx, txWithPostCommit.Tx, flowId, flowParticipant.EntityId, flowParticipant.EntityType)
 		if err != nil {
 			tracing.TraceErr(span, err)
