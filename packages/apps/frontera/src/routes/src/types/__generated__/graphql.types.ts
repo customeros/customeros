@@ -2213,19 +2213,41 @@ export type Mailbox = {
   userId?: Maybe<Scalars['ID']['output']>;
 };
 
-export type MailstackDomain = {
-  __typename?: 'MailstackDomain';
+export type MailstackBuyRequest = {
+  __typename?: 'MailstackBuyRequest';
+  createdAt: Scalars['Time']['output'];
+  domains: Array<MailstackBuyRequestDomain>;
+  id: Scalars['String']['output'];
+  mailboxes: Array<MailstackBuyRequestMailbox>;
+  status: MailstackBuyRequestStatus;
+};
+
+export type MailstackBuyRequestDomain = {
+  __typename?: 'MailstackBuyRequestDomain';
   domain: Scalars['String']['output'];
-  status: MailstackStatus;
+  status: MailstackBuyRequestDomainStatus;
 };
 
-export type MailstackMailbox = {
-  __typename?: 'MailstackMailbox';
+export enum MailstackBuyRequestDomainStatus {
+  Completed = 'COMPLETED',
+  Failed = 'FAILED',
+  Pending = 'PENDING',
+}
+
+export type MailstackBuyRequestMailbox = {
+  __typename?: 'MailstackBuyRequestMailbox';
   mailbox: Scalars['String']['output'];
-  status: MailstackStatus;
+  status: MailstackBuyRequestMailboxStatus;
 };
 
-export enum MailstackStatus {
+export enum MailstackBuyRequestMailboxStatus {
+  Completed = 'COMPLETED',
+  Failed = 'FAILED',
+  Pending = 'PENDING',
+}
+
+export enum MailstackBuyRequestStatus {
+  AwaitingPayment = 'AWAITING_PAYMENT',
   Completed = 'COMPLETED',
   Failed = 'FAILED',
   Pending = 'PENDING',
@@ -2925,7 +2947,7 @@ export type MutationLogEntry_UpdateArgs = {
 };
 
 export type MutationMailstack_RegisterBuyDomainsWithMailboxesArgs = {
-  amount?: InputMaybe<Scalars['Float']['input']>;
+  amount: Scalars['Float']['input'];
   domains: Array<Scalars['String']['input']>;
   usernames: Array<Scalars['String']['input']>;
 };
@@ -4065,7 +4087,7 @@ export type Query = {
   mailstack_DomainPurchaseSuggestions: Array<Scalars['String']['output']>;
   mailstack_Domains: Array<Scalars['String']['output']>;
   mailstack_Mailboxes: Array<Mailbox>;
-  mailstack_RegisteredBuyDomainsWithMailboxes: Array<RegisteredBuyDomainWithMailboxes>;
+  mailstack_RegisteredBuyDomainsWithMailboxes: Array<MailstackBuyRequest>;
   mailstack_UniqueUsernames: Array<Scalars['String']['output']>;
   meeting: Meeting;
   opportunities_LinkedToOrganizations: OpportunityPage;
@@ -4342,23 +4364,6 @@ export type RegisterBuyDomainWithMailboxes = {
   __typename?: 'RegisterBuyDomainWithMailboxes';
   clientSecret: Scalars['String']['output'];
   id: Scalars['String']['output'];
-  status: RegisterMailstackStatus;
-};
-
-export enum RegisterMailstackStatus {
-  AwaitingPayment = 'AWAITING_PAYMENT',
-  Completed = 'COMPLETED',
-  Failed = 'FAILED',
-  Pending = 'PENDING',
-}
-
-export type RegisteredBuyDomainWithMailboxes = {
-  __typename?: 'RegisteredBuyDomainWithMailboxes';
-  createdAt: Scalars['Time']['output'];
-  domain: MailstackDomain;
-  id: Scalars['String']['output'];
-  mailboxes: Array<MailstackMailbox>;
-  status: Scalars['String']['output'];
 };
 
 export type Reminder = MetadataInterface & {
