@@ -1,4 +1,3 @@
-// todo update all API responses to standard format
 package restenrich
 
 import (

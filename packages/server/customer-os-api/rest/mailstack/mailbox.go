@@ -95,7 +95,7 @@ func RegisterNewMailbox(services *service.Services) gin.HandlerFunc {
 		additionalForwardingTo := fmt.Sprintf("bcc@%s.customeros.ai", strings.ToLower(tenant))
 		forwardingTo = append(forwardingTo, additionalForwardingTo)
 
-		response := MailboxResponse{
+		response := MailboxRecord{
 			Email:             username + "@" + domain,
 			WebmailEnabled:    mailboxRequest.WebmailEnabled,
 			ForwardingEnabled: true,
@@ -124,12 +124,13 @@ func RegisterNewMailbox(services *service.Services) gin.HandlerFunc {
 			}
 		}
 
-		response.Status = "success"
-		response.Message = "Mailbox setup successful"
 		if passwordGenerated {
 			response.Password = password
 		}
-		c.JSON(http.StatusOK, response)
+		c.JSON(http.StatusOK, MailboxResponse{
+			BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
+			Mailbox:      response,
+		})
 	}
 }
 
@@ -189,7 +190,8 @@ func GetMailboxes(services *service.Services) gin.HandlerFunc {
 		}
 
 		response := MailboxesResponse{
-			Status: "success",
+			BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
+			Mailboxes:    make([]MailboxRecord, 0, len(mailboxRecords)),
 		}
 		for _, mailboxRecord := range mailboxRecords {
 			mailboxDetails, err := services.CommonServices.OpenSrsService.GetMailboxDetails(ctx, mailboxRecord.MailboxUsername)
@@ -198,7 +200,7 @@ func GetMailboxes(services *service.Services) gin.HandlerFunc {
 				rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer.WithMessage("Error getting mailbox details"))
 				return
 			}
-			response.Mailboxes = append(response.Mailboxes, MailboxResponse{
+			response.Mailboxes = append(response.Mailboxes, MailboxRecord{
 				Email:             mailboxRecord.MailboxUsername,
 				ForwardingEnabled: mailboxDetails.ForwardingEnabled,
 				ForwardingTo:      mailboxDetails.ForwardingTo,
