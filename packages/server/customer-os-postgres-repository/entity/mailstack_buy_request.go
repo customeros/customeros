@@ -49,9 +49,10 @@ func (MailstackBuyRequestDomain) TableName() string {
 type MailstackBuyRequestDomainStatus string
 
 const (
-	MailstackBuyRequestDomainStatusPending   MailstackBuyRequestDomainStatus = "PENDING"
-	MailstackBuyRequestDomainStatusCompleted MailstackBuyRequestDomainStatus = "COMPLETED"
-	MailstackBuyRequestDomainStatusFailed    MailstackBuyRequestDomainStatus = "FAILED"
+	MailstackBuyRequestDomainStatusAwaitingPayment MailstackBuyRequestDomainStatus = "AWAITING_PAYMENT"
+	MailstackBuyRequestDomainStatusPending         MailstackBuyRequestDomainStatus = "PENDING"
+	MailstackBuyRequestDomainStatusCompleted       MailstackBuyRequestDomainStatus = "COMPLETED"
+	MailstackBuyRequestDomainStatusFailed          MailstackBuyRequestDomainStatus = "FAILED"
 )
 
 type MailstackBuyRequestMailbox struct {
@@ -73,7 +74,8 @@ func (MailstackBuyRequestMailbox) TableName() string {
 type MailstackBuyRequestMailboxStatus string
 
 const (
-	MailstackBuyRequestDomainMailboxPending   MailstackBuyRequestMailboxStatus = "PENDING"
-	MailstackBuyRequestDomainMailboxCompleted MailstackBuyRequestMailboxStatus = "COMPLETED"
-	MailstackBuyRequestDomainMailboxFailed    MailstackBuyRequestMailboxStatus = "FAILED"
+	MailstackBuyRequestDomainMailboxAwaitingPayment MailstackBuyRequestMailboxStatus = "AWAITING_PAYMENT"
+	MailstackBuyRequestDomainMailboxPending         MailstackBuyRequestMailboxStatus = "PENDING"
+	MailstackBuyRequestDomainMailboxCompleted       MailstackBuyRequestMailboxStatus = "COMPLETED"
+	MailstackBuyRequestDomainMailboxFailed          MailstackBuyRequestMailboxStatus = "FAILED"
 )

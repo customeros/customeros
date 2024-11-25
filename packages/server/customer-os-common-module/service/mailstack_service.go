@@ -44,6 +44,12 @@ func (s *mailstackService) RegisterBuyDomainsWithMailboxes(ctx context.Context, 
 	tenant := common.GetTenantFromContext(ctx)
 	email := common.GetUserEmailFromContext(ctx)
 
+	if s.cfg.ExternalServices.StripeConfig.ApiKey == "" {
+		err := errors.New("Stripe API key not set")
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		return "", "", err
+	}
+
 	id, err := s.services.PostgresRepositories.MailstackBuyRequestRepository.Store(ctx, nil, &entity.MailstackBuyRequest{
 		Domains:   strings.Join(domains, ","),
 		Usernames: strings.Join(usernames, ","),
@@ -83,18 +89,49 @@ func (s *mailstackService) RegisterBuyDomainsWithMailboxes(ctx context.Context, 
 		log.Fatalf("Failed to create payment intent: %v", err)
 	}
 
-	mailstackBuyRequest, err := s.services.PostgresRepositories.MailstackBuyRequestRepository.GetById(ctx, id)
-	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
-		return "", "", nil
-	}
+	err = s.services.PostgresRepositories.Db.Transaction(func(tx *gorm.DB) error {
 
-	mailstackBuyRequest.PaymentIntentId = pi.ID
+		mailstackBuyRequest, err := s.services.PostgresRepositories.MailstackBuyRequestRepository.GetById(ctx, id)
+		if err != nil {
+			tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+			return nil
+		}
 
-	_, err = s.services.PostgresRepositories.MailstackBuyRequestRepository.Store(ctx, nil, mailstackBuyRequest)
+		mailstackBuyRequest.PaymentIntentId = pi.ID
+
+		_, err = s.services.PostgresRepositories.MailstackBuyRequestRepository.Store(ctx, tx, mailstackBuyRequest)
+		if err != nil {
+			tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+			return nil
+		}
+
+		for _, domain := range strings.Split(mailstackBuyRequest.Domains, ",") {
+			err := s.services.PostgresRepositories.MailstackBuyRequestRepository.StoreDomain(ctx, tx, &entity.MailstackBuyRequestDomain{
+				MailstackBuyRequestId: id,
+				Domain:                domain,
+				Status:                entity.MailstackBuyRequestDomainStatusAwaitingPayment,
+			})
+			if err != nil {
+				return err
+			}
+
+			for _, username := range strings.Split(mailstackBuyRequest.Usernames, ",") {
+				err := s.services.PostgresRepositories.MailstackBuyRequestRepository.StoreMailbox(ctx, tx, &entity.MailstackBuyRequestMailbox{
+					MailstackBuyRequestId: id,
+					Mailbox:               username + "@" + domain,
+					Status:                entity.MailstackBuyRequestDomainMailboxAwaitingPayment,
+				})
+				if err != nil {
+					return err
+				}
+			}
+		}
+
+		return nil
+	})
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
-		return "", "", nil
+		tracing.TraceErr(span, err)
+		return "", "", err
 	}
 
 	return id, pi.ClientSecret, nil
@@ -106,6 +143,12 @@ func (s *mailstackService) MarkBuyRequestAsPaid(ctx context.Context, id string) 
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	span.LogKV("id", id)
+
+	if s.cfg.ExternalServices.StripeConfig.ApiKey == "" {
+		err := errors.New("Stripe API key not set")
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		return err
+	}
 
 	mailstackBuyRequest, err := s.services.PostgresRepositories.MailstackBuyRequestRepository.GetById(ctx, id)
 	if err != nil {
@@ -141,25 +184,32 @@ func (s *mailstackService) MarkBuyRequestAsPaid(ctx context.Context, id string) 
 			return err
 		}
 
-		for _, domain := range strings.Split(mailstackBuyRequest.Domains, ",") {
-			err := s.services.PostgresRepositories.MailstackBuyRequestRepository.StoreDomain(ctx, tx, &entity.MailstackBuyRequestDomain{
-				MailstackBuyRequestId: id,
-				Domain:                domain,
-				Status:                entity.MailstackBuyRequestDomainStatusPending,
-			})
+		domains, err := s.services.PostgresRepositories.MailstackBuyRequestRepository.GetDomains(ctx, id)
+		if err != nil {
+			return err
+		}
+
+		for _, domain := range domains {
+
+			domain.Status = entity.MailstackBuyRequestDomainStatusPending
+
+			err := s.services.PostgresRepositories.MailstackBuyRequestRepository.StoreDomain(ctx, tx, domain)
 			if err != nil {
 				return err
 			}
+		}
 
-			for _, username := range strings.Split(mailstackBuyRequest.Usernames, ",") {
-				err := s.services.PostgresRepositories.MailstackBuyRequestRepository.StoreMailbox(ctx, tx, &entity.MailstackBuyRequestMailbox{
-					MailstackBuyRequestId: id,
-					Mailbox:               username + "@" + domain,
-					Status:                entity.MailstackBuyRequestDomainMailboxPending,
-				})
-				if err != nil {
-					return err
-				}
+		mailboxes, err := s.services.PostgresRepositories.MailstackBuyRequestRepository.GetMailboxes(ctx, id)
+		if err != nil {
+			return err
+		}
+
+		for _, mailbox := range mailboxes {
+			mailbox.Status = entity.MailstackBuyRequestDomainMailboxPending
+
+			err := s.services.PostgresRepositories.MailstackBuyRequestRepository.StoreMailbox(ctx, tx, mailbox)
+			if err != nil {
+				return err
 			}
 		}
 
