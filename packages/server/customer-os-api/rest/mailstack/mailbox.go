@@ -2,6 +2,7 @@ package restmailstack
 
 import (
 	"fmt"
+	service2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"net/http"
 	"regexp"
 	"strings"
@@ -113,7 +114,6 @@ func RegisterNewMailbox(services *service.Services) gin.HandlerFunc {
 		}
 
 		// add mailbox
-		forwardingEnabled := true
 		forwardingTo := mailboxRequest.ForwardingTo
 		additionalForwardingTo := fmt.Sprintf("bcc@%s.customeros.ai", strings.ToLower(tenant))
 		forwardingTo = append(forwardingTo, additionalForwardingTo)
@@ -121,14 +121,19 @@ func RegisterNewMailbox(services *service.Services) gin.HandlerFunc {
 		response := MailboxResponse{
 			Email:             username + "@" + domain,
 			WebmailEnabled:    mailboxRequest.WebmailEnabled,
-			ForwardingEnabled: forwardingEnabled,
+			ForwardingEnabled: true,
 			ForwardingTo:      forwardingTo,
 		}
 
-		addMailboxReq := services.CommonServices.MailboxService.BuildAddMailboxRequest(
-			ctx, domain, username, password, mailboxRequest.LinkedUser, forwardingEnabled, mailboxRequest.WebmailEnabled, forwardingTo)
+		err := services.CommonServices.MailboxService.AddMailbox(ctx, service2.AddMailboxRequest{
+			Domain:          domain,
+			Username:        username,
+			Password:        password,
+			LinkedUserEmail: mailboxRequest.LinkedUser,
+			WebmailEnabled:  mailboxRequest.WebmailEnabled,
+			ForwardingTo:    forwardingTo,
+		})
 
-		err := services.CommonServices.MailboxService.AddMailbox(ctx, addMailboxReq)
 		if err != nil {
 			if errors.Is(err, coserrors.ErrDomainNotFound) {
 				c.JSON(http.StatusNotFound,

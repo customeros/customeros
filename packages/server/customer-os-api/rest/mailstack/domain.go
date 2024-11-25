@@ -168,7 +168,7 @@ func registerDomain(ctx context.Context, tenant, domain, website string, service
 	}
 
 	//step 1 - check domain availability
-	isAvailable, isPremium, err := services.NamecheapService.CheckDomainAvailability(ctx, domain)
+	isAvailable, isPremium, err := services.CommonServices.NamecheapService.CheckDomainAvailability(ctx, domain)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Error checking domain availability"))
 		return registerNewDomainResponse, err
@@ -181,17 +181,17 @@ func registerDomain(ctx context.Context, tenant, domain, website string, service
 	}
 
 	// step 2 - check pricing
-	domainPrice, err := services.NamecheapService.GetDomainPrice(ctx, domain)
+	domainPrice, err := services.CommonServices.NamecheapService.GetDomainPrice(ctx, domain)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Error getting domain price"))
 		return registerNewDomainResponse, err
 	}
-	if domainPrice > services.Cfg.ExternalServices.Namecheap.MaxPrice {
+	if domainPrice > services.Cfg.ExternalServices.NamecheapConfig.MaxPrice {
 		return registerNewDomainResponse, coserrors.ErrDomainPriceExceeded
 	}
 
 	//step 3 - register domain
-	err = services.NamecheapService.PurchaseDomain(ctx, tenant, domain)
+	err = services.CommonServices.NamecheapService.PurchaseDomain(ctx, tenant, domain)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Error purchasing domain"))
 		return registerNewDomainResponse, err
@@ -334,7 +334,7 @@ func configureDomain(ctx context.Context, tenant, domain, website string, servic
 	}
 
 	// replace nameservers in namecheap
-	err = services.NamecheapService.UpdateNameservers(ctx, tenant, domain, nameservers)
+	err = services.CommonServices.NamecheapService.UpdateNameservers(ctx, tenant, domain, nameservers)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Error updating nameservers"))
 		return domainResponse, coserrors.ErrDomainConfigurationFailed
@@ -347,7 +347,7 @@ func configureDomain(ctx context.Context, tenant, domain, website string, servic
 	}
 
 	// get domain details
-	domainInfo, err := services.NamecheapService.GetDomainInfo(ctx, tenant, domain)
+	domainInfo, err := services.CommonServices.NamecheapService.GetDomainInfo(ctx, tenant, domain)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Error getting domain info"))
 		return domainResponse, err
@@ -407,7 +407,7 @@ func GetDomains(services *service.Services) gin.HandlerFunc {
 			Status: "success",
 		}
 		for _, domainRecord := range activeDomainRecords {
-			domain, err := services.NamecheapService.GetDomainInfo(ctx, tenant, domainRecord.Domain)
+			domain, err := services.CommonServices.NamecheapService.GetDomainInfo(ctx, tenant, domainRecord.Domain)
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "Error getting domain info"))
 				span.LogFields(tracingLog.String("result", "Error getting domain info"))

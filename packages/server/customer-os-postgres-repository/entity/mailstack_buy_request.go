@@ -62,7 +62,9 @@ type MailstackBuyRequestMailbox struct {
 	UpdatedAt time.Time `gorm:"column:updated_at;type:timestamp" json:"updatedAt"`
 
 	MailstackBuyRequestId string `gorm:"column:mailstack_buy_request_id;type:uuid;NOT NULL" json:"mailstackBuyRequestId"`
-	Mailbox               string `gorm:"column:domain;type:varchar(255)" json:"domain"`
+	Domain                string `gorm:"column:domain;type:varchar(255)" json:"domain"`
+	Username              string `gorm:"column:username;type:varchar(255)" json:"username"`
+	Mailbox               string `gorm:"column:mailbox;type:varchar(255)" json:"mailbox"`
 
 	Status MailstackBuyRequestMailboxStatus `gorm:"column:status;type:varchar(50)" json:"status"`
 }

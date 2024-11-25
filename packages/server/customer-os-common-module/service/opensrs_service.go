@@ -37,7 +37,7 @@ type MailboxDetails struct {
 type OpenSrsService interface {
 	SendEmail(ctx context.Context, request *entity.EmailMessage) error
 	SetupDomain(ctx context.Context, tenant, domain string) error
-	SetupMailbox(ctx context.Context, tenant, domain, username, password string, forwardingEnabled bool, forwardingTo []string, webmailEnabled bool) error
+	SetupMailbox(ctx context.Context, tenant, domain, username, password string, forwardingTo []string, webmailEnabled bool) error
 	GetMailboxDetails(ctx context.Context, email string) (MailboxDetails, error)
 }
 
@@ -340,13 +340,13 @@ func (s *openSRSService) setEmailDomainInOpenSRS(ctx context.Context, domain, dk
 	return nil
 }
 
-func (s *openSRSService) SetupMailbox(ctx context.Context, tenant, domain, username, password string, forwardingEnabled bool, forwardingTo []string, webmailEnabled bool) error {
+func (s *openSRSService) SetupMailbox(ctx context.Context, tenant, domain, username, password string, forwardingTo []string, webmailEnabled bool) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpensrsService.SetupMailbox")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	tracing.TagTenant(span, tenant)
 	span.LogKV("domain", domain, "username", username)
-	span.LogFields(log.Bool("forwardingEnabled", forwardingEnabled), log.Bool("webmailEnabled", webmailEnabled), log.Object("forwardingTo", forwardingTo))
+	span.LogFields(log.Bool("webmailEnabled", webmailEnabled), log.Object("forwardingTo", forwardingTo))
 
 	// Define the API endpoint for adding a mailbox (replace with your environment's URL)
 	apiURL := s.services.GlobalConfig.ExternalServices.OpenSRSConfig.Url + "/api/change_user"
@@ -370,7 +370,7 @@ func (s *openSRSService) SetupMailbox(ctx context.Context, tenant, domain, usern
 		attributes["service_webmail"] = "disabled"
 	}
 	// Add forwarding options if enabled
-	if forwardingEnabled && len(forwardingTo) > 0 {
+	if len(forwardingTo) > 0 {
 		attributes["delivery_forward"] = true
 		attributes["forward_recipients"] = forwardingTo
 	}

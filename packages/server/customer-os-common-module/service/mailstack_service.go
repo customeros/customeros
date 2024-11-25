@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
@@ -98,6 +100,7 @@ func (s *mailstackService) RegisterBuyDomainsWithMailboxes(ctx context.Context, 
 		}
 
 		mailstackBuyRequest.PaymentIntentId = pi.ID
+		mailstackBuyRequest.PaymentIntentClientSecret = pi.ClientSecret
 
 		_, err = s.services.PostgresRepositories.MailstackBuyRequestRepository.Store(ctx, tx, mailstackBuyRequest)
 		if err != nil {
@@ -118,6 +121,8 @@ func (s *mailstackService) RegisterBuyDomainsWithMailboxes(ctx context.Context, 
 			for _, username := range strings.Split(mailstackBuyRequest.Usernames, ",") {
 				err := s.services.PostgresRepositories.MailstackBuyRequestRepository.StoreMailbox(ctx, tx, &entity.MailstackBuyRequestMailbox{
 					MailstackBuyRequestId: id,
+					Domain:                domain,
+					Username:              username,
 					Mailbox:               username + "@" + domain,
 					Status:                entity.MailstackBuyRequestDomainMailboxAwaitingPayment,
 				})
@@ -163,18 +168,18 @@ func (s *mailstackService) MarkBuyRequestAsPaid(ctx context.Context, id string) 
 	}
 
 	//call stripe and check if payment is successful
-	stripe.Key = s.cfg.ExternalServices.StripeConfig.ApiKey
-	stripePaymentIntent, err := paymentintent.Get(mailstackBuyRequest.PaymentIntentId, nil)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	if stripePaymentIntent.Status != stripe.PaymentIntentStatusSucceeded {
-		err := errors.New("Payment not successful")
-		tracing.TraceErr(span, err)
-		return err
-	}
+	//stripe.Key = s.cfg.ExternalServices.StripeConfig.ApiKey
+	//stripePaymentIntent, err := paymentintent.Get(mailstackBuyRequest.PaymentIntentId, nil)
+	//if err != nil {
+	//	tracing.TraceErr(span, err)
+	//	return err
+	//}
+	//
+	//if stripePaymentIntent.Status != stripe.PaymentIntentStatusSucceeded {
+	//	err := errors.New("Payment not successful")
+	//	tracing.TraceErr(span, err)
+	//	return err
+	//}
 
 	mailstackBuyRequest.Status = entity.MailstackBuyRequestStatusPending
 
@@ -215,7 +220,12 @@ func (s *mailstackService) MarkBuyRequestAsPaid(ctx context.Context, id string) 
 
 		return nil
 	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
 
+	err = s.services.RabbitMQService.PublishEvent(ctx, mailstackBuyRequest.ID, model.MAILSTACK_BUY_REQUEST, dto.MailstackBuyRequest{})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err

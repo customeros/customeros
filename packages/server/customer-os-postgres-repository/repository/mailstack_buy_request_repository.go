@@ -181,9 +181,9 @@ func (repo *mailstackBuyRequestRepositoryRepositoryImpl) StoreMailbox(ctx contex
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	span.LogFields(log.String("input.mailbox", input.Mailbox))
+	span.LogFields(log.String("input.domain", input.Domain), log.String("input.username", input.Username), log.String("input.mailbox", input.Mailbox), log.String("input.mailstackBuyRequestId", input.MailstackBuyRequestId))
 
-	if input.Mailbox == "" || input.MailstackBuyRequestId == "" {
+	if input.Domain == "" || input.Username == "" || input.Mailbox == "" || input.MailstackBuyRequestId == "" {
 		span.LogFields(log.Object("input", input))
 		err := errors.New("params missing")
 		tracing.TraceErr(span, err)

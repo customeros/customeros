@@ -3,10 +3,8 @@ package service
 import (
 	"encoding/xml"
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/coserrors"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
@@ -38,16 +36,14 @@ type NamecheapService interface {
 }
 
 type namecheapService struct {
-	log          logger.Logger
-	cfg          *config.Config
-	repositories *repository.Repositories
+	cfg      *config.GlobalConfig
+	services *Services
 }
 
-func NewNamecheapService(log logger.Logger, cfg *config.Config, repositories *repository.Repositories) NamecheapService {
+func NewNamecheapService(cfg *config.GlobalConfig, services *Services) NamecheapService {
 	return &namecheapService{
-		log:          log,
-		cfg:          cfg,
-		repositories: repositories,
+		cfg:      cfg,
+		services: services,
 	}
 }
 
@@ -58,17 +54,16 @@ func (s *namecheapService) CheckDomainAvailability(ctx context.Context, domain s
 	span.LogKV("domain", domain)
 
 	params := url.Values{}
-	params.Add("ApiKey", s.cfg.ExternalServices.Namecheap.ApiKey)
-	params.Add("ApiUser", s.cfg.ExternalServices.Namecheap.ApiUser)
-	params.Add("UserName", s.cfg.ExternalServices.Namecheap.ApiUsername)
-	params.Add("ClientIp", s.cfg.ExternalServices.Namecheap.ApiClientIp)
+	params.Add("ApiKey", s.cfg.ExternalServices.NamecheapConfig.ApiKey)
+	params.Add("ApiUser", s.cfg.ExternalServices.NamecheapConfig.ApiUser)
+	params.Add("UserName", s.cfg.ExternalServices.NamecheapConfig.ApiUsername)
+	params.Add("ClientIp", s.cfg.ExternalServices.NamecheapConfig.ApiClientIp)
 	params.Add("Command", "namecheap.domains.check")
 	params.Add("DomainList", domain)
 
-	resp, err := http.PostForm(s.cfg.ExternalServices.Namecheap.Url, params)
+	resp, err := http.PostForm(s.cfg.ExternalServices.NamecheapConfig.Url, params)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to call Namecheap API"))
-		s.log.Error("failed to call Namecheap API", err)
 		return false, false, err
 	}
 	defer resp.Body.Close()
@@ -77,7 +72,6 @@ func (s *namecheapService) CheckDomainAvailability(ctx context.Context, domain s
 	span.LogFields(tracingLog.String("responseBody", string(responseBody)))
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to read Namecheap response"))
-		s.log.Error("failed to read Namecheap response", err)
 		if string(responseBody) == "error code: 522" {
 			return false, false, coserrors.ErrConnectionTimeout
 		}
@@ -107,7 +101,6 @@ func (s *namecheapService) CheckDomainAvailability(ctx context.Context, domain s
 
 	if err = xml.Unmarshal(responseBody, &result); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to parse Namecheap XML response"))
-		s.log.Error("failed to parse Namecheap XML response", err)
 		return false, false, err
 	}
 	// Check if any errors exist
@@ -115,7 +108,6 @@ func (s *namecheapService) CheckDomainAvailability(ctx context.Context, domain s
 		for _, e := range result.Errors.Error {
 			errMsg := fmt.Sprintf("Error %s: %s", e.Number, e.Message)
 			tracing.TraceErr(span, fmt.Errorf(errMsg))
-			s.log.Errorf("Namecheap API returned an error: %s", errMsg)
 		}
 		return false, false, fmt.Errorf("Namecheap API returned errors")
 	}
@@ -135,68 +127,67 @@ func (s *namecheapService) PurchaseDomain(ctx context.Context, tenant, domain st
 	span.LogKV("domain", domain)
 
 	params := url.Values{}
-	params.Add("ApiKey", s.cfg.ExternalServices.Namecheap.ApiKey)
-	params.Add("ApiUser", s.cfg.ExternalServices.Namecheap.ApiUser)
-	params.Add("UserName", s.cfg.ExternalServices.Namecheap.ApiUsername)
-	params.Add("ClientIp", s.cfg.ExternalServices.Namecheap.ApiClientIp)
+	params.Add("ApiKey", s.cfg.ExternalServices.NamecheapConfig.ApiKey)
+	params.Add("ApiUser", s.cfg.ExternalServices.NamecheapConfig.ApiUser)
+	params.Add("UserName", s.cfg.ExternalServices.NamecheapConfig.ApiUsername)
+	params.Add("ClientIp", s.cfg.ExternalServices.NamecheapConfig.ApiClientIp)
 	params.Add("Command", "namecheap.domains.create")
 	params.Add("DomainName", domain)
-	params.Add("Years", strconv.Itoa(s.cfg.ExternalServices.Namecheap.Years))
+	params.Add("Years", strconv.Itoa(s.cfg.ExternalServices.NamecheapConfig.Years))
 	params.Add("AddFreeWhoisguard", "yes")
 
-	params.Add("RegistrantFirstName", s.cfg.ExternalServices.Namecheap.RegistrantFirstName)
-	params.Add("RegistrantLastName", s.cfg.ExternalServices.Namecheap.RegistrantLastName)
-	params.Add("RegistrantJobTitle", s.cfg.ExternalServices.Namecheap.RegistrantJobTitle)
-	params.Add("RegistrantAddress1", s.cfg.ExternalServices.Namecheap.RegistrantAddress1)
-	params.Add("RegistrantOrganizationName", s.cfg.ExternalServices.Namecheap.RegistrantCompanyName)
-	params.Add("RegistrantCity", s.cfg.ExternalServices.Namecheap.RegistrantCity)
-	params.Add("RegistrantStateProvince", s.cfg.ExternalServices.Namecheap.RegistrantState)
-	params.Add("RegistrantPostalCode", s.cfg.ExternalServices.Namecheap.RegistrantZIP)
-	params.Add("RegistrantCountry", s.cfg.ExternalServices.Namecheap.RegistrantCountry)
-	params.Add("RegistrantPhone", s.cfg.ExternalServices.Namecheap.RegistrantPhoneNumber)
-	params.Add("RegistrantEmailAddress", s.cfg.ExternalServices.Namecheap.RegistrantEmail)
+	params.Add("RegistrantFirstName", s.cfg.ExternalServices.NamecheapConfig.RegistrantFirstName)
+	params.Add("RegistrantLastName", s.cfg.ExternalServices.NamecheapConfig.RegistrantLastName)
+	params.Add("RegistrantJobTitle", s.cfg.ExternalServices.NamecheapConfig.RegistrantJobTitle)
+	params.Add("RegistrantAddress1", s.cfg.ExternalServices.NamecheapConfig.RegistrantAddress1)
+	params.Add("RegistrantOrganizationName", s.cfg.ExternalServices.NamecheapConfig.RegistrantCompanyName)
+	params.Add("RegistrantCity", s.cfg.ExternalServices.NamecheapConfig.RegistrantCity)
+	params.Add("RegistrantStateProvince", s.cfg.ExternalServices.NamecheapConfig.RegistrantState)
+	params.Add("RegistrantPostalCode", s.cfg.ExternalServices.NamecheapConfig.RegistrantZIP)
+	params.Add("RegistrantCountry", s.cfg.ExternalServices.NamecheapConfig.RegistrantCountry)
+	params.Add("RegistrantPhone", s.cfg.ExternalServices.NamecheapConfig.RegistrantPhoneNumber)
+	params.Add("RegistrantEmailAddress", s.cfg.ExternalServices.NamecheapConfig.RegistrantEmail)
 
-	params.Add("TechFirstName", s.cfg.ExternalServices.Namecheap.RegistrantFirstName)
-	params.Add("TechLastName", s.cfg.ExternalServices.Namecheap.RegistrantLastName)
-	params.Add("TechJobTitle", s.cfg.ExternalServices.Namecheap.RegistrantJobTitle)
-	params.Add("TechAddress1", s.cfg.ExternalServices.Namecheap.RegistrantAddress1)
-	params.Add("TechOrganizationName", s.cfg.ExternalServices.Namecheap.RegistrantCompanyName)
-	params.Add("TechCity", s.cfg.ExternalServices.Namecheap.RegistrantCity)
-	params.Add("TechStateProvince", s.cfg.ExternalServices.Namecheap.RegistrantState)
-	params.Add("TechPostalCode", s.cfg.ExternalServices.Namecheap.RegistrantZIP)
-	params.Add("TechCountry", s.cfg.ExternalServices.Namecheap.RegistrantCountry)
-	params.Add("TechPhone", s.cfg.ExternalServices.Namecheap.RegistrantPhoneNumber)
-	params.Add("TechEmailAddress", s.cfg.ExternalServices.Namecheap.RegistrantEmail)
+	params.Add("TechFirstName", s.cfg.ExternalServices.NamecheapConfig.RegistrantFirstName)
+	params.Add("TechLastName", s.cfg.ExternalServices.NamecheapConfig.RegistrantLastName)
+	params.Add("TechJobTitle", s.cfg.ExternalServices.NamecheapConfig.RegistrantJobTitle)
+	params.Add("TechAddress1", s.cfg.ExternalServices.NamecheapConfig.RegistrantAddress1)
+	params.Add("TechOrganizationName", s.cfg.ExternalServices.NamecheapConfig.RegistrantCompanyName)
+	params.Add("TechCity", s.cfg.ExternalServices.NamecheapConfig.RegistrantCity)
+	params.Add("TechStateProvince", s.cfg.ExternalServices.NamecheapConfig.RegistrantState)
+	params.Add("TechPostalCode", s.cfg.ExternalServices.NamecheapConfig.RegistrantZIP)
+	params.Add("TechCountry", s.cfg.ExternalServices.NamecheapConfig.RegistrantCountry)
+	params.Add("TechPhone", s.cfg.ExternalServices.NamecheapConfig.RegistrantPhoneNumber)
+	params.Add("TechEmailAddress", s.cfg.ExternalServices.NamecheapConfig.RegistrantEmail)
 
-	params.Add("AdminFirstName", s.cfg.ExternalServices.Namecheap.RegistrantFirstName)
-	params.Add("AdminLastName", s.cfg.ExternalServices.Namecheap.RegistrantLastName)
-	params.Add("AdminJobTitle", s.cfg.ExternalServices.Namecheap.RegistrantJobTitle)
-	params.Add("AdminAddress1", s.cfg.ExternalServices.Namecheap.RegistrantAddress1)
-	params.Add("AdminOrganizationName", s.cfg.ExternalServices.Namecheap.RegistrantCompanyName)
-	params.Add("AdminCity", s.cfg.ExternalServices.Namecheap.RegistrantCity)
-	params.Add("AdminStateProvince", s.cfg.ExternalServices.Namecheap.RegistrantState)
-	params.Add("AdminPostalCode", s.cfg.ExternalServices.Namecheap.RegistrantZIP)
-	params.Add("AdminCountry", s.cfg.ExternalServices.Namecheap.RegistrantCountry)
-	params.Add("AdminPhone", s.cfg.ExternalServices.Namecheap.RegistrantPhoneNumber)
-	params.Add("AdminEmailAddress", s.cfg.ExternalServices.Namecheap.RegistrantEmail)
+	params.Add("AdminFirstName", s.cfg.ExternalServices.NamecheapConfig.RegistrantFirstName)
+	params.Add("AdminLastName", s.cfg.ExternalServices.NamecheapConfig.RegistrantLastName)
+	params.Add("AdminJobTitle", s.cfg.ExternalServices.NamecheapConfig.RegistrantJobTitle)
+	params.Add("AdminAddress1", s.cfg.ExternalServices.NamecheapConfig.RegistrantAddress1)
+	params.Add("AdminOrganizationName", s.cfg.ExternalServices.NamecheapConfig.RegistrantCompanyName)
+	params.Add("AdminCity", s.cfg.ExternalServices.NamecheapConfig.RegistrantCity)
+	params.Add("AdminStateProvince", s.cfg.ExternalServices.NamecheapConfig.RegistrantState)
+	params.Add("AdminPostalCode", s.cfg.ExternalServices.NamecheapConfig.RegistrantZIP)
+	params.Add("AdminCountry", s.cfg.ExternalServices.NamecheapConfig.RegistrantCountry)
+	params.Add("AdminPhone", s.cfg.ExternalServices.NamecheapConfig.RegistrantPhoneNumber)
+	params.Add("AdminEmailAddress", s.cfg.ExternalServices.NamecheapConfig.RegistrantEmail)
 
-	params.Add("AuxBillingFirstName", s.cfg.ExternalServices.Namecheap.RegistrantFirstName)
-	params.Add("AuxBillingLastName", s.cfg.ExternalServices.Namecheap.RegistrantLastName)
-	params.Add("AuxBillingJobTitle", s.cfg.ExternalServices.Namecheap.RegistrantJobTitle)
-	params.Add("AuxBillingAddress1", s.cfg.ExternalServices.Namecheap.RegistrantAddress1)
-	params.Add("AuxBillingOrganizationName", s.cfg.ExternalServices.Namecheap.RegistrantCompanyName)
-	params.Add("AuxBillingCity", s.cfg.ExternalServices.Namecheap.RegistrantCity)
-	params.Add("AuxBillingStateProvince", s.cfg.ExternalServices.Namecheap.RegistrantState)
-	params.Add("AuxBillingPostalCode", s.cfg.ExternalServices.Namecheap.RegistrantZIP)
-	params.Add("AuxBillingCountry", s.cfg.ExternalServices.Namecheap.RegistrantCountry)
-	params.Add("AuxBillingPhone", s.cfg.ExternalServices.Namecheap.RegistrantPhoneNumber)
-	params.Add("AuxBillingEmailAddress", s.cfg.ExternalServices.Namecheap.RegistrantEmail)
+	params.Add("AuxBillingFirstName", s.cfg.ExternalServices.NamecheapConfig.RegistrantFirstName)
+	params.Add("AuxBillingLastName", s.cfg.ExternalServices.NamecheapConfig.RegistrantLastName)
+	params.Add("AuxBillingJobTitle", s.cfg.ExternalServices.NamecheapConfig.RegistrantJobTitle)
+	params.Add("AuxBillingAddress1", s.cfg.ExternalServices.NamecheapConfig.RegistrantAddress1)
+	params.Add("AuxBillingOrganizationName", s.cfg.ExternalServices.NamecheapConfig.RegistrantCompanyName)
+	params.Add("AuxBillingCity", s.cfg.ExternalServices.NamecheapConfig.RegistrantCity)
+	params.Add("AuxBillingStateProvince", s.cfg.ExternalServices.NamecheapConfig.RegistrantState)
+	params.Add("AuxBillingPostalCode", s.cfg.ExternalServices.NamecheapConfig.RegistrantZIP)
+	params.Add("AuxBillingCountry", s.cfg.ExternalServices.NamecheapConfig.RegistrantCountry)
+	params.Add("AuxBillingPhone", s.cfg.ExternalServices.NamecheapConfig.RegistrantPhoneNumber)
+	params.Add("AuxBillingEmailAddress", s.cfg.ExternalServices.NamecheapConfig.RegistrantEmail)
 
 	// Execute the request
-	resp, err := http.PostForm(s.cfg.ExternalServices.Namecheap.Url, params)
+	resp, err := http.PostForm(s.cfg.ExternalServices.NamecheapConfig.Url, params)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to call Namecheap API for domain purchase"))
-		s.log.Error("failed to call Namecheap API for domain purchase", err)
 		return err
 	}
 	defer resp.Body.Close()
@@ -205,7 +196,6 @@ func (s *namecheapService) PurchaseDomain(ctx context.Context, tenant, domain st
 	span.LogFields(tracingLog.String("responseBody", string(responseBody)))
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to read Namecheap response"))
-		s.log.Error("failed to read Namecheap response", err)
 		return err
 	}
 
@@ -233,7 +223,6 @@ func (s *namecheapService) PurchaseDomain(ctx context.Context, tenant, domain st
 
 	if err = xml.Unmarshal(responseBody, &result); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to parse Namecheap XML response"))
-		s.log.Error("failed to parse Namecheap XML response", err)
 		return err
 	}
 	// Check if any errors exist
@@ -241,7 +230,6 @@ func (s *namecheapService) PurchaseDomain(ctx context.Context, tenant, domain st
 		for _, e := range result.Errors.Error {
 			errMsg := fmt.Sprintf("Error %s: %s", e.Number, e.Message)
 			tracing.TraceErr(span, fmt.Errorf(errMsg))
-			s.log.Errorf("Namecheap API returned an error: %s", errMsg)
 		}
 		return fmt.Errorf("Namecheap API returned errors")
 	}
@@ -250,7 +238,6 @@ func (s *namecheapService) PurchaseDomain(ctx context.Context, tenant, domain st
 	if !result.CommandResponse.DomainCreateResult.Registered {
 		err = fmt.Errorf("failed to register domain %s: Namecheap API returned unsuccessful status", domain)
 		tracing.TraceErr(span, err)
-		s.log.Error(err)
 		return err
 	}
 
@@ -261,17 +248,11 @@ func (s *namecheapService) PurchaseDomain(ctx context.Context, tenant, domain st
 		tracingLog.String("result.transactionID", result.CommandResponse.DomainCreateResult.TransactionID),
 		tracingLog.String("result.chargedAmount", result.CommandResponse.DomainCreateResult.ChargedAmount),
 	)
-	s.log.Infof("Domain purchased successfully: %s, Order ID: %s, Transaction ID: %s",
-		result.CommandResponse.DomainCreateResult.Domain,
-		result.CommandResponse.DomainCreateResult.OrderID,
-		result.CommandResponse.DomainCreateResult.TransactionID,
-	)
 
 	// Store domain
-	_, err = s.repositories.PostgresRepositories.MailStackDomainRepository.RegisterDomain(ctx, tenant, domain)
+	_, err = s.services.PostgresRepositories.MailStackDomainRepository.RegisterDomain(ctx, tenant, domain)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to store mailstack domain in postgres"))
-		s.log.Error("failed to store domain in postgres", err)
 		return nil
 	}
 
@@ -288,19 +269,18 @@ func (s *namecheapService) GetDomainPrice(ctx context.Context, domain string) (f
 	tld := strings.Split(domain, ".")[1]
 
 	params := url.Values{}
-	params.Add("ApiKey", s.cfg.ExternalServices.Namecheap.ApiKey)
-	params.Add("ApiUser", s.cfg.ExternalServices.Namecheap.ApiUser)
-	params.Add("UserName", s.cfg.ExternalServices.Namecheap.ApiUsername)
-	params.Add("ClientIp", s.cfg.ExternalServices.Namecheap.ApiClientIp)
+	params.Add("ApiKey", s.cfg.ExternalServices.NamecheapConfig.ApiKey)
+	params.Add("ApiUser", s.cfg.ExternalServices.NamecheapConfig.ApiUser)
+	params.Add("UserName", s.cfg.ExternalServices.NamecheapConfig.ApiUsername)
+	params.Add("ClientIp", s.cfg.ExternalServices.NamecheapConfig.ApiClientIp)
 	params.Add("Command", "namecheap.users.getPricing")
 	params.Add("ProductType", "DOMAIN")
 	params.Add("ProductCategory", "REGISTER")
 	params.Add("ProductName", tld)
 
-	resp, err := http.PostForm(s.cfg.ExternalServices.Namecheap.Url, params)
+	resp, err := http.PostForm(s.cfg.ExternalServices.NamecheapConfig.Url, params)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to call Namecheap API for domain pricing"))
-		s.log.Error("failed to call Namecheap API for domain pricing", err)
 		return 0, err
 	}
 	defer resp.Body.Close()
@@ -309,7 +289,6 @@ func (s *namecheapService) GetDomainPrice(ctx context.Context, domain string) (f
 	span.LogFields(tracingLog.String("responseBody", string(responseBody)))
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to read Namecheap response"))
-		s.log.Error("failed to read Namecheap response", err)
 		return 0, err
 	}
 
@@ -350,7 +329,6 @@ func (s *namecheapService) GetDomainPrice(ctx context.Context, domain string) (f
 
 	if err = xml.Unmarshal(responseBody, &result); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to parse Namecheap XML response"))
-		s.log.Error("failed to parse Namecheap XML response", err)
 		return 0, err
 	}
 	// Check if any errors exist
@@ -358,7 +336,6 @@ func (s *namecheapService) GetDomainPrice(ctx context.Context, domain string) (f
 		for _, e := range result.Errors.Error {
 			errMsg := fmt.Sprintf("Error %s: %s", e.Number, e.Message)
 			tracing.TraceErr(span, fmt.Errorf(errMsg))
-			s.log.Errorf("Namecheap API returned an error: %s", errMsg)
 		}
 		return 0, fmt.Errorf("Namecheap API returned errors")
 	}
@@ -374,7 +351,6 @@ func (s *namecheapService) GetDomainPrice(ctx context.Context, domain string) (f
 							parsedPrice, err := strconv.ParseFloat(price.YourPrice, 64)
 							if err != nil {
 								tracing.TraceErr(span, errors.Wrap(err, "failed to parse registration price"))
-								s.log.Error("failed to parse registration price", err)
 								return 0, err
 							}
 							span.LogKV("result.price", parsedPrice)
@@ -396,32 +372,29 @@ func (s *namecheapService) GetDomainInfo(ctx context.Context, tenant, domain str
 	span.LogKV("domain", domain)
 
 	// Check if domain belongs to the tenant in PostgreSQL and is active
-	exists, err := s.repositories.PostgresRepositories.MailStackDomainRepository.CheckDomainOwnership(ctx, tenant, domain)
+	exists, err := s.services.PostgresRepositories.MailStackDomainRepository.CheckDomainOwnership(ctx, tenant, domain)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to check domain ownership in postgres"))
-		s.log.Error("failed to check domain ownership in postgres", err)
 		return NamecheapDomainInfo{}, err
 	}
 	if !exists {
 		err := fmt.Errorf("domain %s does not belong to tenant %s or is not active", domain, tenant)
 		tracing.TraceErr(span, err)
-		s.log.Error(err)
 		return NamecheapDomainInfo{}, err
 	}
 
 	params := url.Values{}
-	params.Add("ApiKey", s.cfg.ExternalServices.Namecheap.ApiKey)
-	params.Add("ApiUser", s.cfg.ExternalServices.Namecheap.ApiUser)
-	params.Add("UserName", s.cfg.ExternalServices.Namecheap.ApiUsername)
-	params.Add("ClientIp", s.cfg.ExternalServices.Namecheap.ApiClientIp)
+	params.Add("ApiKey", s.cfg.ExternalServices.NamecheapConfig.ApiKey)
+	params.Add("ApiUser", s.cfg.ExternalServices.NamecheapConfig.ApiUser)
+	params.Add("UserName", s.cfg.ExternalServices.NamecheapConfig.ApiUsername)
+	params.Add("ClientIp", s.cfg.ExternalServices.NamecheapConfig.ApiClientIp)
 	params.Add("Command", "namecheap.domains.getInfo")
 	params.Add("DomainName", domain)
 
 	// Execute the request
-	resp, err := http.PostForm(s.cfg.ExternalServices.Namecheap.Url, params)
+	resp, err := http.PostForm(s.cfg.ExternalServices.NamecheapConfig.Url, params)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to call Namecheap API for domain info"))
-		s.log.Error("failed to call Namecheap API for domain info", err)
 		return NamecheapDomainInfo{}, err
 	}
 	defer resp.Body.Close()
@@ -430,7 +403,6 @@ func (s *namecheapService) GetDomainInfo(ctx context.Context, tenant, domain str
 	span.LogFields(tracingLog.String("responseBody", string(responseBody)))
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to read Namecheap response"))
-		s.log.Error("failed to read Namecheap response", err)
 		return NamecheapDomainInfo{}, err
 	}
 
@@ -485,7 +457,6 @@ func (s *namecheapService) GetDomainInfo(ctx context.Context, tenant, domain str
 	var result NamecheapDomainInfoResult
 	if err = xml.Unmarshal(responseBody, &result); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to parse Namecheap XML response"))
-		s.log.Error("failed to parse Namecheap XML response", err)
 		return NamecheapDomainInfo{}, err
 	}
 
@@ -494,7 +465,6 @@ func (s *namecheapService) GetDomainInfo(ctx context.Context, tenant, domain str
 		for _, e := range result.Errors.Error {
 			errMsg := fmt.Sprintf("Error %s: %s", e.Number, e.Message)
 			tracing.TraceErr(span, fmt.Errorf(errMsg))
-			s.log.Errorf("Namecheap API returned an error: %s", errMsg)
 		}
 		return NamecheapDomainInfo{}, fmt.Errorf("Namecheap API returned errors")
 	}
@@ -521,16 +491,14 @@ func (s *namecheapService) UpdateNameservers(ctx context.Context, tenant, domain
 	span.LogKV("domain", domain, "nameservers", nameservers)
 
 	// Check if domain belongs to the tenant in PostgreSQL and is active
-	exists, err := s.repositories.PostgresRepositories.MailStackDomainRepository.CheckDomainOwnership(ctx, tenant, domain)
+	exists, err := s.services.PostgresRepositories.MailStackDomainRepository.CheckDomainOwnership(ctx, tenant, domain)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to check domain ownership in postgres"))
-		s.log.Error("failed to check domain ownership in postgres", err)
 		return err
 	}
 	if !exists {
 		err := fmt.Errorf("domain %s does not belong to tenant %s or is not active", domain, tenant)
 		tracing.TraceErr(span, err)
-		s.log.Error(err)
 		return err
 	}
 
@@ -539,20 +507,19 @@ func (s *namecheapService) UpdateNameservers(ctx context.Context, tenant, domain
 
 	// Prepare the parameters for the Namecheap API call
 	params := url.Values{}
-	params.Add("ApiKey", s.cfg.ExternalServices.Namecheap.ApiKey)
-	params.Add("ApiUser", s.cfg.ExternalServices.Namecheap.ApiUser)
-	params.Add("UserName", s.cfg.ExternalServices.Namecheap.ApiUsername)
-	params.Add("ClientIp", s.cfg.ExternalServices.Namecheap.ApiClientIp)
+	params.Add("ApiKey", s.cfg.ExternalServices.NamecheapConfig.ApiKey)
+	params.Add("ApiUser", s.cfg.ExternalServices.NamecheapConfig.ApiUser)
+	params.Add("UserName", s.cfg.ExternalServices.NamecheapConfig.ApiUsername)
+	params.Add("ClientIp", s.cfg.ExternalServices.NamecheapConfig.ApiClientIp)
 	params.Add("Command", "namecheap.domains.dns.setCustom")
 	params.Add("SLD", sld)
 	params.Add("TLD", tld)
 	params.Add("Nameservers", strings.Join(nameservers, ","))
 
 	// Execute the request
-	resp, err := http.PostForm(s.cfg.ExternalServices.Namecheap.Url, params)
+	resp, err := http.PostForm(s.cfg.ExternalServices.NamecheapConfig.Url, params)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to call Namecheap API for setting custom nameservers"))
-		s.log.Error("failed to call Namecheap API for setting custom nameservers", err)
 		return err
 	}
 	defer resp.Body.Close()
@@ -561,7 +528,6 @@ func (s *namecheapService) UpdateNameservers(ctx context.Context, tenant, domain
 	span.LogFields(tracingLog.String("responseBody", string(responseBody)))
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to read Namecheap response"))
-		s.log.Error("failed to read Namecheap response", err)
 		return err
 	}
 
@@ -586,7 +552,6 @@ func (s *namecheapService) UpdateNameservers(ctx context.Context, tenant, domain
 	var result NamecheapSetCustomDNSResult
 	if err = xml.Unmarshal(responseBody, &result); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to parse Namecheap XML response"))
-		s.log.Error("failed to parse Namecheap XML response", err)
 		return err
 	}
 
@@ -595,7 +560,6 @@ func (s *namecheapService) UpdateNameservers(ctx context.Context, tenant, domain
 		for _, e := range result.Errors.Error {
 			errMsg := fmt.Sprintf("Error %s: %s", e.Number, e.Message)
 			tracing.TraceErr(span, fmt.Errorf(errMsg))
-			s.log.Errorf("Namecheap API returned an error: %s", errMsg)
 		}
 		return fmt.Errorf("Namecheap API returned errors")
 	}
@@ -604,13 +568,11 @@ func (s *namecheapService) UpdateNameservers(ctx context.Context, tenant, domain
 	if !result.CommandResponse.DomainDNSSetCustomResult.Updated {
 		err := fmt.Errorf("failed to set custom nameservers for domain %s", domain)
 		tracing.TraceErr(span, err)
-		s.log.Error(err)
 		return err
 	}
 
 	// Log success
 	span.LogKV("result", "success")
-	s.log.Infof("Successfully set custom nameservers for domain %s", domain)
 
 	return nil
 }

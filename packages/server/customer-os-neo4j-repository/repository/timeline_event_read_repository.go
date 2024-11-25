@@ -16,12 +16,13 @@ import (
 )
 
 var (
-	relationshipsWithOrganization           = []string{"LOGGED", "REPORTED_BY", "SENT_TO", "SENT_BY", "ACTION_ON"}
-	relationshipsWithOrganizationProperties = []string{"SENT_TO", "SENT_BY", "PART_OF", "DESCRIBES", "ATTENDED_BY", "CREATED_BY"}
-	relationshipsWithContact                = []string{"HAS_ACTION", "PARTICIPATES", "SENT_TO", "SENT_BY", "PART_OF", "REPORTED_BY", "DESCRIBES", "ATTENDED_BY", "CREATED_BY"}
-	relationshipsWithContactProperties      = []string{"SENT_TO", "SENT_BY", "PART_OF", "DESCRIBES", "ATTENDED_BY", "CREATED_BY"}
-	relationshipsWithOrganizationContracts  = []string{"ACTION_ON"}
-	relationshipsWithOrganizationInvoices   = []string{"ACTION_ON"}
+	relationshipsWithOrganizationForLastTouchpoint = []string{"REPORTED_BY", "SENT_TO", "SENT_BY"}
+	relationshipsWithOrganization                  = []string{"LOGGED", "REPORTED_BY", "SENT_TO", "SENT_BY", "ACTION_ON"}
+	relationshipsWithOrganizationProperties        = []string{"SENT_TO", "SENT_BY", "PART_OF", "ATTENDED_BY", "CREATED_BY"}
+	relationshipsWithContact                       = []string{"HAS_ACTION", "PARTICIPATES", "SENT_TO", "SENT_BY", "PART_OF", "REPORTED_BY", "ATTENDED_BY", "CREATED_BY"}
+	relationshipsWithContactProperties             = []string{"SENT_TO", "SENT_BY", "PART_OF", "ATTENDED_BY", "CREATED_BY"}
+	relationshipsWithOrganizationContracts         = []string{"ACTION_ON"}
+	relationshipsWithOrganizationInvoices          = []string{"ACTION_ON"}
 )
 
 type TimelineEventReadRepository interface {
@@ -93,9 +94,9 @@ func (r *timelineEventReadRepository) CalculateAndGetLastTouchPoint(ctx context.
 	params := map[string]any{
 		"tenant":                                  tenant,
 		"organizationId":                          organizationId,
-		"nodeLabels":                              []string{model.NodeLabelInteractionSession, model.NodeLabelIssue, model.NodeLabelInteractionEvent, model.NodeLabelMeeting, model.NodeLabelLogEntry},
+		"nodeLabels":                              []string{model.NodeLabelInteractionSession, model.NodeLabelIssue, model.NodeLabelInteractionEvent, model.NodeLabelMeeting},
 		"excludeInteractionEventContentType":      []string{"x-openline-transcript-element"},
-		"relationshipsWithOrganization":           relationshipsWithOrganization,
+		"relationshipsWithOrganization":           relationshipsWithOrganizationForLastTouchpoint,
 		"relationshipsWithContact":                relationshipsWithContact,
 		"relationshipsWithContactProperties":      relationshipsWithContactProperties,
 		"relationshipsWithOrganizationProperties": relationshipsWithOrganizationProperties,
@@ -196,7 +197,7 @@ func (r *timelineEventReadRepository) GetTimelineEventsForContact(ctx context.Co
 		// get all timeline events for the contact
 		" WITH c MATCH (c), "+
 		" p = (c)-[*1..2]-(a:TimelineEvent) "+
-		" WHERE all(r IN relationships(p) WHERE type(r) in ['WORKS_AS','HAS_ACTION','PARTICIPATES','SENT_TO','SENT_BY','PART_OF','REPORTED_BY', 'DESCRIBES', 'ATTENDED_BY', 'CREATED_BY'])"+
+		" WHERE all(r IN relationships(p) WHERE type(r) in ['WORKS_AS','HAS_ACTION','PARTICIPATES','SENT_TO','SENT_BY','PART_OF','REPORTED_BY', 'ATTENDED_BY', 'CREATED_BY'])"+
 		" AND coalesce(a.startedAt, a.createdAt) < datetime($startingDate) "+
 		" AND (a.hide IS NULL OR a.hide = false) "+
 		" AND (a.status IS NULL OR a.status <> $skipDeleted) "+
@@ -207,7 +208,7 @@ func (r *timelineEventReadRepository) GetTimelineEventsForContact(ctx context.Co
 		" WITH c MATCH (c)-[:HAS]->(e),"+
 		" p = (e)-[*1..2]-(a:TimelineEvent) "+
 		" WHERE ('Email' in labels(e) OR 'PhoneNumber' in labels(e)) "+
-		" AND all(r IN relationships(p) WHERE type(r) in ['SENT_TO','SENT_BY', 'PART_OF', 'DESCRIBES', 'ATTENDED_BY', 'CREATED_BY'])"+
+		" AND all(r IN relationships(p) WHERE type(r) in ['SENT_TO','SENT_BY', 'PART_OF', 'ATTENDED_BY', 'CREATED_BY'])"+
 		" AND coalesce(a.startedAt, a.createdAt) < datetime($startingDate) "+
 		" AND (a.hide IS NULL OR a.hide = false) "+
 		" %s "+
@@ -263,7 +264,7 @@ func (r *timelineEventReadRepository) GetTimelineEventsTotalCountForContact(ctx 
 		// get all timeline events for the contact
 		" WITH c MATCH (c), "+
 		" p = (c)-[*1..2]-(a:TimelineEvent) "+
-		" WHERE all(r IN relationships(p) WHERE type(r) in ['WORKS_AS','HAS_ACTION','PARTICIPATES','SENT_TO','SENT_BY','PART_OF','REPORTED_BY', 'DESCRIBES', 'ATTENDED_BY', 'CREATED_BY']) "+
+		" WHERE all(r IN relationships(p) WHERE type(r) in ['WORKS_AS','HAS_ACTION','PARTICIPATES','SENT_TO','SENT_BY','PART_OF','REPORTED_BY', 'ATTENDED_BY', 'CREATED_BY']) "+
 		" AND (a.hide IS NULL OR a.hide = false) "+
 		" AND (a.status IS NULL OR a.status <> $skipDeleted) "+
 		" %s "+
@@ -273,7 +274,7 @@ func (r *timelineEventReadRepository) GetTimelineEventsTotalCountForContact(ctx 
 		" WITH c MATCH (c)-[:HAS]->(e),"+
 		" p = (e)-[*1..2]-(a:TimelineEvent) "+
 		" WHERE ('Email' in labels(e) OR 'PhoneNumber' in labels(e)) "+
-		" AND all(r IN relationships(p) WHERE type(r) in ['SENT_TO','SENT_BY', 'PART_OF', 'DESCRIBES', 'ATTENDED_BY', 'CREATED_BY'])"+
+		" AND all(r IN relationships(p) WHERE type(r) in ['SENT_TO','SENT_BY', 'PART_OF', 'ATTENDED_BY', 'CREATED_BY'])"+
 		" AND (a.hide IS NULL OR a.hide = false) "+
 		" %s "+
 		" return a as timelineEvent "+
