@@ -1,5 +1,7 @@
 package customerbase
 
+import "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
+
 // ContactRecord represents the request structure for creating a contact
 // @Description Request to create a contact
 type ContactRecord struct {
@@ -14,7 +16,7 @@ type ContactRecord struct {
 // @Description Detailed contact information returned by API operations
 type ContactResult struct {
 	// Inherits standard response fields
-	BaseResponse
+	rest.BaseResponse
 
 	// Contact's unique identifier
 	ContactId string `json:"contactId,omitempty" example:"contact-123"`
@@ -69,16 +71,6 @@ type CreateOrganizationRequest struct {
 type SetPrimaryExternalSystemIdRequest struct {
 	// The ID of the external system to be set as primary
 	ExternalId string `json:"externalId" example:"stripe-1234"`
-}
-
-// BaseResponse represents the standard API response structure
-// @Description Standard response structure for API operations
-type BaseResponse struct {
-	// Status indicates the result of the operation ("success" or "error")
-	Status string `json:"status" example:"success"`
-
-	// Message provides additional information about the operation
-	Message string `json:"message,omitempty" example:"Operation completed successfully"`
 }
 
 // OrganizationResult represents detailed organization information

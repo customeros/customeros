@@ -2,9 +2,9 @@ package service
 
 import (
 	"context"
+
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
@@ -15,6 +15,8 @@ import (
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 )
 
 type EmailService interface {
@@ -96,7 +98,7 @@ func (s *emailService) GetById(ctx context.Context, emailId string) (*neo4jentit
 	if err != nil {
 		return nil, err
 	}
-	var emailEntity = neo4jmapper.MapDbNodeToEmailEntity(emailNode)
+	emailEntity := neo4jmapper.MapDbNodeToEmailEntity(emailNode)
 	return emailEntity, nil
 }
 
