@@ -12,7 +12,7 @@ import (
 )
 
 type WorkspaceReadRepository interface {
-	Get(ctx context.Context, tenant string) ([]*dbtype.Node, error)
+	GetAllForTenant(ctx context.Context, tenant string) ([]*dbtype.Node, error)
 	GetByName(ctx context.Context, tenant, name string) (*dbtype.Node, error)
 }
 
@@ -28,8 +28,8 @@ func NewWorkspaceReadRepository(driver *neo4j.DriverWithContext, database string
 	}
 }
 
-func (r *workspaceReadRepository) Get(ctx context.Context, tenant string) ([]*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WorkspaceReadRepository.Get")
+func (r *workspaceReadRepository) GetAllForTenant(ctx context.Context, tenant string) ([]*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WorkspaceReadRepository.GetAllForTenant")
 	defer span.Finish()
 
 	span.SetTag(tracing.SpanTagTenant, tenant)
