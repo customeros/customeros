@@ -4,13 +4,13 @@ import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
 
 import { useStore } from '@shared/hooks/useStore';
+import { Rocket02 } from '@ui/media/icons/Rocket02';
+import { Trophy01 } from '@ui/media/icons/Trophy01';
 import { FlowParticipantStatus } from '@graphql/types';
-import { Rocket02 } from '@ui/media/icons/Rocket02.tsx';
-import { Trophy01 } from '@ui/media/icons/Trophy01.tsx';
-import { Hourglass02 } from '@ui/media/icons/Hourglass02.tsx';
-import { CheckCircle } from '@ui/media/icons/CheckCircle.tsx';
-import { SlashCircle01 } from '@ui/media/icons/SlashCircle01.tsx';
-import { CalendarCheck01 } from '@ui/media/icons/CalendarCheck01.tsx';
+import { Hourglass02 } from '@ui/media/icons/Hourglass02';
+import { CheckCircle } from '@ui/media/icons/CheckCircle';
+import { SlashCircle01 } from '@ui/media/icons/SlashCircle01';
+import { CalendarCheck01 } from '@ui/media/icons/CalendarCheck01';
 
 interface FlowStatusCellProps {
   contactID: string;
