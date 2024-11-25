@@ -2,6 +2,9 @@ package rest
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/opentracing/opentracing-go"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 )
 
 type ErrorResponse struct {
@@ -13,6 +16,14 @@ var (
 	ErrBadRequest = &ErrorResponse{
 		BaseResponse: BuildBaseResponse(StatusError),
 		Message:      "Invalid request format",
+	}
+	ErrConflict = &ErrorResponse{
+		BaseResponse: BuildBaseResponse(StatusError),
+		Message:      "Entity already exists",
+	}
+	ErrInternalServer = &ErrorResponse{
+		BaseResponse: BuildBaseResponse(StatusError),
+		Message:      "Unable to process request",
 	}
 	ErrInvalidAPIKey = &ErrorResponse{
 		BaseResponse: BuildBaseResponse(StatusError),
@@ -36,6 +47,7 @@ func (e *ErrorResponse) WithMessage(message string) *ErrorResponse {
 	}
 }
 
-func SendError(c *gin.Context, httpStatusCode int, err *ErrorResponse) {
+func SendError(c *gin.Context, span opentracing.Span, httpStatusCode int, err *ErrorResponse) {
+	tracing.LogObjectAsJson(span, c.Request.URL.Path, err)
 	c.JSON(httpStatusCode, err)
 }

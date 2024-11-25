@@ -53,7 +53,7 @@ func CreateOrganization(services *service.Services) gin.HandlerFunc {
 		if err := c.ShouldBindJSON(&request); err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "Invalid request body"))
 			services.Log.Error(ctx, "Invalid request body", err)
-			rest.SendError(c, http.StatusBadRequest, "Invalid request body")
+			rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest)
 			return
 		}
 
@@ -64,6 +64,7 @@ func CreateOrganization(services *service.Services) gin.HandlerFunc {
 			Services:       services,
 			Tenant:         tenant,
 		}
+
 		if err := validateOrganizationRequest(httpContext, &request); err != nil {
 			return
 		}
@@ -73,14 +74,15 @@ func CreateOrganization(services *service.Services) gin.HandlerFunc {
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "Failed to create organization"))
 			services.Log.Error(ctx, "Failed to create organization", err)
-			rest.SendError(c, http.StatusInternalServerError, "Failed to create organization")
+			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer.WithMessage("Failed to create organization"))
 			return
 		}
 
-		c.JSON(http.StatusCreated, OrganizationResult{
-			Status:  "success",
-			Message: "Organization created successfully",
-			ID:      organizationId,
+		c.JSON(http.StatusCreated, OrganizationResponse{
+			BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
+			Organization: OrganizationRecord{
+				ID: organizationId,
+			},
 		})
 	}
 }
@@ -111,7 +113,7 @@ func GetOrganization(services *service.Services) gin.HandlerFunc {
 
 		orgID := c.Param("id")
 		if orgID == "" {
-			rest.SendError(c, http.StatusBadRequest, "Invalid organization ID")
+			rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Invalid organization ID"))
 			return
 		}
 
@@ -123,8 +125,19 @@ func GetOrganization(services *service.Services) gin.HandlerFunc {
 			Tenant:         tenant,
 		}
 
-		result, statusCode := retrieveOrganization(httpContext, orgID)
-		c.JSON(statusCode, result)
+		result, status := retrieveOrganization(httpContext, orgID)
+
+		switch {
+		case status == rest.StatusError:
+			rest.SendError(c, span, http.StatusNotFound, rest.ErrNotFound.WithMessage("Organization does not exist"))
+		case status == rest.StatusPartialSuccess:
+			c.JSON(http.StatusPartialContent, "Unable to retrieve full organization data")
+		default:
+			c.JSON(http.StatusOK, OrganizationResponse{
+				BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
+				Organization: result,
+			})
+		}
 	}
 }
 
@@ -163,13 +176,26 @@ func SetPrimaryExternalSystemId(services *service.Services) gin.HandlerFunc {
 		}
 
 		result, statusCode := handleExternalSystemUpdate(httpContext)
-		c.JSON(statusCode, result)
+
+		switch {
+		case statusCode == http.StatusBadRequest:
+			rest.SendError(c, span, statusCode, rest.ErrBadRequest)
+		case statusCode == http.StatusInternalServerError:
+			rest.SendError(c, span, statusCode, rest.ErrInternalServer)
+		case statusCode == http.StatusNotFound:
+			rest.SendError(c, span, statusCode, rest.ErrNotFound)
+		default:
+			c.JSON(statusCode, ExternalSystemResponse{
+				BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
+				Organization: result,
+			})
+		}
 	}
 }
 
 func validateOrganizationRequest(ctx rest.HTTPContext, request *CreateOrganizationRequest) error {
 	if request.Name == "" && request.CustomId == "" && request.Website == "" && request.LinkedinUrl == "" {
-		rest.SendError(ctx.GinContext, http.StatusBadRequest, "Missing organization input fields")
+		rest.SendError(ctx.GinContext, ctx.Span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Missing organization input fields"))
 		return errors.New("missing required fields")
 	}
 
@@ -177,10 +203,10 @@ func validateOrganizationRequest(ctx rest.HTTPContext, request *CreateOrganizati
 	websiteDomain, _ := ctx.Services.CommonServices.DomainService.GetPrimaryDomainForOrganizationWebsite(*ctx.ServiceContext, request.Website)
 	if websiteDomain != "" {
 		if exists, err := checkOrganizationExistsByDomain(*ctx.ServiceContext, ctx.Services, websiteDomain); err != nil {
-			rest.SendError(ctx.GinContext, http.StatusInternalServerError, "Failed to check organization domain")
+			rest.SendError(ctx.GinContext, ctx.Span, http.StatusInternalServerError, rest.ErrInternalServer.WithMessage("Failed to check organization domain"))
 			return err
 		} else if exists {
-			rest.SendError(ctx.GinContext, http.StatusConflict, "Organization already exists with given domain")
+			rest.SendError(ctx.GinContext, ctx.Span, http.StatusConflict, rest.ErrConflict.WithMessage("Organization already exists with given domain"))
 			return errors.New("organization exists")
 		}
 	}
@@ -188,10 +214,10 @@ func validateOrganizationRequest(ctx rest.HTTPContext, request *CreateOrganizati
 	// Validate custom ID
 	if request.CustomId != "" {
 		if exists, err := checkOrganizationExistsByCustomId(*ctx.ServiceContext, ctx.Services, request.CustomId); err != nil {
-			rest.SendError(ctx.GinContext, http.StatusInternalServerError, "Failed to check organization custom id")
+			rest.SendError(ctx.GinContext, ctx.Span, http.StatusInternalServerError, rest.ErrInternalServer.WithMessage("Failed to check organization custom id"))
 			return err
 		} else if exists {
-			rest.SendError(ctx.GinContext, http.StatusConflict, "Organization already exists with given custom id")
+			rest.SendError(ctx.GinContext, ctx.Span, http.StatusConflict, rest.ErrConflict.WithMessage("Organization already exists with given custom id"))
 			return errors.New("organization exists")
 		}
 	}
@@ -199,10 +225,10 @@ func validateOrganizationRequest(ctx rest.HTTPContext, request *CreateOrganizati
 	// Validate LinkedIn URL
 	if request.LinkedinUrl != "" {
 		if exists, err := checkOrganizationExistsBySocialUrl(*ctx.ServiceContext, ctx.Services, request.LinkedinUrl); err != nil {
-			rest.SendError(ctx.GinContext, http.StatusInternalServerError, "Failed to check organization linkedin url")
+			rest.SendError(ctx.GinContext, ctx.Span, http.StatusInternalServerError, rest.ErrInternalServer.WithMessage("Failed to check organization linkedin url"))
 			return err
 		} else if exists {
-			rest.SendError(ctx.GinContext, http.StatusConflict, "Organization already exists with given linkedin url")
+			rest.SendError(ctx.GinContext, ctx.Span, http.StatusConflict, rest.ErrConflict.WithMessage("Organization already exists with given linkedin url"))
 			return errors.New("organization exists")
 		}
 	}
@@ -252,18 +278,21 @@ func determineOrganizationStage(relationship model.OrganizationRelationship) *en
 	return utils.ToPtr(enummapper.MapStageFromModel(stage))
 }
 
-func retrieveOrganization(ctx rest.HTTPContext, orgID string) (OrganizationResult, int) {
-	organizationDbNode, err := ctx.Services.Repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByIdOrCustomerOsId(*ctx.ServiceContext, common.GetTenantFromContext(*ctx.ServiceContext), orgID)
+func retrieveOrganization(ctx rest.HTTPContext, orgID string) (OrganizationRecord, rest.Status) {
+	var result OrganizationRecord
+
+	organizationDbNode, err := ctx.Services.Repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByIdOrCustomerOsId(
+		*ctx.ServiceContext, common.GetTenantFromContext(*ctx.ServiceContext), orgID)
 	if err != nil {
 		tracing.TraceErr(ctx.Span, err)
-		return OrganizationResult{Status: "error", Message: "Organization not found"}, http.StatusNotFound
+		return result, rest.StatusError
 	}
 	if organizationDbNode == nil {
-		return OrganizationResult{Status: "error", Message: "Organization not found"}, http.StatusNotFound
+		return result, rest.StatusError
 	}
 
 	organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
-	result := mapOrganizationEntityToResult(organizationEntity)
+	result = mapOrganizationEntityToResult(organizationEntity)
 
 	// Fetch additional data
 	partialSuccess := false
@@ -275,35 +304,33 @@ func retrieveOrganization(ctx rest.HTTPContext, orgID string) (OrganizationResul
 	}
 
 	if partialSuccess {
-		result.Status = "partial_success"
-		result.Message = "Failed to retrieve complete organization data"
-		return result, http.StatusPartialContent
+		return result, rest.StatusPartialSuccess
 	}
 
-	result.Status = "success"
-	result.Message = "Organization retrieved successfully"
-	return result, http.StatusOK
+	return result, rest.StatusSuccess
 }
 
-func handleExternalSystemUpdate(ctx rest.HTTPContext) (ExternalSystemResult, int) {
+func handleExternalSystemUpdate(ctx rest.HTTPContext) (ExternalSystemRecord, int) {
+	var results ExternalSystemRecord
+
 	orgId := ctx.GinContext.Param("id")
 	externalSystem := strings.ToLower(ctx.GinContext.Param("externalSystem"))
 
 	var request SetPrimaryExternalSystemIdRequest
 	if err := ctx.GinContext.ShouldBindJSON(&request); err != nil {
-		return ExternalSystemResult{Status: "error", Message: "Invalid request body"}, http.StatusBadRequest
+		return results, http.StatusBadRequest
 	}
 
 	// Validate organization exists
 	if exists, err := validateOrganizationExists(*ctx.ServiceContext, ctx.Services, orgId); err != nil {
-		return ExternalSystemResult{Status: "error", Message: "Failed to validate organization"}, http.StatusInternalServerError
+		return results, http.StatusInternalServerError
 	} else if !exists {
-		return ExternalSystemResult{Status: "error", Message: "Organization not found"}, http.StatusNotFound
+		return results, http.StatusNotFound
 	}
 
 	// Validate external system
 	if !neo4jentity.IsValidDataSource(externalSystem) {
-		return ExternalSystemResult{Status: "error", Message: "External system not found"}, http.StatusNotFound
+		return results, http.StatusNotFound
 	}
 
 	// Set primary ID
@@ -313,12 +340,10 @@ func handleExternalSystemUpdate(ctx rest.HTTPContext) (ExternalSystemResult, int
 			Id:   orgId,
 		})
 	if err != nil {
-		return ExternalSystemResult{Status: "error", Message: "Failed to set primary external ID"}, http.StatusInternalServerError
+		return results, http.StatusInternalServerError
 	}
 
-	return ExternalSystemResult{
-		Status:         "success",
-		Message:        "Primary external ID set successfully",
+	return ExternalSystemRecord{
 		OrganizationId: orgId,
 		ExternalSystem: externalSystem,
 		ExternalId:     request.ExternalId,
@@ -347,7 +372,7 @@ func validateOrganizationExists(ctx context.Context, services *service.Services,
 	return organizationDbNode != nil, err
 }
 
-func enrichOrganizationWithDomains(ctx context.Context, services *service.Services, result *OrganizationResult, orgId string) error {
+func enrichOrganizationWithDomains(ctx context.Context, services *service.Services, result *OrganizationRecord, orgId string) error {
 	domainEntities, err := services.CommonServices.DomainService.GetAllDomainsForOrganizations(ctx, []string{orgId})
 	if err != nil {
 		return err
@@ -360,7 +385,7 @@ func enrichOrganizationWithDomains(ctx context.Context, services *service.Servic
 	return nil
 }
 
-func enrichOrganizationWithExternalLinks(ctx context.Context, services *service.Services, result *OrganizationResult, orgId string) error {
+func enrichOrganizationWithExternalLinks(ctx context.Context, services *service.Services, result *OrganizationRecord, orgId string) error {
 	externalSystemEntities, err := services.CommonServices.ExternalSystemService.GetExternalSystemsForEntities(ctx, []string{orgId}, commonModel.ORGANIZATION)
 	if err != nil {
 		return err
@@ -379,8 +404,8 @@ func enrichOrganizationWithExternalLinks(ctx context.Context, services *service.
 	return nil
 }
 
-func mapOrganizationEntityToResult(entity *neo4jentity.OrganizationEntity) OrganizationResult {
-	return OrganizationResult{
+func mapOrganizationEntityToResult(entity *neo4jentity.OrganizationEntity) OrganizationRecord {
+	return OrganizationRecord{
 		ID:           entity.ID,
 		CustomId:     entity.ReferenceId,
 		CosId:        entity.CustomerOsId,

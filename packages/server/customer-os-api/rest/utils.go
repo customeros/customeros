@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"mime/multipart"
+	"net/http"
 	"strings"
 	"time"
 
@@ -37,9 +38,10 @@ type HTTPContext struct {
 type Status string
 
 const (
-	StatusSuccess    Status = "success"
-	StatusError      Status = "error"
-	StatusProcessing Status = "processing"
+	StatusError          Status = "error"
+	StatusPartialSuccess Status = "partial success"
+	StatusProcessing     Status = "processing"
+	StatusSuccess        Status = "success"
 )
 
 const requestIDLength = 16
@@ -56,21 +58,21 @@ func ValidateTenant(c *gin.Context, ctx context.Context, span opentracing.Span) 
 	tracing.TagTenant(span, tenant)
 
 	if tenant == "" {
-		SendError(c, ErrInvalidAPIKey)
+		SendError(c, span, http.StatusUnauthorized, ErrInvalidAPIKey)
 		return ""
 	}
 	return tenant
 }
 
-func ValidateAndOpenCsvFile(c *gin.Context) (multipart.File, error) {
+func ValidateAndOpenCsvFile(c *gin.Context, span opentracing.Span) (multipart.File, error) {
 	file, header, err := c.Request.FormFile("file")
 	if err != nil {
-		SendError(c, ErrBadRequest.WithMessage("Unable to parse file"))
+		SendError(c, span, http.StatusBadRequest, ErrBadRequest.WithMessage("Unable to parse file"))
 		return nil, err
 	}
 
 	if header.Header.Get("Content-Type") != "text/csv" && !strings.HasSuffix(header.Filename, ".csv") {
-		SendError(c, ErrBadRequest.WithMessage("Invalid file type"))
+		SendError(c, span, http.StatusBadRequest, ErrBadRequest.WithMessage("Invalid file type"))
 		return nil, errors.New("invalid file type")
 	}
 

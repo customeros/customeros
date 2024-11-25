@@ -64,9 +64,10 @@ func handleJSONRequest(ctx rest.HTTPContext) {
 		err, errValue := validateContact(&contact)
 		if err != nil {
 			errMessage := fmt.Sprintf("%s | %s", errValue, err)
-			rest.SendError(ctx.GinContext, http.StatusBadRequest, rest.ErrBadRequest.WithMessage(errMessage))
+			rest.SendError(ctx.GinContext, ctx.Span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage(errMessage))
 
 		}
+		contact.ContactId = processContact(ctx, contact)
 		ctx.GinContext.JSON(http.StatusOK, SingleContactResponse{
 			BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
 			Contact:      contact,
@@ -105,9 +106,9 @@ func validateContact(record *ContactRecord) (error, string) {
 }
 
 func processContact(ctx rest.HTTPContext, record ContactRecord) string {
-	emailEntity, contactId := findExistingContact(ctx, record.Email)
+	emailEntity, contactId := findExistingContactByEmail(ctx, record.Email)
 	if emailEntity == nil && contactId == "" {
-		contactId = createNewContact(ctx, record.LinkedInURL)
+		contactId = createNewContactByLinkedin(ctx, record.LinkedInURL)
 	}
 
 	if emailEntity == nil && record.Email != "" {
@@ -116,7 +117,7 @@ func processContact(ctx rest.HTTPContext, record ContactRecord) string {
 	return contactId
 }
 
-func findExistingContact(ctx rest.HTTPContext, email string) (*neo4jentity.EmailEntity, string) {
+func findExistingContactByEmail(ctx rest.HTTPContext, email string) (*neo4jentity.EmailEntity, string) {
 	if email == "" {
 		return nil, ""
 	}
@@ -143,7 +144,7 @@ func findExistingContact(ctx rest.HTTPContext, email string) (*neo4jentity.Email
 	return emailEntity, ""
 }
 
-func createNewContact(ctx rest.HTTPContext, linkedInURL string) string {
+func createNewContactByLinkedin(ctx rest.HTTPContext, linkedInURL string) string {
 	contactId, err := ctx.Services.CommonServices.ContactService.CreateContactByLinkedIn(*ctx.ServiceContext, nil, linkedInURL)
 	if err != nil {
 		tracing.TraceErr(ctx.Span, errors.Wrap(err, "failed to save contact"))

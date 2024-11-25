@@ -9,6 +9,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
@@ -82,7 +83,7 @@ func ImportContacts(services *service.Services) gin.HandlerFunc {
 
 		contentType := c.GetHeader("Content-Type")
 		if !strings.HasPrefix(contentType, "multipart/form-data") {
-			rest.SendError(c, http.StatusBadRequest, rest.ErrUnsupportedContentType)
+			rest.SendError(c, span, http.StatusBadRequest, rest.ErrUnsupportedContentType)
 		}
 
 		handleCSVUpload(httpContext)
@@ -92,12 +93,12 @@ func ImportContacts(services *service.Services) gin.HandlerFunc {
 func handleBulkJSONRequest(ctx rest.HTTPContext) {
 	var multipleContacts []ContactRecord
 	if err := ctx.GinContext.ShouldBindJSON(&multipleContacts); err != nil {
-		rest.SendError(ctx.GinContext, http.StatusBadRequest, rest.ErrBadRequest)
+		rest.SendError(ctx.GinContext, ctx.Span, http.StatusBadRequest, rest.ErrBadRequest)
 		return
 	}
 
 	if len(multipleContacts) == 0 {
-		rest.SendError(ctx.GinContext, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("No contacts provided"))
+		rest.SendError(ctx.GinContext, ctx.Span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("No contacts provided"))
 		return
 	}
 
@@ -117,6 +118,7 @@ func handleBulkJSONRequest(ctx rest.HTTPContext) {
 
 			validationErrors = append(validationErrors, errDetails)
 		}
+		contact.ContactId = processContact(ctx, contact)
 	}
 
 	switch {
@@ -145,7 +147,7 @@ func handleBulkJSONRequest(ctx rest.HTTPContext) {
 		}
 		ctx.GinContext.JSON(http.StatusCreated, resp)
 	case fail == total:
-		rest.SendError(ctx.GinContext, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("No valid contacts found in request"))
+		rest.SendError(ctx.GinContext, ctx.Span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("No valid contacts found in request"))
 	default:
 		resp := BulkResponseMultipleErrors{
 			BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
@@ -169,17 +171,17 @@ func handleCSVUpload(ctx rest.HTTPContext) {
 	defer file.Close()
 
 	reader := csv.NewReader(file)
-	if err := validateFileHeaders(ctx.GinContext, reader); err != nil {
+	if err := validateFileHeaders(ctx.GinContext, ctx.Span, reader); err != nil {
 		return
 	}
 
 	processCSVRecords(ctx, reader)
 }
 
-func validateFileHeaders(c *gin.Context, reader *csv.Reader) error {
+func validateFileHeaders(c *gin.Context, span opentracing.Span, reader *csv.Reader) error {
 	headers, err := reader.Read()
 	if err != nil {
-		rest.SendError(c, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Unable to read file"))
+		rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Unable to read file"))
 		return err
 	}
 
@@ -195,7 +197,7 @@ func validateFileHeaders(c *gin.Context, reader *csv.Reader) error {
 	}
 
 	if !hasEmail || !hasLinkedIn {
-		rest.SendError(c, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Missing required headers: email, linkedin_url"))
+		rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Missing required headers: email, linkedin_url"))
 		return errors.New("invalid headers")
 	}
 	return nil
@@ -240,6 +242,7 @@ func processCSVRecords(ctx rest.HTTPContext, reader *csv.Reader) {
 				Description: fmt.Sprintf("%s", err),
 			})
 		}
+		contactRecord.ContactId = processContact(ctx, contactRecord)
 	}
 
 	switch {
@@ -268,7 +271,7 @@ func processCSVRecords(ctx rest.HTTPContext, reader *csv.Reader) {
 		}
 		ctx.GinContext.JSON(http.StatusCreated, resp)
 	case fail == total:
-		rest.SendError(ctx.GinContext, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("No valid contacts found in request"))
+		rest.SendError(ctx.GinContext, ctx.Span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("No valid contacts found in request"))
 	default:
 		resp := BulkResponseMultipleErrors{
 			BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
