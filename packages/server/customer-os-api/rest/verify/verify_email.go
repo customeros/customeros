@@ -34,18 +34,17 @@ const (
 	threadsToVerifyBulkEmails                     = 6
 )
 
+type EmailVerificationResponse struct {
+	rest.BaseResponse
+	Email EmailVerificationRecord `json:"email,omitempty"`
+}
+
 // EmailVerificationResponse represents the response returned after verifying an email address
 // @Description The response structure for email verification, providing detailed validation results.
 // @example 200 {object} EmailVerificationResponse
-type EmailVerificationResponse struct {
-	// Status indicates the status of the verification (e.g., "success" or "failure")
-	Status string `json:"status" example:"success"`
-
-	// Message contains any additional information or errors related to the verification
-	Message string `json:"message,omitempty" example:"Email verified successfully"`
-
+type EmailVerificationRecord struct {
 	// Email is the email address that was verified
-	Email string `json:"email" example:"example@example.com"`
+	EmailAddress string `json:"emailAddress" example:"example@example.com"`
 
 	// Deliverable indicates whether the email is deliverable (e.g., "true", "false", "unknown")
 	Deliverable string `json:"deliverable" example:"true"`
@@ -180,10 +179,12 @@ func VerifyEmailAddress(services *service.Services) gin.HandlerFunc {
 		syntaxValidation := mailsherpa.ValidateEmailSyntax(emailAddress)
 		if !syntaxValidation.IsValid {
 			c.JSON(http.StatusOK, EmailVerificationResponse{
-				Status: "success",
-				Email:  emailAddress,
-				Syntax: EmailVerificationSyntax{
-					IsValid: false,
+				BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
+				Email: EmailVerificationRecord{
+					EmailAddress: emailAddress,
+					Syntax: EmailVerificationSyntax{
+						IsValid: false,
+					},
 				},
 			})
 			logger.Warnf("Invalid email address format: %s", emailAddress)
@@ -201,9 +202,8 @@ func VerifyEmailAddress(services *service.Services) gin.HandlerFunc {
 			return
 		}
 
-		emailVerificationResponse := EmailVerificationResponse{
-			Status:                "success",
-			Email:                 emailAddress,
+		emailVerificationResponse := EmailVerificationRecord{
+			EmailAddress:          emailAddress,
 			Deliverable:           result.Data.EmailData.Deliverable,
 			Provider:              result.Data.DomainData.Provider,
 			SecureGatewayProvider: result.Data.DomainData.SecureGatewayProvider,
@@ -245,7 +245,10 @@ func VerifyEmailAddress(services *service.Services) gin.HandlerFunc {
 		}
 
 		c.Header("Content-Type", "application/json")
-		c.JSON(http.StatusOK, emailVerificationResponse)
+		c.JSON(http.StatusOK, EmailVerificationResponse{
+			BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
+			Email:        emailVerificationResponse,
+		})
 	}
 }
 
