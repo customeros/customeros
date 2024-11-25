@@ -1,9 +1,10 @@
 package restmailstack
 
 import (
+	"net/http"
+	"strings"
+
 	"github.com/gin-gonic/gin"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/coserrors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -11,8 +12,9 @@ import (
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
-	"net/http"
-	"strings"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
 
 // RegisterNewDomain registers a new domain for the mail service
@@ -40,11 +42,7 @@ func RegisterNewDomain(services *service.Services) gin.HandlerFunc {
 		tenant := common.GetTenantFromContext(ctx)
 		// if tenant missing return auth error
 		if tenant == "" {
-			c.JSON(http.StatusUnauthorized,
-				rest.ErrorResponse{
-					Status:  "error",
-					Message: "API key invalid or expired",
-				})
+			rest.SendError(c, span, http.StatusUnauthorized, rest.ErrUnauthorized)
 			span.LogFields(tracingLog.String("result", "Missing tenant in context"))
 			return
 		}
@@ -52,86 +50,42 @@ func RegisterNewDomain(services *service.Services) gin.HandlerFunc {
 		// Parse and validate request body
 		var req RegisterNewDomainRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
-			c.JSON(http.StatusBadRequest,
-				rest.ErrorResponse{
-					Status:  "error",
-					Message: "Invalid request body or missing input fields",
-				})
+			rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest)
 			span.LogFields(tracingLog.String("result", "Invalid request body"))
 			return
 		}
 
 		// Check for missing domain
 		if req.Domain == "" {
-			c.JSON(http.StatusBadRequest,
-				rest.ErrorResponse{
-					Status:  "error",
-					Message: "Missing required field: domain",
-				})
-			span.LogFields(tracingLog.String("result", "Missing domain"))
+			rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Missing required field: domain"))
 			return
 		} else if req.Website == "" {
-			c.JSON(http.StatusBadRequest,
-				rest.ErrorResponse{
-					Status:  "error",
-					Message: "Missing required field: website",
-				})
-			span.LogFields(tracingLog.String("result", "Missing website"))
+			rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Missing required field: website"))
 			return
 		}
 
 		registerNewDomainResponse, err := registerDomain(ctx, tenant, req.Domain, req.Website, services)
 		if err != nil {
 			if errors.Is(err, coserrors.ErrNotSupported) {
-				c.JSON(http.StatusNotAcceptable,
-					rest.ErrorResponse{
-						Status:  "error",
-						Message: "Domain TLD not supported, please choose another domain",
-					})
-				span.LogFields(tracingLog.String("result", "Domain TLD not supported"))
+				rest.SendError(c, span, http.StatusNotAcceptable, rest.ErrBadRequest.WithMessage("Domain TLD not supported"))
 				return
 			} else if errors.Is(err, coserrors.ErrDomainUnavailable) {
-				c.JSON(http.StatusConflict,
-					rest.ErrorResponse{
-						Status:  "error",
-						Message: "Domain is already registered, please choose another domain",
-					})
+				rest.SendError(c, span, http.StatusConflict, rest.ErrConflict.WithMessage("Domain already registered"))
 				return
 			} else if errors.Is(err, coserrors.ErrDomainPremium) {
-				c.JSON(http.StatusNotAcceptable,
-					rest.ErrorResponse{
-						Status:  "error",
-						Message: "Not supporting premium domains, please choose another domain",
-					})
+				rest.SendError(c, span, http.StatusNotAcceptable, rest.ErrBadRequest.WithMessage("Premium domain names are not supported"))
 				return
 			} else if errors.Is(err, coserrors.ErrDomainPriceExceeded) {
-				c.JSON(http.StatusNotAcceptable,
-					rest.ErrorResponse{
-						Status:  "error",
-						Message: "Domain price exceeds the maximum allowed price, please contact support",
-					})
+				rest.SendError(c, span, http.StatusNotAcceptable, rest.ErrBadRequest.WithMessage("Unauthorized to purchase domain, please contact support"))
 				return
 			} else if errors.Is(err, coserrors.ErrDomainConfigurationFailed) {
-				c.JSON(http.StatusInternalServerError,
-					rest.ErrorResponse{
-						Status:  "error",
-						Message: "Error configuring domain, please contact support",
-					})
+				rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer.WithMessage("Unable to configure domain"))
 				return
 			} else if errors.Is(err, coserrors.ErrConnectionTimeout) {
-				c.JSON(http.StatusInternalServerError,
-					rest.ErrorResponse{
-						Status:  "error",
-						Message: "Connection timeout, please try again",
-					})
+				rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer.WithMessage("Connection timeout, please retry"))
 				return
 			} else {
-				c.JSON(http.StatusInternalServerError,
-					rest.ErrorResponse{
-						Status:  "error",
-						Message: "Domain registration failed, please contact support",
-					})
-				span.LogFields(tracingLog.String("result", "Internal server error, please contact support"))
+				rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer.WithMessage("Domain registratin failed, please contact support"))
 				return
 			}
 		}
@@ -148,7 +102,7 @@ func registerDomain(ctx context.Context, tenant, domain, website string, service
 	span, ctx := opentracing.StartSpanFromContext(ctx, "registerDomain")
 	defer span.Finish()
 
-	var registerNewDomainResponse = DomainResponse{}
+	registerNewDomainResponse := DomainResponse{}
 	registerNewDomainResponse.Domain = domain
 
 	var err error
@@ -197,7 +151,7 @@ func registerDomain(ctx context.Context, tenant, domain, website string, service
 		return registerNewDomainResponse, err
 	}
 
-	//step 4 - configure domain
+	// step 4 - configure domain
 	return configureDomain(ctx, tenant, domain, website, services)
 }
 
@@ -225,11 +179,7 @@ func ConfigureDomain(services *service.Services) gin.HandlerFunc {
 		tenant := common.GetTenantFromContext(ctx)
 		// if tenant missing return auth error
 		if tenant == "" {
-			c.JSON(http.StatusUnauthorized,
-				rest.ErrorResponse{
-					Status:  "error",
-					Message: "API key invalid or expired",
-				})
+			rest.SendError(c, span, http.StatusUnauthorized, rest.ErrUnauthorized)
 			span.LogFields(tracingLog.String("result", "Missing tenant in context"))
 			return
 		}
@@ -237,58 +187,29 @@ func ConfigureDomain(services *service.Services) gin.HandlerFunc {
 		// Parse and validate request body
 		var req ConfigureDomainRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
-			c.JSON(http.StatusBadRequest,
-				rest.ErrorResponse{
-					Status:  "error",
-					Message: "Invalid request body or missing input fields",
-				})
-			span.LogFields(tracingLog.String("result", "Invalid request body"))
+			rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest)
 			return
 		}
 
 		// Check for missing domain
 		if req.Domain == "" {
-			c.JSON(http.StatusBadRequest,
-				rest.ErrorResponse{
-					Status:  "error",
-					Message: "Missing required field: domain",
-				})
-			span.LogFields(tracingLog.String("result", "Missing domain"))
+			rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Missing required field: domain"))
 			return
 		} else if req.Website == "" {
-			c.JSON(http.StatusBadRequest,
-				rest.ErrorResponse{
-					Status:  "error",
-					Message: "Missing required field: website",
-				})
-			span.LogFields(tracingLog.String("result", "Missing website"))
+			rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Missing required field: website"))
 			return
 		}
 
 		domainResponse, err := configureDomain(ctx, tenant, req.Domain, req.Website, services)
 		if err != nil {
 			if errors.Is(err, coserrors.ErrDomainNotFound) {
-				c.JSON(http.StatusNotFound,
-					rest.ErrorResponse{
-						Status:  "error",
-						Message: "Domain not found",
-					})
-				span.LogFields(tracingLog.String("result", "Domain not found"))
+				rest.SendError(c, span, http.StatusNotFound, rest.ErrNotFound)
 				return
 			} else if errors.Is(err, coserrors.ErrDomainConfigurationFailed) {
-				c.JSON(http.StatusInternalServerError,
-					rest.ErrorResponse{
-						Status:  "error",
-						Message: "Error configuring domain, please contact support",
-					})
+				rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer.WithMessage("Unable to configure domain"))
 				return
 			} else {
-				c.JSON(http.StatusInternalServerError,
-					rest.ErrorResponse{
-						Status:  "error",
-						Message: "Domain registration failed, please contact support",
-					})
-				span.LogFields(tracingLog.String("result", "Internal server error"))
+				rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer.WithMessage("Domain registration failed"))
 				return
 			}
 		}
@@ -305,7 +226,7 @@ func configureDomain(ctx context.Context, tenant, domain, website string, servic
 	span, ctx := opentracing.StartSpanFromContext(ctx, "configureDomain")
 	defer span.Finish()
 
-	var domainResponse = DomainResponse{}
+	domainResponse := DomainResponse{}
 	domainResponse.Domain = domain
 
 	var err error
@@ -381,11 +302,7 @@ func GetDomains(services *service.Services) gin.HandlerFunc {
 		tenant := common.GetTenantFromContext(ctx)
 		// if tenant missing return auth error
 		if tenant == "" {
-			c.JSON(http.StatusUnauthorized,
-				rest.ErrorResponse{
-					Status:  "error",
-					Message: "API key invalid or expired",
-				})
+			rest.SendError(c, span, http.StatusUnauthorized, rest.ErrUnauthorized)
 			span.LogFields(tracingLog.String("result", "Missing tenant in context"))
 			return
 		}
@@ -394,12 +311,7 @@ func GetDomains(services *service.Services) gin.HandlerFunc {
 		activeDomainRecords, err := services.CommonServices.PostgresRepositories.MailStackDomainRepository.GetActiveDomains(ctx, tenant)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "Error retrieving domains"))
-			span.LogFields(tracingLog.String("result", "Error retrieving domains"))
-			c.JSON(http.StatusInternalServerError,
-				rest.ErrorResponse{
-					Status:  "error",
-					Message: "Error retrieving domains",
-				})
+			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer.WithMessage("Unable to retrieve domains"))
 			return
 		}
 
@@ -411,11 +323,7 @@ func GetDomains(services *service.Services) gin.HandlerFunc {
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "Error getting domain info"))
 				span.LogFields(tracingLog.String("result", "Error getting domain info"))
-				c.JSON(http.StatusInternalServerError,
-					rest.ErrorResponse{
-						Status:  "error",
-						Message: "Error getting domain info",
-					})
+				rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer.WithMessage("Unable to retrieve domain info"))
 				return
 			}
 			response.Domains = append(response.Domains, DomainResponse{
