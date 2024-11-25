@@ -615,27 +615,30 @@ func (r *mutationResolver) ContactFindWorkEmail(ctx context.Context, contactID s
 	orgDomain := ""
 	orgName := ""
 	if organizationID != nil {
-		_, err := r.Services.Repositories.Neo4jRepositories.JobRoleReadRepository.ExistsForContactAndOrganization(ctx, common.GetTenantFromContext(ctx), contactID, *organizationID)
+		orgAndContactLinked, err := r.Services.Repositories.Neo4jRepositories.JobRoleReadRepository.ExistsForContactAndOrganization(ctx, common.GetTenantFromContext(ctx), contactID, *organizationID)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			graphql.AddErrorf(ctx, "Contact %s does not belong to organization %s", contactID, *organizationID)
 			return &model.ActionResponse{Accepted: false}, nil
 		}
-		organizationEntity, err = r.Services.CommonServices.OrganizationService.GetById(ctx, tenant, *organizationID)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			graphql.AddErrorf(ctx, "Organization with id %s not found", *organizationID)
-			return &model.ActionResponse{Accepted: false}, nil
-		}
-		domains, err := r.Services.CommonServices.DomainService.GetAllDomainsForOrganizations(ctx, []string{organizationEntity.ID})
-		if err != nil {
-			tracing.TraceErr(span, err)
-			graphql.AddErrorf(ctx, "Failed to get domains for organization %s", *organizationID)
-			return &model.ActionResponse{Accepted: false}, nil
-		}
-		if len(*domains) > 0 {
+		if orgAndContactLinked {
+			organizationEntity, err = r.Services.CommonServices.OrganizationService.GetById(ctx, tenant, *organizationID)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				graphql.AddErrorf(ctx, "Organization with id %s not found", *organizationID)
+				return &model.ActionResponse{Accepted: false}, nil
+			}
 			orgName = organizationEntity.Name
-			orgDomain = (*domains)[0].Domain
+			domains, err := r.Services.CommonServices.DomainService.GetAllDomainsForOrganizations(ctx, []string{organizationEntity.ID})
+			if err != nil {
+				tracing.TraceErr(span, err)
+				graphql.AddErrorf(ctx, "Failed to get domains for organization %s", *organizationID)
+				return &model.ActionResponse{Accepted: false}, nil
+			}
+			if len(*domains) > 0 {
+				orgName = organizationEntity.Name
+				orgDomain = (*domains)[0].Domain
+			}
 		}
 	}
 
@@ -668,8 +671,8 @@ func (r *mutationResolver) ContactFindWorkEmail(ctx context.Context, contactID s
 	}
 
 	if orgName == "" && orgDomain == "" {
-		tracing.TraceErr(span, errors.New("cannot find email for contact without organization"))
-		graphql.AddErrorf(ctx, "Missing organization for contact")
+		tracing.TraceErr(span, errors.New("cannot find email for contact without domain"))
+		graphql.AddErrorf(ctx, "Missing domain for contact")
 		return &model.ActionResponse{Accepted: false}, nil
 	}
 

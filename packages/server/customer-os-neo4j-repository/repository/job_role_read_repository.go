@@ -207,5 +207,6 @@ func (r *jobRoleReadRepository) ExistsForContactAndOrganization(ctx context.Cont
 	if err != nil {
 		return false, err
 	}
+	span.LogFields(log.Bool("result.found", len(records.([]*neo4j.Record)) > 0))
 	return len(records.([]*neo4j.Record)) > 0, err
 }
