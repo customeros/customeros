@@ -578,7 +578,7 @@ func (s *trackingService) notifyOnSlack(c context.Context, r *entity.Tracking) e
 	//skip notification if the identified company domain is the same as the workspace domain in the tenant ( basically skip employees from triggering notifications)
 	if record.OrganizationDomain != nil && *record.OrganizationDomain != "" {
 
-		workspaceNodeList, err := s.services.CommonServices.Neo4jRepositories.WorkspaceReadRepository.Get(ctx, record.Tenant)
+		workspaceNodeList, err := s.services.CommonServices.Neo4jRepositories.WorkspaceReadRepository.GetAllForTenant(ctx, record.Tenant)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to get workspace nodes"))
 			return err
