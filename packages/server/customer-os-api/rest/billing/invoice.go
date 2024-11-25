@@ -1,4 +1,3 @@
-// todo update all API responses to standard format
 package billing
 
 import (
@@ -18,20 +17,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
 
-// GetInvoicesForOrganization retrieves the list of invoices for a given organization
-// @Summary Get organization invoices
-// @Description Retrieves a list of invoices for the organization with the given ID
-// @Tags Billing API
-// @Accept  json
-// @Produce  json
-// @Param   id   path     string  true  "Organization ID or Organization COS ID"
-// @Success 200  {array}  InvoiceResponse "List of invoices for the organization"
-// @Failure 400  "Invalid organization ID"
-// @Failure 401  "Unauthorized"
-// @Failure 404  "Organization not found"
-// @Failure 500  "Internal server error"
-// @Router /billing/v1/organizations/{id}/invoices [get]
-// @Security ApiKeyAuth
 func GetInvoicesForOrganization(services *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "GetInvoicesForOrganization", c.Request.Header)
@@ -69,17 +54,18 @@ func GetInvoicesForOrganization(services *service.Services) gin.HandlerFunc {
 		}
 
 		response := InvoicesResponse{
-			Status: "success",
+			BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
+			Invoices:     make([]InvoiceRecord, 0, len(*invoiceEntities)), // Pre-allocate slice
 		}
 
 		workerCount := 10
-		invoicesChan := make(chan *InvoiceResponse, len(*invoiceEntities))
+		recordsChan := make(chan *InvoiceRecord, len(*invoiceEntities))
 		errChan := make(chan error, len(*invoiceEntities))
 		var wg sync.WaitGroup
-		sem := make(chan struct{}, workerCount) // Semaphore to limit workers
+		sem := make(chan struct{}, workerCount)
 
 		for _, invoiceEntity := range *invoiceEntities {
-			invoiceResponse := InvoiceResponse{
+			record := InvoiceRecord{
 				ID:            invoiceEntity.Id,
 				Number:        invoiceEntity.Number,
 				DueDate:       invoiceEntity.DueDate,
@@ -87,48 +73,48 @@ func GetInvoicesForOrganization(services *service.Services) gin.HandlerFunc {
 				Amount:        invoiceEntity.TotalAmount,
 				Currency:      invoiceEntity.Currency.String(),
 			}
+
 			if (invoiceEntity.Status == neo4jenum.InvoiceStatusDue || invoiceEntity.Status == neo4jenum.InvoiceStatusOverdue) &&
 				(invoiceEntity.PaymentDetails.PaymentLink != "") {
-				invoiceResponse.PaymentLink = services.Cfg.InternalServices.CustomerOsApiUrl + "/invoice/" + invoiceEntity.Id + "/pay"
+				record.PaymentLink = services.Cfg.InternalServices.CustomerOsApiUrl + "/invoice/" + invoiceEntity.Id + "/pay"
 			}
 
 			wg.Add(1)
-			go func(invoiceEntity neo4jentity.InvoiceEntity, invoiceResponse InvoiceResponse) {
+			go func(invoiceEntity neo4jentity.InvoiceEntity, record InvoiceRecord) {
 				defer wg.Done()
-				sem <- struct{}{} // Acquire a spot
+				sem <- struct{}{}        // Acquire a spot
+				defer func() { <-sem }() // Release spot in defer
 
 				publicUrl, err := services.FileStoreApiService.GetFilePublicUrl(ctx, tenant, invoiceEntity.RepositoryFileId)
 				if err != nil {
-					errChan <- errors.New("failed to get invoice public url: " + err.Error())
-					<-sem // Release a spot
+					errChan <- errors.Wrap(err, "failed to get invoice public url")
 					return
 				}
-				invoiceResponse.PublicUrl = publicUrl
-				invoicesChan <- &invoiceResponse
-				<-sem // Release a spot
-			}(invoiceEntity, invoiceResponse)
+				record.PublicUrl = publicUrl
+				recordsChan <- &record
+			}(invoiceEntity, record)
 		}
 
 		go func() {
 			wg.Wait()
-			close(invoicesChan)
+			close(recordsChan)
 			close(errChan)
 		}()
 
 		// Collect results
-		for invoiceResponse := range invoicesChan {
-			response.Invoices = append(response.Invoices, *invoiceResponse)
+		for record := range recordsChan {
+			response.Invoices = append(response.Invoices, *record)
 		}
 
 		// Check for errors
 		if len(errChan) > 0 {
-			tracing.TraceErr(span, <-errChan)
+			err := <-errChan
+			tracing.TraceErr(span, err)
 		}
 
-		// sort returned invoices by due date descending
+		// Sort invoices by due date descending
 		sort.Slice(response.Invoices, func(i, j int) bool {
-			// Compare the due dates, sorting by descending order (latest first)
-			return (response.Invoices)[i].DueDate.After((response.Invoices)[j].DueDate)
+			return response.Invoices[i].DueDate.After(response.Invoices[j].DueDate)
 		})
 
 		c.JSON(http.StatusOK, response)
