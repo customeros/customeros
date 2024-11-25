@@ -45,11 +45,7 @@ func RegisterNewMailbox(services *service.Services) gin.HandlerFunc {
 		// get domain from path
 		domain := c.Param("domain")
 		if domain == "" {
-			c.JSON(http.StatusBadRequest,
-				rest.ErrorResponse{
-					Status:  "error",
-					Message: "Missing domain",
-				})
+			rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Missing parameter: domain"))
 			return
 		}
 		span.LogKV("request.domain", domain)
@@ -58,11 +54,7 @@ func RegisterNewMailbox(services *service.Services) gin.HandlerFunc {
 		tenant := common.GetTenantFromContext(ctx)
 		// if tenant missing return auth error
 		if tenant == "" {
-			c.JSON(http.StatusUnauthorized,
-				rest.ErrorResponse{
-					Status:  "error",
-					Message: "API key invalid or expired",
-				})
+			rest.SendError(c, span, http.StatusUnauthorized, rest.ErrUnauthorized)
 			span.LogFields(tracingLog.String("result", "Missing tenant in context"))
 			return
 		}
@@ -74,23 +66,13 @@ func RegisterNewMailbox(services *service.Services) gin.HandlerFunc {
 			// log body
 			body, _ := c.GetRawData()
 			span.LogFields(tracingLog.String("request.body", string(body)))
-			c.JSON(http.StatusBadRequest,
-				rest.ErrorResponse{
-					Status:  "error",
-					Message: "Invalid request body or missing input fields",
-				})
-			span.LogFields(tracingLog.String("result", "Invalid request body"))
+			rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest)
 			return
 		}
 
 		username := strings.TrimSpace(mailboxRequest.Username)
 		if username == "" {
-			c.JSON(http.StatusBadRequest,
-				rest.ErrorResponse{
-					Status:  "error",
-					Message: "Missing username",
-				})
-			span.LogFields(tracingLog.String("result", "Missing username"))
+			rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Missing parameter: username"))
 			return
 		}
 		span.LogKV("request.username", username)
@@ -104,12 +86,7 @@ func RegisterNewMailbox(services *service.Services) gin.HandlerFunc {
 
 		// validate username format
 		if err := validateMailboxUsername(username); err != nil {
-			c.JSON(http.StatusBadRequest,
-				rest.ErrorResponse{
-					Status:  "error",
-					Message: err.Error(),
-				})
-			span.LogFields(tracingLog.String("result", "Invalid username format"))
+			rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("username is invalid"))
 			return
 		}
 
@@ -136,28 +113,13 @@ func RegisterNewMailbox(services *service.Services) gin.HandlerFunc {
 
 		if err != nil {
 			if errors.Is(err, coserrors.ErrDomainNotFound) {
-				c.JSON(http.StatusNotFound,
-					rest.ErrorResponse{
-						Status:  "error",
-						Message: "Domain not found",
-					})
-				span.LogFields(tracingLog.String("result", "Domain not found"))
+				rest.SendError(c, span, http.StatusNotFound, rest.ErrNotFound.WithMessage("Domain not found"))
 				return
 			} else if errors.Is(err, coserrors.ErrMailboxExists) {
-				c.JSON(http.StatusConflict,
-					rest.ErrorResponse{
-						Status:  "error",
-						Message: "Username already exists",
-					})
-				span.LogFields(tracingLog.String("result", "Mailbox already exists"))
+				rest.SendError(c, span, http.StatusConflict, rest.ErrConflict.WithMessage("Username already exists"))
 				return
 			} else {
-				c.JSON(http.StatusInternalServerError,
-					rest.ErrorResponse{
-						Status:  "error",
-						Message: "Mailbox setup failed, please contact support",
-					})
-				span.LogFields(tracingLog.String("result", "Internal server error"))
+				rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer.WithMessage("Mailbox setup failed, please contact support"))
 				return
 			}
 		}
@@ -204,11 +166,7 @@ func GetMailboxes(services *service.Services) gin.HandlerFunc {
 		// get domain from path
 		domain := c.Param("domain")
 		if domain == "" {
-			c.JSON(http.StatusBadRequest,
-				rest.ErrorResponse{
-					Status:  "error",
-					Message: "Missing domain",
-				})
+			rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Missing parameter: domain"))
 			return
 		}
 		span.LogKV("request.domain", domain)
@@ -217,11 +175,7 @@ func GetMailboxes(services *service.Services) gin.HandlerFunc {
 		tenant := common.GetTenantFromContext(ctx)
 		// if tenant missing return auth error
 		if tenant == "" {
-			c.JSON(http.StatusUnauthorized,
-				rest.ErrorResponse{
-					Status:  "error",
-					Message: "API key invalid or expired",
-				})
+			rest.SendError(c, span, http.StatusUnauthorized, rest.ErrUnauthorized)
 			span.LogFields(tracingLog.String("result", "Missing tenant in context"))
 			return
 		}
@@ -229,13 +183,8 @@ func GetMailboxes(services *service.Services) gin.HandlerFunc {
 		// get mailboxes for domain from postgres
 		mailboxRecords, err := services.CommonServices.PostgresRepositories.TenantSettingsMailboxRepository.GetAllByDomain(ctx, domain)
 		if err != nil {
+			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer.WithMessage("Error retrieving mailboxes"))
 			tracing.TraceErr(span, errors.Wrap(err, "Error retrieving mailboxes"))
-			span.LogFields(tracingLog.String("result", "Error retrieving mailboxes"))
-			c.JSON(http.StatusInternalServerError,
-				rest.ErrorResponse{
-					Status:  "error",
-					Message: "Error retrieving mailboxes",
-				})
 			return
 		}
 
@@ -246,12 +195,7 @@ func GetMailboxes(services *service.Services) gin.HandlerFunc {
 			mailboxDetails, err := services.CommonServices.OpenSrsService.GetMailboxDetails(ctx, mailboxRecord.MailboxUsername)
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "Error getting mailbox details"))
-				span.LogFields(tracingLog.String("result", "Error getting mailbox details"))
-				c.JSON(http.StatusInternalServerError,
-					rest.ErrorResponse{
-						Status:  "error",
-						Message: "Error getting mailbox details",
-					})
+				rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer.WithMessage("Error getting mailbox details"))
 				return
 			}
 			response.Mailboxes = append(response.Mailboxes, MailboxResponse{
