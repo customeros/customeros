@@ -17,7 +17,7 @@ import (
 
 var (
 	relationshipsWithOrganizationForLastTouchpoint = []string{"REPORTED_BY", "SENT_TO", "SENT_BY"}
-	relationshipsWithOrganization                  = []string{"LOGGED", "REPORTED_BY", "SENT_TO", "SENT_BY", "ACTION_ON"}
+	relationshipsWithOrganization                  = []string{"LOGGED", "REPORTED_BY", "SENT_TO", "SENT_BY", "ACTION_ON", "HAS_MARKDOWN_EVENT"}
 	relationshipsWithOrganizationProperties        = []string{"SENT_TO", "SENT_BY", "PART_OF", "ATTENDED_BY", "CREATED_BY"}
 	relationshipsWithContact                       = []string{"HAS_ACTION", "PARTICIPATES", "SENT_TO", "SENT_BY", "PART_OF", "REPORTED_BY", "ATTENDED_BY", "CREATED_BY"}
 	relationshipsWithContactProperties             = []string{"SENT_TO", "SENT_BY", "PART_OF", "ATTENDED_BY", "CREATED_BY"}

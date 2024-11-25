@@ -6,7 +6,6 @@ import (
 )
 
 type LogEntryEntity struct {
-	EventStoreAggregate
 	DataLoaderKey
 	Id            string
 	Content       string

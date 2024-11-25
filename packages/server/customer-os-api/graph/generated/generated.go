@@ -916,6 +916,11 @@ type ComplexityRoot struct {
 		Status  func(childComplexity int) int
 	}
 
+	MarkdownEvent struct {
+		Content  func(childComplexity int) int
+		Metadata func(childComplexity int) int
+	}
+
 	Meeting struct {
 		Agenda             func(childComplexity int) int
 		AgendaContentType  func(childComplexity int) int
@@ -6362,6 +6367,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.MailstackBuyRequestMailbox.Status(childComplexity), true
+
+	case "MarkdownEvent.content":
+		if e.complexity.MarkdownEvent.Content == nil {
+			break
+		}
+
+		return e.complexity.MarkdownEvent.Content(childComplexity), true
+
+	case "MarkdownEvent.metadata":
+		if e.complexity.MarkdownEvent.Metadata == nil {
+			break
+		}
+
+		return e.complexity.MarkdownEvent.Metadata(childComplexity), true
 
 	case "Meeting.agenda":
 		if e.complexity.Meeting.Agenda == nil {
@@ -14626,6 +14645,10 @@ enum MailstackBuyRequestMailboxStatus {
     COMPLETED,
     FAILED
 }`, BuiltIn: false},
+	{Name: "../schemas/markdown_event.graphqls", Input: `type MarkdownEvent {
+    metadata: Metadata!
+    content: String
+}`, BuiltIn: false},
 	{Name: "../schemas/meeting.graphqls", Input: `"""
 Specifies how many pages of meeting information has been returned in the query response.
 **A ` + "`" + `response` + "`" + ` object.**
@@ -16146,7 +16169,7 @@ type TenantBillableInfo {
     greylistedOrganizations: Int64!
     greylistedContacts: Int64!
 }`, BuiltIn: false},
-	{Name: "../schemas/timeline_event.graphqls", Input: `union TimelineEvent = PageView | InteractionSession | Note | InteractionEvent | Issue | Meeting | Action | LogEntry
+	{Name: "../schemas/timeline_event.graphqls", Input: `union TimelineEvent = PageView | InteractionSession | Note | InteractionEvent | Issue | Meeting | Action | LogEntry | MarkdownEvent
 
 extend type Query {
     timelineEvents(ids: [ID!]!): [TimelineEvent!]!
@@ -16163,6 +16186,7 @@ enum TimelineEventType {
     ACTION
     LOG_ENTRY
     ORDER
+    MARKDOWN_EVENT
 }`, BuiltIn: false},
 	{Name: "../schemas/types.graphqls", Input: `type DeleteResponse {
     accepted: Boolean!
@@ -56307,6 +56331,107 @@ func (ec *executionContext) fieldContext_MailstackBuyRequestMailbox_status(_ con
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type MailstackBuyRequestMailboxStatus does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MarkdownEvent_metadata(ctx context.Context, field graphql.CollectedField, obj *model.MarkdownEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MarkdownEvent_metadata(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Metadata, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Metadata)
+	fc.Result = res
+	return ec.marshalNMetadata2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMetadata(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MarkdownEvent_metadata(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MarkdownEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Metadata_id(ctx, field)
+			case "created":
+				return ec.fieldContext_Metadata_created(ctx, field)
+			case "lastUpdated":
+				return ec.fieldContext_Metadata_lastUpdated(ctx, field)
+			case "source":
+				return ec.fieldContext_Metadata_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Metadata_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Metadata_appSource(ctx, field)
+			case "version":
+				return ec.fieldContext_Metadata_version(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Metadata", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MarkdownEvent_content(ctx context.Context, field graphql.CollectedField, obj *model.MarkdownEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MarkdownEvent_content(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Content, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MarkdownEvent_content(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MarkdownEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -111860,6 +111985,13 @@ func (ec *executionContext) _TimelineEvent(ctx context.Context, sel ast.Selectio
 			return graphql.Null
 		}
 		return ec._LogEntry(ctx, sel, obj)
+	case model.MarkdownEvent:
+		return ec._MarkdownEvent(ctx, sel, &obj)
+	case *model.MarkdownEvent:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._MarkdownEvent(ctx, sel, obj)
 	default:
 		panic(fmt.Errorf("unexpected type %T", obj))
 	}
@@ -118978,6 +119110,47 @@ func (ec *executionContext) _MailstackBuyRequestMailbox(ctx context.Context, sel
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var markdownEventImplementors = []string{"MarkdownEvent", "TimelineEvent"}
+
+func (ec *executionContext) _MarkdownEvent(ctx context.Context, sel ast.SelectionSet, obj *model.MarkdownEvent) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, markdownEventImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("MarkdownEvent")
+		case "metadata":
+			out.Values[i] = ec._MarkdownEvent_metadata(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "content":
+			out.Values[i] = ec._MarkdownEvent_content(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

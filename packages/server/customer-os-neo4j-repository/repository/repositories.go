@@ -65,6 +65,7 @@ type Repositories struct {
 	LogEntryWriteRepository                  LogEntryWriteRepository
 	LinkedinConnectionRequestReadRepository  LinkedinConnectionRequestReadRepository
 	LinkedinConnectionRequestWriteRepository LinkedinConnectionRequestWriteRepository
+	MarkdownEventWriteRepository             MarkdownEventWriteRepository
 	OpportunityReadRepository                OpportunityReadRepository
 	OpportunityWriteRepository               OpportunityWriteRepository
 	OrganizationReadRepository               OrganizationReadRepository
@@ -159,6 +160,7 @@ func InitNeo4jRepositories(driver *neo4j.DriverWithContext, neo4jDatabase string
 		LogEntryWriteRepository:                  NewLogEntryWriteRepository(driver, neo4jDatabase),
 		LinkedinConnectionRequestReadRepository:  NewLinkedinConnectionRequestReadRepository(driver, neo4jDatabase),
 		LinkedinConnectionRequestWriteRepository: NewLinkedinConnectionRequestWriteRepository(driver, neo4jDatabase),
+		MarkdownEventWriteRepository:             NewMarkdownEventWriteRepository(driver, neo4jDatabase),
 		OpportunityReadRepository:                NewOpportunityReadRepository(driver, neo4jDatabase),
 		OpportunityWriteRepository:               NewOpportunityWriteRepository(driver, neo4jDatabase),
 		OrganizationReadRepository:               NewOrganizationReadRepository(driver, neo4jDatabase),
