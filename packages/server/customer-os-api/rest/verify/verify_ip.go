@@ -105,11 +105,7 @@ func IpIntelligence(services *service.Services) gin.HandlerFunc {
 
 		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {
-			c.JSON(http.StatusUnauthorized,
-				rest.BaseResponse{
-					Status:  "error",
-					Message: "Missing tenant context",
-				})
+			rest.SendError(c, span, http.StatusUnauthorized, rest.ErrUnauthorized)
 			return
 		}
 		logger := services.Log
@@ -117,21 +113,13 @@ func IpIntelligence(services *service.Services) gin.HandlerFunc {
 		// Check if address is provided
 		ipAddress := c.Query("address")
 		if ipAddress == "" {
-			c.JSON(http.StatusBadRequest,
-				rest.BaseResponse{
-					Status:  "error",
-					Message: "Missing address parameter",
-				})
+			rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Missing parameter: address"))
 			return
 		}
 		span.LogFields(log.String("address", ipAddress))
 
 		if net.ParseIP(ipAddress) == nil {
-			c.JSON(http.StatusBadRequest,
-				rest.BaseResponse{
-					Status:  "error",
-					Message: "Invalid IP address format",
-				})
+			rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("IP address is not valid"))
 			logger.Warnf("Invalid IP address format: %s", ipAddress)
 			return
 		}
@@ -141,22 +129,14 @@ func IpIntelligence(services *service.Services) gin.HandlerFunc {
 		})
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to marshal request"))
-			c.JSON(http.StatusInternalServerError,
-				rest.BaseResponse{
-					Status:  "error",
-					Message: "Internal error",
-				})
+			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer)
 			return
 		}
 		requestBody := []byte(string(requestJSON))
 		req, err := http.NewRequest("POST", services.Cfg.InternalServices.ValidationApi+"/ipLookup", bytes.NewBuffer(requestBody))
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to create request"))
-			c.JSON(http.StatusInternalServerError,
-				rest.BaseResponse{
-					Status:  "error",
-					Message: "Internal error",
-				})
+			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer)
 			return
 		}
 		// Inject span context into the HTTP request
@@ -171,11 +151,7 @@ func IpIntelligence(services *service.Services) gin.HandlerFunc {
 		response, err := client.Do(req)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to perform request"))
-			c.JSON(http.StatusInternalServerError,
-				rest.BaseResponse{
-					Status:  "error",
-					Message: "Internal error",
-				})
+			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer)
 		}
 		defer response.Body.Close()
 
@@ -183,11 +159,7 @@ func IpIntelligence(services *service.Services) gin.HandlerFunc {
 		err = json.NewDecoder(response.Body).Decode(&result)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to decode response"))
-			c.JSON(http.StatusInternalServerError,
-				rest.BaseResponse{
-					Status:  "error",
-					Message: "Internal error",
-				})
+			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer)
 			return
 		}
 

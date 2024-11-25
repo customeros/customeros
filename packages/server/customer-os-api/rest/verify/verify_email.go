@@ -158,7 +158,7 @@ func VerifyEmailAddress(services *service.Services) gin.HandlerFunc {
 
 		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {
-			c.JSON(http.StatusUnauthorized, rest.BaseResponse{Status: "error", Message: "Missing tenant context"})
+			rest.SendError(c, span, http.StatusUnauthorized, rest.ErrUnauthorized)
 			return
 		}
 		logger := services.Log
@@ -166,7 +166,7 @@ func VerifyEmailAddress(services *service.Services) gin.HandlerFunc {
 		// Check if email address is provided
 		emailAddress := c.Query("address")
 		if emailAddress == "" {
-			c.JSON(http.StatusBadRequest, rest.BaseResponse{Status: "error", Message: "Missing address parameter"})
+			rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Missing parameter: address"))
 			return
 		}
 		span.LogKV("request.address", emailAddress)
@@ -193,11 +193,11 @@ func VerifyEmailAddress(services *service.Services) gin.HandlerFunc {
 		// call validation api
 		result, err := CallApiValidateEmail(ctx, services, emailAddress, verifyCatchAll)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, rest.BaseResponse{Status: "error", Message: "Internal error"})
+			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer)
 			return
 		}
 		if result.Status != "success" {
-			c.JSON(http.StatusInternalServerError, rest.BaseResponse{Status: "error", Message: result.Message})
+			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer.WithMessage(result.Message))
 			return
 		}
 
@@ -272,14 +272,9 @@ func BulkUploadEmailsForVerification(services *service.Services) gin.HandlerFunc
 
 		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {
-			c.JSON(http.StatusUnauthorized,
-				rest.BaseResponse{
-					Status:  "error",
-					Message: "Missing tenant context",
-				})
+			rest.SendError(c, span, http.StatusUnauthorized, rest.ErrUnauthorized)
 			return
 		}
-		logger := services.Log
 
 		// Get email column param (optional)
 		emailColumn := c.DefaultPostForm("emailColumn", "")
@@ -296,22 +291,14 @@ func BulkUploadEmailsForVerification(services *service.Services) gin.HandlerFunc
 		file, header, err := c.Request.FormFile("file")
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to insert records"))
-			c.JSON(http.StatusBadRequest,
-				rest.BaseResponse{
-					Status:  "error",
-					Message: "Failed to read file",
-				})
+			rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Unable to read csv file"))
 			return
 		}
 		defer file.Close()
 
 		// Validate file type
 		if header.Header.Get("Content-Type") != "text/csv" && !strings.HasSuffix(header.Filename, ".csv") {
-			c.JSON(http.StatusBadRequest,
-				rest.BaseResponse{
-					Status:  "error",
-					Message: "Only CSV files are accepted",
-				})
+			rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("File type not permitted.  Please send .csv file"))
 			return
 		}
 
@@ -321,11 +308,7 @@ func BulkUploadEmailsForVerification(services *service.Services) gin.HandlerFunc
 		reader := csv.NewReader(file)
 		headers, err := reader.Read()
 		if err != nil {
-			c.JSON(http.StatusBadRequest,
-				rest.BaseResponse{
-					Status:  "error",
-					Message: "Failed to parse CSV file",
-				})
+			rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Unable to parse csv file"))
 			return
 		}
 
@@ -340,21 +323,13 @@ func BulkUploadEmailsForVerification(services *service.Services) gin.HandlerFunc
 				}
 			}
 			if emailIndex == -1 {
-				c.JSON(http.StatusBadRequest,
-					rest.BaseResponse{
-						Status:  "error",
-						Message: fmt.Sprintf("Column '%s' not found", emailColumn),
-					})
+				rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage(fmt.Sprintf("Column '%s' not found", emailColumn)))
 				return
 			}
 		} else if len(headers) == 1 {
 			emailIndex = 0 // Default to first column if only one column exists
 		} else {
-			c.JSON(http.StatusBadRequest,
-				rest.BaseResponse{
-					Status:  "error",
-					Message: "Multiple columns found, please provide 'emailColumn' parameter",
-				})
+			rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Please provide emailColumn parameter"))
 			return
 		}
 
@@ -368,11 +343,7 @@ func BulkUploadEmailsForVerification(services *service.Services) gin.HandlerFunc
 				break
 			}
 			if err != nil {
-				c.JSON(http.StatusBadRequest,
-					rest.BaseResponse{
-						Status:  "error",
-						Message: "Error reading CSV file",
-					})
+				rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Unable to read csv file"))
 				return
 			}
 
@@ -387,33 +358,21 @@ func BulkUploadEmailsForVerification(services *service.Services) gin.HandlerFunc
 		// Register the bulk request in the database
 		totalEmails := len(emails)
 		if totalEmails == 0 {
-			c.JSON(http.StatusBadRequest,
-				rest.BaseResponse{
-					Status:  "error",
-					Message: "No records found in the file",
-				})
+			rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("No records found in the csv file"))
 			return
 		}
 
 		bulkRequest, err := services.Repositories.PostgresRepositories.EmailValidationRequestBulkRepository.RegisterRequest(ctx, tenant, requestID, header.Filename, verifyCatchAll, totalEmails)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to insert records"))
-			logger.Errorf("Failed to register request: %v", err)
-			c.JSON(http.StatusInternalServerError, rest.BaseResponse{
-				Status:  "error",
-				Message: "Failed to register bulk request",
-			})
+			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer.WithMessage("Unable to process bulk request"))
 		}
 
 		// Bulk insert email records into the database
 		err = services.Repositories.PostgresRepositories.EmailValidationRecordRepository.BulkInsertRecords(ctx, tenant, requestID, verifyCatchAll, emails)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to insert records"))
-			logger.Errorf("Failed to insert records: %v", err)
-			c.JSON(http.StatusInternalServerError, rest.BaseResponse{
-				Status:  "error",
-				Message: "Failed to store email records",
-			})
+			tracing.TraceErr(span, errors.Wrap(err, "failed to insert email records"))
+			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer.WithMessage("Unable to process bulk request"))
 			return
 		}
 
@@ -455,11 +414,7 @@ func GetBulkEmailVerificationResults(services *service.Services) gin.HandlerFunc
 
 		requestID := c.Param("requestId")
 		if requestID == "" {
-			c.JSON(http.StatusBadRequest,
-				rest.BaseResponse{
-					Status:  "error",
-					Message: "Missing request ID",
-				})
+			rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Missing parameter: ID"))
 			return
 		}
 		span.LogKV("requestId", requestID)
@@ -468,19 +423,11 @@ func GetBulkEmailVerificationResults(services *service.Services) gin.HandlerFunc
 		bulkRequest, err := services.Repositories.PostgresRepositories.EmailValidationRequestBulkRepository.GetByRequestID(ctx, requestID)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to insert records"))
-			c.JSON(http.StatusInternalServerError,
-				rest.BaseResponse{
-					Status:  "error",
-					Message: "Failed to retrieve request",
-				})
+			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer.WithMessage("Failed to retrieve results"))
 			return
 		}
 		if bulkRequest == nil {
-			c.JSON(http.StatusNotFound,
-				rest.BaseResponse{
-					Status:  "error",
-					Message: "Request not found",
-				})
+			rest.SendError(c, span, http.StatusNotFound, rest.ErrNotFound.WithMessage("Unable to find request"))
 			return
 		}
 
@@ -530,6 +477,7 @@ func GetBulkEmailVerificationResults(services *service.Services) gin.HandlerFunc
 // @Security ApiKeyAuth
 // @Produce text/csv
 // @Router /verify/v1/email/bulk/results/{requestId}/download [get]
+
 func DownloadBulkEmailVerificationResults(services *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "GetBulkEmailVerificationResults", c.Request.Header)
@@ -540,11 +488,7 @@ func DownloadBulkEmailVerificationResults(services *service.Services) gin.Handle
 		// Extract requestID from the path parameter
 		requestID := c.Param("requestId")
 		if requestID == "" {
-			c.JSON(http.StatusBadRequest,
-				rest.BaseResponse{
-					Status:  "error",
-					Message: "Missing request ID",
-				})
+			rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Missing requestId"))
 			return
 		}
 
@@ -553,48 +497,33 @@ func DownloadBulkEmailVerificationResults(services *service.Services) gin.Handle
 		bulkRequest, err := services.Repositories.PostgresRepositories.EmailValidationRequestBulkRepository.GetByRequestID(ctx, requestID)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to insert records"))
-			c.JSON(http.StatusInternalServerError,
-				rest.BaseResponse{
-					Status:  "error",
-					Message: "Failed to retrieve request",
-				})
+			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer.WithMessage("Unable to retrieve request"))
 			return
 		}
 		if bulkRequest == nil {
-			c.JSON(http.StatusNotFound,
-				rest.BaseResponse{
-					Status:  "error",
-					Message: "Request not found",
-				})
+			rest.SendError(c, span, http.StatusNotFound, rest.ErrNotFound.WithMessage("Unable to find request"))
 			return
 		}
 
 		// Check if the bulk request is completed before proceeding
 		if bulkRequest.Status != postgresentity.EmailValidationRequestBulkStatusCompleted {
-			c.JSON(http.StatusAccepted, rest.BaseResponse{
-				Status:  "processing",
-				Message: "The bulk request is still being processed. Please try again later.",
+			c.JSON(http.StatusAccepted, gin.H{
+				"status":    string(rest.StatusProcessing),
+				"requestId": requestID,
+				"message":   "The bulk request is still being processed. Please try again later.",
 			})
 			return
 		}
 
 		if bulkRequest.FileStoreId == "" {
-			c.JSON(http.StatusNotFound,
-				rest.BaseResponse{
-					Status:  "error",
-					Message: "File not found",
-				})
+			rest.SendError(c, span, http.StatusNotFound, rest.ErrNotFound.WithMessage("csv file not found"))
 			return
 		}
 
 		fileDTO, fileContent, err := services.FileStoreApiService.GetFile(bulkRequest.Tenant, bulkRequest.FileStoreId, span)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to get file using file store api"))
-			c.JSON(http.StatusInternalServerError,
-				rest.BaseResponse{
-					Status:  "error",
-					Message: "Failed to fetch the file",
-				})
+			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer.WithMessage("unable to fetch the csv file"))
 			return
 		}
 

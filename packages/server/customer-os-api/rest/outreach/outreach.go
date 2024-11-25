@@ -1,12 +1,15 @@
 package restoutreach
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"net/http"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
 
 func GenerateEmailTrackingUrls(services *service.Services) gin.HandlerFunc {
@@ -18,7 +21,7 @@ func GenerateEmailTrackingUrls(services *service.Services) gin.HandlerFunc {
 
 		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {
-			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Missing tenant context"})
+			rest.SendError(c, span, http.StatusUnauthorized, rest.ErrUnauthorized)
 			return
 		}
 
@@ -39,9 +42,8 @@ func GenerateEmailTrackingUrls(services *service.Services) gin.HandlerFunc {
 
 		// Bind the JSON request body to the struct
 		if err := c.ShouldBindJSON(&request); err != nil {
-			tracing.TraceErr(span, err)
 			log.Error(ctx, "Invalid request body", err)
-			c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Invalid request body"})
+			rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Invalid request body"))
 			return
 		}
 		tracing.LogObjectAsJson(span, "request", request)
@@ -61,7 +63,7 @@ func GenerateEmailTrackingUrls(services *service.Services) gin.HandlerFunc {
 		if err != nil {
 			tracing.TraceErr(span, err)
 			log.Error(ctx, "Error generating spy pixel URL", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Error generating open url"})
+			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer.WithMessage("Error generating email open tracker"))
 			return
 		}
 
@@ -72,7 +74,7 @@ func GenerateEmailTrackingUrls(services *service.Services) gin.HandlerFunc {
 			if err != nil {
 				tracing.TraceErr(span, err)
 				log.Error(ctx, "Error generating tracked link", err)
-				c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Error generating links"})
+				rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer.WithMessage("Error generating tracking links"))
 				return
 			}
 			trackedLinks = append(trackedLinks, map[string]string{
@@ -88,7 +90,7 @@ func GenerateEmailTrackingUrls(services *service.Services) gin.HandlerFunc {
 			if err != nil {
 				tracing.TraceErr(span, err)
 				log.Error(ctx, "Error generating unsubscribe URL", err)
-				c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Error generating unsubscribe link"})
+				rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer.WithMessage("Error generating unsubscribe link"))
 				return
 			}
 			trackedUnsubscribeLink = unsubscribeUrl
