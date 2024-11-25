@@ -1644,6 +1644,13 @@ type MailstackBuyRequestMailbox struct {
 	Status  entity1.MailstackBuyRequestMailboxStatus `json:"status"`
 }
 
+type MarkdownEvent struct {
+	Metadata *Metadata `json:"metadata"`
+	Content  *string   `json:"content,omitempty"`
+}
+
+func (MarkdownEvent) IsTimelineEvent() {}
+
 type Meeting struct {
 	ID                 string               `json:"id"`
 	Name               *string              `json:"name,omitempty"`
@@ -5173,6 +5180,7 @@ const (
 	TimelineEventTypeAction             TimelineEventType = "ACTION"
 	TimelineEventTypeLogEntry           TimelineEventType = "LOG_ENTRY"
 	TimelineEventTypeOrder              TimelineEventType = "ORDER"
+	TimelineEventTypeMarkdownEvent      TimelineEventType = "MARKDOWN_EVENT"
 )
 
 var AllTimelineEventType = []TimelineEventType{
@@ -5186,11 +5194,12 @@ var AllTimelineEventType = []TimelineEventType{
 	TimelineEventTypeAction,
 	TimelineEventTypeLogEntry,
 	TimelineEventTypeOrder,
+	TimelineEventTypeMarkdownEvent,
 }
 
 func (e TimelineEventType) IsValid() bool {
 	switch e {
-	case TimelineEventTypePageView, TimelineEventTypeInteractionSession, TimelineEventTypeNote, TimelineEventTypeInteractionEvent, TimelineEventTypeAnalysis, TimelineEventTypeIssue, TimelineEventTypeMeeting, TimelineEventTypeAction, TimelineEventTypeLogEntry, TimelineEventTypeOrder:
+	case TimelineEventTypePageView, TimelineEventTypeInteractionSession, TimelineEventTypeNote, TimelineEventTypeInteractionEvent, TimelineEventTypeAnalysis, TimelineEventTypeIssue, TimelineEventTypeMeeting, TimelineEventTypeAction, TimelineEventTypeLogEntry, TimelineEventTypeOrder, TimelineEventTypeMarkdownEvent:
 		return true
 	}
 	return false

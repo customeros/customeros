@@ -299,6 +299,16 @@ func (r *organizationRepository) MergeOrganizationRelationsInTx(ctx context.Cont
 
 	if _, err := tx.Run(ctx, matchQuery+
 		" WITH primary, merged "+
+		" MATCH (merged)-[rel:HAS_MARKDOWN_EVENT]->(n:MarkdownEvent) "+
+		" MERGE (primary)-[newRel:HAS_MARKDOWN_EVENT]->(n) "+
+		" ON CREATE SET newRel.mergedFrom = $mergedOrganizationId, "+
+		"				newRel.createdAt = $now "+
+		"			SET	rel.merged=true", params); err != nil {
+		return err
+	}
+
+	if _, err := tx.Run(ctx, matchQuery+
+		" WITH primary, merged "+
 		" MATCH (merged)-[rel:CREATED]->(n:Note) "+
 		" MERGE (primary)-[newRel:CREATED]->(n) "+
 		" ON CREATE SET newRel.mergedFrom = $mergedOrganizationId, "+

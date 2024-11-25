@@ -1,4 +1,4 @@
-union TimelineEvent = PageView | InteractionSession | Note | InteractionEvent | Issue | Meeting | Action | LogEntry
+union TimelineEvent = PageView | InteractionSession | Note | InteractionEvent | Issue | Meeting | Action | LogEntry | MarkdownEvent
 
 extend type Query {
     timelineEvents(ids: [ID!]!): [TimelineEvent!]!
@@ -15,4 +15,5 @@ enum TimelineEventType {
     ACTION
     LOG_ENTRY
     ORDER
+    MARKDOWN_EVENT
 }
