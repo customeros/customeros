@@ -146,7 +146,10 @@ export const EmailSettingsPanel = observer(() => {
 
       setTimeout(() => {
         takeSnapshot();
-        ui.commandMenu.clearContext();
+        ui.commandMenu.setContext({
+          entity: 'Flow',
+          ids: [flowId],
+        });
         sidePanelStore.clearContext();
         sidePanelStore.setOpen(false);
       }, 0);
