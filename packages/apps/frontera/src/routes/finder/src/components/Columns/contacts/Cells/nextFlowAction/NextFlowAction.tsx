@@ -66,13 +66,17 @@ export const NextFlowAction = observer(
       (e) => e.scheduledAt && !e.executedAt,
     );
 
+    if (!nextAction) {
+      return <span className='text-grayModern-400'>None</span>;
+    }
+
     const nextActionNode = nodes.find(
       (e: ExtendedNode) => e.internalId === nextAction?.action?.metadata?.id,
     );
     const nextActionIndex = actionNodes.findIndex(
       (e: ExtendedNode) => e.internalId === nextAction?.action?.metadata?.id,
     );
-    const nextActionDate = nextAction?.scheduledAt;
+    const nextActionDate = nextAction.scheduledAt;
     const utcScheduledAt = toZonedTime(nextActionDate, 'UTC').toUTCString();
 
     const formattedDate = DateTimeUtils.format(
