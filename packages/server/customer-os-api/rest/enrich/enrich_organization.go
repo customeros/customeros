@@ -30,13 +30,8 @@ import (
 // @Description Response structure for the organization enrichment API.
 // @example 200 {object} EnrichOrganizationResponse
 type EnrichOrganizationResponse struct {
-	// Status of the response.
-	// Example: success
-	Status string `json:"status" example:"success"`
-	// Message for the response.
-	// Example: Enrichment completed
-	Message string                 `json:"message,omitempty" example:"Enrichment completed"`
-	Data    EnrichOrganizationData `json:"data"`
+	rest.BaseResponse
+	Data EnrichOrganizationData `json:"data"`
 }
 
 // EnrichOrganizationData represents the detailed data about the organization from enrichment.
@@ -192,8 +187,7 @@ func EnrichOrganization(services *service.Services) gin.HandlerFunc {
 			socialUrls = append(socialUrls, social.Url)
 		}
 		response := EnrichOrganizationResponse{
-			Status:  "success",
-			Message: "Enrichment completed",
+			BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
 			Data: EnrichOrganizationData{
 				Name:             enrichOrganizationApiResponse.Data.Name,
 				Domain:           enrichOrganizationApiResponse.Data.Domain,
