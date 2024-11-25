@@ -59,7 +59,7 @@ export const ConfirmEmailContentChanges = observer(() => {
               }
             }}
           >
-            Don't save
+            Discard
           </Button>
 
           <Button
