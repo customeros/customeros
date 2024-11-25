@@ -192,9 +192,11 @@ export const EmailSettingsPanel = observer(() => {
 
           <div className='flex gap-2'>
             <div>
-              <Button size='xs' variant='ghost' onClick={handleCancelChanges}>
-                Discard
-              </Button>
+              {ui.flowActionSidePanel.context.hasUnsavedChanges && (
+                <Button size='xs' variant='ghost' onClick={handleCancelChanges}>
+                  Discard changes
+                </Button>
+              )}
             </div>
             <div>
               <Button size='xs' variant='outline' onClick={handleSave}>
@@ -260,8 +262,10 @@ export const EmailSettingsPanel = observer(() => {
               namespace='flow-email-editor'
               defaultHtmlValue={bodyTemplate}
               placeholderClassName='text-sm '
-              onChange={(e) => setBodyTemplate(e)}
               className='text-sm cursor-text email-editor h-full'
+              onChange={(e) => {
+                setBodyTemplate(e);
+              }}
             />
           </div>
         </div>

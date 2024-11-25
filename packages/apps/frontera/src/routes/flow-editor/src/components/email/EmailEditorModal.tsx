@@ -72,7 +72,7 @@ export const EmailEditorModal = observer(
                     handleCancel();
                   }}
                 >
-                  Discard
+                  Discard changes
                 </Button>
                 <Button
                   size='xs'
