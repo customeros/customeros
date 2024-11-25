@@ -168,8 +168,6 @@ export class FlowsStore implements GroupStore<Flow> {
     id: string,
     options?: { onSuccess?: (serverId: string) => void },
   ) {
-    this.isLoading = true;
-
     const originFlow = this.value.get(id);
     const newFlow = new FlowStore(this.root, this.transport);
     const tempId = newFlow.value.metadata.id;
@@ -229,8 +227,6 @@ export class FlowsStore implements GroupStore<Flow> {
         this.error = (e as Error)?.message;
         this.value.delete(tempId);
       });
-    } finally {
-      this.isLoading = false;
     }
   }
 
