@@ -189,7 +189,7 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 			createContact = false
 		}
 		if createContact {
-			contactId, err = s.services.CommonServices.ContactService.Save(ctx, nil,
+			contactId, err = s.services.CommonServices.ContactService.Save(ctx, nil, nil,
 				data_fields.ContactFields{
 					Name:            utils.StringPtr(contactInput.Name),
 					FirstName:       utils.StringPtr(contactInput.FirstName),
@@ -258,7 +258,7 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 				ExternalSource:   contactInput.ExternalSourceEntity,
 				SyncDate:         &syncDate,
 			}
-			_, err = s.services.CommonServices.ContactService.Save(ctx, &contactId, contactFields, false)
+			_, err = s.services.CommonServices.ContactService.Save(ctx, nil, &contactId, contactFields, false)
 			if err != nil {
 				failedSync = true
 				tracing.TraceErr(span, err)

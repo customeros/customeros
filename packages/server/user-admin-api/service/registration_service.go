@@ -90,7 +90,7 @@ func (s *registrationService) CreateOrganizationAndContact(ctx context.Context, 
 		}
 
 		if contactNode == nil {
-			contactId, err = s.services.CommonServices.ContactService.Save(ctx, nil, data_fields.ContactFields{}, false)
+			contactId, err = s.services.CommonServices.ContactService.Save(ctx, nil, nil, data_fields.ContactFields{}, false)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return nil, nil, err

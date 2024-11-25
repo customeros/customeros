@@ -107,9 +107,9 @@ func (s *contactService) Create(ctx context.Context, contactDetails *ContactCrea
 	var err error
 
 	if (neo4jentity.SocialEntity{Url: contactDetails.SocialUrl}).IsLinkedin() {
-		contactId, err = s.services.CommonServices.ContactService.CreateContactByLinkedIn(ctx, contactDetails.SocialUrl)
+		contactId, err = s.services.CommonServices.ContactService.CreateContactByLinkedIn(ctx, nil, contactDetails.SocialUrl)
 	} else {
-		contactId, err = s.services.CommonServices.ContactService.Save(ctx, nil,
+		contactId, err = s.services.CommonServices.ContactService.Save(ctx, nil, nil,
 			data_fields.ContactFields{
 				Source:          utils.StringPtr(string(contactDetails.Source)),
 				AppSource:       utils.StringPtr(utils.StringFirstNonEmpty(contactDetails.AppSource, constants.AppSourceCustomerOsApi)),
@@ -433,7 +433,7 @@ func (s *contactService) CustomerContactCreate(ctx context.Context, data *Custom
 	result := &model.CustomerContact{}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	contactId, err := s.services.CommonServices.ContactService.Save(ctx, nil,
+	contactId, err := s.services.CommonServices.ContactService.Save(ctx, nil, nil,
 		data_fields.ContactFields{
 			FirstName:   utils.StringPtr(data.ContactEntity.FirstName),
 			LastName:    utils.StringPtr(data.ContactEntity.LastName),

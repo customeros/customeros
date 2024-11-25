@@ -242,7 +242,7 @@ func processCSVRecords(c *gin.Context, ctx context.Context, span opentracing.Spa
 func processContact(c *gin.Context, ctx context.Context, span opentracing.Span, services *service.Services, tenant string, record ContactRecord) string {
 	emailEntity, contactId := findExistingContact(c, ctx, span, services, record.Email)
 	if emailEntity == nil && contactId == "" {
-		contactId = createNewContact(c, ctx, span, services, record.LinkedInURL)
+		contactId = createNewContact(ctx, span, services, record.LinkedInURL)
 	}
 
 	if emailEntity == nil && record.Email != "" {
@@ -279,8 +279,8 @@ func findExistingContact(c *gin.Context, ctx context.Context, span opentracing.S
 	return emailEntity, ""
 }
 
-func createNewContact(c *gin.Context, ctx context.Context, span opentracing.Span, services *service.Services, linkedInURL string) string {
-	contactId, err := services.CommonServices.ContactService.CreateContactByLinkedIn(ctx, linkedInURL)
+func createNewContact(ctx context.Context, span opentracing.Span, services *service.Services, linkedInURL string) string {
+	contactId, err := services.CommonServices.ContactService.CreateContactByLinkedIn(ctx, nil, linkedInURL)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to save contact"))
 		return ""

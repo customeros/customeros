@@ -18,6 +18,7 @@ type ContactFields struct {
 	Description     *string               `json:"description,omitempty"`
 	Prefix          *string               `json:"prefix,omitempty"`
 	CreatedAt       *time.Time            `json:"createdAt,omitempty"`
+	Hide            *bool                 `json:"hide,omitempty"`
 }
 
 func (fields ContactFields) ExternalSystemAvailable() bool {

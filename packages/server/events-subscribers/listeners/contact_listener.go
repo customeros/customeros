@@ -455,7 +455,7 @@ func (c *contactListenerImpl) enrichContactWithScrapInEnrichDetails(ctx context.
 	}
 
 	if updateContact {
-		_, err := c.services.ContactService.Save(ctx, &contact.Id, contactFields, false)
+		_, err := c.services.ContactService.Save(ctx, nil, &contact.Id, contactFields, false)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "ContactService.Save"))
 			c.log.Errorf("Error updating contact: %s", err.Error())
