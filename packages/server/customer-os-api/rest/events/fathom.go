@@ -75,7 +75,11 @@ func createEventFromFathomAISummaryZapier(ctx rest.HTTPContext, aiSummaryData *R
 		return err
 	}
 	meeting.Content = content
-	meeting.Organizations = getParticipantOrganizationIds(ctx, aiSummaryData.MeetingExternalDomains)
+	orgs, err := getParticipantOrganizationIds(ctx, aiSummaryData.MeetingExternalDomains)
+	if err != nil {
+		return err
+	}
+	meeting.OrganizationIDs = orgs
 	meeting.EventTimestamp = aiSummaryData.MeetingScheduledStartTime
 	meeting.Source = "FATHOM"
 	meeting.Tenant = ctx.Tenant
@@ -85,11 +89,17 @@ func createEventFromFathomAISummaryZapier(ctx rest.HTTPContext, aiSummaryData *R
 	return nil
 }
 
-func getParticipantOrganizationIds(ctx rest.HTTPContext, externalDomains string) []string {
+func getParticipantOrganizationIds(ctx rest.HTTPContext, externalDomains string) ([]string, error) {
 	var results []string
 	domains := strings.Split(externalDomains, ",")
+	tenantDomains, err := ctx.Services.CommonServices.WorkspaceService.GetWorkspaceDomainsForTenant(*ctx.ServiceContext)
+	if err != nil {
+		return results, err
+	}
 	for _, domain := range domains {
-		// todo - check if domian belongs to tenant before calling Save
+		if isDomainTenantDomain(domain, tenantDomains) {
+			continue
+		}
 		dataFields := data_fields.OrganizationFields{
 			Domains: []string{
 				domain,
@@ -102,7 +112,16 @@ func getParticipantOrganizationIds(ctx rest.HTTPContext, externalDomains string)
 
 		results = append(results, id)
 	}
-	return results
+	return results, nil
+}
+
+func isDomainTenantDomain(domain string, tenantDomains []string) bool {
+	for _, tenantDomain := range tenantDomains {
+		if domain == tenantDomain {
+			return true
+		}
+	}
+	return false
 }
 
 func processFathomSummaryFromZapier(raw *RawFathomAISummaryZapier) (string, error) {
