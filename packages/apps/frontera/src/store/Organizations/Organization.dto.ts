@@ -199,7 +199,7 @@ export class Organization extends Entity<OrganizationDatum> {
         name: 'Unnamed',
         metadata: {
           id: crypto.randomUUID(),
-          lastUpdated: new Date().toString(),
+          lastUpdated: new Date().toISOString(),
           created: new Date().toISOString(),
         },
         hide: false,
