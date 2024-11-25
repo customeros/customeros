@@ -7,8 +7,12 @@ export function convertPlainTextToHtml(plainText: string): string {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
 
-  // Replace newline characters with <br> tags
-  const htmlText = escapedText.replace(/\n/g, '<br>');
+  // ensure variables are properly converted to nodes
+  const textWithVariables = escapedText.replace(
+    /\{\{([^}]+)\}\}/g,
+    '<span data-lexical-variable>{{$1}}</span>',
+  );
 
-  return htmlText;
+  // Replace newline characters with <br> tags
+  return textWithVariables.replace(/\n/g, '<br>');
 }
