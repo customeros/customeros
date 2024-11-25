@@ -330,7 +330,6 @@ export const FlowBuilder = observer(
           edges={edges}
           minZoom={0.1}
           fitView={true}
-          deleteKeyCode={null}
           onConnect={onConnect}
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
