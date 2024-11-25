@@ -160,11 +160,10 @@ func (repo *rawEmailRepositoryImpl) UpdateRawEmailTable(id uuid.UUID, dbUpdateRe
 	if dbUpdateRecord.Error != nil {
 		tx.Update("error", fmt.Sprintf("%v", dbUpdateRecord.Error))
 	}
-	if len(*dbUpdateRecord.BouncedEmails) > 0 {
+	if dbUpdateRecord.BouncedEmails != nil && len(*dbUpdateRecord.BouncedEmails) > 0 {
 		jsonBytes, _ := json.Marshal(dbUpdateRecord.BouncedEmails)
 		bounced := string(jsonBytes)
 		tx.Update("bounced_emails", bounced)
-
 	}
 
 	err := tx.Error
