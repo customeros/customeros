@@ -14,10 +14,9 @@ import (
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 )
 
-func Fathom(services *service.Services) gin.HandlerFunc {
+func FathomZapier(services *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := commontracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "Fathom", c.Request.Header)
 		defer span.Finish()
@@ -75,13 +74,14 @@ func createEventFromFathomAISummaryZapier(ctx rest.HTTPContext, aiSummaryData *R
 		return err
 	}
 	meeting.Content = content
-	orgs, err := getParticipantOrganizationIds(ctx, aiSummaryData.MeetingExternalDomains)
+	domains := strings.Split(aiSummaryData.MeetingExternalDomains, ",")
+	orgs, err := getParticipantOrganizationIds(ctx, domains)
 	if err != nil {
 		return err
 	}
 	meeting.OrganizationIDs = orgs
 	meeting.EventTimestamp = aiSummaryData.MeetingScheduledStartTime
-	meeting.Source = "FATHOM"
+	meeting.Source = string(EventFathom)
 	meeting.Tenant = ctx.Tenant
 
 	// write event to database
@@ -89,44 +89,9 @@ func createEventFromFathomAISummaryZapier(ctx rest.HTTPContext, aiSummaryData *R
 	return nil
 }
 
-func getParticipantOrganizationIds(ctx rest.HTTPContext, externalDomains string) ([]string, error) {
-	var results []string
-	domains := strings.Split(externalDomains, ",")
-	tenantDomains, err := ctx.Services.CommonServices.WorkspaceService.GetWorkspaceDomainsForTenant(*ctx.ServiceContext)
-	if err != nil {
-		return results, err
-	}
-	for _, domain := range domains {
-		if isDomainTenantDomain(domain, tenantDomains) {
-			continue
-		}
-		dataFields := data_fields.OrganizationFields{
-			Domains: []string{
-				domain,
-			},
-		}
-		id, err := ctx.Services.CommonServices.OrganizationService.Save(*ctx.ServiceContext, nil, nil, dataFields)
-		if err != nil {
-			tracing.TraceErr(ctx.Span, errors.Wrap(err, "Error saving organization by domain"))
-		}
-
-		results = append(results, id)
-	}
-	return results, nil
-}
-
-func isDomainTenantDomain(domain string, tenantDomains []string) bool {
-	for _, tenantDomain := range tenantDomains {
-		if domain == tenantDomain {
-			return true
-		}
-	}
-	return false
-}
-
 func processFathomSummaryFromZapier(raw *RawFathomAISummaryZapier) (string, error) {
 	// Convert HTML to clean markdown
-	cleanMarkdown, err := convertHTMLToCleanMarkdown(raw.AISummaryHTMLFormatted)
+	cleanMarkdown, err := convertFathomHTMLToCleanMarkdown(raw.AISummaryHTMLFormatted)
 	if err != nil {
 		return "", fmt.Errorf("error converting HTML to markdown: %w", err)
 	}
@@ -155,7 +120,7 @@ func processFathomSummaryFromZapier(raw *RawFathomAISummaryZapier) (string, erro
 	return builder.String(), nil
 }
 
-func convertHTMLToCleanMarkdown(htmlContent string) (string, error) {
+func convertFathomHTMLToCleanMarkdown(htmlContent string) (string, error) {
 	// Parse HTML
 	doc, err := html.Parse(strings.NewReader(htmlContent))
 	if err != nil {
