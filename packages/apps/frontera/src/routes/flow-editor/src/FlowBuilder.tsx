@@ -272,6 +272,20 @@ export const FlowBuilder = observer(
       takeSnapshot();
     }, [takeSnapshot]);
 
+    const handleOpenEmailEditor = useCallback((node: Node) => {
+      onToggleSidePanel(false);
+
+      store.ui.flowActionSidePanel.setOpen(true);
+      store.ui.flowActionSidePanel.setType('EmailAction');
+      store.ui.flowActionSidePanel.setContext({
+        ...store.ui.flowActionSidePanel.context,
+        id: node.id,
+        // @ts-expect-error to do improve types on flowActionSidePanel
+
+        node: node,
+      });
+    }, []);
+
     const onNodesChangeHandler = useCallback(
       (changes: NodeChange[]) => {
         // this is hack to prevent removing initial edges automatically for some unknown yet reason
@@ -295,27 +309,18 @@ export const FlowBuilder = observer(
           }
         }
 
-        // Check if we need to open the side panel
-        const shouldOpenSidePanel = changes.some((change) => {
-          if (
+        // Open email editor when new node is added
+        const newEmailNode = changes.find(
+          (change: NodeChange): change is NodeChange & { item: Node } =>
             change.type === 'add' &&
-            change.item.type === 'action' &&
-            change.item.data.action === 'EMAIL_NEW'
-          ) {
-            // Check if this is the first email action
-            const existingEmailNodes = nodes.filter(
-              (node) =>
-                node.type === 'action' && node.data.action === 'EMAIL_NEW',
-            );
+            'item' in change &&
+            change.item?.type === 'action' &&
+            (change.item?.data?.action === 'EMAIL_NEW' ||
+              change.item?.data?.action === 'EMAIL_REPLY'),
+        );
 
-            return existingEmailNodes.length === 0;
-          }
-
-          return false;
-        });
-
-        if (shouldOpenSidePanel) {
-          onToggleSidePanel(true);
+        if (newEmailNode) {
+          handleOpenEmailEditor(newEmailNode.item);
         }
       },
       [nodes, onNodesChange],
@@ -464,15 +469,7 @@ export const FlowBuilder = observer(
               ['EMAIL_NEW', 'EMAIL_REPLY'].includes(node.data.action as string)
             ) {
               event.stopPropagation();
-              store.ui.flowActionSidePanel.setOpen(true);
-              store.ui.flowActionSidePanel.setType('EmailAction');
-              store.ui.flowActionSidePanel.setContext({
-                ...store.ui.flowActionSidePanel.context,
-                id: node.id,
-                // @ts-expect-error to do improve types on flowActionSidePanel
-
-                node: node,
-              });
+              handleOpenEmailEditor(node);
 
               return;
             }
