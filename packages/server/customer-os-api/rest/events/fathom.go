@@ -14,6 +14,7 @@ import (
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 )
 
 func Fathom(services *service.Services) gin.HandlerFunc {
@@ -69,29 +70,39 @@ func handleFathomAISummaryZapier(ctx rest.HTTPContext) {
 func createEventFromFathomAISummaryZapier(ctx rest.HTTPContext, aiSummaryData *RawFathomAISummaryZapier) error {
 	var meeting Event
 
-	// get id back from db
-	meeting.ID = ""
-
 	content, err := processFathomSummaryFromZapier(aiSummaryData)
 	if err != nil {
 		return err
 	}
 	meeting.Content = content
-
-	// determine meeting participants that belong to tenant
-	meeting.Users = []string{}
-
-	// determine meeting participants that do not belong to tenant
-	meeting.Contacts = []string{}
-
-	// find org ID associated with users that do not belong to tenant
-	meeting.Organizations = []string{}
-
+	meeting.Organizations = getParticipantOrganizationIds(ctx, aiSummaryData.MeetingExternalDomains)
 	meeting.EventTimestamp = aiSummaryData.MeetingScheduledStartTime
-	meeting.Source = "Fathom"
+	meeting.Source = "FATHOM"
+	meeting.Tenant = ctx.Tenant
 
-	// write to database
+	// write event to database
+	meeting.ID = ""
 	return nil
+}
+
+func getParticipantOrganizationIds(ctx rest.HTTPContext, externalDomains string) []string {
+	var results []string
+	domains := strings.Split(externalDomains, ",")
+	for _, domain := range domains {
+		// todo - check if domian belongs to tenant before calling Save
+		dataFields := data_fields.OrganizationFields{
+			Domains: []string{
+				domain,
+			},
+		}
+		id, err := ctx.Services.CommonServices.OrganizationService.Save(*ctx.ServiceContext, nil, nil, dataFields)
+		if err != nil {
+			tracing.TraceErr(ctx.Span, errors.Wrap(err, "Error saving organization by domain"))
+		}
+
+		results = append(results, id)
+	}
+	return results
 }
 
 func processFathomSummaryFromZapier(raw *RawFathomAISummaryZapier) (string, error) {

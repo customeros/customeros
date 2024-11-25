@@ -6,13 +6,13 @@ import (
 )
 
 type Event struct {
-	ID             string
-	Content        string
-	EventTimestamp time.Time
-	Organizations  []string
-	Users          []string
-	Contacts       []string
-	Source         string
+	ID              string
+	Content         string
+	EventTimestamp  time.Time
+	Tenant          string
+	OrganizationIDs []string
+	Source          string
+	SourceLogoUrl   string
 }
 
 // FathomAISummaryZapier represents the webhook payload from Fathom via Zapier
