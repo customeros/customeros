@@ -1,4 +1,4 @@
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { useRef, useMemo, useState, useEffect } from 'react';
 
 import { LexicalEditor } from 'lexical';
@@ -8,13 +8,15 @@ import { render } from '@react-email/render';
 import { FlowActionType } from '@store/Flows/types';
 
 import { cn } from '@ui/utils/cn';
+import { Lotus } from '@ui/media/icons/Lotus';
 import { Button } from '@ui/form/Button/Button';
 import { Editor } from '@ui/form/Editor/Editor';
+import { Send03 } from '@ui/media/icons/Send03';
 import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
-import { MailAdd } from '@ui/media/icons/MailAdd';
-import { ZenCircle } from '@ui/media/icons/ZenCircle';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
+import { ChevronUp } from '@ui/media/icons/ChevronUp';
+import { ChevronDown } from '@ui/media/icons/ChevronDown';
 import { EmailTemplate } from '@shared/components/EmailTemplate';
 import { extractPlainText } from '@ui/form/Editor/utils/extractPlainText';
 import { convertPlainTextToHtml } from '@ui/form/Editor/utils/convertPlainTextToHtml';
@@ -23,9 +25,10 @@ import { useUndoRedo } from '../../hooks';
 import { EmailEditorModal } from './EmailEditorModal';
 
 export const EmailSettingsPanel = observer(() => {
-  const { ui, flowEmailVariables, flows } = useStore();
+  const { ui, flowEmailVariables, flows, session } = useStore();
   const flowId = useParams()?.id as string;
   const [focusMode, setFocusMode] = useState(false);
+  const [showTestEmailMode, setShowTestEmailMode] = useState(false);
   const sidePanelStore = ui.flowActionSidePanel;
   const { setNodes } = useReactFlow();
 
@@ -35,6 +38,7 @@ export const EmailSettingsPanel = observer(() => {
   const variables = flowEmailVariables?.value.get('CONTACT')?.variables;
   const data = ui.flowActionSidePanel.context.node?.data;
 
+  const [isSendingTestEmail, setIsSendingTestEmail] = useState(false);
   const [subject, setSubject] = useState(data?.subject ?? '');
   const [bodyTemplate, setBodyTemplate] = useState(data?.bodyTemplate ?? '');
 
@@ -53,8 +57,8 @@ export const EmailSettingsPanel = observer(() => {
   }, [data?.subject, data?.bodyTemplate, data?.action]);
 
   const { takeSnapshot } = useUndoRedo();
-
-  const flow = flows.value.get(flowId)?.value?.name;
+  const flowStore = flows.value.get(flowId);
+  const flow = flowStore?.value?.name;
 
   useEffect(() => {
     ui.commandMenu.setCallback(handleSave);
@@ -171,25 +175,44 @@ export const EmailSettingsPanel = observer(() => {
     sidePanelStore.setOpen(false);
   };
 
+  const handleSendTextEmail = async () => {
+    setIsSendingTestEmail(true);
+
+    try {
+      const emailContent = await prepareEmailContent(bodyTemplate);
+
+      if (emailContent?.html) {
+        flowStore?.sendTestEmail({
+          sendToEmailAddress: session.value.profile.email,
+          subject: subject || '',
+          bodyTemplate: emailContent.html || '',
+        });
+      }
+    } catch (error) {
+      ui.toastError('Error sending test email', 'email-send-error');
+    } finally {
+      setIsSendingTestEmail(false);
+    }
+  };
+
   return (
     <div
       onClick={(e) => e.stopPropagation()}
       onKeyDown={(e) => e.stopPropagation()}
       className='pl-4 -ml-4 fixed z-50 top-[0px] bottom-0 right-0 w-[400px] h-full  '
     >
-      <article className=' h-full bg-white  border-l flex flex-col gap-1 animate-slideLeft'>
+      <article className=' h-full bg-white  border-l flex flex-col  animate-slideLeft'>
         <div className='flex justify-between items-center border-b border-gray-200 p-4 y-2 h-[41px]'>
           <div className='flex items-center gap-2'>
             <h1 className='font-medium'>Email {}</h1>
-            <Tooltip label='Focus mode'>
-              <IconButton
-                size='xs'
-                variant='ghost'
-                icon={<ZenCircle />}
-                aria-label={'Focus mode'}
-                onClick={() => setFocusMode(true)}
-              />
-            </Tooltip>
+
+            <Button
+              size='xxs'
+              onClick={() => setShowTestEmailMode(!showTestEmailMode)}
+              rightIcon={showTestEmailMode ? <ChevronUp /> : <ChevronDown />}
+            >
+              Test...
+            </Button>
           </div>
 
           <div className='flex gap-2'>
@@ -205,54 +228,97 @@ export const EmailSettingsPanel = observer(() => {
             </div>
           </div>
         </div>
-
-        <div className='px-4 overflow-y-auto min-h-[50%] h-full'>
-          <Tooltip
-            align='start'
-            label={
-              data?.action === FlowActionType.EMAIL_REPLY
-                ? `Reply to email subjects can't be edited`
-                : ''
-            }
-          >
-            <div
-              className={cn({
-                'cursor-not-allowed':
-                  data?.action === FlowActionType.EMAIL_REPLY,
-              })}
-            >
-              <Editor
-                size='md'
-                usePlainText
-                ref={inputRef}
-                placeholder='Subject'
-                variableOptions={variables}
-                namespace='flow-email-editor-subject'
-                onChange={(html) => setSubject(extractPlainText(html))}
-                defaultHtmlValue={convertPlainTextToHtml(subject ?? '')}
-                onKeyDown={(e) => {
-                  if (e.key === 'Tab') {
-                    e.preventDefault();
-                    editorRef.current?.focus();
-                  }
-                }}
-                placeholderClassName={cn(
-                  'text-sm font-medium h-auto cursor-text ',
-                  {
-                    'pointer-events-none text-gray-400':
-                      data?.action === FlowActionType.EMAIL_REPLY,
-                  },
-                )}
-                className={cn(
-                  `text-sm font-medium h-auto cursor-text email-editor-subject`,
-                  {
-                    'pointer-events-none text-gray-400':
-                      data?.action === FlowActionType.EMAIL_REPLY,
-                  },
-                )}
-              />
+        {showTestEmailMode && (
+          <div className='bg-gray-50 w-full px-4 py-2 border-b border-gray-200 text-sm'>
+            <div className='flex justify-between items-center mb-1'>
+              <p className='text-sm font-medium'>Send a test email...</p>
+              <Button
+                size='xxs'
+                leftIcon={<Send03 />}
+                loadingText='Sending…'
+                onClick={handleSendTextEmail}
+                isLoading={isSendingTestEmail}
+              >
+                Send
+              </Button>
             </div>
-          </Tooltip>
+            <div>
+              <ul className='list-disc px-6'>
+                {/* to do - fill the data of sender and test org id when the BE is ready*/}
+                <li>To {session.value.profile.email}</li>
+                <li>From robertinc@testcustomeros.com</li>
+                <li>
+                  Replies will show up in{' '}
+                  <Link to={'/'} className='text-primary-700'>
+                    Example, Inc’s timeline
+                  </Link>{' '}
+                </li>
+              </ul>
+            </div>
+          </div>
+        )}
+        <div className='px-4 overflow-y-auto min-h-[50%] h-full'>
+          <div className='flex items-center gap-2'>
+            <Tooltip
+              align='start'
+              label={
+                data?.action === FlowActionType.EMAIL_REPLY
+                  ? `Reply to email subjects can't be edited`
+                  : ''
+              }
+            >
+              <div
+                className={cn('w-full', {
+                  'cursor-not-allowed':
+                    data?.action === FlowActionType.EMAIL_REPLY,
+                })}
+              >
+                <Editor
+                  size='md'
+                  usePlainText
+                  ref={inputRef}
+                  placeholder='Subject'
+                  variableOptions={variables}
+                  namespace='flow-email-editor-subject'
+                  onChange={(html) => setSubject(extractPlainText(html))}
+                  defaultHtmlValue={convertPlainTextToHtml(subject ?? '')}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Tab') {
+                      e.preventDefault();
+                      editorRef.current?.focus();
+                    }
+                  }}
+                  placeholderClassName={cn(
+                    'text-sm font-medium h-auto cursor-text ',
+                    {
+                      'pointer-events-none text-gray-400':
+                        data?.action === FlowActionType.EMAIL_REPLY,
+                    },
+                  )}
+                  className={cn(
+                    `text-sm font-medium h-auto cursor-text email-editor-subject`,
+                    {
+                      'pointer-events-none text-gray-400':
+                        data?.action === FlowActionType.EMAIL_REPLY,
+                    },
+                  )}
+                />
+              </div>
+            </Tooltip>
+
+            <Tooltip label='Focus mode'>
+              <div>
+                <IconButton
+                  size='xs'
+                  variant='ghost'
+                  icon={<Lotus />}
+                  aria-label={'Focus mode'}
+                  onClick={() => setFocusMode(true)}
+                />
+              </div>
+            </Tooltip>
+          </div>
+
           <div className='min-h-[60vh] mb-2'>
             <Editor
               ref={editorRef}
@@ -267,28 +333,7 @@ export const EmailSettingsPanel = observer(() => {
             />
           </div>
         </div>
-        <Button
-          size='lg'
-          variant='ghost'
-          colorScheme='primary'
-          leftIcon={<MailAdd className='text-inherit size-4' />}
-          className='text-primary-700 w-full text-sm absolute bottom-0 py-4 rounded-none border-t border-solid border-gray-200'
-          onClick={() => {
-            ui.commandMenu.setOpen(true, {
-              type: 'SendTestEmail',
-              context: {
-                entity: 'Flow',
-                ids: [flowId],
-                meta: {
-                  subject,
-                  bodyTemplate,
-                },
-              },
-            });
-          }}
-        >
-          Set up a test email...
-        </Button>
+
         <EmailEditorModal
           flowName={flow}
           subject={subject}
