@@ -209,7 +209,7 @@ func (s *contactService) hideContactsWithGroupOrSystemGeneratedEmail(ctx context
 				AppSource: constants.AppSourceDataUpkeeper,
 			})
 
-			err = s.commonServices.ContactService.HideContact(innerCtx, record.ContactId)
+			err = s.commonServices.ContactService.HideContact(innerCtx, nil, record.ContactId)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error hiding contact {%s}: %s", record.ContactId, err.Error())
@@ -285,7 +285,7 @@ func (s *contactService) checkContacts(ctx context.Context) {
 			}
 
 			if saveContact {
-				_, err = s.commonServices.ContactService.Save(innerCtx, &contactEntity.Id, contactFields, false)
+				_, err = s.commonServices.ContactService.Save(innerCtx, nil, &contactEntity.Id, contactFields, false)
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "ContactService.Save"))
 					s.log.Errorf("Error updating contact {%s}: %s", contactEntity.Id, err.Error())
@@ -364,7 +364,7 @@ func (s *contactService) updateContactNamesFromEmails(ctx context.Context) {
 				saveContact = true
 			}
 			if saveContact {
-				_, err = s.commonServices.ContactService.Save(innerCtx, &record.ContactId, contactFields, false)
+				_, err = s.commonServices.ContactService.Save(innerCtx, nil, &record.ContactId, contactFields, false)
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "ContactService.Save"))
 					s.log.Errorf("Error updating contact {%s}: %s", record.ContactId, err.Error())
@@ -559,7 +559,7 @@ func (s *contactService) processLinkedInUrl(ctx context.Context, tenant, linkedi
 
 	var contactIds []string
 	if len(contactsWithLinkedin) == 0 {
-		contactId, err := s.commonServices.ContactService.CreateContactByLinkedIn(ctx, linkedinProfileUrl)
+		contactId, err := s.commonServices.ContactService.CreateContactByLinkedIn(ctx, nil, linkedinProfileUrl)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err

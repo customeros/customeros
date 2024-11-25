@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	mailsherpa "github.com/customeros/mailsherpa/mailvalidate"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
@@ -23,10 +22,10 @@ import (
 )
 
 type ContactService interface {
-	Save(ctx context.Context, id *string, contactFields data_fields.ContactFields, updateOnlyIfEmpty bool) (string, error)
-	CreateContactByLinkedIn(ctx context.Context, linkedInUrl string) (string, error)
-	HideContact(ctx context.Context, contactId string) error
-	ShowContact(ctx context.Context, contactId string) error
+	Save(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, id *string, contactFields data_fields.ContactFields, updateOnlyIfEmpty bool) (string, error)
+	CreateContactByLinkedIn(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, linkedInUrl string) (string, error)
+	HideContact(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, contactId string) error
+	ShowContact(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, contactId string) error
 	GetContactById(ctx context.Context, contactId string) (*neo4jentity.ContactEntity, error)
 	LinkContactWithOrganization(ctx context.Context, contactId, organizationId, jobTitle, description, source string, primary bool, startedAt, endedAt *time.Time) error
 	CheckContactExistsWithLinkedIn(ctx context.Context, url, alias, externalId string) (bool, string, error)
@@ -45,7 +44,7 @@ func NewContactService(log logger.Logger, services *Services) ContactService {
 	}
 }
 
-func (s *contactService) Save(ctx context.Context, id *string, contactFields data_fields.ContactFields, updateOnlyIfEmpty bool) (string, error) {
+func (s *contactService) Save(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, id *string, contactFields data_fields.ContactFields, updateOnlyIfEmpty bool) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.Save")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -90,6 +89,9 @@ func (s *contactService) Save(ctx context.Context, id *string, contactFields dat
 		if utils.IfNotNilString(contactFields.AppSource) == "" {
 			contactFields.AppSource = utils.StringPtr(common.GetAppSourceFromContext(ctx))
 		}
+		if contactFields.Hide == nil {
+			contactFields.Hide = utils.BoolPtr(false)
+		}
 	} else {
 		contactId = *id
 		// validate contact exists
@@ -115,40 +117,47 @@ func (s *contactService) Save(ctx context.Context, id *string, contactFields dat
 		}
 	}
 
-	_, err = utils.ExecuteWriteInTransaction(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, nil, func(tx neo4j.ManagedTransaction) (any, error) {
-		innerErr := s.services.Neo4jRepositories.ContactWriteRepository.SaveContactInTx(ctx, &tx, tenant, contactId, contactFields, updateOnlyIfEmpty)
+	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
+
+		innerErr := s.services.Neo4jRepositories.ContactWriteRepository.SaveContactInTx(ctx, txWithPostCommit.Tx, tenant, contactId, contactFields, updateOnlyIfEmpty)
 		if innerErr != nil {
 			s.log.Errorf("Error while saving contact %s: %s", contactId, err.Error())
 			return nil, innerErr
 		}
+
 		if contactFields.ExternalSystemAvailable() {
-			innerErr = s.services.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntityInTx(ctx, &tx, tenant, contactId, model.NodeLabelContact, *contactFields.ExternalSystem)
+			innerErr = s.services.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntityInTx(ctx, txWithPostCommit.Tx, tenant, contactId, model.NodeLabelContact, *contactFields.ExternalSystem)
 			if err != nil {
 				s.log.Errorf("Error while link contact %s with external system %s: %s", contactId, contactFields.ExternalSystem.ExternalSystemId, err.Error())
 				return nil, innerErr
 			}
 		}
+
+		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
+			if createFlow {
+				err = s.services.RabbitMQService.PublishEvent(ctx, contactId, model.CONTACT, dto.CreateContact{contactFields})
+				if err != nil {
+					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateContact"))
+				}
+				utils.EventCompleted(ctx, tenant, model.CONTACT.String(), contactId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithCreate())
+			} else {
+				err = s.services.RabbitMQService.PublishEvent(ctx, contactId, model.CONTACT, dto.UpdateContact{contactFields})
+				if err != nil {
+					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateContact"))
+				}
+				if common.GetAppSourceFromContext(ctx) != constants.AppSourceCustomerOsApi {
+					utils.EventCompleted(ctx, tenant, model.CONTACT.String(), contactId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
+				}
+			}
+
+			return nil
+		})
+
 		return nil, nil
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return "", err
-	}
-
-	if createFlow {
-		err = s.services.RabbitMQService.PublishEvent(ctx, contactId, model.CONTACT, dto.CreateContact{contactFields})
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateContact"))
-		}
-		utils.EventCompleted(ctx, tenant, model.CONTACT.String(), contactId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithCreate())
-	} else {
-		err = s.services.RabbitMQService.PublishEvent(ctx, contactId, model.CONTACT, dto.UpdateContact{contactFields})
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateContact"))
-		}
-		if common.GetAppSourceFromContext(ctx) != constants.AppSourceCustomerOsApi {
-			utils.EventCompleted(ctx, tenant, model.CONTACT.String(), contactId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
-		}
 	}
 
 	if createFlow {
@@ -159,7 +168,7 @@ func (s *contactService) Save(ctx context.Context, id *string, contactFields dat
 	return contactId, nil
 }
 
-func (s *contactService) HideContact(ctx context.Context, contactId string) error {
+func (s *contactService) HideContact(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, contactId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.HideContact")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -173,28 +182,30 @@ func (s *contactService) HideContact(ctx context.Context, contactId string) erro
 	}
 	tenant := common.GetTenantFromContext(ctx)
 
-	err = s.services.Neo4jRepositories.CommonWriteRepository.UpdateBoolProperty(ctx, tenant, model.NodeLabelContact, contactId, string(neo4jentity.ContactPropertyHide), true)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("error while hiding contact %s: %s", contactId, err.Error())
-	}
-	err = s.services.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, tenant, model.NodeLabelContact, contactId, string(neo4jentity.ContactPropertyHiddenAt), utils.NowPtr())
-	if err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("error while updating hidden at property for contact %s: %s", contactId, err.Error())
-	}
+	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
+		contactFields := data_fields.ContactFields{Hide: utils.BoolPtr(false)}
+		err = s.services.Neo4jRepositories.ContactWriteRepository.SaveContactInTx(ctx, txWithPostCommit.Tx, tenant, contactId, contactFields, false)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("error while hiding contact %s: %s", contactId, err.Error())
+		}
 
-	err = s.services.RabbitMQService.PublishEvent(ctx, contactId, model.CONTACT, dto.HideContact{})
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message HideContact"))
-	}
+		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
+			err = s.services.RabbitMQService.PublishEvent(ctx, contactId, model.CONTACT, dto.HideContact{})
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message HideContact"))
+			}
 
-	utils.EventCompleted(ctx, tenant, model.CONTACT.String(), contactId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithDelete())
+			utils.EventCompleted(ctx, tenant, model.CONTACT.String(), contactId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithDelete())
+			return nil
+		})
+		return nil, nil
+	})
 
 	return nil
 }
 
-func (s *contactService) ShowContact(ctx context.Context, contactId string) error {
+func (s *contactService) ShowContact(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, contactId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.ShowContact")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -208,19 +219,28 @@ func (s *contactService) ShowContact(ctx context.Context, contactId string) erro
 	}
 	tenant := common.GetTenantFromContext(ctx)
 
-	err = s.services.Neo4jRepositories.CommonWriteRepository.UpdateBoolProperty(ctx, tenant, model.NodeLabelContact, contactId, string(neo4jentity.ContactPropertyHide), false)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("error while showing contact %s: %s", contactId, err.Error())
-		return err
-	}
+	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
+		contactFields := data_fields.ContactFields{Hide: utils.BoolPtr(true)}
+		err = s.services.Neo4jRepositories.ContactWriteRepository.SaveContactInTx(ctx, txWithPostCommit.Tx, tenant, contactId, contactFields, false)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("error while showing contact %s: %s", contactId, err.Error())
+			return nil, err
+		}
 
-	err = s.services.RabbitMQService.PublishEvent(ctx, contactId, model.CONTACT, dto.ShowContact{})
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message ShowContact"))
-	}
+		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
+			err = s.services.RabbitMQService.PublishEvent(ctx, contactId, model.CONTACT, dto.ShowContact{})
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message ShowContact"))
+			}
 
-	utils.EventCompleted(ctx, tenant, model.CONTACT.String(), contactId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithCreate())
+			utils.EventCompleted(ctx, tenant, model.CONTACT.String(), contactId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithCreate())
+
+			return nil
+		})
+
+		return nil, nil
+	})
 
 	return nil
 }
@@ -385,7 +405,7 @@ func (s *contactService) CheckContactExistsWithEmail(ctx context.Context, email 
 	return len(contacts) > 0, contactId, nil
 }
 
-func (s *contactService) CreateContactByLinkedIn(ctx context.Context, linkedInUrl string) (string, error) {
+func (s *contactService) CreateContactByLinkedIn(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, linkedInUrl string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.CreateContactByLinkedIn")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -410,57 +430,68 @@ func (s *contactService) CreateContactByLinkedIn(ctx context.Context, linkedInUr
 	// Reject contact creation if linked-in url is already used by another contact
 	if utils.IfNotNilString(linkedInUrl) != "" {
 		if (neo4jentity.SocialEntity{Url: linkedInUrl}).IsLinkedin() {
-			linkedinUsed, existingContactId, err := s.services.ContactService.CheckContactExistsWithLinkedIn(ctx, linkedInUrl, "", "")
+			linkedInAlreadyUsed, existingContactId, err := s.services.ContactService.CheckContactExistsWithLinkedIn(ctx, linkedInUrl, "", "")
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "unable to check contact exists with linkedin"))
 				return "", err
 			}
-			if linkedinUsed {
-				contactEntity, err := s.GetContactById(ctx, existingContactId)
+			if linkedInAlreadyUsed {
+				contactByLinkedInEntity, err := s.GetContactById(ctx, existingContactId)
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "unable to get contact by id"))
 					return "", err
 				}
-				if contactEntity.Hide {
-					err = s.ShowContact(ctx, existingContactId)
-					if err != nil {
-						tracing.TraceErr(span, errors.Wrap(err, "unable to show contact"))
-						return "", err
+
+				_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
+					if contactByLinkedInEntity.Hide {
+						err = s.ShowContact(ctx, txWithPostCommit, existingContactId)
+						if err != nil {
+							tracing.TraceErr(span, errors.Wrap(err, "unable to show contact"))
+							return "", err
+						}
+					} else {
+						// just update contact' updatedAt
+						err = s.services.Neo4jRepositories.CommonWriteRepository.TouchEntity(ctx, txWithPostCommit.Tx, tenant, model.NodeLabelContact, existingContactId)
+						if err != nil {
+							tracing.TraceErr(span, errors.Wrap(err, "error on updating contact updatedAt"))
+						}
+						txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
+							utils.EventCompleted(ctx, tenant, model.CONTACT.String(), existingContactId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
+							return nil
+						})
 					}
-				} else {
-					// just update contact' updatedAt
-					err = s.services.Neo4jRepositories.CommonWriteRepository.TouchEntity(ctx, nil, tenant, model.NodeLabelContact, existingContactId)
-					if err != nil {
-						tracing.TraceErr(span, errors.Wrap(err, "error on updating contact updatedAt"))
-					}
-					utils.EventCompleted(ctx, tenant, model.CONTACT.String(), existingContactId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
-				}
+					return nil, nil
+				})
 				return existingContactId, nil
 			}
 		}
 	}
 
-	createdContactId, err := s.Save(ctx, nil, data_fields.ContactFields{}, false)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to create contact"))
-		return "", err
-	}
+	createdContactId := ""
 
-	if (neo4jentity.SocialEntity{Url: linkedInUrl}).IsLinkedin() {
-		_, err := s.services.SocialService.AddSocialToEntity(ctx, nil,
-			LinkWith{
-				Id:   createdContactId,
-				Type: model.CONTACT,
-			},
-			neo4jentity.SocialEntity{
-				Url:       linkedInUrl,
-				Source:    neo4jentity.DecodeDataSource(neo4jentity.DataSourceOpenline.String()),
-				AppSource: common.GetAppSourceFromContext(ctx),
-			})
+	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
+		createdContactId, err = s.Save(ctx, txWithPostCommit, nil, data_fields.ContactFields{}, false)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to merge social with contact"))
+			tracing.TraceErr(span, errors.Wrap(err, "failed to create contact"))
+			return "", err
 		}
-	}
+		if (neo4jentity.SocialEntity{Url: linkedInUrl}).IsLinkedin() {
+			_, err := s.services.SocialService.AddSocialToEntity(ctx, txWithPostCommit,
+				LinkWith{
+					Id:   createdContactId,
+					Type: model.CONTACT,
+				},
+				neo4jentity.SocialEntity{
+					Url:       linkedInUrl,
+					Source:    neo4jentity.DecodeDataSource(neo4jentity.DataSourceOpenline.String()),
+					AppSource: common.GetAppSourceFromContext(ctx),
+				})
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "failed to merge social with contact"))
+			}
+		}
+		return nil, nil
+	})
 
 	return createdContactId, nil
 }

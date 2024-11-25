@@ -90,6 +90,11 @@ func (r *contactWriteRepository) SaveContactInTx(ctx context.Context, tx *neo4j.
 			cypher += ", c.username = CASE WHEN $updateOnlyIfEmpty = false OR c.username is null OR c.username = '' THEN $username ELSE c.username END"
 			params["username"] = *data.Username
 		}
+		if data.Hide != nil {
+			cypher += ", c.hide = $hide"
+			cypher += `, c.hiddenAt = CASE WHEN $hide = true THEN datetime() ELSE null END `
+			params["hide"] = *data.Hide
+		}
 
 		span.LogFields(log.String("cypher", cypher))
 		tracing.LogObjectAsJson(span, "params", params)

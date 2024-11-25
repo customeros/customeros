@@ -373,7 +373,7 @@ func (r *mutationResolver) ContactUpdate(ctx context.Context, input model.Contac
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "request.input", input)
 
-	contactId, err := r.Services.CommonServices.ContactService.Save(ctx, utils.StringPtr(input.ID), mapper.MapContactUpdateInputToContactFields(input), false)
+	contactId, err := r.Services.CommonServices.ContactService.Save(ctx, nil, utils.StringPtr(input.ID), mapper.MapContactUpdateInputToContactFields(input), false)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to update contact %s", input.ID)
@@ -450,7 +450,7 @@ func (r *mutationResolver) ContactHide(ctx context.Context, contactID string) (*
 		return &model.ActionResponse{Accepted: false}, nil
 	}
 
-	err = r.Services.CommonServices.ContactService.HideContact(ctx, contactID)
+	err = r.Services.CommonServices.ContactService.HideContact(ctx, nil, contactID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Error while hiding contact")
