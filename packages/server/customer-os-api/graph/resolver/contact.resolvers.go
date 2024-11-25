@@ -670,7 +670,7 @@ func (r *mutationResolver) ContactFindWorkEmail(ctx context.Context, contactID s
 		orgDomain = *domain
 	}
 
-	if orgName == "" && orgDomain == "" {
+	if orgDomain == "" {
 		tracing.TraceErr(span, errors.New("cannot find email for contact without domain"))
 		graphql.AddErrorf(ctx, "Missing domain for contact")
 		return &model.ActionResponse{Accepted: false}, nil
