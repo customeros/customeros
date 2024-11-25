@@ -18,23 +18,16 @@ import (
 )
 
 type AddMailboxRequest struct {
-	Domain            string
-	Username          string
-	Password          string
-	LinkedUserEmail   string
-	ForwardingEnabled bool
-	WebmailEnabled    bool
-	ForwardingTo      []string
+	Domain          string
+	Username        string
+	Password        string
+	LinkedUserEmail string
+	WebmailEnabled  bool
+	ForwardingTo    []string
 }
 
 type MailboxService interface {
 	AddMailbox(ctx context.Context, request AddMailboxRequest) error
-	BuildAddMailboxRequest(
-		ctx context.Context,
-		domain, username, password, linkedUserEmail string,
-		forwardingEnabled, webmailEnabled bool,
-		forwardingTo []string,
-	) AddMailboxRequest
 	IsDomainAvailable(ctx context.Context, domain string) (ok, available bool)
 	RecommendOutboundDomains(ctx context.Context, domainRoot string, count int) []string
 }
@@ -53,31 +46,12 @@ func NewMailboxService(log logger.Logger, services *Services) MailboxService {
 	}
 }
 
-func (s *mailboxService) BuildAddMailboxRequest(
-	ctx context.Context,
-	domain, username, password, linkedUserEmail string,
-	forwardingEnabled, webmailEnabled bool,
-	forwardingTo []string,
-) AddMailboxRequest {
-	r := AddMailboxRequest{
-		Domain:            domain,
-		Username:          username,
-		Password:          password,
-		LinkedUserEmail:   linkedUserEmail,
-		ForwardingEnabled: forwardingEnabled,
-		WebmailEnabled:    webmailEnabled,
-		ForwardingTo:      forwardingTo,
-	}
-	return r
-}
-
 func (s *mailboxService) AddMailbox(ctx context.Context, request AddMailboxRequest) error {
 	span, ctx := s.initializeTracing(ctx, "MailboxService.AddMailbox")
 	span.LogFields(
 		log.String("linkedUserEmail", request.LinkedUserEmail),
 		log.String("domain", request.Domain),
 		log.String("username", request.Username),
-		log.Bool("forwardingEnabled", request.ForwardingEnabled),
 		log.Bool("webmailEnabled", request.WebmailEnabled),
 		log.Object("forwardingTo", request.ForwardingTo),
 	)
@@ -191,7 +165,6 @@ func (s *mailboxService) setupMailbox(ctx context.Context, span opentracing.Span
 		request.Domain,
 		request.Username,
 		request.Password,
-		request.ForwardingEnabled,
 		request.ForwardingTo,
 		request.WebmailEnabled,
 	)

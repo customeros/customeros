@@ -69,10 +69,7 @@ type MailboxRequest struct {
 	// Required: false
 	Password string `json:"password" example:"SecurePassword123!"`
 
-	// Specifies if email forwarding is enabled
-	ForwardingEnabled bool `json:"forwardingEnabled" example:"true"`
-
-	// Email address to forward to (if forwarding is enabled)
+	// Email address to forward to
 	ForwardingTo []string `json:"forwardingTo" example:"['user1@example.com', 'user2@example.com']"`
 
 	// Specifies if webmail access is enabled

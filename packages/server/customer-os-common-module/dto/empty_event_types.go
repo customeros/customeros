@@ -17,3 +17,5 @@ type FlowOff struct{}
 type FlowArchive struct{}
 
 type FlowParticipantSchedule struct{}
+
+type MailstackBuyRequest struct{}

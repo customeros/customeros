@@ -30,6 +30,7 @@ const (
 	CUSTOM_FIELD          EntityType = "CUSTOM_FIELD"
 	CUSTOM_FIELD_TEMPLATE EntityType = "CUSTOM_FIELD_TEMPLATE"
 	SOCIAL                EntityType = "SOCIAL"
+	MAILSTACK_BUY_REQUEST EntityType = "MAILSTACK_BUY_REQUEST"
 )
 
 func (entityType EntityType) String() string {

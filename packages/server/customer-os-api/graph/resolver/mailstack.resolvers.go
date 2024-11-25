@@ -143,7 +143,7 @@ func (r *queryResolver) MailstackCheckUnavailableDomains(ctx context.Context, do
 
 	unaivalableDomains := []string{}
 	for _, domain := range domains {
-		isAvailable, isPremium, err := r.Services.NamecheapService.CheckDomainAvailability(ctx, domain)
+		isAvailable, isPremium, err := r.Services.CommonServices.NamecheapService.CheckDomainAvailability(ctx, domain)
 		if err != nil {
 			tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 			r.log.Errorf("Failed to check domain %s availability", domain)
