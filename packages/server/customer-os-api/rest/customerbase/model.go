@@ -56,15 +56,22 @@ type SetPrimaryExternalSystemIdRequest struct {
 	ExternalId string `json:"externalId" example:"stripe-1234"`
 }
 
+type OrganizationResponse struct {
+	rest.BaseResponse
+	Organization OrganizationRecord `json:"organization,omitempty"`
+}
+
+// OrganizationsResponse represents a response containing multiple organizations
+// @Description Response structure for operations returning multiple organizations
+type OrganizationsResponse struct {
+	rest.BaseResponse
+	// List of organizations
+	Organizations []OrganizationRecord `json:"organizations,omitempty"`
+}
+
 // OrganizationResult represents detailed organization information
 // @Description Detailed organization information returned by API operations
-type OrganizationResult struct {
-	// Status indicates the result of the operation
-	Status string `json:"status" example:"success"`
-
-	// Message provides additional information
-	Message string `json:"message,omitempty" example:"Organization retrieved successfully"`
-
+type OrganizationRecord struct {
 	// Organization's unique identifier
 	ID string `json:"id,omitempty" example:"123e4567-e89b-12d3-a456-426614174000"`
 
@@ -99,28 +106,14 @@ type OrganizationResult struct {
 	ExternalLinks []ExternalLink `json:"externalLinks,omitempty"`
 }
 
-// OrganizationsResponse represents a response containing multiple organizations
-// @Description Response structure for operations returning multiple organizations
-type OrganizationsResponse struct {
-	// Status of the operation
-	Status string `json:"status" example:"success"`
-
-	// Additional information about the operation
-	Message string `json:"message,omitempty" example:"Organizations retrieved successfully"`
-
-	// List of organizations
-	Organizations []OrganizationResult `json:"organizations,omitempty"`
+type ExternalSystemResponse struct {
+	rest.BaseResponse
+	Organization ExternalSystemRecord `json:"organization,omitempty"`
 }
 
 // ExternalSystemResult represents the result of external system operations
 // @Description Response structure for external system operations
-type ExternalSystemResult struct {
-	// Status of the operation
-	Status string `json:"status" example:"success"`
-
-	// Additional information
-	Message string `json:"message,omitempty" example:"External system ID set successfully"`
-
+type ExternalSystemRecord struct {
 	// Associated organization ID
 	OrganizationId string `json:"organizationId,omitempty" example:"org-789"`
 
