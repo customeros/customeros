@@ -74,8 +74,8 @@ func registerCustomerBaseRoutes(ctx context.Context, r *gin.Engine, services *se
 }
 
 func registerEventsRoutes(ctx context.Context, r *gin.Engine, services *service.Services, cache *commoncaches.Cache) {
-	setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/fathom", eventsV1Path), services, cache, restevents.Fathom(services))
-	// setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/grain", eventsV1Path), services, cache, restevents.Grain(services))
+	setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/fathom", eventsV1Path), services, cache, restevents.FathomZapier(services))
+	setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/grain", eventsV1Path), services, cache, restevents.GrainZapier(services))
 }
 
 func registerBillingRoutes(ctx context.Context, r *gin.Engine, services *service.Services, grpcClients *grpc_client.Clients, cache *commoncaches.Cache) {
