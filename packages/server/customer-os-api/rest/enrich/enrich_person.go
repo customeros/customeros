@@ -1,4 +1,3 @@
-// todo refactor success responses to standard format
 package restenrich
 
 import (

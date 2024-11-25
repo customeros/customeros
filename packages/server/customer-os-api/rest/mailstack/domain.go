@@ -90,20 +90,18 @@ func RegisterNewDomain(services *service.Services) gin.HandlerFunc {
 			}
 		}
 
-		registerNewDomainResponse.Status = "success"
-		registerNewDomainResponse.Message = "Domain registered successfully"
-
-		// Placeholder for response logic (to be implemented)
-		c.JSON(http.StatusCreated, registerNewDomainResponse)
+		c.JSON(http.StatusCreated, DomainResponse{
+			BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
+			Domain:       registerNewDomainResponse,
+		})
 	}
 }
 
-func registerDomain(ctx context.Context, tenant, domain, website string, services *service.Services) (DomainResponse, error) {
+func registerDomain(ctx context.Context, tenant, domain, website string, services *service.Services) (DomainRecord, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "registerDomain")
 	defer span.Finish()
 
-	registerNewDomainResponse := DomainResponse{}
-	registerNewDomainResponse.Domain = domain
+	registerNewDomainResponse := DomainRecord{}
 
 	var err error
 
@@ -214,19 +212,18 @@ func ConfigureDomain(services *service.Services) gin.HandlerFunc {
 			}
 		}
 
-		domainResponse.Status = "success"
-		domainResponse.Message = "Domain configured successfully"
-
-		// Placeholder for response logic (to be implemented)
-		c.JSON(http.StatusCreated, domainResponse)
+		c.JSON(http.StatusCreated, DomainResponse{
+			BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
+			Domain:       domainResponse,
+		})
 	}
 }
 
-func configureDomain(ctx context.Context, tenant, domain, website string, services *service.Services) (DomainResponse, error) {
+func configureDomain(ctx context.Context, tenant, domain, website string, services *service.Services) (DomainRecord, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "configureDomain")
 	defer span.Finish()
 
-	domainResponse := DomainResponse{}
+	domainResponse := DomainRecord{}
 	domainResponse.Domain = domain
 
 	var err error
@@ -316,8 +313,10 @@ func GetDomains(services *service.Services) gin.HandlerFunc {
 		}
 
 		response := DomainsResponse{
-			Status: "success",
+			BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
+			Domains:      make([]DomainRecord, 0, len(activeDomainRecords)),
 		}
+
 		for _, domainRecord := range activeDomainRecords {
 			domain, err := services.CommonServices.NamecheapService.GetDomainInfo(ctx, tenant, domainRecord.Domain)
 			if err != nil {
@@ -326,7 +325,7 @@ func GetDomains(services *service.Services) gin.HandlerFunc {
 				rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer.WithMessage("Unable to retrieve domain info"))
 				return
 			}
-			response.Domains = append(response.Domains, DomainResponse{
+			response.Domains = append(response.Domains, DomainRecord{
 				Domain:      domain.DomainName,
 				CreatedDate: domain.CreatedDate,
 				ExpiredDate: domain.ExpiredDate,

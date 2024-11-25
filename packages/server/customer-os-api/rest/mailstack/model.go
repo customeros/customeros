@@ -1,5 +1,7 @@
 package restmailstack
 
+import "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
+
 // RegisterNewDomainRequest defines the request body for registering a new domain
 // @Description Request body for domain registration
 type RegisterNewDomainRequest struct {
@@ -24,27 +26,23 @@ type ConfigureDomainRequest struct {
 	Website string `json:"website" example:"www.example.com"`
 }
 
+type DomainResponse struct {
+	rest.BaseResponse
+
+	Domain DomainRecord `json:"domain"`
+}
+
 // DomainsResponse defines the response structure for multiple domains in the response
 // @Description Response body for all domain details
 type DomainsResponse struct {
-	// Status indicates the result of the action
-	Status string `json:"status,omitempty" example:"success"`
+	rest.BaseResponse
 
-	// Message provides additional information about the action
-	Message string `json:"message,omitempty" example:"Domains retrieved successfully"`
-
-	Domains []DomainResponse `json:"domains"`
+	Domains []DomainRecord `json:"domains"`
 }
 
 // DomainResponse defines the structure of a domain in the response
 // @Description Domain object in the response
-type DomainResponse struct {
-	// Status indicates the result of the action
-	Status string `json:"status,omitempty" example:"success"`
-
-	// Message provides additional information about the action
-	Message string `json:"message,omitempty" example:"Domain retrieved successfully"`
-
+type DomainRecord struct {
 	// Domain is the domain name that was registered
 	Domain string `json:"domain" example:"example.com"`
 
@@ -80,14 +78,19 @@ type MailboxRequest struct {
 	LinkedUser string `json:"linkedUser" example:"john.doe@mycompany.com"`
 }
 
+type MailboxResponse struct {
+	rest.BaseResponse
+	Mailbox MailboxRecord `json:"mailbox,omitempty"`
+}
+
+type MailboxesResponse struct {
+	rest.BaseResponse
+	Mailboxes []MailboxRecord `json:"mailboxes,omitempty"`
+}
+
 // MailboxResponse defines the structure of a mailbox in the response
 // @Description Mailbox object in the response
-type MailboxResponse struct {
-	// Status indicates the result of the action
-	Status string `json:"status,omitempty" example:"success"`
-
-	// Message provides additional information about the action
-	Message string `json:"message,omitempty" example:"Mailbox setup successful"`
+type MailboxRecord struct {
 
 	// Email is the email address for the mailbox
 	// Required: true
@@ -105,16 +108,4 @@ type MailboxResponse struct {
 
 	// WebmailEnabled indicates if webmail access is enabled
 	WebmailEnabled bool `json:"webmailEnabled" example:"true"`
-}
-
-// MailboxesResponse defines the response structure for multiple mailboxes in the response
-// @Description Response body for all mailbox details
-type MailboxesResponse struct {
-	// Status indicates the result of the action
-	Status string `json:"status,omitempty" example:"success"`
-
-	// Message provides additional information about the action
-	Message string `json:"message,omitempty" example:"Mailboxes retrieved successfully"`
-
-	Mailboxes []MailboxResponse `json:"mailboxes"`
 }
