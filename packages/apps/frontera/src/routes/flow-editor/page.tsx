@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
@@ -68,6 +68,15 @@ const FlowContent = observer(
     const tableId = tableViewDef?.value.tableId;
 
     const tableType = tableViewDef?.value?.tableType;
+
+    useEffect(() => {
+      const nodes = getNodes();
+
+      // open settings
+      if (nodes.length === 2) {
+        setIsSidePanelOpen(true);
+      }
+    }, []);
 
     return (
       <>
