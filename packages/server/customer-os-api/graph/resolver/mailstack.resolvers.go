@@ -6,7 +6,6 @@ package resolver
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -18,18 +17,51 @@ import (
 )
 
 // MailstackRegisterBuyDomainsWithMailboxes is the resolver for the mailstack_RegisterBuyDomainsWithMailboxes field.
-func (r *mutationResolver) MailstackRegisterBuyDomainsWithMailboxes(ctx context.Context, domains []string, usernames []string, amount *float64) (*model.RegisterBuyDomainWithMailboxes, error) {
-	panic(fmt.Errorf("not implemented: MailstackRegisterBuyDomainsWithMailboxes - mailstack_RegisterBuyDomainsWithMailboxes"))
+func (r *mutationResolver) MailstackRegisterBuyDomainsWithMailboxes(ctx context.Context, domains []string, usernames []string, amount float64) (*model.RegisterBuyDomainWithMailboxes, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.MailstackRegisterBuyDomainsWithMailboxes", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	span.LogKV("request.domains", domains)
+	span.LogKV("request.usernames", usernames)
+
+	amountInt := int64(amount * 100)
+	registerId, stripeClientSecret, err := r.Services.CommonServices.MailstackService.RegisterBuyDomainsWithMailboxes(ctx, domains, usernames, amountInt)
+	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		r.log.Errorf("Failed to register buy domains with mailboxes")
+		graphql.AddErrorf(ctx, "Failed to register buy domains with mailboxes")
+		return nil, nil
+	}
+
+	return &model.RegisterBuyDomainWithMailboxes{
+		ID:           registerId,
+		ClientSecret: stripeClientSecret,
+	}, nil
 }
 
 // MailstackRegisteredBuyDomainsWithMailboxesPaid is the resolver for the mailstack_RegisteredBuyDomainsWithMailboxesPaid field.
 func (r *mutationResolver) MailstackRegisteredBuyDomainsWithMailboxesPaid(ctx context.Context, id string) (*model.Result, error) {
-	panic(fmt.Errorf("not implemented: MailstackRegisteredBuyDomainsWithMailboxesPaid - mailstack_RegisteredBuyDomainsWithMailboxesPaid"))
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.MailstackRegisteredBuyDomainsWithMailboxesPaid", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	span.LogKV("request.id", id)
+
+	err := r.Services.CommonServices.MailstackService.MarkBuyRequestAsPaid(ctx, id)
+	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		r.log.Errorf("Failed to mark buy request as paid")
+		graphql.AddErrorf(ctx, "Failed to mark buy request as paid")
+		return &model.Result{Result: false}, nil
+	}
+
+	return &model.Result{Result: true}, nil
 }
 
 // MailstackSetUser is the resolver for the mailstack_SetUser field.
 func (r *mutationResolver) MailstackSetUser(ctx context.Context, mailbox string, userID string) (*model.Result, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.MailstackSetUser", graphql.GetOperationContext(ctx))
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.MailstackSetUser", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogKV("request.mailbox", mailbox)
@@ -183,18 +215,58 @@ func (r *queryResolver) MailstackMailboxes(ctx context.Context) ([]*model.Mailbo
 }
 
 // MailstackRegisteredBuyDomainsWithMailboxes is the resolver for the mailstack_RegisteredBuyDomainsWithMailboxes field.
-func (r *queryResolver) MailstackRegisteredBuyDomainsWithMailboxes(ctx context.Context) ([]*model.RegisteredBuyDomainWithMailboxes, error) {
-	panic(fmt.Errorf("not implemented: MailstackRegisteredBuyDomainsWithMailboxes - mailstack_RegisteredBuyDomainsWithMailboxes"))
-}
+func (r *queryResolver) MailstackRegisteredBuyDomainsWithMailboxes(ctx context.Context) ([]*model.MailstackBuyRequest, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.MailstackRegisteredBuyDomainsWithMailboxes", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 
-// !!! WARNING !!!
-// The code below was going to be deleted when updating resolvers. It has been copied here so you have
-// one last chance to move it out of harms way if you want. There are two reasons this happens:
-//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
-//    it when you're done.
-//  - You have helper methods in this file. Move them out to keep these resolver files clean.
-/*
-	func (r *mutationResolver) MailstackCreatePaymentIntent(ctx context.Context, amount *float64) (string, error) {
-	panic(fmt.Errorf("not implemented: MailstackCreatePaymentIntent - mailstack_CreatePaymentIntent"))
+	buyRequests, err := r.Services.Repositories.PostgresRepositories.MailstackBuyRequestRepository.GetList(ctx)
+	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		r.log.Errorf("Failed to get mailstack buy requests")
+		graphql.AddErrorf(ctx, "Failed to get mailstack buy requests")
+		return nil, nil
+	}
+
+	response := []*model.MailstackBuyRequest{}
+	for _, buyRequest := range buyRequests {
+		buyRequestResponse := model.MailstackBuyRequest{
+			ID:     buyRequest.ID,
+			Status: buyRequest.Status,
+		}
+
+		domains, err := r.Services.Repositories.PostgresRepositories.MailstackBuyRequestRepository.GetDomains(ctx, buyRequest.ID)
+		if err != nil {
+			tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+			r.log.Errorf("Failed to get domains for mailstack buy request %s", buyRequest.ID)
+			graphql.AddErrorf(ctx, "Failed to get domains for mailstack buy request %s", buyRequest.ID)
+			return nil, nil
+		}
+
+		for _, domain := range domains {
+			buyRequestResponse.Domains = append(buyRequestResponse.Domains, &model.MailstackBuyRequestDomain{
+				Domain: domain.Domain,
+				Status: domain.Status,
+			})
+		}
+
+		mailboxes, err := r.Services.Repositories.PostgresRepositories.MailstackBuyRequestRepository.GetMailboxes(ctx, buyRequest.ID)
+		if err != nil {
+			tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+			r.log.Errorf("Failed to get mailboxes for mailstack buy request %s", buyRequest.ID)
+			graphql.AddErrorf(ctx, "Failed to get mailboxes for mailstack buy request %s", buyRequest.ID)
+			return nil, nil
+		}
+
+		for _, mailbox := range mailboxes {
+			buyRequestResponse.Mailboxes = append(buyRequestResponse.Mailboxes, &model.MailstackBuyRequestMailbox{
+				Mailbox: mailbox.Mailbox,
+				Status:  mailbox.Status,
+			})
+		}
+
+		response = append(response, &buyRequestResponse)
+	}
+
+	return response, nil
 }
-*/

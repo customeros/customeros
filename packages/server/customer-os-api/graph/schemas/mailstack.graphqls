@@ -6,11 +6,11 @@ extend type Query {
     mailstack_UniqueUsernames: [String!]! @hasRole(roles: [ADMIN, USER]) @hasTenant #unique usernames from mailboxes
     mailstack_Mailboxes: [Mailbox!]! @hasRole(roles: [ADMIN, USER]) @hasTenant #mailboxes owned by tenant
 
-    mailstack_RegisteredBuyDomainsWithMailboxes: [RegisteredBuyDomainWithMailboxes!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    mailstack_RegisteredBuyDomainsWithMailboxes: [MailstackBuyRequest!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 extend type Mutation {
-    mailstack_RegisterBuyDomainsWithMailboxes(domains: [String!]!, usernames: [String!]!, amount: Float): RegisterBuyDomainWithMailboxes! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    mailstack_RegisterBuyDomainsWithMailboxes(domains: [String!]!, usernames: [String!]!, amount: Float!): RegisterBuyDomainWithMailboxes! @hasRole(roles: [ADMIN, USER]) @hasTenant
     mailstack_RegisteredBuyDomainsWithMailboxesPaid(id: String!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
     mailstack_SetUser(mailbox: String!, userId: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
@@ -30,37 +30,42 @@ type Mailbox {
 }
 
 type RegisterBuyDomainWithMailboxes {
-   id: String!
-   clientSecret:       String!
-   status:             RegisterMailstackStatus!
-}
-
-type RegisteredBuyDomainWithMailboxes {
     id: String!
-    domain:             MailstackDomain!
-    mailboxes:          [MailstackMailbox!]!
+    clientSecret:       String!
+}
+
+type MailstackBuyRequest {
+    id: String!
+    domains:            [MailstackBuyRequestDomain!]!
+    mailboxes:          [MailstackBuyRequestMailbox!]!
     createdAt:          Time!
-    status:             String!
+    status:             MailstackBuyRequestStatus!
 }
 
-type MailstackDomain {
-    domain:             String!
-    status:             MailstackStatus!
-}
-
-type MailstackMailbox {
-    mailbox:            String!
-    status:             MailstackStatus!
-}
-
-enum MailstackStatus {
+enum MailstackBuyRequestStatus {
+    AWAITING_PAYMENT,
     PENDING,
     COMPLETED,
     FAILED
 }
 
-enum RegisterMailstackStatus {
-    AWAITING_PAYMENT,
+type MailstackBuyRequestDomain {
+    domain:             String!
+    status:             MailstackBuyRequestDomainStatus!
+}
+
+type MailstackBuyRequestMailbox {
+    mailbox:            String!
+    status:             MailstackBuyRequestMailboxStatus!
+}
+
+enum MailstackBuyRequestDomainStatus {
+    PENDING,
+    COMPLETED,
+    FAILED
+}
+
+enum MailstackBuyRequestMailboxStatus {
     PENDING,
     COMPLETED,
     FAILED

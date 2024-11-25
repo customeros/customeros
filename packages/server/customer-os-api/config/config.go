@@ -78,6 +78,7 @@ type Config struct {
 			Email  string `env:"CLOUDFLARE_API_EMAIL" validate:"required"`
 		}
 		OpenSRSConfig config.OpenSRSConfig
+		StripeConfig  config.StripeConfig
 	}
 }
 

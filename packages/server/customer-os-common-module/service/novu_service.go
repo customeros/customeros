@@ -93,6 +93,7 @@ func NewNovuService(services *Services) NovuService {
 func (np *novuService) SendNotification(ctx context.Context, notification *NovuNotification) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "NovuService.SendNotification")
 	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	payload := notification.Payload
 
