@@ -21,6 +21,10 @@ var (
 		BaseResponse: BuildBaseResponse(StatusError),
 		Message:      "Entity already exists",
 	}
+	ErrForbidden = &ErrorResponse{
+		BaseResponse: BuildBaseResponse(StatusError),
+		Message:      "Forbidden",
+	}
 	ErrInternalServer = &ErrorResponse{
 		BaseResponse: BuildBaseResponse(StatusError),
 		Message:      "Unable to process request",

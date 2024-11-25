@@ -28,7 +28,7 @@ func Fathom(services *service.Services) gin.HandlerFunc {
 		}
 
 		if !strings.HasPrefix(c.ContentType(), "application/json") {
-			rest.SendError(c, http.StatusBadRequest, "Unsupported Content-Type")
+			rest.SendError(c, span, http.StatusBadRequest, rest.ErrUnsupportedContentType)
 		}
 
 		httpContext := rest.HTTPContext{
@@ -40,11 +40,11 @@ func Fathom(services *service.Services) gin.HandlerFunc {
 		}
 
 		if c.Request.UserAgent() == "" {
-			rest.SendError(c, http.StatusForbidden, "User-Agent header is required")
+			rest.SendError(c, span, http.StatusForbidden, rest.ErrForbidden)
 		}
 
 		if !strings.EqualFold(c.Request.UserAgent(), "Zapier") {
-			rest.SendError(c, http.StatusForbidden, "User-Agent not authorized")
+			rest.SendError(c, span, http.StatusForbidden, rest.ErrForbidden)
 		}
 
 		handleFathomAISummaryZapier(httpContext)
@@ -54,7 +54,7 @@ func Fathom(services *service.Services) gin.HandlerFunc {
 func handleFathomAISummaryZapier(ctx rest.HTTPContext) {
 	var aiSummaryData RawFathomAISummaryZapier
 	if err := ctx.GinContext.BindJSON(&aiSummaryData); err == nil && aiSummaryData.AISummaryHTMLFormatted != "" {
-		rest.SendSuccess(ctx.GinContext, http.StatusAccepted, "Processing Fathom AI Summary")
+		ctx.GinContext.JSON(http.StatusAccepted, rest.BuildBaseResponse(rest.StatusProcessing))
 
 		go func() {
 			if err := createEventFromFathomAISummaryZapier(ctx, &aiSummaryData); err != nil {
