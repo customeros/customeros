@@ -22,13 +22,16 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
 
+type IpIntelligenceResponse struct {
+	rest.BaseResponse
+	IP IpIntelligenceRecord `json:"ip,omitempty"`
+}
+
 // IpIntelligenceResponse represents the response for IP intelligence lookup.
 // @Description Response structure for IP intelligence lookup.
 // @example 200 {object} IpIntelligenceResponse
-type IpIntelligenceResponse struct {
-	Status       string                     `json:"status" example:"success"`
-	Message      string                     `json:"message,omitempty" example:"No threats detected"`
-	IP           string                     `json:"ip" example:"192.168.1.1"`
+type IpIntelligenceRecord struct {
+	IPAddress    string                     `json:"ipAddress" example:"192.168.1.1"`
 	Threats      IpIntelligenceThreats      `json:"threats"`
 	Geolocation  IpIntelligenceGeolocation  `json:"geolocation"`
 	TimeZone     IpIntelligenceTimeZone     `json:"time_zone"`
@@ -163,19 +166,17 @@ func IpIntelligence(services *service.Services) gin.HandlerFunc {
 			return
 		}
 
-		var ipIntelligenceResponse IpIntelligenceResponse
+		var ipIntelligenceResponse IpIntelligenceRecord
 		if result.IpData.StatusCode == 400 {
-			ipIntelligenceResponse = IpIntelligenceResponse{
-				Status: "success",
-				IP:     ipAddress,
+			ipIntelligenceResponse = IpIntelligenceRecord{
+				IPAddress: ipAddress,
 				Threats: IpIntelligenceThreats{
 					IsUnallocated: true,
 				},
 			}
 		} else {
-			ipIntelligenceResponse = IpIntelligenceResponse{
-				Status: "success",
-				IP:     ipAddress,
+			ipIntelligenceResponse = IpIntelligenceRecord{
+				IPAddress: ipAddress,
 				Threats: IpIntelligenceThreats{
 					IsProxy:       result.IpData.Threat.IsProxy,
 					IsVpn:         result.IpData.Threat.IsVpn,
@@ -222,7 +223,10 @@ func IpIntelligence(services *service.Services) gin.HandlerFunc {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to register billable event"))
 		}
 
-		c.JSON(http.StatusOK, ipIntelligenceResponse)
+		c.JSON(http.StatusOK, IpIntelligenceResponse{
+			BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
+			IP:           ipIntelligenceResponse,
+		})
 	}
 }
 
