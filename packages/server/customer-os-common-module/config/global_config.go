@@ -24,4 +24,5 @@ type InternalServices struct {
 type ExternalServices struct {
 	OpenSRSConfig  OpenSRSConfig
 	PostmarkConfig PostmarkConfig
+	StripeConfig   StripeConfig
 }

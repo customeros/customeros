@@ -11,3 +11,7 @@ type PostmarkConfig struct {
 	AccountApiKey               string `env:"POSTMARK_ACCOUNT_API_KEY"`
 	DefaultInboundStreamWebhook string `env:"POSTMARK_DEFAULT_INBOUND_STREAM_WEBHOOK"`
 }
+
+type StripeConfig struct {
+	ApiKey string `env:"STRIPE_API_KEY" envDefault:"N/A"`
+}

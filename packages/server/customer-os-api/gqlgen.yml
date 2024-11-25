@@ -86,3 +86,12 @@ models:
   FlowActionType:
     model:
       - github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity.FlowActionType
+  MailstackBuyRequestStatus:
+    model:
+      - github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity.MailstackBuyRequestStatus
+  MailstackBuyRequestDomainStatus:
+    model:
+      - github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity.MailstackBuyRequestDomainStatus
+  MailstackBuyRequestMailboxStatus:
+    model:
+      - github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity.MailstackBuyRequestMailboxStatus

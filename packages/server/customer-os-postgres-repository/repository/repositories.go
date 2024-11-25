@@ -6,6 +6,8 @@ import (
 )
 
 type Repositories struct {
+	Db *gorm.DB
+
 	CommonRepository                            CommonRepository
 	AiLocationMappingRepository                 AiLocationMappingRepository
 	AiPromptLogRepository                       AiPromptLogRepository
@@ -62,10 +64,12 @@ type Repositories struct {
 	BrowserAutomationRunResultRepository        BrowserAutomationRunResultRepository
 	EmailMessageRepository                      EmailMessageRepository
 	UserWorkingScheduleRepository               UserWorkingScheduleRepository
+	MailstackBuyRequestRepository               MailstackBuyRequestRepository
 }
 
 func InitRepositories(db *gorm.DB) *Repositories {
 	repositories := &Repositories{
+		Db:                                          db,
 		CommonRepository:                            NewCommonRepository(db),
 		AiLocationMappingRepository:                 NewAiLocationMappingRepository(db),
 		AiPromptLogRepository:                       NewAiPromptLogRepository(db),
@@ -122,6 +126,7 @@ func InitRepositories(db *gorm.DB) *Repositories {
 		BrowserAutomationRunResultRepository:        NewBrowserAutomationRunResultRepository(db),
 		EmailMessageRepository:                      NewEmailMessageRepository(db),
 		UserWorkingScheduleRepository:               NewUserWorkingScheduleRepository(db),
+		MailstackBuyRequestRepository:               NewMailstackBuyRequestRepository(db),
 	}
 
 	return repositories
@@ -186,7 +191,10 @@ func (r *Repositories) Migration(db *gorm.DB) {
 		&entity.ApiBillableEvent{},
 		&entity.MailStackDomain{},
 		&entity.EmailMessage{},
-		&entity.UserWorkingSchedule{})
+		&entity.UserWorkingSchedule{},
+		&entity.MailstackBuyRequest{},
+		&entity.MailstackBuyRequestDomain{},
+		&entity.MailstackBuyRequestMailbox{})
 	if err != nil {
 		panic(err)
 	}

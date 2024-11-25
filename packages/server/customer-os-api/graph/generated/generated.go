@@ -17,6 +17,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	model1 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	entity1 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -897,12 +898,20 @@ type ComplexityRoot struct {
 		UserID          func(childComplexity int) int
 	}
 
-	MailstackDomain struct {
+	MailstackBuyRequest struct {
+		CreatedAt func(childComplexity int) int
+		Domains   func(childComplexity int) int
+		ID        func(childComplexity int) int
+		Mailboxes func(childComplexity int) int
+		Status    func(childComplexity int) int
+	}
+
+	MailstackBuyRequestDomain struct {
 		Domain func(childComplexity int) int
 		Status func(childComplexity int) int
 	}
 
-	MailstackMailbox struct {
+	MailstackBuyRequestMailbox struct {
 		Mailbox func(childComplexity int) int
 		Status  func(childComplexity int) int
 	}
@@ -1033,7 +1042,7 @@ type ComplexityRoot struct {
 		LogEntryRemoveTag                              func(childComplexity int, id string, input model.TagIDOrNameInput) int
 		LogEntryResetTags                              func(childComplexity int, id string, input []*model.TagIDOrNameInput) int
 		LogEntryUpdate                                 func(childComplexity int, id string, input model.LogEntryUpdateInput) int
-		MailstackRegisterBuyDomainsWithMailboxes       func(childComplexity int, domains []string, usernames []string, amount *float64) int
+		MailstackRegisterBuyDomainsWithMailboxes       func(childComplexity int, domains []string, usernames []string, amount float64) int
 		MailstackRegisteredBuyDomainsWithMailboxesPaid func(childComplexity int, id string) int
 		MailstackSetUser                               func(childComplexity int, mailbox string, userID string) int
 		MeetingAddNewLocation                          func(childComplexity int, meetingID string) int
@@ -1450,15 +1459,6 @@ type ComplexityRoot struct {
 	RegisterBuyDomainWithMailboxes struct {
 		ClientSecret func(childComplexity int) int
 		ID           func(childComplexity int) int
-		Status       func(childComplexity int) int
-	}
-
-	RegisteredBuyDomainWithMailboxes struct {
-		CreatedAt func(childComplexity int) int
-		Domain    func(childComplexity int) int
-		ID        func(childComplexity int) int
-		Mailboxes func(childComplexity int) int
-		Status    func(childComplexity int) int
 	}
 
 	Reminder struct {
@@ -1898,7 +1898,7 @@ type MutationResolver interface {
 	LogEntryResetTags(ctx context.Context, id string, input []*model.TagIDOrNameInput) (string, error)
 	LogEntryAddTag(ctx context.Context, id string, input model.TagIDOrNameInput) (string, error)
 	LogEntryRemoveTag(ctx context.Context, id string, input model.TagIDOrNameInput) (string, error)
-	MailstackRegisterBuyDomainsWithMailboxes(ctx context.Context, domains []string, usernames []string, amount *float64) (*model.RegisterBuyDomainWithMailboxes, error)
+	MailstackRegisterBuyDomainsWithMailboxes(ctx context.Context, domains []string, usernames []string, amount float64) (*model.RegisterBuyDomainWithMailboxes, error)
 	MailstackRegisteredBuyDomainsWithMailboxesPaid(ctx context.Context, id string) (*model.Result, error)
 	MailstackSetUser(ctx context.Context, mailbox string, userID string) (*model.Result, error)
 	MeetingCreate(ctx context.Context, meeting model.MeetingInput) (*model.Meeting, error)
@@ -2079,7 +2079,7 @@ type QueryResolver interface {
 	MailstackCheckUnavailableDomains(ctx context.Context, domains []string) ([]string, error)
 	MailstackUniqueUsernames(ctx context.Context) ([]string, error)
 	MailstackMailboxes(ctx context.Context) ([]*model.Mailbox, error)
-	MailstackRegisteredBuyDomainsWithMailboxes(ctx context.Context) ([]*model.RegisteredBuyDomainWithMailboxes, error)
+	MailstackRegisteredBuyDomainsWithMailboxes(ctx context.Context) ([]*model.MailstackBuyRequest, error)
 	Meeting(ctx context.Context, id string) (*model.Meeting, error)
 	ExternalMeetings(ctx context.Context, externalSystemID string, externalID *string, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.MeetingsPage, error)
 	Opportunity(ctx context.Context, id string) (*model.Opportunity, error)
@@ -6300,33 +6300,68 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mailbox.UserID(childComplexity), true
 
-	case "MailstackDomain.domain":
-		if e.complexity.MailstackDomain.Domain == nil {
+	case "MailstackBuyRequest.createdAt":
+		if e.complexity.MailstackBuyRequest.CreatedAt == nil {
 			break
 		}
 
-		return e.complexity.MailstackDomain.Domain(childComplexity), true
+		return e.complexity.MailstackBuyRequest.CreatedAt(childComplexity), true
 
-	case "MailstackDomain.status":
-		if e.complexity.MailstackDomain.Status == nil {
+	case "MailstackBuyRequest.domains":
+		if e.complexity.MailstackBuyRequest.Domains == nil {
 			break
 		}
 
-		return e.complexity.MailstackDomain.Status(childComplexity), true
+		return e.complexity.MailstackBuyRequest.Domains(childComplexity), true
 
-	case "MailstackMailbox.mailbox":
-		if e.complexity.MailstackMailbox.Mailbox == nil {
+	case "MailstackBuyRequest.id":
+		if e.complexity.MailstackBuyRequest.ID == nil {
 			break
 		}
 
-		return e.complexity.MailstackMailbox.Mailbox(childComplexity), true
+		return e.complexity.MailstackBuyRequest.ID(childComplexity), true
 
-	case "MailstackMailbox.status":
-		if e.complexity.MailstackMailbox.Status == nil {
+	case "MailstackBuyRequest.mailboxes":
+		if e.complexity.MailstackBuyRequest.Mailboxes == nil {
 			break
 		}
 
-		return e.complexity.MailstackMailbox.Status(childComplexity), true
+		return e.complexity.MailstackBuyRequest.Mailboxes(childComplexity), true
+
+	case "MailstackBuyRequest.status":
+		if e.complexity.MailstackBuyRequest.Status == nil {
+			break
+		}
+
+		return e.complexity.MailstackBuyRequest.Status(childComplexity), true
+
+	case "MailstackBuyRequestDomain.domain":
+		if e.complexity.MailstackBuyRequestDomain.Domain == nil {
+			break
+		}
+
+		return e.complexity.MailstackBuyRequestDomain.Domain(childComplexity), true
+
+	case "MailstackBuyRequestDomain.status":
+		if e.complexity.MailstackBuyRequestDomain.Status == nil {
+			break
+		}
+
+		return e.complexity.MailstackBuyRequestDomain.Status(childComplexity), true
+
+	case "MailstackBuyRequestMailbox.mailbox":
+		if e.complexity.MailstackBuyRequestMailbox.Mailbox == nil {
+			break
+		}
+
+		return e.complexity.MailstackBuyRequestMailbox.Mailbox(childComplexity), true
+
+	case "MailstackBuyRequestMailbox.status":
+		if e.complexity.MailstackBuyRequestMailbox.Status == nil {
+			break
+		}
+
+		return e.complexity.MailstackBuyRequestMailbox.Status(childComplexity), true
 
 	case "Meeting.agenda":
 		if e.complexity.Meeting.Agenda == nil {
@@ -7575,7 +7610,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.MailstackRegisterBuyDomainsWithMailboxes(childComplexity, args["domains"].([]string), args["usernames"].([]string), args["amount"].(*float64)), true
+		return e.complexity.Mutation.MailstackRegisterBuyDomainsWithMailboxes(childComplexity, args["domains"].([]string), args["usernames"].([]string), args["amount"].(float64)), true
 
 	case "Mutation.mailstack_RegisteredBuyDomainsWithMailboxesPaid":
 		if e.complexity.Mutation.MailstackRegisteredBuyDomainsWithMailboxesPaid == nil {
@@ -10811,48 +10846,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.RegisterBuyDomainWithMailboxes.ID(childComplexity), true
-
-	case "RegisterBuyDomainWithMailboxes.status":
-		if e.complexity.RegisterBuyDomainWithMailboxes.Status == nil {
-			break
-		}
-
-		return e.complexity.RegisterBuyDomainWithMailboxes.Status(childComplexity), true
-
-	case "RegisteredBuyDomainWithMailboxes.createdAt":
-		if e.complexity.RegisteredBuyDomainWithMailboxes.CreatedAt == nil {
-			break
-		}
-
-		return e.complexity.RegisteredBuyDomainWithMailboxes.CreatedAt(childComplexity), true
-
-	case "RegisteredBuyDomainWithMailboxes.domain":
-		if e.complexity.RegisteredBuyDomainWithMailboxes.Domain == nil {
-			break
-		}
-
-		return e.complexity.RegisteredBuyDomainWithMailboxes.Domain(childComplexity), true
-
-	case "RegisteredBuyDomainWithMailboxes.id":
-		if e.complexity.RegisteredBuyDomainWithMailboxes.ID == nil {
-			break
-		}
-
-		return e.complexity.RegisteredBuyDomainWithMailboxes.ID(childComplexity), true
-
-	case "RegisteredBuyDomainWithMailboxes.mailboxes":
-		if e.complexity.RegisteredBuyDomainWithMailboxes.Mailboxes == nil {
-			break
-		}
-
-		return e.complexity.RegisteredBuyDomainWithMailboxes.Mailboxes(childComplexity), true
-
-	case "RegisteredBuyDomainWithMailboxes.status":
-		if e.complexity.RegisteredBuyDomainWithMailboxes.Status == nil {
-			break
-		}
-
-		return e.complexity.RegisteredBuyDomainWithMailboxes.Status(childComplexity), true
 
 	case "Reminder.content":
 		if e.complexity.Reminder.Content == nil {
@@ -14569,11 +14562,11 @@ input LogEntryUpdateInput {
     mailstack_UniqueUsernames: [String!]! @hasRole(roles: [ADMIN, USER]) @hasTenant #unique usernames from mailboxes
     mailstack_Mailboxes: [Mailbox!]! @hasRole(roles: [ADMIN, USER]) @hasTenant #mailboxes owned by tenant
 
-    mailstack_RegisteredBuyDomainsWithMailboxes: [RegisteredBuyDomainWithMailboxes!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    mailstack_RegisteredBuyDomainsWithMailboxes: [MailstackBuyRequest!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 extend type Mutation {
-    mailstack_RegisterBuyDomainsWithMailboxes(domains: [String!]!, usernames: [String!]!, amount: Float): RegisterBuyDomainWithMailboxes! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    mailstack_RegisterBuyDomainsWithMailboxes(domains: [String!]!, usernames: [String!]!, amount: Float!): RegisterBuyDomainWithMailboxes! @hasRole(roles: [ADMIN, USER]) @hasTenant
     mailstack_RegisteredBuyDomainsWithMailboxesPaid(id: String!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
     mailstack_SetUser(mailbox: String!, userId: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
@@ -14593,37 +14586,42 @@ type Mailbox {
 }
 
 type RegisterBuyDomainWithMailboxes {
-   id: String!
-   clientSecret:       String!
-   status:             RegisterMailstackStatus!
-}
-
-type RegisteredBuyDomainWithMailboxes {
     id: String!
-    domain:             MailstackDomain!
-    mailboxes:          [MailstackMailbox!]!
+    clientSecret:       String!
+}
+
+type MailstackBuyRequest {
+    id: String!
+    domains:            [MailstackBuyRequestDomain!]!
+    mailboxes:          [MailstackBuyRequestMailbox!]!
     createdAt:          Time!
-    status:             String!
+    status:             MailstackBuyRequestStatus!
 }
 
-type MailstackDomain {
-    domain:             String!
-    status:             MailstackStatus!
-}
-
-type MailstackMailbox {
-    mailbox:            String!
-    status:             MailstackStatus!
-}
-
-enum MailstackStatus {
+enum MailstackBuyRequestStatus {
+    AWAITING_PAYMENT,
     PENDING,
     COMPLETED,
     FAILED
 }
 
-enum RegisterMailstackStatus {
-    AWAITING_PAYMENT,
+type MailstackBuyRequestDomain {
+    domain:             String!
+    status:             MailstackBuyRequestDomainStatus!
+}
+
+type MailstackBuyRequestMailbox {
+    mailbox:            String!
+    status:             MailstackBuyRequestMailboxStatus!
+}
+
+enum MailstackBuyRequestDomainStatus {
+    PENDING,
+    COMPLETED,
+    FAILED
+}
+
+enum MailstackBuyRequestMailboxStatus {
     PENDING,
     COMPLETED,
     FAILED
@@ -20993,22 +20991,22 @@ func (ec *executionContext) field_Mutation_mailstack_RegisterBuyDomainsWithMailb
 func (ec *executionContext) field_Mutation_mailstack_RegisterBuyDomainsWithMailboxes_argsAmount(
 	ctx context.Context,
 	rawArgs map[string]interface{},
-) (*float64, error) {
+) (float64, error) {
 	// We won't call the directive if the argument is null.
 	// Set call_argument_directives_with_null to true to call directives
 	// even if the argument is null.
 	_, ok := rawArgs["amount"]
 	if !ok {
-		var zeroVal *float64
+		var zeroVal float64
 		return zeroVal, nil
 	}
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("amount"))
 	if tmp, ok := rawArgs["amount"]; ok {
-		return ec.unmarshalOFloat2ᚖfloat64(ctx, tmp)
+		return ec.unmarshalNFloat2float64(ctx, tmp)
 	}
 
-	var zeroVal *float64
+	var zeroVal float64
 	return zeroVal, nil
 }
 
@@ -55906,8 +55904,240 @@ func (ec *executionContext) fieldContext_Mailbox_currentFlowIds(_ context.Contex
 	return fc, nil
 }
 
-func (ec *executionContext) _MailstackDomain_domain(ctx context.Context, field graphql.CollectedField, obj *model.MailstackDomain) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_MailstackDomain_domain(ctx, field)
+func (ec *executionContext) _MailstackBuyRequest_id(ctx context.Context, field graphql.CollectedField, obj *model.MailstackBuyRequest) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MailstackBuyRequest_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MailstackBuyRequest_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MailstackBuyRequest",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MailstackBuyRequest_domains(ctx context.Context, field graphql.CollectedField, obj *model.MailstackBuyRequest) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MailstackBuyRequest_domains(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Domains, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.MailstackBuyRequestDomain)
+	fc.Result = res
+	return ec.marshalNMailstackBuyRequestDomain2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMailstackBuyRequestDomainᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MailstackBuyRequest_domains(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MailstackBuyRequest",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "domain":
+				return ec.fieldContext_MailstackBuyRequestDomain_domain(ctx, field)
+			case "status":
+				return ec.fieldContext_MailstackBuyRequestDomain_status(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type MailstackBuyRequestDomain", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MailstackBuyRequest_mailboxes(ctx context.Context, field graphql.CollectedField, obj *model.MailstackBuyRequest) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MailstackBuyRequest_mailboxes(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Mailboxes, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.MailstackBuyRequestMailbox)
+	fc.Result = res
+	return ec.marshalNMailstackBuyRequestMailbox2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMailstackBuyRequestMailboxᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MailstackBuyRequest_mailboxes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MailstackBuyRequest",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "mailbox":
+				return ec.fieldContext_MailstackBuyRequestMailbox_mailbox(ctx, field)
+			case "status":
+				return ec.fieldContext_MailstackBuyRequestMailbox_status(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type MailstackBuyRequestMailbox", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MailstackBuyRequest_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.MailstackBuyRequest) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MailstackBuyRequest_createdAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MailstackBuyRequest_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MailstackBuyRequest",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MailstackBuyRequest_status(ctx context.Context, field graphql.CollectedField, obj *model.MailstackBuyRequest) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MailstackBuyRequest_status(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Status, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(entity1.MailstackBuyRequestStatus)
+	fc.Result = res
+	return ec.marshalNMailstackBuyRequestStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑpostgresᚑrepositoryᚋentityᚐMailstackBuyRequestStatus(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MailstackBuyRequest_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MailstackBuyRequest",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type MailstackBuyRequestStatus does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MailstackBuyRequestDomain_domain(ctx context.Context, field graphql.CollectedField, obj *model.MailstackBuyRequestDomain) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MailstackBuyRequestDomain_domain(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -55937,9 +56167,9 @@ func (ec *executionContext) _MailstackDomain_domain(ctx context.Context, field g
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_MailstackDomain_domain(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_MailstackBuyRequestDomain_domain(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "MailstackDomain",
+		Object:     "MailstackBuyRequestDomain",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -55950,8 +56180,8 @@ func (ec *executionContext) fieldContext_MailstackDomain_domain(_ context.Contex
 	return fc, nil
 }
 
-func (ec *executionContext) _MailstackDomain_status(ctx context.Context, field graphql.CollectedField, obj *model.MailstackDomain) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_MailstackDomain_status(ctx, field)
+func (ec *executionContext) _MailstackBuyRequestDomain_status(ctx context.Context, field graphql.CollectedField, obj *model.MailstackBuyRequestDomain) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MailstackBuyRequestDomain_status(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -55976,26 +56206,26 @@ func (ec *executionContext) _MailstackDomain_status(ctx context.Context, field g
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.MailstackStatus)
+	res := resTmp.(entity1.MailstackBuyRequestDomainStatus)
 	fc.Result = res
-	return ec.marshalNMailstackStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMailstackStatus(ctx, field.Selections, res)
+	return ec.marshalNMailstackBuyRequestDomainStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑpostgresᚑrepositoryᚋentityᚐMailstackBuyRequestDomainStatus(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_MailstackDomain_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_MailstackBuyRequestDomain_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "MailstackDomain",
+		Object:     "MailstackBuyRequestDomain",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type MailstackStatus does not have child fields")
+			return nil, errors.New("field of type MailstackBuyRequestDomainStatus does not have child fields")
 		},
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _MailstackMailbox_mailbox(ctx context.Context, field graphql.CollectedField, obj *model.MailstackMailbox) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_MailstackMailbox_mailbox(ctx, field)
+func (ec *executionContext) _MailstackBuyRequestMailbox_mailbox(ctx context.Context, field graphql.CollectedField, obj *model.MailstackBuyRequestMailbox) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MailstackBuyRequestMailbox_mailbox(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -56025,9 +56255,9 @@ func (ec *executionContext) _MailstackMailbox_mailbox(ctx context.Context, field
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_MailstackMailbox_mailbox(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_MailstackBuyRequestMailbox_mailbox(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "MailstackMailbox",
+		Object:     "MailstackBuyRequestMailbox",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -56038,8 +56268,8 @@ func (ec *executionContext) fieldContext_MailstackMailbox_mailbox(_ context.Cont
 	return fc, nil
 }
 
-func (ec *executionContext) _MailstackMailbox_status(ctx context.Context, field graphql.CollectedField, obj *model.MailstackMailbox) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_MailstackMailbox_status(ctx, field)
+func (ec *executionContext) _MailstackBuyRequestMailbox_status(ctx context.Context, field graphql.CollectedField, obj *model.MailstackBuyRequestMailbox) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MailstackBuyRequestMailbox_status(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -56064,19 +56294,19 @@ func (ec *executionContext) _MailstackMailbox_status(ctx context.Context, field 
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.MailstackStatus)
+	res := resTmp.(entity1.MailstackBuyRequestMailboxStatus)
 	fc.Result = res
-	return ec.marshalNMailstackStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMailstackStatus(ctx, field.Selections, res)
+	return ec.marshalNMailstackBuyRequestMailboxStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑpostgresᚑrepositoryᚋentityᚐMailstackBuyRequestMailboxStatus(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_MailstackMailbox_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_MailstackBuyRequestMailbox_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "MailstackMailbox",
+		Object:     "MailstackBuyRequestMailbox",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type MailstackStatus does not have child fields")
+			return nil, errors.New("field of type MailstackBuyRequestMailboxStatus does not have child fields")
 		},
 	}
 	return fc, nil
@@ -65899,7 +66129,7 @@ func (ec *executionContext) _Mutation_mailstack_RegisterBuyDomainsWithMailboxes(
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().MailstackRegisterBuyDomainsWithMailboxes(rctx, fc.Args["domains"].([]string), fc.Args["usernames"].([]string), fc.Args["amount"].(*float64))
+			return ec.resolvers.Mutation().MailstackRegisterBuyDomainsWithMailboxes(rctx, fc.Args["domains"].([]string), fc.Args["usernames"].([]string), fc.Args["amount"].(float64))
 		}
 
 		directive1 := func(ctx context.Context) (interface{}, error) {
@@ -65961,8 +66191,6 @@ func (ec *executionContext) fieldContext_Mutation_mailstack_RegisterBuyDomainsWi
 				return ec.fieldContext_RegisterBuyDomainWithMailboxes_id(ctx, field)
 			case "clientSecret":
 				return ec.fieldContext_RegisterBuyDomainWithMailboxes_clientSecret(ctx, field)
-			case "status":
-				return ec.fieldContext_RegisterBuyDomainWithMailboxes_status(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type RegisterBuyDomainWithMailboxes", field.Name)
 		},
@@ -90419,18 +90647,18 @@ func (ec *executionContext) _Query_mailstack_RegisteredBuyDomainsWithMailboxes(c
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
 			if err != nil {
-				var zeroVal []*model.RegisteredBuyDomainWithMailboxes
+				var zeroVal []*model.MailstackBuyRequest
 				return zeroVal, err
 			}
 			if ec.directives.HasRole == nil {
-				var zeroVal []*model.RegisteredBuyDomainWithMailboxes
+				var zeroVal []*model.MailstackBuyRequest
 				return zeroVal, errors.New("directive hasRole is not implemented")
 			}
 			return ec.directives.HasRole(ctx, nil, directive0, roles)
 		}
 		directive2 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.HasTenant == nil {
-				var zeroVal []*model.RegisteredBuyDomainWithMailboxes
+				var zeroVal []*model.MailstackBuyRequest
 				return zeroVal, errors.New("directive hasTenant is not implemented")
 			}
 			return ec.directives.HasTenant(ctx, nil, directive1)
@@ -90443,10 +90671,10 @@ func (ec *executionContext) _Query_mailstack_RegisteredBuyDomainsWithMailboxes(c
 		if tmp == nil {
 			return nil, nil
 		}
-		if data, ok := tmp.([]*model.RegisteredBuyDomainWithMailboxes); ok {
+		if data, ok := tmp.([]*model.MailstackBuyRequest); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.RegisteredBuyDomainWithMailboxes`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.MailstackBuyRequest`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -90458,9 +90686,9 @@ func (ec *executionContext) _Query_mailstack_RegisteredBuyDomainsWithMailboxes(c
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.RegisteredBuyDomainWithMailboxes)
+	res := resTmp.([]*model.MailstackBuyRequest)
 	fc.Result = res
-	return ec.marshalNRegisteredBuyDomainWithMailboxes2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRegisteredBuyDomainWithMailboxesᚄ(ctx, field.Selections, res)
+	return ec.marshalNMailstackBuyRequest2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMailstackBuyRequestᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_mailstack_RegisteredBuyDomainsWithMailboxes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -90472,17 +90700,17 @@ func (ec *executionContext) fieldContext_Query_mailstack_RegisteredBuyDomainsWit
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_RegisteredBuyDomainWithMailboxes_id(ctx, field)
-			case "domain":
-				return ec.fieldContext_RegisteredBuyDomainWithMailboxes_domain(ctx, field)
+				return ec.fieldContext_MailstackBuyRequest_id(ctx, field)
+			case "domains":
+				return ec.fieldContext_MailstackBuyRequest_domains(ctx, field)
 			case "mailboxes":
-				return ec.fieldContext_RegisteredBuyDomainWithMailboxes_mailboxes(ctx, field)
+				return ec.fieldContext_MailstackBuyRequest_mailboxes(ctx, field)
 			case "createdAt":
-				return ec.fieldContext_RegisteredBuyDomainWithMailboxes_createdAt(ctx, field)
+				return ec.fieldContext_MailstackBuyRequest_createdAt(ctx, field)
 			case "status":
-				return ec.fieldContext_RegisteredBuyDomainWithMailboxes_status(ctx, field)
+				return ec.fieldContext_MailstackBuyRequest_status(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type RegisteredBuyDomainWithMailboxes", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type MailstackBuyRequest", field.Name)
 		},
 	}
 	return fc, nil
@@ -94588,282 +94816,6 @@ func (ec *executionContext) _RegisterBuyDomainWithMailboxes_clientSecret(ctx con
 func (ec *executionContext) fieldContext_RegisterBuyDomainWithMailboxes_clientSecret(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "RegisterBuyDomainWithMailboxes",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _RegisterBuyDomainWithMailboxes_status(ctx context.Context, field graphql.CollectedField, obj *model.RegisterBuyDomainWithMailboxes) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_RegisterBuyDomainWithMailboxes_status(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Status, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(model.RegisterMailstackStatus)
-	fc.Result = res
-	return ec.marshalNRegisterMailstackStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRegisterMailstackStatus(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_RegisterBuyDomainWithMailboxes_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "RegisterBuyDomainWithMailboxes",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type RegisterMailstackStatus does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _RegisteredBuyDomainWithMailboxes_id(ctx context.Context, field graphql.CollectedField, obj *model.RegisteredBuyDomainWithMailboxes) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_RegisteredBuyDomainWithMailboxes_id(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_RegisteredBuyDomainWithMailboxes_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "RegisteredBuyDomainWithMailboxes",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _RegisteredBuyDomainWithMailboxes_domain(ctx context.Context, field graphql.CollectedField, obj *model.RegisteredBuyDomainWithMailboxes) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_RegisteredBuyDomainWithMailboxes_domain(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Domain, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.MailstackDomain)
-	fc.Result = res
-	return ec.marshalNMailstackDomain2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMailstackDomain(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_RegisteredBuyDomainWithMailboxes_domain(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "RegisteredBuyDomainWithMailboxes",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "domain":
-				return ec.fieldContext_MailstackDomain_domain(ctx, field)
-			case "status":
-				return ec.fieldContext_MailstackDomain_status(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type MailstackDomain", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _RegisteredBuyDomainWithMailboxes_mailboxes(ctx context.Context, field graphql.CollectedField, obj *model.RegisteredBuyDomainWithMailboxes) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_RegisteredBuyDomainWithMailboxes_mailboxes(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Mailboxes, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*model.MailstackMailbox)
-	fc.Result = res
-	return ec.marshalNMailstackMailbox2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMailstackMailboxᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_RegisteredBuyDomainWithMailboxes_mailboxes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "RegisteredBuyDomainWithMailboxes",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "mailbox":
-				return ec.fieldContext_MailstackMailbox_mailbox(ctx, field)
-			case "status":
-				return ec.fieldContext_MailstackMailbox_status(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type MailstackMailbox", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _RegisteredBuyDomainWithMailboxes_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.RegisteredBuyDomainWithMailboxes) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_RegisteredBuyDomainWithMailboxes_createdAt(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.CreatedAt, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(time.Time)
-	fc.Result = res
-	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_RegisteredBuyDomainWithMailboxes_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "RegisteredBuyDomainWithMailboxes",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Time does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _RegisteredBuyDomainWithMailboxes_status(ctx context.Context, field graphql.CollectedField, obj *model.RegisteredBuyDomainWithMailboxes) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_RegisteredBuyDomainWithMailboxes_status(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Status, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_RegisteredBuyDomainWithMailboxes_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "RegisteredBuyDomainWithMailboxes",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -118902,24 +118854,39 @@ func (ec *executionContext) _Mailbox(ctx context.Context, sel ast.SelectionSet, 
 	return out
 }
 
-var mailstackDomainImplementors = []string{"MailstackDomain"}
+var mailstackBuyRequestImplementors = []string{"MailstackBuyRequest"}
 
-func (ec *executionContext) _MailstackDomain(ctx context.Context, sel ast.SelectionSet, obj *model.MailstackDomain) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, mailstackDomainImplementors)
+func (ec *executionContext) _MailstackBuyRequest(ctx context.Context, sel ast.SelectionSet, obj *model.MailstackBuyRequest) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, mailstackBuyRequestImplementors)
 
 	out := graphql.NewFieldSet(fields)
 	deferred := make(map[string]*graphql.FieldSet)
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
-			out.Values[i] = graphql.MarshalString("MailstackDomain")
-		case "domain":
-			out.Values[i] = ec._MailstackDomain_domain(ctx, field, obj)
+			out.Values[i] = graphql.MarshalString("MailstackBuyRequest")
+		case "id":
+			out.Values[i] = ec._MailstackBuyRequest_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "domains":
+			out.Values[i] = ec._MailstackBuyRequest_domains(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "mailboxes":
+			out.Values[i] = ec._MailstackBuyRequest_mailboxes(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createdAt":
+			out.Values[i] = ec._MailstackBuyRequest_createdAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "status":
-			out.Values[i] = ec._MailstackDomain_status(ctx, field, obj)
+			out.Values[i] = ec._MailstackBuyRequest_status(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -118946,24 +118913,68 @@ func (ec *executionContext) _MailstackDomain(ctx context.Context, sel ast.Select
 	return out
 }
 
-var mailstackMailboxImplementors = []string{"MailstackMailbox"}
+var mailstackBuyRequestDomainImplementors = []string{"MailstackBuyRequestDomain"}
 
-func (ec *executionContext) _MailstackMailbox(ctx context.Context, sel ast.SelectionSet, obj *model.MailstackMailbox) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, mailstackMailboxImplementors)
+func (ec *executionContext) _MailstackBuyRequestDomain(ctx context.Context, sel ast.SelectionSet, obj *model.MailstackBuyRequestDomain) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, mailstackBuyRequestDomainImplementors)
 
 	out := graphql.NewFieldSet(fields)
 	deferred := make(map[string]*graphql.FieldSet)
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
-			out.Values[i] = graphql.MarshalString("MailstackMailbox")
-		case "mailbox":
-			out.Values[i] = ec._MailstackMailbox_mailbox(ctx, field, obj)
+			out.Values[i] = graphql.MarshalString("MailstackBuyRequestDomain")
+		case "domain":
+			out.Values[i] = ec._MailstackBuyRequestDomain_domain(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "status":
-			out.Values[i] = ec._MailstackMailbox_status(ctx, field, obj)
+			out.Values[i] = ec._MailstackBuyRequestDomain_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var mailstackBuyRequestMailboxImplementors = []string{"MailstackBuyRequestMailbox"}
+
+func (ec *executionContext) _MailstackBuyRequestMailbox(ctx context.Context, sel ast.SelectionSet, obj *model.MailstackBuyRequestMailbox) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, mailstackBuyRequestMailboxImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("MailstackBuyRequestMailbox")
+		case "mailbox":
+			out.Values[i] = ec._MailstackBuyRequestMailbox_mailbox(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "status":
+			out.Values[i] = ec._MailstackBuyRequestMailbox_status(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -124594,70 +124605,6 @@ func (ec *executionContext) _RegisterBuyDomainWithMailboxes(ctx context.Context,
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "status":
-			out.Values[i] = ec._RegisterBuyDomainWithMailboxes_status(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch(ctx)
-	if out.Invalids > 0 {
-		return graphql.Null
-	}
-
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
-
-	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
-			Label:    label,
-			Path:     graphql.GetPath(ctx),
-			FieldSet: dfs,
-			Context:  ctx,
-		})
-	}
-
-	return out
-}
-
-var registeredBuyDomainWithMailboxesImplementors = []string{"RegisteredBuyDomainWithMailboxes"}
-
-func (ec *executionContext) _RegisteredBuyDomainWithMailboxes(ctx context.Context, sel ast.SelectionSet, obj *model.RegisteredBuyDomainWithMailboxes) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, registeredBuyDomainWithMailboxesImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	deferred := make(map[string]*graphql.FieldSet)
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("RegisteredBuyDomainWithMailboxes")
-		case "id":
-			out.Values[i] = ec._RegisteredBuyDomainWithMailboxes_id(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "domain":
-			out.Values[i] = ec._RegisteredBuyDomainWithMailboxes_domain(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "mailboxes":
-			out.Values[i] = ec._RegisteredBuyDomainWithMailboxes_mailboxes(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "createdAt":
-			out.Values[i] = ec._RegisteredBuyDomainWithMailboxes_createdAt(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "status":
-			out.Values[i] = ec._RegisteredBuyDomainWithMailboxes_status(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -129855,17 +129802,7 @@ func (ec *executionContext) marshalNMailbox2ᚖgithubᚗcomᚋopenlineᚑaiᚋop
 	return ec._Mailbox(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNMailstackDomain2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMailstackDomain(ctx context.Context, sel ast.SelectionSet, v *model.MailstackDomain) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._MailstackDomain(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalNMailstackMailbox2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMailstackMailboxᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.MailstackMailbox) graphql.Marshaler {
+func (ec *executionContext) marshalNMailstackBuyRequest2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMailstackBuyRequestᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.MailstackBuyRequest) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -129889,7 +129826,7 @@ func (ec *executionContext) marshalNMailstackMailbox2ᚕᚖgithubᚗcomᚋopenli
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNMailstackMailbox2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMailstackMailbox(ctx, sel, v[i])
+			ret[i] = ec.marshalNMailstackBuyRequest2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMailstackBuyRequest(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -129909,24 +129846,170 @@ func (ec *executionContext) marshalNMailstackMailbox2ᚕᚖgithubᚗcomᚋopenli
 	return ret
 }
 
-func (ec *executionContext) marshalNMailstackMailbox2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMailstackMailbox(ctx context.Context, sel ast.SelectionSet, v *model.MailstackMailbox) graphql.Marshaler {
+func (ec *executionContext) marshalNMailstackBuyRequest2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMailstackBuyRequest(ctx context.Context, sel ast.SelectionSet, v *model.MailstackBuyRequest) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
 		}
 		return graphql.Null
 	}
-	return ec._MailstackMailbox(ctx, sel, v)
+	return ec._MailstackBuyRequest(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNMailstackStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMailstackStatus(ctx context.Context, v interface{}) (model.MailstackStatus, error) {
-	var res model.MailstackStatus
-	err := res.UnmarshalGQL(v)
+func (ec *executionContext) marshalNMailstackBuyRequestDomain2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMailstackBuyRequestDomainᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.MailstackBuyRequestDomain) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNMailstackBuyRequestDomain2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMailstackBuyRequestDomain(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNMailstackBuyRequestDomain2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMailstackBuyRequestDomain(ctx context.Context, sel ast.SelectionSet, v *model.MailstackBuyRequestDomain) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._MailstackBuyRequestDomain(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNMailstackBuyRequestDomainStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑpostgresᚑrepositoryᚋentityᚐMailstackBuyRequestDomainStatus(ctx context.Context, v interface{}) (entity1.MailstackBuyRequestDomainStatus, error) {
+	tmp, err := graphql.UnmarshalString(v)
+	res := entity1.MailstackBuyRequestDomainStatus(tmp)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNMailstackStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMailstackStatus(ctx context.Context, sel ast.SelectionSet, v model.MailstackStatus) graphql.Marshaler {
-	return v
+func (ec *executionContext) marshalNMailstackBuyRequestDomainStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑpostgresᚑrepositoryᚋentityᚐMailstackBuyRequestDomainStatus(ctx context.Context, sel ast.SelectionSet, v entity1.MailstackBuyRequestDomainStatus) graphql.Marshaler {
+	res := graphql.MarshalString(string(v))
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) marshalNMailstackBuyRequestMailbox2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMailstackBuyRequestMailboxᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.MailstackBuyRequestMailbox) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNMailstackBuyRequestMailbox2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMailstackBuyRequestMailbox(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNMailstackBuyRequestMailbox2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMailstackBuyRequestMailbox(ctx context.Context, sel ast.SelectionSet, v *model.MailstackBuyRequestMailbox) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._MailstackBuyRequestMailbox(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNMailstackBuyRequestMailboxStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑpostgresᚑrepositoryᚋentityᚐMailstackBuyRequestMailboxStatus(ctx context.Context, v interface{}) (entity1.MailstackBuyRequestMailboxStatus, error) {
+	tmp, err := graphql.UnmarshalString(v)
+	res := entity1.MailstackBuyRequestMailboxStatus(tmp)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNMailstackBuyRequestMailboxStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑpostgresᚑrepositoryᚋentityᚐMailstackBuyRequestMailboxStatus(ctx context.Context, sel ast.SelectionSet, v entity1.MailstackBuyRequestMailboxStatus) graphql.Marshaler {
+	res := graphql.MarshalString(string(v))
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) unmarshalNMailstackBuyRequestStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑpostgresᚑrepositoryᚋentityᚐMailstackBuyRequestStatus(ctx context.Context, v interface{}) (entity1.MailstackBuyRequestStatus, error) {
+	tmp, err := graphql.UnmarshalString(v)
+	res := entity1.MailstackBuyRequestStatus(tmp)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNMailstackBuyRequestStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑpostgresᚑrepositoryᚋentityᚐMailstackBuyRequestStatus(ctx context.Context, sel ast.SelectionSet, v entity1.MailstackBuyRequestStatus) graphql.Marshaler {
+	res := graphql.MarshalString(string(v))
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
 }
 
 func (ec *executionContext) marshalNMeeting2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeeting(ctx context.Context, sel ast.SelectionSet, v model.Meeting) graphql.Marshaler {
@@ -130519,70 +130602,6 @@ func (ec *executionContext) marshalNRegisterBuyDomainWithMailboxes2ᚖgithubᚗc
 		return graphql.Null
 	}
 	return ec._RegisterBuyDomainWithMailboxes(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalNRegisterMailstackStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRegisterMailstackStatus(ctx context.Context, v interface{}) (model.RegisterMailstackStatus, error) {
-	var res model.RegisterMailstackStatus
-	err := res.UnmarshalGQL(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNRegisterMailstackStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRegisterMailstackStatus(ctx context.Context, sel ast.SelectionSet, v model.RegisterMailstackStatus) graphql.Marshaler {
-	return v
-}
-
-func (ec *executionContext) marshalNRegisteredBuyDomainWithMailboxes2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRegisteredBuyDomainWithMailboxesᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.RegisteredBuyDomainWithMailboxes) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNRegisteredBuyDomainWithMailboxes2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRegisteredBuyDomainWithMailboxes(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
-}
-
-func (ec *executionContext) marshalNRegisteredBuyDomainWithMailboxes2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRegisteredBuyDomainWithMailboxes(ctx context.Context, sel ast.SelectionSet, v *model.RegisteredBuyDomainWithMailboxes) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._RegisteredBuyDomainWithMailboxes(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNReminder2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐReminder(ctx context.Context, sel ast.SelectionSet, v model.Reminder) graphql.Marshaler {
