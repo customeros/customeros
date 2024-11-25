@@ -3,9 +3,11 @@ package restverify
 import (
 	"bytes"
 	"encoding/json"
+	"net"
+	"net/http"
+	"time"
+
 	"github.com/gin-gonic/gin"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -15,9 +17,9 @@ import (
 	validationmodel "github.com/openline-ai/openline-customer-os/packages/server/validation-api/model"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-	"net"
-	"net/http"
-	"time"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
 
 // IpIntelligenceResponse represents the response for IP intelligence lookup.
@@ -104,7 +106,7 @@ func IpIntelligence(services *service.Services) gin.HandlerFunc {
 		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {
 			c.JSON(http.StatusUnauthorized,
-				rest.ErrorResponse{
+				rest.BaseResponse{
 					Status:  "error",
 					Message: "Missing tenant context",
 				})
@@ -116,7 +118,7 @@ func IpIntelligence(services *service.Services) gin.HandlerFunc {
 		ipAddress := c.Query("address")
 		if ipAddress == "" {
 			c.JSON(http.StatusBadRequest,
-				rest.ErrorResponse{
+				rest.BaseResponse{
 					Status:  "error",
 					Message: "Missing address parameter",
 				})
@@ -126,7 +128,7 @@ func IpIntelligence(services *service.Services) gin.HandlerFunc {
 
 		if net.ParseIP(ipAddress) == nil {
 			c.JSON(http.StatusBadRequest,
-				rest.ErrorResponse{
+				rest.BaseResponse{
 					Status:  "error",
 					Message: "Invalid IP address format",
 				})
@@ -140,7 +142,7 @@ func IpIntelligence(services *service.Services) gin.HandlerFunc {
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to marshal request"))
 			c.JSON(http.StatusInternalServerError,
-				rest.ErrorResponse{
+				rest.BaseResponse{
 					Status:  "error",
 					Message: "Internal error",
 				})
@@ -151,7 +153,7 @@ func IpIntelligence(services *service.Services) gin.HandlerFunc {
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to create request"))
 			c.JSON(http.StatusInternalServerError,
-				rest.ErrorResponse{
+				rest.BaseResponse{
 					Status:  "error",
 					Message: "Internal error",
 				})
@@ -170,7 +172,7 @@ func IpIntelligence(services *service.Services) gin.HandlerFunc {
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to perform request"))
 			c.JSON(http.StatusInternalServerError,
-				rest.ErrorResponse{
+				rest.BaseResponse{
 					Status:  "error",
 					Message: "Internal error",
 				})
@@ -182,7 +184,7 @@ func IpIntelligence(services *service.Services) gin.HandlerFunc {
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to decode response"))
 			c.JSON(http.StatusInternalServerError,
-				rest.ErrorResponse{
+				rest.BaseResponse{
 					Status:  "error",
 					Message: "Internal error",
 				})
@@ -233,9 +235,9 @@ func IpIntelligence(services *service.Services) gin.HandlerFunc {
 				},
 				Organization: IpIntelligenceOrganization{
 					// TBD: Snitcher
-					//Name:     TBD,
-					//Domain:   TBD,
-					//LinkedIn: TBD,
+					// Name:     TBD,
+					// Domain:   TBD,
+					// LinkedIn: TBD,
 				},
 			}
 		}

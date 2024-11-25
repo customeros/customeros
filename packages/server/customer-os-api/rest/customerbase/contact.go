@@ -1,7 +1,6 @@
 package customerbase
 
 import (
-	"context"
 	"encoding/csv"
 	"io"
 	"net/http"
@@ -14,11 +13,11 @@ import (
 	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
 
@@ -42,54 +41,62 @@ func CreateContact(services *service.Services) gin.HandlerFunc {
 		defer span.Finish()
 		tracing.TagComponentRest(span)
 
-		tenant := validateTenant(c, ctx, span)
+		tenant := rest.ValidateTenant(c, ctx, span)
 		if tenant == "" {
 			return
+		}
+
+		httpContext := rest.HTTPContext{
+			GinContext:     c,
+			ServiceContext: &ctx,
+			Span:           span,
+			Services:       services,
+			Tenant:         tenant,
 		}
 
 		contentType := c.GetHeader("Content-Type")
 		switch {
 		case strings.HasPrefix(contentType, "multipart/form-data"):
-			handleCSVUpload(c, ctx, span, services, tenant)
+			handleCSVUpload(httpContext)
 		case strings.HasPrefix(contentType, "application/json"):
-			handleJSONRequest(c, ctx, span, services, tenant)
+			handleJSONRequest(httpContext)
 		default:
-			sendError(c, http.StatusBadRequest, "Unsupported Content-Type")
+			rest.SendError(c, http.StatusBadRequest, "Unsupported Content-Type")
 		}
 	}
 }
 
-func handleCSVUpload(c *gin.Context, ctx context.Context, span opentracing.Span, services *service.Services, tenant string) {
-	file, err := validateAndOpenFile(c)
+func handleCSVUpload(ctx rest.HTTPContext) {
+	file, err := rest.ValidateAndOpenCsvFile(ctx.GinContext)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(ctx.Span, err)
 		return
 	}
 	defer file.Close()
 
 	reader := csv.NewReader(file)
-	if err := validateFileHeaders(c, reader); err != nil {
+	if err := validateFileHeaders(ctx.GinContext, reader); err != nil {
 		return
 	}
 
-	results := processCSVRecords(c, ctx, span, reader, services, tenant)
+	results := processCSVRecords(ctx, reader)
 	if len(results) == 0 {
-		sendError(c, http.StatusBadRequest, "No valid contacts found in file")
+		rest.SendError(ctx.GinContext, http.StatusBadRequest, "No valid contacts found in file")
 		return
 	}
 
-	c.JSON(http.StatusCreated, ContactsResponse{
+	ctx.GinContext.JSON(http.StatusCreated, ContactsResponse{
 		Status:   "success",
 		Contacts: results,
 	})
 }
 
-func handleJSONRequest(c *gin.Context, ctx context.Context, span opentracing.Span, services *service.Services, tenant string) {
+func handleJSONRequest(ctx rest.HTTPContext) {
 	// Try single contact
 	var singleContact ContactRecord
-	if err := c.BindJSON(&singleContact); err == nil && (singleContact.Email != "" || singleContact.LinkedInURL != "") {
-		result := validateAndProcessContact(c, ctx, span, services, tenant, singleContact)
-		c.JSON(http.StatusOK, result)
+	if err := ctx.GinContext.BindJSON(&singleContact); err == nil && (singleContact.Email != "" || singleContact.LinkedInURL != "") {
+		result := validateAndProcessContact(ctx, singleContact)
+		ctx.GinContext.JSON(http.StatusOK, result)
 		return
 	}
 
@@ -98,32 +105,32 @@ func handleJSONRequest(c *gin.Context, ctx context.Context, span opentracing.Spa
 		Contacts []ContactRecord `json:"contacts"`
 	}
 
-	if err := c.ShouldBindJSON(&request); err != nil {
-		sendError(c, http.StatusBadRequest, "Invalid request format")
+	if err := ctx.GinContext.ShouldBindJSON(&request); err != nil {
+		rest.SendError(ctx.GinContext, http.StatusBadRequest, "Invalid request format")
 		return
 	}
 
 	if len(request.Contacts) == 0 {
-		sendError(c, http.StatusBadRequest, "No contacts provided")
+		rest.SendError(ctx.GinContext, http.StatusBadRequest, "No contacts provided")
 		return
 	}
 
 	results := make([]ContactResult, 0, len(request.Contacts))
 	for _, record := range request.Contacts {
-		result := validateAndProcessContact(c, ctx, span, services, tenant, record)
+		result := validateAndProcessContact(ctx, record)
 		results = append(results, result)
 	}
 
-	c.JSON(http.StatusCreated, ContactsResponse{
+	ctx.GinContext.JSON(http.StatusCreated, ContactsResponse{
 		Status:   "success",
 		Contacts: results,
 	})
 }
 
-func validateAndProcessContact(c *gin.Context, ctx context.Context, span opentracing.Span, services *service.Services, tenant string, record ContactRecord) ContactResult {
+func validateAndProcessContact(ctx rest.HTTPContext, record ContactRecord) ContactResult {
 	if err := validateContact(&record); err != nil {
 		return ContactResult{
-			BaseResponse: BaseResponse{
+			BaseResponse: rest.BaseResponse{
 				Status:  "error",
 				Message: err.Error(),
 			},
@@ -132,10 +139,10 @@ func validateAndProcessContact(c *gin.Context, ctx context.Context, span opentra
 		}
 	}
 
-	contactId := processContact(c, ctx, span, services, tenant, record)
+	contactId := processContact(ctx, record)
 	if contactId == "" {
 		return ContactResult{
-			BaseResponse: BaseResponse{
+			BaseResponse: rest.BaseResponse{
 				Status:  "error",
 				Message: "Failed to process contact",
 			},
@@ -145,7 +152,7 @@ func validateAndProcessContact(c *gin.Context, ctx context.Context, span opentra
 	}
 
 	return ContactResult{
-		BaseResponse: BaseResponse{
+		BaseResponse: rest.BaseResponse{
 			Status: "success",
 		},
 		ContactId:   contactId,
@@ -183,7 +190,7 @@ func validateContact(record *ContactRecord) error {
 func validateFileHeaders(c *gin.Context, reader *csv.Reader) error {
 	headers, err := reader.Read()
 	if err != nil {
-		sendError(c, http.StatusBadRequest, "Failed to read file")
+		rest.SendError(c, http.StatusBadRequest, "Failed to read file")
 		return err
 	}
 
@@ -199,13 +206,13 @@ func validateFileHeaders(c *gin.Context, reader *csv.Reader) error {
 	}
 
 	if !hasEmail || !hasLinkedIn {
-		sendError(c, http.StatusBadRequest, "Missing required headers: email, linkedin_url")
+		rest.SendError(c, http.StatusBadRequest, "Missing required headers: email, linkedin_url")
 		return errors.New("invalid headers")
 	}
 	return nil
 }
 
-func processCSVRecords(c *gin.Context, ctx context.Context, span opentracing.Span, reader *csv.Reader, services *service.Services, tenant string) []ContactResult {
+func processCSVRecords(ctx rest.HTTPContext, reader *csv.Reader) []ContactResult {
 	results := make([]ContactResult, 0)
 
 	for {
@@ -215,7 +222,7 @@ func processCSVRecords(c *gin.Context, ctx context.Context, span opentracing.Spa
 		}
 		if err != nil {
 			results = append(results, ContactResult{
-				BaseResponse: BaseResponse{
+				BaseResponse: rest.BaseResponse{
 					Status:  "error",
 					Message: "Failed to read record",
 				},
@@ -232,33 +239,32 @@ func processCSVRecords(c *gin.Context, ctx context.Context, span opentracing.Spa
 			continue
 		}
 
-		result := validateAndProcessContact(c, ctx, span, services, tenant, contactRecord)
+		result := validateAndProcessContact(ctx, contactRecord)
 		results = append(results, result)
 	}
 
 	return results
 }
 
-func processContact(c *gin.Context, ctx context.Context, span opentracing.Span, services *service.Services, tenant string, record ContactRecord) string {
-	emailEntity, contactId := findExistingContact(c, ctx, span, services, record.Email)
+func processContact(ctx rest.HTTPContext, record ContactRecord) string {
+	emailEntity, contactId := findExistingContact(ctx, record.Email)
 	if emailEntity == nil && contactId == "" {
-		contactId = createNewContact(ctx, span, services, record.LinkedInURL)
+		contactId = createNewContact(ctx, record.LinkedInURL)
 	}
 
 	if emailEntity == nil && record.Email != "" {
-		associateEmail(c, ctx, span, services, tenant, record.Email, contactId)
+		associateEmail(ctx, record.Email, contactId)
 	}
 	return contactId
 }
 
-func findExistingContact(c *gin.Context, ctx context.Context, span opentracing.Span, services *service.Services, email string) (*neo4jentity.EmailEntity, string) {
+func findExistingContact(ctx rest.HTTPContext, email string) (*neo4jentity.EmailEntity, string) {
 	if email == "" {
 		return nil, ""
 	}
-
-	emailEntity, err := services.EmailService.GetByEmailAddress(ctx, email)
+	emailEntity, err := ctx.Services.EmailService.GetByEmailAddress(*ctx.ServiceContext, email)
 	if err != nil {
-		span.LogFields(log.String("result", "Failed to get email entity"))
+		ctx.Span.LogFields(log.String("result", "Failed to get email entity"))
 		return nil, ""
 	}
 
@@ -266,9 +272,9 @@ func findExistingContact(c *gin.Context, ctx context.Context, span opentracing.S
 		return nil, ""
 	}
 
-	contacts, err := services.ContactService.GetContactsForEmails(ctx, []string{emailEntity.Id})
+	contacts, err := ctx.Services.ContactService.GetContactsForEmails(*ctx.ServiceContext, []string{emailEntity.Id})
 	if err != nil {
-		span.LogFields(log.String("result", "Failed to get contacts for email"))
+		ctx.Span.LogFields(log.String("result", "Failed to get contacts for email"))
 		return nil, ""
 	}
 
@@ -279,17 +285,17 @@ func findExistingContact(c *gin.Context, ctx context.Context, span opentracing.S
 	return emailEntity, ""
 }
 
-func createNewContact(ctx context.Context, span opentracing.Span, services *service.Services, linkedInURL string) string {
-	contactId, err := services.CommonServices.ContactService.CreateContactByLinkedIn(ctx, nil, linkedInURL)
+func createNewContact(ctx rest.HTTPContext, linkedInURL string) string {
+	contactId, err := ctx.Services.CommonServices.ContactService.CreateContactByLinkedIn(*ctx.ServiceContext, nil, linkedInURL)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to save contact"))
+		tracing.TraceErr(ctx.Span, errors.Wrap(err, "failed to save contact"))
 		return ""
 	}
 	return contactId
 }
 
-func associateEmail(c *gin.Context, ctx context.Context, span opentracing.Span, services *service.Services, tenant, email, contactId string) {
-	_, err := services.CommonServices.EmailService.Merge(ctx, tenant,
+func associateEmail(ctx rest.HTTPContext, email, contactId string) {
+	_, err := ctx.Services.CommonServices.EmailService.Merge(*ctx.ServiceContext, ctx.Tenant,
 		commonservice.EmailFields{
 			Email:     email,
 			Source:    neo4jentity.DataSourceOpenline,
@@ -299,8 +305,8 @@ func associateEmail(c *gin.Context, ctx context.Context, span opentracing.Span, 
 			Id:   contactId,
 		})
 	if err != nil {
-		tracing.TraceErr(span, err)
-		span.LogFields(log.String("result", "Failed to upsert email"))
+		tracing.TraceErr(ctx.Span, err)
+		ctx.Span.LogFields(log.String("result", "Failed to upsert email"))
 	}
 }
 

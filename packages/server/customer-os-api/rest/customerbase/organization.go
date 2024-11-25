@@ -21,6 +21,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	enummapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper/enum"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
 
@@ -44,7 +45,7 @@ func CreateOrganization(services *service.Services) gin.HandlerFunc {
 		defer span.Finish()
 		tracing.TagComponentRest(span)
 
-		tenant := validateTenant(c, ctx, span)
+		tenant := rest.ValidateTenant(c, ctx, span)
 		if tenant == "" {
 			return
 		}
@@ -53,7 +54,7 @@ func CreateOrganization(services *service.Services) gin.HandlerFunc {
 		if err := c.ShouldBindJSON(&request); err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "Invalid request body"))
 			services.Log.Error(ctx, "Invalid request body", err)
-			sendError(c, http.StatusBadRequest, "Invalid request body")
+			rest.SendError(c, http.StatusBadRequest, "Invalid request body")
 			return
 		}
 
@@ -66,7 +67,7 @@ func CreateOrganization(services *service.Services) gin.HandlerFunc {
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "Failed to create organization"))
 			services.Log.Error(ctx, "Failed to create organization", err)
-			sendError(c, http.StatusInternalServerError, "Failed to create organization")
+			rest.SendError(c, http.StatusInternalServerError, "Failed to create organization")
 			return
 		}
 
@@ -97,14 +98,14 @@ func GetOrganization(services *service.Services) gin.HandlerFunc {
 		defer span.Finish()
 		tracing.TagComponentRest(span)
 
-		tenant := validateTenant(c, ctx, span)
+		tenant := rest.ValidateTenant(c, ctx, span)
 		if tenant == "" {
 			return
 		}
 
 		orgID := c.Param("id")
 		if orgID == "" {
-			sendError(c, http.StatusBadRequest, "Invalid organization ID")
+			rest.SendError(c, http.StatusBadRequest, "Invalid organization ID")
 			return
 		}
 
@@ -134,7 +135,7 @@ func SetPrimaryExternalSystemId(services *service.Services) gin.HandlerFunc {
 		defer span.Finish()
 		tracing.TagComponentRest(span)
 
-		tenant := validateTenant(c, ctx, span)
+		tenant := rest.ValidateTenant(c, ctx, span)
 		if tenant == "" {
 			return
 		}
@@ -146,7 +147,7 @@ func SetPrimaryExternalSystemId(services *service.Services) gin.HandlerFunc {
 
 func validateOrganizationRequest(c *gin.Context, ctx context.Context, span opentracing.Span, services *service.Services, request *CreateOrganizationRequest) error {
 	if request.Name == "" && request.CustomId == "" && request.Website == "" && request.LinkedinUrl == "" {
-		sendError(c, http.StatusBadRequest, "Missing organization input fields")
+		rest.SendError(c, http.StatusBadRequest, "Missing organization input fields")
 		return errors.New("missing required fields")
 	}
 
@@ -154,10 +155,10 @@ func validateOrganizationRequest(c *gin.Context, ctx context.Context, span opent
 	websiteDomain, _ := services.CommonServices.DomainService.GetPrimaryDomainForOrganizationWebsite(ctx, request.Website)
 	if websiteDomain != "" {
 		if exists, err := checkOrganizationExistsByDomain(ctx, services, websiteDomain); err != nil {
-			sendError(c, http.StatusInternalServerError, "Failed to check organization domain")
+			rest.SendError(c, http.StatusInternalServerError, "Failed to check organization domain")
 			return err
 		} else if exists {
-			sendError(c, http.StatusConflict, "Organization already exists with given domain")
+			rest.SendError(c, http.StatusConflict, "Organization already exists with given domain")
 			return errors.New("organization exists")
 		}
 	}
@@ -165,10 +166,10 @@ func validateOrganizationRequest(c *gin.Context, ctx context.Context, span opent
 	// Validate custom ID
 	if request.CustomId != "" {
 		if exists, err := checkOrganizationExistsByCustomId(ctx, services, request.CustomId); err != nil {
-			sendError(c, http.StatusInternalServerError, "Failed to check organization custom id")
+			rest.SendError(c, http.StatusInternalServerError, "Failed to check organization custom id")
 			return err
 		} else if exists {
-			sendError(c, http.StatusConflict, "Organization already exists with given custom id")
+			rest.SendError(c, http.StatusConflict, "Organization already exists with given custom id")
 			return errors.New("organization exists")
 		}
 	}
@@ -176,10 +177,10 @@ func validateOrganizationRequest(c *gin.Context, ctx context.Context, span opent
 	// Validate LinkedIn URL
 	if request.LinkedinUrl != "" {
 		if exists, err := checkOrganizationExistsBySocialUrl(ctx, services, request.LinkedinUrl); err != nil {
-			sendError(c, http.StatusInternalServerError, "Failed to check organization linkedin url")
+			rest.SendError(c, http.StatusInternalServerError, "Failed to check organization linkedin url")
 			return err
 		} else if exists {
-			sendError(c, http.StatusConflict, "Organization already exists with given linkedin url")
+			rest.SendError(c, http.StatusConflict, "Organization already exists with given linkedin url")
 			return errors.New("organization exists")
 		}
 	}

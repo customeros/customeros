@@ -1,8 +1,11 @@
 package billing
 
 import (
+	"net/http"
+	"sort"
+	"sync"
+
 	"github.com/gin-gonic/gin"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
@@ -10,9 +13,9 @@ import (
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-	"net/http"
-	"sort"
-	"sync"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
 
 // GetInvoicesForOrganization retrieves the list of invoices for a given organization
@@ -36,18 +39,12 @@ func GetInvoicesForOrganization(services *service.Services) gin.HandlerFunc {
 		tracing.TagComponentRest(span)
 		tracing.TagTenant(span, common.GetTenantFromContext(ctx))
 
-		tenant := common.GetTenantFromContext(ctx)
-		// if tenant missing return auth error
-		if tenant == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"status": "error", "message": "API key invalid or expired"})
-			span.LogFields(tracingLog.String("result", "Missing tenant in context"))
-			return
-		}
+		tenant := rest.ValidateTenant(c, ctx, span)
 
 		// Extract organization ID from the path
 		orgID := c.Param("id")
 		if orgID == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Invalid organization ID"})
+			c.JSON(http.StatusBadRequest, rest.BaseResponse{Status: "error", Message: "Invalid organization ID"})
 			span.LogFields(tracingLog.String("result", "Invalid organization ID"))
 			return
 		}
@@ -56,11 +53,11 @@ func GetInvoicesForOrganization(services *service.Services) gin.HandlerFunc {
 		organizationDbNode, err := services.Repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByIdOrCustomerOsId(ctx, tenant, orgID)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			c.JSON(http.StatusNotFound, gin.H{"status": "error", "message": "Organization not found"})
+			c.JSON(http.StatusNotFound, rest.BaseResponse{Status: "error", Message: "Organization not found"})
 			return
 		}
 		if organizationDbNode == nil {
-			c.JSON(http.StatusNotFound, gin.H{"status": "error", "message": "Organization not found"})
+			c.JSON(http.StatusNotFound, rest.BaseResponse{Status: "error", Message: "Organization not found"})
 			return
 		}
 		organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
@@ -68,7 +65,7 @@ func GetInvoicesForOrganization(services *service.Services) gin.HandlerFunc {
 		invoiceEntities, err := services.CommonServices.InvoiceService.GetNonDryRunInvoicesForOrganization(ctx, tenant, organizationEntity.ID)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Internal server error"})
+			c.JSON(http.StatusInternalServerError, rest.BaseResponse{Status: "error", Message: "Internal server error"})
 			return
 		}
 
