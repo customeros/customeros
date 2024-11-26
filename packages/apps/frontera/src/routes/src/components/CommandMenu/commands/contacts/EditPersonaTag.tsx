@@ -50,11 +50,10 @@ export const EditPersonaTag = observer(() => {
 
   const handleCreateOption = (value: string) => {
     store.tags?.create(
-      { name: value },
+      { name: value, entityType: EntityType.Contact },
       {
         onSucces: () => {
           contact?.value.tags?.push({
-            id: value,
             name: value,
             metadata: {
               id: value,
@@ -64,11 +63,7 @@ export const EditPersonaTag = observer(() => {
               created: new Date().toISOString(),
               lastUpdated: new Date().toISOString(),
             },
-            appSource: 'organization',
-            createdAt: new Date().toISOString(),
             entityType: EntityType.Contact,
-            updatedAt: new Date().toISOString(),
-            source: DataSource.Openline,
           });
           contact?.commit();
 
