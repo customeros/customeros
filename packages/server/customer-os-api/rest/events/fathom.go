@@ -57,22 +57,29 @@ func FathomZapier(services *service.Services) gin.HandlerFunc {
 }
 
 func handleFathomAISummaryZapier(ctx rest.HTTPContext) {
-	var aiSummaryData RawFathomAISummaryZapier
+	var aiSummaryData FathomZapierPayload
 	err := ctx.GinContext.BindJSON(&aiSummaryData)
-	if err == nil && aiSummaryData.AISummaryHTMLFormatted != "" {
-		ctx.GinContext.JSON(http.StatusAccepted, rest.BuildBaseResponse(rest.StatusProcessing))
-
-		go func() {
-			if err := createEventFromFathomAISummaryZapier(ctx, &aiSummaryData); err != nil {
-				tracing.TraceErr(ctx.Span, errors.Wrap(err, "failed to process Fathom AI summary from zapier"))
-			}
-		}()
+	if err != nil {
+		rest.SendError(ctx.GinContext, ctx.Span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Unable to parse payload from Zapier"))
 		return
 	}
+
+	if aiSummaryData.AISummary.HTMLFormatted == "" {
+		rest.SendError(ctx.GinContext, ctx.Span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("No Fantom summary data"))
+		return
+	}
+
+	ctx.GinContext.JSON(http.StatusAccepted, rest.BuildBaseResponse(rest.StatusProcessing))
+
+	go func() {
+		if err := createEventFromFathomAISummaryZapier(ctx, &aiSummaryData); err != nil {
+			tracing.TraceErr(ctx.Span, errors.Wrap(err, "failed to process Fathom AI summary from zapier"))
+		}
+	}()
 	return
 }
 
-func createEventFromFathomAISummaryZapier(ctx rest.HTTPContext, aiSummaryData *RawFathomAISummaryZapier) error {
+func createEventFromFathomAISummaryZapier(ctx rest.HTTPContext, aiSummaryData *FathomZapierPayload) error {
 	var event data_fields.MarkdownEventFields
 	var allErrs error
 
@@ -83,14 +90,14 @@ func createEventFromFathomAISummaryZapier(ctx rest.HTTPContext, aiSummaryData *R
 
 	source := neo4jentity.DataSourceFathom
 	event.Source = &source
-	if aiSummaryData.MeetingScheduledStartTime.IsZero() {
+	if aiSummaryData.Meeting.ScheduledStartTime.IsZero() {
 		event.CreatedAt = utils.NowPtr()
 	} else {
-		event.CreatedAt = utils.TimePtr(aiSummaryData.MeetingScheduledStartTime.UTC())
+		event.CreatedAt = utils.TimePtr(aiSummaryData.Meeting.ScheduledStartTime.UTC())
 	}
 	event.Content = &content
 
-	domains := strings.Split(aiSummaryData.MeetingExternalDomains, ",")
+	domains := strings.Split(aiSummaryData.Meeting.ExternalDomains, ",")
 	orgIds, err := getParticipantOrganizationIds(ctx, domains)
 	if err != nil {
 		allErrs = multierr.Append(allErrs, errors.Wrap(err, "failed to get organization id for participant"))
@@ -112,16 +119,12 @@ func createEventFromFathomAISummaryZapier(ctx rest.HTTPContext, aiSummaryData *R
 	return allErrs
 }
 
-func processFathomSummaryFromZapier(raw *RawFathomAISummaryZapier) (string, error) {
+func processFathomSummaryFromZapier(raw *FathomZapierPayload) (string, error) {
 	// Convert HTML to clean markdown
-	cleanMarkdown, err := convertFathomHTMLToCleanMarkdown(raw.AISummaryHTMLFormatted)
+	cleanMarkdown, err := convertFathomHTMLToCleanMarkdown(raw.AISummary.HTMLFormatted)
 	if err != nil {
 		return "", fmt.Errorf("error converting HTML to markdown: %w", err)
 	}
-
-	// Get list of participants
-	participants := strings.Split(raw.MeetingInviteeEmails, ",")
-	participants = append(participants, raw.FathomUserEmail) // Add the Fathom user
 
 	// Build the additional sections
 	var builder strings.Builder
@@ -129,16 +132,16 @@ func processFathomSummaryFromZapier(raw *RawFathomAISummaryZapier) (string, erro
 
 	// Add participants section
 	builder.WriteString("\n\n### Meeting Participants\n")
-	for _, participant := range participants {
-		builder.WriteString(fmt.Sprintf("- %s\n", strings.TrimSpace(participant)))
+	for _, participant := range raw.Meeting.Invitees {
+		builder.WriteString(fmt.Sprintf("- %s (%s)\n", participant.Name, participant.Email))
 	}
 
 	// Add duration
 	builder.WriteString("\n### Meeting Duration\n")
-	builder.WriteString(fmt.Sprintf("%s minutes\n\n", raw.RecordingDuration))
+	builder.WriteString(fmt.Sprintf("%s minutes\n\n", raw.Recording.DurationInMinutes))
 
 	// Add recording link
-	builder.WriteString(fmt.Sprintf("[View Recording](%s)\n", raw.RecordingShareURL))
+	builder.WriteString(fmt.Sprintf("[View Recording](%s)\n", raw.Recording.ShareURL))
 
 	return builder.String(), nil
 }
