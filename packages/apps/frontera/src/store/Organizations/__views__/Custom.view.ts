@@ -1,5 +1,5 @@
-import { autorun } from 'mobx';
 import { inPlaceSort } from 'fast-sort';
+import { toJS, action, autorun } from 'mobx';
 
 import type { Organization } from '../Organization.dto';
 
@@ -10,20 +10,38 @@ import { OrganizationsStore } from '../Organizations.store';
 
 // TODO: Cache filtered and sorted results for faster subsequent access
 export class CustomView {
+  private cachedCombos = new Map<string, string>();
+
   constructor(private store: OrganizationsStore) {
     autorun(() => {
-      const p = this.store.root.tableViewDefs.customPresets;
+      const customViewDefs = this.store.root.tableViewDefs.customPresets;
 
-      p.forEach((v) => {
-        const id = v.value.id;
+      const dataSize = this.store.value.size;
+      const dataVersion = this.store.version;
 
-        const searchTerm = this.store.getSearchTermByView(id);
+      customViewDefs.forEach((viewDef) => {
+        const preset = viewDef?.value.id;
+        const searchTerm = this.store.getSearchTermByView(preset);
+        const combo = [
+          viewDef.value?.defaultFilters,
+          viewDef.value?.filters,
+          viewDef.value?.sorting,
+          searchTerm,
+          JSON.stringify(toJS(viewDef.value.columns)),
+          dataSize,
+          dataVersion,
+        ].join('-');
 
-        this.update(id, searchTerm);
+        if (this.cachedCombos.get(preset) === combo) return;
+
+        this.cachedCombos.set(preset, combo);
+
+        this.update(preset, searchTerm);
       });
     });
   }
 
+  @action
   public update = (preset: string, searchTerm?: string) => {
     if (!preset) return;
 
