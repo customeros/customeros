@@ -60,23 +60,28 @@ func GrainZapier(services *service.Services) gin.HandlerFunc {
 func handleGrainNewRecordingEventZapier(ctx rest.HTTPContext) {
 	var grainData GrainRecordingData
 	err := ctx.GinContext.BindJSON(&grainData)
-	if err == nil && grainData.Data.IntelligenceNotesMD != "" {
-		err = cleanJsonPayload(&grainData)
-		if err != nil {
-			tracing.TraceErr(ctx.Span, errors.Wrap(err, "failed to clean grain json payload"))
-			return
-		}
-
-		ctx.GinContext.JSON(http.StatusAccepted, rest.BuildBaseResponse(rest.StatusProcessing))
-
-		go func() {
-			if err := createEventFromGrainRecordingZapier(ctx, &grainData); err != nil {
-				tracing.TraceErr(ctx.Span, errors.Wrap(err, "failed to process Grain AI summary from zapier"))
-			}
-		}()
+	if err != nil {
+		rest.SendError(ctx.GinContext, ctx.Span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Unable to parse payload from Zapier"))
 		return
 	}
 
+	err = cleanJsonPayload(&grainData)
+	if err != nil {
+		rest.SendError(ctx.GinContext, ctx.Span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Unable to normalize payload from Zapier"))
+		return
+	}
+
+	if grainData.Data.IntelligenceNotesMD == "" {
+		rest.SendError(ctx.GinContext, ctx.Span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("No Grain meeting in payload"))
+	}
+
+	ctx.GinContext.JSON(http.StatusAccepted, rest.BuildBaseResponse(rest.StatusProcessing))
+
+	go func() {
+		if err := createEventFromGrainRecordingZapier(ctx, &grainData); err != nil {
+			tracing.TraceErr(ctx.Span, errors.Wrap(err, "failed to process Grain AI summary from zapier"))
+		}
+	}()
 	return
 }
 
