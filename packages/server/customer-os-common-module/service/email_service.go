@@ -29,7 +29,7 @@ type emailService struct {
 }
 
 type EmailService interface {
-	Merge(ctx context.Context, tenant string, emailFields EmailFields, linkWith *LinkWith) (*string, error)
+	Merge(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, tenant string, emailFields EmailFields, linkWith *LinkWith) (*string, error)
 	ReplaceEmail(ctx context.Context, previousEmail string, emailFields EmailFields, linkWith LinkWith) (*string, error)
 	UnlinkEmail(ctx context.Context, email, appSource string, linkWith LinkWith) error
 	DeleteOrphanEmail(ctx context.Context, tenant, emailId, appSource string) error
@@ -47,11 +47,16 @@ func NewEmailService(services *Services) EmailService {
 	}
 }
 
-func (s *emailService) Merge(ctx context.Context, tenant string, emailFields EmailFields, linkWith *LinkWith) (*string, error) {
+// TODO alexb implement txWithPostCommit
+func (s *emailService) Merge(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, tenant string, emailFields EmailFields, linkWith *LinkWith) (*string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.Merge")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "input", emailFields)
+
+	if common.GetTenantFromContext(ctx) == "" {
+		tracing.TraceErr(span, errors.New("tenant is missing in context"))
+	}
 
 	if tenant == "" {
 		tenant = common.GetTenantFromContext(ctx)
