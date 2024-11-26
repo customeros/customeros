@@ -9,8 +9,11 @@ import (
 
 	"github.com/customeros/mailsherpa/mailvalidate"
 	"github.com/gin-gonic/gin"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	commontracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/pkg/errors"
+	"go.uber.org/multierr"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
@@ -70,18 +73,30 @@ func handleGrainNewRecordingEventZapier(ctx rest.HTTPContext) {
 }
 
 func createEventFromGrainRecordingZapier(ctx rest.HTTPContext, grainData *GrainRecordingData) error {
-	var meeting Event
+	var event data_fields.MarkdownEventFields
+	var allErrs error
 
-	meeting.Content = extractGrainMeetingNotes(grainData)
-	meeting.EventTimestamp = grainData.Data.StartDatetime
-	meeting.Tenant = ctx.Tenant
-	meeting.Source = string(EventGrain)
+	content := extractGrainMeetingNotes(grainData)
+	event.Content = &content
+	event.CreatedAt = &grainData.Data.StartDatetime
+	source := neo4jentity.DataSourceGrain
+	event.Source = &source
 
 	orgIds, err := getParticipantOrganizationIds(ctx, getParticipantDomains(ctx, &grainData.Data.Participants))
 	if err != nil {
-		tracing.TraceErr(ctx.Span, errors.Wrap(err, "Error getting participant organization Ids"))
+		allErrs = multierr.Append(allErrs, errors.Wrap(err, "failed to get organization id for participant"))
+		tracing.TraceErr(ctx.Span, err)
+
 	}
-	meeting.OrganizationIDs = orgIds
+
+	for _, orgId := range orgIds {
+		event.OrganizationId = &orgId
+		_, err := ctx.Services.CommonServices.MarkdownEventService.Save(*ctx.ServiceContext, nil, nil, event)
+		if err != nil {
+			allErrs = multierr.Append(allErrs, errors.Wrap(err, "failed to get organization id for participant"))
+			tracing.TraceErr(ctx.Span, err)
+		}
+	}
 
 	// write event to db
 	return nil
