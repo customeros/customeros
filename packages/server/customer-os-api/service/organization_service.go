@@ -34,8 +34,8 @@ type OrganizationService interface {
 	GetByCustomerOsId(ctx context.Context, customerOsId string) (*neo4jentity.OrganizationEntity, error)
 	GetByReferenceId(ctx context.Context, referenceId string) (*neo4jentity.OrganizationEntity, error)
 	ExistsById(ctx context.Context, organizationId string) (bool, error)
-	FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
-	GetOrganizationsForContact(ctx context.Context, contactId string, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
+	FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*commonmodel.SortBy) (*utils.Pagination, error)
+	GetOrganizationsForContact(ctx context.Context, contactId string, page, limit int, filter *model.Filter, sortBy []*commonmodel.SortBy) (*utils.Pagination, error)
 	Merge(ctx context.Context, primaryOrganizationId, mergedOrganizationId string) error
 	GetOrganizationsForEmails(ctx context.Context, emailIds []string) (*neo4jentity.OrganizationEntities, error)
 	GetOrganizationsForPhoneNumbers(ctx context.Context, phoneNumberIds []string) (*neo4jentity.OrganizationEntities, error)
@@ -95,7 +95,7 @@ func (s *organizationService) ExistsById(ctx context.Context, organizationId str
 	return s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), organizationId, commonmodel.NodeLabelOrganization)
 }
 
-func (s *organizationService) FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error) {
+func (s *organizationService) FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*commonmodel.SortBy) (*utils.Pagination, error) {
 	var paginatedResult = utils.Pagination{
 		Limit: limit,
 		Page:  page,
@@ -129,7 +129,7 @@ func (s *organizationService) FindAll(ctx context.Context, page, limit int, filt
 	return &paginatedResult, nil
 }
 
-func (s *organizationService) GetOrganizationsForContact(ctx context.Context, contactId string, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error) {
+func (s *organizationService) GetOrganizationsForContact(ctx context.Context, contactId string, page, limit int, filter *model.Filter, sortBy []*commonmodel.SortBy) (*utils.Pagination, error) {
 	var paginatedResult = utils.Pagination{
 		Limit: limit,
 		Page:  page,

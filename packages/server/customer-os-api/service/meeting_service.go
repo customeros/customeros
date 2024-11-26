@@ -37,7 +37,7 @@ type MeetingService interface {
 	GetMeetingsForInteractionEvents(ctx context.Context, ids []string) (*entity.MeetingEntities, error)
 	GetParticipantsForMeetings(ctx context.Context, ids []string, relation entity.MeetingRelation) (*neo4jentity.MeetingParticipants, error)
 
-	FindAll(ctx context.Context, externalSystemID string, externalID *string, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
+	FindAll(ctx context.Context, externalSystemID string, externalID *string, page, limit int, filter *model.Filter, sortBy []*commonModel.SortBy) (*utils.Pagination, error)
 }
 
 type MeetingParticipant struct {
@@ -373,7 +373,7 @@ func (s *meetingService) GetMeetingsForInteractionEvents(ctx context.Context, id
 	return &meetingEntities, nil
 }
 
-func (s *meetingService) FindAll(ctx context.Context, externalSystemID string, externalID *string, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error) {
+func (s *meetingService) FindAll(ctx context.Context, externalSystemID string, externalID *string, page, limit int, filter *model.Filter, sortBy []*commonModel.SortBy) (*utils.Pagination, error) {
 	session := utils.NewNeo4jReadSession(ctx, s.getNeo4jDriver())
 	defer session.Close(ctx)
 

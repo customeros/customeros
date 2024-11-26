@@ -207,7 +207,7 @@ func (r *queryResolver) UIOrganizations(ctx context.Context, ids []string) ([]*m
 }
 
 // UIOrganizationsSearch is the resolver for the ui_organizations_search field.
-func (r *queryResolver) UIOrganizationsSearch(ctx context.Context, limit *int, where *model.Filter, sort *model.SortBy) (*model.OrganizationSearchResult, error) {
+func (r *queryResolver) UIOrganizationsSearch(ctx context.Context, limit *int, where *model.Filter, sort *commonModel.SortBy) (*model.OrganizationSearchResult, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.UIOrganizationsSearch", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)

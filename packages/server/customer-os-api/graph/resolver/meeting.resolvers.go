@@ -415,7 +415,7 @@ func (r *queryResolver) Meeting(ctx context.Context, id string) (*model.Meeting,
 }
 
 // ExternalMeetings is the resolver for the externalMeetings field.
-func (r *queryResolver) ExternalMeetings(ctx context.Context, externalSystemID string, externalID *string, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.MeetingsPage, error) {
+func (r *queryResolver) ExternalMeetings(ctx context.Context, externalSystemID string, externalID *string, pagination *model.Pagination, where *model.Filter, sort []*commonModel.SortBy) (*model.MeetingsPage, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.Meetings", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
