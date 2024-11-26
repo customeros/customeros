@@ -1,0 +1,3100 @@
+{
+    "schemes": [
+        "https"
+    ],
+    "swagger": "2.0",
+    "info": {
+        "description": "CustomerOS API for multiple services (Verify, Enrich, Orgs)",
+        "title": "CustomerOS API",
+        "contact": {},
+        "version": "1.0"
+    },
+    "host": "api.customeros.ai",
+    "basePath": "/",
+    "paths": {
+        "/billing/v1/organizations/{id}/invoices": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves all non-dry-run invoices for a specific organization, sorted by due date descending",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Billing API"
+                ],
+                "summary": "Get organization's invoices",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "example": "org_123",
+                        "description": "Organization ID or COS ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of invoices retrieved successfully",
+                        "schema": {
+                            "$ref": "#/definitions/billing.InvoicesResponse"
+                        }
+                    },
+                    "206": {
+                        "description": "Invoices retrieved with some errors fetching public URLs",
+                        "schema": {
+                            "$ref": "#/definitions/billing.InvoicesResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid organization ID format",
+                        "schema": {
+                            "$ref": "#/definitions/rest.BaseResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Invalid or missing API key",
+                        "schema": {
+                            "$ref": "#/definitions/rest.BaseResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Organization not found",
+                        "schema": {
+                            "$ref": "#/definitions/rest.BaseResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/rest.BaseResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/customerbase/v1/contacts": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Creates a contact from either JSON or CSV upload",
+                "consumes": [
+                    "application/json",
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CustomerBASE API"
+                ],
+                "summary": "Create a new contact",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "CSV file with contact data",
+                        "name": "file",
+                        "in": "formData"
+                    },
+                    {
+                        "description": "Contact information",
+                        "name": "contact",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/customerbase.ContactRecord"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successfully created single contact",
+                        "schema": {
+                            "$ref": "#/definitions/customerbase.SingleContactResponse"
+                        }
+                    },
+                    "201": {
+                        "description": "Successfully processed CSV file",
+                        "schema": {
+                            "$ref": "#/definitions/customerbase.ContactsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request data",
+                        "schema": {
+                            "$ref": "#/definitions/rest.BaseResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/rest.BaseResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/rest.BaseResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/customerbase/v1/contacts/bulk": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Creates multiple contacts from JSON input",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CustomerBASE API"
+                ],
+                "summary": "Create multiple contacts",
+                "parameters": [
+                    {
+                        "description": "Array of contacts to create",
+                        "name": "contacts",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/customerbase.ContactRecord"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "All contacts created successfully",
+                        "schema": {
+                            "$ref": "#/definitions/customerbase.BulkResponse"
+                        }
+                    },
+                    "207": {
+                        "description": "Contacts created with some failures",
+                        "schema": {
+                            "$ref": "#/definitions/customerbase.BulkResponseMultipleErrors"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request data",
+                        "schema": {
+                            "$ref": "#/definitions/rest.BaseResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/rest.BaseResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/rest.BaseResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/customerbase/v1/contacts/import": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAutl": []
+                    }
+                ],
+                "description": "Creates multiple contacts from CSV file upload",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CustomerBASE API"
+                ],
+                "summary": "Import contacts from CSV",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "CSV file with contact data (required headers: email, linkedin_url)",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "All contacts imported successfully",
+                        "schema": {
+                            "$ref": "#/definitions/customerbase.BulkResponse"
+                        }
+                    },
+                    "207": {
+                        "description": "Contacts imported with some failures",
+                        "schema": {
+                            "$ref": "#/definitions/customerbase.BulkResponseMultipleErrors"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid file format or data",
+                        "schema": {
+                            "$ref": "#/definitions/rest.BaseResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/rest.BaseResponse"
+                        }
+                    },
+                    "415": {
+                        "description": "Unsupported content type",
+                        "schema": {
+                            "$ref": "#/definitions/rest.BaseResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/rest.BaseResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/customerbase/v1/organizations": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Creates an organization if it doesn't exist based on website, custom ID, or LinkedIn URL. Returns existing organization if found.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CustomerBASE API"
+                ],
+                "summary": "Create a new organization",
+                "parameters": [
+                    {
+                        "description": "Organization creation request",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/customerbase.CreateOrganizationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Organization created successfully",
+                        "schema": {
+                            "$ref": "#/definitions/customerbase.OrganizationResponse"
+                        }
+                    },
+                    "206": {
+                        "description": "Organization created with partial data",
+                        "schema": {
+                            "$ref": "#/definitions/customerbase.OrganizationResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request - Missing required fields",
+                        "schema": {
+                            "$ref": "#/definitions/rest.BaseResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Invalid or missing API key",
+                        "schema": {
+                            "$ref": "#/definitions/rest.BaseResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict - Organization already exists with provided identifiers",
+                        "schema": {
+                            "$ref": "#/definitions/rest.BaseResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/rest.BaseResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/customerbase/v1/organizations/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves detailed organization information by ID or COS ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CustomerBASE API"
+                ],
+                "summary": "Get organization details",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "example": "org_123",
+                        "description": "Organization ID or COS ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Organization found",
+                        "schema": {
+                            "$ref": "#/definitions/customerbase.OrganizationResponse"
+                        }
+                    },
+                    "206": {
+                        "description": "Organization found with partial data",
+                        "schema": {
+                            "$ref": "#/definitions/customerbase.OrganizationResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid organization ID format",
+                        "schema": {
+                            "$ref": "#/definitions/rest.BaseResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Invalid or missing API key",
+                        "schema": {
+                            "$ref": "#/definitions/rest.BaseResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Organization not found",
+                        "schema": {
+                            "$ref": "#/definitions/rest.BaseResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/rest.BaseResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/customerbase/v1/organizations/{id}/links/{externalSystem}/primary": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Sets or updates the primary external system identifier for an organization",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CustomerBASE API"
+                ],
+                "summary": "Set primary external system ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "example": "org_123",
+                        "description": "Organization ID or COS ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "example": "salesforce",
+                        "description": "External system name",
+                        "name": "externalSystem",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "External system ID details",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/customerbase.SetPrimaryExternalSystemIdRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Primary ID set successfully",
+                        "schema": {
+                            "$ref": "#/definitions/customerbase.ExternalSystemResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request parameters",
+                        "schema": {
+                            "$ref": "#/definitions/rest.BaseResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Invalid or missing API key",
+                        "schema": {
+                            "$ref": "#/definitions/rest.BaseResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Organization or external system not found",
+                        "schema": {
+                            "$ref": "#/definitions/rest.BaseResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/rest.BaseResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/domains": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves all active domains for the authenticated tenant",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Domains"
+                ],
+                "summary": "List active domains",
+                "responses": {
+                    "200": {
+                        "description": "Successfully retrieved domain list",
+                        "schema": {
+                            "$ref": "#/definitions/restmailstack.DomainsResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Missing or invalid API key",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error - Unable to retrieve domains",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Registers and configures a new domain for mail services, including DNS setup",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Domains"
+                ],
+                "summary": "Register new domain",
+                "parameters": [
+                    {
+                        "description": "Domain registration details",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/restmailstack.RegisterNewDomainRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Domain registered and configured successfully",
+                        "schema": {
+                            "$ref": "#/definitions/restmailstack.DomainResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request - Missing required fields or invalid format",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Missing or invalid API key",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "406": {
+                        "description": "Not Acceptable - Domain TLD not supported or premium domain",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict - Domain already registered",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error - Configuration failed or service unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/domains/configure": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Sets up DNS records and mail services for an existing domain",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Domains"
+                ],
+                "summary": "Configure domain DNS",
+                "parameters": [
+                    {
+                        "description": "Domain configuration details",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/restmailstack.ConfigureDomainRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Domain configured successfully",
+                        "schema": {
+                            "$ref": "#/definitions/restmailstack.DomainResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request - Missing required fields or invalid format",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Missing or invalid API key",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found - Domain not found or not owned by tenant",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error - Configuration failed or service unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/domains/{domain}/mailboxes": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves all mailboxes configured for the specified domain",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Mailboxes"
+                ],
+                "summary": "List mailboxes",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "example": "example.com",
+                        "description": "Domain name",
+                        "name": "domain",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successfully retrieved mailboxes",
+                        "schema": {
+                            "$ref": "#/definitions/restmailstack.MailboxesResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Missing domain parameter",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Missing or invalid API key",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Domain not found",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Creates a new mailbox for the specified domain with optional forwarding and webmail access",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Mailboxes"
+                ],
+                "summary": "Create mailbox",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "example": "example.com",
+                        "description": "Domain name",
+                        "name": "domain",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Mailbox configuration",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/restmailstack.MailboxRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mailbox created successfully with generated password",
+                        "schema": {
+                            "$ref": "#/definitions/restmailstack.MailboxResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request - Missing or invalid parameters",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Missing or invalid API key",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Domain not found",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Mailbox already exists",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/enrich/v1/organization": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Enriches organization information using either domain or LinkedIn URL",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Enrichment API"
+                ],
+                "summary": "Enrich organization information",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "example": "https://linkedin.com/company/acme",
+                        "description": "Organization's LinkedIn URL",
+                        "name": "linkedinUrl",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "acme.com",
+                        "description": "Organization's domain",
+                        "name": "domain",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Organization not found (status: warning)",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Missing or invalid parameters",
+                        "schema": {
+                            "$ref": "#/definitions/rest.BaseResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Missing or invalid API key",
+                        "schema": {
+                            "$ref": "#/definitions/rest.BaseResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/rest.BaseResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/enrich/v1/person": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Enriches person information using LinkedIn URL, email, and other optional details",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Enrichment API"
+                ],
+                "summary": "Enrich person information",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "example": "https://linkedin.com/in/johndoe",
+                        "description": "LinkedIn profile URL",
+                        "name": "linkedinUrl",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "format": "email",
+                        "example": "john.doe@example.com",
+                        "description": "Email address",
+                        "name": "email",
+                        "in": "query"
+                    },
+                    {
+                        "minLength": 1,
+                        "type": "string",
+                        "example": "John",
+                        "description": "First name",
+                        "name": "firstName",
+                        "in": "query"
+                    },
+                    {
+                        "minLength": 1,
+                        "type": "string",
+                        "example": "Doe",
+                        "description": "Last name",
+                        "name": "lastName",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Include mobile number in results",
+                        "name": "includeMobileNumber",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Person not found (status: warning)",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "202": {
+                        "description": "Processing initiated, check ResultURL for final data",
+                        "schema": {
+                            "$ref": "#/definitions/restenrich.EnrichPersonResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Missing linkedinUrl or email",
+                        "schema": {
+                            "$ref": "#/definitions/rest.BaseResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Missing or invalid API key",
+                        "schema": {
+                            "$ref": "#/definitions/rest.BaseResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/rest.BaseResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/enrich/v1/person/results/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves the results of an asynchronous person enrichment operation",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Enrichment API"
+                ],
+                "summary": "Retrieve enrichment results",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Result ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successfully retrieved enriched data",
+                        "schema": {
+                            "$ref": "#/definitions/restenrich.EnrichPersonResponse"
+                        }
+                    },
+                    "202": {
+                        "description": "Still processing, check again later",
+                        "schema": {
+                            "$ref": "#/definitions/restenrich.EnrichPersonResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid result ID",
+                        "schema": {
+                            "$ref": "#/definitions/rest.BaseResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Missing or invalid API key",
+                        "schema": {
+                            "$ref": "#/definitions/rest.BaseResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Result not found",
+                        "schema": {
+                            "$ref": "#/definitions/rest.BaseResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/rest.BaseResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/outreach/v1/email/tracking": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Generates tracking pixels, click tracking URLs, and unsubscribe links for email campaigns",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Outreach"
+                ],
+                "summary": "Generate email tracking URLs",
+                "parameters": [
+                    {
+                        "description": "Tracking URL generation configuration",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/restoutreach.EmailTrackingRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Tracking URLs generated successfully",
+                        "schema": {
+                            "$ref": "#/definitions/restoutreach.EmailTrackingResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Missing or invalid API key",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/verify/v1/email": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Performs comprehensive validation of a single email address",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Email Verification"
+                ],
+                "summary": "Verify single email address",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "email",
+                        "description": "Email address to verify",
+                        "name": "address",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "Verify catch-all domain",
+                        "name": "verifyCatchAll",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Email verification results",
+                        "schema": {
+                            "$ref": "#/definitions/restverify.EmailVerificationResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid email format or missing parameters",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Missing or invalid API key",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/verify/v1/email/bulk": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Initiates bulk verification process for emails from CSV file",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Email Verification"
+                ],
+                "summary": "Upload emails for bulk verification",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "CSV file containing email addresses",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "first column",
+                        "description": "CSV column containing emails",
+                        "name": "emailColumn",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "Verify catch-all domains",
+                        "name": "verifyCatchAll",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Bulk verification initiated",
+                        "schema": {
+                            "$ref": "#/definitions/restverify.BulkUploadResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid file format or missing parameters",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Missing or invalid API key",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/verify/v1/email/bulk/results/{requestId}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves results or status of bulk verification job",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Email Verification"
+                ],
+                "summary": "Get bulk verification results",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Bulk verification job ID",
+                        "name": "requestId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Verification results or status",
+                        "schema": {
+                            "$ref": "#/definitions/restverify.BulkResultsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid job ID",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Missing or invalid API key",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Job not found",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/verify/v1/email/bulk/results/{requestId}/download": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Downloads CSV file containing detailed verification results",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "text/csv"
+                ],
+                "tags": [
+                    "Email Verification"
+                ],
+                "summary": "Download bulk verification results",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Bulk verification job ID",
+                        "name": "requestId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "CSV file containing verification results",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid job ID",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Missing or invalid API key",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Results not found",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/verify/v1/ip": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves comprehensive information about an IP address including threats, geolocation, and network details",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "IP Intelligence"
+                ],
+                "summary": "Get IP intelligence data",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "IP address to analyze",
+                        "name": "address",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "IP intelligence data retrieved successfully",
+                        "schema": {
+                            "$ref": "#/definitions/restverify.IpIntelligenceResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid IP address format",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Missing or invalid API key",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "billing.InvoiceRecord": {
+            "description": "Detailed invoice information including payment details and status",
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "description": "Total amount due for the invoice\nrequired: true\nexample: 1500.50\nminimum: 0",
+                    "type": "number"
+                },
+                "currency": {
+                    "description": "Currency code for the invoice amount\nrequired: true\nexample: USD\npattern: ^[A-Z]{3}$",
+                    "type": "string"
+                },
+                "dueDate": {
+                    "description": "Date when the invoice payment is due\nrequired: true\nexample: 2024-12-01T00:00:00Z\nformat: date-time",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "Unique identifier for the invoice\nrequired: true\nexample: 123e4567-e89b-12d3-a456-426614174000\nformat: uuid",
+                    "type": "string"
+                },
+                "invoiceStatus": {
+                    "description": "Current status of the invoice\nrequired: true\nexample: PAID\nenum: DRAFT,PENDING,PAID,OVERDUE,CANCELLED,VOID",
+                    "type": "string"
+                },
+                "number": {
+                    "description": "Invoice number or reference\nrequired: true\nexample: INV-2024-001\nminLength: 1",
+                    "type": "string"
+                },
+                "paymentLink": {
+                    "description": "URL where the invoice can be paid\nrequired: false\nexample: https://payment.example.com/inv/12345\nformat: uri",
+                    "type": "string"
+                },
+                "publicUrl": {
+                    "description": "Public URL to access the invoice PDF\nrequired: false\nexample: https://invoices.example.com/12345.pdf\nformat: uri",
+                    "type": "string"
+                }
+            }
+        },
+        "billing.InvoicesResponse": {
+            "description": "Response containing multiple invoices",
+            "type": "object",
+            "properties": {
+                "invoices": {
+                    "description": "List of invoices\nrequired: false",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/billing.InvoiceRecord"
+                    }
+                },
+                "requestId": {
+                    "type": "string",
+                    "example": "1234567890abcdef"
+                },
+                "status": {
+                    "description": "Status indicates the result of the operation (\"success\" or \"error\")",
+                    "type": "string",
+                    "example": "success"
+                }
+            }
+        },
+        "customerbase.BulkErrorDetails": {
+            "description": "Error details for failed operations in bulk processing",
+            "type": "object",
+            "properties": {
+                "description": {
+                    "description": "Description of the error\nexample: invalid email format",
+                    "type": "string"
+                },
+                "value": {
+                    "description": "The value that caused the error\nexample: invalid@email..com",
+                    "type": "string"
+                }
+            }
+        },
+        "customerbase.BulkResponse": {
+            "description": "Response structure for bulk operations with single error detail",
+            "type": "object",
+            "properties": {
+                "details": {
+                    "description": "Error details if any",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/customerbase.BulkErrorDetails"
+                        }
+                    ]
+                },
+                "requestId": {
+                    "type": "string",
+                    "example": "1234567890abcdef"
+                },
+                "status": {
+                    "description": "Status indicates the result of the operation (\"success\" or \"error\")",
+                    "type": "string",
+                    "example": "success"
+                },
+                "summary": {
+                    "description": "Summary of the bulk operation",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/customerbase.BulkSummary"
+                        }
+                    ]
+                }
+            }
+        },
+        "customerbase.BulkResponseMultipleErrors": {
+            "description": "Response structure for bulk operations with multiple error details",
+            "type": "object",
+            "properties": {
+                "details": {
+                    "description": "List of error details",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/customerbase.BulkErrorDetails"
+                    }
+                },
+                "requestId": {
+                    "type": "string",
+                    "example": "1234567890abcdef"
+                },
+                "status": {
+                    "description": "Status indicates the result of the operation (\"success\" or \"error\")",
+                    "type": "string",
+                    "example": "success"
+                },
+                "summary": {
+                    "description": "Summary of the bulk operation",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/customerbase.BulkSummary"
+                        }
+                    ]
+                }
+            }
+        },
+        "customerbase.BulkSummary": {
+            "description": "Summary statistics for bulk operations",
+            "type": "object",
+            "properties": {
+                "failed": {
+                    "description": "Number of failed records\nexample: 5",
+                    "type": "integer"
+                },
+                "success": {
+                    "description": "Number of successfully processed records\nexample: 95",
+                    "type": "integer"
+                },
+                "total": {
+                    "description": "Total number of records processed\nexample: 100",
+                    "type": "integer"
+                }
+            }
+        },
+        "customerbase.ContactRecord": {
+            "description": "Request to create a contact",
+            "type": "object",
+            "properties": {
+                "contactId": {
+                    "description": "Contact's unique identifier\nexample: contact-123",
+                    "type": "string"
+                },
+                "email": {
+                    "description": "Contact's email address\nexample: john@example.com",
+                    "type": "string"
+                },
+                "linkedinUrl": {
+                    "description": "Contact's LinkedIn profile URL\nexample: https://linkedin.com/in/john-doe",
+                    "type": "string"
+                }
+            }
+        },
+        "customerbase.ContactsResponse": {
+            "description": "Response structure for multiple contact operations",
+            "type": "object",
+            "properties": {
+                "contacts": {
+                    "description": "List of contacts",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/customerbase.ContactRecord"
+                    }
+                },
+                "requestId": {
+                    "type": "string",
+                    "example": "1234567890abcdef"
+                },
+                "status": {
+                    "description": "Status indicates the result of the operation (\"success\" or \"error\")",
+                    "type": "string",
+                    "example": "success"
+                }
+            }
+        },
+        "customerbase.CreateOrganizationRequest": {
+            "description": "Request to create an organization",
+            "type": "object",
+            "properties": {
+                "customId": {
+                    "description": "Custom ID provided by the user\nexample: 12345",
+                    "type": "string"
+                },
+                "icpFit": {
+                    "description": "Indicates if the organization is an ICP (Ideal Customer Profile) fit\nexample: true",
+                    "type": "boolean"
+                },
+                "leadSource": {
+                    "description": "Lead source of the organization\nexample: Web Search",
+                    "type": "string"
+                },
+                "linkedinUrl": {
+                    "description": "Organization's LinkedIn profile URL\nexample: https://linkedin.com/company/openline",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Organization's name\nrequired: true\nexample: CustomerOS",
+                    "type": "string"
+                },
+                "relationship": {
+                    "description": "Relationship status of the organization\nexample: customer",
+                    "type": "string"
+                },
+                "website": {
+                    "description": "Organization's website URL\nexample: https://customeros.ai",
+                    "type": "string"
+                }
+            }
+        },
+        "customerbase.ExternalLink": {
+            "description": "External system link information",
+            "type": "object",
+            "properties": {
+                "id": {
+                    "description": "External system identifier\nexample: cos-12345",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "External system name\nexample: stripe",
+                    "type": "string"
+                },
+                "primary": {
+                    "description": "Indicates if this is the primary link\nexample: true",
+                    "type": "boolean"
+                }
+            }
+        },
+        "customerbase.ExternalSystemRecord": {
+            "description": "External system information and its relationship to an organization",
+            "type": "object",
+            "properties": {
+                "externalId": {
+                    "description": "External system identifier\nexample: stripe-1234",
+                    "type": "string"
+                },
+                "externalSystem": {
+                    "description": "Name of the external system\nexample: stripe",
+                    "type": "string"
+                },
+                "organizationId": {
+                    "description": "Associated organization ID\nexample: org-789",
+                    "type": "string"
+                },
+                "primary": {
+                    "description": "Indicates if this is the primary link\nexample: true",
+                    "type": "boolean"
+                }
+            }
+        },
+        "customerbase.ExternalSystemResponse": {
+            "description": "Response structure for external system operations",
+            "type": "object",
+            "properties": {
+                "organization": {
+                    "description": "The external system information",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/customerbase.ExternalSystemRecord"
+                        }
+                    ]
+                },
+                "requestId": {
+                    "type": "string",
+                    "example": "1234567890abcdef"
+                },
+                "status": {
+                    "description": "Status indicates the result of the operation (\"success\" or \"error\")",
+                    "type": "string",
+                    "example": "success"
+                }
+            }
+        },
+        "customerbase.OrganizationRecord": {
+            "description": "Detailed organization information returned by API operations",
+            "type": "object",
+            "properties": {
+                "cosId": {
+                    "description": "CustomerOS unique identifier\nexample: C-A12-B45",
+                    "type": "string"
+                },
+                "customId": {
+                    "description": "Custom ID provided by the user\nexample: 12345",
+                    "type": "string"
+                },
+                "domains": {
+                    "description": "Associated domains\nexample: [\"customeros.com\",\"customeros.ai\"]",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "externalLinks": {
+                    "description": "External system links",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/customerbase.ExternalLink"
+                    }
+                },
+                "icpFit": {
+                    "description": "ICP fit indicator\nexample: true",
+                    "type": "boolean"
+                },
+                "id": {
+                    "description": "Organization's unique identifier\nexample: 123e4567-e89b-12d3-a456-426614174000",
+                    "type": "string"
+                },
+                "leadSource": {
+                    "description": "Lead source of the organization\nexample: Web Search",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Organization name\nexample: CustomerOS",
+                    "type": "string"
+                },
+                "relationship": {
+                    "description": "Relationship status with the organization\nexample: customer",
+                    "type": "string"
+                },
+                "stage": {
+                    "description": "Current stage in the organization lifecycle\nexample: lead",
+                    "type": "string"
+                },
+                "website": {
+                    "description": "Organization's website URL\nexample: https://customeros.ai",
+                    "type": "string"
+                }
+            }
+        },
+        "customerbase.OrganizationResponse": {
+            "description": "Response structure for single organization operations",
+            "type": "object",
+            "properties": {
+                "organization": {
+                    "description": "The organization information",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/customerbase.OrganizationRecord"
+                        }
+                    ]
+                },
+                "requestId": {
+                    "type": "string",
+                    "example": "1234567890abcdef"
+                },
+                "status": {
+                    "description": "Status indicates the result of the operation (\"success\" or \"error\")",
+                    "type": "string",
+                    "example": "success"
+                }
+            }
+        },
+        "customerbase.SetPrimaryExternalSystemIdRequest": {
+            "description": "Request to set or replace the primary external system ID",
+            "type": "object",
+            "properties": {
+                "externalId": {
+                    "description": "The ID of the external system to be set as primary\nrequired: true\nexample: stripe-1234",
+                    "type": "string"
+                }
+            }
+        },
+        "customerbase.SingleContactResponse": {
+            "description": "Response structure for single contact operations",
+            "type": "object",
+            "properties": {
+                "contact": {
+                    "description": "The contact information",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/customerbase.ContactRecord"
+                        }
+                    ]
+                },
+                "requestId": {
+                    "type": "string",
+                    "example": "1234567890abcdef"
+                },
+                "status": {
+                    "description": "Status indicates the result of the operation (\"success\" or \"error\")",
+                    "type": "string",
+                    "example": "success"
+                }
+            }
+        },
+        "rest.BaseResponse": {
+            "description": "Standard response structure for API operations",
+            "type": "object",
+            "properties": {
+                "requestId": {
+                    "type": "string",
+                    "example": "1234567890abcdef"
+                },
+                "status": {
+                    "description": "Status indicates the result of the operation (\"success\" or \"error\")",
+                    "type": "string",
+                    "example": "success"
+                }
+            }
+        },
+        "rest.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "requestId": {
+                    "type": "string",
+                    "example": "1234567890abcdef"
+                },
+                "status": {
+                    "description": "Status indicates the result of the operation (\"success\" or \"error\")",
+                    "type": "string",
+                    "example": "success"
+                }
+            }
+        },
+        "restenrich.EnrichOrganizationData": {
+            "description": "Detailed enriched information about an organization",
+            "type": "object",
+            "properties": {
+                "description": {
+                    "description": "Brief description of the organization\nrequired: false\nexample: A global leader in innovative solutions",
+                    "type": "string"
+                },
+                "domain": {
+                    "description": "Organization's primary domain\nrequired: true\nexample: acme.com",
+                    "type": "string"
+                },
+                "employees": {
+                    "description": "Number of employees\nrequired: false\nminimum: 0\nexample: 5000",
+                    "type": "integer"
+                },
+                "foundedYear": {
+                    "description": "Year the organization was founded\nrequired: false\nminimum: 1800\nmaximum: 2100\nexample: 1995",
+                    "type": "integer"
+                },
+                "icons": {
+                    "description": "URLs to organization icons\nrequired: false\nexample: [\"https://acme.com/icon.png\"]",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "industry": {
+                    "description": "Industry classification\nrequired: false",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/restenrich.EnrichOrganizationIndustry"
+                        }
+                    ]
+                },
+                "location": {
+                    "description": "Organization location information\nrequired: false",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/restenrich.EnrichOrganizationLocation"
+                        }
+                    ]
+                },
+                "logos": {
+                    "description": "URLs to organization logos\nrequired: false\nexample: [\"https://acme.com/logo.png\"]",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "longDescription": {
+                    "description": "Detailed description of the organization\nrequired: false\nexample: Acme Corporation provides cutting-edge technology solutions across the globe",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Organization name\nrequired: true\nexample: Acme Corporation",
+                    "type": "string"
+                },
+                "public": {
+                    "description": "Indicates if the organization is publicly traded\nrequired: false\nexample: true",
+                    "type": "boolean"
+                },
+                "socials": {
+                    "description": "Social media presence\nrequired: false\nexample: [\"https://linkedin.com/company/acme\"]",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "website": {
+                    "description": "Organization's website URL\nrequired: true\nexample: https://acme.com\nformat: uri",
+                    "type": "string"
+                }
+            }
+        },
+        "restenrich.EnrichOrganizationIndustry": {
+            "description": "Industry classification information",
+            "type": "object",
+            "properties": {
+                "industry": {
+                    "description": "Primary industry category\nrequired: true\nexample: Technology",
+                    "type": "string"
+                }
+            }
+        },
+        "restenrich.EnrichOrganizationLocation": {
+            "description": "Detailed location information for an organization",
+            "type": "object",
+            "properties": {
+                "addressLine1": {
+                    "description": "Primary address line\nrequired: false\nexample: 123 Main St",
+                    "type": "string"
+                },
+                "addressLine2": {
+                    "description": "Secondary address line\nrequired: false\nexample: Suite 100",
+                    "type": "string"
+                },
+                "city": {
+                    "description": "City name\nrequired: false\nexample: San Francisco",
+                    "type": "string"
+                },
+                "country": {
+                    "description": "Country name\nrequired: true\nexample: United States",
+                    "type": "string"
+                },
+                "countryCodeA2": {
+                    "description": "ISO 3166-1 alpha-2 country code\nrequired: true\nexample: US\npattern: ^[A-Z]{2}$",
+                    "type": "string"
+                },
+                "isHeadquarter": {
+                    "description": "Indicates if this is the headquarters location\nrequired: true\nexample: true",
+                    "type": "boolean"
+                },
+                "postalCode": {
+                    "description": "Postal code\nrequired: false\nexample: 94105",
+                    "type": "string"
+                },
+                "region": {
+                    "description": "State or region\nrequired: false\nexample: California",
+                    "type": "string"
+                }
+            }
+        },
+        "restenrich.EnrichOrganizationResponse": {
+            "description": "Response structure for organization enrichment operations",
+            "type": "object",
+            "properties": {
+                "data": {
+                    "description": "Enriched organization data\nrequired: true",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/restenrich.EnrichOrganizationData"
+                        }
+                    ]
+                },
+                "requestId": {
+                    "type": "string",
+                    "example": "1234567890abcdef"
+                },
+                "status": {
+                    "description": "Status indicates the result of the operation (\"success\" or \"error\")",
+                    "type": "string",
+                    "example": "success"
+                }
+            }
+        },
+        "restenrich.EnrichPersonData": {
+            "description": "Comprehensive enriched information about a person",
+            "type": "object",
+            "properties": {
+                "emails": {
+                    "description": "List of email addresses associated with the person\nrequired: false",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/restenrich.EnrichPersonEmail"
+                    }
+                },
+                "jobs": {
+                    "description": "Employment history\nrequired: false",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/restenrich.EnrichPersonJob"
+                    }
+                },
+                "location": {
+                    "description": "Geographic location information\nrequired: false",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/restenrich.EnrichPersonLocation"
+                        }
+                    ]
+                },
+                "name": {
+                    "description": "Person's name information\nrequired: true",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/restenrich.EnrichPersonName"
+                        }
+                    ]
+                },
+                "phoneNumbers": {
+                    "description": "List of phone numbers\nrequired: false",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/restenrich.EnrichPersonPhoneNumber"
+                    }
+                },
+                "profilePic": {
+                    "description": "URL to person's profile picture\nrequired: false\nformat: uri",
+                    "type": "string",
+                    "example": "https://example.com/profile.jpg"
+                },
+                "social": {
+                    "description": "Social media presence\nrequired: false",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/restenrich.EnrichPersonSocial"
+                        }
+                    ]
+                }
+            }
+        },
+        "restenrich.EnrichPersonDiscord": {
+            "description": "Discord profile details",
+            "type": "object",
+            "properties": {
+                "username": {
+                    "description": "Discord username with discriminator\nrequired: true\npattern: ^.{3,32}#[0-9]{4}$",
+                    "type": "string",
+                    "example": "johndoe#1234"
+                }
+            }
+        },
+        "restenrich.EnrichPersonEmail": {
+            "description": "Email address with validation details",
+            "type": "object",
+            "properties": {
+                "address": {
+                    "description": "Email address\nrequired: true\nformat: email",
+                    "type": "string",
+                    "example": "john.doe@example.com"
+                },
+                "deliverable": {
+                    "description": "Indicates if the email is deliverable\nrequired: false",
+                    "type": "string",
+                    "example": "true"
+                },
+                "isRisky": {
+                    "description": "Indicates if the email is considered risky\nrequired: false",
+                    "type": "boolean",
+                    "example": false
+                },
+                "type": {
+                    "description": "Type of email address\nrequired: false\nenum: personal,work",
+                    "type": "string",
+                    "example": "work"
+                }
+            }
+        },
+        "restenrich.EnrichPersonGithub": {
+            "description": "GitHub profile details",
+            "type": "object",
+            "properties": {
+                "url": {
+                    "description": "Full GitHub profile URL\nrequired: false\nformat: uri",
+                    "type": "string",
+                    "example": "https://github.com/johndoe"
+                },
+                "username": {
+                    "description": "GitHub username\nrequired: true",
+                    "type": "string",
+                    "example": "johndoe"
+                }
+            }
+        },
+        "restenrich.EnrichPersonJob": {
+            "description": "Details about a person's job position",
+            "type": "object",
+            "properties": {
+                "company": {
+                    "description": "Company name\nrequired: true",
+                    "type": "string",
+                    "example": "Tech Corp"
+                },
+                "companyLinkedin": {
+                    "description": "Company's LinkedIn URL\nrequired: false\nformat: uri",
+                    "type": "string",
+                    "example": "https://linkedin.com/company/techcorp"
+                },
+                "companyWebsite": {
+                    "description": "Company's website\nrequired: false\nformat: uri",
+                    "type": "string",
+                    "example": "https://techcorp.com"
+                },
+                "duration": {
+                    "description": "Employment duration\nrequired: true",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/restenrich.EnrichPersonJobDuration"
+                        }
+                    ]
+                },
+                "isCurrent": {
+                    "description": "Indicates if this is the current position\nrequired: true",
+                    "type": "boolean",
+                    "example": true
+                },
+                "seniority": {
+                    "description": "Seniority level\nrequired: false\nenum: Junior,Mid-Level,Senior,Lead,Manager,Director,VP,C-Level",
+                    "type": "string",
+                    "example": "Senior"
+                },
+                "title": {
+                    "description": "Job title\nrequired: true",
+                    "type": "string",
+                    "example": "Software Engineer"
+                }
+            }
+        },
+        "restenrich.EnrichPersonJobDuration": {
+            "description": "Time period of employment",
+            "type": "object",
+            "properties": {
+                "endMonth": {
+                    "description": "Ending month (1-12)\nrequired: false\nminimum: 1\nmaximum: 12",
+                    "type": "integer",
+                    "example": 12
+                },
+                "endYear": {
+                    "description": "Ending year\nrequired: false\nminimum: 1900\nmaximum: 2100",
+                    "type": "integer",
+                    "example": 2023
+                },
+                "startMonth": {
+                    "description": "Starting month (1-12)\nrequired: false\nminimum: 1\nmaximum: 12",
+                    "type": "integer",
+                    "example": 1
+                },
+                "startYear": {
+                    "description": "Starting year\nrequired: false\nminimum: 1900\nmaximum: 2100",
+                    "type": "integer",
+                    "example": 2020
+                }
+            }
+        },
+        "restenrich.EnrichPersonLinkedIn": {
+            "description": "LinkedIn specific profile details",
+            "type": "object",
+            "properties": {
+                "followerCount": {
+                    "description": "Number of LinkedIn followers\nrequired: false\nminimum: 0",
+                    "type": "integer",
+                    "example": 500
+                },
+                "id": {
+                    "description": "LinkedIn internal ID\nrequired: false",
+                    "type": "string",
+                    "example": "123456789"
+                },
+                "publicId": {
+                    "description": "LinkedIn public identifier\nrequired: false",
+                    "type": "string",
+                    "example": "john-doe"
+                },
+                "url": {
+                    "description": "Full LinkedIn profile URL\nrequired: false\nformat: uri",
+                    "type": "string",
+                    "example": "https://linkedin.com/in/john-doe"
+                }
+            }
+        },
+        "restenrich.EnrichPersonLocation": {
+            "description": "Geographic and timezone information about a person",
+            "type": "object",
+            "properties": {
+                "city": {
+                    "description": "City name\nrequired: false",
+                    "type": "string",
+                    "example": "San Francisco"
+                },
+                "country": {
+                    "description": "Country name\nrequired: false",
+                    "type": "string",
+                    "example": "United States"
+                },
+                "region": {
+                    "description": "State or region\nrequired: false",
+                    "type": "string",
+                    "example": "California"
+                },
+                "timezone": {
+                    "description": "Timezone identifier\nrequired: false\nexample: America/Los_Angeles",
+                    "type": "string",
+                    "example": "PST"
+                }
+            }
+        },
+        "restenrich.EnrichPersonName": {
+            "description": "Person's name details",
+            "type": "object",
+            "properties": {
+                "firstName": {
+                    "description": "First name\nrequired: true\nminLength: 1",
+                    "type": "string",
+                    "example": "John"
+                },
+                "fullName": {
+                    "description": "Full name (typically firstName + lastName)\nrequired: false",
+                    "type": "string",
+                    "example": "John Doe"
+                },
+                "lastName": {
+                    "description": "Last name\nrequired: true\nminLength: 1",
+                    "type": "string",
+                    "example": "Doe"
+                }
+            }
+        },
+        "restenrich.EnrichPersonPhoneNumber": {
+            "description": "Phone number with type classification",
+            "type": "object",
+            "properties": {
+                "number": {
+                    "description": "Phone number in E.164 format\nrequired: true\npattern: ^\\+[1-9]\\d{1,14}$",
+                    "type": "string",
+                    "example": "+14155552671"
+                },
+                "type": {
+                    "description": "Type of phone number\nrequired: true\nenum: mobile,work,home,other",
+                    "type": "string",
+                    "example": "mobile"
+                }
+            }
+        },
+        "restenrich.EnrichPersonResponse": {
+            "description": "Response structure for person enrichment operations",
+            "type": "object",
+            "properties": {
+                "data": {
+                    "description": "Enriched person data\nrequired: true",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/restenrich.EnrichPersonData"
+                        }
+                    ]
+                },
+                "isComplete": {
+                    "description": "Indicates if all enrichment operations are complete\nrequired: true",
+                    "type": "boolean",
+                    "example": true
+                },
+                "message": {
+                    "description": "Optional message providing additional information\nrequired: false",
+                    "type": "string",
+                    "example": "Enrichment completed"
+                },
+                "pendingFields": {
+                    "description": "List of fields still being processed\nrequired: false",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "email",
+                        "phone number"
+                    ]
+                },
+                "resultUrl": {
+                    "description": "URL to check the final result when processing is incomplete\nrequired: false\nformat: uri",
+                    "type": "string",
+                    "example": "https://api.customeros.ai/enrich/v1/person/results/550e8400-e29b-41d4-a716-446655440000"
+                },
+                "status": {
+                    "description": "Operation status\nrequired: true\nenum: success,error,warning",
+                    "type": "string",
+                    "example": "success"
+                }
+            }
+        },
+        "restenrich.EnrichPersonSocial": {
+            "description": "Collection of social media profile information",
+            "type": "object",
+            "properties": {
+                "discord": {
+                    "description": "Discord profile information\nrequired: false",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/restenrich.EnrichPersonDiscord"
+                        }
+                    ]
+                },
+                "github": {
+                    "description": "GitHub profile information\nrequired: false",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/restenrich.EnrichPersonGithub"
+                        }
+                    ]
+                },
+                "linkedin": {
+                    "description": "LinkedIn profile information\nrequired: false",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/restenrich.EnrichPersonLinkedIn"
+                        }
+                    ]
+                },
+                "x": {
+                    "description": "X (Twitter) profile information\nrequired: false",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/restenrich.EnrichPersonX"
+                        }
+                    ]
+                }
+            }
+        },
+        "restenrich.EnrichPersonX": {
+            "description": "X (formerly Twitter) profile details",
+            "type": "object",
+            "properties": {
+                "handle": {
+                    "description": "X handle (without @)\nrequired: true",
+                    "type": "string",
+                    "example": "johndoe"
+                },
+                "url": {
+                    "description": "Full X profile URL\nrequired: false\nformat: uri",
+                    "type": "string",
+                    "example": "https://x.com/johndoe"
+                }
+            }
+        },
+        "restmailstack.ConfigureDomainRequest": {
+            "description": "Request payload for configuring domain DNS and mail services",
+            "type": "object",
+            "properties": {
+                "domain": {
+                    "description": "Domain name to configure\nrequired: true\npattern: ^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\\.[a-zA-Z]{2,}$\nexample: example.com",
+                    "type": "string"
+                },
+                "website": {
+                    "description": "Website URL for domain configuration\nrequired: true\nformat: uri\nexample: https://www.example.com",
+                    "type": "string"
+                }
+            }
+        },
+        "restmailstack.DomainRecord": {
+            "description": "Comprehensive domain record information",
+            "type": "object",
+            "properties": {
+                "createdDate": {
+                    "description": "Domain registration date\nrequired: true\nformat: date\nexample: 2024-09-14",
+                    "type": "string"
+                },
+                "domain": {
+                    "description": "Registered domain name\nrequired: true\nexample: example.com",
+                    "type": "string"
+                },
+                "expiredDate": {
+                    "description": "Domain expiration date\nrequired: true\nformat: date\nexample: 2025-09-14",
+                    "type": "string"
+                },
+                "nameservers": {
+                    "description": "List of assigned nameservers\nrequired: true\nminItems: 2\nexample: [\"ns1.example.com\",\"ns2.example.com\"]",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "restmailstack.DomainResponse": {
+            "description": "Response containing domain details and status",
+            "type": "object",
+            "properties": {
+                "domain": {
+                    "description": "Domain information\nrequired: true",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/restmailstack.DomainRecord"
+                        }
+                    ]
+                },
+                "requestId": {
+                    "type": "string",
+                    "example": "1234567890abcdef"
+                },
+                "status": {
+                    "description": "Status indicates the result of the operation (\"success\" or \"error\")",
+                    "type": "string",
+                    "example": "success"
+                }
+            }
+        },
+        "restmailstack.DomainsResponse": {
+            "description": "Response containing list of domains and status",
+            "type": "object",
+            "properties": {
+                "domains": {
+                    "description": "List of domains\nrequired: true",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/restmailstack.DomainRecord"
+                    }
+                },
+                "requestId": {
+                    "type": "string",
+                    "example": "1234567890abcdef"
+                },
+                "status": {
+                    "description": "Status indicates the result of the operation (\"success\" or \"error\")",
+                    "type": "string",
+                    "example": "success"
+                }
+            }
+        },
+        "restmailstack.MailboxRecord": {
+            "description": "Comprehensive mailbox configuration and status",
+            "type": "object",
+            "properties": {
+                "email": {
+                    "description": "Email address for the mailbox\nrequired: true\nformat: email\nexample: user@example.com",
+                    "type": "string"
+                },
+                "forwardingEnabled": {
+                    "description": "Email forwarding status\nrequired: true\ndefault: false",
+                    "type": "boolean"
+                },
+                "forwardingTo": {
+                    "description": "List of forwarding email addresses\nrequired: false\nmaxItems: 10",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "password": {
+                    "description": "Mailbox password (only included in specific responses)\nrequired: false\nminLength: 8\nmaxLength: 64",
+                    "type": "string"
+                },
+                "webmailEnabled": {
+                    "description": "Webmail access status\nrequired: true\ndefault: false",
+                    "type": "boolean"
+                }
+            }
+        },
+        "restmailstack.MailboxRequest": {
+            "description": "Request payload for creating and configuring a new mailbox",
+            "type": "object",
+            "properties": {
+                "forwardingTo": {
+                    "description": "List of email addresses to forward to\nrequired: false\nmaxItems: 10\nexample: [\"user1@example.com\",\"user2@example.com\"]",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "linkedUser": {
+                    "description": "Associated user's email address\nrequired: false\nformat: email\nexample: john.doe@mycompany.com",
+                    "type": "string"
+                },
+                "password": {
+                    "description": "Password for mailbox access\nrequired: false\nminLength: 8\nmaxLength: 64\nexample: SecurePassword123!",
+                    "type": "string"
+                },
+                "username": {
+                    "description": "Username for the mailbox\nrequired: true\npattern: ^[a-zA-Z0-9._%+-]+$\nminLength: 3\nmaxLength: 64\nexample: john.doe",
+                    "type": "string"
+                },
+                "webmailEnabled": {
+                    "description": "Enable webmail access\nrequired: false\ndefault: false",
+                    "type": "boolean"
+                }
+            }
+        },
+        "restmailstack.MailboxResponse": {
+            "description": "Response containing mailbox details and status",
+            "type": "object",
+            "properties": {
+                "mailbox": {
+                    "description": "Mailbox information\nrequired: false",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/restmailstack.MailboxRecord"
+                        }
+                    ]
+                },
+                "requestId": {
+                    "type": "string",
+                    "example": "1234567890abcdef"
+                },
+                "status": {
+                    "description": "Status indicates the result of the operation (\"success\" or \"error\")",
+                    "type": "string",
+                    "example": "success"
+                }
+            }
+        },
+        "restmailstack.MailboxesResponse": {
+            "description": "Response containing list of mailboxes and status",
+            "type": "object",
+            "properties": {
+                "mailboxes": {
+                    "description": "List of mailboxes\nrequired: false",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/restmailstack.MailboxRecord"
+                    }
+                },
+                "requestId": {
+                    "type": "string",
+                    "example": "1234567890abcdef"
+                },
+                "status": {
+                    "description": "Status indicates the result of the operation (\"success\" or \"error\")",
+                    "type": "string",
+                    "example": "success"
+                }
+            }
+        },
+        "restmailstack.RegisterNewDomainRequest": {
+            "description": "Request payload for registering a new domain for mail services",
+            "type": "object",
+            "properties": {
+                "domain": {
+                    "description": "Domain name to register\nrequired: true\npattern: ^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\\.[a-zA-Z]{2,}$\nexample: example.com",
+                    "type": "string"
+                },
+                "website": {
+                    "description": "Website URL for domain configuration\nrequired: true\nformat: uri\nexample: https://www.example.com",
+                    "type": "string"
+                }
+            }
+        },
+        "restoutreach.EmailTrackingRequest": {
+            "description": "Request payload for generating email tracking URLs and pixels",
+            "type": "object",
+            "properties": {
+                "campaignId": {
+                    "description": "Unique identifier for the email campaign\nrequired: true\nexample: camp_123456",
+                    "type": "string"
+                },
+                "generateUnsubscribeLink": {
+                    "description": "Enable unsubscribe link generation\nrequired: false\ndefault: false",
+                    "type": "boolean"
+                },
+                "links": {
+                    "description": "List of URLs to be tracked\nrequired: false\nexample: [\"https://example.com/page1\", \"https://example.com/page2\"]",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "messageId": {
+                    "description": "Unique identifier for the message (optional, generated if not provided)\nrequired: false\nexample: msg_123456",
+                    "type": "string"
+                },
+                "recipientId": {
+                    "description": "Unique identifier for the recipient\nrequired: true\nexample: recipient_123456",
+                    "type": "string"
+                },
+                "trackClicks": {
+                    "description": "Enable click tracking for links\nrequired: false\ndefault: false",
+                    "type": "boolean"
+                },
+                "trackOpens": {
+                    "description": "Enable open tracking via pixel\nrequired: false\ndefault: false",
+                    "type": "boolean"
+                },
+                "trackerDomain": {
+                    "description": "Domain to use for tracking URLs (optional, system default used if not provided)\nrequired: false\nformat: hostname\nexample: track.example.com",
+                    "type": "string"
+                },
+                "unsubscribeLink": {
+                    "description": "URL for unsubscribe page\nrequired: false\nformat: uri\nexample: https://example.com/unsubscribe",
+                    "type": "string"
+                }
+            }
+        },
+        "restoutreach.EmailTrackingResponse": {
+            "description": "Response containing generated tracking URLs and pixel",
+            "type": "object",
+            "properties": {
+                "status": {
+                    "description": "Operation status\nrequired: true\nenum: success",
+                    "type": "string",
+                    "example": "success"
+                },
+                "trackedLinks": {
+                    "description": "List of original and tracked URLs (only if TrackClicks is true)\nrequired: false",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/restoutreach.TrackedLink"
+                    }
+                },
+                "trackingId": {
+                    "description": "Generated or provided message ID\nrequired: true",
+                    "type": "string",
+                    "example": "msg_123456"
+                },
+                "trackingPixel": {
+                    "description": "URL for tracking pixel (only if TrackOpens is true)\nrequired: false\nformat: uri",
+                    "type": "string",
+                    "example": "https://track.example.com/p/abc123"
+                },
+                "unsubscribeLink": {
+                    "description": "Generated unsubscribe link (only if GenerateUnsubscribeLink is true)\nrequired: false\nformat: uri",
+                    "type": "string",
+                    "example": "https://track.example.com/u/abc123"
+                }
+            }
+        },
+        "restoutreach.TrackedLink": {
+            "description": "Pair of original and tracking-enabled URLs",
+            "type": "object",
+            "properties": {
+                "original": {
+                    "description": "Original URL before tracking\nrequired: true\nformat: uri",
+                    "type": "string",
+                    "example": "https://example.com/page1"
+                },
+                "tracked": {
+                    "description": "Generated tracking URL\nrequired: true\nformat: uri",
+                    "type": "string",
+                    "example": "https://track.example.com/r/abc123"
+                }
+            }
+        },
+        "restverify.BulkResultsDetails": {
+            "description": "Detailed statistics for bulk verification results",
+            "type": "object",
+            "properties": {
+                "deliverable": {
+                    "description": "Number of deliverable emails\nrequired: true\nminimum: 0",
+                    "type": "integer",
+                    "example": 950
+                },
+                "downloadUrl": {
+                    "description": "URL to download detailed results\nrequired: true\nformat: uri",
+                    "type": "string",
+                    "example": "https://api.customeros.ai/verify/v1/email/bulk/results/550e8400-e29b-41d4-a716-446655440000/download"
+                },
+                "totalEmails": {
+                    "description": "Total number of emails processed\nrequired: true\nminimum: 0",
+                    "type": "integer",
+                    "example": 1000
+                },
+                "undeliverable": {
+                    "description": "Number of undeliverable emails\nrequired: true\nminimum: 0",
+                    "type": "integer",
+                    "example": 45
+                }
+            }
+        },
+        "restverify.BulkResultsResponse": {
+            "description": "Response containing bulk verification results or status",
+            "type": "object",
+            "properties": {
+                "estimatedCompletionTs": {
+                    "description": "Estimated completion timestamp\nrequired: true",
+                    "type": "integer",
+                    "example": 1694030400
+                },
+                "fileName": {
+                    "description": "Original filename\nrequired: true",
+                    "type": "string",
+                    "example": "emails.csv"
+                },
+                "jobId": {
+                    "description": "Unique job identifier\nrequired: true\nformat: uuid",
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                },
+                "message": {
+                    "description": "Progress message\nrequired: true",
+                    "type": "string",
+                    "example": "Completed 1000 of 1000 emails"
+                },
+                "results": {
+                    "description": "Verification results if completed\nrequired: false",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/restverify.BulkResultsDetails"
+                        }
+                    ]
+                },
+                "status": {
+                    "description": "Processing status\nrequired: true\nenum: processing,completed",
+                    "type": "string",
+                    "example": "completed"
+                }
+            }
+        },
+        "restverify.BulkUploadResponse": {
+            "description": "Response after initiating bulk email verification",
+            "type": "object",
+            "properties": {
+                "estimatedCompletionTs": {
+                    "description": "Estimated completion timestamp\nrequired: true",
+                    "type": "number",
+                    "example": 1694030400
+                },
+                "jobId": {
+                    "description": "Unique job identifier\nrequired: true\nformat: uuid",
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                },
+                "message": {
+                    "description": "Status message\nrequired: true",
+                    "type": "string",
+                    "example": "File uploaded successfully"
+                },
+                "resultUrl": {
+                    "description": "URL to check verification results\nrequired: true\nformat: uri",
+                    "type": "string",
+                    "example": "https://api.customeros.ai/verify/v1/email/bulk/results/550e8400-e29b-41d4-a716-446655440000"
+                }
+            }
+        },
+        "restverify.EmailVerificationRecord": {
+            "description": "Detailed validation results for an email address",
+            "type": "object",
+            "properties": {
+                "alternateEmail": {
+                    "description": "Alternative email address if available\nrequired: false\nformat: email",
+                    "type": "string",
+                    "example": "alternate@example.com"
+                },
+                "deliverable": {
+                    "description": "Deliverability status\nrequired: true\nenum: true,false,unknown",
+                    "type": "string",
+                    "example": "true"
+                },
+                "emailAddress": {
+                    "description": "Email address that was verified\nrequired: true\nformat: email",
+                    "type": "string",
+                    "example": "example@example.com"
+                },
+                "isCatchAll": {
+                    "description": "Indicates if domain is catch-all\nrequired: true",
+                    "type": "boolean",
+                    "example": false
+                },
+                "isRisky": {
+                    "description": "Indicates if email is considered risky\nrequired: true",
+                    "type": "boolean",
+                    "example": false
+                },
+                "provider": {
+                    "description": "Email service provider\nrequired: false",
+                    "type": "string",
+                    "example": "gmail"
+                },
+                "risk": {
+                    "description": "Risk assessment details\nrequired: true",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/restverify.EmailVerificationRisk"
+                        }
+                    ]
+                },
+                "secureGatewayProvider": {
+                    "description": "Security gateway provider\nrequired: false",
+                    "type": "string",
+                    "example": "Proofpoint"
+                },
+                "syntax": {
+                    "description": "Syntax validation details\nrequired: true",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/restverify.EmailVerificationSyntax"
+                        }
+                    ]
+                }
+            }
+        },
+        "restverify.EmailVerificationResponse": {
+            "description": "Response for single email verification including detailed validation results",
+            "type": "object",
+            "properties": {
+                "email": {
+                    "description": "Email verification details\nrequired: true",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/restverify.EmailVerificationRecord"
+                        }
+                    ]
+                },
+                "requestId": {
+                    "type": "string",
+                    "example": "1234567890abcdef"
+                },
+                "status": {
+                    "description": "Status indicates the result of the operation (\"success\" or \"error\")",
+                    "type": "string",
+                    "example": "success"
+                }
+            }
+        },
+        "restverify.EmailVerificationRisk": {
+            "description": "Risk factors associated with the email address",
+            "type": "object",
+            "properties": {
+                "isFirewalled": {
+                    "description": "Indicates if email is behind a firewall\nrequired: true",
+                    "type": "boolean",
+                    "example": false
+                },
+                "isFreeProvider": {
+                    "description": "Indicates if email uses a free provider\nrequired: true",
+                    "type": "boolean",
+                    "example": true
+                },
+                "isMailboxFull": {
+                    "description": "Indicates if mailbox is full\nrequired: true",
+                    "type": "boolean",
+                    "example": false
+                },
+                "isPrimaryDomain": {
+                    "description": "Indicates if domain is primary\nrequired: true",
+                    "type": "boolean",
+                    "example": true
+                },
+                "isRoleMailbox": {
+                    "description": "Indicates if email is a role account\nrequired: true",
+                    "type": "boolean",
+                    "example": false
+                },
+                "isSystemGenerated": {
+                    "description": "Indicates if email is system-generated\nrequired: true",
+                    "type": "boolean",
+                    "example": false
+                }
+            }
+        },
+        "restverify.EmailVerificationSyntax": {
+            "description": "Email syntax validation details",
+            "type": "object",
+            "properties": {
+                "domain": {
+                    "description": "Domain part of email\nrequired: true",
+                    "type": "string",
+                    "example": "example.com"
+                },
+                "isValid": {
+                    "description": "Indicates if email syntax is valid\nrequired: true",
+                    "type": "boolean",
+                    "example": true
+                },
+                "user": {
+                    "description": "Local part of email\nrequired: true",
+                    "type": "string",
+                    "example": "example"
+                }
+            }
+        },
+        "restverify.IpIntelligenceGeolocation": {
+            "description": "Geographic location information for the IP address",
+            "type": "object",
+            "properties": {
+                "city": {
+                    "description": "City name\nrequired: false",
+                    "type": "string",
+                    "example": "Berlin"
+                },
+                "country": {
+                    "description": "Country name\nrequired: true",
+                    "type": "string",
+                    "example": "Germany"
+                },
+                "countryIso": {
+                    "description": "ISO 3166-1 alpha-2 country code\nrequired: true\npattern: ^[A-Z]{2}$",
+                    "type": "string",
+                    "example": "DE"
+                },
+                "isEuropeanUnion": {
+                    "description": "Indicates if country is in the European Union\nrequired: true",
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "restverify.IpIntelligenceNetwork": {
+            "description": "Network information for the IP address",
+            "type": "object",
+            "properties": {
+                "asn": {
+                    "description": "Autonomous System Number\nrequired: true\npattern: ^AS\\d+$",
+                    "type": "string",
+                    "example": "AS12345"
+                },
+                "domain": {
+                    "description": "Network domain\nrequired: false",
+                    "type": "string",
+                    "example": "isp.com"
+                },
+                "name": {
+                    "description": "Network name\nrequired: true",
+                    "type": "string",
+                    "example": "ISP Name"
+                },
+                "route": {
+                    "description": "Network route (CIDR notation)\nrequired: true\npattern: ^(\\d{1,3}\\.){3}\\d{1,3}/\\d{1,2}$",
+                    "type": "string",
+                    "example": "192.168.0.0/16"
+                },
+                "type": {
+                    "description": "Network type\nrequired: true\nenum: business,hosting,isp,education,government",
+                    "type": "string",
+                    "example": "business"
+                }
+            }
+        },
+        "restverify.IpIntelligenceOrganization": {
+            "description": "Organization information associated with the IP address",
+            "type": "object",
+            "properties": {
+                "domain": {
+                    "description": "Organization domain\nrequired: false",
+                    "type": "string",
+                    "example": "company.com"
+                },
+                "linkedin": {
+                    "description": "LinkedIn profile URL\nrequired: false\nformat: uri",
+                    "type": "string",
+                    "example": "https://linkedin.com/company/company"
+                },
+                "name": {
+                    "description": "Organization name\nrequired: false",
+                    "type": "string",
+                    "example": "Company Name"
+                }
+            }
+        },
+        "restverify.IpIntelligenceRecord": {
+            "description": "Comprehensive information about an IP address",
+            "type": "object",
+            "properties": {
+                "geolocation": {
+                    "description": "Geolocation information\nrequired: true",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/restverify.IpIntelligenceGeolocation"
+                        }
+                    ]
+                },
+                "ipAddress": {
+                    "description": "IP address being analyzed\nrequired: true\npattern: ^(?:[0-9]{1,3}\\.){3}[0-9]{1,3}$",
+                    "type": "string",
+                    "example": "192.168.1.1"
+                },
+                "network": {
+                    "description": "Network information\nrequired: true",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/restverify.IpIntelligenceNetwork"
+                        }
+                    ]
+                },
+                "organization": {
+                    "description": "Organization information\nrequired: false",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/restverify.IpIntelligenceOrganization"
+                        }
+                    ]
+                },
+                "threats": {
+                    "description": "Threat intelligence information\nrequired: true",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/restverify.IpIntelligenceThreats"
+                        }
+                    ]
+                },
+                "time_zone": {
+                    "description": "Timezone information\nrequired: true",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/restverify.IpIntelligenceTimeZone"
+                        }
+                    ]
+                }
+            }
+        },
+        "restverify.IpIntelligenceResponse": {
+            "description": "Response containing IP intelligence data including threats, geolocation, and network information",
+            "type": "object",
+            "properties": {
+                "ip": {
+                    "description": "IP intelligence details\nrequired: true",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/restverify.IpIntelligenceRecord"
+                        }
+                    ]
+                },
+                "requestId": {
+                    "type": "string",
+                    "example": "1234567890abcdef"
+                },
+                "status": {
+                    "description": "Status indicates the result of the operation (\"success\" or \"error\")",
+                    "type": "string",
+                    "example": "success"
+                }
+            }
+        },
+        "restverify.IpIntelligenceThreats": {
+            "description": "Threat intelligence indicators for the IP address",
+            "type": "object",
+            "properties": {
+                "isCloudRelay": {
+                    "description": "Indicates if IP is a cloud relay\nrequired: true",
+                    "type": "boolean",
+                    "example": false
+                },
+                "isDatacenter": {
+                    "description": "Indicates if IP belongs to a datacenter\nrequired: true",
+                    "type": "boolean",
+                    "example": false
+                },
+                "isMobile": {
+                    "description": "Indicates if IP belongs to a mobile network\nrequired: true",
+                    "type": "boolean",
+                    "example": false
+                },
+                "isProxy": {
+                    "description": "Indicates if IP is a proxy\nrequired: true",
+                    "type": "boolean",
+                    "example": false
+                },
+                "isTor": {
+                    "description": "Indicates if IP is a TOR exit node\nrequired: true",
+                    "type": "boolean",
+                    "example": false
+                },
+                "isUnallocated": {
+                    "description": "Indicates if IP is unallocated\nrequired: true",
+                    "type": "boolean",
+                    "example": false
+                },
+                "isVpn": {
+                    "description": "Indicates if IP is a VPN\nrequired: true",
+                    "type": "boolean",
+                    "example": false
+                }
+            }
+        },
+        "restverify.IpIntelligenceTimeZone": {
+            "description": "Timezone information for the IP address location",
+            "type": "object",
+            "properties": {
+                "abbr": {
+                    "description": "Timezone abbreviation\nrequired: true\nexample: CET",
+                    "type": "string"
+                },
+                "current_time": {
+                    "description": "Current time in the timezone\nrequired: true\nformat: date-time",
+                    "type": "string",
+                    "example": "2024-09-10T14:00:00+01:00"
+                },
+                "is_dst": {
+                    "description": "Indicates if daylight saving time is active\nrequired: true",
+                    "type": "boolean",
+                    "example": true
+                },
+                "name": {
+                    "description": "IANA timezone name\nrequired: true\nexample: Europe/Berlin",
+                    "type": "string"
+                },
+                "offset": {
+                    "description": "UTC offset\nrequired: true\npattern: ^[+-]\\d{4}$",
+                    "type": "string",
+                    "example": "+0100"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "ApiKeyAuth": {
+            "type": "apiKey",
+            "name": "X-CUSTOMER-OS-API-KEY",
+            "in": "header"
+        }
+    }
+}
