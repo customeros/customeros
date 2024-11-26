@@ -16,12 +16,15 @@ type GrainRecording struct {
 	ICalUID             string             `json:"ical_uid"`
 	ID                  string             `json:"id"`
 	IntelligenceNotesMD string             `json:"intelligence_notes_md"`
-	Owners              []string           `json:"owners"`
-	Participants        []GrainParticipant `json:"participants"`
+	OwnersStr           string             `json:"owners"`
+	Owners              []string           `json:"ownersArr"`
+	ParticipantsStr     string             `json:"participants"`
+	Participants        []GrainParticipant `json:"participantsArray"`
 	PublicThumbnailURL  string             `json:"public_thumbnail_url"`
 	PublicURL           string             `json:"public_url"`
 	StartDatetime       time.Time          `json:"start_datetime"`
-	Tags                []string           `json:"tags"`
+	TagsStr             string             `json:"tags"`
+	Tags                []string           `json:"tagsArray"`
 	Title               string             `json:"title"`
 	URL                 string             `json:"url"`
 }
