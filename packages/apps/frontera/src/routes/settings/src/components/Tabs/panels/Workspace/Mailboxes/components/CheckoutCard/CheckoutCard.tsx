@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useLocalStorage } from 'usehooks-ts';
 
 import { Button } from '@ui/form/Button/Button';
+import { DotSingle } from '@ui/media/icons/DotSingle';
 import { CheckCircle } from '@ui/media/icons/CheckCircle';
 import { ChevronRight } from '@ui/media/icons/ChevronRight';
 import { Card, CardFooter, CardContent } from '@ui/presentation/Card/Card';
@@ -12,10 +13,14 @@ const formatNumberWithComma = (num: number): string => {
 };
 
 interface CheckoutCardProps {
+  unvalidDomains: string[];
   onCheckoutClick: (isCheckedOut: boolean) => void;
 }
 
-export const CheckoutCard = ({ onCheckoutClick }: CheckoutCardProps) => {
+export const CheckoutCard = ({
+  onCheckoutClick,
+  unvalidDomains,
+}: CheckoutCardProps) => {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [storedBrandName, _setStoredBrandName] = useLocalStorage<string[]>(
@@ -23,7 +28,7 @@ export const CheckoutCard = ({ onCheckoutClick }: CheckoutCardProps) => {
     [],
   );
 
-  const [storeUserName, _setStoreUserName] = useLocalStorage<string[]>(
+  const [storedUserName, _setStoredUserName] = useLocalStorage<string[]>(
     'userName',
     [],
   );
@@ -33,10 +38,10 @@ export const CheckoutCard = ({ onCheckoutClick }: CheckoutCardProps) => {
     [],
   );
 
-  const handlePaymentView = () => {
+  const handlePaymentView = async () => {
     onCheckoutClick(true);
 
-    if (storeUserName.length > 1) {
+    if (storedUserName.length >= 1 && unvalidDomains?.length === 0) {
       const params = new URLSearchParams(searchParams.toString() ?? '');
 
       params.set('checkout', 'mailboxes');
@@ -46,7 +51,7 @@ export const CheckoutCard = ({ onCheckoutClick }: CheckoutCardProps) => {
 
   const noOfMailboxes =
     storedBrandName.length +
-    selectedAdditionalDomains.length * storeUserName.length;
+    selectedAdditionalDomains.length * storedUserName.length;
 
   const noOfEmails = formatNumberWithComma(noOfMailboxes * 1200);
 
@@ -67,7 +72,16 @@ export const CheckoutCard = ({ onCheckoutClick }: CheckoutCardProps) => {
             </p>
           </div>
         </CardContent>
-        <CardFooter className='p-0 mt-3 items-center justify-center'>
+        <CardFooter className='flex flex-col p-0 mt-3 items-center justify-center'>
+          {unvalidDomains.length > 0 && (
+            <div className='mb-2 bg-error-50 w-full flex items-center gap-2 rounded-lg py-1 px-2'>
+              <DotSingle className='text-error-500 size-6' />
+              <span className='text-error-700 text-sm'>
+                1 of your domains are unavailable
+              </span>
+            </div>
+          )}
+
           <Button
             className='w-full'
             colorScheme='primary'

@@ -7,6 +7,7 @@ import { RegisteredBuyDomainWithMailboxes } from '@shared/types/__generated__/gr
 
 import { MailboxStore } from './Mailbox.store';
 import { MailboxesService } from './__service__/Mailboxes/Mailboxes.service';
+import { CheckUnavailableDomainsQueryVariables } from './__service__/Mailboxes/getMailstackCheckUnavailableDomains.generated';
 
 export class MailboxesStore extends SyncableGroup<
   RegisteredBuyDomainWithMailboxes,
@@ -65,6 +66,26 @@ export class MailboxesStore extends SyncableGroup<
       });
 
       return reponse.mailstack_DomainPurchaseSuggestions;
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error).message;
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+      });
+    }
+  }
+
+  async getMailstackCheckUnvalidDomains(
+    payload: CheckUnavailableDomainsQueryVariables,
+  ) {
+    try {
+      const reponse = await this.service.getMailstackCheckUnavailableDomains({
+        domains: payload.domains,
+      });
+
+      return reponse.mailstack_CheckUnavailableDomains;
     } catch (err) {
       runInAction(() => {
         this.error = (err as Error).message;

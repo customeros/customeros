@@ -9,7 +9,13 @@ import { ChevronExpand } from '@ui/media/icons/ChevronExpand';
 import { ChevronCollapse } from '@ui/media/icons/ChevronCollapse';
 import { Card, CardHeader, CardContent } from '@ui/presentation/Card/Card';
 
-export const AdditionalDomainsCard = () => {
+interface AdditionalDomainsCardProps {
+  unvalidDomains: string[];
+}
+
+export const AdditionalDomainsCard = ({
+  unvalidDomains,
+}: AdditionalDomainsCardProps) => {
   const [expanded, setExpanded] = useState(false);
 
   const [selectedAdditionalDomains, setSelectedAdditionalDomains] =
@@ -38,25 +44,32 @@ export const AdditionalDomainsCard = () => {
       </CardHeader>
 
       <CardContent className='p-0'>
-        {selectedAdditionalDomains.map((domain, index) => (
-          <div
-            key={`${domain}-${index}`}
-            className='flex items-center justify-between mt-1 bg-gray-100 rounded-[4px] py-1 px-2'
-          >
-            <span className='text-sm'>{domain}</span>
-            <IconButton
-              size='xxs'
-              variant='ghost'
-              icon={<MinusCircle />}
-              aria-label='remove-domain'
-              onClick={() => {
-                setSelectedAdditionalDomains((prev) => {
-                  return prev.filter((item) => item !== domain);
-                });
-              }}
-            />
-          </div>
-        ))}
+        {selectedAdditionalDomains.map((domain, index) => {
+          const isInvalid = unvalidDomains.includes(domain);
+
+          return (
+            <div
+              key={`${domain}-${index}`}
+              className={cn(
+                'flex items-center justify-between mt-1 rounded-[4px] py-1 px-2',
+                isInvalid ? 'bg-error-50' : 'bg-gray-100',
+              )}
+            >
+              <span className='text-sm'>{domain}</span>
+              <IconButton
+                size='xxs'
+                variant='ghost'
+                icon={<MinusCircle />}
+                aria-label='remove-domain'
+                onClick={() => {
+                  setSelectedAdditionalDomains((prev) => {
+                    return prev.filter((item) => item !== domain);
+                  });
+                }}
+              />
+            </div>
+          );
+        })}
         {selectedAdditionalDomains.length === 0 && (
           <p className='text-sm'> Add more domains at $18.99 each(53% off)</p>
         )}

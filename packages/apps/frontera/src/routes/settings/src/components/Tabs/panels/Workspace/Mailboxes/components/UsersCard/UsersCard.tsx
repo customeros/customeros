@@ -38,14 +38,14 @@ export const UsersCard = ({ checkout }: UsersCardProps) => {
           </span>
         </CardHeader>
 
-        <CardContent className='flex flex-col p-0 '>
+        <CardContent className='flex flex-col p-0'>
           <Input
             size='sm'
             variant='outline'
-            className='w-full'
             value={userName[0]}
             placeholder='E.g. john'
-            required={checkout && user1.length === 0}
+            className='w-full mb-[17px]'
+            required={checkout && userName.length === 0}
             onChange={(e) => {
               setUser1(e.target.value.trim());
             }}
@@ -58,7 +58,7 @@ export const UsersCard = ({ checkout }: UsersCardProps) => {
               }
             }}
           />
-          {checkout && user1?.length === 0 && (
+          {checkout && userName.length === 0 && (
             <span className='text-[12px] ml-[9px] text-error-400'>
               Houston, we have a blank...
             </span>
@@ -69,7 +69,7 @@ export const UsersCard = ({ checkout }: UsersCardProps) => {
             value={userName[1]}
             placeholder='E.g. melinda'
             className='w-full mt-[2px]'
-            required={checkout && user2.length === 0 && user1.length === 0}
+            required={checkout && userName.length === 0}
             onChange={(e) => {
               setUser2(e.target.value.trim());
             }}

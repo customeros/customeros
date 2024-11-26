@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
-import { useLocalStorage } from 'usehooks-ts'; // Import useSearchParams if applicable
+import { observer } from 'mobx-react-lite';
+import { useLocalStorage } from 'usehooks-ts';
 
+import { useStore } from '@shared/hooks/useStore';
 import { ChevronRight } from '@ui/media/icons/ChevronRight';
 
 import { CheckoutPage } from './components/CheckoutPage';
@@ -13,11 +15,19 @@ import { BaseBoundleCard } from './components/BaseBoundleCard';
 import { CheckoutCard } from './components/CheckoutCard/CheckoutCard';
 import { AdditionalDomainsCard } from './components/AdditionalDomainsCard';
 
-export const Mailboxes = () => {
+export const Mailboxes = observer(() => {
+  const store = useStore();
   const [isUpdated, setIsUpdated] = useState<boolean>(true);
+  const [unvailbleDomains, setUnavailbleDomains] = useState<string[]>([]);
   const [checkout, setCheckout] = useState<boolean>(false);
   const [storedBrandName] = useLocalStorage<string[]>('brandName', []);
+  const [selectedAdditionalDomains] = useLocalStorage<string[]>(
+    'selectedAdditionalDomains',
+    [],
+  );
   const [searchParams] = useSearchParams();
+
+  const mailboxesStore = store.mailboxes;
 
   const handleUpdate = () => {
     setIsUpdated(true);
@@ -29,6 +39,20 @@ export const Mailboxes = () => {
   if (!isUpdated) {
     return <EmptyMailboxes onUpdate={handleUpdate} />;
   }
+
+  useEffect(() => {
+    const checkUnvalidDomains = async () => {
+      if (checkout) {
+        const response = await mailboxesStore.getMailstackCheckUnvalidDomains({
+          domains: storedBrandName.concat(selectedAdditionalDomains),
+        });
+
+        setUnavailbleDomains(response || []);
+      }
+    };
+
+    checkUnvalidDomains();
+  }, [checkout, mailboxesStore, storedBrandName, selectedAdditionalDomains]);
 
   return (
     <div className='overflow-y-auto h-full'>
@@ -50,10 +74,15 @@ export const Mailboxes = () => {
               <div className='py-[10px] px-6 flex flex-col h-full border-r-[1px]'>
                 <p className='mb-4 font-semibold'>Checkout</p>
                 <div className='flex flex-col gap-2'>
-                  <BaseBoundleCard />
-                  {noOfDomains === 5 && <AdditionalDomainsCard />}
+                  <BaseBoundleCard unvalidDomains={unvailbleDomains} />
+                  {noOfDomains === 5 && (
+                    <AdditionalDomainsCard unvalidDomains={unvailbleDomains} />
+                  )}
                   {noOfDomains > 0 && (
-                    <CheckoutCard onCheckoutClick={() => setCheckout(true)} />
+                    <CheckoutCard
+                      unvalidDomains={unvailbleDomains}
+                      onCheckoutClick={() => setCheckout(true)}
+                    />
                   )}
                 </div>
               </div>
@@ -65,4 +94,4 @@ export const Mailboxes = () => {
       </div>
     </div>
   );
-};
+});
