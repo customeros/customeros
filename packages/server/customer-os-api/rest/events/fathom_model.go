@@ -15,22 +15,12 @@ type FathomZapierPayload struct {
 
 // AISummary represents the AI summary section
 type AISummary struct {
-	HTMLFormatted      string    `json:"html_formatted"`
-	MarkdownFormatted  string    `json:"markdown_formatted"`
-	PlaintextFormatted string    `json:"plaintext_formatted"`
-	Sections           []Section `json:"sections"`
-	SlackFormatted     string    `json:"slack_formatted"`
-	TemplateName       string    `json:"template_name"`
-}
-
-// Section represents each section in the AI summary
-type Section struct {
-	Depth              int    `json:"depth"`
-	Title              string `json:"title"`
 	HTMLFormatted      string `json:"html_formatted"`
 	MarkdownFormatted  string `json:"markdown_formatted"`
 	PlaintextFormatted string `json:"plaintext_formatted"`
+	Sections           string `json:"sections"`
 	SlackFormatted     string `json:"slack_formatted"`
+	TemplateName       string `json:"template_name"`
 }
 
 // FathomUser represents the user information
@@ -41,11 +31,13 @@ type FathomUser struct {
 
 // Meeting represents the meeting information
 type Meeting struct {
-	ExternalDomains          []ExternalDomain `json:"external_domains"`
-	HasExternalInvitees      bool             `json:"has_external_invitees"`
-	Invitees                 []Invitee        `json:"invitees"`
+	ExternalDomainsStr       string           `json:"external_domains"`
+	ExternalDomains          []ExternalDomain `json:"external_domains_array"`
+	HasExternalInvitees      string           `json:"has_external_invitees"`
+	InviteesStr              string           `json:"invitees"`
+	Invitees                 []Invitee        `json:"invitees_array"`
 	JoinURL                  string           `json:"join_url"`
-	ScheduledDurationMinutes int              `json:"scheduled_duration_in_minutes"`
+	ScheduledDurationMinutes string           `json:"scheduled_duration_in_minutes"`
 	ScheduledEndTime         time.Time        `json:"scheduled_end_time"`
 	ScheduledStartTime       time.Time        `json:"scheduled_start_time"`
 	Title                    string           `json:"title"`
