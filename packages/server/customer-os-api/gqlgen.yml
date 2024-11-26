@@ -74,6 +74,9 @@ models:
   SortingDirection:
     model:
       - github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model.SortingDirection
+  ComparisonOperator:
+    model:
+      - github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model.ComparisonOperator
   FlowStatus:
     model:
       - github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity.FlowStatus

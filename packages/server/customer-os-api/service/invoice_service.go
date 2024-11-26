@@ -75,7 +75,7 @@ func (s *invoiceService) CountInvoices(ctx context.Context, tenant, organization
 	invoiceFilter.Filters = make([]*utils.CypherFilter, 0)
 
 	if organizationId != "" {
-		organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateStringCypherFilter("id", organizationId, utils.EQUALS))
+		organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateStringCypherFilter("id", organizationId, model2.ComparisonOperatorEq))
 		organizationFilterCypher, organizationFilterParams = organizationFilter.BuildCypherFilterFragmentWithParamName("o", "o_param_")
 	}
 
@@ -195,7 +195,7 @@ func (s *invoiceService) GetInvoices(ctx context.Context, organizationId string,
 	invoiceFilter.Filters = make([]*utils.CypherFilter, 0)
 
 	if organizationId != "" {
-		organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateStringCypherFilter("id", organizationId, utils.EQUALS))
+		organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateStringCypherFilter("id", organizationId, model2.ComparisonOperatorEq))
 		organizationFilterCypher, organizationFilterParams = organizationFilter.BuildCypherFilterFragmentWithParamName("o", "o_param_")
 	}
 
@@ -203,7 +203,7 @@ func (s *invoiceService) GetInvoices(ctx context.Context, organizationId string,
 
 		for _, f := range where.And {
 			if f.Filter.Property == SortContractName {
-				contractFilter.Filters = append(contractFilter.Filters, utils.CreateStringCypherFilter("name", *f.Filter.Value.Str, utils.CONTAINS))
+				contractFilter.Filters = append(contractFilter.Filters, utils.CreateStringCypherFilter("name", *f.Filter.Value.Str, model2.ComparisonOperatorContains))
 			}
 			if f.Filter.Property == SearchSortContractBillingCycle {
 				arrayInt := []int64{}
@@ -247,8 +247,8 @@ func (s *invoiceService) GetInvoices(ctx context.Context, organizationId string,
 			}
 			if f.Filter.Property == SearchInvoiceIssueDate && f.Filter.Value.ArrayTime != nil && len(*f.Filter.Value.ArrayTime) == 2 {
 				times := *f.Filter.Value.ArrayTime
-				invoiceFilter.Filters = append(invoiceFilter.Filters, utils.CreateCypherFilter("issuedDate", times[0], utils.GTE))
-				invoiceFilter.Filters = append(invoiceFilter.Filters, utils.CreateCypherFilter("issuedDate", times[1], utils.LTE))
+				invoiceFilter.Filters = append(invoiceFilter.Filters, utils.CreateCypherFilter("issuedDate", times[0], model2.ComparisonOperatorGte))
+				invoiceFilter.Filters = append(invoiceFilter.Filters, utils.CreateCypherFilter("issuedDate", times[1], model2.ComparisonOperatorLte))
 			}
 		}
 

@@ -240,7 +240,7 @@ func (r *queryResolver) UIOrganizationsSearch(ctx context.Context, limit *int, w
 		defer wg.Done()
 		tracing.SetDefaultResolverSpanTags(ctx, span)
 
-		organizationSearchResponse, err := r.Services.Repositories.DashboardRepository.GetDashboardViewOrganizationDataV2(ctx, tenant, *limit, where, sort)
+		organizationSearchResponse, err := r.Services.Repositories.DashboardV2Repository.GetDashboardViewOrganizationDataV2(ctx, tenant, *limit, where, sort)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			setError(err)

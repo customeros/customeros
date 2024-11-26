@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	entity1 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 )
@@ -1065,11 +1066,11 @@ type Filter struct {
 }
 
 type FilterItem struct {
-	Property      string             `json:"property"`
-	Operation     ComparisonOperator `json:"operation"`
-	Value         AnyTypeValue       `json:"value"`
-	CaseSensitive *bool              `json:"caseSensitive,omitempty"`
-	IncludeEmpty  *bool              `json:"includeEmpty,omitempty"`
+	Property      string                   `json:"property"`
+	Operation     model.ComparisonOperator `json:"operation"`
+	Value         AnyTypeValue             `json:"value"`
+	CaseSensitive *bool                    `json:"caseSensitive,omitempty"`
+	IncludeEmpty  *bool                    `json:"includeEmpty,omitempty"`
 }
 
 type Flow struct {
@@ -3379,74 +3380,6 @@ func (e *ColumnViewType) UnmarshalGQL(v interface{}) error {
 }
 
 func (e ColumnViewType) MarshalGQL(w io.Writer) {
-	fmt.Fprint(w, strconv.Quote(e.String()))
-}
-
-type ComparisonOperator string
-
-const (
-	ComparisonOperatorEq          ComparisonOperator = "EQ"
-	ComparisonOperatorContains    ComparisonOperator = "CONTAINS"
-	ComparisonOperatorStartsWith  ComparisonOperator = "STARTS_WITH"
-	ComparisonOperatorLte         ComparisonOperator = "LTE"
-	ComparisonOperatorGte         ComparisonOperator = "GTE"
-	ComparisonOperatorIn          ComparisonOperator = "IN"
-	ComparisonOperatorBetween     ComparisonOperator = "BETWEEN"
-	ComparisonOperatorIsNull      ComparisonOperator = "IS_NULL"
-	ComparisonOperatorIsEmpty     ComparisonOperator = "IS_EMPTY"
-	ComparisonOperatorLt          ComparisonOperator = "LT"
-	ComparisonOperatorGt          ComparisonOperator = "GT"
-	ComparisonOperatorIsNoneOf    ComparisonOperator = "IS_NONE_OF"
-	ComparisonOperatorIsNotEmpty  ComparisonOperator = "IS_NOT_EMPTY"
-	ComparisonOperatorNotContains ComparisonOperator = "NOT_CONTAINS"
-	// Not supported yet
-	ComparisonOperatorNotEqual ComparisonOperator = "NOT_EQUAL"
-)
-
-var AllComparisonOperator = []ComparisonOperator{
-	ComparisonOperatorEq,
-	ComparisonOperatorContains,
-	ComparisonOperatorStartsWith,
-	ComparisonOperatorLte,
-	ComparisonOperatorGte,
-	ComparisonOperatorIn,
-	ComparisonOperatorBetween,
-	ComparisonOperatorIsNull,
-	ComparisonOperatorIsEmpty,
-	ComparisonOperatorLt,
-	ComparisonOperatorGt,
-	ComparisonOperatorIsNoneOf,
-	ComparisonOperatorIsNotEmpty,
-	ComparisonOperatorNotContains,
-	ComparisonOperatorNotEqual,
-}
-
-func (e ComparisonOperator) IsValid() bool {
-	switch e {
-	case ComparisonOperatorEq, ComparisonOperatorContains, ComparisonOperatorStartsWith, ComparisonOperatorLte, ComparisonOperatorGte, ComparisonOperatorIn, ComparisonOperatorBetween, ComparisonOperatorIsNull, ComparisonOperatorIsEmpty, ComparisonOperatorLt, ComparisonOperatorGt, ComparisonOperatorIsNoneOf, ComparisonOperatorIsNotEmpty, ComparisonOperatorNotContains, ComparisonOperatorNotEqual:
-		return true
-	}
-	return false
-}
-
-func (e ComparisonOperator) String() string {
-	return string(e)
-}
-
-func (e *ComparisonOperator) UnmarshalGQL(v interface{}) error {
-	str, ok := v.(string)
-	if !ok {
-		return fmt.Errorf("enums must be strings")
-	}
-
-	*e = ComparisonOperator(str)
-	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid ComparisonOperator", str)
-	}
-	return nil
-}
-
-func (e ComparisonOperator) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 

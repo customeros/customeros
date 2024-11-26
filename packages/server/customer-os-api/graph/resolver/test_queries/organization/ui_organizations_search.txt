@@ -1,0 +1,17 @@
+query UiOrganizationsSearch($limit: Int!, $filterName: String!, $filterValue: Any!, $filterOperation: ComparisonOperator!, $sortByField: String!, $sortByDirection: SortingDirection!) {
+  ui_organizations_search(
+    limit: $limit
+    where: {
+      AND: [
+        {
+          filter: { property: $filterName, value: $filterValue, operation: $filterOperation }
+        }
+      ]
+    }
+    sort: { by: $sortByField, direction: $sortByDirection }
+  ) {
+    ids
+    totalElements
+    totalAvailable
+  }
+}

@@ -112,17 +112,17 @@ func (r *organizationWithFiltersReadRepository) GetFilteredOrganizationIds(ctx c
 				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilterIn(string(neo4jentity.OrganizationPropertyIndustry), *filterPart.Filter.Value.ArrayStr))
 			} else if getOrganizationSearchParam(filterPart.Filter.Property) == organizationSearchParamEmployee {
 				if filterPart.Filter.Operation == model.ComparisonOperatorBetween {
-					organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilter(string(neo4jentity.OrganizationPropertyEmployees), *filterPart.Filter.Value.ArrayInt, utils.BETWEEN))
+					organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilter(string(neo4jentity.OrganizationPropertyEmployees), *filterPart.Filter.Value.ArrayInt, model.ComparisonOperatorBetween))
 				} else {
 					// expecting only LTE / LT / GTE / GT
-					organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilter(string(neo4jentity.OrganizationPropertyEmployees), (*filterPart.Filter.Value.ArrayInt)[0], filterPart.Filter.Operation.GetOperator()))
+					organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilter(string(neo4jentity.OrganizationPropertyEmployees), (*filterPart.Filter.Value.ArrayInt)[0], filterPart.Filter.Operation))
 				}
 			} else if getOrganizationSearchParam(filterPart.Filter.Property) == organizationSearchParamYearFounded {
 				if filterPart.Filter.Operation == model.ComparisonOperatorBetween {
-					organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilter(string(neo4jentity.OrganizationPropertyYearFounded), *filterPart.Filter.Value.ArrayInt, utils.BETWEEN))
+					organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilter(string(neo4jentity.OrganizationPropertyYearFounded), *filterPart.Filter.Value.ArrayInt, model.ComparisonOperatorBetween))
 				} else {
 					// expecting only LTE / LT / GTE / GT
-					organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilter(string(neo4jentity.OrganizationPropertyYearFounded), (*filterPart.Filter.Value.ArrayInt)[0], filterPart.Filter.Operation.GetOperator()))
+					organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilter(string(neo4jentity.OrganizationPropertyYearFounded), (*filterPart.Filter.Value.ArrayInt)[0], filterPart.Filter.Operation))
 				}
 			} else if getOrganizationSearchParam(filterPart.Filter.Property) == organizationSearchParamTags {
 				tagFilter.Filters = append(tagFilter.Filters, utils.CreateCypherFilterIn(string(neo4jentity.TagPropertyId), *filterPart.Filter.Value.ArrayStr))
@@ -131,12 +131,12 @@ func (r *organizationWithFiltersReadRepository) GetFilteredOrganizationIds(ctx c
 			} else if getOrganizationSearchParam(filterPart.Filter.Property) == organizationSearchParamIsPublic {
 				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilterEq(string(neo4jentity.OrganizationPropertyIsPublic), *filterPart.Filter.Value.Bool))
 			} else if getOrganizationSearchParam(filterPart.Filter.Property) == organizationSearchParamLinkedInFollowerCount {
-				socialFilter.Filters = append(socialFilter.Filters, utils.CreateCypherFilter(string(neo4jentity.SocialPropertyUrl), "linkedin.", utils.CONTAINS))
+				socialFilter.Filters = append(socialFilter.Filters, utils.CreateCypherFilter(string(neo4jentity.SocialPropertyUrl), "linkedin.", model.ComparisonOperatorContains))
 				if filterPart.Filter.Operation == model.ComparisonOperatorBetween {
-					socialFilter.Filters = append(socialFilter.Filters, utils.CreateCypherFilter(string(neo4jentity.SocialPropertyFollowersCount), *filterPart.Filter.Value.ArrayInt, utils.BETWEEN))
+					socialFilter.Filters = append(socialFilter.Filters, utils.CreateCypherFilter(string(neo4jentity.SocialPropertyFollowersCount), *filterPart.Filter.Value.ArrayInt, model.ComparisonOperatorBetween))
 				} else {
 					// expecting only LTE / LT / GTE / GT
-					socialFilter.Filters = append(socialFilter.Filters, utils.CreateCypherFilter(string(neo4jentity.SocialPropertyFollowersCount), (*filterPart.Filter.Value.ArrayInt)[0], filterPart.Filter.Operation.GetOperator()))
+					socialFilter.Filters = append(socialFilter.Filters, utils.CreateCypherFilter(string(neo4jentity.SocialPropertyFollowersCount), (*filterPart.Filter.Value.ArrayInt)[0], filterPart.Filter.Operation))
 				}
 			}
 		}
