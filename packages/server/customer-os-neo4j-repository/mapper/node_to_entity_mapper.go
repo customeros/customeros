@@ -782,11 +782,24 @@ func MapDbNodeToLogEntryEntity(node *dbtype.Node) *entity.LogEntryEntity {
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
 		Source:        entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		SourceOfTruth: entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
-		EventStoreAggregate: entity.EventStoreAggregate{
-			AggregateVersion: utils.GetInt64PropOrNil(props, "aggregateVersion"),
-		},
 	}
 	return &logEntry
+}
+
+func MapDbNodeToMarkdownEventEntity(node *dbtype.Node) *entity.MarkdownEventEntity {
+	if node == nil {
+		return &entity.MarkdownEventEntity{}
+	}
+	props := utils.GetPropsFromNode(*node)
+	event := entity.MarkdownEventEntity{
+		Id:        utils.GetStringPropOrEmpty(props, "id"),
+		Content:   utils.GetStringPropOrEmpty(props, "content"),
+		CreatedAt: utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt: utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		AppSource: utils.GetStringPropOrEmpty(props, "appSource"),
+		Source:    entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+	}
+	return &event
 }
 
 func MapDbNodeToMeetingEntity(node *dbtype.Node) *entity.MeetingEntity {

@@ -183,7 +183,7 @@ func (s *contactService) HideContact(ctx context.Context, txWithPostCommit *util
 	tenant := common.GetTenantFromContext(ctx)
 
 	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
-		contactFields := data_fields.ContactFields{Hide: utils.BoolPtr(false)}
+		contactFields := data_fields.ContactFields{Hide: utils.BoolPtr(true)}
 		err = s.services.Neo4jRepositories.ContactWriteRepository.SaveContactInTx(ctx, txWithPostCommit.Tx, tenant, contactId, contactFields, false)
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -220,7 +220,7 @@ func (s *contactService) ShowContact(ctx context.Context, txWithPostCommit *util
 	tenant := common.GetTenantFromContext(ctx)
 
 	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
-		contactFields := data_fields.ContactFields{Hide: utils.BoolPtr(true)}
+		contactFields := data_fields.ContactFields{Hide: utils.BoolPtr(false)}
 		err = s.services.Neo4jRepositories.ContactWriteRepository.SaveContactInTx(ctx, txWithPostCommit.Tx, tenant, contactId, contactFields, false)
 		if err != nil {
 			tracing.TraceErr(span, err)

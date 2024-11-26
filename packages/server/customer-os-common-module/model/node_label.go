@@ -18,6 +18,7 @@ const (
 	NodeLabelInteractionSession        = "InteractionSession"
 	NodeLabelNote                      = "Note"
 	NodeLabelLogEntry                  = "LogEntry"
+	NodeLabelMarkdownEvent             = "MarkdownEvent"
 	NodeLabelOrganization              = "Organization"
 	NodeLabelBillingProfile            = "BillingProfile"
 	NodeLabelAction                    = "Action"

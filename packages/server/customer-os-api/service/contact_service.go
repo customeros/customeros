@@ -31,11 +31,11 @@ type ContactService interface {
 	GetById(ctx context.Context, id string) (*neo4jentity.ContactEntity, error)
 	GetFirstContactByEmail(ctx context.Context, email string) (*neo4jentity.ContactEntity, error)
 	GetFirstContactByPhoneNumber(ctx context.Context, phoneNumber string) (*neo4jentity.ContactEntity, error)
-	FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
+	FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*commonModel.SortBy) (*utils.Pagination, error)
 	PermanentDelete(ctx context.Context, id string) (bool, error)
 	RestoreFromArchive(ctx context.Context, contactId string) (bool, error)
 	GetContactsForJobRoles(ctx context.Context, jobRoleIds []string) (*neo4jentity.ContactEntities, error)
-	GetContactsForOrganization(ctx context.Context, organizationId string, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
+	GetContactsForOrganization(ctx context.Context, organizationId string, page, limit int, filter *model.Filter, sortBy []*commonModel.SortBy) (*utils.Pagination, error)
 	Merge(ctx context.Context, primaryContactId, mergedContactId string) error
 	GetContactsForEmails(ctx context.Context, emailIds []string) (*neo4jentity.ContactEntities, error)
 	GetContactsForPhoneNumbers(ctx context.Context, phoneNumberIds []string) (*neo4jentity.ContactEntities, error)
@@ -234,7 +234,7 @@ func (s *contactService) GetFirstContactByPhoneNumber(ctx context.Context, phone
 	return neo4jmapper.MapDbNodeToContactEntity(dbNodes[0]), nil
 }
 
-func (s *contactService) FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error) {
+func (s *contactService) FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*commonModel.SortBy) (*utils.Pagination, error) {
 	session := utils.NewNeo4jReadSession(ctx, s.getNeo4jDriver())
 	defer session.Close(ctx)
 
@@ -291,7 +291,7 @@ func (s *contactService) GetContactsForJobRoles(ctx context.Context, jobRoleIds 
 	return &contactEntities, nil
 }
 
-func (s *contactService) GetContactsForOrganization(ctx context.Context, organizationId string, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error) {
+func (s *contactService) GetContactsForOrganization(ctx context.Context, organizationId string, page, limit int, filter *model.Filter, sortBy []*commonModel.SortBy) (*utils.Pagination, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.GetContactsForOrganization")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)

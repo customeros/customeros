@@ -18,6 +18,7 @@ const (
 	COMMENT               EntityType = "COMMENT"
 	ISSUE                 EntityType = "ISSUE"
 	LOG_ENTRY             EntityType = "LOG_ENTRY"
+	MARKDOWN_EVENT        EntityType = "MARKDOWN_EVENT"
 	OPPORTUNITY           EntityType = "OPPORTUNITY"
 	SERVICE_LINE_ITEM     EntityType = "SERVICE_LINE_ITEM"
 	REMINDER              EntityType = "REMINDER"
@@ -91,6 +92,8 @@ func (entityType EntityType) Neo4jLabel() string {
 		return NodeLabelCustomFieldTemplate
 	case SOCIAL:
 		return NodeLabelSocial
+	case MARKDOWN_EVENT:
+		return NodeLabelMarkdownEvent
 	}
 	return "Unknown"
 }

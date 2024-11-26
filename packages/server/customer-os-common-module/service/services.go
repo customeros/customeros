@@ -40,6 +40,7 @@ type Services struct {
 	InteractionEventService    InteractionEventService
 	LocationService            LocationService
 	LogEntryService            LogEntryService
+	MarkdownEventService       MarkdownEventService
 	OpportunityService         OpportunityService
 	SlackChannelService        SlackChannelService
 	ServiceLineItemService     ServiceLineItemService
@@ -102,6 +103,7 @@ func InitServices(globalConfig *config.GlobalConfig, db *gorm.DB, driver *neo4j.
 	services.InteractionEventService = NewInteractionEventService(services)
 	services.LocationService = NewLocationService(log, services)
 	services.LogEntryService = NewLogEntryService(log, services)
+	services.MarkdownEventService = NewMarkdownEventService(log, services)
 	services.SocialService = NewSocialService(log, services)
 	services.OpportunityService = NewOpportunityService(log, services)
 	services.SocialService = NewSocialService(log, services)

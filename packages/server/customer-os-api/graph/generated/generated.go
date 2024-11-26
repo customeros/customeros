@@ -219,7 +219,7 @@ type ComplexityRoot struct {
 		Locations                     func(childComplexity int) int
 		Metadata                      func(childComplexity int) int
 		Name                          func(childComplexity int) int
-		Organizations                 func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
+		Organizations                 func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model1.SortBy) int
 		Owner                         func(childComplexity int) int
 		PhoneNumbers                  func(childComplexity int) int
 		Prefix                        func(childComplexity int) int
@@ -916,6 +916,11 @@ type ComplexityRoot struct {
 		Status  func(childComplexity int) int
 	}
 
+	MarkdownEvent struct {
+		Content  func(childComplexity int) int
+		Metadata func(childComplexity int) int
+	}
+
 	Meeting struct {
 		Agenda             func(childComplexity int) int
 		AgendaContentType  func(childComplexity int) int
@@ -1202,7 +1207,7 @@ type ComplexityRoot struct {
 		AccountDetails                func(childComplexity int) int
 		AppSource                     func(childComplexity int) int
 		ContactCount                  func(childComplexity int) int
-		Contacts                      func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
+		Contacts                      func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model1.SortBy) int
 		Contracts                     func(childComplexity int) int
 		CreatedAt                     func(childComplexity int) int
 		CustomFields                  func(childComplexity int) int
@@ -1386,7 +1391,7 @@ type ComplexityRoot struct {
 		Contact                                    func(childComplexity int, id string) int
 		ContactByEmail                             func(childComplexity int, email string) int
 		ContactByPhone                             func(childComplexity int, e164 string) int
-		Contacts                                   func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
+		Contacts                                   func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model1.SortBy) int
 		Contract                                   func(childComplexity int, id string) int
 		Contracts                                  func(childComplexity int, pagination *model.Pagination) int
 		CustomFieldTemplateList                    func(childComplexity int) int
@@ -1399,10 +1404,10 @@ type ComplexityRoot struct {
 		DashboardRetentionRate                     func(childComplexity int, period *model.DashboardPeriodInput) int
 		DashboardRevenueAtRisk                     func(childComplexity int, period *model.DashboardPeriodInput) int
 		DashboardTimeToOnboard                     func(childComplexity int, period *model.DashboardPeriodInput) int
-		DashboardViewOrganizations                 func(childComplexity int, pagination model.Pagination, where *model.Filter, sort *model.SortBy) int
-		DashboardViewRenewals                      func(childComplexity int, pagination model.Pagination, where *model.Filter, sort *model.SortBy) int
+		DashboardViewOrganizations                 func(childComplexity int, pagination model.Pagination, where *model.Filter, sort *model1.SortBy) int
+		DashboardViewRenewals                      func(childComplexity int, pagination model.Pagination, where *model.Filter, sort *model1.SortBy) int
 		Email                                      func(childComplexity int, id string) int
-		ExternalMeetings                           func(childComplexity int, externalSystemID string, externalID *string, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
+		ExternalMeetings                           func(childComplexity int, externalSystemID string, externalID *string, pagination *model.Pagination, where *model.Filter, sort []*model1.SortBy) int
 		ExternalSystemInstances                    func(childComplexity int) int
 		Flow                                       func(childComplexity int, id string) int
 		FlowEmailVariables                         func(childComplexity int) int
@@ -1414,7 +1419,7 @@ type ComplexityRoot struct {
 		InteractionEvent                           func(childComplexity int, id string) int
 		Invoice                                    func(childComplexity int, id string) int
 		InvoiceByNumber                            func(childComplexity int, number string) int
-		Invoices                                   func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy, organizationID *string) int
+		Invoices                                   func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model1.SortBy, organizationID *string) int
 		Issue                                      func(childComplexity int, id string) int
 		LogEntry                                   func(childComplexity int, id string) int
 		MailstackCheckUnavailableDomains           func(childComplexity int, domains []string) int
@@ -1431,7 +1436,7 @@ type ComplexityRoot struct {
 		OrganizationByCustomerOsID                 func(childComplexity int, customerOsID string) int
 		OrganizationCheckWebsite                   func(childComplexity int, website string) int
 		OrganizationDistinctOwners                 func(childComplexity int) int
-		Organizations                              func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
+		Organizations                              func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model1.SortBy) int
 		OrganizationsHiddenAfter                   func(childComplexity int, date time.Time) int
 		PhoneNumber                                func(childComplexity int, id string) int
 		Reminder                                   func(childComplexity int, id string) int
@@ -1448,10 +1453,10 @@ type ComplexityRoot struct {
 		TimelineEvents                             func(childComplexity int, ids []string) int
 		UIOrganization                             func(childComplexity int, ids string) int
 		UIOrganizations                            func(childComplexity int, ids []string) int
-		UIOrganizationsSearch                      func(childComplexity int, limit *int, where *model.Filter, sort *model.SortBy) int
+		UIOrganizationsSearch                      func(childComplexity int, limit *int, where *model.Filter, sort *model1.SortBy) int
 		User                                       func(childComplexity int, id string) int
 		UserByEmail                                func(childComplexity int, email string) int
-		Users                                      func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
+		Users                                      func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model1.SortBy) int
 		WorkflowByType                             func(childComplexity int, workflowType model.WorkflowType) int
 		Workflows                                  func(childComplexity int) int
 	}
@@ -1702,7 +1707,7 @@ type CommentResolver interface {
 type ContactResolver interface {
 	Tags(ctx context.Context, obj *model.Contact) ([]*model.Tag, error)
 	JobRoles(ctx context.Context, obj *model.Contact) ([]*model.JobRole, error)
-	Organizations(ctx context.Context, obj *model.Contact, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.OrganizationPage, error)
+	Organizations(ctx context.Context, obj *model.Contact, pagination *model.Pagination, where *model.Filter, sort []*model1.SortBy) (*model.OrganizationPage, error)
 	LatestOrganizationWithJobRole(ctx context.Context, obj *model.Contact) (*model.OrganizationWithJobRole, error)
 	PhoneNumbers(ctx context.Context, obj *model.Contact) ([]*model.PhoneNumber, error)
 	Emails(ctx context.Context, obj *model.Contact) ([]*model.Email, error)
@@ -2015,7 +2020,7 @@ type OrganizationResolver interface {
 
 	TimelineEvents(ctx context.Context, obj *model.Organization, from *time.Time, size int, timelineEventTypes []model.TimelineEventType) ([]model.TimelineEvent, error)
 
-	Contacts(ctx context.Context, obj *model.Organization, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.ContactsPage, error)
+	Contacts(ctx context.Context, obj *model.Organization, pagination *model.Pagination, where *model.Filter, sort []*model1.SortBy) (*model.ContactsPage, error)
 	JobRoles(ctx context.Context, obj *model.Organization) ([]*model.JobRole, error)
 	Emails(ctx context.Context, obj *model.Organization) ([]*model.Email, error)
 	PhoneNumbers(ctx context.Context, obj *model.Organization) ([]*model.PhoneNumber, error)
@@ -2044,14 +2049,14 @@ type QueryResolver interface {
 	BankAccounts(ctx context.Context) ([]*model.BankAccount, error)
 	GlobalCache(ctx context.Context) (*model.GlobalCache, error)
 	Contact(ctx context.Context, id string) (*model.Contact, error)
-	Contacts(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.ContactsPage, error)
+	Contacts(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model1.SortBy) (*model.ContactsPage, error)
 	ContactByEmail(ctx context.Context, email string) (*model.Contact, error)
 	ContactByPhone(ctx context.Context, e164 string) (*model.Contact, error)
 	Contract(ctx context.Context, id string) (*model.Contract, error)
 	Contracts(ctx context.Context, pagination *model.Pagination) (*model.ContractPage, error)
 	CustomFieldTemplateList(ctx context.Context) ([]*model.CustomFieldTemplate, error)
-	DashboardViewOrganizations(ctx context.Context, pagination model.Pagination, where *model.Filter, sort *model.SortBy) (*model.OrganizationPage, error)
-	DashboardViewRenewals(ctx context.Context, pagination model.Pagination, where *model.Filter, sort *model.SortBy) (*model.RenewalsPage, error)
+	DashboardViewOrganizations(ctx context.Context, pagination model.Pagination, where *model.Filter, sort *model1.SortBy) (*model.OrganizationPage, error)
+	DashboardViewRenewals(ctx context.Context, pagination model.Pagination, where *model.Filter, sort *model1.SortBy) (*model.RenewalsPage, error)
 	DashboardCustomerMap(ctx context.Context) ([]*model.DashboardCustomerMap, error)
 	DashboardMRRPerCustomer(ctx context.Context, period *model.DashboardPeriodInput) (*model.DashboardMRRPerCustomer, error)
 	DashboardGrossRevenueRetention(ctx context.Context, period *model.DashboardPeriodInput) (*model.DashboardGrossRevenueRetention, error)
@@ -2070,7 +2075,7 @@ type QueryResolver interface {
 	FlowTestEmailSender(ctx context.Context) (string, error)
 	InteractionEvent(ctx context.Context, id string) (*model.InteractionEvent, error)
 	Invoice(ctx context.Context, id string) (*model.Invoice, error)
-	Invoices(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy, organizationID *string) (*model.InvoicesPage, error)
+	Invoices(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model1.SortBy, organizationID *string) (*model.InvoicesPage, error)
 	InvoiceByNumber(ctx context.Context, number string) (*model.Invoice, error)
 	Issue(ctx context.Context, id string) (*model.Issue, error)
 	LogEntry(ctx context.Context, id string) (*model.LogEntry, error)
@@ -2081,10 +2086,10 @@ type QueryResolver interface {
 	MailstackMailboxes(ctx context.Context) ([]*model.Mailbox, error)
 	MailstackRegisteredBuyDomainsWithMailboxes(ctx context.Context) ([]*model.MailstackBuyRequest, error)
 	Meeting(ctx context.Context, id string) (*model.Meeting, error)
-	ExternalMeetings(ctx context.Context, externalSystemID string, externalID *string, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.MeetingsPage, error)
+	ExternalMeetings(ctx context.Context, externalSystemID string, externalID *string, pagination *model.Pagination, where *model.Filter, sort []*model1.SortBy) (*model.MeetingsPage, error)
 	Opportunity(ctx context.Context, id string) (*model.Opportunity, error)
 	OpportunitiesLinkedToOrganizations(ctx context.Context, pagination *model.Pagination) (*model.OpportunityPage, error)
-	Organizations(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.OrganizationPage, error)
+	Organizations(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model1.SortBy) (*model.OrganizationPage, error)
 	Organization(ctx context.Context, id string) (*model.Organization, error)
 	OrganizationByCustomerOsID(ctx context.Context, customerOsID string) (*model.Organization, error)
 	OrganizationByCustomID(ctx context.Context, customID string) (*model.Organization, error)
@@ -2093,7 +2098,7 @@ type QueryResolver interface {
 	OrganizationsHiddenAfter(ctx context.Context, date time.Time) ([]string, error)
 	UIOrganization(ctx context.Context, ids string) (*model.OrganizationUIDetails, error)
 	UIOrganizations(ctx context.Context, ids []string) ([]*model.OrganizationUIDetails, error)
-	UIOrganizationsSearch(ctx context.Context, limit *int, where *model.Filter, sort *model.SortBy) (*model.OrganizationSearchResult, error)
+	UIOrganizationsSearch(ctx context.Context, limit *int, where *model.Filter, sort *model1.SortBy) (*model.OrganizationSearchResult, error)
 	PhoneNumber(ctx context.Context, id string) (*model.PhoneNumber, error)
 	Reminder(ctx context.Context, id string) (*model.Reminder, error)
 	RemindersForOrganization(ctx context.Context, organizationID string, dismissed *bool) ([]*model.Reminder, error)
@@ -2108,7 +2113,7 @@ type QueryResolver interface {
 	TenantSettings(ctx context.Context) (*model.TenantSettings, error)
 	BillableInfo(ctx context.Context) (*model.TenantBillableInfo, error)
 	TimelineEvents(ctx context.Context, ids []string) ([]model.TimelineEvent, error)
-	Users(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.UserPage, error)
+	Users(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model1.SortBy) (*model.UserPage, error)
 	User(ctx context.Context, id string) (*model.User, error)
 	UserByEmail(ctx context.Context, email string) (*model.User, error)
 	TableViewDefs(ctx context.Context) ([]*model.TableViewDef, error)
@@ -2921,7 +2926,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Contact.Organizations(childComplexity, args["pagination"].(*model.Pagination), args["where"].(*model.Filter), args["sort"].([]*model.SortBy)), true
+		return e.complexity.Contact.Organizations(childComplexity, args["pagination"].(*model.Pagination), args["where"].(*model.Filter), args["sort"].([]*model1.SortBy)), true
 
 	case "Contact.owner":
 		if e.complexity.Contact.Owner == nil {
@@ -6363,6 +6368,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.MailstackBuyRequestMailbox.Status(childComplexity), true
 
+	case "MarkdownEvent.content":
+		if e.complexity.MarkdownEvent.Content == nil {
+			break
+		}
+
+		return e.complexity.MarkdownEvent.Content(childComplexity), true
+
+	case "MarkdownEvent.metadata":
+		if e.complexity.MarkdownEvent.Metadata == nil {
+			break
+		}
+
+		return e.complexity.MarkdownEvent.Metadata(childComplexity), true
+
 	case "Meeting.agenda":
 		if e.complexity.Meeting.Agenda == nil {
 			break
@@ -8983,7 +9002,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Organization.Contacts(childComplexity, args["pagination"].(*model.Pagination), args["where"].(*model.Filter), args["sort"].([]*model.SortBy)), true
+		return e.complexity.Organization.Contacts(childComplexity, args["pagination"].(*model.Pagination), args["where"].(*model.Filter), args["sort"].([]*model1.SortBy)), true
 
 	case "Organization.contracts":
 		if e.complexity.Organization.Contracts == nil {
@@ -10117,7 +10136,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Contacts(childComplexity, args["pagination"].(*model.Pagination), args["where"].(*model.Filter), args["sort"].([]*model.SortBy)), true
+		return e.complexity.Query.Contacts(childComplexity, args["pagination"].(*model.Pagination), args["where"].(*model.Filter), args["sort"].([]*model1.SortBy)), true
 
 	case "Query.contract":
 		if e.complexity.Query.Contract == nil {
@@ -10263,7 +10282,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.DashboardViewOrganizations(childComplexity, args["pagination"].(model.Pagination), args["where"].(*model.Filter), args["sort"].(*model.SortBy)), true
+		return e.complexity.Query.DashboardViewOrganizations(childComplexity, args["pagination"].(model.Pagination), args["where"].(*model.Filter), args["sort"].(*model1.SortBy)), true
 
 	case "Query.dashboardView_Renewals":
 		if e.complexity.Query.DashboardViewRenewals == nil {
@@ -10275,7 +10294,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.DashboardViewRenewals(childComplexity, args["pagination"].(model.Pagination), args["where"].(*model.Filter), args["sort"].(*model.SortBy)), true
+		return e.complexity.Query.DashboardViewRenewals(childComplexity, args["pagination"].(model.Pagination), args["where"].(*model.Filter), args["sort"].(*model1.SortBy)), true
 
 	case "Query.email":
 		if e.complexity.Query.Email == nil {
@@ -10299,7 +10318,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.ExternalMeetings(childComplexity, args["externalSystemId"].(string), args["externalId"].(*string), args["pagination"].(*model.Pagination), args["where"].(*model.Filter), args["sort"].([]*model.SortBy)), true
+		return e.complexity.Query.ExternalMeetings(childComplexity, args["externalSystemId"].(string), args["externalId"].(*string), args["pagination"].(*model.Pagination), args["where"].(*model.Filter), args["sort"].([]*model1.SortBy)), true
 
 	case "Query.externalSystemInstances":
 		if e.complexity.Query.ExternalSystemInstances == nil {
@@ -10418,7 +10437,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Invoices(childComplexity, args["pagination"].(*model.Pagination), args["where"].(*model.Filter), args["sort"].([]*model.SortBy), args["organizationId"].(*string)), true
+		return e.complexity.Query.Invoices(childComplexity, args["pagination"].(*model.Pagination), args["where"].(*model.Filter), args["sort"].([]*model1.SortBy), args["organizationId"].(*string)), true
 
 	case "Query.issue":
 		if e.complexity.Query.Issue == nil {
@@ -10597,7 +10616,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Organizations(childComplexity, args["pagination"].(*model.Pagination), args["where"].(*model.Filter), args["sort"].([]*model.SortBy)), true
+		return e.complexity.Query.Organizations(childComplexity, args["pagination"].(*model.Pagination), args["where"].(*model.Filter), args["sort"].([]*model1.SortBy)), true
 
 	case "Query.organizations_HiddenAfter":
 		if e.complexity.Query.OrganizationsHiddenAfter == nil {
@@ -10776,7 +10795,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.UIOrganizationsSearch(childComplexity, args["limit"].(*int), args["where"].(*model.Filter), args["sort"].(*model.SortBy)), true
+		return e.complexity.Query.UIOrganizationsSearch(childComplexity, args["limit"].(*int), args["where"].(*model.Filter), args["sort"].(*model1.SortBy)), true
 
 	case "Query.user":
 		if e.complexity.Query.User == nil {
@@ -10812,7 +10831,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Users(childComplexity, args["pagination"].(*model.Pagination), args["where"].(*model.Filter), args["sort"].([]*model.SortBy)), true
+		return e.complexity.Query.Users(childComplexity, args["pagination"].(*model.Pagination), args["where"].(*model.Filter), args["sort"].([]*model1.SortBy)), true
 
 	case "Query.workflow_ByType":
 		if e.complexity.Query.WorkflowByType == nil {
@@ -14626,6 +14645,10 @@ enum MailstackBuyRequestMailboxStatus {
     COMPLETED,
     FAILED
 }`, BuiltIn: false},
+	{Name: "../schemas/markdown_event.graphqls", Input: `type MarkdownEvent {
+    metadata: Metadata!
+    content: String
+}`, BuiltIn: false},
 	{Name: "../schemas/meeting.graphqls", Input: `"""
 Specifies how many pages of meeting information has been returned in the query response.
 **A ` + "`" + `response` + "`" + ` object.**
@@ -16146,7 +16169,7 @@ type TenantBillableInfo {
     greylistedOrganizations: Int64!
     greylistedContacts: Int64!
 }`, BuiltIn: false},
-	{Name: "../schemas/timeline_event.graphqls", Input: `union TimelineEvent = PageView | InteractionSession | Note | InteractionEvent | Issue | Meeting | Action | LogEntry
+	{Name: "../schemas/timeline_event.graphqls", Input: `union TimelineEvent = PageView | InteractionSession | Note | InteractionEvent | Issue | Meeting | Action | LogEntry | MarkdownEvent
 
 extend type Query {
     timelineEvents(ids: [ID!]!): [TimelineEvent!]!
@@ -16163,6 +16186,7 @@ enum TimelineEventType {
     ACTION
     LOG_ENTRY
     ORDER
+    MARKDOWN_EVENT
 }`, BuiltIn: false},
 	{Name: "../schemas/types.graphqls", Input: `type DeleteResponse {
     accepted: Boolean!
@@ -16690,22 +16714,22 @@ func (ec *executionContext) field_Contact_organizations_argsWhere(
 func (ec *executionContext) field_Contact_organizations_argsSort(
 	ctx context.Context,
 	rawArgs map[string]interface{},
-) ([]*model.SortBy, error) {
+) ([]*model1.SortBy, error) {
 	// We won't call the directive if the argument is null.
 	// Set call_argument_directives_with_null to true to call directives
 	// even if the argument is null.
 	_, ok := rawArgs["sort"]
 	if !ok {
-		var zeroVal []*model.SortBy
+		var zeroVal []*model1.SortBy
 		return zeroVal, nil
 	}
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("sort"))
 	if tmp, ok := rawArgs["sort"]; ok {
-		return ec.unmarshalOSortBy2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortByᚄ(ctx, tmp)
+		return ec.unmarshalOSortBy2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐSortByᚄ(ctx, tmp)
 	}
 
-	var zeroVal []*model.SortBy
+	var zeroVal []*model1.SortBy
 	return zeroVal, nil
 }
 
@@ -24604,22 +24628,22 @@ func (ec *executionContext) field_Organization_contacts_argsWhere(
 func (ec *executionContext) field_Organization_contacts_argsSort(
 	ctx context.Context,
 	rawArgs map[string]interface{},
-) ([]*model.SortBy, error) {
+) ([]*model1.SortBy, error) {
 	// We won't call the directive if the argument is null.
 	// Set call_argument_directives_with_null to true to call directives
 	// even if the argument is null.
 	_, ok := rawArgs["sort"]
 	if !ok {
-		var zeroVal []*model.SortBy
+		var zeroVal []*model1.SortBy
 		return zeroVal, nil
 	}
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("sort"))
 	if tmp, ok := rawArgs["sort"]; ok {
-		return ec.unmarshalOSortBy2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortByᚄ(ctx, tmp)
+		return ec.unmarshalOSortBy2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐSortByᚄ(ctx, tmp)
 	}
 
-	var zeroVal []*model.SortBy
+	var zeroVal []*model1.SortBy
 	return zeroVal, nil
 }
 
@@ -24968,22 +24992,22 @@ func (ec *executionContext) field_Query_contacts_argsWhere(
 func (ec *executionContext) field_Query_contacts_argsSort(
 	ctx context.Context,
 	rawArgs map[string]interface{},
-) ([]*model.SortBy, error) {
+) ([]*model1.SortBy, error) {
 	// We won't call the directive if the argument is null.
 	// Set call_argument_directives_with_null to true to call directives
 	// even if the argument is null.
 	_, ok := rawArgs["sort"]
 	if !ok {
-		var zeroVal []*model.SortBy
+		var zeroVal []*model1.SortBy
 		return zeroVal, nil
 	}
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("sort"))
 	if tmp, ok := rawArgs["sort"]; ok {
-		return ec.unmarshalOSortBy2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortByᚄ(ctx, tmp)
+		return ec.unmarshalOSortBy2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐSortByᚄ(ctx, tmp)
 	}
 
-	var zeroVal []*model.SortBy
+	var zeroVal []*model1.SortBy
 	return zeroVal, nil
 }
 
@@ -25118,22 +25142,22 @@ func (ec *executionContext) field_Query_dashboardView_Organizations_argsWhere(
 func (ec *executionContext) field_Query_dashboardView_Organizations_argsSort(
 	ctx context.Context,
 	rawArgs map[string]interface{},
-) (*model.SortBy, error) {
+) (*model1.SortBy, error) {
 	// We won't call the directive if the argument is null.
 	// Set call_argument_directives_with_null to true to call directives
 	// even if the argument is null.
 	_, ok := rawArgs["sort"]
 	if !ok {
-		var zeroVal *model.SortBy
+		var zeroVal *model1.SortBy
 		return zeroVal, nil
 	}
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("sort"))
 	if tmp, ok := rawArgs["sort"]; ok {
-		return ec.unmarshalOSortBy2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortBy(ctx, tmp)
+		return ec.unmarshalOSortBy2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐSortBy(ctx, tmp)
 	}
 
-	var zeroVal *model.SortBy
+	var zeroVal *model1.SortBy
 	return zeroVal, nil
 }
 
@@ -25204,22 +25228,22 @@ func (ec *executionContext) field_Query_dashboardView_Renewals_argsWhere(
 func (ec *executionContext) field_Query_dashboardView_Renewals_argsSort(
 	ctx context.Context,
 	rawArgs map[string]interface{},
-) (*model.SortBy, error) {
+) (*model1.SortBy, error) {
 	// We won't call the directive if the argument is null.
 	// Set call_argument_directives_with_null to true to call directives
 	// even if the argument is null.
 	_, ok := rawArgs["sort"]
 	if !ok {
-		var zeroVal *model.SortBy
+		var zeroVal *model1.SortBy
 		return zeroVal, nil
 	}
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("sort"))
 	if tmp, ok := rawArgs["sort"]; ok {
-		return ec.unmarshalOSortBy2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortBy(ctx, tmp)
+		return ec.unmarshalOSortBy2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐSortBy(ctx, tmp)
 	}
 
-	var zeroVal *model.SortBy
+	var zeroVal *model1.SortBy
 	return zeroVal, nil
 }
 
@@ -25632,22 +25656,22 @@ func (ec *executionContext) field_Query_externalMeetings_argsWhere(
 func (ec *executionContext) field_Query_externalMeetings_argsSort(
 	ctx context.Context,
 	rawArgs map[string]interface{},
-) ([]*model.SortBy, error) {
+) ([]*model1.SortBy, error) {
 	// We won't call the directive if the argument is null.
 	// Set call_argument_directives_with_null to true to call directives
 	// even if the argument is null.
 	_, ok := rawArgs["sort"]
 	if !ok {
-		var zeroVal []*model.SortBy
+		var zeroVal []*model1.SortBy
 		return zeroVal, nil
 	}
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("sort"))
 	if tmp, ok := rawArgs["sort"]; ok {
-		return ec.unmarshalOSortBy2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortByᚄ(ctx, tmp)
+		return ec.unmarshalOSortBy2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐSortByᚄ(ctx, tmp)
 	}
 
-	var zeroVal []*model.SortBy
+	var zeroVal []*model1.SortBy
 	return zeroVal, nil
 }
 
@@ -25942,22 +25966,22 @@ func (ec *executionContext) field_Query_invoices_argsWhere(
 func (ec *executionContext) field_Query_invoices_argsSort(
 	ctx context.Context,
 	rawArgs map[string]interface{},
-) ([]*model.SortBy, error) {
+) ([]*model1.SortBy, error) {
 	// We won't call the directive if the argument is null.
 	// Set call_argument_directives_with_null to true to call directives
 	// even if the argument is null.
 	_, ok := rawArgs["sort"]
 	if !ok {
-		var zeroVal []*model.SortBy
+		var zeroVal []*model1.SortBy
 		return zeroVal, nil
 	}
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("sort"))
 	if tmp, ok := rawArgs["sort"]; ok {
-		return ec.unmarshalOSortBy2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortByᚄ(ctx, tmp)
+		return ec.unmarshalOSortBy2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐSortByᚄ(ctx, tmp)
 	}
 
-	var zeroVal []*model.SortBy
+	var zeroVal []*model1.SortBy
 	return zeroVal, nil
 }
 
@@ -26434,22 +26458,22 @@ func (ec *executionContext) field_Query_organizations_argsWhere(
 func (ec *executionContext) field_Query_organizations_argsSort(
 	ctx context.Context,
 	rawArgs map[string]interface{},
-) ([]*model.SortBy, error) {
+) ([]*model1.SortBy, error) {
 	// We won't call the directive if the argument is null.
 	// Set call_argument_directives_with_null to true to call directives
 	// even if the argument is null.
 	_, ok := rawArgs["sort"]
 	if !ok {
-		var zeroVal []*model.SortBy
+		var zeroVal []*model1.SortBy
 		return zeroVal, nil
 	}
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("sort"))
 	if tmp, ok := rawArgs["sort"]; ok {
-		return ec.unmarshalOSortBy2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortByᚄ(ctx, tmp)
+		return ec.unmarshalOSortBy2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐSortByᚄ(ctx, tmp)
 	}
 
-	var zeroVal []*model.SortBy
+	var zeroVal []*model1.SortBy
 	return zeroVal, nil
 }
 
@@ -26867,22 +26891,22 @@ func (ec *executionContext) field_Query_ui_organizations_search_argsWhere(
 func (ec *executionContext) field_Query_ui_organizations_search_argsSort(
 	ctx context.Context,
 	rawArgs map[string]interface{},
-) (*model.SortBy, error) {
+) (*model1.SortBy, error) {
 	// We won't call the directive if the argument is null.
 	// Set call_argument_directives_with_null to true to call directives
 	// even if the argument is null.
 	_, ok := rawArgs["sort"]
 	if !ok {
-		var zeroVal *model.SortBy
+		var zeroVal *model1.SortBy
 		return zeroVal, nil
 	}
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("sort"))
 	if tmp, ok := rawArgs["sort"]; ok {
-		return ec.unmarshalOSortBy2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortBy(ctx, tmp)
+		return ec.unmarshalOSortBy2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐSortBy(ctx, tmp)
 	}
 
-	var zeroVal *model.SortBy
+	var zeroVal *model1.SortBy
 	return zeroVal, nil
 }
 
@@ -27017,22 +27041,22 @@ func (ec *executionContext) field_Query_users_argsWhere(
 func (ec *executionContext) field_Query_users_argsSort(
 	ctx context.Context,
 	rawArgs map[string]interface{},
-) ([]*model.SortBy, error) {
+) ([]*model1.SortBy, error) {
 	// We won't call the directive if the argument is null.
 	// Set call_argument_directives_with_null to true to call directives
 	// even if the argument is null.
 	_, ok := rawArgs["sort"]
 	if !ok {
-		var zeroVal []*model.SortBy
+		var zeroVal []*model1.SortBy
 		return zeroVal, nil
 	}
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("sort"))
 	if tmp, ok := rawArgs["sort"]; ok {
-		return ec.unmarshalOSortBy2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortByᚄ(ctx, tmp)
+		return ec.unmarshalOSortBy2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐSortByᚄ(ctx, tmp)
 	}
 
-	var zeroVal []*model.SortBy
+	var zeroVal []*model1.SortBy
 	return zeroVal, nil
 }
 
@@ -31978,7 +32002,7 @@ func (ec *executionContext) _Contact_organizations(ctx context.Context, field gr
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Contact().Organizations(rctx, obj, fc.Args["pagination"].(*model.Pagination), fc.Args["where"].(*model.Filter), fc.Args["sort"].([]*model.SortBy))
+		return ec.resolvers.Contact().Organizations(rctx, obj, fc.Args["pagination"].(*model.Pagination), fc.Args["where"].(*model.Filter), fc.Args["sort"].([]*model1.SortBy))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -56307,6 +56331,107 @@ func (ec *executionContext) fieldContext_MailstackBuyRequestMailbox_status(_ con
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type MailstackBuyRequestMailboxStatus does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MarkdownEvent_metadata(ctx context.Context, field graphql.CollectedField, obj *model.MarkdownEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MarkdownEvent_metadata(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Metadata, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Metadata)
+	fc.Result = res
+	return ec.marshalNMetadata2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMetadata(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MarkdownEvent_metadata(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MarkdownEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Metadata_id(ctx, field)
+			case "created":
+				return ec.fieldContext_Metadata_created(ctx, field)
+			case "lastUpdated":
+				return ec.fieldContext_Metadata_lastUpdated(ctx, field)
+			case "source":
+				return ec.fieldContext_Metadata_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Metadata_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Metadata_appSource(ctx, field)
+			case "version":
+				return ec.fieldContext_Metadata_version(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Metadata", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MarkdownEvent_content(ctx context.Context, field graphql.CollectedField, obj *model.MarkdownEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MarkdownEvent_content(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Content, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MarkdownEvent_content(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MarkdownEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -81365,7 +81490,7 @@ func (ec *executionContext) _Organization_contacts(ctx context.Context, field gr
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Organization().Contacts(rctx, obj, fc.Args["pagination"].(*model.Pagination), fc.Args["where"].(*model.Filter), fc.Args["sort"].([]*model.SortBy))
+		return ec.resolvers.Organization().Contacts(rctx, obj, fc.Args["pagination"].(*model.Pagination), fc.Args["where"].(*model.Filter), fc.Args["sort"].([]*model1.SortBy))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -87529,7 +87654,7 @@ func (ec *executionContext) _Query_contacts(ctx context.Context, field graphql.C
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Contacts(rctx, fc.Args["pagination"].(*model.Pagination), fc.Args["where"].(*model.Filter), fc.Args["sort"].([]*model.SortBy))
+		return ec.resolvers.Query().Contacts(rctx, fc.Args["pagination"].(*model.Pagination), fc.Args["where"].(*model.Filter), fc.Args["sort"].([]*model1.SortBy))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -88228,7 +88353,7 @@ func (ec *executionContext) _Query_dashboardView_Organizations(ctx context.Conte
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().DashboardViewOrganizations(rctx, fc.Args["pagination"].(model.Pagination), fc.Args["where"].(*model.Filter), fc.Args["sort"].(*model.SortBy))
+		return ec.resolvers.Query().DashboardViewOrganizations(rctx, fc.Args["pagination"].(model.Pagination), fc.Args["where"].(*model.Filter), fc.Args["sort"].(*model1.SortBy))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -88290,7 +88415,7 @@ func (ec *executionContext) _Query_dashboardView_Renewals(ctx context.Context, f
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().DashboardViewRenewals(rctx, fc.Args["pagination"].(model.Pagination), fc.Args["where"].(*model.Filter), fc.Args["sort"].(*model.SortBy))
+		return ec.resolvers.Query().DashboardViewRenewals(rctx, fc.Args["pagination"].(model.Pagination), fc.Args["where"].(*model.Filter), fc.Args["sort"].(*model1.SortBy))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -89782,7 +89907,7 @@ func (ec *executionContext) _Query_invoices(ctx context.Context, field graphql.C
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Invoices(rctx, fc.Args["pagination"].(*model.Pagination), fc.Args["where"].(*model.Filter), fc.Args["sort"].([]*model.SortBy), fc.Args["organizationId"].(*string))
+		return ec.resolvers.Query().Invoices(rctx, fc.Args["pagination"].(*model.Pagination), fc.Args["where"].(*model.Filter), fc.Args["sort"].([]*model1.SortBy), fc.Args["organizationId"].(*string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -90829,7 +90954,7 @@ func (ec *executionContext) _Query_externalMeetings(ctx context.Context, field g
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().ExternalMeetings(rctx, fc.Args["externalSystemId"].(string), fc.Args["externalId"].(*string), fc.Args["pagination"].(*model.Pagination), fc.Args["where"].(*model.Filter), fc.Args["sort"].([]*model.SortBy))
+		return ec.resolvers.Query().ExternalMeetings(rctx, fc.Args["externalSystemId"].(string), fc.Args["externalId"].(*string), fc.Args["pagination"].(*model.Pagination), fc.Args["where"].(*model.Filter), fc.Args["sort"].([]*model1.SortBy))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -91142,7 +91267,7 @@ func (ec *executionContext) _Query_organizations(ctx context.Context, field grap
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().Organizations(rctx, fc.Args["pagination"].(*model.Pagination), fc.Args["where"].(*model.Filter), fc.Args["sort"].([]*model.SortBy))
+			return ec.resolvers.Query().Organizations(rctx, fc.Args["pagination"].(*model.Pagination), fc.Args["where"].(*model.Filter), fc.Args["sort"].([]*model1.SortBy))
 		}
 
 		directive1 := func(ctx context.Context) (interface{}, error) {
@@ -92599,7 +92724,7 @@ func (ec *executionContext) _Query_ui_organizations_search(ctx context.Context, 
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().UIOrganizationsSearch(rctx, fc.Args["limit"].(*int), fc.Args["where"].(*model.Filter), fc.Args["sort"].(*model.SortBy))
+			return ec.resolvers.Query().UIOrganizationsSearch(rctx, fc.Args["limit"].(*int), fc.Args["where"].(*model.Filter), fc.Args["sort"].(*model1.SortBy))
 		}
 
 		directive1 := func(ctx context.Context) (interface{}, error) {
@@ -94025,7 +94150,7 @@ func (ec *executionContext) _Query_users(ctx context.Context, field graphql.Coll
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Users(rctx, fc.Args["pagination"].(*model.Pagination), fc.Args["where"].(*model.Filter), fc.Args["sort"].([]*model.SortBy))
+		return ec.resolvers.Query().Users(rctx, fc.Args["pagination"].(*model.Pagination), fc.Args["where"].(*model.Filter), fc.Args["sort"].([]*model1.SortBy))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -110106,8 +110231,8 @@ func (ec *executionContext) unmarshalInputSocialUpdateInput(ctx context.Context,
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputSortBy(ctx context.Context, obj interface{}) (model.SortBy, error) {
-	var it model.SortBy
+func (ec *executionContext) unmarshalInputSortBy(ctx context.Context, obj interface{}) (model1.SortBy, error) {
+	var it model1.SortBy
 	asMap := map[string]interface{}{}
 	for k, v := range obj.(map[string]interface{}) {
 		asMap[k] = v
@@ -110136,7 +110261,7 @@ func (ec *executionContext) unmarshalInputSortBy(ctx context.Context, obj interf
 			it.By = data
 		case "direction":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("direction"))
-			data, err := ec.unmarshalNSortingDirection2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortingDirection(ctx, v)
+			data, err := ec.unmarshalNSortingDirection2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐSortingDirection(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -111860,6 +111985,13 @@ func (ec *executionContext) _TimelineEvent(ctx context.Context, sel ast.Selectio
 			return graphql.Null
 		}
 		return ec._LogEntry(ctx, sel, obj)
+	case model.MarkdownEvent:
+		return ec._MarkdownEvent(ctx, sel, &obj)
+	case *model.MarkdownEvent:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._MarkdownEvent(ctx, sel, obj)
 	default:
 		panic(fmt.Errorf("unexpected type %T", obj))
 	}
@@ -118978,6 +119110,47 @@ func (ec *executionContext) _MailstackBuyRequestMailbox(ctx context.Context, sel
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var markdownEventImplementors = []string{"MarkdownEvent", "TimelineEvent"}
+
+func (ec *executionContext) _MarkdownEvent(ctx context.Context, sel ast.SelectionSet, obj *model.MarkdownEvent) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, markdownEventImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("MarkdownEvent")
+		case "metadata":
+			out.Values[i] = ec._MarkdownEvent_metadata(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "content":
+			out.Values[i] = ec._MarkdownEvent_content(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -131008,19 +131181,25 @@ func (ec *executionContext) unmarshalNSocialUpdateInput2githubᚗcomᚋopenline�
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNSortBy2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortBy(ctx context.Context, v interface{}) (*model.SortBy, error) {
+func (ec *executionContext) unmarshalNSortBy2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐSortBy(ctx context.Context, v interface{}) (*model1.SortBy, error) {
 	res, err := ec.unmarshalInputSortBy(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNSortingDirection2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortingDirection(ctx context.Context, v interface{}) (model.SortingDirection, error) {
-	var res model.SortingDirection
-	err := res.UnmarshalGQL(v)
+func (ec *executionContext) unmarshalNSortingDirection2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐSortingDirection(ctx context.Context, v interface{}) (model1.SortingDirection, error) {
+	tmp, err := graphql.UnmarshalString(v)
+	res := model1.SortingDirection(tmp)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNSortingDirection2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortingDirection(ctx context.Context, sel ast.SelectionSet, v model.SortingDirection) graphql.Marshaler {
-	return v
+func (ec *executionContext) marshalNSortingDirection2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐSortingDirection(ctx context.Context, sel ast.SelectionSet, v model1.SortingDirection) graphql.Marshaler {
+	res := graphql.MarshalString(string(v))
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
@@ -133316,7 +133495,7 @@ func (ec *executionContext) unmarshalOServiceLineItemBulkUpdateItem2ᚖgithubᚗ
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOSortBy2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortByᚄ(ctx context.Context, v interface{}) ([]*model.SortBy, error) {
+func (ec *executionContext) unmarshalOSortBy2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐSortByᚄ(ctx context.Context, v interface{}) ([]*model1.SortBy, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -133325,10 +133504,10 @@ func (ec *executionContext) unmarshalOSortBy2ᚕᚖgithubᚗcomᚋopenlineᚑai�
 		vSlice = graphql.CoerceList(v)
 	}
 	var err error
-	res := make([]*model.SortBy, len(vSlice))
+	res := make([]*model1.SortBy, len(vSlice))
 	for i := range vSlice {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNSortBy2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortBy(ctx, vSlice[i])
+		res[i], err = ec.unmarshalNSortBy2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐSortBy(ctx, vSlice[i])
 		if err != nil {
 			return nil, err
 		}
@@ -133336,7 +133515,7 @@ func (ec *executionContext) unmarshalOSortBy2ᚕᚖgithubᚗcomᚋopenlineᚑai�
 	return res, nil
 }
 
-func (ec *executionContext) unmarshalOSortBy2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortBy(ctx context.Context, v interface{}) (*model.SortBy, error) {
+func (ec *executionContext) unmarshalOSortBy2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐSortBy(ctx context.Context, v interface{}) (*model1.SortBy, error) {
 	if v == nil {
 		return nil, nil
 	}

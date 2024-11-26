@@ -43,7 +43,14 @@ export const getOrganizationSortFn = (columnId: string) =>
           .with(OpportunityRenewalLikelihood.LowRenewal, () => 1)
           .otherwise(() => null),
     )
-
+    .with(
+      ColumnViewType.OrganizationsUpdatedDate,
+      () => (row: Organization) => {
+        return row?.value?.metadata?.lastUpdated
+          ? new Date(row?.value?.metadata?.lastUpdated)
+          : null;
+      },
+    )
     .with(
       ColumnViewType.OrganizationsRenewalDate,
       () => (row: Organization) => {

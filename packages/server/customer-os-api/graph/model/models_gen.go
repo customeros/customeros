@@ -1644,6 +1644,13 @@ type MailstackBuyRequestMailbox struct {
 	Status  entity1.MailstackBuyRequestMailboxStatus `json:"status"`
 }
 
+type MarkdownEvent struct {
+	Metadata *Metadata `json:"metadata"`
+	Content  *string   `json:"content,omitempty"`
+}
+
+func (MarkdownEvent) IsTimelineEvent() {}
+
 type Meeting struct {
 	ID                 string               `json:"id"`
 	Name               *string              `json:"name,omitempty"`
@@ -2565,12 +2572,6 @@ type SocialInput struct {
 type SocialUpdateInput struct {
 	ID  string `json:"id"`
 	URL string `json:"url"`
-}
-
-type SortBy struct {
-	By            string           `json:"by"`
-	Direction     SortingDirection `json:"direction"`
-	CaseSensitive *bool            `json:"caseSensitive,omitempty"`
 }
 
 type State struct {
@@ -5009,47 +5010,6 @@ func (e Role) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
-type SortingDirection string
-
-const (
-	SortingDirectionAsc  SortingDirection = "ASC"
-	SortingDirectionDesc SortingDirection = "DESC"
-)
-
-var AllSortingDirection = []SortingDirection{
-	SortingDirectionAsc,
-	SortingDirectionDesc,
-}
-
-func (e SortingDirection) IsValid() bool {
-	switch e {
-	case SortingDirectionAsc, SortingDirectionDesc:
-		return true
-	}
-	return false
-}
-
-func (e SortingDirection) String() string {
-	return string(e)
-}
-
-func (e *SortingDirection) UnmarshalGQL(v interface{}) error {
-	str, ok := v.(string)
-	if !ok {
-		return fmt.Errorf("enums must be strings")
-	}
-
-	*e = SortingDirection(str)
-	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid SortingDirection", str)
-	}
-	return nil
-}
-
-func (e SortingDirection) MarshalGQL(w io.Writer) {
-	fmt.Fprint(w, strconv.Quote(e.String()))
-}
-
 type TableIDType string
 
 const (
@@ -5173,6 +5133,7 @@ const (
 	TimelineEventTypeAction             TimelineEventType = "ACTION"
 	TimelineEventTypeLogEntry           TimelineEventType = "LOG_ENTRY"
 	TimelineEventTypeOrder              TimelineEventType = "ORDER"
+	TimelineEventTypeMarkdownEvent      TimelineEventType = "MARKDOWN_EVENT"
 )
 
 var AllTimelineEventType = []TimelineEventType{
@@ -5186,11 +5147,12 @@ var AllTimelineEventType = []TimelineEventType{
 	TimelineEventTypeAction,
 	TimelineEventTypeLogEntry,
 	TimelineEventTypeOrder,
+	TimelineEventTypeMarkdownEvent,
 }
 
 func (e TimelineEventType) IsValid() bool {
 	switch e {
-	case TimelineEventTypePageView, TimelineEventTypeInteractionSession, TimelineEventTypeNote, TimelineEventTypeInteractionEvent, TimelineEventTypeAnalysis, TimelineEventTypeIssue, TimelineEventTypeMeeting, TimelineEventTypeAction, TimelineEventTypeLogEntry, TimelineEventTypeOrder:
+	case TimelineEventTypePageView, TimelineEventTypeInteractionSession, TimelineEventTypeNote, TimelineEventTypeInteractionEvent, TimelineEventTypeAnalysis, TimelineEventTypeIssue, TimelineEventTypeMeeting, TimelineEventTypeAction, TimelineEventTypeLogEntry, TimelineEventTypeOrder, TimelineEventTypeMarkdownEvent:
 		return true
 	}
 	return false
