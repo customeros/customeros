@@ -1,0 +1,695 @@
+openapi: 3.0.1
+info:
+  title: CustomerOS API
+  description: CustomerOS API for multiple services (Verify, Enrich, Orgs)
+  contact: {}
+  version: '1.0'
+servers:
+- url: https://api.customeros.ai/
+paths:
+  /customerbase/v1/contacts:
+    post:
+      tags:
+      - CustomerBASE API
+      summary: Create a new contact
+      description: Creates a contact from either JSON or CSV upload
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  description: CSV file with contact data
+                  format: binary
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  description: CSV file with contact data
+                  format: binary
+      responses:
+        '200':
+          description: Successfully created single contact
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/customerbase.SingleContactResponse'
+        '201':
+          description: Successfully processed CSV file
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/customerbase.ContactsResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/rest.BaseResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/rest.BaseResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/rest.BaseResponse'
+      security:
+      - ApiKeyAuth: []
+      x-codegen-request-body-name: contact
+  /customerbase/v1/contacts/bulk:
+    post:
+      tags:
+      - CustomerBASE API
+      summary: Create multiple contacts
+      description: Creates multiple contacts from JSON input
+      requestBody:
+        description: Array of contacts to create
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/customerbase.ContactRecord'
+        required: true
+      responses:
+        '201':
+          description: All contacts created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/customerbase.BulkResponse'
+        '207':
+          description: Contacts created with some failures
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/customerbase.BulkResponseMultipleErrors'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/rest.BaseResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/rest.BaseResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/rest.BaseResponse'
+      security:
+      - ApiKeyAuth: []
+      x-codegen-request-body-name: contacts
+  /customerbase/v1/contacts/import:
+    post:
+      tags:
+      - CustomerBASE API
+      summary: Import contacts from CSV
+      description: Creates multiple contacts from CSV file upload
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              required:
+              - file
+              type: object
+              properties:
+                file:
+                  type: string
+                  description: 'CSV file with contact data (required headers: email,
+                    linkedin_url)'
+                  format: binary
+        required: true
+      responses:
+        '201':
+          description: All contacts imported successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/customerbase.BulkResponse'
+        '207':
+          description: Contacts imported with some failures
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/customerbase.BulkResponseMultipleErrors'
+        '400':
+          description: Invalid file format or data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/rest.BaseResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/rest.BaseResponse'
+        '415':
+          description: Unsupported content type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/rest.BaseResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/rest.BaseResponse'
+      security:
+      - ApiKeyAutl: []
+  /customerbase/v1/organizations:
+    post:
+      tags:
+      - CustomerBASE API
+      summary: Create a new organization
+      description: Creates an organization if it doesn't exist based on website, custom
+        ID, or LinkedIn URL. Returns existing organization if found.
+      requestBody:
+        description: Organization creation request
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/customerbase.CreateOrganizationRequest'
+        required: true
+      responses:
+        '201':
+          description: Organization created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/customerbase.OrganizationResponse'
+        '206':
+          description: Organization created with partial data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/customerbase.OrganizationResponse'
+        '400':
+          description: Invalid request - Missing required fields
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/rest.BaseResponse'
+        '401':
+          description: Unauthorized - Invalid or missing API key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/rest.BaseResponse'
+        '409':
+          description: Conflict - Organization already exists with provided identifiers
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/rest.BaseResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/rest.BaseResponse'
+      security:
+      - ApiKeyAuth: []
+      x-codegen-request-body-name: body
+  /customerbase/v1/organizations/{id}:
+    get:
+      tags:
+      - CustomerBASE API
+      summary: Get organization details
+      description: Retrieves detailed organization information by ID or COS ID
+      parameters:
+      - name: id
+        in: path
+        description: Organization ID or COS ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Organization found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/customerbase.OrganizationResponse'
+        '206':
+          description: Organization found with partial data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/customerbase.OrganizationResponse'
+        '400':
+          description: Invalid organization ID format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/rest.BaseResponse'
+        '401':
+          description: Unauthorized - Invalid or missing API key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/rest.BaseResponse'
+        '404':
+          description: Organization not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/rest.BaseResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/rest.BaseResponse'
+      security:
+      - ApiKeyAuth: []
+  /customerbase/v1/organizations/{id}/links/{externalSystem}/primary:
+    put:
+      tags:
+      - CustomerBASE API
+      summary: Set primary external system ID
+      description: Sets or updates the primary external system identifier for an organization
+      parameters:
+      - name: id
+        in: path
+        description: Organization ID or COS ID
+        required: true
+        schema:
+          type: string
+      - name: externalSystem
+        in: path
+        description: External system name
+        required: true
+        schema:
+          type: string
+      requestBody:
+        description: External system ID details
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/customerbase.SetPrimaryExternalSystemIdRequest'
+        required: true
+      responses:
+        '200':
+          description: Primary ID set successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/customerbase.ExternalSystemResponse'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/rest.BaseResponse'
+        '401':
+          description: Unauthorized - Invalid or missing API key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/rest.BaseResponse'
+        '404':
+          description: Organization or external system not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/rest.BaseResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/rest.BaseResponse'
+      security:
+      - ApiKeyAuth: []
+      x-codegen-request-body-name: body
+components:
+  schemas:
+    customerbase.BulkErrorDetails:
+      type: object
+      properties:
+        description:
+          type: string
+          description: 'Description of the error
+
+            example: invalid email format'
+        value:
+          type: string
+          description: 'The value that caused the error
+
+            example: invalid@email..com'
+      description: Error details for failed operations in bulk processing
+    customerbase.BulkResponse:
+      type: object
+      properties:
+        details:
+          type: object
+          description: Error details if any
+          allOf:
+          - $ref: '#/components/schemas/customerbase.BulkErrorDetails'
+        requestId:
+          type: string
+          example: 1234567890abcdef
+        status:
+          type: string
+          description: Status indicates the result of the operation ("success" or
+            "error")
+          example: success
+        summary:
+          type: object
+          description: Summary of the bulk operation
+          allOf:
+          - $ref: '#/components/schemas/customerbase.BulkSummary'
+      description: Response structure for bulk operations with single error detail
+    customerbase.BulkSummary:
+      type: object
+      properties:
+        failed:
+          type: integer
+          description: 'Number of failed records
+
+            example: 5'
+        success:
+          type: integer
+          description: 'Number of successfully processed records
+
+            example: 95'
+        total:
+          type: integer
+          description: 'Total number of records processed
+
+            example: 100'
+      description: Summary statistics for bulk operations
+    customerbase.BulkResponseMultipleErrors:
+      type: object
+      properties:
+        details:
+          type: array
+          description: List of error details
+          items:
+            $ref: '#/components/schemas/customerbase.BulkErrorDetails'
+        requestId:
+          type: string
+          example: 1234567890abcdef
+        status:
+          type: string
+          description: Status indicates the result of the operation ("success" or
+            "error")
+          example: success
+        summary:
+          type: object
+          description: Summary of the bulk operation
+          allOf:
+          - $ref: '#/components/schemas/customerbase.BulkSummary'
+      description: Response structure for bulk operations with multiple error details
+    customerbase.ContactRecord:
+      type: object
+      properties:
+        contactId:
+          type: string
+          description: 'Contact''s unique identifier
+
+            example: contact-123'
+        email:
+          type: string
+          description: 'Contact''s email address
+
+            example: john@example.com'
+        linkedinUrl:
+          type: string
+          description: 'Contact''s LinkedIn profile URL
+
+            example: https://linkedin.com/in/john-doe'
+      description: Request to create a contact
+    customerbase.ContactsResponse:
+      type: object
+      properties:
+        contacts:
+          type: array
+          description: List of contacts
+          items:
+            $ref: '#/components/schemas/customerbase.ContactRecord'
+        requestId:
+          type: string
+          example: 1234567890abcdef
+        status:
+          type: string
+          description: Status indicates the result of the operation ("success" or
+            "error")
+          example: success
+      description: Response structure for multiple contact operations
+    customerbase.CreateOrganizationRequest:
+      type: object
+      properties:
+        customId:
+          type: string
+          description: 'Custom ID provided by the user
+
+            example: 12345'
+        icpFit:
+          type: boolean
+          description: 'Indicates if the organization is an ICP (Ideal Customer Profile)
+            fit
+
+            example: true'
+        leadSource:
+          type: string
+          description: 'Lead source of the organization
+
+            example: Web Search'
+        linkedinUrl:
+          type: string
+          description: 'Organization''s LinkedIn profile URL
+
+            example: https://linkedin.com/company/openline'
+        name:
+          type: string
+          description: 'Organization''s name
+
+            required: true
+
+            example: CustomerOS'
+        relationship:
+          type: string
+          description: 'Relationship status of the organization
+
+            example: customer'
+        website:
+          type: string
+          description: 'Organization''s website URL
+
+            example: https://customeros.ai'
+      description: Request to create an organization
+    customerbase.ExternalLink:
+      type: object
+      properties:
+        id:
+          type: string
+          description: 'External system identifier
+
+            example: cos-12345'
+        name:
+          type: string
+          description: 'External system name
+
+            example: stripe'
+        primary:
+          type: boolean
+          description: 'Indicates if this is the primary link
+
+            example: true'
+      description: External system link information
+    customerbase.ExternalSystemRecord:
+      type: object
+      properties:
+        externalId:
+          type: string
+          description: 'External system identifier
+
+            example: stripe-1234'
+        externalSystem:
+          type: string
+          description: 'Name of the external system
+
+            example: stripe'
+        organizationId:
+          type: string
+          description: 'Associated organization ID
+
+            example: org-789'
+        primary:
+          type: boolean
+          description: 'Indicates if this is the primary link
+
+            example: true'
+      description: External system information and its relationship to an organization
+    customerbase.ExternalSystemResponse:
+      type: object
+      properties:
+        organization:
+          type: object
+          description: The external system information
+          allOf:
+          - $ref: '#/components/schemas/customerbase.ExternalSystemRecord'
+        requestId:
+          type: string
+          example: 1234567890abcdef
+        status:
+          type: string
+          description: Status indicates the result of the operation ("success" or
+            "error")
+          example: success
+      description: Response structure for external system operations
+    customerbase.OrganizationRecord:
+      type: object
+      properties:
+        cosId:
+          type: string
+          description: 'CustomerOS unique identifier
+
+            example: C-A12-B45'
+        customId:
+          type: string
+          description: 'Custom ID provided by the user
+
+            example: 12345'
+        domains:
+          type: array
+          description: 'Associated domains
+
+            example: ["customeros.com","customeros.ai"]'
+          items:
+            type: string
+        externalLinks:
+          type: array
+          description: External system links
+          items:
+            $ref: '#/components/schemas/customerbase.ExternalLink'
+        icpFit:
+          type: boolean
+          description: 'ICP fit indicator
+
+            example: true'
+        id:
+          type: string
+          description: 'Organization''s unique identifier
+
+            example: 123e4567-e89b-12d3-a456-426614174000'
+        leadSource:
+          type: string
+          description: 'Lead source of the organization
+
+            example: Web Search'
+        name:
+          type: string
+          description: 'Organization name
+
+            example: CustomerOS'
+        relationship:
+          type: string
+          description: 'Relationship status with the organization
+
+            example: customer'
+        stage:
+          type: string
+          description: 'Current stage in the organization lifecycle
+
+            example: lead'
+        website:
+          type: string
+          description: 'Organization''s website URL
+
+            example: https://customeros.ai'
+      description: Detailed organization information returned by API operations
+    customerbase.OrganizationResponse:
+      type: object
+      properties:
+        organization:
+          type: object
+          description: The organization information
+          allOf:
+          - $ref: '#/components/schemas/customerbase.OrganizationRecord'
+        requestId:
+          type: string
+          example: 1234567890abcdef
+        status:
+          type: string
+          description: Status indicates the result of the operation ("success" or
+            "error")
+          example: success
+      description: Response structure for single organization operations
+    customerbase.SetPrimaryExternalSystemIdRequest:
+      type: object
+      properties:
+        externalId:
+          type: string
+          description: 'The ID of the external system to be set as primary
+
+            required: true
+
+            example: stripe-1234'
+      description: Request to set or replace the primary external system ID
+    customerbase.SingleContactResponse:
+      type: object
+      properties:
+        contact:
+          type: object
+          description: The contact information
+          allOf:
+          - $ref: '#/components/schemas/customerbase.ContactRecord'
+        requestId:
+          type: string
+          example: 1234567890abcdef
+        status:
+          type: string
+          description: Status indicates the result of the operation ("success" or
+            "error")
+          example: success
+      description: Response structure for single contact operations
+    rest.BaseResponse:
+      type: object
+      properties:
+        requestId:
+          type: string
+          example: 1234567890abcdef
+        status:
+          type: string
+          description: Status indicates the result of the operation ("success" or
+            "error")
+          example: success
+      description: Standard response structure for API operations
+    rest.ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        requestId:
+          type: string
+          example: 1234567890abcdef
+        status:
+          type: string
+          description: Status indicates the result of the operation ("success" or
+            "error")
+          example: success
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      name: X-CUSTOMER-OS-API-KEY
+      in: header
+x-original-swagger-version: '2.0'

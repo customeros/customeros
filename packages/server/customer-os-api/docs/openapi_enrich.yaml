@@ -1,0 +1,313 @@
+openapi: 3.0.1
+info:
+  title: CustomerOS API
+  description: CustomerOS API for multiple services (Verify, Enrich, Orgs)
+  contact: {}
+  version: '1.0'
+servers:
+- url: https://api.customeros.ai/
+paths:
+  /enrich/v1/organization:
+    get:
+      tags:
+      - Enrichment API
+      summary: Enrich organization information
+      description: Enriches organization information using either domain or LinkedIn
+        URL
+      parameters:
+      - name: linkedinUrl
+        in: query
+        description: Organization's LinkedIn URL
+        schema:
+          type: string
+      - name: domain
+        in: query
+        description: Organization's domain
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 'Organization not found (status: warning)'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/rest.ErrorResponse'
+        '400':
+          description: Missing or invalid parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/rest.BaseResponse'
+        '401':
+          description: Missing or invalid API key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/rest.BaseResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/rest.BaseResponse'
+      security:
+      - ApiKeyAuth: []
+  /enrich/v1/person:
+    get:
+      tags:
+      - Enrichment API
+      summary: Enrich person information
+      description: Enriches person information using LinkedIn URL, email, and other
+        optional details
+      parameters:
+      - name: linkedinUrl
+        in: query
+        description: LinkedIn profile URL
+        schema:
+          type: string
+      - name: email
+        in: query
+        description: Email address
+        schema:
+          type: string
+          format: email
+      - name: firstName
+        in: query
+        description: First name
+        schema:
+          minLength: 1
+          type: string
+      - name: lastName
+        in: query
+        description: Last name
+        schema:
+          minLength: 1
+          type: string
+      - name: includeMobileNumber
+        in: query
+        description: Include mobile number in results
+        schema:
+          type: boolean
+          default: false
+      responses:
+        '200':
+          description: 'Person not found (status: warning)'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/rest.ErrorResponse'
+        '202':
+          description: Processing initiated, check ResultURL for final data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/restenrich.EnrichPersonResponse'
+        '400':
+          description: Missing linkedinUrl or email
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/rest.BaseResponse'
+        '401':
+          description: Missing or invalid API key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/rest.BaseResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/rest.BaseResponse'
+      security:
+      - ApiKeyAuth: []
+  /enrich/v1/person/results/{id}:
+    get:
+      tags:
+      - Enrichment API
+      summary: Retrieve enrichment results
+      description: Retrieves the results of an asynchronous person enrichment operation
+      parameters:
+      - name: id
+        in: path
+        description: Result ID
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Successfully retrieved enriched data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/restenrich.EnrichPersonResponse'
+        '202':
+          description: Still processing, check again later
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/restenrich.EnrichPersonResponse'
+        '400':
+          description: Invalid result ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/rest.BaseResponse'
+        '401':
+          description: Missing or invalid API key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/rest.BaseResponse'
+        '404':
+          description: Result not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/rest.BaseResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/rest.BaseResponse'
+      security:
+      - ApiKeyAuth: []
+components:
+  schemas:
+    rest.BaseResponse:
+      type: object
+      properties:
+        requestId:
+          type: string
+          example: 1234567890abcdef
+        status:
+          type: string
+          description: Status indicates the result of the operation ("success" or
+            "error")
+          example: success
+      description: Standard response structure for API operations
+    rest.ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        requestId:
+          type: string
+          example: 1234567890abcdef
+        status:
+          type: string
+          description: Status indicates the result of the operation ("success" or
+            "error")
+          example: success
+    restenrich.EnrichPersonResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          description: 'Enriched person data
+
+            required: true'
+          allOf:
+          - $ref: '#/components/schemas/restenrich.EnrichPersonData'
+        isComplete:
+          type: boolean
+          description: 'Indicates if all enrichment operations are complete
+
+            required: true'
+          example: true
+        message:
+          type: string
+          description: 'Optional message providing additional information
+
+            required: false'
+          example: Enrichment completed
+        pendingFields:
+          type: array
+          description: 'List of fields still being processed
+
+            required: false'
+          example:
+          - email
+          - phone number
+          items:
+            type: string
+        resultUrl:
+          type: string
+          description: 'URL to check the final result when processing is incomplete
+
+            required: false
+
+            format: uri'
+          example: https://api.customeros.ai/enrich/v1/person/results/550e8400-e29b-41d4-a716-446655440000
+        status:
+          type: string
+          description: 'Operation status
+
+            required: true
+
+            enum: success,error,warning'
+          example: success
+      description: Response structure for person enrichment operations
+    restenrich.EnrichPersonData:
+      type: object
+      properties:
+        emails:
+          type: array
+          description: 'List of email addresses associated with the person
+
+            required: false'
+          items:
+            $ref: '#/components/schemas/restenrich.EnrichPersonEmail'
+        jobs:
+          type: array
+          description: 'Employment history
+
+            required: false'
+          items:
+            $ref: '#/components/schemas/restenrich.EnrichPersonJob'
+        location:
+          type: object
+          description: 'Geographic location information
+
+            required: false'
+          allOf:
+          - $ref: '#/components/schemas/restenrich.EnrichPersonLocation'
+        name:
+          type: object
+          description: 'Person''s name information
+
+            required: true'
+          allOf:
+          - $ref: '#/components/schemas/restenrich.EnrichPersonName'
+        phoneNumbers:
+          type: array
+          description: 'List of phone numbers
+
+            required: false'
+          items:
+            $ref: '#/components/schemas/restenrich.EnrichPersonPhoneNumber'
+        profilePic:
+          type: string
+          description: 'URL to person''s profile picture
+
+            required: false
+
+            format: uri'
+          example: https://example.com/profile.jpg
+        social:
+          type: object
+          description: 'Social media presence
+
+            required: false'
+          allOf:
+          - $ref: '#/components/schemas/restenrich.EnrichPersonSocial'
+      description: Comprehensive enriched information about a person
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      name: X-CUSTOMER-OS-API-KEY
+      in: header
+x-original-swagger-version: '2.0'

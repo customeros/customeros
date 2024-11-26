@@ -1,0 +1,190 @@
+openapi: 3.0.1
+info:
+  title: CustomerOS API
+  description: CustomerOS API for multiple services (Verify, Enrich, Orgs)
+  contact: {}
+  version: '1.0'
+servers:
+- url: https://api.customeros.ai/
+paths:
+  /billing/v1/organizations/{id}/invoices:
+    get:
+      tags:
+      - Billing API
+      summary: Get organization's invoices
+      description: Retrieves all non-dry-run invoices for a specific organization,
+        sorted by due date descending
+      parameters:
+      - name: id
+        in: path
+        description: Organization ID or COS ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: List of invoices retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/billing.InvoicesResponse'
+        '206':
+          description: Invoices retrieved with some errors fetching public URLs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/billing.InvoicesResponse'
+        '400':
+          description: Invalid organization ID format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/rest.BaseResponse'
+        '401':
+          description: Unauthorized - Invalid or missing API key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/rest.BaseResponse'
+        '404':
+          description: Organization not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/rest.BaseResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/rest.BaseResponse'
+      security:
+      - ApiKeyAuth: []
+components:
+  schemas:
+    billing.InvoiceRecord:
+      type: object
+      properties:
+        amount:
+          type: number
+          description: 'Total amount due for the invoice
+
+            required: true
+
+            example: 1500.50
+
+            minimum: 0'
+        currency:
+          type: string
+          description: 'Currency code for the invoice amount
+
+            required: true
+
+            example: USD
+
+            pattern: ^[A-Z]{3}$'
+        dueDate:
+          type: string
+          description: 'Date when the invoice payment is due
+
+            required: true
+
+            example: 2024-12-01T00:00:00Z
+
+            format: date-time'
+        id:
+          type: string
+          description: 'Unique identifier for the invoice
+
+            required: true
+
+            example: 123e4567-e89b-12d3-a456-426614174000
+
+            format: uuid'
+        invoiceStatus:
+          type: string
+          description: 'Current status of the invoice
+
+            required: true
+
+            example: PAID
+
+            enum: DRAFT,PENDING,PAID,OVERDUE,CANCELLED,VOID'
+        number:
+          type: string
+          description: 'Invoice number or reference
+
+            required: true
+
+            example: INV-2024-001
+
+            minLength: 1'
+        paymentLink:
+          type: string
+          description: 'URL where the invoice can be paid
+
+            required: false
+
+            example: https://payment.example.com/inv/12345
+
+            format: uri'
+        publicUrl:
+          type: string
+          description: 'Public URL to access the invoice PDF
+
+            required: false
+
+            example: https://invoices.example.com/12345.pdf
+
+            format: uri'
+      description: Detailed invoice information including payment details and status
+    billing.InvoicesResponse:
+      type: object
+      properties:
+        invoices:
+          type: array
+          description: 'List of invoices
+
+            required: false'
+          items:
+            $ref: '#/components/schemas/billing.InvoiceRecord'
+        requestId:
+          type: string
+          example: 1234567890abcdef
+        status:
+          type: string
+          description: Status indicates the result of the operation ("success" or
+            "error")
+          example: success
+      description: Response containing multiple invoices
+    rest.BaseResponse:
+      type: object
+      properties:
+        requestId:
+          type: string
+          example: 1234567890abcdef
+        status:
+          type: string
+          description: Status indicates the result of the operation ("success" or
+            "error")
+          example: success
+      description: Standard response structure for API operations
+    rest.ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        requestId:
+          type: string
+          example: 1234567890abcdef
+        status:
+          type: string
+          description: Status indicates the result of the operation ("success" or
+            "error")
+          example: success
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      name: X-CUSTOMER-OS-API-KEY
+      in: header
+x-original-swagger-version: '2.0'
