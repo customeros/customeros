@@ -2,6 +2,7 @@
 package events
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"regexp"
@@ -36,6 +37,7 @@ func FathomZapier(services *service.Services) gin.HandlerFunc {
 
 		if !strings.HasPrefix(c.ContentType(), "application/json") {
 			rest.SendError(c, span, http.StatusBadRequest, rest.ErrUnsupportedContentType)
+			return
 		}
 
 		httpContext := rest.HTTPContext{
@@ -48,10 +50,12 @@ func FathomZapier(services *service.Services) gin.HandlerFunc {
 
 		if c.Request.UserAgent() == "" {
 			rest.SendError(c, span, http.StatusForbidden, rest.ErrForbidden)
+			return
 		}
 
 		if !strings.EqualFold(c.Request.UserAgent(), "Zapier") {
 			rest.SendError(c, span, http.StatusForbidden, rest.ErrForbidden)
+			return
 		}
 
 		handleFathomAISummaryZapier(httpContext)
@@ -63,6 +67,12 @@ func handleFathomAISummaryZapier(ctx rest.HTTPContext) {
 	err := ctx.GinContext.BindJSON(&aiSummaryData)
 	if err != nil {
 		rest.SendError(ctx.GinContext, ctx.Span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Unable to parse payload from Zapier"))
+		return
+	}
+
+	err = cleanFathomJsonPayload(&aiSummaryData)
+	if err != nil {
+		rest.SendError(ctx.GinContext, ctx.Span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Unable to normalize payload from Zapier"))
 		return
 	}
 
@@ -79,6 +89,30 @@ func handleFathomAISummaryZapier(ctx rest.HTTPContext) {
 		}
 	}()
 	return
+}
+
+func cleanFathomJsonPayload(data *FathomZapierPayload) error {
+	if data.Meeting.ExternalDomainsStr != "" {
+		externalDomainsJson := utils.ReplaceSingleQuotesWithDoubleQuotes(data.Meeting.ExternalDomainsStr)
+		var externalDomains []ExternalDomain
+		err := json.Unmarshal([]byte(externalDomainsJson), &externalDomains)
+		if err != nil {
+			return err
+		}
+		data.Meeting.ExternalDomains = externalDomains
+	}
+
+	if data.Meeting.InviteesStr != "" {
+		inviteesJson := utils.ReplaceSingleQuotesWithDoubleQuotes(data.Meeting.InviteesStr)
+		var invitees []Invitee
+		err := json.Unmarshal([]byte(inviteesJson), &invitees)
+		if err != nil {
+			return err
+		}
+		data.Meeting.Invitees = invitees
+	}
+
+	return nil
 }
 
 func createEventFromFathomAISummaryZapier(ctx rest.HTTPContext, aiSummaryData *FathomZapierPayload) error {
@@ -163,6 +197,11 @@ func convertFathomHTMLToCleanMarkdown(htmlContent string) (string, error) {
 
 	process = func(n *html.Node) {
 		switch n.Type {
+		case html.DocumentNode:
+			// Start processing from the root node
+			for c := n.FirstChild; c != nil; c = c.NextSibling {
+				process(c)
+			}
 		case html.TextNode:
 			builder.WriteString(n.Data)
 		case html.ElementNode:
@@ -181,14 +220,14 @@ func convertFathomHTMLToCleanMarkdown(htmlContent string) (string, error) {
 				builder.WriteString("\n- ")
 			case "br":
 				builder.WriteString("\n")
-			case "a":
-				// Skip the href and just process the text content
 			}
 
+			// Process child nodes
 			for c := n.FirstChild; c != nil; c = c.NextSibling {
 				process(c)
 			}
 
+			// Close Markdown elements where necessary
 			switch n.Data {
 			case "p", "h1", "h2", "h3", "ul", "li":
 				builder.WriteString("\n")
