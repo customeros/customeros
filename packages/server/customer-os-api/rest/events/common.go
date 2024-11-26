@@ -5,6 +5,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/pkg/errors"
 )
 
@@ -15,7 +16,7 @@ func getParticipantOrganizationIds(ctx rest.HTTPContext, domains []string) ([]st
 		return results, err
 	}
 	for _, domain := range domains {
-		if isDomainTenantDomain(domain, tenantDomains) {
+		if utils.Contains(tenantDomains, domain) {
 			continue
 		}
 		dataFields := data_fields.OrganizationFields{
@@ -23,21 +24,12 @@ func getParticipantOrganizationIds(ctx rest.HTTPContext, domains []string) ([]st
 				domain,
 			},
 		}
-		id, err := ctx.Services.CommonServices.OrganizationService.Save(*ctx.ServiceContext, nil, nil, dataFields)
+		orgId, err := ctx.Services.CommonServices.OrganizationService.Save(*ctx.ServiceContext, nil, nil, dataFields)
 		if err != nil {
 			tracing.TraceErr(ctx.Span, errors.Wrap(err, "Error saving organization by domain"))
 		}
 
-		results = append(results, id)
+		results = append(results, orgId)
 	}
 	return results, nil
-}
-
-func isDomainTenantDomain(domain string, tenantDomains []string) bool {
-	for _, tenantDomain := range tenantDomains {
-		if domain == tenantDomain {
-			return true
-		}
-	}
-	return false
 }

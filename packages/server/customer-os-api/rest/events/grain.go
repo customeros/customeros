@@ -126,7 +126,7 @@ func createEventFromGrainRecordingZapier(ctx rest.HTTPContext, grainData *GrainR
 	source := neo4jentity.DataSourceGrain
 	event.Source = &source
 
-	orgIds, err := getParticipantOrganizationIds(ctx, getParticipantDomains(ctx, &grainData.Data.Participants))
+	orgIds, err := getParticipantOrganizationIds(ctx, getParticipantDomains(&grainData.Data.Participants))
 	if err != nil {
 		allErrs = multierr.Append(allErrs, errors.Wrap(err, "failed to get organization id for participant"))
 		tracing.TraceErr(ctx.Span, err)
@@ -148,7 +148,7 @@ func createEventFromGrainRecordingZapier(ctx rest.HTTPContext, grainData *GrainR
 	return nil
 }
 
-func getParticipantDomains(ctx rest.HTTPContext, participants *[]GrainParticipant) []string {
+func getParticipantDomains(participants *[]GrainParticipant) []string {
 	var domains []string
 
 	for _, participant := range *participants {
