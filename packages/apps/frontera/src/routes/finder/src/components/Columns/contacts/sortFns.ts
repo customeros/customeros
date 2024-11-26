@@ -4,7 +4,7 @@ import { ContactStore } from '@store/Contacts/Contact.store';
 
 import { User, Social, JobRole, ColumnViewType } from '@graphql/types';
 
-export const getContactSortFn = (columnId: string) =>
+export const getContactSortFn = (columnId: string, flowId?: string) =>
   match(columnId)
     .with(ColumnViewType.ContactsName, () => (row: ContactStore) => {
       return row.name?.trim().toLowerCase() || null;
@@ -62,6 +62,14 @@ export const getContactSortFn = (columnId: string) =>
     })
     .with(ColumnViewType.ContactsUpdatedAt, () => (row: ContactStore) => {
       return row.value.updatedAt;
+    })
+    .with(ColumnViewType.ContactsFlowStatus, () => (row: ContactStore) => {
+      if (!flowId) return false;
+
+      return row.root.flows.value
+        .get(flowId)
+        ?.value.participants.find((e) => e.entityId === row.id)
+        ?.status?.toLowerCase();
     })
 
     .otherwise(() => (_row: ContactStore) => false);
