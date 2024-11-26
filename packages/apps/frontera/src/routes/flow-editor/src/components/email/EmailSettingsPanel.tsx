@@ -247,6 +247,7 @@ export const EmailSettingsPanel = observer(() => {
                 {/* to do - fill the data of sender and test org id when the BE is ready*/}
                 <li>To {session.value.profile.email}</li>
                 <li>From robertinc@testcustomeros.com</li>
+                {/*show only for test flow*/}
                 <li>
                   Replies will show up in{' '}
                   <Link to={'/'} className='text-primary-700'>
