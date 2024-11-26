@@ -135,7 +135,7 @@ func processFathomSummaryFromZapier(raw *RawFathomAISummaryZapier) (string, erro
 
 	// Add duration
 	builder.WriteString("\n### Meeting Duration\n")
-	builder.WriteString(fmt.Sprintf("%.0f minutes\n\n", raw.RecordingDuration))
+	builder.WriteString(fmt.Sprintf("%s minutes\n\n", raw.RecordingDuration))
 
 	// Add recording link
 	builder.WriteString(fmt.Sprintf("[View Recording](%s)\n", raw.RecordingShareURL))
