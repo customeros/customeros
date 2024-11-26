@@ -3870,6 +3870,8 @@ const (
 	DataSourceAttio          DataSource = "ATTIO"
 	DataSourceZendeskSell    DataSource = "ZENDESK_SELL"
 	DataSourceMailstack      DataSource = "MAILSTACK"
+	DataSourceFathom         DataSource = "FATHOM"
+	DataSourceGrain          DataSource = "GRAIN"
 )
 
 var AllDataSource = []DataSource{
@@ -3891,11 +3893,13 @@ var AllDataSource = []DataSource{
 	DataSourceAttio,
 	DataSourceZendeskSell,
 	DataSourceMailstack,
+	DataSourceFathom,
+	DataSourceGrain,
 }
 
 func (e DataSource) IsValid() bool {
 	switch e {
-	case DataSourceNa, DataSourceOpenline, DataSourceWebscrape, DataSourceHubspot, DataSourceZendeskSupport, DataSourcePipedrive, DataSourceSLACk, DataSourceIntercom, DataSourceSalesforce, DataSourceStripe, DataSourceMixpanel, DataSourceClose, DataSourceOutlook, DataSourceUnthread, DataSourceShopify, DataSourceAttio, DataSourceZendeskSell, DataSourceMailstack:
+	case DataSourceNa, DataSourceOpenline, DataSourceWebscrape, DataSourceHubspot, DataSourceZendeskSupport, DataSourcePipedrive, DataSourceSLACk, DataSourceIntercom, DataSourceSalesforce, DataSourceStripe, DataSourceMixpanel, DataSourceClose, DataSourceOutlook, DataSourceUnthread, DataSourceShopify, DataSourceAttio, DataSourceZendeskSell, DataSourceMailstack, DataSourceFathom, DataSourceGrain:
 		return true
 	}
 	return false
