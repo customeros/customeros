@@ -105,8 +105,10 @@ func (server *server) Run(parentCtx context.Context) error {
 	commonServices := commonservice.InitServices(&commonConfig.GlobalConfig{
 		RabbitMQConfig: &server.cfg.RabbitMQConfig,
 		ExternalServices: commonConfig.ExternalServices{
-			OpenSRSConfig: server.cfg.ExternalServices.OpenSRSConfig,
-			StripeConfig:  server.cfg.ExternalServices.StripeConfig,
+			OpenSRSConfig:   server.cfg.ExternalServices.OpenSRSConfig,
+			StripeConfig:    server.cfg.ExternalServices.StripeConfig,
+			NamecheapConfig: server.cfg.ExternalServices.NamecheapConfig,
+			PostmarkConfig:  server.cfg.ExternalServices.PostmarkConfig,
 		},
 	}, db.GormDB, &neo4jDriver, server.cfg.Neo4j.Database, grpcContainer, server.log)
 
