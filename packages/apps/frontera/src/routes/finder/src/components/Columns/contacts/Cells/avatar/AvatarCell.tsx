@@ -3,6 +3,7 @@ import { observer } from 'mobx-react-lite';
 import { cn } from '@ui/utils/cn';
 import { Avatar } from '@ui/media/Avatar/Avatar';
 import { useStore } from '@shared/hooks/useStore';
+import { User01 } from '@ui/media/icons/User01.tsx';
 
 interface AvatarCellProps {
   id: string;
@@ -17,6 +18,9 @@ export const AvatarCell = observer(
     const store = useStore();
     const src = icon || logo;
     const fullName = name || 'Unnamed';
+    const contactStore = store.contacts.value.get(id);
+
+    const isEnriching = contactStore?.isEnriching;
 
     return (
       <div className='items-center ml-[1px]'>
@@ -24,12 +28,14 @@ export const AvatarCell = observer(
           size='xs'
           textSize='xs'
           tabIndex={-1}
-          name={fullName}
+          icon={<User01 />}
           src={src || undefined}
           variant='outlineCircle'
+          name={isEnriching ? '' : fullName}
           className={cn(
             'text-gray-700 cursor-pointer focus:outline-none',
             !canNavigate && 'cursor-default',
+            isEnriching && 'animate-pulse',
           )}
           onClick={() => {
             if (

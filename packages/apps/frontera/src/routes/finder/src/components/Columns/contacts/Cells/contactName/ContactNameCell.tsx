@@ -26,6 +26,8 @@ export const ContactNameCell = observer(
     const [isEdit, setIsEdit] = useState(false);
     const ref = useRef(null);
 
+    const isEnriching = contactStore?.isEnriching;
+
     useOutsideClick({
       ref: ref,
       handler: () => {
@@ -61,7 +63,11 @@ export const ContactNameCell = observer(
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        {!isEdit && !contactName && <p className='text-gray-400'>Unknown</p>}
+        {!isEdit && !contactName && (
+          <p className='text-gray-400'>
+            {isEnriching ? 'Enriching...' : 'Unknown'}
+          </p>
+        )}
         {!isEdit && contactName && (
           <p
             role='button'

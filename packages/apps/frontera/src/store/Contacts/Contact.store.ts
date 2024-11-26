@@ -4,7 +4,7 @@ import { Syncable } from '@store/syncable';
 import { Transport } from '@store/transport';
 import { FlowStore } from '@store/Flows/Flow.store';
 import { countryMap } from '@assets/countries/countriesMap';
-import { action, override, runInAction, makeObservable } from 'mobx';
+import { action, override, computed, runInAction, makeObservable } from 'mobx';
 
 import {
   Contact,
@@ -34,6 +34,7 @@ export class ContactStore extends Syncable<Contact> {
       setId: override,
       invalidate: action,
       getChannelName: override,
+      isEnriching: computed,
     });
   }
 
@@ -44,6 +45,14 @@ export class ContactStore extends Syncable<Contact> {
   set id(id: string) {
     this.value.id = id;
     this.value.metadata.id = id;
+  }
+
+  get isEnriching(): boolean {
+    return (
+      this.value?.enrichDetails?.requestedAt &&
+      !this.value?.enrichDetails?.enrichedAt &&
+      !this.value?.enrichDetails?.failedAt
+    );
   }
 
   get id() {

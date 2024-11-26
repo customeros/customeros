@@ -7,7 +7,7 @@ interface TextCellProps {
   dataTest?: string;
   unknownText?: string;
   leftIcon?: ReactNode;
-  enrichingStatus?: boolean;
+  isEnriching?: boolean;
 }
 
 export const TextCell = ({
@@ -15,14 +15,14 @@ export const TextCell = ({
   leftIcon,
   unknownText = 'Not set',
   dataTest,
-  enrichingStatus,
+  isEnriching,
 }: TextCellProps) => {
   const itemRef = useRef<HTMLDivElement>(null);
 
   if (!text)
     return (
       <div data-test={dataTest} className='text-gray-400'>
-        {enrichingStatus ? 'Enriching' : `${unknownText}`}
+        {isEnriching ? 'Enriching' : `${unknownText}`}
       </div>
     );
 
