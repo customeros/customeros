@@ -354,7 +354,10 @@ const getFilterFn = (
     .otherwise(() => noop);
 };
 
-const filterTypeText = (filter: FilterItem, value?: string | undefined) => {
+const filterTypeText = (
+  filter: FilterItem,
+  value: string | undefined | null,
+) => {
   const filterValue = filter?.value?.toLowerCase();
   const filterOperator = filter?.operation;
   const valueLower = value?.toLowerCase();
