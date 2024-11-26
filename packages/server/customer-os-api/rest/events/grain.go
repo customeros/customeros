@@ -2,7 +2,9 @@
 package events
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"net/http"
 	"regexp"
 	"strings"
@@ -22,7 +24,7 @@ import (
 
 func GrainZapier(services *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := commontracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "Fathom", c.Request.Header)
+		ctx, span := commontracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "Grain", c.Request.Header)
 		defer span.Finish()
 		commontracing.TagComponentRest(span)
 
@@ -47,9 +49,9 @@ func GrainZapier(services *service.Services) gin.HandlerFunc {
 			rest.SendError(c, span, http.StatusForbidden, rest.ErrForbidden)
 		}
 
-		if !strings.EqualFold(c.Request.UserAgent(), "Zapier") {
-			rest.SendError(c, span, http.StatusForbidden, rest.ErrForbidden)
-		}
+		//if !strings.EqualFold(c.Request.UserAgent(), "Zapier") {
+		//	rest.SendError(c, span, http.StatusForbidden, rest.ErrForbidden)
+		//}
 
 		handleGrainNewRecordingEventZapier(httpContext)
 	}
@@ -58,7 +60,13 @@ func GrainZapier(services *service.Services) gin.HandlerFunc {
 func handleGrainNewRecordingEventZapier(ctx rest.HTTPContext) {
 	var grainData GrainRecordingData
 	err := ctx.GinContext.BindJSON(&grainData)
-	if err != nil && grainData.Data.IntelligenceNotesMD != "" {
+	if err == nil && grainData.Data.IntelligenceNotesMD != "" {
+		err = cleanJsonPayload(&grainData)
+		if err != nil {
+			tracing.TraceErr(ctx.Span, errors.Wrap(err, "failed to clean grain json payload"))
+			return
+		}
+
 		ctx.GinContext.JSON(http.StatusAccepted, rest.BuildBaseResponse(rest.StatusProcessing))
 
 		go func() {
@@ -70,6 +78,38 @@ func handleGrainNewRecordingEventZapier(ctx rest.HTTPContext) {
 	}
 
 	return
+}
+
+func cleanJsonPayload(data *GrainRecordingData) error {
+	ownersJson := utils.ReplaceSingleQuotesWithDoubleQuotes(data.Data.OwnersStr)
+	var owners []string
+	err := json.Unmarshal([]byte(ownersJson), &owners)
+	if err != nil {
+		return err
+	}
+	data.Data.Owners = owners
+
+	participantsJson := utils.ReplaceSingleQuotesWithDoubleQuotes(data.Data.ParticipantsStr)
+
+	participantsJson = strings.Replace(participantsJson, " True", " true", -1)
+	participantsJson = strings.Replace(participantsJson, " False", " false", -1)
+	participantsJson = strings.Replace(participantsJson, " None", " \"\"", -1)
+
+	var participants []GrainParticipant
+	err = json.Unmarshal([]byte(participantsJson), &participants)
+	if err != nil {
+		return err
+	}
+	data.Data.Participants = participants
+
+	tagsJson := utils.ReplaceSingleQuotesWithDoubleQuotes(data.Data.TagsStr)
+	var tags []string
+	err = json.Unmarshal([]byte(tagsJson), &tags)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func createEventFromGrainRecordingZapier(ctx rest.HTTPContext, grainData *GrainRecordingData) error {
@@ -86,8 +126,10 @@ func createEventFromGrainRecordingZapier(ctx rest.HTTPContext, grainData *GrainR
 	if err != nil {
 		allErrs = multierr.Append(allErrs, errors.Wrap(err, "failed to get organization id for participant"))
 		tracing.TraceErr(ctx.Span, err)
-
 	}
+
+	orgIds = utils.RemoveDuplicates(orgIds)
+	orgIds = utils.RemoveEmpties(orgIds)
 
 	for _, orgId := range orgIds {
 		event.OrganizationId = &orgId

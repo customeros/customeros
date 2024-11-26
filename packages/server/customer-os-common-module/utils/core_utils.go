@@ -373,3 +373,8 @@ func BoolToString(b bool) string {
 	}
 	return "false"
 }
+
+// ReplaceSingleQuotes replaces single quotes with double quotes in a JSON-like string
+func ReplaceSingleQuotesWithDoubleQuotes(input string) string {
+	return strings.ReplaceAll(input, "'", "\"")
+}
