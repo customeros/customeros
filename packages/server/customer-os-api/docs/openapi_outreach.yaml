@@ -1,0 +1,222 @@
+openapi: 3.0.1
+info:
+  title: CustomerOS API
+  description: CustomerOS API for multiple services (Verify, Enrich, Orgs)
+  contact: {}
+  version: '1.0'
+servers:
+- url: https://api.customeros.ai/
+paths:
+  /outreach/v1/email/tracking:
+    post:
+      tags:
+      - Outreach
+      summary: Generate email tracking URLs
+      description: Generates tracking pixels, click tracking URLs, and unsubscribe
+        links for email campaigns
+      requestBody:
+        description: Tracking URL generation configuration
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/restoutreach.EmailTrackingRequest'
+        required: true
+      responses:
+        '200':
+          description: Tracking URLs generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/restoutreach.EmailTrackingResponse'
+        '400':
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/rest.ErrorResponse'
+        '401':
+          description: Unauthorized - Missing or invalid API key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/rest.ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/rest.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      x-codegen-request-body-name: body
+components:
+  schemas:
+    rest.BaseResponse:
+      type: object
+      properties:
+        requestId:
+          type: string
+          example: 1234567890abcdef
+        status:
+          type: string
+          description: Status indicates the result of the operation ("success" or
+            "error")
+          example: success
+      description: Standard response structure for API operations
+    rest.ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        requestId:
+          type: string
+          example: 1234567890abcdef
+        status:
+          type: string
+          description: Status indicates the result of the operation ("success" or
+            "error")
+          example: success
+    restoutreach.EmailTrackingRequest:
+      type: object
+      properties:
+        campaignId:
+          type: string
+          description: 'Unique identifier for the email campaign
+
+            required: true
+
+            example: camp_123456'
+        generateUnsubscribeLink:
+          type: boolean
+          description: 'Enable unsubscribe link generation
+
+            required: false
+
+            default: false'
+        links:
+          type: array
+          description: 'List of URLs to be tracked
+
+            required: false
+
+            example: ["https://example.com/page1", "https://example.com/page2"]'
+          items:
+            type: string
+        messageId:
+          type: string
+          description: 'Unique identifier for the message (optional, generated if
+            not provided)
+
+            required: false
+
+            example: msg_123456'
+        recipientId:
+          type: string
+          description: 'Unique identifier for the recipient
+
+            required: true
+
+            example: recipient_123456'
+        trackClicks:
+          type: boolean
+          description: 'Enable click tracking for links
+
+            required: false
+
+            default: false'
+        trackOpens:
+          type: boolean
+          description: 'Enable open tracking via pixel
+
+            required: false
+
+            default: false'
+        trackerDomain:
+          type: string
+          description: 'Domain to use for tracking URLs (optional, system default
+            used if not provided)
+
+            required: false
+
+            format: hostname
+
+            example: track.example.com'
+        unsubscribeLink:
+          type: string
+          description: 'URL for unsubscribe page
+
+            required: false
+
+            format: uri
+
+            example: https://example.com/unsubscribe'
+      description: Request payload for generating email tracking URLs and pixels
+    restoutreach.EmailTrackingResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          description: 'Operation status
+
+            required: true
+
+            enum: success'
+          example: success
+        trackedLinks:
+          type: array
+          description: 'List of original and tracked URLs (only if TrackClicks is
+            true)
+
+            required: false'
+          items:
+            $ref: '#/components/schemas/restoutreach.TrackedLink'
+        trackingId:
+          type: string
+          description: 'Generated or provided message ID
+
+            required: true'
+          example: msg_123456
+        trackingPixel:
+          type: string
+          description: 'URL for tracking pixel (only if TrackOpens is true)
+
+            required: false
+
+            format: uri'
+          example: https://track.example.com/p/abc123
+        unsubscribeLink:
+          type: string
+          description: 'Generated unsubscribe link (only if GenerateUnsubscribeLink
+            is true)
+
+            required: false
+
+            format: uri'
+          example: https://track.example.com/u/abc123
+      description: Response containing generated tracking URLs and pixel
+    restoutreach.TrackedLink:
+      type: object
+      properties:
+        original:
+          type: string
+          description: 'Original URL before tracking
+
+            required: true
+
+            format: uri'
+          example: https://example.com/page1
+        tracked:
+          type: string
+          description: 'Generated tracking URL
+
+            required: true
+
+            format: uri'
+          example: https://track.example.com/r/abc123
+      description: Pair of original and tracking-enabled URLs
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      name: X-CUSTOMER-OS-API-KEY
+      in: header
+x-original-swagger-version: '2.0'
