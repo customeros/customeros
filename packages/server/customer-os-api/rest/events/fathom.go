@@ -3,10 +3,12 @@ package events
 
 import (
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
@@ -97,7 +99,7 @@ func createEventFromFathomAISummaryZapier(ctx rest.HTTPContext, aiSummaryData *F
 	}
 	event.Content = &content
 
-	domains := strings.Split(aiSummaryData.Meeting.ExternalDomains, ",")
+	domains := aiSummaryData.ExternalDomains()
 	orgIds, err := getParticipantOrganizationIds(ctx, domains)
 	if err != nil {
 		allErrs = multierr.Append(allErrs, errors.Wrap(err, "failed to get organization id for participant"))
@@ -138,7 +140,10 @@ func processFathomSummaryFromZapier(raw *FathomZapierPayload) (string, error) {
 
 	// Add duration
 	builder.WriteString("\n### Meeting Duration\n")
-	builder.WriteString(fmt.Sprintf("%s minutes\n\n", raw.Recording.DurationInMinutes))
+	mins, err := strconv.ParseFloat(raw.Recording.DurationInMinutes, 64)
+	if err == nil {
+		builder.WriteString(fmt.Sprintf("%d minutes\n\n", int(mins)))
+	}
 
 	// Add recording link
 	builder.WriteString(fmt.Sprintf("[View Recording](%s)\n", raw.Recording.ShareURL))
