@@ -19,6 +19,7 @@ import { IntercomStub } from '@organization/components/Timeline/PastZone/events/
 import { LogEntryStub } from '@organization/components/Timeline/PastZone/events/logEntry/LogEntryStub';
 import { UserActionStub } from '@organization/components/Timeline/PastZone/events/action/UserActionStub';
 import { TimelineActions } from '@organization/components/Timeline/FutureZone/TimelineActions/TimelineActions';
+import { MarkdownEventStub } from '@organization/components/Timeline/PastZone/events/markdownEvent/MarkdownEventStub';
 import { TimelineItemSkeleton } from '@organization/components/Timeline/PastZone/events/TimelineItem/TimelineItemSkeleton';
 import { TimelineEventPreviewModal } from '@organization/components/Timeline/shared/TimelineEventPreview/TimelineEventPreviewModal';
 
@@ -180,6 +181,8 @@ export const OrganizationTimeline = observer(() => {
           return !!d.id;
         case 'Action':
           return !!d.id && d.actionType !== 'CREATED';
+        case 'MarkdownEvent':
+          return !!d.markdownEventMetadata?.id;
         default:
           return false;
       }
@@ -197,6 +200,8 @@ export const OrganizationTimeline = observer(() => {
             return a.createdAt;
           case 'LogEntry':
             return a.logEntryStartedAt;
+          case 'MarkdownEvent':
+            return a.markdownEventMetadata.created;
 
           default:
             return null;
@@ -307,6 +312,17 @@ export const OrganizationTimeline = observer(() => {
                   date={timelineEvent?.createdAt}
                 >
                   <MeetingStub data={timelineEvent} />
+                </TimelineItem>
+              );
+            }
+
+            case 'MarkdownEvent': {
+              return (
+                <TimelineItem
+                  showDate={showDate}
+                  date={timelineEvent?.markdownEventMetadata?.created}
+                >
+                  <MarkdownEventStub event={timelineEvent} />
                 </TimelineItem>
               );
             }

@@ -1,5 +1,6 @@
 import { QueryKey, InfiniteData, useQueryClient } from '@tanstack/react-query';
 
+import { LogEntry } from '@graphql/types';
 import { TimelineEvent } from '@organization/components/Timeline/types';
 import { GetTimelineQuery } from '@organization/graphql/getTimeline.generated';
 
@@ -21,10 +22,8 @@ export function useUpdateCacheWithExistingEvent() {
               if (
                 // those entities need fragments on the query string in order to have `id` field present
                 // we filter them out on this condition to avoid TS saying there's no `id` present when checking.
-                event.__typename !== 'InteractionSession' &&
-                event.__typename !== 'Note' &&
-                event.__typename !== 'PageView' &&
-                event.id === updatedEvent?.id
+                event.__typename === 'LogEntry' &&
+                event.id === (updatedEvent as LogEntry)?.id
               ) {
                 return { ...event, ...updatedEvent };
               }

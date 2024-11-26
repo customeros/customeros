@@ -639,6 +639,16 @@ export type TimelineQuery = {
           }>;
         }
       | {
+          __typename: 'MarkdownEvent';
+          content?: string | null;
+          markdownEventMetadata: {
+            __typename?: 'Metadata';
+            id: string;
+            created: any;
+            source: Types.DataSource;
+          };
+        }
+      | {
           __typename: 'Meeting';
           id: string;
           name?: string | null;

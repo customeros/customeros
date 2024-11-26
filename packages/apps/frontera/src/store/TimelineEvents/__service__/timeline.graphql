@@ -7,7 +7,7 @@ query Timeline($organizationId: ID!, $from: Time!, $size: Int!) {
         ACTION
         LOG_ENTRY
         ISSUE
-        ORDER
+        MARKDOWN_EVENT
       ]
     )
     timelineEvents(
@@ -19,7 +19,7 @@ query Timeline($organizationId: ID!, $from: Time!, $size: Int!) {
         ACTION
         LOG_ENTRY
         ISSUE
-        ORDER
+        MARKDOWN_EVENT
       ]
     ) {
       __typename
@@ -150,6 +150,15 @@ query Timeline($organizationId: ID!, $from: Time!, $size: Int!) {
           externalUrl
           externalSource
         }
+      }
+      ... on MarkdownEvent {
+        __typename
+        markdownEventMetadata: metadata {
+            id
+            created
+            source
+        }
+        content
       }
       ... on Issue {
         __typename

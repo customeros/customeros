@@ -1,6 +1,6 @@
 import { QueryKey, useQueryClient } from '@tanstack/react-query';
 
-import { TimelineEvent } from '@graphql/types';
+import { TimelineEvent } from '@organization/components/Timeline/types';
 import { useTimelineMeta } from '@organization/components/Timeline/state';
 import { useInfiniteGetTimelineQuery } from '@organization/graphql/getTimeline.generated';
 import {
@@ -51,12 +51,34 @@ export const useTimelineEventCachedData = () => {
 
     const eventMap = new Map<string, TimelineEvent>();
 
+    const getID = (a: TimelineEvent) => {
+      if (!a) return null;
+
+      switch (a.__typename) {
+        case 'InteractionEvent':
+        case 'Meeting':
+        case 'Action':
+        case 'Issue':
+        case 'LogEntry':
+          return a.id;
+        case 'MarkdownEvent':
+          return a?.markdownEventMetadata?.id;
+
+        default:
+          return null;
+      }
+    };
+
     pages.forEach((page) => {
       const timelineEvents = page?.organization?.timelineEvents;
 
-      timelineEvents.forEach((event: TimelineEvent) =>
-        eventMap.set(event.id, event),
-      );
+      timelineEvents.forEach((event: TimelineEvent) => {
+        const id = getID(event);
+
+        if (id) {
+          eventMap.set(id, event);
+        }
+      });
     });
 
     return (eventMap.get(eventId) as TimelineEvent) || null;
