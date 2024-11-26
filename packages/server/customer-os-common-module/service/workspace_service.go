@@ -9,6 +9,7 @@ import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 )
 
 type WorkspaceService interface {
@@ -60,5 +61,7 @@ func (s *workspaceService) GetWorkspaceDomainsForTenant(ctx context.Context) ([]
 	}
 	domains = utils.RemoveEmpties(domains)
 	domains = utils.RemoveDuplicates(domains)
+
+	span.LogFields(log.String("domains", fmt.Sprintf("%v", domains)))
 	return domains, nil
 }
