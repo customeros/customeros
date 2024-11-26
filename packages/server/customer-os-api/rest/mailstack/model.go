@@ -1,111 +1,170 @@
+// @openapi 3.0.0
 package restmailstack
 
 import "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 
-// RegisterNewDomainRequest defines the request body for registering a new domain
-// @Description Request body for domain registration
+// RegisterNewDomainRequest represents the domain registration request
+// @Description Request payload for registering a new domain for mail services
 type RegisterNewDomainRequest struct {
-	// Domain is the domain name to be registered
-	// Required: true
-	Domain string `json:"domain" example:"example.com"`
+	// Domain name to register
+	// required: true
+	// pattern: ^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\.[a-zA-Z]{2,}$
+	// example: example.com
+	Domain string `json:"domain"`
 
-	// Destination website for permanent redirect
-	// Required: true
-	Website string `json:"website" example:"www.example.com"`
+	// Website URL for domain configuration
+	// required: true
+	// format: uri
+	// example: https://www.example.com
+	Website string `json:"website"`
 }
 
-// ConfigureDomainRequest defines the request body for configuring domain
-// @Description Request body for domain configuration
+// ConfigureDomainRequest represents the domain configuration request
+// @Description Request payload for configuring domain DNS and mail services
 type ConfigureDomainRequest struct {
-	// Domain is the domain name to be configured
-	// Required: true
-	Domain string `json:"domain" example:"example.com"`
+	// Domain name to configure
+	// required: true
+	// pattern: ^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\.[a-zA-Z]{2,}$
+	// example: example.com
+	Domain string `json:"domain"`
 
-	// Destination website for permanent redirect
-	// Required: true
-	Website string `json:"website" example:"www.example.com"`
+	// Website URL for domain configuration
+	// required: true
+	// format: uri
+	// example: https://www.example.com
+	Website string `json:"website"`
 }
 
+// DomainResponse represents a single domain response
+// @Description Response containing domain details and status
 type DomainResponse struct {
+	// Inherits standard response fields
 	rest.BaseResponse
-
+	// Domain information
+	// required: true
 	Domain DomainRecord `json:"domain"`
 }
 
-// DomainsResponse defines the response structure for multiple domains in the response
-// @Description Response body for all domain details
+// DomainsResponse represents multiple domains response
+// @Description Response containing list of domains and status
 type DomainsResponse struct {
+	// Inherits standard response fields
 	rest.BaseResponse
-
+	// List of domains
+	// required: true
 	Domains []DomainRecord `json:"domains"`
 }
 
-// DomainResponse defines the structure of a domain in the response
-// @Description Domain object in the response
+// DomainRecord represents detailed domain information
+// @Description Comprehensive domain record information
 type DomainRecord struct {
-	// Domain is the domain name that was registered
-	Domain string `json:"domain" example:"example.com"`
+	// Registered domain name
+	// required: true
+	// example: example.com
+	Domain string `json:"domain"`
 
-	// CreatedDate is the date the domain was registered
-	CreatedDate string `json:"createdDate" example:"09/14/2024"`
+	// Domain registration date
+	// required: true
+	// format: date
+	// example: 2024-09-14
+	CreatedDate string `json:"createdDate"`
 
-	// ExpiredDate is the date when the domain registration will expire
-	ExpiredDate string `json:"expiredDate" example:"09/14/2025"`
+	// Domain expiration date
+	// required: true
+	// format: date
+	// example: 2025-09-14
+	ExpiredDate string `json:"expiredDate"`
 
-	// Nameservers lists the nameservers associated with the domain
-	Nameservers []string `json:"nameservers" example:"['ns1.example.com', 'ns2.example.com']"`
+	// List of assigned nameservers
+	// required: true
+	// minItems: 2
+	// example: ["ns1.example.com","ns2.example.com"]
+	Nameservers []string `json:"nameservers"`
 }
 
-// MailboxRequest represents the request body to add and configure a new mailbox
-// @Description Request body for adding and configuring a new mailbox
+// MailboxRequest represents mailbox creation request
+// @Description Request payload for creating and configuring a new mailbox
 type MailboxRequest struct {
-	// Username for the mailbox (e.g., "john.doe")
-	// Required: true
-	Username string `json:"username" example:"john.doe"`
+	// Username for the mailbox
+	// required: true
+	// pattern: ^[a-zA-Z0-9._%+-]+$
+	// minLength: 3
+	// maxLength: 64
+	// example: john.doe
+	Username string `json:"username"`
 
-	// Password for the mailbox (e.g., "SecurePassword123!")
-	// Required: false
-	Password string `json:"password" example:"SecurePassword123!"`
+	// Password for mailbox access
+	// required: false
+	// minLength: 8
+	// maxLength: 64
+	// example: SecurePassword123!
+	Password string `json:"password"`
 
-	// Email address to forward to
-	ForwardingTo []string `json:"forwardingTo" example:"['user1@example.com', 'user2@example.com']"`
+	// List of email addresses to forward to
+	// required: false
+	// maxItems: 10
+	// example: ["user1@example.com","user2@example.com"]
+	ForwardingTo []string `json:"forwardingTo"`
 
-	// Specifies if webmail access is enabled
-	WebmailEnabled bool `json:"webmailEnabled" example:"true"`
+	// Enable webmail access
+	// required: false
+	// default: false
+	WebmailEnabled bool `json:"webmailEnabled"`
 
-	// LinkedUser is the email address of the user to whom new mailbox should be linked. If not provided or not found, mailbox will not be associated with any user
-	// Required: false
-	LinkedUser string `json:"linkedUser" example:"john.doe@mycompany.com"`
+	// Associated user's email address
+	// required: false
+	// format: email
+	// example: john.doe@mycompany.com
+	LinkedUser string `json:"linkedUser"`
 }
 
+// MailboxResponse represents single mailbox response
+// @Description Response containing mailbox details and status
 type MailboxResponse struct {
+	// Inherits standard response fields
 	rest.BaseResponse
+	// Mailbox information
+	// required: false
 	Mailbox MailboxRecord `json:"mailbox,omitempty"`
 }
 
+// MailboxesResponse represents multiple mailboxes response
+// @Description Response containing list of mailboxes and status
 type MailboxesResponse struct {
+	// Inherits standard response fields
 	rest.BaseResponse
+	// List of mailboxes
+	// required: false
 	Mailboxes []MailboxRecord `json:"mailboxes,omitempty"`
 }
 
-// MailboxResponse defines the structure of a mailbox in the response
-// @Description Mailbox object in the response
+// MailboxRecord represents detailed mailbox information
+// @Description Comprehensive mailbox configuration and status
 type MailboxRecord struct {
+	// Email address for the mailbox
+	// required: true
+	// format: email
+	// example: user@example.com
+	Email string `json:"email"`
 
-	// Email is the email address for the mailbox
-	// Required: true
-	Email string `json:"email" example:"user@example.com"`
+	// Mailbox password (only included in specific responses)
+	// required: false
+	// minLength: 8
+	// maxLength: 64
+	Password string `json:"password,omitempty"`
 
-	// Password is the password for the mailbox
-	// Required: false
-	Password string `json:"password,omitempty" example:"SecurePassword123!"`
+	// Email forwarding status
+	// required: true
+	// default: false
+	ForwardingEnabled bool `json:"forwardingEnabled"`
 
-	// ForwardingEnabled indicates if email forwarding is enabled
-	ForwardingEnabled bool `json:"forwardingEnabled" example:"true"`
+	// List of forwarding email addresses
+	// required: false
+	// maxItems: 10
+	ForwardingTo []string `json:"forwardingTo"`
 
-	// ForwardingTo is the email address the mailbox forwards to
-	ForwardingTo []string `json:"forwardingTo" example:"['user1@example.com', 'user2@example.com']"`
-
-	// WebmailEnabled indicates if webmail access is enabled
-	WebmailEnabled bool `json:"webmailEnabled" example:"true"`
+	// Webmail access status
+	// required: true
+	// default: false
+	WebmailEnabled bool `json:"webmailEnabled"`
 }

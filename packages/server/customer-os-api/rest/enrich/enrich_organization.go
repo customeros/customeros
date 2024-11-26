@@ -1,3 +1,4 @@
+// @openapi 3.0.0
 package restenrich
 
 import (
@@ -25,122 +26,155 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 )
 
-// EnrichOrganizationResponse represents the response for the organization enrichment API.
-// @Description Response structure for the organization enrichment API.
-// @example 200 {object} EnrichOrganizationResponse
+// EnrichOrganizationResponse represents the response for organization enrichment
+// @Description Response structure for organization enrichment operations
 type EnrichOrganizationResponse struct {
+	// Inherits standard response fields
 	rest.BaseResponse
+	// Enriched organization data
+	// required: true
 	Data EnrichOrganizationData `json:"data"`
 }
 
-// EnrichOrganizationData represents the detailed data about the organization from enrichment.
-// @Description Detailed data about an organization from enrichment.
+// EnrichOrganizationData represents enriched organization information
+// @Description Detailed enriched information about an organization
 type EnrichOrganizationData struct {
-	// Name of the organization.
-	// Example: Acme Corporation
-	Name string `json:"name" example:"Acme Corporation"`
+	// Organization name
+	// required: true
+	// example: Acme Corporation
+	Name string `json:"name"`
 
-	// Domain of the organization's website.
-	// Example: acme.com
-	Domain string `json:"domain" example:"acme.com"`
+	// Organization's primary domain
+	// required: true
+	// example: acme.com
+	Domain string `json:"domain"`
 
-	// Short description of the organization.
-	// Example: A global leader in innovative solutions.
-	ShortDescription string `json:"description" example:"A global leader in innovative solutions"`
+	// Brief description of the organization
+	// required: false
+	// example: A global leader in innovative solutions
+	ShortDescription string `json:"description,omitempty"`
 
-	// Long description of the organization.
-	// Example: Acme Corporation provides cutting-edge technology solutions across the globe.
-	LongDescription string `json:"longDescription" example:"Acme Corporation provides cutting-edge technology solutions across the globe."`
+	// Detailed description of the organization
+	// required: false
+	// example: Acme Corporation provides cutting-edge technology solutions across the globe
+	LongDescription string `json:"longDescription,omitempty"`
 
-	// Website URL of the organization.
-	// Example: https://acme.com
-	Website string `json:"website" example:"https://acme.com"`
+	// Organization's website URL
+	// required: true
+	// example: https://acme.com
+	// format: uri
+	Website string `json:"website"`
 
-	// Number of employees in the organization.
-	// Example: 5000
-	Employees int `json:"employees" example:"5000"`
+	// Number of employees
+	// required: false
+	// minimum: 0
+	// example: 5000
+	Employees int `json:"employees,omitempty"`
 
-	// Year the organization was founded.
-	// Example: 1995
-	FoundedYear int `json:"foundedYear" example:"1995"`
+	// Year the organization was founded
+	// required: false
+	// minimum: 1800
+	// maximum: 2100
+	// example: 1995
+	FoundedYear int `json:"foundedYear,omitempty"`
 
-	// Indicates whether the organization is publicly traded.
-	// Example: true
-	Public bool `json:"public,omitempty" example:"true"`
+	// Indicates if the organization is publicly traded
+	// required: false
+	// example: true
+	Public bool `json:"public,omitempty"`
 
-	// List of logo URLs for the organization.
-	// Example: ["https://acme.com/logo.png"]
-	Logos []string `json:"logos" example:"https://acme.com/logo.png"`
+	// URLs to organization logos
+	// required: false
+	// example: ["https://acme.com/logo.png"]
+	Logos []string `json:"logos,omitempty"`
 
-	// List of icon URLs for the organization.
-	// Example: ["https://acme.com/icon.png"]
-	Icons []string `json:"icons" example:"https://acme.com/icon.png"`
+	// URLs to organization icons
+	// required: false
+	// example: ["https://acme.com/icon.png"]
+	Icons []string `json:"icons,omitempty"`
 
-	// Industry in which the organization operates.
-	Industry EnrichOrganizationIndustry `json:"industry"`
+	// Industry classification
+	// required: false
+	Industry EnrichOrganizationIndustry `json:"industry,omitempty"`
 
-	// List of social media URLs for the organization.
-	// Example: ["https://linkedin.com/company/acme"]
-	Socials []string `json:"socials" example:"https://linkedin.com/company/acme"`
+	// Social media presence
+	// required: false
+	// example: ["https://linkedin.com/company/acme"]
+	Socials []string `json:"socials,omitempty"`
 
-	// Location information about the organization.
-	Location EnrichOrganizationLocation `json:"location"`
+	// Organization location information
+	// required: false
+	Location EnrichOrganizationLocation `json:"location,omitempty"`
 }
 
+// EnrichOrganizationIndustry represents industry classification
+// @Description Industry classification information
 type EnrichOrganizationIndustry struct {
-	// Industry in which the organization operates.
-	// Example: Technology
-	Industry string `json:"industry" example:"Technology"`
+	// Primary industry category
+	// required: true
+	// example: Technology
+	Industry string `json:"industry"`
 }
 
-// EnrichOrganizationLocation represents the location details of an organization.
-// @Description Location details of an organization.
+// EnrichOrganizationLocation represents location information
+// @Description Detailed location information for an organization
 type EnrichOrganizationLocation struct {
-	// Indicates if the location is the headquarters.
-	// Example: true
-	IsHeadquarter bool `json:"isHeadquarter" example:"true"`
+	// Indicates if this is the headquarters location
+	// required: true
+	// example: true
+	IsHeadquarter bool `json:"isHeadquarter"`
 
-	// Country of the organization.
-	// Example: United States
-	Country string `json:"country" example:"United States"`
+	// Country name
+	// required: true
+	// example: United States
+	Country string `json:"country"`
 
-	// ISO Alpha-2 code of the country.
-	// Example: US
-	CountryCodeA2 string `json:"countryCodeA2" example:"US"`
+	// ISO 3166-1 alpha-2 country code
+	// required: true
+	// example: US
+	// pattern: ^[A-Z]{2}$
+	CountryCodeA2 string `json:"countryCodeA2"`
 
-	// City or locality of the organization.
-	// Example: San Francisco
-	City string `json:"city" example:"San Francisco"`
+	// City name
+	// required: false
+	// example: San Francisco
+	City string `json:"city,omitempty"`
 
-	// Region or state of the organization.
-	// Example: California
-	Region string `json:"region" example:"California"`
+	// State or region
+	// required: false
+	// example: California
+	Region string `json:"region,omitempty"`
 
-	// Postal code of the organization's location.
-	// Example: 94105
-	PostalCode string `json:"postalCode" example:"94105"`
+	// Postal code
+	// required: false
+	// example: 94105
+	PostalCode string `json:"postalCode,omitempty"`
 
-	// Address line 1 of the organization.
-	// Example: 123 Main St
-	AddressLine1 string `json:"addressLine1" example:"123 Main St"`
+	// Primary address line
+	// required: false
+	// example: 123 Main St
+	AddressLine1 string `json:"addressLine1,omitempty"`
 
-	// Address line 2 of the organization (optional).
-	// Example: Suite 100
-	AddressLine2 string `json:"addressLine2" example:"Suite 100"`
+	// Secondary address line
+	// required: false
+	// example: Suite 100
+	AddressLine2 string `json:"addressLine2,omitempty"`
 }
 
-// @Summary Enrich Organization Information
-// @Description Enriches an organization's information using the domain or other details.
+// @Summary Enrich organization information
+// @Description Enriches organization information using either domain or LinkedIn URL
 // @Tags Enrichment API
-// @Param linkedinUrl query string false "LinkedIn profile URL of the organization"
-// @Param domain query string false "Domain of the organization"
-// @Success 200 {object} EnrichOrganizationResponse "Enrichment results including organizational data"
-// @Failure 400 "Bad Request"
-// @Failure 401 "Unauthorized"
-// @Failure 500 "Internal Server Error"
-// @Security ApiKeyAuth
+// @Accept json
 // @Produce json
+// @Param linkedinUrl query string false "Organization's LinkedIn URL" example(https://linkedin.com/company/acme)
+// @Param domain query string false "Organization's domain" example(acme.com)
+// @Success 200 {object} EnrichOrganizationResponse "Successfully retrieved enriched data"
+// @Success 200 {object} rest.ErrorResponse "Organization not found (status: warning)"
+// @Failure 400 {object} rest.BaseResponse "Missing or invalid parameters"
+// @Failure 401 {object} rest.BaseResponse "Missing or invalid API key"
+// @Failure 500 {object} rest.BaseResponse "Internal server error"
 // @Router /enrich/v1/organization [get]
+// @Security ApiKeyAuth
 func EnrichOrganization(services *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "EnrichOrganization", c.Request.Header)

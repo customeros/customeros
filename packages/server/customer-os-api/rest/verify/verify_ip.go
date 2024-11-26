@@ -1,3 +1,4 @@
+// @openapi 3.0.0
 package restverify
 
 import (
@@ -22,83 +23,182 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
 
+// IpIntelligenceResponse represents the IP intelligence response
+// @Description Response containing IP intelligence data including threats, geolocation, and network information
 type IpIntelligenceResponse struct {
+	// Inherits standard response fields
 	rest.BaseResponse
+	// IP intelligence details
+	// required: true
 	IP IpIntelligenceRecord `json:"ip,omitempty"`
 }
 
-// IpIntelligenceResponse represents the response for IP intelligence lookup.
-// @Description Response structure for IP intelligence lookup.
-// @example 200 {object} IpIntelligenceResponse
+// IpIntelligenceRecord represents detailed IP information
+// @Description Comprehensive information about an IP address
 type IpIntelligenceRecord struct {
-	IPAddress    string                     `json:"ipAddress" example:"192.168.1.1"`
-	Threats      IpIntelligenceThreats      `json:"threats"`
-	Geolocation  IpIntelligenceGeolocation  `json:"geolocation"`
-	TimeZone     IpIntelligenceTimeZone     `json:"time_zone"`
-	Network      IpIntelligenceNetwork      `json:"network"`
+	// IP address being analyzed
+	// required: true
+	// pattern: ^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$
+	IPAddress string `json:"ipAddress" example:"192.168.1.1"`
+
+	// Threat intelligence information
+	// required: true
+	Threats IpIntelligenceThreats `json:"threats"`
+
+	// Geolocation information
+	// required: true
+	Geolocation IpIntelligenceGeolocation `json:"geolocation"`
+
+	// Timezone information
+	// required: true
+	TimeZone IpIntelligenceTimeZone `json:"time_zone"`
+
+	// Network information
+	// required: true
+	Network IpIntelligenceNetwork `json:"network"`
+
+	// Organization information
+	// required: false
 	Organization IpIntelligenceOrganization `json:"organization"`
 }
 
-// IpIntelligenceThreats contains threat intelligence data related to the IP address.
-// @Description Threat intelligence data related to the IP address.
+// IpIntelligenceThreats represents threat intelligence data
+// @Description Threat intelligence indicators for the IP address
 type IpIntelligenceThreats struct {
-	IsProxy       bool `json:"isProxy" example:"false"`
-	IsVpn         bool `json:"isVpn" example:"false"`
-	IsTor         bool `json:"isTor" example:"false"`
-	IsUnallocated bool `json:"isUnallocated" example:"true"`
-	IsDatacenter  bool `json:"isDatacenter" example:"false"`
-	IsCloudRelay  bool `json:"isCloudRelay" example:"false"`
-	IsMobile      bool `json:"isMobile" example:"true"`
+	// Indicates if IP is a proxy
+	// required: true
+	IsProxy bool `json:"isProxy" example:"false"`
+
+	// Indicates if IP is a VPN
+	// required: true
+	IsVpn bool `json:"isVpn" example:"false"`
+
+	// Indicates if IP is a TOR exit node
+	// required: true
+	IsTor bool `json:"isTor" example:"false"`
+
+	// Indicates if IP is unallocated
+	// required: true
+	IsUnallocated bool `json:"isUnallocated" example:"false"`
+
+	// Indicates if IP belongs to a datacenter
+	// required: true
+	IsDatacenter bool `json:"isDatacenter" example:"false"`
+
+	// Indicates if IP is a cloud relay
+	// required: true
+	IsCloudRelay bool `json:"isCloudRelay" example:"false"`
+
+	// Indicates if IP belongs to a mobile network
+	// required: true
+	IsMobile bool `json:"isMobile" example:"false"`
 }
 
-// IpIntelligenceGeolocation contains geolocation data related to the IP address.
-// @Description Geolocation data related to the IP address.
+// IpIntelligenceGeolocation represents geolocation data
+// @Description Geographic location information for the IP address
 type IpIntelligenceGeolocation struct {
-	City            string `json:"city" example:"Berlin"`
-	Country         string `json:"country" example:"Germany"`
-	CountryIso      string `json:"countryIso" example:"DE"`
-	IsEuropeanUnion bool   `json:"isEuropeanUnion" example:"true"`
+	// City name
+	// required: false
+	City string `json:"city" example:"Berlin"`
+
+	// Country name
+	// required: true
+	Country string `json:"country" example:"Germany"`
+
+	// ISO 3166-1 alpha-2 country code
+	// required: true
+	// pattern: ^[A-Z]{2}$
+	CountryIso string `json:"countryIso" example:"DE"`
+
+	// Indicates if country is in the European Union
+	// required: true
+	IsEuropeanUnion bool `json:"isEuropeanUnion" example:"true"`
 }
 
-// IpIntelligenceTimeZone contains timezone data for the IP address.
-// @Description Timezone data for the IP address.
+// IpIntelligenceTimeZone represents timezone data
+// @Description Timezone information for the IP address location
 type IpIntelligenceTimeZone struct {
-	Name        string    `json:"name" example:"Europe/Berlin"`
-	Abbr        string    `json:"abbr" example:"CET"`
-	Offset      string    `json:"offset" example:"+0100"`
-	IsDst       bool      `json:"is_dst" example:"true"`
+	// IANA timezone name
+	// required: true
+	// example: Europe/Berlin
+	Name string `json:"name"`
+
+	// Timezone abbreviation
+	// required: true
+	// example: CET
+	Abbr string `json:"abbr"`
+
+	// UTC offset
+	// required: true
+	// pattern: ^[+-]\d{4}$
+	Offset string `json:"offset" example:"+0100"`
+
+	// Indicates if daylight saving time is active
+	// required: true
+	IsDst bool `json:"is_dst" example:"true"`
+
+	// Current time in the timezone
+	// required: true
+	// format: date-time
 	CurrentTime time.Time `json:"current_time" example:"2024-09-10T14:00:00+01:00"`
 }
 
-// IpIntelligenceNetwork contains network-related data for the IP address.
-// @Description Network-related data for the IP address.
+// IpIntelligenceNetwork represents network data
+// @Description Network information for the IP address
 type IpIntelligenceNetwork struct {
-	ASN    string `json:"asn" example:"AS12345"`
-	Name   string `json:"name" example:"ISP Name"`
+	// Autonomous System Number
+	// required: true
+	// pattern: ^AS\d+$
+	ASN string `json:"asn" example:"AS12345"`
+
+	// Network name
+	// required: true
+	Name string `json:"name" example:"ISP Name"`
+
+	// Network domain
+	// required: false
 	Domain string `json:"domain" example:"isp.com"`
-	Route  string `json:"route" example:"192.168.0.0/16"`
-	Type   string `json:"type" example:"business"`
+
+	// Network route (CIDR notation)
+	// required: true
+	// pattern: ^(\d{1,3}\.){3}\d{1,3}/\d{1,2}$
+	Route string `json:"route" example:"192.168.0.0/16"`
+
+	// Network type
+	// required: true
+	// enum: business,hosting,isp,education,government
+	Type string `json:"type" example:"business"`
 }
 
-// IpIntelligenceOrganization contains organizational data for the IP address.
-// @Description Organizational data for the IP address.
+// IpIntelligenceOrganization represents organization data
+// @Description Organization information associated with the IP address
 type IpIntelligenceOrganization struct {
-	Name     string `json:"name" example:"Company Name"`
-	Domain   string `json:"domain" example:"company.com"`
+	// Organization name
+	// required: false
+	Name string `json:"name" example:"Company Name"`
+
+	// Organization domain
+	// required: false
+	Domain string `json:"domain" example:"company.com"`
+
+	// LinkedIn profile URL
+	// required: false
+	// format: uri
 	LinkedIn string `json:"linkedin" example:"https://linkedin.com/company/company"`
 }
 
-// @Tags Verify API
-// @Summary Get IP Intelligence
-// @Description Retrieves threat intelligence and geolocation data for the given IP address.
-// @Param address query string true "IP address to check"
-// @Success 200 {object} IpIntelligenceResponse
-// @Failure 400 "Bad Request"
-// @Failure 401 "Unauthorized"
-// @Failure 500 "Internal Server Error"
-// @Security ApiKeyAuth
+// @Summary Get IP intelligence data
+// @Description Retrieves comprehensive information about an IP address including threats, geolocation, and network details
+// @Tags IP Intelligence
+// @Accept json
 // @Produce json
+// @Param address query string true "IP address to analyze" pattern(^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$)
+// @Success 200 {object} IpIntelligenceResponse "IP intelligence data retrieved successfully"
+// @Failure 400 {object} rest.ErrorResponse "Invalid IP address format"
+// @Failure 401 {object} rest.ErrorResponse "Unauthorized - Missing or invalid API key"
+// @Failure 500 {object} rest.ErrorResponse "Internal server error"
 // @Router /verify/v1/ip [get]
+// @Security ApiKeyAuth
 func IpIntelligence(services *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "IpIntelligence", c.Request.Header)

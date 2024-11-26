@@ -1,3 +1,4 @@
+// @openapi 3.0.0
 package restoutreach
 
 import (
@@ -12,6 +13,111 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
 
+// EmailTrackingRequest represents the request for generating tracking URLs
+// @Description Request payload for generating email tracking URLs and pixels
+type EmailTrackingRequest struct {
+	// Domain to use for tracking URLs (optional, system default used if not provided)
+	// required: false
+	// format: hostname
+	// example: track.example.com
+	TrackerDomain string `json:"trackerDomain"`
+
+	// Unique identifier for the email campaign
+	// required: true
+	// example: camp_123456
+	CampaignId string `json:"campaignId"`
+
+	// Unique identifier for the message (optional, generated if not provided)
+	// required: false
+	// example: msg_123456
+	MessageId string `json:"messageId"`
+
+	// Unique identifier for the recipient
+	// required: true
+	// example: recipient_123456
+	RecipientId string `json:"recipientId"`
+
+	// Enable open tracking via pixel
+	// required: false
+	// default: false
+	TrackOpens bool `json:"trackOpens"`
+
+	// Enable click tracking for links
+	// required: false
+	// default: false
+	TrackClicks bool `json:"trackClicks"`
+
+	// Enable unsubscribe link generation
+	// required: false
+	// default: false
+	GenerateUnsubscribeLink bool `json:"generateUnsubscribeLink"`
+
+	// List of URLs to be tracked
+	// required: false
+	// example: ["https://example.com/page1", "https://example.com/page2"]
+	Links []string `json:"links"`
+
+	// URL for unsubscribe page
+	// required: false
+	// format: uri
+	// example: https://example.com/unsubscribe
+	UnsubscribeLink string `json:"unsubscribeLink"`
+}
+
+// EmailTrackingResponse represents the response containing generated tracking URLs
+// @Description Response containing generated tracking URLs and pixel
+type EmailTrackingResponse struct {
+	// Operation status
+	// required: true
+	// enum: success
+	Status string `json:"status" example:"success"`
+
+	// Generated or provided message ID
+	// required: true
+	TrackingId string `json:"trackingId" example:"msg_123456"`
+
+	// URL for tracking pixel (only if TrackOpens is true)
+	// required: false
+	// format: uri
+	TrackingPixel string `json:"trackingPixel,omitempty" example:"https://track.example.com/p/abc123"`
+
+	// List of original and tracked URLs (only if TrackClicks is true)
+	// required: false
+	TrackedLinks []TrackedLink `json:"trackedLinks,omitempty"`
+
+	// Generated unsubscribe link (only if GenerateUnsubscribeLink is true)
+	// required: false
+	// format: uri
+	UnsubscribeLink string `json:"unsubscribeLink,omitempty" example:"https://track.example.com/u/abc123"`
+}
+
+// TrackedLink represents an original URL and its tracked version
+// @Description Pair of original and tracking-enabled URLs
+type TrackedLink struct {
+	// Original URL before tracking
+	// required: true
+	// format: uri
+	Original string `json:"original" example:"https://example.com/page1"`
+
+	// Generated tracking URL
+	// required: true
+	// format: uri
+	Tracked string `json:"tracked" example:"https://track.example.com/r/abc123"`
+}
+
+// GenerateEmailTrackingUrls generates tracking URLs for email campaigns
+// @Summary Generate email tracking URLs
+// @Description Generates tracking pixels, click tracking URLs, and unsubscribe links for email campaigns
+// @Tags Outreach
+// @Accept json
+// @Produce json
+// @Param body body EmailTrackingRequest true "Tracking URL generation configuration"
+// @Success 200 {object} EmailTrackingResponse "Tracking URLs generated successfully"
+// @Failure 400 {object} rest.ErrorResponse "Invalid request body"
+// @Failure 401 {object} rest.ErrorResponse "Unauthorized - Missing or invalid API key"
+// @Failure 500 {object} rest.ErrorResponse "Internal server error"
+// @Router /outreach/v1/email/tracking [post]
+// @Security ApiKeyAuth
 func GenerateEmailTrackingUrls(services *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "GenerateEmailTrackingUrls", c.Request.Header)

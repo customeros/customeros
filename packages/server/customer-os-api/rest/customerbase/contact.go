@@ -1,3 +1,4 @@
+// @openapi 3.0.0
 package customerbase
 
 import (
@@ -27,11 +28,11 @@ import (
 // @Produce json
 // @Param file formData file false "CSV file with contact data"
 // @Param contact body ContactRecord false "Contact information"
-// @Success 200 {object} ContactResult
-// @Success 201 {object} ContactsResponse
-// @Failure 400 {object} BaseResponse
-// @Failure 401 {object} BaseResponse
-// @Failure 500 {object} BaseResponse
+// @Success 200 {object} SingleContactResponse "Successfully created single contact"
+// @Success 201 {object} ContactsResponse "Successfully processed CSV file"
+// @Failure 400 {object} rest.BaseResponse "Invalid request data"
+// @Failure 401 {object} rest.BaseResponse "Unauthorized"
+// @Failure 500 {object} rest.BaseResponse "Internal server error"
 // @Router /customerbase/v1/contacts [post]
 // @Security ApiKeyAuth
 func CreateContact(services *service.Services) gin.HandlerFunc {

@@ -1,3 +1,4 @@
+// @openapi 3.0.0
 package billing
 
 import (
@@ -6,42 +7,74 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 )
 
+// InvoiceResponse represents a single invoice response
+// @Description Response containing a single invoice's details
 type InvoiceResponse struct {
+	// Inherits standard response fields
 	rest.BaseResponse
+	// The invoice information
+	// required: false
 	Invoice InvoiceRecord `json:"invoice,omitempty"`
 }
 
-// InvoicesResponse defines the response structure for multiple invoices in the response.
-// @Description Response body for all invoices details
+// InvoicesResponse represents a collection of invoices
+// @Description Response containing multiple invoices
 type InvoicesResponse struct {
+	// Inherits standard response fields
 	rest.BaseResponse
-	Invoices []InvoiceRecord `json:"invoice,omitempty"`
+	// List of invoices
+	// required: false
+	Invoices []InvoiceRecord `json:"invoices,omitempty"`
 }
 
-// Invoice represents the structure of an invoice
-// @Description Invoice details
+// InvoiceRecord represents detailed invoice information
+// @Description Detailed invoice information including payment details and status
 type InvoiceRecord struct {
-	// ID is the unique identifier for the invoice, uuid format.
-	ID string `json:"id" example:"123e4567-e89b-12d3-a456-426614174000"`
+	// Unique identifier for the invoice
+	// required: true
+	// example: 123e4567-e89b-12d3-a456-426614174000
+	// format: uuid
+	ID string `json:"id"`
 
-	// Number represents the invoice number.
-	Number string `json:"number" example:"ABC-12345"`
+	// Invoice number or reference
+	// required: true
+	// example: INV-2024-001
+	// minLength: 1
+	Number string `json:"number"`
 
-	// DueDate represents the date the invoice is due.
-	DueDate time.Time `json:"dueDate" example:"2024-12-01T00:00:00Z"`
+	// Date when the invoice payment is due
+	// required: true
+	// example: 2024-12-01T00:00:00Z
+	// format: date-time
+	DueDate time.Time `json:"dueDate"`
 
-	// Status represents the payment status of the invoice.
-	InvoiceStatus string `json:"invoiceStatus" example:"PAID"`
+	// Current status of the invoice
+	// required: true
+	// example: PAID
+	// enum: DRAFT,PENDING,PAID,OVERDUE,CANCELLED,VOID
+	InvoiceStatus string `json:"invoiceStatus"`
 
-	// Amount represents the total amount due for the invoice.
-	Amount float64 `json:"amount" example:"1500.50"`
+	// Total amount due for the invoice
+	// required: true
+	// example: 1500.50
+	// minimum: 0
+	Amount float64 `json:"amount"`
 
-	// Currency represents the currency used for the invoice, e.g. USD, EUR, etc.
-	Currency string `json:"currency" example:"USD"`
+	// Currency code for the invoice amount
+	// required: true
+	// example: USD
+	// pattern: ^[A-Z]{3}$
+	Currency string `json:"currency"`
 
-	// PaymentLink represents the URL where the invoice can be paid.
-	PaymentLink string `json:"paymentLink" example:"https://example.com/payments/12345"`
+	// URL where the invoice can be paid
+	// required: false
+	// example: https://payment.example.com/inv/12345
+	// format: uri
+	PaymentLink string `json:"paymentLink,omitempty"`
 
-	// PublicUrl represents the public URL where the PDF version of the invoice can be accessed.
-	PublicUrl string `json:"publicUrl" example:"https://example.com/invoices/12345.pdf"`
+	// Public URL to access the invoice PDF
+	// required: false
+	// example: https://invoices.example.com/12345.pdf
+	// format: uri
+	PublicUrl string `json:"publicUrl,omitempty"`
 }
