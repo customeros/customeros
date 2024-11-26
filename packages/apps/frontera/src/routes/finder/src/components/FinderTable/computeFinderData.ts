@@ -62,9 +62,9 @@ export const computeFinderData = (
     })
     .with(TableViewType.Contacts, () =>
       store.contacts?.toComputedArray((arr) => {
-        if (tableViewDef?.value.tableId === TableIdType.FlowContacts) {
-          const currentFlowId = urlParams?.id as string;
+        const currentFlowId = urlParams?.id as string;
 
+        if (tableViewDef?.value.tableId === TableIdType.FlowContacts) {
           arr = arr.filter(
             (v) =>
               v.hasFlows &&
@@ -76,7 +76,10 @@ export const computeFinderData = (
           tableViewDef?.getDefaultFilters(),
         );
 
-        const filters = getContactFilterFns(tableViewDef?.getFilters());
+        const filters = getContactFilterFns(
+          tableViewDef?.getFilters(),
+          currentFlowId,
+        );
 
         if (defaultFilters) {
           arr = arr.filter((v) => defaultFilters.every((fn) => fn(v)));
@@ -91,7 +94,7 @@ export const computeFinderData = (
           const isDesc = sorting[0]?.desc;
 
           arr = inPlaceSort(arr)?.[isDesc ? 'desc' : 'asc'](
-            getContactSortFn(columnId),
+            getContactSortFn(columnId, currentFlowId),
           );
         }
 

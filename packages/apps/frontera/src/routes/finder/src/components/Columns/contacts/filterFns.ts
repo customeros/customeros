@@ -16,7 +16,10 @@ import {
 
 import { EmailVerificationStatus } from './filterTypes';
 
-const getFilterFn = (filter: FilterItem | undefined | null) => {
+const getFilterFn = (
+  filter: FilterItem | undefined | null,
+  flowId?: string,
+) => {
   const noop = (_row: ContactStore) => true;
 
   if (!filter) return noop;
@@ -338,10 +341,15 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
             filter.operation === ComparisonOperator.IsEmpty ||
             filter.operation === ComparisonOperator.NotContains
           );
+        if (!flowId) return false;
 
-        return row.flows?.some((e) =>
-          filterTypeList(filter, [e?.value?.status]),
-        );
+        const participantStatus = row.root.flows.value
+          .get(flowId)
+          ?.value.participants.find((e) => e.entityId === row.id)?.status;
+
+        if (!participantStatus) return false;
+
+        return filterTypeList(filter, [participantStatus]);
       },
     )
 
@@ -391,10 +399,10 @@ const filterTypeList = (filter: FilterItem, value: string[] | undefined) => {
         !value?.length ||
         (value?.length && !value.some((v) => filterValue?.includes(v))),
     )
-    .with(
-      ComparisonOperator.Contains,
-      () => value?.length && value.some((v) => filterValue?.includes(v)),
-    )
+    .with(ComparisonOperator.Contains, () => {
+      return value?.length && value?.some((v) => filterValue?.includes(v));
+    })
+
     .otherwise(() => false);
 };
 
@@ -422,11 +430,14 @@ export const getContactDefaultFilterFns = (filters: Filter | null) => {
   return data.map(({ filter }) => getFilterFn(filter));
 };
 
-export const getContactFilterFns = (filters: Filter | null) => {
+export const getContactFilterFns = (
+  filters: Filter | null,
+  flowId?: string,
+) => {
   if (!filters || !filters.AND) return [];
   const data = filters?.AND;
 
-  return data.map(({ filter }) => getFilterFn(filter));
+  return data.map(({ filter }) => getFilterFn(filter, flowId));
 };
 
 function isNotDeliverableV2(
