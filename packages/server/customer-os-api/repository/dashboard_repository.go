@@ -7,6 +7,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
+	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
@@ -51,9 +52,9 @@ const (
 
 type DashboardRepository interface {
 	//deprecated
-	GetDashboardViewOrganizationData(ctx context.Context, tenant string, skip, limit int, where *model.Filter, sort *model.SortBy) (*utils.DbNodesWithTotalCount, error)
-	GetDashboardViewOrganizationDataV2(ctx context.Context, tenant string, limit int, where *model.Filter, sort *model.SortBy) (*utils.StringsWithTotalCount, error)
-	GetDashboardViewRenewalData(ctx context.Context, tenant string, skip, limit int, where *model.Filter, sort *model.SortBy) (*utils.RecordsWithTotalCount, error)
+	GetDashboardViewOrganizationData(ctx context.Context, tenant string, skip, limit int, where *model.Filter, sort *commonmodel.SortBy) (*utils.DbNodesWithTotalCount, error)
+	GetDashboardViewOrganizationDataV2(ctx context.Context, tenant string, limit int, where *model.Filter, sort *commonmodel.SortBy) (*utils.StringsWithTotalCount, error)
+	GetDashboardViewRenewalData(ctx context.Context, tenant string, skip, limit int, where *model.Filter, sort *commonmodel.SortBy) (*utils.RecordsWithTotalCount, error)
 	GetDashboardNewCustomersData(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error)
 	GetDashboardCustomerMapData(ctx context.Context, tenant string) ([]map[string]interface{}, error)
 	GetDashboardRevenueAtRiskData(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error)
@@ -94,7 +95,7 @@ func createStringCypherFilterWithValueOrEmpty(filter *model.FilterItem, property
 	}
 }
 
-func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Context, tenant string, skip, limit int, where *model.Filter, sort *model.SortBy) (*utils.DbNodesWithTotalCount, error) {
+func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Context, tenant string, skip, limit int, where *model.Filter, sort *commonmodel.SortBy) (*utils.DbNodesWithTotalCount, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardRepository.GetDashboardViewOrganizationData")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
@@ -334,7 +335,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 	aliases := " o, d, l"
 	query += " WITH o, d, l "
 	if sort != nil && sort.By == SearchSortParamOwner {
-		if sort.Direction == model.SortingDirectionAsc {
+		if sort.Direction == commonmodel.SortingDirectionAsc {
 			query += ", CASE WHEN owner.firstName <> \"\" and not owner.firstName is null THEN owner.firstName ELSE 'ZZZZZZZZZZZZZZZZZZZ' END as OWNER_FIRST_NAME_FOR_SORTING "
 			query += ", CASE WHEN owner.lastName <> \"\" and not owner.lastName is null THEN owner.lastName ELSE 'ZZZZZZZZZZZZZZZZZZZ' END as OWNER_LAST_NAME_FOR_SORTING "
 		} else {
@@ -344,7 +345,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 		aliases += ", OWNER_FIRST_NAME_FOR_SORTING, OWNER_LAST_NAME_FOR_SORTING "
 	}
 	if sort != nil && sort.By == SearchSortParamName {
-		if sort.Direction == model.SortingDirectionAsc {
+		if sort.Direction == commonmodel.SortingDirectionAsc {
 			query += ", CASE WHEN o.name <> \"\" and not o.name is null THEN o.name ELSE 'ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ' END as NAME_FOR_SORTING "
 		} else {
 			query += ", o.name as NAME_FOR_SORTING "
@@ -352,7 +353,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 		aliases += ", NAME_FOR_SORTING "
 	}
 	if sort != nil && sort.By == SearchSortParamRenewalLikelihood {
-		if sort.Direction == model.SortingDirectionAsc {
+		if sort.Direction == commonmodel.SortingDirectionAsc {
 			query += ", CASE WHEN o.derivedRenewalLikelihoodOrder IS NOT NULL THEN o.derivedRenewalLikelihoodOrder ELSE 9999 END as RENEWAL_LIKELIHOOD_FOR_SORTING "
 		} else {
 			query += ", CASE WHEN o.derivedRenewalLikelihoodOrder IS NOT NULL THEN o.derivedRenewalLikelihoodOrder ELSE -1 END as RENEWAL_LIKELIHOOD_FOR_SORTING "
@@ -360,7 +361,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 		aliases += ", RENEWAL_LIKELIHOOD_FOR_SORTING "
 	}
 	if sort != nil && sort.By == SearchSortParamRelationship {
-		if sort.Direction == model.SortingDirectionAsc {
+		if sort.Direction == commonmodel.SortingDirectionAsc {
 			query += ", CASE WHEN o.relationship <> '' AND NOT o.relationship IS NULL THEN o.relationship ELSE 'ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ' END as RELATIONSHIP_FOR_SORTING "
 		} else {
 			query += ", o.relationship as RELATIONSHIP_FOR_SORTING "
@@ -368,7 +369,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 		aliases += ", RELATIONSHIP_FOR_SORTING "
 	}
 	if sort != nil && sort.By == SearchSortParamStage {
-		if sort.Direction == model.SortingDirectionAsc {
+		if sort.Direction == commonmodel.SortingDirectionAsc {
 			query += ", CASE WHEN o.stage <> '' AND NOT o.stage IS NULL THEN o.stage ELSE 'ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ' END as STAGE_FOR_SORTING "
 		} else {
 			query += ", o.stage as STAGE_FOR_SORTING "
@@ -376,7 +377,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 		aliases += ", STAGE_FOR_SORTING "
 	}
 	if sort != nil && sort.By == SearchSortParamIndustry {
-		if sort.Direction == model.SortingDirectionAsc {
+		if sort.Direction == commonmodel.SortingDirectionAsc {
 			query += ", CASE WHEN o.industry <> '' AND NOT o.industry IS NULL THEN o.industry ELSE 'ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ' END as STAGE_FOR_SORTING "
 		} else {
 			query += ", o.industry as INDUSTRY_FOR_SORTING "
@@ -384,7 +385,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 		aliases += ", INDUSTRY_FOR_SORTING "
 	}
 	if sort != nil && sort.By == SearchSortParamRenewalCycleNext {
-		if sort.Direction == model.SortingDirectionAsc {
+		if sort.Direction == commonmodel.SortingDirectionAsc {
 			query += ", CASE WHEN o.billingDetailsRenewalCycleNext IS NOT NULL THEN date(o.billingDetailsRenewalCycleNext) ELSE date('2100-01-01') END as RENEWAL_CYCLE_NEXT_FOR_SORTING "
 		} else {
 			query += ", CASE WHEN o.billingDetailsRenewalCycleNext IS NOT NULL THEN date(o.billingDetailsRenewalCycleNext) ELSE date('1900-01-01') END as RENEWAL_CYCLE_NEXT_FOR_SORTING "
@@ -392,7 +393,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 		aliases += ", RENEWAL_CYCLE_NEXT_FOR_SORTING "
 	}
 	if sort != nil && sort.By == SearchSortParamRenewalDate {
-		if sort.Direction == model.SortingDirectionAsc {
+		if sort.Direction == commonmodel.SortingDirectionAsc {
 			query += ", CASE WHEN o.derivedNextRenewalAt IS NOT NULL THEN date(o.derivedNextRenewalAt) ELSE date('2100-01-01') END as RENEWAL_DATE_FOR_SORTING "
 		} else {
 			query += ", CASE WHEN o.derivedNextRenewalAt IS NOT NULL THEN date(o.derivedNextRenewalAt) ELSE date('1900-01-01') END as RENEWAL_DATE_FOR_SORTING "
@@ -400,7 +401,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 		aliases += ", RENEWAL_DATE_FOR_SORTING "
 	}
 	if sort != nil && sort.By == SearchSortParamChurnDate {
-		if sort.Direction == model.SortingDirectionAsc {
+		if sort.Direction == commonmodel.SortingDirectionAsc {
 			query += ", CASE WHEN o.derivedChurnedAt IS NOT NULL THEN date(o.derivedChurnedAt) ELSE date('2100-01-01') END as CHURN_DATE_FOR_SORTING "
 		} else {
 			query += ", CASE WHEN o.derivedChurnedAt IS NOT NULL THEN date(o.derivedChurnedAt) ELSE date('1900-01-01') END as CHURN_DATE_FOR_SORTING "
@@ -408,7 +409,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 		aliases += ", RENEWAL_DATE_FOR_SORTING "
 	}
 	if sort != nil && sort.By == SearchSortParamOnboardingStatus {
-		if sort.Direction == model.SortingDirectionAsc {
+		if sort.Direction == commonmodel.SortingDirectionAsc {
 			query += ", CASE WHEN o.onboardingStatusOrder IS NOT NULL THEN o.onboardingStatusOrder ELSE 9999 END as ONBOARDING_STATUS_FOR_SORTING "
 			query += ", o.onboardingUpdatedAt AS ONBOARDING_UPDATED_AT_FOR_SORTING "
 		} else {
@@ -418,7 +419,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 		aliases += ", ONBOARDING_STATUS_FOR_SORTING, ONBOARDING_UPDATED_AT_FOR_SORTING "
 	}
 	if sort != nil && sort.By == SearchSortParamForecastArr {
-		if sort.Direction == model.SortingDirectionAsc {
+		if sort.Direction == commonmodel.SortingDirectionAsc {
 			query += ", CASE WHEN o.renewalForecastArr <> \"\" and o.renewalForecastArr IS NOT NULL THEN o.renewalForecastArr ELSE 9999999999999999 END as FORECAST_ARR_FOR_SORTING "
 		} else {
 			query += ", CASE WHEN o.renewalForecastArr <> \"\" and o.renewalForecastArr IS NOT NULL THEN o.renewalForecastArr ELSE 0 END as FORECAST_ARR_FOR_SORTING "
@@ -445,10 +446,10 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 		} else if sort.By == SearchSortParamIndustry {
 			query += " ORDER BY INDUSTRY_FOR_SORTING " + string(sort.Direction)
 		} else if sort.By == SearchSortParamOrganization {
-			cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(neo4jentity.OrganizationEntity{})).WithCoalesce().WithAlias("parent")
-			cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(neo4jentity.OrganizationEntity{})).WithCoalesce()
-			cypherSort.NewSortRule("NAME", sort.Direction.String(), true, reflect.TypeOf(neo4jentity.OrganizationEntity{})).WithAlias("parent").WithDescending()
-			cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(neo4jentity.OrganizationEntity{}))
+			cypherSort.NewSortRule("NAME", string(sort.Direction), *sort.CaseSensitive, reflect.TypeOf(neo4jentity.OrganizationEntity{})).WithCoalesce().WithAlias("parent")
+			cypherSort.NewSortRule("NAME", string(sort.Direction), *sort.CaseSensitive, reflect.TypeOf(neo4jentity.OrganizationEntity{})).WithCoalesce()
+			cypherSort.NewSortRule("NAME", string(sort.Direction), true, reflect.TypeOf(neo4jentity.OrganizationEntity{})).WithAlias("parent").WithDescending()
+			cypherSort.NewSortRule("NAME", string(sort.Direction), *sort.CaseSensitive, reflect.TypeOf(neo4jentity.OrganizationEntity{}))
 			query += string(cypherSort.SortingCypherFragment("o"))
 		} else if sort.By == SearchSortParamForecastArr {
 			query += " ORDER BY FORECAST_ARR_FOR_SORTING " + string(sort.Direction)
@@ -464,12 +465,12 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 		} else if sort.By == SearchSortParamChurnDate {
 			query += " ORDER BY CHURN_DATE_FOR_SORTING " + string(sort.Direction)
 		} else if sort.By == "DOMAIN" {
-			cypherSort.NewSortRule("DOMAIN", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(neo4jentity.DomainEntity{}))
+			cypherSort.NewSortRule("DOMAIN", string(sort.Direction), *sort.CaseSensitive, reflect.TypeOf(neo4jentity.DomainEntity{}))
 			query += string(cypherSort.SortingCypherFragment("d"))
 		} else if sort.By == SearchSortParamLocation {
-			cypherSort.NewSortRule("COUNTRY", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(neo4jentity.LocationEntity{}))
-			cypherSort.NewSortRule("REGION", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(neo4jentity.LocationEntity{}))
-			cypherSort.NewSortRule("LOCALITY", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(neo4jentity.LocationEntity{}))
+			cypherSort.NewSortRule("COUNTRY", string(sort.Direction), *sort.CaseSensitive, reflect.TypeOf(neo4jentity.LocationEntity{}))
+			cypherSort.NewSortRule("REGION", string(sort.Direction), *sort.CaseSensitive, reflect.TypeOf(neo4jentity.LocationEntity{}))
+			cypherSort.NewSortRule("LOCALITY", string(sort.Direction), *sort.CaseSensitive, reflect.TypeOf(neo4jentity.LocationEntity{}))
 			query += string(cypherSort.SortingCypherFragment("l"))
 		} else if sort.By == "OWNER" {
 			if sort.CaseSensitive != nil && *sort.CaseSensitive {
@@ -478,17 +479,17 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 				query += " ORDER BY toLower(OWNER_FIRST_NAME_FOR_SORTING) " + string(sort.Direction) + ", toLower(OWNER_LAST_NAME_FOR_SORTING) " + string(sort.Direction)
 			}
 		} else if sort.By == SearchSortParamLastTouchpointAt || sort.By == SearchSortParamLastTouchpoint {
-			cypherSort.NewSortRule("LAST_TOUCHPOINT_AT", sort.Direction.String(), false, reflect.TypeOf(neo4jentity.OrganizationEntity{}))
+			cypherSort.NewSortRule("LAST_TOUCHPOINT_AT", string(sort.Direction), false, reflect.TypeOf(neo4jentity.OrganizationEntity{}))
 			query += string(cypherSort.SortingCypherFragment("o"))
 		} else if sort.By == SearchSortParamLastTouchpointType {
-			cypherSort.NewSortRule("LAST_TOUCHPOINT_TYPE", sort.Direction.String(), false, reflect.TypeOf(neo4jentity.OrganizationEntity{}))
+			cypherSort.NewSortRule("LAST_TOUCHPOINT_TYPE", string(sort.Direction), false, reflect.TypeOf(neo4jentity.OrganizationEntity{}))
 			query += string(cypherSort.SortingCypherFragment("o"))
 		} else if sort.By == SearchSortParamUpdatedAt {
-			cypherSort.NewSortRule("UPDATED_AT", sort.Direction.String(), false, reflect.TypeOf(neo4jentity.OrganizationEntity{}))
+			cypherSort.NewSortRule("UPDATED_AT", string(sort.Direction), false, reflect.TypeOf(neo4jentity.OrganizationEntity{}))
 			query += string(cypherSort.SortingCypherFragment("o"))
 		}
 	} else {
-		cypherSort.NewSortRule("UPDATED_AT", string(model.SortingDirectionDesc), false, reflect.TypeOf(neo4jentity.OrganizationEntity{}))
+		cypherSort.NewSortRule("UPDATED_AT", string(commonmodel.SortingDirectionDesc), false, reflect.TypeOf(neo4jentity.OrganizationEntity{}))
 		query += string(cypherSort.SortingCypherFragment("o"))
 	}
 	// end sort region
@@ -516,7 +517,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 	return dbNodesWithTotalCount, nil
 }
 
-func (r *dashboardRepository) GetDashboardViewOrganizationDataV2(ctx context.Context, tenant string, limit int, where *model.Filter, sort *model.SortBy) (*utils.StringsWithTotalCount, error) {
+func (r *dashboardRepository) GetDashboardViewOrganizationDataV2(ctx context.Context, tenant string, limit int, where *model.Filter, sort *commonmodel.SortBy) (*utils.StringsWithTotalCount, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardRepository.GetDashboardViewOrganizationDataV2")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
@@ -736,7 +737,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationDataV2(ctx context.Con
 	aliases := " o, d, l"
 	selectQuery += " WITH o, d, l "
 	if sort != nil && sort.By == SearchSortParamOwner {
-		if sort.Direction == model.SortingDirectionAsc {
+		if sort.Direction == commonmodel.SortingDirectionAsc {
 			selectQuery += ", CASE WHEN owner.firstName <> \"\" and not owner.firstName is null THEN owner.firstName ELSE 'ZZZZZZZZZZZZZZZZZZZ' END as OWNER_FIRST_NAME_FOR_SORTING "
 			selectQuery += ", CASE WHEN owner.lastName <> \"\" and not owner.lastName is null THEN owner.lastName ELSE 'ZZZZZZZZZZZZZZZZZZZ' END as OWNER_LAST_NAME_FOR_SORTING "
 		} else {
@@ -746,7 +747,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationDataV2(ctx context.Con
 		aliases += ", OWNER_FIRST_NAME_FOR_SORTING, OWNER_LAST_NAME_FOR_SORTING "
 	}
 	if sort != nil && sort.By == SearchSortParamName {
-		if sort.Direction == model.SortingDirectionAsc {
+		if sort.Direction == commonmodel.SortingDirectionAsc {
 			selectQuery += ", CASE WHEN o.name <> \"\" and not o.name is null THEN o.name ELSE 'ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ' END as NAME_FOR_SORTING "
 		} else {
 			selectQuery += ", o.name as NAME_FOR_SORTING "
@@ -754,7 +755,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationDataV2(ctx context.Con
 		aliases += ", NAME_FOR_SORTING "
 	}
 	if sort != nil && sort.By == SearchSortParamRenewalLikelihood {
-		if sort.Direction == model.SortingDirectionAsc {
+		if sort.Direction == commonmodel.SortingDirectionAsc {
 			selectQuery += ", CASE WHEN o.derivedRenewalLikelihoodOrder IS NOT NULL THEN o.derivedRenewalLikelihoodOrder ELSE 9999 END as RENEWAL_LIKELIHOOD_FOR_SORTING "
 		} else {
 			selectQuery += ", CASE WHEN o.derivedRenewalLikelihoodOrder IS NOT NULL THEN o.derivedRenewalLikelihoodOrder ELSE -1 END as RENEWAL_LIKELIHOOD_FOR_SORTING "
@@ -762,7 +763,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationDataV2(ctx context.Con
 		aliases += ", RENEWAL_LIKELIHOOD_FOR_SORTING "
 	}
 	if sort != nil && sort.By == SearchSortParamRelationship {
-		if sort.Direction == model.SortingDirectionAsc {
+		if sort.Direction == commonmodel.SortingDirectionAsc {
 			selectQuery += ", CASE WHEN o.relationship <> '' AND NOT o.relationship IS NULL THEN o.relationship ELSE 'ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ' END as RELATIONSHIP_FOR_SORTING "
 		} else {
 			selectQuery += ", o.relationship as RELATIONSHIP_FOR_SORTING "
@@ -770,7 +771,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationDataV2(ctx context.Con
 		aliases += ", RELATIONSHIP_FOR_SORTING "
 	}
 	if sort != nil && sort.By == SearchSortParamStage {
-		if sort.Direction == model.SortingDirectionAsc {
+		if sort.Direction == commonmodel.SortingDirectionAsc {
 			selectQuery += ", CASE WHEN o.stage <> '' AND NOT o.stage IS NULL THEN o.stage ELSE 'ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ' END as STAGE_FOR_SORTING "
 		} else {
 			selectQuery += ", o.stage as STAGE_FOR_SORTING "
@@ -778,7 +779,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationDataV2(ctx context.Con
 		aliases += ", STAGE_FOR_SORTING "
 	}
 	if sort != nil && sort.By == SearchSortParamIndustry {
-		if sort.Direction == model.SortingDirectionAsc {
+		if sort.Direction == commonmodel.SortingDirectionAsc {
 			selectQuery += ", CASE WHEN o.industry <> '' AND NOT o.industry IS NULL THEN o.industry ELSE 'ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ' END as STAGE_FOR_SORTING "
 		} else {
 			selectQuery += ", o.industry as INDUSTRY_FOR_SORTING "
@@ -786,7 +787,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationDataV2(ctx context.Con
 		aliases += ", INDUSTRY_FOR_SORTING "
 	}
 	if sort != nil && sort.By == SearchSortParamRenewalCycleNext {
-		if sort.Direction == model.SortingDirectionAsc {
+		if sort.Direction == commonmodel.SortingDirectionAsc {
 			selectQuery += ", CASE WHEN o.billingDetailsRenewalCycleNext IS NOT NULL THEN date(o.billingDetailsRenewalCycleNext) ELSE date('2100-01-01') END as RENEWAL_CYCLE_NEXT_FOR_SORTING "
 		} else {
 			selectQuery += ", CASE WHEN o.billingDetailsRenewalCycleNext IS NOT NULL THEN date(o.billingDetailsRenewalCycleNext) ELSE date('1900-01-01') END as RENEWAL_CYCLE_NEXT_FOR_SORTING "
@@ -794,7 +795,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationDataV2(ctx context.Con
 		aliases += ", RENEWAL_CYCLE_NEXT_FOR_SORTING "
 	}
 	if sort != nil && sort.By == SearchSortParamRenewalDate {
-		if sort.Direction == model.SortingDirectionAsc {
+		if sort.Direction == commonmodel.SortingDirectionAsc {
 			selectQuery += ", CASE WHEN o.derivedNextRenewalAt IS NOT NULL THEN date(o.derivedNextRenewalAt) ELSE date('2100-01-01') END as RENEWAL_DATE_FOR_SORTING "
 		} else {
 			selectQuery += ", CASE WHEN o.derivedNextRenewalAt IS NOT NULL THEN date(o.derivedNextRenewalAt) ELSE date('1900-01-01') END as RENEWAL_DATE_FOR_SORTING "
@@ -802,7 +803,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationDataV2(ctx context.Con
 		aliases += ", RENEWAL_DATE_FOR_SORTING "
 	}
 	if sort != nil && sort.By == SearchSortParamChurnDate {
-		if sort.Direction == model.SortingDirectionAsc {
+		if sort.Direction == commonmodel.SortingDirectionAsc {
 			selectQuery += ", CASE WHEN o.derivedChurnedAt IS NOT NULL THEN date(o.derivedChurnedAt) ELSE date('2100-01-01') END as CHURN_DATE_FOR_SORTING "
 		} else {
 			selectQuery += ", CASE WHEN o.derivedChurnedAt IS NOT NULL THEN date(o.derivedChurnedAt) ELSE date('1900-01-01') END as CHURN_DATE_FOR_SORTING "
@@ -810,7 +811,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationDataV2(ctx context.Con
 		aliases += ", RENEWAL_DATE_FOR_SORTING "
 	}
 	if sort != nil && sort.By == SearchSortParamOnboardingStatus {
-		if sort.Direction == model.SortingDirectionAsc {
+		if sort.Direction == commonmodel.SortingDirectionAsc {
 			selectQuery += ", CASE WHEN o.onboardingStatusOrder IS NOT NULL THEN o.onboardingStatusOrder ELSE 9999 END as ONBOARDING_STATUS_FOR_SORTING "
 			selectQuery += ", o.onboardingUpdatedAt AS ONBOARDING_UPDATED_AT_FOR_SORTING "
 		} else {
@@ -820,7 +821,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationDataV2(ctx context.Con
 		aliases += ", ONBOARDING_STATUS_FOR_SORTING, ONBOARDING_UPDATED_AT_FOR_SORTING "
 	}
 	if sort != nil && sort.By == SearchSortParamForecastArr {
-		if sort.Direction == model.SortingDirectionAsc {
+		if sort.Direction == commonmodel.SortingDirectionAsc {
 			selectQuery += ", CASE WHEN o.renewalForecastArr <> \"\" and o.renewalForecastArr IS NOT NULL THEN o.renewalForecastArr ELSE 9999999999999999 END as FORECAST_ARR_FOR_SORTING "
 		} else {
 			selectQuery += ", CASE WHEN o.renewalForecastArr <> \"\" and o.renewalForecastArr IS NOT NULL THEN o.renewalForecastArr ELSE 0 END as FORECAST_ARR_FOR_SORTING "
@@ -847,10 +848,10 @@ func (r *dashboardRepository) GetDashboardViewOrganizationDataV2(ctx context.Con
 		} else if sort.By == SearchSortParamIndustry {
 			selectQuery += " ORDER BY INDUSTRY_FOR_SORTING " + string(sort.Direction)
 		} else if sort.By == SearchSortParamOrganization {
-			cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(neo4jentity.OrganizationEntity{})).WithCoalesce().WithAlias("parent")
-			cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(neo4jentity.OrganizationEntity{})).WithCoalesce()
-			cypherSort.NewSortRule("NAME", sort.Direction.String(), true, reflect.TypeOf(neo4jentity.OrganizationEntity{})).WithAlias("parent").WithDescending()
-			cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(neo4jentity.OrganizationEntity{}))
+			cypherSort.NewSortRule("NAME", string(sort.Direction), *sort.CaseSensitive, reflect.TypeOf(neo4jentity.OrganizationEntity{})).WithCoalesce().WithAlias("parent")
+			cypherSort.NewSortRule("NAME", string(sort.Direction), *sort.CaseSensitive, reflect.TypeOf(neo4jentity.OrganizationEntity{})).WithCoalesce()
+			cypherSort.NewSortRule("NAME", string(sort.Direction), true, reflect.TypeOf(neo4jentity.OrganizationEntity{})).WithAlias("parent").WithDescending()
+			cypherSort.NewSortRule("NAME", string(sort.Direction), *sort.CaseSensitive, reflect.TypeOf(neo4jentity.OrganizationEntity{}))
 			selectQuery += string(cypherSort.SortingCypherFragment("o"))
 		} else if sort.By == SearchSortParamForecastArr {
 			selectQuery += " ORDER BY FORECAST_ARR_FOR_SORTING " + string(sort.Direction)
@@ -866,12 +867,12 @@ func (r *dashboardRepository) GetDashboardViewOrganizationDataV2(ctx context.Con
 		} else if sort.By == SearchSortParamChurnDate {
 			selectQuery += " ORDER BY CHURN_DATE_FOR_SORTING " + string(sort.Direction)
 		} else if sort.By == "DOMAIN" {
-			cypherSort.NewSortRule("DOMAIN", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(neo4jentity.DomainEntity{}))
+			cypherSort.NewSortRule("DOMAIN", string(sort.Direction), *sort.CaseSensitive, reflect.TypeOf(neo4jentity.DomainEntity{}))
 			selectQuery += string(cypherSort.SortingCypherFragment("d"))
 		} else if sort.By == SearchSortParamLocation {
-			cypherSort.NewSortRule("COUNTRY", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(neo4jentity.LocationEntity{}))
-			cypherSort.NewSortRule("REGION", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(neo4jentity.LocationEntity{}))
-			cypherSort.NewSortRule("LOCALITY", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(neo4jentity.LocationEntity{}))
+			cypherSort.NewSortRule("COUNTRY", string(sort.Direction), *sort.CaseSensitive, reflect.TypeOf(neo4jentity.LocationEntity{}))
+			cypherSort.NewSortRule("REGION", string(sort.Direction), *sort.CaseSensitive, reflect.TypeOf(neo4jentity.LocationEntity{}))
+			cypherSort.NewSortRule("LOCALITY", string(sort.Direction), *sort.CaseSensitive, reflect.TypeOf(neo4jentity.LocationEntity{}))
 			selectQuery += string(cypherSort.SortingCypherFragment("l"))
 		} else if sort.By == "OWNER" {
 			if sort.CaseSensitive != nil && *sort.CaseSensitive {
@@ -880,17 +881,17 @@ func (r *dashboardRepository) GetDashboardViewOrganizationDataV2(ctx context.Con
 				selectQuery += " ORDER BY toLower(OWNER_FIRST_NAME_FOR_SORTING) " + string(sort.Direction) + ", toLower(OWNER_LAST_NAME_FOR_SORTING) " + string(sort.Direction)
 			}
 		} else if sort.By == SearchSortParamLastTouchpointAt || sort.By == SearchSortParamLastTouchpoint {
-			cypherSort.NewSortRule("LAST_TOUCHPOINT_AT", sort.Direction.String(), false, reflect.TypeOf(neo4jentity.OrganizationEntity{}))
+			cypherSort.NewSortRule("LAST_TOUCHPOINT_AT", string(sort.Direction), false, reflect.TypeOf(neo4jentity.OrganizationEntity{}))
 			selectQuery += string(cypherSort.SortingCypherFragment("o"))
 		} else if sort.By == SearchSortParamLastTouchpointType {
-			cypherSort.NewSortRule("LAST_TOUCHPOINT_TYPE", sort.Direction.String(), false, reflect.TypeOf(neo4jentity.OrganizationEntity{}))
+			cypherSort.NewSortRule("LAST_TOUCHPOINT_TYPE", string(sort.Direction), false, reflect.TypeOf(neo4jentity.OrganizationEntity{}))
 			selectQuery += string(cypherSort.SortingCypherFragment("o"))
 		} else if sort.By == SearchSortParamUpdatedAt {
-			cypherSort.NewSortRule("UPDATED_AT", sort.Direction.String(), false, reflect.TypeOf(neo4jentity.OrganizationEntity{}))
+			cypherSort.NewSortRule("UPDATED_AT", string(sort.Direction), false, reflect.TypeOf(neo4jentity.OrganizationEntity{}))
 			selectQuery += string(cypherSort.SortingCypherFragment("o"))
 		}
 	} else {
-		cypherSort.NewSortRule("UPDATED_AT", string(model.SortingDirectionDesc), false, reflect.TypeOf(neo4jentity.OrganizationEntity{}))
+		cypherSort.NewSortRule("UPDATED_AT", string(commonmodel.SortingDirectionDesc), false, reflect.TypeOf(neo4jentity.OrganizationEntity{}))
 		selectQuery += string(cypherSort.SortingCypherFragment("o"))
 	}
 	// end sort region
@@ -982,7 +983,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationDataV2(ctx context.Con
 	return stringsWithTotalCount, nil
 }
 
-func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, tenant string, skip, limit int, where *model.Filter, sort *model.SortBy) (*utils.RecordsWithTotalCount, error) {
+func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, tenant string, skip, limit int, where *model.Filter, sort *commonmodel.SortBy) (*utils.RecordsWithTotalCount, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardRepository.GetDashboardViewRenewalData")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
@@ -1260,7 +1261,7 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 		aliases := " o, contract, op, owner"
 		query += " WITH o, contract, op, owner "
 		if sort != nil && sort.By == SearchSortParamOwner {
-			if sort.Direction == model.SortingDirectionAsc {
+			if sort.Direction == commonmodel.SortingDirectionAsc {
 				query += ", CASE WHEN owner.firstName <> \"\" and not owner.firstName is null THEN owner.firstName ELSE 'ZZZZZZZZZZZZZZZZZZZ' END as OWNER_FIRST_NAME_FOR_SORTING "
 				query += ", CASE WHEN owner.lastName <> \"\" and not owner.lastName is null THEN owner.lastName ELSE 'ZZZZZZZZZZZZZZZZZZZ' END as OWNER_LAST_NAME_FOR_SORTING "
 			} else {
@@ -1270,7 +1271,7 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 			aliases += ", OWNER_FIRST_NAME_FOR_SORTING, OWNER_LAST_NAME_FOR_SORTING "
 		}
 		if sort != nil && sort.By == SearchSortParamName {
-			if sort.Direction == model.SortingDirectionAsc {
+			if sort.Direction == commonmodel.SortingDirectionAsc {
 				query += ", CASE WHEN o.name <> \"\" and not o.name is null THEN o.name ELSE 'ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ' END as NAME_FOR_SORTING "
 			} else {
 				query += ", o.name as NAME_FOR_SORTING "
@@ -1278,7 +1279,7 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 			aliases += ", NAME_FOR_SORTING "
 		}
 		if sort != nil && sort.By == SearchSortParamRenewalLikelihood {
-			if sort.Direction == model.SortingDirectionAsc {
+			if sort.Direction == commonmodel.SortingDirectionAsc {
 				query += ", CASE WHEN op.renewalLikelihood IS NOT NULL THEN op.renewalLikelihood ELSE 9999 END as RENEWAL_LIKELIHOOD_FOR_SORTING "
 			} else {
 				query += ", CASE WHEN op.renewalLikelihood IS NOT NULL THEN op.renewalLikelihood ELSE -1 END as RENEWAL_LIKELIHOOD_FOR_SORTING "
@@ -1286,7 +1287,7 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 			aliases += ", RENEWAL_LIKELIHOOD_FOR_SORTING "
 		}
 		if sort != nil && sort.By == SearchSortParamRenewalCycleNext {
-			if sort.Direction == model.SortingDirectionAsc {
+			if sort.Direction == commonmodel.SortingDirectionAsc {
 				query += ", CASE WHEN op.renewedAt IS NOT NULL THEN date(op.renewedAt) ELSE date('2100-01-01') END as RENEWAL_CYCLE_NEXT_FOR_SORTING "
 			} else {
 				query += ", CASE WHEN op.renewedAt IS NOT NULL THEN date(op.renewedAt) ELSE date('1900-01-01') END as RENEWAL_CYCLE_NEXT_FOR_SORTING "
@@ -1294,7 +1295,7 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 			aliases += ", RENEWAL_CYCLE_NEXT_FOR_SORTING "
 		}
 		if sort != nil && sort.By == SearchSortParamRenewalDate {
-			if sort.Direction == model.SortingDirectionAsc {
+			if sort.Direction == commonmodel.SortingDirectionAsc {
 				query += ", CASE WHEN op.renewedAt IS NOT NULL THEN date(op.renewedAt) ELSE date('2100-01-01') END as RENEWAL_DATE_FOR_SORTING "
 			} else {
 				query += ", CASE WHEN op.renewedAt IS NOT NULL THEN date(op.renewedAt) ELSE date('1900-01-01') END as RENEWAL_DATE_FOR_SORTING "
@@ -1302,7 +1303,7 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 			aliases += ", RENEWAL_DATE_FOR_SORTING "
 		}
 		if sort != nil && sort.By == SearchSortParamContractLengthInMonths {
-			if sort.Direction == model.SortingDirectionAsc {
+			if sort.Direction == commonmodel.SortingDirectionAsc {
 				query += ", CASE WHEN contract.lengthInMonths IS NOT NULL AND contract.lengthInMonths > 0 THEN contract.lengthInMonths ELSE 9999 END as CONTRACT_LENGTH_FOR_SORTING "
 			} else {
 				query += ", CASE WHEN contract.lengthInMonths IS NOT NULL THEN contract.lengthInMonths ELSE -1 END as CONTRACT_LENGTH_FOR_SORTING "
@@ -1310,7 +1311,7 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 			aliases += ", RENEWAL_LIKELIHOOD_FOR_SORTING "
 		}
 		if sort != nil && sort.By == SearchSortParamOnboardingStatus {
-			if sort.Direction == model.SortingDirectionAsc {
+			if sort.Direction == commonmodel.SortingDirectionAsc {
 				query += ", CASE WHEN o.onboardingStatusOrder IS NOT NULL THEN o.onboardingStatusOrder ELSE 9999 END as ONBOARDING_STATUS_FOR_SORTING "
 				query += ", o.onboardingUpdatedAt AS ONBOARDING_UPDATED_AT_FOR_SORTING "
 			} else {
@@ -1320,7 +1321,7 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 			aliases += ", ONBOARDING_STATUS_FOR_SORTING, ONBOARDING_UPDATED_AT_FOR_SORTING "
 		}
 		if sort != nil && sort.By == SearchSortParamForecastArr {
-			if sort.Direction == model.SortingDirectionAsc {
+			if sort.Direction == commonmodel.SortingDirectionAsc {
 				query += ", CASE WHEN op.maxAmount <> \"\" and op.maxAmount IS NOT NULL THEN op.maxAmount ELSE 9999999999999999 END as FORECAST_ARR_FOR_SORTING "
 			} else {
 				query += ", CASE WHEN op.maxAmount <> \"\" and op.maxAmount IS NOT NULL THEN op.maxAmount ELSE 0 END as FORECAST_ARR_FOR_SORTING "
@@ -1337,10 +1338,10 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 			if sort.By == SearchSortParamName {
 				query += " ORDER BY NAME_FOR_SORTING " + string(sort.Direction)
 			} else if sort.By == SearchSortParamOrganization {
-				cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(neo4jentity.OrganizationEntity{})).WithCoalesce().WithAlias("parent")
-				cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(neo4jentity.OrganizationEntity{})).WithCoalesce()
-				cypherSort.NewSortRule("NAME", sort.Direction.String(), true, reflect.TypeOf(neo4jentity.OrganizationEntity{})).WithAlias("parent").WithDescending()
-				cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(neo4jentity.OrganizationEntity{}))
+				cypherSort.NewSortRule("NAME", string(sort.Direction), *sort.CaseSensitive, reflect.TypeOf(neo4jentity.OrganizationEntity{})).WithCoalesce().WithAlias("parent")
+				cypherSort.NewSortRule("NAME", string(sort.Direction), *sort.CaseSensitive, reflect.TypeOf(neo4jentity.OrganizationEntity{})).WithCoalesce()
+				cypherSort.NewSortRule("NAME", string(sort.Direction), true, reflect.TypeOf(neo4jentity.OrganizationEntity{})).WithAlias("parent").WithDescending()
+				cypherSort.NewSortRule("NAME", string(sort.Direction), *sort.CaseSensitive, reflect.TypeOf(neo4jentity.OrganizationEntity{}))
 				query += string(cypherSort.SortingCypherFragment("o"))
 			} else if sort.By == SearchSortParamForecastArr {
 				query += " ORDER BY FORECAST_ARR_FOR_SORTING " + string(sort.Direction)
@@ -1356,19 +1357,19 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 			} else if sort.By == "OWNER" {
 				query += " ORDER BY OWNER_FIRST_NAME_FOR_SORTING " + string(sort.Direction) + ", OWNER_LAST_NAME_FOR_SORTING " + string(sort.Direction)
 			} else if sort.By == SearchSortParamLastTouchpointAt || sort.By == SearchSortParamLastTouchpoint {
-				cypherSort.NewSortRule("LAST_TOUCHPOINT_AT", sort.Direction.String(), false, reflect.TypeOf(neo4jentity.OrganizationEntity{}))
+				cypherSort.NewSortRule("LAST_TOUCHPOINT_AT", string(sort.Direction), false, reflect.TypeOf(neo4jentity.OrganizationEntity{}))
 				query += string(cypherSort.SortingCypherFragment("o"))
 			} else if sort.By == SearchSortParamLastTouchpointType {
-				cypherSort.NewSortRule("LAST_TOUCHPOINT_TYPE", sort.Direction.String(), false, reflect.TypeOf(neo4jentity.OrganizationEntity{}))
+				cypherSort.NewSortRule("LAST_TOUCHPOINT_TYPE", string(sort.Direction), false, reflect.TypeOf(neo4jentity.OrganizationEntity{}))
 				query += string(cypherSort.SortingCypherFragment("o"))
 			} else if sort.By == SearchSortParamContractLengthInMonths {
 				query += " ORDER BY CONTRACT_LENGTH_FOR_SORTING " + string(sort.Direction)
 			} else if sort.By == SearchSortParamUpdatedAt {
-				cypherSort.NewSortRule("UPDATED_AT", sort.Direction.String(), false, reflect.TypeOf(neo4jentity.OrganizationEntity{}))
+				cypherSort.NewSortRule("UPDATED_AT", string(sort.Direction), false, reflect.TypeOf(neo4jentity.OrganizationEntity{}))
 				query += string(cypherSort.SortingCypherFragment("o"))
 			}
 		} else {
-			cypherSort.NewSortRule("UPDATED_AT", string(model.SortingDirectionDesc), false, reflect.TypeOf(neo4jentity.OrganizationEntity{}))
+			cypherSort.NewSortRule("UPDATED_AT", string(commonmodel.SortingDirectionDesc), false, reflect.TypeOf(neo4jentity.OrganizationEntity{}))
 			query += string(cypherSort.SortingCypherFragment("o"))
 		}
 		// end sort region

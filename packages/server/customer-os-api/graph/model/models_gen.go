@@ -2574,12 +2574,6 @@ type SocialUpdateInput struct {
 	URL string `json:"url"`
 }
 
-type SortBy struct {
-	By            string           `json:"by"`
-	Direction     SortingDirection `json:"direction"`
-	CaseSensitive *bool            `json:"caseSensitive,omitempty"`
-}
-
 type State struct {
 	ID      string   `json:"id"`
 	Country *Country `json:"country"`
@@ -5013,47 +5007,6 @@ func (e *Role) UnmarshalGQL(v interface{}) error {
 }
 
 func (e Role) MarshalGQL(w io.Writer) {
-	fmt.Fprint(w, strconv.Quote(e.String()))
-}
-
-type SortingDirection string
-
-const (
-	SortingDirectionAsc  SortingDirection = "ASC"
-	SortingDirectionDesc SortingDirection = "DESC"
-)
-
-var AllSortingDirection = []SortingDirection{
-	SortingDirectionAsc,
-	SortingDirectionDesc,
-}
-
-func (e SortingDirection) IsValid() bool {
-	switch e {
-	case SortingDirectionAsc, SortingDirectionDesc:
-		return true
-	}
-	return false
-}
-
-func (e SortingDirection) String() string {
-	return string(e)
-}
-
-func (e *SortingDirection) UnmarshalGQL(v interface{}) error {
-	str, ok := v.(string)
-	if !ok {
-		return fmt.Errorf("enums must be strings")
-	}
-
-	*e = SortingDirection(str)
-	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid SortingDirection", str)
-	}
-	return nil
-}
-
-func (e SortingDirection) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 

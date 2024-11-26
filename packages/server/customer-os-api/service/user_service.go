@@ -32,7 +32,7 @@ import (
 type UserService interface {
 	Create(ctx context.Context, UserEntity neo4jentity.UserEntity) (string, error)
 	Update(ctx context.Context, userId, firstName, lastName string, name, timezone, profilePhotoURL *string) (*neo4jentity.UserEntity, error)
-	GetAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
+	GetAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model2.SortBy) (*utils.Pagination, error)
 
 	AddRole(ctx context.Context, userId string, role model.Role) (*neo4jentity.UserEntity, error)
 	AddRoleInTenant(ctx context.Context, userId string, tenant string, role model.Role) (*neo4jentity.UserEntity, error)
@@ -295,7 +295,7 @@ func (s *userService) RemoveRoleInTenant(parentCtx context.Context, userId strin
 	return s.services.CommonServices.UserService.GetById(ctx, userId)
 }
 
-func (s *userService) GetAll(parentCtx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error) {
+func (s *userService) GetAll(parentCtx context.Context, page, limit int, filter *model.Filter, sortBy []*model2.SortBy) (*utils.Pagination, error) {
 	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.GetAll")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)

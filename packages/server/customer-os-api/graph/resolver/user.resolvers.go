@@ -179,7 +179,7 @@ func (r *mutationResolver) CustomerUserAddJobRole(ctx context.Context, id string
 }
 
 // Users is the resolver for the users field.
-func (r *queryResolver) Users(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.UserPage, error) {
+func (r *queryResolver) Users(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*commonModel.SortBy) (*model.UserPage, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.Users", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)

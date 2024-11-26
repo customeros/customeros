@@ -68,6 +68,12 @@ models:
       - github.com/99designs/gqlgen/graphql.Int
       - github.com/99designs/gqlgen/graphql.Int64
       - github.com/99designs/gqlgen/graphql.Int32
+  SortBy:
+    model:
+      - github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model.SortBy
+  SortingDirection:
+    model:
+      - github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model.SortingDirection
   FlowStatus:
     model:
       - github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity.FlowStatus

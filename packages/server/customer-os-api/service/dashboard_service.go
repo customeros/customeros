@@ -11,6 +11,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
@@ -23,14 +24,14 @@ import (
 
 type DashboardViewOrganizationsRequest struct {
 	Where *model.Filter
-	Sort  *model.SortBy
+	Sort  *commonModel.SortBy
 	Page  int
 	Limit int
 }
 
 type DashboardViewRenewalsRequest struct {
 	Where *model.Filter
-	Sort  *model.SortBy
+	Sort  *commonModel.SortBy
 	Page  int
 	Limit int
 }

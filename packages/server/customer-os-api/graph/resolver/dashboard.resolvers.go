@@ -17,6 +17,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	model1 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/opentracing/opentracing-go/log"
@@ -45,7 +46,7 @@ func (r *dashboardCustomerMapResolver) Organization(ctx context.Context, obj *mo
 }
 
 // DashboardViewOrganizations is the resolver for the dashboardView_Organizations field.
-func (r *queryResolver) DashboardViewOrganizations(ctx context.Context, pagination model.Pagination, where *model.Filter, sort *model.SortBy) (*model.OrganizationPage, error) {
+func (r *queryResolver) DashboardViewOrganizations(ctx context.Context, pagination model.Pagination, where *model.Filter, sort *model1.SortBy) (*model.OrganizationPage, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.DashboardViewOrganizations", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
@@ -84,7 +85,7 @@ func (r *queryResolver) DashboardViewOrganizations(ctx context.Context, paginati
 }
 
 // DashboardViewRenewals is the resolver for the dashboardView_Renewals field.
-func (r *queryResolver) DashboardViewRenewals(ctx context.Context, pagination model.Pagination, where *model.Filter, sort *model.SortBy) (*model.RenewalsPage, error) {
+func (r *queryResolver) DashboardViewRenewals(ctx context.Context, pagination model.Pagination, where *model.Filter, sort *model1.SortBy) (*model.RenewalsPage, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.DashboardViewRenewals", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)

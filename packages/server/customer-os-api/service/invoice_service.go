@@ -35,7 +35,7 @@ const (
 
 type InvoiceService interface {
 	CountInvoices(ctx context.Context, tenant, organizationId string, where *model.Filter) (int64, error)
-	GetInvoices(ctx context.Context, organizationId string, page, limit int, where *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
+	GetInvoices(ctx context.Context, organizationId string, page, limit int, where *model.Filter, sortBy []*model2.SortBy) (*utils.Pagination, error)
 	UpdateInvoice(ctx context.Context, input model.InvoiceUpdateInput) error
 }
 type invoiceService struct {
@@ -128,7 +128,7 @@ func (s *invoiceService) CountInvoices(ctx context.Context, tenant, organization
 	return s.repositories.Neo4jRepositories.InvoiceReadRepository.CountInvoices(ctx, tenant, filter, params)
 }
 
-func (s *invoiceService) GetInvoices(ctx context.Context, organizationId string, page, limit int, where *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error) {
+func (s *invoiceService) GetInvoices(ctx context.Context, organizationId string, page, limit int, where *model.Filter, sortBy []*model2.SortBy) (*utils.Pagination, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.GetInvoices")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -144,10 +144,10 @@ func (s *invoiceService) GetInvoices(ctx context.Context, organizationId string,
 	}
 
 	if len(sortBy) == 0 {
-		sortBy = []*model.SortBy{
+		sortBy = []*model2.SortBy{
 			{
 				By:        "INVOICE_DUE_DATE",
-				Direction: model.SortingDirectionDesc,
+				Direction: model2.SortingDirectionDesc,
 			},
 		}
 	}

@@ -1,18 +1,18 @@
 package service
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/pkg/errors"
 	"reflect"
 	"strings"
 )
 
-func buildSort(sortBy []*model.SortBy, T reflect.Type) (*utils.CypherSort, error) {
+func buildSort(sortBy []*commonModel.SortBy, T reflect.Type) (*utils.CypherSort, error) {
 	transformedSorting := new(utils.CypherSort)
 	if sortBy != nil {
 		for _, v := range sortBy {
-			orderBy := transformedSorting.NewSortRule(v.By, v.Direction.String(), utils.IfNotNilBool(v.CaseSensitive), T)
+			orderBy := transformedSorting.NewSortRule(v.By, string(v.Direction), utils.IfNotNilBool(v.CaseSensitive), T)
 			if !orderBy.IsValid() {
 				return nil, errors.New("Invalid sorting rule")
 			}
@@ -34,7 +34,7 @@ type SortMultipleEntitiesDefinitionDefault struct {
 	DescDefault  string
 }
 
-func buildSortMultipleEntities(sortBy []*model.SortBy, mapping []SortMultipleEntitiesDefinition) (*utils.Cypher, error) {
+func buildSortMultipleEntities(sortBy []*commonModel.SortBy, mapping []SortMultipleEntitiesDefinition) (*utils.Cypher, error) {
 	transformedSorting := new(utils.CypherSort)
 
 	if sortBy != nil {
@@ -57,7 +57,7 @@ func buildSortMultipleEntities(sortBy []*model.SortBy, mapping []SortMultipleEnt
 				return nil, errors.New("Entity not found in mapping")
 			}
 
-			orderBy := transformedSorting.NewSortRule(sort, v.Direction.String(), utils.IfNotNilBool(v.CaseSensitive), mappingFound.EntityMapping)
+			orderBy := transformedSorting.NewSortRule(sort, string(v.Direction), utils.IfNotNilBool(v.CaseSensitive), mappingFound.EntityMapping)
 			if !orderBy.IsValid() {
 				return nil, errors.New("Invalid sorting rule")
 			}
@@ -65,7 +65,7 @@ func buildSortMultipleEntities(sortBy []*model.SortBy, mapping []SortMultipleEnt
 			var defaultIfNil string
 			for _, value := range mappingFound.EntityDefaults {
 				if value.PropertyName == sort {
-					if v.Direction.String() == "ASC" {
+					if string(v.Direction) == "ASC" {
 						defaultIfNil = value.AscDefault
 					} else {
 						defaultIfNil = value.DescDefault
