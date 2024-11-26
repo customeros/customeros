@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   repository_dispatch:
     types:
-      - customer-os-api  * deployed
+      - customer-os-api * deployed
 
 concurrency:
   group: ${{ github.workflow }}-global
