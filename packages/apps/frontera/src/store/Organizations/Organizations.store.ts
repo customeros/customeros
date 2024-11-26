@@ -272,6 +272,10 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
     try {
       const record = new Organization(this, Organization.default(payload));
 
+      record.value.enrichDetails = {
+        ...record.value.enrichDetails,
+        requestedAt: new Date().toISOString(),
+      };
       this.value.set(record.id, record);
       tempId = record.id;
 

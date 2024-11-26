@@ -50,15 +50,22 @@ export const columns: Record<string, Column> = {
     enableColumnFilter: false,
     enableResizing: false,
     cell: (props) => {
-      const icon = props.getValue()?.value?.icon;
-      const logo = props.getValue()?.value?.logo;
-      const description = props.getValue()?.value?.valueProposition;
+      const enrichedOrg = props.getValue()?.value;
+
+      const icon = enrichedOrg?.icon;
+      const logo = enrichedOrg?.logo;
+      const description = enrichedOrg?.valueProposition;
+      const isEnriching =
+        !enrichedOrg?.enrichDetails?.enrichedAt &&
+        enrichedOrg?.enrichDetails?.requestedAt &&
+        !enrichedOrg?.enrichDetails?.failedAt;
 
       return (
         <AvatarCell
           icon={icon}
           logo={logo}
           description={description}
+          isEnriching={isEnriching}
           name={props.getValue()?.value?.name}
           id={props.getValue()?.value?.metadata?.id}
         />
@@ -75,8 +82,15 @@ export const columns: Record<string, Column> = {
     enableColumnFilter: false,
     enableResizing: true,
     cell: (props) => {
+      const enrichedOrg = props.getValue()?.value;
+      const isEnriching =
+        !enrichedOrg?.enrichDetails?.enrichedAt &&
+        enrichedOrg?.enrichDetails?.requestedAt &&
+        !enrichedOrg?.enrichDetails?.failedAt;
+
       return (
         <OrganizationCell
+          isEnriching={isEnriching}
           name={props.getValue().value.name}
           id={props.getValue().value.metadata?.id}
           isSubsidiary={!!props.getValue()?.value?.subsidiaryOf?.length}
@@ -765,11 +779,16 @@ export const columns: Record<string, Column> = {
           props.getValue()?.value?.parentCompanies?.[0]?.organization;
 
         if (!parentOrg) return null;
+        const isEnriching =
+          !parentOrg?.enrichDetails?.enrichedAt &&
+          parentOrg?.enrichDetails?.requestedAt &&
+          !parentOrg?.enrichDetails?.failedAt;
 
         return (
           <OrganizationCell
             isSubsidiary={false}
             name={parentOrg?.name}
+            isEnriching={isEnriching}
             parentOrganizationName={''}
             id={parentOrg?.metadata?.id}
           />

@@ -3,8 +3,10 @@ import { useNavigate } from 'react-router-dom';
 
 import { useLocalStorage } from 'usehooks-ts';
 
+import { cn } from '@ui/utils/cn.ts';
 import { Image } from '@ui/media/Image/Image';
 import { Avatar } from '@ui/media/Avatar/Avatar';
+import { Building07 } from '@ui/media/icons/Building07.tsx';
 import {
   Popover,
   PopoverTrigger,
@@ -17,10 +19,11 @@ interface AvatarCellProps {
   icon?: string | null;
   logo?: string | null;
   description?: string;
+  isEnriching: boolean;
 }
 
 export const AvatarCell = memo(
-  ({ name, id, icon, logo, description }: AvatarCellProps) => {
+  ({ name, id, icon, logo, description, isEnriching }: AvatarCellProps) => {
     const [isOpen, setIsOpen] = useState(false);
     const navigate = useNavigate();
 
@@ -46,13 +49,16 @@ export const AvatarCell = memo(
               size='xs'
               textSize='xs'
               tabIndex={-1}
-              name={fullName}
+              icon={<Building07 />}
               src={src || undefined}
               variant='outlineSquare'
               onClick={handleNavigate}
+              name={isEnriching ? '' : fullName}
               onMouseEnter={() => setIsOpen(true)}
               onMouseLeave={() => setIsOpen(false)}
-              className='text-gray-700 cursor-pointer focus:outline-none'
+              className={cn('text-gray-700 cursor-pointer focus:outline-none', {
+                'animate-pulse': isEnriching,
+              })}
             />
           </PopoverTrigger>
 

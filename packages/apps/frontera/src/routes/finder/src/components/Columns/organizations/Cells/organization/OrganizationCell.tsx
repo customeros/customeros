@@ -8,6 +8,7 @@ import { TableCellTooltip } from '@ui/presentation/Table';
 interface OrganizationCellProps {
   id: string;
   name: string;
+  isEnriching: boolean;
   isSubsidiary: boolean;
   parentOrganizationName: string;
 }
@@ -17,6 +18,7 @@ export const OrganizationCell = ({
   name,
   isSubsidiary,
   parentOrganizationName,
+  isEnriching,
 }: OrganizationCellProps) => {
   const [tabs] = useLocalStorage<{
     [key: string]: string;
@@ -25,6 +27,10 @@ export const OrganizationCell = ({
 
   const linkRef = useRef<HTMLParagraphElement>(null);
   const fullName = name || 'Unnamed';
+
+  if (isEnriching) {
+    return <p className='text-gray-400'>Enriching...</p>;
+  }
 
   const handleNavigate = () => {
     const lastPositionParams = tabs[id];
