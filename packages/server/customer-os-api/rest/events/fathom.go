@@ -3,6 +3,7 @@ package events
 
 import (
 	"fmt"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"net/http"
 	"regexp"
 	"strings"
@@ -57,7 +58,8 @@ func FathomZapier(services *service.Services) gin.HandlerFunc {
 
 func handleFathomAISummaryZapier(ctx rest.HTTPContext) {
 	var aiSummaryData RawFathomAISummaryZapier
-	if err := ctx.GinContext.BindJSON(&aiSummaryData); err == nil && aiSummaryData.AISummaryHTMLFormatted != "" {
+	err := ctx.GinContext.BindJSON(&aiSummaryData)
+	if err == nil && aiSummaryData.AISummaryHTMLFormatted != "" {
 		ctx.GinContext.JSON(http.StatusAccepted, rest.BuildBaseResponse(rest.StatusProcessing))
 
 		go func() {
@@ -81,17 +83,24 @@ func createEventFromFathomAISummaryZapier(ctx rest.HTTPContext, aiSummaryData *R
 
 	source := neo4jentity.DataSourceFathom
 	event.Source = &source
-	event.CreatedAt = &aiSummaryData.MeetingScheduledStartTime
+	if aiSummaryData.MeetingScheduledStartTime.IsZero() {
+		event.CreatedAt = utils.NowPtr()
+	} else {
+		event.CreatedAt = utils.TimePtr(aiSummaryData.MeetingScheduledStartTime.UTC())
+	}
 	event.Content = &content
 
 	domains := strings.Split(aiSummaryData.MeetingExternalDomains, ",")
-	orgs, err := getParticipantOrganizationIds(ctx, domains)
+	orgIds, err := getParticipantOrganizationIds(ctx, domains)
 	if err != nil {
 		allErrs = multierr.Append(allErrs, errors.Wrap(err, "failed to get organization id for participant"))
 		tracing.TraceErr(ctx.Span, err)
 	}
 
-	for _, org := range orgs {
+	orgIds = utils.RemoveEmpties(orgIds)
+	orgIds = utils.RemoveDuplicates(orgIds)
+
+	for _, org := range orgIds {
 		event.OrganizationId = &org
 		_, err := ctx.Services.CommonServices.MarkdownEventService.Save(*ctx.ServiceContext, nil, nil, event)
 		if err != nil {

@@ -2,6 +2,7 @@
 package events
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"strings"
 	"time"
 )
@@ -36,9 +37,9 @@ type RawFathomAISummaryZapier struct {
 	MeetingTitle              string    `json:"meeting_title"`
 
 	// Recording details
-	RecordingDuration float64 `json:"recording_duration"`
-	RecordingShareURL string  `json:"recording_share_url"`
-	RecordingURL      string  `json:"recording_url"`
+	RecordingDuration string `json:"recording_duration"`
+	RecordingShareURL string `json:"recording_share_url"`
+	RecordingURL      string `json:"recording_url"`
 }
 
 // Helper method to check if meeting has external participants
@@ -48,7 +49,10 @@ func (f *RawFathomAISummaryZapier) HasExternalParticipants() bool {
 
 // Helper method to get meeting duration in minutes
 func (f *RawFathomAISummaryZapier) GetDurationMinutes() float64 {
-	return f.RecordingDuration
+	if f.RecordingDuration == "" {
+		return 0
+	}
+	return utils.IfNotNilFloat64(utils.ParseStringToFloat(f.RecordingDuration))
 }
 
 // Helper method to get external domains
