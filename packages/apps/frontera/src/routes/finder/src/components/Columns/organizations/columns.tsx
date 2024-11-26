@@ -55,10 +55,7 @@ export const columns: Record<string, Column> = {
       const icon = enrichedOrg?.icon;
       const logo = enrichedOrg?.logo;
       const description = enrichedOrg?.valueProposition;
-      const isEnriching =
-        !enrichedOrg?.enrichDetails?.enrichedAt &&
-        enrichedOrg?.enrichDetails?.requestedAt &&
-        !enrichedOrg?.enrichDetails?.failedAt;
+      const isEnriching = props.getValue()?.isEnriching;
 
       return (
         <AvatarCell
@@ -82,17 +79,11 @@ export const columns: Record<string, Column> = {
     enableColumnFilter: false,
     enableResizing: true,
     cell: (props) => {
-      const enrichedOrg = props.getValue()?.value;
-      const isEnriching =
-        !enrichedOrg?.enrichDetails?.enrichedAt &&
-        enrichedOrg?.enrichDetails?.requestedAt &&
-        !enrichedOrg?.enrichDetails?.failedAt;
-
       return (
         <OrganizationCell
-          isEnriching={isEnriching}
           name={props.getValue().value.name}
           id={props.getValue().value.metadata?.id}
+          isEnriching={props.getValue()?.isEnriching}
           isSubsidiary={!!props.getValue()?.value?.subsidiaryOf?.length}
           parentOrganizationName={
             props.getValue()?.value?.subsidiaryOf?.[0]?.organization.name
@@ -780,9 +771,7 @@ export const columns: Record<string, Column> = {
 
         if (!parentOrg) return null;
         const isEnriching =
-          !parentOrg?.enrichDetails?.enrichedAt &&
-          parentOrg?.enrichDetails?.requestedAt &&
-          !parentOrg?.enrichDetails?.failedAt;
+          props.getValue()?.value?.parentCompanies?.[0]?.isEnriching;
 
         return (
           <OrganizationCell

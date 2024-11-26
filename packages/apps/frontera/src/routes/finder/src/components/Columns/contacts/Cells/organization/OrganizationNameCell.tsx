@@ -40,12 +40,7 @@ export const OrganizationNameCell = observer(
     const href = getHref(orgId, lastPositionParams);
     const contactStore = store.contacts.value.get(contactId);
 
-    const enrichedContact = contactStore?.value.enrichDetails;
-
-    const enrichingStatus =
-      !enrichedContact?.enrichedAt &&
-      enrichedContact?.requestedAt &&
-      !enrichedContact?.failedAt;
+    const isEnriching = contactStore?.isEnriching;
 
     const organizations = store.organizations.toArray();
 
@@ -54,10 +49,10 @@ export const OrganizationNameCell = observer(
       value: org.value.metadata.id,
     }));
 
-    if (!org?.length && enrichingStatus) {
+    if (!org?.length && isEnriching) {
       return (
         <p className='text-gray-400'>
-          {enrichingStatus ? 'Enriching...' : 'Not set'}
+          {isEnriching ? 'Enriching...' : 'Not set'}
         </p>
       );
     }

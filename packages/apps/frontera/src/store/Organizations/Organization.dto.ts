@@ -54,6 +54,15 @@ export class Organization extends Entity<OrganizationDatum> {
   }
 
   @computed
+  get isEnriching(): boolean {
+    return (
+      this.value?.enrichDetails?.requestedAt &&
+      !this.value?.enrichDetails?.enrichedAt &&
+      !this.value?.enrichDetails?.failedAt
+    );
+  }
+
+  @computed
   get contacts() {
     return this.value.contacts.content.reduce((acc, { metadata }) => {
       const store = this.store.root.contacts.value.get(metadata?.id);

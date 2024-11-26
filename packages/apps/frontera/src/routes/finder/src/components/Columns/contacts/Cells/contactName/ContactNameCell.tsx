@@ -25,12 +25,8 @@ export const ContactNameCell = observer(
 
     const [isEdit, setIsEdit] = useState(false);
     const ref = useRef(null);
-    const enrichedContact = contactStore?.value.enrichDetails;
 
-    const enrichingStatus =
-      !enrichedContact?.enrichedAt &&
-      enrichedContact?.requestedAt &&
-      !enrichedContact?.failedAt;
+    const isEnriching = contactStore?.isEnriching;
 
     useOutsideClick({
       ref: ref,
@@ -69,7 +65,7 @@ export const ContactNameCell = observer(
       >
         {!isEdit && !contactName && (
           <p className='text-gray-400'>
-            {enrichingStatus ? 'Enriching...' : 'Unknown'}
+            {isEnriching ? 'Enriching...' : 'Unknown'}
           </p>
         )}
         {!isEdit && contactName && (

@@ -20,12 +20,7 @@ export const AvatarCell = observer(
     const fullName = name || 'Unnamed';
     const contactStore = store.contacts.value.get(id);
 
-    const enrichedContact = contactStore?.value.enrichDetails;
-
-    const enrichingStatus =
-      !enrichedContact?.enrichedAt &&
-      enrichedContact?.requestedAt &&
-      !enrichedContact?.failedAt;
+    const isEnriching = contactStore?.isEnriching;
 
     return (
       <div className='items-center ml-[1px]'>
@@ -36,11 +31,11 @@ export const AvatarCell = observer(
           icon={<User01 />}
           src={src || undefined}
           variant='outlineCircle'
-          name={enrichingStatus ? '' : fullName}
+          name={isEnriching ? '' : fullName}
           className={cn(
             'text-gray-700 cursor-pointer focus:outline-none',
             !canNavigate && 'cursor-default',
-            enrichingStatus && 'animate-pulse',
+            isEnriching && 'animate-pulse',
           )}
           onClick={() => {
             if (

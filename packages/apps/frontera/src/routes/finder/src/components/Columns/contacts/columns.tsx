@@ -168,17 +168,13 @@ const columns: Record<string, Column> = {
       ),
       cell: (props) => {
         const phoneNumber = props.getValue()?.[0];
-        const enrichedContact = props.row.original.value.enrichDetails;
 
-        const enrichingStatus =
-          !enrichedContact?.enrichedAt &&
-          enrichedContact?.requestedAt &&
-          !enrichedContact?.failedAt;
+        const isEnriching = props.row.original.isEnriching;
 
         if (!phoneNumber)
           return (
             <p className='text-gray-400'>
-              {enrichingStatus ? 'Enriching...' : 'Not set'}
+              {isEnriching ? 'Enriching...' : 'Not set'}
             </p>
           );
 
@@ -196,13 +192,9 @@ const columns: Record<string, Column> = {
     enableSorting: true,
     cell: (props) => {
       const city = props.getValue()?.[0]?.locality;
-      const enrichedContact = props.row.original.value.enrichDetails;
-      const enrichingStatus =
-        !enrichedContact?.enrichedAt &&
-        enrichedContact?.requestedAt &&
-        !enrichedContact?.failedAt;
+      const isEnriching = props.row.original.isEnriching;
 
-      return <TextCell text={city} enrichingStatus={enrichingStatus} />;
+      return <TextCell text={city} isEnriching={isEnriching} />;
     },
     header: (props) => (
       <THead<HTMLInputElement>
@@ -325,17 +317,13 @@ const columns: Record<string, Column> = {
       cell: (props) => {
         const jobRole =
           props.row.original.value.latestOrganizationWithJobRole?.jobRole;
-        const enrichedContact = props.row.original.value.enrichDetails;
 
-        const enrichingStatus =
-          !enrichedContact?.enrichedAt &&
-          enrichedContact?.requestedAt &&
-          !enrichedContact?.failedAt;
+        const isEnriching = props.row.original.isEnriching;
 
         if (!jobRole?.startedAt)
           return (
             <p className='text-gray-400'>
-              {enrichingStatus ? 'Enriching...' : 'Not set'}
+              {isEnriching ? 'Enriching...' : 'Not set'}
             </p>
           );
 
@@ -468,16 +456,12 @@ const columns: Record<string, Column> = {
             e?.url?.includes('linkedin'),
           )?.followersCount;
 
-        const enrichedContact = props.row.original.value.enrichDetails;
-        const enrichingStatus =
-          !enrichedContact?.enrichedAt &&
-          enrichedContact?.requestedAt &&
-          !enrichedContact?.failedAt;
+        const isEnriching = props.row.original.isEnriching;
 
         if (typeof value !== 'number')
           return (
             <div className='text-gray-400'>
-              {enrichingStatus ? 'Enriching...' : 'Not set'}
+              {isEnriching ? 'Enriching...' : 'Not set'}
             </div>
           );
 
@@ -545,13 +529,9 @@ const columns: Record<string, Column> = {
     enableSorting: true,
     cell: (props) => {
       const region = props.getValue()?.[0]?.region;
-      const enrichedContact = props.row.original.value.enrichDetails;
-      const enrichingStatus =
-        !enrichedContact?.enrichedAt &&
-        enrichedContact?.requestedAt &&
-        !enrichedContact?.failedAt;
+      const isEnriching = props.row.original?.isEnriching;
 
-      return <TextCell text={region} enrichingStatus={enrichingStatus} />;
+      return <TextCell text={region} isEnriching={isEnriching} />;
     },
     header: (props) => (
       <THead<HTMLInputElement>
