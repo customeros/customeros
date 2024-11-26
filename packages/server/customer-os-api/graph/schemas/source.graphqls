@@ -17,4 +17,6 @@ enum DataSource {
     ATTIO
     ZENDESK_SELL
     MAILSTACK
+    FATHOM
+    GRAIN
 }

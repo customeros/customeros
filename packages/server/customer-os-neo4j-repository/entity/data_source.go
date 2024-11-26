@@ -47,6 +47,8 @@ var AllDataSource = []DataSource{
 	DataSourceWebscrape,
 	DataSourceZendeskSell,
 	DataSourceZendeskSupport,
+	DataSourceFathom,
+	DataSourceGrain,
 }
 
 func (ds DataSource) String() string {
