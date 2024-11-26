@@ -49,9 +49,9 @@ func GrainZapier(services *service.Services) gin.HandlerFunc {
 			rest.SendError(c, span, http.StatusForbidden, rest.ErrForbidden)
 		}
 
-		//if !strings.EqualFold(c.Request.UserAgent(), "Zapier") {
-		//	rest.SendError(c, span, http.StatusForbidden, rest.ErrForbidden)
-		//}
+		if !strings.EqualFold(c.Request.UserAgent(), "Zapier") {
+			rest.SendError(c, span, http.StatusForbidden, rest.ErrForbidden)
+		}
 
 		handleGrainNewRecordingEventZapier(httpContext)
 	}
@@ -118,7 +118,11 @@ func createEventFromGrainRecordingZapier(ctx rest.HTTPContext, grainData *GrainR
 
 	content := extractGrainMeetingNotes(grainData)
 	event.Content = &content
-	event.CreatedAt = &grainData.Data.StartDatetime
+	if grainData.Data.StartDatetime.IsZero() {
+		event.CreatedAt = utils.NowPtr()
+	} else {
+		event.CreatedAt = utils.TimePtr(grainData.Data.StartDatetime.UTC())
+	}
 	source := neo4jentity.DataSourceGrain
 	event.Source = &source
 
