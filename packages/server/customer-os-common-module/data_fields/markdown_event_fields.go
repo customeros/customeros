@@ -11,7 +11,6 @@ type MarkdownEventFields struct {
 	AppSource      *string                    `json:"appSource,omitempty"`
 	Source         *neo4jentity.DataSource    `json:"source,omitempty"`
 	CreatedAt      *time.Time                 `json:"createdAt,omitempty"`
-	StartedAt      *time.Time                 `json:"startedAt,omitempty" `
 	OrganizationId *string                    `json:"organizationId,omitempty"`
 	Content        *string                    `json:"content,omitempty"`
 	ExternalSystem *neo4jmodel.ExternalSystem `json:"externalSystem,omitempty"`

@@ -614,7 +614,10 @@ func (c *contactListenerImpl) enrichContactWithScrapInEnrichDetails(ctx context.
 	if len(scrapinContactResponse.Person.Positions.PositionHistory) > 0 {
 		positionName := ""
 		var positionStartedAt, positionEndedAt *time.Time
-		for _, position := range scrapinContactResponse.Person.Positions.PositionHistory {
+
+		// process positions in reverse order
+		for i := len(scrapinContactResponse.Person.Positions.PositionHistory) - 1; i >= 0; i-- {
+			position := scrapinContactResponse.Person.Positions.PositionHistory[i]
 
 			// find organization by linkedin url
 			organizationDbNodes, err := c.services.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsByLinkedIn(ctx, tenant, position.LinkedInUrl, "", position.LinkedInId)
