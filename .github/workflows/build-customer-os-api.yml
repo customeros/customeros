@@ -70,7 +70,7 @@ jobs:
       - name: Configure Test Folders
         id: test-folders
         run: |
-          test_folders=$(go list ./... | grep -v /gen | grep -v /test | grep -v /test/testify | paste -sd "," -)
+          test_folders=$(go list ./... | grep -v /gen | grep -v /test | paste -sd "," -)
           echo "{name}={test_folders}" >> $GITHUB_OUTPUT
 
       - name: Test

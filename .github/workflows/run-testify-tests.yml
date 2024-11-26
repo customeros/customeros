@@ -40,9 +40,11 @@ jobs:
       - name: Run Tests and Capture Output
         id: run_tests
         working-directory: ./packages/server/customer-os-api/test/testify
+        env:
+          TESTIFY_TENANT_API_KEY: ${{ secrets.TESTIFY_TENANT_API_KEY }}
         run: |
           set -o pipefail  # Ensure pipe status is propagated
-          TESTIFY_TENANT_API_KEY="${{ secrets.TESTIFY_TENANT_API_KEY }}" go test -v ./... 2>&1 | tee test-output.txt
+          go test -v ./... 2>&1 | tee test-output.txt
           exit ${PIPESTATUS[0]}  # Use the exit code from go test, not tee
 
       - name: Parse Test Results
