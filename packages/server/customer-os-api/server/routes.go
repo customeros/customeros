@@ -31,6 +31,7 @@ const (
 	enrichV1Path       = "/enrich/v1"
 	mailStackV1Path    = "/mailstack/v1"
 	eventsV1Path       = "/events/v1"
+	webhooksV1Path     = "/webhooks/v1"
 )
 
 func RegisterRestRoutes(ctx context.Context, r *gin.Engine, grpcClients *grpc_client.Clients, services *service.Services, cache *commoncaches.Cache) {
@@ -46,12 +47,19 @@ func RegisterRestRoutes(ctx context.Context, r *gin.Engine, grpcClients *grpc_cl
 
 func registerPublicRoutes(ctx context.Context, r *gin.Engine, services *service.Services) {
 	// Redirect to pay invoice link
-	r.GET("/invoice/:invoiceId/pay",
-		tracing.TracingEnhancer(ctx, "GET:/invoice/:invoiceId/pay"),
+	pay := "/invoice/:invoiceId/pay"
+	r.GET(pay,
+		tracing.TracingEnhancer(ctx, fmt.Sprintf("GET:%s", pay)),
 		rest.RedirectToPayInvoice(services))
-	r.GET("/invoice/:invoiceId/paymentLink",
-		tracing.TracingEnhancer(ctx, "GET:/invoice/:invoiceId/paymentLink"),
+
+	paymentLink := "/invoice/:invoiceId/paymentLink"
+	r.GET(paymentLink,
+		tracing.TracingEnhancer(ctx, fmt.Sprintf("GET:%s", paymentLink)),
 		rest.GetInvoicePaymentLink(services))
+
+	postmark := fmt.Sprintf("%s/postmark", webhooksV1Path)
+	r.POST(postmark, tracing.TracingEnhancer(ctx, fmt.Sprintf("POST:%s", postmark),
+		rest.PostmarkInboundEmail(services)))
 }
 
 func registerEnrichRoutes(ctx context.Context, r *gin.Engine, services *service.Services, cache *commoncaches.Cache) {
