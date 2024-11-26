@@ -254,7 +254,7 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
         const record = this.value.get(id);
 
         if (record) {
-          Object.assign(record, raw);
+          Object.assign(record.value, raw);
         }
       });
     } catch (e) {

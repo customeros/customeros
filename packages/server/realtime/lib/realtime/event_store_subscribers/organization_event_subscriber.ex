@@ -79,6 +79,13 @@ defmodule Realtime.OrganizationEventSubscriber do
     {:noreply, state}
   end
 
+  def handle_info(event, %{subscription: subscription} = state) do
+    IO.warn(~c"Unknown event payload!")
+    Spear.ack(EventStoreClient, subscription, event)
+
+    {:noreply, state}
+  end
+
   def handle_info({:dropped, reason}, state) do
     IO.puts("Subscription dropped: #{inspect(reason)}")
     {:stop, :normal, state}
