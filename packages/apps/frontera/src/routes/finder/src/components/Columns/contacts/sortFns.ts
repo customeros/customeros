@@ -71,5 +71,13 @@ export const getContactSortFn = (columnId: string, flowId?: string) =>
         ?.value.participants.find((e) => e.entityId === row.id)
         ?.status?.toLowerCase();
     })
+    .with(ColumnViewType.ContactsFlowNextAction, () => (row: ContactStore) => {
+      if (!flowId) return false;
+
+      return row.root.flows.value
+        .get(flowId)
+        ?.value.participants.find((e) => e.entityId === row.id)
+        ?.executions?.find((e) => e.scheduledAt && !e.executedAt)?.scheduledAt;
+    })
 
     .otherwise(() => (_row: ContactStore) => false);

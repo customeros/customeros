@@ -632,7 +632,7 @@ const columns: Record<string, Column> = {
     maxSize: 600,
     enableResizing: true,
     enableColumnFilter: false,
-    enableSorting: false,
+    enableSorting: true,
     cell: (props) => {
       const value = props.getValue()?.value.metadata.id;
 
