@@ -70,11 +70,12 @@ jobs:
       - name: Configure Test Folders
         id: test-folders
         run: |
-          test_folders=$(go list ./... | grep -v /gen | grep -v /test | paste -sd "," -)
+          test_folders=$(go list ./... | grep -v /gen | grep -v /test | grep -v /testify | paste -sd "," -)
           echo "{name}={test_folders}" >> $GITHUB_OUTPUT
 
       - name: Test
-        run: gotestsum --junitfile unit-tests.xml -- -coverprofile=cover.out -coverpkg=${{ steps.test-folders.outputs.test_folders }} ./...
+        run: gotestsum --junitfile unit-tests.xml -- -coverprofile=cover.out -coverpkg=${{ steps.test-folders.outputs.test_folders }} $(go list ./... | grep -v /testify)
+
 
       - name: Test Report
         uses: mikepenz/action-junit-report@v5
