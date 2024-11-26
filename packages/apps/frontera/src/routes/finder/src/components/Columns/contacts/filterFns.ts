@@ -199,8 +199,6 @@ const getFilterFn = (
         const jobTitles =
           row.value?.latestOrganizationWithJobRole?.jobRole.jobTitle;
 
-        if (!jobTitles) return false;
-
         return filterTypeText(filter, jobTitles);
       },
     )
@@ -356,7 +354,7 @@ const getFilterFn = (
     .otherwise(() => noop);
 };
 
-const filterTypeText = (filter: FilterItem, value: string | undefined) => {
+const filterTypeText = (filter: FilterItem, value?: string | undefined) => {
   const filterValue = filter?.value?.toLowerCase();
   const filterOperator = filter?.operation;
   const valueLower = value?.toLowerCase();
