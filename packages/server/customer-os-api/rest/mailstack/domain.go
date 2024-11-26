@@ -1,3 +1,4 @@
+// @openapi 3.0.0
 package restmailstack
 
 import (
@@ -17,20 +18,25 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
 
-// RegisterNewDomain registers a new domain for the mail service
-// @Summary Register a new domain
-// @Description Registers a new domain for the mail service
-// @Tags MailStack API
+// @title MailStack API
+// @version 1.0
+// @description API for managing domain registration and configuration for mail services
+// @BasePath /mailstack/v1
+
+// RegisterNewDomain registers a new domain for mail service
+// @Summary Register new domain
+// @Description Registers and configures a new domain for mail services, including DNS setup
+// @Tags Domains
 // @Accept json
 // @Produce json
-// @Param body body RegisterNewDomainRequest true "Domain registration payload"
-// @Success 201 {object} DomainResponse "Domain registered successfully"
-// @Failure 400 {object} rest.ErrorResponse "Invalid request body or missing input fields"
-// @Failure 401 {object} rest.ErrorResponse "Unauthorized access - API key invalid or expired"
-// @Failure 409 {object} rest.ErrorResponse "Domain is already registered"
-// @Failure 406 {object} rest.ErrorResponse "Restrictions on domain purchase"
-// @Failure 500 {object} rest.ErrorResponse "Internal server error"
-// @Router /mailstack/v1/domains [post]
+// @Param body body RegisterNewDomainRequest true "Domain registration details"
+// @Success 201 {object} DomainResponse "Domain registered and configured successfully"
+// @Failure 400 {object} rest.ErrorResponse "Invalid request - Missing required fields or invalid format"
+// @Failure 401 {object} rest.ErrorResponse "Unauthorized - Missing or invalid API key"
+// @Failure 406 {object} rest.ErrorResponse "Not Acceptable - Domain TLD not supported or premium domain"
+// @Failure 409 {object} rest.ErrorResponse "Conflict - Domain already registered"
+// @Failure 500 {object} rest.ErrorResponse "Internal server error - Configuration failed or service unavailable"
+// @Router /domains [post]
 // @Security ApiKeyAuth
 func RegisterNewDomain(services *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -153,19 +159,19 @@ func registerDomain(ctx context.Context, tenant, domain, website string, service
 	return configureDomain(ctx, tenant, domain, website, services)
 }
 
-// ConfigureDomain configures the given domain for the mail service
-// @Summary Configure domain
-// @Description Configures the DNS records for the given domain
-// @Tags MailStack API
+// ConfigureDomain configures DNS for an existing domain
+// @Summary Configure domain DNS
+// @Description Sets up DNS records and mail services for an existing domain
+// @Tags Domains
 // @Accept json
 // @Produce json
-// @Param body body ConfigureDomainRequest true "Domain payload"
+// @Param body body ConfigureDomainRequest true "Domain configuration details"
 // @Success 201 {object} DomainResponse "Domain configured successfully"
-// @Failure 400 {object} rest.ErrorResponse "Invalid request body or missing input fields"
-// @Failure 401 {object} rest.ErrorResponse "Unauthorized access - API key invalid or expired"
-// @Failure 404 {object} rest.ErrorResponse "Domain not found"
-// @Failure 500 {object} rest.ErrorResponse "Internal server error"
-// @Router /mailstack/v1/domains/configure [post]
+// @Failure 400 {object} rest.ErrorResponse "Invalid request - Missing required fields or invalid format"
+// @Failure 401 {object} rest.ErrorResponse "Unauthorized - Missing or invalid API key"
+// @Failure 404 {object} rest.ErrorResponse "Not Found - Domain not found or not owned by tenant"
+// @Failure 500 {object} rest.ErrorResponse "Internal server error - Configuration failed or service unavailable"
+// @Router /domains/configure [post]
 // @Security ApiKeyAuth
 func ConfigureDomain(services *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -278,16 +284,16 @@ func configureDomain(ctx context.Context, tenant, domain, website string, servic
 	return domainResponse, nil
 }
 
-// GetDomains retrieves all active domains for the tenant
-// @Summary Get active domains
-// @Description Retrieves a list of all active domains associated with the tenant
-// @Tags MailStack API
+// GetDomains retrieves all active domains
+// @Summary List active domains
+// @Description Retrieves all active domains for the authenticated tenant
+// @Tags Domains
 // @Accept json
 // @Produce json
-// @Success 200 {object} DomainsResponse "Successfully retrieved domains"
-// @Failure 401 {object} rest.ErrorResponse "Unauthorized access - API key invalid or expired"
-// @Failure 500 {object} rest.ErrorResponse "Internal server error"
-// @Router /mailstack/v1/domains [get]
+// @Success 200 {object} DomainsResponse "Successfully retrieved domain list"
+// @Failure 401 {object} rest.ErrorResponse "Unauthorized - Missing or invalid API key"
+// @Failure 500 {object} rest.ErrorResponse "Internal server error - Unable to retrieve domains"
+// @Router /domains [get]
 // @Security ApiKeyAuth
 func GetDomains(services *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {

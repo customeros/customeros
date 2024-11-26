@@ -1,3 +1,4 @@
+// @openapi 3.0.0
 package restenrich
 
 import (
@@ -32,137 +33,302 @@ const (
 	enrichPersonAcceptedUrl = "/enrich/v1/person/results"
 )
 
-// EnrichPersonResponse represents the response for the person enrichment API.
-// @Description Response structure for the person enrichment API.
-// @example 200 {object} EnrichPersonResponse
+// EnrichPersonResponse represents the response for person enrichment
+// @Description Response structure for person enrichment operations
 type EnrichPersonResponse struct {
-	Status        string           `json:"status" example:"success"`
-	Message       string           `json:"message,omitempty" example:"Enrichment completed"`
-	IsComplete    bool             `json:"isComplete" example:"true"`
-	PendingFields []string         `json:"pendingFields,omitempty" example:"[\"email\", \"phone number\"]"`
-	ResultURL     string           `json:"resultUrl,omitempty" example:"https://api.customeros.ai/enrich/v1/person/results/550e8400-e29b-41d4-a716-446655440000"`
-	Data          EnrichPersonData `json:"data"`
+	// Operation status
+	// required: true
+	// enum: success,error,warning
+	Status string `json:"status" example:"success"`
+
+	// Optional message providing additional information
+	// required: false
+	Message string `json:"message,omitempty" example:"Enrichment completed"`
+
+	// Indicates if all enrichment operations are complete
+	// required: true
+	IsComplete bool `json:"isComplete" example:"true"`
+
+	// List of fields still being processed
+	// required: false
+	PendingFields []string `json:"pendingFields,omitempty" example:"email,phone number"`
+
+	// URL to check the final result when processing is incomplete
+	// required: false
+	// format: uri
+	ResultURL string `json:"resultUrl,omitempty" example:"https://api.customeros.ai/enrich/v1/person/results/550e8400-e29b-41d4-a716-446655440000"`
+
+	// Enriched person data
+	// required: true
+	Data EnrichPersonData `json:"data"`
 }
 
-// EnrichPersonData represents detailed data about a person from enrichment.
-// @Description Detailed data about a person from enrichment.
+// EnrichPersonData represents enriched person information
+// @Description Comprehensive enriched information about a person
 type EnrichPersonData struct {
-	Emails       []EnrichPersonEmail       `json:"emails"`
-	Jobs         []EnrichPersonJob         `json:"jobs"`
-	Location     EnrichPersonLocation      `json:"location"`
-	Name         EnrichPersonName          `json:"name"`
+	// List of email addresses associated with the person
+	// required: false
+	Emails []EnrichPersonEmail `json:"emails"`
+
+	// Employment history
+	// required: false
+	Jobs []EnrichPersonJob `json:"jobs"`
+
+	// Geographic location information
+	// required: false
+	Location EnrichPersonLocation `json:"location"`
+
+	// Person's name information
+	// required: true
+	Name EnrichPersonName `json:"name"`
+
+	// List of phone numbers
+	// required: false
 	PhoneNumbers []EnrichPersonPhoneNumber `json:"phoneNumbers"`
-	ProfilePic   string                    `json:"profilePic" example:"https://example.com/profile.jpg"`
-	Social       EnrichPersonSocial        `json:"social"`
+
+	// URL to person's profile picture
+	// required: false
+	// format: uri
+	ProfilePic string `json:"profilePic" example:"https://example.com/profile.jpg"`
+
+	// Social media presence
+	// required: false
+	Social EnrichPersonSocial `json:"social"`
 }
 
-// EnrichPersonEmail represents the email details of a person.
-// @Description Email details of a person.
+// EnrichPersonEmail represents email information
+// @Description Email address with validation details
 type EnrichPersonEmail struct {
-	Address     string  `json:"address" example:"john.doe@example.com"`
+	// Email address
+	// required: true
+	// format: email
+	Address string `json:"address" example:"john.doe@example.com"`
+
+	// Indicates if the email is deliverable
+	// required: false
 	Deliverable *string `json:"deliverable,omitempty" example:"true"`
-	IsRisky     *bool   `json:"isRisky,omitempty" example:"false"`
-	Type        *string `json:"type,omitempty" example:"work"`
+
+	// Indicates if the email is considered risky
+	// required: false
+	IsRisky *bool `json:"isRisky,omitempty" example:"false"`
+
+	// Type of email address
+	// required: false
+	// enum: personal,work
+	Type *string `json:"type,omitempty" example:"work"`
 }
 
-// EnrichPersonJob represents the job details of a person.
-// @Description Job details of a person.
+// EnrichPersonJob represents employment information
+// @Description Details about a person's job position
 type EnrichPersonJob struct {
-	Title           string                  `json:"title" example:"Software Engineer"`
-	Seniority       string                  `json:"seniority" example:"Senior"`
-	Duration        EnrichPersonJobDuration `json:"duration"`
-	Company         string                  `json:"company" example:"Tech Corp"`
-	CompanyLinkedin string                  `json:"companyLinkedin" example:"https://linkedin.com/company/techcorp"`
-	CompanyWebsite  string                  `json:"companyWebsite" example:"https://techcorp.com"`
-	IsCurrent       bool                    `json:"isCurrent" example:"true"`
+	// Job title
+	// required: true
+	Title string `json:"title" example:"Software Engineer"`
+
+	// Seniority level
+	// required: false
+	// enum: Junior,Mid-Level,Senior,Lead,Manager,Director,VP,C-Level
+	Seniority string `json:"seniority" example:"Senior"`
+
+	// Employment duration
+	// required: true
+	Duration EnrichPersonJobDuration `json:"duration"`
+
+	// Company name
+	// required: true
+	Company string `json:"company" example:"Tech Corp"`
+
+	// Company's LinkedIn URL
+	// required: false
+	// format: uri
+	CompanyLinkedin string `json:"companyLinkedin" example:"https://linkedin.com/company/techcorp"`
+
+	// Company's website
+	// required: false
+	// format: uri
+	CompanyWebsite string `json:"companyWebsite" example:"https://techcorp.com"`
+
+	// Indicates if this is the current position
+	// required: true
+	IsCurrent bool `json:"isCurrent" example:"true"`
 }
 
-// EnrichPersonJobDuration represents the duration of a person's job.
-// @Description Job duration of a person.
+// EnrichPersonJobDuration represents employment duration
+// @Description Time period of employment
 type EnrichPersonJobDuration struct {
+	// Starting month (1-12)
+	// required: false
+	// minimum: 1
+	// maximum: 12
 	StartMonth *int `json:"startMonth,omitempty" example:"1"`
-	StartYear  *int `json:"startYear,omitempty" example:"2020"`
-	EndMonth   *int `json:"endMonth,omitempty" example:"12"`
-	EndYear    *int `json:"endYear,omitempty" example:"2023"`
+
+	// Starting year
+	// required: false
+	// minimum: 1900
+	// maximum: 2100
+	StartYear *int `json:"startYear,omitempty" example:"2020"`
+
+	// Ending month (1-12)
+	// required: false
+	// minimum: 1
+	// maximum: 12
+	EndMonth *int `json:"endMonth,omitempty" example:"12"`
+
+	// Ending year
+	// required: false
+	// minimum: 1900
+	// maximum: 2100
+	EndYear *int `json:"endYear,omitempty" example:"2023"`
 }
 
-// EnrichPersonLocation represents the location details of a person.
-// @Description Location details of a person.
+// EnrichPersonLocation represents location information
+// @Description Geographic and timezone information about a person
 type EnrichPersonLocation struct {
-	City     string `json:"city" example:"San Francisco"`
-	Region   string `json:"region" example:"California"`
-	Country  string `json:"country" example:"USA"`
+	// City name
+	// required: false
+	City string `json:"city" example:"San Francisco"`
+
+	// State or region
+	// required: false
+	Region string `json:"region" example:"California"`
+
+	// Country name
+	// required: false
+	Country string `json:"country" example:"United States"`
+
+	// Timezone identifier
+	// required: false
+	// example: America/Los_Angeles
 	Timezone string `json:"timezone" example:"PST"`
 }
 
-// EnrichPersonName represents the name details of a person.
-// @Description Name details of a person.
+// EnrichPersonName represents name information
+// @Description Person's name details
 type EnrichPersonName struct {
+	// First name
+	// required: true
+	// minLength: 1
 	FirstName string `json:"firstName" example:"John"`
-	LastName  string `json:"lastName" example:"Doe"`
-	FullName  string `json:"fullName" example:"John Doe"`
+
+	// Last name
+	// required: true
+	// minLength: 1
+	LastName string `json:"lastName" example:"Doe"`
+
+	// Full name (typically firstName + lastName)
+	// required: false
+	FullName string `json:"fullName" example:"John Doe"`
 }
 
-// EnrichPersonPhoneNumber represents the phone number details of a person.
-// @Description Phone number details of a person.
+// EnrichPersonPhoneNumber represents phone information
+// @Description Phone number with type classification
 type EnrichPersonPhoneNumber struct {
-	Number string `json:"number" example:"+1234567890"`
-	Type   string `json:"type" example:"mobile"`
+	// Phone number in E.164 format
+	// required: true
+	// pattern: ^\+[1-9]\d{1,14}$
+	Number string `json:"number" example:"+14155552671"`
+
+	// Type of phone number
+	// required: true
+	// enum: mobile,work,home,other
+	Type string `json:"type" example:"mobile"`
 }
 
-// EnrichPersonSocial represents the social media details of a person.
-// @Description Social media details of a person.
+// EnrichPersonSocial represents social media presence
+// @Description Collection of social media profile information
 type EnrichPersonSocial struct {
+	// LinkedIn profile information
+	// required: false
 	Linkedin EnrichPersonLinkedIn `json:"linkedin"`
-	X        EnrichPersonX        `json:"x"`
-	Github   EnrichPersonGithub   `json:"github"`
-	Discord  EnrichPersonDiscord  `json:"discord"`
+
+	// X (Twitter) profile information
+	// required: false
+	X EnrichPersonX `json:"x"`
+
+	// GitHub profile information
+	// required: false
+	Github EnrichPersonGithub `json:"github"`
+
+	// Discord profile information
+	// required: false
+	Discord EnrichPersonDiscord `json:"discord"`
 }
 
-// EnrichPersonLinkedIn represents the LinkedIn profile details of a person.
-// @Description LinkedIn profile details of a person.
+// EnrichPersonLinkedIn represents LinkedIn profile information
+// @Description LinkedIn specific profile details
 type EnrichPersonLinkedIn struct {
-	ID            string `json:"id" example:"123456789"`
-	PublicID      string `json:"publicId" example:"john-doe"`
-	URL           string `json:"url" example:"https://linkedin.com/in/john-doe"`
-	FollowerCount int    `json:"followerCount" example:"500"`
+	// LinkedIn internal ID
+	// required: false
+	ID string `json:"id" example:"123456789"`
+
+	// LinkedIn public identifier
+	// required: false
+	PublicID string `json:"publicId" example:"john-doe"`
+
+	// Full LinkedIn profile URL
+	// required: false
+	// format: uri
+	URL string `json:"url" example:"https://linkedin.com/in/john-doe"`
+
+	// Number of LinkedIn followers
+	// required: false
+	// minimum: 0
+	FollowerCount int `json:"followerCount" example:"500"`
 }
 
-// EnrichPersonX represents the X (formerly Twitter) profile details of a person.
-// @Description X (formerly Twitter) profile details of a person.
+// EnrichPersonX represents X (Twitter) profile information
+// @Description X (formerly Twitter) profile details
 type EnrichPersonX struct {
-	Handle string `json:"handle" example:"@johndoe"`
-	URL    string `json:"url" example:"https://x.com/johndoe"`
+	// X handle (without @)
+	// required: true
+	Handle string `json:"handle" example:"johndoe"`
+
+	// Full X profile URL
+	// required: false
+	// format: uri
+	URL string `json:"url" example:"https://x.com/johndoe"`
 }
 
-// EnrichPersonGithub represents the Github profile details of a person.
-// @Description Github profile details of a person.
+// EnrichPersonGithub represents GitHub profile information
+// @Description GitHub profile details
 type EnrichPersonGithub struct {
+	// GitHub username
+	// required: true
 	Username string `json:"username" example:"johndoe"`
-	URL      string `json:"url" example:"https://github.com/johndoe"`
+
+	// Full GitHub profile URL
+	// required: false
+	// format: uri
+	URL string `json:"url" example:"https://github.com/johndoe"`
 }
 
-// EnrichPersonDiscord represents the Discord profile details of a person.
-// @Description Discord profile details of a person.
+// EnrichPersonDiscord represents Discord profile information
+// @Description Discord profile details
 type EnrichPersonDiscord struct {
+	// Discord username with discriminator
+	// required: true
+	// pattern: ^.{3,32}#[0-9]{4}$
 	Username string `json:"username" example:"johndoe#1234"`
 }
 
-// @Summary Enrich Person Information
-// @Description Enriches a person's information using LinkedIn URL, email, and other optional details.
+// @Summary Enrich person information
+// @Description Enriches person information using LinkedIn URL, email, and other optional details
 // @Tags Enrichment API
-// @Param linkedinUrl query string false "LinkedIn profile URL of the person"
-// @Param email query string false "Email address of the person"
-// @Param firstName query string false "First name of the person"
-// @Param lastName query string false "Last name of the person"
-// @Param includeMobileNumber query string false "Include mobile phone number in the enrichment result" default(false)
-// @Success 200 {object} EnrichPersonResponse "Enrichment results including personal, job, and social data"
-// @Failure 400 "Bad Request"
-// @Failure 401 "Unauthorized"
-// @Failure 500 "Internal Server Error"
-// @Security ApiKeyAuth
+// @Accept json
 // @Produce json
+// @Param linkedinUrl query string false "LinkedIn profile URL" example(https://linkedin.com/in/johndoe)
+// @Param email query string false "Email address" example(john.doe@example.com) format(email)
+// @Param firstName query string false "First name" example(John) minLength(1)
+// @Param lastName query string false "Last name" example(Doe) minLength(1)
+// @Param includeMobileNumber query bool false "Include mobile number in results" default(false)
+// @Success 200 {object} EnrichPersonResponse "Successfully retrieved enriched data"
+// @Success 202 {object} EnrichPersonResponse "Processing initiated, check ResultURL for final data"
+// @Success 200 {object} rest.ErrorResponse "Person not found (status: warning)"
+// @Failure 400 {object} rest.BaseResponse "Missing linkedinUrl or email"
+// @Failure 401 {object} rest.BaseResponse "Missing or invalid API key"
+// @Failure 500 {object} rest.BaseResponse "Internal server error"
 // @Router /enrich/v1/person [get]
+// @Security ApiKeyAuth
 func EnrichPerson(services *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "EnrichPerson", c.Request.Header)
@@ -338,18 +504,20 @@ func EnrichPerson(services *service.Services) gin.HandlerFunc {
 	}
 }
 
-// @Summary Enrich Person Callback
-// @Description Retrieves enriched person data from a temporary result based on the given ID.
+// @Summary Retrieve enrichment results
+// @Description Retrieves the results of an asynchronous person enrichment operation
 // @Tags Enrichment API
-// @Param id path string true "Temporary result ID"
-// @Success 200 {object} EnrichPersonResponse "Enrichment results including personal, job, and social data"
-// @Failure 400 "Bad Request"
-// @Failure 401 "Unauthorized"
-// @Failure 404 "Not Found"
-// @Failure 500 "Internal Server Error"
-// @Security ApiKeyAuth
+// @Accept json
 // @Produce json
+// @Param id path string true "Result ID" format(uuid)
+// @Success 200 {object} EnrichPersonResponse "Successfully retrieved enriched data"
+// @Success 202 {object} EnrichPersonResponse "Still processing, check again later"
+// @Failure 400 {object} rest.BaseResponse "Invalid result ID"
+// @Failure 401 {object} rest.BaseResponse "Missing or invalid API key"
+// @Failure 404 {object} rest.BaseResponse "Result not found"
+// @Failure 500 {object} rest.BaseResponse "Internal server error"
 // @Router /enrich/v1/person/results/{id} [get]
+// @Security ApiKeyAuth
 func EnrichPersonCallback(services *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "EnrichPerson", c.Request.Header)

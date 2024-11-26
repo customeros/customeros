@@ -1,8 +1,9 @@
+// @openapi 3.0.0
 package events
 
 import "time"
 
-// RecordingResponse represents the top-level response structure
+// RecordingRes the top-level response structure
 type GrainRecordingData struct {
 	Data   GrainRecording `json:"data"`
 	Type   string         `json:"type"`

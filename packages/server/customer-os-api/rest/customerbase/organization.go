@@ -1,3 +1,4 @@
+// @openapi 3.0.0
 package customerbase
 
 import (
@@ -25,17 +26,17 @@ import (
 )
 
 // @Summary Create a new organization
-// @Description Creates an organization in the system if it doesn't already exist based on website, custom ID, or LinkedIn URL
+// @Description Creates an organization if it doesn't exist based on website, custom ID, or LinkedIn URL. Returns existing organization if found.
 // @Tags CustomerBASE API
-// @Accept  json
-// @Produce  json
-// @Param   body   body    CreateOrganizationRequest  true  "Organization creation payload"
-// @Success 201 {object} OrganizationResult
-// @Success 206 {object} OrganizationResult
-// @Failure 400 {object} BaseResponse
-// @Failure 401 {object} BaseResponse
-// @Failure 409 {object} BaseResponse
-// @Failure 500 {object} BaseResponse
+// @Accept json
+// @Produce json
+// @Param body body CreateOrganizationRequest true "Organization creation request"
+// @Success 201 {object} OrganizationResponse "Organization created successfully"
+// @Success 206 {object} OrganizationResponse "Organization created with partial data"
+// @Failure 400 {object} rest.BaseResponse "Invalid request - Missing required fields"
+// @Failure 401 {object} rest.BaseResponse "Unauthorized - Invalid or missing API key"
+// @Failure 409 {object} rest.BaseResponse "Conflict - Organization already exists with provided identifiers"
+// @Failure 500 {object} rest.BaseResponse "Internal server error"
 // @Router /customerbase/v1/organizations [post]
 // @Security ApiKeyAuth
 func CreateOrganization(services *service.Services) gin.HandlerFunc {
@@ -87,17 +88,18 @@ func CreateOrganization(services *service.Services) gin.HandlerFunc {
 	}
 }
 
-// @Summary Get an organization
-// @Description Retrieves an organization by its ID or COS ID
+// @Summary Get organization details
+// @Description Retrieves detailed organization information by ID or COS ID
 // @Tags CustomerBASE API
-// @Accept  json
-// @Produce  json
-// @Param   id   path     string  true  "Organization ID or Organization COS ID"
-// @Success 200 {object} OrganizationResult
-// @Failure 400 {object} BaseResponse
-// @Failure 401 {object} BaseResponse
-// @Failure 404 {object} BaseResponse
-// @Failure 500 {object} BaseResponse
+// @Accept json
+// @Produce json
+// @Param id path string true "Organization ID or COS ID" example(org_123)
+// @Success 200 {object} OrganizationResponse "Organization found"
+// @Success 206 {object} OrganizationResponse "Organization found with partial data"
+// @Failure 400 {object} rest.BaseResponse "Invalid organization ID format"
+// @Failure 401 {object} rest.BaseResponse "Unauthorized - Invalid or missing API key"
+// @Failure 404 {object} rest.BaseResponse "Organization not found"
+// @Failure 500 {object} rest.BaseResponse "Internal server error"
 // @Router /customerbase/v1/organizations/{id} [get]
 // @Security ApiKeyAuth
 func GetOrganization(services *service.Services) gin.HandlerFunc {
@@ -141,19 +143,19 @@ func GetOrganization(services *service.Services) gin.HandlerFunc {
 	}
 }
 
-// @Summary Set primary link ID for an organization
-// @Description Sets or replaces the primary ID for an organization linked to a specific external system
+// @Summary Set primary external system ID
+// @Description Sets or updates the primary external system identifier for an organization
 // @Tags CustomerBASE API
-// @Accept  json
-// @Produce  json
-// @Param   id             path     string  true  "Organization ID or Organization COS ID"
-// @Param   externalSystem path     string  true  "External system name"
-// @Param   body           body     SetPrimaryExternalSystemIdRequest  true  "Request payload"
-// @Success 200 {object} ExternalSystemResult
-// @Failure 400 {object} BaseResponse
-// @Failure 401 {object} BaseResponse
-// @Failure 404 {object} BaseResponse
-// @Failure 500 {object} BaseResponse
+// @Accept json
+// @Produce json
+// @Param id path string true "Organization ID or COS ID" example(org_123)
+// @Param externalSystem path string true "External system name" example(salesforce)
+// @Param body body SetPrimaryExternalSystemIdRequest true "External system ID details"
+// @Success 200 {object} ExternalSystemResponse "Primary ID set successfully"
+// @Failure 400 {object} rest.BaseResponse "Invalid request parameters"
+// @Failure 401 {object} rest.BaseResponse "Unauthorized - Invalid or missing API key"
+// @Failure 404 {object} rest.BaseResponse "Organization or external system not found"
+// @Failure 500 {object} rest.BaseResponse "Internal server error"
 // @Router /customerbase/v1/organizations/{id}/links/{externalSystem}/primary [put]
 // @Security ApiKeyAuth
 func SetPrimaryExternalSystemId(services *service.Services) gin.HandlerFunc {

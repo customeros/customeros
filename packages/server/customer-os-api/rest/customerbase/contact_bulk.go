@@ -1,3 +1,4 @@
+// @openapi 3.0.0
 package customerbase
 
 import (
@@ -16,29 +17,66 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
 
+// BulkResponse represents the response for bulk operations with single error
+// @Description Response structure for bulk operations with single error detail
 type BulkResponse struct {
+	// Inherits standard response fields
 	rest.BaseResponse
-	Summary BulkSummary      `json:"summary,omitempty"`
+	// Summary of the bulk operation
+	Summary BulkSummary `json:"summary,omitempty"`
+	// Error details if any
 	Details BulkErrorDetails `json:"details,omitempty"`
 }
 
+// BulkResponseMultipleErrors represents the response for bulk operations with multiple errors
+// @Description Response structure for bulk operations with multiple error details
 type BulkResponseMultipleErrors struct {
+	// Inherits standard response fields
 	rest.BaseResponse
-	Summary BulkSummary        `json:"summary,omitempty"`
+	// Summary of the bulk operation
+	Summary BulkSummary `json:"summary,omitempty"`
+	// List of error details
 	Details []BulkErrorDetails `json:"details,omitempty"`
 }
 
+// BulkErrorDetails represents error details for bulk operations
+// @Description Error details for failed operations in bulk processing
 type BulkErrorDetails struct {
-	Value       string `json:"value"`
+	// The value that caused the error
+	// example: invalid@email..com
+	Value string `json:"value"`
+	// Description of the error
+	// example: invalid email format
 	Description string `json:"description"`
 }
 
+// BulkSummary represents the summary of a bulk operation
+// @Description Summary statistics for bulk operations
 type BulkSummary struct {
-	Total   int `json:"total"`
+	// Total number of records processed
+	// example: 100
+	Total int `json:"total"`
+	// Number of successfully processed records
+	// example: 95
 	Success int `json:"success"`
-	Failed  int `json:"failed"`
+	// Number of failed records
+	// example: 5
+	Failed int `json:"failed"`
 }
 
+// @Summary Create multiple contacts
+// @Description Creates multiple contacts from JSON input
+// @Tags CustomerBASE API
+// @Accept json
+// @Produce json
+// @Param contacts body []ContactRecord true "Array of contacts to create"
+// @Success 201 {object} BulkResponse "All contacts created successfully"
+// @Success 207 {object} BulkResponseMultipleErrors "Contacts created with some failures"
+// @Failure 400 {object} rest.BaseResponse "Invalid request data"
+// @Failure 401 {object} rest.BaseResponse "Unauthorized"
+// @Failure 500 {object} rest.BaseResponse "Internal server error"
+// @Router /customerbase/v1/contacts/bulk [post]
+// @Security ApiKeyAuth
 func CreateBulkContacts(services *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "CreateContact", c.Request.Header)
@@ -62,6 +100,20 @@ func CreateBulkContacts(services *service.Services) gin.HandlerFunc {
 	}
 }
 
+// @Summary Import contacts from CSV
+// @Description Creates multiple contacts from CSV file upload
+// @Tags CustomerBASE API
+// @Accept multipart/form-data
+// @Produce json
+// @Param file formData file true "CSV file with contact data (required headers: email, linkedin_url)"
+// @Success 201 {object} BulkResponse "All contacts imported successfully"
+// @Success 207 {object} BulkResponseMultipleErrors "Contacts imported with some failures"
+// @Failure 400 {object} rest.BaseResponse "Invalid file format or data"
+// @Failure 401 {object} rest.BaseResponse "Unauthorized"
+// @Failure 415 {object} rest.BaseResponse "Unsupported content type"
+// @Failure 500 {object} rest.BaseResponse "Internal server error"
+// @Router /customerbase/v1/contacts/import [post]
+// @Security ApiKeyAutl
 func ImportContacts(services *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "CreateContact", c.Request.Header)

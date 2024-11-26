@@ -1,3 +1,4 @@
+// @openapi 3.0.0
 package restverify
 
 import (
@@ -34,120 +35,196 @@ const (
 	threadsToVerifyBulkEmails                     = 6
 )
 
+// Email verification responses and types
+
+// EmailVerificationResponse represents the email verification response
+// @Description Response for single email verification including detailed validation results
 type EmailVerificationResponse struct {
+	// Inherits standard response fields
 	rest.BaseResponse
+	// Email verification details
+	// required: true
 	Email EmailVerificationRecord `json:"email,omitempty"`
 }
 
-// EmailVerificationResponse represents the response returned after verifying an email address
-// @Description The response structure for email verification, providing detailed validation results.
-// @example 200 {object} EmailVerificationResponse
+// EmailVerificationRecord represents detailed email verification results
+// @Description Detailed validation results for an email address
 type EmailVerificationRecord struct {
-	// Email is the email address that was verified
+	// Email address that was verified
+	// required: true
+	// format: email
 	EmailAddress string `json:"emailAddress" example:"example@example.com"`
 
-	// Deliverable indicates whether the email is deliverable (e.g., "true", "false", "unknown")
+	// Deliverability status
+	// required: true
+	// enum: true,false,unknown
 	Deliverable string `json:"deliverable" example:"true"`
 
-	// Provider is the email service provider (e.g., Gmail, Outlook)
+	// Email service provider
+	// required: false
 	Provider string `json:"provider" example:"gmail"`
 
-	// SecureGatewayProvider is the secure gateway provider (e.g., Proofpoint, Mimecast)
+	// Security gateway provider
+	// required: false
 	SecureGatewayProvider string `json:"secureGatewayProvider" example:"Proofpoint"`
 
-	// IsRisky indicates whether the email address is risky (e.g., used in spam or phishing)
+	// Indicates if email is considered risky
+	// required: true
 	IsRisky bool `json:"isRisky" example:"false"`
 
-	// IsCatchAll indicates if the email address is a catch-all address
+	// Indicates if domain is catch-all
+	// required: true
 	IsCatchAll bool `json:"isCatchAll" example:"false"`
 
-	// Risk provides detailed risk factors associated with the email address
+	// Risk assessment details
+	// required: true
 	Risk EmailVerificationRisk `json:"risk"`
 
-	// Syntax provides details on the syntax validation of the email
+	// Syntax validation details
+	// required: true
 	Syntax EmailVerificationSyntax `json:"syntax"`
 
-	// AlternateEmail provides an alternate email if available
-	AlternateEmail string `json:"alternateEmail" example:"alternate@example.com"`
+	// Alternative email address if available
+	// required: false
+	// format: email
+	AlternateEmail string `json:"alternateEmail,omitempty" example:"alternate@example.com"`
 }
 
-// EmailVerificationRisk provides details on potential risks associated with the email address
+// EmailVerificationRisk represents risk assessment details
+// @Description Risk factors associated with the email address
 type EmailVerificationRisk struct {
-	// IsFirewalled indicates whether the email is protected by a firewall
+	// Indicates if email is behind a firewall
+	// required: true
 	IsFirewalled bool `json:"isFirewalled" example:"false"`
 
-	// IsRoleMailbox indicates if the email belongs to a role (e.g., info@, support@)
+	// Indicates if email is a role account
+	// required: true
 	IsRoleMailbox bool `json:"isRoleMailbox" example:"false"`
 
-	// IsSystemGenerated indicates if the email is system-generated
+	// Indicates if email is system-generated
+	// required: true
 	IsSystemGenerated bool `json:"isSystemGenerated" example:"false"`
 
-	// IsFreeProvider indicates if the email uses a free provider like Gmail or Yahoo
+	// Indicates if email uses a free provider
+	// required: true
 	IsFreeProvider bool `json:"isFreeProvider" example:"true"`
 
-	// IsMailboxFull indicates if the mailbox is full
+	// Indicates if mailbox is full
+	// required: true
 	IsMailboxFull bool `json:"isMailboxFull" example:"false"`
 
-	// IsPrimaryDomain indicates if the email belongs to a primary domain (not an alias)
+	// Indicates if domain is primary
+	// required: true
 	IsPrimaryDomain bool `json:"isPrimaryDomain" example:"true"`
 }
 
-// EmailVerificationSyntax provides details on the syntax validation of the email address
+// EmailVerificationSyntax represents syntax validation results
+// @Description Email syntax validation details
 type EmailVerificationSyntax struct {
-	// IsValid indicates if the syntax of the email is valid
+	// Indicates if email syntax is valid
+	// required: true
 	IsValid bool `json:"isValid" example:"true"`
 
-	// Domain represents the domain part of the email address
+	// Domain part of email
+	// required: true
 	Domain string `json:"domain" example:"example.com"`
 
-	// User represents the local part (before the @) of the email address
+	// Local part of email
+	// required: true
 	User string `json:"user" example:"example"`
 }
 
-// BulkUploadResponse represents the response for the bulk email upload API.
-// @Description Response structure for bulk email upload, containing job ID, result URL, and estimated completion time.
-// @example 200 {object} BulkUploadResponse
+// Bulk verification responses
+
+// BulkUploadResponse represents bulk verification job initiation response
+// @Description Response after initiating bulk email verification
 type BulkUploadResponse struct {
-	Message               string  `json:"message" example:"File uploaded successfully"`
-	JobID                 string  `json:"jobId" example:"550e8400-e29b-41d4-a716-446655440000"`
-	ResultURL             string  `json:"resultUrl" example:"https://api.customeros.ai/verify/v1/email/bulk/results/550e8400-e29b-41d4-a716-446655440000"`
-	EstimatedCompletionTs float64 `json:"estimatedCompletionTs" example:"1694030400"` // Epoch timestamp
+	// Status message
+	// required: true
+	Message string `json:"message" example:"File uploaded successfully"`
+
+	// Unique job identifier
+	// required: true
+	// format: uuid
+	JobID string `json:"jobId" example:"550e8400-e29b-41d4-a716-446655440000"`
+
+	// URL to check verification results
+	// required: true
+	// format: uri
+	ResultURL string `json:"resultUrl" example:"https://api.customeros.ai/verify/v1/email/bulk/results/550e8400-e29b-41d4-a716-446655440000"`
+
+	// Estimated completion timestamp
+	// required: true
+	EstimatedCompletionTs float64 `json:"estimatedCompletionTs" example:"1694030400"`
 }
 
-// BulkResultsResponse represents the response for the bulk email results API.
-// @Description Response structure for returning bulk email verification results after processing.
-// @example 200 {object} BulkResultsResponse
+// BulkResultsResponse represents bulk verification results
+// @Description Response containing bulk verification results or status
 type BulkResultsResponse struct {
-	JobID                 string              `json:"jobId" example:"550e8400-e29b-41d4-a716-446655440000"`
-	Status                string              `json:"status" example:"completed"`
-	FileName              string              `json:"fileName" example:"emails.csv"`
-	Message               string              `json:"message" example:"Completed 1000 of 1000 emails"`
-	Results               *BulkResultsDetails `json:"results"`
-	EstimatedCompletionTs int64               `json:"estimatedCompletionTs" example:"1694030400"` // Epoch timestamp
+	// Unique job identifier
+	// required: true
+	// format: uuid
+	JobID string `json:"jobId" example:"550e8400-e29b-41d4-a716-446655440000"`
+
+	// Processing status
+	// required: true
+	// enum: processing,completed
+	Status string `json:"status" example:"completed"`
+
+	// Original filename
+	// required: true
+	FileName string `json:"fileName" example:"emails.csv"`
+
+	// Progress message
+	// required: true
+	Message string `json:"message" example:"Completed 1000 of 1000 emails"`
+
+	// Verification results if completed
+	// required: false
+	Results *BulkResultsDetails `json:"results,omitempty"`
+
+	// Estimated completion timestamp
+	// required: true
+	EstimatedCompletionTs int64 `json:"estimatedCompletionTs" example:"1694030400"`
 }
 
-// BulkResultsDetails contains the details of the results of the bulk verification.
-// @Description Detailed results of the bulk email verification.
+// BulkResultsDetails represents detailed bulk verification results
+// @Description Detailed statistics for bulk verification results
 type BulkResultsDetails struct {
-	TotalEmails   int    `json:"totalEmails" example:"1000"`
-	Deliverable   int    `json:"deliverable" example:"950"`
-	Undeliverable int    `json:"undeliverable" example:"45"`
-	DownloadURL   string `json:"downloadUrl" example:"https://api.customeros.ai/verify/v1/email/bulk/results/550e8400-e29b-41d4-a716-446655440000/download"`
+	// Total number of emails processed
+	// required: true
+	// minimum: 0
+	TotalEmails int `json:"totalEmails" example:"1000"`
+
+	// Number of deliverable emails
+	// required: true
+	// minimum: 0
+	Deliverable int `json:"deliverable" example:"950"`
+
+	// Number of undeliverable emails
+	// required: true
+	// minimum: 0
+	Undeliverable int `json:"undeliverable" example:"45"`
+
+	// URL to download detailed results
+	// required: true
+	// format: uri
+	DownloadURL string `json:"downloadUrl" example:"https://api.customeros.ai/verify/v1/email/bulk/results/550e8400-e29b-41d4-a716-446655440000/download"`
 }
 
-// @Summary Verify Single Email Address
-// @Description Checks the validity and various characteristics of the given email address
-// @Tags Verify API
-// @Param address query string true "Email address to verify"
-// @Param verifyCatchAll query string false "Verify catch-all domain" default(true)"
-// @Success 200 {object} EmailVerificationResponse "Successful response"
-// @Failure 400 "Bad Request"
-// @Failure 401 "Unauthorized"
-// @Failure 500 "Internal Server Error"
-// @Security ApiKeyAuth
-// @Produce json
+// @Summary Verify single email address
+// @Description Performs comprehensive validation of a single email address
+// @Tags Email Verification
 // @Accept json
+// @Produce json
+// @Param address query string true "Email address to verify" format(email)
+// @Param verifyCatchAll query bool false "Verify catch-all domain" default(true)
+// @Success 200 {object} EmailVerificationResponse "Email verification results"
+// @Failure 400 {object} rest.ErrorResponse "Invalid email format or missing parameters"
+// @Failure 401 {object} rest.ErrorResponse "Unauthorized - Missing or invalid API key"
+// @Failure 500 {object} rest.ErrorResponse "Internal server error"
 // @Router /verify/v1/email [get]
+// @Security ApiKeyAuth
 func VerifyEmailAddress(services *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "VerifyEmailAddress", c.Request.Header)
@@ -252,20 +329,20 @@ func VerifyEmailAddress(services *service.Services) gin.HandlerFunc {
 	}
 }
 
-// @Summary Bulk Upload Emails for Verification
-// @Description Uploads a CSV file with email addresses for bulk verification.
-// @Tags Verify API
-// @Param file formData file true "CSV file containing email addresses to verify"
-// @Param emailColumn formData string false "The column name in the CSV that contains the email addresses (optional if only one column exists)"
-// @Param verifyCatchAll formData string false "Verify catch-all domain" default(true)"
-// @Success 200 {object} BulkUploadResponse "File uploaded successfully, with job ID and result URL"
-// @Failure 400 "Bad Request"
-// @Failure 401 "Unauthorized"
-// @Failure 500 "Internal Server Error"
-// @Security ApiKeyAuth
-// @Produce json
+// @Summary Upload emails for bulk verification
+// @Description Initiates bulk verification process for emails from CSV file
+// @Tags Email Verification
 // @Accept multipart/form-data
+// @Produce json
+// @Param file formData file true "CSV file containing email addresses"
+// @Param emailColumn formData string false "CSV column containing emails" default(first column)
+// @Param verifyCatchAll formData bool false "Verify catch-all domains" default(true)
+// @Success 200 {object} BulkUploadResponse "Bulk verification initiated"
+// @Failure 400 {object} rest.ErrorResponse "Invalid file format or missing parameters"
+// @Failure 401 {object} rest.ErrorResponse "Unauthorized - Missing or invalid API key"
+// @Failure 500 {object} rest.ErrorResponse "Internal server error"
 // @Router /verify/v1/email/bulk [post]
+// @Security ApiKeyAuth
 func BulkUploadEmailsForVerification(services *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "BulkUploadEmailsForVerification", c.Request.Header)
@@ -397,17 +474,19 @@ func BulkUploadEmailsForVerification(services *service.Services) gin.HandlerFunc
 	}
 }
 
-// @Summary Get Bulk Email Verification Results
-// @Description Retrieves the results of bulk email verification if the processing is completed.
-// @Tags Verify API
-// @Param requestId path string true "Job ID of the bulk email verification"
-// @Success 200 {object} BulkResultsResponse "Bulk email verification results if processing is completed"
-// @Failure 400 "Bad Request"
-// @Failure 401 "Unauthorized"
-// @Failure 500 "Internal Server Error"
-// @Security ApiKeyAuth
+// @Summary Get bulk verification results
+// @Description Retrieves results or status of bulk verification job
+// @Tags Email Verification
+// @Accept json
 // @Produce json
+// @Param requestId path string true "Bulk verification job ID" format(uuid)
+// @Success 200 {object} BulkResultsResponse "Verification results or status"
+// @Failure 400 {object} rest.ErrorResponse "Invalid job ID"
+// @Failure 401 {object} rest.ErrorResponse "Unauthorized - Missing or invalid API key"
+// @Failure 404 {object} rest.ErrorResponse "Job not found"
+// @Failure 500 {object} rest.ErrorResponse "Internal server error"
 // @Router /verify/v1/email/bulk/results/{requestId} [get]
+// @Security ApiKeyAuth
 func GetBulkEmailVerificationResults(services *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "GetBulkEmailVerificationResults", c.Request.Header)
@@ -468,19 +547,19 @@ func GetBulkEmailVerificationResults(services *service.Services) gin.HandlerFunc
 	}
 }
 
-// @Summary Download Bulk Email Verification Results
-// @Description Downloads the CSV file containing the results of bulk email verification if the processing is completed.
-// @Tags Verify API
-// @Param requestId path string true "Job ID of the bulk email verification"
-// @Success 200 "CSV file containing the results of the bulk email verification"
-// @Failure 400 "Bad Request"
-// @Failure 401 "Unauthorized"
-// @Failure 404 "Not Found"
-// @Failure 500 "Internal Server Error"
-// @Security ApiKeyAuth
+// @Summary Download bulk verification results
+// @Description Downloads CSV file containing detailed verification results
+// @Tags Email Verification
+// @Accept json
 // @Produce text/csv
+// @Param requestId path string true "Bulk verification job ID" format(uuid)
+// @Success 200 {file} csv "CSV file containing verification results"
+// @Failure 400 {object} rest.ErrorResponse "Invalid job ID"
+// @Failure 401 {object} rest.ErrorResponse "Unauthorized - Missing or invalid API key"
+// @Failure 404 {object} rest.ErrorResponse "Results not found"
+// @Failure 500 {object} rest.ErrorResponse "Internal server error"
 // @Router /verify/v1/email/bulk/results/{requestId}/download [get]
-
+// @Security ApiKeyAuth
 func DownloadBulkEmailVerificationResults(services *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "GetBulkEmailVerificationResults", c.Request.Header)

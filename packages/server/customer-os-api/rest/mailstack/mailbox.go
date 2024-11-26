@@ -1,3 +1,4 @@
+// @openapi 3.0.0
 package restmailstack
 
 import (
@@ -19,21 +20,27 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
 
-// RegisterNewMailbox registers a new mailbox for the given domain
-// @Summary Register a new mailbox
-// @Description Registers a new mailbox for the specified domain
-// @Tags MailStack API
+// @title MailStack API
+// @version 1.0
+// @description API for managing mailboxes and domain email configuration
+// @BasePath /mailstack/v1
+
+// RegisterNewMailbox creates a new mailbox for a domain
+// @Summary Create mailbox
+// @Description Creates a new mailbox for the specified domain with optional forwarding and webmail access
+// @Tags Mailboxes
 // @Accept json
 // @Produce json
-// @Param domain path string true "Domain for which to register the mailbox"
-// @Param body body MailboxRequest true "Mailbox registration payload"
-// @Success 200 {object} MailboxResponse "Mailbox setup successful"
-// @Failure 400 {object} rest.ErrorResponse "Invalid request body, missing input fields, or invalid username format"
-// @Failure 401 {object} rest.ErrorResponse "Unauthorized access - API key invalid or expired"
+// @Param domain path string true "Domain name" example(example.com)
+// @Param body body MailboxRequest true "Mailbox configuration"
+// @Success 200 {object} MailboxResponse "Mailbox created successfully"
+// @Success 200 {object} MailboxResponse "Mailbox created successfully with generated password"
+// @Failure 400 {object} rest.ErrorResponse "Invalid request - Missing or invalid parameters"
+// @Failure 401 {object} rest.ErrorResponse "Unauthorized - Missing or invalid API key"
 // @Failure 404 {object} rest.ErrorResponse "Domain not found"
 // @Failure 409 {object} rest.ErrorResponse "Mailbox already exists"
 // @Failure 500 {object} rest.ErrorResponse "Internal server error"
-// @Router /mailstack/v1/domains/{domain}/mailboxes [post]
+// @Router /domains/{domain}/mailboxes [post]
 // @Security ApiKeyAuth
 func RegisterNewMailbox(services *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -144,18 +151,19 @@ func validateMailboxUsername(username string) error {
 	return nil
 }
 
-// GetMailboxes retrieves all mailboxes for a specified domain
-// @Summary Get all mailboxes
-// @Description Retrieves a list of all mailboxes associated with a specified domain
-// @Tags MailStack API
+// GetMailboxes retrieves all mailboxes for a domain
+// @Summary List mailboxes
+// @Description Retrieves all mailboxes configured for the specified domain
+// @Tags Mailboxes
 // @Accept json
 // @Produce json
-// @Param domain path string true "Domain for which to retrieve mailboxes"
+// @Param domain path string true "Domain name" example(example.com)
 // @Success 200 {object} MailboxesResponse "Successfully retrieved mailboxes"
-// @Failure 400 {object} rest.ErrorResponse "Missing domain"
-// @Failure 401 {object} rest.ErrorResponse "Unauthorized access - API key invalid or expired"
-// @Failure 500 {object} rest.ErrorResponse "Error retrieving mailboxes"
-// @Router /mailstack/v1/domains/{domain}/mailboxes [get]
+// @Failure 400 {object} rest.ErrorResponse "Missing domain parameter"
+// @Failure 401 {object} rest.ErrorResponse "Unauthorized - Missing or invalid API key"
+// @Failure 404 {object} rest.ErrorResponse "Domain not found"
+// @Failure 500 {object} rest.ErrorResponse "Internal server error"
+// @Router /domains/{domain}/mailboxes [get]
 // @Security ApiKeyAuth
 func GetMailboxes(services *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {

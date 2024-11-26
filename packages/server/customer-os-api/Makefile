@@ -21,3 +21,4 @@ clean:
 	rm -rf customer-os-api
 
 all: install build
+

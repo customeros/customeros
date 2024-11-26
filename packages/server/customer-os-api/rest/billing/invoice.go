@@ -1,3 +1,4 @@
+// @openapi 3.0.0
 package billing
 
 import (
@@ -17,6 +18,20 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
 
+// @Summary Get organization's invoices
+// @Description Retrieves all non-dry-run invoices for a specific organization, sorted by due date descending
+// @Tags Billing API
+// @Accept json
+// @Produce json
+// @Param id path string true "Organization ID or COS ID" example(org_123)
+// @Success 200 {object} InvoicesResponse "List of invoices retrieved successfully"
+// @Success 206 {object} InvoicesResponse "Invoices retrieved with some errors fetching public URLs"
+// @Failure 400 {object} rest.BaseResponse "Invalid organization ID format"
+// @Failure 401 {object} rest.BaseResponse "Unauthorized - Invalid or missing API key"
+// @Failure 404 {object} rest.BaseResponse "Organization not found"
+// @Failure 500 {object} rest.BaseResponse "Internal server error"
+// @Router /billing/v1/organizations/{id}/invoices [get]
+// @Security ApiKeyAuth
 func GetInvoicesForOrganization(services *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "GetInvoicesForOrganization", c.Request.Header)
