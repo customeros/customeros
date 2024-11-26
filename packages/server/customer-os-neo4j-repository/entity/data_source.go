@@ -4,44 +4,49 @@ type DataSource string
 
 const (
 	DataSourceNA             DataSource = ""
-	DataSourceOpenline       DataSource = "openline"
-	DataSourceGmail          DataSource = "gmail"
-	DataSourceHubspot        DataSource = "hubspot"
-	DataSourceZendeskSupport DataSource = "zendesk_support"
-	DataSourcePipedrive      DataSource = "pipedrive"
-	DataSourceSlack          DataSource = "slack"
-	DataSourceWebscrape      DataSource = "webscrape"
-	DataSourceIntercom       DataSource = "intercom"
-	DataSourceSalesforce     DataSource = "salesforce"
-	DataSourceStripe         DataSource = "stripe"
-	DataSourceMixpanel       DataSource = "mixpanel"
-	DataSourceClose          DataSource = "close"
-	DataSourceOutlook        DataSource = "outlook"
-	DataSourceUnthread       DataSource = "unthread"
-	DataSourceShopify        DataSource = "shopify"
 	DataSourceAttio          DataSource = "attio"
-	DataSourceZendeskSell    DataSource = "zendesk-sell"
+	DataSourceClose          DataSource = "close"
+	DataSourceFathom         DataSource = "fathom"
+	DataSourceGmail          DataSource = "gmail"
+	DataSourceGrain          DataSource = "grain"
+	DataSourceHubspot        DataSource = "hubspot"
+	DataSourceIntercom       DataSource = "intercom"
 	DataSourceMailstack      DataSource = "mailstack"
+	DataSourceMixpanel       DataSource = "mixpanel"
+	DataSourceOpenline       DataSource = "openline"
+	DataSourceOutlook        DataSource = "outlook"
+	DataSourcePipedrive      DataSource = "pipedrive"
+	DataSourceSalesforce     DataSource = "salesforce"
+	DataSourceShopify        DataSource = "shopify"
+	DataSourceSlack          DataSource = "slack"
+	DataSourceStripe         DataSource = "stripe"
+	DataSourceUnthread       DataSource = "unthread"
+	DataSourceWebscrape      DataSource = "webscrape"
+	DataSourceZendeskSell    DataSource = "zendesk-sell"
+	DataSourceZendeskSupport DataSource = "zendesk_support"
 )
 
 var AllDataSource = []DataSource{
-	DataSourceOpenline,
-	DataSourceHubspot,
-	DataSourceZendeskSupport,
-	DataSourcePipedrive,
-	DataSourceSlack,
-	DataSourceWebscrape,
-	DataSourceIntercom,
-	DataSourceSalesforce,
-	DataSourceStripe,
-	DataSourceMixpanel,
-	DataSourceClose,
-	DataSourceOutlook,
-	DataSourceUnthread,
-	DataSourceShopify,
 	DataSourceAttio,
-	DataSourceZendeskSell,
+	DataSourceClose,
+	DataSourceFathom,
+	DataSourceGmail,
+	DataSourceGrain,
+	DataSourceHubspot,
+	DataSourceIntercom,
 	DataSourceMailstack,
+	DataSourceMixpanel,
+	DataSourceOpenline,
+	DataSourceOutlook,
+	DataSourcePipedrive,
+	DataSourceSalesforce,
+	DataSourceShopify,
+	DataSourceSlack,
+	DataSourceStripe,
+	DataSourceUnthread,
+	DataSourceWebscrape,
+	DataSourceZendeskSell,
+	DataSourceZendeskSupport,
 }
 
 func (ds DataSource) String() string {

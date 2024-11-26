@@ -8,9 +8,12 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	commontracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/pkg/errors"
+	"go.uber.org/multierr"
 	"golang.org/x/net/html"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
@@ -68,26 +71,36 @@ func handleFathomAISummaryZapier(ctx rest.HTTPContext) {
 }
 
 func createEventFromFathomAISummaryZapier(ctx rest.HTTPContext, aiSummaryData *RawFathomAISummaryZapier) error {
-	var meeting Event
+	var event data_fields.MarkdownEventFields
+	var allErrs error
 
 	content, err := processFathomSummaryFromZapier(aiSummaryData)
 	if err != nil {
 		return err
 	}
-	meeting.Content = content
+
+	source := neo4jentity.DataSourceFathom
+	event.Source = &source
+	event.CreatedAt = &aiSummaryData.MeetingScheduledStartTime
+	event.Content = &content
+
 	domains := strings.Split(aiSummaryData.MeetingExternalDomains, ",")
 	orgs, err := getParticipantOrganizationIds(ctx, domains)
 	if err != nil {
-		return err
+		allErrs = multierr.Append(allErrs, errors.Wrap(err, "failed to get organization id for participant"))
+		tracing.TraceErr(ctx.Span, err)
 	}
-	meeting.OrganizationIDs = orgs
-	meeting.EventTimestamp = aiSummaryData.MeetingScheduledStartTime
-	meeting.Source = string(EventFathom)
-	meeting.Tenant = ctx.Tenant
 
-	// write event to database
-	meeting.ID = ""
-	return nil
+	for _, org := range orgs {
+		event.OrganizationId = &org
+		_, err := ctx.Services.CommonServices.MarkdownEventService.Save(*ctx.ServiceContext, nil, nil, event)
+		if err != nil {
+			allErrs = multierr.Append(allErrs, errors.Wrap(err, "failed to save markdown event"))
+			tracing.TraceErr(ctx.Span, errors.Wrap(err, "failed to save markdown event"))
+		}
+	}
+
+	return allErrs
 }
 
 func processFathomSummaryFromZapier(raw *RawFathomAISummaryZapier) (string, error) {
