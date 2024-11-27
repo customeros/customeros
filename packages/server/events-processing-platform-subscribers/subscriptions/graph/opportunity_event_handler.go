@@ -614,7 +614,7 @@ func (h *OpportunityEventHandler) OnCloseLost(ctx context.Context, evt eventstor
 		if organizationDbNode != nil {
 			organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
 			// Make organization target if it's not already
-			if organizationEntity.Relationship == neo4jenum.Prospect && organizationEntity.Stage == neo4jenum.Engaged {
+			if organizationEntity.Relationship == neo4jenum.OrganizationRelationshipProspect && organizationEntity.Stage == neo4jenum.Engaged {
 				_, err = h.services.CommonServices.OrganizationService.Save(ctx, nil, &organizationEntity.ID, data_fields.OrganizationFields{
 					Stage: utils.ToPtr(neo4jenum.Target),
 				})

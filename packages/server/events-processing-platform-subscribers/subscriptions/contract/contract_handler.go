@@ -219,7 +219,7 @@ func (h *contractHandler) UpdateOrganizationRelationship(ctx context.Context, te
 
 		if !activeContractFound {
 			_, err = h.services.CommonServices.OrganizationService.Save(ctx, nil, &orgEntity.ID, data_fields.OrganizationFields{
-				Relationship: utils.ToPtr(neo4jenum.FormerCustomer),
+				Relationship: utils.ToPtr(neo4jenum.OrganizationRelationshipFormerCustomer),
 				Stage:        utils.ToPtr(neo4jenum.Target),
 			})
 			if err != nil {

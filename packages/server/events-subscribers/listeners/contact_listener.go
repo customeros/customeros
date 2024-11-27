@@ -580,7 +580,7 @@ func (c *contactListenerImpl) enrichContactWithScrapInEnrichDetails(ctx context.
 			orgId, err := c.services.OrganizationService.Save(ctx, nil, nil, data_fields.OrganizationFields{
 				Name:         utils.StringPtr(scrapinContactResponse.Company.Name),
 				Website:      utils.StringPtr(scrapinContactResponse.Company.WebsiteUrl),
-				Relationship: utils.ToPtr(neo4jenum.Prospect),
+				Relationship: utils.ToPtr(neo4jenum.OrganizationRelationshipProspect),
 				Stage:        utils.ToPtr(neo4jenum.Lead),
 				AppSource:    utils.StringPtr(constants.AppScrapin),
 			})

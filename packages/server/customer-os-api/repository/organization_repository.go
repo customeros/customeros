@@ -65,7 +65,7 @@ func (r *organizationRepository) CountCustomers(ctx context.Context, tenant stri
 			RETURN count(org)`,
 			map[string]any{
 				"tenant":               tenant,
-				"customerRelationship": neo4jenum.Customer,
+				"customerRelationship": neo4jenum.OrganizationRelationshipCustomer,
 			}); err != nil {
 			return nil, err
 		} else {
