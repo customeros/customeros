@@ -876,7 +876,7 @@ func (r *mutationResolver) ContactFindWorkEmail(ctx context.Context, contactID s
 
 // ContactAddTag is the resolver for the contact_AddTag field.
 func (r *mutationResolver) ContactAddTag(ctx context.Context, input model.ContactTagInput) (*model.ActionResponse, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationAddTag", graphql.GetOperationContext(ctx))
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactAddTag", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.Object("request", input))
@@ -895,18 +895,39 @@ func (r *mutationResolver) ContactAddTag(ctx context.Context, input model.Contac
 
 // ContactRemoveTag is the resolver for the contact_RemoveTag field.
 func (r *mutationResolver) ContactRemoveTag(ctx context.Context, input model.ContactTagInput) (*model.ActionResponse, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationAddTag", graphql.GetOperationContext(ctx))
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactRemoveTag", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.Object("request", input))
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	err := r.Services.CommonServices.TagService.RemoveTagFromEntity(ctx, nil, tenant, input.ContactID, commonmodel.CONTACT, utils.StringOrEmpty(input.Tag.ID))
+	tagId := ""
+	if input.Tag != nil {
+		tagId = utils.IfNotNilString(input.Tag.ID)
+		if tagId == "" {
+			tagName := utils.IfNotNilString(input.Tag.Name)
+			tagEntity, err := r.Services.CommonServices.TagService.GetTagByEntityTypeAndName(ctx, commonmodel.CONTACT, tagName)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				graphql.AddErrorf(ctx, "Error removing tag from organization")
+				return &model.ActionResponse{Accepted: false}, nil
+			}
+			tagId = tagEntity.Id
+		}
+	}
+
+	if tagId == "" {
+		tracing.TraceErr(span, errors.New("Missing tag id"))
+		graphql.AddErrorf(ctx, "Missing tag")
+		return &model.ActionResponse{Accepted: false}, nil
+	}
+
+	err := r.Services.CommonServices.TagService.RemoveTagFromEntity(ctx, nil, tenant, input.ContactID, commonmodel.CONTACT, tagId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Error removing tag from organization")
-		return nil, nil
+		return &model.ActionResponse{Accepted: false}, nil
 	}
 
 	return &model.ActionResponse{Accepted: true}, nil

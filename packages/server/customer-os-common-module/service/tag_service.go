@@ -26,6 +26,7 @@ type TagService interface {
 	UnlinkAndDelete(ctx context.Context, id string) (bool, error)
 	GetAll(ctx context.Context) (*neo4jentity.TagEntities, error)
 	GetById(ctx context.Context, tagId string) (*neo4jentity.TagEntity, error)
+	GetTagByEntityTypeAndName(ctx context.Context, entityType model.EntityType, name string) (*neo4jentity.TagEntity, error)
 	GetTagsByEntityType(ctx context.Context, entityType model.EntityType) (*neo4jentity.TagEntities, error)
 	GetTagsForContacts(ctx context.Context, contactIds []string) (*neo4jentity.TagEntities, error)
 	GetTagsForIssues(ctx context.Context, issueIds []string) (*neo4jentity.TagEntities, error)
@@ -36,6 +37,20 @@ type TagService interface {
 type tagService struct {
 	log      logger.Logger
 	services *Services
+}
+
+func (s *tagService) GetTagByEntityTypeAndName(ctx context.Context, entityType model.EntityType, name string) (*neo4jentity.TagEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TagService.GetTagByEntityTypeAndName")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("entityType", entityType.String()), log.String("name", name))
+
+	tagDbNode, err := s.services.Neo4jRepositories.TagReadRepository.GetByEntityTypeAndName(ctx, common.GetTenantFromContext(ctx), entityType, name)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	return neo4jmapper.MapDbNodeToTagEntity(tagDbNode), nil
 }
 
 func NewTagService(log logger.Logger, services *Services) TagService {
