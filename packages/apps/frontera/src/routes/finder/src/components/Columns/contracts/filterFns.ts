@@ -179,8 +179,8 @@ const filterTypeNumber = (filter: FilterItem, value: number | undefined) => {
   return match(filterOperator)
     .with(ComparisonOperator.Lt, () => val < Number(filterValue))
     .with(ComparisonOperator.Gt, () => val > Number(filterValue))
-    .with(ComparisonOperator.Eq, () => val === Number(filterValue))
-    .with(ComparisonOperator.NotEqual, () => val !== Number(filterValue))
+    .with(ComparisonOperator.Equals, () => val === Number(filterValue))
+    .with(ComparisonOperator.NotEquals, () => val !== Number(filterValue))
     .otherwise(() => true);
 };
 

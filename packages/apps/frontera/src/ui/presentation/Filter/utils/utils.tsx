@@ -31,7 +31,7 @@ export const handleOperatorName = (
         ? 'is any of'
         : 'contains',
     )
-    .with(ComparisonOperator.Eq, () => 'equals')
+    .with(ComparisonOperator.Equals, () => 'equals')
     .with(ComparisonOperator.Gt, () =>
       type === 'date' ? 'after' : 'more than',
     )
@@ -52,7 +52,7 @@ export const handleOperatorName = (
         ? 'is none of'
         : 'does not contain',
     )
-    .with(ComparisonOperator.NotEqual, () => 'not equal to')
+    .with(ComparisonOperator.NotEquals, () => 'not equal to')
     .otherwise(() => 'unknown');
 };
 
@@ -67,7 +67,7 @@ export const handleOperatorIcon = (
     .with(ComparisonOperator.Contains, () => (
       <CheckCircle className='text-gray-500 group-hover:text-gray-700' />
     ))
-    .with(ComparisonOperator.Eq, () => (
+    .with(ComparisonOperator.Equals, () => (
       <Equal className='text-gray-500 group-hover:text-gray-700' />
     ))
     .with(ComparisonOperator.Gt, () =>
@@ -98,7 +98,7 @@ export const handleOperatorIcon = (
     .with(ComparisonOperator.NotContains, () => (
       <SlashCircle01 className='text-gray-500 group-hover:text-gray-700' />
     ))
-    .with(ComparisonOperator.NotEqual, () => (
+    .with(ComparisonOperator.NotEquals, () => (
       <EqualNot className='text-gray-500 group-hover:text-gray-700' />
     ))
     .otherwise(() => 'unknown');

@@ -99,6 +99,15 @@ query getTimelineEvents($ids: [ID!]!) {
         name
       }
     }
+    ... on MarkdownEvent {
+      __typename
+      markdownEventMetadata: metadata {
+        id
+        created
+        source
+      }
+      content
+    }
     ... on Action {
       __typename
       id

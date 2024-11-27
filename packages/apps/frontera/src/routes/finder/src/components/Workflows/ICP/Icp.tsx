@@ -411,7 +411,7 @@ export const Icp = observer(() => {
                   workFlow?.setFilter({
                     property: ColumnViewType.OrganizationsIsPublic,
                     value: false,
-                    operation: ComparisonOperator.Eq,
+                    operation: ComparisonOperator.Equals,
                   });
                 }}
               >
@@ -422,7 +422,7 @@ export const Icp = observer(() => {
                   workFlow?.setFilter({
                     property: ColumnViewType.OrganizationsIsPublic,
                     value: true,
-                    operation: ComparisonOperator.Eq,
+                    operation: ComparisonOperator.Equals,
                   });
                 }}
               >

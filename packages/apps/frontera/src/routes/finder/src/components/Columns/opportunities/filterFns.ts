@@ -133,8 +133,8 @@ const filterTypeNumber = (filter: FilterItem, value: number | undefined) => {
   return match(filterOperator)
     .with(ComparisonOperator.Lt, () => value < Number(filterValue))
     .with(ComparisonOperator.Gt, () => value > Number(filterValue))
-    .with(ComparisonOperator.Eq, () => value === Number(filterValue))
-    .with(ComparisonOperator.NotEqual, () => value !== Number(filterValue))
+    .with(ComparisonOperator.Equals, () => value === Number(filterValue))
+    .with(ComparisonOperator.NotEquals, () => value !== Number(filterValue))
     .otherwise(() => true);
 };
 

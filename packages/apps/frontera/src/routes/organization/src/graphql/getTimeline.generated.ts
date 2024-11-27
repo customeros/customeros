@@ -665,6 +665,16 @@ export type GetTimelineQuery = {
           }>;
         }
       | {
+          __typename: 'MarkdownEvent';
+          content?: string | null;
+          markdownEventMetadata: {
+            __typename?: 'Metadata';
+            id: string;
+            created: any;
+            source: Types.DataSource;
+          };
+        }
+      | {
           __typename: 'Meeting';
           id: string;
           name?: string | null;
@@ -836,12 +846,12 @@ export const GetTimelineDocument = `
     query GetTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
   organization(id: $organizationId) {
     timelineEventsTotalCount(
-      timelineEventTypes: [INTERACTION_EVENT, MEETING, ACTION, LOG_ENTRY, ISSUE, ORDER]
+      timelineEventTypes: [INTERACTION_EVENT, MEETING, ACTION, LOG_ENTRY, ISSUE, MARKDOWN_EVENT, ORDER]
     )
     timelineEvents(
       from: $from
       size: $size
-      timelineEventTypes: [INTERACTION_EVENT, MEETING, ACTION, LOG_ENTRY, ISSUE, ORDER]
+      timelineEventTypes: [INTERACTION_EVENT, MEETING, ACTION, LOG_ENTRY, ISSUE, MARKDOWN_EVENT, ORDER]
     ) {
       __typename
       ... on Action {
@@ -860,6 +870,15 @@ export const GetTimelineDocument = `
             lastName
             profilePhotoUrl
           }
+        }
+        content
+      }
+      ... on MarkdownEvent {
+        __typename
+        markdownEventMetadata: metadata {
+          id
+          created
+          source
         }
         content
       }

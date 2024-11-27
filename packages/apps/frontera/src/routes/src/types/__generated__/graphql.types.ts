@@ -420,18 +420,18 @@ export enum ComparisonOperator {
   Between = 'BETWEEN',
   Contains = 'CONTAINS',
   Eq = 'EQ',
+  Equals = 'EQUALS',
   Gt = 'GT',
   Gte = 'GTE',
   In = 'IN',
   IsEmpty = 'IS_EMPTY',
-  IsNoneOf = 'IS_NONE_OF',
   IsNotEmpty = 'IS_NOT_EMPTY',
+  IsNotNull = 'IS_NOT_NULL',
   IsNull = 'IS_NULL',
   Lt = 'LT',
   Lte = 'LTE',
   NotContains = 'NOT_CONTAINS',
-  /** Not supported yet */
-  NotEqual = 'NOT_EQUAL',
+  NotEquals = 'NOT_EQUALS',
   StartsWith = 'STARTS_WITH',
 }
 
@@ -1276,6 +1276,8 @@ export type DashboardTimeToOnboardPerMonth = {
 export enum DataSource {
   Attio = 'ATTIO',
   Close = 'CLOSE',
+  Fathom = 'FATHOM',
+  Grain = 'GRAIN',
   Hubspot = 'HUBSPOT',
   Intercom = 'INTERCOM',
   Mailstack = 'MAILSTACK',
@@ -1725,6 +1727,11 @@ export enum GCliSearchResultType {
   OrganizationRelationship = 'ORGANIZATION_RELATIONSHIP',
   State = 'STATE',
 }
+
+export type GetPaymentIntent = {
+  __typename?: 'GetPaymentIntent';
+  clientSecret: Scalars['String']['output'];
+};
 
 export type GlobalCache = {
   __typename?: 'GlobalCache';
@@ -2213,23 +2220,11 @@ export type Mailbox = {
   userId?: Maybe<Scalars['ID']['output']>;
 };
 
-export type MailstackDomain = {
-  __typename?: 'MailstackDomain';
-  domain: Scalars['String']['output'];
-  status: MailstackStatus;
+export type MarkdownEvent = {
+  __typename?: 'MarkdownEvent';
+  content?: Maybe<Scalars['String']['output']>;
+  metadata: Metadata;
 };
-
-export type MailstackMailbox = {
-  __typename?: 'MailstackMailbox';
-  mailbox: Scalars['String']['output'];
-  status: MailstackStatus;
-};
-
-export enum MailstackStatus {
-  Completed = 'COMPLETED',
-  Failed = 'FAILED',
-  Pending = 'PENDING',
-}
 
 export enum Market {
   B2B = 'B2B',
@@ -2446,8 +2441,8 @@ export type Mutation = {
   logEntry_RemoveTag: Scalars['ID']['output'];
   logEntry_ResetTags: Scalars['ID']['output'];
   logEntry_Update: Scalars['ID']['output'];
-  mailstack_RegisterBuyDomainsWithMailboxes: RegisterBuyDomainWithMailboxes;
-  mailstack_RegisteredBuyDomainsWithMailboxesPaid: Result;
+  mailstack_GetPaymentIntent: GetPaymentIntent;
+  mailstack_RegisterBuyDomainsWithMailboxes: Result;
   mailstack_SetUser: Result;
   meeting_AddNewLocation: Meeting;
   meeting_AddNote: Meeting;
@@ -2924,14 +2919,18 @@ export type MutationLogEntry_UpdateArgs = {
   input: LogEntryUpdateInput;
 };
 
-export type MutationMailstack_RegisterBuyDomainsWithMailboxesArgs = {
-  amount?: InputMaybe<Scalars['Float']['input']>;
+export type MutationMailstack_GetPaymentIntentArgs = {
+  amount: Scalars['Float']['input'];
   domains: Array<Scalars['String']['input']>;
   usernames: Array<Scalars['String']['input']>;
 };
 
-export type MutationMailstack_RegisteredBuyDomainsWithMailboxesPaidArgs = {
-  id: Scalars['String']['input'];
+export type MutationMailstack_RegisterBuyDomainsWithMailboxesArgs = {
+  amount: Scalars['Float']['input'];
+  domains: Array<Scalars['String']['input']>;
+  paymentIntentId: Scalars['String']['input'];
+  test: Scalars['Boolean']['input'];
+  usernames: Array<Scalars['String']['input']>;
 };
 
 export type MutationMailstack_SetUserArgs = {
@@ -4065,7 +4064,6 @@ export type Query = {
   mailstack_DomainPurchaseSuggestions: Array<Scalars['String']['output']>;
   mailstack_Domains: Array<Scalars['String']['output']>;
   mailstack_Mailboxes: Array<Mailbox>;
-  mailstack_RegisteredBuyDomainsWithMailboxes: Array<RegisteredBuyDomainWithMailboxes>;
   mailstack_UniqueUsernames: Array<Scalars['String']['output']>;
   meeting: Meeting;
   opportunities_LinkedToOrganizations: OpportunityPage;
@@ -4336,29 +4334,6 @@ export type QueryUsersArgs = {
 
 export type QueryWorkflow_ByTypeArgs = {
   workflowType: WorkflowType;
-};
-
-export type RegisterBuyDomainWithMailboxes = {
-  __typename?: 'RegisterBuyDomainWithMailboxes';
-  clientSecret: Scalars['String']['output'];
-  id: Scalars['String']['output'];
-  status: RegisterMailstackStatus;
-};
-
-export enum RegisterMailstackStatus {
-  AwaitingPayment = 'AWAITING_PAYMENT',
-  Completed = 'COMPLETED',
-  Failed = 'FAILED',
-  Pending = 'PENDING',
-}
-
-export type RegisteredBuyDomainWithMailboxes = {
-  __typename?: 'RegisteredBuyDomainWithMailboxes';
-  createdAt: Scalars['Time']['output'];
-  domain: MailstackDomain;
-  id: Scalars['String']['output'];
-  mailboxes: Array<MailstackMailbox>;
-  status: Scalars['String']['output'];
 };
 
 export type Reminder = MetadataInterface & {
@@ -4911,6 +4886,7 @@ export type TimelineEvent =
   | InteractionSession
   | Issue
   | LogEntry
+  | MarkdownEvent
   | Meeting
   | Note
   | PageView;
@@ -4922,6 +4898,7 @@ export enum TimelineEventType {
   InteractionSession = 'INTERACTION_SESSION',
   Issue = 'ISSUE',
   LogEntry = 'LOG_ENTRY',
+  MarkdownEvent = 'MARKDOWN_EVENT',
   Meeting = 'MEETING',
   Note = 'NOTE',
   Order = 'ORDER',

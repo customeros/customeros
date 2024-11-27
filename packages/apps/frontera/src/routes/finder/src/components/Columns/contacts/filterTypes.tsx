@@ -255,7 +255,7 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.Gt,
         ComparisonOperator.Lt,
         ComparisonOperator.Eq,
-        ComparisonOperator.NotEqual,
+        ComparisonOperator.NotEquals,
       ],
       icon: (
         <Users03 className='group-hover:text-gray-700 text-gray-500 mb-0.5' />

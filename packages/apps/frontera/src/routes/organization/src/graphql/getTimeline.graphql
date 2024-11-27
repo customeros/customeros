@@ -1,12 +1,12 @@
 query GetTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
   organization(id: $organizationId) {
     timelineEventsTotalCount(
-      timelineEventTypes: [INTERACTION_EVENT, MEETING, ACTION, LOG_ENTRY, ISSUE, ORDER]
+      timelineEventTypes: [INTERACTION_EVENT, MEETING, ACTION, LOG_ENTRY, ISSUE, MARKDOWN_EVENT,ORDER]
     )
     timelineEvents(
       from: $from
       size: $size
-      timelineEventTypes: [INTERACTION_EVENT, MEETING, ACTION, LOG_ENTRY, ISSUE, ORDER]
+      timelineEventTypes: [INTERACTION_EVENT, MEETING, ACTION, LOG_ENTRY, ISSUE, MARKDOWN_EVENT,ORDER]
     ) {
       __typename
       ... on Action {
@@ -25,6 +25,15 @@ query GetTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
             lastName
             profilePhotoUrl
           }
+        }
+        content
+      }
+      ... on MarkdownEvent {
+        __typename
+        markdownEventMetadata: metadata {
+          id
+          created
+          source
         }
         content
       }
