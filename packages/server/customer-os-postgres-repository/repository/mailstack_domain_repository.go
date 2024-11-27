@@ -21,6 +21,7 @@ type MailStackDomainRepository interface {
 	MarkConfigured(ctx context.Context, tenant, domain string) error
 	SetDkimKeys(ctx context.Context, tenant, domain, dkimPublic, dkimPrivate string) error
 	CreateDMARCReport(ctx context.Context, tenant string, report *entity.DMARCMonitoring) error
+	CreateMailstackReputationScore(ctx context.Context, tenant string, score *entity.MailstackReputationEntity) error
 }
 
 type mailStackDomainRepository struct {
@@ -31,8 +32,22 @@ func NewMailStackDomainRepository(db *gorm.DB) MailStackDomainRepository {
 	return &mailStackDomainRepository{db: db}
 }
 
+func (r *mailStackDomainRepository) CreateMailstackReputationScore(ctx context.Context, tenant string, score *entity.MailstackReputationEntity) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "MailStackDomainRepository.CreateMailstackReputationScore")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+	tracing.TagTenant(span, tenant)
+
+	err := r.db.Create(&score).Error
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "db error"))
+		return err
+	}
+	return nil
+}
+
 func (r *mailStackDomainRepository) CreateDMARCReport(ctx context.Context, tenant string, report *entity.DMARCMonitoring) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "MailStackDomainRepository.SaveDMARCStats")
+	span, _ := opentracing.StartSpanFromContext(ctx, "MailStackDomainRepository.CreateDMARCReport")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 	tracing.TagTenant(span, tenant)
