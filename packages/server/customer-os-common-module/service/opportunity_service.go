@@ -309,15 +309,15 @@ func (s *opportunityService) Save(ctx context.Context, tx *neo4j.ManagedTransact
 
 	//TODO put back after we integrate
 	//if input.AppSource != constants.AppSourceCustomerOsApi {
-	details := utils.NewEventCompletedDetails()
 
 	if createFlow {
-		details.WithCreate()
+		s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, *opportunityId, commonModel.OPPORTUNITY, utils.NewEventCompletedDetails().WithCreate())
 	} else {
-		details.WithUpdate()
+		if common.GetAppSourceFromContext(ctx) != constants.AppSourceCustomerOsApi {
+			s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, *opportunityId, commonModel.OPPORTUNITY, utils.NewEventCompletedDetails().WithUpdate())
+		}
 	}
 
-	s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, *opportunityId, commonModel.OPPORTUNITY, details)
 	//}
 
 	return opportunityId, nil
