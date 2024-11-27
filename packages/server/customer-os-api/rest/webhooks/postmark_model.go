@@ -26,13 +26,13 @@ type PostmarkInboundEmailData struct {
 		MailboxHash string `json:"MailboxHash"`
 	} `json:"ToFull"`
 	Cc     string `json:"Cc"`
-	CcFull []struct {
+	CcFull []*struct {
 		Email       string `json:"Email"`
 		Name        string `json:"Name"`
 		MailboxHash string `json:"MailboxHash"`
 	} `json:"CcFull"`
 	Bcc     string `json:"Bcc"`
-	BccFull []struct {
+	BccFull []*struct {
 		Email       string `json:"Email"`
 		Name        string `json:"Name"`
 		MailboxHash string `json:"MailboxHash"`

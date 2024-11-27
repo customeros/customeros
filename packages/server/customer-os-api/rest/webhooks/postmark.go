@@ -26,16 +26,12 @@ const EXTERNAL_SYSTEM = "mailstack"
 
 func PostmarkInboundEmail(s *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "RedirectToPayInvoice", c.Request.Header)
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "PostmarkInboundEmail", c.Request.Header)
 		defer span.Finish()
 		tracing.TagComponentRest(span)
 
-		if c.Request.UserAgent() == "" {
-			rest.SendError(c, span, http.StatusForbidden, rest.ErrForbidden)
-			return
-		}
-
-		if !strings.EqualFold(c.Request.UserAgent(), "Postmark") {
+		// Validate Postmark User-Agent
+		if c.Request.UserAgent() == "" || !strings.EqualFold(c.Request.UserAgent(), "Postmark") {
 			rest.SendError(c, span, http.StatusForbidden, rest.ErrForbidden)
 			return
 		}
@@ -47,6 +43,7 @@ func PostmarkInboundEmail(s *service.Services) gin.HandlerFunc {
 			Services:       s,
 		}
 
+		// Parse email data
 		emailData, err := parseInboundEmail(httpContext)
 		if err != nil {
 			tracing.LogObjectAsJson(span, "body", c.Request.Body)
@@ -55,24 +52,24 @@ func PostmarkInboundEmail(s *service.Services) gin.HandlerFunc {
 			return
 		}
 
-		httpContext.GinContext.JSON(http.StatusAccepted, rest.BuildBaseResponse(rest.StatusProcessing))
+		// Return accepted response immediately
+		c.JSON(http.StatusAccepted, rest.BuildBaseResponse(rest.StatusProcessing))
 
+		// Process email asynchronously
 		go func() {
+			var err error
 			if emailData.IsMonitorEmail() {
-				// Process dmarc monitoring report
-				err := processDmarcMonitoringReport(httpContext, &emailData)
+				err = processDmarcMonitoringReport(httpContext, &emailData)
 				if err != nil {
-					tracing.TraceErr(httpContext.Span, errors.Wrap(err, "failed to process DMARC report"))
+					tracing.TraceErr(span, errors.Wrap(err, "failed to process DMARC report"))
 				}
 			} else {
-				// Process normal mailstack email
-				err := processInboundEmail(httpContext, &emailData)
+				err = processInboundEmail(httpContext, &emailData)
 				if err != nil {
-					tracing.TraceErr(httpContext.Span, errors.Wrap(err, "failed to process inbound email from Postmark"))
+					tracing.TraceErr(span, errors.Wrap(err, "failed to process inbound email from Postmark"))
 				}
 			}
 		}()
-		return
 	}
 }
 
