@@ -17,6 +17,6 @@ type DMARCMonitoring struct {
 	Data          string    `gorm:"type:text"`
 }
 
-func (TenantSettingsMailbox) TableName() string {
+func (DMARCMonitoring) TableName() string {
 	return "mailstack_dmarc_monitoring"
 }
