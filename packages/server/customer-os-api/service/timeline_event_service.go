@@ -180,6 +180,8 @@ func (s *timelineEventService) convertDbNodeToTimelineEvent(dbNode *dbtype.Node)
 		return neo4jmapper.MapDbNodeToActionEntity(dbNode)
 	} else if slices.Contains(dbNode.Labels, model2.NodeLabelLogEntry) {
 		return neo4jmapper.MapDbNodeToLogEntryEntity(dbNode)
+	} else if slices.Contains(dbNode.Labels, model2.NodeLabelMarkdownEvent) {
+		return neo4jmapper.MapDbNodeToMarkdownEventEntity(dbNode)
 	}
 	return nil
 }
