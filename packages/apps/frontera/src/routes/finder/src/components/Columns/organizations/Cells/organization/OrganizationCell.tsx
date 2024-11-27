@@ -1,25 +1,26 @@
 import { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { observer } from 'mobx-react-lite';
 import { useLocalStorage } from 'usehooks-ts';
 
+import { useStore } from '@shared/hooks/useStore';
 import { TableCellTooltip } from '@ui/presentation/Table';
 
 interface OrganizationCellProps {
   id: string;
-  name: string;
-  isEnriching: boolean;
-  isSubsidiary: boolean;
-  parentOrganizationName: string;
 }
 
-export const OrganizationCell = ({
-  id,
-  name,
-  isSubsidiary,
-  parentOrganizationName,
-  isEnriching,
-}: OrganizationCellProps) => {
+export const OrganizationCell = observer(({ id }: OrganizationCellProps) => {
+  const store = useStore();
+  const org = store.organizations.getById(id);
+
+  const name = org?.value?.name;
+  const isSubsidiary = org?.value?.subsidiaries?.length > 0;
+  const parentOrganizationName =
+    org?.value?.parentCompanies?.[0]?.organization?.name;
+  const isEnriching = org?.isEnriching;
+
   const [tabs] = useLocalStorage<{
     [key: string]: string;
   }>(`customeros-player-last-position`, { root: 'organization' });
@@ -40,6 +41,8 @@ export const OrganizationCell = ({
 
     navigate(href);
   };
+
+  if (!org) return null;
 
   return (
     <TableCellTooltip
@@ -67,7 +70,7 @@ export const OrganizationCell = ({
       </span>
     </TableCellTooltip>
   );
-};
+});
 
 function getHref(id: string, lastPositionParams: string | undefined) {
   return `/organization/${id}?${lastPositionParams || 'tab=about'}`;

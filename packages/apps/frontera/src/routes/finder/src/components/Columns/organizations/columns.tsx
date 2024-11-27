@@ -71,35 +71,28 @@ export const columns: Record<string, Column> = {
     header: AvatarHeader,
     skeleton: () => <Skeleton className='size-[24px]' />,
   }),
-  [ColumnViewType.OrganizationsName]: columnHelper.accessor((row) => row, {
-    id: ColumnViewType.OrganizationsName,
-    minSize: 160,
-    size: 160,
-    maxSize: 400,
-    enableColumnFilter: false,
-    enableResizing: true,
-    cell: (props) => {
-      return (
-        <OrganizationCell
-          name={props.getValue().value.name}
-          id={props.getValue().value.metadata?.id}
-          isEnriching={props.getValue()?.isEnriching}
-          isSubsidiary={!!props.getValue()?.value?.subsidiaryOf?.length}
-          parentOrganizationName={
-            props.getValue()?.value?.subsidiaryOf?.[0]?.organization.name
-          }
+  [ColumnViewType.OrganizationsName]: columnHelper.accessor(
+    'value.metadata.id',
+    {
+      id: ColumnViewType.OrganizationsName,
+      minSize: 160,
+      size: 160,
+      maxSize: 400,
+      enableColumnFilter: false,
+      enableResizing: true,
+      cell: (props) => {
+        return <OrganizationCell id={props.getValue()} />;
+      },
+      header: (props) => (
+        <THead<HTMLInputElement>
+          title='Organization'
+          id={ColumnViewType.OrganizationsName}
+          {...getTHeadProps<Organization>(props)}
         />
-      );
+      ),
+      skeleton: () => <Skeleton className='w-[100px] h-[14px]' />,
     },
-    header: (props) => (
-      <THead<HTMLInputElement>
-        title='Organization'
-        id={ColumnViewType.OrganizationsName}
-        {...getTHeadProps<Organization>(props)}
-      />
-    ),
-    skeleton: () => <Skeleton className='w-[100px] h-[14px]' />,
-  }),
+  ),
   [ColumnViewType.OrganizationsWebsite]: columnHelper.accessor(
     'value.website',
     {
@@ -766,22 +759,13 @@ export const columns: Record<string, Column> = {
       enableColumnFilter: false,
       enableSorting: true,
       cell: (props) => {
-        const parentOrg =
-          props.getValue()?.value?.parentCompanies?.[0]?.organization;
+        const parentOrgId =
+          props.getValue()?.value?.parentCompanies?.[0]?.organization?.metadata
+            ?.id;
 
-        if (!parentOrg) return null;
-        const isEnriching =
-          props.getValue()?.value?.parentCompanies?.[0]?.isEnriching;
+        if (!parentOrgId) return null;
 
-        return (
-          <OrganizationCell
-            isSubsidiary={false}
-            name={parentOrg?.name}
-            isEnriching={isEnriching}
-            parentOrganizationName={''}
-            id={parentOrg?.metadata?.id}
-          />
-        );
+        return <OrganizationCell id={parentOrgId} />;
       },
       header: (props) => (
         <THead<HTMLInputElement>

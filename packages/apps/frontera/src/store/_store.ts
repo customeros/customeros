@@ -210,7 +210,7 @@ export class Store<T extends object, E extends Entity<T> = Entity<T>> {
 
     const diff = packet.operation.diff;
 
-    applyDiff(target, diff);
+    applyDiff(target.value, diff);
 
     this.version++;
   }
