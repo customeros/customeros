@@ -269,7 +269,7 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 		span.LogFields(log.String("contactId", contactInput.Id))
 	}
 	if !failedSync && contactInput.HasPrimaryEmail() {
-		_, err = s.services.CommonServices.EmailService.Merge(ctx, tenant,
+		_, err = s.services.CommonServices.EmailService.Merge(ctx, nil, tenant,
 			commonservice.EmailFields{
 				Email:     contactInput.Email,
 				AppSource: appSource,
@@ -288,7 +288,7 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 	}
 	if !failedSync && contactInput.HasAdditionalEmails() {
 		for _, email := range contactInput.AdditionalEmails {
-			_, err = s.services.CommonServices.EmailService.Merge(ctx, tenant,
+			_, err = s.services.CommonServices.EmailService.Merge(ctx, nil, tenant,
 				commonservice.EmailFields{
 					Email:     email,
 					AppSource: appSource,
