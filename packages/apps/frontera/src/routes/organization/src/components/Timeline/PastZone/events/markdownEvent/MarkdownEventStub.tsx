@@ -23,7 +23,7 @@ export const MarkdownEventStub: FC<{ event: MarkdownEventType }> = ({
           'rounded-lg hover:shadow-md transition-all duration-200 ease-out',
         )}
       >
-        <CardContent className='p-3 pr-0 overflow-hidden text-sm flex gap-2 '>
+        <CardContent className='p-3 pr-0 overflow-hidden text-sm w-full flex justify-between gap-2 '>
           <div>
             <Markdown
               components={{
@@ -33,18 +33,19 @@ export const MarkdownEventStub: FC<{ event: MarkdownEventType }> = ({
                   </blockquote>
                 ),
                 ul: ({ children }) => (
-                  <ul className='list-disc list-inside'>{children}</ul>
+                  <ul className='list-disc list-inside my-1'>{children}</ul>
                 ),
                 ol: ({ children }) => (
-                  <ul className='list-decimal list-inside'>{children}</ul>
+                  <ul className='list-decimal list-inside my-1'>{children}</ul>
                 ),
                 h1: ({ children }) => (
-                  <h1 className='text-sm font-bold'>{children}</h1>
+                  <h1 className='text-sm font-bold mt-1'>{children}</h1>
                 ),
 
                 h2: ({ children }) => (
-                  <h2 className='text-sm font-medium'>{children}</h2>
+                  <h2 className='text-sm font-medium mt-1'>{children}</h2>
                 ),
+                p: ({ children }) => <p className='text-sm my-1'>{children}</p>,
               }}
             >
               {event?.content}
