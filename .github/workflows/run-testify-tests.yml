@@ -91,7 +91,7 @@ jobs:
           
             VERSION_INFO=""
             if [ ! -z "$NEW_VERSION" ] && [ ! -z "$OLD_VERSION" ]; then
-              VERSION_INFO=" - new version: v$NEW_VERSION / old version: v$OLD_VERSION"
+              VERSION_INFO=" - new version: $NEW_VERSION / old version: v$OLD_VERSION"
             fi
           
             MESSAGE="$MESSAGE\nTriggered by \`$TRIGGER_SOURCE\`$VERSION_INFO"
