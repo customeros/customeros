@@ -155,7 +155,7 @@ func createNewContactByLinkedin(ctx rest.HTTPContext, linkedInURL string) string
 }
 
 func associateEmail(ctx rest.HTTPContext, email, contactId string) {
-	_, err := ctx.Services.CommonServices.EmailService.Merge(*ctx.ServiceContext, ctx.Tenant,
+	_, err := ctx.Services.CommonServices.EmailService.Merge(*ctx.ServiceContext, nil, ctx.Tenant,
 		commonservice.EmailFields{
 			Email:     email,
 			Source:    neo4jentity.DataSourceOpenline,

@@ -147,7 +147,6 @@ func (s *contactService) Save(ctx context.Context, txWithPostCommit *utils.TxWit
 					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateContact"))
 				}
 				if common.GetAppSourceFromContext(ctx) != constants.AppSourceCustomerOsApi {
-
 					s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, contactId, model.CONTACT, utils.NewEventCompletedDetails().WithUpdate())
 				}
 			}

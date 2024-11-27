@@ -58,12 +58,12 @@ type EmailValidatedFields struct {
 }
 
 type EmailWriteRepository interface {
-	CreateEmail(ctx context.Context, tenant, emailId string, data EmailCreateFields) error
+	CreateEmail(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, emailId string, data EmailCreateFields) error
 	EmailValidated(ctx context.Context, tenant, emailId string, data EmailValidatedFields) error
 	CleanEmailValidation(ctx context.Context, tenant, emailId string) error
-	LinkWithContact(ctx context.Context, tenant, contactId, emailId string, primary bool) error
-	LinkWithOrganization(ctx context.Context, tenant, organizationId, emailId string, primary bool) error
-	LinkWithUser(ctx context.Context, tenant, userId, emailId string, primary bool) error
+	LinkWithContact(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, contactId, emailId string, primary bool) error
+	LinkWithOrganization(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId, emailId string, primary bool) error
+	LinkWithUser(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, userId, emailId string, primary bool) error
 	UnlinkFromUser(ctx context.Context, tenant, usedId, email string) error
 	UnlinkFromContact(ctx context.Context, tenant, contactId, email string) error
 	UnlinkFromOrganization(ctx context.Context, tenant, organizationId, email string) error
@@ -84,7 +84,7 @@ func NewEmailWriteRepository(driver *neo4j.DriverWithContext, database string) E
 	}
 }
 
-func (r *emailWriteRepository) CreateEmail(ctx context.Context, tenant, emailId string, data EmailCreateFields) error {
+func (r *emailWriteRepository) CreateEmail(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, emailId string, data EmailCreateFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailWriteRepository.CreateEmail")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
@@ -109,10 +109,17 @@ func (r *emailWriteRepository) CreateEmail(ctx context.Context, tenant, emailId 
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
+
 	return err
 }
 
@@ -198,7 +205,7 @@ func (r *emailWriteRepository) EmailValidated(ctx context.Context, tenant, email
 	return err
 }
 
-func (r *emailWriteRepository) LinkWithContact(ctx context.Context, tenant, contactId, emailId string, primary bool) error {
+func (r *emailWriteRepository) LinkWithContact(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, contactId, emailId string, primary bool) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailWriteRepository.LinkWithContact")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
@@ -219,14 +226,21 @@ func (r *emailWriteRepository) LinkWithContact(ctx context.Context, tenant, cont
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
+
 	return err
 }
 
-func (r *emailWriteRepository) LinkWithOrganization(ctx context.Context, tenant, organizationId, emailId string, primary bool) error {
+func (r *emailWriteRepository) LinkWithOrganization(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId, emailId string, primary bool) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailWriteRepository.LinkWithOrganization")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
@@ -248,14 +262,21 @@ func (r *emailWriteRepository) LinkWithOrganization(ctx context.Context, tenant,
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
+
 	return err
 }
 
-func (r *emailWriteRepository) LinkWithUser(ctx context.Context, tenant, userId, emailId string, primary bool) error {
+func (r *emailWriteRepository) LinkWithUser(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, userId, emailId string, primary bool) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailWriteRepository.LinkWithUser")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
@@ -277,10 +298,17 @@ func (r *emailWriteRepository) LinkWithUser(ctx context.Context, tenant, userId,
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
+
 	return err
 }
 

@@ -462,7 +462,7 @@ func (s *mailService) buildChannelData(email *EmailMessageData, span opentracing
 }
 
 func (s *mailService) createUserEmailAddressAsNode(ctx context.Context, tenant, userEmailAddress, externalSystem string, span opentracing.Span) error {
-	_, err := s.services.EmailService.Merge(ctx, tenant, EmailFields{
+	_, err := s.services.EmailService.Merge(ctx, nil, tenant, EmailFields{
 		Email:     userEmailAddress,
 		AppSource: AppSource,
 		Source:    neo4jentity.DecodeDataSource(externalSystem),
