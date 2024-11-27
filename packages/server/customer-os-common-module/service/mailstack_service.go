@@ -66,11 +66,8 @@ func (s *mailstackService) RegisterBuyDomainsWithMailboxes(ctx context.Context, 
 	stipePaymentDescription := fmt.Sprintf("Mailstack purchase: %d domains (%s) with usernames (%s)", len(domains), strings.Join(domains, ", "), strings.Join(usernames, ", "))
 
 	params := &stripe.PaymentIntentParams{
-		Amount:   stripe.Int64(amount),                      // Amount in cents (e.g., $20.00)
-		Currency: stripe.String(string(stripe.CurrencyUSD)), // Currency (e.g., USD)
-		PaymentMethodTypes: stripe.StringSlice([]string{
-			"card", // Allowed payment method types
-		}),
+		Amount:       stripe.Int64(amount),                      // Amount in cents (e.g., $20.00)
+		Currency:     stripe.String(string(stripe.CurrencyUSD)), // Currency (e.g., USD)
 		Description:  stripe.String(stipePaymentDescription),
 		ReceiptEmail: stripe.String(email),
 		Params: stripe.Params{
