@@ -27,8 +27,10 @@ type FilterItem struct {
 type ComparisonOperator string
 
 const (
+	//deprecated
 	ComparisonOperatorEq          ComparisonOperator = "EQ"
-	ComparisonOperatorNotEq       ComparisonOperator = "NOT_EQ"
+	ComparisonOperatorEquals      ComparisonOperator = "EQUALS"
+	ComparisonOperatorNotEquals   ComparisonOperator = "NOT_EQUALS"
 	ComparisonOperatorContains    ComparisonOperator = "CONTAINS"
 	ComparisonOperatorNotContains ComparisonOperator = "NOT_CONTAINS"
 	ComparisonOperatorStartsWith  ComparisonOperator = "STARTS_WITH"
