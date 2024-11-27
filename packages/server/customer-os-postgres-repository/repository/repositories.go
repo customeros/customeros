@@ -1,8 +1,9 @@
 package repository
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"gorm.io/gorm"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 )
 
 type Repositories struct {
@@ -133,7 +134,6 @@ func InitRepositories(db *gorm.DB) *Repositories {
 }
 
 func (r *Repositories) Migration(db *gorm.DB) {
-
 	//err = db.AutoMigrate(&entity.AppKey{})
 	//if err != nil {
 	//	panic(err)
@@ -149,6 +149,7 @@ func (r *Repositories) Migration(db *gorm.DB) {
 		&entity.TenantWebhook{},
 		&entity.SlackChannel{},
 		&entity.PostmarkApiKey{},
+		&entity.DMARCMonitoring{},
 		&entity.GoogleServiceAccountKey{},
 		&entity.CurrencyRate{},
 		&entity.EventBuffer{},

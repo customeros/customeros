@@ -2,13 +2,15 @@ package repository
 
 import (
 	"context"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 )
 
 type MailStackDomainRepository interface {
@@ -18,6 +20,7 @@ type MailStackDomainRepository interface {
 	GetActiveDomains(ctx context.Context, tenant string) ([]entity.MailStackDomain, error)
 	MarkConfigured(ctx context.Context, tenant, domain string) error
 	SetDkimKeys(ctx context.Context, tenant, domain, dkimPublic, dkimPrivate string) error
+	CreateDMARCReport(ctx context.Context, tenant string, report *entity.DMARCMonitoring) error
 }
 
 type mailStackDomainRepository struct {
@@ -26,6 +29,23 @@ type mailStackDomainRepository struct {
 
 func NewMailStackDomainRepository(db *gorm.DB) MailStackDomainRepository {
 	return &mailStackDomainRepository{db: db}
+}
+
+func (r *mailStackDomainRepository) CreateDMARCReport(ctx context.Context, tenant string, report *entity.DMARCMonitoring) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "MailStackDomainRepository.SaveDMARCStats")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+	tracing.TagTenant(span, tenant)
+
+	now := utils.Now()
+	report.CreatedAt = now
+
+	err := r.db.Create(&report).Error
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "db error"))
+		return err
+	}
+	return nil
 }
 
 func (r *mailStackDomainRepository) RegisterDomain(ctx context.Context, tenant, domain string) (*entity.MailStackDomain, error) {
@@ -63,7 +83,6 @@ func (r *mailStackDomainRepository) CheckDomainOwnership(ctx context.Context, te
 	err := r.db.WithContext(ctx).
 		Where("tenant = ? AND domain = ? AND active = ?", tenant, domain, true).
 		First(&mailStackDomain).Error
-
 	if err != nil {
 		// If the record is not found, return false without an error
 		if errors.Is(err, gorm.ErrRecordNotFound) {

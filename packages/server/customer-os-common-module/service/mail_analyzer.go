@@ -39,7 +39,7 @@ func (a *mailService) ProcessEmailCheck(ctx context.Context, tenant string, emai
 		case !xFailedHeaderExists && emailData.Identifiers.ExternalSystem == "outlook":
 			analysis.BouncedEmails = emailData.Participants.GetToEmailAddresses()
 		case !xFailedHeaderExists && emailData.Identifiers.ExternalSystem == "mailstack":
-			analysis.BouncedEmails = a.extractEmails(emailData.Content.Text)
+			analysis.BouncedEmails = a.ExtractEmails(emailData.Content.Text)
 		default:
 			analysis.BouncedEmails = emailData.Headers.XFailedRecepients
 		}

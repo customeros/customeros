@@ -132,13 +132,16 @@ func GetOrganization(services *service.Services) gin.HandlerFunc {
 		switch {
 		case status == rest.StatusError:
 			rest.SendError(c, span, http.StatusNotFound, rest.ErrNotFound.WithMessage("Organization does not exist"))
+			return
 		case status == rest.StatusPartialSuccess:
 			c.JSON(http.StatusPartialContent, "Unable to retrieve full organization data")
+			return
 		default:
 			c.JSON(http.StatusOK, OrganizationResponse{
 				BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
 				Organization: result,
 			})
+			return
 		}
 	}
 }

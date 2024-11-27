@@ -22,6 +22,7 @@ require (
 	github.com/99designs/gqlgen v0.17.57
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/customeros/mailsherpa v0.3.3
+	github.com/customeros/mailwatcher v0.1.4
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gin-contrib/cors v1.7.2
 	github.com/gin-contrib/zap v1.1.4

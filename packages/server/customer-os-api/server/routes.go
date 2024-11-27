@@ -20,6 +20,7 @@ import (
 	restmailstack "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/mailstack"
 	restoutreach "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/outreach"
 	restverify "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/verify"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/webhooks"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
 
@@ -31,6 +32,7 @@ const (
 	enrichV1Path       = "/enrich/v1"
 	mailStackV1Path    = "/mailstack/v1"
 	eventsV1Path       = "/events/v1"
+	webhooksV1Path     = "/webhooks/v1"
 )
 
 func RegisterRestRoutes(ctx context.Context, r *gin.Engine, grpcClients *grpc_client.Clients, services *service.Services, cache *commoncaches.Cache) {
@@ -47,13 +49,10 @@ func RegisterRestRoutes(ctx context.Context, r *gin.Engine, grpcClients *grpc_cl
 
 func registerPublicRoutes(ctx context.Context, r *gin.Engine, services *service.Services) {
 	// Redirect to pay invoice link
-	r.GET("/invoice/:invoiceId/pay",
-		tracing.TracingEnhancer(ctx, "GET:/invoice/:invoiceId/pay"),
-		rest.RedirectToPayInvoice(services))
+	setupPublicRoute(ctx, r, services, "GET", "/invoice/:invoiceId/pay", rest.RedirectToPayInvoice(services))
+	setupPublicRoute(ctx, r, services, "GET", "/invoice/:invoiceId/paymentLink", rest.GetInvoicePaymentLink(services))
 
-	r.GET("/invoice/:invoiceId/paymentLink",
-		tracing.TracingEnhancer(ctx, "GET:/invoice/:invoiceId/paymentLink"),
-		rest.GetInvoicePaymentLink(services))
+	setupPublicRoute(ctx, r, services, "POST", fmt.Sprintf("%s/postmark", webhooksV1Path), webhooks.PostmarkInboundEmail(services))
 }
 
 func registerHealthRoutes(ctx context.Context, r *gin.Engine, services *service.Services, cache *commoncaches.Cache) {
@@ -128,4 +127,8 @@ func setupRestRoute(ctx context.Context, r *gin.Engine, method, path string, ser
 		enrichContextMiddleware(constants.AppSourceCustomerOsApiRest),
 		cosHandler.StatsSuccessHandler(method+":"+path, services),
 		handler)
+}
+
+func setupPublicRoute(ctx context.Context, r *gin.Engine, services *service.Services, method, path string, handler gin.HandlerFunc) {
+	r.Handle(method, path, tracing.TracingEnhancer(ctx, method+":"+path), handler)
 }

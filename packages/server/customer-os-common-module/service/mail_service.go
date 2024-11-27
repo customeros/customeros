@@ -17,6 +17,7 @@ type mailService struct {
 }
 
 type MailService interface {
+	ExtractEmails(s string) []string
 	GetEmailsForProcessingForUser(ctx context.Context, tenant, userEmailAddress string)
 	LoadEmail(ctx context.Context, rawEmail *postgresentity.RawEmail) (EmailMessageData, error)
 	ProcessEmailCheck(ctx context.Context, tenant string, email *EmailMessageData) HeaderAnalysis

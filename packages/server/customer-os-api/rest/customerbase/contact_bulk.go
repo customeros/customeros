@@ -136,6 +136,7 @@ func ImportContacts(services *service.Services) gin.HandlerFunc {
 		contentType := c.GetHeader("Content-Type")
 		if !strings.HasPrefix(contentType, "multipart/form-data") {
 			rest.SendError(c, span, http.StatusBadRequest, rest.ErrUnsupportedContentType)
+			return
 		}
 
 		handleCSVUpload(httpContext)
