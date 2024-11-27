@@ -104,6 +104,8 @@ func cleanFathomJsonPayload(data *FathomZapierPayload) error {
 
 	if data.Meeting.InviteesStr != "" {
 		inviteesJson := utils.ReplaceSingleQuotesWithDoubleQuotes(data.Meeting.InviteesStr)
+		inviteesJson = strings.Replace(inviteesJson, ": True", ": true", -1)
+		inviteesJson = strings.Replace(inviteesJson, ": False", ": false", -1)
 		var invitees []Invitee
 		err := json.Unmarshal([]byte(inviteesJson), &invitees)
 		if err != nil {
