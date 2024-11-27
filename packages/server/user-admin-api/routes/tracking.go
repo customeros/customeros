@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/service"
 	tracingLog "github.com/opentracing/opentracing-go/log"
@@ -60,6 +61,10 @@ func addTrackingRoutes(rg *gin.RouterGroup, services *service.Services) {
 
 		tracking.Tenant = *tenant
 		tracking.State = entity.TrackingIdentificationStateNew
+		// Fix UTF-8 encoding issues
+		tracking.UserAgent = utils.SanitizeUTF8(tracking.UserAgent)
+		tracking.Referrer = utils.SanitizeUTF8(tracking.Referrer)
+		tracking.Origin = utils.SanitizeUTF8(tracking.Origin)
 
 		_, err = services.CommonServices.PostgresRepositories.TrackingRepository.Store(ctx, tracking)
 		if err != nil {
