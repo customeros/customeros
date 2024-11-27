@@ -183,8 +183,8 @@ export const getFilterTypes = (store?: RootStore) => {
       filterOperators: [
         ComparisonOperator.Gt,
         ComparisonOperator.Lt,
-        ComparisonOperator.Eq,
-        ComparisonOperator.NotEqual,
+        ComparisonOperator.Equals,
+        ComparisonOperator.NotEquals,
       ],
       icon: (
         <Calculator className='group-hover:text-gray-700 text-gray-500 mb-0.5' />
@@ -244,8 +244,8 @@ export const getFilterTypes = (store?: RootStore) => {
       filterOperators: [
         ComparisonOperator.Gt,
         ComparisonOperator.Lt,
-        ComparisonOperator.Eq,
-        ComparisonOperator.NotEqual,
+        ComparisonOperator.Equals,
+        ComparisonOperator.NotEquals,
       ],
       icon: <Cake className='group-hover:text-gray-700 text-gray-500 mb-0.5' />,
     },
@@ -256,8 +256,8 @@ export const getFilterTypes = (store?: RootStore) => {
       filterOperators: [
         ComparisonOperator.Gt,
         ComparisonOperator.Lt,
-        ComparisonOperator.Eq,
-        ComparisonOperator.NotEqual,
+        ComparisonOperator.Equals,
+        ComparisonOperator.NotEquals,
       ],
       icon: (
         <Users03 className='group-hover:text-gray-700 text-gray-500 mb-0.5' />
@@ -334,8 +334,8 @@ export const getFilterTypes = (store?: RootStore) => {
       filterOperators: [
         ComparisonOperator.Gt,
         ComparisonOperator.Lt,
-        ComparisonOperator.Eq,
-        ComparisonOperator.NotEqual,
+        ComparisonOperator.Equals,
+        ComparisonOperator.NotEquals,
       ],
       icon: (
         <CurrencyDollarCircle className='group-hover:text-gray-700 text-gray-500 mb-0.5' />
@@ -368,8 +368,8 @@ export const getFilterTypes = (store?: RootStore) => {
       filterOperators: [
         ComparisonOperator.Gt,
         ComparisonOperator.Lt,
-        ComparisonOperator.Eq,
-        ComparisonOperator.NotEqual,
+        ComparisonOperator.Equals,
+        ComparisonOperator.NotEquals,
       ],
       icon: (
         <Hash02 className='group-hover:text-gray-700 text-gray-500 mb-0.5' />

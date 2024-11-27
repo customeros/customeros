@@ -219,7 +219,6 @@ func CreateUserWithId(ctx context.Context, driver *neo4j.DriverWithContext, tena
 
 func CreateOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, organization entity.OrganizationEntity) string {
 	orgId := utils.NewUUIDIfEmpty(organization.ID)
-	now := time.Now().UTC()
 	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})
 			MERGE (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization:Organization_%s {id:$id})
 			ON CREATE SET 	org.name=$name, 
@@ -279,7 +278,7 @@ func CreateOrganization(ctx context.Context, driver *neo4j.DriverWithContext, te
 		"targetAudience":                organization.TargetAudience,
 		"valueProposition":              organization.ValueProposition,
 		"hide":                          organization.Hide,
-		"lastTouchpointAt":              utils.TimePtrAsAny(organization.LastTouchpointAt, &now),
+		"lastTouchpointAt":              utils.TimePtrAsAny(organization.LastTouchpointAt),
 		"lastTouchpointType":            organization.LastTouchpointType,
 		"lastFundingRound":              organization.LastFundingRound,
 		"lastFundingAmount":             organization.LastFundingAmount,

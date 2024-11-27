@@ -285,6 +285,8 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
         this.value.set(record.id, record);
         this.value.delete(tempId);
 
+        this.version++;
+
         tempId = record.id;
 
         this.sync({

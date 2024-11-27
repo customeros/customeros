@@ -7,10 +7,10 @@ import (
 )
 
 var relationshipByModel = map[model.OrganizationRelationship]neo4jenum.OrganizationRelationship{
-	model.OrganizationRelationshipCustomer:       neo4jenum.Customer,
-	model.OrganizationRelationshipProspect:       neo4jenum.Prospect,
-	model.OrganizationRelationshipNotAFit:        neo4jenum.NotAFit,
-	model.OrganizationRelationshipFormerCustomer: neo4jenum.FormerCustomer,
+	model.OrganizationRelationshipCustomer:       neo4jenum.OrganizationRelationshipCustomer,
+	model.OrganizationRelationshipProspect:       neo4jenum.OrganizationRelationshipProspect,
+	model.OrganizationRelationshipNotAFit:        neo4jenum.OrganizationRelationshipNotAFit,
+	model.OrganizationRelationshipFormerCustomer: neo4jenum.OrganizationRelationshipFormerCustomer,
 }
 
 var relationshipByValue = utils.ReverseMap(relationshipByModel)

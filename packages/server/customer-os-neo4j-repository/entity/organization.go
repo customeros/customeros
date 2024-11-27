@@ -154,14 +154,14 @@ func OrganizationStageAndRelationshipCompatible(stageStr, relationshipStr string
 		return true
 	}
 
-	if relationship == enum.NotAFit && stage != enum.Unqualified {
+	if relationship == enum.OrganizationRelationshipNotAFit && stage != enum.Unqualified {
 		return false
-	} else if relationship == enum.FormerCustomer && stage != enum.Target {
+	} else if relationship == enum.OrganizationRelationshipFormerCustomer && stage != enum.Target {
 		return false
-	} else if relationship == enum.Prospect && stage != enum.Lead && stage != enum.Target &&
+	} else if relationship == enum.OrganizationRelationshipProspect && stage != enum.Lead && stage != enum.Target &&
 		stage != enum.Engaged && stage != enum.ReadyToBuy && stage != enum.Trial {
 		return false
-	} else if relationship == enum.Customer && stage != enum.Onboarding && stage != enum.InitialValue &&
+	} else if relationship == enum.OrganizationRelationshipCustomer && stage != enum.Onboarding && stage != enum.InitialValue &&
 		stage != enum.RecurringValue && stage != enum.MaxValue && stage != enum.PendingChurn {
 		return false
 	}

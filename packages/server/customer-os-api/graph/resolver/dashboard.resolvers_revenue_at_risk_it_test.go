@@ -65,7 +65,7 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_Draft_Contract(t *testing.T) {
 
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
-	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Relationship: neo4jenum.Customer})
+	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Relationship: neo4jenum.OrganizationRelationshipCustomer})
 
 	contract1ServiceStartedAt := utils.FirstTimeOfMonth(2023, 8)
 	neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
@@ -108,7 +108,7 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_Closed_Contract(t *testing.T) {
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
-	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Relationship: neo4jenum.Customer})
+	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Relationship: neo4jenum.OrganizationRelationshipCustomer})
 
 	contract1ServiceStartedAt := utils.FirstTimeOfMonth(2023, 8)
 	contract1EndeddAt := utils.FirstTimeOfMonth(2023, 9)
@@ -155,7 +155,7 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_Hidden_Organization_With_Contra
 
 	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		Hide:         true,
-		Relationship: neo4jenum.Customer,
+		Relationship: neo4jenum.OrganizationRelationshipCustomer,
 	})
 
 	contract1ServiceStartedAt := utils.FirstTimeOfMonth(2023, 8)
@@ -200,7 +200,7 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_Prospect_Organization_With_Cont
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
-		Relationship: neo4jenum.Prospect,
+		Relationship: neo4jenum.OrganizationRelationshipProspect,
 	})
 
 	contract1ServiceStartedAt := utils.FirstTimeOfMonth(2023, 8)
@@ -243,7 +243,7 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_Organization_With_1_Live_Renewa
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
-	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Relationship: neo4jenum.Customer})
+	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Relationship: neo4jenum.OrganizationRelationshipCustomer})
 
 	contract1ServiceStartedAt := utils.FirstTimeOfMonth(2023, 8)
 	neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
@@ -268,7 +268,7 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_Organization_With_1_Live_Renewa
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
-		Relationship: neo4jenum.Customer,
+		Relationship: neo4jenum.OrganizationRelationshipCustomer,
 	})
 
 	contract1ServiceStartedAt := utils.FirstTimeOfMonth(2023, 8)
@@ -294,7 +294,7 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_Organization_With_1_Live_Renewa
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
-		Relationship: neo4jenum.Customer,
+		Relationship: neo4jenum.OrganizationRelationshipCustomer,
 	})
 
 	contract1ServiceStartedAt := utils.FirstTimeOfMonth(2023, 8)
@@ -320,7 +320,7 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_Organization_With_1_Live_Contra
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
-		Relationship: neo4jenum.Customer,
+		Relationship: neo4jenum.OrganizationRelationshipCustomer,
 	})
 
 	contract1ServiceStartedAt := utils.FirstTimeOfMonth(2023, 8)
@@ -346,7 +346,7 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_Organization_With_1_High_1_At_R
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
-		Relationship: neo4jenum.Customer,
+		Relationship: neo4jenum.OrganizationRelationshipCustomer,
 	})
 
 	contractServiceStartedAt := utils.FirstTimeOfMonth(2023, 8)
@@ -403,7 +403,7 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_Organization_With_2_Opportuniti
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
-		Relationship: neo4jenum.Customer,
+		Relationship: neo4jenum.OrganizationRelationshipCustomer,
 	})
 
 	contractServiceStartedAt := utils.FirstTimeOfMonth(2023, 8)
@@ -459,7 +459,7 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_Organization_With_2_Opportuniti
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
-		Relationship: neo4jenum.Customer,
+		Relationship: neo4jenum.OrganizationRelationshipCustomer,
 	})
 
 	contractServiceStartedAt := utils.FirstTimeOfMonth(2023, 8)
@@ -515,7 +515,7 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_2_Organizations_With_1_High_1_A
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 
 	org1Id := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
-		Relationship: neo4jenum.Customer,
+		Relationship: neo4jenum.OrganizationRelationshipCustomer,
 	})
 
 	contractServiceStartedAt := utils.FirstTimeOfMonth(2023, 8)
@@ -532,7 +532,7 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_2_Organizations_With_1_High_1_A
 	})
 
 	org2Id := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
-		Relationship: neo4jenum.Customer,
+		Relationship: neo4jenum.OrganizationRelationshipCustomer,
 	})
 
 	neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, org2Id, neo4jentity.ContractEntity{

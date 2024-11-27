@@ -1,3 +1,5 @@
+import { MarkdownEventType } from '@store/TimelineEvents/MarkdownEvent/types';
+
 import {
   User,
   Issue,
@@ -26,5 +28,6 @@ export type TimelineEvent =
   | Meeting
   | Action
   | IssueWithAliases
+  | MarkdownEventType
   | Pick<InvoiceWithId, 'id' | '__typename'>
   | LogEntryWithAliases;

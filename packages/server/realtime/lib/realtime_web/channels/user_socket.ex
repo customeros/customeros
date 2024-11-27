@@ -52,6 +52,8 @@ defmodule RealtimeWeb.UserSocket do
   channel "Issues:*", RealtimeWeb.IssuesChannel
   channel "LogEntry:*", RealtimeWeb.LogEntryChannel
   channel "LogEntries:*", RealtimeWeb.LogEntriesChannel
+  channel "MarkdownEvent:*", RealtimeWeb.MarkdownEventChannel
+  channel "MarkdownEvents:*", RealtimeWeb.MarkdownEventsChannel
   channel "Meeting:*", RealtimeWeb.MeetingChannel
   channel "Meetings:*", RealtimeWeb.MeetingsChannel
   channel "Note:*", RealtimeWeb.NoteChannel

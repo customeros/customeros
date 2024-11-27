@@ -1,5 +1,7 @@
 import { VirtuosoHandle } from 'react-virtuoso';
 
+import { MarkdownEventType } from '@store/TimelineEvents/MarkdownEvent/types';
+
 import {
   InvoiceWithId,
   LogEntryWithAliases,
@@ -16,6 +18,7 @@ import { InvoicePreviewModal } from '@organization/components/Timeline/PastZone/
 import { LogEntryPreviewModal } from '@organization/components/Timeline/PastZone/events/logEntry/LogEntryPreviewModal';
 import { TimelinePreviewBackdrop } from '@organization/components/Timeline/shared/TimelineEventPreview/TimelinePreviewBackdrop';
 import { IntercomThreadPreviewModal } from '@organization/components/Timeline/PastZone/events/intercom/IntercomThreadPreviewModal';
+import { MarkdownEventPreviewModal } from '@organization/components/Timeline/PastZone/events/markdownEvent/MarkdownEventPreviewModal';
 import { LogEntryUpdateModalContextProvider } from '@organization/components/Timeline/PastZone/events/logEntry/context/LogEntryUpdateModalContext';
 import { useTimelineEventPreviewStateContext } from '@organization/components/Timeline/shared/TimelineEventPreview/context/TimelineEventPreviewContext';
 
@@ -41,6 +44,7 @@ export const TimelineEventPreviewModal = ({
     | Action
     | Issue
     | InvoiceWithId
+    | MarkdownEventType
     | LogEntryWithAliases;
   const isMeeting = event?.__typename === 'Meeting';
   const isAction = event?.__typename === 'Action';
@@ -48,6 +52,7 @@ export const TimelineEventPreviewModal = ({
   const isInteraction = event?.__typename === 'InteractionEvent';
   const isIssue = event?.__typename === 'Issue';
   const isInvoice = event?.__typename === 'Invoice';
+  const isMarkdownEvent = event?.__typename === 'MarkdownEvent';
   const isSlack =
     isInteraction &&
     event?.channel === 'CHAT' &&
@@ -81,6 +86,7 @@ export const TimelineEventPreviewModal = ({
         )}
         {isIssue && <IssuePreviewModal />}
         {isInvoice && <InvoicePreviewModal />}
+        {isMarkdownEvent && <MarkdownEventPreviewModal />}
       </TimelinePreviewBackdrop>
     </LogEntryUpdateModalContextProvider>
   );

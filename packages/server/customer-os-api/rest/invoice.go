@@ -264,7 +264,7 @@ func notifyOnSlackPaymentFailed(ctx context.Context, services *service.Services,
 	}
 	organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
 
-	slackMessageText := fmt.Sprintf("Customer %s encountered an error trying to pay invoice %s", organizationEntity.Name, invoiceNumber)
+	slackMessageText := fmt.Sprintf("OrganizationRelationshipCustomer %s encountered an error trying to pay invoice %s", organizationEntity.Name, invoiceNumber)
 
 	err = utils.SendSlackMessage(ctx, tenantSettings.SharedSlackChannelUrl, slackMessageText)
 	if err != nil {

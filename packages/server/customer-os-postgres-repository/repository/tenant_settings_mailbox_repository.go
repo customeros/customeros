@@ -172,6 +172,7 @@ func (r *tenantSettingsMailboxRepository) Merge(ctx context.Context, input *enti
 			MailboxUsername:         input.MailboxUsername,
 			MailboxPassword:         input.MailboxPassword,
 			Username:                input.Username,
+			UserId:                  input.UserId,
 			Domain:                  input.Domain,
 			LastRampUpAt:            utils.Now(),
 			RampUpRate:              3,
@@ -195,6 +196,7 @@ func (r *tenantSettingsMailboxRepository) Merge(ctx context.Context, input *enti
 		mailbox.RampUpCurrent = input.RampUpCurrent
 		mailbox.MinMinutesBetweenEmails = input.MinMinutesBetweenEmails
 		mailbox.MaxMinutesBetweenEmails = input.MaxMinutesBetweenEmails
+		mailbox.UserId = input.UserId
 		mailbox.UpdatedAt = utils.Now()
 
 		err = r.gormDb.Save(&mailbox).Error

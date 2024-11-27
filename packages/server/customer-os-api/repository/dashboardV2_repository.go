@@ -68,7 +68,28 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 
 		for _, filter := range where.And {
 			if filter.Filter.Property == model.ColumnViewTypeOrganizationsName.String() {
-				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateStringCypherFilter("name", *filter.Filter.Value.Str, filter.Filter.Operation))
+				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateStringCypherFilter("name", filter.Filter.Value.Str, filter.Filter.Operation))
+			}
+			if filter.Filter.Property == model.ColumnViewTypeOrganizationsWebsite.String() {
+				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateStringCypherFilter("website", filter.Filter.Value.Str, filter.Filter.Operation))
+			}
+			if filter.Filter.Property == model.ColumnViewTypeOrganizationsRelationship.String() {
+				createInOrEmptyStringFilter(filter, organizationFilter, "relationship")
+			}
+			if filter.Filter.Property == model.ColumnViewTypeOrganizationsOnboardingStatus.String() {
+				createInOrEmptyStringFilter(filter, organizationFilter, "onboardingStatus")
+			}
+			if filter.Filter.Property == model.ColumnViewTypeOrganizationsRenewalLikelihood.String() {
+				createInOrEmptyStringFilter(filter, organizationFilter, "derivedRenewalLikelihood")
+			}
+			if filter.Filter.Property == model.ColumnViewTypeOrganizationsRenewalDate.String() {
+				createBetweenOrEmptyTimeFilter(filter, organizationFilter, "derivedNextRenewalAt")
+			}
+			if filter.Filter.Property == model.ColumnViewTypeOrganizationsLastTouchpointDate.String() {
+				createBetweenOrEmptyTimeFilter(filter, organizationFilter, "lastTouchpointAt")
+			}
+			if filter.Filter.Property == model.ColumnViewTypeOrganizationsStage.String() {
+				createInOrEmptyStringFilter(filter, organizationFilter, "stage")
 			}
 		}
 		//		orFilter := utils.CypherFilter{}
@@ -501,4 +522,22 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 	}
 
 	return stringsWithTotalCount, nil
+}
+
+func createInOrEmptyStringFilter(filter *model.Filter, cypherFilter *utils.CypherFilter, neo4jProperty string) {
+	if filter.Filter.Operation == commonmodel.ComparisonOperatorIsEmpty && filter.Filter.Value.Str != nil {
+		cypherFilter.Filters = append(cypherFilter.Filters, utils.CreateCypherFilter(neo4jProperty, nil, commonmodel.ComparisonOperatorIsEmpty))
+	} else if filter.Filter.Operation == commonmodel.ComparisonOperatorIn && filter.Filter.Value.ArrayStr != nil {
+		cypherFilter.Filters = append(cypherFilter.Filters, utils.CreateCypherFilter(neo4jProperty, filter.Filter.Value.ArrayStr, commonmodel.ComparisonOperatorIn))
+	}
+}
+
+func createBetweenOrEmptyTimeFilter(filter *model.Filter, cypherFilter *utils.CypherFilter, neo4jProperty string) {
+	if filter.Filter.Operation == commonmodel.ComparisonOperatorBetween && filter.Filter.Value.ArrayTime != nil && len(*filter.Filter.Value.ArrayTime) == 2 {
+		times := *filter.Filter.Value.ArrayTime
+		cypherFilter.Filters = append(cypherFilter.Filters, utils.CreateCypherFilter(neo4jProperty, times[0], commonmodel.ComparisonOperatorGte))
+		cypherFilter.Filters = append(cypherFilter.Filters, utils.CreateCypherFilter(neo4jProperty, times[1], commonmodel.ComparisonOperatorLte))
+	} else if filter.Filter.Operation == commonmodel.ComparisonOperatorIsEmpty {
+		cypherFilter.Filters = append(cypherFilter.Filters, utils.CreateCypherFilter(neo4jProperty, nil, commonmodel.ComparisonOperatorIsEmpty))
+	}
 }

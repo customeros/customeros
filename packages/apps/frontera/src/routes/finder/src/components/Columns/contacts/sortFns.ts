@@ -2,7 +2,13 @@ import { match } from 'ts-pattern';
 import countries from '@assets/countries/countries.json';
 import { ContactStore } from '@store/Contacts/Contact.store';
 
-import { User, Social, JobRole, ColumnViewType } from '@graphql/types';
+import {
+  User,
+  Social,
+  JobRole,
+  ColumnViewType,
+  FlowParticipantStatus,
+} from '@graphql/types';
 
 export const getContactSortFn = (columnId: string, flowId?: string) =>
   match(columnId)
@@ -66,10 +72,21 @@ export const getContactSortFn = (columnId: string, flowId?: string) =>
     .with(ColumnViewType.ContactsFlowStatus, () => (row: ContactStore) => {
       if (!flowId) return false;
 
-      return row.root.flows.value
+      const status = row.root.flows.value
         .get(flowId)
-        ?.value.participants.find((e) => e.entityId === row.id)
-        ?.status?.toLowerCase();
+        ?.value.participants.find((e) => e.entityId === row.id)?.status;
+
+      const statusOrder = {
+        [FlowParticipantStatus.OnHold]: 1,
+        [FlowParticipantStatus.Completed]: 2,
+        [FlowParticipantStatus.Error]: 3,
+        [FlowParticipantStatus.GoalAchieved]: 4,
+        [FlowParticipantStatus.InProgress]: 5,
+        [FlowParticipantStatus.Ready]: 6,
+        [FlowParticipantStatus.Scheduled]: 7,
+      };
+
+      return status && statusOrder?.[status];
     })
     .with(ColumnViewType.ContactsFlowNextAction, () => (row: ContactStore) => {
       if (!flowId) return false;

@@ -25,9 +25,12 @@ import { ActionsStore } from './Actions/Actions.store';
 import { MeetingStore } from './Meetings/Meeting.store';
 import { MeetingsStore } from './Meetings/Meetings.store';
 import { LogEntryStore } from './LogEntry/LogEntry.store';
+import { MarkdownEventType } from './MarkdownEvent/types';
 import { PageViewStore } from './PageViews/PageView.store';
 import { PageViewsStore } from './PageViews/PageViews.store';
 import { LogEntriesStore } from './LogEntry/LogEntries.store';
+import { MarkdownEventStore } from './MarkdownEvent/MarkdownEvent.store';
+import { MarkdownEventsStore } from './MarkdownEvent/MarkdownEvents.store';
 import { TimelineEventsService } from './__service__/TimelineEvents.service';
 import { InteractionEventStore } from './InteractionEvents/InteractionEvent.store';
 import { InteractionEventsStore } from './InteractionEvents/InteractionEvents.store';
@@ -42,6 +45,7 @@ type TimelineEventStore =
   | PageViewStore
   | LogEntryStore
   | InteractionEventStore
+  | MarkdownEventStore
   | InteractionSessionStore;
 
 export class TimelineEventsStore {
@@ -53,6 +57,7 @@ export class TimelineEventsStore {
   logEntries: LogEntriesStore;
   interactionEvents: InteractionEventsStore;
   interactionSessions: InteractionSessionsStore;
+  markdownEvents: MarkdownEventsStore;
   private service: TimelineEventsService;
   isLoading = false;
   error: string | null = null;
@@ -65,6 +70,7 @@ export class TimelineEventsStore {
     this.meetings = new MeetingsStore(this.root, this.transport);
     this.pageViews = new PageViewsStore(this.root, this.transport);
     this.logEntries = new LogEntriesStore(this.root, this.transport);
+    this.markdownEvents = new MarkdownEventsStore(this.root, this.transport);
     this.interactionEvents = new InteractionEventsStore(
       this.root,
       this.transport,
@@ -172,6 +178,16 @@ export class TimelineEventsStore {
 
           return this.interactionEvents.value.get(
             (interactionEvent as unknown as InteractionEvent).id,
+          );
+        })
+        .with({ __typename: 'MarkdownEvent' }, (markdownEvent) => {
+          this.markdownEvents.load([
+            markdownEvent as unknown as MarkdownEventType,
+          ]);
+
+          return this.markdownEvents.value.get(
+            (markdownEvent as unknown as MarkdownEventType)
+              .markdownEventMetadata.id,
           );
         })
         .with({ __typename: 'InteractionSession' }, (interactionSession) => {

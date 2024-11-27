@@ -22,7 +22,7 @@ var defaultStringFilterItem = model.FilterItem{
 }
 var defaultIntFilterItem = model.FilterItem{
 	Property:  "NAME",
-	Operation: model2.ComparisonOperatorEq,
+	Operation: model2.ComparisonOperatorEquals,
 	Value: model.AnyTypeValue{
 		Int: utils.Int64Ptr(100),
 	},

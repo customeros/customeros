@@ -16,6 +16,7 @@ type TagReadRepository interface {
 	GetById(ctx context.Context, tenant, tagId string) (*dbtype.Node, error)
 	GetAll(ctx context.Context, tenant string) ([]*dbtype.Node, error)
 	GetAllByEntityType(ctx context.Context, tenant string, entityType commonmodel.EntityType) ([]*dbtype.Node, error)
+	GetByEntityTypeAndName(ctx context.Context, tenant string, entityType commonmodel.EntityType, name string) (*dbtype.Node, error)
 	GetForContacts(ctx context.Context, tenant string, contactIds []string) ([]*utils.DbNodeWithRelationAndId, error)
 	GetForLogEntries(ctx context.Context, tenant string, logEntryIds []string) ([]*utils.DbNodeWithRelationAndId, error)
 	GetForIssues(ctx context.Context, tenant string, issueIds []string) ([]*utils.DbNodeWithRelationAndId, error)
@@ -274,4 +275,39 @@ func (r *tagReadRepository) GetAllByEntityType(ctx context.Context, tenant strin
 
 	span.LogFields(log.Int("result.count", len(result.([]*dbtype.Node))))
 	return result.([]*dbtype.Node), err
+}
+
+func (r *tagReadRepository) GetByEntityTypeAndName(ctx context.Context, tenant string, entityType commonmodel.EntityType, name string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TagReadRepository.GetByEntityTypeAndName")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
+	span.LogFields(log.String("entityType", entityType.String()), log.String("name", name))
+
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag {entityType:$entityType, name:$name})
+			RETURN tag`
+	params := map[string]any{
+		"tenant":     tenant,
+		"entityType": entityType.String(),
+		"name":       name,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
+	})
+	if err != nil {
+		return nil, err
+	}
+	if dbRecords == nil || len(dbRecords.([]*dbtype.Node)) == 0 {
+		span.LogFields(log.String("result", "not found"))
+		return nil, nil
+	}
+	span.LogFields(log.String("result", "found"))
+	return dbRecords.([]*dbtype.Node)[0], err
 }

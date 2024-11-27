@@ -91,8 +91,8 @@ export const getFilterTypes = () => {
       filterOperators: [
         ComparisonOperator.Gt,
         ComparisonOperator.Lt,
-        ComparisonOperator.Eq,
-        ComparisonOperator.NotEqual,
+        ComparisonOperator.Equals,
+        ComparisonOperator.NotEquals,
       ],
       icon: (
         <CurrencyDollarCircle className='group-hover:text-gray-700 text-gray-500' />

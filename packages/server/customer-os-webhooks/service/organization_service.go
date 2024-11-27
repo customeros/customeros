@@ -261,11 +261,11 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 			organizationDataFields.EmployeeGrowthRate = utils.StringPtr(orgInput.EmployeeGrowthRate)
 			organizationDataFields.LeadSource = utils.StringPtr(utils.StringFirstNonEmpty(orgInput.ExternalSystem, orgInput.Source))
 			if orgInput.IsCustomer {
-				organizationDataFields.Relationship = utils.ToPtr(neo4jenum.Customer)
+				organizationDataFields.Relationship = utils.ToPtr(neo4jenum.OrganizationRelationshipCustomer)
 			} else {
 				if !matchingOrganizationExists {
 					organizationDataFields.Stage = utils.ToPtr(neo4jenum.Trial)
-					organizationDataFields.Relationship = utils.ToPtr(neo4jenum.Prospect)
+					organizationDataFields.Relationship = utils.ToPtr(neo4jenum.OrganizationRelationshipProspect)
 				}
 			}
 		}
