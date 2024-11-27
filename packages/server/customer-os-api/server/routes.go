@@ -35,6 +35,7 @@ const (
 
 func RegisterRestRoutes(ctx context.Context, r *gin.Engine, grpcClients *grpc_client.Clients, services *service.Services, cache *commoncaches.Cache) {
 	registerPublicRoutes(ctx, r, services)
+	registerHealthRoutes(ctx, r, services, cache)
 	registerBillingRoutes(ctx, r, services, grpcClients, cache)
 	registerCustomerBaseRoutes(ctx, r, services, grpcClients, cache)
 	registerEnrichRoutes(ctx, r, services, cache)
@@ -49,9 +50,14 @@ func registerPublicRoutes(ctx context.Context, r *gin.Engine, services *service.
 	r.GET("/invoice/:invoiceId/pay",
 		tracing.TracingEnhancer(ctx, "GET:/invoice/:invoiceId/pay"),
 		rest.RedirectToPayInvoice(services))
+
 	r.GET("/invoice/:invoiceId/paymentLink",
 		tracing.TracingEnhancer(ctx, "GET:/invoice/:invoiceId/paymentLink"),
 		rest.GetInvoicePaymentLink(services))
+}
+
+func registerHealthRoutes(ctx context.Context, r *gin.Engine, services *service.Services, cache *commoncaches.Cache) {
+	setupRestRoute(ctx, r, "GET", "/me", services, cache, rest.AuthorizeMe(services))
 }
 
 func registerEnrichRoutes(ctx context.Context, r *gin.Engine, services *service.Services, cache *commoncaches.Cache) {
