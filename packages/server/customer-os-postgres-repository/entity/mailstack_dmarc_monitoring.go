@@ -9,7 +9,7 @@ type DMARCMonitoring struct {
 	EmailProvider string    `gorm:"column:email_provider;type:varchar(255)" json:"emailProvider"`
 	Domain        string    `gorm:"column:domain;type:varchar(255)" json:"domain"`
 	ReportStart   time.Time `gorm:"column:report_start;type:timestamp" json:"reportStart"`
-	ReportEnd     time.Time `gorm:"column:report_start;type:timestamp" json:"reportEnd"`
+	ReportEnd     time.Time `gorm:"column:report_end;type:timestamp" json:"reportEnd"`
 	MessageCount  int       `gorm:"column:message_count;type:integer" json:"messageCount"`
 	SPFPass       int       `gorm:"column:spf_pass;type:integer" json:"spfPass"`
 	DKIMPass      int       `gorm:"column:dkim_pass;type:integer" json:"dkimPass"`
