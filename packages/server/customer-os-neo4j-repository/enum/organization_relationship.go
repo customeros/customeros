@@ -3,10 +3,10 @@ package enum
 type OrganizationRelationship string
 
 const (
-	Prospect       OrganizationRelationship = "PROSPECT"
-	Customer       OrganizationRelationship = "CUSTOMER"
-	FormerCustomer OrganizationRelationship = "FORMER_CUSTOMER"
-	NotAFit        OrganizationRelationship = "NOT_A_FIT"
+	OrganizationRelationshipProspect       OrganizationRelationship = "PROSPECT"
+	OrganizationRelationshipCustomer       OrganizationRelationship = "CUSTOMER"
+	OrganizationRelationshipFormerCustomer OrganizationRelationship = "FORMER_CUSTOMER"
+	OrganizationRelationshipNotAFit        OrganizationRelationship = "NOT_A_FIT"
 )
 
 func (e OrganizationRelationship) String() string {
@@ -15,14 +15,14 @@ func (e OrganizationRelationship) String() string {
 
 func DecodeOrganizationRelationship(str string) OrganizationRelationship {
 	switch str {
-	case Prospect.String():
-		return Prospect
-	case Customer.String():
-		return Customer
-	case NotAFit.String():
-		return NotAFit
-	case FormerCustomer.String():
-		return FormerCustomer
+	case OrganizationRelationshipProspect.String():
+		return OrganizationRelationshipProspect
+	case OrganizationRelationshipCustomer.String():
+		return OrganizationRelationshipCustomer
+	case OrganizationRelationshipNotAFit.String():
+		return OrganizationRelationshipNotAFit
+	case OrganizationRelationshipFormerCustomer.String():
+		return OrganizationRelationshipFormerCustomer
 	default:
 		return ""
 	}
@@ -30,7 +30,7 @@ func DecodeOrganizationRelationship(str string) OrganizationRelationship {
 
 func (e OrganizationRelationship) IsValid() bool {
 	switch e {
-	case Prospect, Customer, NotAFit, FormerCustomer:
+	case OrganizationRelationshipProspect, OrganizationRelationshipCustomer, OrganizationRelationshipNotAFit, OrganizationRelationshipFormerCustomer:
 		return true
 	}
 	return false
@@ -38,13 +38,13 @@ func (e OrganizationRelationship) IsValid() bool {
 
 func (e OrganizationRelationship) DefaultStage() OrganizationStage {
 	switch e {
-	case Prospect:
+	case OrganizationRelationshipProspect:
 		return Lead
-	case Customer:
+	case OrganizationRelationshipCustomer:
 		return Onboarding
-	case NotAFit:
+	case OrganizationRelationshipNotAFit:
 		return Unqualified
-	case FormerCustomer:
+	case OrganizationRelationshipFormerCustomer:
 		return Target
 	default:
 		return ""

@@ -17,7 +17,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	model1 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	entity1 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -617,6 +616,10 @@ type ComplexityRoot struct {
 		Type    func(childComplexity int) int
 	}
 
+	GetPaymentIntent struct {
+		ClientSecret func(childComplexity int) int
+	}
+
 	GlobalCache struct {
 		ActiveEmailTokens   func(childComplexity int) int
 		CdnLogoURL          func(childComplexity int) int
@@ -898,24 +901,6 @@ type ComplexityRoot struct {
 		UserID          func(childComplexity int) int
 	}
 
-	MailstackBuyRequest struct {
-		CreatedAt func(childComplexity int) int
-		Domains   func(childComplexity int) int
-		ID        func(childComplexity int) int
-		Mailboxes func(childComplexity int) int
-		Status    func(childComplexity int) int
-	}
-
-	MailstackBuyRequestDomain struct {
-		Domain func(childComplexity int) int
-		Status func(childComplexity int) int
-	}
-
-	MailstackBuyRequestMailbox struct {
-		Mailbox func(childComplexity int) int
-		Status  func(childComplexity int) int
-	}
-
 	MarkdownEvent struct {
 		Content  func(childComplexity int) int
 		Metadata func(childComplexity int) int
@@ -962,171 +947,171 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		AddTag                                         func(childComplexity int, input model.AddTagInput) int
-		AttachmentCreate                               func(childComplexity int, input model.AttachmentInput) int
-		BankAccountCreate                              func(childComplexity int, input *model.BankAccountCreateInput) int
-		BankAccountDelete                              func(childComplexity int, id string) int
-		BankAccountUpdate                              func(childComplexity int, input *model.BankAccountUpdateInput) int
-		BillingProfileCreate                           func(childComplexity int, input model.BillingProfileInput) int
-		BillingProfileLinkEmail                        func(childComplexity int, input model.BillingProfileLinkEmailInput) int
-		BillingProfileLinkLocation                     func(childComplexity int, input model.BillingProfileLinkLocationInput) int
-		BillingProfileUnlinkEmail                      func(childComplexity int, input model.BillingProfileLinkEmailInput) int
-		BillingProfileUnlinkLocation                   func(childComplexity int, input model.BillingProfileLinkLocationInput) int
-		BillingProfileUpdate                           func(childComplexity int, input model.BillingProfileUpdateInput) int
-		ContactAddNewLocation                          func(childComplexity int, contactID string) int
-		ContactAddOrganizationByID                     func(childComplexity int, input model.ContactOrganizationInput) int
-		ContactAddSocial                               func(childComplexity int, contactID string, input model.SocialInput) int
-		ContactAddTag                                  func(childComplexity int, input model.ContactTagInput) int
-		ContactCreate                                  func(childComplexity int, input model.ContactInput) int
-		ContactCreateForOrganization                   func(childComplexity int, input model.ContactInput, organizationID string) int
-		ContactFindWorkEmail                           func(childComplexity int, contactID string, organizationID *string, domain *string, findMobileNumber *bool) int
-		ContactHardDelete                              func(childComplexity int, contactID string) int
-		ContactHide                                    func(childComplexity int, contactID string) int
-		ContactMerge                                   func(childComplexity int, primaryContactID string, mergedContactIds []string) int
-		ContactRemoveLocation                          func(childComplexity int, contactID string, locationID string) int
-		ContactRemoveSocial                            func(childComplexity int, contactID string, socialID string) int
-		ContactRemoveTag                               func(childComplexity int, input model.ContactTagInput) int
-		ContactUpdate                                  func(childComplexity int, input model.ContactUpdateInput) int
-		ContractAddAttachment                          func(childComplexity int, contractID string, attachmentID string) int
-		ContractCreate                                 func(childComplexity int, input model.ContractInput) int
-		ContractDelete                                 func(childComplexity int, id string) int
-		ContractLineItemClose                          func(childComplexity int, input model.ServiceLineItemCloseInput) int
-		ContractLineItemCreate                         func(childComplexity int, input model.ServiceLineItemInput) int
-		ContractLineItemNewVersion                     func(childComplexity int, input model.ServiceLineItemNewVersionInput) int
-		ContractLineItemPause                          func(childComplexity int, id string) int
-		ContractLineItemResume                         func(childComplexity int, id string) int
-		ContractLineItemUpdate                         func(childComplexity int, input model.ServiceLineItemUpdateInput) int
-		ContractRemoveAttachment                       func(childComplexity int, contractID string, attachmentID string) int
-		ContractRenew                                  func(childComplexity int, input model.ContractRenewalInput) int
-		ContractUpdate                                 func(childComplexity int, input model.ContractUpdateInput) int
-		CustomFieldDeleteFromContactByID               func(childComplexity int, contactID string, id string) int
-		CustomFieldDeleteFromContactByName             func(childComplexity int, contactID string, fieldName string) int
-		CustomFieldMergeToContact                      func(childComplexity int, contactID string, input model.CustomFieldInput) int
-		CustomFieldTemplateDelete                      func(childComplexity int, id string) int
-		CustomFieldTemplateSave                        func(childComplexity int, input model.CustomFieldTemplateInput) int
-		CustomFieldUpdateInContact                     func(childComplexity int, contactID string, input model.CustomFieldUpdateInput) int
-		CustomFieldsMergeAndUpdateInContact            func(childComplexity int, contactID string, customFields []*model.CustomFieldInput) int
-		CustomerContactCreate                          func(childComplexity int, input model.CustomerContactInput) int
-		CustomerUserAddJobRole                         func(childComplexity int, id string, jobRoleInput model.JobRoleInput) int
-		EmailMergeToContact                            func(childComplexity int, contactID string, input model.EmailInput) int
-		EmailMergeToOrganization                       func(childComplexity int, organizationID string, input model.EmailInput) int
-		EmailMergeToUser                               func(childComplexity int, userID string, input model.EmailInput) int
-		EmailRemoveFromContact                         func(childComplexity int, contactID string, email string) int
-		EmailRemoveFromOrganization                    func(childComplexity int, organizationID string, email string) int
-		EmailRemoveFromUser                            func(childComplexity int, userID string, email string) int
-		EmailReplaceForContact                         func(childComplexity int, contactID string, previousEmail *string, input model.EmailInput) int
-		EmailReplaceForOrganization                    func(childComplexity int, organizationID string, previousEmail *string, input model.EmailInput) int
-		EmailReplaceForUser                            func(childComplexity int, userID string, previousEmail *string, input model.EmailInput) int
-		EmailSetPrimaryForContact                      func(childComplexity int, contactID string, email string) int
-		EmailValidate                                  func(childComplexity int, id string) int
-		ExternalSystemCreate                           func(childComplexity int, input model.ExternalSystemInput) int
-		FlowChangeStatus                               func(childComplexity int, id string, status entity.FlowStatus) int
-		FlowDummy1Email                                func(childComplexity int, flowsCount int, contactsCount int, userCount int, mailboxForEachUserCount int) int
-		FlowEmailActionTest                            func(childComplexity int, subject string, bodyTemplate string, sendToEmailAddress string) int
-		FlowMerge                                      func(childComplexity int, input model.FlowMergeInput) int
-		FlowParticipantAdd                             func(childComplexity int, flowID string, entityID string, entityType model1.EntityType) int
-		FlowParticipantAddBulk                         func(childComplexity int, flowID string, entityIds []string, entityType model1.EntityType) int
-		FlowParticipantDelete                          func(childComplexity int, id string) int
-		FlowParticipantDeleteBulk                      func(childComplexity int, id []string) int
-		FlowSenderDelete                               func(childComplexity int, id string) int
-		FlowSenderMerge                                func(childComplexity int, flowID string, input model.FlowSenderMergeInput) int
-		InteractionEventLinkAttachment                 func(childComplexity int, eventID string, attachmentID string) int
-		InvoiceNextDryRunForContract                   func(childComplexity int, contractID string) int
-		InvoicePay                                     func(childComplexity int, id string) int
-		InvoiceSimulate                                func(childComplexity int, input model.InvoiceSimulateInput) int
-		InvoiceUpdate                                  func(childComplexity int, input model.InvoiceUpdateInput) int
-		InvoiceVoid                                    func(childComplexity int, id string) int
-		JobRoleCreate                                  func(childComplexity int, contactID string, input model.JobRoleInput) int
-		JobRoleDelete                                  func(childComplexity int, contactID string, roleID string) int
-		JobRoleUpdate                                  func(childComplexity int, contactID string, input model.JobRoleUpdateInput) int
-		LocationRemoveFromContact                      func(childComplexity int, contactID string, locationID string) int
-		LocationRemoveFromOrganization                 func(childComplexity int, organizationID string, locationID string) int
-		LocationUpdate                                 func(childComplexity int, input model.LocationUpdateInput) int
-		LogEntryAddTag                                 func(childComplexity int, id string, input model.TagIDOrNameInput) int
-		LogEntryCreateForOrganization                  func(childComplexity int, organizationID string, input model.LogEntryInput) int
-		LogEntryRemoveTag                              func(childComplexity int, id string, input model.TagIDOrNameInput) int
-		LogEntryResetTags                              func(childComplexity int, id string, input []*model.TagIDOrNameInput) int
-		LogEntryUpdate                                 func(childComplexity int, id string, input model.LogEntryUpdateInput) int
-		MailstackRegisterBuyDomainsWithMailboxes       func(childComplexity int, domains []string, usernames []string, amount float64) int
-		MailstackRegisteredBuyDomainsWithMailboxesPaid func(childComplexity int, id string) int
-		MailstackSetUser                               func(childComplexity int, mailbox string, userID string) int
-		MeetingAddNewLocation                          func(childComplexity int, meetingID string) int
-		MeetingAddNote                                 func(childComplexity int, meetingID string, note *model.NoteInput) int
-		MeetingCreate                                  func(childComplexity int, meeting model.MeetingInput) int
-		MeetingLinkAttachment                          func(childComplexity int, meetingID string, attachmentID string) int
-		MeetingLinkAttendedBy                          func(childComplexity int, meetingID string, participant model.MeetingParticipantInput) int
-		MeetingLinkRecording                           func(childComplexity int, meetingID string, attachmentID string) int
-		MeetingUnlinkAttachment                        func(childComplexity int, meetingID string, attachmentID string) int
-		MeetingUnlinkAttendedBy                        func(childComplexity int, meetingID string, participant model.MeetingParticipantInput) int
-		MeetingUnlinkRecording                         func(childComplexity int, meetingID string, attachmentID string) int
-		MeetingUpdate                                  func(childComplexity int, meetingID string, meeting model.MeetingUpdateInput) int
-		NoteDelete                                     func(childComplexity int, id string) int
-		NoteLinkAttachment                             func(childComplexity int, noteID string, attachmentID string) int
-		NoteUnlinkAttachment                           func(childComplexity int, noteID string, attachmentID string) int
-		NoteUpdate                                     func(childComplexity int, input model.NoteUpdateInput) int
-		OpportunityArchive                             func(childComplexity int, id string) int
-		OpportunityRenewalUpdate                       func(childComplexity int, input model.OpportunityRenewalUpdateInput, ownerUserID *string) int
-		OpportunityRenewalUpdateAllForOrganization     func(childComplexity int, input model.OpportunityRenewalUpdateAllForOrganizationInput) int
-		OpportunitySave                                func(childComplexity int, input model.OpportunitySaveInput) int
-		OrganizationAddSocial                          func(childComplexity int, organizationID string, input model.SocialInput) int
-		OrganizationAddSubsidiary                      func(childComplexity int, input model.LinkOrganizationsInput) int
-		OrganizationAddTag                             func(childComplexity int, input model.OrganizationTagInput) int
-		OrganizationHide                               func(childComplexity int, id string) int
-		OrganizationHideAll                            func(childComplexity int, ids []string) int
-		OrganizationMerge                              func(childComplexity int, primaryOrganizationID string, mergedOrganizationIds []string) int
-		OrganizationRemoveSocial                       func(childComplexity int, organizationID string, socialID string) int
-		OrganizationRemoveSubsidiary                   func(childComplexity int, organizationID string, subsidiaryID string) int
-		OrganizationRemoveTag                          func(childComplexity int, input model.OrganizationTagInput) int
-		OrganizationSave                               func(childComplexity int, input model.OrganizationSaveInput) int
-		OrganizationSetOwner                           func(childComplexity int, organizationID string, userID string) int
-		OrganizationShow                               func(childComplexity int, id string) int
-		OrganizationShowAll                            func(childComplexity int, ids []string) int
-		OrganizationUnlinkAllDomains                   func(childComplexity int, organizationID string) int
-		OrganizationUnsetOwner                         func(childComplexity int, organizationID string) int
-		OrganizationUpdate                             func(childComplexity int, input model.OrganizationUpdateInput) int
-		OrganizationUpdateOnboardingStatus             func(childComplexity int, input model.OnboardingStatusInput) int
-		PhoneNumberMergeToContact                      func(childComplexity int, contactID string, input model.PhoneNumberInput) int
-		PhoneNumberMergeToOrganization                 func(childComplexity int, organizationID string, input model.PhoneNumberInput) int
-		PhoneNumberMergeToUser                         func(childComplexity int, userID string, input model.PhoneNumberInput) int
-		PhoneNumberRemoveFromContactByE164             func(childComplexity int, contactID string, e164 string) int
-		PhoneNumberRemoveFromContactByID               func(childComplexity int, contactID string, id string) int
-		PhoneNumberRemoveFromOrganizationByE164        func(childComplexity int, organizationID string, e164 string) int
-		PhoneNumberRemoveFromOrganizationByID          func(childComplexity int, organizationID string, id string) int
-		PhoneNumberRemoveFromUserByE164                func(childComplexity int, userID string, e164 string) int
-		PhoneNumberRemoveFromUserByID                  func(childComplexity int, userID string, id string) int
-		PhoneNumberUpdate                              func(childComplexity int, input model.PhoneNumberUpdateInput) int
-		PhoneNumberUpdateInContact                     func(childComplexity int, contactID string, input model.PhoneNumberRelationUpdateInput) int
-		PhoneNumberUpdateInOrganization                func(childComplexity int, organizationID string, input model.PhoneNumberRelationUpdateInput) int
-		PhoneNumberUpdateInUser                        func(childComplexity int, userID string, input model.PhoneNumberRelationUpdateInput) int
-		ReminderCreate                                 func(childComplexity int, input model.ReminderInput) int
-		ReminderUpdate                                 func(childComplexity int, input model.ReminderUpdateInput) int
-		RemoveTag                                      func(childComplexity int, input model.RemoveTagInput) int
-		ServiceLineItemBulkUpdate                      func(childComplexity int, input model.ServiceLineItemBulkUpdateInput) int
-		ServiceLineItemDelete                          func(childComplexity int, id string) int
-		SocialRemove                                   func(childComplexity int, socialID string) int
-		SocialUpdate                                   func(childComplexity int, input model.SocialUpdateInput) int
-		TableViewDefArchive                            func(childComplexity int, id string) int
-		TableViewDefCreate                             func(childComplexity int, input model.TableViewDefCreateInput) int
-		TableViewDefUpdate                             func(childComplexity int, input model.TableViewDefUpdateInput) int
-		TableViewDefUpdateShared                       func(childComplexity int, input model.TableViewDefUpdateInput) int
-		TagCreate                                      func(childComplexity int, input model.TagInput) int
-		TagDelete                                      func(childComplexity int, id string) int
-		TagUpdate                                      func(childComplexity int, input model.TagUpdateInput) int
-		TenantAddBillingProfile                        func(childComplexity int, input model.TenantBillingProfileInput) int
-		TenantHardDelete                               func(childComplexity int, tenant string, confirmTenant string) int
-		TenantUpdateBillingProfile                     func(childComplexity int, input model.TenantBillingProfileUpdateInput) int
-		TenantUpdateSettings                           func(childComplexity int, input *model.TenantSettingsInput) int
-		TenantUpdateSettingsOpportunityStage           func(childComplexity int, input model.TenantSettingsOpportunityStageConfigurationInput) int
-		UserAddRole                                    func(childComplexity int, id string, role model.Role) int
-		UserAddRoleInTenant                            func(childComplexity int, id string, tenant string, role model.Role) int
-		UserCreate                                     func(childComplexity int, input model.UserInput) int
-		UserDelete                                     func(childComplexity int, id string) int
-		UserDeleteInTenant                             func(childComplexity int, id string, tenant string) int
-		UserRemoveRole                                 func(childComplexity int, id string, role model.Role) int
-		UserRemoveRoleInTenant                         func(childComplexity int, id string, tenant string, role model.Role) int
-		UserUpdate                                     func(childComplexity int, input model.UserUpdateInput) int
-		WorkflowCreate                                 func(childComplexity int, input model.WorkflowCreateInput) int
-		WorkflowUpdate                                 func(childComplexity int, input model.WorkflowUpdateInput) int
+		AddTag                                     func(childComplexity int, input model.AddTagInput) int
+		AttachmentCreate                           func(childComplexity int, input model.AttachmentInput) int
+		BankAccountCreate                          func(childComplexity int, input *model.BankAccountCreateInput) int
+		BankAccountDelete                          func(childComplexity int, id string) int
+		BankAccountUpdate                          func(childComplexity int, input *model.BankAccountUpdateInput) int
+		BillingProfileCreate                       func(childComplexity int, input model.BillingProfileInput) int
+		BillingProfileLinkEmail                    func(childComplexity int, input model.BillingProfileLinkEmailInput) int
+		BillingProfileLinkLocation                 func(childComplexity int, input model.BillingProfileLinkLocationInput) int
+		BillingProfileUnlinkEmail                  func(childComplexity int, input model.BillingProfileLinkEmailInput) int
+		BillingProfileUnlinkLocation               func(childComplexity int, input model.BillingProfileLinkLocationInput) int
+		BillingProfileUpdate                       func(childComplexity int, input model.BillingProfileUpdateInput) int
+		ContactAddNewLocation                      func(childComplexity int, contactID string) int
+		ContactAddOrganizationByID                 func(childComplexity int, input model.ContactOrganizationInput) int
+		ContactAddSocial                           func(childComplexity int, contactID string, input model.SocialInput) int
+		ContactAddTag                              func(childComplexity int, input model.ContactTagInput) int
+		ContactCreate                              func(childComplexity int, input model.ContactInput) int
+		ContactCreateForOrganization               func(childComplexity int, input model.ContactInput, organizationID string) int
+		ContactFindWorkEmail                       func(childComplexity int, contactID string, organizationID *string, domain *string, findMobileNumber *bool) int
+		ContactHardDelete                          func(childComplexity int, contactID string) int
+		ContactHide                                func(childComplexity int, contactID string) int
+		ContactMerge                               func(childComplexity int, primaryContactID string, mergedContactIds []string) int
+		ContactRemoveLocation                      func(childComplexity int, contactID string, locationID string) int
+		ContactRemoveSocial                        func(childComplexity int, contactID string, socialID string) int
+		ContactRemoveTag                           func(childComplexity int, input model.ContactTagInput) int
+		ContactUpdate                              func(childComplexity int, input model.ContactUpdateInput) int
+		ContractAddAttachment                      func(childComplexity int, contractID string, attachmentID string) int
+		ContractCreate                             func(childComplexity int, input model.ContractInput) int
+		ContractDelete                             func(childComplexity int, id string) int
+		ContractLineItemClose                      func(childComplexity int, input model.ServiceLineItemCloseInput) int
+		ContractLineItemCreate                     func(childComplexity int, input model.ServiceLineItemInput) int
+		ContractLineItemNewVersion                 func(childComplexity int, input model.ServiceLineItemNewVersionInput) int
+		ContractLineItemPause                      func(childComplexity int, id string) int
+		ContractLineItemResume                     func(childComplexity int, id string) int
+		ContractLineItemUpdate                     func(childComplexity int, input model.ServiceLineItemUpdateInput) int
+		ContractRemoveAttachment                   func(childComplexity int, contractID string, attachmentID string) int
+		ContractRenew                              func(childComplexity int, input model.ContractRenewalInput) int
+		ContractUpdate                             func(childComplexity int, input model.ContractUpdateInput) int
+		CustomFieldDeleteFromContactByID           func(childComplexity int, contactID string, id string) int
+		CustomFieldDeleteFromContactByName         func(childComplexity int, contactID string, fieldName string) int
+		CustomFieldMergeToContact                  func(childComplexity int, contactID string, input model.CustomFieldInput) int
+		CustomFieldTemplateDelete                  func(childComplexity int, id string) int
+		CustomFieldTemplateSave                    func(childComplexity int, input model.CustomFieldTemplateInput) int
+		CustomFieldUpdateInContact                 func(childComplexity int, contactID string, input model.CustomFieldUpdateInput) int
+		CustomFieldsMergeAndUpdateInContact        func(childComplexity int, contactID string, customFields []*model.CustomFieldInput) int
+		CustomerContactCreate                      func(childComplexity int, input model.CustomerContactInput) int
+		CustomerUserAddJobRole                     func(childComplexity int, id string, jobRoleInput model.JobRoleInput) int
+		EmailMergeToContact                        func(childComplexity int, contactID string, input model.EmailInput) int
+		EmailMergeToOrganization                   func(childComplexity int, organizationID string, input model.EmailInput) int
+		EmailMergeToUser                           func(childComplexity int, userID string, input model.EmailInput) int
+		EmailRemoveFromContact                     func(childComplexity int, contactID string, email string) int
+		EmailRemoveFromOrganization                func(childComplexity int, organizationID string, email string) int
+		EmailRemoveFromUser                        func(childComplexity int, userID string, email string) int
+		EmailReplaceForContact                     func(childComplexity int, contactID string, previousEmail *string, input model.EmailInput) int
+		EmailReplaceForOrganization                func(childComplexity int, organizationID string, previousEmail *string, input model.EmailInput) int
+		EmailReplaceForUser                        func(childComplexity int, userID string, previousEmail *string, input model.EmailInput) int
+		EmailSetPrimaryForContact                  func(childComplexity int, contactID string, email string) int
+		EmailValidate                              func(childComplexity int, id string) int
+		ExternalSystemCreate                       func(childComplexity int, input model.ExternalSystemInput) int
+		FlowChangeStatus                           func(childComplexity int, id string, status entity.FlowStatus) int
+		FlowDummy1Email                            func(childComplexity int, flowsCount int, contactsCount int, userCount int, mailboxForEachUserCount int) int
+		FlowEmailActionTest                        func(childComplexity int, subject string, bodyTemplate string, sendToEmailAddress string) int
+		FlowMerge                                  func(childComplexity int, input model.FlowMergeInput) int
+		FlowParticipantAdd                         func(childComplexity int, flowID string, entityID string, entityType model1.EntityType) int
+		FlowParticipantAddBulk                     func(childComplexity int, flowID string, entityIds []string, entityType model1.EntityType) int
+		FlowParticipantDelete                      func(childComplexity int, id string) int
+		FlowParticipantDeleteBulk                  func(childComplexity int, id []string) int
+		FlowSenderDelete                           func(childComplexity int, id string) int
+		FlowSenderMerge                            func(childComplexity int, flowID string, input model.FlowSenderMergeInput) int
+		InteractionEventLinkAttachment             func(childComplexity int, eventID string, attachmentID string) int
+		InvoiceNextDryRunForContract               func(childComplexity int, contractID string) int
+		InvoicePay                                 func(childComplexity int, id string) int
+		InvoiceSimulate                            func(childComplexity int, input model.InvoiceSimulateInput) int
+		InvoiceUpdate                              func(childComplexity int, input model.InvoiceUpdateInput) int
+		InvoiceVoid                                func(childComplexity int, id string) int
+		JobRoleCreate                              func(childComplexity int, contactID string, input model.JobRoleInput) int
+		JobRoleDelete                              func(childComplexity int, contactID string, roleID string) int
+		JobRoleUpdate                              func(childComplexity int, contactID string, input model.JobRoleUpdateInput) int
+		LocationRemoveFromContact                  func(childComplexity int, contactID string, locationID string) int
+		LocationRemoveFromOrganization             func(childComplexity int, organizationID string, locationID string) int
+		LocationUpdate                             func(childComplexity int, input model.LocationUpdateInput) int
+		LogEntryAddTag                             func(childComplexity int, id string, input model.TagIDOrNameInput) int
+		LogEntryCreateForOrganization              func(childComplexity int, organizationID string, input model.LogEntryInput) int
+		LogEntryRemoveTag                          func(childComplexity int, id string, input model.TagIDOrNameInput) int
+		LogEntryResetTags                          func(childComplexity int, id string, input []*model.TagIDOrNameInput) int
+		LogEntryUpdate                             func(childComplexity int, id string, input model.LogEntryUpdateInput) int
+		MailstackGetPaymentIntent                  func(childComplexity int, domains []string, usernames []string, amount float64) int
+		MailstackRegisterBuyDomainsWithMailboxes   func(childComplexity int, test bool, paymentIntentID string, domains []string, usernames []string, amount float64) int
+		MailstackSetUser                           func(childComplexity int, mailbox string, userID string) int
+		MeetingAddNewLocation                      func(childComplexity int, meetingID string) int
+		MeetingAddNote                             func(childComplexity int, meetingID string, note *model.NoteInput) int
+		MeetingCreate                              func(childComplexity int, meeting model.MeetingInput) int
+		MeetingLinkAttachment                      func(childComplexity int, meetingID string, attachmentID string) int
+		MeetingLinkAttendedBy                      func(childComplexity int, meetingID string, participant model.MeetingParticipantInput) int
+		MeetingLinkRecording                       func(childComplexity int, meetingID string, attachmentID string) int
+		MeetingUnlinkAttachment                    func(childComplexity int, meetingID string, attachmentID string) int
+		MeetingUnlinkAttendedBy                    func(childComplexity int, meetingID string, participant model.MeetingParticipantInput) int
+		MeetingUnlinkRecording                     func(childComplexity int, meetingID string, attachmentID string) int
+		MeetingUpdate                              func(childComplexity int, meetingID string, meeting model.MeetingUpdateInput) int
+		NoteDelete                                 func(childComplexity int, id string) int
+		NoteLinkAttachment                         func(childComplexity int, noteID string, attachmentID string) int
+		NoteUnlinkAttachment                       func(childComplexity int, noteID string, attachmentID string) int
+		NoteUpdate                                 func(childComplexity int, input model.NoteUpdateInput) int
+		OpportunityArchive                         func(childComplexity int, id string) int
+		OpportunityRenewalUpdate                   func(childComplexity int, input model.OpportunityRenewalUpdateInput, ownerUserID *string) int
+		OpportunityRenewalUpdateAllForOrganization func(childComplexity int, input model.OpportunityRenewalUpdateAllForOrganizationInput) int
+		OpportunitySave                            func(childComplexity int, input model.OpportunitySaveInput) int
+		OrganizationAddSocial                      func(childComplexity int, organizationID string, input model.SocialInput) int
+		OrganizationAddSubsidiary                  func(childComplexity int, input model.LinkOrganizationsInput) int
+		OrganizationAddTag                         func(childComplexity int, input model.OrganizationTagInput) int
+		OrganizationHide                           func(childComplexity int, id string) int
+		OrganizationHideAll                        func(childComplexity int, ids []string) int
+		OrganizationMerge                          func(childComplexity int, primaryOrganizationID string, mergedOrganizationIds []string) int
+		OrganizationRemoveSocial                   func(childComplexity int, organizationID string, socialID string) int
+		OrganizationRemoveSubsidiary               func(childComplexity int, organizationID string, subsidiaryID string) int
+		OrganizationRemoveTag                      func(childComplexity int, input model.OrganizationTagInput) int
+		OrganizationSave                           func(childComplexity int, input model.OrganizationSaveInput) int
+		OrganizationSetOwner                       func(childComplexity int, organizationID string, userID string) int
+		OrganizationShow                           func(childComplexity int, id string) int
+		OrganizationShowAll                        func(childComplexity int, ids []string) int
+		OrganizationUnlinkAllDomains               func(childComplexity int, organizationID string) int
+		OrganizationUnsetOwner                     func(childComplexity int, organizationID string) int
+		OrganizationUpdate                         func(childComplexity int, input model.OrganizationUpdateInput) int
+		OrganizationUpdateOnboardingStatus         func(childComplexity int, input model.OnboardingStatusInput) int
+		PhoneNumberMergeToContact                  func(childComplexity int, contactID string, input model.PhoneNumberInput) int
+		PhoneNumberMergeToOrganization             func(childComplexity int, organizationID string, input model.PhoneNumberInput) int
+		PhoneNumberMergeToUser                     func(childComplexity int, userID string, input model.PhoneNumberInput) int
+		PhoneNumberRemoveFromContactByE164         func(childComplexity int, contactID string, e164 string) int
+		PhoneNumberRemoveFromContactByID           func(childComplexity int, contactID string, id string) int
+		PhoneNumberRemoveFromOrganizationByE164    func(childComplexity int, organizationID string, e164 string) int
+		PhoneNumberRemoveFromOrganizationByID      func(childComplexity int, organizationID string, id string) int
+		PhoneNumberRemoveFromUserByE164            func(childComplexity int, userID string, e164 string) int
+		PhoneNumberRemoveFromUserByID              func(childComplexity int, userID string, id string) int
+		PhoneNumberUpdate                          func(childComplexity int, input model.PhoneNumberUpdateInput) int
+		PhoneNumberUpdateInContact                 func(childComplexity int, contactID string, input model.PhoneNumberRelationUpdateInput) int
+		PhoneNumberUpdateInOrganization            func(childComplexity int, organizationID string, input model.PhoneNumberRelationUpdateInput) int
+		PhoneNumberUpdateInUser                    func(childComplexity int, userID string, input model.PhoneNumberRelationUpdateInput) int
+		ReminderCreate                             func(childComplexity int, input model.ReminderInput) int
+		ReminderUpdate                             func(childComplexity int, input model.ReminderUpdateInput) int
+		RemoveTag                                  func(childComplexity int, input model.RemoveTagInput) int
+		ServiceLineItemBulkUpdate                  func(childComplexity int, input model.ServiceLineItemBulkUpdateInput) int
+		ServiceLineItemDelete                      func(childComplexity int, id string) int
+		SocialRemove                               func(childComplexity int, socialID string) int
+		SocialUpdate                               func(childComplexity int, input model.SocialUpdateInput) int
+		TableViewDefArchive                        func(childComplexity int, id string) int
+		TableViewDefCreate                         func(childComplexity int, input model.TableViewDefCreateInput) int
+		TableViewDefUpdate                         func(childComplexity int, input model.TableViewDefUpdateInput) int
+		TableViewDefUpdateShared                   func(childComplexity int, input model.TableViewDefUpdateInput) int
+		TagCreate                                  func(childComplexity int, input model.TagInput) int
+		TagDelete                                  func(childComplexity int, id string) int
+		TagUpdate                                  func(childComplexity int, input model.TagUpdateInput) int
+		TenantAddBillingProfile                    func(childComplexity int, input model.TenantBillingProfileInput) int
+		TenantHardDelete                           func(childComplexity int, tenant string, confirmTenant string) int
+		TenantUpdateBillingProfile                 func(childComplexity int, input model.TenantBillingProfileUpdateInput) int
+		TenantUpdateSettings                       func(childComplexity int, input *model.TenantSettingsInput) int
+		TenantUpdateSettingsOpportunityStage       func(childComplexity int, input model.TenantSettingsOpportunityStageConfigurationInput) int
+		UserAddRole                                func(childComplexity int, id string, role model.Role) int
+		UserAddRoleInTenant                        func(childComplexity int, id string, tenant string, role model.Role) int
+		UserCreate                                 func(childComplexity int, input model.UserInput) int
+		UserDelete                                 func(childComplexity int, id string) int
+		UserDeleteInTenant                         func(childComplexity int, id string, tenant string) int
+		UserRemoveRole                             func(childComplexity int, id string, role model.Role) int
+		UserRemoveRoleInTenant                     func(childComplexity int, id string, tenant string, role model.Role) int
+		UserUpdate                                 func(childComplexity int, input model.UserUpdateInput) int
+		WorkflowCreate                             func(childComplexity int, input model.WorkflowCreateInput) int
+		WorkflowUpdate                             func(childComplexity int, input model.WorkflowUpdateInput) int
 	}
 
 	Note struct {
@@ -1385,85 +1370,79 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Attachment                                 func(childComplexity int, id string) int
-		BankAccounts                               func(childComplexity int) int
-		BillableInfo                               func(childComplexity int) int
-		Contact                                    func(childComplexity int, id string) int
-		ContactByEmail                             func(childComplexity int, email string) int
-		ContactByPhone                             func(childComplexity int, e164 string) int
-		Contacts                                   func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model1.SortBy) int
-		Contract                                   func(childComplexity int, id string) int
-		Contracts                                  func(childComplexity int, pagination *model.Pagination) int
-		CustomFieldTemplateList                    func(childComplexity int) int
-		DashboardARRBreakdown                      func(childComplexity int, period *model.DashboardPeriodInput) int
-		DashboardCustomerMap                       func(childComplexity int) int
-		DashboardGrossRevenueRetention             func(childComplexity int, period *model.DashboardPeriodInput) int
-		DashboardMRRPerCustomer                    func(childComplexity int, period *model.DashboardPeriodInput) int
-		DashboardNewCustomers                      func(childComplexity int, period *model.DashboardPeriodInput) int
-		DashboardOnboardingCompletion              func(childComplexity int, period *model.DashboardPeriodInput) int
-		DashboardRetentionRate                     func(childComplexity int, period *model.DashboardPeriodInput) int
-		DashboardRevenueAtRisk                     func(childComplexity int, period *model.DashboardPeriodInput) int
-		DashboardTimeToOnboard                     func(childComplexity int, period *model.DashboardPeriodInput) int
-		DashboardViewOrganizations                 func(childComplexity int, pagination model.Pagination, where *model.Filter, sort *model1.SortBy) int
-		DashboardViewRenewals                      func(childComplexity int, pagination model.Pagination, where *model.Filter, sort *model1.SortBy) int
-		Email                                      func(childComplexity int, id string) int
-		ExternalMeetings                           func(childComplexity int, externalSystemID string, externalID *string, pagination *model.Pagination, where *model.Filter, sort []*model1.SortBy) int
-		ExternalSystemInstances                    func(childComplexity int) int
-		Flow                                       func(childComplexity int, id string) int
-		FlowEmailVariables                         func(childComplexity int) int
-		FlowParticipant                            func(childComplexity int, id string) int
-		FlowTestEmailSender                        func(childComplexity int) int
-		Flows                                      func(childComplexity int) int
-		GcliSearch                                 func(childComplexity int, keyword string, limit *int) int
-		GlobalCache                                func(childComplexity int) int
-		InteractionEvent                           func(childComplexity int, id string) int
-		Invoice                                    func(childComplexity int, id string) int
-		InvoiceByNumber                            func(childComplexity int, number string) int
-		Invoices                                   func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model1.SortBy, organizationID *string) int
-		Issue                                      func(childComplexity int, id string) int
-		LogEntry                                   func(childComplexity int, id string) int
-		MailstackCheckUnavailableDomains           func(childComplexity int, domains []string) int
-		MailstackDomainPurchaseSuggestions         func(childComplexity int, domain string) int
-		MailstackDomains                           func(childComplexity int) int
-		MailstackMailboxes                         func(childComplexity int) int
-		MailstackRegisteredBuyDomainsWithMailboxes func(childComplexity int) int
-		MailstackUniqueUsernames                   func(childComplexity int) int
-		Meeting                                    func(childComplexity int, id string) int
-		OpportunitiesLinkedToOrganizations         func(childComplexity int, pagination *model.Pagination) int
-		Opportunity                                func(childComplexity int, id string) int
-		Organization                               func(childComplexity int, id string) int
-		OrganizationByCustomID                     func(childComplexity int, customID string) int
-		OrganizationByCustomerOsID                 func(childComplexity int, customerOsID string) int
-		OrganizationCheckWebsite                   func(childComplexity int, website string) int
-		OrganizationDistinctOwners                 func(childComplexity int) int
-		Organizations                              func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model1.SortBy) int
-		OrganizationsHiddenAfter                   func(childComplexity int, date time.Time) int
-		PhoneNumber                                func(childComplexity int, id string) int
-		Reminder                                   func(childComplexity int, id string) int
-		RemindersForOrganization                   func(childComplexity int, organizationID string, dismissed *bool) int
-		ServiceLineItem                            func(childComplexity int, id string) int
-		SlackChannels                              func(childComplexity int, pagination *model.Pagination) int
-		TableViewDefs                              func(childComplexity int) int
-		Tags                                       func(childComplexity int) int
-		TagsByEntityType                           func(childComplexity int, entityType model.EntityType) int
-		Tenant                                     func(childComplexity int) int
-		TenantBillingProfile                       func(childComplexity int, id string) int
-		TenantBillingProfiles                      func(childComplexity int) int
-		TenantSettings                             func(childComplexity int) int
-		TimelineEvents                             func(childComplexity int, ids []string) int
-		UIOrganization                             func(childComplexity int, ids string) int
-		UIOrganizations                            func(childComplexity int, ids []string) int
-		UIOrganizationsSearch                      func(childComplexity int, limit *int, where *model.Filter, sort *model1.SortBy) int
-		User                                       func(childComplexity int, id string) int
-		UserByEmail                                func(childComplexity int, email string) int
-		Users                                      func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model1.SortBy) int
-		WorkflowByType                             func(childComplexity int, workflowType model.WorkflowType) int
-		Workflows                                  func(childComplexity int) int
-	}
-
-	RegisterBuyDomainWithMailboxes struct {
-		ClientSecret func(childComplexity int) int
-		ID           func(childComplexity int) int
+		Attachment                         func(childComplexity int, id string) int
+		BankAccounts                       func(childComplexity int) int
+		BillableInfo                       func(childComplexity int) int
+		Contact                            func(childComplexity int, id string) int
+		ContactByEmail                     func(childComplexity int, email string) int
+		ContactByPhone                     func(childComplexity int, e164 string) int
+		Contacts                           func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model1.SortBy) int
+		Contract                           func(childComplexity int, id string) int
+		Contracts                          func(childComplexity int, pagination *model.Pagination) int
+		CustomFieldTemplateList            func(childComplexity int) int
+		DashboardARRBreakdown              func(childComplexity int, period *model.DashboardPeriodInput) int
+		DashboardCustomerMap               func(childComplexity int) int
+		DashboardGrossRevenueRetention     func(childComplexity int, period *model.DashboardPeriodInput) int
+		DashboardMRRPerCustomer            func(childComplexity int, period *model.DashboardPeriodInput) int
+		DashboardNewCustomers              func(childComplexity int, period *model.DashboardPeriodInput) int
+		DashboardOnboardingCompletion      func(childComplexity int, period *model.DashboardPeriodInput) int
+		DashboardRetentionRate             func(childComplexity int, period *model.DashboardPeriodInput) int
+		DashboardRevenueAtRisk             func(childComplexity int, period *model.DashboardPeriodInput) int
+		DashboardTimeToOnboard             func(childComplexity int, period *model.DashboardPeriodInput) int
+		DashboardViewOrganizations         func(childComplexity int, pagination model.Pagination, where *model.Filter, sort *model1.SortBy) int
+		DashboardViewRenewals              func(childComplexity int, pagination model.Pagination, where *model.Filter, sort *model1.SortBy) int
+		Email                              func(childComplexity int, id string) int
+		ExternalMeetings                   func(childComplexity int, externalSystemID string, externalID *string, pagination *model.Pagination, where *model.Filter, sort []*model1.SortBy) int
+		ExternalSystemInstances            func(childComplexity int) int
+		Flow                               func(childComplexity int, id string) int
+		FlowEmailVariables                 func(childComplexity int) int
+		FlowParticipant                    func(childComplexity int, id string) int
+		FlowTestEmailSender                func(childComplexity int) int
+		Flows                              func(childComplexity int) int
+		GcliSearch                         func(childComplexity int, keyword string, limit *int) int
+		GlobalCache                        func(childComplexity int) int
+		InteractionEvent                   func(childComplexity int, id string) int
+		Invoice                            func(childComplexity int, id string) int
+		InvoiceByNumber                    func(childComplexity int, number string) int
+		Invoices                           func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model1.SortBy, organizationID *string) int
+		Issue                              func(childComplexity int, id string) int
+		LogEntry                           func(childComplexity int, id string) int
+		MailstackCheckUnavailableDomains   func(childComplexity int, domains []string) int
+		MailstackDomainPurchaseSuggestions func(childComplexity int, domain string) int
+		MailstackDomains                   func(childComplexity int) int
+		MailstackMailboxes                 func(childComplexity int) int
+		MailstackUniqueUsernames           func(childComplexity int) int
+		Meeting                            func(childComplexity int, id string) int
+		OpportunitiesLinkedToOrganizations func(childComplexity int, pagination *model.Pagination) int
+		Opportunity                        func(childComplexity int, id string) int
+		Organization                       func(childComplexity int, id string) int
+		OrganizationByCustomID             func(childComplexity int, customID string) int
+		OrganizationByCustomerOsID         func(childComplexity int, customerOsID string) int
+		OrganizationCheckWebsite           func(childComplexity int, website string) int
+		OrganizationDistinctOwners         func(childComplexity int) int
+		Organizations                      func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model1.SortBy) int
+		OrganizationsHiddenAfter           func(childComplexity int, date time.Time) int
+		PhoneNumber                        func(childComplexity int, id string) int
+		Reminder                           func(childComplexity int, id string) int
+		RemindersForOrganization           func(childComplexity int, organizationID string, dismissed *bool) int
+		ServiceLineItem                    func(childComplexity int, id string) int
+		SlackChannels                      func(childComplexity int, pagination *model.Pagination) int
+		TableViewDefs                      func(childComplexity int) int
+		Tags                               func(childComplexity int) int
+		TagsByEntityType                   func(childComplexity int, entityType model.EntityType) int
+		Tenant                             func(childComplexity int) int
+		TenantBillingProfile               func(childComplexity int, id string) int
+		TenantBillingProfiles              func(childComplexity int) int
+		TenantSettings                     func(childComplexity int) int
+		TimelineEvents                     func(childComplexity int, ids []string) int
+		UIOrganization                     func(childComplexity int, ids string) int
+		UIOrganizations                    func(childComplexity int, ids []string) int
+		UIOrganizationsSearch              func(childComplexity int, limit *int, where *model.Filter, sort *model1.SortBy) int
+		User                               func(childComplexity int, id string) int
+		UserByEmail                        func(childComplexity int, email string) int
+		Users                              func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model1.SortBy) int
+		WorkflowByType                     func(childComplexity int, workflowType model.WorkflowType) int
+		Workflows                          func(childComplexity int) int
 	}
 
 	Reminder struct {
@@ -1903,8 +1882,8 @@ type MutationResolver interface {
 	LogEntryResetTags(ctx context.Context, id string, input []*model.TagIDOrNameInput) (string, error)
 	LogEntryAddTag(ctx context.Context, id string, input model.TagIDOrNameInput) (string, error)
 	LogEntryRemoveTag(ctx context.Context, id string, input model.TagIDOrNameInput) (string, error)
-	MailstackRegisterBuyDomainsWithMailboxes(ctx context.Context, domains []string, usernames []string, amount float64) (*model.RegisterBuyDomainWithMailboxes, error)
-	MailstackRegisteredBuyDomainsWithMailboxesPaid(ctx context.Context, id string) (*model.Result, error)
+	MailstackGetPaymentIntent(ctx context.Context, domains []string, usernames []string, amount float64) (*model.GetPaymentIntent, error)
+	MailstackRegisterBuyDomainsWithMailboxes(ctx context.Context, test bool, paymentIntentID string, domains []string, usernames []string, amount float64) (*model.Result, error)
 	MailstackSetUser(ctx context.Context, mailbox string, userID string) (*model.Result, error)
 	MeetingCreate(ctx context.Context, meeting model.MeetingInput) (*model.Meeting, error)
 	MeetingUpdate(ctx context.Context, meetingID string, meeting model.MeetingUpdateInput) (*model.Meeting, error)
@@ -2084,7 +2063,6 @@ type QueryResolver interface {
 	MailstackCheckUnavailableDomains(ctx context.Context, domains []string) ([]string, error)
 	MailstackUniqueUsernames(ctx context.Context) ([]string, error)
 	MailstackMailboxes(ctx context.Context) ([]*model.Mailbox, error)
-	MailstackRegisteredBuyDomainsWithMailboxes(ctx context.Context) ([]*model.MailstackBuyRequest, error)
 	Meeting(ctx context.Context, id string) (*model.Meeting, error)
 	ExternalMeetings(ctx context.Context, externalSystemID string, externalID *string, pagination *model.Pagination, where *model.Filter, sort []*model1.SortBy) (*model.MeetingsPage, error)
 	Opportunity(ctx context.Context, id string) (*model.Opportunity, error)
@@ -4758,6 +4736,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.GCliItem.Type(childComplexity), true
 
+	case "GetPaymentIntent.clientSecret":
+		if e.complexity.GetPaymentIntent.ClientSecret == nil {
+			break
+		}
+
+		return e.complexity.GetPaymentIntent.ClientSecret(childComplexity), true
+
 	case "GlobalCache.activeEmailTokens":
 		if e.complexity.GlobalCache.ActiveEmailTokens == nil {
 			break
@@ -6305,69 +6290,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mailbox.UserID(childComplexity), true
 
-	case "MailstackBuyRequest.createdAt":
-		if e.complexity.MailstackBuyRequest.CreatedAt == nil {
-			break
-		}
-
-		return e.complexity.MailstackBuyRequest.CreatedAt(childComplexity), true
-
-	case "MailstackBuyRequest.domains":
-		if e.complexity.MailstackBuyRequest.Domains == nil {
-			break
-		}
-
-		return e.complexity.MailstackBuyRequest.Domains(childComplexity), true
-
-	case "MailstackBuyRequest.id":
-		if e.complexity.MailstackBuyRequest.ID == nil {
-			break
-		}
-
-		return e.complexity.MailstackBuyRequest.ID(childComplexity), true
-
-	case "MailstackBuyRequest.mailboxes":
-		if e.complexity.MailstackBuyRequest.Mailboxes == nil {
-			break
-		}
-
-		return e.complexity.MailstackBuyRequest.Mailboxes(childComplexity), true
-
-	case "MailstackBuyRequest.status":
-		if e.complexity.MailstackBuyRequest.Status == nil {
-			break
-		}
-
-		return e.complexity.MailstackBuyRequest.Status(childComplexity), true
-
-	case "MailstackBuyRequestDomain.domain":
-		if e.complexity.MailstackBuyRequestDomain.Domain == nil {
-			break
-		}
-
-		return e.complexity.MailstackBuyRequestDomain.Domain(childComplexity), true
-
-	case "MailstackBuyRequestDomain.status":
-		if e.complexity.MailstackBuyRequestDomain.Status == nil {
-			break
-		}
-
-		return e.complexity.MailstackBuyRequestDomain.Status(childComplexity), true
-
-	case "MailstackBuyRequestMailbox.mailbox":
-		if e.complexity.MailstackBuyRequestMailbox.Mailbox == nil {
-			break
-		}
-
-		return e.complexity.MailstackBuyRequestMailbox.Mailbox(childComplexity), true
-
-	case "MailstackBuyRequestMailbox.status":
-		if e.complexity.MailstackBuyRequestMailbox.Status == nil {
-			break
-		}
-
-		return e.complexity.MailstackBuyRequestMailbox.Status(childComplexity), true
-
 	case "MarkdownEvent.content":
 		if e.complexity.MarkdownEvent.Content == nil {
 			break
@@ -7619,6 +7541,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.LogEntryUpdate(childComplexity, args["id"].(string), args["input"].(model.LogEntryUpdateInput)), true
 
+	case "Mutation.mailstack_GetPaymentIntent":
+		if e.complexity.Mutation.MailstackGetPaymentIntent == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_mailstack_GetPaymentIntent_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.MailstackGetPaymentIntent(childComplexity, args["domains"].([]string), args["usernames"].([]string), args["amount"].(float64)), true
+
 	case "Mutation.mailstack_RegisterBuyDomainsWithMailboxes":
 		if e.complexity.Mutation.MailstackRegisterBuyDomainsWithMailboxes == nil {
 			break
@@ -7629,19 +7563,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.MailstackRegisterBuyDomainsWithMailboxes(childComplexity, args["domains"].([]string), args["usernames"].([]string), args["amount"].(float64)), true
-
-	case "Mutation.mailstack_RegisteredBuyDomainsWithMailboxesPaid":
-		if e.complexity.Mutation.MailstackRegisteredBuyDomainsWithMailboxesPaid == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_mailstack_RegisteredBuyDomainsWithMailboxesPaid_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.MailstackRegisteredBuyDomainsWithMailboxesPaid(childComplexity, args["id"].(string)), true
+		return e.complexity.Mutation.MailstackRegisterBuyDomainsWithMailboxes(childComplexity, args["test"].(bool), args["paymentIntentId"].(string), args["domains"].([]string), args["usernames"].([]string), args["amount"].(float64)), true
 
 	case "Mutation.mailstack_SetUser":
 		if e.complexity.Mutation.MailstackSetUser == nil {
@@ -10501,13 +10423,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.MailstackMailboxes(childComplexity), true
 
-	case "Query.mailstack_RegisteredBuyDomainsWithMailboxes":
-		if e.complexity.Query.MailstackRegisteredBuyDomainsWithMailboxes == nil {
-			break
-		}
-
-		return e.complexity.Query.MailstackRegisteredBuyDomainsWithMailboxes(childComplexity), true
-
 	case "Query.mailstack_UniqueUsernames":
 		if e.complexity.Query.MailstackUniqueUsernames == nil {
 			break
@@ -10851,20 +10766,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Workflows(childComplexity), true
-
-	case "RegisterBuyDomainWithMailboxes.clientSecret":
-		if e.complexity.RegisterBuyDomainWithMailboxes.ClientSecret == nil {
-			break
-		}
-
-		return e.complexity.RegisterBuyDomainWithMailboxes.ClientSecret(childComplexity), true
-
-	case "RegisterBuyDomainWithMailboxes.id":
-		if e.complexity.RegisterBuyDomainWithMailboxes.ID == nil {
-			break
-		}
-
-		return e.complexity.RegisterBuyDomainWithMailboxes.ID(childComplexity), true
 
 	case "Reminder.content":
 		if e.complexity.Reminder.Content == nil {
@@ -14576,13 +14477,11 @@ input LogEntryUpdateInput {
 
     mailstack_UniqueUsernames: [String!]! @hasRole(roles: [ADMIN, USER]) @hasTenant #unique usernames from mailboxes
     mailstack_Mailboxes: [Mailbox!]! @hasRole(roles: [ADMIN, USER]) @hasTenant #mailboxes owned by tenant
-
-    mailstack_RegisteredBuyDomainsWithMailboxes: [MailstackBuyRequest!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 extend type Mutation {
-    mailstack_RegisterBuyDomainsWithMailboxes(domains: [String!]!, usernames: [String!]!, amount: Float!): RegisterBuyDomainWithMailboxes! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    mailstack_RegisteredBuyDomainsWithMailboxesPaid(id: String!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    mailstack_GetPaymentIntent(domains: [String!]!, usernames: [String!]!, amount: Float!): GetPaymentIntent! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    mailstack_RegisterBuyDomainsWithMailboxes(test: Boolean!, paymentIntentId: String!, domains: [String!]!, usernames: [String!]!, amount: Float!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
     mailstack_SetUser(mailbox: String!, userId: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
@@ -14600,46 +14499,8 @@ type Mailbox {
     currentFlowIds:     [ID!]
 }
 
-type RegisterBuyDomainWithMailboxes {
-    id: String!
+type GetPaymentIntent {
     clientSecret:       String!
-}
-
-type MailstackBuyRequest {
-    id: String!
-    domains:            [MailstackBuyRequestDomain!]!
-    mailboxes:          [MailstackBuyRequestMailbox!]!
-    createdAt:          Time!
-    status:             MailstackBuyRequestStatus!
-}
-
-enum MailstackBuyRequestStatus {
-    AWAITING_PAYMENT,
-    PENDING,
-    COMPLETED,
-    FAILED
-}
-
-type MailstackBuyRequestDomain {
-    domain:             String!
-    status:             MailstackBuyRequestDomainStatus!
-}
-
-type MailstackBuyRequestMailbox {
-    mailbox:            String!
-    status:             MailstackBuyRequestMailboxStatus!
-}
-
-enum MailstackBuyRequestDomainStatus {
-    PENDING,
-    COMPLETED,
-    FAILED
-}
-
-enum MailstackBuyRequestMailboxStatus {
-    PENDING,
-    COMPLETED,
-    FAILED
 }`, BuiltIn: false},
 	{Name: "../schemas/markdown_event.graphqls", Input: `type MarkdownEvent {
     metadata: Metadata!
@@ -20946,26 +20807,166 @@ func (ec *executionContext) field_Mutation_logEntry_Update_argsInput(
 	return zeroVal, nil
 }
 
-func (ec *executionContext) field_Mutation_mailstack_RegisterBuyDomainsWithMailboxes_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_mailstack_GetPaymentIntent_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	arg0, err := ec.field_Mutation_mailstack_RegisterBuyDomainsWithMailboxes_argsDomains(ctx, rawArgs)
+	arg0, err := ec.field_Mutation_mailstack_GetPaymentIntent_argsDomains(ctx, rawArgs)
 	if err != nil {
 		return nil, err
 	}
 	args["domains"] = arg0
-	arg1, err := ec.field_Mutation_mailstack_RegisterBuyDomainsWithMailboxes_argsUsernames(ctx, rawArgs)
+	arg1, err := ec.field_Mutation_mailstack_GetPaymentIntent_argsUsernames(ctx, rawArgs)
 	if err != nil {
 		return nil, err
 	}
 	args["usernames"] = arg1
-	arg2, err := ec.field_Mutation_mailstack_RegisterBuyDomainsWithMailboxes_argsAmount(ctx, rawArgs)
+	arg2, err := ec.field_Mutation_mailstack_GetPaymentIntent_argsAmount(ctx, rawArgs)
 	if err != nil {
 		return nil, err
 	}
 	args["amount"] = arg2
 	return args, nil
 }
+func (ec *executionContext) field_Mutation_mailstack_GetPaymentIntent_argsDomains(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) ([]string, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["domains"]
+	if !ok {
+		var zeroVal []string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("domains"))
+	if tmp, ok := rawArgs["domains"]; ok {
+		return ec.unmarshalNString2ᚕstringᚄ(ctx, tmp)
+	}
+
+	var zeroVal []string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_mailstack_GetPaymentIntent_argsUsernames(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) ([]string, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["usernames"]
+	if !ok {
+		var zeroVal []string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("usernames"))
+	if tmp, ok := rawArgs["usernames"]; ok {
+		return ec.unmarshalNString2ᚕstringᚄ(ctx, tmp)
+	}
+
+	var zeroVal []string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_mailstack_GetPaymentIntent_argsAmount(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (float64, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["amount"]
+	if !ok {
+		var zeroVal float64
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("amount"))
+	if tmp, ok := rawArgs["amount"]; ok {
+		return ec.unmarshalNFloat2float64(ctx, tmp)
+	}
+
+	var zeroVal float64
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_mailstack_RegisterBuyDomainsWithMailboxes_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	arg0, err := ec.field_Mutation_mailstack_RegisterBuyDomainsWithMailboxes_argsTest(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["test"] = arg0
+	arg1, err := ec.field_Mutation_mailstack_RegisterBuyDomainsWithMailboxes_argsPaymentIntentID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["paymentIntentId"] = arg1
+	arg2, err := ec.field_Mutation_mailstack_RegisterBuyDomainsWithMailboxes_argsDomains(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["domains"] = arg2
+	arg3, err := ec.field_Mutation_mailstack_RegisterBuyDomainsWithMailboxes_argsUsernames(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["usernames"] = arg3
+	arg4, err := ec.field_Mutation_mailstack_RegisterBuyDomainsWithMailboxes_argsAmount(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["amount"] = arg4
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_mailstack_RegisterBuyDomainsWithMailboxes_argsTest(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (bool, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["test"]
+	if !ok {
+		var zeroVal bool
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("test"))
+	if tmp, ok := rawArgs["test"]; ok {
+		return ec.unmarshalNBoolean2bool(ctx, tmp)
+	}
+
+	var zeroVal bool
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_mailstack_RegisterBuyDomainsWithMailboxes_argsPaymentIntentID(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (string, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["paymentIntentId"]
+	if !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("paymentIntentId"))
+	if tmp, ok := rawArgs["paymentIntentId"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
 func (ec *executionContext) field_Mutation_mailstack_RegisterBuyDomainsWithMailboxes_argsDomains(
 	ctx context.Context,
 	rawArgs map[string]interface{},
@@ -21029,38 +21030,6 @@ func (ec *executionContext) field_Mutation_mailstack_RegisterBuyDomainsWithMailb
 	}
 
 	var zeroVal float64
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Mutation_mailstack_RegisteredBuyDomainsWithMailboxesPaid_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	arg0, err := ec.field_Mutation_mailstack_RegisteredBuyDomainsWithMailboxesPaid_argsID(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["id"] = arg0
-	return args, nil
-}
-func (ec *executionContext) field_Mutation_mailstack_RegisteredBuyDomainsWithMailboxesPaid_argsID(
-	ctx context.Context,
-	rawArgs map[string]interface{},
-) (string, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["id"]
-	if !ok {
-		var zeroVal string
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-	if tmp, ok := rawArgs["id"]; ok {
-		return ec.unmarshalNString2string(ctx, tmp)
-	}
-
-	var zeroVal string
 	return zeroVal, nil
 }
 
@@ -45077,6 +45046,50 @@ func (ec *executionContext) fieldContext_GCliItem_data(_ context.Context, field 
 	return fc, nil
 }
 
+func (ec *executionContext) _GetPaymentIntent_clientSecret(ctx context.Context, field graphql.CollectedField, obj *model.GetPaymentIntent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_GetPaymentIntent_clientSecret(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ClientSecret, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_GetPaymentIntent_clientSecret(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "GetPaymentIntent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _GlobalCache_user(ctx context.Context, field graphql.CollectedField, obj *model.GlobalCache) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_GlobalCache_user(ctx, field)
 	if err != nil {
@@ -55926,414 +55939,6 @@ func (ec *executionContext) fieldContext_Mailbox_currentFlowIds(_ context.Contex
 	return fc, nil
 }
 
-func (ec *executionContext) _MailstackBuyRequest_id(ctx context.Context, field graphql.CollectedField, obj *model.MailstackBuyRequest) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_MailstackBuyRequest_id(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_MailstackBuyRequest_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "MailstackBuyRequest",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _MailstackBuyRequest_domains(ctx context.Context, field graphql.CollectedField, obj *model.MailstackBuyRequest) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_MailstackBuyRequest_domains(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Domains, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*model.MailstackBuyRequestDomain)
-	fc.Result = res
-	return ec.marshalNMailstackBuyRequestDomain2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMailstackBuyRequestDomainᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_MailstackBuyRequest_domains(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "MailstackBuyRequest",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "domain":
-				return ec.fieldContext_MailstackBuyRequestDomain_domain(ctx, field)
-			case "status":
-				return ec.fieldContext_MailstackBuyRequestDomain_status(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type MailstackBuyRequestDomain", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _MailstackBuyRequest_mailboxes(ctx context.Context, field graphql.CollectedField, obj *model.MailstackBuyRequest) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_MailstackBuyRequest_mailboxes(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Mailboxes, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*model.MailstackBuyRequestMailbox)
-	fc.Result = res
-	return ec.marshalNMailstackBuyRequestMailbox2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMailstackBuyRequestMailboxᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_MailstackBuyRequest_mailboxes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "MailstackBuyRequest",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "mailbox":
-				return ec.fieldContext_MailstackBuyRequestMailbox_mailbox(ctx, field)
-			case "status":
-				return ec.fieldContext_MailstackBuyRequestMailbox_status(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type MailstackBuyRequestMailbox", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _MailstackBuyRequest_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.MailstackBuyRequest) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_MailstackBuyRequest_createdAt(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.CreatedAt, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(time.Time)
-	fc.Result = res
-	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_MailstackBuyRequest_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "MailstackBuyRequest",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Time does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _MailstackBuyRequest_status(ctx context.Context, field graphql.CollectedField, obj *model.MailstackBuyRequest) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_MailstackBuyRequest_status(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Status, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(entity1.MailstackBuyRequestStatus)
-	fc.Result = res
-	return ec.marshalNMailstackBuyRequestStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑpostgresᚑrepositoryᚋentityᚐMailstackBuyRequestStatus(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_MailstackBuyRequest_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "MailstackBuyRequest",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type MailstackBuyRequestStatus does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _MailstackBuyRequestDomain_domain(ctx context.Context, field graphql.CollectedField, obj *model.MailstackBuyRequestDomain) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_MailstackBuyRequestDomain_domain(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Domain, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_MailstackBuyRequestDomain_domain(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "MailstackBuyRequestDomain",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _MailstackBuyRequestDomain_status(ctx context.Context, field graphql.CollectedField, obj *model.MailstackBuyRequestDomain) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_MailstackBuyRequestDomain_status(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Status, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(entity1.MailstackBuyRequestDomainStatus)
-	fc.Result = res
-	return ec.marshalNMailstackBuyRequestDomainStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑpostgresᚑrepositoryᚋentityᚐMailstackBuyRequestDomainStatus(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_MailstackBuyRequestDomain_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "MailstackBuyRequestDomain",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type MailstackBuyRequestDomainStatus does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _MailstackBuyRequestMailbox_mailbox(ctx context.Context, field graphql.CollectedField, obj *model.MailstackBuyRequestMailbox) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_MailstackBuyRequestMailbox_mailbox(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Mailbox, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_MailstackBuyRequestMailbox_mailbox(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "MailstackBuyRequestMailbox",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _MailstackBuyRequestMailbox_status(ctx context.Context, field graphql.CollectedField, obj *model.MailstackBuyRequestMailbox) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_MailstackBuyRequestMailbox_status(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Status, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(entity1.MailstackBuyRequestMailboxStatus)
-	fc.Result = res
-	return ec.marshalNMailstackBuyRequestMailboxStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑpostgresᚑrepositoryᚋentityᚐMailstackBuyRequestMailboxStatus(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_MailstackBuyRequestMailbox_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "MailstackBuyRequestMailbox",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type MailstackBuyRequestMailboxStatus does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _MarkdownEvent_metadata(ctx context.Context, field graphql.CollectedField, obj *model.MarkdownEvent) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_MarkdownEvent_metadata(ctx, field)
 	if err != nil {
@@ -66237,6 +65842,99 @@ func (ec *executionContext) fieldContext_Mutation_logEntry_RemoveTag(ctx context
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_mailstack_GetPaymentIntent(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_mailstack_GetPaymentIntent(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().MailstackGetPaymentIntent(rctx, fc.Args["domains"].([]string), fc.Args["usernames"].([]string), fc.Args["amount"].(float64))
+		}
+
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				var zeroVal *model.GetPaymentIntent
+				return zeroVal, err
+			}
+			if ec.directives.HasRole == nil {
+				var zeroVal *model.GetPaymentIntent
+				return zeroVal, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				var zeroVal *model.GetPaymentIntent
+				return zeroVal, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.GetPaymentIntent); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.GetPaymentIntent`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.GetPaymentIntent)
+	fc.Result = res
+	return ec.marshalNGetPaymentIntent2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐGetPaymentIntent(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_mailstack_GetPaymentIntent(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "clientSecret":
+				return ec.fieldContext_GetPaymentIntent_clientSecret(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type GetPaymentIntent", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_mailstack_GetPaymentIntent_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_mailstack_RegisterBuyDomainsWithMailboxes(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_mailstack_RegisterBuyDomainsWithMailboxes(ctx, field)
 	if err != nil {
@@ -66252,102 +65950,7 @@ func (ec *executionContext) _Mutation_mailstack_RegisterBuyDomainsWithMailboxes(
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().MailstackRegisterBuyDomainsWithMailboxes(rctx, fc.Args["domains"].([]string), fc.Args["usernames"].([]string), fc.Args["amount"].(float64))
-		}
-
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
-			if err != nil {
-				var zeroVal *model.RegisterBuyDomainWithMailboxes
-				return zeroVal, err
-			}
-			if ec.directives.HasRole == nil {
-				var zeroVal *model.RegisterBuyDomainWithMailboxes
-				return zeroVal, errors.New("directive hasRole is not implemented")
-			}
-			return ec.directives.HasRole(ctx, nil, directive0, roles)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.HasTenant == nil {
-				var zeroVal *model.RegisterBuyDomainWithMailboxes
-				return zeroVal, errors.New("directive hasTenant is not implemented")
-			}
-			return ec.directives.HasTenant(ctx, nil, directive1)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.RegisterBuyDomainWithMailboxes); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.RegisterBuyDomainWithMailboxes`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.RegisterBuyDomainWithMailboxes)
-	fc.Result = res
-	return ec.marshalNRegisterBuyDomainWithMailboxes2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRegisterBuyDomainWithMailboxes(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_mailstack_RegisterBuyDomainsWithMailboxes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_RegisterBuyDomainWithMailboxes_id(ctx, field)
-			case "clientSecret":
-				return ec.fieldContext_RegisterBuyDomainWithMailboxes_clientSecret(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type RegisterBuyDomainWithMailboxes", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_mailstack_RegisterBuyDomainsWithMailboxes_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_mailstack_RegisteredBuyDomainsWithMailboxesPaid(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_mailstack_RegisteredBuyDomainsWithMailboxesPaid(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().MailstackRegisteredBuyDomainsWithMailboxesPaid(rctx, fc.Args["id"].(string))
+			return ec.resolvers.Mutation().MailstackRegisterBuyDomainsWithMailboxes(rctx, fc.Args["test"].(bool), fc.Args["paymentIntentId"].(string), fc.Args["domains"].([]string), fc.Args["usernames"].([]string), fc.Args["amount"].(float64))
 		}
 
 		directive1 := func(ctx context.Context) (interface{}, error) {
@@ -66397,7 +66000,7 @@ func (ec *executionContext) _Mutation_mailstack_RegisteredBuyDomainsWithMailboxe
 	return ec.marshalNResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐResult(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_mailstack_RegisteredBuyDomainsWithMailboxesPaid(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_mailstack_RegisterBuyDomainsWithMailboxes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -66418,7 +66021,7 @@ func (ec *executionContext) fieldContext_Mutation_mailstack_RegisteredBuyDomains
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_mailstack_RegisteredBuyDomainsWithMailboxesPaid_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_mailstack_RegisterBuyDomainsWithMailboxes_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -90749,96 +90352,6 @@ func (ec *executionContext) fieldContext_Query_mailstack_Mailboxes(_ context.Con
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_mailstack_RegisteredBuyDomainsWithMailboxes(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_mailstack_RegisteredBuyDomainsWithMailboxes(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().MailstackRegisteredBuyDomainsWithMailboxes(rctx)
-		}
-
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
-			if err != nil {
-				var zeroVal []*model.MailstackBuyRequest
-				return zeroVal, err
-			}
-			if ec.directives.HasRole == nil {
-				var zeroVal []*model.MailstackBuyRequest
-				return zeroVal, errors.New("directive hasRole is not implemented")
-			}
-			return ec.directives.HasRole(ctx, nil, directive0, roles)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.HasTenant == nil {
-				var zeroVal []*model.MailstackBuyRequest
-				return zeroVal, errors.New("directive hasTenant is not implemented")
-			}
-			return ec.directives.HasTenant(ctx, nil, directive1)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.([]*model.MailstackBuyRequest); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.MailstackBuyRequest`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*model.MailstackBuyRequest)
-	fc.Result = res
-	return ec.marshalNMailstackBuyRequest2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMailstackBuyRequestᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Query_mailstack_RegisteredBuyDomainsWithMailboxes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_MailstackBuyRequest_id(ctx, field)
-			case "domains":
-				return ec.fieldContext_MailstackBuyRequest_domains(ctx, field)
-			case "mailboxes":
-				return ec.fieldContext_MailstackBuyRequest_mailboxes(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_MailstackBuyRequest_createdAt(ctx, field)
-			case "status":
-				return ec.fieldContext_MailstackBuyRequest_status(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type MailstackBuyRequest", field.Name)
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Query_meeting(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_meeting(ctx, field)
 	if err != nil {
@@ -94856,94 +94369,6 @@ func (ec *executionContext) fieldContext_Query___schema(_ context.Context, field
 				return ec.fieldContext___Schema_directives(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type __Schema", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _RegisterBuyDomainWithMailboxes_id(ctx context.Context, field graphql.CollectedField, obj *model.RegisterBuyDomainWithMailboxes) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_RegisterBuyDomainWithMailboxes_id(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_RegisterBuyDomainWithMailboxes_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "RegisterBuyDomainWithMailboxes",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _RegisterBuyDomainWithMailboxes_clientSecret(ctx context.Context, field graphql.CollectedField, obj *model.RegisterBuyDomainWithMailboxes) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_RegisterBuyDomainWithMailboxes_clientSecret(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ClientSecret, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_RegisterBuyDomainWithMailboxes_clientSecret(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "RegisterBuyDomainWithMailboxes",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -116518,6 +115943,45 @@ func (ec *executionContext) _GCliItem(ctx context.Context, sel ast.SelectionSet,
 	return out
 }
 
+var getPaymentIntentImplementors = []string{"GetPaymentIntent"}
+
+func (ec *executionContext) _GetPaymentIntent(ctx context.Context, sel ast.SelectionSet, obj *model.GetPaymentIntent) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, getPaymentIntentImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("GetPaymentIntent")
+		case "clientSecret":
+			out.Values[i] = ec._GetPaymentIntent_clientSecret(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var globalCacheImplementors = []string{"GlobalCache"}
 
 func (ec *executionContext) _GlobalCache(ctx context.Context, sel ast.SelectionSet, obj *model.GlobalCache) graphql.Marshaler {
@@ -118984,153 +118448,6 @@ func (ec *executionContext) _Mailbox(ctx context.Context, sel ast.SelectionSet, 
 	return out
 }
 
-var mailstackBuyRequestImplementors = []string{"MailstackBuyRequest"}
-
-func (ec *executionContext) _MailstackBuyRequest(ctx context.Context, sel ast.SelectionSet, obj *model.MailstackBuyRequest) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, mailstackBuyRequestImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	deferred := make(map[string]*graphql.FieldSet)
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("MailstackBuyRequest")
-		case "id":
-			out.Values[i] = ec._MailstackBuyRequest_id(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "domains":
-			out.Values[i] = ec._MailstackBuyRequest_domains(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "mailboxes":
-			out.Values[i] = ec._MailstackBuyRequest_mailboxes(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "createdAt":
-			out.Values[i] = ec._MailstackBuyRequest_createdAt(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "status":
-			out.Values[i] = ec._MailstackBuyRequest_status(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch(ctx)
-	if out.Invalids > 0 {
-		return graphql.Null
-	}
-
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
-
-	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
-			Label:    label,
-			Path:     graphql.GetPath(ctx),
-			FieldSet: dfs,
-			Context:  ctx,
-		})
-	}
-
-	return out
-}
-
-var mailstackBuyRequestDomainImplementors = []string{"MailstackBuyRequestDomain"}
-
-func (ec *executionContext) _MailstackBuyRequestDomain(ctx context.Context, sel ast.SelectionSet, obj *model.MailstackBuyRequestDomain) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, mailstackBuyRequestDomainImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	deferred := make(map[string]*graphql.FieldSet)
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("MailstackBuyRequestDomain")
-		case "domain":
-			out.Values[i] = ec._MailstackBuyRequestDomain_domain(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "status":
-			out.Values[i] = ec._MailstackBuyRequestDomain_status(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch(ctx)
-	if out.Invalids > 0 {
-		return graphql.Null
-	}
-
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
-
-	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
-			Label:    label,
-			Path:     graphql.GetPath(ctx),
-			FieldSet: dfs,
-			Context:  ctx,
-		})
-	}
-
-	return out
-}
-
-var mailstackBuyRequestMailboxImplementors = []string{"MailstackBuyRequestMailbox"}
-
-func (ec *executionContext) _MailstackBuyRequestMailbox(ctx context.Context, sel ast.SelectionSet, obj *model.MailstackBuyRequestMailbox) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, mailstackBuyRequestMailboxImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	deferred := make(map[string]*graphql.FieldSet)
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("MailstackBuyRequestMailbox")
-		case "mailbox":
-			out.Values[i] = ec._MailstackBuyRequestMailbox_mailbox(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "status":
-			out.Values[i] = ec._MailstackBuyRequestMailbox_status(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch(ctx)
-	if out.Invalids > 0 {
-		return graphql.Null
-	}
-
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
-
-	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
-			Label:    label,
-			Path:     graphql.GetPath(ctx),
-			FieldSet: dfs,
-			Context:  ctx,
-		})
-	}
-
-	return out
-}
-
 var markdownEventImplementors = []string{"MarkdownEvent", "TimelineEvent"}
 
 func (ec *executionContext) _MarkdownEvent(ctx context.Context, sel ast.SelectionSet, obj *model.MarkdownEvent) graphql.Marshaler {
@@ -120185,16 +119502,16 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "mailstack_RegisterBuyDomainsWithMailboxes":
+		case "mailstack_GetPaymentIntent":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_mailstack_RegisterBuyDomainsWithMailboxes(ctx, field)
+				return ec._Mutation_mailstack_GetPaymentIntent(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "mailstack_RegisteredBuyDomainsWithMailboxesPaid":
+		case "mailstack_RegisterBuyDomainsWithMailboxes":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_mailstack_RegisteredBuyDomainsWithMailboxesPaid(ctx, field)
+				return ec._Mutation_mailstack_RegisterBuyDomainsWithMailboxes(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -123966,28 +123283,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "mailstack_RegisteredBuyDomainsWithMailboxes":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_mailstack_RegisteredBuyDomainsWithMailboxes(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
-				return res
-			}
-
-			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx,
-					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "meeting":
 			field := field
 
@@ -124732,50 +124027,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Query___schema(ctx, field)
 			})
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch(ctx)
-	if out.Invalids > 0 {
-		return graphql.Null
-	}
-
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
-
-	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
-			Label:    label,
-			Path:     graphql.GetPath(ctx),
-			FieldSet: dfs,
-			Context:  ctx,
-		})
-	}
-
-	return out
-}
-
-var registerBuyDomainWithMailboxesImplementors = []string{"RegisterBuyDomainWithMailboxes"}
-
-func (ec *executionContext) _RegisterBuyDomainWithMailboxes(ctx context.Context, sel ast.SelectionSet, obj *model.RegisterBuyDomainWithMailboxes) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, registerBuyDomainWithMailboxesImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	deferred := make(map[string]*graphql.FieldSet)
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("RegisterBuyDomainWithMailboxes")
-		case "id":
-			out.Values[i] = ec._RegisterBuyDomainWithMailboxes_id(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "clientSecret":
-			out.Values[i] = ec._RegisterBuyDomainWithMailboxes_clientSecret(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -128967,6 +128218,20 @@ func (ec *executionContext) marshalNGCliSearchResultType2githubᚗcomᚋopenline
 	return v
 }
 
+func (ec *executionContext) marshalNGetPaymentIntent2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐGetPaymentIntent(ctx context.Context, sel ast.SelectionSet, v model.GetPaymentIntent) graphql.Marshaler {
+	return ec._GetPaymentIntent(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNGetPaymentIntent2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐGetPaymentIntent(ctx context.Context, sel ast.SelectionSet, v *model.GetPaymentIntent) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._GetPaymentIntent(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNGlobalCache2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐGlobalCache(ctx context.Context, sel ast.SelectionSet, v model.GlobalCache) graphql.Marshaler {
 	return ec._GlobalCache(ctx, sel, &v)
 }
@@ -129979,216 +129244,6 @@ func (ec *executionContext) marshalNMailbox2ᚖgithubᚗcomᚋopenlineᚑaiᚋop
 	return ec._Mailbox(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNMailstackBuyRequest2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMailstackBuyRequestᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.MailstackBuyRequest) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNMailstackBuyRequest2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMailstackBuyRequest(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
-}
-
-func (ec *executionContext) marshalNMailstackBuyRequest2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMailstackBuyRequest(ctx context.Context, sel ast.SelectionSet, v *model.MailstackBuyRequest) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._MailstackBuyRequest(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalNMailstackBuyRequestDomain2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMailstackBuyRequestDomainᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.MailstackBuyRequestDomain) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNMailstackBuyRequestDomain2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMailstackBuyRequestDomain(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
-}
-
-func (ec *executionContext) marshalNMailstackBuyRequestDomain2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMailstackBuyRequestDomain(ctx context.Context, sel ast.SelectionSet, v *model.MailstackBuyRequestDomain) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._MailstackBuyRequestDomain(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalNMailstackBuyRequestDomainStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑpostgresᚑrepositoryᚋentityᚐMailstackBuyRequestDomainStatus(ctx context.Context, v interface{}) (entity1.MailstackBuyRequestDomainStatus, error) {
-	tmp, err := graphql.UnmarshalString(v)
-	res := entity1.MailstackBuyRequestDomainStatus(tmp)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNMailstackBuyRequestDomainStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑpostgresᚑrepositoryᚋentityᚐMailstackBuyRequestDomainStatus(ctx context.Context, sel ast.SelectionSet, v entity1.MailstackBuyRequestDomainStatus) graphql.Marshaler {
-	res := graphql.MarshalString(string(v))
-	if res == graphql.Null {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-	}
-	return res
-}
-
-func (ec *executionContext) marshalNMailstackBuyRequestMailbox2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMailstackBuyRequestMailboxᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.MailstackBuyRequestMailbox) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNMailstackBuyRequestMailbox2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMailstackBuyRequestMailbox(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
-}
-
-func (ec *executionContext) marshalNMailstackBuyRequestMailbox2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMailstackBuyRequestMailbox(ctx context.Context, sel ast.SelectionSet, v *model.MailstackBuyRequestMailbox) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._MailstackBuyRequestMailbox(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalNMailstackBuyRequestMailboxStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑpostgresᚑrepositoryᚋentityᚐMailstackBuyRequestMailboxStatus(ctx context.Context, v interface{}) (entity1.MailstackBuyRequestMailboxStatus, error) {
-	tmp, err := graphql.UnmarshalString(v)
-	res := entity1.MailstackBuyRequestMailboxStatus(tmp)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNMailstackBuyRequestMailboxStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑpostgresᚑrepositoryᚋentityᚐMailstackBuyRequestMailboxStatus(ctx context.Context, sel ast.SelectionSet, v entity1.MailstackBuyRequestMailboxStatus) graphql.Marshaler {
-	res := graphql.MarshalString(string(v))
-	if res == graphql.Null {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-	}
-	return res
-}
-
-func (ec *executionContext) unmarshalNMailstackBuyRequestStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑpostgresᚑrepositoryᚋentityᚐMailstackBuyRequestStatus(ctx context.Context, v interface{}) (entity1.MailstackBuyRequestStatus, error) {
-	tmp, err := graphql.UnmarshalString(v)
-	res := entity1.MailstackBuyRequestStatus(tmp)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNMailstackBuyRequestStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑpostgresᚑrepositoryᚋentityᚐMailstackBuyRequestStatus(ctx context.Context, sel ast.SelectionSet, v entity1.MailstackBuyRequestStatus) graphql.Marshaler {
-	res := graphql.MarshalString(string(v))
-	if res == graphql.Null {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-	}
-	return res
-}
-
 func (ec *executionContext) marshalNMeeting2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeeting(ctx context.Context, sel ast.SelectionSet, v model.Meeting) graphql.Marshaler {
 	return ec._Meeting(ctx, sel, &v)
 }
@@ -130765,20 +129820,6 @@ func (ec *executionContext) unmarshalNPhoneNumberRelationUpdateInput2githubᚗco
 func (ec *executionContext) unmarshalNPhoneNumberUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPhoneNumberUpdateInput(ctx context.Context, v interface{}) (model.PhoneNumberUpdateInput, error) {
 	res, err := ec.unmarshalInputPhoneNumberUpdateInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNRegisterBuyDomainWithMailboxes2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRegisterBuyDomainWithMailboxes(ctx context.Context, sel ast.SelectionSet, v model.RegisterBuyDomainWithMailboxes) graphql.Marshaler {
-	return ec._RegisterBuyDomainWithMailboxes(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNRegisterBuyDomainWithMailboxes2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRegisterBuyDomainWithMailboxes(ctx context.Context, sel ast.SelectionSet, v *model.RegisterBuyDomainWithMailboxes) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._RegisterBuyDomainWithMailboxes(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNReminder2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐReminder(ctx context.Context, sel ast.SelectionSet, v model.Reminder) graphql.Marshaler {

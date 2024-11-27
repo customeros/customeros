@@ -374,10 +374,10 @@ func (s *opportunityService) CloseWon(ctx context.Context, txWithPostCommit *uti
 			if organizationDbNode != nil {
 				organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
 				// Make organization customer if it's not already
-				if organizationEntity.Relationship != neo4jenum.Customer && organizationEntity.Stage != neo4jenum.Trial {
+				if organizationEntity.Relationship != neo4jenum.OrganizationRelationshipCustomer && organizationEntity.Stage != neo4jenum.Trial {
 					_, err := s.services.OrganizationService.Save(ctx, txWithPostCommit, &organizationEntity.ID, data_fields.OrganizationFields{
-						Relationship: utils.ToPtr(neo4jenum.Customer),
-						Stage:        utils.ToPtr(neo4jenum.Customer.DefaultStage()),
+						Relationship: utils.ToPtr(neo4jenum.OrganizationRelationshipCustomer),
+						Stage:        utils.ToPtr(neo4jenum.OrganizationRelationshipCustomer.DefaultStage()),
 					})
 					if err != nil {
 						tracing.TraceErr(span, err)

@@ -169,9 +169,9 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 				externalId = *filter.Filter.Value.Str
 			} else if filter.Filter.Property == SearchSortParamIsCustomer && filter.Filter.Value.ArrayBool != nil && len(*filter.Filter.Value.ArrayBool) >= 1 {
 				if (*filter.Filter.Value.ArrayBool)[0] {
-					organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilterEq("relationship", neo4jenum.Customer.String()))
+					organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilterEq("relationship", neo4jenum.OrganizationRelationshipCustomer.String()))
 				} else {
-					organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilterNotEq("relationship", neo4jenum.Customer.String()))
+					organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilterNotEq("relationship", neo4jenum.OrganizationRelationshipCustomer.String()))
 				}
 			} else if filter.Filter.Property == SearchSortParamRenewalLikelihood && filter.Filter.Value.ArrayStr != nil && len(*filter.Filter.Value.ArrayStr) >= 1 {
 				renewalLikelihoodValues := make([]string, 0)
@@ -600,9 +600,9 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 				ownerIncludeEmpty = *filter.Filter.IncludeEmpty
 			} else if filter.Filter.Property == SearchSortParamIsCustomer && filter.Filter.Value.ArrayBool != nil && len(*filter.Filter.Value.ArrayBool) >= 1 {
 				if (*filter.Filter.Value.ArrayBool)[0] {
-					organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilterEq("relationship", neo4jenum.Customer.String()))
+					organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilterEq("relationship", neo4jenum.OrganizationRelationshipCustomer.String()))
 				} else {
-					organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilterNotEq("relationship", neo4jenum.Customer.String()))
+					organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilterNotEq("relationship", neo4jenum.OrganizationRelationshipCustomer.String()))
 				}
 			} else if filter.Filter.Property == SearchSortParamRenewalLikelihood && filter.Filter.Value.ArrayStr != nil && len(*filter.Filter.Value.ArrayStr) >= 1 {
 				renewalLikelihoodValues := make([]string, 0)
@@ -978,7 +978,7 @@ func (r *dashboardRepository) GetDashboardNewCustomersData(ctx context.Context, 
 				"tenant":               tenant,
 				"startDate":            startDate,
 				"endDate":              endDate,
-				"customerRelationship": neo4jenum.Customer,
+				"customerRelationship": neo4jenum.OrganizationRelationshipCustomer,
 			})
 		if err != nil {
 			return nil, err
@@ -1092,7 +1092,7 @@ func (r *dashboardRepository) GetDashboardCustomerMapData(ctx context.Context, t
 				"likelihoodMedium":               neo4jenum.RenewalLikelihoodMedium.String(),
 				"likelihoodLow":                  neo4jenum.RenewalLikelihoodLow.String(),
 				"likelihoodZero":                 neo4jenum.RenewalLikelihoodZero.String(),
-				"customerRelationship":           neo4jenum.Customer.String(),
+				"customerRelationship":           neo4jenum.OrganizationRelationshipCustomer.String(),
 			})
 		if err != nil {
 			return nil, err
@@ -1152,7 +1152,7 @@ func (r *dashboardRepository) GetDashboardRevenueAtRiskData(ctx context.Context,
 				"tenant":               tenant,
 				"startDate":            startDate,
 				"endDate":              endDate,
-				"customerRelationship": neo4jenum.Customer.String(),
+				"customerRelationship": neo4jenum.OrganizationRelationshipCustomer.String(),
 			})
 		if err != nil {
 			return nil, err
@@ -1223,7 +1223,7 @@ func (r *dashboardRepository) GetDashboardMRRPerCustomerData(ctx context.Context
 				"tenant":               tenant,
 				"startDate":            startDate,
 				"endDate":              endDate,
-				"customerRelationship": neo4jenum.Customer.String(),
+				"customerRelationship": neo4jenum.OrganizationRelationshipCustomer.String(),
 			})
 		if err != nil {
 			return nil, err
@@ -1361,7 +1361,7 @@ func (r *dashboardRepository) GetDashboardARRBreakdownData(ctx context.Context, 
 				"tenant":               tenant,
 				"startDate":            startDate,
 				"endDate":              endDate,
-				"customerRelationship": neo4jenum.Customer.String(),
+				"customerRelationship": neo4jenum.OrganizationRelationshipCustomer.String(),
 			})
 		if err != nil {
 			return nil, err
@@ -1476,7 +1476,7 @@ func (r *dashboardRepository) GetDashboardARRBreakdownUpsellsAndDowngradesData(c
 				"tenant":               tenant,
 				"startDate":            startDate,
 				"endDate":              endDate,
-				"customerRelationship": neo4jenum.Customer.String(),
+				"customerRelationship": neo4jenum.OrganizationRelationshipCustomer.String(),
 			})
 		if err != nil {
 			return nil, err
@@ -1596,7 +1596,7 @@ func (r *dashboardRepository) GetDashboardARRBreakdownRenewalsData(ctx context.C
 				"tenant":               tenant,
 				"startDate":            startDate,
 				"endDate":              endDate,
-				"customerRelationship": neo4jenum.Customer.String(),
+				"customerRelationship": neo4jenum.OrganizationRelationshipCustomer.String(),
 			})
 		if err != nil {
 			return nil, err
@@ -1674,7 +1674,7 @@ func (r *dashboardRepository) GetDashboardARRBreakdownValueData(ctx context.Cont
 			map[string]any{
 				"tenant":               tenant,
 				"date":                 date,
-				"customerRelationship": neo4jenum.Customer.String(),
+				"customerRelationship": neo4jenum.OrganizationRelationshipCustomer.String(),
 			})
 		if err != nil {
 			return nil, err
@@ -1761,7 +1761,7 @@ func (r *dashboardRepository) GetDashboardRetentionRateContractsRenewalsData(ctx
 				"tenant":               tenant,
 				"startDate":            startDate,
 				"endDate":              endDate,
-				"customerRelationship": neo4jenum.Customer.String(),
+				"customerRelationship": neo4jenum.OrganizationRelationshipCustomer.String(),
 			})
 		if err != nil {
 			return nil, err
@@ -1841,7 +1841,7 @@ func (r *dashboardRepository) GetDashboardRetentionRateContractsChurnedData(ctx 
 				"tenant":               tenant,
 				"startDate":            startDate,
 				"endDate":              endDate,
-				"customerRelationship": neo4jenum.Customer.String(),
+				"customerRelationship": neo4jenum.OrganizationRelationshipCustomer.String(),
 			})
 		if err != nil {
 			return nil, err

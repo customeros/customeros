@@ -57,7 +57,7 @@ func (s *registrationService) CreateOrganizationAndContact(ctx context.Context, 
 			organizationId, err = s.services.CommonServices.OrganizationService.Save(ctx, nil, nil, data_fields.OrganizationFields{
 				Domains:      []string{domain},
 				Name:         commonUtils.StringPtr(domain),
-				Relationship: commonUtils.ToPtr(enum.Prospect),
+				Relationship: commonUtils.ToPtr(enum.OrganizationRelationshipProspect),
 				Stage:        commonUtils.ToPtr(enum.Trial),
 				LeadSource:   commonUtils.StringPtr(leadSource),
 			})

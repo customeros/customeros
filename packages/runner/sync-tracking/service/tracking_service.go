@@ -189,7 +189,7 @@ func (s *trackingService) CreateOrganizationsFromTrackedData(ctx context.Context
 				Name:         snitcherData.CompanyName,
 				Website:      snitcherData.CompanyWebsite,
 				LeadSource:   utils.StringPtr("Reveal AI"),
-				Relationship: utils.ToPtr(neo4jenum.Prospect),
+				Relationship: utils.ToPtr(neo4jenum.OrganizationRelationshipProspect),
 				Stage:        utils.ToPtr(neo4jenum.Lead),
 				Domains:      []string{*snitcherData.CompanyDomain},
 				Source:       utils.StringPtr(constants.SourceOpenline),

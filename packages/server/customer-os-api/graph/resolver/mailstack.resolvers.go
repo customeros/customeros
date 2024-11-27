@@ -16,8 +16,31 @@ import (
 	opentracing "github.com/opentracing/opentracing-go"
 )
 
+// MailstackGetPaymentIntent is the resolver for the mailstack_GetPaymentIntent field.
+func (r *mutationResolver) MailstackGetPaymentIntent(ctx context.Context, domains []string, usernames []string, amount float64) (*model.GetPaymentIntent, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.MailstackGetPaymentIntent", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	span.LogKV("request.domains", domains)
+	span.LogKV("request.usernames", usernames)
+
+	amountInt := int64(amount * 100)
+	stripeClientSecret, err := r.Services.CommonServices.MailstackService.GetPaymentIntent(ctx, domains, usernames, amountInt)
+	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		r.log.Errorf("Failed to register buy domains with mailboxes")
+		graphql.AddErrorf(ctx, "Failed to register buy domains with mailboxes")
+		return nil, nil
+	}
+
+	return &model.GetPaymentIntent{
+		ClientSecret: stripeClientSecret,
+	}, nil
+}
+
 // MailstackRegisterBuyDomainsWithMailboxes is the resolver for the mailstack_RegisterBuyDomainsWithMailboxes field.
-func (r *mutationResolver) MailstackRegisterBuyDomainsWithMailboxes(ctx context.Context, domains []string, usernames []string, amount float64) (*model.RegisterBuyDomainWithMailboxes, error) {
+func (r *mutationResolver) MailstackRegisterBuyDomainsWithMailboxes(ctx context.Context, test bool, paymentIntentID string, domains []string, usernames []string, amount float64) (*model.Result, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.MailstackRegisterBuyDomainsWithMailboxes", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
@@ -26,33 +49,11 @@ func (r *mutationResolver) MailstackRegisterBuyDomainsWithMailboxes(ctx context.
 	span.LogKV("request.usernames", usernames)
 
 	amountInt := int64(amount * 100)
-	registerId, stripeClientSecret, err := r.Services.CommonServices.MailstackService.RegisterBuyDomainsWithMailboxes(ctx, domains, usernames, amountInt)
+	err := r.Services.CommonServices.MailstackService.RegisterBuyDomainsWithMailboxes(ctx, test, paymentIntentID, domains, usernames, amountInt)
 	if err != nil {
 		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to register buy domains with mailboxes")
 		graphql.AddErrorf(ctx, "Failed to register buy domains with mailboxes")
-		return nil, nil
-	}
-
-	return &model.RegisterBuyDomainWithMailboxes{
-		ID:           registerId,
-		ClientSecret: stripeClientSecret,
-	}, nil
-}
-
-// MailstackRegisteredBuyDomainsWithMailboxesPaid is the resolver for the mailstack_RegisteredBuyDomainsWithMailboxesPaid field.
-func (r *mutationResolver) MailstackRegisteredBuyDomainsWithMailboxesPaid(ctx context.Context, id string) (*model.Result, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.MailstackRegisteredBuyDomainsWithMailboxesPaid", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-
-	span.LogKV("request.id", id)
-
-	err := r.Services.CommonServices.MailstackService.MarkBuyRequestAsPaid(ctx, id)
-	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
-		r.log.Errorf("Failed to mark buy request as paid")
-		graphql.AddErrorf(ctx, "Failed to mark buy request as paid")
 		return &model.Result{Result: false}, nil
 	}
 
@@ -209,63 +210,6 @@ func (r *queryResolver) MailstackMailboxes(ctx context.Context) ([]*model.Mailbo
 			CurrentFlowIds:  []string{},
 			ScheduledEmails: 0,
 		})
-	}
-
-	return response, nil
-}
-
-// MailstackRegisteredBuyDomainsWithMailboxes is the resolver for the mailstack_RegisteredBuyDomainsWithMailboxes field.
-func (r *queryResolver) MailstackRegisteredBuyDomainsWithMailboxes(ctx context.Context) ([]*model.MailstackBuyRequest, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.MailstackRegisteredBuyDomainsWithMailboxes", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-
-	buyRequests, err := r.Services.Repositories.PostgresRepositories.MailstackBuyRequestRepository.GetList(ctx)
-	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
-		r.log.Errorf("Failed to get mailstack buy requests")
-		graphql.AddErrorf(ctx, "Failed to get mailstack buy requests")
-		return nil, nil
-	}
-
-	response := []*model.MailstackBuyRequest{}
-	for _, buyRequest := range buyRequests {
-		buyRequestResponse := model.MailstackBuyRequest{
-			ID:     buyRequest.ID,
-			Status: buyRequest.Status,
-		}
-
-		domains, err := r.Services.Repositories.PostgresRepositories.MailstackBuyRequestRepository.GetDomains(ctx, buyRequest.ID)
-		if err != nil {
-			tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
-			r.log.Errorf("Failed to get domains for mailstack buy request %s", buyRequest.ID)
-			graphql.AddErrorf(ctx, "Failed to get domains for mailstack buy request %s", buyRequest.ID)
-			return nil, nil
-		}
-
-		for _, domain := range domains {
-			buyRequestResponse.Domains = append(buyRequestResponse.Domains, &model.MailstackBuyRequestDomain{
-				Domain: domain.Domain,
-				Status: domain.Status,
-			})
-		}
-
-		mailboxes, err := r.Services.Repositories.PostgresRepositories.MailstackBuyRequestRepository.GetMailboxes(ctx, buyRequest.ID)
-		if err != nil {
-			tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
-			r.log.Errorf("Failed to get mailboxes for mailstack buy request %s", buyRequest.ID)
-			graphql.AddErrorf(ctx, "Failed to get mailboxes for mailstack buy request %s", buyRequest.ID)
-			return nil, nil
-		}
-
-		for _, mailbox := range mailboxes {
-			buyRequestResponse.Mailboxes = append(buyRequestResponse.Mailboxes, &model.MailstackBuyRequestMailbox{
-				Mailbox: mailbox.Mailbox,
-				Status:  mailbox.Status,
-			})
-		}
-
-		response = append(response, &buyRequestResponse)
 	}
 
 	return response, nil

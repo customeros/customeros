@@ -166,7 +166,7 @@ func (s *syncService) GetEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTr
 
 		organizationName := domain
 		hide := false
-		relationship := neo4jenum.Prospect.String()
+		relationship := neo4jenum.OrganizationRelationshipProspect.String()
 		stage := neo4jenum.Lead.String()
 		leadSource := ""
 

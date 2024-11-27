@@ -10,7 +10,6 @@ import (
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	entity1 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 )
 
 type InteractionEventParticipant interface {
@@ -1195,6 +1194,10 @@ type GCliItem struct {
 	Data    []*GCliAttributeKeyValuePair `json:"data,omitempty"`
 }
 
+type GetPaymentIntent struct {
+	ClientSecret string `json:"clientSecret"`
+}
+
 type GlobalCache struct {
 	User                *User                    `json:"user"`
 	IsOwner             bool                     `json:"isOwner"`
@@ -1625,24 +1628,6 @@ type Mailbox struct {
 	UserID          *string   `json:"userId,omitempty"`
 	ScheduledEmails int64     `json:"scheduledEmails"`
 	CurrentFlowIds  []string  `json:"currentFlowIds,omitempty"`
-}
-
-type MailstackBuyRequest struct {
-	ID        string                            `json:"id"`
-	Domains   []*MailstackBuyRequestDomain      `json:"domains"`
-	Mailboxes []*MailstackBuyRequestMailbox     `json:"mailboxes"`
-	CreatedAt time.Time                         `json:"createdAt"`
-	Status    entity1.MailstackBuyRequestStatus `json:"status"`
-}
-
-type MailstackBuyRequestDomain struct {
-	Domain string                                  `json:"domain"`
-	Status entity1.MailstackBuyRequestDomainStatus `json:"status"`
-}
-
-type MailstackBuyRequestMailbox struct {
-	Mailbox string                                   `json:"mailbox"`
-	Status  entity1.MailstackBuyRequestMailboxStatus `json:"status"`
 }
 
 type MarkdownEvent struct {
@@ -2359,11 +2344,6 @@ type PhoneNumberUpdateInput struct {
 }
 
 type Query struct {
-}
-
-type RegisterBuyDomainWithMailboxes struct {
-	ID           string `json:"id"`
-	ClientSecret string `json:"clientSecret"`
 }
 
 type Reminder struct {
