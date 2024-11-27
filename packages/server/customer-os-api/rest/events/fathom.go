@@ -53,10 +53,10 @@ func FathomZapier(services *service.Services) gin.HandlerFunc {
 			return
 		}
 
-		if !strings.EqualFold(c.Request.UserAgent(), "Zapier") {
-			rest.SendError(c, span, http.StatusForbidden, rest.ErrForbidden)
-			return
-		}
+		//if !strings.EqualFold(c.Request.UserAgent(), "Zapier") {
+		//	rest.SendError(c, span, http.StatusForbidden, rest.ErrForbidden)
+		//	return
+		//}
 
 		handleFathomAISummaryZapier(httpContext)
 	}
@@ -104,6 +104,8 @@ func cleanFathomJsonPayload(data *FathomZapierPayload) error {
 
 	if data.Meeting.InviteesStr != "" {
 		inviteesJson := utils.ReplaceSingleQuotesWithDoubleQuotes(data.Meeting.InviteesStr)
+		inviteesJson = strings.Replace(inviteesJson, ": True", ": true", -1)
+		inviteesJson = strings.Replace(inviteesJson, ": False", ": false", -1)
 		var invitees []Invitee
 		err := json.Unmarshal([]byte(inviteesJson), &invitees)
 		if err != nil {
