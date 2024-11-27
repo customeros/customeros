@@ -2,6 +2,7 @@ package service
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	model2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/stretchr/testify/require"
@@ -13,7 +14,7 @@ var entityType = reflect.TypeOf(neo4jentity.ContactEntity{})
 var defaultErrorMessage = "incorrect filter formatting"
 var defaultStringFilterItem = model.FilterItem{
 	Property:  "NAME",
-	Operation: model.ComparisonOperatorContains,
+	Operation: model2.ComparisonOperatorContains,
 	Value: model.AnyTypeValue{
 		Str: utils.StringPtr("testValue"),
 	},
@@ -21,7 +22,7 @@ var defaultStringFilterItem = model.FilterItem{
 }
 var defaultIntFilterItem = model.FilterItem{
 	Property:  "NAME",
-	Operation: model.ComparisonOperatorEq,
+	Operation: model2.ComparisonOperatorEq,
 	Value: model.AnyTypeValue{
 		Int: utils.Int64Ptr(100),
 	},
@@ -140,7 +141,7 @@ func TestBuilderFilter_NegationOfNegation(t *testing.T) {
 	require.Equal(t, "name", details.NodeProperty)
 	require.Equal(t, true, details.SupportCaseSensitive)
 	require.Equal(t, true, details.CaseSensitive)
-	require.Equal(t, utils.CONTAINS, details.ComparisonOperator)
+	require.Equal(t, model2.ComparisonOperatorContains, details.ComparisonOperator)
 	require.Equal(t, "testValue", details.Value)
 	require.NotEmpty(t, details.DbNodePropertyProps)
 }

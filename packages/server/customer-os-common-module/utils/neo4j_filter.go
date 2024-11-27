@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"strconv"
 	"strings"
 )
@@ -10,93 +11,7 @@ const (
 	paramPrefix = "param_"
 )
 
-type ComparisonOperator int
 type LogicalOperator int
-
-const (
-	C_NONE ComparisonOperator = iota
-	IS_NULL
-	IS_NOT_NULL
-	EQUALS
-	NOT_EQUALS
-	CONTAINS
-	STARTS_WITH
-	LTE
-	GTE
-	IN
-	BETWEEN
-	IS_EMPTY
-	LT
-	GT
-)
-
-func (c ComparisonOperator) String() string {
-	switch c {
-	case C_NONE:
-		return "NONE"
-	case IS_NULL:
-		return "IS_NULL"
-	case IS_NOT_NULL:
-		return "IS_NOT_NULL"
-	case EQUALS:
-		return "EQUALS"
-	case NOT_EQUALS:
-		return "NOT_EQUALS"
-	case CONTAINS:
-		return "CONTAINS"
-	case STARTS_WITH:
-		return "STARTS WITH"
-	case LTE:
-		return "LTE"
-	case GTE:
-		return "GTE"
-	case IN:
-		return "IN"
-	case BETWEEN:
-		return "BETWEEN"
-	case IS_EMPTY:
-		return "IS_EMPTY"
-	case LT:
-		return "LT"
-	case GT:
-		return "GT"
-	default:
-		return fmt.Sprintf("%d", int(c))
-	}
-}
-
-func (c ComparisonOperator) CypherString() string {
-	switch c {
-	case C_NONE:
-		return ""
-	case IS_NULL:
-		return "is null"
-	case IS_NOT_NULL:
-		return "is not null"
-	case EQUALS:
-		return "="
-	case NOT_EQUALS:
-		return "<>"
-	case CONTAINS:
-		return "CONTAINS"
-	case STARTS_WITH:
-		return "STARTS WITH"
-	case LTE:
-		return "<="
-	case GTE:
-		return ">="
-	case IN:
-		return "IN"
-	case BETWEEN:
-		return "BETWEEN"
-	case LT:
-		return "<"
-	case GT:
-		return ">"
-	default:
-		return "="
-	}
-}
 
 const (
 	L_NONE LogicalOperator = iota
@@ -123,7 +38,7 @@ type CypherFilterItem struct {
 	CaseSensitive        bool
 	Value                any
 	DbNodePropertyProps  map[string]string
-	ComparisonOperator   ComparisonOperator
+	ComparisonOperator   model.ComparisonOperator
 }
 
 type CypherFilter struct {
@@ -158,11 +73,11 @@ func (f CypherFilterItem) String() string {
 	res.WriteString(fmt.Sprintf("CaseSensitive: %v ", f.CaseSensitive))
 	res.WriteString(fmt.Sprintf("Value: %v ", f.Value))
 	res.WriteString(fmt.Sprintf("DbNodePropertyProps: %v ", f.DbNodePropertyProps))
-	res.WriteString(fmt.Sprintf("ComparisonOperator: %v ", f.ComparisonOperator.String()))
+	res.WriteString(fmt.Sprintf("ComparisonOperator: %s ", f.ComparisonOperator))
 	return res.String()
 }
 
-func CreateStringCypherFilter(propertyName string, searchTerm any, comparator ComparisonOperator) *CypherFilter {
+func CreateStringCypherFilter(propertyName string, searchTerm any, comparator model.ComparisonOperator) *CypherFilter {
 	filter := CypherFilter{}
 	filter.Details = new(CypherFilterItem)
 	filter.Details.NodeProperty = propertyName
@@ -172,7 +87,7 @@ func CreateStringCypherFilter(propertyName string, searchTerm any, comparator Co
 	return &filter
 }
 
-func CreateCypherFilter(propertyName string, searchTerm any, comparator ComparisonOperator) *CypherFilter {
+func CreateCypherFilter(propertyName string, searchTerm any, comparator model.ComparisonOperator) *CypherFilter {
 	filter := CypherFilter{}
 	filter.Details = new(CypherFilterItem)
 	filter.Details.NodeProperty = propertyName
@@ -183,23 +98,23 @@ func CreateCypherFilter(propertyName string, searchTerm any, comparator Comparis
 }
 
 func CreateCypherFilterIsNull(propertyName string) *CypherFilter {
-	return CreateCypherFilter(propertyName, "", IS_NULL)
+	return CreateCypherFilter(propertyName, "", model.ComparisonOperatorIsNull)
 }
 
 func CreateCypherFilterIsNotNull(propertyName string) *CypherFilter {
-	return CreateCypherFilter(propertyName, "", IS_NOT_NULL)
+	return CreateCypherFilter(propertyName, "", model.ComparisonOperatorIsNotNull)
 }
 
 func CreateCypherFilterIn(propertyName string, arrayValues any) *CypherFilter {
-	return CreateCypherFilter(propertyName, arrayValues, IN)
+	return CreateCypherFilter(propertyName, arrayValues, model.ComparisonOperatorIn)
 }
 
 func CreateCypherFilterEq(propertyName string, value any) *CypherFilter {
-	return CreateCypherFilter(propertyName, value, EQUALS)
+	return CreateCypherFilter(propertyName, value, model.ComparisonOperatorEq)
 }
 
 func CreateCypherFilterNotEq(propertyName string, value any) *CypherFilter {
-	return CreateCypherFilter(propertyName, value, NOT_EQUALS)
+	return CreateCypherFilter(propertyName, value, model.ComparisonOperatorNotEq)
 }
 
 func (f *CypherFilter) CypherFilterFragment(nodeAlias string) (Cypher, map[string]any) {
@@ -225,7 +140,7 @@ func (f *CypherFilter) BuildCypherFilterFragmentWithParamName(nodeAlias string, 
 	var params = map[string]any{}
 
 	// convert IS_EMPTY to IS_NULL + EQUALS empty string
-	if f.Details != nil && f.Details.ComparisonOperator == IS_EMPTY {
+	if f.Details != nil && f.Details.ComparisonOperator == model.ComparisonOperatorIsEmpty {
 		nodeProperty := f.Details.NodeProperty
 		dbNodePropertyProps := f.Details.DbNodePropertyProps
 		f.LogicalOperator = OR
@@ -233,7 +148,7 @@ func (f *CypherFilter) BuildCypherFilterFragmentWithParamName(nodeAlias string, 
 			&CypherFilter{
 				Details: &CypherFilterItem{
 					NodeProperty:        nodeProperty,
-					ComparisonOperator:  IS_NULL,
+					ComparisonOperator:  model.ComparisonOperatorIsNull,
 					DbNodePropertyProps: dbNodePropertyProps,
 				},
 				LogicalOperator: L_NONE,
@@ -241,12 +156,54 @@ func (f *CypherFilter) BuildCypherFilterFragmentWithParamName(nodeAlias string, 
 			&CypherFilter{
 				Details: &CypherFilterItem{
 					NodeProperty:        nodeProperty,
-					ComparisonOperator:  EQUALS,
+					ComparisonOperator:  model.ComparisonOperatorEq,
 					Value:               "",
 					DbNodePropertyProps: dbNodePropertyProps,
 				},
 				LogicalOperator: L_NONE,
 			})
+		f.Details = nil
+	} else if f.Details != nil && f.Details.ComparisonOperator == model.ComparisonOperatorIsNotEmpty {
+		nodeProperty := f.Details.NodeProperty
+		dbNodePropertyProps := f.Details.DbNodePropertyProps
+		f.LogicalOperator = AND
+		f.Filters = append(f.Filters,
+			&CypherFilter{
+				Details: &CypherFilterItem{
+					NodeProperty:        nodeProperty,
+					ComparisonOperator:  model.ComparisonOperatorIsNotNull,
+					DbNodePropertyProps: dbNodePropertyProps,
+				},
+				LogicalOperator: L_NONE,
+			},
+			&CypherFilter{
+				Details: &CypherFilterItem{
+					NodeProperty:        nodeProperty,
+					ComparisonOperator:  model.ComparisonOperatorNotEq,
+					Value:               "",
+					DbNodePropertyProps: dbNodePropertyProps,
+				},
+				LogicalOperator: L_NONE,
+			})
+		f.Details = nil
+	} else if f.Details != nil && f.Details.ComparisonOperator == model.ComparisonOperatorNotContains {
+		nodeProperty := f.Details.NodeProperty
+		dbNodePropertyProps := f.Details.DbNodePropertyProps
+		f.LogicalOperator = AND
+		f.Negate = true
+		f.Filters = append(f.Filters,
+			&CypherFilter{
+				Details: &CypherFilterItem{
+					NodeProperty:         nodeProperty,
+					ComparisonOperator:   model.ComparisonOperatorContains,
+					DbNodePropertyProps:  dbNodePropertyProps,
+					Value:                f.Details.Value,
+					SupportCaseSensitive: true,
+					CaseSensitive:        false,
+				},
+				LogicalOperator: L_NONE,
+			},
+		)
 		f.Details = nil
 	}
 
@@ -283,12 +240,12 @@ func (f *CypherFilter) BuildCypherFilterFragmentWithParamName(nodeAlias string, 
 		if toLower {
 			cypherStr.WriteString(")")
 		}
-		cypherStr.WriteString(SurroundWithSpaces(f.Details.ComparisonOperator.CypherString()))
+		cypherStr.WriteString(SurroundWithSpaces(CypherString(f.Details.ComparisonOperator)))
 		if toLower {
 			cypherStr.WriteString("toLower(")
 		}
 
-		if f.Details.ComparisonOperator != IS_NULL && f.Details.ComparisonOperator != IS_NOT_NULL {
+		if f.Details.ComparisonOperator != model.ComparisonOperatorIsNull && f.Details.ComparisonOperator != model.ComparisonOperatorIsNotNull {
 			f.paramCount++
 			paramSuffix := strconv.Itoa(f.paramCount)
 			cypherStr.WriteString("$" + customParamPrefix + paramSuffix)
@@ -305,4 +262,33 @@ func (f *CypherFilter) BuildCypherFilterFragmentWithParamName(nodeAlias string, 
 	}
 
 	return cypherStr.String(), params
+}
+
+func CypherString(c model.ComparisonOperator) string {
+	switch c {
+	case model.ComparisonOperatorIsNull:
+		return "is null"
+	case model.ComparisonOperatorIsNotNull:
+		return "is not null"
+	case model.ComparisonOperatorEq:
+		return "="
+	case model.ComparisonOperatorNotEq:
+		return "<>"
+	case model.ComparisonOperatorContains:
+		return "CONTAINS"
+	case model.ComparisonOperatorStartsWith:
+		return "STARTS WITH"
+	case model.ComparisonOperatorGte:
+		return ">="
+	case model.ComparisonOperatorIn:
+		return "IN"
+	case model.ComparisonOperatorBetween:
+		return "BETWEEN"
+	case model.ComparisonOperatorLt:
+		return ">"
+	case model.ComparisonOperatorLte:
+		return "<="
+	default:
+		return "="
+	}
 }
