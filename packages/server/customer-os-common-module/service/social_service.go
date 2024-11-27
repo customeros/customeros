@@ -224,14 +224,20 @@ func (s *socialService) AddSocialToEntity(ctx context.Context, txWithPostCommit 
 					// use identifier as alias
 					alias = socialEntity.ExtractLinkedinCompanyIdentifierFromUrl()
 				}
-				orgs, err := s.services.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsByLinkedIn(ctx, tenant, socialUrl, alias, socialEntity.ExternalId)
+				orgsDbNodes, err := s.services.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsByLinkedIn(ctx, tenant, socialUrl, alias, socialEntity.ExternalId)
 				if err != nil {
 					tracing.TraceErr(span, err)
 					return "", err
 				}
-				if len(orgs) > 0 {
-					err = errors.Errorf("linkedin url %s already used by organization %s", socialUrl, orgs[0].Props["id"])
-					return "", err
+				if len(orgsDbNodes) > 0 {
+					if orgsDbNodes[0].Props["id"] == linkWith.Id {
+						// social already linked to organization
+						span.LogFields(log.Bool("result.alreadyLinked", true))
+						return "", nil
+					} else {
+						err = errors.Errorf("linkedin url %s already used by organization %s", socialUrl, orgsDbNodes[0].Props["id"])
+						return "", err
+					}
 				}
 			} else if linkWith.Type == model.CONTACT {
 				linkedInUsed, existingContactId, err := s.services.ContactService.CheckContactExistsWithLinkedIn(ctx, socialUrl, socialEntity.Alias, socialEntity.ExternalId)
@@ -240,8 +246,14 @@ func (s *socialService) AddSocialToEntity(ctx context.Context, txWithPostCommit 
 					return "", err
 				}
 				if linkedInUsed {
-					err = errors.Errorf("linkedin url %s already used by contact %s", socialUrl, existingContactId)
-					return "", err
+					if existingContactId == linkWith.Id {
+						// social already linked to contact
+						span.LogFields(log.Bool("result.alreadyLinked", true))
+						return "", nil
+					} else {
+						err = errors.Errorf("linkedin url %s already used by contact %s", socialUrl, existingContactId)
+						return "", err
+					}
 				}
 			}
 		}
