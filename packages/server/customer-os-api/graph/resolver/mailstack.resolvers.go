@@ -85,7 +85,7 @@ func (r *mutationResolver) MailstackSetUser(ctx context.Context, mailbox string,
 
 	mailboxEntity.UserId = userID
 
-	err = r.Services.Repositories.PostgresRepositories.TenantSettingsMailboxRepository.Merge(ctx, mailboxEntity)
+	err = r.Services.Repositories.PostgresRepositories.TenantSettingsMailboxRepository.Merge(ctx, nil, mailboxEntity)
 
 	if err != nil {
 		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)

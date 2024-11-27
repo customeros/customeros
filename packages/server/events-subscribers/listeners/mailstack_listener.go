@@ -3,19 +3,17 @@ package listeners
 import (
 	"context"
 	"errors"
-	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/coserrors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"strings"
 )
 
-func Handle_MailstackBuyRequest(ctx context.Context, services *service.Services, input any) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "Listeners.Handle_MailstackBuyRequest")
+func Handle_MailstackProvisionBuyRequest(ctx context.Context, services *service.Services, input any) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "Listeners.Handle_MailstackProvisionBuyRequest")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "input", input)
@@ -48,7 +46,7 @@ func Handle_MailstackBuyRequest(ctx context.Context, services *service.Services,
 	}
 
 	for _, domain := range domains {
-		if domain.Status != entity.MailstackBuyRequestDomainStatusPending {
+		if domain.Status != entity.MailstackBuyRequestDomainStatusPendingProvisioning {
 			continue
 		}
 
@@ -59,7 +57,7 @@ func Handle_MailstackBuyRequest(ctx context.Context, services *service.Services,
 			mailstackBuyRequest.Status = entity.MailstackBuyRequestStatusFailed
 			domain.Status = entity.MailstackBuyRequestDomainStatusFailed
 		} else {
-			domain.Status = entity.MailstackBuyRequestDomainStatusCompleted
+			domain.Status = entity.MailstackBuyRequestDomainStatusProvisioned
 		}
 
 		err = services.PostgresRepositories.CommonRepository.UpdateProperty(ctx, domain.Tenant, entity.MailstackBuyRequestDomain{}, domain.ID, "Status", domain.Status)
@@ -69,13 +67,6 @@ func Handle_MailstackBuyRequest(ctx context.Context, services *service.Services,
 		}
 	}
 
-	//buy mailboxes
-	mailboxes, err := services.PostgresRepositories.MailstackBuyRequestRepository.GetMailboxes(ctx, mailstackBuyRequest.ID)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-
 	//reload latest state for domains
 	domains, err = services.PostgresRepositories.MailstackBuyRequestRepository.GetDomains(ctx, mailstackBuyRequest.ID)
 	if err != nil {
@@ -83,67 +74,58 @@ func Handle_MailstackBuyRequest(ctx context.Context, services *service.Services,
 		return err
 	}
 
-	for _, mailbox := range mailboxes {
-		if mailbox.Status != entity.MailstackBuyRequestDomainMailboxPending {
+	for _, domain := range domains {
+		if domain.Status != entity.MailstackBuyRequestDomainStatusProvisioned {
 			continue
 		}
 
-		err := services.MailboxService.AddMailbox(ctx, service.AddMailboxRequest{
-			Domain:         mailbox.Domain,
-			Username:       mailbox.Username,
-			Password:       utils.GenerateLowerAlpha(1) + utils.GenerateKey(11, false),
-			WebmailEnabled: true,
-			ForwardingTo:   []string{fmt.Sprintf("bcc@%s.customeros.ai", strings.ToLower(mailbox.Tenant))},
-		})
-		if err != nil && err != coserrors.ErrMailboxExists {
-			tracing.TraceErr(span, err)
-
-			mailbox.Status = entity.MailstackBuyRequestDomainMailboxFailed
-		} else {
-			mailbox.Status = entity.MailstackBuyRequestDomainMailboxCompleted
-		}
-
-		err = services.PostgresRepositories.CommonRepository.UpdateProperty(ctx, mailbox.Tenant, entity.MailstackBuyRequestMailbox{}, mailbox.ID, "Status", mailbox.Status)
+		mailboxes, err := services.PostgresRepositories.TenantSettingsMailboxRepository.GetAllByDomain(ctx, domain.Domain)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
 		}
+
+		for _, mailbox := range mailboxes {
+			if mailbox.Status != entity.MailboxStatusPendingProvisioning {
+				continue
+			}
+
+			err := services.RabbitMQService.PublishEvent(ctx, mailbox.ID, model.MAILBOX, dto.MailstackProvisionMailbox{})
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return err
+			}
+		}
 	}
 
-	//reload latest state and update request status
-	mailboxes, err = services.PostgresRepositories.MailstackBuyRequestRepository.GetMailboxes(ctx, mailstackBuyRequest.ID)
+	return nil
+}
+
+func Handle_MailstackProvisionMailbox(ctx context.Context, services *service.Services, input any) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "Listeners.Handle_MailstackProvisionMailbox")
+	defer span.Finish()
+	tracing.SetDefaultListenerSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "input", input)
+
+	message := input.(*dto.Event)
+
+	mailbox, err := services.PostgresRepositories.TenantSettingsMailboxRepository.GetById(ctx, message.Event.EntityId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 
-	hasFailures := false
-	allMailboxesCompleted := true
-	for _, mailbox := range mailboxes {
-		if mailbox.Status == entity.MailstackBuyRequestDomainMailboxFailed {
-			hasFailures = true
-			break
-		}
-		if mailbox.Status != entity.MailstackBuyRequestDomainMailboxCompleted {
-			allMailboxesCompleted = false
-			break
-		}
+	err = services.OpenSrsService.SetupMailbox(ctx, mailbox.Tenant, mailbox.Domain, mailbox.MailboxUsername, mailbox.MailboxPassword, strings.Split(mailbox.ForwardingTo, ","), mailbox.WebmailEnabled)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
 	}
 
-	if hasFailures {
-		err := services.PostgresRepositories.CommonRepository.UpdateProperty(ctx, mailstackBuyRequest.Tenant, entity.MailstackBuyRequest{}, mailstackBuyRequest.ID, "Status", entity.MailstackBuyRequestStatusFailed)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
-	}
+	mailbox.Status = entity.MailboxStatusProvisioned
 
-	if !hasFailures && allMailboxesCompleted {
-		err := services.PostgresRepositories.CommonRepository.UpdateProperty(ctx, mailstackBuyRequest.Tenant, entity.MailstackBuyRequest{}, mailstackBuyRequest.ID, "Status", entity.MailstackBuyRequestStatusCompleted)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
+	err = services.PostgresRepositories.CommonRepository.UpdateProperty(ctx, mailbox.Tenant, entity.TenantSettingsMailbox{}, mailbox.ID, "Status", mailbox.Status)
+	if err != nil {
+		tracing.TraceErr(span, err)
 	}
 
 	return nil

@@ -194,8 +194,7 @@ func (r *Repositories) Migration(db *gorm.DB) {
 		&entity.EmailMessage{},
 		&entity.UserWorkingSchedule{},
 		&entity.MailstackBuyRequest{},
-		&entity.MailstackBuyRequestDomain{},
-		&entity.MailstackBuyRequestMailbox{})
+		&entity.MailstackBuyRequestDomain{})
 	if err != nil {
 		panic(err)
 	}

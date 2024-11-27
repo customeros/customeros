@@ -19,9 +19,6 @@ type MailstackBuyRequestRepository interface {
 
 	GetDomains(ctx context.Context, mailstackBuyRequestId string) ([]*entity.MailstackBuyRequestDomain, error)
 	StoreDomain(ctx context.Context, tx *gorm.DB, input *entity.MailstackBuyRequestDomain) error
-
-	GetMailboxes(ctx context.Context, mailstackBuyRequestId string) ([]*entity.MailstackBuyRequestMailbox, error)
-	StoreMailbox(ctx context.Context, tx *gorm.DB, input *entity.MailstackBuyRequestMailbox) error
 }
 
 type mailstackBuyRequestRepositoryRepositoryImpl struct {
@@ -133,57 +130,6 @@ func (repo *mailstackBuyRequestRepositoryRepositoryImpl) StoreDomain(ctx context
 	span.LogFields(log.String("input.domain", input.Domain))
 
 	if input.Domain == "" || input.MailstackBuyRequestId == "" {
-		span.LogFields(log.Object("input", input))
-		err := errors.New("params missing")
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	input.Tenant = tenant
-	input.CreatedAt = utils.Now()
-
-	if tx == nil {
-		tx = repo.gormDb
-	}
-
-	err := repo.gormDb.Save(&input).Error
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	return nil
-}
-
-func (repo *mailstackBuyRequestRepositoryRepositoryImpl) GetMailboxes(ctx context.Context, mailstackBuyRequestId string) ([]*entity.MailstackBuyRequestMailbox, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "MailstackBuyRequestRepository.GetMailboxes")
-	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-
-	span.LogFields(log.String("mailstackBuyRequestId", mailstackBuyRequestId))
-
-	tenant := common.GetTenantFromContext(ctx)
-
-	var e []*entity.MailstackBuyRequestMailbox
-	err := repo.gormDb.Where("tenant = ? and mailstack_buy_request_id = ?", tenant, mailstackBuyRequestId).Find(&e).Error
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	return e, nil
-}
-
-func (repo *mailstackBuyRequestRepositoryRepositoryImpl) StoreMailbox(ctx context.Context, tx *gorm.DB, input *entity.MailstackBuyRequestMailbox) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "MailstackBuyRequestRepository.StoreMailbox")
-	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-
-	tenant := common.GetTenantFromContext(ctx)
-
-	span.LogFields(log.String("input.domain", input.Domain), log.String("input.username", input.Username), log.String("input.mailbox", input.Mailbox), log.String("input.mailstackBuyRequestId", input.MailstackBuyRequestId))
-
-	if input.Domain == "" || input.Username == "" || input.Mailbox == "" || input.MailstackBuyRequestId == "" {
 		span.LogFields(log.Object("input", input))
 		err := errors.New("params missing")
 		tracing.TraceErr(span, err)
