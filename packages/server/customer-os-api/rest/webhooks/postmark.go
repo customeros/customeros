@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -24,7 +25,13 @@ func PostmarkInboundEmail(s *service.Services) gin.HandlerFunc {
 		defer span.Finish()
 		tracing.TagComponentRest(span)
 
-		// todo add validation it's coming from postmark
+		if c.Request.UserAgent() == "" {
+			rest.SendError(c, span, http.StatusForbidden, rest.ErrForbidden)
+		}
+
+		if !strings.EqualFold(c.Request.UserAgent(), "Postmark") {
+			rest.SendError(c, span, http.StatusForbidden, rest.ErrForbidden)
+		}
 
 		httpContext := rest.HTTPContext{
 			GinContext:     c,
