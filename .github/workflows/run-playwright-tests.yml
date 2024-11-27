@@ -143,6 +143,9 @@ jobs:
         if: always()
         env:
           GITHUB_CONTEXT: ${{ toJson(github) }}
+          TRIGGER_SOURCE: ${{ env.trigger_source }}
+          NEW_VERSION: ${{ env.new_version }}
+          OLD_VERSION: ${{ env.old_version }}
         run: |
           BUILD_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           RESULTS="${{ steps.test_results.outputs.results }}"
