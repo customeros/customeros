@@ -21,7 +21,7 @@ func (s *mailboxService) ReputationScore(ctx context.Context, domain string) int
 	domainAgePenalty := s.domainAgePenalty(span, domain)
 	blacklistPenaltyPct := s.blacklistPenaltyPercent(domain)
 
-	score := (100 - domainAgePenalty) * (1 - blacklistPenaltyPct)
+	score := (100 - domainAgePenalty) * (1 - (blacklistPenaltyPct)/100)
 
 	// 7 day lookback on bounces
 
@@ -59,13 +59,14 @@ func (s *mailboxService) domainAgePenalty(span opentracing.Span, domain string) 
 
 func (s *mailboxService) blacklistPenaltyPercent(domain string) int {
 
-	blacklists := blscan.ScanBlacklists
+	blacklists := blscan.ScanBlacklists(domain, "domain")
 
-	pct := (blacklists.MajorLists * .8) + (blacklists.MinorLists * .1) + (blacklists.SpamTrapLists * .25)
-	if pct > 1 {
+	pct := (blacklists.MajorLists * 80) + (blacklists.MinorLists * 10) + (blacklists.SpamTrapLists * 20)
+
+	if pct > 100 {
 		return 100
 	} else {
-		return int(pct * 100)
+		return pct
 	}
 
 }
