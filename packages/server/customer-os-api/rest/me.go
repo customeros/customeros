@@ -16,7 +16,7 @@ type MeResponse struct {
 
 func AuthorizeMe(services *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "CreateContact", c.Request.Header)
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "AuthorizeMe", c.Request.Header)
 		defer span.Finish()
 		tracing.TagComponentRest(span)
 
