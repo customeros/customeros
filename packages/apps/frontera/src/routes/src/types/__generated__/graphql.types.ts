@@ -420,6 +420,7 @@ export enum ComparisonOperator {
   Between = 'BETWEEN',
   Contains = 'CONTAINS',
   Eq = 'EQ',
+  Equals = 'EQUALS',
   Gt = 'GT',
   Gte = 'GTE',
   In = 'IN',
@@ -430,6 +431,7 @@ export enum ComparisonOperator {
   Lt = 'LT',
   Lte = 'LTE',
   NotContains = 'NOT_CONTAINS',
+  NotEquals = 'NOT_EQUALS',
   StartsWith = 'STARTS_WITH',
 }
 

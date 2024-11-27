@@ -5,7 +5,7 @@ export const filterOutDryRunInvoices = {
     {
       filter: {
         property: 'DRY_RUN',
-        operation: ComparisonOperator.Eq,
+        operation: ComparisonOperator.Equals,
         value: false,
       },
     },
