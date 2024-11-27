@@ -23,9 +23,10 @@ export const MarkdownEventStub: FC<{ event: MarkdownEventType }> = ({
           'rounded-lg hover:shadow-md transition-all duration-200 ease-out',
         )}
       >
-        <CardContent className='p-3 pr-0 overflow-hidden text-sm w-full flex justify-between gap-2 '>
+        <CardContent className='p-3 pr-0 overflow-hidden text-sm w-full flex justify-between gap-2'>
           <div>
             <Markdown
+              skipHtml
               components={{
                 blockquote: ({ children }) => (
                   <blockquote className='text-gray-500 border-l border-gray-500 pl-3'>
@@ -36,7 +37,7 @@ export const MarkdownEventStub: FC<{ event: MarkdownEventType }> = ({
                   <ul className='list-disc list-inside my-1'>{children}</ul>
                 ),
                 ol: ({ children }) => (
-                  <ul className='list-decimal list-inside my-1'>{children}</ul>
+                  <ol className='list-decimal list-inside my-1'>{children}</ol>
                 ),
                 h1: ({ children }) => (
                   <h1 className='text-sm font-bold mt-1'>{children}</h1>
@@ -46,6 +47,13 @@ export const MarkdownEventStub: FC<{ event: MarkdownEventType }> = ({
                   <h2 className='text-sm font-medium mt-1'>{children}</h2>
                 ),
                 p: ({ children }) => <p className='text-sm my-1'>{children}</p>,
+                a: ({ children, href }) => {
+                  return (
+                    <a href={href} target='_blank' rel='noreferrer noopener'>
+                      {children}
+                    </a>
+                  );
+                },
               }}
             >
               {event?.content}
