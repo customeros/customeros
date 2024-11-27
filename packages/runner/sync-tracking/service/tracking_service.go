@@ -320,11 +320,23 @@ func (s *trackingService) processNewRecord(c context.Context, newRecord *entity.
 func (s *trackingService) askAndStoreIPData(c context.Context, request *entity.EnrichDetailsPreFilterTracking) error {
 	span, ctx := opentracing.StartSpanFromContext(c, "TrackingService.askAndStoreIPData")
 	defer span.Finish()
+	tracing.LogObjectAsJson(span, "request", request)
+
+	// Check ip address is valid
+	if net.ParseIP(request.IP) == nil {
+		// not a valid IP
+		innerErr := s.services.CommonServices.PostgresRepositories.EnrichDetailsPrefilterTrackingRepository.RegisterResponse(ctx, request.IP, false, "invalid IP address", "")
+		if innerErr != nil {
+			tracing.TraceErr(span, innerErr)
+			return fmt.Errorf("failed to store response: %s", innerErr.Error())
+		}
+		return nil
+	}
 
 	ipLookupResponse, err := s.callVerifyAPIForIpData(ctx, request.IP)
 	if err != nil {
-		tracing.TraceErr(span, err)
-		return fmt.Errorf("failed to call verify API: %v", err)
+		tracing.TraceErr(span, errors.Wrap(err, "failed to call verify API"))
+		return fmt.Errorf("failed to call verify API: %s", err.Error())
 	}
 
 	shouldIdentify := true
@@ -813,6 +825,7 @@ func (s *trackingService) sendSlackMessage(ctx context.Context, tenant, channel,
 func (s *trackingService) callVerifyAPIForIpData(ctx context.Context, ipAddress string) (*validationmodel.IpLookupResponse, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TrackingService.callVerifyAPIForIpData")
 	defer span.Finish()
+	span.LogKV("ipAddress", ipAddress)
 
 	if net.ParseIP(ipAddress) == nil {
 		err := errors.New("invalid IP address")

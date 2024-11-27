@@ -5,7 +5,7 @@ import (
 )
 
 type EnrichDetailsPreFilterTracking struct {
-	ID                 string    `gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
+	ID                 string    `gorm:"type:uuid;default:gen_random_uuid();primaryKey" json:"id"`
 	CreatedAt          time.Time `gorm:"column:created_at;type:timestamp;DEFAULT:current_timestamp" json:"createdAt"`
 	UpdatedAt          time.Time `gorm:"column:updated_at;type:timestamp;" json:"updatedAt"`
 	IP                 string    `gorm:"column:ip;uniqueIndex:ip_unique;type:varchar(255);" json:"ip"`
