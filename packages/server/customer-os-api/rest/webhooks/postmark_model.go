@@ -59,6 +59,16 @@ type PostmarkInboundEmailData struct {
 	} `json:"Attachments"`
 }
 
+func (p *PostmarkInboundEmailData) IsMonitorEmail() bool {
+	for _, address := range p.BccFull {
+		validation := mailvalidate.ValidateEmailSyntax(address.Email)
+		if validation.IsValid && strings.EqualFold(validation.User, "monitor") {
+			return true
+		}
+	}
+	return false
+}
+
 func (p *PostmarkInboundEmailData) TenantFromBcc() string {
 	var tenant string
 	for _, address := range p.BccFull {
@@ -174,6 +184,15 @@ func (p *PostmarkInboundEmailData) ToRawDbObject() entity.EmailRawData {
 	return result
 }
 
+func (p *PostmarkInboundEmailData) DMARCReportProvider() string {
+	filename := p.Attachments[0].Name
+	parts := strings.Split(filename, "!")
+	if len(parts) > 0 {
+		return parts[0]
+	}
+	return ""
+}
+
 func EmailWithBrackets(s []string) string {
 	emails := make([]string, 0)
 	for _, v := range s {
@@ -181,4 +200,16 @@ func EmailWithBrackets(s []string) string {
 	}
 
 	return strings.Join(emails, ", ")
+}
+
+type DMARCReport struct {
+	Domain        string
+	EmailProvider string
+	Start         time.Time
+	End           time.Time
+	Messages      int
+	SPFPass       int
+	DKIMPass      int
+	DMARCPass     int
+	Data          string
 }

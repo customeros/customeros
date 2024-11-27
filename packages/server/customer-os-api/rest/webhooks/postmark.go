@@ -1,11 +1,16 @@
 package webhooks
 
 import (
+	"archive/zip"
+	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 
+	"github.com/customeros/mailwatcher/dmarkstats"
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
@@ -51,9 +56,18 @@ func PostmarkInboundEmail(s *service.Services) gin.HandlerFunc {
 		httpContext.GinContext.JSON(http.StatusAccepted, rest.BuildBaseResponse(rest.StatusProcessing))
 
 		go func() {
-			err := processInboundEmail(httpContext, &emailData)
-			if err != nil {
-				tracing.TraceErr(httpContext.Span, errors.Wrap(err, "failed to process inbound email from Postmark"))
+			if emailData.IsMonitorEmail() {
+				// Process dmarc monitoring report
+				err := processDmarcMonitoringReport(httpContext, &emailData)
+				if err != nil {
+					tracing.TraceErr(httpContext.Span, errors.Wrap(err, "failed to process DMARC report"))
+				}
+			} else {
+				// Process normal mailstack email
+				err := processInboundEmail(httpContext, &emailData)
+				if err != nil {
+					tracing.TraceErr(httpContext.Span, errors.Wrap(err, "failed to process inbound email from Postmark"))
+				}
 			}
 		}()
 		return
@@ -68,6 +82,38 @@ func parseInboundEmail(ctx rest.HTTPContext) (PostmarkInboundEmailData, error) {
 	}
 
 	return emailData, nil
+}
+
+func processDmarcMonitoringReport(ctx rest.HTTPContext, emailData *PostmarkInboundEmailData) error {
+	// Get attachment, unzip, feed file to dmark analyzer service
+	attachment := emailData.Attachments[0]
+	if attachment.ContentType != "application/zip" {
+		return fmt.Errorf("attachment %s is not a zip file", attachment.Name)
+	}
+
+	provider := emailData.DMARCReportProvider()
+
+	reports, err := decodeAndReadDMARCReportFile(emailData.Attachments[0].Content)
+	for _, report := range reports {
+		dbReport := buildDMARCReport(report, provider)
+	}
+	// Save results to database
+	return nil
+}
+
+func buildDMARCReport(report dmarcstats.Report, provider string) DMARCReport {
+	jsonReport, _ := json.Marshal(report)
+	return DMARCReport{
+		EmailProvider: provider,
+		Domain:        report.Domain,
+		Start:         report.ReportPeriod.Start,
+		End:           report.ReportPeriod.End,
+		Messages:      report.TotalMessages,
+		SPFPass:       report.SPFPassCount,
+		DKIMPass:      report.DKIMPassCount,
+		DMARCPass:     report.DMARCPassCount,
+		Data:          string(jsonReport),
+	}
 }
 
 func processInboundEmail(ctx rest.HTTPContext, emailData *PostmarkInboundEmailData) error {
@@ -155,4 +201,45 @@ func getUsername(ctx rest.HTTPContext, EmailParticipants []string) (string, erro
 	}
 
 	return "", fmt.Errorf("Unable to find user amongst email participants")
+}
+
+func decodeAndReadDMARCReportFile(attachment string) ([]dmarcstats.Report, error) {
+	var reports []dmarcstats.Report
+
+	// Decode base64 string to bytes
+	decoded, err := base64.StdEncoding.DecodeString(attachment)
+	if err != nil {
+		return reports, fmt.Errorf("failed to decode base64: %w", err)
+	}
+
+	// Create a reader from the decoded bytes
+	zipReader, err := zip.NewReader(bytes.NewReader(decoded), int64(len(decoded)))
+	if err != nil {
+		return reports, fmt.Errorf("failed to create zip reader: %w", err)
+	}
+
+	// Read each file in the zip
+	for _, file := range zipReader.File {
+		rc, err := file.Open()
+		if err != nil {
+			return reports, fmt.Errorf("failed to open zip file %s: %w", file.Name, err)
+		}
+		defer rc.Close()
+
+		// Read the file contents
+		//[]bytes
+		content, err := io.ReadAll(rc)
+		if err != nil {
+			return reports, fmt.Errorf("failed to read zip file %s: %w", file.Name, err)
+		}
+
+		report, err := dmarcstats.AnalyzeDMARCReport(content)
+		if err != nil {
+			return reports, fmt.Errorf("failed to read get dmarc report for file %s: %w", file.Name, err)
+		}
+		reports = append(reports, report)
+
+	}
+
+	return reports, nil
 }
