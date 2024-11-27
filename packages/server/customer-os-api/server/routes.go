@@ -20,6 +20,7 @@ import (
 	restmailstack "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/mailstack"
 	restoutreach "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/outreach"
 	restverify "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/verify"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/webhooks"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
 
@@ -48,20 +49,10 @@ func RegisterRestRoutes(ctx context.Context, r *gin.Engine, grpcClients *grpc_cl
 
 func registerPublicRoutes(ctx context.Context, r *gin.Engine, services *service.Services) {
 	// Redirect to pay invoice link
-	pay := "/invoice/:invoiceId/pay"
-	r.GET(pay,
-		tracing.TracingEnhancer(ctx, fmt.Sprintf("GET:%s", pay)),
-		rest.RedirectToPayInvoice(services))
+	setupPublicRoute(ctx, r, services, "GET", "/invoice/:invoiceId/pay", rest.RedirectToPayInvoice(services))
+	setupPublicRoute(ctx, r, services, "GET", "/invoice/:invoiceId/paymentLink", rest.GetInvoicePaymentLink(services))
 
-
-	paymentLink := "/invoice/:invoiceId/paymentLink"
-	r.GET(paymentLink,
-		tracing.TracingEnhancer(ctx, fmt.Sprintf("GET:%s", paymentLink)),
-		rest.GetInvoicePaymentLink(services))
-
-	postmark := fmt.Sprintf("%s/postmark", webhooksV1Path)
-	r.POST(postmark, tracing.TracingEnhancer(ctx, fmt.Sprintf("POST:%s", postmark),
-		rest.PostmarkInboundEmail(services)))
+	setupPublicRoute(ctx, r, services, "POST", fmt.Sprintf("%s/postmark", webhooksV1Path), webhooks.PostmarkInboundEmail(services))
 }
 
 func registerHealthRoutes(ctx context.Context, r *gin.Engine, services *service.Services, cache *commoncaches.Cache) {
@@ -136,4 +127,8 @@ func setupRestRoute(ctx context.Context, r *gin.Engine, method, path string, ser
 		enrichContextMiddleware(constants.AppSourceCustomerOsApiRest),
 		cosHandler.StatsSuccessHandler(method+":"+path, services),
 		handler)
+}
+
+func setupPublicRoute(ctx context.Context, r *gin.Engine, services *service.Services, method, path string, handler gin.HandlerFunc) {
+	r.Handle(method, path, tracing.TracingEnhancer(ctx, method+":"+path), handler)
 }
