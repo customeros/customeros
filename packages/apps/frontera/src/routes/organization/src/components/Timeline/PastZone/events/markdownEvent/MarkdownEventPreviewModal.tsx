@@ -23,8 +23,11 @@ export const MarkdownEventPreviewModal = () => {
       <CardHeader className='py-4 px-6 pb-1 sticky top-0 rounded-xl bg-white z-[1]'>
         <div className='flex justify-between items-center'>
           <div className='flex mb-2 items-center'>
-            <h2 className='text-lg font-semibold'>
-              Event from {event.markdownEventMetadata.source}
+            <h2 className='text-lg font-semibold capitalize'>
+              Event from
+              <div className='capitalize ml-1 inline-flex'>
+                {event.markdownEventMetadata.source.toLowerCase()}
+              </div>
             </h2>
           </div>
           <div className='flex justify-end items-center'>
@@ -61,25 +64,24 @@ export const MarkdownEventPreviewModal = () => {
           className='text-sm'
           components={{
             blockquote: ({ children }) => (
-              <blockquote className='text-gray-500 border-l-2 border-gray-300 pl-3 py-1'>
+              <blockquote className='text-gray-500 border-l border-gray-500 pl-3'>
                 {children}
               </blockquote>
             ),
             ul: ({ children }) => (
-              <ul className='list-disc list-inside'>{children}</ul>
+              <ul className='list-disc list-inside my-1'>{children}</ul>
             ),
             ol: ({ children }) => (
-              <ul className='list-decimal list-inside'>{children}</ul>
+              <ul className='list-decimal list-inside my-1'>{children}</ul>
             ),
             h1: ({ children }) => (
-              <h1 className='text-base font-bold '>{children}</h1>
+              <h1 className='text-sm font-bold mt-1'>{children}</h1>
             ),
+
             h2: ({ children }) => (
-              <h2 className='text-sm font-medium '>{children}</h2>
+              <h2 className='text-sm font-medium mt-1'>{children}</h2>
             ),
-            h3: ({ children }) => (
-              <h3 className='text-sm font-medium '>{children}</h3>
-            ),
+            p: ({ children }) => <p className='text-sm my-1'>{children}</p>,
           }}
         >
           {event?.content}
