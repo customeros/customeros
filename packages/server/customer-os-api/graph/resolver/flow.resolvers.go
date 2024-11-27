@@ -441,7 +441,7 @@ func (r *mutationResolver) FlowDummy1Email(ctx context.Context, flowsCount int, 
 				MinMinutesBetweenEmails: 10,
 				MaxMinutesBetweenEmails: 10,
 			}
-			err := r.Services.CommonServices.PostgresRepositories.TenantSettingsMailboxRepository.Merge(ctx, &mailbox)
+			err := r.Services.CommonServices.PostgresRepositories.TenantSettingsMailboxRepository.Merge(ctx, nil, &mailbox)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				graphql.AddErrorf(ctx, "")
@@ -458,7 +458,7 @@ func (r *mutationResolver) FlowDummy1Email(ctx context.Context, flowsCount int, 
 				MinMinutesBetweenEmails: 10,
 				MaxMinutesBetweenEmails: 10,
 			}
-			err = r.Services.CommonServices.PostgresRepositories.TenantSettingsMailboxRepository.Merge(ctx, &mailbox)
+			err = r.Services.CommonServices.PostgresRepositories.TenantSettingsMailboxRepository.Merge(ctx, nil, &mailbox)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				graphql.AddErrorf(ctx, "")

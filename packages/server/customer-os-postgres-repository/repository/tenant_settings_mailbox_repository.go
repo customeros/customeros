@@ -19,11 +19,12 @@ type tenantSettingsMailboxRepository struct {
 type TenantSettingsMailboxRepository interface {
 	GetAll(ctx context.Context) ([]*entity.TenantSettingsMailbox, error)
 	GetForRampUp(ctx context.Context) ([]*entity.TenantSettingsMailbox, error)
+	GetById(ctx context.Context, id string) (*entity.TenantSettingsMailbox, error)
 	GetByMailbox(ctx context.Context, mailbox string) (*entity.TenantSettingsMailbox, error)
 	GetAllByDomain(ctx context.Context, domain string) ([]entity.TenantSettingsMailbox, error)
 	GetAllByUsername(ctx context.Context, username string) ([]entity.TenantSettingsMailbox, error)
 
-	Merge(ctx context.Context, mailbox *entity.TenantSettingsMailbox) error
+	Merge(ctx context.Context, tx *gorm.DB, mailbox *entity.TenantSettingsMailbox) error
 }
 
 func NewTenantSettingsMailboxRepository(db *gorm.DB) TenantSettingsMailboxRepository {
@@ -68,6 +69,35 @@ func (r *tenantSettingsMailboxRepository) GetForRampUp(ctx context.Context) ([]*
 	}
 
 	return result, nil
+}
+
+func (r *tenantSettingsMailboxRepository) GetById(ctx context.Context, id string) (*entity.TenantSettingsMailbox, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "TenantSettingsMailboxRepository.GetById")
+	defer span.Finish()
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	span.LogFields(tracingLog.String("id", id))
+
+	var result entity.TenantSettingsMailbox
+	err := r.gormDb.
+		Where("tenant = ? and id = ?", tenant, id).
+		First(&result).
+		Error
+
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			span.LogFields(tracingLog.Bool("result.found", false))
+			return nil, nil
+		}
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	span.LogFields(tracingLog.Bool("result.found", true))
+
+	return &result, nil
 }
 
 func (r *tenantSettingsMailboxRepository) GetByMailbox(ctx context.Context, mailbox string) (*entity.TenantSettingsMailbox, error) {
@@ -145,7 +175,7 @@ func (r *tenantSettingsMailboxRepository) GetAllByUsername(ctx context.Context, 
 	return result, nil
 }
 
-func (r *tenantSettingsMailboxRepository) Merge(ctx context.Context, input *entity.TenantSettingsMailbox) error {
+func (r *tenantSettingsMailboxRepository) Merge(ctx context.Context, tx *gorm.DB, input *entity.TenantSettingsMailbox) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "TenantSettingsMailboxRepository.Merge")
 	defer span.Finish()
 	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
@@ -171,6 +201,9 @@ func (r *tenantSettingsMailboxRepository) Merge(ctx context.Context, input *enti
 			Tenant:                  tenant,
 			MailboxUsername:         input.MailboxUsername,
 			MailboxPassword:         input.MailboxPassword,
+			Status:                  input.Status,
+			ForwardingTo:            input.ForwardingTo,
+			WebmailEnabled:          input.WebmailEnabled,
 			Username:                input.Username,
 			UserId:                  input.UserId,
 			Domain:                  input.Domain,
@@ -189,6 +222,9 @@ func (r *tenantSettingsMailboxRepository) Merge(ctx context.Context, input *enti
 		}
 	} else {
 		// If found, update the existing mailbox
+		mailbox.Status = input.Status
+		mailbox.ForwardingTo = input.ForwardingTo
+		mailbox.WebmailEnabled = input.WebmailEnabled
 		mailbox.MailboxPassword = input.MailboxPassword
 		mailbox.LastRampUpAt = input.LastRampUpAt
 		mailbox.RampUpRate = input.RampUpRate
@@ -199,7 +235,11 @@ func (r *tenantSettingsMailboxRepository) Merge(ctx context.Context, input *enti
 		mailbox.UserId = input.UserId
 		mailbox.UpdatedAt = utils.Now()
 
-		err = r.gormDb.Save(&mailbox).Error
+		if tx == nil {
+			tx = r.gormDb
+		}
+
+		err = tx.Save(&mailbox).Error
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err

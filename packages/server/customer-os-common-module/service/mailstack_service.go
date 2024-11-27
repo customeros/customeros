@@ -90,6 +90,8 @@ func (s *mailstackService) RegisterBuyDomainsWithMailboxes(ctx context.Context, 
 	span.LogKV("request.domains", domains)
 	span.LogKV("request.usernames", usernames)
 
+	tenant := common.GetTenantFromContext(ctx)
+
 	if s.cfg.ExternalServices.StripeConfig.ApiKey == "" {
 		err := errors.New("Stripe API key not set")
 		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
@@ -128,19 +130,20 @@ func (s *mailstackService) RegisterBuyDomainsWithMailboxes(ctx context.Context, 
 			err := s.services.PostgresRepositories.MailstackBuyRequestRepository.StoreDomain(ctx, tx, &entity.MailstackBuyRequestDomain{
 				MailstackBuyRequestId: mailstackBuyRequestId,
 				Domain:                domain,
-				Status:                entity.MailstackBuyRequestDomainStatusPending,
+				Status:                entity.MailstackBuyRequestDomainStatusPendingProvisioning,
 			})
 			if err != nil {
 				return err
 			}
 
 			for _, username := range usernames {
-				err := s.services.PostgresRepositories.MailstackBuyRequestRepository.StoreMailbox(ctx, tx, &entity.MailstackBuyRequestMailbox{
-					MailstackBuyRequestId: mailstackBuyRequestId,
+				err = s.services.MailboxService.CreateMailbox(ctx, tx, CreateMailboxRequest{
+					IgnoreDomainOwnership: true,
 					Domain:                domain,
 					Username:              username,
-					Mailbox:               username + "@" + domain,
-					Status:                entity.MailstackBuyRequestDomainMailboxPending,
+					Password:              utils.GenerateLowerAlpha(1) + utils.GenerateKey(11, false),
+					WebmailEnabled:        true,
+					ForwardingTo:          []string{fmt.Sprintf("bcc@%s.customeros.ai", strings.ToLower(tenant))},
 				})
 				if err != nil {
 					return err
@@ -156,7 +159,7 @@ func (s *mailstackService) RegisterBuyDomainsWithMailboxes(ctx context.Context, 
 	}
 
 	if !test {
-		err = s.services.RabbitMQService.PublishEvent(ctx, mailstackBuyRequestId, model.MAILSTACK_BUY_REQUEST, dto.MailstackBuyRequest{})
+		err = s.services.RabbitMQService.PublishEvent(ctx, mailstackBuyRequestId, model.MAILSTACK_BUY_REQUEST, dto.MailstackProvisionBuyRequest{})
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
