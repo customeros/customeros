@@ -183,7 +183,7 @@ func (l *mailService) parseHeaders(headers map[string]string) EmailHeaders {
 			eh.XLoop = true
 		}
 		if strings.EqualFold(header, "X-Failed-Recipients") {
-			eh.XFailedRecepients = l.extractEmails(value)
+			eh.XFailedRecepients = l.ExtractEmails(value)
 		}
 		if strings.EqualFold(header, "Reply-To") {
 			eh.ReplyToExists = true
@@ -204,14 +204,14 @@ func extractLines(input string) []string {
 
 func (l *mailService) extractEmail(s string) string {
 	// Use the more comprehensive approach for single email extraction
-	emails := l.extractEmails(s)
+	emails := l.ExtractEmails(s)
 	if len(emails) > 0 {
 		return emails[0]
 	}
 	return ""
 }
 
-func (a *mailService) extractEmails(s string) []string {
+func (a *mailService) ExtractEmails(s string) []string {
 	// Regex to match bracketed and unbracketed email addresses
 	emailRegex := regexp.MustCompile(`<([^>]+)>|([^\s,<>]+@[^\s,<>]+)`)
 
