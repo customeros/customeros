@@ -53,10 +53,10 @@ func FathomZapier(services *service.Services) gin.HandlerFunc {
 			return
 		}
 
-		//if !strings.EqualFold(c.Request.UserAgent(), "Zapier") {
-		//	rest.SendError(c, span, http.StatusForbidden, rest.ErrForbidden)
-		//	return
-		//}
+		if !strings.EqualFold(c.Request.UserAgent(), "Zapier") {
+			rest.SendError(c, span, http.StatusForbidden, rest.ErrForbidden)
+			return
+		}
 
 		handleFathomAISummaryZapier(httpContext)
 	}
