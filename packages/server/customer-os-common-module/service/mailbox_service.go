@@ -78,10 +78,10 @@ func (s *mailboxService) AddMailbox(ctx context.Context, request AddMailboxReque
 	}
 
 	// Setup mailbox in OpenSRS
-	if err := s.setupMailbox(ctx, span, request, mailboxEmail); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to setup mailbox in OpenSRS"))
-		return err
-	}
+	//if err := s.setupMailbox(ctx, span, request, mailboxEmail); err != nil {
+	//	tracing.TraceErr(span, errors.Wrap(err, "failed to setup mailbox in OpenSRS"))
+	//	return err
+	//}
 
 	// Save mailbox settings
 	if err := s.saveMailboxSettings(ctx, span, request, mailboxEmail, linkedUserFound); err != nil {

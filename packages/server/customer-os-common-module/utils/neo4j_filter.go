@@ -114,7 +114,7 @@ func CreateCypherFilterEq(propertyName string, value any) *CypherFilter {
 }
 
 func CreateCypherFilterNotEq(propertyName string, value any) *CypherFilter {
-	return CreateCypherFilter(propertyName, value, model.ComparisonOperatorNotEq)
+	return CreateCypherFilter(propertyName, value, model.ComparisonOperatorNotEquals)
 }
 
 func (f *CypherFilter) CypherFilterFragment(nodeAlias string) (Cypher, map[string]any) {
@@ -179,7 +179,7 @@ func (f *CypherFilter) BuildCypherFilterFragmentWithParamName(nodeAlias string, 
 			&CypherFilter{
 				Details: &CypherFilterItem{
 					NodeProperty:        nodeProperty,
-					ComparisonOperator:  model.ComparisonOperatorNotEq,
+					ComparisonOperator:  model.ComparisonOperatorNotEquals,
 					Value:               "",
 					DbNodePropertyProps: dbNodePropertyProps,
 				},
@@ -272,7 +272,9 @@ func CypherString(c model.ComparisonOperator) string {
 		return "is not null"
 	case model.ComparisonOperatorEq:
 		return "="
-	case model.ComparisonOperatorNotEq:
+	case model.ComparisonOperatorEquals:
+		return "="
+	case model.ComparisonOperatorNotEquals:
 		return "<>"
 	case model.ComparisonOperatorContains:
 		return "CONTAINS"

@@ -13745,7 +13745,9 @@ input FilterItem {
 }
 
 enum ComparisonOperator {
-    EQ
+    EQ #deprecated
+    EQUALS
+    NOT_EQUALS
     CONTAINS
     NOT_CONTAINS
     STARTS_WITH
