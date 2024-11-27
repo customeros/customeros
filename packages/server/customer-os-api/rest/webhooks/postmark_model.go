@@ -201,15 +201,3 @@ func EmailWithBrackets(s []string) string {
 
 	return strings.Join(emails, ", ")
 }
-
-type DMARCReport struct {
-	Domain        string
-	EmailProvider string
-	Start         time.Time
-	End           time.Time
-	Messages      int
-	SPFPass       int
-	DKIMPass      int
-	DMARCPass     int
-	Data          string
-}

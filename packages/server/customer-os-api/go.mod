@@ -22,6 +22,7 @@ require (
 	github.com/99designs/gqlgen v0.17.57
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/customeros/mailsherpa v0.3.3
+	github.com/customeros/mailwatcher v0.1.4
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gin-contrib/cors v1.7.2
 	github.com/gin-contrib/zap v1.1.4
@@ -82,7 +83,6 @@ require (
 	github.com/coocood/freecache v1.2.4 // indirect
 	github.com/cpuguy83/dockercfg v0.3.2 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.5 // indirect
-	github.com/customeros/mailwatcher v0.1.3 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/distribution/reference v0.6.0 // indirect
 	github.com/docker/docker v27.3.1+incompatible // indirect

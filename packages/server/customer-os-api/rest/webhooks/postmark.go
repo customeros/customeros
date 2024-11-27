@@ -94,24 +94,29 @@ func processDmarcMonitoringReport(ctx rest.HTTPContext, emailData *PostmarkInbou
 	provider := emailData.DMARCReportProvider()
 
 	reports, err := decodeAndReadDMARCReportFile(emailData.Attachments[0].Content)
-	for _, report := range reports {
-		dbReport := buildDMARCReport(report, provider)
+	if err != nil {
+		return fmt.Errorf("cannot parse dmarc report %s from attachment: %v", attachment.Name, err)
 	}
-	// Save results to database
+	for _, report := range reports {
+		dbReport := buildDMARCReport(report, provider, ctx.Tenant)
+		ctx.Services.Repositories.PostgresRepositories.MailStackDomainRepository.CreateDMARCReport(
+			*ctx.ServiceContext, ctx.Tenant, &dbReport)
+	}
 	return nil
 }
 
-func buildDMARCReport(report dmarcstats.Report, provider string) DMARCReport {
+func buildDMARCReport(report dmarcstats.Report, provider, tenant string) entity.DMARCMonitoring {
 	jsonReport, _ := json.Marshal(report)
-	return DMARCReport{
+	return entity.DMARCMonitoring{
+		Tenant:        tenant,
 		EmailProvider: provider,
 		Domain:        report.Domain,
-		Start:         report.ReportPeriod.Start,
-		End:           report.ReportPeriod.End,
-		Messages:      report.TotalMessages,
-		SPFPass:       report.SPFPassCount,
-		DKIMPass:      report.DKIMPassCount,
-		DMARCPass:     report.DMARCPassCount,
+		ReportStart:   report.ReportPeriod.Start,
+		ReportEnd:     report.ReportPeriod.End,
+		MessageCount:  report.TotalMessages,
+		SPFPass:       report.AuthResults.SPFPassCount,
+		DKIMPass:      report.AuthResults.DKIMPassCount,
+		DMARCPass:     report.AuthResults.DMARCPassCount,
 		Data:          string(jsonReport),
 	}
 }
@@ -227,17 +232,16 @@ func decodeAndReadDMARCReportFile(attachment string) ([]dmarcstats.Report, error
 		defer rc.Close()
 
 		// Read the file contents
-		//[]bytes
 		content, err := io.ReadAll(rc)
 		if err != nil {
 			return reports, fmt.Errorf("failed to read zip file %s: %w", file.Name, err)
 		}
-
-		report, err := dmarcstats.AnalyzeDMARCReport(content)
+		reader := bytes.NewReader(content)
+		report, err := dmarcstats.AnalyzeDMARCReport(reader)
 		if err != nil {
 			return reports, fmt.Errorf("failed to read get dmarc report for file %s: %w", file.Name, err)
 		}
-		reports = append(reports, report)
+		reports = append(reports, *report)
 
 	}
 
