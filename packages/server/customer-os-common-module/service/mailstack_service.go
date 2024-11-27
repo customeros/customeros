@@ -9,10 +9,11 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
-	"github.com/stripe/stripe-go"
-	"github.com/stripe/stripe-go/paymentintent"
+	"github.com/stripe/stripe-go/v81"
+	"github.com/stripe/stripe-go/v81/paymentintent"
 	"gorm.io/gorm"
 	"log"
 	"strings"
@@ -66,21 +67,19 @@ func (s *mailstackService) RegisterBuyDomainsWithMailboxes(ctx context.Context, 
 	stipePaymentDescription := fmt.Sprintf("Mailstack purchase: %d domains (%s) with usernames (%s)", len(domains), strings.Join(domains, ", "), strings.Join(usernames, ", "))
 
 	params := &stripe.PaymentIntentParams{
-		Amount:   stripe.Int64(amount),                      // Amount in cents (e.g., $20.00)
-		Currency: stripe.String(string(stripe.CurrencyUSD)), // Currency (e.g., USD)
-		PaymentMethodTypes: stripe.StringSlice([]string{
-			"card", // Allowed payment method types
-		}),
+		Amount:       stripe.Int64(amount),                      // Amount in cents (e.g., $20.00)
+		Currency:     stripe.String(string(stripe.CurrencyUSD)), // Currency (e.g., USD)
 		Description:  stripe.String(stipePaymentDescription),
 		ReceiptEmail: stripe.String(email),
-		Params: stripe.Params{
-			Metadata: map[string]string{
-				"mailstack_buy_request_id": id,
-				"tenant":                   tenant,
-				"username":                 email,
-				"domains":                  strings.Join(domains, ","),
-				"usernames":                strings.Join(usernames, ","),
-			},
+		AutomaticPaymentMethods: &stripe.PaymentIntentAutomaticPaymentMethodsParams{
+			Enabled: utils.BoolPtr(true),
+		},
+		Metadata: map[string]string{
+			"mailstack_buy_request_id": id,
+			"tenant":                   tenant,
+			"username":                 email,
+			"domains":                  strings.Join(domains, ","),
+			"usernames":                strings.Join(usernames, ","),
 		},
 	}
 

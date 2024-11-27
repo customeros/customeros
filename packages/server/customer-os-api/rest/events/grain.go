@@ -60,53 +60,64 @@ func GrainZapier(services *service.Services) gin.HandlerFunc {
 func handleGrainNewRecordingEventZapier(ctx rest.HTTPContext) {
 	var grainData GrainRecordingData
 	err := ctx.GinContext.BindJSON(&grainData)
-	if err == nil && grainData.Data.IntelligenceNotesMD != "" {
-		err = cleanJsonPayload(&grainData)
-		if err != nil {
-			tracing.TraceErr(ctx.Span, errors.Wrap(err, "failed to clean grain json payload"))
-			return
-		}
-
-		ctx.GinContext.JSON(http.StatusAccepted, rest.BuildBaseResponse(rest.StatusProcessing))
-
-		go func() {
-			if err := createEventFromGrainRecordingZapier(ctx, &grainData); err != nil {
-				tracing.TraceErr(ctx.Span, errors.Wrap(err, "failed to process Grain AI summary from zapier"))
-			}
-		}()
+	if err != nil {
+		rest.SendError(ctx.GinContext, ctx.Span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Unable to parse payload from Zapier"))
 		return
 	}
 
+	err = cleanGrainJsonPayload(&grainData)
+	if err != nil {
+		rest.SendError(ctx.GinContext, ctx.Span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Unable to normalize payload from Zapier"))
+		return
+	}
+
+	if grainData.Data.IntelligenceNotesMD == "" {
+		rest.SendError(ctx.GinContext, ctx.Span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("No Grain meeting in payload"))
+	}
+
+	ctx.GinContext.JSON(http.StatusAccepted, rest.BuildBaseResponse(rest.StatusProcessing))
+
+	go func() {
+		if err := createEventFromGrainRecordingZapier(ctx, &grainData); err != nil {
+			tracing.TraceErr(ctx.Span, errors.Wrap(err, "failed to process Grain AI summary from zapier"))
+		}
+	}()
 	return
 }
 
-func cleanJsonPayload(data *GrainRecordingData) error {
-	ownersJson := utils.ReplaceSingleQuotesWithDoubleQuotes(data.Data.OwnersStr)
-	var owners []string
-	err := json.Unmarshal([]byte(ownersJson), &owners)
-	if err != nil {
-		return err
+func cleanGrainJsonPayload(data *GrainRecordingData) error {
+	if data.Data.OwnersStr != "" {
+		ownersJson := utils.ReplaceSingleQuotesWithDoubleQuotes(data.Data.OwnersStr)
+		var owners []string
+		err := json.Unmarshal([]byte(ownersJson), &owners)
+		if err != nil {
+			return err
+		}
+		data.Data.Owners = owners
 	}
-	data.Data.Owners = owners
 
-	participantsJson := utils.ReplaceSingleQuotesWithDoubleQuotes(data.Data.ParticipantsStr)
+	if data.Data.ParticipantsStr != "" {
+		participantsJson := utils.ReplaceSingleQuotesWithDoubleQuotes(data.Data.ParticipantsStr)
 
-	participantsJson = strings.Replace(participantsJson, " True", " true", -1)
-	participantsJson = strings.Replace(participantsJson, " False", " false", -1)
-	participantsJson = strings.Replace(participantsJson, " None", " \"\"", -1)
+		participantsJson = strings.Replace(participantsJson, " True", " true", -1)
+		participantsJson = strings.Replace(participantsJson, " False", " false", -1)
+		participantsJson = strings.Replace(participantsJson, " None", " \"\"", -1)
 
-	var participants []GrainParticipant
-	err = json.Unmarshal([]byte(participantsJson), &participants)
-	if err != nil {
-		return err
+		var participants []GrainParticipant
+		err := json.Unmarshal([]byte(participantsJson), &participants)
+		if err != nil {
+			return err
+		}
+		data.Data.Participants = participants
 	}
-	data.Data.Participants = participants
 
-	tagsJson := utils.ReplaceSingleQuotesWithDoubleQuotes(data.Data.TagsStr)
-	var tags []string
-	err = json.Unmarshal([]byte(tagsJson), &tags)
-	if err != nil {
-		return err
+	if data.Data.TagsStr != "" {
+		tagsJson := utils.ReplaceSingleQuotesWithDoubleQuotes(data.Data.TagsStr)
+		var tags []string
+		err := json.Unmarshal([]byte(tagsJson), &tags)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

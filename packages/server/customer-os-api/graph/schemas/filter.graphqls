@@ -60,20 +60,16 @@ input FilterItem {
 enum ComparisonOperator {
     EQ
     CONTAINS
+    NOT_CONTAINS
     STARTS_WITH
     LTE
     GTE
     IN
     BETWEEN
     IS_NULL
+    IS_NOT_NULL
     IS_EMPTY
+    IS_NOT_EMPTY
     LT
     GT
-    IS_NONE_OF
-    IS_NOT_EMPTY
-    NOT_CONTAINS
-    """
-    Not supported yet
-    """
-    NOT_EQUAL
 }

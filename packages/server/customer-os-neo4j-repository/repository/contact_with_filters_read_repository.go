@@ -111,12 +111,12 @@ func (r *contactWithFiltersReadRepository) GetFilteredContactIds(ctx context.Con
 			if getContactSearchParam(filterPart.Filter.Property) == contactSearchParamTags {
 				tagFilter.Filters = append(tagFilter.Filters, utils.CreateCypherFilterIn(string(neo4jentity.TagPropertyId), *filterPart.Filter.Value.ArrayStr))
 			} else if getContactSearchParam(filterPart.Filter.Property) == contactSearchParamLinkedInFollowerCount {
-				socialFilter.Filters = append(socialFilter.Filters, utils.CreateCypherFilter(string(neo4jentity.SocialPropertyUrl), "linkedin.", utils.CONTAINS))
+				socialFilter.Filters = append(socialFilter.Filters, utils.CreateCypherFilter(string(neo4jentity.SocialPropertyUrl), "linkedin.", model.ComparisonOperatorContains))
 				if filterPart.Filter.Operation == model.ComparisonOperatorBetween {
-					socialFilter.Filters = append(socialFilter.Filters, utils.CreateCypherFilter(string(neo4jentity.SocialPropertyFollowersCount), *filterPart.Filter.Value.ArrayInt, utils.BETWEEN))
+					socialFilter.Filters = append(socialFilter.Filters, utils.CreateCypherFilter(string(neo4jentity.SocialPropertyFollowersCount), *filterPart.Filter.Value.ArrayInt, model.ComparisonOperatorBetween))
 				} else {
 					// expecting only LTE / LT / GTE / GT
-					socialFilter.Filters = append(socialFilter.Filters, utils.CreateCypherFilter(string(neo4jentity.SocialPropertyFollowersCount), (*filterPart.Filter.Value.ArrayInt)[0], filterPart.Filter.Operation.GetOperator()))
+					socialFilter.Filters = append(socialFilter.Filters, utils.CreateCypherFilter(string(neo4jentity.SocialPropertyFollowersCount), (*filterPart.Filter.Value.ArrayInt)[0], filterPart.Filter.Operation))
 				}
 			} else if getContactSearchParam(filterPart.Filter.Property) == ContactSearchParamStage {
 				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilterEq(string(neo4jentity.OrganizationPropertyStage), *filterPart.Filter.Value.Str))

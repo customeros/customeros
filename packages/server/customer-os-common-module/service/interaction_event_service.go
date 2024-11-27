@@ -410,7 +410,7 @@ func (s *interactionEventService) linkInteractionEventParticipantInTx(ctx contex
 			linkWithId = emailId
 		} else {
 			//TODO create and use inTx method
-			createdEmailId, err := s.services.EmailService.Merge(ctx, "",
+			createdEmailId, err := s.services.EmailService.Merge(ctx, nil, "",
 				EmailFields{
 					Email:     *linkWIthData.Email,
 					AppSource: ""},

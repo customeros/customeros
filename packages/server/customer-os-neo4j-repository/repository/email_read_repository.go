@@ -26,7 +26,7 @@ type EmailReadRepository interface {
 	GetAllEmailNodesForLinkedEntityIds(ctx context.Context, tenant string, entityType neo4jenum.EntityType, entityIds []string) ([]*utils.DbNodeWithRelationAndId, error)
 	GetPrimaryEmailNodesForLinkedEntityIds(ctx context.Context, tenant string, entityType neo4jenum.EntityType, entityIds []string) ([]*utils.DbNodeWithRelationAndId, error)
 	GetEmailsForValidation(ctx context.Context, delayFromLastUpdateInSeconds, delayFromLastValidationAttemptInMinutes, limit int) ([]TenantAndEmailId, error)
-	IsLinkedToEntityByEmailAddress(ctx context.Context, tenant, email, entityId string, entityType neo4jenum.EntityType) (bool, error)
+	IsLinkedToEntityByEmailAddress(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, email, entityId string, entityType neo4jenum.EntityType) (bool, error)
 	GetOrphanEmailNodes(ctx context.Context, limit, hoursFromLastUpdate int) ([]TenantAndEmailId, error)
 	IsOrphanEmail(ctx context.Context, tenant, emailId string) (bool, error)
 	GetTestEmailForFlows(ctx context.Context, tenant string) (string, error)
@@ -343,7 +343,7 @@ func (r *emailReadRepository) GetEmailsForValidation(ctx context.Context, delayF
 	return output, nil
 }
 
-func (r *emailReadRepository) IsLinkedToEntityByEmailAddress(ctx context.Context, tenant, email, entityId string, entityType neo4jenum.EntityType) (bool, error) {
+func (r *emailReadRepository) IsLinkedToEntityByEmailAddress(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, email, entityId string, entityType neo4jenum.EntityType) (bool, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailReadRepository.IsLinkedToEntityByEmailAddress")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
@@ -376,7 +376,7 @@ func (r *emailReadRepository) IsLinkedToEntityByEmailAddress(ctx context.Context
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
 
-	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+	result, err := utils.ExecuteReadInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
 			return nil, err
 		} else {

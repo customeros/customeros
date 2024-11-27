@@ -418,14 +418,14 @@ func (r *mutationResolver) FlowDummy1Email(ctx context.Context, flowsCount int, 
 		userEmail := fmt.Sprintf("user%d@test.com", i)
 		mailboxdId := uuid.New().String()
 
-		err = r.Services.CommonServices.Neo4jRepositories.EmailWriteRepository.CreateEmail(ctx, tenant, mailboxdId, repository.EmailCreateFields{RawEmail: userEmail})
+		err = r.Services.CommonServices.Neo4jRepositories.EmailWriteRepository.CreateEmail(ctx, nil, tenant, mailboxdId, repository.EmailCreateFields{RawEmail: userEmail})
 		if err != nil {
 			tracing.TraceErr(span, err)
 			graphql.AddErrorf(ctx, "")
 			return nil, err
 		}
 
-		err = r.Services.CommonServices.Neo4jRepositories.EmailWriteRepository.LinkWithUser(ctx, tenant, userId, mailboxdId, false)
+		err = r.Services.CommonServices.Neo4jRepositories.EmailWriteRepository.LinkWithUser(ctx, nil, tenant, userId, mailboxdId, false)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			graphql.AddErrorf(ctx, "")
@@ -466,14 +466,14 @@ func (r *mutationResolver) FlowDummy1Email(ctx context.Context, flowsCount int, 
 			}
 
 			emailMailboxId := uuid.New().String()
-			err = r.Services.CommonServices.Neo4jRepositories.EmailWriteRepository.CreateEmail(ctx, tenant, emailMailboxId, repository.EmailCreateFields{RawEmail: mailboxUsername})
+			err = r.Services.CommonServices.Neo4jRepositories.EmailWriteRepository.CreateEmail(ctx, nil, tenant, emailMailboxId, repository.EmailCreateFields{RawEmail: mailboxUsername})
 			if err != nil {
 				tracing.TraceErr(span, err)
 				graphql.AddErrorf(ctx, "")
 				return nil, err
 			}
 
-			err = r.Services.CommonServices.Neo4jRepositories.EmailWriteRepository.LinkWithUser(ctx, tenant, userId, emailMailboxId, false)
+			err = r.Services.CommonServices.Neo4jRepositories.EmailWriteRepository.LinkWithUser(ctx, nil, tenant, userId, emailMailboxId, false)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				graphql.AddErrorf(ctx, "")

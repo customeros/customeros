@@ -212,7 +212,7 @@ func (s *mailboxService) createEmailNode(ctx context.Context, span opentracing.S
 		}
 	}
 
-	_, err := s.services.EmailService.Merge(ctx, tenant, emailFields, linkWith)
+	_, err := s.services.EmailService.Merge(ctx, nil, tenant, emailFields, linkWith)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Error creating email node for mailbox"))
 		return err

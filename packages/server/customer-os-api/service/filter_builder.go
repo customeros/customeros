@@ -73,35 +73,12 @@ func buildFilter(modelFilter *model.Filter, T reflect.Type) (*utils.CypherFilter
 			SupportCaseSensitive: props[utils.TagSupportCaseSensitive] == "true",
 			CaseSensitive:        *modelFilter.Filter.CaseSensitive == true,
 			Value:                modelFilter.Filter.Value.RealValue(),
-			ComparisonOperator:   comparisonOperatorToEnum(modelFilter.Filter.Operation),
+			ComparisonOperator:   modelFilter.Filter.Operation,
 			DbNodePropertyProps:  props,
 		}
 		cypherFilter.Details = &cypherFilterItem
 	}
 	return cypherFilter, nil
-}
-
-func comparisonOperatorToEnum(co model.ComparisonOperator) utils.ComparisonOperator {
-	switch co {
-	case model.ComparisonOperatorContains:
-		return utils.CONTAINS
-	case model.ComparisonOperatorStartsWith:
-		return utils.STARTS_WITH
-	case model.ComparisonOperatorIn:
-		return utils.IN
-	case model.ComparisonOperatorLte:
-		return utils.LTE
-	case model.ComparisonOperatorGte:
-		return utils.GTE
-	case model.ComparisonOperatorBetween:
-		return utils.BETWEEN
-	case model.ComparisonOperatorIsNull:
-		return utils.IS_NULL
-	case model.ComparisonOperatorIsEmpty:
-		return utils.IS_EMPTY
-	default:
-		return utils.EQUALS
-	}
 }
 
 func newFilterError() error {

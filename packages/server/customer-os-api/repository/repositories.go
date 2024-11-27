@@ -36,7 +36,8 @@ type Repositories struct {
 	//Deprecated
 	SearchRepository SearchRepository
 	//Deprecated
-	DashboardRepository DashboardRepository
+	DashboardRepository   DashboardRepository
+	DashboardV2Repository DashboardV2Repository
 	//Deprecated
 	IssueRepository IssueRepository
 	//Deprecated
@@ -73,6 +74,7 @@ func InitRepos(driver *neo4j.DriverWithContext, database string, gormDb *gorm.DB
 	repositories.TagRepository = NewTagRepository(driver)
 	repositories.SearchRepository = NewSearchRepository(driver)
 	repositories.DashboardRepository = NewDashboardRepository(driver)
+	repositories.DashboardV2Repository = NewDashboardV2Repository(driver)
 	repositories.IssueRepository = NewIssueRepository(driver, database)
 	repositories.MeetingRepository = NewMeetingRepository(driver)
 	repositories.ActionRepository = NewActionRepository(driver)

@@ -141,3 +141,7 @@ func (c ContactEntity) DeriveFirstAndLastNames() (string, string) {
 
 	return firstName, lastName
 }
+
+func (c ContactEntity) IsHidden() bool {
+	return c.Hide
+}

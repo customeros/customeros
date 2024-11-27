@@ -61,6 +61,7 @@ type Config struct {
 		OpenSRSConfig   config.OpenSRSConfig
 		NamecheapConfig config.NamecheapConfig
 		StripeConfig    config.StripeConfig
+		PostmarkConfig  config.PostmarkConfig
 	}
 }
 

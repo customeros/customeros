@@ -213,7 +213,7 @@ func (s *userService) syncUser(ctx context.Context, syncMutex *sync.Mutex, userI
 		}
 	}
 	if !failedSync && userInput.HasEmail() {
-		_, err = s.services.CommonServices.EmailService.Merge(ctx, tenant,
+		_, err = s.services.CommonServices.EmailService.Merge(ctx, nil, tenant,
 			commonservice.EmailFields{
 				Email:     userInput.Email,
 				AppSource: userInput.AppSource,

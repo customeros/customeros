@@ -545,7 +545,7 @@ func initializeUser(c context.Context, services *service.Services, provider, pro
 			AppSource: constants.AppSourceUserAdminApi,
 		})
 
-		_, err = services.CommonServices.EmailService.Merge(innerCtx, tenant, commonservice.EmailFields{
+		_, err = services.CommonServices.EmailService.Merge(innerCtx, nil, tenant, commonservice.EmailFields{
 			Primary:   true,
 			Email:     email,
 			Source:    neo4jentity.DataSourceOpenline,

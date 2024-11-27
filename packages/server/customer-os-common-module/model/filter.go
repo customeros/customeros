@@ -3,7 +3,8 @@ package model
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/pkg/errors"
+	"strings"
 	"time"
 )
 
@@ -26,32 +27,22 @@ type FilterItem struct {
 type ComparisonOperator string
 
 const (
-	ComparisonOperatorEq         ComparisonOperator = "EQ"
-	ComparisonOperatorContains   ComparisonOperator = "CONTAINS"
-	ComparisonOperatorStartsWith ComparisonOperator = "STARTS_WITH"
-	ComparisonOperatorLte        ComparisonOperator = "LTE"
-	ComparisonOperatorGte        ComparisonOperator = "GTE"
-	ComparisonOperatorIn         ComparisonOperator = "IN"
-	ComparisonOperatorBetween    ComparisonOperator = "BETWEEN"
-	ComparisonOperatorIsNull     ComparisonOperator = "IS_NULL"
-	ComparisonOperatorIsEmpty    ComparisonOperator = "IS_EMPTY"
-	ComparisonOperatorLt         ComparisonOperator = "LT"
-	ComparisonOperatorGt         ComparisonOperator = "GT"
+	ComparisonOperatorEq          ComparisonOperator = "EQ"
+	ComparisonOperatorNotEq       ComparisonOperator = "NOT_EQ"
+	ComparisonOperatorContains    ComparisonOperator = "CONTAINS"
+	ComparisonOperatorNotContains ComparisonOperator = "NOT_CONTAINS"
+	ComparisonOperatorStartsWith  ComparisonOperator = "STARTS_WITH"
+	ComparisonOperatorLte         ComparisonOperator = "LTE"
+	ComparisonOperatorGte         ComparisonOperator = "GTE"
+	ComparisonOperatorIn          ComparisonOperator = "IN"
+	ComparisonOperatorBetween     ComparisonOperator = "BETWEEN"
+	ComparisonOperatorIsNull      ComparisonOperator = "IS_NULL"
+	ComparisonOperatorIsNotNull   ComparisonOperator = "IS_NOT_NULL"
+	ComparisonOperatorIsEmpty     ComparisonOperator = "IS_EMPTY"
+	ComparisonOperatorIsNotEmpty  ComparisonOperator = "IS_NOT_EMPTY"
+	ComparisonOperatorLt          ComparisonOperator = "LT"
+	ComparisonOperatorGt          ComparisonOperator = "GT"
 )
-
-func (c ComparisonOperator) GetOperator() utils.ComparisonOperator {
-	switch c {
-	case ComparisonOperatorLte:
-		return utils.LTE
-	case ComparisonOperatorGte:
-		return utils.GTE
-	case ComparisonOperatorLt:
-		return utils.LT
-	case ComparisonOperatorGt:
-		return utils.GT
-	}
-	return utils.EQUALS
-}
 
 type AnyTypeValue struct {
 	Str   *string
@@ -132,7 +123,7 @@ func UnmarshalAnyTypeValue(input any) (AnyTypeValue, error) {
 			var arrayStr []string
 			var arrayTime []time.Time
 			for _, v := range input {
-				dateTime, err := utils.UnmarshalDateTime(v.(string))
+				dateTime, err := UnmarshalDateTime(v.(string))
 				if err == nil {
 					arrayTime = append(arrayTime, *dateTime)
 					continue
@@ -172,6 +163,51 @@ func UnmarshalFilter(input string) (*Filter, error) {
 	}
 
 	return &filter, nil
+}
+
+const customLayout1 = "2006-01-02 15:04:05"
+const customLayout2 = "2006-01-02T15:04:05.000-0700"
+const customLayout3 = "2006-01-02T15:04:05-07:00"
+const customLayout4 = "Mon, 2 Jan 2006 15:04:05 -0700 (MST)"
+const customLayout5 = "Mon, 2 Jan 2006 15:04:05 MST"
+const customLayout6 = "Mon, 2 Jan 2006 15:04:05 -0700"
+const customLayout7 = "Mon, 2 Jan 2006 15:04:05 +0000 (GMT)"
+const customLayout8 = "Mon, 2 Jan 2006 15:04:05 -0700 (MST)"
+const customLayout9 = "2 Jan 2006 15:04:05 -0700"
+
+func UnmarshalDateTime(input string) (*time.Time, error) {
+	if input == "" {
+		return nil, nil
+	}
+	t, err := time.Parse(time.RFC3339, input)
+	if err == nil {
+		// Parsed as RFC3339
+		return &t, nil
+	}
+
+	// Try custom layouts
+	customLayouts := []string{customLayout1, customLayout2, customLayout4, customLayout5, customLayout6, customLayout7, customLayout8, customLayout9}
+
+	for _, layout := range customLayouts {
+		t, err = time.Parse(layout, input)
+		if err == nil {
+			return &t, nil
+		}
+	}
+	inputForLayout3 := input
+	if !strings.Contains(input, "[UTC]") {
+		index := strings.Index(input, "[")
+		// If found, strip off the timezone information
+		if index != -1 {
+			inputForLayout3 = input[:index]
+		}
+	}
+	t, err = time.Parse(customLayout3, inputForLayout3)
+	if err == nil {
+		return &t, nil
+	}
+
+	return nil, errors.New(fmt.Sprintf("cannot parse input as date time %s", input))
 }
 
 func processFilter(filter *Filter) error {

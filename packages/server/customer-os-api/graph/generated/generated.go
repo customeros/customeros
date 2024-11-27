@@ -13846,22 +13846,18 @@ input FilterItem {
 enum ComparisonOperator {
     EQ
     CONTAINS
+    NOT_CONTAINS
     STARTS_WITH
     LTE
     GTE
     IN
     BETWEEN
     IS_NULL
+    IS_NOT_NULL
     IS_EMPTY
+    IS_NOT_EMPTY
     LT
     GT
-    IS_NONE_OF
-    IS_NOT_EMPTY
-    NOT_CONTAINS
-    """
-    Not supported yet
-    """
-    NOT_EQUAL
 }`, BuiltIn: false},
 	{Name: "../schemas/flow.graphqls", Input: `extend type Query {
     flow(id: ID!): Flow! @hasRole(roles: [ADMIN, USER]) @hasTenant
@@ -106964,7 +106960,7 @@ func (ec *executionContext) unmarshalInputFilterItem(ctx context.Context, obj in
 			it.Property = data
 		case "operation":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("operation"))
-			data, err := ec.unmarshalNComparisonOperator2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐComparisonOperator(ctx, v)
+			data, err := ec.unmarshalNComparisonOperator2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐComparisonOperator(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -127393,14 +127389,20 @@ func (ec *executionContext) marshalNComment2ᚖgithubᚗcomᚋopenlineᚑaiᚋop
 	return ec._Comment(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNComparisonOperator2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐComparisonOperator(ctx context.Context, v interface{}) (model.ComparisonOperator, error) {
-	var res model.ComparisonOperator
-	err := res.UnmarshalGQL(v)
+func (ec *executionContext) unmarshalNComparisonOperator2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐComparisonOperator(ctx context.Context, v interface{}) (model1.ComparisonOperator, error) {
+	tmp, err := graphql.UnmarshalString(v)
+	res := model1.ComparisonOperator(tmp)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNComparisonOperator2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐComparisonOperator(ctx context.Context, sel ast.SelectionSet, v model.ComparisonOperator) graphql.Marshaler {
-	return v
+func (ec *executionContext) marshalNComparisonOperator2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐComparisonOperator(ctx context.Context, sel ast.SelectionSet, v model1.ComparisonOperator) graphql.Marshaler {
+	res := graphql.MarshalString(string(v))
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
 }
 
 func (ec *executionContext) marshalNContact2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContact(ctx context.Context, sel ast.SelectionSet, v model.Contact) graphql.Marshaler {
