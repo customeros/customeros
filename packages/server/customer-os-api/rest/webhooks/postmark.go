@@ -1,20 +1,17 @@
 package webhooks
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
@@ -81,7 +78,7 @@ func processInboundEmail(ctx rest.HTTPContext, emailData *PostmarkInboundEmailDa
 		return err
 	}
 
-	messageId := emailData.HeaderMessageID()
+	messageId := emailData.GetHeaderValue("Message-Id")
 	emailExistsInDb, err := ctx.Services.CommonServices.PostgresRepositories.RawEmailRepository.EmailExistsByMessageId(
 		*ctx.ServiceContext, EXTERNAL_SYSTEM, ctx.Tenant, username, messageId,
 	)
@@ -110,6 +107,8 @@ func processInboundEmail(ctx rest.HTTPContext, emailData *PostmarkInboundEmailDa
 	// Check to see if email is a reply to a flow.  If so, mark as complete.
 	// This should be handled in the email processor common service, not here.
 	// Same with goal achieved.
+	// Move slack notifications to processing service
+	// Handle attachments
 
 	return nil
 }

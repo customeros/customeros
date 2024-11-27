@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/customeros/mailsherpa/mailvalidate"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 )
@@ -63,7 +62,7 @@ type PostmarkInboundEmailData struct {
 func (p *PostmarkInboundEmailData) TenantFromBcc() string {
 	var tenant string
 	for _, address := range p.BccFull {
-		validation := mailvalidate.SyntaxValidation(address.Email)
+		validation := mailvalidate.ValidateEmailSyntax(address.Email)
 		if validation.IsValid {
 			tenant = strings.Split(validation.Domain, ".")[0]
 		}
@@ -155,7 +154,7 @@ func (p *PostmarkInboundEmailData) GetHeaders() map[string]string {
 }
 
 func (p *PostmarkInboundEmailData) ToRawDbObject() entity.EmailRawData {
-	var result entity.RawEmailData
+	var result entity.EmailRawData
 
 	messageId := p.GetHeaderValue("Message-Id")
 	result.ProviderMessageId = messageId
