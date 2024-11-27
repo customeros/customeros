@@ -335,7 +335,7 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 	}
 	if !failedSync {
 		if orgInput.HasEmail() {
-			_, err = s.services.CommonServices.EmailService.Merge(ctx, tenant,
+			_, err = s.services.CommonServices.EmailService.Merge(ctx, nil, tenant,
 				commonservice.EmailFields{
 					Email:     orgInput.Email,
 					AppSource: orgInput.AppSource,

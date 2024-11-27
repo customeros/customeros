@@ -3,10 +3,7 @@ package service
 import (
 	"context"
 	"errors"
-	constants "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
-	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
-	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	commonUtils "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
@@ -90,21 +87,7 @@ func (s *registrationService) CreateOrganizationAndContact(ctx context.Context, 
 		}
 
 		if contactNode == nil {
-			contactId, err = s.services.CommonServices.ContactService.Save(ctx, nil, nil, data_fields.ContactFields{}, false)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				return nil, nil, err
-			}
-
-			_, err := s.services.CommonServices.EmailService.Merge(ctx, tenant,
-				commonservice.EmailFields{
-					Email:     email,
-					Source:    neo4jentity.DataSourceOpenline,
-					AppSource: constants.AppSourceUserAdminApi,
-				}, &commonservice.LinkWith{
-					Type: commonModel.CONTACT,
-					Id:   contactId,
-				})
+			contactId, err = s.services.CommonServices.ContactService.CreateContactByEmail(ctx, nil, email)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return nil, nil, err

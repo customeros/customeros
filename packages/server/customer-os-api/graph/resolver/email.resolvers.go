@@ -77,7 +77,7 @@ func (r *mutationResolver) EmailMergeToContact(ctx context.Context, contactID st
 	span.LogFields(log.String("request.contactID", contactID))
 	tracing.LogObjectAsJson(span, "request.emailInput", input)
 
-	emailId, err := r.Services.CommonServices.EmailService.Merge(ctx, common.GetTenantFromContext(ctx),
+	emailId, err := r.Services.CommonServices.EmailService.Merge(ctx, nil, common.GetTenantFromContext(ctx),
 		commonservice.EmailFields{
 			Email:     strings.TrimSpace(input.Email),
 			Primary:   utils.IfNotNilBool(input.Primary),
@@ -200,7 +200,7 @@ func (r *mutationResolver) EmailMergeToUser(ctx context.Context, userID string, 
 	span.LogFields(log.String("request.userID", userID))
 	tracing.LogObjectAsJson(span, "request.input", input)
 
-	emailId, err := r.Services.CommonServices.EmailService.Merge(ctx, common.GetTenantFromContext(ctx),
+	emailId, err := r.Services.CommonServices.EmailService.Merge(ctx, nil, common.GetTenantFromContext(ctx),
 		commonservice.EmailFields{
 			Email:     strings.TrimSpace(input.Email),
 			Primary:   utils.IfNotNilBool(input.Primary),
@@ -301,7 +301,7 @@ func (r *mutationResolver) EmailMergeToOrganization(ctx context.Context, organiz
 	span.LogFields(log.String("request.organizationID", organizationID))
 	tracing.LogObjectAsJson(span, "request.input", input)
 
-	emailId, err := r.Services.CommonServices.EmailService.Merge(ctx, common.GetTenantFromContext(ctx),
+	emailId, err := r.Services.CommonServices.EmailService.Merge(ctx, nil, common.GetTenantFromContext(ctx),
 		commonservice.EmailFields{
 			Email:     strings.TrimSpace(input.Email),
 			Primary:   utils.IfNotNilBool(input.Primary),

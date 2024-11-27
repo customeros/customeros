@@ -130,7 +130,7 @@ func (s *contactService) Create(ctx context.Context, contactDetails *ContactCrea
 	}
 
 	if contactDetails.EmailEntity != nil {
-		_, err := s.services.CommonServices.EmailService.Merge(ctx, common.GetTenantFromContext(ctx),
+		_, err := s.services.CommonServices.EmailService.Merge(ctx, nil, common.GetTenantFromContext(ctx),
 			commonservice.EmailFields{
 				Email:     strings.TrimSpace(utils.FirstNotEmptyString(contactDetails.EmailEntity.Email, contactDetails.EmailEntity.RawEmail)),
 				Primary:   utils.IfNotNilBool(contactDetails.EmailEntity.Primary),
@@ -449,7 +449,7 @@ func (s *contactService) CustomerContactCreate(ctx context.Context, data *Custom
 	result.ID = contactId
 
 	if data.EmailEntity != nil {
-		emailId, err := s.services.CommonServices.EmailService.Merge(ctx, common.GetTenantFromContext(ctx),
+		emailId, err := s.services.CommonServices.EmailService.Merge(ctx, nil, common.GetTenantFromContext(ctx),
 			commonservice.EmailFields{
 				Email:     strings.TrimSpace(utils.FirstNotEmptyString(data.EmailEntity.Email, data.EmailEntity.RawEmail)),
 				Primary:   utils.IfNotNilBool(data.EmailEntity.Primary),

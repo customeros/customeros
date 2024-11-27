@@ -43,7 +43,7 @@ func (r *mutationResolver) UserCreate(ctx context.Context, input model.UserInput
 	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 
 	if input.Email != nil {
-		_, err = r.Services.CommonServices.EmailService.Merge(ctx, common.GetTenantFromContext(ctx),
+		_, err = r.Services.CommonServices.EmailService.Merge(ctx, nil, common.GetTenantFromContext(ctx),
 			commonservice.EmailFields{
 				Email:     input.Email.Email,
 				Primary:   utils.IfNotNilBool(input.Email.Primary),

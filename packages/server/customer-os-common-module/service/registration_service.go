@@ -139,7 +139,7 @@ func (s *registrationService) setupTestMailbox(ctx context.Context, span opentra
 	mailboxAddress := strings.ToLower(fmt.Sprintf("%s@%s", tenant, TEST_MAILBOX_DOMAIN))
 	testUser.mailboxAddress = mailboxAddress
 
-	testEmailId, err := s.services.EmailService.Merge(ctx, tenant, EmailFields{
+	testEmailId, err := s.services.EmailService.Merge(ctx, nil, tenant, EmailFields{
 		Email: mailboxAddress,
 	}, &LinkWith{
 		Type: model.USER,

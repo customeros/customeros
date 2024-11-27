@@ -780,7 +780,7 @@ func (r *mutationResolver) ContactFindWorkEmail(ctx context.Context, contactID s
 	emailLinked := false
 	for _, email := range emailsToCreateAndLinkWithContact {
 		if !utils.Contains(currentEmails, email) {
-			_, err = r.Services.CommonServices.EmailService.Merge(ctx, common.GetTenantFromContext(ctx),
+			_, err = r.Services.CommonServices.EmailService.Merge(ctx, nil, common.GetTenantFromContext(ctx),
 				commonService.EmailFields{
 					Email:     email,
 					AppSource: constants.AppSourceCustomerOsApi,

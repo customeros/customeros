@@ -97,7 +97,7 @@ func (h *EmailEventHandler) OnEmailValidatedV2(ctx context.Context, evt eventsto
 				Tenant:    eventData.Tenant,
 				AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 			})
-			_, err = h.services.CommonServices.EmailService.Merge(innerCtx, eventData.Tenant,
+			_, err = h.services.CommonServices.EmailService.Merge(innerCtx, nil, eventData.Tenant,
 				commonservice.EmailFields{
 					Email:     eventData.AlternateEmail,
 					Source:    neo4jentity.DataSourceOpenline,
@@ -120,7 +120,7 @@ func (h *EmailEventHandler) OnEmailValidatedV2(ctx context.Context, evt eventsto
 				Tenant:    eventData.Tenant,
 				AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 			})
-			_, err = h.services.CommonServices.EmailService.Merge(innerCtx, eventData.Tenant,
+			_, err = h.services.CommonServices.EmailService.Merge(innerCtx, nil, eventData.Tenant,
 				commonservice.EmailFields{
 					Email:     eventData.AlternateEmail,
 					Source:    neo4jentity.DataSourceOpenline,

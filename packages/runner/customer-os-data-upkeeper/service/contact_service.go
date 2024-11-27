@@ -931,7 +931,7 @@ func (s *contactService) EnrichWithWorkEmailFromBetterContact() {
 		if len(betterContactResponse.Data) > 0 {
 			for _, item := range betterContactResponse.Data {
 				if item.ContactEmailAddress != "" && !utils.Contains(currentEmails, item.ContactEmailAddress) {
-					_, err = s.commonServices.EmailService.Merge(innerCtx, record.Tenant,
+					_, err = s.commonServices.EmailService.Merge(innerCtx, nil, record.Tenant,
 						commonService.EmailFields{
 							Email:     item.ContactEmailAddress,
 							AppSource: constants.AppSourceDataUpkeeper,
