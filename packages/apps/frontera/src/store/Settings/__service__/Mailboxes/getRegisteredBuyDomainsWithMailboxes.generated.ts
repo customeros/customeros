@@ -7,18 +7,18 @@ export type GetRegisteredBuyDomainsWithMailboxesQueryVariables = Types.Exact<{
 export type GetRegisteredBuyDomainsWithMailboxesQuery = {
   __typename?: 'Query';
   mailstack_RegisteredBuyDomainsWithMailboxes: Array<{
-    __typename?: 'RegisteredBuyDomainWithMailboxes';
+    __typename?: 'MailstackBuyRequest';
     id: string;
     createdAt: any;
-    domain: {
-      __typename?: 'MailstackDomain';
+    domains: Array<{
+      __typename?: 'MailstackBuyRequestDomain';
       domain: string;
-      status: Types.MailstackStatus;
-    };
+      status: Types.MailstackBuyRequestDomainStatus;
+    }>;
     mailboxes: Array<{
-      __typename?: 'MailstackMailbox';
+      __typename?: 'MailstackBuyRequestMailbox';
       mailbox: string;
-      status: Types.MailstackStatus;
+      status: Types.MailstackBuyRequestMailboxStatus;
     }>;
   }>;
 };

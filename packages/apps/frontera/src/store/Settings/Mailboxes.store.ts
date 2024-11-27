@@ -1,19 +1,30 @@
 import { RootStore } from '@store/root';
 import { Transport } from '@store/transport';
 import { SyncableGroup } from '@store/syncable-group';
-import { override, runInAction, makeObservable } from 'mobx';
+import {
+  override,
+  computed,
+  observable,
+  runInAction,
+  makeObservable,
+} from 'mobx';
 
-import { RegisteredBuyDomainWithMailboxes } from '@shared/types/__generated__/graphql.types';
+import { MailstackBuyRequest } from '@shared/types/__generated__/graphql.types';
 
 import { MailboxStore } from './Mailbox.store';
 import { MailboxesService } from './__service__/Mailboxes/Mailboxes.service';
-import { CheckUnavailableDomainsQueryVariables } from './__service__/Mailboxes/getMailstackCheckUnavailableDomains.generated';
 
 export class MailboxesStore extends SyncableGroup<
-  RegisteredBuyDomainWithMailboxes,
+  MailstackBuyRequest,
   MailboxStore
 > {
   private service: MailboxesService;
+  domain: string = '';
+  baseBundle: Set<string> = new Set();
+  extendedBundle: Set<string> = new Set();
+  invalidDomains: string[] = [];
+  domainSuggestions: string[] = [];
+  usernames: [string, string] = ['', ''];
 
   constructor(public root: RootStore, public transport: Transport) {
     super(root, transport, MailboxStore);
@@ -21,32 +32,66 @@ export class MailboxesStore extends SyncableGroup<
 
     makeObservable<MailboxesStore>(this, {
       channelName: override,
+      domain: observable,
+      baseBundle: observable,
+      extendedBundle: observable,
+      invalidDomains: observable,
+      domainSuggestions: observable,
+      usernames: observable,
+      hasUsernames: computed,
+      domainCount: computed,
+      mailboxesCount: computed,
+      usernamesCount: computed,
+    });
+  }
+
+  get hasUsernames() {
+    return this.usernames[0].length > 0 || this.usernames[1].length > 0;
+  }
+
+  get usernamesCount() {
+    return this.usernames.filter((v) => v !== '').length;
+  }
+
+  get domainCount() {
+    return this.baseBundle.size + this.extendedBundle.size;
+  }
+
+  get mailboxesCount() {
+    return this.usernames.reduce(
+      (acc, curr) => (curr.length ? this.domainCount : 0) + acc,
+      0,
+    );
+  }
+
+  public selectDomain(domain: string) {
+    runInAction(() => {
+      if (this.baseBundle.size < 5) {
+        this.baseBundle.add(domain);
+      } else {
+        this.extendedBundle.add(domain);
+      }
+
+      this.domainSuggestions = this.domainSuggestions.filter(
+        (d) => d !== domain,
+      );
+    });
+  }
+
+  public removeDomain(domain: string) {
+    runInAction(() => {
+      this.baseBundle.delete(domain);
+      this.extendedBundle.delete(domain);
     });
   }
 
   async bootstrap() {
     try {
-      const { mailstack_RegisteredBuyDomainsWithMailboxes } =
+      const { mailstack_RegisteredBuyDomainsWithMailboxes: mailboxes } =
         await this.service.getRegisteredMailboxes();
 
-      const mailboxes = mailstack_RegisteredBuyDomainsWithMailboxes.map(
-        (template) =>
-          ({
-            createdAt: template.createdAt,
-            domain: {
-              domain: template.domain.domain,
-              status: template.domain.status,
-            },
-            id: template.id,
-            mailboxes: template.mailboxes.map((mailbox) => ({
-              mailbox: mailbox.mailbox,
-              status: mailbox.status,
-            })),
-          } as RegisteredBuyDomainWithMailboxes),
-      );
-
-      this.load(mailboxes as RegisteredBuyDomainWithMailboxes[], {
-        getId: (data: RegisteredBuyDomainWithMailboxes) => data.id,
+      this.load(mailboxes as MailstackBuyRequest[], {
+        getId: (data) => data.id,
       });
 
       runInAction(() => {
@@ -59,13 +104,16 @@ export class MailboxesStore extends SyncableGroup<
     }
   }
 
-  async getDomainsSuggestions(payload: string) {
+  async getDomainSuggestions() {
     try {
-      const reponse = await this.service.getMailstackDomainsSuggestions({
-        domain: payload,
-      });
+      const { mailstack_DomainPurchaseSuggestions } =
+        await this.service.getMailstackDomainsSuggestions({
+          domain: this.domain,
+        });
 
-      return reponse.mailstack_DomainPurchaseSuggestions;
+      runInAction(() => {
+        this.domainSuggestions = mailstack_DomainPurchaseSuggestions;
+      });
     } catch (err) {
       runInAction(() => {
         this.error = (err as Error).message;
@@ -77,94 +125,68 @@ export class MailboxesStore extends SyncableGroup<
     }
   }
 
-  async getMailstackCheckUnvalidDomains(
-    payload: CheckUnavailableDomainsQueryVariables,
-  ) {
+  public setDomainName(domain: string) {
+    runInAction(() => {
+      this.domain = domain;
+    });
+  }
+
+  public setUsername(index: 0 | 1, username: string) {
+    runInAction(() => {
+      this.usernames[index] = username;
+    });
+  }
+
+  async getPaymentIntent() {
     try {
-      const reponse = await this.service.getMailstackCheckUnavailableDomains({
-        domains: payload.domains,
+      const { mailstack_RegisterBuyDomainsWithMailboxes } =
+        await this.service.createMailbox({
+          domains: [...this.baseBundle, ...this.extendedBundle],
+          amount: 100,
+          usernames: this.usernames.filter((v) => v !== ''),
+        });
+
+      return mailstack_RegisterBuyDomainsWithMailboxes;
+    } catch (err) {
+      this.root.ui.toastError(
+        'Failed processing the payment.',
+        'get-payment-intent',
+      );
+    }
+  }
+
+  async validateDomains({
+    onSuccess,
+    onInvalid,
+  }: { onSuccess?: () => void; onInvalid?: () => void } = {}) {
+    try {
+      runInAction(() => {
+        this.isLoading = true;
       });
 
-      return reponse.mailstack_CheckUnavailableDomains;
-    } catch (err) {
-      runInAction(() => {
-        this.error = (err as Error).message;
+      const response = await this.service.getMailstackCheckUnavailableDomains({
+        domains: [...this.baseBundle, ...this.extendedBundle],
       });
+
+      runInAction(() => {
+        this.invalidDomains = response.mailstack_CheckUnavailableDomains;
+
+        if (this.invalidDomains.length === 0) {
+          onSuccess?.();
+        }
+
+        if (this.invalidDomains.length > 0) {
+          onInvalid?.();
+        }
+      });
+    } catch (err) {
+      this.root.ui.toastError('Failed validating domains', 'validate-domains');
     } finally {
       runInAction(() => {
         this.isLoading = false;
       });
     }
   }
-
-  // async save(payload: CustomFieldTemplateInput) {
-  //   try {
-  //     const response = await this.service.saveCustomField({
-  //       validValues: payload.validValues,
-  //       name: payload.name,
-  //       type: payload.type,
-  //       entityType: payload.entityType,
-  //     });
-
-  //     const customField: CustomFieldTemplateInput = {
-  //       id: response.customFieldTemplate_Save.id,
-  //       name: payload.name,
-  //       entityType: payload.entityType,
-  //       type: payload?.type,
-  //       validValues: payload.validValues,
-  //     };
-
-  //     runInAction(() => {
-  //       this.load(
-  //         [
-  //           {
-  //             id: customField.id || '',
-  //             name: customField.name || '',
-  //             value: '',
-  //             createdAt: new Date(),
-  //             updatedAt: new Date(),
-  //             source: DataSource.Openline,
-  //             datatype: CustomFieldDataType.Text,
-  //             template: {
-  //               name: customField.name || '',
-  //               id: customField.id || '',
-  //               validValues: customField.validValues || [],
-  //               createdAt: new Date(),
-  //               updatedAt: new Date(),
-  //               entityType: customField.entityType || EntityType.Organization,
-  //               type: customField.type || CustomFieldTemplateType.FreeText,
-  //             },
-  //           },
-  //         ],
-  //         {
-  //           getId: (data: CustomField) => data.id,
-  //         },
-  //       );
-  //     });
-  //   } catch (err) {
-  //     runInAction(() => {
-  //       this.error = (err as Error).message;
-  //     });
-  //   }
-  // }
-
-  // async deleteCustomField(id: string) {
-  //   const customField = this.value.get(id);
-
-  //   try {
-  //     await this.service.deleteCustomField(id);
-
-  //     if (customField) {
-  //       runInAction(() => {
-  //         this.value.delete(id);
-  //       });
-  //     }
-  //   } catch (err) {
-  //     runInAction(() => {
-  //       this.error = (err as Error).message;
-  //     });
-  //   }
-  // }
 
   get channelName() {
     return 'Mailboxes';

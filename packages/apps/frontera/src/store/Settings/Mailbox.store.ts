@@ -4,19 +4,19 @@ import { Transport } from '@store/transport';
 import { action, override, makeObservable } from 'mobx';
 
 import {
-  MailstackStatus,
-  RegisteredBuyDomainWithMailboxes,
+  MailstackBuyRequest,
+  MailstackBuyRequestStatus,
 } from '@shared/types/__generated__/graphql.types';
 
 import { MailboxesService } from './__service__/Mailboxes/Mailboxes.service';
 
-export class MailboxStore extends Syncable<RegisteredBuyDomainWithMailboxes> {
+export class MailboxStore extends Syncable<MailstackBuyRequest> {
   private service: MailboxesService;
 
   constructor(
     public root: RootStore,
     public transport: Transport,
-    data: RegisteredBuyDomainWithMailboxes,
+    data: MailstackBuyRequest,
   ) {
     super(root, transport, data ?? getDefaultValue());
     this.service = MailboxesService.getInstance(transport);
@@ -48,27 +48,21 @@ export class MailboxStore extends Syncable<RegisteredBuyDomainWithMailboxes> {
     return 'Mailbox';
   }
 
-  static getDefaultValue(): RegisteredBuyDomainWithMailboxes {
+  static getDefaultValue(): MailstackBuyRequest {
     return {
       id: crypto.randomUUID(),
-      domain: {
-        domain: '',
-        status: MailstackStatus.Pending,
-      },
-      createdAt: new Date(),
+      domains: [],
       mailboxes: [],
-      status: MailstackStatus.Pending,
+      createdAt: new Date().toISOString(),
+      status: MailstackBuyRequestStatus.Pending,
     };
   }
 }
 
-export const getDefaultValue = (): RegisteredBuyDomainWithMailboxes => ({
+export const getDefaultValue = (): MailstackBuyRequest => ({
   id: crypto.randomUUID(),
-  domain: {
-    domain: '',
-    status: MailstackStatus.Pending,
-  },
-  createdAt: new Date(),
+  domains: [],
+  createdAt: new Date().toISOString(),
   mailboxes: [],
-  status: MailstackStatus.Pending,
+  status: MailstackBuyRequestStatus.Pending,
 });

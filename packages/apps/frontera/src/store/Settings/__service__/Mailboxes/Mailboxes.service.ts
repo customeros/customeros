@@ -122,7 +122,7 @@ export class MailboxesService {
     >(RegisterBuyDomainsWithMailboxesDocument, payload);
   }
 
-  public async mutateOperation(operation: Operation, store: MailboxStore) {
+  public async mutateOperation(operation: Operation, _store: MailboxStore) {
     const diff = operation.diff?.[0];
     const path = diff?.path;
     const mailboxNumber = operation.entityId;

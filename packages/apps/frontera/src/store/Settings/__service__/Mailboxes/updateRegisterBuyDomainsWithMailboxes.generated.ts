@@ -7,7 +7,7 @@ export type RegisterBuyDomainsWithMailboxesMutationVariables = Types.Exact<{
   usernames:
     | Array<Types.Scalars['String']['input']>
     | Types.Scalars['String']['input'];
-  amount?: Types.InputMaybe<Types.Scalars['Float']['input']>;
+  amount: Types.Scalars['Float']['input'];
 }>;
 
 export type RegisterBuyDomainsWithMailboxesMutation = {
@@ -16,6 +16,5 @@ export type RegisterBuyDomainsWithMailboxesMutation = {
     __typename?: 'RegisterBuyDomainWithMailboxes';
     id: string;
     clientSecret: string;
-    status: Types.RegisterMailstackStatus;
   };
 };

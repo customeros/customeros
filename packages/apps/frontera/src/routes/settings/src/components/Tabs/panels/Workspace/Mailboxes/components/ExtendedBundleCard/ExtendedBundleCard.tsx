@@ -1,57 +1,43 @@
 import { useState } from 'react';
 
-import { useLocalStorage } from 'usehooks-ts';
+import { observer } from 'mobx-react-lite';
 
 import { cn } from '@ui/utils/cn';
 import { IconButton } from '@ui/form/IconButton';
+import { useStore } from '@shared/hooks/useStore';
 import { MinusCircle } from '@ui/media/icons/MinusCircle';
 import { ChevronExpand } from '@ui/media/icons/ChevronExpand';
 import { ChevronCollapse } from '@ui/media/icons/ChevronCollapse';
 import { Card, CardHeader, CardContent } from '@ui/presentation/Card/Card';
 
-interface AdditionalDomainsCardProps {
-  unvalidDomains: string[];
-}
-
-export const AdditionalDomainsCard = ({
-  unvalidDomains,
-}: AdditionalDomainsCardProps) => {
+export const ExtendedBundleCard = observer(() => {
+  const store = useStore();
+  const invalidDomains = store.mailboxes.invalidDomains;
+  const extendedDomains = store.mailboxes.extendedBundle;
   const [expanded, setExpanded] = useState(false);
-
-  const [selectedAdditionalDomains, setSelectedAdditionalDomains] =
-    useLocalStorage<string[]>('selectedAdditionalDomains', []);
-
-  const [_storedBrandName, _setStoredBrandName] = useLocalStorage<string[]>(
-    'brandName',
-    [],
-  );
-  const [storeUserName, _setStoreUserName] = useLocalStorage<string[]>(
-    'userName',
-    [],
-  );
 
   return (
     <Card className='py-2 px-3 bg-white'>
       <CardHeader className='font-medium'>
         <div className='flex items-center justify-between text-sm'>
           Additional domains
-          {selectedAdditionalDomains.length > 0 && (
+          {extendedDomains.size > 0 && (
             <span className='text-sm ml-2'>
-              {`${selectedAdditionalDomains.length} x $18.99`}
+              {`${extendedDomains.size} x $18.99`}
             </span>
           )}
         </div>
       </CardHeader>
 
       <CardContent className='p-0'>
-        {selectedAdditionalDomains.map((domain, index) => {
-          const isInvalid = unvalidDomains.includes(domain);
+        {Array.from(extendedDomains).map((domain, index) => {
+          const isInvalid = invalidDomains.includes(domain);
 
           return (
             <div
               key={`${domain}-${index}`}
               className={cn(
-                'flex items-center justify-between mt-1 rounded-[4px] py-1 px-2',
+                'flex items-center justify-between mt-1 rounded-[4px] py-1 px-2 border',
                 isInvalid ? 'bg-error-50' : 'bg-gray-100',
               )}
             >
@@ -62,22 +48,19 @@ export const AdditionalDomainsCard = ({
                 icon={<MinusCircle />}
                 aria-label='remove-domain'
                 onClick={() => {
-                  setSelectedAdditionalDomains((prev) => {
-                    return prev.filter((item) => item !== domain);
-                  });
+                  store.mailboxes.removeDomain(domain);
                 }}
               />
             </div>
           );
         })}
-        {selectedAdditionalDomains.length === 0 && (
+        {extendedDomains.size === 0 && (
           <p className='text-sm'> Add more domains at $18.99 each(53% off)</p>
         )}
-        {storeUserName.length > 0 && selectedAdditionalDomains.length > 0 && (
+        {store.mailboxes.usernamesCount > 0 && extendedDomains.size > 0 && (
           <CardHeader className='mt-2 flex justify-between items-center'>
             <span className='font-medium text-sm'>
-              {storeUserName.length * selectedAdditionalDomains.length}{' '}
-              mailboxes
+              {store.mailboxes.usernamesCount * extendedDomains.size} mailboxes
             </span>
             <IconButton
               size='xxs'
@@ -89,23 +72,28 @@ export const AdditionalDomainsCard = ({
           </CardHeader>
         )}
         {expanded &&
-          selectedAdditionalDomains.reduce<JSX.Element[]>(
+          Array.from(extendedDomains).reduce<JSX.Element[]>(
             (acc, brand, brandIndex) => {
-              const brandUserCombos = storeUserName.map((user, userIndex) => {
-                return (
-                  <div
-                    key={`${user}-${brand}-${userIndex}-${brandIndex}`}
-                    className={cn(
-                      'flex items-center justify-between ml-2',
-                      (brandIndex * storeUserName.length + userIndex) % 2 === 1
-                        ? 'mb-3'
-                        : '',
-                    )}
-                  >
-                    <span className='text-sm'>{`${user}@${brand}`}</span>
-                  </div>
-                );
-              });
+              const brandUserCombos = store.mailboxes.usernames
+                .filter((v) => v !== '')
+                .map((user, userIndex) => {
+                  return (
+                    <div
+                      key={`${user}-${brand}-${userIndex}-${brandIndex}`}
+                      className={cn(
+                        'flex items-center justify-between ml-2',
+                        (brandIndex * store.mailboxes.usernamesCount +
+                          userIndex) %
+                          2 ===
+                          1
+                          ? 'mb-3'
+                          : '',
+                      )}
+                    >
+                      <span className='text-sm'>{`${user}@${brand}`}</span>
+                    </div>
+                  );
+                });
 
               return [...acc, ...brandUserCombos];
             },
@@ -114,4 +102,4 @@ export const AdditionalDomainsCard = ({
       </CardContent>
     </Card>
   );
-};
+});

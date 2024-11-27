@@ -1,8 +1,6 @@
 import { useState } from 'react';
 
-import _ from 'lodash';
 import { observer } from 'mobx-react-lite';
-import { useLocalStorage } from 'usehooks-ts';
 
 import { Input } from '@ui/form/Input';
 import { Button } from '@ui/form/Button/Button';
@@ -21,30 +19,16 @@ import {
 
 export const AddDomainsCard = observer(() => {
   const store = useStore();
-  const [brandName, setBrandName] = useState('');
-  const [domainVariations, setDomainVariations] = useState<string[]>([]);
   const [isHovered, setIsHovered] = useState<number | null>(null);
   const [showSecondHalf, setShowSecondHalf] = useState(false);
 
-  const [_storedBrandName, setStoredBrandName] = useLocalStorage<string[]>(
-    'brandName',
-    [],
-  );
-
-  const [_selectedAdditionalDomains, setSelectedAdditionalDomains] =
-    useLocalStorage<string[]>('selectedAdditionalDomains', []);
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setBrandName(e.target.value);
+    store.mailboxes.setDomainName(e.target.value);
   };
 
   const handleInputBlur = async () => {
-    if (brandName.trim() !== '') {
-      const domainSuggestions = await store.mailboxes.getDomainsSuggestions(
-        brandName,
-      );
-
-      setDomainVariations(domainSuggestions || []);
+    if (store.mailboxes.domain.trim() !== '') {
+      store.mailboxes.getDomainSuggestions();
       setShowSecondHalf(false);
     }
   };
@@ -54,8 +38,8 @@ export const AddDomainsCard = observer(() => {
   };
 
   const displayedDomains = showSecondHalf
-    ? domainVariations.slice(10, 20)
-    : domainVariations.slice(0, 10);
+    ? store.mailboxes.domainSuggestions.slice(10, 20)
+    : store.mailboxes.domainSuggestions.slice(0, 10);
 
   return (
     <Card className='py-2 px-3 bg-white'>
@@ -74,10 +58,10 @@ export const AddDomainsCard = observer(() => {
           <Input
             size='sm'
             variant='outline'
-            value={brandName}
             placeholder='Brand name'
             onBlur={handleInputBlur}
             onChange={handleInputChange}
+            value={store.mailboxes.domain}
           />
           <SearchSm className='absolute right-2 text-gray-500' />
         </CardFooter>
@@ -97,35 +81,14 @@ export const AddDomainsCard = observer(() => {
                   aria-label='add to cart'
                   icon={<ShoppingCartAdd className='text-primary-700' />}
                   onClick={() => {
-                    if (_storedBrandName.length <= 4) {
-                      setStoredBrandName((prev) => {
-                        return [...prev, domain];
-                      });
-                    }
-
-                    if (_storedBrandName.length === 5) {
-                      setSelectedAdditionalDomains((prev) => {
-                        return [...prev, domain];
-                      });
-                    }
-
-                    setDomainVariations((prev) => {
-                      const foundIndex = prev.findIndex(
-                        (item) => item === domain,
-                      );
-
-                      return [
-                        ...prev.slice(0, foundIndex),
-                        ...prev.slice(foundIndex + 1),
-                      ];
-                    });
+                    store.mailboxes.selectDomain(domain);
                   }}
                 />
               )}
             </div>
           ))}
         </div>
-        {domainVariations.length > 10 && (
+        {store.mailboxes.domainSuggestions.length > 10 && (
           <Button
             size='xxs'
             variant='ghost'

@@ -2220,6 +2220,46 @@ export type Mailbox = {
   userId?: Maybe<Scalars['ID']['output']>;
 };
 
+export type MailstackBuyRequest = {
+  __typename?: 'MailstackBuyRequest';
+  createdAt: Scalars['Time']['output'];
+  domains: Array<MailstackBuyRequestDomain>;
+  id: Scalars['String']['output'];
+  mailboxes: Array<MailstackBuyRequestMailbox>;
+  status: MailstackBuyRequestStatus;
+};
+
+export type MailstackBuyRequestDomain = {
+  __typename?: 'MailstackBuyRequestDomain';
+  domain: Scalars['String']['output'];
+  status: MailstackBuyRequestDomainStatus;
+};
+
+export enum MailstackBuyRequestDomainStatus {
+  Completed = 'COMPLETED',
+  Failed = 'FAILED',
+  Pending = 'PENDING',
+}
+
+export type MailstackBuyRequestMailbox = {
+  __typename?: 'MailstackBuyRequestMailbox';
+  mailbox: Scalars['String']['output'];
+  status: MailstackBuyRequestMailboxStatus;
+};
+
+export enum MailstackBuyRequestMailboxStatus {
+  Completed = 'COMPLETED',
+  Failed = 'FAILED',
+  Pending = 'PENDING',
+}
+
+export enum MailstackBuyRequestStatus {
+  AwaitingPayment = 'AWAITING_PAYMENT',
+  Completed = 'COMPLETED',
+  Failed = 'FAILED',
+  Pending = 'PENDING',
+}
+
 export type MarkdownEvent = {
   __typename?: 'MarkdownEvent';
   content?: Maybe<Scalars['String']['output']>;

@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
+import { observer } from 'mobx-react-lite';
 import { loadStripe, StripeElementsOptions } from '@stripe/stripe-js';
 import {
   Elements,
@@ -10,9 +11,11 @@ import {
 } from '@stripe/react-stripe-js';
 
 import { Button } from '@ui/form/Button/Button';
+import { useStore } from '@shared/hooks/useStore';
 import { ChevronRight } from '@ui/media/icons/ChevronRight';
 
-export const CheckoutForm = () => {
+export const CheckoutForm = observer(() => {
+  const store = useStore();
   const stripe = useStripe();
   const elements = useElements();
 
@@ -33,11 +36,7 @@ export const CheckoutForm = () => {
       return;
     }
 
-    const res = await fetch('/create-intent', {
-      method: 'POST',
-    });
-
-    const { client_secret: clientSecret } = await res.json();
+    const res = await store.mailboxes.getPaymentIntent();
 
     if (!stripe) {
       setErrorMessage('Stripe has not loaded yet.');
@@ -45,15 +44,28 @@ export const CheckoutForm = () => {
       return;
     }
 
-    const { error } = await stripe.confirmPayment({
+    if (!res?.clientSecret) {
+      // show some error about payment not processable
+      return;
+    }
+
+    const { error, paymentIntent } = await stripe.confirmPayment({
       elements,
-      clientSecret,
+      clientSecret: res?.clientSecret,
+      redirect: 'if_required',
       confirmParams: {
-        return_url: 'https://example.com/order/123/complete',
+        return_url: 'http://localhost:5173/hello',
+        receipt_email: 'acalinica@customeros.ai',
       },
     });
 
+    console.log(paymentIntent);
+
     if (error) {
+      store.ui.toastError(
+        'Could not process your payment',
+        'stripe-processing',
+      );
       // This point will only be reached if there is an immediate error when
       // confirming the payment. Show error to your customer (for example, payment
       // details incomplete)
@@ -87,10 +99,10 @@ export const CheckoutForm = () => {
       </form>
     </>
   );
-};
+});
 
 const stripePromise = loadStripe(
-  'pk_live_51NmzLnEVwE7CWhpkO3Cp5V2BHo6FHSaYLDm62YEDQi5w6HEKyqDSY0w3AIOxhbTTLuXwmOLRTlMcmnAnpII0qMLU00dssbGeSi',
+  'pk_test_51NmzLnEVwE7CWhpkM1aC51Y9MDX4FwryNWDfwotBBAodIGkashnVV0HoRAmArnpiOvPjhgbH1IdjXKaeHxLF0BiG00DeAezb3D',
 );
 
 const options: StripeElementsOptions = {
@@ -109,6 +121,14 @@ const options: StripeElementsOptions = {
 
 export const CheckoutPage = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const goToAddNew = () => {
+    const params = new URLSearchParams(searchParams);
+
+    params.delete('checkout');
+    setSearchParams(params);
+  };
 
   return (
     <div className='py-2 px-4 w-[full] border-r-[1px]'>
@@ -120,7 +140,10 @@ export const CheckoutPage = () => {
           Mailboxes
         </span>
         <ChevronRight className='mt-0.5 text-gray-400 size-3' />
-        <span className='font-semibold text-gray-500 hover:text-gray-700 hover:cursor-pointer'>
+        <span
+          onClick={goToAddNew}
+          className='font-semibold text-gray-500 hover:text-gray-700 hover:cursor-pointer'
+        >
           Add new
         </span>
         <ChevronRight className='mt-0.5 text-gray-400 size-3' />

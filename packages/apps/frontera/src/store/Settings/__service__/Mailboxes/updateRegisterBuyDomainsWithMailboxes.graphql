@@ -1,7 +1,7 @@
 mutation RegisterBuyDomainsWithMailboxes(
   $domains: [String!]!
   $usernames: [String!]!
-  $amount: Float
+  $amount: Float!
 ) {
   mailstack_RegisterBuyDomainsWithMailboxes(
     domains: $domains
@@ -10,6 +10,5 @@ mutation RegisterBuyDomainsWithMailboxes(
   ) {
     id
     clientSecret
-    status
   }
 }

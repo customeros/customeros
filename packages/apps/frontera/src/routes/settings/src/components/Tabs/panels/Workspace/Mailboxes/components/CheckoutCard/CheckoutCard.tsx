@@ -1,8 +1,9 @@
 import { useSearchParams } from 'react-router-dom';
 
-import { useLocalStorage } from 'usehooks-ts';
+import { observer } from 'mobx-react-lite';
 
 import { Button } from '@ui/form/Button/Button';
+import { useStore } from '@shared/hooks/useStore';
 import { DotSingle } from '@ui/media/icons/DotSingle';
 import { CheckCircle } from '@ui/media/icons/CheckCircle';
 import { ChevronRight } from '@ui/media/icons/ChevronRight';
@@ -12,50 +13,31 @@ const formatNumberWithComma = (num: number): string => {
   return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 };
 
-interface CheckoutCardProps {
-  unvalidDomains: string[];
-  onCheckoutClick: (isCheckedOut: boolean) => void;
-}
-
-export const CheckoutCard = ({
-  onCheckoutClick,
-  unvalidDomains,
-}: CheckoutCardProps) => {
+export const CheckoutCard = observer(() => {
+  const store = useStore();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const [storedBrandName, _setStoredBrandName] = useLocalStorage<string[]>(
-    'brandName',
-    [],
-  );
-
-  const [storedUserName, _setStoredUserName] = useLocalStorage<string[]>(
-    'userName',
-    [],
-  );
-
-  const [selectedAdditionalDomains] = useLocalStorage<string[]>(
-    'selectedAdditionalDomains',
-    [],
-  );
-
   const handlePaymentView = async () => {
-    onCheckoutClick(true);
+    // store.mailboxes.validateDomains({
+    //   onSuccess: () => {
+    //     const params = new URLSearchParams(searchParams.toString() ?? '');
+    //
+    //     params.set('checkout', 'mailboxes');
+    //     setSearchParams(params.toString());
+    //   },
+    // });
 
-    if (storedUserName.length >= 1 && unvalidDomains?.length === 0) {
-      const params = new URLSearchParams(searchParams.toString() ?? '');
+    const params = new URLSearchParams(searchParams.toString() ?? '');
 
-      params.set('checkout', 'mailboxes');
-      setSearchParams(params.toString());
-    }
+    params.set('checkout', 'mailboxes');
+    setSearchParams(params.toString());
   };
 
-  const noOfMailboxes =
-    storedBrandName.length +
-    selectedAdditionalDomains.length * storedUserName.length;
-
+  const noOfMailboxes = store.mailboxes.mailboxesCount;
   const noOfEmails = formatNumberWithComma(noOfMailboxes * 1200);
-
-  const total = (199.99 + selectedAdditionalDomains.length * 18.99).toFixed(2);
+  const total = (199.99 + store.mailboxes.extendedBundle.size * 18.99).toFixed(
+    2,
+  );
 
   return (
     <>
@@ -73,7 +55,7 @@ export const CheckoutCard = ({
           </div>
         </CardContent>
         <CardFooter className='flex flex-col p-0 mt-3 items-center justify-center'>
-          {unvalidDomains.length > 0 && (
+          {store.mailboxes.invalidDomains.length > 0 && (
             <div className='mb-2 bg-error-50 w-full flex items-center gap-2 rounded-lg py-1 px-2'>
               <DotSingle className='text-error-500 size-6' />
               <span className='text-error-700 text-sm'>
@@ -86,6 +68,7 @@ export const CheckoutCard = ({
             className='w-full'
             colorScheme='primary'
             rightIcon={<ChevronRight />}
+            isLoading={store.mailboxes.isLoading}
             onClick={() => {
               handlePaymentView();
             }}
@@ -96,4 +79,4 @@ export const CheckoutCard = ({
       </Card>
     </>
   );
-};
+});

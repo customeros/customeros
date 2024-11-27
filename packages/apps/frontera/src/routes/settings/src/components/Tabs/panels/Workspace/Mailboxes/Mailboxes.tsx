@@ -1,58 +1,36 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
-import { useLocalStorage } from 'usehooks-ts';
 
 import { useStore } from '@shared/hooks/useStore';
 import { ChevronRight } from '@ui/media/icons/ChevronRight';
 
 import { CheckoutPage } from './components/CheckoutPage';
+import { BaseBundleCard } from './components/BaseBundleCard';
 import { EmptyMailboxes } from './components/EmptyMailboxes';
 import { AddDomainsCard } from './components/AddDomainsCard';
 import { UsersCard } from './components/UsersCard/UsersCard';
-import { BaseBoundleCard } from './components/BaseBoundleCard';
+import { ExtendedBundleCard } from './components/ExtendedBundleCard';
 import { CheckoutCard } from './components/CheckoutCard/CheckoutCard';
-import { AdditionalDomainsCard } from './components/AdditionalDomainsCard';
 
 export const Mailboxes = observer(() => {
   const store = useStore();
   const [isUpdated, setIsUpdated] = useState<boolean>(true);
-  const [unvailbleDomains, setUnavailbleDomains] = useState<string[]>([]);
-  const [checkout, setCheckout] = useState<boolean>(false);
-  const [storedBrandName] = useLocalStorage<string[]>('brandName', []);
-  const [selectedAdditionalDomains] = useLocalStorage<string[]>(
-    'selectedAdditionalDomains',
-    [],
-  );
   const [searchParams] = useSearchParams();
 
-  const mailboxesStore = store.mailboxes;
-
   const handleUpdate = () => {
-    setIsUpdated(true);
+    setIsUpdated(false);
   };
 
-  const noOfDomains = storedBrandName.length;
+  const noOfDomains =
+    store.mailboxes.baseBundle.size + store.mailboxes.extendedBundle.size;
+
   const showMainContent = searchParams.get('checkout') !== 'mailboxes';
 
-  if (!isUpdated) {
+  if (isUpdated) {
     return <EmptyMailboxes onUpdate={handleUpdate} />;
   }
-
-  useEffect(() => {
-    const checkUnvalidDomains = async () => {
-      if (checkout) {
-        const response = await mailboxesStore.getMailstackCheckUnvalidDomains({
-          domains: storedBrandName.concat(selectedAdditionalDomains),
-        });
-
-        setUnavailbleDomains(response || []);
-      }
-    };
-
-    checkUnvalidDomains();
-  }, [checkout, mailboxesStore, storedBrandName, selectedAdditionalDomains]);
 
   return (
     <div className='overflow-y-auto h-full'>
@@ -67,23 +45,16 @@ export const Mailboxes = observer(() => {
               </div>
               <div className='space-y-4'>
                 <AddDomainsCard />
-                <UsersCard checkout={checkout} />
+                <UsersCard />
               </div>
             </div>
             {noOfDomains > 0 && (
               <div className='py-[10px] px-6 flex flex-col h-full border-r-[1px]'>
                 <p className='mb-4 font-semibold'>Checkout</p>
                 <div className='flex flex-col gap-2'>
-                  <BaseBoundleCard unvalidDomains={unvailbleDomains} />
-                  {noOfDomains === 5 && (
-                    <AdditionalDomainsCard unvalidDomains={unvailbleDomains} />
-                  )}
-                  {noOfDomains > 0 && (
-                    <CheckoutCard
-                      unvalidDomains={unvailbleDomains}
-                      onCheckoutClick={() => setCheckout(true)}
-                    />
-                  )}
+                  <BaseBundleCard />
+                  {noOfDomains > 5 && <ExtendedBundleCard />}
+                  {noOfDomains > 0 && <CheckoutCard />}
                 </div>
               </div>
             )}
