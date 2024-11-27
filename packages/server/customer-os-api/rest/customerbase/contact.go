@@ -66,6 +66,7 @@ func handleJSONRequest(ctx rest.HTTPContext) {
 		if err != nil {
 			errMessage := fmt.Sprintf("%s | %s", errValue, err)
 			rest.SendError(ctx.GinContext, ctx.Span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage(errMessage))
+			return
 
 		}
 		contact.ContactId = processContact(ctx, contact)

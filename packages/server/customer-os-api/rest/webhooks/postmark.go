@@ -32,10 +32,12 @@ func PostmarkInboundEmail(s *service.Services) gin.HandlerFunc {
 
 		if c.Request.UserAgent() == "" {
 			rest.SendError(c, span, http.StatusForbidden, rest.ErrForbidden)
+			return
 		}
 
 		if !strings.EqualFold(c.Request.UserAgent(), "Postmark") {
 			rest.SendError(c, span, http.StatusForbidden, rest.ErrForbidden)
+			return
 		}
 
 		httpContext := rest.HTTPContext{
