@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"runtime/debug"
 	"strings"
 
 	"github.com/customeros/mailwatcher/dmarkstats"
@@ -57,6 +58,14 @@ func PostmarkInboundEmail(s *service.Services) gin.HandlerFunc {
 
 		// Process email asynchronously
 		go func() {
+			defer func() {
+				if r := recover(); r != nil {
+					stack := debug.Stack()
+					err := fmt.Errorf("panic recovered in email processing: %v\n%s", r, stack)
+					tracing.TraceErr(span, err)
+				}
+			}()
+
 			var err error
 			if emailData.IsMonitorEmail() {
 				err = processDmarcMonitoringReport(httpContext, &emailData)
