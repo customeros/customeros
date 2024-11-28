@@ -6,9 +6,14 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/config"
-	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/constants"
-	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/logger"
+	"io"
+	"net/http"
+	"net/url"
+	"strconv"
+	"strings"
+	"sync"
+	"time"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	fsc "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/file_store_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
@@ -25,13 +30,10 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-	"io"
-	"net/http"
-	"net/url"
-	"strconv"
-	"strings"
-	"sync"
-	"time"
+
+	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/config"
+	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/constants"
+	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/logger"
 )
 
 type ScrubbyIoResponse struct {
@@ -85,7 +87,7 @@ func (s *emailService) CheckEnrowRequestsWithoutResponse() {
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("Accept", "application/json")
 
-		//Perform the request
+		// Perform the request
 		resp, err := client.Do(req)
 		if err != nil {
 			tracing.TraceErr(span, err)

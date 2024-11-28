@@ -75,4 +75,8 @@ type Config struct {
 
 	// Domains
 	CronScheduleCheckDomains string `env:"CRON_SCHEDULE_CHECK_DOMAINS" envDefault:"0 */1 * * * *"`
+
+	// Daily at midnight
+	// Mailstack Reputation Monitoring
+	CronScheduleMailstackReputation string `env:"CRON_SCHEDULE_MAILSTACK_REPUTATION" envDefault:"0 0 0 */1 * *"`
 }

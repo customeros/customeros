@@ -68,6 +68,7 @@ require (
 	github.com/cloudwego/iasm v0.2.0 // indirect
 	github.com/containerd/platforms v0.2.1 // indirect
 	github.com/customeros/mailsherpa v0.3.3 // indirect
+	github.com/customeros/mailwatcher v0.1.4 // indirect
 	github.com/distribution/reference v0.6.0 // indirect
 	github.com/emersion/go-message v0.18.1 // indirect
 	github.com/facebookgo/clock v0.0.0-20150410010913-600d898af40a // indirect
@@ -93,6 +94,9 @@ require (
 	github.com/jpillora/backoff v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.8 // indirect
+	github.com/likexian/gokit v0.25.15 // indirect
+	github.com/likexian/whois v1.15.5 // indirect
+	github.com/likexian/whois-parser v1.24.20 // indirect
 	github.com/lucasepe/codename v0.2.0 // indirect
 	github.com/machinebox/graphql v0.2.2 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect

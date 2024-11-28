@@ -1,11 +1,13 @@
 package cron
 
 import (
+	"sync"
+
+	"github.com/robfig/cron"
+
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/container"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/logger"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/service"
-	"github.com/robfig/cron"
-	"sync"
 )
 
 const (
@@ -30,6 +32,7 @@ const (
 	sendEmailsGroup                 = "sendEmailsGroup"
 	processSentEmailsGroup          = "processSentEmailsGroup"
 	domainGroup                     = "domainGroup"
+	mailstackGroup                  = "mailstackGroup"
 )
 
 var jobLocks = struct {
@@ -58,6 +61,7 @@ var jobLocks = struct {
 		sendEmailsGroup:                 {},
 		processSentEmailsGroup:          {},
 		domainGroup:                     {},
+		mailstackGroup:                  {},
 	},
 }
 
@@ -303,6 +307,13 @@ func StartCron(cont *container.Container) *cron.Cron {
 		cont.Log.Fatalf("Could not add cron job %s: %v", "checkDomains", err.Error())
 	}
 
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleMailstackReputation, func() {
+		lockAndRunJob(cont, mailstackGroup, checkMailstackDomainReputation)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "checkMailstackDomainReputation", err.Error())
+	}
+
 	c.Start()
 
 	return c
@@ -456,4 +467,8 @@ func processSentEmails(cont *container.Container) {
 
 func checkDomains(cont *container.Container) {
 	service.NewDomainService(cont.Cfg, cont.Log, cont.CommonServices).CheckDomains()
+}
+
+func checkMailstackDomainReputation(cont *container.Container) {
+	service.NewMailstackService(cont.Cfg, cont.Log, cont.CommonServices).CheckMailstackDomainReputation()
 }

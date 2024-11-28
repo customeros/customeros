@@ -150,6 +150,7 @@ func (r *Repositories) Migration(db *gorm.DB) {
 		&entity.SlackChannel{},
 		&entity.PostmarkApiKey{},
 		&entity.DMARCMonitoring{},
+		&entity.MailstackReputationEntity{},
 		&entity.GoogleServiceAccountKey{},
 		&entity.CurrencyRate{},
 		&entity.EventBuffer{},

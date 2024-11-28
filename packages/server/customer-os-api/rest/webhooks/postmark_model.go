@@ -188,7 +188,14 @@ func (p *PostmarkInboundEmailData) DMARCReportProvider() string {
 	filename := p.Attachments[0].Name
 	parts := strings.Split(filename, "!")
 	if len(parts) > 0 {
-		return parts[0]
+		switch {
+		case parts[0] == "enterprise.protection.outlook.com":
+			return "outlook.com"
+		case parts[0] == "aol.com":
+			return "yahoo.com"
+		default:
+			return parts[0]
+		}
 	}
 	return ""
 }
