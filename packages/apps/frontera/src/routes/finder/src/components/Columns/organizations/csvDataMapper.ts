@@ -22,7 +22,9 @@ export const csvDataMapper = {
   [ColumnViewType.OrganizationsForecastArr]: (d: Organization) =>
     d?.value?.accountDetails?.renewalSummary?.arrForecast,
 
-  [ColumnViewType.OrganizationsOwner]: (d: Organization) => d.owner,
+  [ColumnViewType.OrganizationsOwner]: (d: Organization) => {
+    return d.owner?.name ?? 'No owner';
+  },
   [ColumnViewType.OrganizationsLeadSource]: (d: Organization) =>
     d.value?.leadSource,
   [ColumnViewType.OrganizationsCreatedDate]: (d: Organization) =>
