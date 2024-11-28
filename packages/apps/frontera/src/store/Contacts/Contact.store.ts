@@ -163,16 +163,19 @@ export class ContactStore extends Syncable<Contact> {
     options?: {
       invalidate?: boolean;
       onError?: (error: string) => void;
+      onSuccess?: (serverId: string) => void;
     },
   ) {
     const email = this.value.emails?.[payload.index ?? 0]?.email ?? '';
 
     options = { invalidate: true, ...options };
 
+    let serverId: string | undefined;
+
     try {
       this.isLoading = true;
 
-      await this.service.updateContactEmail({
+      const { emailReplaceForContact } = await this.service.updateContactEmail({
         contactId: this.getId(),
         input: {
           email,
@@ -183,6 +186,7 @@ export class ContactStore extends Syncable<Contact> {
 
       runInAction(() => {
         this.isLoading = false;
+        serverId = emailReplaceForContact.id;
       });
     } catch (e) {
       runInAction(() => {
@@ -193,6 +197,11 @@ export class ContactStore extends Syncable<Contact> {
         }
       });
     } finally {
+      if (serverId) {
+        options?.onSuccess?.(serverId);
+        this.invalidate();
+      }
+
       if (options?.invalidate) {
         this.invalidate();
       }

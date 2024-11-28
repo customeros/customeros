@@ -1,7 +1,6 @@
 import { useMemo, useState, useEffect } from 'react';
 
 import { set } from 'lodash';
-import { P } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
 
 import { Edit03 } from '@ui/media/icons/Edit03';
@@ -38,10 +37,16 @@ export const EditEmail = observer(() => {
         index: selectedId,
         primary: false,
       });
+      store.ui.commandMenu.setOpen(false);
+      store.ui.setSelectionId(null);
+      store.ui.commandMenu.setType('ContactCommands');
     }
 
     if (selectedId === null) {
       contact?.updateEmailPrimary(oldEmail ?? '');
+      store.ui.commandMenu.setOpen(false);
+      store.ui.setSelectionId(null);
+      store.ui.commandMenu.setType('ContactCommands');
     }
 
     if (store.ui.focusRow) {
@@ -56,10 +61,15 @@ export const EditEmail = observer(() => {
             setError(error);
           },
           invalidate: false,
+          onSuccess(serverId) {
+            if (serverId) {
+              store.ui.commandMenu.setOpen(false);
+              store.ui.setSelectionId(null);
+              store.ui.commandMenu.setType('ContactCommands');
+            }
+          },
         },
       );
-
-      // return;
     }
 
     if (
@@ -68,10 +78,10 @@ export const EditEmail = observer(() => {
       selectedId === null
     ) {
       contact?.updateEmailPrimary('');
+      store.ui.commandMenu.setOpen(false);
+      store.ui.setSelectionId(null);
+      store.ui.commandMenu.setType('ContactCommands');
     }
-    // store.ui.commandMenu.setOpen(false);
-    // store.ui.setSelectionId(null);
-    // store.ui.commandMenu.setType('ContactCommands');
   };
 
   useEffect(() => {
