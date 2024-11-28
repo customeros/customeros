@@ -342,22 +342,29 @@ export const ContactCard = observer(
             >
               <InputGroup>
                 <LeftElement>
-                  <Tooltip hasArrow label='Click to autopopulate'>
-                    <span>
-                      {enrichedEmailStatus ? (
+                  <span>
+                    {enrichedEmailStatus ? (
+                      <Tooltip hasArrow label='Click to autopopulate'>
                         <Spinner
                           size='sm'
                           label='Finding email'
                           className='text-gray-300 fill-gray-500'
                         />
-                      ) : (
-                        <Mail01
-                          onClick={handleFindEmail}
-                          className='text-gray-500 hover:text-gray-700 transition-colors'
-                        />
-                      )}
-                    </span>
-                  </Tooltip>
+                      </Tooltip>
+                    ) : (
+                      <Tooltip
+                        side='right'
+                        label={`Find email for ${organizationName}`}
+                      >
+                        <div>
+                          <Mail01
+                            onClick={handleFindEmail}
+                            className='text-gray-500 hover:text-gray-700 transition-colors'
+                          />
+                        </div>
+                      </Tooltip>
+                    )}
+                  </span>
                 </LeftElement>
                 <Input
                   variant='unstyled'
