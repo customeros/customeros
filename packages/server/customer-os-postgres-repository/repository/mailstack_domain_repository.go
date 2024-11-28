@@ -21,6 +21,8 @@ type MailStackDomainRepository interface {
 	MarkConfigured(ctx context.Context, tenant, domain string) error
 	SetDkimKeys(ctx context.Context, tenant, domain, dkimPublic, dkimPrivate string) error
 	CreateDMARCReport(ctx context.Context, tenant string, report *entity.DMARCMonitoring) error
+	GetDomainCrossTenant(ctx context.Context, domain string) (*entity.MailStackDomain, error)
+	GetAllDomainsCrossTenant(ctx context.Context) ([]entity.MailStackDomain, error)
 }
 
 type mailStackDomainRepository struct {
@@ -180,4 +182,41 @@ func (r *mailStackDomainRepository) GetDomain(ctx context.Context, tenant, domai
 	}
 
 	return &mailStackDomain, nil
+}
+
+func (r *mailStackDomainRepository) GetDomainCrossTenant(ctx context.Context, domain string) (*entity.MailStackDomain, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "MailStackDomainRepository.GetDomainCrossTenant")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+	span.LogKV("domain", domain)
+
+	var mailStackDomain entity.MailStackDomain
+	err := r.db.WithContext(ctx).
+		Where("domain = ?", domain).
+		First(&mailStackDomain).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		tracing.TraceErr(span, errors.Wrap(err, "db error"))
+		return nil, err
+	}
+
+	return &mailStackDomain, nil
+}
+
+func (r *mailStackDomainRepository) GetAllDomainsCrossTenant(ctx context.Context) ([]entity.MailStackDomain, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "MailStackDomainRepository.GetAllDomainsCrossTenant")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	var mailStackDomains []entity.MailStackDomain
+	err := r.db.WithContext(ctx).
+		Find(&mailStackDomains).Error
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "db error"))
+		return nil, err
+	}
+
+	return mailStackDomains, nil
 }

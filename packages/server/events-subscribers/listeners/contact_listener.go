@@ -347,6 +347,8 @@ func (c *contactListenerImpl) callApiEnrichPerson(ctx context.Context, tenant, l
 func (c *contactListenerImpl) enrichContactWithScrapInEnrichDetails(ctx context.Context, tenant string, contact *neo4jentity.ContactEntity, enrichPersonResponse *enrichmentmodel.EnrichPersonScrapinResponse) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactListener.enrichContactWithScrapInEnrichDetails")
 	defer span.Finish()
+	tracing.TagComponentListener(span)
+	tracing.TagTenant(span, tenant)
 
 	if enrichPersonResponse == nil || enrichPersonResponse.Data == nil || enrichPersonResponse.Data.PersonProfile == nil {
 		return nil
