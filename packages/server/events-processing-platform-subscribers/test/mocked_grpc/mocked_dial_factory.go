@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
-	eventcompletionpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/event_completion"
 	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
@@ -40,7 +39,6 @@ func (dfi MockedTestDialFactoryImpl) GetEventsProcessingPlatformConn() (*grpc.Cl
 	invoicepb.RegisterInvoiceGrpcServiceServer(server, &MockInvoiceService{})
 	emailpb.RegisterEmailGrpcServiceServer(server, &MockEmailService{})
 	phonenumberpb.RegisterPhoneNumberGrpcServiceServer(server, &MockPhoneNumberService{})
-	eventcompletionpb.RegisterEventCompletionGrpcServiceServer(server, &MockEventCompletionService{})
 
 	go func() {
 		if err := server.Serve(listener); err != nil {
