@@ -82,21 +82,6 @@ func (s *Subscriptions) RefreshSubscriptions(ctx context.Context) error {
 		return err
 	}
 
-	organizationWebscrapeSubscriptionSettings := esdb.SubscriptionSettingsDefault()
-	organizationWebscrapeSubscriptionSettings.MessageTimeout = s.cfg.Subscriptions.OrganizationWebscrapeSubscription.MessageTimeoutSec * 1000
-	organizationWebscrapeSubscriptionSettings.CheckpointLowerBound = s.cfg.Subscriptions.OrganizationWebscrapeSubscription.CheckpointLowerBound
-	organizationWebscrapeSubscriptionSettings.ExtraStatistics = true
-	if err := s.subscribeToAll(ctx,
-		s.cfg.Subscriptions.OrganizationWebscrapeSubscription.GroupName,
-		&esdb.SubscriptionFilter{Type: esdb.StreamFilterType, Prefixes: []string{s.cfg.Subscriptions.OrganizationWebscrapeSubscription.Prefix}},
-		&organizationWebscrapeSubscriptionSettings,
-		false,
-		false,
-		esdb.End{},
-	); err != nil {
-		return err
-	}
-
 	enrichSubscriptionSettings := esdb.SubscriptionSettingsDefault()
 	enrichSubscriptionSettings.MessageTimeout = s.cfg.Subscriptions.EnrichSubscription.MessageTimeoutSec * 1000
 	enrichSubscriptionSettings.CheckpointLowerBound = s.cfg.Subscriptions.EnrichSubscription.CheckpointLowerBound

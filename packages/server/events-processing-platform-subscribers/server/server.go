@@ -191,17 +191,6 @@ func (server *Server) InitSubscribers(ctx context.Context, grpcClients *grpc_cli
 		}()
 	}
 
-	if server.Config.Subscriptions.OrganizationWebscrapeSubscription.Enabled {
-		organizationWebscrapeSubscriber := organization_subscription.NewOrganizationEnrichSubscriber(server.Log, esdb, server.Config, server.caches, grpcClients, server.Services)
-		go func() {
-			err := organizationWebscrapeSubscriber.Connect(ctx, organizationWebscrapeSubscriber.ProcessEvents)
-			if err != nil {
-				server.Log.Errorf("(organizationWebscrapeSubscriber.Connect) err: {%s}", err.Error())
-				cancel()
-			}
-		}()
-	}
-
 	if server.Config.Subscriptions.NotificationsSubscription.Enabled {
 		notificationsSubscriber := notifications_subscription.NewNotificationsSubscriber(server.Log, esdb, server.Services, server.Config)
 		go func() {
