@@ -38,7 +38,7 @@ type Clients struct {
 	InteractionSessionClient interactionsessionpb.InteractionSessionGrpcServiceClient
 	CommentClient            commentpb.CommentGrpcServiceClient
 	EventStoreClient         eventstorepb.EventStoreGrpcServiceClient
-	EventCompletionClient    eventcompletionpb.EventCompletionGrpcServiceClient
+	EventCompletionClient    eventcompletionpb.EventCompletionGrpcServiceClient // TODO alexb delete
 }
 
 func InitClients(conn *grpc.ClientConn) *Clients {

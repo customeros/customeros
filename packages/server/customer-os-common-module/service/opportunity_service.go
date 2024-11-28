@@ -418,7 +418,6 @@ func (s *opportunityService) CloseWon(ctx context.Context, txWithPostCommit *uti
 		})
 
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
-			utils.EventCompleted(ctx, tenant, commonModel.OPPORTUNITY.String(), opportunityId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
 			s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, opportunityId, commonModel.OPPORTUNITY, utils.NewEventCompletedDetails().WithUpdate())
 			return nil
 		})
@@ -457,7 +456,6 @@ func (s *opportunityService) CloseLost(ctx context.Context, tx *neo4j.ManagedTra
 		return err
 	}
 
-	utils.EventCompleted(ctx, tenant, commonModel.OPPORTUNITY.String(), opportunityId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
 	s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, opportunityId, commonModel.OPPORTUNITY, utils.NewEventCompletedDetails().WithUpdate())
 
 	return nil
@@ -492,7 +490,6 @@ func (s *opportunityService) Archive(ctx context.Context, tenant, opportunityId 
 		return err
 	}
 
-	utils.EventCompleted(ctx, tenant, commonModel.OPPORTUNITY.String(), opportunityId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithDelete())
 	s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, opportunityId, commonModel.OPPORTUNITY, utils.NewEventCompletedDetails().WithDelete())
 
 	return nil

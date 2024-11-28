@@ -115,7 +115,7 @@ func (s *markdownEventService) Save(ctx context.Context, txWithPostCommit *utils
 				}
 
 				// send event completed for organization for refresh
-				utils.EventCompleted(ctx, tenant, model.ORGANIZATION.String(), *input.OrganizationId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
+				s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, *input.OrganizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
 			}
 
 			return nil

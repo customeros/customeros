@@ -105,7 +105,7 @@ func (h *ContractEventHandler) OnRolloutRenewalOpportunity(ctx context.Context, 
 		h.log.Errorf("Failed creating renewed action for contract %s: %s", contractId, err.Error())
 	}
 
-	utils.EventCompleted(ctx, eventData.Tenant, model.CONTRACT.String(), contractId, h.grpcClients, utils.NewEventCompletedDetails().WithUpdate())
+	h.services.CommonServices.RabbitMQService.PublishEventCompleted(ctx, eventData.Tenant, contractId, model.CONTACT, utils.NewEventCompletedDetails().WithUpdate())
 
 	return nil
 }
@@ -250,7 +250,7 @@ func (h *ContractEventHandler) OnDeleteV1(ctx context.Context, evt eventstore.Ev
 		return err
 	}
 
-	utils.EventCompleted(ctx, eventData.Tenant, model.CONTRACT.String(), contractId, h.grpcClients, utils.NewEventCompletedDetails().WithDelete())
+	h.services.CommonServices.RabbitMQService.PublishEventCompleted(ctx, eventData.Tenant, contractId, model.CONTRACT, utils.NewEventCompletedDetails().WithDelete())
 
 	return nil
 }
@@ -344,7 +344,7 @@ func (h *ContractEventHandler) OnRefreshStatus(ctx context.Context, evt eventsto
 
 	h.startOnboardingIfEligible(ctx, eventData.Tenant, contractId, span)
 
-	utils.EventCompleted(ctx, eventData.Tenant, model.CONTRACT.String(), contractId, h.grpcClients, utils.NewEventCompletedDetails().WithUpdate())
+	h.services.CommonServices.RabbitMQService.PublishEventCompleted(ctx, eventData.Tenant, contractId, model.CONTRACT, utils.NewEventCompletedDetails().WithUpdate())
 
 	return nil
 }
@@ -498,7 +498,7 @@ func (h *ContractEventHandler) OnRefreshLtv(ctx context.Context, evt eventstore.
 		}
 	}
 
-	utils.EventCompleted(ctx, eventData.Tenant, model.CONTRACT.String(), contractId, h.grpcClients, utils.NewEventCompletedDetails().WithUpdate())
+	h.services.CommonServices.RabbitMQService.PublishEventCompleted(ctx, eventData.Tenant, contractId, model.CONTRACT, utils.NewEventCompletedDetails().WithUpdate())
 
 	return nil
 }

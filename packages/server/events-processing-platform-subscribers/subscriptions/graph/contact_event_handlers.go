@@ -43,7 +43,7 @@ func (h *ContactEventHandler) OnPhoneNumberLinkToContact(ctx context.Context, ev
 	contactId := contact.GetContactObjectID(evt.AggregateID, eventData.Tenant)
 	err := h.services.CommonServices.Neo4jRepositories.PhoneNumberWriteRepository.LinkWithContact(ctx, eventData.Tenant, contactId, eventData.PhoneNumberId, eventData.Label, eventData.Primary)
 
-	utils.EventCompleted(ctx, eventData.Tenant, model.CONTACT.String(), contactId, h.grpcClients, utils.NewEventCompletedDetails().WithUpdate())
+	h.services.CommonServices.RabbitMQService.PublishEventCompleted(ctx, eventData.Tenant, contactId, model.CONTACT, utils.NewEventCompletedDetails().WithUpdate())
 
 	return err
 }
@@ -62,7 +62,7 @@ func (h *ContactEventHandler) OnLocationLinkToContact(ctx context.Context, evt e
 	contactId := contact.GetContactObjectID(evt.AggregateID, eventData.Tenant)
 	err := h.services.CommonServices.Neo4jRepositories.LocationWriteRepository.LinkWithContact(ctx, eventData.Tenant, contactId, eventData.LocationId)
 
-	utils.EventCompleted(ctx, eventData.Tenant, model.CONTACT.String(), contactId, h.grpcClients, utils.NewEventCompletedDetails().WithUpdate())
+	h.services.CommonServices.RabbitMQService.PublishEventCompleted(ctx, eventData.Tenant, contactId, model.CONTACT, utils.NewEventCompletedDetails().WithUpdate())
 
 	return err
 }

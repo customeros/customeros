@@ -133,7 +133,7 @@ func (h *OpportunityEventHandler) OnCreate(ctx context.Context, evt eventstore.E
 		}
 	}
 
-	utils.EventCompleted(ctx, eventData.Tenant, model.OPPORTUNITY.String(), opportunityId, h.grpcClients, utils.NewEventCompletedDetails().WithCreate())
+	h.services.CommonServices.RabbitMQService.PublishEventCompleted(ctx, eventData.Tenant, opportunityId, model.OPPORTUNITY, utils.NewEventCompletedDetails().WithCreate())
 
 	return nil
 }
@@ -212,7 +212,7 @@ func (h *OpportunityEventHandler) OnCreateRenewal(ctx context.Context, evt event
 		}
 	}
 
-	utils.EventCompleted(ctx, eventData.Tenant, model.OPPORTUNITY.String(), opportunityId, h.grpcClients, utils.NewEventCompletedDetails().WithCreate())
+	h.services.CommonServices.RabbitMQService.PublishEventCompleted(ctx, eventData.Tenant, opportunityId, model.OPPORTUNITY, utils.NewEventCompletedDetails().WithCreate())
 
 	return nil
 }
@@ -266,7 +266,7 @@ func (h *OpportunityEventHandler) OnUpdateNextCycleDate(ctx context.Context, evt
 
 	h.sendEventToUpdateOrganizationRenewalSummary(ctx, eventData.Tenant, opportunityId, span)
 
-	utils.EventCompleted(ctx, eventData.Tenant, model.OPPORTUNITY.String(), opportunityId, h.grpcClients, utils.NewEventCompletedDetails().WithUpdate())
+	h.services.CommonServices.RabbitMQService.PublishEventCompleted(ctx, eventData.Tenant, opportunityId, model.OPPORTUNITY, utils.NewEventCompletedDetails().WithUpdate())
 
 	return nil
 }
@@ -434,7 +434,7 @@ func (h *OpportunityEventHandler) OnUpdate(ctx context.Context, evt eventstore.E
 	}
 
 	if eventData.AppSource != constants.AppSourceCustomerOsApi {
-		utils.EventCompleted(ctx, eventData.Tenant, model.OPPORTUNITY.String(), opportunityId, h.grpcClients, utils.NewEventCompletedDetails().WithUpdate())
+		h.services.CommonServices.RabbitMQService.PublishEventCompleted(ctx, eventData.Tenant, opportunityId, model.OPPORTUNITY, utils.NewEventCompletedDetails().WithUpdate())
 	}
 	return nil
 }
@@ -541,7 +541,7 @@ func (h *OpportunityEventHandler) OnUpdateRenewal(ctx context.Context, evt event
 		}
 	}
 
-	utils.EventCompleted(ctx, eventData.Tenant, model.OPPORTUNITY.String(), opportunityId, h.grpcClients, utils.NewEventCompletedDetails().WithUpdate())
+	h.services.CommonServices.RabbitMQService.PublishEventCompleted(ctx, eventData.Tenant, opportunityId, model.OPPORTUNITY, utils.NewEventCompletedDetails().WithUpdate())
 
 	return nil
 }
@@ -625,7 +625,7 @@ func (h *OpportunityEventHandler) OnCloseLost(ctx context.Context, evt eventstor
 		}
 	}
 
-	utils.EventCompleted(ctx, eventData.Tenant, model.OPPORTUNITY.String(), opportunityId, h.grpcClients, utils.NewEventCompletedDetails().WithUpdate())
+	h.services.CommonServices.RabbitMQService.PublishEventCompleted(ctx, eventData.Tenant, opportunityId, model.OPPORTUNITY, utils.NewEventCompletedDetails().WithUpdate())
 
 	return nil
 }

@@ -406,8 +406,8 @@ func (s *emailService) UnlinkEmail(ctx context.Context, email, appSource string,
 		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message RemoveEmailEvent"))
 	}
 
-	// publish event to eventstore for completion
-	utils.EventCompleted(ctx, common.GetTenantFromContext(ctx), linkWith.Type.String(), linkWith.Id, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
+	// publish event for completion
+	s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, linkWith.Id, linkWith.Type, utils.NewEventCompletedDetails().WithUpdate())
 
 	return err
 }
@@ -495,6 +495,7 @@ func (s *emailService) SetPrimary(ctx context.Context, email string, forEntity L
 		tracing.TraceErr(span, err)
 		return err
 	}
+	tenant := common.GetTenantFromContext(ctx)
 
 	if forEntity.Id == "" {
 		tracing.TraceErr(span, errors.New("forEntity id is required"))
@@ -523,7 +524,7 @@ func (s *emailService) SetPrimary(ctx context.Context, email string, forEntity L
 		return err
 	}
 
-	utils.EventCompleted(ctx, common.GetTenantFromContext(ctx), forEntity.Type.String(), forEntity.Id, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
+	s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, forEntity.Id, forEntity.Type, utils.NewEventCompletedDetails().WithUpdate())
 
 	return nil
 }
