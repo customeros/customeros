@@ -27,6 +27,8 @@ type mailstackService struct {
 type MailstackService interface {
 	GetPaymentIntent(ctx context.Context, domains []string, usernames []string, amount int64) (string, error)                                         // stripe client secret
 	RegisterBuyDomainsWithMailboxes(ctx context.Context, test bool, paymentIntentId string, domains []string, usernames []string, amount int64) error // id, stripe client secret
+	GetTenantForMailstackDomain(ctx context.Context, domain string) (string, error)
+	GetAllMailstackDomains(ctx context.Context) (map[string]string, error)
 }
 
 func NewMailstackService(cfg *config.GlobalConfig, services *Services) MailstackService {
@@ -167,4 +169,43 @@ func (s *mailstackService) RegisterBuyDomainsWithMailboxes(ctx context.Context, 
 	}
 
 	return nil
+}
+
+func (s *mailstackService) GetTenantForMailstackDomain(ctx context.Context, domain string) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MailstackService.GetTenantForMailstackDomain")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	span.LogKV("request.domain", domain)
+
+	mailStackDomainEntity, err := s.services.PostgresRepositories.MailStackDomainRepository.GetDomainCrossTenant(ctx, domain)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+	if mailStackDomainEntity == nil {
+		return "", nil
+	}
+
+	return mailStackDomainEntity.Tenant, nil
+}
+
+func (s *mailstackService) GetAllMailstackDomains(ctx context.Context) (map[string]string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MailstackService.GetAllMailstackDomains")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	output := map[string]string{}
+
+	mailStackDomains, err := s.services.PostgresRepositories.MailStackDomainRepository.GetAllDomainsCrossTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return output, err
+	}
+
+	for _, mailStackDomain := range mailStackDomains {
+		output[mailStackDomain.Domain] = mailStackDomain.Tenant
+	}
+
+	return output, nil
 }
