@@ -155,31 +155,56 @@ export class ContactStore extends Syncable<Contact> {
   }
 
   async updateEmail(
-    previousEmail: string,
-    index?: number,
-    primary: boolean = false,
+    payload: {
+      index?: number;
+      primary: boolean;
+      previousEmail: string;
+    } = { previousEmail: '', index: 0, primary: false },
+    options?: {
+      invalidate?: boolean;
+      onError?: (error: string) => void;
+      onSuccess?: (serverId: string) => void;
+    },
   ) {
-    const email = this.value.emails?.[index ?? 0]?.email ?? '';
+    const email = this.value.emails?.[payload.index ?? 0]?.email ?? '';
+
+    options = { invalidate: true, ...options };
+
+    let serverId: string | undefined;
 
     try {
       this.isLoading = true;
-      await this.service.updateContactEmail({
+
+      const { emailReplaceForContact } = await this.service.updateContactEmail({
         contactId: this.getId(),
         input: {
           email,
-          primary: primary,
+          primary: payload.primary,
         },
-        previousEmail,
+        previousEmail: payload.previousEmail,
       });
+
       runInAction(() => {
         this.isLoading = false;
+        serverId = emailReplaceForContact.id;
       });
     } catch (e) {
       runInAction(() => {
         this.error = (e as Error).message;
+
+        if (options?.onError) {
+          options?.onError((e as Error).message);
+        }
       });
     } finally {
-      this.invalidate();
+      if (serverId) {
+        options?.onSuccess?.(serverId);
+        this.invalidate();
+      }
+
+      if (options?.invalidate) {
+        this.invalidate();
+      }
     }
   }
 
@@ -398,7 +423,7 @@ export class ContactStore extends Syncable<Contact> {
   }
 }
 
-const getDefaultValue = (): Contact => ({
+export const getDefaultValue = (): Contact => ({
   id: crypto.randomUUID(),
   createdAt: '',
   customFields: [],
@@ -407,13 +432,13 @@ const getDefaultValue = (): Contact => ({
   jobRoles: [],
   lastName: '',
   locations: [],
-  phoneNumbers: [],
-  profilePhotoUrl: '',
   latestOrganizationWithJobRole: {
     jobRole: {} as JobRole,
     organization: {} as Organization,
   } as OrganizationWithJobRole,
 
+  phoneNumbers: [],
+  profilePhotoUrl: '',
   organizations: {
     content: [],
     totalPages: 0,

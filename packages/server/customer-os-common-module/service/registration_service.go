@@ -162,16 +162,14 @@ func (s *registrationService) createMailboxIfNotExists(ctx context.Context, span
 	}
 
 	if mailbox == nil {
-		mailboxRequest := AddMailboxRequest{
+		if err := s.services.MailboxService.CreateMailbox(ctx, nil, CreateMailboxRequest{
 			Domain:          TEST_MAILBOX_DOMAIN,
 			Username:        strings.ToLower(tenant),
 			Password:        utils.GenerateLowerAlpha(1) + utils.GenerateKey(11, false),
 			LinkedUserEmail: mailboxAddress,
 			WebmailEnabled:  true,
 			ForwardingTo:    []string{fmt.Sprintf("bcc@%s.customeros.ai", strings.ToLower(tenant))},
-		}
-
-		if err := s.services.MailboxService.AddMailbox(ctx, mailboxRequest); err != nil {
+		}); err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to add mailbox"))
 			return err
 		}

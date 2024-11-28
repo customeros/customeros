@@ -200,6 +200,29 @@ func TestQueryResolver_UIOrganizationsSearch_FilterByStage(t *testing.T) {
 	assertSearch(t, searchBy, []string{enum.Trial.String(), enum.Lead.String()}, commonModel.ComparisonOperatorIn, 4, 3)
 }
 
+func TestQueryResolver_UIOrganizationsSearch_FilterByLeadSource(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{LeadSource: ""})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{LeadSource: "A"})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{LeadSource: "B"})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{LeadSource: "AB"})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{LeadSource: "C"})
+
+	require.Equal(t, 5, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+
+	searchBy := model.ColumnViewTypeOrganizationsLeadSource
+
+	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 5, 1)
+	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 5, 4)
+	assertSearch(t, searchBy, "C", commonModel.ComparisonOperatorContains, 5, 1)
+	assertSearch(t, searchBy, "A", commonModel.ComparisonOperatorContains, 5, 2)
+	assertSearch(t, searchBy, "A", commonModel.ComparisonOperatorNotContains, 5, 3)
+}
+
 func assertSearch(t *testing.T, filterName model.ColumnViewType, searchValue any, operator commonModel.ComparisonOperator, totalAvailable int64, totalElements int64) {
 	rawResponse, err := c.RawPost(getQuery("organization/ui_organizations_search"),
 		client.Var("limit", 10),

@@ -91,6 +91,9 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 			if filter.Filter.Property == model.ColumnViewTypeOrganizationsStage.String() {
 				createInOrEmptyStringFilter(filter, organizationFilter, "stage")
 			}
+			if filter.Filter.Property == model.ColumnViewTypeOrganizationsLeadSource.String() {
+				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateStringCypherFilter("leadSource", filter.Filter.Value.Str, filter.Filter.Operation))
+			}
 		}
 		//		orFilter := utils.CypherFilter{}
 		//		orFilter.LogicalOperator = utils.OR

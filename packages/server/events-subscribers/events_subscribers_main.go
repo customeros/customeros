@@ -78,7 +78,8 @@ func main() {
 	commonServices.RabbitMQService.RegisterHandler(dto.FlowArchive{}, listeners.Handle_FlowArchive)
 	commonServices.RabbitMQService.RegisterHandler(dto.FlowParticipantSchedule{}, listeners.Handle_FlowParticipantSchedule)
 	commonServices.RabbitMQService.RegisterHandler(dto.FlowComputeParticipantsRequirements{}, listeners.Handle_FlowComputeParticipantsRequirements)
-	commonServices.RabbitMQService.RegisterHandler(dto.MailstackBuyRequest{}, listeners.Handle_MailstackBuyRequest)
+	commonServices.RabbitMQService.RegisterHandler(dto.MailstackProvisionBuyRequest{}, listeners.Handle_MailstackProvisionBuyRequest)
+	commonServices.RabbitMQService.RegisterHandler(dto.MailstackProvisionMailbox{}, listeners.Handle_MailstackProvisionMailbox)
 
 	commonServices.RabbitMQService.RegisterHandler(dto.FlowParticipantGoalAchieved{}, listeners.Handle_FlowParticipantGoalAchieved)
 	commonServices.RabbitMQService.RegisterHandler(dto.AddSocialToContact{}, listeners.OnSocialAddedToContact)

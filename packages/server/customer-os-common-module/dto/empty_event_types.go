@@ -18,4 +18,6 @@ type FlowArchive struct{}
 
 type FlowParticipantSchedule struct{}
 
-type MailstackBuyRequest struct{}
+type MailstackProvisionBuyRequest struct{}
+
+type MailstackProvisionMailbox struct{}

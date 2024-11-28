@@ -9,7 +9,6 @@ import {
   clickLocatorsThatAreVisible,
   clickLocatorThatIsVisibleWithIndex,
   clickLocatorThatIsVisibleAndHasText,
-  clickLocatorWithSublocatorThatIsVisible,
 } from '../../helper';
 
 export class OrganizationAccountPage {
@@ -201,16 +200,15 @@ export class OrganizationAccountPage {
   }
 
   async addNoteToOrg() {
-    const editor = await clickLocatorWithSublocatorThatIsVisible(
+    const editor = await clickLocatorThatIsVisible(
       this.page,
       this.organizationAccountNotesEditor,
-      '.ProseMirror',
     );
 
     const requestPromise = createRequestPromise(
       this.page,
       'notes',
-      '<p>Test Note!</p>',
+      '<p class="my-3" dir="ltr"><span style="white-space: pre-wrap;">Test Note!</span></p>',
     );
 
     const responsePromise = createResponsePromise(
@@ -221,7 +219,7 @@ export class OrganizationAccountPage {
 
     // Type the note
     await editor.pressSequentially('Test Note!', { delay: 500 });
-    await editor.press('Tab');
+    await editor.press('Escape');
 
     await Promise.all([requestPromise, responsePromise]);
 

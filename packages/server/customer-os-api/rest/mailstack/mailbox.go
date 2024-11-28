@@ -3,6 +3,8 @@ package restmailstack
 
 import (
 	"fmt"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	service2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"net/http"
 	"regexp"
@@ -109,7 +111,7 @@ func RegisterNewMailbox(services *service.Services) gin.HandlerFunc {
 			ForwardingTo:      forwardingTo,
 		}
 
-		err := services.CommonServices.MailboxService.AddMailbox(ctx, service2.AddMailboxRequest{
+		err := services.CommonServices.MailboxService.CreateMailbox(ctx, nil, service2.CreateMailboxRequest{
 			Domain:          domain,
 			Username:        username,
 			Password:        password,
@@ -129,6 +131,20 @@ func RegisterNewMailbox(services *service.Services) gin.HandlerFunc {
 				rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer.WithMessage("Mailbox setup failed, please contact support"))
 				return
 			}
+		}
+
+		mailbox, err := services.CommonServices.PostgresRepositories.TenantSettingsMailboxRepository.GetByMailbox(ctx, username+"@"+domain)
+		if err != nil {
+			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer.WithMessage("Error retrieving mailbox"))
+			tracing.TraceErr(span, errors.Wrap(err, "Error retrieving mailbox"))
+			return
+		}
+
+		err = services.CommonServices.RabbitMQService.PublishEvent(ctx, mailbox.ID, model.MAILBOX, dto.MailstackProvisionMailbox{})
+		if err != nil {
+			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer.WithMessage("Error provisioning mailbox"))
+			tracing.TraceErr(span, errors.Wrap(err, "Error provisioning mailbox"))
+			return
 		}
 
 		if passwordGenerated {

@@ -86,7 +86,7 @@ func (s *flowExecutionService) rampUpMailbox(ctx context.Context, mailbox *entit
 
 		mailbox.LastRampUpAt = mailbox.LastRampUpAt.AddDate(0, 0, 1)
 
-		err := s.commonServices.PostgresRepositories.TenantSettingsMailboxRepository.Merge(ctx, mailbox)
+		err := s.commonServices.PostgresRepositories.TenantSettingsMailboxRepository.Merge(ctx, nil, mailbox)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err

@@ -33,6 +33,7 @@ export const Notes = observer(({ id }: NotesProps) => {
             namespace='opportunity-next-step'
             placeholderClassName='cursor-text'
             onBlur={() => organization?.commit()}
+            dataTest='organization-account-notes-editor'
             defaultHtmlValue={organization?.value?.notes ?? ''}
             placeholder='Write some notes or anything related to this customer'
             onChange={(html) => {

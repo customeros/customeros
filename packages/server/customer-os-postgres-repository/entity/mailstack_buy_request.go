@@ -47,33 +47,7 @@ func (MailstackBuyRequestDomain) TableName() string {
 type MailstackBuyRequestDomainStatus string
 
 const (
-	MailstackBuyRequestDomainStatusPending   MailstackBuyRequestDomainStatus = "PENDING"
-	MailstackBuyRequestDomainStatusCompleted MailstackBuyRequestDomainStatus = "COMPLETED"
-	MailstackBuyRequestDomainStatusFailed    MailstackBuyRequestDomainStatus = "FAILED"
-)
-
-type MailstackBuyRequestMailbox struct {
-	ID        string    `gorm:"primary_key;type:uuid;default:gen_random_uuid()" json:"id"`
-	Tenant    string    `gorm:"column:tenant;type:varchar(255);NOT NULL" json:"tenant"`
-	CreatedAt time.Time `gorm:"column:created_at;type:timestamp;DEFAULT:current_timestamp" json:"createdAt"`
-	UpdatedAt time.Time `gorm:"column:updated_at;type:timestamp" json:"updatedAt"`
-
-	MailstackBuyRequestId string `gorm:"column:mailstack_buy_request_id;type:uuid;NOT NULL" json:"mailstackBuyRequestId"`
-	Domain                string `gorm:"column:domain;type:varchar(255)" json:"domain"`
-	Username              string `gorm:"column:username;type:varchar(255)" json:"username"`
-	Mailbox               string `gorm:"column:mailbox;type:varchar(255)" json:"mailbox"`
-
-	Status MailstackBuyRequestMailboxStatus `gorm:"column:status;type:varchar(50)" json:"status"`
-}
-
-func (MailstackBuyRequestMailbox) TableName() string {
-	return "mailstack_buy_request_mailbox"
-}
-
-type MailstackBuyRequestMailboxStatus string
-
-const (
-	MailstackBuyRequestDomainMailboxPending   MailstackBuyRequestMailboxStatus = "PENDING"
-	MailstackBuyRequestDomainMailboxCompleted MailstackBuyRequestMailboxStatus = "COMPLETED"
-	MailstackBuyRequestDomainMailboxFailed    MailstackBuyRequestMailboxStatus = "FAILED"
+	MailstackBuyRequestDomainStatusPendingProvisioning MailstackBuyRequestDomainStatus = "PENDING_PROVISIONING"
+	MailstackBuyRequestDomainStatusProvisioned         MailstackBuyRequestDomainStatus = "PROVISIONED"
+	MailstackBuyRequestDomainStatusFailed              MailstackBuyRequestDomainStatus = "FAILED"
 )

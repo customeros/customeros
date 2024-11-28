@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"gorm.io/gorm"
+	"strings"
 
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
@@ -17,17 +19,19 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 )
 
-type AddMailboxRequest struct {
+type CreateMailboxRequest struct {
 	Domain          string
 	Username        string
 	Password        string
 	LinkedUserEmail string
 	WebmailEnabled  bool
 	ForwardingTo    []string
+
+	IgnoreDomainOwnership bool
 }
 
 type MailboxService interface {
-	AddMailbox(ctx context.Context, request AddMailboxRequest) error
+	CreateMailbox(ctx context.Context, tx *gorm.DB, request CreateMailboxRequest) error
 	IsDomainAvailable(ctx context.Context, domain string) (ok, available bool)
 	RecommendOutboundDomains(ctx context.Context, domainRoot string, count int) []string
 	ReputationScore(ctx context.Context, domain, tenant string) (int, error)
@@ -47,8 +51,8 @@ func NewMailboxService(log logger.Logger, services *Services) MailboxService {
 	}
 }
 
-func (s *mailboxService) AddMailbox(ctx context.Context, request AddMailboxRequest) error {
-	span, ctx := s.initializeTracing(ctx, "MailboxService.AddMailbox")
+func (s *mailboxService) CreateMailbox(ctx context.Context, tx *gorm.DB, request CreateMailboxRequest) error {
+	span, ctx := s.initializeTracing(ctx, "MailboxService.CreateMailbox")
 	span.LogFields(
 		log.String("linkedUserEmail", request.LinkedUserEmail),
 		log.String("domain", request.Domain),
@@ -58,9 +62,11 @@ func (s *mailboxService) AddMailbox(ctx context.Context, request AddMailboxReque
 	)
 	defer span.Finish()
 
-	if err := s.validateRequest(ctx, span, request.Domain); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "cannot vaildate MailboxRequest"))
-		return err
+	if !request.IgnoreDomainOwnership {
+		if err := s.validateRequest(ctx, span, request.Domain); err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "cannot vaildate MailboxRequest"))
+			return err
+		}
 	}
 
 	mailboxEmail := request.Username + "@" + request.Domain
@@ -78,14 +84,8 @@ func (s *mailboxService) AddMailbox(ctx context.Context, request AddMailboxReque
 		return err
 	}
 
-	// Setup mailbox in OpenSRS
-	//if err := s.setupMailbox(ctx, span, request, mailboxEmail); err != nil {
-	//	tracing.TraceErr(span, errors.Wrap(err, "failed to setup mailbox in OpenSRS"))
-	//	return err
-	//}
-
-	// Save mailbox settings
-	if err := s.saveMailboxSettings(ctx, span, request, mailboxEmail, linkedUserFound); err != nil {
+	// Save mailbox
+	if err := s.createMailbox(ctx, span, tx, request, mailboxEmail, linkedUserFound); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to save mailbox settings"))
 		return err
 	}
@@ -158,38 +158,22 @@ func (s *mailboxService) verifyMailboxNotExists(ctx context.Context, span opentr
 	return nil
 }
 
-func (s *mailboxService) setupMailbox(ctx context.Context, span opentracing.Span, request AddMailboxRequest, mailboxEmail string) error {
-	tenant := common.GetTenantFromContext(ctx)
-	err := s.services.OpenSrsService.SetupMailbox(
-		ctx,
-		tenant,
-		request.Domain,
-		request.Username,
-		request.Password,
-		request.ForwardingTo,
-		request.WebmailEnabled,
-	)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error setting mailbox"))
-		return err
-	}
-	return nil
-}
-
-func (s *mailboxService) saveMailboxSettings(ctx context.Context, span opentracing.Span, request AddMailboxRequest, mailboxEmail string, linkedUserFound bool) error {
+func (s *mailboxService) createMailbox(ctx context.Context, span opentracing.Span, tx *gorm.DB, request CreateMailboxRequest, mailboxEmail string, linkedUserFound bool) error {
 	tenant := common.GetTenantFromContext(ctx)
 	tenantSettingsMailbox := entity.TenantSettingsMailbox{
-		Domain:                  request.Domain,
-		MailboxUsername:         mailboxEmail,
-		Tenant:                  tenant,
-		MailboxPassword:         request.Password,
-		MinMinutesBetweenEmails: 5,
-		MaxMinutesBetweenEmails: 10,
+		Tenant:          tenant,
+		Domain:          request.Domain,
+		MailboxUsername: mailboxEmail,
+		MailboxPassword: request.Password,
+		Username:        request.Username,
+		ForwardingTo:    strings.Join(request.ForwardingTo, ","),
+		WebmailEnabled:  request.WebmailEnabled,
+		Status:          entity.MailboxStatusPendingProvisioning,
 	}
 	if linkedUserFound {
 		tenantSettingsMailbox.Username = request.LinkedUserEmail
 	}
-	err := s.services.PostgresRepositories.TenantSettingsMailboxRepository.Merge(ctx, &tenantSettingsMailbox)
+	err := s.services.PostgresRepositories.TenantSettingsMailboxRepository.Merge(ctx, tx, &tenantSettingsMailbox)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Error saving mailbox"))
 		return err
