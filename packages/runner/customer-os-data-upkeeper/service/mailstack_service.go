@@ -21,15 +21,15 @@ type mailstackService struct {
 	commonServices *commonservice.Services
 }
 
-func NewMailstackService(cfg *config.Config, log logger.Logger, commonServices *commonservice.Services) DomainService {
-	return &domainService{
+func NewMailstackService(cfg *config.Config, log logger.Logger, commonServices *commonservice.Services) MailstackService {
+	return &mailstackService{
 		cfg:            cfg,
 		log:            log,
 		commonServices: commonServices,
 	}
 }
 
-func (s *mailstackService) NewMailstackService() {
+func (s *mailstackService) CheckMailstackDomainReputation() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
 
