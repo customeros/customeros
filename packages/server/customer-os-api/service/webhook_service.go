@@ -1,12 +1,11 @@
 package service
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 )
@@ -29,10 +28,8 @@ func (i Integration) String() string {
 	return string(i)
 }
 
-func (i Integration) IntegragionID() string {
-	h := sha256.New()
-	h.Write([]byte(string(i)))
-	return hex.EncodeToString(h.Sum(nil))[:12]
+func (i Integration) IntegrationID() string {
+	return utils.GenerateHashId(i.String(), 12)
 }
 
 type webhookService struct {
@@ -53,7 +50,7 @@ func NewWebhookService(log logger.Logger, repositories *repository.Repositories,
 	}
 
 	for _, i := range integrations {
-		integrationHashMap[i.IntegragionID()] = i
+		integrationHashMap[i.IntegrationID()] = i
 	}
 
 	return &webhookService{
