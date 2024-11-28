@@ -10,7 +10,7 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -38,11 +38,11 @@ type CloudflareService interface {
 type cloudflareService struct {
 	log      logger.Logger
 	services *Services
-	cfg      *config.Config
+	cfg      *config.GlobalConfig
 }
 
 // NewCloudflareService initializes the CloudflareService
-func NewCloudflareService(log logger.Logger, services *Services, cfg *config.Config) CloudflareService {
+func NewCloudflareService(log logger.Logger, services *Services, cfg *config.GlobalConfig) CloudflareService {
 	return &cloudflareService{
 		log:      log,
 		services: services,
@@ -137,7 +137,7 @@ func (s *cloudflareService) deleteAllDNSRecords(ctx context.Context, domain stri
 		return nil
 	}
 
-	cloudflareUrl := fmt.Sprintf("%s/zones/%s/dns_records", s.cfg.ExternalServices.Cloudflare.Url, zoneID)
+	cloudflareUrl := fmt.Sprintf("%s/zones/%s/dns_records", s.cfg.ExternalServices.CloudflareConfig.Url, zoneID)
 	req, err := http.NewRequestWithContext(ctx, "GET", cloudflareUrl, nil)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to create request"))
@@ -145,8 +145,8 @@ func (s *cloudflareService) deleteAllDNSRecords(ctx context.Context, domain stri
 		return err
 	}
 
-	req.Header.Set("X-Auth-Email", s.cfg.ExternalServices.Cloudflare.Email)
-	req.Header.Set("X-Auth-Key", s.cfg.ExternalServices.Cloudflare.ApiKey)
+	req.Header.Set("X-Auth-Email", s.cfg.ExternalServices.CloudflareConfig.Email)
+	req.Header.Set("X-Auth-Key", s.cfg.ExternalServices.CloudflareConfig.ApiKey)
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := http.DefaultClient.Do(req)
@@ -187,15 +187,15 @@ func (s *cloudflareService) deleteAllDNSRecords(ctx context.Context, domain stri
 	// Step 3: Delete DNS records that match the given domain or its subdomains
 	for _, record := range recordsResponse.Result {
 		if record.Name == domain || strings.HasSuffix(record.Name, "."+domain) {
-			delURL := fmt.Sprintf("%s/zones/%s/dns_records/%s", s.cfg.ExternalServices.Cloudflare.Url, zoneID, record.ID)
+			delURL := fmt.Sprintf("%s/zones/%s/dns_records/%s", s.cfg.ExternalServices.CloudflareConfig.Url, zoneID, record.ID)
 			deleteReq, err := http.NewRequestWithContext(ctx, "DELETE", delURL, nil)
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "failed to create delete request"))
 				return err
 			}
 
-			deleteReq.Header.Set("X-Auth-Email", s.cfg.ExternalServices.Cloudflare.Email)
-			deleteReq.Header.Set("X-Auth-Key", s.cfg.ExternalServices.Cloudflare.ApiKey)
+			deleteReq.Header.Set("X-Auth-Email", s.cfg.ExternalServices.CloudflareConfig.Email)
+			deleteReq.Header.Set("X-Auth-Key", s.cfg.ExternalServices.CloudflareConfig.ApiKey)
 			deleteReq.Header.Set("Content-Type", "application/json")
 
 			delResp, err := http.DefaultClient.Do(deleteReq)
@@ -223,7 +223,7 @@ func (s *cloudflareService) checkDomain(ctx context.Context, domain string) (boo
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CloudflareService.checkDomain")
 	defer span.Finish()
 
-	cloudflareUrl := fmt.Sprintf("%s/zones?name=%s", s.cfg.ExternalServices.Cloudflare.Url, domain)
+	cloudflareUrl := fmt.Sprintf("%s/zones?name=%s", s.cfg.ExternalServices.CloudflareConfig.Url, domain)
 	req, err := http.NewRequestWithContext(ctx, "GET", cloudflareUrl, nil)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to create request"))
@@ -231,8 +231,8 @@ func (s *cloudflareService) checkDomain(ctx context.Context, domain string) (boo
 		return false, "", err
 	}
 
-	req.Header.Set("X-Auth-Email", s.cfg.ExternalServices.Cloudflare.Email)
-	req.Header.Set("X-Auth-Key", s.cfg.ExternalServices.Cloudflare.ApiKey)
+	req.Header.Set("X-Auth-Email", s.cfg.ExternalServices.CloudflareConfig.Email)
+	req.Header.Set("X-Auth-Key", s.cfg.ExternalServices.CloudflareConfig.ApiKey)
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := http.DefaultClient.Do(req)
@@ -278,7 +278,7 @@ func (s *cloudflareService) addDomain(ctx context.Context, domain string) (strin
 	defer span.Finish()
 	span.LogKV("domain", domain)
 
-	cloudflareUrl := fmt.Sprintf("%s/zones", s.cfg.ExternalServices.Cloudflare.Url)
+	cloudflareUrl := fmt.Sprintf("%s/zones", s.cfg.ExternalServices.CloudflareConfig.Url)
 
 	// Create the request payload
 	payload := map[string]interface{}{
@@ -300,8 +300,8 @@ func (s *cloudflareService) addDomain(ctx context.Context, domain string) (strin
 		return "", err
 	}
 
-	req.Header.Set("X-Auth-Email", s.cfg.ExternalServices.Cloudflare.Email)
-	req.Header.Set("X-Auth-Key", s.cfg.ExternalServices.Cloudflare.ApiKey)
+	req.Header.Set("X-Auth-Email", s.cfg.ExternalServices.CloudflareConfig.Email)
+	req.Header.Set("X-Auth-Key", s.cfg.ExternalServices.CloudflareConfig.ApiKey)
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := http.DefaultClient.Do(req)
@@ -362,7 +362,7 @@ func (s *cloudflareService) addDNSRecord(ctx context.Context, zoneID, recordType
 	span.LogKV("zoneID", zoneID, "recordType", recordType, "name", name)
 	span.LogFields(tracingLog.String("content", content), tracingLog.Int("ttl", ttl), tracingLog.Bool("proxied", proxied))
 
-	cloudflareUrl := fmt.Sprintf("%s/zones/%s/dns_records", s.cfg.ExternalServices.Cloudflare.Url, zoneID)
+	cloudflareUrl := fmt.Sprintf("%s/zones/%s/dns_records", s.cfg.ExternalServices.CloudflareConfig.Url, zoneID)
 
 	// Create the request payload
 	payload := map[string]interface{}{
@@ -391,8 +391,8 @@ func (s *cloudflareService) addDNSRecord(ctx context.Context, zoneID, recordType
 		return err
 	}
 
-	req.Header.Set("X-Auth-Email", s.cfg.ExternalServices.Cloudflare.Email)
-	req.Header.Set("X-Auth-Key", s.cfg.ExternalServices.Cloudflare.ApiKey)
+	req.Header.Set("X-Auth-Email", s.cfg.ExternalServices.CloudflareConfig.Email)
+	req.Header.Set("X-Auth-Key", s.cfg.ExternalServices.CloudflareConfig.ApiKey)
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := http.DefaultClient.Do(req)
@@ -446,7 +446,7 @@ func (s *cloudflareService) getNameservers(ctx context.Context, zoneID string) (
 	defer span.Finish()
 	span.LogKV("zoneID", zoneID)
 
-	cloudflareUrl := fmt.Sprintf("%s/zones/%s", s.cfg.ExternalServices.Cloudflare.Url, zoneID)
+	cloudflareUrl := fmt.Sprintf("%s/zones/%s", s.cfg.ExternalServices.CloudflareConfig.Url, zoneID)
 
 	req, err := http.NewRequestWithContext(ctx, "GET", cloudflareUrl, nil)
 	if err != nil {
@@ -455,8 +455,8 @@ func (s *cloudflareService) getNameservers(ctx context.Context, zoneID string) (
 		return nil, err
 	}
 
-	req.Header.Set("X-Auth-Email", s.cfg.ExternalServices.Cloudflare.Email)
-	req.Header.Set("X-Auth-Key", s.cfg.ExternalServices.Cloudflare.ApiKey)
+	req.Header.Set("X-Auth-Email", s.cfg.ExternalServices.CloudflareConfig.Email)
+	req.Header.Set("X-Auth-Key", s.cfg.ExternalServices.CloudflareConfig.ApiKey)
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := http.DefaultClient.Do(req)
@@ -581,7 +581,7 @@ func (s *cloudflareService) addRedirectPageRule(ctx context.Context, zoneID stri
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CloudflareService.addRedirectPageRule")
 	defer span.Finish()
 
-	url := fmt.Sprintf("%s/zones/%s/pagerules", s.cfg.ExternalServices.Cloudflare.Url, zoneID)
+	url := fmt.Sprintf("%s/zones/%s/pagerules", s.cfg.ExternalServices.CloudflareConfig.Url, zoneID)
 	payloadData, err := json.Marshal(pageRule)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to marshal page rule payload"))
@@ -596,8 +596,8 @@ func (s *cloudflareService) addRedirectPageRule(ctx context.Context, zoneID stri
 		return err
 	}
 
-	req.Header.Set("X-Auth-Email", s.cfg.ExternalServices.Cloudflare.Email)
-	req.Header.Set("X-Auth-Key", s.cfg.ExternalServices.Cloudflare.ApiKey)
+	req.Header.Set("X-Auth-Email", s.cfg.ExternalServices.CloudflareConfig.Email)
+	req.Header.Set("X-Auth-Key", s.cfg.ExternalServices.CloudflareConfig.ApiKey)
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := http.DefaultClient.Do(req)
@@ -656,7 +656,7 @@ func (s *cloudflareService) dnsConfigsForMailStack(ctx context.Context, tenant, 
 	}
 
 	// add dkim dns record
-	domainRecord, err := s.services.Repositories.PostgresRepositories.MailStackDomainRepository.GetDomain(ctx, tenant, domain)
+	domainRecord, err := s.services.PostgresRepositories.MailStackDomainRepository.GetDomain(ctx, tenant, domain)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to get domain record"))
 		return nil, err
@@ -670,7 +670,7 @@ func (s *cloudflareService) dnsConfigsForMailStack(ctx context.Context, tenant, 
 			s.log.Error("failed to generate DKIM key pair", err)
 			return nil, err
 		}
-		err = s.services.Repositories.PostgresRepositories.MailStackDomainRepository.SetDkimKeys(ctx, tenant, domain, dkimPublic, dkimPrivate)
+		err = s.services.PostgresRepositories.MailStackDomainRepository.SetDkimKeys(ctx, tenant, domain, dkimPublic, dkimPrivate)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to set DKIM keys"))
 			s.log.Error("failed to set DKIM keys", err)

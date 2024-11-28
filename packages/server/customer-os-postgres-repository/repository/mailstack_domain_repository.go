@@ -23,7 +23,7 @@ type MailStackDomainRepository interface {
 	CreateDMARCReport(ctx context.Context, tenant string, report *entity.DMARCMonitoring) error
 	CreateMailstackReputationScore(ctx context.Context, tenant string, score *entity.MailstackReputationEntity) error
 	GetDomainCrossTenant(ctx context.Context, domain string) (*entity.MailStackDomain, error)
-	GetAllDomainsCrossTenant(ctx context.Context) ([]entity.MailStackDomain, error)
+	GetAllActiveDomainsCrossTenant(ctx context.Context) ([]entity.MailStackDomain, error)
 }
 
 type mailStackDomainRepository struct {
@@ -220,13 +220,15 @@ func (r *mailStackDomainRepository) GetDomainCrossTenant(ctx context.Context, do
 	return &mailStackDomain, nil
 }
 
-func (r *mailStackDomainRepository) GetAllDomainsCrossTenant(ctx context.Context) ([]entity.MailStackDomain, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "MailStackDomainRepository.GetAllDomainsCrossTenant")
+func (r *mailStackDomainRepository) GetAllActiveDomainsCrossTenant(ctx context.Context) ([]entity.MailStackDomain, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "MailStackDomainRepository.GetAllActiveDomainsCrossTenant")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
 	var mailStackDomains []entity.MailStackDomain
 	err := r.db.WithContext(ctx).
+		Where("active = ?", true).
+		Where("configured = ?", true).
 		Find(&mailStackDomains).Error
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "db error"))

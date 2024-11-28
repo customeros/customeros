@@ -46,24 +46,38 @@ func Handle_MailstackProvisionBuyRequest(ctx context.Context, services *service.
 	}
 
 	for _, domain := range domains {
-		if domain.Status != entity.MailstackBuyRequestDomainStatusPendingProvisioning {
-			continue
+		// step 1 - purchase domain in namecheap
+		if domain.Status == entity.MailstackBuyRequestDomainStatusPendingProvisioning {
+			err = services.NamecheapService.PurchaseDomain(ctx, domain.Tenant, domain.Domain)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				mailstackBuyRequest.Status = entity.MailstackBuyRequestStatusFailed
+				domain.Status = entity.MailstackBuyRequestDomainStatusFailed
+			} else {
+				domain.Status = entity.MailstackBuyRequestDomainStatusPendingConfiguration
+			}
+
+			err = services.PostgresRepositories.CommonRepository.UpdateProperty(ctx, domain.Tenant, entity.MailstackBuyRequestDomain{}, domain.ID, "Status", domain.Status)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return err
+			}
 		}
 
-		err := services.NamecheapService.PurchaseDomain(ctx, domain.Tenant, domain.Domain)
-		if err != nil {
-			tracing.TraceErr(span, err)
+		// step 2 - configure domain in mailstack
+		if domain.Status == entity.MailstackBuyRequestDomainStatusPendingConfiguration {
+			err = services.MailstackService.ConfigureMailstackDomain(ctx, domain.Domain, domain.RedirectWebsite)
+			if err != nil {
+				tracing.TraceErr(span, err)
+			} else {
+				domain.Status = entity.MailstackBuyRequestDomainStatusCompleted
+			}
 
-			mailstackBuyRequest.Status = entity.MailstackBuyRequestStatusFailed
-			domain.Status = entity.MailstackBuyRequestDomainStatusFailed
-		} else {
-			domain.Status = entity.MailstackBuyRequestDomainStatusProvisioned
-		}
-
-		err = services.PostgresRepositories.CommonRepository.UpdateProperty(ctx, domain.Tenant, entity.MailstackBuyRequestDomain{}, domain.ID, "Status", domain.Status)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
+			err = services.PostgresRepositories.CommonRepository.UpdateProperty(ctx, domain.Tenant, entity.MailstackBuyRequestDomain{}, domain.ID, "Status", domain.Status)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return err
+			}
 		}
 	}
 
@@ -75,7 +89,7 @@ func Handle_MailstackProvisionBuyRequest(ctx context.Context, services *service.
 	}
 
 	for _, domain := range domains {
-		if domain.Status != entity.MailstackBuyRequestDomainStatusProvisioned {
+		if domain.Status != entity.MailstackBuyRequestDomainStatusCompleted {
 			continue
 		}
 
@@ -96,6 +110,15 @@ func Handle_MailstackProvisionBuyRequest(ctx context.Context, services *service.
 				return err
 			}
 		}
+	}
+
+	// mark buy request as completed or failed
+	if mailstackBuyRequest.Status == entity.MailstackBuyRequestStatusPending {
+		mailstackBuyRequest.Status = entity.MailstackBuyRequestStatusCompleted
+	}
+	_, err = services.PostgresRepositories.MailstackBuyRequestRepository.Store(ctx, nil, mailstackBuyRequest)
+	if err != nil {
+		tracing.TraceErr(span, err)
 	}
 
 	return nil

@@ -70,6 +70,11 @@ func main() {
 			EnrichmentApiConfig: cfg.InternalServices.EnrichmentApi,
 			AiApiConfig:         cfg.InternalServices.AiApi,
 		},
+		ExternalServices: commonConfig.ExternalServices{
+			OpenSRSConfig:    cfg.OpenSRSConfig,
+			NamecheapConfig:  cfg.NamecheapConfig,
+			CloudflareConfig: cfg.CloudflareConfig,
+		},
 	}, db.GormDB, &neo4jDriver, cfg.Neo4j.Database, eventsProcessingGrpcClient, appLogger)
 
 	//Register listeners

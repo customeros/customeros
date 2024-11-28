@@ -127,7 +127,7 @@ func (repo *mailstackBuyRequestRepositoryRepositoryImpl) StoreDomain(ctx context
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	span.LogFields(log.String("input.domain", input.Domain))
+	span.LogKV("input.domain", input.Domain, "input.redirectWebsite", input.RedirectWebsite)
 
 	if input.Domain == "" || input.MailstackBuyRequestId == "" {
 		span.LogFields(log.Object("input", input))

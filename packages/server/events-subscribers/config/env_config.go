@@ -15,6 +15,9 @@ type Config struct {
 	NovuConfig       config.NovuConfig
 	GrpcClientConfig config.GrpcClientConfig
 	InternalServices InternalServices
+	CloudflareConfig config.CloudflareConfig
+	NamecheapConfig  config.NamecheapConfig
+	OpenSRSConfig    config.OpenSRSConfig
 }
 
 type InternalServices struct {

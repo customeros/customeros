@@ -24,6 +24,7 @@ type Services struct {
 	GrpcClients     *grpc_client.Clients
 
 	AttachmentService          AttachmentService
+	CloudflareService          CloudflareService
 	ContactService             ContactService
 	ContractService            ContractService
 	CommonService              CommonService
@@ -125,6 +126,7 @@ func InitServices(globalConfig *config.GlobalConfig, db *gorm.DB, driver *neo4j.
 	services.MailService = NewMailService(services)
 	services.MailstackService = NewMailstackService(globalConfig, services)
 	services.NamecheapService = NewNamecheapService(globalConfig, services)
+	services.CloudflareService = NewCloudflareService(log, services, globalConfig)
 
 	// TODO remove, and refactor
 	services.SyncService = NewSyncService(services)

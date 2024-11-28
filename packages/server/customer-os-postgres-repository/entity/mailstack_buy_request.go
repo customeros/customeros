@@ -36,6 +36,7 @@ type MailstackBuyRequestDomain struct {
 
 	MailstackBuyRequestId string `gorm:"column:mailstack_buy_request_id;type:uuid;NOT NULL" json:"mailstackBuyRequestId"`
 	Domain                string `gorm:"column:domain;type:varchar(255)" json:"domain"`
+	RedirectWebsite       string `gorm:"column:redirect_website;type:varchar(255)" json:"redirectWebsite"`
 
 	Status MailstackBuyRequestDomainStatus `gorm:"column:status;type:varchar(50)" json:"status"`
 }
@@ -47,7 +48,8 @@ func (MailstackBuyRequestDomain) TableName() string {
 type MailstackBuyRequestDomainStatus string
 
 const (
-	MailstackBuyRequestDomainStatusPendingProvisioning MailstackBuyRequestDomainStatus = "PENDING_PROVISIONING"
-	MailstackBuyRequestDomainStatusProvisioned         MailstackBuyRequestDomainStatus = "PROVISIONED"
-	MailstackBuyRequestDomainStatusFailed              MailstackBuyRequestDomainStatus = "FAILED"
+	MailstackBuyRequestDomainStatusPendingProvisioning  MailstackBuyRequestDomainStatus = "PENDING_PROVISIONING"
+	MailstackBuyRequestDomainStatusPendingConfiguration MailstackBuyRequestDomainStatus = "PENDING_CONFIGURATION"
+	MailstackBuyRequestDomainStatusCompleted            MailstackBuyRequestDomainStatus = "COMPLETED"
+	MailstackBuyRequestDomainStatusFailed               MailstackBuyRequestDomainStatus = "FAILED"
 )
