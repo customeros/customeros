@@ -167,7 +167,7 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return nil
 	}
 	switch evt.GetEventType() {
-	case "V1_EVENT_COMPLETED",
+	case
 		phonenumberevents.PhoneNumberValidateV1,
 		emailevents.EmailValidationFailedV1,
 		emailevents.EmailValidatedV1,
