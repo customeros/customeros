@@ -239,24 +239,6 @@ func (s *organizationService) RemoveParentOrganization(ctx context.Context, requ
 	return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
 }
 
-func (s *organizationService) EnrichOrganization(ctx context.Context, request *organizationpb.EnrichOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
-	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.EnrichOrganization")
-	defer span.Finish()
-	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	tracing.LogObjectAsJson(span, "request", request)
-
-	initAggregateFunc := func() eventstore.Aggregate {
-		return aggregate.NewOrganizationTempAggregateWithTenantAndID(request.Tenant, request.OrganizationId)
-	}
-	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{SkipLoadEvents: true}, request); err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("(EnrichOrganization.HandleGRPCRequest) tenant:{%s}, organization ID: {%s}, err: %s", request.Tenant, request.OrganizationId, err.Error())
-		return nil, grpcerr.ErrResponse(err)
-	}
-
-	return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
-}
-
 func (s *organizationService) UpdateOnboardingStatus(ctx context.Context, request *organizationpb.UpdateOnboardingStatusGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.UpdateOnboardingStatus")
 	defer span.Finish()

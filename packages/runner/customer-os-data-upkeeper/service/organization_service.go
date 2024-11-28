@@ -8,6 +8,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
@@ -284,26 +285,23 @@ func (s *organizationService) enrichOrganization(ctx context.Context) {
 
 		//process organizations
 		for _, record := range records {
-			_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-				return s.eventsProcessingClient.OrganizationClient.EnrichOrganization(ctx, &organizationpb.EnrichOrganizationGrpcRequest{
-					Tenant:         record.Tenant,
-					OrganizationId: record.OrganizationId,
-					Url:            record.Param1,
-					AppSource:      constants.AppSourceDataUpkeeper,
-				})
+			innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+				Tenant:    record.Tenant,
+				AppSource: constants.AppSourceDataUpkeeper,
 			})
+			err = s.commonServices.RabbitMQService.PublishEvent(innerCtx, record.OrganizationId, model.ORGANIZATION, dto.RequestEnrichOrganization{Url: record.Param1})
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error enriching organization {%s}: %s", record.OrganizationId, err.Error())
 			}
-			err = s.commonServices.Neo4jRepositories.OrganizationWriteRepository.UpdateTimeProperty(ctx, record.Tenant, record.OrganizationId, string(neo4jentity.OrganizationPropertyEnrichRequestedAt), utils.NowPtr())
+			err = s.commonServices.Neo4jRepositories.OrganizationWriteRepository.UpdateTimeProperty(innerCtx, record.Tenant, record.OrganizationId, string(neo4jentity.OrganizationPropertyEnrichRequestedAt), utils.NowPtr())
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error updating domain checked at: %s", err.Error())
 			}
 
 			// increment enrich attempts
-			err = s.commonServices.Neo4jRepositories.CommonWriteRepository.IncrementProperty(ctx, record.Tenant, model.NodeLabelOrganization, record.OrganizationId, string(neo4jentity.OrganizationPropertyEnrichAttempts))
+			err = s.commonServices.Neo4jRepositories.CommonWriteRepository.IncrementProperty(innerCtx, record.Tenant, model.NodeLabelOrganization, record.OrganizationId, string(neo4jentity.OrganizationPropertyEnrichAttempts))
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error incrementing contact' enrich attempts: %s", err.Error())

@@ -146,14 +146,6 @@ message RemoveParentOrganizationGrpcRequest {
   string appSource = 5;
 }
 
-message EnrichOrganizationGrpcRequest {
-  string tenant = 1;
-  string organizationId = 2;
-  string url = 3;
-  string appSource = 4;
-  string loggedInUserId = 5;
-}
-
 message UpdateOnboardingStatusGrpcRequest {
   string tenant = 1;
   string organizationId = 2;
@@ -255,7 +247,6 @@ message BillingProfileIdGrpcResponse {
 }
 
 service organizationGrpcService {
-  rpc EnrichOrganization(EnrichOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc LinkPhoneNumberToOrganization(LinkPhoneNumberToOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc LinkLocationToOrganization(LinkLocationToOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc UnlinkDomainFromOrganization(UnLinkDomainFromOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);

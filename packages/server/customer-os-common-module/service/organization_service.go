@@ -16,7 +16,6 @@ import (
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
-	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -428,16 +427,7 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 				}
 				// invoke enrich organization by domain
 				if primaryDomain != "" {
-					ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-					_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-						return s.services.GrpcClients.OrganizationClient.EnrichOrganization(ctx, &organizationpb.EnrichOrganizationGrpcRequest{
-							Tenant:         tenant,
-							OrganizationId: organizationId,
-							LoggedInUserId: common.GetUserIdFromContext(ctx),
-							AppSource:      common.GetAppSourceFromContext(ctx),
-							Url:            primaryDomain,
-						})
-					})
+					err = s.services.RabbitMQService.PublishEvent(ctx, organizationId, model.ORGANIZATION, dto.RequestEnrichOrganization{Url: primaryDomain})
 					if err != nil {
 						tracing.TraceErr(span, err)
 					}
@@ -639,16 +629,9 @@ func (s *organizationService) LinkWithDomain(ctx context.Context, txWithPostComm
 		if domainLinkedSuccessfully {
 			txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
 				// send organization enrich request
-				_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-					return s.services.GrpcClients.OrganizationClient.EnrichOrganization(ctx, &organizationpb.EnrichOrganizationGrpcRequest{
-						Tenant:         tenant,
-						OrganizationId: organizationId,
-						Url:            domain,
-						AppSource:      common.GetAppSourceFromContext(ctx),
-					})
-				})
+				err = s.services.RabbitMQService.PublishEvent(ctx, organizationId, model.ORGANIZATION, dto.RequestEnrichOrganization{Url: domain})
 				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "failed to request enrich organization"))
+					tracing.TraceErr(span, errors.Wrap(err, "failed to publish event RequestEnrichOrganization"))
 				}
 				return nil
 			})
