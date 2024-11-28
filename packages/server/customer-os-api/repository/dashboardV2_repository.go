@@ -16,8 +16,6 @@ import (
 	"sync"
 )
 
-const ()
-
 type DashboardV2Repository interface {
 	GetDashboardViewOrganizationDataV2(ctx context.Context, tenant string, limit int, where *model.Filter, sort *commonmodel.SortBy) (*utils.StringsWithTotalCount, error)
 }
@@ -41,12 +39,12 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 	tracing.LogObjectAsJson(span, "sort", sort)
 
 	organizationFilterCypher, organizationFilterParams := "", make(map[string]interface{})
-	emailFilterCypher, emailFilterParams := "", make(map[string]interface{})
+	socialFilterCypher, socialFilterParams := "", make(map[string]interface{})
+	tagFilterCypher, tagFilterParams := "", make(map[string]interface{})
 	locationFilterCypher, locationFilterParams := "", make(map[string]interface{})
 
 	ownerId := []string{}
 	ownerIncludeEmpty := false
-	externalId := ""
 
 	//ORGANIZATION, EMAIL, COUNTRY, REGION, LOCALITY
 	//region organization filters
@@ -55,6 +53,16 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 		organizationFilter.Negate = false
 		organizationFilter.LogicalOperator = utils.AND
 		organizationFilter.Filters = make([]*utils.CypherFilter, 0)
+
+		socialFilter := new(utils.CypherFilter)
+		socialFilter.Negate = false
+		socialFilter.LogicalOperator = utils.AND
+		socialFilter.Filters = make([]*utils.CypherFilter, 0)
+
+		tagFilter := new(utils.CypherFilter)
+		tagFilter.Negate = false
+		tagFilter.LogicalOperator = utils.AND
+		tagFilter.Filters = make([]*utils.CypherFilter, 0)
 
 		emailFilter := new(utils.CypherFilter)
 		emailFilter.Negate = false
@@ -91,85 +99,76 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 			if filter.Filter.Property == model.ColumnViewTypeOrganizationsStage.String() {
 				createInOrEmptyStringFilter(filter, organizationFilter, "stage")
 			}
+			if filter.Filter.Property == model.ColumnViewTypeOrganizationsSocials.String() {
+				socialFilter.Filters = append(socialFilter.Filters, utils.CreateStringCypherFilter("url", filter.Filter.Value.Str, filter.Filter.Operation))
+			}
 			if filter.Filter.Property == model.ColumnViewTypeOrganizationsLeadSource.String() {
 				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateStringCypherFilter("leadSource", filter.Filter.Value.Str, filter.Filter.Operation))
 			}
+			if filter.Filter.Property == model.ColumnViewTypeOrganizationsCreatedDate.String() {
+				createBetweenOrEmptyTimeFilter(filter, organizationFilter, "createdAt")
+			}
+			if filter.Filter.Property == model.ColumnViewTypeOrganizationsEmployeeCount.String() {
+				createNumberCypherFilter(filter, organizationFilter, "employees")
+			}
+			if filter.Filter.Property == model.ColumnViewTypeOrganizationsYearFounded.String() {
+				createNumberCypherFilter(filter, organizationFilter, "yearFounded")
+			}
+			if filter.Filter.Property == model.ColumnViewTypeOrganizationsIndustry.String() {
+				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateStringCypherFilter("industry", filter.Filter.Value.Str, filter.Filter.Operation))
+			}
+			if filter.Filter.Property == model.ColumnViewTypeOrganizationsChurnDate.String() {
+				createBetweenOrEmptyTimeFilter(filter, organizationFilter, "derivedChurnedAt")
+			}
+			if filter.Filter.Property == model.ColumnViewTypeOrganizationsLtv.String() {
+				createNumberCypherFilter(filter, organizationFilter, "derivedLtv")
+			}
+			if filter.Filter.Property == model.ColumnViewTypeOrganizationsCountry.String() {
+				locationFilter.Filters = append(locationFilter.Filters, utils.CreateStringCypherFilter("country", filter.Filter.Value.Str, filter.Filter.Operation))
+			}
+			if filter.Filter.Property == model.ColumnViewTypeOrganizationsCity.String() {
+				locationFilter.Filters = append(locationFilter.Filters, utils.CreateStringCypherFilter("locality", filter.Filter.Value.Str, filter.Filter.Operation))
+			}
+			if filter.Filter.Property == model.ColumnViewTypeOrganizationsIsPublic.String() {
+				createBooleanFilter(filter, organizationFilter, "isPublic")
+			}
+			if filter.Filter.Property == model.ColumnViewTypeOrganizationsTags.String() {
+
+				cf := utils.CypherFilter{}
+
+				if filter.Filter.Operation == commonmodel.ComparisonOperatorIsEmpty {
+					cf.Details = new(utils.CypherFilterItem)
+					cf.Details.NodeProperty = "trCount = 0"
+					cf.Details.ComparisonOperator = commonmodel.ComparisonOperatorCountRelation
+				} else if filter.Filter.Operation == commonmodel.ComparisonOperatorIsNotEmpty {
+					cf.Details = new(utils.CypherFilterItem)
+					cf.Details.NodeProperty = "trCount > 0"
+					cf.Details.ComparisonOperator = commonmodel.ComparisonOperatorCountRelation
+				} else {
+					cf.Details = new(utils.CypherFilterItem)
+					cf.Details.NodeProperty = "name"
+					cf.Details.Value = filter.Filter.Value.Str
+					cf.Details.ComparisonOperator = filter.Filter.Operation
+				}
+
+				tagFilter.Filters = append(tagFilter.Filters, &cf)
+			}
+			if filter.Filter.Property == model.ColumnViewTypeOrganizationsHeadquarters.String() {
+				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateStringCypherFilter("headquarters", filter.Filter.Value.Str, filter.Filter.Operation))
+			}
+			if filter.Filter.Property == model.ColumnViewTypeOrganizationsUpdatedDate.String() {
+				createBetweenOrEmptyTimeFilter(filter, organizationFilter, "updatedAt")
+			}
 		}
-		//		orFilter := utils.CypherFilter{}
-		//		orFilter.LogicalOperator = utils.OR
-		//		orFilter.Details = new(utils.CypherFilterItem)
-		//
-		//		orFilter.Filters = append(orFilter.Filters, utils.CreateStringCypherFilter("name", *filter.Filter.Value.Str, utils.CONTAINS))
-		//		orFilter.Filters = append(orFilter.Filters, utils.CreateStringCypherFilter("website", *filter.Filter.Value.Str, utils.CONTAINS))
-		//		orFilter.Filters = append(orFilter.Filters, utils.CreateStringCypherFilter("customerOsId", *filter.Filter.Value.Str, utils.CONTAINS))
-		//		orFilter.Filters = append(orFilter.Filters, utils.CreateStringCypherFilter("referenceId", *filter.Filter.Value.Str, utils.CONTAINS))
-		//
-		//		organizationFilter.Filters = append(organizationFilter.Filters, &orFilter)
-		//	} else if filter.Filter.Property == SearchSortParamName {
-		//		organizationFilter.Filters = append(organizationFilter.Filters, createStringCypherFilterWithValueOrEmpty(filter.Filter, "name"))
-		//	} else if filter.Filter.Property == SearchSortParamWebsite {
-		//		organizationFilter.Filters = append(organizationFilter.Filters, createStringCypherFilterWithValueOrEmpty(filter.Filter, "website"))
-		//	} else if filter.Filter.Property == SearchSortParamRelationship && filter.Filter.Value.ArrayStr != nil {
-		//		organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilterIn("relationship", *filter.Filter.Value.ArrayStr))
-		//	} else if filter.Filter.Property == SearchSortParamStage && filter.Filter.Value.ArrayStr != nil {
-		//		organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilterIn("stage", *filter.Filter.Value.ArrayStr))
-		//	} else if filter.Filter.Property == SearchSortParamIndustry && filter.Filter.Value.ArrayStr != nil {
-		//		organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilterIn("industry", *filter.Filter.Value.ArrayStr))
-		//	} else if filter.Filter.Property == SearchSortParamEmail {
-		//		emailFilter.Filters = append(emailFilter.Filters, utils.CreateStringCypherFilter("email", *filter.Filter.Value.Str, utils.CONTAINS))
-		//		emailFilter.Filters = append(emailFilter.Filters, utils.CreateStringCypherFilter("rawEmail", *filter.Filter.Value.Str, utils.CONTAINS))
-		//	} else if filter.Filter.Property == SearchSortParamCountry {
-		//		locationFilter.Filters = append(locationFilter.Filters, utils.CreateStringCypherFilter("country", *filter.Filter.Value.Str, utils.EQUALS))
-		//	} else if filter.Filter.Property == SearchSortParamRegion {
-		//		locationFilter.Filters = append(locationFilter.Filters, utils.CreateStringCypherFilter("region", *filter.Filter.Value.Str, utils.EQUALS))
-		//	} else if filter.Filter.Property == SearchSortParamLocality {
-		//		locationFilter.Filters = append(locationFilter.Filters, utils.CreateStringCypherFilter("locality", *filter.Filter.Value.Str, utils.EQUALS))
-		//	} else if filter.Filter.Property == SearchSortParamOwnerId {
-		//		if filter.Filter.Value.ArrayStr != nil {
-		//			ownerId = *filter.Filter.Value.ArrayStr
-		//		}
-		//		ownerIncludeEmpty = *filter.Filter.IncludeEmpty
-		//	} else if filter.Filter.Property == SearchParamExternalId {
-		//		externalId = *filter.Filter.Value.Str
-		//	} else if filter.Filter.Property == SearchSortParamIsCustomer && filter.Filter.Value.ArrayBool != nil && len(*filter.Filter.Value.ArrayBool) >= 1 {
-		//		if (*filter.Filter.Value.ArrayBool)[0] {
-		//			organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilterEq("relationship", neo4jenum.Customer.String()))
-		//		} else {
-		//			organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilterNotEq("relationship", neo4jenum.Customer.String()))
-		//		}
-		//	} else if filter.Filter.Property == SearchSortParamRenewalLikelihood && filter.Filter.Value.ArrayStr != nil && len(*filter.Filter.Value.ArrayStr) >= 1 {
-		//		renewalLikelihoodValues := make([]string, 0)
-		//		for _, v := range *filter.Filter.Value.ArrayStr {
-		//			renewalLikelihoodValues = append(renewalLikelihoodValues, mapper.MapOpportunityRenewalLikelihoodFromString(&v))
-		//		}
-		//		organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilterIn("derivedRenewalLikelihood", renewalLikelihoodValues))
-		//	} else if filter.Filter.Property == SearchSortParamOnboardingStatus && filter.Filter.Value.ArrayStr != nil && len(*filter.Filter.Value.ArrayStr) >= 1 {
-		//		onboardingStatusValues := make([]string, 0)
-		//		for _, v := range *filter.Filter.Value.ArrayStr {
-		//			onboardingStatusValues = append(onboardingStatusValues, mapper.MapOnboardingStatusFromString(&v))
-		//		}
-		//		organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilterIn("onboardingStatus", onboardingStatusValues))
-		//	} else if filter.Filter.Property == SearchSortParamRenewalCycleNext && filter.Filter.Value.Time != nil {
-		//		organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilter("billingDetailsRenewalCycleNext", *filter.Filter.Value.Time, utils.LTE))
-		//	} else if filter.Filter.Property == SearchSortParamRenewalDate && filter.Filter.Value.Time != nil {
-		//		organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilter("derivedNextRenewalAt", *filter.Filter.Value.Time, utils.LTE))
-		//	} else if filter.Filter.Property == SearchSortParamForecastArr && filter.Filter.Value.ArrayInt != nil && len(*filter.Filter.Value.ArrayInt) == 2 {
-		//		organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilter("renewalForecastArr", (*filter.Filter.Value.ArrayInt)[0], utils.GTE))
-		//		organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilter("renewalForecastArr", (*filter.Filter.Value.ArrayInt)[1], utils.LTE))
-		//	} else if (filter.Filter.Property == SearchSortParamLastTouchpointAt || filter.Filter.Property == SearchSortParamLastTouchpoint) && filter.Filter.Value.Time != nil {
-		//		organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilter("lastTouchpointAt", *filter.Filter.Value.Time, utils.GTE))
-		//	} else if filter.Filter.Property == SearchSortParamLastTouchpointType && filter.Filter.Value.ArrayStr != nil {
-		//		organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilterIn("lastTouchpointType", *filter.Filter.Value.ArrayStr))
-		//	} else if filter.Filter.Property == SearchSortParamUpdatedAt && filter.Filter.Value.Time != nil {
-		//		organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilter("updatedAt", *filter.Filter.Value.Time, utils.GTE))
-		//	}
-		//}
 
 		if len(organizationFilter.Filters) > 0 {
 			organizationFilterCypher, organizationFilterParams = organizationFilter.BuildCypherFilterFragmentWithParamName("o", "o_param_")
 		}
-		if len(emailFilter.Filters) > 0 {
-			emailFilterCypher, emailFilterParams = emailFilter.BuildCypherFilterFragmentWithParamName("e", "e_param_")
+		if len(socialFilter.Filters) > 0 {
+			socialFilterCypher, socialFilterParams = socialFilter.BuildCypherFilterFragmentWithParamName("s", "s_param_")
+		}
+		if len(tagFilter.Filters) > 0 {
+			tagFilterCypher, tagFilterParams = tagFilter.BuildCypherFilterFragmentWithParamName("t", "t_param_")
 		}
 		if len(locationFilter.Filters) > 0 {
 			locationFilterCypher, locationFilterParams = locationFilter.BuildCypherFilterFragmentWithParamName("l", "l_param_")
@@ -179,14 +178,14 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 	//endregion
 
 	params := map[string]any{
-		"tenant":     tenant,
-		"ownerId":    ownerId,
-		"externalId": externalId,
-		"limit":      limit,
+		"tenant":  tenant,
+		"ownerId": ownerId,
+		"limit":   limit,
 	}
 
 	utils.MergeMapToMap(organizationFilterParams, params)
-	utils.MergeMapToMap(emailFilterParams, params)
+	utils.MergeMapToMap(socialFilterParams, params)
+	utils.MergeMapToMap(tagFilterParams, params)
 	utils.MergeMapToMap(locationFilterParams, params)
 
 	//region count selectQuery
@@ -194,18 +193,19 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 	if len(ownerId) > 0 || ownerIncludeEmpty {
 		countQuery += ` OPTIONAL MATCH (o)<-[:OWNS]-(owner:User) WITH *`
 	}
-	if emailFilterCypher != "" {
-		countQuery += ` MATCH (o)-[:HAS]->(e:Email) WITH *`
+	if socialFilterCypher != "" {
+		countQuery += ` MATCH (o)-[:HAS]->(s:Social) WITH *`
+	}
+	if tagFilterCypher != "" {
+		countQuery += ` OPTIONAL MATCH (o)-[tr:TAGGED]->(t:Tag) WITH *, count(tr) as trCount`
 	}
 	if locationFilterCypher != "" {
 		countQuery += ` MATCH (o)-[:ASSOCIATED_WITH]->(l:Location) WITH *`
 	}
-	if externalId != "" {
-		countQuery += ` MATCH (o)-[:IS_LINKED_WITH {externalId:$externalId}]->(ext:ExternalSystem) WITH *`
-	}
+
 	countQuery += ` WHERE o.hide = false `
 
-	if organizationFilterCypher != "" || emailFilterCypher != "" || locationFilterCypher != "" || len(ownerId) > 0 || ownerIncludeEmpty {
+	if organizationFilterCypher != "" || socialFilterCypher != "" || tagFilterCypher != "" || locationFilterCypher != "" || len(ownerId) > 0 || ownerIncludeEmpty {
 		countQuery += " AND "
 	}
 
@@ -222,8 +222,11 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 			countQueryParts = append(countQueryParts, fmt.Sprintf(` owner.id IN $ownerId `))
 		}
 	}
-	if emailFilterCypher != "" {
-		countQueryParts = append(countQueryParts, emailFilterCypher)
+	if socialFilterCypher != "" {
+		countQueryParts = append(countQueryParts, socialFilterCypher)
+	}
+	if tagFilterCypher != "" {
+		countQueryParts = append(countQueryParts, tagFilterCypher)
 	}
 	if locationFilterCypher != "" {
 		countQueryParts = append(countQueryParts, locationFilterCypher)
@@ -237,18 +240,15 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 	if len(ownerId) > 0 || ownerIncludeEmpty {
 		selectQuery += fmt.Sprintf(` OPTIONAL MATCH (o)<-[:OWNS]-(owner:User) WITH *`)
 	}
-	if externalId != "" {
-		selectQuery += ` MATCH (o)-[:IS_LINKED_WITH {externalId:$externalId}]->(ext:ExternalSystem) WITH *`
-	}
-	selectQuery += fmt.Sprintf(` OPTIONAL MATCH (o)-[:HAS_DOMAIN]->(d:Domain) WITH *`)
-	selectQuery += fmt.Sprintf(` OPTIONAL MATCH (o)-[:HAS]->(e:Email_%s) WITH *`, tenant)
+	selectQuery += fmt.Sprintf(` OPTIONAL MATCH (o)-[:HAS]->(s:Social_%s) WITH *`, tenant)
+	selectQuery += fmt.Sprintf(` OPTIONAL MATCH (o)-[tr:TAGGED]->(t:Tag_%s) WITH *, count(tr) as trCount`, tenant)
 	selectQuery += fmt.Sprintf(` OPTIONAL MATCH (o)-[:ASSOCIATED_WITH]->(l:Location_%s) WITH *`, tenant)
 	if sort != nil && sort.By == SearchSortParamOwner {
 		selectQuery += fmt.Sprintf(` OPTIONAL MATCH (o)<-[:OWNS]-(owner:User_%s) WITH *`, tenant)
 	}
 	selectQuery += ` WHERE (o.hide = false) `
 
-	if organizationFilterCypher != "" || emailFilterCypher != "" || locationFilterCypher != "" || len(ownerId) > 0 || ownerIncludeEmpty {
+	if organizationFilterCypher != "" || socialFilterCypher != "" || tagFilterCypher != "" || locationFilterCypher != "" || len(ownerId) > 0 || ownerIncludeEmpty {
 		selectQuery += " AND "
 	}
 
@@ -265,8 +265,11 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 			queryParts = append(queryParts, fmt.Sprintf(` owner.id IN $ownerId `))
 		}
 	}
-	if emailFilterCypher != "" {
-		queryParts = append(queryParts, emailFilterCypher)
+	if socialFilterCypher != "" {
+		queryParts = append(queryParts, socialFilterCypher)
+	}
+	if tagFilterCypher != "" {
+		queryParts = append(queryParts, tagFilterCypher)
 	}
 	if locationFilterCypher != "" {
 		queryParts = append(queryParts, locationFilterCypher)
@@ -277,7 +280,7 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 
 	// sort region
 	//aliases := " o, d, l"
-	selectQuery += " WITH o, d, l "
+	selectQuery += " WITH o, l "
 	//if sort != nil && sort.By == SearchSortParamOwner {
 	//	if sort.Direction == commonmodel.SortingDirectionAsc {
 	//		selectQuery += ", CASE WHEN owner.firstName <> \"\" and not owner.firstName is null THEN owner.firstName ELSE 'ZZZZZZZZZZZZZZZZZZZ' END as OWNER_FIRST_NAME_FOR_SORTING "
@@ -542,5 +545,60 @@ func createBetweenOrEmptyTimeFilter(filter *model.Filter, cypherFilter *utils.Cy
 		cypherFilter.Filters = append(cypherFilter.Filters, utils.CreateCypherFilter(neo4jProperty, times[1], commonmodel.ComparisonOperatorLte))
 	} else if filter.Filter.Operation == commonmodel.ComparisonOperatorIsEmpty {
 		cypherFilter.Filters = append(cypherFilter.Filters, utils.CreateCypherFilter(neo4jProperty, nil, commonmodel.ComparisonOperatorIsEmpty))
+	}
+}
+
+func createNumberCypherFilter(filter *model.Filter, cypherFilter *utils.CypherFilter, neo4jProperty string) {
+	if filter.Filter.Value.Int == nil && filter.Filter.Value.Float == nil && filter.Filter.Operation != commonmodel.ComparisonOperatorIsEmpty && filter.Filter.Operation != commonmodel.ComparisonOperatorIsNotEmpty {
+		return
+	}
+
+	if filter.Filter.Operation == commonmodel.ComparisonOperatorIsEmpty {
+		cypherFilter.Filters = append(cypherFilter.Filters, utils.CreateCypherFilter(neo4jProperty, nil, commonmodel.ComparisonOperatorIsNull))
+	} else if filter.Filter.Operation == commonmodel.ComparisonOperatorIsEmpty {
+		cypherFilter.Filters = append(cypherFilter.Filters, utils.CreateCypherFilter(neo4jProperty, nil, commonmodel.ComparisonOperatorIsNotNull))
+	} else {
+		if filter.Filter.Value.Int != nil {
+			createInternalNumberCypherFilter(filter.Filter.Value.Int, filter, cypherFilter, neo4jProperty)
+		} else {
+			createInternalNumberCypherFilter(filter.Filter.Value.Float, filter, cypherFilter, neo4jProperty)
+		}
+	}
+}
+
+func createInternalNumberCypherFilter(val any, filter *model.Filter, cypherFilter *utils.CypherFilter, neo4jProperty string) {
+	if val == nil && filter.Filter.Operation != commonmodel.ComparisonOperatorIsEmpty && filter.Filter.Operation != commonmodel.ComparisonOperatorIsNotEmpty {
+		return
+	}
+
+	if filter.Filter.Operation != commonmodel.ComparisonOperatorIsEmpty &&
+		filter.Filter.Operation != commonmodel.ComparisonOperatorIsNotEmpty &&
+		filter.Filter.Operation != commonmodel.ComparisonOperatorLt &&
+		filter.Filter.Operation != commonmodel.ComparisonOperatorLte &&
+		filter.Filter.Operation != commonmodel.ComparisonOperatorGt &&
+		filter.Filter.Operation != commonmodel.ComparisonOperatorGte &&
+		filter.Filter.Operation != commonmodel.ComparisonOperatorEquals &&
+		filter.Filter.Operation != commonmodel.ComparisonOperatorNotEquals {
+		return
+	}
+
+	// not equals should also show empty values
+	if filter.Filter.Operation == commonmodel.ComparisonOperatorNotEquals {
+		orFilter := utils.CypherFilter{}
+		orFilter.LogicalOperator = utils.OR
+		orFilter.Details = new(utils.CypherFilterItem)
+
+		orFilter.Filters = append(orFilter.Filters, utils.CreateCypherFilter(neo4jProperty, "", commonmodel.ComparisonOperatorIsEmpty))
+		orFilter.Filters = append(orFilter.Filters, utils.CreateCypherFilter(neo4jProperty, val, filter.Filter.Operation))
+
+		cypherFilter.Filters = append(cypherFilter.Filters, &orFilter)
+	} else {
+		cypherFilter.Filters = append(cypherFilter.Filters, utils.CreateCypherFilter(neo4jProperty, val, filter.Filter.Operation))
+	}
+}
+
+func createBooleanFilter(filter *model.Filter, cypherFilter *utils.CypherFilter, neo4jProperty string) {
+	if (filter.Filter.Operation == commonmodel.ComparisonOperatorEquals || filter.Filter.Operation == commonmodel.ComparisonOperatorNotEquals) && filter.Filter.Value.Bool != nil {
+		cypherFilter.Filters = append(cypherFilter.Filters, utils.CreateCypherFilter(neo4jProperty, filter.Filter.Value.Bool, filter.Filter.Operation))
 	}
 }

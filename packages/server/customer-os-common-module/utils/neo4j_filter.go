@@ -206,7 +206,6 @@ func (f *CypherFilter) BuildCypherFilterFragmentWithParamName(nodeAlias string, 
 		)
 		f.Details = nil
 	}
-
 	if f.Negate {
 		cypherStr.WriteString(" NOT ")
 		f.Filters[0].paramCount = f.paramCount
@@ -230,34 +229,39 @@ func (f *CypherFilter) BuildCypherFilterFragmentWithParamName(nodeAlias string, 
 		}
 		cypherStr.WriteString(")")
 	} else {
-		toLower := f.Details.SupportCaseSensitive && !f.Details.CaseSensitive
-		if toLower {
-			cypherStr.WriteString("toLower(")
-		}
-		cypherStr.WriteString(nodeAlias)
-		cypherStr.WriteString(".")
-		cypherStr.WriteString(f.Details.NodeProperty)
-		if toLower {
-			cypherStr.WriteString(")")
-		}
-		cypherStr.WriteString(SurroundWithSpaces(CypherString(f.Details.ComparisonOperator)))
-		if toLower {
-			cypherStr.WriteString("toLower(")
-		}
 
-		if f.Details.ComparisonOperator != model.ComparisonOperatorIsNull && f.Details.ComparisonOperator != model.ComparisonOperatorIsNotNull {
-			f.paramCount++
-			paramSuffix := strconv.Itoa(f.paramCount)
-			cypherStr.WriteString("$" + customParamPrefix + paramSuffix)
-			if params == nil {
-				params = map[string]any{customParamPrefix + paramSuffix: f.Details.Value}
-			} else {
-				params[customParamPrefix+paramSuffix] = f.Details.Value
+		if f.Details.ComparisonOperator == model.ComparisonOperatorCountRelation {
+			cypherStr.WriteString(f.Details.NodeProperty) //hack. you need the full condition here
+		} else {
+			toLower := f.Details.SupportCaseSensitive && !f.Details.CaseSensitive
+			if toLower {
+				cypherStr.WriteString("toLower(")
 			}
-		}
+			cypherStr.WriteString(nodeAlias)
+			cypherStr.WriteString(".")
+			cypherStr.WriteString(f.Details.NodeProperty)
+			if toLower {
+				cypherStr.WriteString(")")
+			}
+			cypherStr.WriteString(SurroundWithSpaces(CypherString(f.Details.ComparisonOperator)))
+			if toLower {
+				cypherStr.WriteString("toLower(")
+			}
 
-		if toLower {
-			cypherStr.WriteString(")")
+			if f.Details.ComparisonOperator != model.ComparisonOperatorIsNull && f.Details.ComparisonOperator != model.ComparisonOperatorIsNotNull {
+				f.paramCount++
+				paramSuffix := strconv.Itoa(f.paramCount)
+				cypherStr.WriteString("$" + customParamPrefix + paramSuffix)
+				if params == nil {
+					params = map[string]any{customParamPrefix + paramSuffix: f.Details.Value}
+				} else {
+					params[customParamPrefix+paramSuffix] = f.Details.Value
+				}
+			}
+
+			if toLower {
+				cypherStr.WriteString(")")
+			}
 		}
 	}
 
@@ -282,12 +286,14 @@ func CypherString(c model.ComparisonOperator) string {
 		return "STARTS WITH"
 	case model.ComparisonOperatorGte:
 		return ">="
+	case model.ComparisonOperatorGt:
+		return ">"
 	case model.ComparisonOperatorIn:
 		return "IN"
 	case model.ComparisonOperatorBetween:
 		return "BETWEEN"
 	case model.ComparisonOperatorLt:
-		return ">"
+		return "<"
 	case model.ComparisonOperatorLte:
 		return "<="
 	default:

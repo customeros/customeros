@@ -19,6 +19,7 @@ import (
 
 type RawEmailRepository interface {
 	CountForUsername(ctx context.Context, externalSystem, tenant, username string) (int64, error)
+	GetByMessageId(ctx context.Context, externalSystem, tenant, username, messageId string) (*entity.RawEmail, error)
 	EmailExistsByMessageId(ctx context.Context, externalSystem, tenant, username, messageId string) (bool, error)
 	Store(ctx context.Context, externalSystem, tenant, username, providerMessageId, messageId, rawEmail string, sentAt time.Time, state entity.EmailImportState) error
 	GetEmailsIdsForSync(externalSystem, tenantName string) ([]entity.RawEmail, error)
@@ -47,6 +48,25 @@ func (repo *rawEmailRepositoryImpl) CountForUsername(ctx context.Context, extern
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return 0, err
+	}
+
+	return result, nil
+}
+
+func (repo *rawEmailRepositoryImpl) GetByMessageId(ctx context.Context, externalSystem, tenant, username, messageId string) (*entity.RawEmail, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "RawEmailRepository.GetByMessageId")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+	tracing.TagTenant(span, tenant)
+
+	var result *entity.RawEmail
+	err := repo.gormDb.Where("external_system = ? AND tenant = ? AND username = ? AND message_id = ?", externalSystem, tenant, username, messageId).First(&result).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		} else {
+			return nil, err
+		}
 	}
 
 	return result, nil

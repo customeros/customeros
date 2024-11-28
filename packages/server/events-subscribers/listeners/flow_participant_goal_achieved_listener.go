@@ -7,6 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -37,6 +38,22 @@ func Handle_FlowParticipantGoalAchieved(ctx context.Context, services *service.S
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
+	}
+
+	flowActionExecutions, err := services.FlowExecutionService.GetFlowActionExecutionsForParticipant(ctx, nil, flow.Id, flowParticipant.EntityId, flowParticipant.EntityType)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	for _, flowActionExecution := range flowActionExecutions {
+		if flowActionExecution.Status == entity.FlowActionExecutionStatusScheduled {
+			err = services.Neo4jRepositories.FlowActionExecutionWriteRepository.Delete(ctx, nil, flowActionExecution.Id)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return err
+			}
+		}
 	}
 
 	executionSettings, err := services.FlowExecutionService.GetFlowExecutionSettingsForEntity(ctx, nil, flow.Id, flowParticipant.EntityId, flowParticipant.EntityType)
