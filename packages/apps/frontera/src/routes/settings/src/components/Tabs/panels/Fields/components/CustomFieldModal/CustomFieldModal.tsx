@@ -1,8 +1,9 @@
-import { useState } from 'react';
 import { ValueContainerProps } from 'react-select';
 import { useSearchParams } from 'react-router-dom';
+import { useRef, useState, useEffect } from 'react';
 
 import { match } from 'ts-pattern';
+import { useKeyBindings } from 'rooks';
 import { observer } from 'mobx-react-lite';
 import { Droppable, DragDropContext } from '@hello-pangea/dnd';
 
@@ -51,23 +52,18 @@ const options = [
   {
     label: 'Text',
     id: CustomFieldTemplateType.FreeText,
-    icon: <Type01 />,
+    icon: <Type01 className='text-gray-500' />,
   },
   {
     label: 'Number',
     id: CustomFieldTemplateType.Number,
-    icon: <Hash02 />,
+    icon: <Hash02 className='text-gray-500' />,
   },
   {
     label: 'Single select',
     id: CustomFieldTemplateType.SingleSelect,
-    icon: <RadioButton />,
+    icon: <RadioButton className='text-gray-500' />,
   },
-  // {
-  //   label: 'Multi select',
-  //   id: 'multi-select',
-  //   icon: <ListBulleted />,
-  // },
 ];
 
 export const CustomFieldModal = observer(
@@ -78,6 +74,7 @@ export const CustomFieldModal = observer(
     fieldId,
   }: NewCustomFieldModalProps) => {
     const store = useStore();
+    const inputRef = useRef<HTMLInputElement>(null);
     const [searchParams] = useSearchParams();
     const [name, setName] = useState<string>('');
 
@@ -106,6 +103,8 @@ export const CustomFieldModal = observer(
             })) || []
         : [],
     );
+
+    const [isError, setIsError] = useState<boolean>(false);
 
     const Option = ({ children, ...props }: OptionProps) => {
       const option = props.data as {
@@ -170,17 +169,36 @@ export const CustomFieldModal = observer(
         customField?.value.template?.type as keyof typeof customField
       ];
 
+    useKeyBindings({
+      Enter: () => {
+        setnewOptions([
+          ...newOption,
+          {
+            value: '',
+            label: '',
+            id: `option-${crypto.randomUUID()}`,
+          },
+        ]);
+      },
+    });
+
+    useEffect(() => {
+      if (isOpen) {
+        inputRef.current?.focus();
+      }
+    }, [isOpen]);
+
     return (
       <Modal open={isOpen} onOpenChange={(value) => onOpenChange(value)}>
         <ModalPortal>
           <ModalOverlay className='z-[99]' />
-          <ModalFeaturedContent className='z-[99]'>
+          <ModalFeaturedContent className='z-[99] '>
             <ModalFeaturedHeader>
               <p className='text-lg font-semibold'>{title}</p>
               <ModalCloseButton asChild />
             </ModalFeaturedHeader>
             <ModalCloseButton />
-            <ModalBody className='flex flex-col gap-4 '>
+            <ModalBody className='flex flex-col gap-4 max-h-[380px] overflow-y-auto'>
               <div className='flex flex-col gap-2'>
                 <div>
                   {!isEdit ? (
@@ -224,8 +242,10 @@ export const CustomFieldModal = observer(
                   <Input
                     id='name'
                     size='sm'
+                    ref={inputRef}
                     className='mt-1'
                     variant='outline'
+                    required={isError}
                     placeholder='Custom field name'
                     defaultValue={customField?.value.name}
                     onChange={(e) => {
@@ -233,8 +253,10 @@ export const CustomFieldModal = observer(
                         customField.value.name = e.target.value;
                       }
                       setName(e.target.value);
+                      setIsError(false);
                     }}
                   />
+                  {isError && <span>'Huston, we have a blank...'</span>}
                 </div>
                 {selectedOption?.id ===
                   CustomFieldTemplateType.SingleSelect && (
@@ -323,18 +345,6 @@ export const CustomFieldModal = observer(
                           },
                         ])
                       }
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          setnewOptions([
-                            ...newOption,
-                            {
-                              value: '',
-                              label: '',
-                              id: `option-${crypto.randomUUID()}`,
-                            },
-                          ]);
-                        }
-                      }}
                     >
                       Add option
                     </Button>
@@ -354,17 +364,21 @@ export const CustomFieldModal = observer(
                     customField?.commit();
                     onOpenChange(false);
                   } else {
-                    store.customFields.save({
-                      name: name,
-                      entityType: EntityType.Organization,
-                      type: selectedOption.id as CustomFieldTemplateType,
-                      validValues:
-                        selectedOption?.id ===
-                        CustomFieldTemplateType.SingleSelect
-                          ? newOption.map((option) => option.value)
-                          : null,
-                    });
-                    onOpenChange(false);
+                    setIsError(true);
+
+                    if (name) {
+                      store.customFields.save({
+                        name: name,
+                        entityType: EntityType.Organization,
+                        type: selectedOption.id as CustomFieldTemplateType,
+                        validValues:
+                          selectedOption?.id ===
+                          CustomFieldTemplateType.SingleSelect
+                            ? newOption.map((option) => option.value)
+                            : null,
+                      });
+                      onOpenChange(false);
+                    }
                   }
                 }}
               >

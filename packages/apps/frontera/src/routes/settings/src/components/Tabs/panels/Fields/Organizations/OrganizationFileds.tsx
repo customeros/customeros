@@ -21,12 +21,13 @@ export const OrganizationFields = observer(() => {
 
   const coreFields =
     store.tableViewDefs.getById(orgPreset || '')?.value.columns || [];
+
   const search = searchParams?.get('search') || '';
 
   const activeTab = (tab: string) => searchParams?.get('view') === tab;
   const customFieldTypes = getDefaultFieldTypes(store);
 
-  const filteredFields = coreFields.filter((field) => {
+  const filteredCoreFields = coreFields.filter((field) => {
     const fieldName = customFieldTypes[field.columnType]?.fieldName || '';
 
     return (
@@ -41,6 +42,15 @@ export const OrganizationFields = observer(() => {
 
   const filteredCustomFields = activeTab('custom') ? customFields : [];
 
+  const searchInCoreFields = filteredCoreFields.filter((field) => {
+    const fieldName = customFieldTypes[field.columnType]?.fieldName || '';
+
+    return (
+      field.columnType !== ColumnViewType.OrganizationsAvatar &&
+      (!search || fieldName.toLowerCase().includes(search.toLowerCase()))
+    );
+  }).length;
+
   return (
     <Layout>
       <Header
@@ -51,15 +61,13 @@ export const OrganizationFields = observer(() => {
       />
 
       <div className='flex items-center justify-between mt-4'>
-        {activeTab('core') && coreFields.length > 0 && (
-          <>
-            <p className='flex flex-2 font-medium text-sm'>Field name</p>
-            <p className='flex flex-1 font-medium text-sm'>Type</p>
-          </>
-        )}
+        <>
+          <p className='flex flex-2 font-medium text-sm'>Field name</p>
+          <p className='flex flex-1 font-medium text-sm'>Type</p>
+        </>
       </div>
       {activeTab('core') ? (
-        filteredFields.map((field) => (
+        filteredCoreFields.map((field) => (
           <div
             key={field.columnId}
             className='flex justify-between items-center'
@@ -70,15 +78,26 @@ export const OrganizationFields = observer(() => {
       ) : (
         <>
           {filteredCustomFields.length === 0 ? (
-            search ? (
-              <p>
-                Nothing to search for yet. Go ahead, add you first custom field
-              </p>
+            search && !searchInCoreFields ? (
+              <div className='flex items-center justify-center'>
+                <p className='text-center text-sm text-gray-500 mt-4 '>
+                  No fields insight...
+                </p>
+              </div>
+            ) : search && searchInCoreFields ? (
+              <div className='flex items-center justify-center'>
+                <p className='text-center text-sm text-gray-500 mt-4 '>
+                  {`No custom field in sight, but ${searchInCoreFields} core fields
+                match your search`}
+                </p>
+              </div>
             ) : (
-              <p className='text-center text-sm text-gray-500'>
-                Nothing to search for yet. Go ahead, add you first custom
-                field...
-              </p>
+              <div className='flex items-center justify-center'>
+                <p className='text-center text-sm text-gray-500 mt-4 max-w-[300px] '>
+                  Nothing to search for yet. Go ahead, add you first custom
+                  field...
+                </p>
+              </div>
             )
           ) : (
             filteredCustomFields.map((field) => (

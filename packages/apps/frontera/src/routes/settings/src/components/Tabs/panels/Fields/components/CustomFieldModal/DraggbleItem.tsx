@@ -1,3 +1,5 @@
+import { useRef, useEffect } from 'react';
+
 import { Draggable } from '@hello-pangea/dnd';
 
 import { X } from '@ui/media/icons/X';
@@ -28,6 +30,14 @@ export const DraggableItem = ({
   newOption,
   setnewOptions,
 }: DraggableItemProps) => {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (index === newOption.length - 1) {
+      inputRef.current?.focus();
+    }
+  }, [index]);
+
   return (
     <Draggable index={index} key={option.id} draggableId={option.id}>
       {(provided) => (
@@ -43,6 +53,7 @@ export const DraggableItem = ({
           <HandleDrag className='absolute bottom-2.5 left-[7px]' />
           <Input
             size='sm'
+            ref={inputRef}
             variant='outline'
             value={option.label}
             placeholder='Option'
@@ -57,6 +68,17 @@ export const DraggableItem = ({
                 label: e.target.value,
               };
               setnewOptions(newOptions);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                const newOptions = [...newOption];
+
+                newOptions.push({
+                  id: `option-${newOptions.length}`,
+                  value: '',
+                  label: '',
+                });
+              }
             }}
           />
           {isHovered === option.id && (
