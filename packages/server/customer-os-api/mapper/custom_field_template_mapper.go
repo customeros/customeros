@@ -50,17 +50,18 @@ func MapCustomFieldTemplateInputToSaveFields(input model.CustomFieldTemplateInpu
 
 func MapEntityToCustomFieldTemplate(entity *neo4jentity.CustomFieldTemplateEntity) *model.CustomFieldTemplate {
 	output := model.CustomFieldTemplate{
-		ID:         entity.Id,
-		Name:       entity.Name,
-		EntityType: model.EntityType(entity.EntityType.String()),
-		Type:       model.CustomFieldTemplateType(entity.Type),
-		Order:      entity.Order,
-		Required:   entity.Required,
-		Length:     entity.Length,
-		Min:        entity.Min,
-		Max:        entity.Max,
-		CreatedAt:  entity.CreatedAt,
-		UpdatedAt:  entity.UpdatedAt,
+		ID:          entity.Id,
+		Name:        entity.Name,
+		EntityType:  model.EntityType(entity.EntityType.String()),
+		Type:        model.CustomFieldTemplateType(entity.Type),
+		Order:       entity.Order,
+		Required:    entity.Required,
+		Length:      entity.Length,
+		Min:         entity.Min,
+		Max:         entity.Max,
+		CreatedAt:   entity.CreatedAt,
+		UpdatedAt:   entity.UpdatedAt,
+		ValidValues: entity.ValidValues,
 	}
 	return &output
 }
