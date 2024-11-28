@@ -219,9 +219,20 @@ func CreateUserWithId(ctx context.Context, driver *neo4j.DriverWithContext, tena
 
 func CreateOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, organization entity.OrganizationEntity) string {
 	orgId := utils.NewUUIDIfEmpty(organization.ID)
+
+	now := utils.Now()
+	if organization.CreatedAt.IsZero() {
+		organization.CreatedAt = now
+	}
+	if organization.UpdatedAt.IsZero() {
+		organization.UpdatedAt = now
+	}
+
 	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})
 			MERGE (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization:Organization_%s {id:$id})
 			ON CREATE SET 	org.name=$name, 
+							org.createdAt=$createdAt,
+							org.updatedAt=$updatedAt,
 							org.customerOsId=$customerOsId,
 							org.referenceId=$referenceId,
 							org.description=$description, 
@@ -240,12 +251,11 @@ func CreateOrganization(ctx context.Context, driver *neo4j.DriverWithContext, te
 							org.iconUrl=$iconUrl,
 							org.yearFounded=$yearFounded,
 							org.headquarters=$headquarters,
+							org.employees=$employees,
 							org.employeeGrowthRate=$employeeGrowthRate,
 							org.isPublic=$isPublic, 
 							org.hide=$hide,
 							org.icpFit=$icpFit,
-							org.createdAt=$now,
-							org.updatedAt=$now,
 							org.renewalForecastArr=$renewalForecastArr,
 							org.renewalForecastMaxArr=$renewalForecastMaxArr,
 							org.derivedNextRenewalAt=$derivedNextRenewalAt,
@@ -265,6 +275,8 @@ func CreateOrganization(ctx context.Context, driver *neo4j.DriverWithContext, te
 							`, tenant)
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"id":                            orgId,
+		"createdAt":                     organization.CreatedAt,
+		"updatedAt":                     organization.UpdatedAt,
 		"customerOsId":                  organization.CustomerOsId,
 		"referenceId":                   organization.ReferenceId,
 		"tenant":                        tenant,
@@ -287,6 +299,7 @@ func CreateOrganization(ctx context.Context, driver *neo4j.DriverWithContext, te
 		"iconUrl":                       organization.IconUrl,
 		"yearFounded":                   organization.YearFounded,
 		"headquarters":                  organization.Headquarters,
+		"employees":                     organization.Employees,
 		"employeeGrowthRate":            organization.EmployeeGrowthRate,
 		"renewalForecastArr":            organization.RenewalSummary.ArrForecast,
 		"renewalForecastMaxArr":         organization.RenewalSummary.MaxArrForecast,
@@ -297,7 +310,6 @@ func CreateOrganization(ctx context.Context, driver *neo4j.DriverWithContext, te
 		"onboardingStatusOrder":         organization.OnboardingDetails.SortingOrder,
 		"onboardingUpdatedAt":           utils.TimePtrAsAny(organization.OnboardingDetails.UpdatedAt),
 		"onboardingComments":            organization.OnboardingDetails.Comments,
-		"now":                           utils.Now(),
 		"relationship":                  organization.Relationship.String(),
 		"stage":                         organization.Stage.String(),
 		"stageUpdatedAt":                utils.TimePtrAsAny(organization.StageUpdatedAt),

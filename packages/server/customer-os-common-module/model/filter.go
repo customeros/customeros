@@ -44,6 +44,8 @@ const (
 	ComparisonOperatorIsNotEmpty  ComparisonOperator = "IS_NOT_EMPTY"
 	ComparisonOperatorLt          ComparisonOperator = "LT"
 	ComparisonOperatorGt          ComparisonOperator = "GT"
+
+	ComparisonOperatorCountRelation ComparisonOperator = "COUNT_RELATION"
 )
 
 type AnyTypeValue struct {

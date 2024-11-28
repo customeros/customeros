@@ -164,6 +164,10 @@ func (s *flowExecutionService) UpdateParticipantFlowRequirements(ctx context.Con
 
 	tenant := common.GetTenantFromContext(ctx)
 
+	if participant.Status == entity.FlowParticipantStatusCompleted || participant.Status == entity.FlowParticipantStatusGoalAchieved {
+		return nil
+	}
+
 	status := entity.FlowParticipantStatusReady
 
 	if requirements.PrimaryEmailRequired {
