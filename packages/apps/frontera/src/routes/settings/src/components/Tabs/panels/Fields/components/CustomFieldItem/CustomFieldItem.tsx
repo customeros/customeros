@@ -8,7 +8,7 @@ import { Archive } from '@ui/media/icons/Archive';
 import { DotsVertical } from '@ui/media/icons/DotsVertical';
 import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
-// import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
+import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
 import {
   ColumnView,
   CustomField,
@@ -31,7 +31,12 @@ export const CustomFieldItem = ({
   store,
   isEditable = false,
 }: CustomFieldItemProps) => {
-  const { onOpen, onToggle, open } = useDisclosure();
+  const { onOpen, onToggle, open } = useDisclosure({ id: 'edit-field' });
+  const {
+    onOpen: onOpenDelete,
+    onToggle: onToggleDelete,
+    open: openDelete,
+  } = useDisclosure({ id: 'delete-field' });
   const [isEdit, setIsEdit] = useState<boolean>(false);
 
   const defaultCustomField = getDefaultFieldTypes(store);
@@ -60,55 +65,57 @@ export const CustomFieldItem = ({
 
   return (
     <>
-      <div className='flex justify-between items-center py-1 w-full '>
-        <div className='flex justify-between w-full'>
-          <div className='flex items-center gap-2 flex-2 text-sm '>
-            {fieldIcon}
-            {fieldName}
-          </div>
-          <div className='flex items-center justify-between flex-1 text-sm'>
-            {fieldType}
-            <Menu>
-              <MenuButton asChild disabled={!isEditable}>
-                <IconButton
-                  size='xs'
-                  variant='ghost'
-                  aria-label='Edit field'
-                  icon={<DotsVertical />}
-                  isDisabled={!isEditable}
-                />
-              </MenuButton>
-              <MenuList>
-                <MenuItem
-                  className='group/edit'
-                  onClick={() => {
-                    setIsEdit(true);
-                    onOpen();
-                  }}
-                >
-                  <div className='flex items-center'>
-                    <Edit03 className='mr-2 text-gray-500 group-hover/edit:text-gray-700' />
-                    Edit field
-                  </div>
-                </MenuItem>
-                <MenuItem
-                  className='group/archive'
-                  onClick={() => {
-                    store.customFields.deleteCustomField(
-                      (field as CustomField)?.id,
-                    );
-                  }}
-                >
-                  <div className='flex items-center'>
-                    <Archive className='mr-2 group-hover/archive:text-gray-700 text-gray-500' />
-                    Archive field
-                  </div>
-                </MenuItem>
-              </MenuList>
-            </Menu>
+      {fieldName && (
+        <div className='flex justify-between items-center py-1 w-full '>
+          <div className='flex justify-between w-full'>
+            <div className='flex items-center gap-2 flex-2 text-sm text-gray-500 '>
+              {fieldIcon}
+              <span className='line-clamp-1 w-[200px] text-gray-500'>
+                {fieldName}
+              </span>
+            </div>
+            <div className='flex items-center justify-between flex-1 text-sm'>
+              {fieldType}
+              <Menu>
+                <MenuButton asChild disabled={!isEditable}>
+                  <IconButton
+                    size='xs'
+                    variant='ghost'
+                    aria-label='Edit field'
+                    icon={<DotsVertical />}
+                    isDisabled={!isEditable}
+                  />
+                </MenuButton>
+                <MenuList>
+                  <MenuItem
+                    className='group/edit'
+                    onClick={() => {
+                      setIsEdit(true);
+                      onOpen();
+                    }}
+                  >
+                    <div className='flex items-center'>
+                      <Edit03 className='mr-2 text-gray-500 group-hover/edit:text-gray-700' />
+                      Edit field
+                    </div>
+                  </MenuItem>
+                  <MenuItem
+                    className='group/archive'
+                    onClick={() => {
+                      onOpenDelete();
+                    }}
+                  >
+                    <div className='flex items-center'>
+                      <Archive className='mr-2 group-hover/archive:text-gray-700 text-gray-500' />
+                      Archive field
+                    </div>
+                  </MenuItem>
+                </MenuList>
+              </Menu>
+            </div>
           </div>
         </div>
-      </div>
+      )}
       {isEdit && (
         <CustomFieldModal
           isOpen={open}
@@ -117,16 +124,16 @@ export const CustomFieldItem = ({
           fieldId={(field as CustomField)?.id}
         />
       )}
-      {/* <ConfirmDeleteDialog
-        isOpen={true}
-        onClose={() => {}}
+      <ConfirmDeleteDialog
+        isOpen={openDelete}
+        onClose={onToggleDelete}
         confirmButtonLabel='Archive field'
         label={`Archive ${fieldName} field?`}
-        description={`Are you sure you want to archive the ${fieldType} field?`}
+        description={`Archiving this field will remove it from all record types where it's currently used`}
         onConfirm={() => {
           store.customFields.deleteCustomField((field as CustomField)?.id);
         }}
-      /> */}
+      />
     </>
   );
 };
