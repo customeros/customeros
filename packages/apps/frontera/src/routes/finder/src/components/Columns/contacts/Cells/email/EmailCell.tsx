@@ -5,6 +5,7 @@ import { observer } from 'mobx-react-lite';
 import { Check } from '@ui/media/icons/Check';
 import { Spinner } from '@ui/feedback/Spinner';
 import { Star06 } from '@ui/media/icons/Star06';
+import { Copy01 } from '@ui/media/icons/Copy01';
 import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
 import { Archive } from '@ui/media/icons/Archive';
@@ -13,6 +14,7 @@ import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { EmailValidationDetails } from '@graphql/types';
 import { PlusCircle } from '@ui/media/icons/PlusCircle';
 import { DotsVertical } from '@ui/media/icons/DotsVertical';
+import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
 import { EmailValidationMessage } from '@organization/components/Tabs/panels/PeoplePanel/ContactCard/EmailValidationMessage';
 
@@ -26,27 +28,34 @@ export const EmailCell = observer(
     const store = useStore();
 
     const [isHovered, setIsHovered] = useState(false);
+    const [isOpened, setIsOpened] = useState(false);
+    const [_, copyToClipboard] = useCopyToClipboard();
 
     const contactStore = store.contacts.value.get(contactId);
 
     const enrichedContact = contactStore?.value.enrichDetails;
 
-    const enrichingStatus =
-      !enrichedContact?.enrichedAt &&
-      enrichedContact?.requestedAt &&
-      !enrichedContact?.failedAt;
+    const isEnrichingContact = contactStore?.isEnriching;
 
     const ref = useRef(null);
 
+    const activeOrgId =
+      contactStore?.value.latestOrganizationWithJobRole?.organization?.metadata
+        ?.id;
+
+    const domains =
+      activeOrgId && store.organizations.value.get(activeOrgId)?.value?.domains;
     const orgActive =
       contactStore?.value.latestOrganizationWithJobRole?.organization?.name;
 
     const email = contactStore?.value?.primaryEmail?.email;
 
-    const enrichedEmailStatus =
+    const isEnrichingEmail =
       !enrichedContact?.emailEnrichedAt &&
       enrichedContact?.emailRequestedAt &&
       !email;
+
+    const enrichedEmailNotFound = !enrichedContact?.emailFound && !email;
 
     return (
       <div
@@ -55,15 +64,17 @@ export const EmailCell = observer(
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        <Menu>
+        <Menu onOpenChange={(newStatus) => setIsOpened(newStatus)}>
           <MenuButton className='text-ellipsis overflow-hidden whitespace-nowrap'>
             <div className='flex items-center gap-2'>
               {!email && (
                 <p className='text-gray-400 '>
-                  {enrichingStatus
+                  {isEnrichingContact
                     ? 'Enriching...'
-                    : enrichedEmailStatus
+                    : isEnrichingEmail
                     ? 'Finding email...'
+                    : enrichedEmailNotFound
+                    ? 'Not found'
                     : 'Not set'}
                 </p>
               )}
@@ -73,19 +84,38 @@ export const EmailCell = observer(
                   validationDetails={validationDetails}
                 />
               )}
-              <p>{email}</p>
+              <p className='inline-flex gap-2'>
+                {email}
+                {isEnrichingEmail && (
+                  <Tooltip label={`Finding email at ${orgActive}`}>
+                    <Spinner
+                      size='sm'
+                      label='finding email'
+                      className='text-gray-400 fill-gray-700 ml-2'
+                    />
+                  </Tooltip>
+                )}
+              </p>
             </div>
           </MenuButton>
           <MenuList align='start' className='max-w-[600px] w-[250px]'>
-            {orgActive && (
-              <MenuItem
-                onClick={() => {
-                  contactStore?.findEmail();
-                }}
-              >
-                <div className='overflow-hidden text-ellipsis w-[200px]'>
-                  <Star06 className='mr-2 text-gray-500' />
-                  {`Find email at ${orgActive}`}
+            {orgActive && !!domains?.length && (
+              <MenuItem onClick={() => contactStore?.findEmail()}>
+                <div className='overflow-hidden inline-flex text-ellipsis w-[200px]'>
+                  {isEnrichingEmail ? (
+                    <Tooltip label={`Finding email at ${orgActive}`}>
+                      <Spinner
+                        size='sm'
+                        label='finding email'
+                        className='text-gray-400 fill-gray-700 mr-2'
+                      />
+                    </Tooltip>
+                  ) : (
+                    <Star06 className='mr-2 text-gray-500' />
+                  )}
+                  {isEnrichingEmail
+                    ? `Finding email at ${orgActive}`
+                    : `Find email at ${orgActive}`}
                 </div>
               </MenuItem>
             )}
@@ -145,17 +175,10 @@ export const EmailCell = observer(
               ))}
           </MenuList>
         </Menu>
-        {isHovered &&
+        {(isHovered || isOpened) &&
           orgActive &&
-          (enrichedEmailStatus ? (
-            <Tooltip label={`Finding email at ${orgActive} `}>
-              <Spinner
-                size='sm'
-                label='finding email'
-                className='text-gray-400 fill-gray-700 ml-2'
-              />
-            </Tooltip>
-          ) : (
+          !isEnrichingEmail &&
+          !!domains?.length && (
             <Tooltip asChild label={`Find email at ${orgActive}`}>
               <IconButton
                 size='xxs'
@@ -168,11 +191,11 @@ export const EmailCell = observer(
                 }}
               />
             </Tooltip>
-          ))}
+          )}
         {(contactStore?.value.primaryEmail?.email ?? '').length > 0 && (
-          <Menu>
+          <Menu onOpenChange={(newStatus) => setIsOpened(newStatus)}>
             <MenuButton asChild>
-              {isHovered && (
+              {(isHovered || isOpened) && (
                 <IconButton
                   size='xxs'
                   variant='ghost'
@@ -196,6 +219,7 @@ export const EmailCell = observer(
                   Edit email
                 </div>
               </MenuItem>
+
               <MenuItem
                 className='group/archive-email'
                 onClick={() => {
@@ -214,6 +238,19 @@ export const EmailCell = observer(
                   Archive email
                 </div>
               </MenuItem>
+              {email && (
+                <MenuItem
+                  className='group/copy-email'
+                  onClick={() => {
+                    copyToClipboard(email, 'Email copied');
+                  }}
+                >
+                  <div className='overflow-hidden text-ellipsis'>
+                    <Copy01 className='group-hover/copy-email:text-gray-700 text-gray-500 mr-2' />
+                    Copy email
+                  </div>
+                </MenuItem>
+              )}
             </MenuList>
           </Menu>
         )}
