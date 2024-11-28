@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
@@ -40,10 +41,10 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 	rg.POST("/signin",
 		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.USER_ADMIN_API, security.WithCache(services.CommonServices.Cache)),
 		func(ginContext *gin.Context) {
-			c, cancel := commonUtils.GetContextWithTimeout(context.Background(), 30*time.Second)
+			contextWithTimeout, cancel := commonUtils.GetContextWithTimeout(context.Background(), 30*time.Second)
 			defer cancel()
 
-			ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c, "/signin", ginContext.Request.Header)
+			ctx, span := tracing.StartHttpServerTracerSpanWithHeader(contextWithTimeout, "/signin", ginContext.Request.Header)
 			defer span.Finish()
 
 			var signInRequest model.SignInRequest
@@ -144,7 +145,7 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 			} else {
 				span.LogFields(tracingLog.String("flow", "authorization"))
 
-				emailId, err := services.CommonServices.Neo4jRepositories.EmailReadRepository.GetEmailIdIfExists(ctx, signInRequest.Tenant, signInRequest.LoggedInEmail)
+				userDbNode, err := services.CommonServices.Neo4jRepositories.UserReadRepository.GetFirstUserByEmail(ctx, signInRequest.Tenant, signInRequest.LoggedInEmail)
 				if err != nil {
 					tracing.TraceErr(span, err)
 					ginContext.JSON(http.StatusInternalServerError, gin.H{
@@ -153,7 +154,7 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 					return
 				}
 
-				if emailId == "" {
+				if userDbNode == nil {
 					ginContext.JSON(http.StatusUnauthorized, gin.H{
 						"result": fmt.Sprintf("email not found"),
 					})
@@ -589,6 +590,21 @@ func initializeUser(c context.Context, services *service.Services, provider, pro
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
+		}
+	}
+
+	if userId != "" {
+		innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+			Tenant:    tenant,
+			AppSource: constants.AppSourceUserAdminApi,
+		})
+		err = services.CommonServices.Neo4jRepositories.UserWriteRepository.RegisterLogin(innerCtx, tenant, userId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+		}
+		err = services.CommonServices.RabbitMQService.PublishEvent(innerCtx, userId, commonModel.USER, dto.UserLogin{LoginEmail: email, Provider: provider, IdentityId: providerAccountId})
+		if err != nil {
+			tracing.TraceErr(span, err)
 		}
 	}
 
