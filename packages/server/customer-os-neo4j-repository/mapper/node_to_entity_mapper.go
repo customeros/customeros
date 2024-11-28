@@ -210,6 +210,7 @@ func MapDbNodeToUserEntity(dbNode *dbtype.Node) *entity.UserEntity {
 		Bot:             utils.GetBoolPropOrFalse(props, "bot"),
 		ProfilePhotoUrl: utils.GetStringPropOrEmpty(props, "profilePhotoUrl"),
 		Timezone:        utils.GetStringPropOrEmpty(props, "timezone"),
+		LastLogin:       utils.GetTimePropOrNil(props, string(entity.UserPropertyLastLogin)),
 	}
 	return &userEntity
 }
