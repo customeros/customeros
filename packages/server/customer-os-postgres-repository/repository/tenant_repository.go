@@ -2,11 +2,10 @@ package repository
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
@@ -48,7 +47,7 @@ func (e tenantRepository) Create(ctx context.Context, tenantEntity entity.Tenant
 		return nil, fmt.Errorf("No tenant name, cannot create tenant")
 	}
 
-	tenantEntity.HashID = e.generateHashID(tenantEntity.Name)
+	tenantEntity.HashID = utils.GenerateHashId(tenantEntity.Name, 12)
 
 	err := e.gormDb.Create(&tenantEntity).Error
 	if err != nil {
@@ -57,10 +56,4 @@ func (e tenantRepository) Create(ctx context.Context, tenantEntity entity.Tenant
 	}
 
 	return &tenantEntity, nil
-}
-
-func (e tenantRepository) generateHashID(tenant string) string {
-	h := sha256.New()
-	h.Write([]byte(tenant))
-	return hex.EncodeToString(h.Sum(nil))[:12]
 }
