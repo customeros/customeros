@@ -9,12 +9,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	commontracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/pkg/errors"
 	"go.uber.org/multierr"
@@ -32,6 +31,7 @@ func FathomZapier(services *service.Services) gin.HandlerFunc {
 
 		tenant := rest.ValidateTenant(c, ctx, span)
 		if tenant == "" {
+			rest.SendError(c, span, http.StatusForbidden, rest.ErrForbidden)
 			return
 		}
 
