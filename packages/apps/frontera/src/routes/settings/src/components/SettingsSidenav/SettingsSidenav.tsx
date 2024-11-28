@@ -14,7 +14,6 @@ import { useKeyboardNavigation } from '@shared/components/RootSidenav/hooks/useK
 
 import { WorkspaceSection } from './components';
 import { FieldsSection } from './components/FieldsSection';
-// import { FieldsSection } from './components/FieldsSection';
 
 export const SettingsSidenav = () => {
   const navigate = useNavigate();
