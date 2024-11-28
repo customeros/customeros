@@ -137,7 +137,7 @@ func (s *tagService) AddTagToEntity(ctx context.Context, tx *neo4j.ManagedTransa
 	}
 
 	if common.GetAppSourceFromContext(ctx) != constants.AppSourceCustomerOsApi {
-		utils.EventCompleted(ctx, tenant, entityType.String(), entityId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
+		s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, entityId, entityType, utils.NewEventCompletedDetails().WithUpdate())
 	}
 
 	return tagId, nil
@@ -169,7 +169,7 @@ func (s *tagService) RemoveTagFromEntity(ctx context.Context, tx *neo4j.ManagedT
 	}
 
 	if common.GetAppSourceFromContext(ctx) != constants.AppSourceCustomerOsApi {
-		utils.EventCompleted(ctx, tenant, entityType.String(), entityId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
+		s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, entityId, entityType, utils.NewEventCompletedDetails().WithUpdate())
 	}
 
 	return nil

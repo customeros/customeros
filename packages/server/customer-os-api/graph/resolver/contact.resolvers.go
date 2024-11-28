@@ -752,7 +752,7 @@ func (r *mutationResolver) ContactFindWorkEmail(ctx context.Context, contactID s
 				tracing.TraceErr(span, err)
 			}
 		}
-		utils.EventCompleted(ctx, common.GetTenantFromContext(ctx), commonmodel.CONTACT.String(), contactID, r.Services.CommonServices.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
+		r.Services.CommonServices.RabbitMQService.PublishEventCompleted(ctx, tenant, contactID, commonmodel.CONTACT, utils.NewEventCompletedDetails().WithUpdate())
 		return &model.ActionResponse{Accepted: true}, nil
 	}
 
@@ -870,7 +870,7 @@ func (r *mutationResolver) ContactFindWorkEmail(ctx context.Context, contactID s
 		}
 	}
 
-	utils.EventCompleted(ctx, common.GetTenantFromContext(ctx), commonmodel.CONTACT.String(), contactID, r.Services.CommonServices.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
+	r.Services.CommonServices.RabbitMQService.PublishEventCompleted(ctx, tenant, contactID, commonmodel.CONTACT, utils.NewEventCompletedDetails().WithUpdate())
 	return &model.ActionResponse{Accepted: true}, nil
 }
 

@@ -229,7 +229,7 @@ func (c *contactListenerImpl) enrichContact(ctx context.Context, contactId, link
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to update enrich requested at"))
 		}
-		utils.EventCompleted(ctx, tenant, model.CONTACT.String(), contactId, c.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
+		c.services.RabbitMQService.PublishEventCompleted(ctx, tenant, contactId, model.CONTACT, utils.NewEventCompletedDetails().WithUpdate())
 
 		apiResponse, err := c.callApiEnrichPerson(ctx, tenant, linkedInUrl, emailAddress, firstName, lastName, domain, companyName)
 		if err != nil {

@@ -1057,7 +1057,7 @@ func (s *contactService) EnrichWithWorkEmailFromBetterContact() {
 				}
 			}
 		}
-		utils.EventCompleted(ctx, record.Tenant, model.CONTACT.String(), record.ContactId, s.commonServices.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
+		s.commonServices.RabbitMQService.PublishEventCompleted(ctx, record.Tenant, record.ContactId, model.CONTACT, utils.NewEventCompletedDetails().WithUpdate())
 	}
 }
 
