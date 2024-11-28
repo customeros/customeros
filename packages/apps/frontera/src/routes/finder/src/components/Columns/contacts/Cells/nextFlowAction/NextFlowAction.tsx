@@ -2,12 +2,11 @@ import { useRef, ReactElement } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { Node } from '@xyflow/react';
-import { toZonedTime } from 'date-fns-tz';
 import { observer } from 'mobx-react-lite';
+import { format, toZonedTime } from 'date-fns-tz';
 import { FlowActionType } from '@store/Flows/types';
-import { FlowStore } from '@store/Flows/Flow.store.ts';
+import { FlowStore } from '@store/Flows/Flow.store';
 
-import { DateTimeUtils } from '@utils/date.ts';
 import { Mail01 } from '@ui/media/icons/Mail01';
 import { useStore } from '@shared/hooks/useStore';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
@@ -37,7 +36,7 @@ const TOOLTIP_MESSAGE: Record<string, (date: string) => string> = {
 
 export const NextFlowAction = observer(
   ({ contactID }: { contactID: string }) => {
-    const { flows } = useStore();
+    const { flows, contacts } = useStore();
     const { id } = useParams<{ id: string }>();
     const itemRef = useRef<HTMLDivElement>(null);
 
@@ -54,6 +53,8 @@ export const NextFlowAction = observer(
     if (!contact?.executions?.length || !flowStore?.value?.nodes) {
       return <span className='text-grayModern-400'>None</span>;
     }
+
+    const contactTimezone = contacts?.value?.get(contactID)?.value?.timezone;
 
     // Process flow data
     const nodes = flowStore.parsedNodes;
@@ -77,12 +78,27 @@ export const NextFlowAction = observer(
       (e: ExtendedNode) => e.internalId === nextAction?.action?.metadata?.id,
     );
     const nextActionDate = nextAction.scheduledAt;
-    const utcScheduledAt = toZonedTime(nextActionDate, 'UTC').toUTCString();
 
-    const formattedDate = DateTimeUtils.format(
-      utcScheduledAt,
-      'd MMM y, hh:mm',
+    const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+    const userTimezoneScheduledAt = toZonedTime(nextActionDate, userTimezone);
+    const contactTimezoneScheduledAt =
+      contactTimezone && toZonedTime(nextActionDate, contactTimezone);
+
+    const formattedDate = format(
+      userTimezoneScheduledAt,
+      'd MMM y, HH:mm zzz',
+      {
+        timeZone: userTimezone,
+      },
     );
+
+    const formattedDateContact =
+      contactTimezone &&
+      contactTimezoneScheduledAt &&
+      format(contactTimezoneScheduledAt, 'HH:mm zzz', {
+        timeZone: contactTimezone,
+      });
 
     if (typeof nextActionNode?.data?.action !== 'string') {
       return null;
@@ -97,6 +113,7 @@ export const NextFlowAction = observer(
           <div className='space-y-1'>
             <div className='flex gap-1'>
               {TOOLTIP_MESSAGE[nextActionNode.data.action](formattedDate)}
+              {formattedDateContact && <span>({formattedDateContact})</span>}
             </div>
           </div>
         }
