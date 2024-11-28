@@ -1033,7 +1033,7 @@ type ComplexityRoot struct {
 		LogEntryResetTags                          func(childComplexity int, id string, input []*model.TagIDOrNameInput) int
 		LogEntryUpdate                             func(childComplexity int, id string, input model.LogEntryUpdateInput) int
 		MailstackGetPaymentIntent                  func(childComplexity int, domains []string, usernames []string, amount float64) int
-		MailstackRegisterBuyDomainsWithMailboxes   func(childComplexity int, test bool, paymentIntentID string, domains []string, usernames []string, amount float64) int
+		MailstackRegisterBuyDomainsWithMailboxes   func(childComplexity int, test bool, paymentIntentID string, domains []string, usernames []string, amount float64, redirectWebsite *string) int
 		MailstackSetUser                           func(childComplexity int, mailbox string, userID string) int
 		MeetingAddNewLocation                      func(childComplexity int, meetingID string) int
 		MeetingAddNote                             func(childComplexity int, meetingID string, note *model.NoteInput) int
@@ -1883,7 +1883,7 @@ type MutationResolver interface {
 	LogEntryAddTag(ctx context.Context, id string, input model.TagIDOrNameInput) (string, error)
 	LogEntryRemoveTag(ctx context.Context, id string, input model.TagIDOrNameInput) (string, error)
 	MailstackGetPaymentIntent(ctx context.Context, domains []string, usernames []string, amount float64) (*model.GetPaymentIntent, error)
-	MailstackRegisterBuyDomainsWithMailboxes(ctx context.Context, test bool, paymentIntentID string, domains []string, usernames []string, amount float64) (*model.Result, error)
+	MailstackRegisterBuyDomainsWithMailboxes(ctx context.Context, test bool, paymentIntentID string, domains []string, usernames []string, amount float64, redirectWebsite *string) (*model.Result, error)
 	MailstackSetUser(ctx context.Context, mailbox string, userID string) (*model.Result, error)
 	MeetingCreate(ctx context.Context, meeting model.MeetingInput) (*model.Meeting, error)
 	MeetingUpdate(ctx context.Context, meetingID string, meeting model.MeetingUpdateInput) (*model.Meeting, error)
@@ -7563,7 +7563,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.MailstackRegisterBuyDomainsWithMailboxes(childComplexity, args["test"].(bool), args["paymentIntentId"].(string), args["domains"].([]string), args["usernames"].([]string), args["amount"].(float64)), true
+		return e.complexity.Mutation.MailstackRegisterBuyDomainsWithMailboxes(childComplexity, args["test"].(bool), args["paymentIntentId"].(string), args["domains"].([]string), args["usernames"].([]string), args["amount"].(float64), args["redirectWebsite"].(*string)), true
 
 	case "Mutation.mailstack_SetUser":
 		if e.complexity.Mutation.MailstackSetUser == nil {
@@ -14483,7 +14483,7 @@ input LogEntryUpdateInput {
 
 extend type Mutation {
     mailstack_GetPaymentIntent(domains: [String!]!, usernames: [String!]!, amount: Float!): GetPaymentIntent! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    mailstack_RegisterBuyDomainsWithMailboxes(test: Boolean!, paymentIntentId: String!, domains: [String!]!, usernames: [String!]!, amount: Float!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    mailstack_RegisterBuyDomainsWithMailboxes(test: Boolean!, paymentIntentId: String!, domains: [String!]!, usernames: [String!]!, amount: Float!, redirectWebsite: String): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
     mailstack_SetUser(mailbox: String!, userId: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
@@ -16305,20 +16305,20 @@ enum ColumnViewType {
     INVOICES_ORGANIZATION
 
     ORGANIZATIONS_AVATAR
-    ORGANIZATIONS_NAME
-    ORGANIZATIONS_WEBSITE
-    ORGANIZATIONS_RELATIONSHIP
-    ORGANIZATIONS_ONBOARDING_STATUS
-    ORGANIZATIONS_RENEWAL_LIKELIHOOD
-    ORGANIZATIONS_RENEWAL_DATE
-    ORGANIZATIONS_FORECAST_ARR
-    ORGANIZATIONS_OWNER
-    ORGANIZATIONS_LAST_TOUCHPOINT
-    ORGANIZATIONS_LAST_TOUCHPOINT_DATE
-    ORGANIZATIONS_STAGE
-    ORGANIZATIONS_CONTACT_COUNT
-    ORGANIZATIONS_SOCIALS
-    ORGANIZATIONS_LEAD_SOURCE
+    ORGANIZATIONS_NAME #search done
+    ORGANIZATIONS_WEBSITE #search done
+    ORGANIZATIONS_RELATIONSHIP #search done
+    ORGANIZATIONS_ONBOARDING_STATUS #search done
+    ORGANIZATIONS_RENEWAL_LIKELIHOOD #search done
+    ORGANIZATIONS_RENEWAL_DATE #search done
+    ORGANIZATIONS_FORECAST_ARR #search done
+    ORGANIZATIONS_OWNER #search done
+    ORGANIZATIONS_LAST_TOUCHPOINT #todo search
+    ORGANIZATIONS_LAST_TOUCHPOINT_DATE #search done
+    ORGANIZATIONS_STAGE #search done
+    ORGANIZATIONS_CONTACT_COUNT #todo search
+    ORGANIZATIONS_SOCIALS #todo search
+    ORGANIZATIONS_LEAD_SOURCE #search done
     ORGANIZATIONS_CREATED_DATE
     ORGANIZATIONS_EMPLOYEE_COUNT
     ORGANIZATIONS_YEAR_FOUNDED
@@ -20923,6 +20923,11 @@ func (ec *executionContext) field_Mutation_mailstack_RegisterBuyDomainsWithMailb
 		return nil, err
 	}
 	args["amount"] = arg4
+	arg5, err := ec.field_Mutation_mailstack_RegisterBuyDomainsWithMailboxes_argsRedirectWebsite(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["redirectWebsite"] = arg5
 	return args, nil
 }
 func (ec *executionContext) field_Mutation_mailstack_RegisterBuyDomainsWithMailboxes_argsTest(
@@ -21032,6 +21037,28 @@ func (ec *executionContext) field_Mutation_mailstack_RegisterBuyDomainsWithMailb
 	}
 
 	var zeroVal float64
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_mailstack_RegisterBuyDomainsWithMailboxes_argsRedirectWebsite(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (*string, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["redirectWebsite"]
+	if !ok {
+		var zeroVal *string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("redirectWebsite"))
+	if tmp, ok := rawArgs["redirectWebsite"]; ok {
+		return ec.unmarshalOString2ᚖstring(ctx, tmp)
+	}
+
+	var zeroVal *string
 	return zeroVal, nil
 }
 
@@ -65952,7 +65979,7 @@ func (ec *executionContext) _Mutation_mailstack_RegisterBuyDomainsWithMailboxes(
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().MailstackRegisterBuyDomainsWithMailboxes(rctx, fc.Args["test"].(bool), fc.Args["paymentIntentId"].(string), fc.Args["domains"].([]string), fc.Args["usernames"].([]string), fc.Args["amount"].(float64))
+			return ec.resolvers.Mutation().MailstackRegisterBuyDomainsWithMailboxes(rctx, fc.Args["test"].(bool), fc.Args["paymentIntentId"].(string), fc.Args["domains"].([]string), fc.Args["usernames"].([]string), fc.Args["amount"].(float64), fc.Args["redirectWebsite"].(*string))
 		}
 
 		directive1 := func(ctx context.Context) (interface{}, error) {

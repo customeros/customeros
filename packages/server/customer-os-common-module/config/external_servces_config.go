@@ -15,3 +15,9 @@ type PostmarkConfig struct {
 type StripeConfig struct {
 	ApiKey string `env:"STRIPE_API_KEY" envDefault:"N/A"`
 }
+
+type CloudflareConfig struct {
+	Url    string `env:"CLOUDFLARE_URL" envDefault:"https://api.cloudflare.com/client/v4" validate:"required"`
+	ApiKey string `env:"CLOUDFLARE_API_KEY" `
+	Email  string `env:"CLOUDFLARE_API_EMAIL"`
+}

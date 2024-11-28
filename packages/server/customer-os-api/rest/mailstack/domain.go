@@ -225,7 +225,7 @@ func ConfigureDomain(services *service.Services) gin.HandlerFunc {
 	}
 }
 
-func configureDomain(ctx context.Context, tenant, domain, website string, services *service.Services) (DomainRecord, error) {
+func configureDomain(ctx context.Context, tenant, domain, redirectWebsite string, services *service.Services) (DomainRecord, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "configureDomain")
 	defer span.Finish()
 
@@ -243,31 +243,10 @@ func configureDomain(ctx context.Context, tenant, domain, website string, servic
 		return domainResponse, coserrors.ErrDomainNotFound
 	}
 
-	// setup domain in cloudflare
-	nameservers, err := services.CloudflareService.SetupDomainForMailStack(ctx, tenant, domain, website)
+	err = services.CommonServices.MailstackService.ConfigureMailstackDomain(ctx, domain, redirectWebsite)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error setting up domain in Cloudflare"))
+		tracing.TraceErr(span, errors.Wrap(err, "Error configuring domain"))
 		return domainResponse, coserrors.ErrDomainConfigurationFailed
-	}
-
-	// setup domain in openSRS
-	err = services.CommonServices.OpenSrsService.SetupDomain(ctx, tenant, domain)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error setting up domain in OpenSRS"))
-		return domainResponse, coserrors.ErrDomainConfigurationFailed
-	}
-
-	// replace nameservers in namecheap
-	err = services.CommonServices.NamecheapService.UpdateNameservers(ctx, tenant, domain, nameservers)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error updating nameservers"))
-		return domainResponse, coserrors.ErrDomainConfigurationFailed
-	}
-
-	// mark domain as configured
-	err = services.CommonServices.PostgresRepositories.MailStackDomainRepository.MarkConfigured(ctx, tenant, domain)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error setting domain as configured"))
 	}
 
 	// get domain details

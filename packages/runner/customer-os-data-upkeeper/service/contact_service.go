@@ -935,6 +935,7 @@ func (s *contactService) EnrichWithWorkEmailFromBetterContact() {
 						commonService.EmailFields{
 							Email:     item.ContactEmailAddress,
 							AppSource: constants.AppSourceDataUpkeeper,
+							Primary:   true,
 						},
 						&commonService.LinkWith{
 							Type: model.CONTACT,
