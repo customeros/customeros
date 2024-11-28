@@ -51,7 +51,6 @@ type Services struct {
 	InvoiceService             InvoiceService
 	SlackService               SlackService
 	ReminderService            ReminderService
-	CloudflareService          CloudflareService
 	EnrichmentService          EnrichmentService
 }
 
@@ -94,7 +93,6 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, cfg *confi
 	services.InvoiceService = NewInvoiceService(log, repositories, grpcClients, &services)
 	services.SlackService = NewSlackService(log, repositories, grpcClients, &services)
 	services.FileStoreApiService = fsc.NewFileStoreApiService(&cfg.InternalServices.FileStoreApiConfig)
-	services.CloudflareService = NewCloudflareService(log, &services, cfg)
 	services.EnrichmentService = NewEnrichmentService(log, &services, cfg)
 
 	log.Info("Init cache service")

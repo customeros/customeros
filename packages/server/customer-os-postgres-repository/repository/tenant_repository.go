@@ -2,11 +2,15 @@ package repository
 
 import (
 	"context"
+	"fmt"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 )
 
 type TenantRepository interface {
@@ -38,6 +42,12 @@ func (e tenantRepository) Create(ctx context.Context, tenantEntity entity.Tenant
 	span, _ := opentracing.StartSpanFromContext(ctx, "TenantRepository.Create")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
+
+	if tenantEntity.Name == "" {
+		return nil, fmt.Errorf("No tenant name, cannot create tenant")
+	}
+
+	tenantEntity.HashID = utils.GenerateHashId(tenantEntity.Name, 12)
 
 	err := e.gormDb.Create(&tenantEntity).Error
 	if err != nil {

@@ -56,6 +56,7 @@ require (
 	github.com/cloudwego/base64x v0.1.4 // indirect
 	github.com/cloudwego/iasm v0.2.0 // indirect
 	github.com/coocood/freecache v1.2.4 // indirect
+	github.com/customeros/mailwatcher v0.1.4 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/emersion/go-message v0.18.1 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
@@ -89,6 +90,9 @@ require (
 	github.com/klauspost/cpuid/v2 v2.2.8 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
+	github.com/likexian/gokit v0.25.15 // indirect
+	github.com/likexian/whois v1.15.5 // indirect
+	github.com/likexian/whois-parser v1.24.20 // indirect
 	github.com/lucasepe/codename v0.2.0 // indirect
 	github.com/machinebox/graphql v0.2.2 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect

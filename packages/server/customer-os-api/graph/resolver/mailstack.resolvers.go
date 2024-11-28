@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	tracingLog "github.com/opentracing/opentracing-go/log"
 	"strings"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -40,16 +41,17 @@ func (r *mutationResolver) MailstackGetPaymentIntent(ctx context.Context, domain
 }
 
 // MailstackRegisterBuyDomainsWithMailboxes is the resolver for the mailstack_RegisterBuyDomainsWithMailboxes field.
-func (r *mutationResolver) MailstackRegisterBuyDomainsWithMailboxes(ctx context.Context, test bool, paymentIntentID string, domains []string, usernames []string, amount float64) (*model.Result, error) {
+func (r *mutationResolver) MailstackRegisterBuyDomainsWithMailboxes(ctx context.Context, test bool, paymentIntentID string, domains []string, usernames []string, amount float64, redirectWebsite *string) (*model.Result, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.MailstackRegisterBuyDomainsWithMailboxes", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 
 	span.LogKV("request.domains", domains)
 	span.LogKV("request.usernames", usernames)
+	span.LogKV("request.redirectWebsite", utils.IfNotNilString(redirectWebsite))
+	span.LogFields(tracingLog.Float64("request.amount", amount))
 
-	amountInt := int64(amount * 100)
-	err := r.Services.CommonServices.MailstackService.RegisterBuyDomainsWithMailboxes(ctx, test, paymentIntentID, domains, usernames, amountInt)
+	err := r.Services.CommonServices.MailstackService.RegisterBuyDomainsWithMailboxes(ctx, test, paymentIntentID, domains, usernames, utils.IfNotNilString(redirectWebsite))
 	if err != nil {
 		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to register buy domains with mailboxes")

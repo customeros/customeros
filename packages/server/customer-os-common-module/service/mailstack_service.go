@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
@@ -12,6 +11,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
+	"github.com/pkg/errors"
 	"github.com/stripe/stripe-go/v81"
 	"github.com/stripe/stripe-go/v81/paymentintent"
 	"gorm.io/gorm"
@@ -25,10 +25,11 @@ type mailstackService struct {
 }
 
 type MailstackService interface {
-	GetPaymentIntent(ctx context.Context, domains []string, usernames []string, amount int64) (string, error)                                         // stripe client secret
-	RegisterBuyDomainsWithMailboxes(ctx context.Context, test bool, paymentIntentId string, domains []string, usernames []string, amount int64) error // id, stripe client secret
+	GetPaymentIntent(ctx context.Context, domains []string, usernames []string, amount int64) (string, error)                                                   // stripe client secret
+	RegisterBuyDomainsWithMailboxes(ctx context.Context, test bool, paymentIntentId string, domains []string, usernames []string, redirectWebsite string) error // id, stripe client secret
 	GetTenantForMailstackDomain(ctx context.Context, domain string) (string, error)
 	GetAllMailstackDomains(ctx context.Context) (map[string]string, error)
+	ConfigureMailstackDomain(ctx context.Context, domain, redirectWebsite string) error
 }
 
 func NewMailstackService(cfg *config.GlobalConfig, services *Services) MailstackService {
@@ -84,13 +85,14 @@ func (s *mailstackService) GetPaymentIntent(ctx context.Context, domains []strin
 	return pi.ClientSecret, nil
 }
 
-func (s *mailstackService) RegisterBuyDomainsWithMailboxes(ctx context.Context, test bool, paymentIntentId string, domains []string, usernames []string, amount int64) error {
+func (s *mailstackService) RegisterBuyDomainsWithMailboxes(ctx context.Context, test bool, paymentIntentId string, domains []string, usernames []string, redirectWebsite string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "MailstackService.RegisterBuyDomainsWithMailboxes")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	span.LogKV("request.domains", domains)
-	span.LogKV("request.usernames", usernames)
+	span.LogKV("domains", domains)
+	span.LogKV("usernames", usernames)
+	span.LogKV("redirectWebsite", redirectWebsite)
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -132,6 +134,7 @@ func (s *mailstackService) RegisterBuyDomainsWithMailboxes(ctx context.Context, 
 			err := s.services.PostgresRepositories.MailstackBuyRequestRepository.StoreDomain(ctx, tx, &entity.MailstackBuyRequestDomain{
 				MailstackBuyRequestId: mailstackBuyRequestId,
 				Domain:                domain,
+				RedirectWebsite:       redirectWebsite,
 				Status:                entity.MailstackBuyRequestDomainStatusPendingProvisioning,
 			})
 			if err != nil {
@@ -197,7 +200,7 @@ func (s *mailstackService) GetAllMailstackDomains(ctx context.Context) (map[stri
 
 	output := map[string]string{}
 
-	mailStackDomains, err := s.services.PostgresRepositories.MailStackDomainRepository.GetAllDomainsCrossTenant(ctx)
+	mailStackDomains, err := s.services.PostgresRepositories.MailStackDomainRepository.GetAllActiveDomainsCrossTenant(ctx)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return output, err
@@ -208,4 +211,49 @@ func (s *mailstackService) GetAllMailstackDomains(ctx context.Context) (map[stri
 	}
 
 	return output, nil
+}
+
+func (s *mailstackService) ConfigureMailstackDomain(ctx context.Context, domain, redirectWebsite string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MailstackService.ConfigureMailstackDomain")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogKV("request.domain", domain)
+	span.LogKV("request.redirectWebsite", redirectWebsite)
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+
+	// setup domain in cloudflare
+	nameservers, err := s.services.CloudflareService.SetupDomainForMailStack(ctx, tenant, domain, redirectWebsite)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Error setting up domain in Cloudflare"))
+		return err
+	}
+
+	// setup domain in openSRS
+	err = s.services.OpenSrsService.SetupDomain(ctx, tenant, domain)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Error setting up domain in OpenSRS"))
+		return err
+	}
+
+	// replace nameservers in namecheap
+	err = s.services.NamecheapService.UpdateNameservers(ctx, tenant, domain, nameservers)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Error updating nameservers"))
+		return err
+	}
+
+	// mark domain as configured
+	err = s.services.PostgresRepositories.MailStackDomainRepository.MarkConfigured(ctx, tenant, domain)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Error setting domain as configured"))
+	}
+
+	return nil
 }

@@ -3,10 +3,10 @@ package webhooks
 import (
 	"archive/zip"
 	"bytes"
+	"compress/gzip"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"runtime/debug"
 	"strings"
@@ -95,25 +95,32 @@ func parseInboundEmail(ctx rest.HTTPContext) (PostmarkInboundEmailData, error) {
 func processDmarcMonitoringReport(ctx rest.HTTPContext, emailData *PostmarkInboundEmailData) error {
 	// Get attachment, unzip, feed file to dmark analyzer service
 	attachment := emailData.Attachments[0]
-	if attachment.ContentType != "application/zip" {
+	if attachment.ContentType != "application/zip" && attachment.ContentType != "application/gzip" {
 		return fmt.Errorf("attachment %s is not a zip file", attachment.Name)
 	}
 
 	provider := emailData.DMARCReportProvider()
 
-	reports, err := decodeAndReadDMARCReportFile(emailData.Attachments[0].Content)
+	reports, err := decodeAndReadDMARCReportFile(attachment.Content, attachment.ContentType)
 	if err != nil {
 		return fmt.Errorf("cannot parse dmarc report %s from attachment: %v", attachment.Name, err)
 	}
 	for _, report := range reports {
-		dbReport := buildDMARCReport(report, provider, ctx.Tenant)
+		dbReport := buildDMARCReport(ctx, report, provider)
+		// todo - if tenant is empty, don't send report to database
+		// leaving this in for now to verify everything is working as expected
 		ctx.Services.Repositories.PostgresRepositories.MailStackDomainRepository.CreateDMARCReport(
 			*ctx.ServiceContext, ctx.Tenant, &dbReport)
 	}
 	return nil
 }
 
-func buildDMARCReport(report dmarcstats.Report, provider, tenant string) entity.DMARCMonitoring {
+func buildDMARCReport(ctx rest.HTTPContext, report dmarcstats.Report, provider string) entity.DMARCMonitoring {
+	tenant, err := ctx.Services.CommonServices.MailstackService.GetTenantForMailstackDomain(*ctx.ServiceContext, report.Domain)
+	if err != nil {
+		tracing.TraceErr(ctx.Span, fmt.Errorf("Unable to get tenant for domain %s: %v", report.Domain, err))
+	}
+
 	jsonReport, _ := json.Marshal(report)
 	return entity.DMARCMonitoring{
 		Tenant:        tenant,
@@ -216,42 +223,79 @@ func getUsername(ctx rest.HTTPContext, EmailParticipants []string) (string, erro
 	return "", fmt.Errorf("Unable to find user amongst email participants")
 }
 
-func decodeAndReadDMARCReportFile(attachment string) ([]dmarcstats.Report, error) {
+func decodeAndReadDMARCReportFile(attachment, contentType string) ([]dmarcstats.Report, error) {
 	var reports []dmarcstats.Report
 
 	// Decode base64 string to bytes
 	decoded, err := base64.StdEncoding.DecodeString(attachment)
 	if err != nil {
-		return reports, fmt.Errorf("failed to decode base64: %w", err)
+		return nil, fmt.Errorf("failed to decode base64: %w", err)
 	}
 
-	// Create a reader from the decoded bytes
-	zipReader, err := zip.NewReader(bytes.NewReader(decoded), int64(len(decoded)))
+	switch contentType {
+	case "application/zip":
+		reports, err = handleZipFile(decoded)
+	case "application/gzip":
+		reports, err = handleGzipFile(decoded)
+	default:
+		return nil, fmt.Errorf("unsupported content type: %s", contentType)
+	}
+
 	if err != nil {
-		return reports, fmt.Errorf("failed to create zip reader: %w", err)
-	}
-
-	// Read each file in the zip
-	for _, file := range zipReader.File {
-		rc, err := file.Open()
-		if err != nil {
-			return reports, fmt.Errorf("failed to open zip file %s: %w", file.Name, err)
-		}
-		defer rc.Close()
-
-		// Read the file contents
-		content, err := io.ReadAll(rc)
-		if err != nil {
-			return reports, fmt.Errorf("failed to read zip file %s: %w", file.Name, err)
-		}
-		reader := bytes.NewReader(content)
-		report, err := dmarcstats.AnalyzeDMARCReport(reader)
-		if err != nil {
-			return reports, fmt.Errorf("failed to read get dmarc report for file %s: %w", file.Name, err)
-		}
-		reports = append(reports, *report)
-
+		return nil, err
 	}
 
 	return reports, nil
+}
+
+func handleZipFile(decoded []byte) ([]dmarcstats.Report, error) {
+	var reports []dmarcstats.Report
+
+	zipReader, err := zip.NewReader(bytes.NewReader(decoded), int64(len(decoded)))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create zip reader: %w", err)
+	}
+
+	for _, file := range zipReader.File {
+		report, err := processZipFile(file)
+		if err != nil {
+			return nil, err
+		}
+		reports = append(reports, *report)
+	}
+
+	return reports, nil
+}
+
+func handleGzipFile(decoded []byte) ([]dmarcstats.Report, error) {
+	var reports []dmarcstats.Report
+
+	gzReader, err := gzip.NewReader(bytes.NewReader(decoded))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create gzip reader: %w", err)
+	}
+	defer gzReader.Close()
+
+	report, err := dmarcstats.AnalyzeDMARCReport(gzReader)
+	if err != nil {
+		return nil, fmt.Errorf("failed to analyze DMARC report from gzip: %w", err)
+	}
+
+	reports = append(reports, *report)
+	return reports, nil
+}
+
+func processZipFile(file *zip.File) (*dmarcstats.Report, error) {
+	rc, err := file.Open()
+	if err != nil {
+		return nil, fmt.Errorf("failed to open zip file %s: %w", file.Name, err)
+	}
+	defer rc.Close()
+
+	report, err := dmarcstats.AnalyzeDMARCReport(rc)
+	if err != nil {
+		return nil, fmt.Errorf("failed to analyze DMARC report for file %s: %w", file.Name, err)
+	}
+
+	return report, nil
 }

@@ -18,6 +18,7 @@ require (
 	github.com/cenkalti/backoff/v4 v4.3.0
 	github.com/coocood/freecache v1.2.4
 	github.com/customeros/mailsherpa v0.3.3
+	github.com/customeros/mailwatcher v0.1.4
 	github.com/docker/docker v27.3.1+incompatible
 	github.com/emersion/go-message v0.18.1
 	github.com/forPelevin/gomoji v1.2.0
@@ -87,6 +88,9 @@ require (
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/jpillora/backoff v1.0.0 // indirect
 	github.com/klauspost/compress v1.17.4 // indirect
+	github.com/likexian/gokit v0.25.15 // indirect
+	github.com/likexian/whois v1.15.5 // indirect
+	github.com/likexian/whois-parser v1.24.20 // indirect
 	github.com/lucasepe/codename v0.2.0 // indirect
 	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
@@ -98,7 +102,7 @@ require (
 	github.com/moby/sys/userns v0.1.0 // indirect
 	github.com/moby/term v0.5.0 // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
-	github.com/nexus-rpc/sdk-go v0.0.11 // indirect
+	github.com/nexus-rpc/sdk-go v0.0.12 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0 // indirect
 	github.com/pborman/uuid v1.2.1 // indirect
@@ -159,7 +163,7 @@ require (
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/uber/jaeger-lib v2.4.1+incompatible // indirect
 	github.com/ugorji/go/codec v1.2.12 // indirect
-	go.temporal.io/sdk v1.30.0
+	go.temporal.io/sdk v1.30.1
 	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/arch v0.8.0 // indirect

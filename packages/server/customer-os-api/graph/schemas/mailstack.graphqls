@@ -9,7 +9,7 @@ extend type Query {
 
 extend type Mutation {
     mailstack_GetPaymentIntent(domains: [String!]!, usernames: [String!]!, amount: Float!): GetPaymentIntent! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    mailstack_RegisterBuyDomainsWithMailboxes(test: Boolean!, paymentIntentId: String!, domains: [String!]!, usernames: [String!]!, amount: Float!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    mailstack_RegisterBuyDomainsWithMailboxes(test: Boolean!, paymentIntentId: String!, domains: [String!]!, usernames: [String!]!, amount: Float!, redirectWebsite: String): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
     mailstack_SetUser(mailbox: String!, userId: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 

@@ -236,7 +236,7 @@ export class Organization extends Entity<OrganizationDatum> {
         website: '',
         accountDetails: {
           onboarding: {
-            status: OnboardingStatus.NotStarted,
+            status: OnboardingStatus.NotApplicable,
             comments: '',
             updatedAt: '',
           },

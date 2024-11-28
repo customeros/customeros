@@ -32,8 +32,11 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
 
   const activeCompany =
     (contactStore?.value?.organizations?.content?.length ?? 1) - 1;
-  const company =
-    contactStore?.value.organizations?.content?.[activeCompany]?.name;
+  const company = contactStore?.value.organizations?.content?.[activeCompany];
+
+  const domains =
+    company?.metadata.id &&
+    store.organizations.value.get(company.metadata.id)?.value?.domains;
 
   const isPrimaryEmail = contactStore?.value.primaryEmail;
 
@@ -49,7 +52,8 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
     'id',
   );
   const enrichedContact = contactStore?.value.enrichDetails;
-  const enrichedEmailStatus =
+
+  const isEnrichingEmail =
     !enrichedContact?.emailEnrichedAt &&
     enrichedContact?.emailRequestedAt &&
     !isPrimaryEmail;
@@ -59,9 +63,12 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
       <div className='flex items-center justify-between w-full text-sm group/menu'>
         <div className='flex items-center gap-2'>
           <Mail02 className='mt-[1px] text-gray-500' />
+
           <span className='text-gray-500'>Emails</span>
           {allEmails.length === 0 && (
-            <span className='text-gray-400 ml-[57px]'>No emails yet</span>
+            <span className='text-gray-400 ml-[57px]'>
+              {isEnrichingEmail ? 'Finding email' : 'No emails yet'}
+            </span>
           )}
         </div>
 
@@ -82,7 +89,7 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
               </div>
             </MenuButton>
             <MenuList>
-              {company && (
+              {company?.name && domains?.length && (
                 <MenuItem
                   className='group/find-email '
                   onClick={() => {
@@ -90,8 +97,23 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
                   }}
                 >
                   <div className='flex items-center gap-1'>
-                    <Star06 className='group-hover/find-email:text-gray-700 text-gray-500' />
-                    <span className='max-w-[150px] text-ellipsis overflow-hidden whitespace-nowrap'>{`Find email at ${company}`}</span>
+                    {isEnrichingEmail ? (
+                      <Tooltip label={`Finding email at ${company?.name}`}>
+                        <Spinner
+                          size='sm'
+                          label='finding email'
+                          className='text-gray-400 fill-gray-700 mr-2'
+                        />
+                      </Tooltip>
+                    ) : (
+                      <Star06 className='group-hover/find-email:text-gray-700 text-gray-500' />
+                    )}
+
+                    <span className='max-w-[150px] text-ellipsis overflow-hidden whitespace-nowrap'>
+                      {isEnrichingEmail
+                        ? `Finding email at ${company?.name}`
+                        : `Find email at ${company?.name}`}
+                    </span>
                   </div>
                 </MenuItem>
               )}
@@ -126,7 +148,7 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
               </MenuItem>
             </MenuList>
           </Menu>
-          {enrichedEmailStatus && (
+          {isEnrichingEmail && (
             <Tooltip label={`Finding email at ${company} `}>
               <div>
                 <Spinner
