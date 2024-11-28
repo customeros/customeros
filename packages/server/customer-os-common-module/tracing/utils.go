@@ -33,6 +33,7 @@ const (
 	SpanTagComponentRest               = "rest"
 	SpanTagComponentCronJob            = "cronJob"
 	SpanTagComponentService            = "service"
+	SpanTagComponentListener           = "listener"
 )
 
 func GraphQlTracingEnhancer(ctx context.Context) func(c *gin.Context) {
@@ -275,4 +276,8 @@ func TagComponentRest(span opentracing.Span) {
 
 func TagComponentService(span opentracing.Span) {
 	span.SetTag(SpanTagComponent, SpanTagComponentService)
+}
+
+func TagComponentListener(span opentracing.Span) {
+	span.SetTag(SpanTagComponent, SpanTagComponentListener)
 }
