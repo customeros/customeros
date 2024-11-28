@@ -1,14 +1,16 @@
 package cron
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/config"
-	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/container"
-	cron_config "github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/cron/config"
+	"testing"
+	"time"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/robfig/cron"
 	"github.com/stretchr/testify/assert"
-	"testing"
-	"time"
+
+	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/config"
+	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/container"
+	cron_config "github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/cron/config"
 )
 
 func getLogger() logger.Logger {
@@ -58,6 +60,7 @@ func TestStartCron(t *testing.T) {
 			CronScheduleSendEmails:                                            "0 0 */1 * * *",
 			CronScheduleProcessSentEmails:                                     "0 0 */1 * * *",
 			CronScheduleCheckDomains:                                          "0 0 */1 * * *",
+			CronScheduleMailstackReputation:                                   "0 0 */1 * * *",
 		},
 	}
 

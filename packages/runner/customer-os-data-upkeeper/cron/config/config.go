@@ -78,5 +78,5 @@ type Config struct {
 
 	// Daily at midnight
 	// Mailstack Reputation Monitoring
-	CronScheduleMailstackReputation string `env:"CRON_SCHEDULE_MAILSTACK_REPUTATION" envDefault:"0 0 0 * * *"`
+	CronScheduleMailstackReputation string `env:"CRON_SCHEDULE_MAILSTACK_REPUTATION" envDefault:"0 0 0 */1 * *"`
 }
