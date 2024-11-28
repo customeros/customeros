@@ -1,5 +1,3 @@
-import Markdown from 'react-markdown';
-
 import copy from 'copy-to-clipboard';
 import { MarkdownEventType } from '@store/TimelineEvents/MarkdownEvent/types';
 
@@ -8,6 +6,7 @@ import { XClose } from '@ui/media/icons/XClose';
 import { IconButton } from '@ui/form/IconButton';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { CardHeader, CardContent } from '@ui/presentation/Card/Card';
+import { MarkdownRenderer } from '@organization/components/Timeline/PastZone/events/markdownEvent/MarkdownRenderer';
 import {
   useTimelineEventPreviewStateContext,
   useTimelineEventPreviewMethodsContext,
@@ -60,39 +59,7 @@ export const MarkdownEventPreviewModal = () => {
         </div>
       </CardHeader>
       <CardContent className='mt-0 max-h-[calc(100vh-60px-56px)] pt-0 pb-0 text-sm overflow-auto'>
-        <Markdown
-          className='text-sm '
-          components={{
-            blockquote: ({ children }) => (
-              <blockquote className='text-gray-500 border-l border-gray-500 pl-3'>
-                {children}
-              </blockquote>
-            ),
-            ul: ({ children }) => (
-              <ul className='list-disc list-inside my-1'>{children}</ul>
-            ),
-            ol: ({ children }) => (
-              <ol className='list-decimal list-inside my-1'>{children}</ol>
-            ),
-            h1: ({ children }) => (
-              <h1 className='text-sm font-bold mt-1'>{children}</h1>
-            ),
-
-            h2: ({ children }) => (
-              <h2 className='text-sm font-medium mt-1'>{children}</h2>
-            ),
-            p: ({ children }) => <p className='text-sm my-1'>{children}</p>,
-            a: ({ children, href }) => {
-              return (
-                <a href={href} target='_blank' rel='noreferrer noopener'>
-                  {children}
-                </a>
-              );
-            },
-          }}
-        >
-          {event?.content}
-        </Markdown>
+        <MarkdownRenderer content={event?.content ?? ''} />
       </CardContent>
     </div>
   );
