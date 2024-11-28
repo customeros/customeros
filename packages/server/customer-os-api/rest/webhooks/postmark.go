@@ -107,6 +107,8 @@ func processDmarcMonitoringReport(ctx rest.HTTPContext, emailData *PostmarkInbou
 	}
 	for _, report := range reports {
 		dbReport := buildDMARCReport(ctx, report, provider)
+		// todo - if tenant is empty, don't send report to database
+		// leaving this in for now to verify everything is working as expected
 		ctx.Services.Repositories.PostgresRepositories.MailStackDomainRepository.CreateDMARCReport(
 			*ctx.ServiceContext, ctx.Tenant, &dbReport)
 	}
@@ -114,8 +116,10 @@ func processDmarcMonitoringReport(ctx rest.HTTPContext, emailData *PostmarkInbou
 }
 
 func buildDMARCReport(ctx rest.HTTPContext, report dmarcstats.Report, provider string) entity.DMARCMonitoring {
-	// todo - need new query to do tenant lookup based on mailstack domain
-	tenant := ""
+	tenant, err := ctx.Services.CommonServices.MailstackService.GetTenantForMailstackDomain(*ctx.ServiceContext, report.Domain)
+	if err != nil {
+		tracing.TraceErr(ctx.Span, fmt.Errorf("Unable to get tenant for domain %s: %v", report.Domain, err))
+	}
 
 	jsonReport, _ := json.Marshal(report)
 	return entity.DMARCMonitoring{

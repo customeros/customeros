@@ -47,13 +47,19 @@ func (s *mailstackService) NewMailstackService() {
 		}
 
 		// get mailstack domains from database
-
-		// no record
-		if len(records) == 0 {
+		domains, err := s.commonServices.MailstackService.GetAllMailstackDomains(ctx)
+		if err != nil {
+			err = errors.Wrap(err, "Unable to get mailstack domains from db")
+			tracing.TraceErr(span, err)
 			return
 		}
 
-		for _, record := range records {
+		// no record
+		if len(domains) == 0 {
+			return
+		}
+
+		for domain, tenant := range domains {
 			_, err := s.commonServices.MailboxService.ReputationScore(ctx, domain, tenant)
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "Error getting mailbox reputation score"))
