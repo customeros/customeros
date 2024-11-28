@@ -62,5 +62,5 @@ func (e tenantRepository) Create(ctx context.Context, tenantEntity entity.Tenant
 func (e tenantRepository) generateHashID(tenant string) string {
 	h := sha256.New()
 	h.Write([]byte(tenant))
-	return hex.EncodeToString(h.Sum(nil))[:16]
+	return hex.EncodeToString(h.Sum(nil))[:12]
 }

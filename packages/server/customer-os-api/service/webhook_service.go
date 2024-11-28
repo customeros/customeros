@@ -32,7 +32,7 @@ func (i Integration) String() string {
 func (i Integration) IntegragionID() string {
 	h := sha256.New()
 	h.Write([]byte(string(i)))
-	return hex.EncodeToString(h.Sum(nil))[:16]
+	return hex.EncodeToString(h.Sum(nil))[:12]
 }
 
 type webhookService struct {
