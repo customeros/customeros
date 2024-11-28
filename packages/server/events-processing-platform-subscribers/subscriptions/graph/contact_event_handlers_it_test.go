@@ -6,12 +6,9 @@ import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/mocked_grpc"
-	eventcompletionpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/event_completion"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event/contact"
 	contactevent "github.com/openline-ai/openline-customer-os/packages/server/events/event/contact/event"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/types/known/emptypb"
 	"testing"
 	"time"
 )
@@ -44,14 +41,6 @@ func TestGraphContactEventHandler_OnLocationLinkToContact(t *testing.T) {
 	require.NotNil(t, dbNodeAfterLocationCreate)
 	propsAfterLocationCreate := utils.GetPropsFromNode(*dbNodeAfterLocationCreate)
 	require.Equal(t, locationName, utils.GetStringPropOrEmpty(propsAfterLocationCreate, "name"))
-
-	// prepare grpc mock
-	callbacks := mocked_grpc.MockEventCompletionCallbacks{
-		NotifyEventProcessed: func(context context.Context, org *eventcompletionpb.NotifyEventProcessedRequest) (*emptypb.Empty, error) {
-			return &emptypb.Empty{}, nil
-		},
-	}
-	mocked_grpc.SetEventCompletionServiceCallbacks(&callbacks)
 
 	contactEventHandler := &ContactEventHandler{
 		services:    testDatabase.Services,
@@ -106,14 +95,6 @@ func TestGraphContactEventHandler_OnPhoneNumberLinkToContact(t *testing.T) {
 	require.Equal(t, false, utils.GetBoolPropOrFalse(propsAfterPhoneNumberCreate, "validated"))
 	creationTime := time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC)
 	require.Equal(t, &creationTime, utils.GetTimePropOrNil(propsAfterPhoneNumberCreate, "updatedAt"))
-
-	// prepare grpc mock
-	callbacks := mocked_grpc.MockEventCompletionCallbacks{
-		NotifyEventProcessed: func(context context.Context, org *eventcompletionpb.NotifyEventProcessedRequest) (*emptypb.Empty, error) {
-			return &emptypb.Empty{}, nil
-		},
-	}
-	mocked_grpc.SetEventCompletionServiceCallbacks(&callbacks)
 
 	contactEventHandler := &ContactEventHandler{
 		services:    testDatabase.Services,
