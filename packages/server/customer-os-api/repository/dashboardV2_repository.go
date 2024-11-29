@@ -52,26 +52,41 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 		organizationFilter := new(utils.CypherFilter)
 		organizationFilter.Negate = false
 		organizationFilter.LogicalOperator = utils.AND
+		organizationFilter.Details = &utils.CypherFilterItem{
+			SupportCaseSensitive: true,
+		}
 		organizationFilter.Filters = make([]*utils.CypherFilter, 0)
 
 		socialFilter := new(utils.CypherFilter)
 		socialFilter.Negate = false
 		socialFilter.LogicalOperator = utils.AND
+		socialFilter.Details = &utils.CypherFilterItem{
+			SupportCaseSensitive: true,
+		}
 		socialFilter.Filters = make([]*utils.CypherFilter, 0)
 
 		tagFilter := new(utils.CypherFilter)
 		tagFilter.Negate = false
 		tagFilter.LogicalOperator = utils.AND
+		tagFilter.Details = &utils.CypherFilterItem{
+			SupportCaseSensitive: true,
+		}
 		tagFilter.Filters = make([]*utils.CypherFilter, 0)
 
 		emailFilter := new(utils.CypherFilter)
 		emailFilter.Negate = false
 		emailFilter.LogicalOperator = utils.OR
+		emailFilter.Details = &utils.CypherFilterItem{
+			SupportCaseSensitive: true,
+		}
 		emailFilter.Filters = make([]*utils.CypherFilter, 0)
 
 		locationFilter := new(utils.CypherFilter)
 		locationFilter.Negate = false
 		locationFilter.LogicalOperator = utils.OR
+		locationFilter.Details = &utils.CypherFilterItem{
+			SupportCaseSensitive: true,
+		}
 		locationFilter.Filters = make([]*utils.CypherFilter, 0)
 
 		for _, filter := range where.And {
@@ -189,98 +204,109 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 	utils.MergeMapToMap(locationFilterParams, params)
 
 	//region count selectQuery
-	countQuery := fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization_%s) `, tenant)
-	if len(ownerId) > 0 || ownerIncludeEmpty {
-		countQuery += ` OPTIONAL MATCH (o)<-[:OWNS]-(owner:User) WITH *`
-	}
-	if socialFilterCypher != "" {
-		countQuery += ` MATCH (o)-[:HAS]->(s:Social) WITH *`
-	}
-	if tagFilterCypher != "" {
-		countQuery += ` OPTIONAL MATCH (o)-[tr:TAGGED]->(t:Tag) WITH *, count(tr) as trCount`
-	}
-	if locationFilterCypher != "" {
-		countQuery += ` MATCH (o)-[:ASSOCIATED_WITH]->(l:Location) WITH *`
-	}
-
-	countQuery += ` WHERE o.hide = false `
-
-	if organizationFilterCypher != "" || socialFilterCypher != "" || tagFilterCypher != "" || locationFilterCypher != "" || len(ownerId) > 0 || ownerIncludeEmpty {
-		countQuery += " AND "
-	}
-
-	countQueryParts := []string{}
-	if organizationFilterCypher != "" {
-		countQueryParts = append(countQueryParts, organizationFilterCypher)
-	}
-	if len(ownerId) > 0 || ownerIncludeEmpty {
-		if len(ownerId) == 0 {
-			countQueryParts = append(countQueryParts, fmt.Sprintf(` owner.id IS NULL `))
-		} else if ownerIncludeEmpty {
-			countQueryParts = append(countQueryParts, fmt.Sprintf(` (owner.id IN $ownerId OR owner.id IS NULL) `))
-		} else {
-			countQueryParts = append(countQueryParts, fmt.Sprintf(` owner.id IN $ownerId `))
+	countQuery := ""
+	{
+		countQuery += fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization_%s) `, tenant)
+		if len(ownerId) > 0 || ownerIncludeEmpty {
+			countQuery += ` OPTIONAL MATCH (o)<-[:OWNS]-(owner:User) WITH *`
 		}
-	}
-	if socialFilterCypher != "" {
-		countQueryParts = append(countQueryParts, socialFilterCypher)
-	}
-	if tagFilterCypher != "" {
-		countQueryParts = append(countQueryParts, tagFilterCypher)
-	}
-	if locationFilterCypher != "" {
-		countQueryParts = append(countQueryParts, locationFilterCypher)
-	}
+		if socialFilterCypher != "" {
+			countQuery += ` OPTIONAL MATCH (o)-[:HAS]->(s:Social) WITH *`
+		}
+		if tagFilterCypher != "" {
+			countQuery += ` OPTIONAL MATCH (o)-[tr:TAGGED]->(t:Tag) WITH *, count(tr) as trCount`
+		}
+		if locationFilterCypher != "" {
+			countQuery += ` OPTIONAL MATCH (o)-[:ASSOCIATED_WITH]->(l:Location) WITH *`
+		}
 
-	countQuery = countQuery + strings.Join(countQueryParts, " AND ") + fmt.Sprintf(` RETURN count(distinct(o))`)
+		countQuery += ` WHERE (o.hide = false OR o.hide IS NULL) `
+
+		if organizationFilterCypher != "" || socialFilterCypher != "" || tagFilterCypher != "" || locationFilterCypher != "" || len(ownerId) > 0 || ownerIncludeEmpty {
+			countQuery += " AND "
+		}
+
+		countQueryParts := []string{}
+		if organizationFilterCypher != "" {
+			countQueryParts = append(countQueryParts, organizationFilterCypher)
+		}
+		if len(ownerId) > 0 || ownerIncludeEmpty {
+			if len(ownerId) == 0 {
+				countQueryParts = append(countQueryParts, fmt.Sprintf(` owner.id IS NULL `))
+			} else if ownerIncludeEmpty {
+				countQueryParts = append(countQueryParts, fmt.Sprintf(` (owner.id IN $ownerId OR owner.id IS NULL) `))
+			} else {
+				countQueryParts = append(countQueryParts, fmt.Sprintf(` owner.id IN $ownerId `))
+			}
+		}
+		if socialFilterCypher != "" {
+			countQueryParts = append(countQueryParts, socialFilterCypher)
+		}
+		if tagFilterCypher != "" {
+			countQueryParts = append(countQueryParts, tagFilterCypher)
+		}
+		if locationFilterCypher != "" {
+			countQueryParts = append(countQueryParts, locationFilterCypher)
+		}
+
+		countQuery = countQuery + strings.Join(countQueryParts, " AND ") + fmt.Sprintf(` RETURN count(distinct(o))`)
+	}
 	//end count region
 
+	selectQuery := ""
 	//region selectQuery to fetch data
-	selectQuery := fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization_%s) `, tenant)
-	if len(ownerId) > 0 || ownerIncludeEmpty {
-		selectQuery += fmt.Sprintf(` OPTIONAL MATCH (o)<-[:OWNS]-(owner:User) WITH *`)
-	}
-	selectQuery += fmt.Sprintf(` OPTIONAL MATCH (o)-[:HAS]->(s:Social_%s) WITH *`, tenant)
-	selectQuery += fmt.Sprintf(` OPTIONAL MATCH (o)-[tr:TAGGED]->(t:Tag_%s) WITH *, count(tr) as trCount`, tenant)
-	selectQuery += fmt.Sprintf(` OPTIONAL MATCH (o)-[:ASSOCIATED_WITH]->(l:Location_%s) WITH *`, tenant)
-	if sort != nil && sort.By == SearchSortParamOwner {
-		selectQuery += fmt.Sprintf(` OPTIONAL MATCH (o)<-[:OWNS]-(owner:User_%s) WITH *`, tenant)
-	}
-	selectQuery += ` WHERE (o.hide = false) `
-
-	if organizationFilterCypher != "" || socialFilterCypher != "" || tagFilterCypher != "" || locationFilterCypher != "" || len(ownerId) > 0 || ownerIncludeEmpty {
-		selectQuery += " AND "
-	}
-
-	queryParts := []string{}
-	if organizationFilterCypher != "" {
-		queryParts = append(queryParts, organizationFilterCypher)
-	}
-	if len(ownerId) > 0 || ownerIncludeEmpty {
-		if len(ownerId) == 0 {
-			queryParts = append(queryParts, fmt.Sprintf(` owner.id IS NULL `))
-		} else if ownerIncludeEmpty {
-			queryParts = append(queryParts, fmt.Sprintf(` (owner.id IN $ownerId OR owner.id IS NULL) `))
-		} else {
-			queryParts = append(queryParts, fmt.Sprintf(` owner.id IN $ownerId `))
+	{
+		selectQuery += fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization_%s) `, tenant)
+		if len(ownerId) > 0 || ownerIncludeEmpty {
+			selectQuery += fmt.Sprintf(` OPTIONAL MATCH (o)<-[:OWNS]-(owner:User) WITH *`)
 		}
-	}
-	if socialFilterCypher != "" {
-		queryParts = append(queryParts, socialFilterCypher)
-	}
-	if tagFilterCypher != "" {
-		queryParts = append(queryParts, tagFilterCypher)
-	}
-	if locationFilterCypher != "" {
-		queryParts = append(queryParts, locationFilterCypher)
-	}
+		if socialFilterCypher != "" {
+			selectQuery += fmt.Sprintf(` OPTIONAL MATCH (o)-[:HAS]->(s:Social_%s) WITH *`, tenant)
+		}
+		if tagFilterCypher != "" {
+			selectQuery += fmt.Sprintf(` OPTIONAL MATCH (o)-[tr:TAGGED]->(t:Tag_%s) WITH *, count(tr) as trCount`, tenant)
+		}
+		if locationFilterCypher != "" {
+			selectQuery += fmt.Sprintf(` OPTIONAL MATCH (o)-[:ASSOCIATED_WITH]->(l:Location_%s) WITH *`, tenant)
+		}
+		if sort != nil && sort.By == SearchSortParamOwner {
+			selectQuery += fmt.Sprintf(` OPTIONAL MATCH (o)<-[:OWNS]-(owner:User_%s) WITH *`, tenant)
+		}
+		selectQuery += ` WHERE (o.hide = false OR o.hide IS NULL) `
 
+		if organizationFilterCypher != "" || socialFilterCypher != "" || tagFilterCypher != "" || locationFilterCypher != "" || len(ownerId) > 0 || ownerIncludeEmpty {
+			selectQuery += " AND "
+		}
+
+		queryParts := []string{}
+		if organizationFilterCypher != "" {
+			queryParts = append(queryParts, organizationFilterCypher)
+		}
+		if len(ownerId) > 0 || ownerIncludeEmpty {
+			if len(ownerId) == 0 {
+				queryParts = append(queryParts, fmt.Sprintf(` owner.id IS NULL `))
+			} else if ownerIncludeEmpty {
+				queryParts = append(queryParts, fmt.Sprintf(` (owner.id IN $ownerId OR owner.id IS NULL) `))
+			} else {
+				queryParts = append(queryParts, fmt.Sprintf(` owner.id IN $ownerId `))
+			}
+		}
+		if socialFilterCypher != "" {
+			queryParts = append(queryParts, socialFilterCypher)
+		}
+		if tagFilterCypher != "" {
+			queryParts = append(queryParts, tagFilterCypher)
+		}
+		if locationFilterCypher != "" {
+			queryParts = append(queryParts, locationFilterCypher)
+		}
+		selectQuery = selectQuery + strings.Join(queryParts, " AND ")
+	}
 	//endregion
-	selectQuery = selectQuery + strings.Join(queryParts, " AND ")
 
 	// sort region
 	//aliases := " o, d, l"
-	selectQuery += " WITH o, l "
+	selectQuery += " WITH o "
 	//if sort != nil && sort.By == SearchSortParamOwner {
 	//	if sort.Direction == commonmodel.SortingDirectionAsc {
 	//		selectQuery += ", CASE WHEN owner.firstName <> \"\" and not owner.firstName is null THEN owner.firstName ELSE 'ZZZZZZZZZZZZZZZZZZZ' END as OWNER_FIRST_NAME_FOR_SORTING "
