@@ -29,6 +29,7 @@ export const Mailboxes = observer(() => {
 
   const goToMailboxes = () => {
     navigate('/settings?tab=mailboxes');
+    store.mailboxes.resetBuyFlow();
   };
 
   const noOfDomains =
@@ -41,6 +42,7 @@ export const Mailboxes = observer(() => {
   useEffect(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const alertUser = (e: any) => {
+      if (showMailboxes) return;
       e.preventDefault();
       e.returnValue = '';
     };
@@ -50,7 +52,7 @@ export const Mailboxes = observer(() => {
     return () => {
       window.removeEventListener('beforeunload', alertUser);
     };
-  }, []);
+  }, [showMailboxes]);
 
   if (!hasMailboxes && showMailboxes) {
     return <EmptyMailboxes onUpdate={goBuy} />;

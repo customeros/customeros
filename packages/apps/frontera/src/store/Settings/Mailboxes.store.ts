@@ -72,7 +72,9 @@ export class MailboxesStore extends SyncableGroup<Mailbox, MailboxStore> {
 
   get totalAmount() {
     // multiply by 100 to convert to cents (required by stripe)
-    return (199.99 + this.extendedBundle.size * 18.99) * 100;
+    return parseFloat(
+      ((199.99 + this.extendedBundle.size * 18.99) * 100).toFixed(2),
+    );
   }
 
   public resetBuyFlow() {
@@ -99,7 +101,7 @@ export class MailboxesStore extends SyncableGroup<Mailbox, MailboxStore> {
         (d) => d !== domain,
       );
 
-      this.invalidBaseBundle = '';
+      this.validateBaseBundle();
     });
   }
 
@@ -114,7 +116,8 @@ export class MailboxesStore extends SyncableGroup<Mailbox, MailboxStore> {
       this.baseBundle = new Set(newArr.splice(0, 5));
       this.extendedBundle = new Set(newArr);
 
-      this.invalidDomains = [];
+      this.validateBaseBundle();
+      this.invalidDomains = this.invalidDomains.filter((d) => d !== domain);
     });
   }
 
@@ -132,7 +135,7 @@ export class MailboxesStore extends SyncableGroup<Mailbox, MailboxStore> {
       }
 
       if (!isValidUrl) {
-        this.invalidRedirectUrl = 'Ivalid URL';
+        this.invalidRedirectUrl = 'Invalid URL';
 
         valid = false;
 
@@ -150,10 +153,12 @@ export class MailboxesStore extends SyncableGroup<Mailbox, MailboxStore> {
     let valid = false;
 
     runInAction(() => {
-      if (this.baseBundle.size < 5) {
-        this.invalidBaseBundle = `Please add ${
-          5 - this.baseBundle.size
-        } more domains`;
+      const count = this.baseBundle.size;
+
+      if (count < 5) {
+        this.invalidBaseBundle = `Please add ${5 - count} more ${
+          count > 1 ? 'domains' : 'domain'
+        }`;
 
         valid = false;
 
@@ -173,8 +178,11 @@ export class MailboxesStore extends SyncableGroup<Mailbox, MailboxStore> {
     runInAction(() => {
       const [a, b] = this.usernames;
 
-      if (a.length === 0) {
-        this.invalidUsernames[0] = 'Houston we have a blank...';
+      if (a.length === 0 || b.length === 0) {
+        this.invalidUsernames = [
+          !a.length ? 'Houston we have a blank...' : '',
+          !b.length ? 'Houston we have a blank...' : '',
+        ];
 
         valid = false;
 

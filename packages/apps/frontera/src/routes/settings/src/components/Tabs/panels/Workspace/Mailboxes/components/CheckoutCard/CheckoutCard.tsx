@@ -35,7 +35,7 @@ export const CheckoutCard = observer(() => {
     <>
       <Card className='py-2 px-3 bg-white mt-2'>
         <CardContent className='p-0'>
-          <div className='flex items-center gap-1 bg-gray-50 rounded-lg py-1 px-2 leading-4'>
+          <div className='flex items-center gap-1 bg-gray-100 rounded-lg py-1 px-2 leading-4'>
             <CheckCircle className='size-7 text-gray-500 mr-2' />
             <p className='text-sm'>
               With{' '}
@@ -51,11 +51,12 @@ export const CheckoutCard = observer(() => {
             <div className='mb-2 bg-error-50 w-full flex items-center gap-2 rounded-lg py-1 px-2'>
               <DotSingle className='text-error-500 size-6' />
               <span className='text-error-700 text-sm'>
-                1 of your domains are unavailable
+                {store.mailboxes.invalidDomains.length} of your domains are
+                unavailable
               </span>
             </div>
           )}
-          {store.mailboxes.invalidBaseBundle && (
+          {!!store.mailboxes.invalidBaseBundle && (
             <div className='mb-2 bg-error-50 w-full flex items-center gap-2 rounded-lg py-1 px-2'>
               <DotSingle className='text-error-500 size-6' />
               <span className='text-error-700 text-sm'>

@@ -132,11 +132,14 @@ export const CheckoutPage = observer(() => {
   const navigate = useNavigate();
 
   return (
-    <div className='py-2 px-4 w-[full] border-r-[1px]'>
+    <div className='py-2 px-6 w-[full] border-r-[1px]'>
       <div className='flex items-center justify-start gap-1 mb-4'>
         <span
-          onClick={() => navigate('/settings?tab=mailboxes')}
           className='font-semibold text-gray-500 hover:text-gray-700 hover:cursor-pointer'
+          onClick={() => {
+            navigate('/settings?tab=mailboxes');
+            store.mailboxes.resetBuyFlow();
+          }}
         >
           Mailboxes
         </span>

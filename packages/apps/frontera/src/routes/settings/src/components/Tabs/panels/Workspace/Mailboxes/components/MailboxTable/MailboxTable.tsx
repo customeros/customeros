@@ -19,7 +19,7 @@ export const MailboxTable = observer(() => {
 
   return (
     <div className='w-full'>
-      <div className='px-3 pt-[5px] pb-[5px] flex items-center justify-between'>
+      <div className='pl-6 pr-3 pt-[5px] pb-[5px] flex items-center justify-between'>
         <h2 className='font-semibold text-md'>Mailboxes</h2>
         <Button
           size='xs'

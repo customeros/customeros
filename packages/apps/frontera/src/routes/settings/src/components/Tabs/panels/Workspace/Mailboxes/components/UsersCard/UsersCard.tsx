@@ -60,14 +60,14 @@ export const UsersCard = observer(() => {
             invalid={error2.length > 0}
             value={store.mailboxes.usernames[1]}
             onBlur={store.mailboxes.validateUsernames}
-            className={cn('w-full mt-0.5', error1.length === 0 && 'mb-[18px]')}
+            className={cn('w-full mt-0.5', error2.length === 0 && 'mb-[18px]')}
             onChange={(e) => {
               store.mailboxes.setUsername(1, e.target.value.trim());
             }}
           />
           {error2.length > 0 && (
             <span className='text-[12px] ml-[9px] text-error-400'>
-              {error1}
+              {error2}
             </span>
           )}
         </CardContent>
