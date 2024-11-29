@@ -542,9 +542,11 @@ func (s *emailService) GetPrimaryEmailForEntityId(ctx context.Context, entityTyp
 	}
 
 	if len(emailNodes) == 0 {
+		span.LogFields(log.Bool("result.found", false))
 		return nil, nil
 	}
 
+	span.LogFields(log.Bool("result.found", true))
 	return mapper.MapDbNodeToEmailEntity(emailNodes[0].Node), nil
 }
 
