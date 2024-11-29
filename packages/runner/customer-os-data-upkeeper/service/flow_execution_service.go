@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/config"
+	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/constants"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
@@ -117,7 +118,8 @@ func (s *flowExecutionService) ExecuteScheduledFlowActions() {
 
 		tenant := model.GetTenantFromLabels(actionExecutionNode.Labels, model.NodeLabelFlowActionExecution)
 		ctx = common.WithCustomContext(ctx, &common.CustomContext{
-			Tenant: tenant,
+			Tenant:    tenant,
+			AppSource: constants.AppSourceDataUpkeeper,
 		})
 
 		err := s.commonServices.FlowExecutionService.ProcessActionExecution(ctx, actionExecution)
