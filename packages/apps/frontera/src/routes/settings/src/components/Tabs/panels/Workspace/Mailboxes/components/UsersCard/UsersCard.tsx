@@ -42,10 +42,13 @@ export const UsersCard = observer(() => {
             placeholder='E.g. john'
             invalid={error1.length > 0}
             value={store.mailboxes.usernames[0]}
-            onBlur={store.mailboxes.validateUsernames}
             className={cn('w-full', error1.length === 0 && 'mb-[18px]')}
             onChange={(e) => {
-              store.mailboxes.setUsername(0, e.target.value.trim());
+              store.mailboxes.setUsername(
+                0,
+                e.target.value.trim().toLowerCase(),
+              );
+              store.mailboxes.validateUsernames();
             }}
           />
           {error1.length > 0 && (
@@ -59,10 +62,13 @@ export const UsersCard = observer(() => {
             placeholder='E.g. melinda'
             invalid={error2.length > 0}
             value={store.mailboxes.usernames[1]}
-            onBlur={store.mailboxes.validateUsernames}
             className={cn('w-full mt-0.5', error2.length === 0 && 'mb-[18px]')}
             onChange={(e) => {
-              store.mailboxes.setUsername(1, e.target.value.trim());
+              store.mailboxes.setUsername(
+                1,
+                e.target.value.trim().toLowerCase(),
+              );
+              store.mailboxes.validateUsernames();
             }}
           />
           {error2.length > 0 && (

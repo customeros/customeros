@@ -9,7 +9,8 @@ import {
   makeObservable,
 } from 'mobx';
 
-import { validateUrl } from '@utils/url';
+import { validateEmailLocalPart } from '@utils/email';
+import { validateUrl, validateDomain as validateDomainStr } from '@utils/url';
 
 import { MailboxStore, type Mailbox } from './Mailbox.store';
 import { MailboxesService } from './__service__/Mailboxes/Mailboxes.service';
@@ -26,6 +27,7 @@ export class MailboxesStore extends SyncableGroup<Mailbox, MailboxStore> {
   invalidUsernames: [string, string] = ['', ''];
   invalidRedirectUrl: string = '';
   invalidBaseBundle: string = '';
+  invalidDomain: string = '';
 
   constructor(public root: RootStore, public transport: Transport) {
     super(root, transport, MailboxStore);
@@ -48,6 +50,7 @@ export class MailboxesStore extends SyncableGroup<Mailbox, MailboxStore> {
       invalidUsernames: observable,
       invalidBaseBundle: observable,
       totalAmount: computed,
+      invalidDomain: observable,
     });
   }
 
@@ -85,8 +88,10 @@ export class MailboxesStore extends SyncableGroup<Mailbox, MailboxStore> {
     this.invalidDomains = [];
     this.domainSuggestions = [];
     this.redirectUrl = '';
+    this.invalidRedirectUrl = '';
     this.invalidUsernames = ['', ''];
     this.invalidBaseBundle = '';
+    this.invalidDomain = '';
   }
 
   public selectDomain(domain: string) {
@@ -120,6 +125,33 @@ export class MailboxesStore extends SyncableGroup<Mailbox, MailboxStore> {
       this.invalidDomains = this.invalidDomains.filter((d) => d !== domain);
     });
   }
+
+  public validateDomain = () => {
+    let valid = false;
+
+    runInAction(() => {
+      if (this.domain === '') {
+        this.invalidDomain = '';
+
+        valid = true;
+
+        return;
+      }
+
+      if (!validateDomainStr(this.domain)) {
+        this.invalidDomain = 'Invalid domain format';
+
+        valid = false;
+
+        return;
+      }
+
+      this.invalidDomain = '';
+      valid = true;
+    });
+
+    return valid;
+  };
 
   public validateRedirectUrl = () => {
     const isValidUrl = validateUrl(this.redirectUrl);
@@ -173,36 +205,17 @@ export class MailboxesStore extends SyncableGroup<Mailbox, MailboxStore> {
   };
 
   public validateUsernames = () => {
-    let valid = false;
-
     runInAction(() => {
-      const [a, b] = this.usernames;
+      this.invalidUsernames = this.usernames.map((v, i, arr) => {
+        if (v.length === 0) return 'Houston we have a blank...';
+        if (!validateEmailLocalPart(v)) return 'Invalid username format';
+        if (arr[i === 0 ? 1 : 0] === v) return 'This username is already used';
 
-      if (a.length === 0 || b.length === 0) {
-        this.invalidUsernames = [
-          !a.length ? 'Houston we have a blank...' : '',
-          !b.length ? 'Houston we have a blank...' : '',
-        ];
-
-        valid = false;
-
-        return;
-      }
-
-      if (a.length > 0 && b.length > 0 && a === b) {
-        this.invalidUsernames[0] = 'This username is already used';
-        this.invalidUsernames[1] = 'This username is already used';
-
-        valid = false;
-
-        return;
-      }
-
-      this.invalidUsernames = ['', ''];
-      valid = true;
+        return '';
+      }) as [string, string];
     });
 
-    return valid;
+    return this.invalidUsernames.every((v) => v === '');
   };
 
   public async validateBuy({ onSuccess }: { onSuccess?: () => void }) {

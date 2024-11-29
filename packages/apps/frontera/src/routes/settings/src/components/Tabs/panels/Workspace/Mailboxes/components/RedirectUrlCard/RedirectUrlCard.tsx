@@ -27,15 +27,15 @@ export const RedirectUrlCard = observer(() => {
           variant='outline'
           placeholder='Website URL'
           value={store.mailboxes.redirectUrl}
-          onBlur={store.mailboxes.validateRedirectUrl}
           invalid={store.mailboxes.invalidRedirectUrl.length > 0}
-          onChange={(e) => {
-            store.mailboxes.setRedirectUrl(e.target.value.trim());
-          }}
           className={cn(
             'w-full',
             store.mailboxes.invalidRedirectUrl.length === 0 && 'mb-[18px]',
           )}
+          onChange={(e) => {
+            store.mailboxes.setRedirectUrl(e.target.value.trim());
+            store.mailboxes.validateRedirectUrl();
+          }}
         />
         {store.mailboxes.invalidRedirectUrl.length > 0 && (
           <span className='text-[12px] ml-[9px] text-error-400'>

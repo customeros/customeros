@@ -1,1 +1,1 @@
-export * from './AddDoaminsCard';
+export * from './AddDomainsCard';

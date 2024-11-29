@@ -1,3 +1,5 @@
+import React from 'react';
+
 interface HighlightProps {
   term: string;
   className?: string;
@@ -15,14 +17,18 @@ export const Highlight = ({ term, className, children }: HighlightProps) => {
     return <>{children}</>;
   }
 
-  // Regex to match all occurrences of the term (case-insensitive)
-  const regex = new RegExp(`(${term})`, 'gi');
+  // Escape special regex characters in the term
+  const escapeRegex = (str: string) =>
+    str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+  const safeTerm = escapeRegex(term);
+  const regex = new RegExp(`(${safeTerm})`, 'gi');
   const parts = children.split(regex);
 
   return (
     <>
       {parts.map((part, index) =>
-        part.toLowerCase() === term.toLowerCase() ? (
+        regex.test(part) ? (
           <span key={index} className={className}>
             {part}
           </span>
