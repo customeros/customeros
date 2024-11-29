@@ -51,6 +51,11 @@ export const OrganizationFields = observer(() => {
     );
   }).length;
 
+  const emptyState =
+    searchInCoreFields === 1
+      ? `No custom field in sight, but ${searchInCoreFields} core field matches your search`
+      : `No custom field in sight, but ${searchInCoreFields} core fields match your search`;
+
   return (
     <Layout>
       <Header
@@ -67,28 +72,35 @@ export const OrganizationFields = observer(() => {
         </>
       </div>
       {activeTab('core') ? (
-        filteredCoreFields.map((field) => (
-          <div
-            key={field.columnId}
-            className='flex justify-between items-center'
-          >
-            <CustomFieldItem field={field} store={store} />
+        searchInCoreFields === 0 ? (
+          <div className='flex items-center justify-center'>
+            <p className='text-center text-sm text-gray-500 mt-4 '>
+              No fields insight...
+            </p>
           </div>
-        ))
+        ) : (
+          filteredCoreFields.map((field) => (
+            <div
+              key={field.columnId}
+              className='flex justify-between items-center'
+            >
+              <CustomFieldItem field={field} store={store} />
+            </div>
+          ))
+        )
       ) : (
         <>
-          {filteredCustomFields.length === 0 ? (
-            search && !searchInCoreFields ? (
+          {filteredCustomFields.length === 0 && search ? (
+            !searchInCoreFields ? (
               <div className='flex items-center justify-center'>
                 <p className='text-center text-sm text-gray-500 mt-4 '>
                   No fields insight...
                 </p>
               </div>
-            ) : search && searchInCoreFields ? (
+            ) : searchInCoreFields ? (
               <div className='flex items-center justify-center'>
                 <p className='text-center text-sm text-gray-500 mt-4 '>
-                  {`No custom field in sight, but ${searchInCoreFields} core fields
-                match your search`}
+                  {`${emptyState}`}
                 </p>
               </div>
             ) : (

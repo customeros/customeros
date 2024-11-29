@@ -17,25 +17,25 @@ import { PlusCircle } from '@ui/media/icons/PlusCircle';
 import { HandleDrag } from '@ui/media/icons/HandleDrag';
 import { RadioButton } from '@ui/media/icons/RadioButton';
 import {
-  Select,
-  components,
-  OptionProps,
-  getContainerClassNames,
-} from '@ui/form/Select';
-import {
   EntityType,
   CustomFieldTemplateType,
 } from '@shared/types/__generated__/graphql.types';
 import {
+  Select,
+  components,
+  OptionProps,
+  getMenuListClassNames,
+  getContainerClassNames,
+} from '@ui/form/Select';
+import {
   Modal,
   ModalBody,
-  ModalClose,
   ModalPortal,
   ModalFooter,
+  ModalHeader,
   ModalOverlay,
+  ModalContent,
   ModalCloseButton,
-  ModalFeaturedHeader,
-  ModalFeaturedContent,
 } from '@ui/overlay/Modal';
 
 import { DraggableItem } from './DraggbleItem';
@@ -191,14 +191,13 @@ export const CustomFieldModal = observer(
     return (
       <Modal open={isOpen} onOpenChange={(value) => onOpenChange(value)}>
         <ModalPortal>
-          <ModalOverlay className='z-[99]' />
-          <ModalFeaturedContent className='z-[99] '>
-            <ModalFeaturedHeader>
+          <ModalOverlay />
+          <ModalContent>
+            <ModalHeader>
               <p className='text-lg font-semibold'>{title}</p>
               <ModalCloseButton asChild />
-            </ModalFeaturedHeader>
-            <ModalCloseButton />
-            <ModalBody className='flex flex-col gap-4 max-h-[380px] overflow-y-auto'>
+            </ModalHeader>
+            <ModalBody className='flex flex-col gap-4'>
               <div className='flex flex-col gap-2'>
                 <div>
                   {!isEdit ? (
@@ -211,6 +210,7 @@ export const CustomFieldModal = observer(
                         className='mt-1'
                         autoFocus={false}
                         defaultValue={options[0]}
+                        onKeyDown={(e) => e.stopPropagation()}
                         components={{ Option, ValueContainer }}
                         onChange={(value) => {
                           setSelectedOption(value as typeof selectedOption);
@@ -225,6 +225,7 @@ export const CustomFieldModal = observer(
                               ...props,
                               size: 'sm',
                             }),
+                          menuList: () => getMenuListClassNames('ml-[-14px]'),
                         }}
                       />
                     </>
@@ -256,7 +257,11 @@ export const CustomFieldModal = observer(
                       setIsError(false);
                     }}
                   />
-                  {isError && <span>'Huston, we have a blank...'</span>}
+                  {isError && (
+                    <span className='text-error-500 text-sm ml-2'>
+                      Huston, we have a blank...
+                    </span>
+                  )}
                 </div>
                 {selectedOption?.id ===
                   CustomFieldTemplateType.SingleSelect && (
@@ -353,9 +358,9 @@ export const CustomFieldModal = observer(
               </div>
             </ModalBody>
             <ModalFooter className='flex gap-3'>
-              <ModalClose asChild className='w-full'>
+              <ModalCloseButton asChild>
                 <Button className='w-full'>Cancel</Button>
-              </ModalClose>
+              </ModalCloseButton>
               <Button
                 className='w-full'
                 colorScheme='primary'
@@ -385,7 +390,7 @@ export const CustomFieldModal = observer(
                 {isEdit ? 'Update field' : 'Create field'}
               </Button>
             </ModalFooter>
-          </ModalFeaturedContent>
+          </ModalContent>
         </ModalPortal>
       </Modal>
     );

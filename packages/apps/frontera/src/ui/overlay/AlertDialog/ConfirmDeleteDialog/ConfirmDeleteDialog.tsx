@@ -54,15 +54,20 @@ export const ConfirmDeleteDialog = ({
       <AlertDialogPortal>
         <AlertDialogOverlay>
           <AlertDialogContent className='rounded-xl'>
-            {!hideCloseButton && <AlertDialogCloseIconButton />}
+            <div className='flex items-start'>
+              <p className='font-semibold line-clamp-2'>{label}</p>
+              {!hideCloseButton && (
+                <AlertDialogCloseIconButton className='mt-[3px]' />
+              )}
+            </div>
             <AlertDialogHeader className='font-bold'>
-              <p className='pb-0 font-semibold truncate'>{label}</p>
               {description && (
                 <p className='mt-1 text-sm text-gray-700 font-normal'>
                   {description}
                 </p>
               )}
             </AlertDialogHeader>
+
             {body && <AlertDialogBody>{body}</AlertDialogBody>}
             <AlertDialogFooter>
               <AlertDialogCloseButton>
