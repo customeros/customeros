@@ -1,7 +1,9 @@
 import { useState } from 'react';
 
+import { runInAction } from 'mobx';
 import { observer } from 'mobx-react-lite';
 
+import { cn } from '@ui/utils/cn';
 import { Input } from '@ui/form/Input';
 import { Spinner } from '@ui/feedback/Spinner';
 import { Button } from '@ui/form/Button/Button';
@@ -23,18 +25,27 @@ import {
 
 export const AddDomainsCard = observer(() => {
   const store = useStore();
-  const [isHovered, setIsHovered] = useState<number | null>(null);
   const [showSecondHalf, setShowSecondHalf] = useState(false);
   const { open, onOpen, onClose } = useDisclosure();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    store.mailboxes.setDomainName(e.target.value);
+    store.mailboxes.setDomainName(e.target.value.toLowerCase());
+
+    if (store.mailboxes.domain === '') {
+      runInAction(() => {
+        store.mailboxes.domainSuggestions = [];
+      });
+    }
+
+    store.mailboxes.validateDomain();
   };
 
   const handleInputBlur = async () => {
     if (store.mailboxes.domain.trim() !== '') {
-      store.mailboxes.getDomainSuggestions();
-      setShowSecondHalf(false);
+      if (!store.mailboxes.invalidDomain) {
+        store.mailboxes.getDomainSuggestions();
+        setShowSecondHalf(false);
+      }
     }
   };
 
@@ -69,6 +80,7 @@ export const AddDomainsCard = observer(() => {
               onBlur={handleInputBlur}
               onChange={handleInputChange}
               value={store.mailboxes.domain}
+              invalid={store.mailboxes.invalidDomain.length > 0}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   e.currentTarget.blur();
@@ -91,13 +103,20 @@ export const AddDomainsCard = observer(() => {
               />
             )}
           </CardFooter>
-          <div className='mt-2'>
-            {displayedDomains.map((domain, index) => (
+          <span
+            className={cn(
+              'text-[12px] ml-[9px] text-error-400',
+              store.mailboxes.invalidDomain.length === 0 && 'opacity-0',
+              displayedDomains.length > 0 && 'hidden',
+            )}
+          >
+            {store.mailboxes.invalidDomain ?? '_'}
+          </span>
+          <div className={cn(displayedDomains.length > 0 && 'mt-2')}>
+            {displayedDomains.map((domain) => (
               <div
-                onMouseLeave={() => setIsHovered(null)}
                 key={`${domain}-${crypto.randomUUID()}`}
-                onMouseEnter={() => setIsHovered(index)}
-                className='flex items-center justify-between py-1 ml-[9px]'
+                className='group/item flex items-center justify-between py-1 ml-[9px] relative'
               >
                 <span className='text-sm'>
                   <Highlight
@@ -107,17 +126,16 @@ export const AddDomainsCard = observer(() => {
                     {domain}
                   </Highlight>
                 </span>
-                {isHovered === index && (
-                  <IconButton
-                    size='xxs'
-                    variant='ghost'
-                    aria-label='add to cart'
-                    icon={<ShoppingCartAdd className='text-primary-700' />}
-                    onClick={() => {
-                      store.mailboxes.selectDomain(domain);
-                    }}
-                  />
-                )}
+                <IconButton
+                  size='xs'
+                  variant='ghost'
+                  aria-label='add to cart'
+                  icon={<ShoppingCartAdd className='text-primary-600' />}
+                  className='absolute right-0 invisible group-hover/item:visible'
+                  onClick={() => {
+                    store.mailboxes.selectDomain(domain);
+                  }}
+                />
               </div>
             ))}
           </div>

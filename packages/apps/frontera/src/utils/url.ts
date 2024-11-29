@@ -1,10 +1,27 @@
-// Source: https://stackoverflow.com/a/8234912/2013580
-const urlRegExp = new RegExp(
-  /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=+$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=+$,\w]+@)[A-Za-z0-9.-]+)((?:\/[+~%/.\w-_]*)?\??(?:[-+=&;%@.\w_]*)#?(?:[\w]*))?)/,
-);
+/**
+ * Validates if a string contains only characters allowed in URL domains.
+ * @param domain - The domain string to validate.
+ * @returns `true` if the domain is valid, otherwise `false`.
+ */
+export function validateDomain(domain: string): boolean {
+  // Regular expression to match valid URL domain names
+  const domainRegex =
+    /^(?!-)(?!.*\.-)(?!.*-\.)[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*$/;
 
+  // Test if the domain matches the regex
+  return domainRegex.test(domain);
+}
+
+/**
+ * Validates if a string is a valid URL with or without protocol and subdomain.
+ * @param url - The URL string to validate.
+ * @returns `true` if the URL is valid, otherwise `false`.
+ */
 export function validateUrl(url: string): boolean {
-  // TODO Fix UI for link insertion; it should never default to an invalid URL such as https://.
-  // Maybe show a dialog where they user can type the URL before inserting it.
-  return url === 'https://' || urlRegExp.test(url);
+  // Regular expression to match valid URLs
+  const urlRegex =
+    /^(?:(https?:\/\/)?([a-zA-Z0-9-]+\.)?[a-zA-Z0-9-]+\.[a-zA-Z]{2,})(\/.*)?$/;
+
+  // Test if the URL matches the regex
+  return urlRegex.test(url);
 }
