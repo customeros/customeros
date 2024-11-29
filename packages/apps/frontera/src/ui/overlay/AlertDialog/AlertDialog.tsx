@@ -166,10 +166,11 @@ export const AlertDialogCloseIconButton = forwardRef<
     <RadixAlertDialog.Cancel
       asChild
       ref={ref}
-      className={twMerge('absolute right-3 top-3', className)}
+      className={twMerge('flex', className)}
       {...props}
     >
       <IconButton
+        size='xxs'
         variant='ghost'
         icon={<XClose />}
         colorScheme='gray'
