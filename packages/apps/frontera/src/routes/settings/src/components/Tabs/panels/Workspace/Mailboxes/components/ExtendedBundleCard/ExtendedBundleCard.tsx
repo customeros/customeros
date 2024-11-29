@@ -14,7 +14,7 @@ export const ExtendedBundleCard = observer(() => {
   const store = useStore();
   const invalidDomains = store.mailboxes.invalidDomains;
   const extendedDomains = store.mailboxes.extendedBundle;
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(true);
 
   return (
     <Card className='py-2 px-3 bg-white'>
@@ -37,8 +37,8 @@ export const ExtendedBundleCard = observer(() => {
             <div
               key={`${domain}-${index}`}
               className={cn(
-                'flex items-center justify-between mt-1 rounded-[4px] py-1 px-2 border',
-                isInvalid ? 'bg-error-50' : 'bg-gray-100',
+                'flex items-center justify-between mt-1 rounded-[4px] py-1 px-2 border border-gray-100 bg-gray-100',
+                isInvalid && 'bg-error-50 border-error-50',
               )}
             >
               <span className='text-sm'>{domain}</span>

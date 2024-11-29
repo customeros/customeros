@@ -4,7 +4,7 @@ import { ColumnDef as ColumnDefinition } from '@tanstack/react-table';
 
 import { createColumnHelper } from '@ui/presentation/Table';
 
-import { UserCell } from './cells';
+import { UserCell, MailboxCell } from './cells';
 
 type ColumnDatum = Mailbox;
 
@@ -18,8 +18,8 @@ export const columns: Column[] = [
   columnHelper.accessor('mailbox', {
     id: 'mailbox',
     minSize: 320,
-    cell: (props) => <p>{props.getValue()}</p>,
-    header: () => <p className='text-sm'>Mailboxes</p>,
+    cell: (props) => <MailboxCell mailbox={props.getValue()} />,
+    header: () => <p className='text-sm ml-8'>Mailboxes</p>,
     skeleton: () => null,
   }),
   columnHelper.accessor('mailbox', {

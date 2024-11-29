@@ -33,8 +33,8 @@ export const BaseBundleCard = observer(() => {
             <div
               key={`${name}-${index}`}
               className={cn(
-                'flex items-center justify-between mt-1 rounded-[4px] py-1 px-2 border',
-                isInvalid ? 'bg-error-50' : 'bg-gray-100',
+                'flex items-center justify-between mt-1 rounded-[4px] py-1 px-2 border border-gray-100 bg-gray-100',
+                isInvalid && 'bg-error-50 border-error-50',
               )}
             >
               <span className='text-sm'>{name}</span>
@@ -54,7 +54,7 @@ export const BaseBundleCard = observer(() => {
           (_, index) => (
             <div
               key={index}
-              className='flex items-center justify-between mt-1 border-dotted border border-gray-300 text-gray-400  rounded-[4px] py-1 px-2'
+              className='flex items-center justify-between mt-1 border-dotted border border-gray-300 text-gray-400 rounded-[4px] py-1 px-2'
             >
               <span className='text-sm'>
                 Domain {store.mailboxes.baseBundle.size + index + 1}
@@ -65,7 +65,8 @@ export const BaseBundleCard = observer(() => {
         {store.mailboxes.hasUsernames && (
           <CardHeader className='mt-2 flex justify-between items-center'>
             <span className='font-medium text-sm'>
-              {store.mailboxes.mailboxesCount} of 10 mailboxes
+              {store.mailboxes.baseBundle.size * store.mailboxes.usernamesCount}{' '}
+              of 10 mailboxes
             </span>
             <IconButton
               size='xxs'

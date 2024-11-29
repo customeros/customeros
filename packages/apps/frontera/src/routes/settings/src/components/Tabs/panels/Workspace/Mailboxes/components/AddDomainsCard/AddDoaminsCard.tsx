@@ -8,6 +8,7 @@ import { Button } from '@ui/form/Button/Button';
 import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
 import { SearchSm } from '@ui/media/icons/SearchSm';
+import { Highlight } from '@ui/presentation/Highlight';
 import { InfoCircle } from '@ui/media/icons/InfoCircle';
 import { RefreshCw01 } from '@ui/media/icons/RefreshCw01';
 import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
@@ -68,6 +69,11 @@ export const AddDomainsCard = observer(() => {
               onBlur={handleInputBlur}
               onChange={handleInputChange}
               value={store.mailboxes.domain}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.currentTarget.blur();
+                }
+              }}
             />
             {store.mailboxes.isLoading ? (
               <Spinner
@@ -93,7 +99,14 @@ export const AddDomainsCard = observer(() => {
                 onMouseEnter={() => setIsHovered(index)}
                 className='flex items-center justify-between py-1 ml-[9px]'
               >
-                <span className='text-sm'>{domain}</span>
+                <span className='text-sm'>
+                  <Highlight
+                    className='font-semibold'
+                    term={store.mailboxes.domain}
+                  >
+                    {domain}
+                  </Highlight>
+                </span>
                 {isHovered === index && (
                   <IconButton
                     size='xxs'
