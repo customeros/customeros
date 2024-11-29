@@ -63,8 +63,14 @@ export const NextFlowAction = observer(
       (node: ExtendedNode) => node.type === 'action',
     );
 
+    // console.log(actionNodes);
+
     const nextAction = contact.executions.find(
       (e) => e.scheduledAt && !e.executedAt,
+    );
+
+    const nextActionIndex = contact.executions.findIndex(
+      (e) => e?.scheduledAt && !e?.executedAt,
     );
 
     if (!nextAction) {
@@ -72,9 +78,6 @@ export const NextFlowAction = observer(
     }
 
     const nextActionNode = nodes.find(
-      (e: ExtendedNode) => e.internalId === nextAction?.action?.metadata?.id,
-    );
-    const nextActionIndex = actionNodes.findIndex(
       (e: ExtendedNode) => e.internalId === nextAction?.action?.metadata?.id,
     );
     const nextActionDate = nextAction.scheduledAt;
