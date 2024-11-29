@@ -1,0 +1,12 @@
+query getMailboxes {
+  mailstack_Mailboxes {
+    domain
+    mailbox
+    userId
+    rampUpRate
+    rampUpMax
+    rampUpCurrent
+    scheduledEmails
+    currentFlowIds
+  }
+}

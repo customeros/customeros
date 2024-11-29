@@ -664,6 +664,7 @@ export type GetTimelineQuery = {
             externalSource?: string | null;
           }>;
         }
+      | { __typename: 'MarkdownEvent' }
       | {
           __typename: 'MarkdownEvent';
           content?: string | null;

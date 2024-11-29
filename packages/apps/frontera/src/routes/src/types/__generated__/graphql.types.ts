@@ -376,6 +376,7 @@ export enum ColumnViewType {
   OrganizationsChurnDate = 'ORGANIZATIONS_CHURN_DATE',
   OrganizationsCity = 'ORGANIZATIONS_CITY',
   OrganizationsContactCount = 'ORGANIZATIONS_CONTACT_COUNT',
+  OrganizationsCountry = 'ORGANIZATIONS_COUNTRY',
   OrganizationsCreatedDate = 'ORGANIZATIONS_CREATED_DATE',
   OrganizationsEmployeeCount = 'ORGANIZATIONS_EMPLOYEE_COUNT',
   OrganizationsForecastArr = 'ORGANIZATIONS_FORECAST_ARR',
@@ -2929,6 +2930,7 @@ export type MutationMailstack_RegisterBuyDomainsWithMailboxesArgs = {
   amount: Scalars['Float']['input'];
   domains: Array<Scalars['String']['input']>;
   paymentIntentId: Scalars['String']['input'];
+  redirectWebsite?: InputMaybe<Scalars['String']['input']>;
   test: Scalars['Boolean']['input'];
   usernames: Array<Scalars['String']['input']>;
 };

@@ -1,3 +1,5 @@
+import { useFeatureIsOn } from '@growthbook/growthbook-react';
+
 import { Building03 } from '@ui/media/icons/Building03';
 import { SidenavItem } from '@shared/components/RootSidenav/components/SidenavItem';
 
@@ -13,6 +15,8 @@ export const WorkspaceSection = ({
   handleItemClick,
   checkIsActive,
 }: WorkspaceSectionProps) => {
+  const isMailboxEnabled = useFeatureIsOn('mailboxes');
+
   return (
     <div className='flex flex-col gap-2'>
       <div className='flex items-center gap-2 px-3'>
@@ -36,6 +40,13 @@ export const WorkspaceSection = ({
           isActive={checkIsActive('api')}
           onClick={handleItemClick('api')}
         />
+        {isMailboxEnabled && (
+          <SidenavItem
+            label='Mailboxes'
+            isActive={checkIsActive('mailboxes')}
+            onClick={handleItemClick('mailboxes')}
+          />
+        )}
       </div>
     </div>
   );

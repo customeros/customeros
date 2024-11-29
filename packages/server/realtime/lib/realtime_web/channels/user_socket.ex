@@ -72,6 +72,8 @@ defmodule RealtimeWeb.UserSocket do
   channel "CustomFields:*", RealtimeWeb.CustomFieldsChannel
   channel "FlowParticipant:*", RealtimeWeb.FlowParticipantChannel
   channel "FlowParticipants:*", RealtimeWeb.FlowParticipantsChannel
+  channel "Mailbox:*", RealtimeWeb.MailBoxChannel
+  channel "Mailboxes:*", RealtimeWeb.MailboxesChannel
 
   # Socket params are passed from the client and can
   # be used to verify and authenticate a user. After
