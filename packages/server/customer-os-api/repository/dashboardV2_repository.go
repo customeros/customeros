@@ -52,41 +52,26 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 		organizationFilter := new(utils.CypherFilter)
 		organizationFilter.Negate = false
 		organizationFilter.LogicalOperator = utils.AND
-		organizationFilter.Details = &utils.CypherFilterItem{
-			SupportCaseSensitive: true,
-		}
 		organizationFilter.Filters = make([]*utils.CypherFilter, 0)
 
 		socialFilter := new(utils.CypherFilter)
 		socialFilter.Negate = false
 		socialFilter.LogicalOperator = utils.AND
-		socialFilter.Details = &utils.CypherFilterItem{
-			SupportCaseSensitive: true,
-		}
 		socialFilter.Filters = make([]*utils.CypherFilter, 0)
 
 		tagFilter := new(utils.CypherFilter)
 		tagFilter.Negate = false
 		tagFilter.LogicalOperator = utils.AND
-		tagFilter.Details = &utils.CypherFilterItem{
-			SupportCaseSensitive: true,
-		}
 		tagFilter.Filters = make([]*utils.CypherFilter, 0)
 
 		emailFilter := new(utils.CypherFilter)
 		emailFilter.Negate = false
 		emailFilter.LogicalOperator = utils.OR
-		emailFilter.Details = &utils.CypherFilterItem{
-			SupportCaseSensitive: true,
-		}
 		emailFilter.Filters = make([]*utils.CypherFilter, 0)
 
 		locationFilter := new(utils.CypherFilter)
 		locationFilter.Negate = false
 		locationFilter.LogicalOperator = utils.OR
-		locationFilter.Details = &utils.CypherFilterItem{
-			SupportCaseSensitive: true,
-		}
 		locationFilter.Filters = make([]*utils.CypherFilter, 0)
 
 		for _, filter := range where.And {
@@ -164,6 +149,8 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 					cf.Details.NodeProperty = "name"
 					cf.Details.Value = filter.Filter.Value.Str
 					cf.Details.ComparisonOperator = filter.Filter.Operation
+					cf.Details.SupportCaseSensitive = true
+					cf.Details.CaseSensitive = false
 				}
 
 				tagFilter.Filters = append(tagFilter.Filters, &cf)

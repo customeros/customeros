@@ -474,7 +474,7 @@ func TestQueryResolver_UIOrganizationsSearch_FilterByTags(t *testing.T) {
 	neo4jtest.LinkNodes(ctx, driver, "org1", "tag2", "TAGGED")
 
 	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "org2"})
-	neo4jtest.CreateTag(ctx, driver, tenantName, neo4jentity.TagEntity{Id: "tag3", Name: "a"})
+	neo4jtest.CreateTag(ctx, driver, tenantName, neo4jentity.TagEntity{Id: "tag3", Name: "A"})
 	neo4jtest.CreateTag(ctx, driver, tenantName, neo4jentity.TagEntity{Id: "tag4", Name: "c"})
 	neo4jtest.LinkNodes(ctx, driver, "org2", "tag3", "TAGGED")
 	neo4jtest.LinkNodes(ctx, driver, "org2", "tag4", "TAGGED")
@@ -492,12 +492,12 @@ func TestQueryResolver_UIOrganizationsSearch_FilterByTags(t *testing.T) {
 	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorContains, 3, 2)
 	assertSearch(t, searchBy, "A", commonModel.ComparisonOperatorContains, 3, 2)
 	assertSearch(t, searchBy, "B", commonModel.ComparisonOperatorContains, 3, 1)
-	assertSearch(t, searchBy, "C", commonModel.ComparisonOperatorContains, 3, 1)
+	assertSearch(t, searchBy, "c", commonModel.ComparisonOperatorContains, 3, 1)
 	assertSearch(t, searchBy, "D", commonModel.ComparisonOperatorContains, 3, 0)
 
-	assertSearch(t, searchBy, "D", commonModel.ComparisonOperatorNotContains, 3, 3)
+	assertSearch(t, searchBy, "D", commonModel.ComparisonOperatorNotContains, 3, 2)
 	assertSearch(t, searchBy, "B", commonModel.ComparisonOperatorNotContains, 3, 2)
-	assertSearch(t, searchBy, "A", commonModel.ComparisonOperatorNotContains, 3, 1)
+	assertSearch(t, searchBy, "A", commonModel.ComparisonOperatorNotContains, 3, 2)
 }
 
 func TestQueryResolver_UIOrganizationsSearch_FilterByUpdatedAt(t *testing.T) {
