@@ -1,5 +1,4 @@
-// @openapi 3.0.0
-package events
+package flows
 
 import (
 	"encoding/json"

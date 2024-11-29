@@ -1,0 +1,148 @@
+package flows
+
+import (
+	"fmt"
+	"net/http"
+	"strings"
+	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
+)
+
+type CreateWebhookRequest struct {
+	Integration string `json:"integration"`
+}
+
+type CreateWebhookRecord struct {
+	URL         string `json:"url"`
+	Integration string `json:"integration"`
+	Secret      string `json:"secret"`
+}
+
+type CreateWebhookResponse struct {
+	rest.BaseResponse
+	Hook CreateWebhookRecord `json:"hook"`
+}
+
+func CreateWebhook(services *service.Services, baseURL, flowsPath string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "Create Webhook", c.Request.Header)
+		defer span.Finish()
+		tracing.TagComponentRest(span)
+
+		tenant := rest.ValidateTenant(c, ctx, span)
+		if tenant == "" {
+			rest.SendError(c, span, http.StatusUnauthorized, rest.ErrInvalidAPIKey)
+			return
+		}
+
+		var req CreateWebhookRequest
+		if err := c.ShouldBindJSON(&req); err != nil {
+			rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Missing parameter: integration"))
+			return
+		}
+
+		integration, err := services.WebhookService.GetIntegration(strings.ToLower(req.Integration))
+		if err != nil {
+			rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("please provide a valid integration value"))
+		}
+
+		webhookPath, secret, err := services.WebhookService.CreateIntegrationWebhook(ctx, tenant, service.Integration(integration))
+		if err != nil {
+			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInvalidAPIKey.WithMessage("Unable to create webhook"))
+			return
+		}
+
+		record := CreateWebhookRecord{
+			URL:         fmt.Sprintf("%s%s/%s", baseURL, flowsPath, webhookPath),
+			Integration: integration.String(),
+			Secret:      secret,
+		}
+
+		c.JSON(http.StatusCreated, CreateWebhookResponse{
+			BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
+			Hook:         record,
+		})
+	}
+}
+
+type NoActiveWebhooks struct {
+	rest.BaseResponse
+	Message string `json:"message"`
+}
+
+type OneActiveWebhook struct {
+	rest.BaseResponse
+	Hook ActiveWebhookRecord `json:"hook"`
+}
+
+type ActiveWebhooksResponse struct {
+	rest.BaseResponse
+	Hooks []ActiveWebhookRecord `json:"hooks"`
+}
+
+type ActiveWebhookRecord struct {
+	URL         string    `json:"url"`
+	Integration string    `json:"integration"`
+	CreatedAt   time.Time `json:"createdAt"`
+	Active      bool      `json:"active"`
+}
+
+func GetActiveWebhooks(services *service.Services, baseURL, flowsPath string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "GetActiveWebhooks", c.Request.Header)
+		defer span.Finish()
+		tracing.TagComponentRest(span)
+
+		tenant := rest.ValidateTenant(c, ctx, span)
+		if tenant == "" {
+			rest.SendError(c, span, http.StatusUnauthorized, rest.ErrInvalidAPIKey)
+			return
+		}
+
+		count, webhooks, err := services.CommonServices.PostgresRepositories.FlowWebhooksRepository.FindAllActiveWebhooks(ctx, tenant)
+		if err != nil {
+			err = fmt.Errorf("Unable to lookup active webhooks for %s: %v", tenant, err)
+			tracing.TraceErr(span, err)
+			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer)
+			return
+		}
+
+		if count == 0 {
+			c.JSON(http.StatusOK, NoActiveWebhooks{
+				BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
+				Message:      "No active webhooks",
+			})
+			return
+		}
+
+		results := make([]ActiveWebhookRecord, count)
+
+		for _, webhook := range webhooks {
+			record := ActiveWebhookRecord{
+				URL:         fmt.Sprintf("%s%s/%s", baseURL, flowsPath, webhook.WebhookPath),
+				Integration: webhook.Integration,
+				CreatedAt:   webhook.CreatedAt,
+				Active:      webhook.Enabled,
+			}
+			results = append(results, record)
+		}
+
+		if count == 1 {
+			c.JSON(http.StatusOK, OneActiveWebhook{
+				BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
+				Hook:         results[0],
+			})
+			return
+		}
+
+		c.JSON(http.StatusOK, ActiveWebhooksResponse{
+			BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
+			Hooks:        results,
+		})
+	}
+}

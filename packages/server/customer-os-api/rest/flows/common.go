@@ -1,12 +1,12 @@
-// @openapi 3.0.0
-package events
+package flows
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/pkg/errors"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 )
 
 func getParticipantOrganizationIds(ctx rest.HTTPContext, domains []string) ([]string, error) {

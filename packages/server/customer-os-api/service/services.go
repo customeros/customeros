@@ -96,7 +96,7 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, cfg *confi
 	services.SlackService = NewSlackService(log, repositories, grpcClients, &services)
 	services.FileStoreApiService = fsc.NewFileStoreApiService(&cfg.InternalServices.FileStoreApiConfig)
 	services.EnrichmentService = NewEnrichmentService(log, &services, cfg)
-	services.WebhookService = NewWebhookService(log, repositories, &services, cfg)
+	services.WebhookService = NewWebhookService(log, repositories, &services)
 
 	log.Info("Init cache service")
 	services.Cache = NewCacheService(&services)
