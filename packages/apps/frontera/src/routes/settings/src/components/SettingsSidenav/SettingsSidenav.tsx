@@ -13,7 +13,6 @@ import { SidenavItem } from '@shared/components/RootSidenav/components/SidenavIt
 import { useKeyboardNavigation } from '@shared/components/RootSidenav/hooks/useKeyboardNavigation';
 
 import { WorkspaceSection } from './components';
-import { FieldsSection } from './components/FieldsSection';
 
 export const SettingsSidenav = () => {
   const navigate = useNavigate();
@@ -87,10 +86,10 @@ export const SettingsSidenav = () => {
             />
           }
         />
-        <FieldsSection
+        {/* <FieldsSection
           checkIsActive={checkIsActive}
           handleItemClick={handleItemClick}
-        />
+        /> */}
         <SidenavItem
           label='Customer billing'
           isActive={checkIsActive('billing')}
