@@ -1100,9 +1100,13 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 				}
 
 				toEmail := primaryEmail.RawEmail
+				span.LogFields(log.String("process.toEmail", toEmail))
 
-				subjectTemplate := *currentAction.Data.Subject
-				bodyTemplate := *currentAction.Data.BodyTemplate
+				subjectTemplate := utils.IfNotNilString(currentAction.Data.Subject)
+				bodyTemplate := utils.IfNotNilString(currentAction.Data.BodyTemplate)
+
+				span.LogFields(log.Bool("process.bodyTemplate.available", bodyTemplate != ""))
+				span.LogFields(log.Bool("process.subjectTemplate.available", subjectTemplate != ""))
 
 				span.LogFields(log.String("process.scheduledActionExecution.EntityType", scheduledActionExecution.EntityType.String()))
 				if scheduledActionExecution.EntityType == model.CONTACT {
