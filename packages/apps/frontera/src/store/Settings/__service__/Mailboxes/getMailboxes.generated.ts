@@ -1,10 +1,8 @@
 import * as Types from '../../../../routes/src/types/__generated__/graphql.types';
 
-export type MailstackMailboxesQueryVariables = Types.Exact<{
-  [key: string]: never;
-}>;
+export type GetMailboxesQueryVariables = Types.Exact<{ [key: string]: never }>;
 
-export type MailstackMailboxesQuery = {
+export type GetMailboxesQuery = {
   __typename?: 'Query';
   mailstack_Mailboxes: Array<{
     __typename?: 'Mailbox';
@@ -14,5 +12,7 @@ export type MailstackMailboxesQuery = {
     rampUpRate: number;
     rampUpMax: number;
     rampUpCurrent: number;
+    scheduledEmails: any;
+    currentFlowIds?: Array<string> | null;
   }>;
 };

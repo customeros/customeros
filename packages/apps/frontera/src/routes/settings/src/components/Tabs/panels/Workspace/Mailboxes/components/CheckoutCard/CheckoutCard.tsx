@@ -1,4 +1,4 @@
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
 
@@ -15,22 +15,14 @@ const formatNumberWithComma = (num: number): string => {
 
 export const CheckoutCard = observer(() => {
   const store = useStore();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
 
   const handlePaymentView = async () => {
-    // store.mailboxes.validateDomains({
-    //   onSuccess: () => {
-    //     const params = new URLSearchParams(searchParams.toString() ?? '');
-    //
-    //     params.set('checkout', 'mailboxes');
-    //     setSearchParams(params.toString());
-    //   },
-    // });
-
-    const params = new URLSearchParams(searchParams.toString() ?? '');
-
-    params.set('checkout', 'mailboxes');
-    setSearchParams(params.toString());
+    store.mailboxes.validateBuy({
+      onSuccess: () => {
+        navigate('/settings?tab=mailboxes&view=checkout');
+      },
+    });
   };
 
   const noOfMailboxes = store.mailboxes.mailboxesCount;
@@ -60,6 +52,14 @@ export const CheckoutCard = observer(() => {
               <DotSingle className='text-error-500 size-6' />
               <span className='text-error-700 text-sm'>
                 1 of your domains are unavailable
+              </span>
+            </div>
+          )}
+          {store.mailboxes.invalidBaseBundle && (
+            <div className='mb-2 bg-error-50 w-full flex items-center gap-2 rounded-lg py-1 px-2'>
+              <DotSingle className='text-error-500 size-6' />
+              <span className='text-error-700 text-sm'>
+                {store.mailboxes.invalidBaseBundle}
               </span>
             </div>
           )}

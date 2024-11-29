@@ -1,14 +1,13 @@
-mutation RegisterBuyDomainsWithMailboxes(
+mutation getPaymentIntent(
   $domains: [String!]!
   $usernames: [String!]!
   $amount: Float!
 ) {
-  mailstack_RegisterBuyDomainsWithMailboxes(
+  mailstack_GetPaymentIntent(
     domains: $domains
     usernames: $usernames
     amount: $amount
   ) {
-    id
     clientSecret
   }
 }

@@ -376,6 +376,7 @@ export enum ColumnViewType {
   OrganizationsChurnDate = 'ORGANIZATIONS_CHURN_DATE',
   OrganizationsCity = 'ORGANIZATIONS_CITY',
   OrganizationsContactCount = 'ORGANIZATIONS_CONTACT_COUNT',
+  OrganizationsCountry = 'ORGANIZATIONS_COUNTRY',
   OrganizationsCreatedDate = 'ORGANIZATIONS_CREATED_DATE',
   OrganizationsEmployeeCount = 'ORGANIZATIONS_EMPLOYEE_COUNT',
   OrganizationsForecastArr = 'ORGANIZATIONS_FORECAST_ARR',
@@ -2220,46 +2221,6 @@ export type Mailbox = {
   userId?: Maybe<Scalars['ID']['output']>;
 };
 
-export type MailstackBuyRequest = {
-  __typename?: 'MailstackBuyRequest';
-  createdAt: Scalars['Time']['output'];
-  domains: Array<MailstackBuyRequestDomain>;
-  id: Scalars['String']['output'];
-  mailboxes: Array<MailstackBuyRequestMailbox>;
-  status: MailstackBuyRequestStatus;
-};
-
-export type MailstackBuyRequestDomain = {
-  __typename?: 'MailstackBuyRequestDomain';
-  domain: Scalars['String']['output'];
-  status: MailstackBuyRequestDomainStatus;
-};
-
-export enum MailstackBuyRequestDomainStatus {
-  Completed = 'COMPLETED',
-  Failed = 'FAILED',
-  Pending = 'PENDING',
-}
-
-export type MailstackBuyRequestMailbox = {
-  __typename?: 'MailstackBuyRequestMailbox';
-  mailbox: Scalars['String']['output'];
-  status: MailstackBuyRequestMailboxStatus;
-};
-
-export enum MailstackBuyRequestMailboxStatus {
-  Completed = 'COMPLETED',
-  Failed = 'FAILED',
-  Pending = 'PENDING',
-}
-
-export enum MailstackBuyRequestStatus {
-  AwaitingPayment = 'AWAITING_PAYMENT',
-  Completed = 'COMPLETED',
-  Failed = 'FAILED',
-  Pending = 'PENDING',
-}
-
 export type MarkdownEvent = {
   __typename?: 'MarkdownEvent';
   content?: Maybe<Scalars['String']['output']>;
@@ -2969,6 +2930,7 @@ export type MutationMailstack_RegisterBuyDomainsWithMailboxesArgs = {
   amount: Scalars['Float']['input'];
   domains: Array<Scalars['String']['input']>;
   paymentIntentId: Scalars['String']['input'];
+  redirectWebsite?: InputMaybe<Scalars['String']['input']>;
   test: Scalars['Boolean']['input'];
   usernames: Array<Scalars['String']['input']>;
 };

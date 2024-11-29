@@ -1,49 +1,38 @@
 import { match } from 'ts-pattern';
 import { Operation } from '@store/types';
-import { makePayload } from '@store/util';
 import { Transport } from '@store/transport';
 import { MailboxStore } from '@store/Settings/Mailbox.store';
 
-import MailstackDomainsDocument from './getMailstackDomains.graphql';
+import BuyDomainsDocument from './buyDomains.graphql';
+import GetDomainsDocument from './getDomains.graphql';
+import { GetDomainsQuery } from './getDomains.generated';
+import GetMailboxesDocument from './getMailboxes.graphql';
+import { GetMailboxesQuery } from './getMailboxes.generated';
+import ValidateDomainsDocument from './validateDomains.graphql';
+import GetPaymentIntentDocument from './getPaymentIntent.graphql';
 import MailstackSetUserDocument from './updateMailstackSetUser.graphql';
-import MailstackMailboxesDocument from './getMailstackMailboxes.graphql';
-import MailstackUniqueUsernamesDocument from './getMailstackUniqueUsernames.graphql';
-import CheckUnavailableDomainsDocument from './getMailstackCheckUnavailableDomains.graphql';
-import RegisterBuyDomainsWithMailboxesDocument from './updateRegisterBuyDomainsWithMailboxes.graphql';
-import GetRegisteredBuyDomainsWithMailboxesDocument from './getRegisteredBuyDomainsWithMailboxes.graphql';
-import MailstackDomainPurchaseSuggestionsDocument from './getMailstackDomainsPurchaseSuggestions.graphql';
+import GetDomainSuggestionsDocument from './getDomainSuggestions.graphql';
 import {
-  MailstackDomainsQuery,
-  MailstackDomainsQueryVariables,
-} from './getMailstackDomains.generated';
+  BuyDomainsMutation,
+  BuyDomainsMutationVariables,
+} from './buyDomains.generated';
 import {
-  MailstackMailboxesQuery,
-  MailstackMailboxesQueryVariables,
-} from './getMailstackMailboxes.generated';
+  ValidateDomainsQuery,
+  ValidateDomainsQueryVariables,
+} from './validateDomains.generated';
+import {
+  GetPaymentIntentMutation,
+  GetPaymentIntentMutationVariables,
+} from './getPaymentIntent.generated';
+import {
+  GetDomainSuggestionsQuery,
+  GetDomainSuggestionsQueryVariables,
+} from './getDomainSuggestions.generated';
 import {
   MailstackSetUserMutation,
   MailstackSetUserMutationVariables,
 } from './updateMailstackSetUser.generated';
-import {
-  MailstackUniqueUsernamesQuery,
-  MailstackUniqueUsernamesQueryVariables,
-} from './getMailstackUniqueUsernames.generated';
-import {
-  CheckUnavailableDomainsQuery,
-  CheckUnavailableDomainsQueryVariables,
-} from './getMailstackCheckUnavailableDomains.generated';
-import {
-  RegisterBuyDomainsWithMailboxesMutation,
-  RegisterBuyDomainsWithMailboxesMutationVariables,
-} from './updateRegisterBuyDomainsWithMailboxes.generated';
-import {
-  MailstackDomainPurchaseSuggestionsQuery,
-  MailstackDomainPurchaseSuggestionsQueryVariables,
-} from './getMailstackDomainsPurchaseSuggestions.generated';
-import {
-  GetRegisteredBuyDomainsWithMailboxesQuery,
-  GetRegisteredBuyDomainsWithMailboxesQueryVariables,
-} from './getRegisteredBuyDomainsWithMailboxes.generated';
+
 export class MailboxesService {
   private static instance: MailboxesService;
   private transport: Transport;
@@ -60,91 +49,83 @@ export class MailboxesService {
     return MailboxesService.instance;
   }
 
-  async getMailstackDomainsSuggestions(
-    payload: MailstackDomainPurchaseSuggestionsQueryVariables,
-  ) {
+  async getDomainSuggestions(payload: GetDomainSuggestionsQueryVariables) {
     return this.transport.graphql.request<
-      MailstackDomainPurchaseSuggestionsQuery,
-      MailstackDomainPurchaseSuggestionsQueryVariables
-    >(MailstackDomainPurchaseSuggestionsDocument, payload);
+      GetDomainSuggestionsQuery,
+      GetDomainSuggestionsQueryVariables
+    >(GetDomainSuggestionsDocument, payload);
   }
 
   async getMailstackDomains() {
-    return this.transport.graphql.request<
-      MailstackDomainsQuery,
-      MailstackDomainsQueryVariables
-    >(MailstackDomainsDocument);
+    return this.transport.graphql.request<GetDomainsQuery>(GetDomainsDocument);
   }
 
-  async getMailstackCheckUnavailableDomains(
-    payload: CheckUnavailableDomainsQueryVariables,
-  ) {
+  async validateDomains(payload: ValidateDomainsQueryVariables) {
     return this.transport.graphql.request<
-      CheckUnavailableDomainsQuery,
-      CheckUnavailableDomainsQueryVariables
-    >(CheckUnavailableDomainsDocument, payload);
+      ValidateDomainsQuery,
+      ValidateDomainsQueryVariables
+    >(ValidateDomainsDocument, payload);
   }
 
-  async getMailstackMailboxes() {
-    return this.transport.graphql.request<
-      MailstackMailboxesQuery,
-      MailstackMailboxesQueryVariables
-    >(MailstackMailboxesDocument);
+  async getMailboxes() {
+    return this.transport.graphql.request<GetMailboxesQuery>(
+      GetMailboxesDocument,
+    );
   }
 
-  async getMailstackUniqueUsernames() {
-    return this.transport.graphql.request<
-      MailstackUniqueUsernamesQuery,
-      MailstackUniqueUsernamesQueryVariables
-    >(MailstackUniqueUsernamesDocument);
-  }
-
-  async updateMailstackUsernames(payload: MailstackSetUserMutationVariables) {
+  async updateUser(payload: MailstackSetUserMutationVariables) {
     return this.transport.graphql.request<
       MailstackSetUserMutation,
       MailstackSetUserMutationVariables
     >(MailstackSetUserDocument, payload);
   }
 
-  async getRegisteredMailboxes() {
+  async buyDomains(payload: BuyDomainsMutationVariables) {
     return this.transport.graphql.request<
-      GetRegisteredBuyDomainsWithMailboxesQuery,
-      GetRegisteredBuyDomainsWithMailboxesQueryVariables
-    >(GetRegisteredBuyDomainsWithMailboxesDocument);
+      BuyDomainsMutation,
+      BuyDomainsMutationVariables
+    >(BuyDomainsDocument, payload);
   }
 
-  async createMailbox(
-    payload: RegisterBuyDomainsWithMailboxesMutationVariables,
-  ) {
+  async getPaymentIntent(payload: GetPaymentIntentMutationVariables) {
     return this.transport.graphql.request<
-      RegisterBuyDomainsWithMailboxesMutation,
-      RegisterBuyDomainsWithMailboxesMutationVariables
-    >(RegisterBuyDomainsWithMailboxesDocument, payload);
+      GetPaymentIntentMutation,
+      GetPaymentIntentMutationVariables
+    >(GetPaymentIntentDocument, payload);
   }
 
-  public async mutateOperation(operation: Operation, _store: MailboxStore) {
+  public async mutateOperation(operation: Operation, store: MailboxStore) {
     const diff = operation.diff?.[0];
     const path = diff?.path;
-    const mailboxNumber = operation.entityId;
-    // const mailboxId = store.value.id;
+    const mailboxId = operation.entityId;
 
     if (!operation.diff.length) {
       return;
     }
 
-    if (!mailboxNumber) {
+    if (!mailboxId) {
       console.error('Missing entityId in Operation! Mutations will not fire.');
 
       return;
     }
     match(path)
-      .with(['domain'], () => {
-        const payload =
-          makePayload<MailstackDomainPurchaseSuggestionsQueryVariables>(
-            operation,
-          );
+      .with(['userId'], async () => {
+        try {
+          await this.updateUser({
+            mailbox: store.value.mailbox,
+            userId: diff.val,
+          });
 
-        this.getMailstackDomainsSuggestions({ ...payload });
+          store.root.ui.toastSuccess(
+            'Mailbox user updated',
+            'mailbox-user-update',
+          );
+        } catch (err) {
+          store.root.ui.toastError(
+            'Could not update mailbox user',
+            'mailbox-user-update',
+          );
+        }
       })
 
       .otherwise(() => {});

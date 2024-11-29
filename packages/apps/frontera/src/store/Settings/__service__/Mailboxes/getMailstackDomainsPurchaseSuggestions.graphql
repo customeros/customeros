@@ -1,3 +1,0 @@
-query mailstack_DomainPurchaseSuggestions($domain: String!) {
-  mailstack_DomainPurchaseSuggestions(domain: $domain)
-}

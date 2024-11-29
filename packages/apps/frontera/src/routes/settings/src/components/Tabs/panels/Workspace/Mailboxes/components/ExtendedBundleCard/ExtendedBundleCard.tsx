@@ -55,7 +55,7 @@ export const ExtendedBundleCard = observer(() => {
           );
         })}
         {extendedDomains.size === 0 && (
-          <p className='text-sm'> Add more domains at $18.99 each(53% off)</p>
+          <p className='text-sm'> Add more domains at $18.99 each (53% off)</p>
         )}
         {store.mailboxes.usernamesCount > 0 && extendedDomains.size > 0 && (
           <CardHeader className='mt-2 flex justify-between items-center'>

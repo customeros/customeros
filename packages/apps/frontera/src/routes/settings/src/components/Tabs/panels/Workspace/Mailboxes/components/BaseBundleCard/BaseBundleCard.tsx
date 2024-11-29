@@ -13,7 +13,7 @@ import { Card, CardHeader, CardContent } from '@ui/presentation/Card/Card';
 export const BaseBundleCard = observer(() => {
   const store = useStore();
   const invalidDomains = store.mailboxes.invalidDomains;
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(true);
 
   return (
     <Card className='py-2 px-3 bg-white'>

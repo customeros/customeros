@@ -1,24 +1,24 @@
 import { RootStore } from '@store/root';
 import { Syncable } from '@store/syncable';
 import { Transport } from '@store/transport';
-import { action, override, makeObservable } from 'mobx';
-
-import {
-  MailstackBuyRequest,
-  MailstackBuyRequestStatus,
-} from '@shared/types/__generated__/graphql.types';
+import { action, override, computed, makeObservable } from 'mobx';
 
 import { MailboxesService } from './__service__/Mailboxes/Mailboxes.service';
+import { GetMailboxesQuery } from './__service__/Mailboxes/getMailboxes.generated';
 
-export class MailboxStore extends Syncable<MailstackBuyRequest> {
+export type Mailbox = NonNullable<
+  GetMailboxesQuery['mailstack_Mailboxes'][number]
+>;
+
+export class MailboxStore extends Syncable<Mailbox> {
   private service: MailboxesService;
 
   constructor(
     public root: RootStore,
     public transport: Transport,
-    data: MailstackBuyRequest,
+    data: Mailbox,
   ) {
-    super(root, transport, data ?? getDefaultValue());
+    super(root, transport, data ?? MailboxStore.getDefaultValue());
     this.service = MailboxesService.getInstance(transport);
 
     makeObservable<MailboxStore>(this, {
@@ -27,42 +27,39 @@ export class MailboxStore extends Syncable<MailstackBuyRequest> {
       setId: override,
       getId: override,
       invalidate: action,
-      getMailbox: action,
       getChannelName: override,
+      user: computed,
     });
   }
 
-  getMailbox() {
-    return this.service.getMailstackMailboxes();
+  get user() {
+    if (!this.value.userId) return null;
+
+    return this.root.users.value.get(this.value.userId) ?? null;
   }
 
   getId() {
-    return this.value.id;
+    return this.value.mailbox;
   }
 
   setId(id: string) {
-    this.value.id = id;
+    this.value.mailbox = id;
   }
 
   getChannelName(): string {
-    return 'Mailbox';
+    return 'Mailboxes';
   }
 
-  static getDefaultValue(): MailstackBuyRequest {
+  static getDefaultValue(): Mailbox {
     return {
-      id: crypto.randomUUID(),
-      domains: [],
-      mailboxes: [],
-      createdAt: new Date().toISOString(),
-      status: MailstackBuyRequestStatus.Pending,
+      domain: '',
+      mailbox: crypto.randomUUID(),
+      userId: '',
+      rampUpMax: 0,
+      rampUpRate: 0,
+      rampUpCurrent: 0,
+      scheduledEmails: 0,
+      currentFlowIds: [],
     };
   }
 }
-
-export const getDefaultValue = (): MailstackBuyRequest => ({
-  id: crypto.randomUUID(),
-  domains: [],
-  createdAt: new Date().toISOString(),
-  mailboxes: [],
-  status: MailstackBuyRequestStatus.Pending,
-});

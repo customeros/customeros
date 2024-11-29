@@ -1,6 +1,6 @@
 import * as Types from '../../../../routes/src/types/__generated__/graphql.types';
 
-export type RegisterBuyDomainsWithMailboxesMutationVariables = Types.Exact<{
+export type GetPaymentIntentMutationVariables = Types.Exact<{
   domains:
     | Array<Types.Scalars['String']['input']>
     | Types.Scalars['String']['input'];
@@ -10,11 +10,10 @@ export type RegisterBuyDomainsWithMailboxesMutationVariables = Types.Exact<{
   amount: Types.Scalars['Float']['input'];
 }>;
 
-export type RegisterBuyDomainsWithMailboxesMutation = {
+export type GetPaymentIntentMutation = {
   __typename?: 'Mutation';
-  mailstack_RegisterBuyDomainsWithMailboxes: {
-    __typename?: 'RegisterBuyDomainWithMailboxes';
-    id: string;
+  mailstack_GetPaymentIntent: {
+    __typename?: 'GetPaymentIntent';
     clientSecret: string;
   };
 };

@@ -1,4 +1,4 @@
-query mailstack_Mailboxes {
+query getMailboxes {
   mailstack_Mailboxes {
     domain
     mailbox
@@ -6,5 +6,7 @@ query mailstack_Mailboxes {
     rampUpRate
     rampUpMax
     rampUpCurrent
+    scheduledEmails
+    currentFlowIds
   }
 }

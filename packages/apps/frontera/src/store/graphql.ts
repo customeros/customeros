@@ -6,6 +6,7 @@ import type { Transport } from './transport';
 import { RootStore } from './root';
 import { ContactService } from './Contacts/__service__/Contacts.service';
 import { InvoicesService } from './Invoices/__service__/Invoices.service';
+import { MailboxesService } from './Settings/__service__/Mailboxes/Mailboxes.service';
 import { OrganizationsService } from './Organizations/__service__/Organizations.service';
 import { CustomFieldsService } from './Settings/__service__/CustomFields/CustomFields.service';
 
@@ -14,6 +15,7 @@ export class GraphqlService {
   private customFieldsService: CustomFieldsService;
   private invoiceService: InvoicesService;
   private contactService: ContactService;
+  private mailboxService: MailboxesService;
 
   constructor(private root: RootStore, private transport: Transport) {
     this.organizationsService = OrganizationsService.getInstance(
@@ -22,6 +24,7 @@ export class GraphqlService {
     this.customFieldsService = CustomFieldsService.getInstance(this.transport);
     this.invoiceService = InvoicesService.getInstance(this.transport);
     this.contactService = ContactService.getInstance(this.transport);
+    this.mailboxService = MailboxesService.getInstance(this.transport);
     this.getStore = this.getStore.bind(this);
   }
 
@@ -63,6 +66,13 @@ export class GraphqlService {
         if (!store) return;
 
         return await this.contactService.mutateOperation(operation, store);
+      })
+      .with('Mailboxes', async () => {
+        const store = this.getStore(operation, 'mailboxes');
+
+        if (!store) return;
+
+        return await this.mailboxService.mutateOperation(operation, store);
       })
       .otherwise(() => {});
   }

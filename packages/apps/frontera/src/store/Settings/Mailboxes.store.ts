@@ -9,22 +9,23 @@ import {
   makeObservable,
 } from 'mobx';
 
-import { MailstackBuyRequest } from '@shared/types/__generated__/graphql.types';
+import { validateUrl } from '@utils/url';
 
-import { MailboxStore } from './Mailbox.store';
+import { MailboxStore, type Mailbox } from './Mailbox.store';
 import { MailboxesService } from './__service__/Mailboxes/Mailboxes.service';
 
-export class MailboxesStore extends SyncableGroup<
-  MailstackBuyRequest,
-  MailboxStore
-> {
+export class MailboxesStore extends SyncableGroup<Mailbox, MailboxStore> {
   private service: MailboxesService;
   domain: string = '';
   baseBundle: Set<string> = new Set();
   extendedBundle: Set<string> = new Set();
   invalidDomains: string[] = [];
   domainSuggestions: string[] = [];
+  redirectUrl: string = '';
   usernames: [string, string] = ['', ''];
+  invalidUsernames: [string, string] = ['', ''];
+  invalidRedirectUrl: string = '';
+  invalidBaseBundle: string = '';
 
   constructor(public root: RootStore, public transport: Transport) {
     super(root, transport, MailboxStore);
@@ -38,10 +39,15 @@ export class MailboxesStore extends SyncableGroup<
       invalidDomains: observable,
       domainSuggestions: observable,
       usernames: observable,
+      redirectUrl: observable,
       hasUsernames: computed,
       domainCount: computed,
       mailboxesCount: computed,
       usernamesCount: computed,
+      invalidRedirectUrl: observable,
+      invalidUsernames: observable,
+      invalidBaseBundle: observable,
+      totalAmount: computed,
     });
   }
 
@@ -64,6 +70,23 @@ export class MailboxesStore extends SyncableGroup<
     );
   }
 
+  get totalAmount() {
+    // multiply by 100 to convert to cents (required by stripe)
+    return (199.99 + this.extendedBundle.size * 18.99) * 100;
+  }
+
+  public resetBuyFlow() {
+    this.baseBundle.clear();
+    this.extendedBundle.clear();
+    this.usernames = ['', ''];
+    this.domain = '';
+    this.invalidDomains = [];
+    this.domainSuggestions = [];
+    this.redirectUrl = '';
+    this.invalidUsernames = ['', ''];
+    this.invalidBaseBundle = '';
+  }
+
   public selectDomain(domain: string) {
     runInAction(() => {
       if (this.baseBundle.size < 5) {
@@ -75,23 +98,126 @@ export class MailboxesStore extends SyncableGroup<
       this.domainSuggestions = this.domainSuggestions.filter(
         (d) => d !== domain,
       );
+
+      this.invalidBaseBundle = '';
     });
   }
 
   public removeDomain(domain: string) {
     runInAction(() => {
-      this.baseBundle.delete(domain);
-      this.extendedBundle.delete(domain);
+      const newSet = new Set([...this.baseBundle, ...this.extendedBundle]);
+
+      newSet.delete(domain);
+
+      const newArr = Array.from(newSet);
+
+      this.baseBundle = new Set(newArr.splice(0, 5));
+      this.extendedBundle = new Set(newArr);
+
+      this.invalidDomains = [];
     });
+  }
+
+  public validateRedirectUrl = () => {
+    const isValidUrl = validateUrl(this.redirectUrl);
+    let valid = false;
+
+    runInAction(() => {
+      if (this.redirectUrl.length === 0) {
+        this.invalidRedirectUrl = 'Your domains need a destination';
+
+        valid = false;
+
+        return;
+      }
+
+      if (!isValidUrl) {
+        this.invalidRedirectUrl = 'Ivalid URL';
+
+        valid = false;
+
+        return;
+      }
+
+      valid = true;
+      this.invalidRedirectUrl = '';
+    });
+
+    return valid;
+  };
+
+  public validateBaseBundle = () => {
+    let valid = false;
+
+    runInAction(() => {
+      if (this.baseBundle.size < 5) {
+        this.invalidBaseBundle = `Please add ${
+          5 - this.baseBundle.size
+        } more domains`;
+
+        valid = false;
+
+        return;
+      }
+
+      this.invalidBaseBundle = '';
+      valid = true;
+    });
+
+    return valid;
+  };
+
+  public validateUsernames = () => {
+    let valid = false;
+
+    runInAction(() => {
+      const [a, b] = this.usernames;
+
+      if (a.length === 0) {
+        this.invalidUsernames[0] = 'Houston we have a blank...';
+
+        valid = false;
+
+        return;
+      }
+
+      if (a.length > 0 && b.length > 0 && a === b) {
+        this.invalidUsernames[0] = 'This username is already used';
+        this.invalidUsernames[1] = 'This username is already used';
+
+        valid = false;
+
+        return;
+      }
+
+      this.invalidUsernames = ['', ''];
+      valid = true;
+    });
+
+    return valid;
+  };
+
+  public async validateBuy({ onSuccess }: { onSuccess?: () => void }) {
+    // sync validations
+    const valid = [
+      this.validateRedirectUrl(),
+      this.validateUsernames(),
+      this.validateBaseBundle(),
+    ].every(Boolean);
+
+    if (!valid) return;
+
+    // async validations
+    await this.validateDomains({ onSuccess });
   }
 
   async bootstrap() {
     try {
-      const { mailstack_RegisteredBuyDomainsWithMailboxes: mailboxes } =
-        await this.service.getRegisteredMailboxes();
+      const { mailstack_Mailboxes: mailboxes } =
+        await this.service.getMailboxes();
 
-      this.load(mailboxes as MailstackBuyRequest[], {
-        getId: (data) => data.id,
+      this.load(mailboxes, {
+        getId: (data) => data.mailbox,
       });
 
       runInAction(() => {
@@ -106,8 +232,10 @@ export class MailboxesStore extends SyncableGroup<
 
   async getDomainSuggestions() {
     try {
+      this.isLoading = true;
+
       const { mailstack_DomainPurchaseSuggestions } =
-        await this.service.getMailstackDomainsSuggestions({
+        await this.service.getDomainSuggestions({
           domain: this.domain,
         });
 
@@ -131,6 +259,12 @@ export class MailboxesStore extends SyncableGroup<
     });
   }
 
+  public setRedirectUrl(url: string) {
+    runInAction(() => {
+      this.redirectUrl = url;
+    });
+  }
+
   public setUsername(index: 0 | 1, username: string) {
     runInAction(() => {
       this.usernames[index] = username;
@@ -139,14 +273,14 @@ export class MailboxesStore extends SyncableGroup<
 
   async getPaymentIntent() {
     try {
-      const { mailstack_RegisterBuyDomainsWithMailboxes } =
-        await this.service.createMailbox({
+      const { mailstack_GetPaymentIntent } =
+        await this.service.getPaymentIntent({
           domains: [...this.baseBundle, ...this.extendedBundle],
-          amount: 100,
+          amount: this.totalAmount,
           usernames: this.usernames.filter((v) => v !== ''),
         });
 
-      return mailstack_RegisterBuyDomainsWithMailboxes;
+      return mailstack_GetPaymentIntent;
     } catch (err) {
       this.root.ui.toastError(
         'Failed processing the payment.',
@@ -164,7 +298,7 @@ export class MailboxesStore extends SyncableGroup<
         this.isLoading = true;
       });
 
-      const response = await this.service.getMailstackCheckUnavailableDomains({
+      const response = await this.service.validateDomains({
         domains: [...this.baseBundle, ...this.extendedBundle],
       });
 
@@ -185,6 +319,22 @@ export class MailboxesStore extends SyncableGroup<
       runInAction(() => {
         this.isLoading = false;
       });
+    }
+  }
+
+  async buyDomains(paymentIntentId: string) {
+    try {
+      await this.service.buyDomains({
+        test: true,
+        paymentIntentId,
+        domains: [...this.baseBundle, ...this.extendedBundle],
+        amount: this.totalAmount,
+        username: this.usernames.filter((v) => v !== ''),
+        redirectWebsite: this.redirectUrl,
+      });
+      this.bootstrap();
+    } catch (err) {
+      this.root.ui.toastError('Failed buying domains', 'buy-domains');
     }
   }
 
