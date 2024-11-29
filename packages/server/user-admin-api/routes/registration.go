@@ -597,6 +597,7 @@ func initializeUser(c context.Context, services *service.Services, provider, pro
 		innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
 			Tenant:    tenant,
 			AppSource: constants.AppSourceUserAdminApi,
+			UserEmail: email,
 		})
 		err = services.CommonServices.Neo4jRepositories.UserWriteRepository.RegisterLogin(innerCtx, tenant, userId)
 		if err != nil {
