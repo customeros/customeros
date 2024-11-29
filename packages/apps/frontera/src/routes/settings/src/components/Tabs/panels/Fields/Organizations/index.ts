@@ -1,1 +1,1 @@
-export * from './OrganizationFileds';
+export * from './OrganizationFields';
