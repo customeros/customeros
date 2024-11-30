@@ -11,7 +11,6 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
-	"strings"
 )
 
 const (
@@ -42,8 +41,6 @@ func (a *EmailAggregate) HandleGRPCRequest(ctx context.Context, request any, par
 		return nil, a.emailValidatedV2(ctx, r)
 	case *emailpb.UpsertEmailRequest:
 		return nil, a.UpsertEmail(ctx, r)
-	case *emailpb.DeleteEmailRequest:
-		return nil, a.DeleteEmail(ctx, r)
 	default:
 		tracing.TraceErr(span, eventstore.ErrInvalidRequestType)
 		return nil, eventstore.ErrInvalidRequestType
@@ -128,47 +125,12 @@ func (a *EmailAggregate) UpsertEmail(ctx context.Context, request *emailpb.Upser
 	return a.Apply(upsertEvent)
 }
 
-func (a *EmailAggregate) DeleteEmail(ctx context.Context, request *emailpb.DeleteEmailRequest) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "EmailAggregate.UpsertEmail")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
-	tracing.LogObjectAsJson(span, "request", request)
-
-	deleteEvent, err := emailevent.NewEmailDeleteEvent(a, request.Tenant)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewEmailDeleteEvent")
-	}
-
-	eventstore.EnrichEventWithMetadataExtended(&deleteEvent, span, eventstore.EventMetadata{
-		Tenant: a.Tenant,
-		UserId: request.LoggedInUserId,
-		App:    request.AppSource,
-	})
-
-	return a.Apply(deleteEvent)
-}
-
 func (a *EmailAggregate) When(event eventstore.Event) error {
 	switch event.GetEventType() {
 	case emailevent.EmailValidatedV2:
 		return a.OnEmailValidated(event)
-	case emailevent.EmailValidationFailedV1,
-		emailevent.EmailValidatedV1,
-		emailevent.EmailCreateV1,
-		emailevent.EmailUpdateV1,
-		emailevent.EmailUpsertV1,
-		emailevent.EmailDeleteV1:
-		return nil
 	default:
-		if strings.HasPrefix(event.GetEventType(), constants.EsInternalStreamPrefix) {
-			return nil
-		}
-		err := eventstore.ErrInvalidEventType
-		err.EventType = event.GetEventType()
-		return err
+		return nil
 	}
 }
 

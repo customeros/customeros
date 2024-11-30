@@ -32,7 +32,7 @@ type EmailService interface {
 	Merge(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, tenant string, emailFields EmailFields, linkWith *LinkWith) (*string, error)
 	ReplaceEmail(ctx context.Context, previousEmail string, emailFields EmailFields, linkWith LinkWith) (*string, error)
 	UnlinkEmail(ctx context.Context, email, appSource string, linkWith LinkWith) error
-	DeleteOrphanEmail(ctx context.Context, tenant, emailId, appSource string) error
+	DeleteOrphanEmail(ctx context.Context, emailId string) error
 	GetAllEmailsForEntityIds(ctx context.Context, tenant string, entityType commonmodel.EntityType, entityIds []string) (*neo4jentity.EmailEntities, error)
 	SetPrimary(ctx context.Context, email string, forEntity LinkWith) error
 	GetPrimaryEmailForEntityId(ctx context.Context, entityType commonmodel.EntityType, entityId string) (*neo4jentity.EmailEntity, error)
@@ -412,16 +412,18 @@ func (s *emailService) UnlinkEmail(ctx context.Context, email, appSource string,
 	return err
 }
 
-func (s *emailService) DeleteOrphanEmail(ctx context.Context, tenant, emailId, appSource string) error {
+func (s *emailService) DeleteOrphanEmail(ctx context.Context, emailId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.DeleteOrphanEmail")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	tracing.TagEntity(span, emailId)
-	span.LogKV("appSource", appSource)
 
-	if tenant == "" {
-		tenant = common.GetTenantFromContext(ctx)
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
 	}
+	tenant := common.GetTenantFromContext(ctx)
 
 	// check if email exists by id
 	exists, err := s.services.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, tenant, emailId, commonmodel.NodeLabelEmail)
@@ -447,18 +449,27 @@ func (s *emailService) DeleteOrphanEmail(ctx context.Context, tenant, emailId, a
 		return err
 	}
 
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = utils.CallEventsPlatformGRPCWithRetry[*emailpb.EmailIdGrpcResponse](func() (*emailpb.EmailIdGrpcResponse, error) {
-		return s.services.GrpcClients.EmailClient.DeleteEmail(ctx, &emailpb.DeleteEmailRequest{
-			Tenant:         tenant,
-			EmailId:        emailId,
-			LoggedInUserId: common.GetUserIdFromContext(ctx),
-			AppSource:      appSource,
-		})
-	})
+	// delete email node
+	err = s.services.Neo4jRepositories.EmailWriteRepository.DeleteOrphanEmail(ctx, tenant, emailId)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to delete email"))
+		tracing.TraceErr(span, errors.Wrap(err, "failed to delete orphan email"))
 		return err
+	}
+
+	// check if email exists by id
+	exists, err = s.services.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, tenant, emailId, commonmodel.NodeLabelEmail)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to check if email exists by id"))
+		return err
+	}
+	if exists {
+		span.LogFields(log.Bool("result.deleted", false))
+	} else {
+		span.LogFields(log.Bool("result.deleted", true))
+		err = s.services.RabbitMQService.PublishEvent(ctx, emailId, commonmodel.EMAIL, dto.Delete{})
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "unable to publish event Delete"))
+		}
 	}
 
 	return nil

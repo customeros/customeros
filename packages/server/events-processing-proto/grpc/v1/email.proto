@@ -14,13 +14,6 @@ message UpsertEmailRequest {
   SourceFields sourceFields = 6;
 }
 
-message DeleteEmailRequest {
-  string tenant = 1;
-  string emailId = 2;
-  string loggedInUserId = 3;
-  string appSource = 4;
-}
-
 message EmailValidationGrpcRequest {
   string tenant = 1;
   string emailId = 2;
@@ -67,5 +60,4 @@ service emailGrpcService {
   rpc UpsertEmailV2(UpsertEmailRequest) returns (EmailIdGrpcResponse);
   rpc RequestEmailValidation(RequestEmailValidationGrpcRequest) returns (EmailIdGrpcResponse);
   rpc UpdateEmailValidation(EmailValidationGrpcRequest) returns (EmailIdGrpcResponse);
-  rpc DeleteEmail(DeleteEmailRequest) returns (EmailIdGrpcResponse);
 }
