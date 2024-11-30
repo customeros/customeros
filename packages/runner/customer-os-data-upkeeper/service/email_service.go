@@ -659,7 +659,12 @@ func (s *emailService) deleteOrphanEmails() {
 		}
 
 		for _, record := range records {
-			err = s.commonServices.EmailService.DeleteOrphanEmail(ctx, record.Tenant, record.EmailId, constants.AppSourceDataUpkeeper)
+			innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+				Tenant:    record.Tenant,
+				AppSource: constants.AppSourceDataUpkeeper,
+			})
+
+			err = s.commonServices.EmailService.DeleteOrphanEmail(innerCtx, record.EmailId)
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "Error deleting orphan email"))
 				s.log.Errorf("Error deleting orphan email {%s}: %s", record.EmailId, err.Error())

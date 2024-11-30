@@ -11,7 +11,8 @@ const (
 	EmailUpsertV1    = "V1_EMAIL_UPSERT"
 	EmailValidateV1  = "V1_EMAIL_VALIDATE"
 	EmailValidatedV2 = "V2_EMAIL_VALIDATED"
-	EmailDeleteV1    = "V1_EMAIL_DELETE"
+	// Deprecated
+	EmailDeleteV1 = "V1_EMAIL_DELETE"
 	// Deprecated
 	EmailCreateV1 = "V1_EMAIL_CREATE"
 	// Deprecated

@@ -69,7 +69,7 @@ type EmailWriteRepository interface {
 	UnlinkFromOrganization(ctx context.Context, tenant, organizationId, email string) error
 	SetDeliverableByEmailForAllTenants(ctx context.Context, email string, deliverable EmailDeliverableStatus) error
 	SetPrimaryForEntity(ctx context.Context, tenant, entityId, email string, entityType model.EntityType) error
-	DeleteEmail(ctx context.Context, tenant, emailId string) error
+	DeleteOrphanEmail(ctx context.Context, tenant, emailId string) error
 }
 
 type emailWriteRepository struct {
@@ -441,8 +441,8 @@ func (r *emailWriteRepository) UnlinkFromOrganization(ctx context.Context, tenan
 	return err
 }
 
-func (r *emailWriteRepository) DeleteEmail(ctx context.Context, tenant, emailId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailWriteRepository.DeleteEmail")
+func (r *emailWriteRepository) DeleteOrphanEmail(ctx context.Context, tenant, emailId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailWriteRepository.DeleteOrphanEmail")
 	defer span.Finish()
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[r:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {id:$id})
