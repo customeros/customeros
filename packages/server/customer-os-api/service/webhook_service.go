@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -17,41 +18,8 @@ import (
 type WebhookService interface {
 	GetIntegration(s string) (Integration, error)
 	CreateIntegrationWebhook(ctx context.Context, tenant string, integration Integration) (webhookUrl string, secret string, err error)
-}
-
-type Integration string
-
-// Add all supported integrations here, and also in validIntegrations below
-const (
-	IntegrationCalCom   Integration = "calcom"
-	IntegrationFathom   Integration = "fathom"
-	IntegrationGrain    Integration = "grain"
-	IntegrationPostmark Integration = "postmark"
-)
-
-var validIntegrations = func() map[string]Integration {
-	integrations := []Integration{
-		IntegrationCalCom,
-		IntegrationFathom,
-		IntegrationGrain,
-		IntegrationPostmark,
-	}
-
-	m := make(map[string]Integration)
-	for _, i := range integrations {
-		m[string(i)] = i
-	}
-	return m
-}()
-
-func (i Integration) String() string {
-	return string(i)
-}
-
-func (i Integration) IntegrationID(rotationCount int64) string {
-	// Add rotation count to string being hashed
-	input := fmt.Sprintf("%s:%d", i.String(), rotationCount)
-	return utils.GenerateHashId(input, 12)
+	ValidateTenantId(ctx context.Context, tenant, tenantId string) (bool, error)
+	GetIntegrationFromWebhookPath(ctx context.Context, tenant, webhookPath string) (Integration, error)
 }
 
 type webhookService struct {
@@ -73,6 +41,38 @@ func (w *webhookService) GetIntegration(s string) (Integration, error) {
 		return integration, nil
 	}
 	return "", fmt.Errorf("invalid integration type: %s", s)
+}
+
+func (w *webhookService) ValidateTenantId(ctx context.Context, tenant, tenantId string) (bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WebhookService.ValidateTenantId")
+	defer span.Finish()
+	span.LogFields(log.String("tenant", tenant))
+	span.LogFields(log.String("tenantId", tenantId))
+
+	tenantFromDb, err := w.services.Repositories.PostgresRepositories.TenantRepository.GetTenant(ctx, tenantId)
+	if err != nil {
+		err = fmt.Errorf("Unable to lookup tenant hashId for %s: %v", tenant, err)
+		tracing.TraceErr(span, err)
+	}
+
+	return tenantFromDb == tenant, nil
+}
+
+// to implement
+func (w *webhookService) GetIntegrationFromWebhookPath(ctx context.Context, tenant, webhookPath string) (Integration, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WebhookService.GetIntegrationFromWebhookPath")
+	defer span.Finish()
+	span.LogFields(log.String("tenant", tenant))
+	span.LogFields(log.String("webhookPath", webhookPath))
+
+	path := strings.TrimPrefix(webhookPath, "/")
+	webhook, err := w.services.Repositories.PostgresRepositories.FlowWebhooksRepository.FindWebhookByPath(ctx, tenant, path)
+	if err != nil {
+		err = fmt.Errorf("Unable to lookup webhook path: %v", err)
+		tracing.TraceErr(span, err)
+	}
+
+	return Integration(webhook.Integration), nil
 }
 
 func (w *webhookService) CreateIntegrationWebhook(ctx context.Context, tenant string, integration Integration) (string, string, error) {

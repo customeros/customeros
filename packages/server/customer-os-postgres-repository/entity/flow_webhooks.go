@@ -3,20 +3,19 @@ package entity
 import (
 	"time"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/pkg/errors"
 )
 
 type FlowWebhooks struct {
 	ID            uint64    `gorm:"primaryKey;autoIncrement" json:"id"`
-	TenantName    string    `gorm:"type:varchar(255);not null;index" json:"tenantName" binding:"required"`
-	CreatedAt     time.Time `gorm:"type:timestamp;default:current_timestamp" json:"createdAt"`
-	UpdatedAt     time.Time `gorm:"type:timestamp" json:"updatedAt"`
-	WebhookPath   string    `gorm:"type:varchar(255);not null" json:"webhookPath" binding:"required"`
-	Integration   string    `gorm:"type:varchar(255);index" json:"integration"`
-	RotationCount int       `gorm:"type:integer" json:"rotationCount"`
-	Secret        string    `gorm:"type:varchar(255);not null" json:"secret" binding:"required"`
-	Enabled       bool      `gorm:"type:boolean;default:true" json:"enabled"`
+	TenantName    string    `gorm:"column:tenant_name;type:varchar(255);not null;index" json:"tenantName" binding:"required"`
+	CreatedAt     time.Time `gorm:"column:created_at;type:timestamp;default:current_timestamp" json:"createdAt"`
+	UpdatedAt     time.Time `gorm:"column:updated_at;type:timestamp" json:"updatedAt"`
+	WebhookPath   string    `gorm:"column:webhook_path;type:varchar(255);not null" json:"webhookPath" binding:"required"`
+	Integration   string    `gorm:"column:integration;type:varchar(255);index" json:"integration"`
+	RotationCount int       `gorm:"column:rotation_count;type:integer" json:"rotationCount"`
+	Secret        string    `gorm:"column:secret;type:varchar(255);not null" json:"secret" binding:"required"`
+	Enabled       bool      `gorm:"column:enabled;type:boolean;default:true" json:"enabled"`
 }
 
 func (TenantWebhook) TableName() string {
@@ -44,13 +43,6 @@ func (fw *FlowWebhooks) BeforeCreate() error {
 
 func (fw *FlowWebhooks) BeforeUpdate() error {
 	fw.UpdatedAt = time.Now()
-	return nil
-}
-
-// Rotate increments rotation count and generates new secret
-func (fw *FlowWebhooks) Rotate() error {
-	fw.RotationCount++
-	fw.Secret = utils.GenerateSecret()
 	return nil
 }
 

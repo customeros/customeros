@@ -82,7 +82,7 @@ func registerCustomerBaseRoutes(ctx context.Context, r *gin.Engine, services *se
 func registerFlowRoutes(ctx context.Context, r *gin.Engine, services *service.Services, cache *commoncaches.Cache) {
 	setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/hooks", flowsV1Path), services, cache, flows.GetActiveWebhooks(services, CustomerOSAPIURL(), flowsV1Path))
 	setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/hooks", flowsV1Path), services, cache, flows.CreateWebhook(services, CustomerOSAPIURL(), flowsV1Path))
-	//     setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/:tenantId/i/:integrationId/rotate", flowsV1Path), services, cache, *func*)
+	setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/:tenantId/i/:integrationId/rotate", flowsV1Path), services, cache, flows.RotateWebhook(services, CustomerOSAPIURL(), flowsV1Path))
 	//     setupRestRoute(ctx, r, "DELETE", fmt.Sprintf("%s/:tenantId/i/:integrationId", flowsV1Path), services, cache, *func*)
 }
 

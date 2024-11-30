@@ -30,7 +30,7 @@ type CreateWebhookResponse struct {
 
 func CreateWebhook(services *service.Services, baseURL, flowsPath string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "Create Webhook", c.Request.Header)
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "CreateWebhook", c.Request.Header)
 		defer span.Finish()
 		tracing.TagComponentRest(span)
 
@@ -143,6 +143,56 @@ func GetActiveWebhooks(services *service.Services, baseURL, flowsPath string) gi
 		c.JSON(http.StatusOK, ActiveWebhooksResponse{
 			BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
 			Hooks:        results,
+		})
+	}
+}
+
+func RotateWebhook(services *service.Services, baseURL, flowsPath string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "RotateWebhook", c.Request.Header)
+		defer span.Finish()
+		tracing.TagComponentRest(span)
+
+		// Validate tenant owns webhook
+		tenant := rest.ValidateTenant(c, ctx, span)
+		if tenant == "" {
+			rest.SendError(c, span, http.StatusUnauthorized, rest.ErrInvalidAPIKey)
+			return
+		}
+		tenantId := c.Param("tenantId")
+		validTenant, err := services.WebhookService.ValidateTenantId(ctx, tenant, tenantId)
+		if err != nil {
+			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer.WithMessage("Unable to verify webhook ownership"))
+			return
+		}
+		if !validTenant {
+			rest.SendError(c, span, http.StatusUnauthorized, rest.ErrUnauthorized)
+			return
+		}
+
+		// Lookup integration
+		integration, err := services.WebhookService.GetIntegrationFromWebhookPath(ctx, tenant, c.Request.URL.Path)
+		if err != nil {
+			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer.WithMessage("Unable to identify webhook"))
+			return
+		}
+
+		// Call create to rotate webhook as it will automatically handle rotation
+		webhookPath, secret, err := services.WebhookService.CreateIntegrationWebhook(ctx, tenant, integration)
+		if err != nil {
+			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer.WithMessage("Unable to rotate webhook"))
+			return
+		}
+
+		record := CreateWebhookRecord{
+			URL:         fmt.Sprintf("%s%s/%s", baseURL, flowsPath, webhookPath),
+			Integration: integration.String(),
+			Secret:      secret,
+		}
+
+		c.JSON(http.StatusCreated, CreateWebhookResponse{
+			BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
+			Hook:         record,
 		})
 	}
 }
