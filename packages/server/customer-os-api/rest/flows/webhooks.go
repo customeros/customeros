@@ -171,7 +171,7 @@ func RotateWebhook(services *service.Services, baseURL, flowsPath string) gin.Ha
 		}
 
 		// Lookup integration
-		integration, err := services.WebhookService.GetIntegrationFromWebhookPath(ctx, tenant, c.Request.URL.Path)
+		integration, err := services.WebhookService.GetIntegrationFromWebhookPath(ctx, tenant, strings.TrimSuffix(c.Request.URL.Path, "/rotate"))
 		if err != nil {
 			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer.WithMessage("Unable to identify webhook"))
 			return
@@ -193,6 +193,43 @@ func RotateWebhook(services *service.Services, baseURL, flowsPath string) gin.Ha
 		c.JSON(http.StatusCreated, CreateWebhookResponse{
 			BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
 			Hook:         record,
+		})
+	}
+}
+
+func DeactivateWebhook(services *service.Services) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "RotateWebhook", c.Request.Header)
+		defer span.Finish()
+		tracing.TagComponentRest(span)
+
+		// Validate tenant owns webhook
+		tenant := rest.ValidateTenant(c, ctx, span)
+		if tenant == "" {
+			rest.SendError(c, span, http.StatusUnauthorized, rest.ErrInvalidAPIKey)
+			return
+		}
+		tenantId := c.Param("tenantId")
+		validTenant, err := services.WebhookService.ValidateTenantId(ctx, tenant, tenantId)
+		if err != nil {
+			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer.WithMessage("Unable to verify webhook ownership"))
+			return
+		}
+		if !validTenant {
+			rest.SendError(c, span, http.StatusUnauthorized, rest.ErrUnauthorized)
+			return
+		}
+
+		// Call to deactivate webhook
+		deactErr := services.WebhookService.DeactivateWebhook(ctx, strings.TrimSuffix(c.Request.URL.Path, "/rotate"))
+		if deactErr != nil {
+			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer)
+			return
+		}
+
+		c.JSON(http.StatusOK, NoActiveWebhooks{
+			BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
+			Message:      "Webhook successfully deactivated",
 		})
 	}
 }

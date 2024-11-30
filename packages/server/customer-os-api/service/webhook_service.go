@@ -20,6 +20,7 @@ type WebhookService interface {
 	CreateIntegrationWebhook(ctx context.Context, tenant string, integration Integration) (webhookUrl string, secret string, err error)
 	ValidateTenantId(ctx context.Context, tenant, tenantId string) (bool, error)
 	GetIntegrationFromWebhookPath(ctx context.Context, tenant, webhookPath string) (Integration, error)
+	DeactivateWebhook(ctx context.Context, webhookPath string) error
 }
 
 type webhookService struct {
@@ -112,7 +113,7 @@ func (w *webhookService) CreateIntegrationWebhook(ctx context.Context, tenant st
 
 	// disable existing webhook for tenant/integration if exists
 	if count != 0 {
-		err := w.repositories.PostgresRepositories.FlowWebhooksRepository.DisableWebhook(ctx, webhook.WebhookPath)
+		err := w.DeactivateWebhook(ctx, webhook.WebhookPath)
 		if err != nil {
 			err = fmt.Errorf("Unable to deactivate existing webhook for %s and %s: %v", tenant, integration.String(), err)
 			tracing.TraceErr(span, err)
@@ -135,4 +136,18 @@ func (w *webhookService) CreateIntegrationWebhook(ctx context.Context, tenant st
 	}
 
 	return newWebhook.WebhookPath, newWebhook.Secret, nil
+}
+
+func (w *webhookService) DeactivateWebhook(ctx context.Context, webhookPath string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WebhookService.Deactivate")
+	defer span.Finish()
+	span.LogFields(log.String("webhookPath", webhookPath))
+
+	err := w.repositories.PostgresRepositories.FlowWebhooksRepository.DisableWebhook(ctx, webhookPath)
+	if err != nil {
+		err = fmt.Errorf("Unable to deactivate webhook %s: %v", webhookPath, err)
+		tracing.TraceErr(span, err)
+		return err
+	}
+	return nil
 }
