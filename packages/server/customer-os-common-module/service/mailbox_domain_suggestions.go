@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"github.com/pkg/errors"
 	"net"
 	"os/exec"
 	"strings"
@@ -24,19 +25,23 @@ func (s *mailboxService) IsDomainAvailable(ctx context.Context, domain string) (
 	// First try DNS lookup
 	dnsOk, dnsCheck := s.dnsCheck(domain, span)
 	if dnsCheck {
+		span.LogFields(log.Bool("result.available", false))
 		return true, false
 	}
 
 	whoOk, whoCheck := s.checkWhois(domain, span)
 
 	if !dnsOk && !whoOk {
+		span.LogFields(log.Bool("result.available", false))
 		return false, false
 	}
 
 	if whoCheck {
+		span.LogFields(log.Bool("result.available", false))
 		return true, false
 	}
 
+	span.LogFields(log.Bool("result.available", true))
 	return true, true
 }
 
@@ -132,7 +137,7 @@ func (s *mailboxService) dnsCheck(domain string, span opentracing.Span) (ok bool
 	}
 
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "dnsCheck"))
 		return false, false
 	}
 
@@ -157,7 +162,7 @@ func (s *mailboxService) checkWhois(domain string, span opentracing.Span) (ok, e
 	}
 
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "checkWhois"))
 		// Check if it's an exit error (whois sometimes exits with status 1)
 		if exitErr, ok := err.(*exec.ExitError); ok {
 			// Still process the output if we got any
