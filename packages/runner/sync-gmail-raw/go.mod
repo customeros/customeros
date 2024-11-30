@@ -16,7 +16,7 @@ require (
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/google/uuid v1.6.0
 	github.com/joho/godotenv v1.5.1
-	github.com/neo4j/neo4j-go-driver/v5 v5.26.0
+	github.com/neo4j/neo4j-go-driver/v5 v5.27.0
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20241120155252-bb48250b6994
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository v0.0.0-20241120155252-bb48250b6994
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository v0.0.0-20241120155252-bb48250b6994
