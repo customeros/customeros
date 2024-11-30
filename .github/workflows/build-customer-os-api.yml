@@ -307,7 +307,7 @@ jobs:
           username: ${{ secrets.REPOSITORY_READ_WRITE_USERNAME }}
           password: ${{ secrets.REPOSITORY_READ_WRITE_TOKEN }}
 
-      - name: Extract metadata
+      - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@v5.6.1
         with:
