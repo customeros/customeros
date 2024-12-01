@@ -45,11 +45,25 @@ func CalDotCom(c *rest.HTTPContext) {
 		return
 	}
 
-	// determine tenant, lookup api key
-	secretKey := "CAL_WEBHOOK_SECRET"
-
-	valid, err := VerifyCalWebhookSignature(body, signature, secretKey)
+	// determine tenant
+	tenant, err := c.Services.Repositories.PostgresRepositories.TenantRepository.GetTenant(ctx, c.GinContext.Param("tenantId"))
 	if err != nil {
+		tracing.TraceErr(c.Span, err)
+		rest.SendError(c.GinContext, c.Span, http.StatusInternalServerError, rest.ErrInternalServer.WithMessage("Unable to identify tenant"))
+		return
+	}
+
+	// lookup secret
+	webhook, err := c.Services.Repositories.PostgresRepositories.FlowWebhooksRepository.FindWebhookByPath(ctx, tenant, c.GinContext.Request.URL.Path)
+	if err != nil {
+		tracing.TraceErr(c.Span, err)
+		rest.SendError(c.GinContext, c.Span, http.StatusInternalServerError, rest.ErrNotFound)
+		return
+	}
+
+	valid, err := VerifyCalWebhookSignature(body, signature, webhook.Secret)
+	if err != nil {
+		tracing.TraceErr(c.Span, err)
 		rest.SendError(c.GinContext, c.Span, http.StatusInternalServerError, rest.ErrInternalServer.WithMessage("Unable to verify message payloar"))
 		return
 	}
@@ -90,7 +104,7 @@ func handleCalDotComEvent(ctx *rest.HTTPContext) {
 
 	switch webhook.TriggerEvent {
 	case "BOOKING_CREATED":
-		err := processBookingCreatedEvent(ctx, webhook)
+		// err := processBookingCreatedEvent(ctx, webhook)
 		// create contacts
 	case "BOOKING_RESCHEDULED":
 		// todo -- Handle reschedule

@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"strings"
 
 	"gorm.io/gorm"
 
@@ -33,6 +34,8 @@ func (r *flowWebhooksRepository) CreateWebhook(webhook *entity.FlowWebhooks) err
 
 func (r *flowWebhooksRepository) FindWebhookByPath(ctx context.Context, tenantName, webhookPath string) (entity.FlowWebhooks, error) {
 	var webhook entity.FlowWebhooks
+
+	webhookPath = strings.TrimPrefix(webhookPath, "/")
 	err := r.gormDb.
 		Where("tenant_name = ? AND webhook_path = ?", tenantName, webhookPath).
 		First(&webhook).Error
