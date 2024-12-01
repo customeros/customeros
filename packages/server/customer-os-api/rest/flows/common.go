@@ -9,7 +9,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 )
 
-func getParticipantOrganizationIds(ctx rest.HTTPContext, domains []string) ([]string, error) {
+func getParticipantOrganizationIds(ctx *rest.HTTPContext, domains []string) ([]string, error) {
 	var results []string
 	tenantDomains, err := ctx.Services.CommonServices.WorkspaceService.GetWorkspaceDomainsForTenant(*ctx.ServiceContext)
 	if err != nil {

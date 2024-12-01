@@ -1,4 +1,4 @@
-package webhooks
+package flows
 
 import (
 	"encoding/json"
@@ -18,47 +18,46 @@ import (
 
 const EXTERNAL_SYSTEM = "mailstack"
 
-func PostmarkInboundEmail(ctx rest.HTTPContext) {
-	ctx.ServiceContext, ctx.Span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "PostmarkInboundEmail", c.Request.Header)
+func PostmarkInboundEmail(c *rest.HTTPContext) {
+	ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.GinContext.Request.Context(), "PostmarkInboundEmail", c.GinContext.Request.Header)
+	c.ServiceContext = &ctx
+	c.Span = span
 	defer span.Finish()
 	tracing.TagComponentRest(span)
 
 	// Validate Postmark User-Agent
-	if c.Request.UserAgent() == "" || !strings.EqualFold(c.Request.UserAgent(), "Postmark") {
-		rest.SendError(c, span, http.StatusForbidden, rest.ErrForbidden)
+	if c.GinContext.Request.UserAgent() == "" || !strings.EqualFold(c.GinContext.Request.UserAgent(), "Postmark") {
+		tracing.TraceErr(span, fmt.Errorf("Invalid user agent %s", c.GinContext.Request.UserAgent()))
+		rest.SendError(c.GinContext, span, http.StatusForbidden, rest.ErrForbidden)
 		return
 	}
 
 	// Parse email data
-	emailData, err := parseInboundEmail(httpContext)
+	emailData, err := parseInboundEmail(c)
 	if err != nil {
-		tracing.LogObjectAsJson(span, "body", c.Request.Body)
+		tracing.LogObjectAsJson(span, "body", c.GinContext.Request.Body)
 		tracing.TraceErr(span, err)
-		rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest)
+		rest.SendError(c.GinContext, span, http.StatusBadRequest, rest.ErrBadRequest)
 		return
 	}
 
 	// Process email asynchronously
 	go func() {
-		// Create a new context for the goroutine
-		asyncCtx, asyncSpan := tracing.StartSpanFromContext(ctx, "AsyncEmailProcessing")
-		defer asyncSpan.Finish()
-
 		defer func() {
 			if r := recover(); r != nil {
 				stack := debug.Stack()
 				err := fmt.Errorf("panic recovered in email processing: %v\n%s", r, stack)
-				tracing.TraceErr(asyncSpan, err)
+				tracing.TraceErr(span, err)
 			}
 		}()
 
-		if err := processInboundEmail(asyncCtx, &emailData); err != nil {
-			tracing.TraceErr(asyncSpan, errors.Wrap(err, "failed to process inbound email from Postmark"))
+		if err := processInboundEmail(c, &emailData); err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to process inbound email from Postmark"))
 		}
 	}()
 }
 
-func parseInboundEmail(ctx rest.HTTPContext) (PostmarkInboundEmailData, error) {
+func parseInboundEmail(ctx *rest.HTTPContext) (PostmarkInboundEmailData, error) {
 	var emailData PostmarkInboundEmailData
 	err := ctx.GinContext.BindJSON(&emailData)
 	if err != nil {
@@ -68,7 +67,7 @@ func parseInboundEmail(ctx rest.HTTPContext) (PostmarkInboundEmailData, error) {
 	return emailData, nil
 }
 
-func processInboundEmail(ctx rest.HTTPContext, emailData *PostmarkInboundEmailData) error {
+func processInboundEmail(ctx *rest.HTTPContext, emailData *PostmarkInboundEmailData) error {
 	tenant, err := getTenant(ctx, emailData)
 	if err != nil {
 		return err
@@ -118,7 +117,7 @@ func processInboundEmail(ctx rest.HTTPContext, emailData *PostmarkInboundEmailDa
 	return nil
 }
 
-func getTenant(ctx rest.HTTPContext, emailData *PostmarkInboundEmailData) (string, error) {
+func getTenant(ctx *rest.HTTPContext, emailData *PostmarkInboundEmailData) (string, error) {
 	nameFromBcc := emailData.TenantFromBcc()
 
 	n, err := ctx.Services.CommonServices.Neo4jRepositories.TenantReadRepository.GetTenantByNameIgnoreCase(*ctx.ServiceContext, nameFromBcc)
@@ -140,7 +139,7 @@ func getTenant(ctx rest.HTTPContext, emailData *PostmarkInboundEmailData) (strin
 	return tenant.Name, nil
 }
 
-func getUsername(ctx rest.HTTPContext, EmailParticipants []string) (string, error) {
+func getUsername(ctx *rest.HTTPContext, EmailParticipants []string) (string, error) {
 	for _, p := range EmailParticipants {
 		userByEmail, err := ctx.Services.CommonServices.Neo4jRepositories.UserReadRepository.GetFirstUserByEmail(
 			*ctx.ServiceContext, ctx.Tenant, p)

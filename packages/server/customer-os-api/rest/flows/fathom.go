@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	commontracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -19,49 +18,40 @@ import (
 	"golang.org/x/net/html"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
 
-func FathomZapier(services *service.Services) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		ctx, span := commontracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "Fathom", c.Request.Header)
-		defer span.Finish()
-		commontracing.TagComponentRest(span)
+func FathomZapier(c *rest.HTTPContext) {
+	ctx, span := commontracing.StartHttpServerTracerSpanWithHeader(c.GinContext.Request.Context(), "Fathom", c.GinContext.Request.Header)
+	c.ServiceContext = &ctx
+	c.Span = span
+	defer span.Finish()
+	commontracing.TagComponentRest(span)
 
-		tenant := rest.ValidateTenant(c, ctx, span)
-		if tenant == "" {
-			rest.SendError(c, span, http.StatusForbidden, rest.ErrForbidden)
-			return
-		}
-
-		if !strings.HasPrefix(c.ContentType(), "application/json") {
-			rest.SendError(c, span, http.StatusBadRequest, rest.ErrUnsupportedContentType)
-			return
-		}
-
-		httpContext := rest.HTTPContext{
-			GinContext:     c,
-			ServiceContext: &ctx,
-			Span:           span,
-			Services:       services,
-			Tenant:         tenant,
-		}
-
-		if c.Request.UserAgent() == "" {
-			rest.SendError(c, span, http.StatusForbidden, rest.ErrForbidden)
-			return
-		}
-
-		if !strings.EqualFold(c.Request.UserAgent(), "Zapier") {
-			rest.SendError(c, span, http.StatusForbidden, rest.ErrForbidden)
-			return
-		}
-
-		handleFathomAISummaryZapier(httpContext)
+	c.Tenant = rest.ValidateTenant(c.GinContext, *c.ServiceContext, c.Span)
+	if c.Tenant == "" {
+		rest.SendError(c.GinContext, c.Span, http.StatusForbidden, rest.ErrForbidden)
+		return
 	}
+
+	if !strings.HasPrefix(c.GinContext.ContentType(), "application/json") {
+		rest.SendError(c.GinContext, c.Span, http.StatusBadRequest, rest.ErrUnsupportedContentType)
+		return
+	}
+
+	if c.GinContext.Request.UserAgent() == "" {
+		rest.SendError(c.GinContext, c.Span, http.StatusForbidden, rest.ErrForbidden)
+		return
+	}
+
+	if !strings.EqualFold(c.GinContext.Request.UserAgent(), "Zapier") {
+		rest.SendError(c.GinContext, c.Span, http.StatusForbidden, rest.ErrForbidden)
+		return
+	}
+
+	handleFathomAISummaryZapier(c)
 }
 
-func handleFathomAISummaryZapier(ctx rest.HTTPContext) {
+func handleFathomAISummaryZapier(ctx *rest.HTTPContext) {
 	var aiSummaryData FathomZapierPayload
 	err := ctx.GinContext.BindJSON(&aiSummaryData)
 	if err != nil {
@@ -116,7 +106,7 @@ func cleanFathomJsonPayload(data *FathomZapierPayload) error {
 	return nil
 }
 
-func createEventFromFathomAISummaryZapier(ctx rest.HTTPContext, aiSummaryData *FathomZapierPayload) error {
+func createEventFromFathomAISummaryZapier(ctx *rest.HTTPContext, aiSummaryData *FathomZapierPayload) error {
 	var event data_fields.MarkdownEventFields
 	var allErrs error
 

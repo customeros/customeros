@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/customeros/mailsherpa/mailvalidate"
-	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	commontracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -18,46 +17,38 @@ import (
 	"go.uber.org/multierr"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
 
-func GrainZapier(services *service.Services) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		ctx, span := commontracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "Grain", c.Request.Header)
-		defer span.Finish()
-		commontracing.TagComponentRest(span)
+func GrainZapier(c *rest.HTTPContext) {
+	ctx, span := commontracing.StartHttpServerTracerSpanWithHeader(c.GinContext.Request.Context(), "Grain", c.GinContext.Request.Header)
+	c.ServiceContext = &ctx
+	c.Span = span
+	defer span.Finish()
+	commontracing.TagComponentRest(span)
 
-		tenant := rest.ValidateTenant(c, ctx, span)
-		if tenant == "" {
-			rest.SendError(c, span, http.StatusForbidden, rest.ErrForbidden)
-			return
-		}
-
-		if !strings.HasPrefix(c.ContentType(), "application/json") {
-			rest.SendError(c, span, http.StatusBadRequest, rest.ErrUnsupportedContentType)
-		}
-
-		httpContext := rest.HTTPContext{
-			GinContext:     c,
-			ServiceContext: &ctx,
-			Span:           span,
-			Services:       services,
-			Tenant:         tenant,
-		}
-
-		if c.Request.UserAgent() == "" {
-			rest.SendError(c, span, http.StatusForbidden, rest.ErrForbidden)
-		}
-
-		if !strings.EqualFold(c.Request.UserAgent(), "Zapier") {
-			rest.SendError(c, span, http.StatusForbidden, rest.ErrForbidden)
-		}
-
-		handleGrainNewRecordingEventZapier(httpContext)
+	tenant := rest.ValidateTenant(c.GinContext, *c.ServiceContext, c.Span)
+	if tenant == "" {
+		rest.SendError(c.GinContext, c.Span, http.StatusForbidden, rest.ErrForbidden)
+		return
 	}
+	c.Tenant = tenant
+
+	if !strings.HasPrefix(c.GinContext.ContentType(), "application/json") {
+		rest.SendError(c.GinContext, c.Span, http.StatusBadRequest, rest.ErrUnsupportedContentType)
+	}
+
+	if c.GinContext.Request.UserAgent() == "" {
+		rest.SendError(c.GinContext, c.Span, http.StatusForbidden, rest.ErrForbidden)
+	}
+
+	if !strings.EqualFold(c.GinContext.Request.UserAgent(), "Zapier") {
+		rest.SendError(c.GinContext, c.Span, http.StatusForbidden, rest.ErrForbidden)
+	}
+
+	handleGrainNewRecordingEventZapier(c)
 }
 
-func handleGrainNewRecordingEventZapier(ctx rest.HTTPContext) {
+func handleGrainNewRecordingEventZapier(ctx *rest.HTTPContext) {
 	var grainData GrainRecordingData
 	err := ctx.GinContext.BindJSON(&grainData)
 	if err != nil {
@@ -123,7 +114,7 @@ func cleanGrainJsonPayload(data *GrainRecordingData) error {
 	return nil
 }
 
-func createEventFromGrainRecordingZapier(ctx rest.HTTPContext, grainData *GrainRecordingData) error {
+func createEventFromGrainRecordingZapier(ctx *rest.HTTPContext, grainData *GrainRecordingData) error {
 	var event data_fields.MarkdownEventFields
 	var allErrs error
 

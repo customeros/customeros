@@ -8,6 +8,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/pkg/errors"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
@@ -231,5 +232,54 @@ func DeactivateWebhook(services *service.Services) gin.HandlerFunc {
 			BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
 			Message:      "Webhook successfully deactivated",
 		})
+	}
+}
+
+func HandleWebhook(s *service.Services) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "Webhooks", c.Request.Header)
+		defer span.Finish()
+		tracing.TagComponentRest(span)
+
+		tenant, err := s.CommonServices.PostgresRepositories.TenantRepository.GetTenant(ctx, c.Param("tenantId"))
+		if err != nil {
+			err := errors.Wrap(err, "Unable to identify tenant")
+			tracing.TraceErr(span, err)
+			rest.SendError(c, span, http.StatusUnauthorized, rest.ErrUnauthorized)
+			return
+		}
+
+		integration, err := s.WebhookService.GetIntegrationFromWebhookPath(ctx, tenant, c.Request.URL.Path)
+		if err != nil {
+			rest.SendError(c, span, http.StatusNotFound, rest.ErrNotFound.WithMessage("Webhook not found"))
+			return
+		}
+
+		// build http context
+		httpContext := rest.HTTPContext{
+			GinContext:     c,
+			ServiceContext: &ctx,
+			Span:           span,
+			Services:       s,
+			Tenant:         tenant,
+		}
+
+		switch integration {
+		case service.IntegrationCalCom:
+			CalDotCom(&httpContext)
+		// todo
+		case service.IntegrationFathom:
+			FathomZapier(&httpContext)
+		// todo
+		case service.IntegrationGrain:
+			GrainZapier(&httpContext)
+		// todo
+		case service.IntegrationPostmark:
+			PostmarkInboundEmail(&httpContext)
+		// todo
+		default:
+			rest.SendError(c, span, http.StatusNotFound, rest.ErrNotFound)
+			return
+		}
 	}
 }

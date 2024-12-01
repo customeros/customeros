@@ -1,4 +1,4 @@
-package webhooks
+package flows
 
 import (
 	"fmt"

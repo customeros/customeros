@@ -1,4 +1,4 @@
-package webhooks
+package flows
 
 import (
 	"archive/zip"
@@ -14,9 +14,7 @@ import (
 	"github.com/customeros/mailwatcher/dmarkstats"
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
-	tracingLog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
@@ -31,6 +29,7 @@ func PostmarkDMARCMonitor(s *service.Services) gin.HandlerFunc {
 
 		// Validate Postmark User-Agent
 		if c.Request.UserAgent() == "" || !strings.EqualFold(c.Request.UserAgent(), "Postmark") {
+			tracing.TraceErr(span, fmt.Errorf("Invalid user agent %s", c.Request.UserAgent()))
 			rest.SendError(c, span, http.StatusForbidden, rest.ErrForbidden)
 			return
 		}
