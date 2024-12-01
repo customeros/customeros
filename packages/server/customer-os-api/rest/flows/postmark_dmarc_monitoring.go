@@ -42,7 +42,7 @@ func PostmarkDMARCMonitor(s *service.Services) gin.HandlerFunc {
 		}
 
 		// Parse email data
-		emailData, err := parseInboundEmail(httpContext)
+		emailData, err := parseInboundEmail(&httpContext)
 		if err != nil {
 			tracing.LogObjectAsJson(span, "body", c.Request.Body)
 			tracing.TraceErr(span, err)

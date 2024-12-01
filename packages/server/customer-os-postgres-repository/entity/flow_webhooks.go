@@ -18,7 +18,7 @@ type FlowWebhooks struct {
 	Enabled       bool      `gorm:"column:enabled;type:boolean;default:true" json:"enabled"`
 }
 
-func (TenantWebhook) TableName() string {
+func (FlowWebhooks) TableName() string {
 	return "flow_webhooks"
 }
 
