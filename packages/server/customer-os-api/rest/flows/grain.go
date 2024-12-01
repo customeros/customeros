@@ -1,13 +1,9 @@
 package flows
 
 import (
-	"encoding/json"
-	"fmt"
 	"net/http"
-	"regexp"
 	"strings"
 
-	"github.com/customeros/mailsherpa/mailvalidate"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	commontracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -49,86 +45,49 @@ func GrainZapier(c *rest.HTTPContext) {
 }
 
 func handleGrainNewRecordingEventZapier(ctx *rest.HTTPContext) {
-	var grainData GrainRecordingData
-	err := ctx.GinContext.BindJSON(&grainData)
+	var grainDataPayload GrainRecordingData
+	err := ctx.GinContext.BindJSON(&grainDataPayload)
 	if err != nil {
 		rest.SendError(ctx.GinContext, ctx.Span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Unable to parse payload from Zapier"))
 		return
 	}
 
-	err = cleanGrainJsonPayload(&grainData)
+	grainData := &grainDataPayload
+	err = grainData.cleanPayload()
 	if err != nil {
 		rest.SendError(ctx.GinContext, ctx.Span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Unable to normalize payload from Zapier"))
 		return
 	}
 
-	if grainData.Data.IntelligenceNotesMD == "" {
+	if grainData.RecordingData.IntelligenceNotesMD == "" {
 		rest.SendError(ctx.GinContext, ctx.Span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("No Grain meeting in payload"))
 	}
 
 	ctx.GinContext.JSON(http.StatusAccepted, rest.BuildBaseResponse(rest.StatusProcessing))
 
 	go func() {
-		if err := createEventFromGrainRecordingZapier(ctx, &grainData); err != nil {
+		if err := createEventFromGrainRecordingZapier(ctx, grainData); err != nil {
 			tracing.TraceErr(ctx.Span, errors.Wrap(err, "failed to process Grain AI summary from zapier"))
 		}
 	}()
 	return
 }
 
-func cleanGrainJsonPayload(data *GrainRecordingData) error {
-	if data.Data.OwnersStr != "" {
-		ownersJson := utils.ReplaceSingleQuotesWithDoubleQuotes(data.Data.OwnersStr)
-		var owners []string
-		err := json.Unmarshal([]byte(ownersJson), &owners)
-		if err != nil {
-			return err
-		}
-		data.Data.Owners = owners
-	}
-
-	if data.Data.ParticipantsStr != "" {
-		participantsJson := utils.ReplaceSingleQuotesWithDoubleQuotes(data.Data.ParticipantsStr)
-
-		participantsJson = strings.Replace(participantsJson, " True", " true", -1)
-		participantsJson = strings.Replace(participantsJson, " False", " false", -1)
-		participantsJson = strings.Replace(participantsJson, " None", " \"\"", -1)
-
-		var participants []GrainParticipant
-		err := json.Unmarshal([]byte(participantsJson), &participants)
-		if err != nil {
-			return err
-		}
-		data.Data.Participants = participants
-	}
-
-	if data.Data.TagsStr != "" {
-		tagsJson := utils.ReplaceSingleQuotesWithDoubleQuotes(data.Data.TagsStr)
-		var tags []string
-		err := json.Unmarshal([]byte(tagsJson), &tags)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
 func createEventFromGrainRecordingZapier(ctx *rest.HTTPContext, grainData *GrainRecordingData) error {
 	var event data_fields.MarkdownEventFields
 	var allErrs error
 
-	content := extractGrainMeetingNotes(grainData)
+	content := grainData.MeetingNoteContent()
 	event.Content = &content
-	if grainData.Data.StartDatetime.IsZero() {
+	if grainData.RecordingData.StartDatetime.IsZero() {
 		event.CreatedAt = utils.NowPtr()
 	} else {
-		event.CreatedAt = utils.TimePtr(grainData.Data.StartDatetime.UTC())
+		event.CreatedAt = utils.TimePtr(grainData.RecordingData.StartDatetime.UTC())
 	}
 	source := neo4jentity.DataSourceGrain
 	event.Source = &source
 
-	orgIds, err := getParticipantOrganizationIds(ctx, getParticipantDomains(&grainData.Data.Participants))
+	orgIds, err := getParticipantOrganizationIds(ctx, grainData.RecordingData.getDomains())
 	if err != nil {
 		allErrs = multierr.Append(allErrs, errors.Wrap(err, "failed to get organization id for participant"))
 		tracing.TraceErr(ctx.Span, err)
@@ -148,85 +107,4 @@ func createEventFromGrainRecordingZapier(ctx *rest.HTTPContext, grainData *Grain
 
 	// write event to db
 	return nil
-}
-
-func getParticipantDomains(participants *[]GrainParticipant) []string {
-	var domains []string
-
-	for _, participant := range *participants {
-		emailData := mailvalidate.ValidateEmailSyntax(*participant.Email)
-		if !emailData.IsValid {
-			continue
-		}
-		domains = append(domains, emailData.Domain)
-	}
-	return domains
-}
-
-func extractGrainMeetingNotes(grainData *GrainRecordingData) string {
-	if grainData == nil || grainData.Data.IntelligenceNotesMD == "" {
-		return ""
-	}
-
-	// Remove hyperlinks using regex
-	// Matches markdown links like [(time)](url)
-	linkPattern := regexp.MustCompile(`\[\([^)]+\)\]\([^)]+\)`)
-	cleanNotes := linkPattern.ReplaceAllStringFunc(grainData.Data.IntelligenceNotesMD, func(match string) string {
-		// Extract just the text between the brackets
-		textStart := strings.Index(match, "(") + 1
-		textEnd := strings.Index(match, ")")
-		return match[textStart:textEnd]
-	})
-
-	// Calculate meeting duration
-	duration := grainData.Data.EndDatetime.Sub(grainData.Data.StartDatetime)
-	durationMinutes := int(duration.Minutes())
-
-	// Build participants section
-	var attendees, declines []string
-	for _, p := range grainData.Data.Participants {
-		email := "No email"
-		if p.Email != nil {
-			email = *p.Email
-		}
-		var participant string
-		if email == "No email" {
-			participant = p.Name
-		} else {
-			participant = fmt.Sprintf("- %s (%s)", p.Name, email)
-		}
-		if p.ConfirmedAttendee {
-			attendees = append(attendees, participant)
-		} else {
-			declines = append(declines, participant)
-		}
-	}
-
-	// Build the final markdown
-	var sb strings.Builder
-
-	// Add meeting details
-	sb.WriteString(fmt.Sprintf("# %s\n\n", grainData.Data.Title))
-	sb.WriteString(fmt.Sprintf("**Meeting Date:** %s\n", grainData.Data.StartDatetime.Format("January 2, 2006 3:04 PM MST")))
-	sb.WriteString(fmt.Sprintf("**Duration:** %d minutes\n\n", durationMinutes))
-
-	// Add participants
-	sb.WriteString("**Attended**\n")
-	sb.WriteString(strings.Join(attendees, "\n"))
-	sb.WriteString("\n\n")
-	if len(declines) > 0 {
-		sb.WriteString("**Declined/No Show**\n")
-		sb.WriteString(strings.Join(declines, "\n"))
-		sb.WriteString("\n\n")
-	}
-
-	// Add meeting notes
-	sb.WriteString("## Meeting Notes\n")
-	sb.WriteString(cleanNotes)
-	sb.WriteString("\n\n")
-
-	// Add recording link
-	sb.WriteString(fmt.Sprintf("[View Recording](%s)\n", grainData.Data.PublicURL))
-
-	return sb.String()
 }

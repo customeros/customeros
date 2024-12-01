@@ -1,11 +1,7 @@
 package flows
 
 import (
-	"encoding/json"
-	"fmt"
 	"net/http"
-	"regexp"
-	"strconv"
 	"strings"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
@@ -15,7 +11,6 @@ import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/pkg/errors"
 	"go.uber.org/multierr"
-	"golang.org/x/net/html"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 )
@@ -52,14 +47,15 @@ func FathomZapier(c *rest.HTTPContext) {
 }
 
 func handleFathomAISummaryZapier(ctx *rest.HTTPContext) {
-	var aiSummaryData FathomZapierPayload
-	err := ctx.GinContext.BindJSON(&aiSummaryData)
+	var aiSummaryDataPayload FathomZapierPayload
+	err := ctx.GinContext.BindJSON(&aiSummaryDataPayload)
 	if err != nil {
 		rest.SendError(ctx.GinContext, ctx.Span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Unable to parse payload from Zapier"))
 		return
 	}
 
-	err = cleanFathomJsonPayload(&aiSummaryData)
+	aiSummaryData := &aiSummaryDataPayload
+	err = aiSummaryData.toCleanPayload()
 	if err != nil {
 		rest.SendError(ctx.GinContext, ctx.Span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Unable to normalize payload from Zapier"))
 		return
@@ -73,44 +69,18 @@ func handleFathomAISummaryZapier(ctx *rest.HTTPContext) {
 	ctx.GinContext.JSON(http.StatusAccepted, rest.BuildBaseResponse(rest.StatusProcessing))
 
 	go func() {
-		if err := createEventFromFathomAISummaryZapier(ctx, &aiSummaryData); err != nil {
+		if err := createEventFromFathomAISummaryZapier(ctx, aiSummaryData); err != nil {
 			tracing.TraceErr(ctx.Span, errors.Wrap(err, "failed to process Fathom AI summary from zapier"))
 		}
 	}()
 	return
 }
 
-func cleanFathomJsonPayload(data *FathomZapierPayload) error {
-	if data.Meeting.ExternalDomainsStr != "" {
-		externalDomainsJson := utils.ReplaceSingleQuotesWithDoubleQuotes(data.Meeting.ExternalDomainsStr)
-		var externalDomains []ExternalDomain
-		err := json.Unmarshal([]byte(externalDomainsJson), &externalDomains)
-		if err != nil {
-			return err
-		}
-		data.Meeting.ExternalDomains = externalDomains
-	}
-
-	if data.Meeting.InviteesStr != "" {
-		inviteesJson := utils.ReplaceSingleQuotesWithDoubleQuotes(data.Meeting.InviteesStr)
-		inviteesJson = strings.Replace(inviteesJson, ": True", ": true", -1)
-		inviteesJson = strings.Replace(inviteesJson, ": False", ": false", -1)
-		var invitees []Invitee
-		err := json.Unmarshal([]byte(inviteesJson), &invitees)
-		if err != nil {
-			return err
-		}
-		data.Meeting.Invitees = invitees
-	}
-
-	return nil
-}
-
 func createEventFromFathomAISummaryZapier(ctx *rest.HTTPContext, aiSummaryData *FathomZapierPayload) error {
 	var event data_fields.MarkdownEventFields
 	var allErrs error
 
-	content, err := processFathomSummaryFromZapier(aiSummaryData)
+	content, err := aiSummaryData.toMarkdownContent()
 	if err != nil {
 		return err
 	}
@@ -144,100 +114,4 @@ func createEventFromFathomAISummaryZapier(ctx *rest.HTTPContext, aiSummaryData *
 	}
 
 	return allErrs
-}
-
-func processFathomSummaryFromZapier(raw *FathomZapierPayload) (string, error) {
-	// Convert HTML to clean markdown
-	cleanMarkdown, err := convertFathomHTMLToCleanMarkdown(raw.AISummary.HTMLFormatted)
-	if err != nil {
-		return "", fmt.Errorf("error converting HTML to markdown: %w", err)
-	}
-
-	// Build the additional sections
-	var builder strings.Builder
-	builder.WriteString(cleanMarkdown)
-
-	// Add participants section
-	builder.WriteString("\n\n### Meeting Participants\n")
-	for _, participant := range raw.Meeting.Invitees {
-		builder.WriteString(fmt.Sprintf("- %s (%s)\n", participant.Name, participant.Email))
-	}
-
-	// Add duration
-	builder.WriteString("\n### Meeting Duration\n")
-	mins, err := strconv.ParseFloat(raw.Recording.DurationInMinutes, 64)
-	if err == nil {
-		builder.WriteString(fmt.Sprintf("%d minutes\n\n", int(mins)))
-	}
-
-	// Add recording link
-	builder.WriteString(fmt.Sprintf("[View Recording](%s)\n", raw.Recording.ShareURL))
-
-	return builder.String(), nil
-}
-
-func convertFathomHTMLToCleanMarkdown(htmlContent string) (string, error) {
-	// Parse HTML
-	doc, err := html.Parse(strings.NewReader(htmlContent))
-	if err != nil {
-		return "", err
-	}
-
-	var builder strings.Builder
-	var process func(*html.Node)
-
-	process = func(n *html.Node) {
-		switch n.Type {
-		case html.DocumentNode:
-			// Start processing from the root node
-			for c := n.FirstChild; c != nil; c = c.NextSibling {
-				process(c)
-			}
-		case html.TextNode:
-			builder.WriteString(n.Data)
-		case html.ElementNode:
-			switch n.Data {
-			case "h1":
-				builder.WriteString("\n# ")
-			case "h2":
-				builder.WriteString("\n## ")
-			case "h3":
-				builder.WriteString("\n### ")
-			case "p":
-				builder.WriteString("\n\n")
-			case "ul":
-				builder.WriteString("\n")
-			case "li":
-				builder.WriteString("\n- ")
-			case "br":
-				builder.WriteString("\n")
-			}
-
-			// Process child nodes
-			for c := n.FirstChild; c != nil; c = c.NextSibling {
-				process(c)
-			}
-
-			// Close Markdown elements where necessary
-			switch n.Data {
-			case "p", "h1", "h2", "h3", "ul", "li":
-				builder.WriteString("\n")
-			}
-		}
-	}
-
-	process(doc)
-
-	// Clean up the output
-	output := builder.String()
-
-	// Remove multiple newlines
-	output = regexp.MustCompile(`\n{3,}`).ReplaceAllString(output, "\n\n")
-	// Remove leading/trailing whitespace
-	output = strings.TrimSpace(output)
-	// Ensure consistent newlines between sections
-	output = regexp.MustCompile(`\n## `).ReplaceAllString(output, "\n\n## ")
-	output = regexp.MustCompile(`\n### `).ReplaceAllString(output, "\n\n### ")
-
-	return output, nil
 }

@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	comserv "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
@@ -16,10 +17,10 @@ import (
 )
 
 type WebhookService interface {
-	GetIntegration(s string) (Integration, error)
-	CreateIntegrationWebhook(ctx context.Context, tenant string, integration Integration) (webhookUrl string, secret string, err error)
+	GetIntegration(s string) (comserv.Integration, error)
+	CreateIntegrationWebhook(ctx context.Context, tenant string, integration comserv.Integration) (webhookUrl string, secret string, err error)
 	ValidateTenantId(ctx context.Context, tenant, tenantId string) (bool, error)
-	GetIntegrationFromWebhookPath(ctx context.Context, tenant, webhookPath string) (Integration, error)
+	GetIntegrationFromWebhookPath(ctx context.Context, tenant, webhookPath string) (comserv.Integration, error)
 	DeactivateWebhook(ctx context.Context, webhookPath string) error
 }
 
@@ -37,8 +38,8 @@ func NewWebhookService(log logger.Logger, repositories *repository.Repositories,
 	}
 }
 
-func (w *webhookService) GetIntegration(s string) (Integration, error) {
-	if integration, ok := validIntegrations[s]; ok {
+func (w *webhookService) GetIntegration(s string) (comserv.Integration, error) {
+	if integration, ok := comserv.ValidIntegrations[s]; ok {
 		return integration, nil
 	}
 	return "", fmt.Errorf("invalid integration type: %s", s)
@@ -60,7 +61,7 @@ func (w *webhookService) ValidateTenantId(ctx context.Context, tenant, tenantId 
 }
 
 // to implement
-func (w *webhookService) GetIntegrationFromWebhookPath(ctx context.Context, tenant, webhookPath string) (Integration, error) {
+func (w *webhookService) GetIntegrationFromWebhookPath(ctx context.Context, tenant, webhookPath string) (comserv.Integration, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebhookService.GetIntegrationFromWebhookPath")
 	defer span.Finish()
 	span.LogFields(log.String("tenant", tenant))
@@ -73,10 +74,10 @@ func (w *webhookService) GetIntegrationFromWebhookPath(ctx context.Context, tena
 		tracing.TraceErr(span, err)
 	}
 
-	return Integration(webhook.Integration), nil
+	return comserv.Integration(webhook.Integration), nil
 }
 
-func (w *webhookService) CreateIntegrationWebhook(ctx context.Context, tenant string, integration Integration) (string, string, error) {
+func (w *webhookService) CreateIntegrationWebhook(ctx context.Context, tenant string, integration comserv.Integration) (string, string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebhookService.CreateWebhook")
 	defer span.Finish()
 	span.LogFields(log.String("tenant", tenant))

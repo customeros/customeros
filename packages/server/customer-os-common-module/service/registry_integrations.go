@@ -19,7 +19,7 @@ const (
 	IntegrationSalesforce Integration = "salesforce"
 )
 
-var validIntegrations = func() map[string]Integration {
+var ValidIntegrations = func() map[string]Integration {
 	integrations := []Integration{
 		IntegrationCalCom,
 		IntegrationFathom,

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	comserv "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/pkg/errors"
 
@@ -52,7 +53,7 @@ func CreateWebhook(services *service.Services, baseURL, flowsPath string) gin.Ha
 			rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("please provide a valid integration value"))
 		}
 
-		webhookPath, secret, err := services.WebhookService.CreateIntegrationWebhook(ctx, tenant, service.Integration(integration))
+		webhookPath, secret, err := services.WebhookService.CreateIntegrationWebhook(ctx, tenant, comserv.Integration(integration))
 		if err != nil {
 			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInvalidAPIKey.WithMessage("Unable to create webhook"))
 			return
@@ -265,14 +266,14 @@ func HandleWebhook(s *service.Services) gin.HandlerFunc {
 		}
 
 		switch integration {
-		case service.IntegrationCalCom:
+		case comserv.IntegrationCalCom:
 			CalDotCom(&httpContext)
 		// todo
-		case service.IntegrationFathom:
+		case comserv.IntegrationFathom:
 			FathomZapier(&httpContext)
-		case service.IntegrationGrain:
+		case comserv.IntegrationGrain:
 			GrainZapier(&httpContext)
-		case service.IntegrationPostmark:
+		case comserv.IntegrationPostmark:
 			PostmarkInboundEmail(&httpContext)
 		// todo
 		default:
