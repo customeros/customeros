@@ -270,10 +270,8 @@ func HandleWebhook(s *service.Services) gin.HandlerFunc {
 		// todo
 		case service.IntegrationFathom:
 			FathomZapier(&httpContext)
-		// todo
 		case service.IntegrationGrain:
 			GrainZapier(&httpContext)
-		// todo
 		case service.IntegrationPostmark:
 			PostmarkInboundEmail(&httpContext)
 		// todo

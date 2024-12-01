@@ -20,7 +20,6 @@ import (
 	restmailstack "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/mailstack"
 	restoutreach "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/outreach"
 	restverify "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/verify"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/webhooks"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
 
