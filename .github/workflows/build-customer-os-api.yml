@@ -30,6 +30,8 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}/customer-os-api
+  GOMODCACHE: ${{ github.workspace }}/go/pkg/mod
+  GOBIN: ${{ github.workspace }}/go/bin
 
 permissions:
   contents: read
@@ -43,6 +45,14 @@ defaults:
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        test-group: [
+          "repository",
+          "rest",
+          "other"
+        ]
     steps:
       - uses: actions/checkout@v4
 
@@ -50,6 +60,25 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: stable
+          cache: true
+        env:
+          GOPROXY: "direct"
+          GOSUMDB: "off"
+          GOMODCACHE: ${{ github.workspace }}/go/pkg/mod
+
+      - name: Cache Go tools
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.GOBIN }}
+          key: ${{ runner.os }}-go-tools-${{ hashFiles('packages/server/customer-os-api/go.sum') }}
+
+      - name: Install gotestsum
+        run: |
+          mkdir -p "$GOBIN"
+          if [ ! -f "$GOBIN/gotestsum" ]; then
+            go install gotest.tools/gotestsum@latest
+          fi
+          echo "$GOBIN" >> $GITHUB_PATH
 
       - name: Go Cache
         id: go-cache
@@ -57,9 +86,8 @@ jobs:
         with:
           path: |
             ~/.cache/go-build
-            ~/go/pkg/mod
-            ~/go/bin
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+            ${{ github.workspace }}/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('packages/server/customer-os-api/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-
 
@@ -67,21 +95,29 @@ jobs:
         if: steps.go-cache.outputs.cache-hit != 'true'
         run: make all
 
-      - name: Configure Test Folders
-        id: test-folders
+      - name: Get test packages
+        id: get-packages
         run: |
-          test_folders=$(go list ./... | grep -v /gen | grep -v /test | grep -v /testify | paste -sd "," -)
-          echo "{name}={test_folders}" >> $GITHUB_OUTPUT
+          if [ "${{ matrix.test-group }}" = "other" ]; then
+            # Get all packages except repository, rest, and graph/resolver
+            PACKAGES=$(go list ./... | grep -v /gen | grep -v /test | grep -v /testify | grep -v "/repository" | grep -v "/rest" | grep -v "/graph/resolver" | paste -sd " " -)
+          else
+            # Get packages for specific group
+            PACKAGES=$(go list ./... | grep "/${{ matrix.test-group }}" | paste -sd " " -)
+          fi
+          echo "packages=${PACKAGES}" >> "$GITHUB_OUTPUT"
 
       - name: Test
-        run: gotestsum --junitfile unit-tests.xml -- -coverprofile=cover.out -coverpkg=${{ steps.test-folders.outputs.test_folders }} $(go list ./... | grep -v /testify)
-
+        run: |
+          gotestsum --junitfile unit-tests.xml -- \
+            -coverprofile=cover.out \
+            ${{ steps.get-packages.outputs.packages }}
 
       - name: Test Report
         uses: mikepenz/action-junit-report@v5
-        if: always()    # run this step even if previous step failed
+        if: always()
         with:
-          report_paths: ./packages/server/customer-os-api/unit-tests.xml    # Path to test results
+          report_paths: packages/server/customer-os-api/**/*unit-tests.xml
           include_passed: true
           annotate_only: true
           detailed_summary: true
@@ -89,23 +125,180 @@ jobs:
       - name: Compute Code Coverage
         id: compute_code_coverage
         run: |
-          echo "## Code Coverage" >> $GITHUB_STEP_SUMMARY
+          echo "## Code Coverage for ${{ matrix.test-group }}" >> $GITHUB_STEP_SUMMARY
           echo "|Filename|Function|Coverage|" >> $GITHUB_STEP_SUMMARY
           echo "|--------|--------|--------|" >> $GITHUB_STEP_SUMMARY
           go tool cover -func=cover.out | sed -r 's/[[:space:]]+/|/g' | sed -r 's/$/|/g' | sed -r 's/^/|/g' >> $GITHUB_STEP_SUMMARY
           go tool cover -func=cover.out | sed -r 's/[[:space:]]+/|/g' | sed -r 's/$/|/g' | sed -r 's/^/|/g' | tail -n 1 > test-coverage.txt
           coverage=$(cat test-coverage.txt | awk -F'|' '{gsub(/%/, "", $(NF-1)); print $(NF-1)}')
           echo "computed_coverage=$coverage" >> $GITHUB_OUTPUT
+  test-resolver:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        chunk: [0, 1, 2, 3]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: stable
+          cache: true
+        env:
+          GOPROXY: "direct"
+          GOSUMDB: "off"
+          GOMODCACHE: ${{ github.workspace }}/go/pkg/mod
+
+      - name: Cache Go tools
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.GOBIN }}
+          key: ${{ runner.os }}-go-tools-${{ hashFiles('packages/server/customer-os-api/go.sum') }}
+
+      - name: Install gotestsum
+        run: |
+          mkdir -p "$GOBIN"
+          if [ ! -f "$GOBIN/gotestsum" ]; then
+            go install gotest.tools/gotestsum@latest
+          fi
+          echo "$GOBIN" >> $GITHUB_PATH
+
+      - name: Go Cache
+        id: go-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ${{ github.workspace }}/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('packages/server/customer-os-api/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Build
+        if: steps.go-cache.outputs.cache-hit != 'true'
+        run: make all
+
+      - name: Cache Test List
+        id: cache-test-list
+        uses: actions/cache@v4
+        with:
+          path: ./packages/server/customer-os-api/.test-list
+          key: test-list-${{ hashFiles('packages/server/customer-os-api/**/*.go') }}
+          restore-keys: |
+            test-list-
+
+      - name: Get test list
+        id: get-tests
+        working-directory: ./packages/server/customer-os-api
+        run: |
+          set -x  # Enable debug output
+          
+          if [ -f ".test-list" ] && [ -s ".test-list" ]; then
+            echo "Using cached test list"
+            cat ".test-list" > all_tests.txt
+          else
+            echo "Generating new test list..."
+            go test -list "^Test" ./graph/resolver/... 2>/dev/null > all_tests.txt
+            cp all_tests.txt .test-list
+          fi
+          echo "Number of lines in all_tests.txt:"
+          wc -l all_tests.txt
+          
+          # Get list of tests directly into array
+          readarray -t TEST_ARRAY < <(cat all_tests.txt | grep "^Test" || true)
+          TOTAL=${#TEST_ARRAY[@]}
+          
+          echo "First 10 tests found:"
+          printf '%s\n' "${TEST_ARRAY[@]:0:10}"
+          
+          echo "Total tests found: $TOTAL"
+          
+          # Calculate chunk details
+          CHUNK_SIZE=$(( (TOTAL + 3) / 4 ))
+          echo "Chunk size: $CHUNK_SIZE"
+          START_INDEX=$(( ${{ matrix.chunk }} * CHUNK_SIZE ))
+          END_INDEX=$(( START_INDEX + CHUNK_SIZE ))
+          
+          # Ensure end index doesn't exceed array size
+          if [ $END_INDEX -gt $TOTAL ]; then
+            END_INDEX=$TOTAL
+          fi
+          
+          echo "Processing chunk ${{ matrix.chunk }}: tests $START_INDEX to $END_INDEX of $TOTAL tests"
+          
+          # Show the range of tests we're about to process
+          echo "Tests in this chunk:"
+          printf '%s\n' "${TEST_ARRAY[@]:$START_INDEX:$CHUNK_SIZE}" | head -n 5
+          echo "... (and more)"
+          
+          # Extract tests for this chunk and join with |
+          TEST_PATTERN=$(printf "%s|" "${TEST_ARRAY[@]:$START_INDEX:$CHUNK_SIZE}")
+          TEST_PATTERN=${TEST_PATTERN%|}  # Remove trailing pipe
+          
+          # Count actual tests in pattern
+          TEST_COUNT=$(echo "$TEST_PATTERN" | tr '|' '\n' | wc -l)
+          echo "Number of tests in this chunk: $TEST_COUNT"
+          
+          # Debug the output
+          echo "Test pattern length: ${#TEST_PATTERN}"
+          echo "First 100 characters of test pattern:"
+          echo "$TEST_PATTERN" | head -c 100
+          
+          # Write to GITHUB_OUTPUT with quotes to preserve the pattern
+          echo "test_pattern=$TEST_PATTERN" >> "$GITHUB_OUTPUT"
+          
+          # Verify the output was written correctly
+          echo "Content of GITHUB_OUTPUT:"
+          cat "$GITHUB_OUTPUT"
+
+      - name: Test
+        working-directory: ./packages/server/customer-os-api
+        run: |
+          if [ -z "${{ steps.get-tests.outputs.test_pattern }}" ]; then
+            echo "No tests to run in this chunk"
+            exit 0
+          fi
+          gotestsum --junitfile unit-tests.xml -- \
+            -coverprofile=cover.out \
+            -run "${{ steps.get-tests.outputs.test_pattern }}" \
+            ./graph/resolver/...
+
+      - name: Test Report
+        uses: mikepenz/action-junit-report@v5
+        if: always()
+        with:
+          report_paths: packages/server/customer-os-api/**/*unit-tests.xml
+          include_passed: true
+          annotate_only: true
+          detailed_summary: true
+
+      - name: Compute Code Coverage
+        id: compute_code_coverage
+        working-directory: ./packages/server/customer-os-api
+        run: |
+          echo "## Code Coverage for resolver (chunk ${{ matrix.chunk }})" >> $GITHUB_STEP_SUMMARY
+          echo "|Filename|Function|Coverage|" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|--------|--------|" >> $GITHUB_STEP_SUMMARY
+          go tool cover -func=cover.out | sed -r 's/[[:space:]]+/|/g' | sed -r 's/$/|/g' | sed -r 's/^/|/g' >> $GITHUB_STEP_SUMMARY
+          go tool cover -func=cover.out | sed -r 's/[[:space:]]+/|/g' | sed -r 's/$/|/g' | sed -r 's/^/|/g' | tail -n 1 > test-coverage.txt
+          coverage=$(cat test-coverage.txt | awk -F'|' '{gsub(/%/, "", $(NF-1)); print $(NF-1)}')
+          echo "computed_coverage=$coverage" >> $GITHUB_OUTPUT
+  
 
   build-publish:
-    needs:
-      - test
-
+    needs: [ test, test-resolver ]
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: |
+            network=host
 
       - name: Log in to the Container registry
         uses: docker/login-action@v3.3.0
@@ -128,3 +321,5 @@ jobs:
           push: ${{ github.ref_name == 'otter' || github.event_name == 'release' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
