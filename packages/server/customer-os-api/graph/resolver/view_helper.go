@@ -147,7 +147,7 @@ func DefaultTableViewDefinitionUpcomingInvoices(span opentracing.Span) (postgres
 		Order:          4,
 		Icon:           "InvoiceUpcoming",
 		Filters:        ``,
-		DefaultFilters: `{"AND":[{"filter":{"property":"INVOICE_PREVIEW","value":true}}]}`,
+		DefaultFilters: `{"AND":[{"filter":{"property":"INVOICE_PREVIEW","value":true}},{"filter":{"property":"INVOICE_DRY_RUN","value":false}}]}`,
 		Sorting:        ``,
 		IsPreset:       true,
 		IsShared:       false,
