@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -364,6 +365,136 @@ func (r *mutationResolver) CustomerContactCreate(ctx context.Context, input mode
 		ContactEntity: mapper.MapCustomerContactInputToEntity(input),
 		EmailEntity:   mapper.MapEmailInputToLocalEntity(input.Email),
 	})
+}
+
+// ContactCreateBulkByLinkedIn is the resolver for the contact_CreateBulkByLinkedIn field.
+func (r *mutationResolver) ContactCreateBulkByLinkedIn(ctx context.Context, linkedInUrls []string, flowID *string) ([]string, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactCreateBulkByLinkedIn", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "request.linkedInUrls", linkedInUrls)
+
+	uniqueLinkedInUrls := utils.RemoveEmpties(linkedInUrls)
+	uniqueLinkedInUrls = utils.RemoveDuplicates(uniqueLinkedInUrls)
+	// if linkedInUrls is empty, return an empty array
+	if len(uniqueLinkedInUrls) == 0 {
+		return []string{}, nil
+	}
+	if len(uniqueLinkedInUrls) > 200 {
+		err := pkgerrors.Wrap(errors.New("maximum number of LinkedIn URLs exceeded"), "ContactCreateBulkByLinkedIn")
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Maximum number of LinkedIn URLs exceeded")
+		return uniqueLinkedInUrls, err
+	}
+
+	maxWorkers := 10
+	var wg sync.WaitGroup
+	inputCh := make(chan string)
+	failedCh := make(chan string, len(uniqueLinkedInUrls))
+
+	// Worker function.
+	worker := func() {
+		defer wg.Done()
+		for item := range inputCh {
+			contactId, err := r.Services.CommonServices.ContactService.CreateContactByLinkedIn(ctx, nil, item, commonService.ServiceOptions{SkipCompletedEvents: true})
+			if contactId == "" && err != nil {
+				// Only collect items that completely failed (empty result with error).
+				failedCh <- item
+			}
+		}
+	}
+
+	// Start workers.
+	for i := 0; i < maxWorkers; i++ {
+		wg.Add(1)
+		go worker()
+	}
+
+	// Send inputs to the input channel.
+	go func() {
+		for _, linkedInUrl := range uniqueLinkedInUrls {
+			inputCh <- linkedInUrl
+		}
+		close(inputCh) // Close input channel after sending all inputs.
+	}()
+
+	// Wait for workers to finish.
+	wg.Wait()
+	close(failedCh) // Close failed channel when workers are done.
+
+	// Collect failed linkedInUrls from the failed channel.
+	var failedLinkedInUrls []string
+	for item := range failedCh {
+		failedLinkedInUrls = append(failedLinkedInUrls, item)
+	}
+
+	span.LogFields(log.String("response.failedLinkedInUrls", strings.Join(failedLinkedInUrls, ", ")))
+	return failedLinkedInUrls, nil
+}
+
+// ContactCreateBulkByEmail is the resolver for the contact_CreateBulkByEmail field.
+func (r *mutationResolver) ContactCreateBulkByEmail(ctx context.Context, emails []string, flowID *string) ([]string, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactCreateBulkByEmail", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "request.emails", emails)
+
+	uniqueEmails := utils.RemoveEmpties(emails)
+	uniqueEmails = utils.RemoveDuplicates(uniqueEmails)
+	// if linkedInUrls is empty, return an empty array
+	if len(uniqueEmails) == 0 {
+		return []string{}, nil
+	}
+	if len(uniqueEmails) > 200 {
+		err := pkgerrors.Wrap(errors.New("maximum number of emails exceeded"), "ContactCreateBulkByLinkedIn")
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Maximum number of emails exceeded")
+		return uniqueEmails, err
+	}
+
+	maxWorkers := 10
+	var wg sync.WaitGroup
+	inputCh := make(chan string)
+	failedCh := make(chan string, len(uniqueEmails))
+
+	// Worker function.
+	worker := func() {
+		defer wg.Done()
+		for item := range inputCh {
+			contactId, err := r.Services.CommonServices.ContactService.CreateContactByEmail(ctx, nil, item, commonService.ServiceOptions{SkipCompletedEvents: true})
+			if contactId == "" && err != nil {
+				// Only collect items that completely failed (empty result with error).
+				failedCh <- item
+			}
+		}
+	}
+
+	// Start workers.
+	for i := 0; i < maxWorkers; i++ {
+		wg.Add(1)
+		go worker()
+	}
+
+	// Send inputs to the input channel.
+	go func() {
+		for _, emailAddress := range uniqueEmails {
+			inputCh <- emailAddress
+		}
+		close(inputCh) // Close input channel after sending all inputs.
+	}()
+
+	// Wait for workers to finish.
+	wg.Wait()
+	close(failedCh) // Close failed channel when workers are done.
+
+	// Collect failed emails from the failed channel.
+	var failedEmails []string
+	for item := range failedCh {
+		failedEmails = append(failedEmails, item)
+	}
+
+	span.LogFields(log.String("response.failedEmails", strings.Join(failedEmails, ", ")))
+	return failedEmails, nil
 }
 
 // ContactUpdate is the resolver for the contact_Update field.
