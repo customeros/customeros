@@ -18,7 +18,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/neo4j/neo4j-go-driver/v5 v5.27.0
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20241120155252-bb48250b6994
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository v0.0.0-20241120155252-bb48250b6994
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository v0.0.0-20241202190357-68898897475c
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository v0.0.0-20241120155252-bb48250b6994
 	github.com/robfig/cron v1.2.0
 	github.com/sirupsen/logrus v1.9.3
