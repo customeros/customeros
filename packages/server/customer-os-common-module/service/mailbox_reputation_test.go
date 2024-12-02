@@ -3,6 +3,9 @@ package service
 import (
 	"testing"
 
+	"bou.ke/monkey"
+	"github.com/customeros/mailwatcher/blscan"
+	"github.com/customeros/mailwatcher/domainage"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/stretchr/testify/assert"
@@ -11,52 +14,68 @@ import (
 func Test_MailboxService_DomainAgePenalty(t *testing.T) {
 	tests := []struct {
 		name            string
-		domainAgeData   string
+		domain          string
+		creationAge     int
 		expectedPenalty int
 	}{
 		{
 			name:            "New domain (1 day)",
-			domainAgeData:   "1",
+			domain:          "example.com",
+			creationAge:     1,
 			expectedPenalty: 75,
 		},
 		{
 			name:            "Week old domain (7 days)",
-			domainAgeData:   "7",
+			domain:          "example.com",
+			creationAge:     7,
 			expectedPenalty: 60,
 		},
 		{
 			name:            "10 days old domain",
-			domainAgeData:   "10",
+			domain:          "example.com",
+			creationAge:     10,
 			expectedPenalty: 50,
 		},
 		{
 			name:            "15 days old domain",
-			domainAgeData:   "15",
+			domain:          "example.com",
+			creationAge:     15,
 			expectedPenalty: 40,
 		},
 		{
 			name:            "30 days old domain",
-			domainAgeData:   "30",
+			domain:          "example.com",
+			creationAge:     30,
 			expectedPenalty: 30,
 		},
 		{
 			name:            "90 days old domain",
-			domainAgeData:   "90",
+			domain:          "example.com",
+			creationAge:     90,
 			expectedPenalty: 15,
 		},
 		{
 			name:            "Older domain (>90 days)",
-			domainAgeData:   "120",
+			domain:          "example.com",
+			creationAge:     120,
 			expectedPenalty: 0,
 		},
 	}
 
-	s := &mailboxService{}
 	mockSpan := &MockSpan{}
+	s := &mailboxService{}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := s.domainAgePenalty(mockSpan, tt.domainAgeData)
+			// Patch the GetDomainDates function for this test
+			patch := monkey.Patch(domainage.GetDomainDates, func(domain string) (domainage.DomainDates, error) {
+				return domainage.DomainDates{
+					CreationAge: tt.creationAge,
+				}, nil
+			})
+			defer patch.Unpatch()
+
+			result := s.domainAgePenalty(mockSpan, tt.domain)
 			assert.Equal(t, tt.expectedPenalty, result)
 		})
 	}
@@ -125,6 +144,16 @@ func Test_MailboxService_BlacklistPenaltyPercent(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			// Patch the ScanBlacklists function for this test
+			patch := monkey.Patch(blscan.ScanBlacklists, func(domain string, scanType string) blscan.BlacklistResults {
+				return blscan.BlacklistResults{
+					MajorLists:    tt.majorLists,
+					MinorLists:    tt.minorLists,
+					SpamTrapLists: tt.spamTrapLists,
+				}
+			})
+			defer patch.Unpatch()
+
 			result := s.blacklistPenaltyPercent(tt.domain)
 			assert.Equal(t, tt.expectedPenalty, result)
 		})
