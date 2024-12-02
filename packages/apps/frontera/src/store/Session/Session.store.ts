@@ -22,6 +22,7 @@ type Session = {
   exp: number;
   iat: number;
   tenant: string;
+  campaign: string;
   access_token: string;
   refresh_token: string;
   integrations_token: string;
@@ -40,6 +41,7 @@ const defaultSession: Session = {
   exp: 0,
   iat: 0,
   tenant: '',
+  campaign: '',
   access_token: '',
   refresh_token: '',
   integrations_token: '',
@@ -137,6 +139,7 @@ export class SessionStore {
         this.value.tenant = jwtParsed?.tenant ?? '';
         this.value.profile.email = jwtParsed?.profile?.email ?? '';
         this.value.profile.id = jwtParsed?.profile?.id ?? '';
+        this.value.campaign = jwtParsed?.campaign ?? '';
       });
 
       return;
@@ -183,8 +186,13 @@ export class SessionStore {
       // initiate the google auth flow
       this.isLoading = provider;
 
+      const params = new URLSearchParams(window.location.search);
+      const from = params.get('from');
+
       const endpoint =
-        provider === 'google' ? '/google-auth' : '/azure-ad-auth';
+        (provider === 'google' ? '/google-auth' : '/azure-ad-auth') +
+        (from ? `?from=${encodeURIComponent(from)}` : '');
+
       const { data } = await this.transport.http.get<{ url: string }>(endpoint);
 
       window.location.href = data.url;
