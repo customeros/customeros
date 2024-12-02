@@ -66,6 +66,7 @@ type Repositories struct {
 	EmailMessageRepository                      EmailMessageRepository
 	UserWorkingScheduleRepository               UserWorkingScheduleRepository
 	MailstackBuyRequestRepository               MailstackBuyRequestRepository
+	FlowWebhooksRepository                      FlowWebhooksRepository
 }
 
 func InitRepositories(db *gorm.DB) *Repositories {
@@ -128,6 +129,7 @@ func InitRepositories(db *gorm.DB) *Repositories {
 		EmailMessageRepository:                      NewEmailMessageRepository(db),
 		UserWorkingScheduleRepository:               NewUserWorkingScheduleRepository(db),
 		MailstackBuyRequestRepository:               NewMailstackBuyRequestRepository(db),
+		FlowWebhooksRepository:                      NewFlowWebhooksRepository(db),
 	}
 
 	return repositories
@@ -143,6 +145,7 @@ func (r *Repositories) Migration(db *gorm.DB) {
 		&entity.Tenant{},
 		&entity.AiLocationMapping{},
 		&entity.AiPromptLog{},
+		&entity.FlowWebhooks{},
 		&entity.PersonalIntegration{},
 		&entity.PersonalEmailProvider{},
 		&entity.TenantWebhookApiKey{},

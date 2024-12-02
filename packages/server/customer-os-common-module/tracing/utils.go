@@ -5,16 +5,18 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/machinebox/graphql"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/constants"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/opentracing/opentracing-go/log"
 	"google.golang.org/grpc/metadata"
-	"io"
-	"net/http"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/constants"
 )
 
 const (
@@ -64,7 +66,6 @@ func TracingEnhancer(ctx context.Context, endpoint string) func(c *gin.Context) 
 
 func StartHttpServerTracerSpanWithHeader(ctx context.Context, operationName string, headers http.Header) (context.Context, opentracing.Span) {
 	spanCtx, err := opentracing.GlobalTracer().Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(headers))
-
 	if err != nil {
 		serverSpan := opentracing.GlobalTracer().StartSpan(operationName)
 		opentracing.GlobalTracer().Inject(serverSpan.Context(), opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(headers))
@@ -89,7 +90,6 @@ func StartRabbitMQMessageTracerSpanWithHeader(ctx context.Context, operationName
 	serverSpan := opentracing.GlobalTracer().StartSpan(operationName, ext.RPCServerOption(span))
 	ctx = opentracing.ContextWithSpan(ctx, serverSpan)
 	return ctx, serverSpan
-
 }
 
 func StartTracerSpan(ctx context.Context, operationName string) (opentracing.Span, context.Context) {
@@ -197,14 +197,17 @@ func SetDefaultServiceSpanTags(ctx context.Context, span opentracing.Span) {
 	setDefaultSpanTags(ctx, span)
 	TagComponentService(span)
 }
+
 func SetDefaultListenerSpanTags(ctx context.Context, span opentracing.Span) {
 	setDefaultSpanTags(ctx, span)
 	span.SetTag(SpanTagComponent, constants.ComponentListener)
 }
+
 func SetDefaultNeo4jRepositorySpanTags(ctx context.Context, span opentracing.Span) {
 	setDefaultSpanTags(ctx, span)
 	TagComponentNeo4jRepository(span)
 }
+
 func SetDefaultPostgresRepositorySpanTags(ctx context.Context, span opentracing.Span) {
 	setDefaultSpanTags(ctx, span)
 	TagComponentPostgresRepository(span)

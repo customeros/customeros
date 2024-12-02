@@ -16,11 +16,10 @@ import (
 	restbilling "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/billing"
 	restcustomerbase "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/customerbase"
 	restenrich "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/enrich"
-	restevents "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/flows"
 	restmailstack "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/mailstack"
 	restoutreach "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/outreach"
 	restverify "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/verify"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/webhooks"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
 
@@ -31,7 +30,7 @@ const (
 	verifyV1Path       = "/verify/v1"
 	enrichV1Path       = "/enrich/v1"
 	mailStackV1Path    = "/mailstack/v1"
-	eventsV1Path       = "/events/v1"
+	flowsV1Path        = "/flows/v1"
 	webhooksV1Path     = "/webhooks/v1"
 )
 
@@ -41,7 +40,7 @@ func RegisterRestRoutes(ctx context.Context, r *gin.Engine, grpcClients *grpc_cl
 	registerBillingRoutes(ctx, r, services, grpcClients, cache)
 	registerCustomerBaseRoutes(ctx, r, services, grpcClients, cache)
 	registerEnrichRoutes(ctx, r, services, cache)
-	registerEventsRoutes(ctx, r, services, cache)
+	registerFlowRoutes(ctx, r, services, cache)
 	registerMailStackRoutes(ctx, r, services, cache)
 	registerOutreachRoutes(ctx, r, services, cache)
 	registerVerifyRoutes(ctx, r, services, cache)
@@ -52,7 +51,8 @@ func registerPublicRoutes(ctx context.Context, r *gin.Engine, services *service.
 	setupPublicRoute(ctx, r, services, "GET", "/invoice/:invoiceId/pay", rest.RedirectToPayInvoice(services))
 	setupPublicRoute(ctx, r, services, "GET", "/invoice/:invoiceId/paymentLink", rest.GetInvoicePaymentLink(services))
 
-	setupPublicRoute(ctx, r, services, "POST", fmt.Sprintf("%s/postmark", webhooksV1Path), webhooks.PostmarkInboundEmail(services))
+	setupPublicRoute(ctx, r, services, "POST", fmt.Sprintf("%s/dmarc", webhooksV1Path), flows.PostmarkDMARCMonitor(services))
+	setupPublicRoute(ctx, r, services, "POST", fmt.Sprintf("%s/:tenantId/:integrationId", flowsV1Path), flows.HandleWebhook(services))
 }
 
 func registerHealthRoutes(ctx context.Context, r *gin.Engine, services *service.Services, cache *commoncaches.Cache) {
@@ -78,9 +78,11 @@ func registerCustomerBaseRoutes(ctx context.Context, r *gin.Engine, services *se
 	registerContactRoutes(ctx, r, services, grpcClients, cache)
 }
 
-func registerEventsRoutes(ctx context.Context, r *gin.Engine, services *service.Services, cache *commoncaches.Cache) {
-	setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/fathom", eventsV1Path), services, cache, restevents.FathomZapier(services))
-	setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/grain", eventsV1Path), services, cache, restevents.GrainZapier(services))
+func registerFlowRoutes(ctx context.Context, r *gin.Engine, services *service.Services, cache *commoncaches.Cache) {
+	setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/hooks", flowsV1Path), services, cache, flows.GetActiveWebhooks(services, CustomerOSAPIURL(), flowsV1Path))
+	setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/hooks", flowsV1Path), services, cache, flows.CreateWebhook(services, CustomerOSAPIURL(), flowsV1Path))
+	setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/:tenantId/i/:integrationId/rotate", flowsV1Path), services, cache, flows.RotateWebhook(services, CustomerOSAPIURL(), flowsV1Path))
+	setupRestRoute(ctx, r, "DELETE", fmt.Sprintf("%s/:tenantId/i/:integrationId", flowsV1Path), services, cache, flows.DeactivateWebhook(services))
 }
 
 func registerBillingRoutes(ctx context.Context, r *gin.Engine, services *service.Services, grpcClients *grpc_client.Clients, cache *commoncaches.Cache) {
