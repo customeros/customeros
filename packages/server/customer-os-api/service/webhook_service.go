@@ -130,7 +130,7 @@ func (w *webhookService) CreateIntegrationWebhook(ctx context.Context, tenant st
 		return "", "", err
 	}
 
-	createErr := w.repositories.PostgresRepositories.FlowWebhooksRepository.CreateWebhook(&newWebhook)
+	createErr := w.repositories.PostgresRepositories.FlowWebhooksRepository.CreateWebhook(ctx, &newWebhook)
 	if createErr != nil {
 		err = fmt.Errorf("Unable to create webhook: %v", err)
 		tracing.TraceErr(span, err)
