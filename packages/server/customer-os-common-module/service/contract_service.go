@@ -171,14 +171,14 @@ func (s *contractService) Save(ctx context.Context, id *string, dataFields data_
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateContract"))
 		}
-		utils.EventCompleted(ctx, tenant, model.CONTRACT.String(), contractId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithCreate())
+		s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, contractId, model.CONTRACT, utils.NewEventCompletedDetails().WithCreate())
 	} else {
 		err = s.services.RabbitMQService.PublishEvent(ctx, contractId, model.CONTRACT, dto.UpdateContract{dataFields})
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateContract"))
 		}
 		if dataFields.AppSource == nil || *dataFields.AppSource != constants.AppSourceCustomerOsApi {
-			utils.EventCompleted(ctx, tenant, model.CONTRACT.String(), contractId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
+			s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, contractId, model.CONTRACT, utils.NewEventCompletedDetails().WithUpdate())
 		}
 	}
 
@@ -196,7 +196,7 @@ func (s *contractService) Save(ctx context.Context, id *string, dataFields data_
 			s.log.Errorf("Error while post create contract %s: %s", contractId, err.Error())
 		}
 		if dataFields.AppSource == nil || *dataFields.AppSource != constants.AppSourceCustomerOsApi {
-			utils.EventCompleted(ctx, tenant, model.CONTRACT.String(), contractId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
+			s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, contractId, model.CONTRACT, utils.NewEventCompletedDetails().WithUpdate())
 		}
 	}
 
@@ -362,7 +362,7 @@ func (s *contractService) updateStatus(ctx context.Context, tenant, contractId s
 		}
 
 		// TODO add event for status change
-		utils.EventCompleted(ctx, tenant, model.CONTRACT.String(), contractId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
+		s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, contractId, model.CONTRACT, utils.NewEventCompletedDetails().WithUpdate())
 
 		err = s.services.RabbitMQService.PublishEvent(ctx, contractId, model.CONTRACT, dto.ChangeStatusForContract{Status: status})
 		if err != nil {

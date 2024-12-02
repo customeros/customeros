@@ -140,35 +140,12 @@ func (h *EmailEventHandler) OnEmailValidatedV2(ctx context.Context, evt eventsto
 	// notify linked contacts
 	for _, contact := range contactsDbNodes {
 		contactEntity := neo4jmapper.MapDbNodeToContactEntity(contact)
-		utils.EventCompleted(ctx, eventData.Tenant, model.CONTACT.String(), contactEntity.Id, h.grpcClients, utils.NewEventCompletedDetails().WithUpdate())
+		h.services.CommonServices.RabbitMQService.PublishEventCompleted(ctx, eventData.Tenant, contactEntity.Id, model.CONTACT, utils.NewEventCompletedDetails().WithUpdate())
 	}
 	// notify linked organizations
 	for _, organization := range organizationDbNodes {
 		organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(organization)
-		utils.EventCompleted(ctx, eventData.Tenant, model.ORGANIZATION.String(), organizationEntity.ID, h.grpcClients, utils.NewEventCompletedDetails().WithUpdate())
-	}
-
-	return nil
-}
-
-func (h *EmailEventHandler) OnEmailDelete(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailEventHandler.OnEmailDelete")
-	defer span.Finish()
-	setEventSpanTagsAndLogFields(span, evt)
-
-	var eventData event.EmailDeleteEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "evt.GetJsonData")
-	}
-	emailId := email.GetEmailObjectID(evt.AggregateID, eventData.Tenant)
-	tracing.TagTenant(span, eventData.Tenant)
-	tracing.TagEntity(span, emailId)
-
-	err := h.services.CommonServices.Neo4jRepositories.EmailWriteRepository.DeleteEmail(ctx, eventData.Tenant, emailId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("failed to delete email: %v", err)
+		h.services.CommonServices.RabbitMQService.PublishEventCompleted(ctx, eventData.Tenant, organizationEntity.ID, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
 	}
 
 	return nil

@@ -59,7 +59,7 @@ export const Header = ({
 
   return (
     <>
-      <div className='flex items-center justify-between pb-2 pt-[5px] sticky top-0 bg-gray-25 z-10'>
+      <div className='flex items-center justify-between  pt-[5px] sticky top-0 bg-gray-25 z-10'>
         <h1 className='font-medium'>{title}</h1>
         <Button
           size='xs'

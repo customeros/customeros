@@ -116,6 +116,7 @@ func (r *organizationReadRepository) GetOrganization(ctx context.Context, tenant
 	tracing.TagComponentNeo4jRepository(span)
 	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, organizationId)
+	span.LogKV("x", "y")
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$id}) RETURN org`
 	params := map[string]any{

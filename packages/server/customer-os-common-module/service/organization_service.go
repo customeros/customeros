@@ -16,7 +16,6 @@ import (
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
-	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -152,7 +151,7 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 								s.services.Logger.Errorf("Failed to update organization updated at property: %v", err.Error())
 							}
 							txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
-								utils.EventCompleted(ctx, tenant, model.ORGANIZATION.String(), organizationByDomainEntity.ID, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
+								s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, organizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
 								return nil
 							})
 						}
@@ -195,7 +194,7 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 								s.services.Logger.Errorf("Failed to update organization updated at property: %v", err.Error())
 							}
 							txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
-								utils.EventCompleted(ctx, tenant, model.ORGANIZATION.String(), organizationByLinkedInEntity.ID, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
+								s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, organizationByLinkedInEntity.ID, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
 								return nil
 							})
 						}
@@ -395,14 +394,14 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateOrganization"))
 				}
-				utils.EventCompleted(ctx, tenant, model.ORGANIZATION.String(), organizationId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithCreate())
+				s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, organizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithCreate())
 			} else {
 				err = s.services.RabbitMQService.PublishEvent(ctx, organizationId, model.ORGANIZATION, dto.UpdateOrganization{input})
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateOrganization"))
 				}
 				if common.GetAppSourceFromContext(ctx) != constants.AppSourceCustomerOsApi {
-					utils.EventCompleted(ctx, tenant, model.ORGANIZATION.String(), organizationId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
+					s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, organizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
 				}
 			}
 			return nil
@@ -428,16 +427,7 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 				}
 				// invoke enrich organization by domain
 				if primaryDomain != "" {
-					ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-					_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-						return s.services.GrpcClients.OrganizationClient.EnrichOrganization(ctx, &organizationpb.EnrichOrganizationGrpcRequest{
-							Tenant:         tenant,
-							OrganizationId: organizationId,
-							LoggedInUserId: common.GetUserIdFromContext(ctx),
-							AppSource:      common.GetAppSourceFromContext(ctx),
-							Url:            primaryDomain,
-						})
-					})
+					err = s.services.RabbitMQService.PublishEvent(ctx, organizationId, model.ORGANIZATION, dto.RequestEnrichOrganization{Url: primaryDomain})
 					if err != nil {
 						tracing.TraceErr(span, err)
 					}
@@ -502,7 +492,7 @@ func (s *organizationService) Hide(ctx context.Context, txWithPostCommit *utils.
 		}
 
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
-			utils.EventCompleted(ctx, tenant, model.ORGANIZATION.String(), organizationId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithDelete())
+			s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, organizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithDelete())
 			return nil
 		})
 		return nil, nil
@@ -545,7 +535,7 @@ func (s *organizationService) Show(ctx context.Context, txWithPostCommit *utils.
 		}
 
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
-			utils.EventCompleted(ctx, tenant, model.ORGANIZATION.String(), organizationId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithCreate())
+			s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, organizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithCreate())
 			err = s.RequestRefreshLastTouchpoint(ctx, organizationId)
 			if err != nil {
 				tracing.TraceErr(span, err)
@@ -639,16 +629,9 @@ func (s *organizationService) LinkWithDomain(ctx context.Context, txWithPostComm
 		if domainLinkedSuccessfully {
 			txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
 				// send organization enrich request
-				_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-					return s.services.GrpcClients.OrganizationClient.EnrichOrganization(ctx, &organizationpb.EnrichOrganizationGrpcRequest{
-						Tenant:         tenant,
-						OrganizationId: organizationId,
-						Url:            domain,
-						AppSource:      common.GetAppSourceFromContext(ctx),
-					})
-				})
+				err = s.services.RabbitMQService.PublishEvent(ctx, organizationId, model.ORGANIZATION, dto.RequestEnrichOrganization{Url: domain})
 				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "failed to request enrich organization"))
+					tracing.TraceErr(span, errors.Wrap(err, "failed to publish event RequestEnrichOrganization"))
 				}
 				return nil
 			})
@@ -661,7 +644,7 @@ func (s *organizationService) LinkWithDomain(ctx context.Context, txWithPostComm
 				}
 
 				// send event to events platform
-				utils.EventCompleted(ctx, tenant, model.ORGANIZATION.String(), organizationId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
+				s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, organizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
 
 				return nil
 			})
@@ -862,7 +845,7 @@ func (s *organizationService) RefreshLastTouchpoint(ctx context.Context, organiz
 		return err
 	}
 
-	utils.EventCompleted(ctx, tenant, model.ORGANIZATION.String(), organizationId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
+	s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, organizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
 
 	return nil
 }

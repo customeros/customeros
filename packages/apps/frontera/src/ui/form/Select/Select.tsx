@@ -203,7 +203,7 @@ export const getMenuClassNames =
 
 export const getMenuListClassNames = (className?: string) => {
   const defaultStyle =
-    'p-2 max-h-[300px] border border-gray-200 bg-white outline-offset-[2px] outline-[2px] rounded-lg shadow-lg overflow-y-auto overscroll-auto';
+    'p-2 max-h-[300px] border border-gray-200 bg-white outline-offset-[2px] outline-[2px] rounded-lg shadow-lg overflow-y-auto overscroll-auto ';
 
   return twMerge(defaultStyle, className);
 };

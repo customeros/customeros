@@ -103,6 +103,7 @@ func (r *contactReadRepository) GetContactsWithSocialUrl(ctx context.Context, te
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
 	tracing.TagTenant(span, tenant)
+	span.LogKV("socialUrl", socialUrl)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)

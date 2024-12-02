@@ -25,10 +25,8 @@ import (
 	issueevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/issue/event"
 	jobroleevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/events"
 	locationevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/events"
-	logentryevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry"
 	phonenumberevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/events"
 	servicelineitemevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/event"
-	tenantevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/tenant"
 	userevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/events"
 	opportunityevent "github.com/openline-ai/openline-customer-os/packages/server/events/event/opportunity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
@@ -166,64 +164,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 	if strings.HasPrefix(evt.GetAggregateID(), constants.EsInternalStreamPrefix) {
 		return nil
 	}
-	switch evt.GetEventType() {
-	case "V1_EVENT_COMPLETED",
-		phonenumberevents.PhoneNumberValidateV1,
-		emailevents.EmailValidationFailedV1,
-		emailevents.EmailValidatedV1,
-		emailevents.EmailValidateV1,
-		emailevents.EmailUpsertV1,
-		orgevents.OrganizationRefreshLastTouchpointV1,
-		phonenumberevents.PhoneNumberValidationSkippedV1,
-		orgevents.OrganizationRequestRenewalForecastV1,
-		orgevents.OrganizationRequestNextCycleDateV1,
-		orgevents.OrganizationUpdateRenewalLikelihoodV1,
-		orgevents.OrganizationUpdateRenewalForecastV1,
-		orgevents.OrganizationUpdateBillingDetailsV1,
-		orgevents.OrganizationRequestScrapeByWebsiteV1,
-		orgevents.OrganizationLinkDomainV1,
-		orgevents.OrganizationAdjustIndustryV1,
-		orgevents.OrganizationRequestEnrichV1,
-		contractevent.ContractUpdateStatusV1,
-		locationevents.LocationValidationSkippedV1,
-		reminderevents.ReminderNotificationV1,
-		orgevents.OrganizationUpdateOwnerNotificationV1,
-		invoiceevents.InvoicePdfRequestedV1,
-		invoiceevents.InvoicePaidV1,
-		invoiceevents.InvoiceFillRequestedV1,
-		invoiceevents.InvoicePayNotificationV1,
-		invoiceevents.InvoicePayV1,
-		invoiceevents.InvoiceRemindNotificationV1,
-		emailevents.EmailCreateV1,
-		emailevents.EmailUpdateV1,
-		orgevents.OrganizationUpdateOwnerV1,
-		orgevents.OrganizationHideV1,
-		orgevents.OrganizationAddTagV1,
-		orgevents.OrganizationRemoveTagV1,
-		orgevents.OrganizationEmailLinkV1,
-		orgevents.OrganizationEmailUnlinkV1,
-		userevents.UserEmailLinkV1,
-		userevents.UserEmailUnlinkV1,
-		logentryevents.LogEntryAddTagV1,
-		logentryevents.LogEntryRemoveTagV1,
-		invoiceevents.InvoiceUpdateV1,
-		contractevent.ContractCreateV1,
-		orgevents.OrganizationAddSocialV1,
-		tenantevent.TenantUpdateSettingsV1,
-		tenantevent.TenantDeleteBankAccountV1,
-		tenantevent.TenantAddBankAccountV1,
-		tenantevent.TenantUpdateBankAccountV1,
-		tenantevent.TenantAddBillingProfileV1,
-		tenantevent.TenantUpdateBillingProfileV1,
-		logentryevents.LogEntryCreateV1,
-		logentryevents.LogEntryUpdateV1,
-		orgevents.OrganizationCreateV1,
-		orgevents.OrganizationUpdateV1,
-		orgevents.OrganizationShowV1,
-		contractevent.ContractUpdateV1:
-
-		return nil
-	}
 
 	ctx, span := tracing.StartProjectionTracerSpan(ctx, "GraphSubscriber.When", evt)
 	defer span.Finish()
@@ -249,9 +189,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 
 	case emailevents.EmailValidatedV2:
 		_ = s.emailEventHandler.OnEmailValidatedV2(ctx, evt)
-		return nil
-	case emailevents.EmailDeleteV1:
-		_ = s.emailEventHandler.OnEmailDelete(ctx, evt)
 		return nil
 
 	case contactevent.ContactPhoneNumberLinkV1:

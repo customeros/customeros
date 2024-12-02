@@ -134,7 +134,7 @@ func (s *socialService) Update(ctx context.Context, socialEntity neo4jentity.Soc
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateSocialForContact"))
 			}
-			utils.EventCompleted(ctx, tenant, model.CONTACT.String(), id, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
+			s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, id, model.CONTACT, utils.NewEventCompletedDetails().WithUpdate())
 		} else if utils.Contains(labels, model.ORGANIZATION.Neo4jLabel()) {
 			err = s.services.RabbitMQService.PublishEvent(ctx, id, model.ORGANIZATION, dto.UpdateSocialForOrganization{
 				SocialId:  socialEntity.Id,
@@ -143,7 +143,7 @@ func (s *socialService) Update(ctx context.Context, socialEntity neo4jentity.Soc
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateSocialForOrganization"))
 			}
-			utils.EventCompleted(ctx, tenant, model.ORGANIZATION.String(), id, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
+			s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, id, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
 		}
 	}
 
@@ -326,7 +326,7 @@ func (s *socialService) AddSocialToEntity(ctx context.Context, txWithPostCommit 
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message AddSocialToContact"))
 				}
-				utils.EventCompleted(ctx, tenant, model.CONTACT.String(), linkWith.Id, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
+				s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, linkWith.Id, model.CONTACT, utils.NewEventCompletedDetails().WithUpdate())
 			case model.ORGANIZATION:
 				err = s.services.RabbitMQService.PublishEvent(ctx, linkWith.Id, model.ORGANIZATION, dto.AddSocialToOrganization{
 					SocialId: socialId,
@@ -335,7 +335,7 @@ func (s *socialService) AddSocialToEntity(ctx context.Context, txWithPostCommit 
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message AddSocialToOrganization"))
 				}
-				utils.EventCompleted(ctx, tenant, model.ORGANIZATION.String(), linkWith.Id, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
+				s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, linkWith.Id, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
 			}
 			return nil
 		})

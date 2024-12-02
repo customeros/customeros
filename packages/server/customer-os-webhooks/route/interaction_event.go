@@ -212,14 +212,6 @@ func syncPostmarkInteractionEventHandler(services *service.Services, cfg *config
 			return
 		}
 
-		err = processMailstackReply(ctx, services, tenantByName, postmarkEmailWebhookData, cfg.Slack.NotifyFlowGoalAchieved)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			log.Errorf("(SyncInteractionEvent) error processing email for flows: %s", err.Error())
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
-			return
-		}
-
 		span.LogFields(tracingLog.Bool("mailbox.found", true))
 		span.LogFields(tracingLog.String("mailbox.username", username))
 
@@ -247,6 +239,32 @@ func syncPostmarkInteractionEventHandler(services *service.Services, cfg *config
 				tracing.TraceErr(span, err)
 				c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 				return
+			}
+
+			storedRawEmail, err := services.CommonServices.PostgresRepositories.RawEmailRepository.GetByMessageId(ctx, externalSystem, tenantByName, username, messageId)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+				return
+			}
+
+			loadedEmail, err := services.CommonServices.MailService.LoadEmail(ctx, storedRawEmail)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+				return
+			}
+
+			processEmailCheck := services.CommonServices.MailService.ProcessEmailCheck(ctx, tenantByName, &loadedEmail)
+
+			if processEmailCheck.ProcessEmail {
+				err = processMailstackReply(ctx, services, tenantByName, postmarkEmailWebhookData, cfg.Slack.NotifyFlowGoalAchieved)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					log.Errorf("(SyncInteractionEvent) error processing email for flows: %s", err.Error())
+					c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+					return
+				}
 			}
 
 			if cfg.Slack.NotifyPostmarkEmail != "" {

@@ -59,6 +59,7 @@ export const inputVariants = cva(
           'focus:outline-none',
           'focus:border-primary-500',
           'invalid:border-error-500',
+          'data-[invalid=true]:border-error-500',
         ],
       },
     },
@@ -73,6 +74,7 @@ export interface InputProps
   extends VariantProps<typeof inputVariants>,
     Omit<InputHTMLAttributes<HTMLInputElement>, 'size'> {
   dataTest?: string;
+  invalid?: boolean;
   className?: string;
   placeholder?: string;
   allowKeyDownEventPropagation?: boolean;
@@ -88,6 +90,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       className,
       onKeyDown,
       dataTest,
+      invalid,
       ...rest
     },
     ref,
@@ -98,6 +101,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         ref={ref}
         data-1p-ignore
         data-test={dataTest}
+        data-invalid={invalid}
         className={twMerge(inputVariants({ className, size, variant }))}
         onKeyDown={(e) => {
           if (onKeyDown) {

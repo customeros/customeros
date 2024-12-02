@@ -6,7 +6,6 @@ package resolver
 
 import (
 	"context"
-	tracingLog "github.com/opentracing/opentracing-go/log"
 	"strings"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -15,6 +14,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	opentracing "github.com/opentracing/opentracing-go"
+	tracingLog "github.com/opentracing/opentracing-go/log"
 )
 
 // MailstackGetPaymentIntent is the resolver for the mailstack_GetPaymentIntent field.

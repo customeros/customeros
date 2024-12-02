@@ -1,0 +1,13 @@
+mutation getPaymentIntent(
+  $domains: [String!]!
+  $usernames: [String!]!
+  $amount: Float!
+) {
+  mailstack_GetPaymentIntent(
+    domains: $domains
+    usernames: $usernames
+    amount: $amount
+  ) {
+    clientSecret
+  }
+}

@@ -45,8 +45,8 @@ func NewFlowExecutionService(services *Services) FlowExecutionService {
 }
 
 type FlowComputeParticipantsRequirementsInput struct {
-	PrimaryEmailRequired      bool
-	LinkedInSocialUrlRequired bool
+	PrimaryEmailRequired      bool `json:"primaryEmailRequired"`
+	LinkedInSocialUrlRequired bool `json:"linkedInSocialUrlRequired"`
 }
 
 func (s *flowExecutionService) GetFlowActionExecutionById(ctx context.Context, flowActionExecution string) (*entity.FlowActionExecutionEntity, error) {
@@ -161,8 +161,17 @@ func (s *flowExecutionService) UpdateParticipantFlowRequirements(ctx context.Con
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.UpdateParticipantFlowRequirements")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
+	if requirements != nil {
+		tracing.LogObjectAsJson(span, "requirements", requirements)
+	} else {
+		span.LogFields(log.String("requirements", "nil"))
+	}
 
 	tenant := common.GetTenantFromContext(ctx)
+
+	if participant.Status == entity.FlowParticipantStatusCompleted || participant.Status == entity.FlowParticipantStatusGoalAchieved {
+		return nil
+	}
 
 	status := entity.FlowParticipantStatusReady
 
@@ -224,6 +233,7 @@ func (s *flowExecutionService) UpdateParticipantFlowRequirements(ctx context.Con
 		return err
 	}
 
+	span.LogFields(log.String("result.participant.status", string(participant.Status)))
 	participant.Status = status
 
 	return nil
@@ -1002,7 +1012,6 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.ProcessActionExecution")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-
 	tenant := common.GetTenantFromContext(ctx)
 
 	span.LogFields(log.Object("scheduledActionExecution", scheduledActionExecution))
@@ -1066,30 +1075,40 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 			}
 
 			if existingEmail == nil {
+				span.LogFields(log.Bool("process.existingEmail", true))
 
 				mailbox, err := s.services.PostgresRepositories.TenantSettingsMailboxRepository.GetByMailbox(ctx, *scheduledActionExecution.Mailbox)
 				if err != nil {
+					tracing.TraceErr(span, errors.Wrap(err, "failed to get mailbox by mailbox"))
 					return nil, errors.Wrap(err, "failed to get mailbox by mailbox")
 				}
 
 				if mailbox == nil {
+					tracing.TraceErr(span, errors.New("Mailbox not found in database"))
 					return nil, errors.New("mailbox not found in database")
 				}
 
 				primaryEmail, err := s.services.EmailService.GetPrimaryEmailForEntityId(ctx, participant.EntityType, participant.EntityId)
 				if err != nil {
+					tracing.TraceErr(span, errors.Wrap(err, "failed to get primary email for entity id"))
 					return nil, errors.Wrap(err, "failed to get primary email for entity id")
 				}
 
 				if primaryEmail == nil {
+					tracing.TraceErr(span, errors.New("Primary email not found"))
 					return nil, errors.New("primary email not found")
 				}
 
 				toEmail := primaryEmail.RawEmail
+				span.LogFields(log.String("process.toEmail", toEmail))
 
-				subjectTemplate := *currentAction.Data.Subject
-				bodyTemplate := *currentAction.Data.BodyTemplate
+				subjectTemplate := utils.IfNotNilString(currentAction.Data.Subject)
+				bodyTemplate := utils.IfNotNilString(currentAction.Data.BodyTemplate)
 
+				span.LogFields(log.Bool("process.bodyTemplate.available", bodyTemplate != ""))
+				span.LogFields(log.Bool("process.subjectTemplate.available", subjectTemplate != ""))
+
+				span.LogFields(log.String("process.scheduledActionExecution.EntityType", scheduledActionExecution.EntityType.String()))
 				if scheduledActionExecution.EntityType == model.CONTACT {
 					contactNode, err := s.services.Neo4jRepositories.ContactReadRepository.GetContact(ctx, tenant, scheduledActionExecution.EntityId)
 					if err != nil {
@@ -1156,19 +1175,23 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 
 					parentEmailAction, err := s.getEmailActionToReply(ctx, scheduledActionExecution.ActionId)
 					if err != nil {
+						tracing.TraceErr(span, err)
 						return nil, errors.Wrap(err, "failed to get email action to reply")
 					}
 
 					if parentEmailAction == nil {
+						tracing.TraceErr(span, err)
 						return nil, errors.New("no parent email action found")
 					}
 
 					parentEmailExecution, err := s.services.Neo4jRepositories.FlowActionExecutionReadRepository.GetExecution(ctx, scheduledActionExecution.FlowId, parentEmailAction.Id, scheduledActionExecution.EntityId, scheduledActionExecution.EntityType)
 					if err != nil {
+						tracing.TraceErr(span, err)
 						return nil, errors.Wrap(err, "failed to get execution")
 					}
 
 					if parentEmailExecution == nil {
+						tracing.TraceErr(span, err)
 						return nil, errors.New("no parent email execution found")
 					}
 
@@ -1176,10 +1199,12 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 
 					parentEmailSent, err := s.services.PostgresRepositories.EmailMessageRepository.GetByProducer(ctx, tenant, parentEmail.Id, model.NodeLabelFlowActionExecution)
 					if err != nil {
+						tracing.TraceErr(span, err)
 						return nil, errors.Wrap(err, "failed to get email by producer")
 					}
 
 					if parentEmailSent == nil {
+						tracing.TraceErr(span, err)
 						return nil, errors.New("no parent email sent found")
 					}
 
@@ -1203,25 +1228,30 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 			}
 		} else if currentAction.Data.Action == entity.FlowActionTypeLinkedinConnectionRequest {
 			if scheduledActionExecution.SocialUrl == nil {
+				tracing.TraceErr(span, err)
 				return nil, errors.New("social url not found")
 			}
 
 			if scheduledActionExecution.UserId == nil {
+				tracing.TraceErr(span, err)
 				return nil, errors.New("user id not found")
 			}
 
 			linkedinTokens, err := s.services.PostgresRepositories.BrowserConfigRepository.GetForUser(ctx, *scheduledActionExecution.UserId)
 			if err != nil {
+				tracing.TraceErr(span, err)
 				return nil, errors.Wrap(err, "failed to get linkedin tokens for user")
 			}
 
 			if linkedinTokens == nil {
+				tracing.TraceErr(span, err)
 				return nil, errors.New("linkedin tokens not found")
 			}
 
 			payload := map[string]interface{}{"profileUrl": *scheduledActionExecution.SocialUrl}
 			payloadBytes, err := json.Marshal(payload)
 			if err != nil {
+				tracing.TraceErr(span, err)
 				return nil, errors.Wrap(err, "failed to marshal payload")
 			}
 
@@ -1255,11 +1285,13 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 
 		_, err = s.services.Neo4jRepositories.FlowActionExecutionWriteRepository.Merge(ctx, txWithPostCommit.Tx, scheduledActionExecution)
 		if err != nil {
+			tracing.TraceErr(span, err)
 			return nil, errors.Wrap(err, "failed to merge flow action execution")
 		}
 
 		err = s.services.FlowExecutionService.ScheduleFlow(ctx, txWithPostCommit, scheduledActionExecution.FlowId, participant)
 		if err != nil {
+			tracing.TraceErr(span, err)
 			return nil, errors.Wrap(err, "failed to schedule flow")
 		}
 
@@ -1270,6 +1302,7 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 		return err
 	}
 
+	span.LogFields(log.Bool("addBillableEvent", addBillableEvent))
 	if addBillableEvent {
 		_, err = s.services.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, tenant, postgresentity.BillableEventFlowActionExecuted,
 			postgresrepository.BillableEventDetails{

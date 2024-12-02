@@ -13,13 +13,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/eventstore"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/mocked_grpc"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
-	eventcompletionpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/event_completion"
 	commonEvents "github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/types/known/emptypb"
 	"testing"
 	"time"
 )
@@ -54,14 +51,6 @@ func TestGraphOrganizationEventHandler_OnLocationLinkedToOrganization(t *testing
 	require.NotNil(t, dbNodeAfterLocationCreate)
 	propsAfterLocationCreate := utils.GetPropsFromNode(*dbNodeAfterLocationCreate)
 	require.Equal(t, locationName, utils.GetStringPropOrEmpty(propsAfterLocationCreate, "name"))
-
-	// prepare grpc mock
-	callbacks := mocked_grpc.MockEventCompletionCallbacks{
-		NotifyEventProcessed: func(context context.Context, org *eventcompletionpb.NotifyEventProcessedRequest) (*emptypb.Empty, error) {
-			return &emptypb.Empty{}, nil
-		},
-	}
-	mocked_grpc.SetEventCompletionServiceCallbacks(&callbacks)
 
 	orgEventHandler := &OrganizationEventHandler{
 		services:    testDatabase.Services,
@@ -110,14 +99,6 @@ func TestGraphOrganizationEventHandler_OnRefreshArr(t *testing.T) {
 		InternalType: neo4jenum.OpportunityInternalTypeNBO,
 	})
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Organization": 1, "Contract": 2, "Opportunity": 4})
-
-	// prepare grpc mock
-	callbacks := mocked_grpc.MockEventCompletionCallbacks{
-		NotifyEventProcessed: func(context context.Context, org *eventcompletionpb.NotifyEventProcessedRequest) (*emptypb.Empty, error) {
-			return &emptypb.Empty{}, nil
-		},
-	}
-	mocked_grpc.SetEventCompletionServiceCallbacks(&callbacks)
 
 	// prepare event handler
 	orgEventHandler := &OrganizationEventHandler{
@@ -237,14 +218,6 @@ func TestGraphOrganizationEventHandler_OnUpdateOnboardingStatus(t *testing.T) {
 	}
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
 
-	// prepare grpc mock
-	callbacks := mocked_grpc.MockEventCompletionCallbacks{
-		NotifyEventProcessed: func(context context.Context, org *eventcompletionpb.NotifyEventProcessedRequest) (*emptypb.Empty, error) {
-			return &emptypb.Empty{}, nil
-		},
-	}
-	mocked_grpc.SetEventCompletionServiceCallbacks(&callbacks)
-
 	now := utils.Now()
 	event, err := events.NewUpdateOnboardingStatusEvent(orgAggregate, "DONE", "Some comments", userId, "", now)
 	require.Nil(t, err)
@@ -295,14 +268,6 @@ func TestGraphOrganizationEventHandler_OnUpdateOnboardingStatus_CausedByContract
 		Name: "test org",
 	})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{})
-
-	// prepare grpc mock
-	callbacks := mocked_grpc.MockEventCompletionCallbacks{
-		NotifyEventProcessed: func(context context.Context, org *eventcompletionpb.NotifyEventProcessedRequest) (*emptypb.Empty, error) {
-			return &emptypb.Empty{}, nil
-		},
-	}
-	mocked_grpc.SetEventCompletionServiceCallbacks(&callbacks)
 
 	orgEventHandler := &OrganizationEventHandler{
 		services:    testDatabase.Services,
@@ -367,14 +332,6 @@ func TestGraphOrganizationEventHandler_OnCreateBillingProfile(t *testing.T) {
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
 
-	// prepare grpc mock
-	callbacks := mocked_grpc.MockEventCompletionCallbacks{
-		NotifyEventProcessed: func(context context.Context, org *eventcompletionpb.NotifyEventProcessedRequest) (*emptypb.Empty, error) {
-			return &emptypb.Empty{}, nil
-		},
-	}
-	mocked_grpc.SetEventCompletionServiceCallbacks(&callbacks)
-
 	orgEventHandler := &OrganizationEventHandler{
 		services:    testDatabase.Services,
 		grpcClients: testMockedGrpcClient,
@@ -426,14 +383,6 @@ func TestGraphOrganizationEventHandler_OnUpdateBillingProfile(t *testing.T) {
 		LegalName: "Billing profile",
 		TaxId:     "Tax id",
 	})
-
-	// prepare grpc mock
-	callbacks := mocked_grpc.MockEventCompletionCallbacks{
-		NotifyEventProcessed: func(context context.Context, org *eventcompletionpb.NotifyEventProcessedRequest) (*emptypb.Empty, error) {
-			return &emptypb.Empty{}, nil
-		},
-	}
-	mocked_grpc.SetEventCompletionServiceCallbacks(&callbacks)
 
 	orgEventHandler := &OrganizationEventHandler{
 		services:    testDatabase.Services,

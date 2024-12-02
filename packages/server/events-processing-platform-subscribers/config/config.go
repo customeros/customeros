@@ -31,7 +31,6 @@ type Subscriptions struct {
 	PhoneNumberValidationSubscription PhoneNumberValidationSubscription
 	LocationValidationSubscription    LocationValidationSubscription
 	OrganizationSubscription          OrganizationSubscription
-	OrganizationWebscrapeSubscription OrganizationWebscrapeSubscription
 	ContractSubscription              ContractSubscription
 	NotificationsSubscription         NotificationsSubscription
 	InvoiceSubscription               InvoiceSubscription
@@ -42,7 +41,7 @@ type Subscriptions struct {
 
 type GraphSubscription struct {
 	Enabled              bool   `env:"EVENT_STORE_SUBSCRIPTIONS_GRAPH_ENABLED" envDefault:"true"`
-	GroupName            string `env:"EVENT_STORE_SUBSCRIPTIONS_GRAPH_GROUP_NAME" envDefault:"graph-v4" validate:"required"`
+	GroupName            string `env:"EVENT_STORE_SUBSCRIPTIONS_GRAPH_GROUP_NAME" envDefault:"graph-v5" validate:"required"`
 	PoolSize             int    `env:"EVENT_STORE_SUBSCRIPTIONS_GRAPH_POOL_SIZE" envDefault:"10" validate:"required,gte=0"`
 	BufferSizeClient     uint32 `env:"EVENT_STORE_SUBSCRIPTIONS_GRAPH_CLIENT_BUFFER_SIZE" envDefault:"10" validate:"required,gte=0"`
 	CheckpointLowerBound int32  `env:"EVENT_STORE_SUBSCRIPTIONS_GRAPH_CHECKPOINT_LOWER_BOUND" envDefault:"10" validate:"required,gte=0"`
@@ -50,7 +49,7 @@ type GraphSubscription struct {
 
 type PhoneNumberValidationSubscription struct {
 	Enabled          bool   `env:"EVENT_STORE_SUBSCRIPTIONS_PHONE_NUMBER_VALIDATION_ENABLED" envDefault:"true"`
-	GroupName        string `env:"EVENT_STORE_SUBSCRIPTIONS_PHONE_NUMBER_VALIDATION_GROUP_NAME" envDefault:"phoneNumberValidation-v2" validate:"required"`
+	GroupName        string `env:"EVENT_STORE_SUBSCRIPTIONS_PHONE_NUMBER_VALIDATION_GROUP_NAME" envDefault:"phoneNumberValidation-v3" validate:"required"`
 	Prefix           string `env:"EVENT_STORE_SUBSCRIPTIONS_PHONE_NUMBER_PREFIX" envDefault:"phone_number-" validate:"required"`
 	PoolSize         int    `env:"EVENT_STORE_SUBSCRIPTIONS_PHONE_NUMBER_VALIDATION_POOL_SIZE" envDefault:"5" validate:"required,gte=0"`
 	BufferSizeClient uint32 `env:"EVENT_STORE_SUBSCRIPTIONS_PHONE_NUMBER_VALIDATION_CLIENT_BUFFER_SIZE" envDefault:"10" validate:"required,gte=0"`
@@ -58,7 +57,7 @@ type PhoneNumberValidationSubscription struct {
 
 type LocationValidationSubscription struct {
 	Enabled          bool   `env:"EVENT_STORE_SUBSCRIPTIONS_LOCATION_VALIDATION_ENABLED" envDefault:"true"`
-	GroupName        string `env:"EVENT_STORE_SUBSCRIPTIONS_LOCATION_VALIDATION_GROUP_NAME" envDefault:"locationValidation-v2" validate:"required"`
+	GroupName        string `env:"EVENT_STORE_SUBSCRIPTIONS_LOCATION_VALIDATION_GROUP_NAME" envDefault:"locationValidation-v3" validate:"required"`
 	Prefix           string `env:"EVENT_STORE_SUBSCRIPTIONS_LOCATION_PREFIX" envDefault:"location-" validate:"required"`
 	PoolSize         int    `env:"EVENT_STORE_SUBSCRIPTIONS_LOCATION_VALIDATION_POOL_SIZE" envDefault:"5" validate:"required,gte=0"`
 	BufferSizeClient uint32 `env:"EVENT_STORE_SUBSCRIPTIONS_LOCATION_VALIDATION_CLIENT_BUFFER_SIZE" envDefault:"10" validate:"required,gte=0"`
@@ -66,7 +65,7 @@ type LocationValidationSubscription struct {
 
 type OrganizationSubscription struct {
 	Enabled                      bool   `env:"EVENT_STORE_SUBSCRIPTIONS_ORGANIZATION_ENABLED" envDefault:"true"`
-	GroupName                    string `env:"EVENT_STORE_SUBSCRIPTIONS_ORGANIZATION_GROUP_NAME" envDefault:"organization-v2" validate:"required"`
+	GroupName                    string `env:"EVENT_STORE_SUBSCRIPTIONS_ORGANIZATION_GROUP_NAME" envDefault:"organization-v3" validate:"required"`
 	Prefix                       string `env:"EVENT_STORE_SUBSCRIPTIONS_ORGANIZATION_PREFIX" envDefault:"organization-" validate:"required"`
 	PoolSize                     int    `env:"EVENT_STORE_SUBSCRIPTIONS_ORGANIZATION_POOL_SIZE" envDefault:"5" validate:"required,gte=0"`
 	BufferSizeClient             uint32 `env:"EVENT_STORE_SUBSCRIPTIONS_ORGANIZATION_CLIENT_BUFFER_SIZE" envDefault:"10" validate:"required,gte=0"`
@@ -75,21 +74,9 @@ type OrganizationSubscription struct {
 	DeletePersistentSubscription bool   `env:"EVENT_STORE_SUBSCRIPTIONS_ORGANIZATION_DELETE_SUBSCRIPTION" envDefault:"false"`
 }
 
-// TODO replace with EnrichSubscription
-type OrganizationWebscrapeSubscription struct {
-	Enabled                      bool   `env:"EVENT_STORE_SUBSCRIPTIONS_ORGANIZATION_WEBSCRAPE_ENABLED" envDefault:"true"`
-	GroupName                    string `env:"EVENT_STORE_SUBSCRIPTIONS_ORGANIZATION_WEBSCRAPE_GROUP_NAME" envDefault:"organizationWebscrape-v2" validate:"required"`
-	Prefix                       string `env:"EVENT_STORE_SUBSCRIPTIONS_ORGANIZATION_WEBSCRAPE_PREFIX" envDefault:"organization-" validate:"required"`
-	PoolSize                     int    `env:"EVENT_STORE_SUBSCRIPTIONS_ORGANIZATION_WEBSCRAPE_POOL_SIZE" envDefault:"5" validate:"required,gte=0"`
-	BufferSizeClient             uint32 `env:"EVENT_STORE_SUBSCRIPTIONS_ORGANIZATION_WEBSCRAPE_CLIENT_BUFFER_SIZE" envDefault:"10" validate:"required,gte=0"`
-	MessageTimeoutSec            int32  `env:"EVENT_STORE_SUBSCRIPTIONS_ORGANIZATION_WEBSCRAPE_MESSAGE_TIMEOUT" envDefault:"300" validate:"required,gte=0"`
-	CheckpointLowerBound         int32  `env:"EVENT_STORE_SUBSCRIPTIONS_ORGANIZATION_WEBSCRAPE_CHECKPOINT_LOWER_BOUND" envDefault:"4" validate:"required,gte=0"`
-	DeletePersistentSubscription bool   `env:"EVENT_STORE_SUBSCRIPTIONS_ORGANIZATION_WEBSCRAPE_DELETE_SUBSCRIPTION" envDefault:"false"`
-}
-
 type EnrichSubscription struct {
 	Enabled                      bool   `env:"EVENT_STORE_SUBSCRIPTIONS_ENRICH_ENABLED" envDefault:"true"`
-	GroupName                    string `env:"EVENT_STORE_SUBSCRIPTIONS_ENRICH_GROUP_NAME" envDefault:"enrich-v2" validate:"required"`
+	GroupName                    string `env:"EVENT_STORE_SUBSCRIPTIONS_ENRICH_GROUP_NAME" envDefault:"enrich-v3" validate:"required"`
 	PoolSize                     int    `env:"EVENT_STORE_SUBSCRIPTIONS_ENRICH_POOL_SIZE" envDefault:"5" validate:"required,gte=0"`
 	BufferSizeClient             uint32 `env:"EVENT_STORE_SUBSCRIPTIONS_ENRICH_CLIENT_BUFFER_SIZE" envDefault:"10" validate:"required,gte=0"`
 	MessageTimeoutSec            int32  `env:"EVENT_STORE_SUBSCRIPTIONS_ENRICH_MESSAGE_TIMEOUT" envDefault:"300" validate:"required,gte=0"`
@@ -99,7 +86,7 @@ type EnrichSubscription struct {
 
 type ContractSubscription struct {
 	Enabled           bool   `env:"EVENT_STORE_SUBSCRIPTIONS_CONTRACT_ENABLED" envDefault:"true"`
-	GroupName         string `env:"EVENT_STORE_SUBSCRIPTIONS_CONTRACT_GROUP_NAME" envDefault:"contract-v2" validate:"required"`
+	GroupName         string `env:"EVENT_STORE_SUBSCRIPTIONS_CONTRACT_GROUP_NAME" envDefault:"contract-v3" validate:"required"`
 	Prefix            string `env:"EVENT_STORE_SUBSCRIPTIONS_CONTRACT_PREFIX" envDefault:"contract-" validate:"required"`
 	PoolSize          int    `env:"EVENT_STORE_SUBSCRIPTIONS_CONTRACT_POOL_SIZE" envDefault:"5" validate:"required,gte=0"`
 	BufferSizeClient  uint32 `env:"EVENT_STORE_SUBSCRIPTIONS_CONTRACT_CLIENT_BUFFER_SIZE" envDefault:"10" validate:"required,gte=0"`
@@ -108,7 +95,7 @@ type ContractSubscription struct {
 
 type NotificationsSubscription struct {
 	Enabled          bool   `env:"EVENT_STORE_SUBSCRIPTIONS_NOTIFICATIONS_ENABLED" envDefault:"true"`
-	GroupName        string `env:"EVENT_STORE_SUBSCRIPTIONS_NOTIFICATIONS_GROUP_NAME" envDefault:"notifications-v2.1" validate:"required"`
+	GroupName        string `env:"EVENT_STORE_SUBSCRIPTIONS_NOTIFICATIONS_GROUP_NAME" envDefault:"notifications-v3" validate:"required"`
 	PoolSize         int    `env:"EVENT_STORE_SUBSCRIPTIONS_NOTIFICATIONS_POOL_SIZE" envDefault:"5" validate:"required,gte=0"`
 	BufferSizeClient uint32 `env:"EVENT_STORE_SUBSCRIPTIONS_NOTIFICATIONS_CLIENT_BUFFER_SIZE" envDefault:"10" validate:"required,gte=0"`
 	IgnoreEvents     bool   `env:"EVENT_STORE_SUBSCRIPTIONS_NOTIFICATIONS_IGNORE_EVENTS" envDefault:"true"`
@@ -117,7 +104,7 @@ type NotificationsSubscription struct {
 
 type InvoiceSubscription struct {
 	Enabled           bool   `env:"EVENT_STORE_INVOICE_NOTIFICATIONS_ENABLED" envDefault:"true"`
-	GroupName         string `env:"EVENT_STORE_INVOICE_NOTIFICATIONS_GROUP_NAME" envDefault:"invoice-v2" validate:"required"`
+	GroupName         string `env:"EVENT_STORE_INVOICE_NOTIFICATIONS_GROUP_NAME" envDefault:"invoice-v3" validate:"required"`
 	PoolSize          int    `env:"EVENT_STORE_INVOICE_NOTIFICATIONS_POOL_SIZE" envDefault:"5" validate:"required,gte=0"`
 	MessageTimeoutSec int32  `env:"EVENT_STORE_INVOICE_NOTIFICATIONS_MESSAGE_TIMEOUT" envDefault:"300" validate:"required,gte=0"`
 	BufferSizeClient  uint32 `env:"EVENT_STORE_INVOICE_NOTIFICATIONS_CLIENT_BUFFER_SIZE" envDefault:"5" validate:"required,gte=0"`
@@ -127,7 +114,7 @@ type InvoiceSubscription struct {
 
 type ReminderSubscription struct {
 	Enabled          bool   `env:"EVENT_STORE_SUBSCRIPTIONS_REMINDER_ENABLED" envDefault:"true"`
-	GroupName        string `env:"EVENT_STORE_SUBSCRIPTIONS_REMINDER_GROUP_NAME" envDefault:"reminder-v2" validate:"required"`
+	GroupName        string `env:"EVENT_STORE_SUBSCRIPTIONS_REMINDER_GROUP_NAME" envDefault:"reminder-v3" validate:"required"`
 	PoolSize         int    `env:"EVENT_STORE_SUBSCRIPTIONS_REMINDER_POOL_SIZE" envDefault:"5" validate:"required,gte=0"`
 	BufferSizeClient uint32 `env:"EVENT_STORE_SUBSCRIPTIONS_REMINDER_CLIENT_BUFFER_SIZE" envDefault:"10" validate:"required,gte=0"`
 	IgnoreEvents     bool   `env:"EVENT_STORE_SUBSCRIPTIONS_REMINDER_IGNORE_EVENTS" envDefault:"false"`

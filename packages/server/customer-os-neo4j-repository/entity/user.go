@@ -5,6 +5,12 @@ import (
 	"time"
 )
 
+type UserProperty string
+
+const (
+	UserPropertyLastLogin UserProperty = "lastLogin"
+)
+
 type UserEntity struct {
 	DataLoaderKey
 	Id              string
@@ -19,6 +25,7 @@ type UserEntity struct {
 	Roles           []string   `neo4jDb:"property:roles;lookupName:ROLES;supportCaseSensitive:false"`
 	Timezone        string     `neo4jDb:"property:timezone;lookupName:TIMEZONE;supportCaseSensitive:true"`
 	ProfilePhotoUrl string     `neo4jDb:"property:profilePhotoUrl;lookupName:PROFILE_PHOTO_URL;supportCaseSensitive:true"`
+	LastLogin       *time.Time
 	Internal        bool
 	Test            bool
 	Bot             bool

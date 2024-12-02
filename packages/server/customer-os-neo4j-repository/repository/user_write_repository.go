@@ -31,6 +31,7 @@ type UserWriteRepository interface {
 	AddRole(ctx context.Context, userId, role string) error
 	AddRoleInTx(ctx context.Context, tx neo4j.ManagedTransaction, userId, role string) error
 	RemoveRole(ctx context.Context, tenant, userId, role string) error
+	RegisterLogin(ctx context.Context, tenant, userId string) error
 }
 
 type userWriteRepository struct {
@@ -261,6 +262,28 @@ func (r *userWriteRepository) RemoveRole(c context.Context, tenant, userId, role
 		"tenant": tenant,
 		"role":   role,
 		"userId": userId,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *userWriteRepository) RegisterLogin(ctx context.Context, tenant, userId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserWriteRepository.RegisterLogin")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.SetTag(tracing.SpanTagEntityId, userId)
+
+	cypher := `MATCH (u:User {id:$userId})-[:USER_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) 
+			SET u.lastLogin = datetime()`
+	params := map[string]any{
+		"userId": userId,
+		"tenant": tenant,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

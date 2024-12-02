@@ -38,7 +38,6 @@ type Services struct {
 	InvoiceService         *invoiceService
 	CountryService         *countryService
 	EventStoreService      *eventStoreService
-	EventCompletionService *eventCompletionService
 }
 
 func InitServices(cfg *config.Config, repositories *repository.Repositories, aggregateStore eventstore.AggregateStore, commandHandlers *command.CommandHandlers, log logger.Logger, ebs *eventbuffer.EventBufferStoreService) *Services {
@@ -67,7 +66,6 @@ func InitServices(cfg *config.Config, repositories *repository.Repositories, agg
 	services.InvoiceService = NewInvoiceService(repositories, &services, log, aggregateStore)
 	services.CountryService = NewCountryService(&services, log, aggregateStore, cfg)
 	services.EventStoreService = NewEventStoreService(&services, log, aggregateStore)
-	services.EventCompletionService = NewEventCompletionService(&services, log, aggregateStore, cfg)
 
 	services.EventStoreGenericService = genericServices.NewEventStoreGenericService(log, aggregateStore)
 

@@ -27,6 +27,17 @@ func NewSubscriptions(log logger.Logger, db *esdb.Client, cfg *config.Config) *S
 }
 
 func (s *Subscriptions) RefreshSubscriptions(ctx context.Context) error {
+
+	_ = s.permanentlyDeletePersistentSubscription(ctx, "invoice-v2")
+	_ = s.permanentlyDeletePersistentSubscription(ctx, "phoneNumberValidation-v2")
+	_ = s.permanentlyDeletePersistentSubscription(ctx, "locationValidation-v2")
+	_ = s.permanentlyDeletePersistentSubscription(ctx, "organization-v2")
+	_ = s.permanentlyDeletePersistentSubscription(ctx, "organizationWebscrape-v2")
+	_ = s.permanentlyDeletePersistentSubscription(ctx, "enrich-v2")
+	_ = s.permanentlyDeletePersistentSubscription(ctx, "notifications-v2.1")
+	_ = s.permanentlyDeletePersistentSubscription(ctx, "reminder-v2")
+	_ = s.permanentlyDeletePersistentSubscription(ctx, "graph-v4")
+
 	graphSubscriptionSettings := esdb.SubscriptionSettingsDefault()
 	graphSubscriptionSettings.ExtraStatistics = true
 	graphSubscriptionSettings.CheckpointLowerBound = s.cfg.Subscriptions.GraphSubscription.CheckpointLowerBound
@@ -75,21 +86,6 @@ func (s *Subscriptions) RefreshSubscriptions(ctx context.Context) error {
 		s.cfg.Subscriptions.OrganizationSubscription.GroupName,
 		&esdb.SubscriptionFilter{Type: esdb.StreamFilterType, Prefixes: []string{s.cfg.Subscriptions.OrganizationSubscription.Prefix}},
 		&organizationSubscriptionSettings,
-		false,
-		false,
-		esdb.End{},
-	); err != nil {
-		return err
-	}
-
-	organizationWebscrapeSubscriptionSettings := esdb.SubscriptionSettingsDefault()
-	organizationWebscrapeSubscriptionSettings.MessageTimeout = s.cfg.Subscriptions.OrganizationWebscrapeSubscription.MessageTimeoutSec * 1000
-	organizationWebscrapeSubscriptionSettings.CheckpointLowerBound = s.cfg.Subscriptions.OrganizationWebscrapeSubscription.CheckpointLowerBound
-	organizationWebscrapeSubscriptionSettings.ExtraStatistics = true
-	if err := s.subscribeToAll(ctx,
-		s.cfg.Subscriptions.OrganizationWebscrapeSubscription.GroupName,
-		&esdb.SubscriptionFilter{Type: esdb.StreamFilterType, Prefixes: []string{s.cfg.Subscriptions.OrganizationWebscrapeSubscription.Prefix}},
-		&organizationWebscrapeSubscriptionSettings,
 		false,
 		false,
 		esdb.End{},

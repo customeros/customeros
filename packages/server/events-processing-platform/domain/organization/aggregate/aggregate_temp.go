@@ -28,8 +28,6 @@ func (a *OrganizationTempAggregate) HandleGRPCRequest(ctx context.Context, reque
 	defer span.Finish()
 
 	switch r := request.(type) {
-	case *organizationpb.EnrichOrganizationGrpcRequest:
-		return nil, a.requestEnrichOrganization(ctx, r)
 	case *organizationpb.RefreshDerivedDataGrpcRequest:
 		return nil, a.refreshDerivedData(ctx, r)
 	case *organizationpb.OrganizationIdGrpcRequest:
@@ -47,28 +45,6 @@ func (a *OrganizationTempAggregate) HandleGRPCRequest(ctx context.Context, reque
 		tracing.TraceErr(span, eventstore.ErrInvalidRequestType)
 		return nil, eventstore.ErrInvalidRequestType
 	}
-}
-
-func (a *OrganizationTempAggregate) requestEnrichOrganization(ctx context.Context, request *organizationpb.EnrichOrganizationGrpcRequest) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationTempAggregate.requestEnrichOrganization")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
-	tracing.LogObjectAsJson(span, "request", request)
-
-	enrichEvent, err := events.NewOrganizationRequestEnrich(a, request.Url)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewOrganizationRequestEnrich")
-	}
-	eventstore.EnrichEventWithMetadataExtended(&enrichEvent, span, eventstore.EventMetadata{
-		Tenant: a.Tenant,
-		UserId: request.LoggedInUserId,
-		App:    request.AppSource,
-	})
-
-	return a.Apply(enrichEvent)
 }
 
 func (a *OrganizationTempAggregate) refreshDerivedData(ctx context.Context, request *organizationpb.RefreshDerivedDataGrpcRequest) error {

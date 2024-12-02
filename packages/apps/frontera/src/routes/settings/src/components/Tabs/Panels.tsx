@@ -1,6 +1,7 @@
 import { AuthPanel } from './panels/AuthPanel';
 import { General } from './panels/Workspace/General';
 import { BillingPanel } from './panels/BillingPanel';
+import { Mailboxes } from './panels/Workspace/Mailboxes';
 import { ApiManager } from './panels/Workspace/ApiManager';
 import { TagsManager } from './panels/Workspace/TagsManager';
 import { IntegrationsPanel } from './panels/IntegrationsPanel';
@@ -28,6 +29,8 @@ export const Panels = ({ tab }: PanelsProps) => {
       return <OrganizationFields />;
     // case 'contacts':
     //   return <ContactFields />;
+    case 'mailboxes':
+      return <Mailboxes />;
 
     default:
       return <AuthPanel />;

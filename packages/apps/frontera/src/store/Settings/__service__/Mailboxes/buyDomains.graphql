@@ -1,0 +1,19 @@
+mutation buyDomains(
+  $test: Boolean!
+  $paymentIntentId: String!
+  $domains: [String!]!
+  $username: [String!]!
+  $amount: Float!
+  $redirectWebsite: String
+) {
+  mailstack_RegisterBuyDomainsWithMailboxes(
+    test: $test
+    paymentIntentId: $paymentIntentId
+    domains: $domains
+    usernames: $username
+    amount: $amount
+    redirectWebsite: $redirectWebsite
+  ) {
+    result
+  }
+}

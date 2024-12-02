@@ -5,7 +5,6 @@ import (
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
 	contract_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
 	email_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
-	eventcompletionpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/event_completion"
 	eventstorepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/event_store"
 	interactioneventpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/interaction_event"
 	interactionsessionpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/interaction_session"
@@ -38,7 +37,6 @@ type Clients struct {
 	InteractionSessionClient interactionsessionpb.InteractionSessionGrpcServiceClient
 	CommentClient            commentpb.CommentGrpcServiceClient
 	EventStoreClient         eventstorepb.EventStoreGrpcServiceClient
-	EventCompletionClient    eventcompletionpb.EventCompletionGrpcServiceClient
 }
 
 func InitClients(conn *grpc.ClientConn) *Clients {
@@ -62,7 +60,6 @@ func InitClients(conn *grpc.ClientConn) *Clients {
 		InteractionSessionClient: interactionsessionpb.NewInteractionSessionGrpcServiceClient(conn),
 		CommentClient:            commentpb.NewCommentGrpcServiceClient(conn),
 		EventStoreClient:         eventstorepb.NewEventStoreGrpcServiceClient(conn),
-		EventCompletionClient:    eventcompletionpb.NewEventCompletionGrpcServiceClient(conn),
 	}
 	return &clients
 }

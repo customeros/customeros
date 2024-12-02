@@ -76,7 +76,6 @@ func main() {
 
 	//testRequestGenerateSummaryRequest()
 	//testRequestGenerateActionItemsRequest()
-	//testEnrichOrganization()
 	//testHideOrganization()
 	//testAddCustomField()
 	//testCreatePhoneNumber()
@@ -102,21 +101,6 @@ func main() {
 	//testCreateInvoice()
 	//testCreateReminder()
 	//testUpdateReminder()
-}
-
-func testEnrichOrganization() {
-	organizationId := "0081162c-a80c-428c-b6ba-ae274ad81c9f"
-	website := "openline.ai"
-
-	result, err := clients.OrganizationClient.EnrichOrganization(context.Background(), &organizationpb.EnrichOrganizationGrpcRequest{
-		Tenant:         tenant,
-		OrganizationId: organizationId,
-		Url:            website,
-	})
-	if err != nil {
-		log.Fatalf("Failed: %v", err.Error())
-	}
-	log.Printf("Result: %v", result.Id)
 }
 
 func testCreateInvoice() {

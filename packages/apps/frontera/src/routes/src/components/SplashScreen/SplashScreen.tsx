@@ -7,6 +7,8 @@ import { observer } from 'mobx-react-lite';
 import { useStore } from '@shared/hooks/useStore';
 import { LoadingScreen } from '@shared/components/SplashScreen/components';
 
+const IS_DEV = import.meta.env.DEV;
+
 // `/auth/success` is omitted from the list of public paths so that the spinner continues to show after a successful login
 // while the user is redirected to the organizations page and bootstrapping is still in progress
 const publicPaths = ['/auth/signin', '/auth/failure'];
@@ -30,7 +32,9 @@ export const SplashScreen = observer(
 
     const showSplash = !store.isBootstrapped && !publicPaths.includes(pathname);
     const render =
-      publicPaths.some((p) => p.startsWith(pathname)) || store.isBootstrapped;
+      IS_DEV ||
+      publicPaths.some((p) => p.startsWith(pathname)) ||
+      store.isBootstrapped;
 
     useEffect(() => {
       if (store.isBootstrapped || publicPaths.includes(pathname)) {
@@ -75,11 +79,13 @@ export const SplashScreen = observer(
       <>
         {render && children}
 
-        <LoadingScreen
-          hide={hidden}
-          showSplash={showSplash}
-          isLoaded={store.isBootstrapped || publicPaths.includes(pathname)}
-        />
+        {!IS_DEV && (
+          <LoadingScreen
+            hide={hidden}
+            showSplash={showSplash}
+            isLoaded={store.isBootstrapped || publicPaths.includes(pathname)}
+          />
+        )}
       </>
     );
   },

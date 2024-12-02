@@ -52,10 +52,14 @@ export const ConfirmDialog = ({
       <AlertDialogPortal>
         <AlertDialogOverlay>
           <AlertDialogContent className='rounded-xl '>
-            {!hideCloseButton && <AlertDialogCloseIconButton />}
+            <div className='flex items-start'>
+              <p className='pb-0 font-semibold line-clamp-2'>{title}</p>
+              {!hideCloseButton && (
+                <AlertDialogCloseIconButton className='mt-[3px]' />
+              )}
+            </div>
 
             <AlertDialogHeader className='font-bold mt-4'>
-              <p className='pb-0 font-semibold'>{title}</p>
               {description && (
                 <p className='mt-1 text-sm text-gray-700 font-normal'>
                   {description}
