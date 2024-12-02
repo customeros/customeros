@@ -4,6 +4,8 @@ import (
 	"context"
 	"strings"
 
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/opentracing/opentracing-go"
 	"gorm.io/gorm"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
@@ -13,7 +15,7 @@ type FlowWebhooksRepository interface {
 	FindAllActiveWebhooks(ctx context.Context, tenantName string) (int, []entity.FlowWebhooks, error)
 	FindActiveWebhook(ctx context.Context, tenantName, integration string) (int, *entity.FlowWebhooks, error)
 	DisableWebhook(ctx context.Context, webhookPath string) error
-	CreateWebhook(webhook *entity.FlowWebhooks) error
+	CreateWebhook(ctx context.Context, webhook *entity.FlowWebhooks) error
 	FindWebhookByPath(ctx context.Context, tenantName, webhookPath string) (entity.FlowWebhooks, error)
 }
 
@@ -25,7 +27,11 @@ func NewFlowWebhooksRepository(gormDb *gorm.DB) FlowWebhooksRepository {
 	return &flowWebhooksRepository{gormDb: gormDb}
 }
 
-func (r *flowWebhooksRepository) CreateWebhook(webhook *entity.FlowWebhooks) error {
+func (r *flowWebhooksRepository) CreateWebhook(ctx context.Context, webhook *entity.FlowWebhooks) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "FlowWebhooksRepository.CreateWebhook")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
 	if err := r.gormDb.Create(webhook).Error; err != nil {
 		return err
 	}
@@ -33,8 +39,11 @@ func (r *flowWebhooksRepository) CreateWebhook(webhook *entity.FlowWebhooks) err
 }
 
 func (r *flowWebhooksRepository) FindWebhookByPath(ctx context.Context, tenantName, webhookPath string) (entity.FlowWebhooks, error) {
-	var webhook entity.FlowWebhooks
+	span, _ := opentracing.StartSpanFromContext(ctx, "FlowWebhooksRepository.FindWebhookByPath")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
 
+	var webhook entity.FlowWebhooks
 	webhookPath = strings.TrimPrefix(webhookPath, "/")
 	err := r.gormDb.
 		Where("tenant_name = ? AND webhook_path = ?", tenantName, webhookPath).
@@ -44,6 +53,10 @@ func (r *flowWebhooksRepository) FindWebhookByPath(ctx context.Context, tenantNa
 }
 
 func (r *flowWebhooksRepository) FindAllActiveWebhooks(ctx context.Context, tenantName string) (int, []entity.FlowWebhooks, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "FlowWebhooksRepository.FindAllActiveWebhooks")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
 	var webhooks []entity.FlowWebhooks
 	err := r.gormDb.
 		Where("tenant_name = ? AND enabled = true", tenantName).
@@ -59,6 +72,10 @@ func (r *flowWebhooksRepository) FindAllActiveWebhooks(ctx context.Context, tena
 }
 
 func (r *flowWebhooksRepository) FindActiveWebhook(ctx context.Context, tenantName, integration string) (int, *entity.FlowWebhooks, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "FlowWebhooksRepository.FindActiveWebhook")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
 	var webhook entity.FlowWebhooks
 
 	err := r.gormDb.
@@ -72,6 +89,10 @@ func (r *flowWebhooksRepository) FindActiveWebhook(ctx context.Context, tenantNa
 }
 
 func (r *flowWebhooksRepository) DisableWebhook(ctx context.Context, webhookPath string) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "FlowWebhooksRepository.DisableWebhook")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
 	return r.gormDb.
 		Where("webhook_path = ? AND enabled = true", webhookPath).
 		Update("enabled", false).Error
