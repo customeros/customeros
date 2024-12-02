@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"gorm.io/gorm"
 )
 
 type FlowWebhooks struct {
@@ -28,7 +29,7 @@ func (FlowWebhooks) UniqueIndex() [][]string {
 	}
 }
 
-func (fw *FlowWebhooks) BeforeCreate() error {
+func (fw *FlowWebhooks) BeforeCreate(*gorm.DB) error {
 	if fw.TenantName == "" {
 		return errors.New("tenant name is required")
 	}
@@ -41,7 +42,7 @@ func (fw *FlowWebhooks) BeforeCreate() error {
 	return nil
 }
 
-func (fw *FlowWebhooks) BeforeUpdate() error {
+func (fw *FlowWebhooks) BeforeUpdate(*gorm.DB) error {
 	fw.UpdatedAt = time.Now()
 	return nil
 }
