@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/customeros/mailsherpa/domaincheck"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
@@ -571,11 +572,54 @@ func (s *scrapinService) ScrapInSearchCompany(ctx context.Context, domain string
 				return 0, nil, err
 			}
 			data = &unmarshalledData
-			return latestEnrichDetailsScrapInRecordWithCompanyFound.ID, data, nil
+
+			if data.Company != nil && data.Company.WebsiteUrl != "" {
+				// check primary domain matches
+				inputIsPrimary, inputAltPrimaryDomain := domaincheck.PrimaryDomainCheck(domain)
+				outputIsPrimary, outputAltPrimaryDomain := domaincheck.PrimaryDomainCheck(data.Company.WebsiteUrl)
+				inputPrimaryDomain := utils.ExtractDomain(inputAltPrimaryDomain)
+				if inputIsPrimary {
+					inputPrimaryDomain = utils.ExtractDomain(domain)
+				}
+				outputPrimaryDomain := utils.ExtractDomain(outputAltPrimaryDomain)
+				if outputIsPrimary {
+					outputPrimaryDomain = utils.ExtractDomain(data.Company.WebsiteUrl)
+				}
+				span.LogFields(log.String("result.inputPrimaryDomain", inputPrimaryDomain), log.String("result.outputPrimaryDomain", outputPrimaryDomain))
+				if inputPrimaryDomain != "" && inputPrimaryDomain == outputPrimaryDomain {
+					return latestEnrichDetailsScrapInRecordWithCompanyFound.ID, data, nil
+				} else {
+					tracing.TraceErr(span, errors.New("Scrapin retuned different company domain, expected: "+inputPrimaryDomain+", got: "+data.Company.WebsiteUrl))
+				}
+			}
+			return 0, nil, nil
 		}
 	}
 
-	return recordId, data, nil
+	if data != nil && data.Company != nil {
+		if data.Company.WebsiteUrl == "" {
+			return recordId, data, nil
+		}
+		// check primary domain matches
+		inputIsPrimary, inputAltPrimaryDomain := domaincheck.PrimaryDomainCheck(domain)
+		outputIsPrimary, outputAltPrimaryDomain := domaincheck.PrimaryDomainCheck(data.Company.WebsiteUrl)
+		inputPrimaryDomain := utils.ExtractDomain(inputAltPrimaryDomain)
+		if inputIsPrimary {
+			inputPrimaryDomain = utils.ExtractDomain(domain)
+		}
+		outputPrimaryDomain := utils.ExtractDomain(outputAltPrimaryDomain)
+		if outputIsPrimary {
+			outputPrimaryDomain = utils.ExtractDomain(data.Company.WebsiteUrl)
+		}
+		span.LogFields(log.String("result.inputPrimaryDomain", inputPrimaryDomain), log.String("result.outputPrimaryDomain", outputPrimaryDomain))
+		if inputPrimaryDomain != "" && inputPrimaryDomain == outputPrimaryDomain {
+			return recordId, data, nil
+		} else {
+			tracing.TraceErr(span, errors.New("Scrapin retuned different company domain, expected: "+inputPrimaryDomain+", got: "+data.Company.WebsiteUrl))
+		}
+	}
+
+	return 0, nil, nil
 }
 
 func (s *scrapinService) callScrapinCompanySearch(ctx context.Context, domain string) (*postgresentity.ScrapInResponseBody, error) {
