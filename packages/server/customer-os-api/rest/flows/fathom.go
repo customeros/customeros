@@ -1,18 +1,17 @@
 package flows
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	"net/http"
 	"strings"
 
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	commontracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/pkg/errors"
-	"go.uber.org/multierr"
-
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 )
 
 func FathomZapier(c *rest.HTTPContext) {
@@ -77,12 +76,11 @@ func handleFathomAISummaryZapier(ctx *rest.HTTPContext) {
 }
 
 func createEventFromFathomAISummaryZapier(ctx *rest.HTTPContext, aiSummaryData *FathomZapierPayload) error {
-	var meetingSummary data_fields.MeetingSummaryCreatedEvent
-	var event data_fields.FlowEventObject[data_fields.MeetingSummaryCreatedEvent]
-	var allErrs error
+	var meetingSummary data_fields.MeetingSummaryFields
 
 	content, err := aiSummaryData.toMarkdownContent()
 	if err != nil {
+		tracing.TraceErr(ctx.Span, errors.Wrap(err, "failed to convert Fathom AI summary to markdown"))
 		return err
 	}
 
@@ -90,22 +88,18 @@ func createEventFromFathomAISummaryZapier(ctx *rest.HTTPContext, aiSummaryData *
 	meetingSummary.Content = &content
 	participants := aiSummaryData.Meeting.participantEmails()
 	meetingSummary.ParticipantEmails = &participants
-
-	// build event object
-	event.Tenant = &ctx.Tenant
-	event.Event = data_fields.FlowEventFathomMeetingSummaryCreated
-	event.Integration = data_fields.IntegrationFathom
-	event.Payload = &meetingSummary
+	meetingSummary.Source = neo4jenum.
 
 	if aiSummaryData.Meeting.ScheduledStartTime.IsZero() {
-		event.Timestamp = utils.NowPtr()
+		meetingSummary.Timestamp = utils.NowPtr()
 	} else {
-		event.Timestamp = utils.TimePtr(aiSummaryData.Meeting.ScheduledStartTime.UTC())
+		meetingSummary.Timestamp = utils.TimePtr(aiSummaryData.Meeting.ScheduledStartTime.UTC())
 	}
 
-	ctx.Services.CommonServices.RabbitMQService.PublishEvent(
-		*ctx.ServiceContext, id, model.FLOW_EVENT, event,
-	)
+	err = ctx.Services.CommonServices.RabbitMQService.PublishEvent(*ctx.ServiceContext, "", model.FLOW_EVENT, dto.MeetingSummaryCreated{meetingSummary})
+	if err != nil {
+		tracing.TraceErr(ctx.Span, errors.Wrap(err, "failed to publish event"))
+	}
 
-	return allErrs
+	return err
 }
