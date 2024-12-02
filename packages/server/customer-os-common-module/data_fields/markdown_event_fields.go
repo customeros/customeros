@@ -1,9 +1,10 @@
 package data_fields
 
 import (
+	"time"
+
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
-	"time"
 )
 
 // Nil fields wil be skipped from update
