@@ -62,8 +62,9 @@ func (r *flowWebhooksRepository) FindAllActiveWebhooks(ctx context.Context, tena
 		Where("tenant_name = ? AND enabled = true", tenantName).
 		Order("created_at DESC").
 		Find(&webhooks).Error
-	if err != nil {
-		return 0, nil, err // DB error
+
+	if err != nil && err.Error() != "record not found" {
+		return 0, nil, err
 	}
 
 	count := len(webhooks)
@@ -81,7 +82,8 @@ func (r *flowWebhooksRepository) FindActiveWebhook(ctx context.Context, tenantNa
 	err := r.gormDb.
 		Where("tenant_name = ? AND integration = ? AND enabled = true", tenantName, integration).
 		First(&webhook).Error
-	if err != nil {
+
+	if err != nil && err.Error() != "record not found" {
 		return 0, nil, err
 	}
 
