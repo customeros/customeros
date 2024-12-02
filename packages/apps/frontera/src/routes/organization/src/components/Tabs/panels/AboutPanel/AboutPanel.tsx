@@ -204,13 +204,14 @@ export const AboutPanel = observer(() => {
             disabled={orgNameReadOnly}
             onFocus={(e) => e.target.select()}
             value={organization?.value.name || ''}
-            onBlur={() => {
-              organization.commit();
-            }}
             onChange={(e) => {
               organization.value.name = e.target.value;
             }}
             className='font-semibold text-[16px] mt-0.5 border-none overflow-hidden overflow-ellipsis'
+            onBlur={() => {
+              organization.draft();
+              organization.commit();
+            }}
           />
           {organization.value?.referenceId && (
             <div className='h-full ml-4'>
@@ -238,11 +239,12 @@ export const AboutPanel = observer(() => {
           placeholder='www.'
           dataTest='org-about-www'
           value={organization.value?.website || ''}
-          onBlur={() => {
-            organization.commit();
-          }}
           onChange={(e) => {
             organization.value!.website = e.target.value;
+          }}
+          onBlur={() => {
+            organization.draft();
+            organization.commit();
           }}
         />
         <Textarea
@@ -254,6 +256,7 @@ export const AboutPanel = observer(() => {
           placeholder={placeholders.valueProposition}
           value={organization.value?.valueProposition || ''}
           onBlur={() => {
+            organization.draft();
             organization.commit();
           }}
           onChange={(e) => {
