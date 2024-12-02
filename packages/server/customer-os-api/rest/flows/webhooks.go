@@ -51,6 +51,7 @@ func CreateWebhook(services *service.Services, baseURL, flowsPath string) gin.Ha
 		integration, err := services.WebhookService.GetIntegration(strings.ToLower(req.Integration))
 		if err != nil {
 			rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("please provide a valid integration value"))
+			return
 		}
 
 		webhookPath, secret, err := services.WebhookService.CreateIntegrationWebhook(ctx, tenant, comserv.Integration(integration))
