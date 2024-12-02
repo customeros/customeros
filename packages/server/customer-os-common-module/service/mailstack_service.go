@@ -56,6 +56,20 @@ func (s *mailstackService) GetPaymentIntent(ctx context.Context, domains []strin
 		return "", err
 	}
 
+	// validate domains  before creating payment intent
+	for _, domain := range domains {
+		available, _, err := s.services.NamecheapService.CheckDomainAvailability(ctx, domain)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "Error checking domain availability"))
+			return "", err
+		}
+		if !available {
+			err = errors.New("Domain not available for purchase")
+			tracing.TraceErr(span, err)
+			return "", err
+		}
+	}
+
 	//create stripe payment intent
 	stipePaymentDescription := fmt.Sprintf("Mailstack purchase: %d domains (%s) with usernames (%s)", len(domains), strings.Join(domains, ", "), strings.Join(usernames, ", "))
 
