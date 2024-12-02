@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"strings"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -63,7 +64,11 @@ func (r *flowWebhooksRepository) FindAllActiveWebhooks(ctx context.Context, tena
 		Order("created_at DESC").
 		Find(&webhooks).Error
 
-	if err != nil && err.Error() != "record not found" {
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return 0, nil, nil
+	}
+
+	if err != nil {
 		return 0, nil, err
 	}
 
@@ -83,7 +88,11 @@ func (r *flowWebhooksRepository) FindActiveWebhook(ctx context.Context, tenantNa
 		Where("tenant_name = ? AND integration = ? AND enabled = true", tenantName, integration).
 		First(&webhook).Error
 
-	if err != nil && err.Error() != "record not found" {
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return 0, nil, nil
+	}
+
+	if err != nil {
 		return 0, nil, err
 	}
 
