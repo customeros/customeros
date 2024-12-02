@@ -87,7 +87,7 @@ require (
 	github.com/mrz1836/postmark v1.6.5 // indirect
 	github.com/neo4j/neo4j-go-driver/v5 v5.27.0 // indirect
 	github.com/novuhq/go-novu v0.1.2 // indirect
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository v0.0.0-20240410144729-44cbe53c019c // indirect
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository v0.0.0-20241202190357-68898897475c // indirect
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository v0.0.0-20240410144729-44cbe53c019c // indirect
 	github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto v0.0.0-20241004122044-3a0040d9c64c // indirect
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
