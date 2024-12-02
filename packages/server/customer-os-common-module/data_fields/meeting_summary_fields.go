@@ -1,8 +1,9 @@
 package data_fields
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	"time"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 )
 
 type MeetingSummaryFields struct {

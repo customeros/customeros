@@ -49,7 +49,7 @@ func GetEvents(services *service.Services) gin.HandlerFunc {
 
 		results := make([]FlowEventRecord, len(events))
 
-		for _, event := range events {
+		for i, event := range events {
 			record := FlowEventRecord{
 				System:      event.ExternalSystem,
 				Resource:    event.Resource,
@@ -57,7 +57,7 @@ func GetEvents(services *service.Services) gin.HandlerFunc {
 				Name:        event.EventName,
 				Description: event.Description,
 			}
-			results = append(results, record)
+			results[i] = record
 		}
 
 		if len(events) == 1 {
