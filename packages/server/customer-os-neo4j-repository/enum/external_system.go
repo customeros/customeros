@@ -3,62 +3,51 @@ package enum
 type ExternalSystemId string
 
 const (
-	Hubspot        ExternalSystemId = "hubspot"
-	ZendeskSupport ExternalSystemId = "zendesk_support"
-	CalCom         ExternalSystemId = "calcom"
-	Pipedrive      ExternalSystemId = "pipedrive"
-	Slack          ExternalSystemId = "slack"
-	Intercom       ExternalSystemId = "intercom"
-	Salesforce     ExternalSystemId = "salesforce"
-	Stripe         ExternalSystemId = "stripe"
-	Mixpanel       ExternalSystemId = "mixpanel"
-	Close          ExternalSystemId = "close"
-	Unthread       ExternalSystemId = "unthread"
-	Outlook        ExternalSystemId = "outlook"
 	Attio          ExternalSystemId = "attio"
+	CalCom         ExternalSystemId = "calcom"
+	Close          ExternalSystemId = "close"
+	Fathom         ExternalSystemId = "fathom"
+	GCal           ExternalSystemId = "gcal"
+	Gain           ExternalSystemId = "grain"
+	GMail          ExternalSystemId = "gmail"
+	Hubspot        ExternalSystemId = "hubspot"
+	Intercom       ExternalSystemId = "intercom"
+	Mailstack      ExternalSystemId = "mailstack"
+	Mixpanel       ExternalSystemId = "mixpanel"
+	Outlook        ExternalSystemId = "outlook"
+	Pipedrive      ExternalSystemId = "pipedrive"
+	Postmark       ExternalSystemId = "postmark"
+	Salesforce     ExternalSystemId = "salesforce"
+	Slack          ExternalSystemId = "slack"
+	Stripe         ExternalSystemId = "stripe"
+	Unthread       ExternalSystemId = "unthread"
 	WeConnect      ExternalSystemId = "weconnect"
 	ZendeskSell    ExternalSystemId = "zendesk-sell"
-	GCal           ExternalSystemId = "gcal"
-	GMail          ExternalSystemId = "gmail"
-	Mailstack      ExternalSystemId = "mailstack"
+	ZendeskSupport ExternalSystemId = "zendesk_support"
 )
+
+var validExternalSystems = func() map[string]ExternalSystemId {
+	systems := []ExternalSystemId{
+		Attio, CalCom, Close, Fathom, GCal, Gain, GMail,
+		Hubspot, Intercom, Mailstack, Mixpanel, Outlook,
+		Pipedrive, Postmark, Salesforce, Slack, Stripe,
+		Unthread, WeConnect, ZendeskSell, ZendeskSupport,
+	}
+
+	m := make(map[string]ExternalSystemId)
+	for _, s := range systems {
+		m[string(s)] = s
+	}
+	return m
+}()
 
 func (e ExternalSystemId) String() string {
 	return string(e)
 }
 
 func DecodeExternalSystemId(value string) ExternalSystemId {
-	switch value {
-	case "hubspot":
-		return Hubspot
-	case "zendesk_support":
-		return ZendeskSupport
-	case "calcom":
-		return CalCom
-	case "pipedrive":
-		return Pipedrive
-	case "slack":
-		return Slack
-	case "intercom":
-		return Intercom
-	case "salesforce":
-		return Salesforce
-	case "stripe":
-		return Stripe
-	case "mixpanel":
-		return Mixpanel
-	case "close":
-		return Close
-	case "unthread":
-		return Unthread
-	case "outlook":
-		return Outlook
-	case "attio":
-		return Attio
-	case "weconnect":
-		return WeConnect
-	case "zendesk-sell":
-		return ZendeskSell
+	if system, ok := validExternalSystems[value]; ok {
+		return system
 	}
 	return ""
 }
