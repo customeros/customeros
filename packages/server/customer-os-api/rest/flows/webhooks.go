@@ -56,7 +56,7 @@ func CreateWebhook(services *service.Services, baseURL, flowsPath string) gin.Ha
 
 		webhookPath, secret, err := services.WebhookService.CreateIntegrationWebhook(ctx, tenant, comserv.Integration(integration))
 		if err != nil {
-			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInvalidAPIKey.WithMessage("Unable to create webhook"))
+			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer.WithMessage("Unable to create webhook"))
 			return
 		}
 
