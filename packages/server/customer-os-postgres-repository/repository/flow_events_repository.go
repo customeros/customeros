@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
@@ -24,13 +25,14 @@ type flowEventsRepository struct {
 	gormDb *gorm.DB
 }
 
-func NewFlowEventsRepository(gormDb *gorm.DB) (FlowEventsRepository, error) {
-	r := &flowEventsRepository{gormDb: gormDb}
+func NewFlowEventsRepository(gormDb *gorm.DB) FlowEventsRepository {
+	repo := &flowEventsRepository{gormDb: gormDb}
 
-	if err := r.InitializeEvents(context.Background()); err != nil {
-		return nil, fmt.Errorf("failed to initialize flow events: %w", err)
+	if err := repo.InitializeEvents(context.Background()); err != nil {
+		log.Printf("Failed to initialize flow events: %v", err)
 	}
-	return r, nil
+
+	return repo
 }
 
 func (r *flowEventsRepository) InitializeEvents(ctx context.Context) error {
@@ -40,14 +42,14 @@ func (r *flowEventsRepository) InitializeEvents(ctx context.Context) error {
 
 	requiredEvents := []entity.FlowEvent{
 		{
-			ExternalSystem: enum.Fathom.String(),
+			ExternalSystem: "fathom",
 			Resource:       "meeting_summary",
 			Action:         "created",
 			Description:    "New AI meeting summary created by Fathom",
 			Enabled:        true,
 		},
 		{
-			ExternalSystem: enum.Grain.String(),
+			ExternalSystem: "grain",
 			Resource:       "meeting_summary",
 			Action:         "created",
 			Description:    "New AI meeting summary created by Grain",
