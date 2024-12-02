@@ -32,11 +32,13 @@ import UpdateContactPhoneNumberDocument from './updateContactPhoneNumber.graphql
 import RemoveContactPhoneNumberDocument from './removeContactPhoneNumber.graphql';
 import FindWorkContactEmailMutationDocument from './findWorkContactEmail.graphql';
 import RemoveTagsFromContactMutationDocument from './removeTagsFromContact.graphql';
+import CreateContactBulkByEmailMutationDocument from './createContactBulkByEmail.graphql';
 import SetPrimaryEmailForContactMutationDocument from './setPrimaryEmailForContact.graphql';
 import {
   AddJobRoleMutation,
   AddJobRoleMutationVariables,
 } from './addJobRole.generated';
+import CreateContactBulkByLinkedInMutationDocument from './createContactBulkByLinkedIn.graphql';
 import {
   CreateContactMutation,
   CreateContactMutationVariables,
@@ -101,6 +103,14 @@ import {
   SetPrimaryEmailForContactMutation,
   SetPrimaryEmailForContactMutationVariables,
 } from './setPrimaryEmailForContact.generated';
+import {
+  CreateContactBulkByEmailMutation,
+  CreateContactBulkByEmailMutationVariables,
+} from './createContactBulkByEmail.generated.ts';
+import {
+  CreateContactBulkByLinkedInMutation,
+  CreateContactBulkByLinkedInMutationVariables,
+} from './createContactBulkByLinkedIn.generated.ts';
 import {
   CreateContactMutation as CreateContactForOrgMutation,
   CreateContactMutationVariables as CreateContactForOrgMutationVariables,
@@ -261,6 +271,24 @@ class ContactService {
       RemoveTagFromContactMutation,
       RemoveTagFromContactMutationVariables
     >(RemoveTagsFromContactMutationDocument, payload);
+  }
+
+  async createContactBulkByEmail(
+    payload: CreateContactBulkByEmailMutationVariables,
+  ) {
+    return this.transport.graphql.request<
+      CreateContactBulkByEmailMutation,
+      CreateContactBulkByEmailMutationVariables
+    >(CreateContactBulkByEmailMutationDocument, payload);
+  }
+
+  async createContactBulkByLinkedIn(
+    payload: CreateContactBulkByLinkedInMutationVariables,
+  ) {
+    return this.transport.graphql.request<
+      CreateContactBulkByLinkedInMutation,
+      CreateContactBulkByLinkedInMutationVariables
+    >(CreateContactBulkByLinkedInMutationDocument, payload);
   }
 
   public async mutateOperation(operation: Operation, store: ContactStore) {

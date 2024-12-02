@@ -10,3 +10,4 @@ export * from './ContactEmailVerificationInfoModal';
 export * from './UnlinkContactFromFlow.tsx';
 export * from './ConfirmBulkFlowEdit';
 export * from './ConfirmSingleFlowEdit';
+export * from './addContactBulk/AddContactsBulk';

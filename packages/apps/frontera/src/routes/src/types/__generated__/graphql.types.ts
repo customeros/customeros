@@ -2372,6 +2372,8 @@ export type Mutation = {
   contact_AddSocial: Social;
   contact_AddTag: ActionResponse;
   contact_Create: Scalars['ID']['output'];
+  contact_CreateBulkByEmail: Array<Scalars['String']['output']>;
+  contact_CreateBulkByLinkedIn: Array<Scalars['String']['output']>;
   contact_CreateForOrganization: Contact;
   contact_FindWorkEmail: ActionResponse;
   contact_HardDelete: Result;
@@ -2592,6 +2594,16 @@ export type MutationContact_AddTagArgs = {
 
 export type MutationContact_CreateArgs = {
   input: ContactInput;
+};
+
+export type MutationContact_CreateBulkByEmailArgs = {
+  emails: Array<Scalars['String']['input']>;
+  flowId?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type MutationContact_CreateBulkByLinkedInArgs = {
+  flowId?: InputMaybe<Scalars['String']['input']>;
+  linkedInUrls: Array<Scalars['String']['input']>;
 };
 
 export type MutationContact_CreateForOrganizationArgs = {
