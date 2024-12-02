@@ -44,6 +44,7 @@ export class OrganizationAboutPage {
   private orgAboutSocialLinkFilledIn = 'p[data-test="org-about-social-link"]';
   private orgAboutSocialLinkEmpty =
     'input[data-test="org-about-social-link"][placeholder="Social link"]';
+  private orgTest = 'input[data-test="test"]';
 
   async addWebsiteToOrg(website: string) {
     await clickLocatorsThatAreVisible(this.page, this.orgAboutWww);
