@@ -62,7 +62,7 @@ func handleFathomAISummaryZapier(ctx *rest.HTTPContext) {
 	}
 
 	if aiSummaryData.AISummary.HTMLFormatted == "" {
-		rest.SendError(ctx.GinContext, ctx.Span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("No Fantom summary data"))
+		rest.SendError(ctx.GinContext, ctx.Span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("No Fathom summary data"))
 		return
 	}
 
