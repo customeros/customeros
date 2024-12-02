@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	comserv "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/pkg/errors"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
@@ -54,7 +54,7 @@ func CreateWebhook(services *service.Services, baseURL, flowsPath string) gin.Ha
 			return
 		}
 
-		webhookPath, secret, err := services.WebhookService.CreateIntegrationWebhook(ctx, tenant, comserv.Integration(integration))
+		webhookPath, secret, err := services.WebhookService.CreateIntegrationWebhook(ctx, tenant, integration)
 		if err != nil {
 			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer.WithMessage("Unable to create webhook"))
 			return
@@ -267,14 +267,14 @@ func HandleWebhook(s *service.Services) gin.HandlerFunc {
 		}
 
 		switch integration {
-		case comserv.IntegrationCalCom:
+		case enum.CalCom:
 			CalDotCom(&httpContext)
 		// todo
-		case comserv.IntegrationFathom:
+		case enum.Fathom:
 			FathomZapier(&httpContext)
-		case comserv.IntegrationGrain:
+		case enum.Grain:
 			GrainZapier(&httpContext)
-		case comserv.IntegrationPostmark:
+		case enum.Postmark:
 			PostmarkInboundEmail(&httpContext)
 		// todo
 		default:

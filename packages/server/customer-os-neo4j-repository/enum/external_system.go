@@ -1,5 +1,11 @@
 package enum
 
+import (
+	"fmt"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+)
+
 type ExternalSystemId string
 
 const (
@@ -8,8 +14,8 @@ const (
 	Close          ExternalSystemId = "close"
 	Fathom         ExternalSystemId = "fathom"
 	GCal           ExternalSystemId = "gcal"
-	Gain           ExternalSystemId = "grain"
 	GMail          ExternalSystemId = "gmail"
+	Grain          ExternalSystemId = "grain"
 	Hubspot        ExternalSystemId = "hubspot"
 	Intercom       ExternalSystemId = "intercom"
 	Mailstack      ExternalSystemId = "mailstack"
@@ -28,7 +34,7 @@ const (
 
 var validExternalSystems = func() map[string]ExternalSystemId {
 	systems := []ExternalSystemId{
-		Attio, CalCom, Close, Fathom, GCal, Gain, GMail,
+		Attio, CalCom, Close, Fathom, GCal, Grain, GMail,
 		Hubspot, Intercom, Mailstack, Mixpanel, Outlook,
 		Pipedrive, Postmark, Salesforce, Slack, Stripe,
 		Unthread, WeConnect, ZendeskSell, ZendeskSupport,
@@ -50,4 +56,9 @@ func DecodeExternalSystemId(value string) ExternalSystemId {
 		return system
 	}
 	return ""
+}
+
+func (e ExternalSystemId) IntegrationID(rotationCount int) string {
+	input := fmt.Sprintf("%s:%d", e.String(), rotationCount)
+	return utils.GenerateHashId(input, 12)
 }
