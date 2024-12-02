@@ -1,12 +1,10 @@
-package service
+package data_fields
 
 import (
 	"fmt"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
-
-type Integration string
 
 // Add all supported integrations here, and also in validIntegrations below
 

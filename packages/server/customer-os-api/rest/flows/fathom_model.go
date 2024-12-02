@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/customeros/mailsherpa/mailvalidate"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"golang.org/x/net/html"
 )
@@ -69,9 +70,17 @@ type Recording struct {
 	URL               string `json:"url"`
 }
 
-type FathomMeetingSummaryCreatedEvent struct {
-	ParticipantEmails *[]string `json:"participantEmails"`
-	Content           *string   `json:"content,omitempty"`
+func (m *Meeting) participantEmails() []string {
+	var emails []string
+
+	for _, i := range m.Invitees {
+		validation := mailvalidate.ValidateEmailSyntax(i.Email)
+		if !validation.IsValid {
+			continue
+		}
+		emails = append(emails, validation.CleanEmail)
+	}
+	return emails
 }
 
 func (f *FathomZapierPayload) ExternalDomains() []string {

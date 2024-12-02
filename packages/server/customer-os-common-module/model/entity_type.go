@@ -26,6 +26,7 @@ const (
 	NOTE                  EntityType = "NOTE"
 	FLOW                  EntityType = "FLOW"
 	FLOW_ACTION           EntityType = "FLOW_ACTION"
+	FLOW_EVENT            EntityType = "FLOW_EVENT"
 	FLOW_PARTICIPANT      EntityType = "FLOW_PARTICIPANT"
 	FLOW_SENDER           EntityType = "FLOW_SENDER"
 	CUSTOM_FIELD          EntityType = "CUSTOM_FIELD"
