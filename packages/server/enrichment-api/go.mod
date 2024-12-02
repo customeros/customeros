@@ -15,6 +15,7 @@ replace github.com/openline-ai/openline-customer-os/packages/server/events-proce
 require (
 	github.com/biter777/countries v1.7.5
 	github.com/caarlos0/env/v6 v6.10.1
+	github.com/customeros/mailsherpa v0.3.3
 	github.com/forPelevin/gomoji v1.2.0
 	github.com/gin-contrib/cors v1.7.2
 	github.com/gin-contrib/zap v1.1.4
@@ -49,7 +50,6 @@ require (
 	github.com/cloudwego/base64x v0.1.4 // indirect
 	github.com/cloudwego/iasm v0.2.0 // indirect
 	github.com/coocood/freecache v1.2.4 // indirect
-	github.com/customeros/mailsherpa v0.3.3 // indirect
 	github.com/customeros/mailwatcher v0.1.4 // indirect
 	github.com/emersion/go-message v0.18.1 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect

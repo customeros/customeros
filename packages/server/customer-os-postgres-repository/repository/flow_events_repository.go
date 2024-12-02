@@ -46,6 +46,13 @@ func (r *flowEventsRepository) InitializeEvents(ctx context.Context) error {
 			Description:    "New AI meeting summary created by Fathom",
 			Enabled:        true,
 		},
+		{
+			ExternalSystem: enum.Grain.String(),
+			Resource:       "meeting_summary",
+			Action:         "created",
+			Description:    "New AI meeting summary created by Grain",
+			Enabled:        true,
+		},
 		// Add other required events...
 	}
 
