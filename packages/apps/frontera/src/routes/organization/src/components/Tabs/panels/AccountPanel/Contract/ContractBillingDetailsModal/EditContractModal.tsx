@@ -39,7 +39,7 @@ export const EditContractModal = ({
   const contractStore = store.contracts.value.get(contractId) as ContractStore;
   const contractNameInputRef = useRef<HTMLInputElement | null>(null);
 
-  const { isEditModalOpen, onEditModalClose } = useContractModalStateContext();
+  const { isEditModalOpen } = useContractModalStateContext();
 
   useEffect(() => {
     if (isEditModalOpen) {
@@ -57,7 +57,7 @@ export const EditContractModal = ({
   }, [isEditModalOpen]);
 
   return (
-    <Modal open={isEditModalOpen} onOpenChange={onEditModalClose}>
+    <Modal open={isEditModalOpen}>
       <ModalPortal>
         <ModalOverlay className='z-50' />
         <ModalContent
