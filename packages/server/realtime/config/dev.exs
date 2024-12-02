@@ -68,3 +68,14 @@ config :phoenix, :plug_init_mode, :runtime
 config :phoenix_live_view, :debug_heex_annotations, true
 
 config :realtime, :app_env, :dev
+
+config :opentelemetry,
+       :processors,
+       otel_batch_processor: %{
+         # Using `localhost` here since we are starting outside docker-compose where
+         # otel would refer to the hostname of the OpenCollector,
+         #
+         # If you are running in docker compose, kindly change it to the correct
+         # hostname: `otel`
+         exporter: {:opentelemetry_exporter, %{endpoints: [{:http, "localhost", 4318, []}]}}
+       }
