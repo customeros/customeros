@@ -1170,9 +1170,9 @@ func (h *InvoiceEventHandler) onInvoicePayNotificationV1(ctx context.Context, ev
 
 	workflowId := ""
 	if contractEntity.PayOnline || contractEntity.PayAutomatically {
-		workflowId = commonService.WorkflowInvoiceReadyNoPaymentLink
-	} else {
 		workflowId = commonService.WorkflowInvoiceReadyWithPaymentLink
+	} else {
+		workflowId = commonService.WorkflowInvoiceReadyNoPaymentLink
 	}
 
 	cc := contractEntity.InvoiceEmailCC
