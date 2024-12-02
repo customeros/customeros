@@ -100,6 +100,7 @@ services:
       /bin/bash -c "\
       cat /provision/neo4j.cypher | cypher-shell -u neo4j -p password --format plain -a bolt://neo4j:7687"
 
+
   eventstore:
     image: eventstore/eventstore:22.10.3-alpha-arm64v8
     environment:
@@ -138,6 +139,7 @@ services:
       - ./temporal:/etc/temporal/config/dynamicconfig
     labels:
       kompose.volume.type: configMap
+
   temporal-admin-tools:
     container_name: temporal-admin-tools
     depends_on:
@@ -150,6 +152,7 @@ services:
       - openline
     stdin_open: true
     tty: true
+
   temporal-ui:
     container_name: temporal-ui
     depends_on:
