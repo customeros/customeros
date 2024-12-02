@@ -53,7 +53,6 @@ require (
 )
 
 require (
-	bou.ke/monkey v1.0.2 // indirect
 	cloud.google.com/go/auth v0.10.2 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.5 // indirect
 	cloud.google.com/go/compute/metadata v0.5.2 // indirect
