@@ -195,8 +195,7 @@ export class Organization extends Entity<OrganizationDatum> {
   public deleteTag(id: string) {
     const idx = this.value.tags?.findIndex((t) => t.metadata.id === id);
 
-    if (!idx || idx === -1) return;
-
+    if (idx === -1 || idx === undefined || idx === null) return;
     this.value.tags?.splice(idx, 1);
   }
 
