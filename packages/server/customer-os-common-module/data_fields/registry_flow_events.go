@@ -1,26 +1,8 @@
-package service
+package data_fields
 
 import (
 	"fmt"
-	"time"
 )
-
-type FlowEventObject[T any] struct {
-	Tenant      string      `json:"tenant"`
-	EventType   string      `json:"eventType"`
-	Integration Integration `json:"integration"`
-	Timestamp   time.Time   `json:"timestamp"`
-	Payload     T           `json:"payload"`
-}
-
-type FlowEventDefinition struct {
-	Event       FlowEvent
-	Integration Integration
-	Schema      interface{} // The defined event type
-	Description string
-}
-
-type FlowEvent string
 
 // Add all supported flow events here //
 
@@ -64,9 +46,4 @@ func ParseEventType(s string) (FlowEvent, error) {
 		return event.Event, nil
 	}
 	return "", fmt.Errorf("invalid event type: %s", s)
-}
-
-type MeetingSummaryCreatedEvent struct {
-	ParticipantEmails *[]string `json:"participantEmails"`
-	Content           *string   `json:"content,omitempty"`
 }

@@ -5,10 +5,10 @@ import (
 	"strings"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	commontracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/pkg/errors"
 	"go.uber.org/multierr"
 
@@ -77,7 +77,8 @@ func handleFathomAISummaryZapier(ctx *rest.HTTPContext) {
 }
 
 func createEventFromFathomAISummaryZapier(ctx *rest.HTTPContext, aiSummaryData *FathomZapierPayload) error {
-	var event data_fields.MarkdownEventFields
+	var meetingSummary data_fields.MeetingSummaryCreatedEvent
+	var event data_fields.FlowEventObject[data_fields.MeetingSummaryCreatedEvent]
 	var allErrs error
 
 	content, err := aiSummaryData.toMarkdownContent()
@@ -85,33 +86,26 @@ func createEventFromFathomAISummaryZapier(ctx *rest.HTTPContext, aiSummaryData *
 		return err
 	}
 
-	source := neo4jentity.DataSourceFathom
-	event.Source = &source
+	// build meeting summary
+	meetingSummary.Content = &content
+	participants := aiSummaryData.Meeting.participantEmails()
+	meetingSummary.ParticipantEmails = &participants
+
+	// build event object
+	event.Tenant = &ctx.Tenant
+	event.Event = data_fields.FlowEventFathomMeetingSummaryCreated
+	event.Integration = data_fields.IntegrationFathom
+	event.Payload = &meetingSummary
+
 	if aiSummaryData.Meeting.ScheduledStartTime.IsZero() {
-		event.CreatedAt = utils.NowPtr()
+		event.Timestamp = utils.NowPtr()
 	} else {
-		event.CreatedAt = utils.TimePtr(aiSummaryData.Meeting.ScheduledStartTime.UTC())
-	}
-	event.Content = &content
-
-	domains := aiSummaryData.ExternalDomains()
-	orgIds, err := getParticipantOrganizationIds(ctx, domains)
-	if err != nil {
-		allErrs = multierr.Append(allErrs, errors.Wrap(err, "failed to get organization id for participant"))
-		tracing.TraceErr(ctx.Span, err)
+		event.Timestamp = utils.TimePtr(aiSummaryData.Meeting.ScheduledStartTime.UTC())
 	}
 
-	orgIds = utils.RemoveEmpties(orgIds)
-	orgIds = utils.RemoveDuplicates(orgIds)
-
-	for _, org := range orgIds {
-		event.OrganizationId = &org
-		_, err := ctx.Services.CommonServices.MarkdownEventService.Save(*ctx.ServiceContext, nil, nil, event)
-		if err != nil {
-			allErrs = multierr.Append(allErrs, errors.Wrap(err, "failed to save markdown event"))
-			tracing.TraceErr(ctx.Span, errors.Wrap(err, "failed to save markdown event"))
-		}
-	}
+	ctx.Services.CommonServices.RabbitMQService.PublishEvent(
+		*ctx.ServiceContext, id, model.FLOW_EVENT, event,
+	)
 
 	return allErrs
 }
