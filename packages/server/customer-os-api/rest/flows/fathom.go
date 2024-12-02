@@ -4,16 +4,15 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
-
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	commontracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/pkg/errors"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 )
 
 func FathomZapier(c *rest.HTTPContext) {
@@ -22,14 +21,15 @@ func FathomZapier(c *rest.HTTPContext) {
 	c.Span = span
 	defer span.Finish()
 	commontracing.TagComponentRest(span)
-    
 
-    //cannot do this as it's an unauthenticated endpoint
-	c.Tenant = rest.ValidateTenant(c.GinContext, *c.ServiceContext, c.Span)
-	if c.Tenant == "" {
-		rest.SendError(c.GinContext, c.Span, http.StatusForbidden, rest.ErrForbidden)
+	tenant, err := c.Services.CommonServices.PostgresRepositories.TenantRepository.GetTenant(ctx, c.GinContext.Param("tenantId"))
+	if err != nil {
+		err := errors.Wrap(err, "Unable to identify tenant")
+		tracing.TraceErr(span, err)
+		rest.SendError(c.GinContext, c.Span, http.StatusUnauthorized, rest.ErrUnauthorized)
 		return
 	}
+	c.Tenant = tenant
 
 	if !strings.HasPrefix(c.GinContext.ContentType(), "application/json") {
 		rest.SendError(c.GinContext, c.Span, http.StatusBadRequest, rest.ErrUnsupportedContentType)
@@ -71,14 +71,6 @@ func handleFathomAISummaryZapier(ctx *rest.HTTPContext) {
 
 	ctx.GinContext.JSON(http.StatusAccepted, rest.BuildBaseResponse(rest.StatusProcessing))
 
-    // create Fathom Events in DB if they don't already exist
-    err := createFathomFlowEvents()
-    if err != nil {
-        tracing.TraceErr(ctx.Span, errors.Wrap(err, "failed to setup Fathom flow events in db"))
-        return
-    }
-
-
 	go func() {
 		if err := createEventFromFathomAISummaryZapier(ctx, aiSummaryData); err != nil {
 			tracing.TraceErr(ctx.Span, errors.Wrap(err, "failed to process Fathom AI summary from zapier"))
@@ -88,7 +80,6 @@ func handleFathomAISummaryZapier(ctx *rest.HTTPContext) {
 }
 
 func createEventFromFathomAISummaryZapier(ctx *rest.HTTPContext, aiSummaryData *FathomZapierPayload) error {
-
 	var meetingSummary data_fields.MeetingSummaryFields
 
 	content, err := aiSummaryData.toMarkdownContent()
@@ -101,7 +92,6 @@ func createEventFromFathomAISummaryZapier(ctx *rest.HTTPContext, aiSummaryData *
 	meetingSummary.Content = &content
 	participants := aiSummaryData.Meeting.participantEmails()
 	meetingSummary.ParticipantEmails = &participants
-	meetingSummary.Source = neo4jenum.
 
 	if aiSummaryData.Meeting.ScheduledStartTime.IsZero() {
 		meetingSummary.Timestamp = utils.NowPtr()
@@ -116,21 +106,3 @@ func createEventFromFathomAISummaryZapier(ctx *rest.HTTPContext, aiSummaryData *
 
 	return err
 }
-
-func createFathomFlowEvents(ctx *rest.HTTPContext) error {
-    events, err := ctx.Services.Repositories.PostgresRepositories.FlowEventsRepository.GetFlowEventsByExternalSystem(enum.Fathom)
-    
-    if err != nil {
-        return err
-    }
-
-    for _, event := range events {
-        if event.EventName != "fathom.meeting_summary.created" 
-    }
-
-    if "fathom.meeting_summary.created" 
-     
-    return nil
-}
-
-func event
