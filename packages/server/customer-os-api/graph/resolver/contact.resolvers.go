@@ -446,7 +446,7 @@ func (r *mutationResolver) ContactCreateBulkByEmail(ctx context.Context, emails 
 		return []string{}, nil
 	}
 	if len(uniqueEmails) > 200 {
-		err := pkgerrors.Wrap(errors.New("maximum number of emails exceeded"), "ContactCreateBulkByLinkedIn")
+		err := pkgerrors.Wrap(errors.New("maximum number of emails exceeded"), "ContactCreateBulkByEmail")
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Maximum number of emails exceeded")
 		return uniqueEmails, err
