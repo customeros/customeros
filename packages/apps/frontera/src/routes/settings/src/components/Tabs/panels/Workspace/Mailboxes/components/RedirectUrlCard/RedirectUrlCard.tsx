@@ -7,6 +7,7 @@ import { Card, CardHeader, CardContent } from '@ui/presentation/Card/Card';
 
 export const RedirectUrlCard = observer(() => {
   const store = useStore();
+  const dirty = store.mailboxes.dirty.get('redirectUrl') || false;
 
   if (store.mailboxes.baseBundle.size === 0) return null;
 
@@ -27,17 +28,28 @@ export const RedirectUrlCard = observer(() => {
           variant='outline'
           placeholder='Website URL'
           value={store.mailboxes.redirectUrl}
-          invalid={store.mailboxes.invalidRedirectUrl.length > 0}
+          invalid={dirty && store.mailboxes.invalidRedirectUrl.length > 0}
           className={cn(
             'w-full',
-            store.mailboxes.invalidRedirectUrl.length === 0 && 'mb-[18px]',
+            (!dirty ||
+              (dirty && store.mailboxes.invalidRedirectUrl.length === 0)) &&
+              'mb-[18px]',
           )}
           onChange={(e) => {
             store.mailboxes.setRedirectUrl(e.target.value.trim());
-            store.mailboxes.validateRedirectUrl();
+
+            if (dirty) {
+              store.mailboxes.validateRedirectUrl();
+            }
+          }}
+          onBlur={() => {
+            if (!dirty && store.mailboxes.redirectUrl.length > 0) {
+              store.mailboxes.setDirty('redirectUrl');
+              store.mailboxes.validateRedirectUrl();
+            }
           }}
         />
-        {store.mailboxes.invalidRedirectUrl.length > 0 && (
+        {dirty && store.mailboxes.invalidRedirectUrl.length > 0 && (
           <span className='text-[12px] ml-[9px] text-error-400'>
             {store.mailboxes.invalidRedirectUrl}
           </span>

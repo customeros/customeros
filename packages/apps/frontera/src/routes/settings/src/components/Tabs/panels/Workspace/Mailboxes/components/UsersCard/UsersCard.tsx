@@ -14,6 +14,10 @@ export const UsersCard = observer(() => {
   const { open, onOpen, onClose } = useDisclosure();
   const [error1, error2] = store.mailboxes.invalidUsernames;
 
+  const dirty = store.mailboxes.dirty;
+  const isUsername1Dirty = dirty.get('username1') || false;
+  const isUsername2Dirty = dirty.get('username2') || false;
+
   if (store.mailboxes.baseBundle.size === 0) return null;
 
   return (
@@ -40,18 +44,35 @@ export const UsersCard = observer(() => {
             size='sm'
             variant='outline'
             placeholder='E.g. john'
-            invalid={error1.length > 0}
             value={store.mailboxes.usernames[0]}
-            className={cn('w-full', error1.length === 0 && 'mb-[18px]')}
+            invalid={isUsername1Dirty && error1.length > 0}
+            className={cn(
+              'w-full',
+              (!isUsername1Dirty ||
+                (isUsername1Dirty && error1.length === 0)) &&
+                'mb-[18px]',
+            )}
             onChange={(e) => {
               store.mailboxes.setUsername(
                 0,
                 e.target.value.trim().toLowerCase(),
               );
-              store.mailboxes.validateUsernames();
+
+              if (isUsername1Dirty) {
+                store.mailboxes.validateUsernames();
+              }
+            }}
+            onBlur={() => {
+              if (
+                !isUsername1Dirty &&
+                store.mailboxes.usernames[0].length > 0
+              ) {
+                store.mailboxes.setDirty('username1');
+                store.mailboxes.validateUsernames();
+              }
             }}
           />
-          {error1.length > 0 && (
+          {isUsername1Dirty && error1.length > 0 && (
             <span className='text-[12px] ml-[9px] text-error-400'>
               {error1}
             </span>
@@ -60,18 +81,35 @@ export const UsersCard = observer(() => {
             size='sm'
             variant='outline'
             placeholder='E.g. melinda'
-            invalid={error2.length > 0}
             value={store.mailboxes.usernames[1]}
-            className={cn('w-full mt-0.5', error2.length === 0 && 'mb-[18px]')}
+            invalid={isUsername2Dirty && error2.length > 0}
+            className={cn(
+              'w-full mt-0.5',
+              (!isUsername2Dirty ||
+                (isUsername2Dirty && error2.length === 0)) &&
+                'mb-[18px]',
+            )}
             onChange={(e) => {
               store.mailboxes.setUsername(
                 1,
                 e.target.value.trim().toLowerCase(),
               );
-              store.mailboxes.validateUsernames();
+
+              if (isUsername2Dirty) {
+                store.mailboxes.validateUsernames();
+              }
+            }}
+            onBlur={() => {
+              if (
+                !isUsername2Dirty &&
+                store.mailboxes.usernames[1].length > 0
+              ) {
+                store.mailboxes.setDirty('username2');
+                store.mailboxes.validateUsernames();
+              }
             }}
           />
-          {error2.length > 0 && (
+          {isUsername2Dirty && error2.length > 0 && (
             <span className='text-[12px] ml-[9px] text-error-400'>
               {error2}
             </span>

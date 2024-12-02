@@ -2,8 +2,8 @@ import { RootStore } from '@store/root';
 import { Transport } from '@store/transport';
 import { SyncableGroup } from '@store/syncable-group';
 import {
-  override,
   computed,
+  override,
   observable,
   runInAction,
   makeObservable,
@@ -28,6 +28,11 @@ export class MailboxesStore extends SyncableGroup<Mailbox, MailboxStore> {
   invalidRedirectUrl: string = '';
   invalidBaseBundle: string = '';
   invalidDomain: string = '';
+  dirty = new Map([
+    ['username1', false],
+    ['username2', false],
+    ['redirectUrl', false],
+  ]);
 
   constructor(public root: RootStore, public transport: Transport) {
     super(root, transport, MailboxStore);
@@ -51,6 +56,7 @@ export class MailboxesStore extends SyncableGroup<Mailbox, MailboxStore> {
       invalidBaseBundle: observable,
       totalAmount: computed,
       invalidDomain: observable,
+      dirty: observable,
     });
   }
 
@@ -92,6 +98,13 @@ export class MailboxesStore extends SyncableGroup<Mailbox, MailboxStore> {
     this.invalidUsernames = ['', ''];
     this.invalidBaseBundle = '';
     this.invalidDomain = '';
+    this.dirty.clear();
+  }
+
+  public setDirty(field: string) {
+    runInAction(() => {
+      this.dirty.set(field, true);
+    });
   }
 
   public selectDomain(domain: string) {
@@ -106,7 +119,8 @@ export class MailboxesStore extends SyncableGroup<Mailbox, MailboxStore> {
         (d) => d !== domain,
       );
 
-      this.validateBaseBundle();
+      // this.validateBaseBundle();
+      this.invalidBaseBundle = '';
     });
   }
 
@@ -121,7 +135,9 @@ export class MailboxesStore extends SyncableGroup<Mailbox, MailboxStore> {
       this.baseBundle = new Set(newArr.splice(0, 5));
       this.extendedBundle = new Set(newArr);
 
-      this.validateBaseBundle();
+      // this.validateBaseBundle();
+
+      this.invalidBaseBundle = '';
       this.invalidDomains = this.invalidDomains.filter((d) => d !== domain);
     });
   }
@@ -225,6 +241,12 @@ export class MailboxesStore extends SyncableGroup<Mailbox, MailboxStore> {
       this.validateUsernames(),
       this.validateBaseBundle(),
     ].every(Boolean);
+
+    // set fields as dirty so we force show any errors on submit
+    // assuming the user never touched the fields
+    runInAction(() => {
+      this.dirty.forEach((_, k) => this.dirty.set(k, true));
+    });
 
     if (!valid) return;
 
