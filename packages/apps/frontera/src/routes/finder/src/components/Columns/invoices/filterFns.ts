@@ -49,6 +49,13 @@ export const getFilterFn = (serverFilter: FilterItem | null | undefined) => {
         return filterTypeText(filter, value);
       },
     )
+    .with({ property: 'INVOICE_PREVIEW' }, (filter) => (row: InvoiceStore) => {
+      const value = row.value?.preview;
+
+      if (!value) return false;
+
+      return value === filter.value;
+    })
 
     .with(
       { property: ColumnViewType.InvoicesContract },
