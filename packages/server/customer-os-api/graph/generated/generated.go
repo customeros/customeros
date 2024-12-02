@@ -963,6 +963,8 @@ type ComplexityRoot struct {
 		ContactAddSocial                           func(childComplexity int, contactID string, input model.SocialInput) int
 		ContactAddTag                              func(childComplexity int, input model.ContactTagInput) int
 		ContactCreate                              func(childComplexity int, input model.ContactInput) int
+		ContactCreateBulkByEmail                   func(childComplexity int, emails []string, flowID *string) int
+		ContactCreateBulkByLinkedIn                func(childComplexity int, linkedInUrls []string, flowID *string) int
 		ContactCreateForOrganization               func(childComplexity int, input model.ContactInput, organizationID string) int
 		ContactFindWorkEmail                       func(childComplexity int, contactID string, organizationID *string, domain *string, findMobileNumber *bool) int
 		ContactHardDelete                          func(childComplexity int, contactID string) int
@@ -1818,6 +1820,8 @@ type MutationResolver interface {
 	ContactCreate(ctx context.Context, input model.ContactInput) (string, error)
 	ContactCreateForOrganization(ctx context.Context, input model.ContactInput, organizationID string) (*model.Contact, error)
 	CustomerContactCreate(ctx context.Context, input model.CustomerContactInput) (*model.CustomerContact, error)
+	ContactCreateBulkByLinkedIn(ctx context.Context, linkedInUrls []string, flowID *string) ([]string, error)
+	ContactCreateBulkByEmail(ctx context.Context, emails []string, flowID *string) ([]string, error)
 	ContactUpdate(ctx context.Context, input model.ContactUpdateInput) (*model.Contact, error)
 	ContactHardDelete(ctx context.Context, contactID string) (*model.Result, error)
 	ContactMerge(ctx context.Context, primaryContactID string, mergedContactIds []string) (*model.Contact, error)
@@ -6712,6 +6716,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.ContactCreate(childComplexity, args["input"].(model.ContactInput)), true
+
+	case "Mutation.contact_CreateBulkByEmail":
+		if e.complexity.Mutation.ContactCreateBulkByEmail == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_contact_CreateBulkByEmail_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ContactCreateBulkByEmail(childComplexity, args["emails"].([]string), args["flowId"].(*string)), true
+
+	case "Mutation.contact_CreateBulkByLinkedIn":
+		if e.complexity.Mutation.ContactCreateBulkByLinkedIn == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_contact_CreateBulkByLinkedIn_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ContactCreateBulkByLinkedIn(childComplexity, args["linkedInUrls"].([]string), args["flowId"].(*string)), true
 
 	case "Mutation.contact_CreateForOrganization":
 		if e.complexity.Mutation.ContactCreateForOrganization == nil {
@@ -12395,6 +12423,8 @@ extend type Mutation {
     contact_Create(input: ContactInput!): ID!
     contact_CreateForOrganization(input: ContactInput!, organizationId: ID!): Contact!
     customer_contact_Create(input: CustomerContactInput!): CustomerContact!
+    contact_CreateBulkByLinkedIn(linkedInUrls: [String!]!, flowId: String): [String!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    contact_CreateBulkByEmail(emails: [String!]!, flowId: String): [String!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
     contact_Update(input: ContactUpdateInput!): Contact!
     contact_HardDelete(contactId: ID!): Result!
@@ -17217,6 +17247,124 @@ func (ec *executionContext) field_Mutation_contact_AddTag_argsInput(
 	}
 
 	var zeroVal model.ContactTagInput
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_contact_CreateBulkByEmail_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	arg0, err := ec.field_Mutation_contact_CreateBulkByEmail_argsEmails(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["emails"] = arg0
+	arg1, err := ec.field_Mutation_contact_CreateBulkByEmail_argsFlowID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["flowId"] = arg1
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_contact_CreateBulkByEmail_argsEmails(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) ([]string, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["emails"]
+	if !ok {
+		var zeroVal []string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("emails"))
+	if tmp, ok := rawArgs["emails"]; ok {
+		return ec.unmarshalNString2ᚕstringᚄ(ctx, tmp)
+	}
+
+	var zeroVal []string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_contact_CreateBulkByEmail_argsFlowID(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (*string, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["flowId"]
+	if !ok {
+		var zeroVal *string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("flowId"))
+	if tmp, ok := rawArgs["flowId"]; ok {
+		return ec.unmarshalOString2ᚖstring(ctx, tmp)
+	}
+
+	var zeroVal *string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_contact_CreateBulkByLinkedIn_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	arg0, err := ec.field_Mutation_contact_CreateBulkByLinkedIn_argsLinkedInUrls(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["linkedInUrls"] = arg0
+	arg1, err := ec.field_Mutation_contact_CreateBulkByLinkedIn_argsFlowID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["flowId"] = arg1
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_contact_CreateBulkByLinkedIn_argsLinkedInUrls(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) ([]string, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["linkedInUrls"]
+	if !ok {
+		var zeroVal []string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("linkedInUrls"))
+	if tmp, ok := rawArgs["linkedInUrls"]; ok {
+		return ec.unmarshalNString2ᚕstringᚄ(ctx, tmp)
+	}
+
+	var zeroVal []string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_contact_CreateBulkByLinkedIn_argsFlowID(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (*string, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["flowId"]
+	if !ok {
+		var zeroVal *string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("flowId"))
+	if tmp, ok := rawArgs["flowId"]; ok {
+		return ec.unmarshalOString2ᚖstring(ctx, tmp)
+	}
+
+	var zeroVal *string
 	return zeroVal, nil
 }
 
@@ -58919,6 +59067,184 @@ func (ec *executionContext) fieldContext_Mutation_customer_contact_Create(ctx co
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_customer_contact_Create_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_contact_CreateBulkByLinkedIn(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_contact_CreateBulkByLinkedIn(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().ContactCreateBulkByLinkedIn(rctx, fc.Args["linkedInUrls"].([]string), fc.Args["flowId"].(*string))
+		}
+
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				var zeroVal []string
+				return zeroVal, err
+			}
+			if ec.directives.HasRole == nil {
+				var zeroVal []string
+				return zeroVal, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				var zeroVal []string
+				return zeroVal, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]string); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []string`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]string)
+	fc.Result = res
+	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_contact_CreateBulkByLinkedIn(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_contact_CreateBulkByLinkedIn_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_contact_CreateBulkByEmail(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_contact_CreateBulkByEmail(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().ContactCreateBulkByEmail(rctx, fc.Args["emails"].([]string), fc.Args["flowId"].(*string))
+		}
+
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				var zeroVal []string
+				return zeroVal, err
+			}
+			if ec.directives.HasRole == nil {
+				var zeroVal []string
+				return zeroVal, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				var zeroVal []string
+				return zeroVal, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]string); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []string`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]string)
+	fc.Result = res
+	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_contact_CreateBulkByEmail(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_contact_CreateBulkByEmail_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -119083,6 +119409,20 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "customer_contact_Create":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_customer_contact_Create(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "contact_CreateBulkByLinkedIn":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_contact_CreateBulkByLinkedIn(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "contact_CreateBulkByEmail":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_contact_CreateBulkByEmail(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++

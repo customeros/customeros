@@ -30,6 +30,8 @@ extend type Mutation {
     contact_Create(input: ContactInput!): ID!
     contact_CreateForOrganization(input: ContactInput!, organizationId: ID!): Contact!
     customer_contact_Create(input: CustomerContactInput!): CustomerContact!
+    contact_CreateBulkByLinkedIn(linkedInUrls: [String!]!, flowId: String): [String!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    contact_CreateBulkByEmail(emails: [String!]!, flowId: String): [String!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
     contact_Update(input: ContactUpdateInput!): Contact!
     contact_HardDelete(contactId: ID!): Result!
