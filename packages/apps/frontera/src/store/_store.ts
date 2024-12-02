@@ -322,6 +322,7 @@ export class Store<T extends object, E extends Entity<T> = Entity<T>> {
 
     this.clearSnapshot(id);
 
+    this.version++;
     this.root.transactions.commit(operation, {
       ...opts,
       persist: () => this.persist(id),
