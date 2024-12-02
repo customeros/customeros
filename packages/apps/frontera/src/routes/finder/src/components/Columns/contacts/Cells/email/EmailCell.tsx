@@ -55,7 +55,18 @@ export const EmailCell = observer(
       enrichedContact?.emailRequestedAt &&
       !email;
 
-    const enrichedEmailNotFound = !enrichedContact?.emailFound && !email;
+    const enrichedEmailNotFound =
+      !enrichedContact?.emailFound &&
+      !email &&
+      enrichedContact?.emailEnrichedAt;
+
+    const enrichingStatus = isEnrichingContact
+      ? 'Enriching...'
+      : isEnrichingEmail
+      ? 'Finding email...'
+      : enrichedEmailNotFound
+      ? 'Not found'
+      : 'Not set';
 
     return (
       <div
@@ -65,37 +76,32 @@ export const EmailCell = observer(
         onMouseLeave={() => setIsHovered(false)}
       >
         <Menu onOpenChange={(newStatus) => setIsOpened(newStatus)}>
-          <MenuButton className='text-ellipsis overflow-hidden whitespace-nowrap'>
+          <MenuButton
+            asChild
+            className='text-ellipsis overflow-hidden whitespace-nowrap'
+          >
             <div className='flex items-center gap-2'>
-              {!email && (
-                <p className='text-gray-400 '>
-                  {isEnrichingContact
-                    ? 'Enriching...'
-                    : isEnrichingEmail
-                    ? 'Finding email...'
-                    : enrichedEmailNotFound
-                    ? 'Not found'
-                    : 'Not set'}
-                </p>
-              )}
+              {!email && <p className='text-gray-400 '>{enrichingStatus}</p>}
               {email && (
                 <EmailValidationMessage
                   email={email}
                   validationDetails={validationDetails}
                 />
               )}
-              <p className='inline-flex gap-2'>
+              <div className='inline-flex gap-2'>
                 {email}
                 {isEnrichingEmail && (
                   <Tooltip label={`Finding email at ${orgActive}`}>
-                    <Spinner
-                      size='sm'
-                      label='finding email'
-                      className='text-gray-400 fill-gray-700 ml-2'
-                    />
+                    <div>
+                      <Spinner
+                        size='sm'
+                        label='finding email'
+                        className='text-gray-400 fill-gray-700 ml-2'
+                      />
+                    </div>
                   </Tooltip>
                 )}
-              </p>
+              </div>
             </div>
           </MenuButton>
           <MenuList align='start' className='max-w-[600px] w-[250px]'>
