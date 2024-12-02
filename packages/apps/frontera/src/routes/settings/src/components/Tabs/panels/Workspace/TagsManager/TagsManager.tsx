@@ -84,7 +84,6 @@ export const TagsManager = observer(() => {
     const tag = store.tags.value.get(tagId);
 
     if (tag) {
-      store.tags.deleteTag(tagId);
       store.organizations.toArray().forEach((organization) => {
         organization.deleteTag(tagId);
       });
@@ -105,6 +104,7 @@ export const TagsManager = observer(() => {
           }
         }
       });
+      store.tags.deleteTag(tagId);
     }
     setDeletingTag(null);
   };

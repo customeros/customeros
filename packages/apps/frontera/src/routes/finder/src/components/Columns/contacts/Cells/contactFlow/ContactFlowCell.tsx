@@ -80,11 +80,11 @@ export const ContactFlowCell = observer(
         label={
           <div>
             {contactFlows?.map((flow) => (
-              <div className='flex gap-1' key={flow.value.metadata.id}>
+              <div className='flex gap-1' key={flow.value?.metadata.id}>
                 <div>
-                  {flow.value.name} •{' '}
+                  {flow.value?.name} •{' '}
                   <span className='capitalize'>
-                    {flow.value.participants
+                    {flow.value?.participants
                       .find((e) => e.entityId === contactId)
                       ?.status?.toLowerCase()
                       ?.split('_')

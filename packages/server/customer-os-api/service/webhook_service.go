@@ -78,7 +78,7 @@ func (w *webhookService) GetIntegrationFromWebhookPath(ctx context.Context, tena
 }
 
 func (w *webhookService) CreateIntegrationWebhook(ctx context.Context, tenant string, integration comserv.Integration) (string, string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WebhookService.CreateWebhook")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WebhookService.CreateIntegrationWebhook")
 	defer span.Finish()
 	span.LogFields(log.String("tenant", tenant))
 	span.LogFields(log.String("integration", integration.String()))

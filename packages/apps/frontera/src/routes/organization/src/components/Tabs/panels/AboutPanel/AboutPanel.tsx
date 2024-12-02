@@ -204,13 +204,14 @@ export const AboutPanel = observer(() => {
             disabled={orgNameReadOnly}
             onFocus={(e) => e.target.select()}
             value={organization?.value.name || ''}
-            onBlur={() => {
-              organization.commit();
-            }}
             onChange={(e) => {
               organization.value.name = e.target.value;
             }}
             className='font-semibold text-[16px] mt-0.5 border-none overflow-hidden overflow-ellipsis'
+            onBlur={() => {
+              organization.draft();
+              organization.commit();
+            }}
           />
           {organization.value?.referenceId && (
             <div className='h-full ml-4'>
@@ -238,11 +239,12 @@ export const AboutPanel = observer(() => {
           placeholder='www.'
           dataTest='org-about-www'
           value={organization.value?.website || ''}
-          onBlur={() => {
-            organization.commit();
-          }}
           onChange={(e) => {
             organization.value!.website = e.target.value;
+          }}
+          onBlur={() => {
+            organization.draft();
+            organization.commit();
           }}
         />
         <Textarea
@@ -254,6 +256,7 @@ export const AboutPanel = observer(() => {
           placeholder={placeholders.valueProposition}
           value={organization.value?.valueProposition || ''}
           onBlur={() => {
+            organization.draft();
             organization.commit();
           }}
           onChange={(e) => {
@@ -351,31 +354,33 @@ export const AboutPanel = observer(() => {
               </MenuList>
             </Menu>
           </div>
-
-          <div className='flex-1' data-test='org-about-stage'>
-            <Menu>
-              <MenuButton className='min-h-[40px] outline-none focus:outline-none'>
-                <Target05 className='text-gray-500 mb-0.5' />
-                <span className='ml-3'>
-                  {selectedStageOption?.label || 'Stage'}
-                </span>
-              </MenuButton>
-              <MenuList side='bottom' align='start'>
-                {applicableStageOptions.map((option) => (
-                  <MenuItem
-                    key={option.value}
-                    onClick={() => {
-                      organization.value!.stage = option.value;
-                      organization.commit();
-                    }}
-                  >
-                    {iconMap[option.label as keyof typeof iconMap]}
-                    {option.label}
-                  </MenuItem>
-                ))}
-              </MenuList>
-            </Menu>
-          </div>
+          {selectedRelationshipOption?.value !==
+            OrganizationRelationship.Customer && (
+            <div className='flex-1' data-test='org-about-stage'>
+              <Menu>
+                <MenuButton className='min-h-[40px] outline-none focus:outline-none'>
+                  <Target05 className='text-gray-500 mb-0.5' />
+                  <span className='ml-3'>
+                    {selectedStageOption?.label || 'Stage'}
+                  </span>
+                </MenuButton>
+                <MenuList side='bottom' align='start'>
+                  {applicableStageOptions.map((option) => (
+                    <MenuItem
+                      key={option.value}
+                      onClick={() => {
+                        organization.value!.stage = option.value;
+                        organization.commit();
+                      }}
+                    >
+                      {iconMap[option.label as keyof typeof iconMap]}
+                      {option.label}
+                    </MenuItem>
+                  ))}
+                </MenuList>
+              </Menu>
+            </div>
+          )}
         </div>
         <div className='flex flex-col w-full flex-1 items-start justify-start gap-0'>
           <Select

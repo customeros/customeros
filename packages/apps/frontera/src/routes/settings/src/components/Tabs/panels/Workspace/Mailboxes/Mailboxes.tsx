@@ -8,13 +8,13 @@ import { ChevronRight } from '@ui/media/icons/ChevronRight';
 
 import { MailboxTable } from './components/MailboxTable';
 import { CheckoutPage } from './components/CheckoutPage';
+import { CheckoutCard } from './components/CheckoutCard';
 import { BaseBundleCard } from './components/BaseBundleCard';
 import { EmptyMailboxes } from './components/EmptyMailboxes';
 import { AddDomainsCard } from './components/AddDomainsCard';
 import { UsersCard } from './components/UsersCard/UsersCard';
 import { RedirectUrlCard } from './components/RedirectUrlCard';
 import { ExtendedBundleCard } from './components/ExtendedBundleCard';
-import { CheckoutCard } from './components/CheckoutCard/CheckoutCard';
 
 export const Mailboxes = observer(() => {
   const store = useStore();
