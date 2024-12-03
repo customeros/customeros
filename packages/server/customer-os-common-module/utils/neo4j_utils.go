@@ -498,7 +498,7 @@ func GetBoolPropOrTrue(props map[string]any, key string) bool {
 	if props[key] != nil {
 		return props[key].(bool)
 	}
-	return false
+	return true
 }
 
 func GetBoolPropOrNil(props map[string]any, key string) *bool {

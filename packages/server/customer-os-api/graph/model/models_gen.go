@@ -2844,10 +2844,11 @@ type User struct {
 	Roles           []Role  `json:"roles"`
 	// All email addresses associated with a user in customerOS.
 	// **Required.  If no values it returns an empty array.**
-	Emails           []*Email       `json:"emails,omitempty"`
-	PhoneNumbers     []*PhoneNumber `json:"phoneNumbers"`
-	Mailboxes        []string       `json:"mailboxes"`
-	HasLinkedInToken bool           `json:"hasLinkedInToken"`
+	Emails           []*Email               `json:"emails,omitempty"`
+	PhoneNumbers     []*PhoneNumber         `json:"phoneNumbers"`
+	Mailboxes        []string               `json:"mailboxes"`
+	HasLinkedInToken bool                   `json:"hasLinkedInToken"`
+	Onboarding       *UserOnboardingDetails `json:"onboarding"`
 	// Timestamp of user creation.
 	// **Required**
 	CreatedAt     time.Time   `json:"createdAt"`
@@ -2880,6 +2881,14 @@ type UserInput struct {
 	// The Job Roles of the user.
 	// **Optional**
 	JobRoles []*JobRoleInput `json:"jobRoles,omitempty"`
+}
+
+type UserOnboardingDetails struct {
+	ShowOnboardingPage               bool `json:"showOnboardingPage"`
+	OnboardingInboundStepCompleted   bool `json:"onboardingInboundStepCompleted"`
+	OnboardingOutboundStepCompleted  bool `json:"onboardingOutboundStepCompleted"`
+	OnboardingCrmStepCompleted       bool `json:"onboardingCrmStepCompleted"`
+	OnboardingMailstackStepCompleted bool `json:"onboardingMailstackStepCompleted"`
 }
 
 // Specifies how many pages of `User` information has been returned in the query response.
