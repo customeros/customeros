@@ -201,7 +201,7 @@ func (r *socialWriteRepository) Update(ctx context.Context, tenant, socialId, ur
 		cypher += `, soc.externalId=$externalId`
 		params["externalId"] = *externalId
 	}
-	cypher += `WITH soc
+	cypher += ` WITH soc
 			OPTIONAL MATCH (n:Contact|Organization)-[:HAS]->(soc)
 				SET n.updatedAt = datetime()
 			RETURN DISTINCT soc`
