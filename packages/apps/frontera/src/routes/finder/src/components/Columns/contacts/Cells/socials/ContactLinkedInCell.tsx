@@ -35,20 +35,17 @@ export const ContactLinkedInCell = observer(
 
     const handleAddSocial = (url: string) => {
       if (!contact || url === 'Unknown' || url === '') return;
+      const formattedValue =
+        url.includes('https://www') || url.includes('linkedin.com')
+          ? getFormattedLink(url).replace(/^linkedin\.com\//, '')
+          : `company/${url}`;
 
-      contact.update((contactData) => {
-        const formattedValue =
-          url.includes('https://www') || url.includes('linkedin.com')
-            ? getFormattedLink(url).replace(/^linkedin\.com\//, '')
-            : `company/${url}`;
+      contact.value.socials.push({
+        id: crypto.randomUUID(),
+        url: `linkedin.com/${formattedValue}`,
+      } as Social);
 
-        contactData.socials.push({
-          id: crypto.randomUUID(),
-          url: `linkedin.com/${formattedValue}`,
-        } as Social);
-
-        return contactData;
-      });
+      contact.commit();
       setIsEdit(false);
     };
 
@@ -59,8 +56,8 @@ export const ContactLinkedInCell = observer(
 
       if (!linkedinId) return;
 
-      contact.update((org) => {
-        const idx = org.socials.findIndex((s) => s.id === linkedinId);
+      contact.value.socials.forEach((social) => {
+        const idx = contact.value.socials.findIndex((s) => s.id === linkedinId);
 
         if (idx !== -1) {
           const formattedValue =
@@ -68,14 +65,13 @@ export const ContactLinkedInCell = observer(
               ? getFormattedLink(url).replace(/^linkedin\.com\//, '')
               : `in/${url}`;
 
-          org.socials[idx].url = `linkedin.com/${formattedValue}`;
+          social.url = `linkedin.com/${formattedValue}`;
         }
 
         if (url === '') {
-          org.socials.splice(idx, 1);
+          contact.value.socials.splice(idx, 1);
         }
-
-        return org;
+        contact.commit();
       });
     };
 
