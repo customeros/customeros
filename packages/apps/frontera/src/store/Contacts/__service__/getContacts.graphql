@@ -25,12 +25,7 @@ query contacts($pagination: Pagination!) {
           created
           lastUpdated
         }
-        id
         name
-        source
-        updatedAt
-        createdAt
-        appSource
       }
       updatedAt
       createdAt
@@ -46,7 +41,9 @@ query contacts($pagination: Pagination!) {
         totalAvailable
       }
       tags {
-        id
+        metadata {
+          id
+        }
         name
       }
       primaryEmail {

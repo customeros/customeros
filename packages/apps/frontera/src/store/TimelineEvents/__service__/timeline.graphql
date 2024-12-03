@@ -139,7 +139,9 @@ query Timeline($organizationId: ID!, $from: Time!, $size: Int!) {
           }
         }
         tags {
-          id
+          metadata {
+            id
+          }
           name
         }
         source
@@ -207,7 +209,9 @@ query Timeline($organizationId: ID!, $from: Time!, $size: Int!) {
           }
         }
         issueTags: tags {
-          id
+          metadata {
+            id
+          }
           name
         }
       }

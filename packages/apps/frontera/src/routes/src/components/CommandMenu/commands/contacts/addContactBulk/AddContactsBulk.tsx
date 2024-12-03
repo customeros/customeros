@@ -18,7 +18,7 @@ import { BulkContactsEditor } from './BulkContactsEditor';
 
 export const AddContactsBulk = observer(() => {
   const store = useStore();
-  const [type, setType] = useState<'email' | 'linkedin'>('email');
+  const [type, setType] = useState<'email' | 'linkedin'>('linkedin');
   const [data, setData] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [loadingError, setLoadingError] = useState<string>('');
@@ -37,8 +37,9 @@ export const AddContactsBulk = observer(() => {
   const tooManyLines = lines.length > 200;
   const hasInvalidData = lines.filter(
     (c) =>
-      (type === 'email' && validateEmail(c)) ||
-      (type === 'linkedin' && !validLinkedInProfileUrl(c)),
+      c.length > 0 &&
+      ((type === 'email' && validateEmail(c)) ||
+        (type === 'linkedin' && !validLinkedInProfileUrl(c))),
   );
   const contactsDataArr = lines.filter(
     (c) =>
@@ -105,20 +106,22 @@ export const AddContactsBulk = observer(() => {
           <ButtonGroup className='flex items-center w-full'>
             <Button
               size='xs'
-              leftIcon={<LinkedinOutline />}
               onClick={() => setType('linkedin')}
+              leftIcon={<LinkedinOutline className='text-inherit' />}
               className={cn('bg-white !border-r w-full', {
                 'bg-gray-50 text-gray-500 font-normal': type === 'email',
+                'text-primary-600 hover:text-primary-600': type === 'linkedin',
               })}
             >
               LinkedIn
             </Button>
             <Button
               size='xs'
-              leftIcon={<Mail01 />}
               onClick={() => setType('email')}
+              leftIcon={<Mail01 className='text-inherit' />}
               className={cn('bg-white px-4 w-full', {
                 'bg-gray-50 text-gray-500 font-normal': type === 'linkedin',
+                'text-primary-600 hover:text-primary-600': type === 'email',
               })}
             >
               Email
@@ -151,7 +154,8 @@ export const AddContactsBulk = observer(() => {
         >
           {!!data.length && !!hasInvalidData.length && (
             <p>
-              {hasInvalidData.length} of your LinkedIn URLs are invalid. Only
+              {hasInvalidData.length} of your{' '}
+              {type === 'email' ? 'emails' : 'LinkedIn URLs'} are invalid. Only
               correctly formatted ones will be added.
             </p>
           )}
@@ -166,7 +170,7 @@ export const AddContactsBulk = observer(() => {
             !(showEmptyError && !data.trim().length) &&
             !(!!data.length && !!hasInvalidData.length) &&
             !loadingError &&
-            'Add one per line'}
+            `Add one ${type === 'email' ? 'email' : 'LinkedIn URL'} per line`}
         </div>
 
         <div className='flex justify-between gap-3 mt-2'>

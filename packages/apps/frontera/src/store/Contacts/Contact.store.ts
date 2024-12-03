@@ -122,7 +122,7 @@ export class ContactStore extends Syncable<Contact> {
 
   deletePersona(personaId: string) {
     this.value.tags = (this.value?.tags || []).filter(
-      (id) => id.id !== personaId,
+      (tag) => tag.metadata.id !== personaId,
     );
   }
 

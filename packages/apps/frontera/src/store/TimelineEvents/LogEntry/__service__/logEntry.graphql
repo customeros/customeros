@@ -6,7 +6,9 @@ query getLogEntry($id: ID!) {
     createdAt
     updatedAt
     tags {
-      id
+      metadata {
+        id
+      }
       name
     }
     createdBy {

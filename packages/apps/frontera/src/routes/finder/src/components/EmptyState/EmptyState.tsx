@@ -39,10 +39,11 @@ export const EmptyState = observer(() => {
         return {
           title: 'No contacts created yet',
           description: 'Currently, there are no contacts created yet.',
-          buttonLabel: 'Go to Organizations',
+          buttonLabel: 'Add contacts',
           dataTest: 'contacts-go-to-orgs',
           onClick: () => {
-            navigate(`/finder?preset=${allOrgsView}`);
+            store.ui.commandMenu.setType('AddContactsBulk');
+            store.ui.commandMenu.setOpen(true);
           },
         };
       case TableIdType.Customers:
