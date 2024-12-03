@@ -205,7 +205,7 @@ export class MailboxesStore extends SyncableGroup<Mailbox, MailboxStore> {
 
       if (count < 5) {
         this.invalidBaseBundle = `Please add ${5 - count} more ${
-          count > 1 ? 'domains' : 'domain'
+          5 - count > 1 ? 'domains' : 'domain'
         }`;
 
         valid = false;
@@ -357,7 +357,10 @@ export class MailboxesStore extends SyncableGroup<Mailbox, MailboxStore> {
         }
       });
     } catch (err) {
-      this.root.ui.toastError('Failed validating domains', 'validate-domains');
+      this.root.ui.toastError(
+        `We're unable to validate your domains`,
+        'validate-domains',
+      );
     } finally {
       runInAction(() => {
         this.isLoading = false;
@@ -368,7 +371,7 @@ export class MailboxesStore extends SyncableGroup<Mailbox, MailboxStore> {
   async buyDomains(paymentIntentId: string) {
     try {
       await this.service.buyDomains({
-        test: true,
+        test: false,
         paymentIntentId,
         domains: [...this.baseBundle, ...this.extendedBundle],
         amount: this.totalAmount,
@@ -377,7 +380,10 @@ export class MailboxesStore extends SyncableGroup<Mailbox, MailboxStore> {
       });
       this.bootstrap();
     } catch (err) {
-      this.root.ui.toastError('Failed buying domains', 'buy-domains');
+      this.root.ui.toastError(
+        `We couldn't register some of your domains`,
+        'buy-domains',
+      );
     }
   }
 
