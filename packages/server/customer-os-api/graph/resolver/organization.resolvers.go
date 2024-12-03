@@ -1151,6 +1151,64 @@ func (r *queryResolver) OrganizationsHiddenAfter(ctx context.Context, date time.
 	return organizationIDs, nil
 }
 
+// OrganizationByLinkedIn is the resolver for the organization_ByLinkedIn field.
+func (r *queryResolver) OrganizationByLinkedIn(ctx context.Context, linkedInURL string) (*model.Organization, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.OrganizationByLinkedIn", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogKV("request.linkedInURL", linkedInURL)
+
+	socialEntity := neo4jentity.SocialEntity{
+		Url: linkedInURL,
+	}
+	if !socialEntity.IsLinkedin() {
+		return nil, nil
+	}
+
+	_, existingOrganizationId, err := r.Services.CommonServices.OrganizationService.CheckOrganizationExistsWithLinkedIn(ctx, linkedInURL, "", "")
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to check organization by linkedin url %s", linkedInURL)
+		return nil, nil
+	}
+	if existingOrganizationId == "" {
+		return nil, nil
+	}
+
+	organizationEntity, err := r.Services.CommonServices.OrganizationService.GetById(ctx, common.GetTenantFromContext(ctx), existingOrganizationId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get organization by id %s", existingOrganizationId)
+		return nil, nil
+	}
+
+	return mapper.MapEntityToOrganization(organizationEntity), nil
+}
+
+// OrganizationExistsByLinkedIn is the resolver for the organization_ExistsByLinkedIn field.
+func (r *queryResolver) OrganizationExistsByLinkedIn(ctx context.Context, linkedInURL string) (bool, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.OrganizationExistsByLinkedIn", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogKV("request.linkedInURL", linkedInURL)
+
+	socialEntity := neo4jentity.SocialEntity{
+		Url: linkedInURL,
+	}
+	if !socialEntity.IsLinkedin() {
+		return false, nil
+	}
+
+	organizationFound, _, err := r.Services.CommonServices.OrganizationService.CheckOrganizationExistsWithLinkedIn(ctx, linkedInURL, "", "")
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to check organization by linkedin url %s", linkedInURL)
+		return false, nil
+	}
+
+	return organizationFound, nil
+}
+
 // LastTouchpoint returns generated.LastTouchpointResolver implementation.
 func (r *Resolver) LastTouchpoint() generated.LastTouchpointResolver {
 	return &lastTouchpointResolver{r}

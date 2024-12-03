@@ -1377,7 +1377,9 @@ type ComplexityRoot struct {
 		BillableInfo                       func(childComplexity int) int
 		Contact                            func(childComplexity int, id string) int
 		ContactByEmail                     func(childComplexity int, email string) int
+		ContactByLinkedIn                  func(childComplexity int, linkedInURL string) int
 		ContactByPhone                     func(childComplexity int, e164 string) int
+		ContactExistsByLinkedIn            func(childComplexity int, linkedInURL string) int
 		Contacts                           func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model1.SortBy) int
 		Contract                           func(childComplexity int, id string) int
 		Contracts                          func(childComplexity int, pagination *model.Pagination) int
@@ -1420,8 +1422,10 @@ type ComplexityRoot struct {
 		Organization                       func(childComplexity int, id string) int
 		OrganizationByCustomID             func(childComplexity int, customID string) int
 		OrganizationByCustomerOsID         func(childComplexity int, customerOsID string) int
+		OrganizationByLinkedIn             func(childComplexity int, linkedInURL string) int
 		OrganizationCheckWebsite           func(childComplexity int, website string) int
 		OrganizationDistinctOwners         func(childComplexity int) int
+		OrganizationExistsByLinkedIn       func(childComplexity int, linkedInURL string) int
 		Organizations                      func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model1.SortBy) int
 		OrganizationsHiddenAfter           func(childComplexity int, date time.Time) int
 		PhoneNumber                        func(childComplexity int, id string) int
@@ -2035,6 +2039,8 @@ type QueryResolver interface {
 	Contacts(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model1.SortBy) (*model.ContactsPage, error)
 	ContactByEmail(ctx context.Context, email string) (*model.Contact, error)
 	ContactByPhone(ctx context.Context, e164 string) (*model.Contact, error)
+	ContactByLinkedIn(ctx context.Context, linkedInURL string) (*model.Contact, error)
+	ContactExistsByLinkedIn(ctx context.Context, linkedInURL string) (bool, error)
 	Contract(ctx context.Context, id string) (*model.Contract, error)
 	Contracts(ctx context.Context, pagination *model.Pagination) (*model.ContractPage, error)
 	CustomFieldTemplateList(ctx context.Context) ([]*model.CustomFieldTemplate, error)
@@ -2078,6 +2084,8 @@ type QueryResolver interface {
 	OrganizationDistinctOwners(ctx context.Context) ([]*model.User, error)
 	OrganizationCheckWebsite(ctx context.Context, website string) (*model.WebsiteDetails, error)
 	OrganizationsHiddenAfter(ctx context.Context, date time.Time) ([]string, error)
+	OrganizationByLinkedIn(ctx context.Context, linkedInURL string) (*model.Organization, error)
+	OrganizationExistsByLinkedIn(ctx context.Context, linkedInURL string) (bool, error)
 	UIOrganization(ctx context.Context, ids string) (*model.OrganizationUIDetails, error)
 	UIOrganizations(ctx context.Context, ids []string) ([]*model.OrganizationUIDetails, error)
 	UIOrganizationsSearch(ctx context.Context, limit *int, where *model.Filter, sort *model1.SortBy) (*model.OrganizationSearchResult, error)
@@ -10064,6 +10072,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.ContactByEmail(childComplexity, args["email"].(string)), true
 
+	case "Query.contact_ByLinkedIn":
+		if e.complexity.Query.ContactByLinkedIn == nil {
+			break
+		}
+
+		args, err := ec.field_Query_contact_ByLinkedIn_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.ContactByLinkedIn(childComplexity, args["linkedInUrl"].(string)), true
+
 	case "Query.contact_ByPhone":
 		if e.complexity.Query.ContactByPhone == nil {
 			break
@@ -10075,6 +10095,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.ContactByPhone(childComplexity, args["e164"].(string)), true
+
+	case "Query.contact_ExistsByLinkedIn":
+		if e.complexity.Query.ContactExistsByLinkedIn == nil {
+			break
+		}
+
+		args, err := ec.field_Query_contact_ExistsByLinkedIn_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.ContactExistsByLinkedIn(childComplexity, args["linkedInUrl"].(string)), true
 
 	case "Query.contacts":
 		if e.complexity.Query.Contacts == nil {
@@ -10530,6 +10562,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.OrganizationByCustomerOsID(childComplexity, args["customerOsId"].(string)), true
 
+	case "Query.organization_ByLinkedIn":
+		if e.complexity.Query.OrganizationByLinkedIn == nil {
+			break
+		}
+
+		args, err := ec.field_Query_organization_ByLinkedIn_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.OrganizationByLinkedIn(childComplexity, args["linkedInUrl"].(string)), true
+
 	case "Query.organization_CheckWebsite":
 		if e.complexity.Query.OrganizationCheckWebsite == nil {
 			break
@@ -10548,6 +10592,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.OrganizationDistinctOwners(childComplexity), true
+
+	case "Query.organization_ExistsByLinkedIn":
+		if e.complexity.Query.OrganizationExistsByLinkedIn == nil {
+			break
+		}
+
+		args, err := ec.field_Query_organization_ExistsByLinkedIn_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.OrganizationExistsByLinkedIn(childComplexity, args["linkedInUrl"].(string)), true
 
 	case "Query.organizations":
 		if e.complexity.Query.Organizations == nil {
@@ -12417,6 +12473,8 @@ enum EntityType {
     contacts(pagination: Pagination, where: Filter, sort: [SortBy!]): ContactsPage!
     contact_ByEmail(email: String!) :Contact!
     contact_ByPhone(e164: String!) :Contact!
+    contact_ByLinkedIn(linkedInUrl: String!): Contact @hasRole(roles: [ADMIN, USER]) @hasTenant
+    contact_ExistsByLinkedIn(linkedInUrl: String!): Boolean! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 extend type Mutation {
@@ -14868,6 +14926,8 @@ input OpportunityRenewalUpdateAllForOrganizationInput {
     organization_DistinctOwners: [User!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_CheckWebsite(website: String!): WebsiteDetails! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organizations_HiddenAfter(date: Time!): [String!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organization_ByLinkedIn(linkedInUrl: String!): Organization @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organization_ExistsByLinkedIn(linkedInUrl: String!): Boolean! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 extend type Mutation {
@@ -25007,6 +25067,38 @@ func (ec *executionContext) field_Query_contact_ByEmail_argsEmail(
 	return zeroVal, nil
 }
 
+func (ec *executionContext) field_Query_contact_ByLinkedIn_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	arg0, err := ec.field_Query_contact_ByLinkedIn_argsLinkedInURL(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["linkedInUrl"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Query_contact_ByLinkedIn_argsLinkedInURL(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (string, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["linkedInUrl"]
+	if !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("linkedInUrl"))
+	if tmp, ok := rawArgs["linkedInUrl"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
 func (ec *executionContext) field_Query_contact_ByPhone_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -25032,6 +25124,38 @@ func (ec *executionContext) field_Query_contact_ByPhone_argsE164(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("e164"))
 	if tmp, ok := rawArgs["e164"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_contact_ExistsByLinkedIn_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	arg0, err := ec.field_Query_contact_ExistsByLinkedIn_argsLinkedInURL(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["linkedInUrl"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Query_contact_ExistsByLinkedIn_argsLinkedInURL(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (string, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["linkedInUrl"]
+	if !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("linkedInUrl"))
+	if tmp, ok := rawArgs["linkedInUrl"]; ok {
 		return ec.unmarshalNString2string(ctx, tmp)
 	}
 
@@ -26441,6 +26565,38 @@ func (ec *executionContext) field_Query_organization_ByCustomerOsId_argsCustomer
 	return zeroVal, nil
 }
 
+func (ec *executionContext) field_Query_organization_ByLinkedIn_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	arg0, err := ec.field_Query_organization_ByLinkedIn_argsLinkedInURL(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["linkedInUrl"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Query_organization_ByLinkedIn_argsLinkedInURL(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (string, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["linkedInUrl"]
+	if !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("linkedInUrl"))
+	if tmp, ok := rawArgs["linkedInUrl"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
 func (ec *executionContext) field_Query_organization_CheckWebsite_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -26466,6 +26622,38 @@ func (ec *executionContext) field_Query_organization_CheckWebsite_argsWebsite(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("website"))
 	if tmp, ok := rawArgs["website"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_organization_ExistsByLinkedIn_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	arg0, err := ec.field_Query_organization_ExistsByLinkedIn_argsLinkedInURL(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["linkedInUrl"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Query_organization_ExistsByLinkedIn_argsLinkedInURL(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (string, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["linkedInUrl"]
+	if !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("linkedInUrl"))
+	if tmp, ok := rawArgs["linkedInUrl"]; ok {
 		return ec.unmarshalNString2string(ctx, tmp)
 	}
 
@@ -87907,6 +88095,249 @@ func (ec *executionContext) fieldContext_Query_contact_ByPhone(ctx context.Conte
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_contact_ByLinkedIn(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_contact_ByLinkedIn(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().ContactByLinkedIn(rctx, fc.Args["linkedInUrl"].(string))
+		}
+
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				var zeroVal *model.Contact
+				return zeroVal, err
+			}
+			if ec.directives.HasRole == nil {
+				var zeroVal *model.Contact
+				return zeroVal, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				var zeroVal *model.Contact
+				return zeroVal, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Contact); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.Contact`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Contact)
+	fc.Result = res
+	return ec.marshalOContact2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContact(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_contact_ByLinkedIn(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "metadata":
+				return ec.fieldContext_Contact_metadata(ctx, field)
+			case "id":
+				return ec.fieldContext_Contact_id(ctx, field)
+			case "title":
+				return ec.fieldContext_Contact_title(ctx, field)
+			case "prefix":
+				return ec.fieldContext_Contact_prefix(ctx, field)
+			case "name":
+				return ec.fieldContext_Contact_name(ctx, field)
+			case "firstName":
+				return ec.fieldContext_Contact_firstName(ctx, field)
+			case "lastName":
+				return ec.fieldContext_Contact_lastName(ctx, field)
+			case "username":
+				return ec.fieldContext_Contact_username(ctx, field)
+			case "description":
+				return ec.fieldContext_Contact_description(ctx, field)
+			case "timezone":
+				return ec.fieldContext_Contact_timezone(ctx, field)
+			case "profilePhotoUrl":
+				return ec.fieldContext_Contact_profilePhotoUrl(ctx, field)
+			case "hide":
+				return ec.fieldContext_Contact_hide(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Contact_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Contact_updatedAt(ctx, field)
+			case "label":
+				return ec.fieldContext_Contact_label(ctx, field)
+			case "source":
+				return ec.fieldContext_Contact_source(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Contact_appSource(ctx, field)
+			case "tags":
+				return ec.fieldContext_Contact_tags(ctx, field)
+			case "jobRoles":
+				return ec.fieldContext_Contact_jobRoles(ctx, field)
+			case "organizations":
+				return ec.fieldContext_Contact_organizations(ctx, field)
+			case "latestOrganizationWithJobRole":
+				return ec.fieldContext_Contact_latestOrganizationWithJobRole(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_Contact_phoneNumbers(ctx, field)
+			case "emails":
+				return ec.fieldContext_Contact_emails(ctx, field)
+			case "primaryEmail":
+				return ec.fieldContext_Contact_primaryEmail(ctx, field)
+			case "locations":
+				return ec.fieldContext_Contact_locations(ctx, field)
+			case "socials":
+				return ec.fieldContext_Contact_socials(ctx, field)
+			case "connectedUsers":
+				return ec.fieldContext_Contact_connectedUsers(ctx, field)
+			case "customFields":
+				return ec.fieldContext_Contact_customFields(ctx, field)
+			case "owner":
+				return ec.fieldContext_Contact_owner(ctx, field)
+			case "flows":
+				return ec.fieldContext_Contact_flows(ctx, field)
+			case "timelineEvents":
+				return ec.fieldContext_Contact_timelineEvents(ctx, field)
+			case "timelineEventsTotalCount":
+				return ec.fieldContext_Contact_timelineEventsTotalCount(ctx, field)
+			case "enrichDetails":
+				return ec.fieldContext_Contact_enrichDetails(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_contact_ByLinkedIn_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_contact_ExistsByLinkedIn(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_contact_ExistsByLinkedIn(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().ContactExistsByLinkedIn(rctx, fc.Args["linkedInUrl"].(string))
+		}
+
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				var zeroVal bool
+				return zeroVal, err
+			}
+			if ec.directives.HasRole == nil {
+				var zeroVal bool
+				return zeroVal, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				var zeroVal bool
+				return zeroVal, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(bool); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be bool`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_contact_ExistsByLinkedIn(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_contact_ExistsByLinkedIn_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_contract(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_contract(ctx, field)
 	if err != nil {
@@ -92217,6 +92648,327 @@ func (ec *executionContext) fieldContext_Query_organizations_HiddenAfter(ctx con
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_organizations_HiddenAfter_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_organization_ByLinkedIn(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_organization_ByLinkedIn(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().OrganizationByLinkedIn(rctx, fc.Args["linkedInUrl"].(string))
+		}
+
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				var zeroVal *model.Organization
+				return zeroVal, err
+			}
+			if ec.directives.HasRole == nil {
+				var zeroVal *model.Organization
+				return zeroVal, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				var zeroVal *model.Organization
+				return zeroVal, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Organization); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.Organization`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Organization)
+	fc.Result = res
+	return ec.marshalOOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganization(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_organization_ByLinkedIn(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "metadata":
+				return ec.fieldContext_Organization_metadata(ctx, field)
+			case "accountDetails":
+				return ec.fieldContext_Organization_accountDetails(ctx, field)
+			case "contracts":
+				return ec.fieldContext_Organization_contracts(ctx, field)
+			case "opportunities":
+				return ec.fieldContext_Organization_opportunities(ctx, field)
+			case "customerOsId":
+				return ec.fieldContext_Organization_customerOsId(ctx, field)
+			case "customFields":
+				return ec.fieldContext_Organization_customFields(ctx, field)
+			case "referenceId":
+				return ec.fieldContext_Organization_referenceId(ctx, field)
+			case "description":
+				return ec.fieldContext_Organization_description(ctx, field)
+			case "domains":
+				return ec.fieldContext_Organization_domains(ctx, field)
+			case "slackChannelId":
+				return ec.fieldContext_Organization_slackChannelId(ctx, field)
+			case "employeeGrowthRate":
+				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
+			case "employees":
+				return ec.fieldContext_Organization_employees(ctx, field)
+			case "headquarters":
+				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "industry":
+				return ec.fieldContext_Organization_industry(ctx, field)
+			case "industryGroup":
+				return ec.fieldContext_Organization_industryGroup(ctx, field)
+			case "lastFundingAmount":
+				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
+			case "lastFundingRound":
+				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
+			case "lastTouchpoint":
+				return ec.fieldContext_Organization_lastTouchpoint(ctx, field)
+			case "locations":
+				return ec.fieldContext_Organization_locations(ctx, field)
+			case "logo":
+				return ec.fieldContext_Organization_logo(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
+			case "icon":
+				return ec.fieldContext_Organization_icon(ctx, field)
+			case "iconUrl":
+				return ec.fieldContext_Organization_iconUrl(ctx, field)
+			case "market":
+				return ec.fieldContext_Organization_market(ctx, field)
+			case "name":
+				return ec.fieldContext_Organization_name(ctx, field)
+			case "notes":
+				return ec.fieldContext_Organization_notes(ctx, field)
+			case "owner":
+				return ec.fieldContext_Organization_owner(ctx, field)
+			case "parentCompanies":
+				return ec.fieldContext_Organization_parentCompanies(ctx, field)
+			case "public":
+				return ec.fieldContext_Organization_public(ctx, field)
+			case "socialMedia":
+				return ec.fieldContext_Organization_socialMedia(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
+			case "subsidiaries":
+				return ec.fieldContext_Organization_subsidiaries(ctx, field)
+			case "tags":
+				return ec.fieldContext_Organization_tags(ctx, field)
+			case "targetAudience":
+				return ec.fieldContext_Organization_targetAudience(ctx, field)
+			case "timelineEvents":
+				return ec.fieldContext_Organization_timelineEvents(ctx, field)
+			case "valueProposition":
+				return ec.fieldContext_Organization_valueProposition(ctx, field)
+			case "website":
+				return ec.fieldContext_Organization_website(ctx, field)
+			case "yearFounded":
+				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "stage":
+				return ec.fieldContext_Organization_stage(ctx, field)
+			case "stageLastUpdated":
+				return ec.fieldContext_Organization_stageLastUpdated(ctx, field)
+			case "relationship":
+				return ec.fieldContext_Organization_relationship(ctx, field)
+			case "leadSource":
+				return ec.fieldContext_Organization_leadSource(ctx, field)
+			case "icpFit":
+				return ec.fieldContext_Organization_icpFit(ctx, field)
+			case "hide":
+				return ec.fieldContext_Organization_hide(ctx, field)
+			case "contacts":
+				return ec.fieldContext_Organization_contacts(ctx, field)
+			case "jobRoles":
+				return ec.fieldContext_Organization_jobRoles(ctx, field)
+			case "emails":
+				return ec.fieldContext_Organization_emails(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
+			case "suggestedMergeTo":
+				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
+			case "timelineEventsTotalCount":
+				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
+			case "externalLinks":
+				return ec.fieldContext_Organization_externalLinks(ctx, field)
+			case "issueSummaryByStatus":
+				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
+			case "contactCount":
+				return ec.fieldContext_Organization_contactCount(ctx, field)
+			case "inboundCommsCount":
+				return ec.fieldContext_Organization_inboundCommsCount(ctx, field)
+			case "outboundCommsCount":
+				return ec.fieldContext_Organization_outboundCommsCount(ctx, field)
+			case "enrichDetails":
+				return ec.fieldContext_Organization_enrichDetails(ctx, field)
+			case "isCustomer":
+				return ec.fieldContext_Organization_isCustomer(ctx, field)
+			case "socials":
+				return ec.fieldContext_Organization_socials(ctx, field)
+			case "isPublic":
+				return ec.fieldContext_Organization_isPublic(ctx, field)
+			case "note":
+				return ec.fieldContext_Organization_note(ctx, field)
+			case "id":
+				return ec.fieldContext_Organization_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Organization_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Organization_updatedAt(ctx, field)
+			case "source":
+				return ec.fieldContext_Organization_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Organization_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Organization_appSource(ctx, field)
+			case "customId":
+				return ec.fieldContext_Organization_customId(ctx, field)
+			case "lastTouchPointAt":
+				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
+			case "lastTouchPointType":
+				return ec.fieldContext_Organization_lastTouchPointType(ctx, field)
+			case "lastTouchPointTimelineEventId":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
+			case "lastTouchPointTimelineEvent":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
+			case "subsidiaryOf":
+				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_organization_ByLinkedIn_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_organization_ExistsByLinkedIn(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_organization_ExistsByLinkedIn(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().OrganizationExistsByLinkedIn(rctx, fc.Args["linkedInUrl"].(string))
+		}
+
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				var zeroVal bool
+				return zeroVal, err
+			}
+			if ec.directives.HasRole == nil {
+				var zeroVal bool
+				return zeroVal, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				var zeroVal bool
+				return zeroVal, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(bool); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be bool`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_organization_ExistsByLinkedIn(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_organization_ExistsByLinkedIn_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -122983,6 +123735,47 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "contact_ByLinkedIn":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_contact_ByLinkedIn(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "contact_ExistsByLinkedIn":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_contact_ExistsByLinkedIn(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "contract":
 			field := field
 
@@ -123872,6 +124665,47 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_organizations_HiddenAfter(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "organization_ByLinkedIn":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_organization_ByLinkedIn(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "organization_ExistsByLinkedIn":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_organization_ExistsByLinkedIn(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
