@@ -7,7 +7,6 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -29,7 +28,7 @@ type SocialWriteRepository interface {
 	PermanentlyDelete(ctx context.Context, tenant, socialId string) error
 	RemoveSocialForEntityById(ctx context.Context, tenant, linkedEntityId, linkedEntityNodeLabel, socialId string) error
 	RemoveSocialForEntityByUrl(ctx context.Context, tenant, linkedEntityId, linkedEntityNodeLabel, socialUrl string) error
-	Update(ctx context.Context, tenant string, socialEntity neo4jentity.SocialEntity) (*dbtype.Node, error)
+	Update(ctx context.Context, tenant string, socialId, url string, alias, externalId *string) (*dbtype.Node, error)
 }
 
 type socialWriteRepository struct {
@@ -180,29 +179,41 @@ func (r *socialWriteRepository) RemoveSocialForEntityByUrl(ctx context.Context, 
 	return err
 }
 
-func (r *socialWriteRepository) Update(ctx context.Context, tenant string, socialEntity neo4jentity.SocialEntity) (*dbtype.Node, error) {
+func (r *socialWriteRepository) Update(ctx context.Context, tenant, socialId, url string, alias, externalId *string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialWriteRepository.Update")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
 	tracing.TagTenant(span, tenant)
+	tracing.TagEntity(span, socialId)
 
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	query := `MATCH (soc:Social_%s {id:$id})
+	params := map[string]any{
+		"id":  socialId,
+		"url": url,
+	}
+	cypher := `MATCH (soc:Social_%s {id:$id})
 				SET soc.updatedAt=datetime(),
-					soc.url=$url
-			WITH soc
+					soc.url=$url`
+	if alias != nil {
+		cypher += `, soc.alias=$alias`
+		params["alias"] = *alias
+	}
+	if externalId != nil {
+		cypher += `, soc.externalId=$externalId`
+		params["externalId"] = *externalId
+	}
+	cypher += `WITH soc
 			OPTIONAL MATCH (n:Contact|Organization)-[:HAS]->(soc)
 				SET n.updatedAt = datetime()
 			RETURN DISTINCT soc`
 
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
 	if result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant),
-			map[string]any{
-				"id":  socialEntity.Id,
-				"url": socialEntity.Url,
-			})
+		queryResult, err := tx.Run(ctx, fmt.Sprintf(cypher, tenant), params)
 		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 	}); err != nil {
 		return nil, err
