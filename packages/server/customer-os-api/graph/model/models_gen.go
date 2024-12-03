@@ -2891,6 +2891,15 @@ type UserOnboardingDetails struct {
 	OnboardingMailstackStepCompleted bool `json:"onboardingMailstackStepCompleted"`
 }
 
+type UserOnboardingDetailsInput struct {
+	ID                               string `json:"id"`
+	ShowOnboardingPage               *bool  `json:"showOnboardingPage,omitempty"`
+	OnboardingInboundStepCompleted   *bool  `json:"onboardingInboundStepCompleted,omitempty"`
+	OnboardingOutboundStepCompleted  *bool  `json:"onboardingOutboundStepCompleted,omitempty"`
+	OnboardingCrmStepCompleted       *bool  `json:"onboardingCrmStepCompleted,omitempty"`
+	OnboardingMailstackStepCompleted *bool  `json:"onboardingMailstackStepCompleted,omitempty"`
+}
+
 // Specifies how many pages of `User` information has been returned in the query response.
 // **A `return` object.**
 type UserPage struct {
