@@ -28,7 +28,7 @@ export const SplashScreen = observer(
     const navigate = useNavigate();
     const location = useLocation();
     const [hidden, setHidden] = useState(false);
-    const { pathname } = location;
+    const { pathname, search } = location;
 
     const showSplash = !store.isBootstrapped && !publicPaths.includes(pathname);
     const render =
@@ -37,7 +37,10 @@ export const SplashScreen = observer(
       store.isBootstrapped;
 
     useEffect(() => {
-      if (store.isBootstrapped || publicPaths.includes(pathname)) {
+      if (
+        store.isBootstrapped ||
+        publicPaths.some((p) => pathname.startsWith(p))
+      ) {
         setTimeout(() => {
           setHidden(true);
         }, 500);
@@ -54,10 +57,20 @@ export const SplashScreen = observer(
           (pathname === '/' || privatePaths.some((p) => pathname.startsWith(p)))
         ) {
           if (!store.session.isAuthenticated) {
-            navigate('/auth/signin');
+            navigate(
+              '/auth/signin' +
+                (pathname !== '/'
+                  ? `?from=${encodeURIComponent(pathname + search)}`
+                  : ''),
+            );
           } else {
             if (pathname === '/') {
-              navigate('/finder');
+              navigate(
+                '/finder' +
+                  (pathname !== '/'
+                    ? `?from=${encodeURIComponent(pathname + search)}`
+                    : ''),
+              );
             }
           }
         }

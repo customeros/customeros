@@ -219,7 +219,7 @@ async function createServer() {
   app.use(fileStorageApiProxy);
 
   //login button
-  app.use('/google-auth', (_req, res) => {
+  app.use('/google-auth', (req, res) => {
     const scopes = ['openid', 'email', 'profile'];
 
     const url = oauth2Client.generateAuthUrl({
@@ -227,7 +227,7 @@ async function createServer() {
       scope: scopes,
       state: btoa(
         JSON.stringify({
-          origin: '/finder',
+          origin: req?.query?.from ?? '/finder',
         }),
       ),
     });
@@ -260,7 +260,7 @@ async function createServer() {
       'state',
       btoa(
         JSON.stringify({
-          origin: '/finder',
+          origin: req?.query?.from ?? '/finder',
           scope,
         }),
       ),
@@ -382,9 +382,13 @@ async function createServer() {
 
       const integrations_token = createIntegrationAppToken(tenant);
 
+      const campaign =
+        new URLSearchParams(stateParsed?.origin).get('campaign') ?? '';
+
       const sessionToken = jwt.sign(
         {
           tenant,
+          campaign,
           access_token,
           refresh_token,
           integrations_token,
@@ -396,9 +400,11 @@ async function createServer() {
         },
       );
 
-      const redirectURL = `${process.env.VITE_CLIENT_APP_URL}/auth/success?sessionToken=${sessionToken}&origin=${stateParsed.origin}`;
-
-      console.info('redirectURL - ' + loggedInEmail + ' -', redirectURL);
+      const redirectURL = `${
+        process.env.VITE_CLIENT_APP_URL
+      }/auth/success?sessionToken=${sessionToken}&origin=${encodeURIComponent(
+        stateParsed.origin,
+      )}`;
 
       res.redirect(redirectURL);
     } catch (err) {
@@ -469,6 +475,8 @@ async function createServer() {
       const tenant = tenantRes?.data?.tenant ?? '';
 
       const integrations_token = createIntegrationAppToken(tenant);
+      const campaign =
+        new URLSearchParams(stateParsed?.origin).get('campaign') ?? '';
 
       const profile = {
         id: profileRes?.id,
@@ -483,6 +491,7 @@ async function createServer() {
       const sessionToken = jwt.sign(
         {
           tenant,
+          campaign,
           access_token,
           refresh_token,
           integrations_token,
@@ -494,9 +503,11 @@ async function createServer() {
         },
       );
 
-      const redirectURL = `${process.env.VITE_CLIENT_APP_URL}/auth/success?sessionToken=${sessionToken}&origin=${stateParsed.origin}`;
-
-      console.info('redirectURL - ' + loggedInEmail + ' -', redirectURL);
+      const redirectURL = `${
+        process.env.VITE_CLIENT_APP_URL
+      }/auth/success?sessionToken=${sessionToken}&origin=${encodeURIComponent(
+        stateParsed.origin,
+      )}`;
 
       res.redirect(redirectURL);
     } catch (err) {
