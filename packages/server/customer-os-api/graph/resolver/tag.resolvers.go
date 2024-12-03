@@ -37,7 +37,9 @@ func (r *mutationResolver) TagCreate(ctx context.Context, input model.TagInput) 
 		graphql.AddErrorf(ctx, "Failed to create tag %s", input.Name)
 		return nil, nil
 	}
-	return mapper.MapEntityToTag(createdTag), nil
+	response := mapper.MapEntityToTag(createdTag)
+	tracing.LogObjectAsJson(span, "response", response)
+	return response, nil
 }
 
 // TagUpdate is the resolver for the tag_Update field.
