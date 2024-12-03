@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
@@ -539,11 +540,10 @@ func initializeUser(c context.Context, services *service.Services, provider, pro
 			Tenant:    tenant,
 			AppSource: constants.AppSourceUserAdminApi,
 		})
-		userId, err = services.CommonServices.UserService.CreateUser(innerCtx, neo4jentity.UserEntity{
-			FirstName: *firstName,
-			LastName:  *lastName,
-			Roles:     []string{"USER", "OWNER"},
-			AppSource: constants.AppSourceUserAdminApi,
+		userId, err = services.CommonServices.UserService.Save(innerCtx, nil, nil, data_fields.UserFields{
+			FirstName: firstName,
+			LastName:  lastName,
+			Roles:     commonUtils.ToPtr([]string{"USER", "OWNER"}),
 		})
 
 		_, err = services.CommonServices.EmailService.Merge(innerCtx, nil, tenant, commonservice.EmailFields{

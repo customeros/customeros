@@ -18,8 +18,6 @@ import (
 
 type UserService interface {
 	Save(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, id *string, userFields data_fields.UserFields) (string, error)
-	// Deprecated, use Save
-	CreateUser(ctx context.Context, userEntity neo4jentity.UserEntity) (string, error)
 
 	GetById(ctx context.Context, userId string) (*neo4jentity.UserEntity, error)
 	GetAllUsersForTenant(ctx context.Context, tenant string) ([]*neo4jentity.UserEntity, error)
@@ -159,31 +157,6 @@ func (s *userService) Save(ctx context.Context, txWithPostCommit *utils.TxWithPo
 	} else {
 		span.LogFields(log.Bool("response.userUpdated", true))
 	}
-	return userId, nil
-}
-
-func (s *userService) CreateUser(ctx context.Context, userEntity neo4jentity.UserEntity) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserService.CreateUser")
-	defer span.Finish()
-
-	tenant := common.GetTenantFromContext(ctx)
-
-	userId, err := s.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelUser)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return "", err
-	}
-
-	userEntity.Id = userId
-	if userEntity.AppSource == "" {
-		userEntity.AppSource = common.GetAppSourceFromContext(ctx)
-	}
-	err = s.services.Neo4jRepositories.UserWriteRepository.CreateUser(ctx, userEntity)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return "", err
-	}
-
 	return userId, nil
 }
 
