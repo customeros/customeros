@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"github.com/customeros/mailsherpa/emailparser"
 	mailsherpa "github.com/customeros/mailsherpa/mailvalidate"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/constants"
@@ -579,10 +580,23 @@ func (s *contactService) CreateContactByEmail(ctx context.Context, txWithPostCom
 
 	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
 		var innerErr error
-		createdContactId, innerErr = s.Save(ctx, txWithPostCommit, nil, data_fields.ContactFields{}, false, options...)
+
+		contactFields := data_fields.ContactFields{}
+		parsedEmail, innerErr := emailparser.Parse(email)
+		if innerErr != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to parse email"))
+		}
+		if parsedEmail.FirstName != "" {
+			contactFields.FirstName = utils.StringPtr(utils.CleanName(parsedEmail.FirstName))
+		}
+		if parsedEmail.LastName != "" {
+			contactFields.LastName = utils.StringPtr(utils.CleanName(parsedEmail.LastName))
+		}
+
+		createdContactId, innerErr = s.Save(ctx, txWithPostCommit, nil, contactFields, false, options...)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to create contact"))
-			return "", err
+			return "", innerErr
 		}
 
 		_, innerErr = s.services.EmailService.Merge(ctx, txWithPostCommit, tenant, EmailFields{Email: email}, &LinkWith{
