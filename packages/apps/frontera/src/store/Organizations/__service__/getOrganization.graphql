@@ -53,6 +53,7 @@ query Organization($id: ID!) {
       id
       url
       followersCount
+      alias
     }
     slackChannelId
     employees
