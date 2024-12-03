@@ -70,6 +70,10 @@ export const DraggableItem = ({
               setnewOptions(newOptions);
             }}
             onKeyDown={(e) => {
+              if (e.key !== 'Enter') {
+                e.stopPropagation();
+              }
+
               if (e.key === 'Enter') {
                 const newOptions = [...newOption];
 
