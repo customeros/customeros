@@ -42,6 +42,7 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 	socialFilterCypher, socialFilterParams := "", make(map[string]interface{})
 	tagFilterCypher, tagFilterParams := "", make(map[string]interface{})
 	locationFilterCypher, locationFilterParams := "", make(map[string]interface{})
+	parentOrganizationFilterCypher, parentOrganizationFilterParams := "", make(map[string]interface{})
 
 	ownerId := []string{}
 	ownerIncludeEmpty := false
@@ -74,6 +75,11 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 		locationFilter.LogicalOperator = utils.OR
 		locationFilter.Filters = make([]*utils.CypherFilter, 0)
 
+		parentOrganizationFilter := new(utils.CypherFilter)
+		parentOrganizationFilter.Negate = false
+		parentOrganizationFilter.LogicalOperator = utils.OR
+		parentOrganizationFilter.Filters = make([]*utils.CypherFilter, 0)
+
 		for _, filter := range where.And {
 			if filter.Filter.Property == model.ColumnViewTypeOrganizationsName.String() {
 				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateStringCypherFilter("name", filter.Filter.Value.Str, filter.Filter.Operation))
@@ -92,6 +98,9 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 			}
 			if filter.Filter.Property == model.ColumnViewTypeOrganizationsRenewalDate.String() {
 				createBetweenOrEmptyTimeFilter(filter, organizationFilter, "derivedNextRenewalAt")
+			}
+			if filter.Filter.Property == model.ColumnViewTypeOrganizationsLastTouchpoint.String() {
+				createInOrEmptyStringFilter(filter, organizationFilter, "lastTouchpointType")
 			}
 			if filter.Filter.Property == model.ColumnViewTypeOrganizationsLastTouchpointDate.String() {
 				createBetweenOrEmptyTimeFilter(filter, organizationFilter, "lastTouchpointAt")
@@ -133,30 +142,13 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 				createBooleanFilter(filter, organizationFilter, "isPublic")
 			}
 			if filter.Filter.Property == model.ColumnViewTypeOrganizationsTags.String() {
-
-				cf := utils.CypherFilter{}
-
-				if filter.Filter.Operation == commonmodel.ComparisonOperatorIsEmpty {
-					cf.Details = new(utils.CypherFilterItem)
-					cf.Details.NodeProperty = "trCount = 0"
-					cf.Details.ComparisonOperator = commonmodel.ComparisonOperatorCountRelation
-				} else if filter.Filter.Operation == commonmodel.ComparisonOperatorIsNotEmpty {
-					cf.Details = new(utils.CypherFilterItem)
-					cf.Details.NodeProperty = "trCount > 0"
-					cf.Details.ComparisonOperator = commonmodel.ComparisonOperatorCountRelation
-				} else {
-					cf.Details = new(utils.CypherFilterItem)
-					cf.Details.NodeProperty = "name"
-					cf.Details.Value = filter.Filter.Value.Str
-					cf.Details.ComparisonOperator = filter.Filter.Operation
-					cf.Details.SupportCaseSensitive = true
-					cf.Details.CaseSensitive = false
-				}
-
-				tagFilter.Filters = append(tagFilter.Filters, &cf)
+				tagFilter.Filters = append(tagFilter.Filters, utils.CreateStringCypherFilter("name", filter.Filter.Value.Str, filter.Filter.Operation))
 			}
 			if filter.Filter.Property == model.ColumnViewTypeOrganizationsHeadquarters.String() {
 				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateStringCypherFilter("headquarters", filter.Filter.Value.Str, filter.Filter.Operation))
+			}
+			if filter.Filter.Property == model.ColumnViewTypeOrganizationsParentOrganization.String() {
+				parentOrganizationFilter.Filters = append(parentOrganizationFilter.Filters, utils.CreateStringCypherFilter("name", filter.Filter.Value.Str, filter.Filter.Operation))
 			}
 			if filter.Filter.Property == model.ColumnViewTypeOrganizationsUpdatedDate.String() {
 				createBetweenOrEmptyTimeFilter(filter, organizationFilter, "updatedAt")
@@ -175,6 +167,9 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 		if len(locationFilter.Filters) > 0 {
 			locationFilterCypher, locationFilterParams = locationFilter.BuildCypherFilterFragmentWithParamName("l", "l_param_")
 		}
+		if len(parentOrganizationFilter.Filters) > 0 {
+			parentOrganizationFilterCypher, parentOrganizationFilterParams = parentOrganizationFilter.BuildCypherFilterFragmentWithParamName("po", "po_param_")
+		}
 	}
 
 	//endregion
@@ -189,6 +184,7 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 	utils.MergeMapToMap(socialFilterParams, params)
 	utils.MergeMapToMap(tagFilterParams, params)
 	utils.MergeMapToMap(locationFilterParams, params)
+	utils.MergeMapToMap(parentOrganizationFilterParams, params)
 
 	//region count selectQuery
 	countQuery := ""
@@ -201,15 +197,18 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 			countQuery += ` OPTIONAL MATCH (o)-[:HAS]->(s:Social) WITH *`
 		}
 		if tagFilterCypher != "" {
-			countQuery += ` OPTIONAL MATCH (o)-[tr:TAGGED]->(t:Tag) WITH *, count(tr) as trCount`
+			countQuery += ` OPTIONAL MATCH (o)-[:TAGGED]->(t:Tag) WITH *`
 		}
 		if locationFilterCypher != "" {
 			countQuery += ` OPTIONAL MATCH (o)-[:ASSOCIATED_WITH]->(l:Location) WITH *`
 		}
+		if parentOrganizationFilterCypher != "" {
+			countQuery += ` OPTIONAL MATCH (o)-[:SUBSIDIARY_OF]->(po:Organization) WITH *`
+		}
 
 		countQuery += ` WHERE (o.hide = false OR o.hide IS NULL) `
 
-		if organizationFilterCypher != "" || socialFilterCypher != "" || tagFilterCypher != "" || locationFilterCypher != "" || len(ownerId) > 0 || ownerIncludeEmpty {
+		if organizationFilterCypher != "" || socialFilterCypher != "" || tagFilterCypher != "" || locationFilterCypher != "" || parentOrganizationFilterCypher != "" || len(ownerId) > 0 || ownerIncludeEmpty {
 			countQuery += " AND "
 		}
 
@@ -235,6 +234,9 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 		if locationFilterCypher != "" {
 			countQueryParts = append(countQueryParts, locationFilterCypher)
 		}
+		if parentOrganizationFilterCypher != "" {
+			countQueryParts = append(countQueryParts, parentOrganizationFilterCypher)
+		}
 
 		countQuery = countQuery + strings.Join(countQueryParts, " AND ") + fmt.Sprintf(` RETURN count(distinct(o))`)
 	}
@@ -251,17 +253,20 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 			selectQuery += fmt.Sprintf(` OPTIONAL MATCH (o)-[:HAS]->(s:Social_%s) WITH *`, tenant)
 		}
 		if tagFilterCypher != "" {
-			selectQuery += fmt.Sprintf(` OPTIONAL MATCH (o)-[tr:TAGGED]->(t:Tag_%s) WITH *, count(tr) as trCount`, tenant)
+			selectQuery += fmt.Sprintf(` OPTIONAL MATCH (o)-[:TAGGED]->(t:Tag_%s) WITH *`, tenant)
 		}
 		if locationFilterCypher != "" {
 			selectQuery += fmt.Sprintf(` OPTIONAL MATCH (o)-[:ASSOCIATED_WITH]->(l:Location_%s) WITH *`, tenant)
+		}
+		if parentOrganizationFilterCypher != "" {
+			selectQuery += fmt.Sprintf(` OPTIONAL MATCH (o)-[:SUBSIDIARY_OF]->(po:Organization_%s) WITH *`, tenant)
 		}
 		if sort != nil && sort.By == SearchSortParamOwner {
 			selectQuery += fmt.Sprintf(` OPTIONAL MATCH (o)<-[:OWNS]-(owner:User_%s) WITH *`, tenant)
 		}
 		selectQuery += ` WHERE (o.hide = false OR o.hide IS NULL) `
 
-		if organizationFilterCypher != "" || socialFilterCypher != "" || tagFilterCypher != "" || locationFilterCypher != "" || len(ownerId) > 0 || ownerIncludeEmpty {
+		if organizationFilterCypher != "" || socialFilterCypher != "" || tagFilterCypher != "" || parentOrganizationFilterCypher != "" || locationFilterCypher != "" || len(ownerId) > 0 || ownerIncludeEmpty {
 			selectQuery += " AND "
 		}
 
@@ -286,6 +291,9 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 		}
 		if locationFilterCypher != "" {
 			queryParts = append(queryParts, locationFilterCypher)
+		}
+		if parentOrganizationFilterCypher != "" {
+			queryParts = append(queryParts, parentOrganizationFilterCypher)
 		}
 		selectQuery = selectQuery + strings.Join(queryParts, " AND ")
 	}
