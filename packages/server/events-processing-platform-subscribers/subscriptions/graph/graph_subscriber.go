@@ -388,10 +388,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return nil
 
 	default:
-		s.log.Errorf("(GraphSubscriber) Unknown EventType: {%s}", evt.EventType)
-		err := eventstore.ErrInvalidEventType
-		err.EventType = evt.GetEventType()
-		tracing.TraceErr(span, err)
 		return nil
 	}
 }
