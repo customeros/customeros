@@ -41,7 +41,7 @@ export const InfoDialog = ({
       <AlertDialogPortal>
         <AlertDialogOverlay>
           <AlertDialogContent className='top-[15%] rounded-md'>
-            <div className='flex items-center'>
+            <div className='flex items-center w-full justify-between'>
               {label && (
                 <p className='pb-0 font-semibold line-clamp-2'>{label}</p>
               )}
