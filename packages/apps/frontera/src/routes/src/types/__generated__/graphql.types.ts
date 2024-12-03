@@ -4655,19 +4655,9 @@ export enum TableViewType {
 
 export type Tag = {
   __typename?: 'Tag';
-  /** @deprecated Use metadata.appSource */
-  appSource?: Maybe<Scalars['String']['output']>;
-  /** @deprecated Use metadata.created */
-  createdAt?: Maybe<Scalars['Time']['output']>;
   entityType: EntityType;
-  /** @deprecated Use metadata.id */
-  id?: Maybe<Scalars['ID']['output']>;
   metadata: Metadata;
   name: Scalars['String']['output'];
-  /** @deprecated Use metadata.source */
-  source?: Maybe<DataSource>;
-  /** @deprecated Use metadata.lastUpdated */
-  updatedAt?: Maybe<Scalars['Time']['output']>;
 };
 
 export type TagIdOrNameInput = {

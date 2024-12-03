@@ -6,5 +6,8 @@ export type UpdateTagMutationVariables = Types.Exact<{
 
 export type UpdateTagMutation = {
   __typename?: 'Mutation';
-  tag_Update?: { __typename?: 'Tag'; id?: string | null } | null;
+  tag_Update?: {
+    __typename?: 'Tag';
+    metadata: { __typename?: 'Metadata'; id: string };
+  } | null;
 };

@@ -541,8 +541,8 @@ export type GetTimelineEventsQuery = {
         }>;
         issueTags?: Array<{
           __typename?: 'Tag';
-          id?: string | null;
           name: string;
+          metadata: { __typename?: 'Metadata'; id: string };
         } | null> | null;
       }
     | {
@@ -565,7 +565,11 @@ export type GetTimelineEventsQuery = {
             email?: string | null;
           }> | null;
         } | null;
-        tags: Array<{ __typename?: 'Tag'; id?: string | null; name: string }>;
+        tags: Array<{
+          __typename?: 'Tag';
+          name: string;
+          metadata: { __typename?: 'Metadata'; id: string };
+        }>;
         externalLinks: Array<{
           __typename?: 'ExternalSystem';
           type: Types.ExternalSystemType;
@@ -847,7 +851,9 @@ export const GetTimelineEventsDocument = `
         }
       }
       issueTags: tags {
-        id
+        metadata {
+          id
+        }
         name
       }
     }
@@ -916,7 +922,9 @@ export const GetTimelineEventsDocument = `
         }
       }
       tags {
-        id
+        metadata {
+          id
+        }
         name
       }
       source
