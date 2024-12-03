@@ -382,6 +382,92 @@ export class ContactsStore extends SyncableGroup<Contact, ContactStore> {
     }
   }
 
+  async createBulkByEmail({
+    emails,
+    options,
+  }: {
+    flowId?: string;
+    emails: string[];
+    options?: {
+      onSuccess?: () => void;
+      onError?: (err: string) => void;
+    };
+  }) {
+    this.isLoading = true;
+
+    try {
+      const { contact_CreateBulkByEmail } =
+        await this.service.createContactBulkByEmail({
+          emails,
+        });
+
+      runInAction(() => {
+        this.sync({ action: 'APPEND', ids: contact_CreateBulkByEmail });
+        options?.onSuccess?.();
+        this.isLoading = false;
+      });
+
+      this.root.ui.toastSuccess(`Contacts created`, 'create-contact-success');
+    } catch (e) {
+      this.root.ui.toastError(
+        `We couldn't create this contact. Please try again.`,
+        'create-contact-error',
+      );
+      runInAction(() => {
+        this.error = (e as Error)?.message;
+        options?.onError?.(this.error);
+      });
+    } finally {
+      setTimeout(() => {
+        this.isBootstrapped = false;
+        this.bootstrap();
+      }, 300);
+    }
+  }
+
+  async createBulkByLinkedIn({
+    linkedInUrls,
+    options,
+  }: {
+    flowId?: string;
+    linkedInUrls: string[];
+    options?: {
+      onSuccess?: () => void;
+      onError?: (err: string) => void;
+    };
+  }) {
+    this.isLoading = true;
+
+    try {
+      const { contact_CreateBulkByLinkedIn } =
+        await this.service.createContactBulkByLinkedIn({
+          linkedInUrls,
+        });
+
+      runInAction(() => {
+        this.sync({ action: 'APPEND', ids: contact_CreateBulkByLinkedIn });
+        options?.onSuccess?.();
+        this.isLoading = false;
+      });
+
+      this.root.ui.toastSuccess(`Contacts created`, 'create-contact-success');
+    } catch (e) {
+      this.root.ui.toastError(
+        `We couldn't create this contact. Please try again.`,
+        'create-contact-error',
+      );
+      runInAction(() => {
+        this.error = (e as Error)?.message;
+        options?.onError?.(this.error);
+      });
+    } finally {
+      setTimeout(() => {
+        this.isBootstrapped = false;
+        this.bootstrap();
+      }, 300);
+    }
+  }
+
   async remove(id: string) {
     try {
       runInAction(() => {

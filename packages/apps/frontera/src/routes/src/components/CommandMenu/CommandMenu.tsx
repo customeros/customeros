@@ -44,6 +44,7 @@ import {
   EditPhoneNumber,
   ContactCommands,
   EditContactFlow,
+  AddContactsBulk,
   ChangeFlowStatus,
   ChangeArrEstimate,
   FlowsBulkCommands,
@@ -106,6 +107,7 @@ const Commands: Record<CommandMenuType, ReactElement> = {
   UnlinkContactFromFlow: <UnlinkContactFromFlow />,
   ConfirmBulkFlowEdit: <ConfirmBulkFlowEdit />,
   ConfirmSingleFlowEdit: <ConfirmSingleFlowEdit />,
+  AddContactsBulk: <AddContactsBulk />,
 
   // Opportunity
   OpportunityHub: <OpportunityHub />,
