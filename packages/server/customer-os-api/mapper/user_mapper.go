@@ -41,6 +41,13 @@ func MapEntityToUser(userEntity *neo4jentity.UserEntity) *model.User {
 		Bot:             userEntity.Bot,
 		Test:            userEntity.Test,
 		ProfilePhotoURL: utils.StringPtr(userEntity.ProfilePhotoUrl),
+		Onboarding: &model.UserOnboardingDetails{
+			ShowOnboardingPage:               userEntity.OnboardingDetails.ShowOnboardingPage,
+			OnboardingInboundStepCompleted:   userEntity.OnboardingDetails.OnboardingInboundStepCompleted,
+			OnboardingOutboundStepCompleted:  userEntity.OnboardingDetails.OnboardingOutboundStepCompleted,
+			OnboardingCrmStepCompleted:       userEntity.OnboardingDetails.OnboardingCrmStepCompleted,
+			OnboardingMailstackStepCompleted: userEntity.OnboardingDetails.OnboardingMailstackStepCompleted,
+		},
 	}
 }
 

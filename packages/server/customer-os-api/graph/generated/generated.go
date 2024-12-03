@@ -1647,6 +1647,7 @@ type ComplexityRoot struct {
 		LastName         func(childComplexity int) int
 		Mailboxes        func(childComplexity int) int
 		Name             func(childComplexity int) int
+		Onboarding       func(childComplexity int) int
 		PhoneNumbers     func(childComplexity int) int
 		ProfilePhotoURL  func(childComplexity int) int
 		Roles            func(childComplexity int) int
@@ -1655,6 +1656,14 @@ type ComplexityRoot struct {
 		Test             func(childComplexity int) int
 		Timezone         func(childComplexity int) int
 		UpdatedAt        func(childComplexity int) int
+	}
+
+	UserOnboardingDetails struct {
+		OnboardingCrmStepCompleted       func(childComplexity int) int
+		OnboardingInboundStepCompleted   func(childComplexity int) int
+		OnboardingMailstackStepCompleted func(childComplexity int) int
+		OnboardingOutboundStepCompleted  func(childComplexity int) int
+		ShowOnboardingPage               func(childComplexity int) int
 	}
 
 	UserPage struct {
@@ -11838,6 +11847,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.User.Name(childComplexity), true
 
+	case "User.onboarding":
+		if e.complexity.User.Onboarding == nil {
+			break
+		}
+
+		return e.complexity.User.Onboarding(childComplexity), true
+
 	case "User.phoneNumbers":
 		if e.complexity.User.PhoneNumbers == nil {
 			break
@@ -11893,6 +11909,41 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.User.UpdatedAt(childComplexity), true
+
+	case "UserOnboardingDetails.onboardingCrmStepCompleted":
+		if e.complexity.UserOnboardingDetails.OnboardingCrmStepCompleted == nil {
+			break
+		}
+
+		return e.complexity.UserOnboardingDetails.OnboardingCrmStepCompleted(childComplexity), true
+
+	case "UserOnboardingDetails.onboardingInboundStepCompleted":
+		if e.complexity.UserOnboardingDetails.OnboardingInboundStepCompleted == nil {
+			break
+		}
+
+		return e.complexity.UserOnboardingDetails.OnboardingInboundStepCompleted(childComplexity), true
+
+	case "UserOnboardingDetails.onboardingMailstackStepCompleted":
+		if e.complexity.UserOnboardingDetails.OnboardingMailstackStepCompleted == nil {
+			break
+		}
+
+		return e.complexity.UserOnboardingDetails.OnboardingMailstackStepCompleted(childComplexity), true
+
+	case "UserOnboardingDetails.onboardingOutboundStepCompleted":
+		if e.complexity.UserOnboardingDetails.OnboardingOutboundStepCompleted == nil {
+			break
+		}
+
+		return e.complexity.UserOnboardingDetails.OnboardingOutboundStepCompleted(childComplexity), true
+
+	case "UserOnboardingDetails.showOnboardingPage":
+		if e.complexity.UserOnboardingDetails.ShowOnboardingPage == nil {
+			break
+		}
+
+		return e.complexity.UserOnboardingDetails.ShowOnboardingPage(childComplexity), true
 
 	case "UserPage.content":
 		if e.complexity.UserPage.Content == nil {
@@ -16208,6 +16259,7 @@ type User {
     phoneNumbers: [PhoneNumber!]! @goField(forceResolver: true)
     mailboxes: [String!]! @goField(forceResolver: true)
     hasLinkedInToken: Boolean! @goField(forceResolver: true)
+    onboarding: UserOnboardingDetails!
 
     """
     Timestamp of user creation.
@@ -16222,6 +16274,14 @@ type User {
     source: DataSource!
     sourceOfTruth: DataSource!
     appSource: String!
+}
+
+type UserOnboardingDetails {
+    showOnboardingPage:                 Boolean!
+    onboardingInboundStepCompleted:     Boolean!
+    onboardingOutboundStepCompleted:    Boolean!
+    onboardingCrmStepCompleted:         Boolean!
+    onboardingMailstackStepCompleted:   Boolean!
 }
 
 """
@@ -27779,6 +27839,8 @@ func (ec *executionContext) fieldContext_Action_createdBy(_ context.Context, fie
 				return ec.fieldContext_User_mailboxes(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_User_onboarding(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -31254,6 +31316,8 @@ func (ec *executionContext) fieldContext_Comment_createdBy(_ context.Context, fi
 				return ec.fieldContext_User_mailboxes(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_User_onboarding(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -32890,6 +32954,8 @@ func (ec *executionContext) fieldContext_Contact_connectedUsers(_ context.Contex
 				return ec.fieldContext_User_mailboxes(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_User_onboarding(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -33037,6 +33103,8 @@ func (ec *executionContext) fieldContext_Contact_owner(_ context.Context, field 
 				return ec.fieldContext_User_mailboxes(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_User_onboarding(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -34182,6 +34250,8 @@ func (ec *executionContext) fieldContext_Contract_createdBy(_ context.Context, f
 				return ec.fieldContext_User_mailboxes(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_User_onboarding(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -34472,6 +34542,8 @@ func (ec *executionContext) fieldContext_Contract_owner(_ context.Context, field
 				return ec.fieldContext_User_mailboxes(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_User_onboarding(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -41148,6 +41220,8 @@ func (ec *executionContext) fieldContext_Email_users(_ context.Context, field gr
 				return ec.fieldContext_User_mailboxes(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_User_onboarding(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -44774,6 +44848,8 @@ func (ec *executionContext) fieldContext_FlowSender_user(_ context.Context, fiel
 				return ec.fieldContext_User_mailboxes(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_User_onboarding(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -45524,6 +45600,8 @@ func (ec *executionContext) fieldContext_GlobalCache_user(_ context.Context, fie
 				return ec.fieldContext_User_mailboxes(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_User_onboarding(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -55645,6 +55723,8 @@ func (ec *executionContext) fieldContext_LogEntry_createdBy(_ context.Context, f
 				return ec.fieldContext_User_mailboxes(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_User_onboarding(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -74843,6 +74923,8 @@ func (ec *executionContext) fieldContext_Mutation_user_Create(ctx context.Contex
 				return ec.fieldContext_User_mailboxes(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_User_onboarding(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -74964,6 +75046,8 @@ func (ec *executionContext) fieldContext_Mutation_user_Update(ctx context.Contex
 				return ec.fieldContext_User_mailboxes(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_User_onboarding(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -75097,6 +75181,8 @@ func (ec *executionContext) fieldContext_Mutation_user_AddRole(ctx context.Conte
 				return ec.fieldContext_User_mailboxes(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_User_onboarding(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -75230,6 +75316,8 @@ func (ec *executionContext) fieldContext_Mutation_user_RemoveRole(ctx context.Co
 				return ec.fieldContext_User_mailboxes(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_User_onboarding(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -75356,6 +75444,8 @@ func (ec *executionContext) fieldContext_Mutation_user_AddRoleInTenant(ctx conte
 				return ec.fieldContext_User_mailboxes(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_User_onboarding(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -75482,6 +75572,8 @@ func (ec *executionContext) fieldContext_Mutation_user_RemoveRoleInTenant(ctx co
 				return ec.fieldContext_User_mailboxes(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_User_onboarding(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -76712,6 +76804,8 @@ func (ec *executionContext) fieldContext_Note_createdBy(_ context.Context, field
 				return ec.fieldContext_User_mailboxes(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_User_onboarding(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -78455,6 +78549,8 @@ func (ec *executionContext) fieldContext_Opportunity_createdBy(_ context.Context
 				return ec.fieldContext_User_mailboxes(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_User_onboarding(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -78574,6 +78670,8 @@ func (ec *executionContext) fieldContext_Opportunity_owner(_ context.Context, fi
 				return ec.fieldContext_User_mailboxes(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_User_onboarding(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -80821,6 +80919,8 @@ func (ec *executionContext) fieldContext_Organization_owner(_ context.Context, f
 				return ec.fieldContext_User_mailboxes(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_User_onboarding(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -85501,6 +85601,8 @@ func (ec *executionContext) fieldContext_OrganizationUiDetails_owner(_ context.C
 				return ec.fieldContext_User_mailboxes(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_User_onboarding(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -86983,6 +87085,8 @@ func (ec *executionContext) fieldContext_PhoneNumber_users(_ context.Context, fi
 				return ec.fieldContext_User_mailboxes(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_User_onboarding(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -92447,6 +92551,8 @@ func (ec *executionContext) fieldContext_Query_organization_DistinctOwners(_ con
 				return ec.fieldContext_User_mailboxes(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_User_onboarding(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -94886,6 +94992,8 @@ func (ec *executionContext) fieldContext_Query_user(ctx context.Context, field g
 				return ec.fieldContext_User_mailboxes(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_User_onboarding(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -95019,6 +95127,8 @@ func (ec *executionContext) fieldContext_Query_user_ByEmail(ctx context.Context,
 				return ec.fieldContext_User_mailboxes(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_User_onboarding(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -95648,6 +95758,8 @@ func (ec *executionContext) fieldContext_Reminder_owner(_ context.Context, field
 				return ec.fieldContext_User_mailboxes(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_User_onboarding(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -97105,6 +97217,8 @@ func (ec *executionContext) fieldContext_ServiceLineItem_createdBy(_ context.Con
 				return ec.fieldContext_User_mailboxes(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_User_onboarding(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -102535,6 +102649,62 @@ func (ec *executionContext) fieldContext_User_hasLinkedInToken(_ context.Context
 	return fc, nil
 }
 
+func (ec *executionContext) _User_onboarding(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_User_onboarding(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Onboarding, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.UserOnboardingDetails)
+	fc.Result = res
+	return ec.marshalNUserOnboardingDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐUserOnboardingDetails(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_User_onboarding(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "showOnboardingPage":
+				return ec.fieldContext_UserOnboardingDetails_showOnboardingPage(ctx, field)
+			case "onboardingInboundStepCompleted":
+				return ec.fieldContext_UserOnboardingDetails_onboardingInboundStepCompleted(ctx, field)
+			case "onboardingOutboundStepCompleted":
+				return ec.fieldContext_UserOnboardingDetails_onboardingOutboundStepCompleted(ctx, field)
+			case "onboardingCrmStepCompleted":
+				return ec.fieldContext_UserOnboardingDetails_onboardingCrmStepCompleted(ctx, field)
+			case "onboardingMailstackStepCompleted":
+				return ec.fieldContext_UserOnboardingDetails_onboardingMailstackStepCompleted(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UserOnboardingDetails", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _User_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_User_createdAt(ctx, field)
 	if err != nil {
@@ -102891,6 +103061,226 @@ func (ec *executionContext) fieldContext_User_appSource(_ context.Context, field
 	return fc, nil
 }
 
+func (ec *executionContext) _UserOnboardingDetails_showOnboardingPage(ctx context.Context, field graphql.CollectedField, obj *model.UserOnboardingDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserOnboardingDetails_showOnboardingPage(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ShowOnboardingPage, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserOnboardingDetails_showOnboardingPage(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserOnboardingDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserOnboardingDetails_onboardingInboundStepCompleted(ctx context.Context, field graphql.CollectedField, obj *model.UserOnboardingDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserOnboardingDetails_onboardingInboundStepCompleted(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.OnboardingInboundStepCompleted, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserOnboardingDetails_onboardingInboundStepCompleted(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserOnboardingDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserOnboardingDetails_onboardingOutboundStepCompleted(ctx context.Context, field graphql.CollectedField, obj *model.UserOnboardingDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserOnboardingDetails_onboardingOutboundStepCompleted(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.OnboardingOutboundStepCompleted, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserOnboardingDetails_onboardingOutboundStepCompleted(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserOnboardingDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserOnboardingDetails_onboardingCrmStepCompleted(ctx context.Context, field graphql.CollectedField, obj *model.UserOnboardingDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserOnboardingDetails_onboardingCrmStepCompleted(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.OnboardingCrmStepCompleted, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserOnboardingDetails_onboardingCrmStepCompleted(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserOnboardingDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserOnboardingDetails_onboardingMailstackStepCompleted(ctx context.Context, field graphql.CollectedField, obj *model.UserOnboardingDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserOnboardingDetails_onboardingMailstackStepCompleted(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.OnboardingMailstackStepCompleted, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserOnboardingDetails_onboardingMailstackStepCompleted(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserOnboardingDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _UserPage_content(ctx context.Context, field graphql.CollectedField, obj *model.UserPage) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_UserPage_content(ctx, field)
 	if err != nil {
@@ -102958,6 +103348,8 @@ func (ec *executionContext) fieldContext_UserPage_content(_ context.Context, fie
 				return ec.fieldContext_User_mailboxes(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_User_onboarding(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -103134,6 +103526,8 @@ func (ec *executionContext) fieldContext_UserParticipant_userParticipant(_ conte
 				return ec.fieldContext_User_mailboxes(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_User_onboarding(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -126765,6 +127159,11 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "onboarding":
+			out.Values[i] = ec._User_onboarding(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
 		case "createdAt":
 			out.Values[i] = ec._User_createdAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -126861,6 +127260,65 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			out.Values[i] = ec._User_appSource(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var userOnboardingDetailsImplementors = []string{"UserOnboardingDetails"}
+
+func (ec *executionContext) _UserOnboardingDetails(ctx context.Context, sel ast.SelectionSet, obj *model.UserOnboardingDetails) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, userOnboardingDetailsImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("UserOnboardingDetails")
+		case "showOnboardingPage":
+			out.Values[i] = ec._UserOnboardingDetails_showOnboardingPage(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "onboardingInboundStepCompleted":
+			out.Values[i] = ec._UserOnboardingDetails_onboardingInboundStepCompleted(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "onboardingOutboundStepCompleted":
+			out.Values[i] = ec._UserOnboardingDetails_onboardingOutboundStepCompleted(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "onboardingCrmStepCompleted":
+			out.Values[i] = ec._UserOnboardingDetails_onboardingCrmStepCompleted(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "onboardingMailstackStepCompleted":
+			out.Values[i] = ec._UserOnboardingDetails_onboardingMailstackStepCompleted(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
 			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -132024,6 +132482,16 @@ func (ec *executionContext) marshalNUser2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenl
 func (ec *executionContext) unmarshalNUserInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐUserInput(ctx context.Context, v interface{}) (model.UserInput, error) {
 	res, err := ec.unmarshalInputUserInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNUserOnboardingDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐUserOnboardingDetails(ctx context.Context, sel ast.SelectionSet, v *model.UserOnboardingDetails) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._UserOnboardingDetails(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNUserPage2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐUserPage(ctx context.Context, sel ast.SelectionSet, v model.UserPage) graphql.Marshaler {

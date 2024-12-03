@@ -58,6 +58,7 @@ type User {
     phoneNumbers: [PhoneNumber!]! @goField(forceResolver: true)
     mailboxes: [String!]! @goField(forceResolver: true)
     hasLinkedInToken: Boolean! @goField(forceResolver: true)
+    onboarding: UserOnboardingDetails!
 
     """
     Timestamp of user creation.
@@ -72,6 +73,14 @@ type User {
     source: DataSource!
     sourceOfTruth: DataSource!
     appSource: String!
+}
+
+type UserOnboardingDetails {
+    showOnboardingPage:                 Boolean!
+    onboardingInboundStepCompleted:     Boolean!
+    onboardingOutboundStepCompleted:    Boolean!
+    onboardingCrmStepCompleted:         Boolean!
+    onboardingMailstackStepCompleted:   Boolean!
 }
 
 """
