@@ -22,14 +22,12 @@ import (
 )
 
 // @Summary Create a new contact
-// @Description Creates a contact from either JSON or CSV upload
+// @Description Creates a contact from either an email address or linkedin_url
 // @Tags CustomerBASE API
-// @Accept json,multipart/form-data
+// @Accept json
 // @Produce json
-// @Param file formData file false "CSV file with contact data"
 // @Param contact body ContactRecord false "Contact information"
 // @Success 200 {object} SingleContactResponse "Successfully created single contact"
-// @Success 201 {object} ContactsResponse "Successfully processed CSV file"
 // @Failure 400 {object} rest.BaseResponse "Invalid request data"
 // @Failure 401 {object} rest.BaseResponse "Unauthorized"
 // @Failure 500 {object} rest.BaseResponse "Internal server error"
