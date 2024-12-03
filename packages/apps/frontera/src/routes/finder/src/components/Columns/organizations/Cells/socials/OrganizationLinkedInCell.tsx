@@ -109,6 +109,7 @@ export const OrganizationLinkedInCell = observer(
         link={linkedIn.url}
         isHovered={isHovered}
         setIsEdit={setIsEdit}
+        alias={linkedIn.alias}
         setMetaKey={setMetaKey}
         setIsHovered={setIsHovered}
         toggleEditMode={toggleEditMode}

@@ -78,6 +78,7 @@ export type GetOrganizationsQuery = {
         id: string;
         url: string;
         followersCount: any;
+        alias: string;
       }>;
       tags?: Array<{
         __typename?: 'Tag';

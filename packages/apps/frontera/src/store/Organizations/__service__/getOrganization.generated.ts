@@ -66,6 +66,7 @@ export type OrganizationQuery = {
       id: string;
       url: string;
       followersCount: any;
+      alias: string;
     }>;
     enrichDetails: {
       __typename?: 'EnrichDetails';
