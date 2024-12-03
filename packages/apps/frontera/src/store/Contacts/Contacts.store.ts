@@ -184,6 +184,7 @@ export class ContactsStore extends SyncableGroup<Contact, ContactStore> {
       runInAction(() => {
         serverId = contact_CreateForOrganization.id;
         newContact.setId(serverId);
+        newContact.commit({ syncOnly: true });
 
         this.value.set(serverId, newContact);
         this.value.delete(tempId);
