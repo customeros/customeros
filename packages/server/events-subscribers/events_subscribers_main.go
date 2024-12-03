@@ -2,6 +2,9 @@ package main
 
 import (
 	"context"
+	"io"
+	"log"
+
 	"github.com/caarlos0/env/v6"
 	"github.com/joho/godotenv"
 	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
@@ -9,12 +12,11 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/opentracing/opentracing-go"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/events-subscribers/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-subscribers/listeners"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-subscribers/logger"
-	"github.com/opentracing/opentracing-go"
-	"io"
-	"log"
 )
 
 const (
@@ -77,7 +79,7 @@ func main() {
 		},
 	}, db.GormDB, &neo4jDriver, cfg.Neo4j.Database, eventsProcessingGrpcClient, appLogger)
 
-	//Register listeners
+	// Register listeners
 	commonServices.RabbitMQService.RegisterHandler(dto.FlowOn{}, listeners.Handle_FlowOn)
 	commonServices.RabbitMQService.RegisterHandler(dto.FlowOff{}, listeners.Handle_FlowOff)
 	commonServices.RabbitMQService.RegisterHandler(dto.FlowArchive{}, listeners.Handle_FlowArchive)
@@ -97,8 +99,8 @@ func main() {
 	commonServices.RabbitMQService.RegisterHandler(dto.RequestRefreshLastTouchpoint{}, listeners.OnRequestLastTouchpointRefresh)
 	commonServices.RabbitMQService.RegisterHandler(dto.RequestEnrichOrganization{}, listeners.OnRequestedEnrichOrganization)
 
-	// meeting
-	commonServices.RabbitMQService.RegisterHandler(dto.MeetingSummaryCreated{}, listeners.OnMeetingSummaryCreated)
+	// webhooks
+	commonServices.RabbitMQService.RegisterHandler(dto.WebhookEvent{}, listeners.OnWebhookEventCreated)
 
 	// Listen for messages
 	commonServices.RabbitMQService.ListenQueue(commonService.EventsQueueName)
@@ -108,7 +110,6 @@ func main() {
 	forever := make(chan bool)
 	log.Println(" [*] Waiting for messages")
 	<-forever
-
 }
 
 func loadConfiguration() *config.Config {

@@ -3,20 +3,22 @@ package service
 import (
 	"context"
 	"encoding/json"
-	"github.com/mitchellh/mapstructure"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/opentracing/opentracing-go"
-	"github.com/pkg/errors"
-	"github.com/rabbitmq/amqp091-go"
 	"log"
 	"reflect"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/mitchellh/mapstructure"
+	"github.com/opentracing/opentracing-go"
+	"github.com/pkg/errors"
+	"github.com/rabbitmq/amqp091-go"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
 
 const (
@@ -87,8 +89,8 @@ func NewRabbitMQService(url string, services *Services) RabbitMQService {
 	}
 	rabbitMQService.connect()
 
-	//TODO sigterm
-	//defer rabbitMQService.Close()
+	// TODO sigterm
+	// defer rabbitMQService.Close()
 
 	return rabbitMQService
 }
@@ -147,6 +149,10 @@ func (r *RabbitMQService) reconnect(ctx context.Context) {
 // PublishEvent publishes a message to the given exchange and routing key with automatic reconnection
 func (r *RabbitMQService) PublishEvent(ctx context.Context, entityId string, entityType model.EntityType, message interface{}) error {
 	return r.PublishEventOnExchange(ctx, entityId, entityType, message, EventsExchangeName, EventsRoutingKey)
+}
+
+func (r *RabbitMQService) PublishWebhookEvent(ctx context.Context, event dto.WebhookEvent[any]) error {
+	return r.PublishEvent(ctx, "", model.WEBHOOK_EVENT, event)
 }
 
 func (r *RabbitMQService) PublishEventOnExchange(ctx context.Context, entityId string, entityType model.EntityType, message interface{}, exchange, routingKey string) error {
@@ -247,7 +253,6 @@ func (r *RabbitMQService) PublishEventCompletedBulk(ctx context.Context, tenant 
 	}
 
 	err := r.PublishMessageOnExchange(ctx, event, NotificationsExchangeName, NotificationRoutingKey)
-
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
@@ -285,7 +290,6 @@ func (r *RabbitMQService) ListenQueue(queueName string) {
 				false,     // no-wait
 				nil,       // args
 			)
-
 			if err != nil {
 				log.Printf("Failed to register consumer on queue %s: %v. Reconnecting...", queueName, err)
 				r.reconnect(context.Background())
@@ -339,7 +343,6 @@ func (r *RabbitMQService) ListenQueueExclusive(queueName string) {
 				false,     // no-wait
 				nil,       // args
 			)
-
 			if err != nil {
 				if strings.Contains(err.Error(), "ACCESS_REFUSED") && strings.Contains(err.Error(), "exclusive") {
 					log.Printf("Exclusive consumer conflict for queue %s. Only one instance can consume exclusively.", queueName)

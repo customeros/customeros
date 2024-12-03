@@ -6,10 +6,10 @@ import (
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	commontracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/pkg/errors"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
@@ -72,15 +72,15 @@ func handleFathomAISummaryZapier(ctx *rest.HTTPContext) {
 	ctx.GinContext.JSON(http.StatusAccepted, rest.BuildBaseResponse(rest.StatusProcessing))
 
 	go func() {
-		if err := createEventFromFathomAISummaryZapier(ctx, aiSummaryData); err != nil {
+		if err := publishMeetingSummaryCreatedEvent(ctx, aiSummaryData); err != nil {
 			tracing.TraceErr(ctx.Span, errors.Wrap(err, "failed to process Fathom AI summary from zapier"))
 		}
 	}()
 	return
 }
 
-func createEventFromFathomAISummaryZapier(ctx *rest.HTTPContext, aiSummaryData *FathomZapierPayload) error {
-	var meetingSummary data_fields.MeetingSummaryFields
+func publishMeetingSummaryCreatedEvent(ctx *rest.HTTPContext, aiSummaryData *FathomZapierPayload) error {
+	var meetingSummary data_fields.MeetingSummaryEvent
 
 	content, err := aiSummaryData.toMarkdownContent()
 	if err != nil {
@@ -99,7 +99,9 @@ func createEventFromFathomAISummaryZapier(ctx *rest.HTTPContext, aiSummaryData *
 		meetingSummary.Timestamp = utils.TimePtr(aiSummaryData.Meeting.ScheduledStartTime.UTC())
 	}
 
-	err = ctx.Services.CommonServices.RabbitMQService.PublishEvent(*ctx.ServiceContext, "", model.FLOW_EVENT, dto.MeetingSummaryCreated{meetingSummary})
+	event := dto.NewWebhookEvent(enum.Fathom, "meeting_summary", "created", &meetingSummary)
+
+	err = ctx.Services.CommonServices.RabbitMQService.PublishWebhookEvent(*ctx.ServiceContext, event)
 	if err != nil {
 		tracing.TraceErr(ctx.Span, errors.Wrap(err, "failed to publish event"))
 	}

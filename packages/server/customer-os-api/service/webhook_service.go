@@ -86,6 +86,7 @@ func (w *webhookService) CreateIntegrationWebhook(ctx context.Context, tenant st
 	var newWebhook entity.FlowWebhooks
 
 	tenantHash, err := w.repositories.PostgresRepositories.TenantRepository.GetHashID(ctx, tenant)
+	span.LogFields(log.String("tenantHash", tenantHash))
 	if err != nil {
 		err = fmt.Errorf("Unable to get HashID for tenant %s: %v", tenant, err)
 		tracing.TraceErr(span, err)
@@ -101,9 +102,12 @@ func (w *webhookService) CreateIntegrationWebhook(ctx context.Context, tenant st
 	}
 
 	integrationHash := integration.IntegrationID(webhook.RotationCount + 1)
+	span.LogFields(log.String("integrationHash", integrationHash))
 	secret, err := utils.GenerateSecret()
+	span.LogFields(log.String("secret", secret))
 	if err != nil {
 		err = fmt.Errorf("Unable to generate webhook secret: %v", err)
+		tracing.TraceErr(span, err)
 	}
 
 	newWebhook.TenantName = tenant

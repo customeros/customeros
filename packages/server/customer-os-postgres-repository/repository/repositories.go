@@ -149,6 +149,7 @@ func (r *Repositories) Migration(db *gorm.DB) {
 		&entity.AiPromptLog{},
 		&entity.FlowWebhooks{},
 		&entity.FlowEvent{},
+		&entity.FlowAction{},
 		&entity.PersonalIntegration{},
 		&entity.PersonalEmailProvider{},
 		&entity.TenantWebhookApiKey{},

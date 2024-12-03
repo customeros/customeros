@@ -2,14 +2,16 @@ package service
 
 import (
 	"context"
+
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	neo4jRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
+	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
+	"gorm.io/gorm"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
-	neo4jRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
-	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
-	"gorm.io/gorm"
 )
 
 type Services struct {
@@ -67,6 +69,8 @@ type Services struct {
 	NamecheapService NamecheapService
 
 	SyncService SyncService
+
+	ActionMeetingSummaryService ActionMeetingSummaryService
 }
 
 func InitServices(globalConfig *config.GlobalConfig, db *gorm.DB, driver *neo4j.DriverWithContext, neo4jDatabase string, grpcClients *grpc_client.Clients, log logger.Logger) *Services {
@@ -128,10 +132,13 @@ func InitServices(globalConfig *config.GlobalConfig, db *gorm.DB, driver *neo4j.
 	services.NamecheapService = NewNamecheapService(globalConfig, services)
 	services.CloudflareService = NewCloudflareService(log, services, globalConfig)
 
+	// Flow Actions
+	services.ActionMeetingSummaryService = NewActionMeetingSummaryService(services)
+
 	// TODO remove, and refactor
 	services.SyncService = NewSyncService(services)
 
-	//init app cache
+	// init app cache
 	personalEmailProviderEntities, err := services.PostgresRepositories.PersonalEmailProviderRepository.GetPersonalEmailProviders()
 	if err != nil {
 		log.Fatalf("Error getting personal email providers: %s", err.Error())
