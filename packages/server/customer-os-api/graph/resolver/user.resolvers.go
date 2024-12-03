@@ -17,6 +17,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	commonTracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -161,6 +162,34 @@ func (r *mutationResolver) UserDelete(ctx context.Context, id string) (*model.Re
 // UserDeleteInTenant is the resolver for the user_DeleteInTenant field.
 func (r *mutationResolver) UserDeleteInTenant(ctx context.Context, id string, tenant string) (*model.Result, error) {
 	panic(fmt.Errorf("not implemented: UserDeleteInTenant - user_DeleteInTenant"))
+}
+
+// UserUpdateOnboardingDetails is the resolver for the user_UpdateOnboardingDetails field.
+func (r *mutationResolver) UserUpdateOnboardingDetails(ctx context.Context, input model.UserOnboardingDetailsInput) (*model.User, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.UserUpdateOnboardingDetails", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "request.input", input)
+
+	_, err := r.Services.CommonServices.UserService.Save(ctx, nil, &input.ID, data_fields.UserFields{
+		ShowOnboardingPage:               input.ShowOnboardingPage,
+		OnboardingInboundStepCompleted:   input.OnboardingInboundStepCompleted,
+		OnboardingOutboundStepCompleted:  input.OnboardingOutboundStepCompleted,
+		OnboardingCrmStepCompleted:       input.OnboardingCrmStepCompleted,
+		OnboardingMailstackStepCompleted: input.OnboardingMailstackStepCompleted,
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to update onboarding details for user %s", input.ID)
+		return nil, nil
+	}
+	userEntity, err := r.Services.CommonServices.UserService.GetById(ctx, input.ID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "User with id %s not found", input.ID)
+		return nil, err
+	}
+	return mapper.MapEntityToUser(userEntity), nil
 }
 
 // CustomerUserAddJobRole is the resolver for the customer_user_AddJobRole field.

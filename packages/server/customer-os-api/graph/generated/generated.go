@@ -1112,6 +1112,7 @@ type ComplexityRoot struct {
 		UserRemoveRole                             func(childComplexity int, id string, role model.Role) int
 		UserRemoveRoleInTenant                     func(childComplexity int, id string, tenant string, role model.Role) int
 		UserUpdate                                 func(childComplexity int, input model.UserUpdateInput) int
+		UserUpdateOnboardingDetails                func(childComplexity int, input model.UserOnboardingDetailsInput) int
 		WorkflowCreate                             func(childComplexity int, input model.WorkflowCreateInput) int
 		WorkflowUpdate                             func(childComplexity int, input model.WorkflowUpdateInput) int
 	}
@@ -1978,6 +1979,7 @@ type MutationResolver interface {
 	UserRemoveRoleInTenant(ctx context.Context, id string, tenant string, role model.Role) (*model.User, error)
 	UserDelete(ctx context.Context, id string) (*model.Result, error)
 	UserDeleteInTenant(ctx context.Context, id string, tenant string) (*model.Result, error)
+	UserUpdateOnboardingDetails(ctx context.Context, input model.UserOnboardingDetailsInput) (*model.User, error)
 	CustomerUserAddJobRole(ctx context.Context, id string, jobRoleInput model.JobRoleInput) (*model.CustomerUser, error)
 	TableViewDefCreate(ctx context.Context, input model.TableViewDefCreateInput) (*model.TableViewDef, error)
 	TableViewDefUpdate(ctx context.Context, input model.TableViewDefUpdateInput) (*model.TableViewDef, error)
@@ -8522,6 +8524,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.UserUpdate(childComplexity, args["input"].(model.UserUpdateInput)), true
 
+	case "Mutation.user_UpdateOnboardingDetails":
+		if e.complexity.Mutation.UserUpdateOnboardingDetails == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_user_UpdateOnboardingDetails_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UserUpdateOnboardingDetails(childComplexity, args["input"].(model.UserOnboardingDetailsInput)), true
+
 	case "Mutation.workflow_Create":
 		if e.complexity.Mutation.WorkflowCreate == nil {
 			break
@@ -12141,6 +12155,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputTenantSettingsOpportunityStageConfigurationInput,
 		ec.unmarshalInputTimeRange,
 		ec.unmarshalInputUserInput,
+		ec.unmarshalInputUserOnboardingDetailsInput,
 		ec.unmarshalInputUserUpdateInput,
 		ec.unmarshalInputWorkflowCreateInput,
 		ec.unmarshalInputWorkflowUpdateInput,
@@ -16215,6 +16230,7 @@ extend type Mutation {
     user_RemoveRoleInTenant(id: ID!, tenant: String!, role: Role!): User! @hasRole(roles: [ADMIN, PLATFORM_OWNER])
     user_Delete(id: ID!): Result! @hasRole(roles: [ADMIN, OWNER]) @hasTenant
     user_DeleteInTenant(id: ID!, tenant: String!): Result! @hasRole(roles: [ADMIN, PLATFORM_OWNER])
+    user_UpdateOnboardingDetails(input: UserOnboardingDetailsInput!): User! @hasRole(roles: [ADMIN, OWNER]) @hasTenant
 
     customer_user_AddJobRole(id: ID!, jobRoleInput: JobRoleInput!) : CustomerUser! @hasRole(roles: [ADMIN, OWNER, PLATFORM_OWNER]) @hasTenant
 }
@@ -16367,6 +16383,15 @@ input UserUpdateInput {
     name: String
     timezone: String
     profilePhotoUrl: String
+}
+
+input UserOnboardingDetailsInput {
+    id: ID!
+    showOnboardingPage:                 Boolean
+    onboardingInboundStepCompleted:     Boolean
+    onboardingOutboundStepCompleted:    Boolean
+    onboardingCrmStepCompleted:         Boolean
+    onboardingMailstackStepCompleted:   Boolean
 }
 
 type CustomerUser {
@@ -24728,6 +24753,38 @@ func (ec *executionContext) field_Mutation_user_RemoveRole_argsRole(
 	}
 
 	var zeroVal model.Role
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_user_UpdateOnboardingDetails_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	arg0, err := ec.field_Mutation_user_UpdateOnboardingDetails_argsInput(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_user_UpdateOnboardingDetails_argsInput(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (model.UserOnboardingDetailsInput, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["input"]
+	if !ok {
+		var zeroVal model.UserOnboardingDetailsInput
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+	if tmp, ok := rawArgs["input"]; ok {
+		return ec.unmarshalNUserOnboardingDetailsInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐUserOnboardingDetailsInput(ctx, tmp)
+	}
+
+	var zeroVal model.UserOnboardingDetailsInput
 	return zeroVal, nil
 }
 
@@ -75785,6 +75842,141 @@ func (ec *executionContext) fieldContext_Mutation_user_DeleteInTenant(ctx contex
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_user_UpdateOnboardingDetails(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_user_UpdateOnboardingDetails(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().UserUpdateOnboardingDetails(rctx, fc.Args["input"].(model.UserOnboardingDetailsInput))
+		}
+
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "OWNER"})
+			if err != nil {
+				var zeroVal *model.User
+				return zeroVal, err
+			}
+			if ec.directives.HasRole == nil {
+				var zeroVal *model.User
+				return zeroVal, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				var zeroVal *model.User
+				return zeroVal, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.User); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.User`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.User)
+	fc.Result = res
+	return ec.marshalNUser2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_user_UpdateOnboardingDetails(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_User_id(ctx, field)
+			case "firstName":
+				return ec.fieldContext_User_firstName(ctx, field)
+			case "lastName":
+				return ec.fieldContext_User_lastName(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
+			case "internal":
+				return ec.fieldContext_User_internal(ctx, field)
+			case "bot":
+				return ec.fieldContext_User_bot(ctx, field)
+			case "test":
+				return ec.fieldContext_User_test(ctx, field)
+			case "timezone":
+				return ec.fieldContext_User_timezone(ctx, field)
+			case "profilePhotoUrl":
+				return ec.fieldContext_User_profilePhotoUrl(ctx, field)
+			case "roles":
+				return ec.fieldContext_User_roles(ctx, field)
+			case "emails":
+				return ec.fieldContext_User_emails(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_User_phoneNumbers(ctx, field)
+			case "mailboxes":
+				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "hasLinkedInToken":
+				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_User_onboarding(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_User_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_User_updatedAt(ctx, field)
+			case "jobRoles":
+				return ec.fieldContext_User_jobRoles(ctx, field)
+			case "calendars":
+				return ec.fieldContext_User_calendars(ctx, field)
+			case "source":
+				return ec.fieldContext_User_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_User_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_User_appSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_user_UpdateOnboardingDetails_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_customer_user_AddJobRole(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_customer_user_AddJobRole(ctx, field)
 	if err != nil {
@@ -112148,6 +112340,68 @@ func (ec *executionContext) unmarshalInputUserInput(ctx context.Context, obj int
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputUserOnboardingDetailsInput(ctx context.Context, obj interface{}) (model.UserOnboardingDetailsInput, error) {
+	var it model.UserOnboardingDetailsInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"id", "showOnboardingPage", "onboardingInboundStepCompleted", "onboardingOutboundStepCompleted", "onboardingCrmStepCompleted", "onboardingMailstackStepCompleted"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "id":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ID = data
+		case "showOnboardingPage":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("showOnboardingPage"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ShowOnboardingPage = data
+		case "onboardingInboundStepCompleted":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("onboardingInboundStepCompleted"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OnboardingInboundStepCompleted = data
+		case "onboardingOutboundStepCompleted":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("onboardingOutboundStepCompleted"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OnboardingOutboundStepCompleted = data
+		case "onboardingCrmStepCompleted":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("onboardingCrmStepCompleted"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OnboardingCrmStepCompleted = data
+		case "onboardingMailstackStepCompleted":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("onboardingMailstackStepCompleted"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OnboardingMailstackStepCompleted = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputUserUpdateInput(ctx context.Context, obj interface{}) (model.UserUpdateInput, error) {
 	var it model.UserUpdateInput
 	asMap := map[string]interface{}{}
@@ -121550,6 +121804,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "user_DeleteInTenant":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_user_DeleteInTenant(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "user_UpdateOnboardingDetails":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_user_UpdateOnboardingDetails(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -132492,6 +132753,11 @@ func (ec *executionContext) marshalNUserOnboardingDetails2ᚖgithubᚗcomᚋopen
 		return graphql.Null
 	}
 	return ec._UserOnboardingDetails(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNUserOnboardingDetailsInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐUserOnboardingDetailsInput(ctx context.Context, v interface{}) (model.UserOnboardingDetailsInput, error) {
+	res, err := ec.unmarshalInputUserOnboardingDetailsInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNUserPage2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐUserPage(ctx context.Context, sel ast.SelectionSet, v model.UserPage) graphql.Marshaler {
