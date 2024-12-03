@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
 
@@ -16,11 +16,17 @@ const formatNumberWithComma = (num: number): string => {
 export const CheckoutCard = observer(() => {
   const store = useStore();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const handlePaymentView = async () => {
+    const campaign = searchParams.get('campaign');
+
     store.mailboxes.validateBuy({
       onSuccess: () => {
-        navigate('/settings?tab=mailboxes&view=checkout');
+        navigate(
+          '/settings?tab=mailboxes&view=checkout' +
+            (campaign ? `&campaign=${campaign}` : ''),
+        );
       },
     });
   };

@@ -33,14 +33,21 @@ export const columns: Column[] = [
     id: 'rampUpCurrent',
     minSize: 128,
     cell: (props) => <p>{props.getValue()}</p>,
-    header: () => <p className='text-sm'>Daily Email limit</p>,
+    header: () => <p className='text-sm'>Daily Email Limit</p>,
     skeleton: () => null,
   }),
+  // columnHelper.accessor('status', {
+  //   id: 'Status',
+  //   minSize: 128,
+  //   cell: (props) => <p>{props.getValue()}</p>,
+  //   header: () => <p className='text-sm'>Status</p>,
+  //   skeleton: () => null,
+  // }),
   columnHelper.accessor('scheduledEmails', {
     id: 'scheduledEmail',
     minSize: 128,
     cell: (props) => <p>{props.getValue()}</p>,
-    header: () => <p className='text-sm'>Scheduled emails</p>,
+    header: () => <p className='text-sm'>Scheduled Emails</p>,
     skeleton: () => null,
   }),
   // columnHelper.accessor('currentFlowIds', {

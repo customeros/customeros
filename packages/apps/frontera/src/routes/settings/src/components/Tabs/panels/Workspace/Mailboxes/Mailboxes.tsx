@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
 
+import { cn } from '@ui/utils/cn';
 import { useStore } from '@shared/hooks/useStore';
 import { ChevronRight } from '@ui/media/icons/ChevronRight';
 
@@ -20,14 +21,17 @@ export const Mailboxes = observer(() => {
   const store = useStore();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const campaign = searchParams.get('campaign');
 
   const hasMailboxes = store.mailboxes.value.size > 0;
 
   const goBuy = () => {
+    if (campaign) return;
     navigate('/settings?tab=mailboxes&view=buy');
   };
 
   const goToMailboxes = () => {
+    if (campaign) return;
     navigate('/settings?tab=mailboxes');
     store.mailboxes.resetBuyFlow();
   };
@@ -54,7 +58,7 @@ export const Mailboxes = observer(() => {
     };
   }, [showMailboxes]);
 
-  if (!hasMailboxes && showMailboxes) {
+  if (!campaign && !hasMailboxes && showMailboxes) {
     return <EmptyMailboxes onUpdate={goBuy} />;
   }
 
@@ -71,7 +75,10 @@ export const Mailboxes = observer(() => {
               <div className='flex items-center justify-start gap-1 mb-4'>
                 <span
                   onClick={goToMailboxes}
-                  className='text-gray-500 font-semibold cursor-pointer hover:text-gray-700 transition-colors'
+                  className={cn(
+                    'text-gray-500 font-semibold transition-colors',
+                    !campaign && 'cursor-pointer hover:text-gray-700',
+                  )}
                 >
                   Mailboxes
                 </span>

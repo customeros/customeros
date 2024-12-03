@@ -71,7 +71,7 @@ export const AddDomainsCard = observer(() => {
           />
         </CardHeader>
         <CardContent className='p-0 text-sm'>
-          Search and add your ideal outbound domains based on your brand
+          Use your brand to find your ideal domains
           <CardFooter className='w-full px-0 mb-0 py-0 mt-2 relative'>
             <Input
               size='sm'
@@ -80,6 +80,7 @@ export const AddDomainsCard = observer(() => {
               onBlur={handleInputBlur}
               onChange={handleInputChange}
               value={store.mailboxes.domain}
+              autoFocus={store.mailboxes.domain.length === 0}
               invalid={store.mailboxes.invalidDomain.length > 0}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
