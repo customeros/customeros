@@ -1,19 +1,19 @@
 import { useRef, useState } from 'react';
-import Calendar, { CalendarProps } from 'react-calendar';
+import { CalendarProps } from 'react-calendar';
 
 import { cn } from '@ui/utils/cn';
 import { DateTimeUtils } from '@utils/date';
-import { ChevronLeft } from '@ui/media/icons/ChevronLeft.tsx';
-import { ChevronRight } from '@ui/media/icons/ChevronRight.tsx';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@ui/overlay/Popover/Popover';
 
+import { DatePicker } from './DatePicker';
+
 interface DatePickerUnderlineProps extends Omit<CalendarProps, 'onChange'> {
   size?: 'sm' | 'md';
-  value: Date | null;
+  value: Date | string | null;
   onChange: (date: Date | null) => void;
 }
 
@@ -70,7 +70,6 @@ export const DatePickerUnderline = ({
           }`}</span>
         </PopoverTrigger>
         <PopoverContent
-          side='top'
           align='start'
           sticky='always'
           className='items-end z-[999]'
@@ -78,14 +77,10 @@ export const DatePickerUnderline = ({
           onOpenAutoFocus={(el) => el.preventDefault()}
         >
           <div>
-            <Calendar
+            <DatePicker
               {...rest}
-              prevLabel={<ChevronLeft />}
-              nextLabel={<ChevronRight />}
-              defaultValue={value ? new Date(value) : new Date()}
-              onChange={(date) => {
-                handleDateInputChange(date as Date);
-              }}
+              value={value ? new Date(value) : new Date()}
+              onChange={(date) => handleDateInputChange(date as Date)}
             />
           </div>
         </PopoverContent>

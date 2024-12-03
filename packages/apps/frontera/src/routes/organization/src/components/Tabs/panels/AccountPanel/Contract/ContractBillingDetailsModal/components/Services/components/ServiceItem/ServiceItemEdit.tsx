@@ -10,7 +10,7 @@ import { IconButton } from '@ui/form/IconButton/IconButton';
 import { PauseCircle } from '@ui/media/icons/PauseCircle.tsx';
 import { currencySymbol } from '@shared/util/currencyOptions';
 import { MaskedResizableInput } from '@ui/form/Input/MaskedResizableInput';
-import { DatePickerUnderline2 } from '@ui/form/DatePicker/DatePickerUnderline2';
+import { DatePickerUnderline } from '@ui/form/DatePicker/DatePickerUnderline';
 
 import { BilledTypeEditField } from './BilledTypeEditField';
 
@@ -281,7 +281,7 @@ export const ServiceItemEdit = observer(
         <div className='flex items-center'>
           <Tooltip label='Service start date'>
             <div>
-              <DatePickerUnderline2
+              <DatePickerUnderline
                 onChange={onChangeServiceStarted}
                 value={service?.tempValue?.serviceStarted}
               />

@@ -10,7 +10,7 @@ import { DotLive } from '@ui/media/icons/DotLive';
 import { Invoice, ContractStatus } from '@graphql/types';
 import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
 import { formatCurrency } from '@utils/getFormattedCurrencyNumber';
-import { DatePickerUnderline2 } from '@ui/form/DatePicker/DatePickerUnderline2.tsx';
+import { DatePickerUnderline } from '@ui/form/DatePicker/DatePickerUnderline';
 
 interface ContractStartModalProps {
   contractId: string;
@@ -99,7 +99,7 @@ export const ContractStartModal = ({
               <span className='font-medium '>{organizationName}’s </span>
               contract live starting on
               <div className='ml-1 inline-flex text-sm'>
-                <DatePickerUnderline2
+                <DatePickerUnderline
                   value={serviceStartedData as string}
                   onChange={(e) => setServiceStarted(e)}
                 />
