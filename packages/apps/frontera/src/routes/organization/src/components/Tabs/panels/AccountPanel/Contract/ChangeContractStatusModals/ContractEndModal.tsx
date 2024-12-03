@@ -8,7 +8,7 @@ import { Button } from '@ui/form/Button/Button';
 import { ContractStatus } from '@graphql/types';
 import { useStore } from '@shared/hooks/useStore';
 import { Radio, RadioGroup } from '@ui/form/Radio/Radio';
-import { DatePickerUnderline2 } from '@ui/form/DatePicker/DatePickerUnderline2.tsx';
+import { DatePickerUnderline } from '@ui/form/DatePicker/DatePickerUnderline';
 import {
   Modal,
   ModalBody,
@@ -157,7 +157,7 @@ export const ContractEndModal = observer(
                   On{' '}
                   {value === EndContract.CustomDate ? (
                     <div className='ml-1'>
-                      <DatePickerUnderline2
+                      <DatePickerUnderline
                         onChange={(e) => setEndedAt(e)}
                         value={endedAt || new Date().toString()}
                       />

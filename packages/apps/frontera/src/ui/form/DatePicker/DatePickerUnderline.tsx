@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { CalendarProps } from 'react-calendar';
 
 import { cn } from '@ui/utils/cn';
 import { DateTimeUtils } from '@utils/date';
@@ -10,9 +11,9 @@ import {
 
 import { DatePicker } from './DatePicker';
 
-interface DatePickerUnderlineProps {
+interface DatePickerUnderlineProps extends Omit<CalendarProps, 'onChange'> {
   size?: 'sm' | 'md';
-  value: Date | null;
+  value: Date | string | null;
   onChange: (date: Date | null) => void;
 }
 
@@ -20,6 +21,7 @@ export const DatePickerUnderline = ({
   size,
   value,
   onChange,
+  ...rest
 }: DatePickerUnderlineProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -76,6 +78,7 @@ export const DatePickerUnderline = ({
         >
           <div>
             <DatePicker
+              {...rest}
               value={value ? new Date(value) : new Date()}
               onChange={(date) => handleDateInputChange(date as Date)}
             />
