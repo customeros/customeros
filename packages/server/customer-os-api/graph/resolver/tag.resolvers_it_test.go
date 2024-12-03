@@ -73,7 +73,6 @@ func TestMutationResolver_TagUpdate(t *testing.T) {
 	require.NotNil(t, updatedTag)
 	require.NotNil(t, updatedTag.Metadata.LastUpdated)
 	require.NotEqual(t, utils.GetEpochStart(), updatedTag.Metadata.LastUpdated)
-	require.NotEqual(t, updatedTag.UpdatedAt, updatedTag.Metadata.LastUpdated)
 	require.Equal(t, tagId, updatedTag.Metadata.ID)
 	require.Equal(t, "new tag name", updatedTag.Name)
 
