@@ -97,7 +97,18 @@ func (s *tagService) AddTagToEntity(ctx context.Context, tx *neo4j.ManagedTransa
 	tracing.TagEntity(span, entityId)
 	span.LogFields(log.String("tagId", tagId), log.String("tagName", tagName), log.String("entityType", entityType.String()))
 
-	if tagId == "" {
+	// check tag exists by id
+	tagByIdExists := false
+	if tagId != "" {
+		exists, err := s.services.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), tagId, model.NodeLabelTag)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return "", err
+		}
+		tagByIdExists = exists
+	}
+
+	if !tagByIdExists && tagName != "" {
 		tagEntity, err := s.Save(ctx, tx, &neo4jentity.TagEntity{
 			Name:       tagName,
 			Source:     constants.SourceOpenline,
