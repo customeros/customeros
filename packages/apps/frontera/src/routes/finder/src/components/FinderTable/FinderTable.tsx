@@ -1,22 +1,17 @@
 import { useParams, useSearchParams } from 'react-router-dom';
-import {
-  useRef,
-  useState,
-  useEffect,
-  type Dispatch,
-  type SetStateAction,
-} from 'react';
+import { useRef, useEffect, type Dispatch, type SetStateAction } from 'react';
 
 import { match } from 'ts-pattern';
 import { useKeyBindings } from 'rooks';
 import { observer } from 'mobx-react-lite';
+import { ColumnSort } from '@tanstack/table-core';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
 import { useColumnSizing } from '@finder/hooks/useColumnSizing';
 import { useTableActions } from '@invoices/hooks/useTableActions';
 import { OpportunitiesTableActions } from '@finder/components/Actions/OpportunityActions';
 
 import { useStore } from '@shared/hooks/useStore';
-import { Invoice, TableViewType, ColumnViewType } from '@graphql/types';
+import { Invoice, TableViewType } from '@graphql/types';
 import { Table, SortingState, TableInstance } from '@ui/presentation/Table';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
 
@@ -44,13 +39,13 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
   const preset = searchParams?.get('preset');
   const tableViewDef = store.tableViewDefs.getById(preset ?? '1');
 
-  const contactsPreset = store.tableViewDefs.contactsPreset;
-
-  const [sorting, setSorting] = useState<SortingState>([
-    preset === contactsPreset
-      ? { id: ColumnViewType.ContactsCreatedAt, desc: true }
-      : { id: ColumnViewType.OrganizationsLastTouchpoint, desc: true },
-  ]);
+  const sortingData = tableViewDef?.getSorting();
+  const sorting: ColumnSort[] = [
+    {
+      id: sortingData?.id,
+      desc: sortingData?.desc,
+    },
+  ];
 
   const searchTerm = searchParams?.get('search');
   const { reset, targetId, isConfirming, onConfirm } = useTableActions();
@@ -70,8 +65,6 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
       typeof updaterOrValue === 'function'
         ? updaterOrValue(sorting)
         : updaterOrValue;
-
-    setSorting(updaterOrValue);
 
     tableViewDef?.setSorting(next[0]?.id, next[0]?.desc);
   };

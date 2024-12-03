@@ -9,6 +9,7 @@ import { Edit03 } from '@ui/media/icons/Edit03';
 import { Delete } from '@ui/media/icons/Delete';
 import { useStore } from '@shared/hooks/useStore';
 import { Archive } from '@ui/media/icons/Archive';
+import { User03 } from '@ui/media/icons/User03.tsx';
 import { EyeOff } from '@ui/media/icons/EyeOff.tsx';
 import { Shuffle01 } from '@ui/media/icons/Shuffle01.tsx';
 import { Certificate02 } from '@ui/media/icons/Certificate02';
@@ -29,6 +30,16 @@ export const ContactCommands = observer(() => {
   return (
     <CommandsContainer label={label}>
       <>
+        <CommandItem
+          leftAccessory={<User03 />}
+          keywords={contactKeywords.add_contact}
+          onSelect={() => {
+            store.ui.commandMenu.setType('AddContactsBulk');
+          }}
+        >
+          Add contacts
+        </CommandItem>
+
         <CommandItem
           leftAccessory={<Tag01 />}
           keywords={contactKeywords.edit_persona_tag}
@@ -202,6 +213,18 @@ export const ContactCommands = observer(() => {
 });
 
 const contactKeywords = {
+  add_contact: [
+    'add',
+    'contact',
+    'upload',
+    'import',
+    'new',
+    'create',
+    'person',
+    'individual',
+    'email',
+    'linkedin',
+  ],
   archive_contact: ['archive', 'contact', 'delete', 'remove', 'hide'],
   edit_email: ['edit', 'email', 'change', 'update', 'address', '@'],
   edit_name: ['edit', 'name', 'change', 'update', 'rename', 'contact'],

@@ -58,13 +58,8 @@ export const OrganizationTableActions = observer(
 
     const onCreateContact = () => {
       if (!focusedId) return;
-      store.ui.commandMenu.setType('AddContactViaLinkedInUrl');
-
+      store.ui.commandMenu.setType('AddContactsBulk');
       store.ui.commandMenu.setOpen(true);
-      store.ui.commandMenu.setContext({
-        entity: 'Organization',
-        ids: [focusedId],
-      });
     };
 
     const onOpenCommandK = () => {

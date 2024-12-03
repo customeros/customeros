@@ -69,7 +69,6 @@ import {
   SetOpportunityNextSteps,
   DeleteConfirmationModal,
   GetBrowserExtensionLink,
-  AddContactViaLinkedInUrl,
   OrganizationBulkCommands,
   InstallLinkedInExtension,
   RenameOrganizationProperty,
@@ -125,7 +124,6 @@ const Commands: Record<CommandMenuType, ReactElement> = {
   ChangeBulkArrEstimate: <ChangeBulkArrEstimate />,
   MergeConfirmationModal: <MergeConfirmationModal />,
   AddNewOrganization: <AddNewOrganization />,
-  AddContactViaLinkedInUrl: <AddContactViaLinkedInUrl />,
   RenameOrganizationProperty: <RenameOrganizationProperty />,
 
   // Flows

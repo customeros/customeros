@@ -90,8 +90,8 @@ export const computeFinderData = (
         }
 
         if (tableType) {
-          const columnId = sorting[0]?.id;
-          const isDesc = sorting[0]?.desc;
+          const columnId = sorting?.[0]?.id;
+          const isDesc = sorting?.[0]?.desc;
 
           arr = inPlaceSort(arr)?.[isDesc ? 'desc' : 'asc'](
             getContactSortFn(columnId, currentFlowId),

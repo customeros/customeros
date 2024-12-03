@@ -4,6 +4,7 @@ import { observer } from 'mobx-react-lite';
 
 import { cn } from '@ui/utils/cn';
 import { Spinner } from '@ui/feedback/Spinner';
+import { ColumnViewType } from '@graphql/types';
 import { Mail01 } from '@ui/media/icons/Mail01';
 import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
@@ -28,7 +29,7 @@ export const AddContactsBulk = observer(() => {
   ) => {
     e.stopPropagation();
     e.preventDefault();
-    store.ui.commandMenu.toggle('ContactEmailVerificationInfoModal');
+    store.ui.commandMenu.toggle('AddContactsBulk');
     store.ui.commandMenu.clearContext();
   };
 
@@ -52,12 +53,16 @@ export const AddContactsBulk = observer(() => {
     setIsLoading(true);
     setLoadingError('');
 
+    const contactsPreset = store.tableViewDefs.contactsPreset;
+    const tableViewDef = store.tableViewDefs.getById(contactsPreset ?? '');
+
     if (type === 'email') {
       store.contacts.createBulkByEmail({
         emails: contactsDataArr,
         options: {
           onSuccess: () => {
-            store.ui.commandMenu.toggle('ContactEmailVerificationInfoModal');
+            tableViewDef?.setSorting(ColumnViewType.ContactsUpdatedAt, true);
+            store.ui.commandMenu.toggle('AddContactsBulk');
             store.ui.commandMenu.clearContext();
           },
           onError: (err) => {
@@ -73,7 +78,8 @@ export const AddContactsBulk = observer(() => {
         linkedInUrls: contactsDataArr,
         options: {
           onSuccess: () => {
-            store.ui.commandMenu.toggle('ContactEmailVerificationInfoModal');
+            tableViewDef?.setSorting(ColumnViewType.ContactsUpdatedAt, true);
+            store.ui.commandMenu.toggle('AddContactsBulk');
             store.ui.commandMenu.clearContext();
           },
           onError: (err) => {
@@ -160,7 +166,7 @@ export const AddContactsBulk = observer(() => {
             !(showEmptyError && !data.trim().length) &&
             !(!!data.length && !!hasInvalidData.length) &&
             !loadingError &&
-            'One per line'}
+            'Add one per line'}
         </div>
 
         <div className='flex justify-between gap-3 mt-2'>

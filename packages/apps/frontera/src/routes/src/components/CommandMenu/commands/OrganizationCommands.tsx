@@ -48,10 +48,10 @@ export const OrganizationCommands = observer(() => {
           rightAccessory={<Kbd>C</Kbd>}
           keywords={organizationKeywords.add_contact}
           onSelect={() => {
-            store.ui.commandMenu.setType('AddContactViaLinkedInUrl');
+            store.ui.commandMenu.setType('AddContactsBulk');
           }}
         >
-          Add contact via LinkedIn
+          Add contacts
         </CommandItem>
 
         <CommandItem
