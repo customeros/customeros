@@ -4,15 +4,21 @@ import (
 	"context"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
-	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+	"github.com/pkg/errors"
 )
 
 type UserService interface {
+	Save(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, id *string, userFields data_fields.UserFields) (string, error)
+	// Deprecated, use Save
 	CreateUser(ctx context.Context, userEntity neo4jentity.UserEntity) (string, error)
 
 	GetById(ctx context.Context, userId string) (*neo4jentity.UserEntity, error)
@@ -50,13 +56,119 @@ func NewUserService(service *Services) UserService {
 	}
 }
 
+func (s *userService) Save(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, id *string, userFields data_fields.UserFields) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserService.Save")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "userFields", userFields)
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+
+	createFlow := false
+	userId := ""
+
+	if id == nil || *id == "" {
+		createFlow = true
+		span.LogKV("flow", "create")
+	} else {
+		span.LogKV("flow", "update")
+	}
+
+	if createFlow {
+		// generate id
+		userId, err = s.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelUser)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return "", err
+		}
+
+		// prepare missing fields
+		if userFields.CreatedAt == nil {
+			userFields.CreatedAt = utils.NowPtr()
+		} else {
+			userFields.CreatedAt = utils.TimePtr(utils.NowIfZero(*userFields.CreatedAt))
+		}
+		if utils.IfNotNilString(userFields.Source) == "" {
+			userFields.Source = utils.StringPtr(neo4jentity.DataSourceOpenline.String())
+		}
+		if utils.IfNotNilString(userFields.AppSource) == "" {
+			userFields.AppSource = utils.StringPtr(common.GetAppSourceFromContext(ctx))
+		}
+	} else {
+		userId = *id
+		// validate user exists
+		exists, err := s.services.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, tenant, userId, model.NodeLabelUser)
+		if err != nil || !exists {
+			err = errors.New("user not found")
+			tracing.TraceErr(span, err)
+			return "", err
+		}
+	}
+	tracing.TagEntity(span, userId)
+
+	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
+
+		var innerErr error
+		if createFlow {
+			innerErr = s.services.Neo4jRepositories.UserWriteRepository.CreateUserInTxNew(ctx, txWithPostCommit.Tx, tenant, userId, userFields)
+		} else {
+			innerErr = s.services.Neo4jRepositories.UserWriteRepository.UpdateUserInTx(ctx, txWithPostCommit.Tx, tenant, userId, userFields)
+		}
+		if innerErr != nil {
+			return nil, innerErr
+		}
+
+		if userFields.ExternalSystemAvailable() {
+			innerErr = s.services.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntityInTx(ctx, txWithPostCommit.Tx, tenant, userId, model.NodeLabelUser, *userFields.ExternalSystem)
+			if err != nil {
+				return nil, innerErr
+			}
+		}
+
+		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
+			if createFlow {
+				err = s.services.RabbitMQService.PublishEvent(ctx, userId, model.USER, dto.CreateUser{userFields})
+				if err != nil {
+					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateUser"))
+				}
+			} else {
+				err = s.services.RabbitMQService.PublishEvent(ctx, userId, model.USER, dto.UpdateUser{userFields})
+				if err != nil {
+					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateUser"))
+				}
+			}
+
+			return nil
+		})
+
+		return nil, nil
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+
+	if createFlow {
+		span.LogFields(log.Bool("response.userCreated", true))
+	} else {
+		span.LogFields(log.Bool("response.userUpdated", true))
+	}
+	return userId, nil
+}
+
 func (s *userService) CreateUser(ctx context.Context, userEntity neo4jentity.UserEntity) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "UserService.CreateUser")
 	defer span.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	userId, err := s.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, commonModel.NodeLabelUser)
+	userId, err := s.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelUser)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return "", err

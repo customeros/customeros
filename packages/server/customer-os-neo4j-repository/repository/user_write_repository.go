@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/constants"
@@ -23,10 +24,15 @@ type UserUpdateFields struct {
 }
 
 type UserWriteRepository interface {
+	// Deprecated: Use CreateUserInTxNew instead
 	CreateUser(ctx context.Context, input neo4jentity.UserEntity) error
+	// Deprecated: Use CreateUserInTxNew instead
 	CreateUserInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, input neo4jentity.UserEntity) error
+	CreateUserInTxNew(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, userId string, data data_fields.UserFields) error
 
+	// Deprecated: Use UpdateUserInTx instead
 	UpdateUser(ctx context.Context, tenant, userId string, data UserUpdateFields) error
+	UpdateUserInTx(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, userId string, data data_fields.UserFields) error
 
 	AddRole(ctx context.Context, userId, role string) error
 	AddRoleInTx(ctx context.Context, tx neo4j.ManagedTransaction, userId, role string) error
@@ -138,6 +144,65 @@ func (r *userWriteRepository) CreateUserInTx(c context.Context, tx neo4j.Managed
 	return nil
 }
 
+func (r *userWriteRepository) CreateUserInTxNew(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, userId string, data data_fields.UserFields) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserWriteRepository.CreateUserInTxNew")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.SetTag(tracing.SpanTagEntityId, userId)
+	tracing.LogObjectAsJson(span, "data", data)
+
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}) 
+		 MERGE (t)<-[:USER_BELONGS_TO_TENANT]-(u:User:User_%s {id:$id}) 
+		 ON CREATE SET 	u.name = $name,
+						u.firstName = $firstName,
+						u.lastName = $lastName,
+						u.source = $source,
+						u.appSource = $appSource,
+						u.createdAt = $createdAt,
+						u.updatedAt = datetime(),
+						u.internal = $internal,
+						u.test = $test,
+						u.roles = $roles,
+						u.bot = $bot,
+						u.profilePhotoUrl = $profilePhotoUrl,
+						u.timezone = $timezone`, tenant)
+	roles := []string{}
+	if data.Roles != nil {
+		roles = *data.Roles
+	}
+	params := map[string]any{
+		"tenant":          tenant,
+		"id":              userId,
+		"createdAt":       utils.IfNotNilTimeWithDefault(data.CreatedAt, utils.Now()),
+		"name":            utils.IfNotNilString(data.Name),
+		"firstName":       utils.IfNotNilString(data.FirstName),
+		"lastName":        utils.IfNotNilString(data.LastName),
+		"internal":        utils.IfNotNilBool(data.Internal),
+		"test":            utils.IfNotNilBool(data.Test),
+		"bot":             utils.IfNotNilBool(data.Bot),
+		"roles":           roles,
+		"profilePhotoUrl": utils.IfNotNilString(data.ProfilePhotoUrl),
+		"timezone":        utils.IfNotNilString(data.Timezone),
+		"source":          utils.IfNotNilString(data.Source),
+		"appSource":       utils.IfNotNilString(data.AppSource),
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+
+	return err
+}
+
 func (r *userWriteRepository) UpdateUser(c context.Context, tenant, userId string, data UserUpdateFields) error {
 	span, ctx := opentracing.StartSpanFromContext(c, "UserWriteRepository.UpdateUser")
 	defer span.Finish()
@@ -177,6 +242,92 @@ func (r *userWriteRepository) UpdateUser(c context.Context, tenant, userId strin
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
+	return err
+}
+
+func (r *userWriteRepository) UpdateUserInTx(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, userId string, data data_fields.UserFields) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserWriteRepository.UpdateUser")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.SetTag(tracing.SpanTagEntityId, userId)
+	tracing.LogObjectAsJson(span, "data", data)
+
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$id}) SET u.updatedAt=datetime()`
+	params := map[string]any{
+		"id":     userId,
+		"tenant": tenant,
+	}
+
+	if data.Name != nil {
+		params["name"] = *data.Name
+		cypher += ", u.name=$name"
+	}
+	if data.FirstName != nil {
+		params["firstName"] = *data.FirstName
+		cypher += ", u.firstName=$firstName"
+	}
+	if data.LastName != nil {
+		params["lastName"] = *data.LastName
+		cypher += ", u.lastName=$lastName"
+	}
+	if data.Timezone != nil {
+		params["timezone"] = *data.Timezone
+		cypher += ", u.timezone=$timezone"
+	}
+	if data.ProfilePhotoUrl != nil {
+		params["profilePhotoUrl"] = *data.ProfilePhotoUrl
+		cypher += ", u.profilePhotoUrl=$profilePhotoUrl"
+	}
+	if data.Bot != nil {
+		params["bot"] = *data.Bot
+		cypher += ", u.bot=$bot"
+	}
+	if data.Internal != nil {
+		params["internal"] = *data.Internal
+		cypher += ", u.internal=$internal"
+	}
+	if data.Test != nil {
+		params["test"] = *data.Test
+		cypher += ", u.test=$test"
+	}
+	if data.ShowOnboardingPage != nil {
+		params["showOnboardingPage"] = *data.ShowOnboardingPage
+		cypher += ", u.showOnboardingPage=$showOnboardingPage"
+	}
+	if data.OnboardingInboundStepCompleted != nil {
+		params["onboardingInboundStepCompleted"] = *data.OnboardingInboundStepCompleted
+		cypher += ", u.onboardingInboundStepCompleted=$onboardingInboundStepCompleted"
+	}
+	if data.OnboardingOutboundStepCompleted != nil {
+		params["onboardingOutboundStepCompleted"] = *data.OnboardingOutboundStepCompleted
+		cypher += ", u.onboardingOutboundStepCompleted=$onboardingOutboundStepCompleted"
+	}
+	if data.OnboardingCrmStepCompleted != nil {
+		params["onboardingCrmStepCompleted"] = *data.OnboardingCrmStepCompleted
+		cypher += ", u.onboardingCrmStepCompleted=$onboardingCrmStepCompleted"
+	}
+	if data.OnboardingMailstackStepCompleted != nil {
+		params["onboardingMailstackStepCompleted"] = *data.OnboardingMailstackStepCompleted
+		cypher += ", u.onboardingMailstackStepCompleted=$onboardingMailstackStepCompleted"
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareWriteSession(ctx)
+	defer session.Close(ctx)
+
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+
 	return err
 }
 
