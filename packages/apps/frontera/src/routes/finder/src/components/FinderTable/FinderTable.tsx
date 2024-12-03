@@ -11,7 +11,7 @@ import { useTableActions } from '@invoices/hooks/useTableActions';
 import { OpportunitiesTableActions } from '@finder/components/Actions/OpportunityActions';
 
 import { useStore } from '@shared/hooks/useStore';
-import { Invoice, TableViewType } from '@graphql/types';
+import { Invoice, TableViewType, ColumnViewType } from '@graphql/types';
 import { Table, SortingState, TableInstance } from '@ui/presentation/Table';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
 
@@ -38,14 +38,22 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
   const tableRef = useRef<TableInstance<object> | null>(null);
   const preset = searchParams?.get('preset');
   const tableViewDef = store.tableViewDefs.getById(preset ?? '1');
+  const contactsPreset = store.tableViewDefs.contactsPreset;
 
   const sortingData = tableViewDef?.getSorting();
-  const sorting: ColumnSort[] = [
-    {
-      id: sortingData?.id,
-      desc: sortingData?.desc,
-    },
-  ];
+  const defaultSorting =
+    preset === contactsPreset
+      ? [{ id: ColumnViewType.ContactsCreatedAt, desc: true }]
+      : [{ id: ColumnViewType.OrganizationsLastTouchpoint, desc: true }];
+
+  const sorting: ColumnSort[] = !sortingData?.id
+    ? defaultSorting
+    : [
+        {
+          id: sortingData.id,
+          desc: sortingData.desc,
+        },
+      ];
 
   const searchTerm = searchParams?.get('search');
   const { reset, targetId, isConfirming, onConfirm } = useTableActions();
