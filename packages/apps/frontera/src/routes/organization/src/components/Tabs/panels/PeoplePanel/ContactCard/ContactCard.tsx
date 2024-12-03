@@ -184,7 +184,6 @@ export const ContactCard = observer(
         {
           onSucces: (id) => {
             contactStore?.value.tags?.push({
-              id,
               name: value,
               metadata: {
                 id,
@@ -194,12 +193,7 @@ export const ContactCard = observer(
                 created: new Date().toISOString(),
                 lastUpdated: new Date().toISOString(),
               },
-              appSource: 'organization',
               entityType: EntityType.Contact,
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-
-              source: DataSource.Openline,
             });
             contactStore?.commit();
           },
