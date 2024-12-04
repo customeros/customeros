@@ -92,7 +92,13 @@ export class Syncable<T extends object> {
 
   public async load(data: T) {
     // safari does not support requestIdleCallback yet
-    const rIC = requestIdleCallback ?? setTimeout;
+    let rIC;
+
+    if ('requestIdleCallback' in window) {
+      rIC = requestIdleCallback;
+    } else {
+      rIC = setTimeout;
+    }
 
     rIC(() => {
       runInAction(() => {
