@@ -11,6 +11,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
+	tracingLog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"github.com/stripe/stripe-go/v81"
 	"github.com/stripe/stripe-go/v81/paymentintent"
@@ -43,9 +44,9 @@ func (s *mailstackService) GetPaymentIntent(ctx context.Context, domains []strin
 	span, ctx := opentracing.StartSpanFromContext(ctx, "MailstackService.GetPaymentIntent")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-
 	span.LogKV("request.domains", domains)
 	span.LogKV("request.usernames", usernames)
+	span.LogFields(tracingLog.Int64("request.amount", amount))
 
 	tenant := common.GetTenantFromContext(ctx)
 	email := common.GetUserEmailFromContext(ctx)
@@ -74,8 +75,8 @@ func (s *mailstackService) GetPaymentIntent(ctx context.Context, domains []strin
 	stipePaymentDescription := fmt.Sprintf("Mailstack purchase: %d domains (%s) with usernames (%s)", len(domains), strings.Join(domains, ", "), strings.Join(usernames, ", "))
 
 	params := &stripe.PaymentIntentParams{
-		Amount:       stripe.Int64(amount),                      // Amount in cents (e.g., $20.00)
-		Currency:     stripe.String(string(stripe.CurrencyUSD)), // Currency (e.g., USD)
+		Amount:       stripe.Int64(amount), // Amount in cents (e.g., 2000 for $20.00)
+		Currency:     stripe.String(string(stripe.CurrencyUSD)),
 		Description:  stripe.String(stipePaymentDescription),
 		ReceiptEmail: stripe.String(email),
 		AutomaticPaymentMethods: &stripe.PaymentIntentAutomaticPaymentMethodsParams{
