@@ -66,7 +66,7 @@ type Repositories struct {
 	TenantWebhookRepository                     TenantWebhookRepository
 	TrackingAllowedOriginRepository             TrackingAllowedOriginRepository
 	TrackingRepository                          TrackingRepository
-	UserEmailImportStateRepository              UserEmailImportStateRepository
+	UserEmailImportPageTokenRepository          UserEmailImportStateRepository
 	UserWorkingScheduleRepository               UserWorkingScheduleRepository
 	WorkflowRepository                          WorkflowRepository
 }
@@ -132,7 +132,7 @@ func InitRepositories(db *gorm.DB) *Repositories {
 		TenantWebhookRepository:                     NewTenantWebhookRepo(db),
 		TrackingAllowedOriginRepository:             NewTrackingAllowedOriginRepository(db),
 		TrackingRepository:                          NewTrackingRepository(db),
-		UserEmailImportStateRepository:              NewUserEmailImportStateRepository(db),
+		UserEmailImportPageTokenRepository:          NewUserEmailImportStateRepository(db),
 		UserWorkingScheduleRepository:               NewUserWorkingScheduleRepository(db),
 		WorkflowRepository:                          NewWorkflowRepository(db),
 	}
