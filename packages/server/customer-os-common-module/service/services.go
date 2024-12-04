@@ -69,8 +69,6 @@ type Services struct {
 	NamecheapService NamecheapService
 
 	SyncService SyncService
-
-	ActionMeetingSummaryService ActionMeetingSummaryService
 }
 
 func InitServices(globalConfig *config.GlobalConfig, db *gorm.DB, driver *neo4j.DriverWithContext, neo4jDatabase string, grpcClients *grpc_client.Clients, log logger.Logger) *Services {
@@ -131,9 +129,6 @@ func InitServices(globalConfig *config.GlobalConfig, db *gorm.DB, driver *neo4j.
 	services.MailstackService = NewMailstackService(globalConfig, services)
 	services.NamecheapService = NewNamecheapService(globalConfig, services)
 	services.CloudflareService = NewCloudflareService(log, services, globalConfig)
-
-	// Flow Actions
-	services.ActionMeetingSummaryService = NewActionMeetingSummaryService(services)
 
 	// TODO remove, and refactor
 	services.SyncService = NewSyncService(services)
