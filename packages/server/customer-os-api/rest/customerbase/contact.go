@@ -9,6 +9,7 @@ import (
 
 	"github.com/customeros/mailsherpa/mailvalidate"
 	"github.com/gin-gonic/gin"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -33,9 +34,9 @@ import (
 // @Failure 500 {object} rest.BaseResponse "Internal server error"
 // @Router /customerbase/v1/contacts [post]
 // @Security ApiKeyAuth
-func CreateContact(services *service.Services) gin.HandlerFunc {
+func CreateContact(s *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "CreateContact", c.Request.Header)
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "Customerbase.CreateContact", c.Request.Header)
 		defer span.Finish()
 		tracing.TagComponentRest(span)
 
@@ -44,31 +45,27 @@ func CreateContact(services *service.Services) gin.HandlerFunc {
 			return
 		}
 
-		httpContext := rest.HTTPContext{
-			GinContext:     c,
-			ServiceContext: &ctx,
-			Span:           span,
-			Services:       services,
-			Tenant:         tenant,
-		}
-
-		handleJSONRequest(httpContext)
+		handleJSONRequest(c, s)
 	}
 }
 
-func handleJSONRequest(ctx rest.HTTPContext) {
-	// Try single contact
+func handleJSONRequest(c *gin.Context, s *service.Services) {
+	_, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "Customerbase.handleJSONRequest", c.Request.Header)
+	defer span.Finish()
+	tracing.TagComponentRest(span)
+
 	var contact ContactRecord
-	if err := ctx.GinContext.BindJSON(&contact); err == nil && (contact.Email != "" || contact.LinkedInURL != "") {
+	if err := c.BindJSON(&contact); err == nil && (contact.Email != "" || contact.LinkedInURL != "") {
 		err, errValue := validateContact(&contact)
 		if err != nil {
 			errMessage := fmt.Sprintf("%s | %s", errValue, err)
-			rest.SendError(ctx.GinContext, ctx.Span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage(errMessage))
+			tracing.TraceErr(span, err)
+			rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage(errMessage))
 			return
 
 		}
-		contact.ContactId = processContact(ctx, contact)
-		ctx.GinContext.JSON(http.StatusOK, SingleContactResponse{
+		contact.ContactId = processContact(c, s, contact)
+		c.JSON(http.StatusOK, SingleContactResponse{
 			BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
 			Contact:      contact,
 		})
@@ -105,25 +102,33 @@ func validateContact(record *ContactRecord) (error, string) {
 	return nil, errValue
 }
 
-func processContact(ctx rest.HTTPContext, record ContactRecord) string {
-	emailEntity, contactId := findExistingContactByEmail(ctx, record.Email)
+func processContact(c *gin.Context, s *service.Services, record ContactRecord) string {
+	span, _ := tracing.StartTracerSpan(c.Request.Context(), "Customerbase.processContact")
+	defer span.Finish()
+	tracing.TagComponentRest(span)
+
+	emailEntity, contactId := findExistingContactByEmail(c, s, record.Email)
 	if emailEntity == nil && contactId == "" {
-		contactId = createNewContactByLinkedin(ctx, record.LinkedInURL)
+		contactId = createNewContactByLinkedin(c, s, record.LinkedInURL)
 	}
 
 	if emailEntity == nil && record.Email != "" {
-		associateEmail(ctx, record.Email, contactId)
+		associateEmail(c, s, record.Email, contactId)
 	}
 	return contactId
 }
 
-func findExistingContactByEmail(ctx rest.HTTPContext, email string) (*neo4jentity.EmailEntity, string) {
+func findExistingContactByEmail(c *gin.Context, s *service.Services, email string) (*neo4jentity.EmailEntity, string) {
+	span, ctx := tracing.StartTracerSpan(c.Request.Context(), "Customerbase.findExistingContactByEmail")
+	defer span.Finish()
+	tracing.TagComponentRest(span)
+
 	if email == "" {
 		return nil, ""
 	}
-	emailEntity, err := ctx.Services.EmailService.GetByEmailAddress(*ctx.ServiceContext, email)
+	emailEntity, err := s.EmailService.GetByEmailAddress(ctx, email)
 	if err != nil {
-		ctx.Span.LogFields(log.String("result", "Failed to get email entity"))
+		span.LogFields(log.String("result", "Failed to get email entity"))
 		return nil, ""
 	}
 
@@ -131,9 +136,9 @@ func findExistingContactByEmail(ctx rest.HTTPContext, email string) (*neo4jentit
 		return nil, ""
 	}
 
-	contacts, err := ctx.Services.ContactService.GetContactsForEmails(*ctx.ServiceContext, []string{emailEntity.Id})
+	contacts, err := s.ContactService.GetContactsForEmails(ctx, []string{emailEntity.Id})
 	if err != nil {
-		ctx.Span.LogFields(log.String("result", "Failed to get contacts for email"))
+		span.LogFields(log.String("result", "Failed to get contacts for email"))
 		return nil, ""
 	}
 
@@ -144,17 +149,25 @@ func findExistingContactByEmail(ctx rest.HTTPContext, email string) (*neo4jentit
 	return emailEntity, ""
 }
 
-func createNewContactByLinkedin(ctx rest.HTTPContext, linkedInURL string) string {
-	contactId, err := ctx.Services.CommonServices.ContactService.CreateContactByLinkedIn(*ctx.ServiceContext, nil, linkedInURL)
+func createNewContactByLinkedin(c *gin.Context, s *service.Services, linkedInURL string) string {
+	span, ctx := tracing.StartTracerSpan(c.Request.Context(), "Customerbase.createNewContactByLinkedin")
+	defer span.Finish()
+	tracing.TagComponentRest(span)
+
+	contactId, err := s.CommonServices.ContactService.CreateContactByLinkedIn(ctx, nil, linkedInURL)
 	if err != nil {
-		tracing.TraceErr(ctx.Span, errors.Wrap(err, "failed to save contact"))
+		tracing.TraceErr(span, errors.Wrap(err, "failed to save contact"))
 		return ""
 	}
 	return contactId
 }
 
-func associateEmail(ctx rest.HTTPContext, email, contactId string) {
-	_, err := ctx.Services.CommonServices.EmailService.Merge(*ctx.ServiceContext, nil, ctx.Tenant,
+func associateEmail(c *gin.Context, s *service.Services, email, contactId string) {
+	span, ctx := tracing.StartTracerSpan(c.Request.Context(), "Customerbase.associateEmail")
+	defer span.Finish()
+	tracing.TagComponentRest(span)
+
+	_, err := s.CommonServices.EmailService.Merge(ctx, nil, common.GetTenantFromContext(ctx),
 		commonservice.EmailFields{
 			Email:     email,
 			Source:    neo4jentity.DataSourceOpenline,
@@ -164,8 +177,8 @@ func associateEmail(ctx rest.HTTPContext, email, contactId string) {
 			Id:   contactId,
 		})
 	if err != nil {
-		tracing.TraceErr(ctx.Span, err)
-		ctx.Span.LogFields(log.String("result", "Failed to upsert email"))
+		tracing.TraceErr(span, err)
+		span.LogFields(log.String("result", "Failed to upsert email"))
 	}
 }
 
