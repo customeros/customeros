@@ -24,10 +24,11 @@ export class CustomersView {
       if (!preset) return '';
 
       const viewDef = this.store.root.tableViewDefs.getById(preset);
+      const columns = JSON.stringify(viewDef?.value.columns);
 
       return `${viewDef?.value.filters ?? ''}-${
         viewDef?.value.defaultFilters ?? ''
-      }-${viewDef?.value.sorting}`;
+      }-${viewDef?.value.sorting}-${columns}`;
     }, this.update);
   }
 
