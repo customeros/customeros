@@ -45,6 +45,8 @@ func Handle_MailstackProvisionBuyRequest(ctx context.Context, services *service.
 		return err
 	}
 
+	//TODO go routine
+
 	for _, domain := range domains {
 		// step 1 - purchase domain in namecheap
 		if domain.Status == entity.MailstackBuyRequestDomainStatusPendingProvisioning {
@@ -138,7 +140,7 @@ func Handle_MailstackProvisionMailbox(ctx context.Context, services *service.Ser
 		return err
 	}
 
-	err = services.OpenSrsService.SetupMailbox(ctx, mailbox.Tenant, mailbox.Domain, mailbox.MailboxUsername, mailbox.MailboxPassword, strings.Split(mailbox.ForwardingTo, ","), mailbox.WebmailEnabled)
+	err = services.OpenSrsService.SetupMailbox(ctx, mailbox.Tenant, mailbox.MailboxUsername, mailbox.MailboxPassword, strings.Split(mailbox.ForwardingTo, ","), mailbox.WebmailEnabled)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
