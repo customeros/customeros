@@ -174,7 +174,9 @@ func RotateWebhook(services *service.Services, baseURL, flowsPath string) gin.Ha
 		}
 
 		// Lookup integration
-		integration, err := services.WebhookService.GetIntegrationFromWebhookPath(ctx, tenant, strings.TrimSuffix(c.Request.URL.Path, "/rotate"))
+		webhookPath := strings.TrimSuffix(c.Request.URL.Path, "/rotate")
+		webhookPath = strings.TrimPrefix(webhookPath, flowsPath)
+		integration, err := services.WebhookService.GetIntegrationFromWebhookPath(ctx, tenant, webhookPath)
 		if err != nil {
 			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer.WithMessage("Unable to identify webhook"))
 			return

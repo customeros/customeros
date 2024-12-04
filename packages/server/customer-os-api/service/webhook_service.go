@@ -64,10 +64,10 @@ func (w *webhookService) ValidateTenantId(ctx context.Context, tenant, tenantId 
 func (w *webhookService) GetIntegrationFromWebhookPath(ctx context.Context, tenant, webhookPath string) (enum.ExternalSystemId, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebhookService.GetIntegrationFromWebhookPath")
 	defer span.Finish()
-	span.LogFields(log.String("tenant", tenant))
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("webhookPath", webhookPath))
 
-	path := strings.TrimPrefix(webhookPath, "/")
+	path := strings.Trim(webhookPath, "/")
 	webhook, err := w.services.Repositories.PostgresRepositories.FlowWebhooksRepository.FindWebhookByPath(ctx, tenant, path)
 	if err != nil {
 		err = fmt.Errorf("Unable to lookup webhook path: %v", err)

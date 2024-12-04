@@ -47,7 +47,7 @@ func (r *flowWebhooksRepository) FindWebhookByPath(ctx context.Context, tenantNa
 
 	var webhook entity.FlowWebhooks
 	webhookPath = strings.TrimPrefix(webhookPath, "/")
-	err := r.gormDb.
+	err := r.gormDb.Model(&entity.FlowWebhooks{}).
 		Where("tenant_name = ? AND webhook_path = ?", tenantName, webhookPath).
 		First(&webhook).Error
 
