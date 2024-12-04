@@ -23,6 +23,14 @@ export function sourcemapExclude(opts?: SourcemapExclude): Plugin {
   };
 }
 
+const allowedSourcemapPackages = [
+  'mobx',
+  'mobx-react-lite',
+  'lodash',
+  'phoenix',
+  'react',
+];
+
 // https://vitejs.dev/config/
 export default defineConfig({
   // uncommenting the build underneath to produce sourcmaps will cause the build process to fail due to a bug in vite
@@ -40,7 +48,14 @@ export default defineConfig({
         sourcemapIgnoreList: (relativeSourcePath) => {
           const normalizedPath = path.normalize(relativeSourcePath);
 
-          return normalizedPath.includes('node_modules');
+          // Check if the path is in node_modules but exclude packages in the allowed list
+          if (normalizedPath.includes('node_modules')) {
+            return !allowedSourcemapPackages.some((pkg) =>
+              normalizedPath.includes(pkg),
+            );
+          }
+
+          return false; // Do not ignore other paths
         },
       },
       onwarn(warning, defaultHandler) {
