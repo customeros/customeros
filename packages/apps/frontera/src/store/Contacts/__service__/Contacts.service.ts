@@ -398,13 +398,13 @@ class ContactService {
       .with(['emails', 0, ...P.array()], () => {
         if (type === 'update') {
           const findIndex = store.value.emails.findIndex(
-            (email) => email === value,
+            (email) => email.email === value,
           );
 
           this.updateContactEmail({
             contactId: contactId!,
             input: {
-              email: value.email,
+              email: value,
               primary: store.value.emails[findIndex].primary || false,
             },
             previousEmail: oldValue as string,
