@@ -29,7 +29,7 @@ import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	postgresrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
-	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	pkgerrors "github.com/pkg/errors"
 )
@@ -387,6 +387,18 @@ func (r *mutationResolver) ContactCreateBulkByLinkedIn(ctx context.Context, link
 		return uniqueLinkedInUrls, err
 	}
 
+	// validate flow id
+	if utils.IfNotNilString(flowID) != "" {
+		flowEntity, err := r.Services.CommonServices.FlowService.FlowGetById(ctx, utils.IfNotNilString(flowID))
+		if err != nil || flowEntity == nil {
+			if err != nil {
+				tracing.TraceErr(span, err)
+			}
+			graphql.AddErrorf(ctx, "Invalid flow id")
+			return uniqueLinkedInUrls, nil
+		}
+	}
+
 	maxWorkers := 10
 	var wg sync.WaitGroup
 	inputCh := make(chan string)
@@ -400,6 +412,11 @@ func (r *mutationResolver) ContactCreateBulkByLinkedIn(ctx context.Context, link
 			if contactId == "" && err != nil {
 				// Only collect items that completely failed (empty result with error).
 				failedCh <- item
+			} else if utils.IfNotNilString(flowID) != "" {
+				_, err = r.Services.CommonServices.FlowService.FlowParticipantAdd(ctx, utils.IfNotNilString(flowID), contactId, commonmodel.CONTACT)
+				if err != nil {
+					tracing.TraceErr(span, err)
+				}
 			}
 		}
 	}
@@ -452,6 +469,18 @@ func (r *mutationResolver) ContactCreateBulkByEmail(ctx context.Context, emails 
 		return uniqueEmails, err
 	}
 
+	// validate flow id
+	if utils.IfNotNilString(flowID) != "" {
+		flowEntity, err := r.Services.CommonServices.FlowService.FlowGetById(ctx, utils.IfNotNilString(flowID))
+		if err != nil || flowEntity == nil {
+			if err != nil {
+				tracing.TraceErr(span, err)
+			}
+			graphql.AddErrorf(ctx, "Invalid flow id")
+			return uniqueEmails, nil
+		}
+	}
+
 	maxWorkers := 10
 	var wg sync.WaitGroup
 	inputCh := make(chan string)
@@ -465,6 +494,11 @@ func (r *mutationResolver) ContactCreateBulkByEmail(ctx context.Context, emails 
 			if contactId == "" && err != nil {
 				// Only collect items that completely failed (empty result with error).
 				failedCh <- item
+			} else if utils.IfNotNilString(flowID) != "" {
+				_, err = r.Services.CommonServices.FlowService.FlowParticipantAdd(ctx, utils.IfNotNilString(flowID), contactId, commonmodel.CONTACT)
+				if err != nil {
+					tracing.TraceErr(span, err)
+				}
 			}
 		}
 	}
