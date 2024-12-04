@@ -97,7 +97,8 @@ export class Syncable<T extends object> {
     if ('requestIdleCallback' in window) {
       rIC = requestIdleCallback;
     } else {
-      rIC = (cb) => setTimeout(cb, 1);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      rIC = (cb: any) => setTimeout(cb, 1);
     }
 
     rIC(() => {
