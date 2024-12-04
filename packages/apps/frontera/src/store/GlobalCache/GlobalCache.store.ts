@@ -1,20 +1,24 @@
-import { gql } from 'graphql-request';
 import { RootStore } from '@store/root';
-import { makeAutoObservable } from 'mobx';
 import { Transport } from '@store/transport';
+import { runInAction, makeAutoObservable } from 'mobx';
 
 import { GlobalCache } from '@graphql/types';
 
 import mock from './mock.json';
+import { GlobalCacheQuery } from './__service__/getGlobalCache.generated';
+import { GlobalCacheService } from './__service__/GlobalCache.service.ts';
+import { UserUpdateOnboardingDetailsMutationVariables } from './__service__/updateUserOnboardingDetails.generated';
 
 export class GlobalCacheStore {
-  value: GlobalCache | null = null;
+  value: GlobalCacheQuery['global_Cache'] | null = null;
   isLoading = false;
   isBootstrapped = false;
   error: string | null = null;
+  private service: GlobalCacheService;
 
   constructor(public root: RootStore, public transport: Transport) {
     makeAutoObservable(this);
+    this.service = GlobalCacheService.getInstance(transport);
   }
 
   async bootstrap() {
@@ -34,10 +38,7 @@ export class GlobalCacheStore {
     try {
       this.isLoading = true;
 
-      const response =
-        await this.transport.graphql.request<GLOBAL_CACHE_QUERY_RESULT>(
-          GLOBAL_CACHE_QUERY,
-        );
+      const response = await this.service.getGlobalCache();
 
       this.value = response.global_Cache;
       this.isBootstrapped = true;
@@ -47,45 +48,57 @@ export class GlobalCacheStore {
       this.isLoading = false;
     }
   }
-}
 
-type GLOBAL_CACHE_QUERY_RESULT = { global_Cache: GlobalCache };
-const GLOBAL_CACHE_QUERY = gql`
-  query global_Cache {
-    global_Cache {
-      cdnLogoUrl
-      user {
-        id
-        emails {
-          email
-          rawEmail
-          primary
-        }
-        firstName
-        lastName
-      }
-      inactiveEmailTokens {
-        email
-        provider
-      }
-      activeEmailTokens {
-        email
-        provider
-      }
-      isOwner
-      gCliCache {
-        id
-        type
-        display
-        data {
-          key
-          value
-          display
-        }
-      }
-      minARRForecastValue
-      maxARRForecastValue
-      contractsExist
+  async updateOnboardingDetails(
+    payload: Omit<
+      Partial<UserUpdateOnboardingDetailsMutationVariables['input']>,
+      'id'
+    >,
+    options?: { onSuccess?: () => void },
+  ) {
+    if (this.root.demoMode) return;
+
+    if (this.value?.user?.onboarding) {
+      const onboarding = this.value.user.onboarding;
+
+      this.value.user.onboarding = {
+        showOnboardingPage:
+          payload?.showOnboardingPage ?? onboarding.showOnboardingPage,
+        onboardingInboundStepCompleted:
+          payload?.onboardingInboundStepCompleted ??
+          onboarding.onboardingInboundStepCompleted,
+        onboardingOutboundStepCompleted:
+          payload?.onboardingOutboundStepCompleted ??
+          onboarding.onboardingOutboundStepCompleted,
+        onboardingCrmStepCompleted:
+          payload?.onboardingCrmStepCompleted ??
+          onboarding.onboardingCrmStepCompleted,
+        onboardingMailstackStepCompleted:
+          payload?.onboardingMailstackStepCompleted ??
+          onboarding.onboardingMailstackStepCompleted,
+      };
+    }
+
+    if (!this.value?.user || !this.value.user.id) {
+      this.root.ui.toastError('User not found', 'user-not-found');
+
+      return;
+    }
+
+    try {
+      await this.service.updateOnboardingDetails({
+        input: {
+          ...this.value.user.onboarding,
+          ...payload,
+          id: this.value.user.id,
+        },
+      });
+
+      runInAction(() => {
+        options?.onSuccess?.();
+      });
+    } catch (error) {
+      this.error = (error as Error)?.message;
     }
   }
-`;
+}

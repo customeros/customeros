@@ -9,6 +9,7 @@ import { SettingsRoute } from './settings/route';
 import { ProspectsRoute } from './prospects/route';
 import { NotFound } from './src/components/NotFound';
 import { CustomerMapRoute } from './customer-map/route';
+import { OnboardingRoute } from './onboarding/route.tsx';
 import { OrganizationRoute } from './organization/route';
 import { FlowEditorRoute } from './flow-editor/route.tsx';
 
@@ -28,6 +29,7 @@ export const RootRoute: RouteObject = {
     CustomerMapRoute,
     ProspectsRoute,
     FlowEditorRoute,
+    OnboardingRoute,
     NotFoundRoute,
   ],
   errorElement: <Error />,
