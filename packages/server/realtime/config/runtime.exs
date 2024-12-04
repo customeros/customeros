@@ -111,6 +111,3 @@ if config_env() == :prod do
   #
   # See https://hexdocs.pm/swoosh/Swoosh.html#module-installation for details.
 end
-
-config :realtime, Realtime.EventStoreClient,
-  connection_string: System.get_env("EVENT_STORE_CONNECTION_STRING")

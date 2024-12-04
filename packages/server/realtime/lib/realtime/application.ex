@@ -27,8 +27,6 @@ defmodule Realtime.Application do
       if env != :test do
         children ++
           [
-            Realtime.EventStoreClient,
-            Realtime.OrganizationEventSubscriber,
             Realtime.RabbitMQConsumer
           ]
       else
