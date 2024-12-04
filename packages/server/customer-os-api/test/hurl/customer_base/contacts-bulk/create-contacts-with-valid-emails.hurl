@@ -16,7 +16,6 @@ X-CUSTOMER-OS-API-KEY: {{api_key}}
 
 HTTP/2 201
 [Asserts]
-body == ""
 jsonpath "$.status" exists
 jsonpath "$.status" == "success"
 jsonpath "$.requestId" exists

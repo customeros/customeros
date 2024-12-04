@@ -23,7 +23,7 @@ do
 
     # Generate a new UUID for this specific test
     NEW_UUID=$(uuidgen)
-    RANDOM_STRING=$(cat /dev/urandom | LC_ALL=C tr -dc 'a-z' | fold -w 10 | head -n 1)
+    RANDOM_STRING=$(openssl rand -base64 12 | tr -dc 'a-z' | fold -w 10 | head -n 1)
 
     # Get the test name from the file
     test_name=""

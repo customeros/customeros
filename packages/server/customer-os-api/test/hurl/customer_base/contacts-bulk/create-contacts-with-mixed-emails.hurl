@@ -10,7 +10,7 @@ X-CUSTOMER-OS-API-KEY: {{api_key}}
         "email": "hurl-{{random_str}}b@gmail.com"
     },
     {
-        "email": "hurl-{{random_str}}b@gmail.com"
+        "email": "hurl-{{random_str}}c@gmail.com"
     },
     {
         "email": "test@example.com"
@@ -26,9 +26,8 @@ X-CUSTOMER-OS-API-KEY: {{api_key}}
     }
 ]
 
-HTTP/2 400
+HTTP/2 201
 [Asserts]
-body == ""
 jsonpath "$.status" exists
 jsonpath "$.status" == "partial success"
 jsonpath "$.requestId" exists
