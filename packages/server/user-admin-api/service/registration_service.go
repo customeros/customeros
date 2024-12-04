@@ -93,7 +93,7 @@ func (s *registrationService) CreateOrganizationAndContact(ctx context.Context, 
 				return nil, nil, err
 			}
 
-			err = s.services.CommonServices.ContactService.LinkContactWithOrganization(ctx, contactId, organizationId, "", "",
+			err = s.services.CommonServices.ContactService.LinkContactWithOrganization(ctx, nil, contactId, organizationId, "", "",
 				neo4jentity.DataSourceOpenline.String(), false, nil, nil)
 			if err != nil {
 				tracing.TraceErr(span, err)

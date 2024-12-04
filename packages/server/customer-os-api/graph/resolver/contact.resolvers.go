@@ -337,7 +337,7 @@ func (r *mutationResolver) ContactCreateForOrganization(ctx context.Context, inp
 
 	// Link contact to organization
 	if contactId != "" {
-		err = r.Services.CommonServices.ContactService.LinkContactWithOrganization(ctx, contactId, organizationID, "", "",
+		err = r.Services.CommonServices.ContactService.LinkContactWithOrganization(ctx, nil, contactId, organizationID, "", "",
 			neo4jentity.DataSourceOpenline.String(), false, nil, nil)
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -632,7 +632,7 @@ func (r *mutationResolver) ContactAddOrganizationByID(ctx context.Context, input
 	span.LogFields(log.String("request.contactID", input.ContactID), log.String("request.organizationID", input.OrganizationID))
 	tracing.LogObjectAsJson(span, "request.input", input)
 
-	err := r.Services.CommonServices.ContactService.LinkContactWithOrganization(ctx, input.ContactID, input.OrganizationID, "", "",
+	err := r.Services.CommonServices.ContactService.LinkContactWithOrganization(ctx, nil, input.ContactID, input.OrganizationID, "", "",
 		neo4jentity.DataSourceOpenline.String(), false, nil, nil)
 	if err != nil {
 		tracing.TraceErr(span, err)

@@ -28,7 +28,7 @@ type JobRoleWriteRepository interface {
 	CreateJobRole(ctx context.Context, tenant, jobRoleId string, data JobRoleFields) error
 	CreateJobRoleInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string, input entity.JobRoleEntity) (*dbtype.Node, error)
 	LinkWithUser(ctx context.Context, tenant, userId, jobRoleId string) error
-	LinkContactWithOrganization(ctx context.Context, tenant, contactId, organizationId string, data JobRoleFields) error
+	LinkContactWithOrganization(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, contactId, organizationId string, data JobRoleFields) error
 
 	DeleteJobRoleInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId, roleId string) error
 	SetOtherJobRolesForContactNonPrimaryInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId, skipRoleId string) error
@@ -111,7 +111,7 @@ func (r *jobRoleWriteRepository) LinkWithUser(ctx context.Context, tenant, userI
 	return err
 }
 
-func (r *jobRoleWriteRepository) LinkContactWithOrganization(ctx context.Context, tenant, contactId, organizationId string, data JobRoleFields) error {
+func (r *jobRoleWriteRepository) LinkContactWithOrganization(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, contactId, organizationId string, data JobRoleFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.LinkContactWithOrganizationByInternalId")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
@@ -159,10 +159,14 @@ func (r *jobRoleWriteRepository) LinkContactWithOrganization(ctx context.Context
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, cypher, params)
+		return nil, err
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
+
 	return err
 }
 

@@ -330,7 +330,7 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 	if !failedSync {
 		for orgId, referencedOrganization := range identifiedOrganizations {
 			// Link contact to organization
-			err = s.services.CommonServices.ContactService.LinkContactWithOrganization(ctx, contactId, orgId, referencedOrganization.JobTitle, referencedOrganization.JobDescription,
+			err = s.services.CommonServices.ContactService.LinkContactWithOrganization(ctx, nil, contactId, orgId, referencedOrganization.JobTitle, referencedOrganization.JobDescription,
 				contactInput.ExternalSystem, false, nil, nil)
 			if err != nil {
 				tracing.TraceErr(span, err)

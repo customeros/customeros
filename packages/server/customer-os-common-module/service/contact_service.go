@@ -30,7 +30,7 @@ type ContactService interface {
 	HideContact(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, contactId string) error
 	ShowContact(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, contactId string) error
 	GetContactById(ctx context.Context, contactId string) (*neo4jentity.ContactEntity, error)
-	LinkContactWithOrganization(ctx context.Context, contactId, organizationId, jobTitle, description, source string, primary bool, startedAt, endedAt *time.Time) error
+	LinkContactWithOrganization(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, contactId, organizationId, jobTitle, description, source string, primary bool, startedAt, endedAt *time.Time) error
 	CheckContactExistsWithLinkedIn(ctx context.Context, url, alias, externalId string) (bool, string, error)
 	CheckContactExistsWithEmail(ctx context.Context, email string) (bool, string, error)
 }
@@ -52,23 +52,24 @@ func (s *contactService) CreateContactWithOrganizationByEmail(ctx context.Contex
 		var innerErr error
 		contactId, innerErr = s.CreateContactByEmail(ctx, txWithPostCommit, email)
 		if innerErr != nil {
-			return "", innerErr
+			return nil, innerErr
 		}
 
 		mailValidation := mailsherpa.ValidateEmailSyntax(email)
-
 		validDomainForOrganization := s.services.DomainService.AcceptedDomainForOrganization(ctx, mailValidation.Domain)
 
 		if validDomainForOrganization {
-			_, innerErr := s.services.OrganizationService.Save(ctx, txWithPostCommit, nil, data_fields.OrganizationFields{
+			organizationId, innerErr := s.services.OrganizationService.Save(ctx, txWithPostCommit, nil, data_fields.OrganizationFields{
 				Domains: []string{mailValidation.Domain},
 			})
 			if innerErr != nil {
-				return "", innerErr
+				return nil, innerErr
 			}
 
-			// TODO add transaction support
-			//s.LinkContactWithOrganization()
+			innerErr = s.LinkContactWithOrganization(ctx, txWithPostCommit, contactId, organizationId, "", "", constants.AppSourceCustomerOsApi, true, nil, nil)
+			if innerErr != nil {
+				return nil, innerErr
+			}
 		}
 
 		return nil, nil
@@ -315,7 +316,7 @@ func (s *contactService) GetContactById(ctx context.Context, contactId string) (
 	return neo4jmapper.MapDbNodeToContactEntity(contactDbNode), nil
 }
 
-func (s *contactService) LinkContactWithOrganization(ctx context.Context, contactId, organizationId, jobTitle, description, source string, primary bool, startedAt, endedAt *time.Time) error {
+func (s *contactService) LinkContactWithOrganization(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, contactId, organizationId, jobTitle, description, source string, primary bool, startedAt, endedAt *time.Time) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.LinkContactWithOrganization")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -336,71 +337,83 @@ func (s *contactService) LinkContactWithOrganization(ctx context.Context, contac
 	}
 	tenant := common.GetTenantFromContext(ctx)
 
-	// validate contact exists
-	exists, err := s.services.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, tenant, contactId, model.NodeLabelContact)
-	if err != nil || !exists {
-		err = errors.New("contact not found")
+	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
+		var innerErr error
+		// validate contact exists
+		exists, innerErr := s.services.Neo4jRepositories.CommonReadRepository.ExistsByIdInTx(ctx, *txWithPostCommit.Tx, tenant, contactId, model.NodeLabelContact)
+		if innerErr != nil || !exists {
+			innerErr = errors.New("contact not found")
+			tracing.TraceErr(span, innerErr)
+			return nil, innerErr
+		}
+
+		// validate organization exists
+		exists, innerErr = s.services.Neo4jRepositories.CommonReadRepository.ExistsByIdInTx(ctx, *txWithPostCommit.Tx, tenant, organizationId, model.NodeLabelOrganization)
+		if innerErr != nil || !exists {
+			innerErr = errors.New("organization not found")
+			tracing.TraceErr(span, innerErr)
+			return nil, innerErr
+		}
+
+		if startedAt != nil && startedAt.Before(time.Date(1900, 1, 1, 0, 0, 0, 0, time.UTC)) {
+			startedAt = nil
+		}
+		if endedAt != nil && endedAt.Before(time.Date(1900, 1, 1, 0, 0, 0, 0, time.UTC)) {
+			endedAt = nil
+		}
+
+		jobRoleData := neo4jrepository.JobRoleFields{
+			Description: description,
+			JobTitle:    jobTitle,
+			Primary:     primary,
+			StartedAt:   startedAt,
+			EndedAt:     endedAt,
+			SourceFields: neo4jmodel.SourceFields{
+				Source:    neo4jmodel.GetSource(source),
+				AppSource: common.GetAppSourceFromContext(ctx),
+			},
+		}
+
+		innerErr = s.services.Neo4jRepositories.JobRoleWriteRepository.LinkContactWithOrganization(ctx, txWithPostCommit.Tx, tenant, contactId, organizationId, jobRoleData)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "unable to link contact with organization"))
+			return nil, innerErr
+		}
+
+		// reset contact enrich attempts
+		_ = s.services.Neo4jRepositories.ContactWriteRepository.ResetEnrichAttempts(ctx, txWithPostCommit.Tx, tenant, contactId)
+
+		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
+			s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, contactId, model.CONTACT, utils.NewEventCompletedDetails().WithUpdate())
+			s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, organizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
+
+			// send 2 events, for contact another for organization
+			dtoData := dto.AddContactToOrganization{
+				ContactId:      contactId,
+				OrganizationId: organizationId,
+				JobTitle:       jobTitle,
+				Description:    description,
+				Primary:        primary,
+				StartedAt:      startedAt,
+				EndedAt:        endedAt,
+			}
+
+			innerErr = s.services.RabbitMQService.PublishEvent(ctx, contactId, model.CONTACT, dtoData)
+			if innerErr != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message AddContactToOrganization for contact"))
+			}
+			innerErr = s.services.RabbitMQService.PublishEvent(ctx, organizationId, model.ORGANIZATION, dtoData)
+			if innerErr != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message AddContactToOrganization for organization"))
+			}
+			return nil
+		})
+
+		return nil, nil
+	})
+	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
-	}
-
-	// validate organization exists
-	exists, err = s.services.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, tenant, organizationId, model.NodeLabelOrganization)
-	if err != nil || !exists {
-		err = errors.New("organization not found")
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	if startedAt != nil && startedAt.Before(time.Date(1900, 1, 1, 0, 0, 0, 0, time.UTC)) {
-		startedAt = nil
-	}
-	if endedAt != nil && endedAt.Before(time.Date(1900, 1, 1, 0, 0, 0, 0, time.UTC)) {
-		endedAt = nil
-	}
-
-	jobRoleData := neo4jrepository.JobRoleFields{
-		Description: description,
-		JobTitle:    jobTitle,
-		Primary:     primary,
-		StartedAt:   startedAt,
-		EndedAt:     endedAt,
-		SourceFields: neo4jmodel.SourceFields{
-			Source:    neo4jmodel.GetSource(source),
-			AppSource: common.GetAppSourceFromContext(ctx),
-		},
-	}
-
-	err = s.services.Neo4jRepositories.JobRoleWriteRepository.LinkContactWithOrganization(ctx, tenant, contactId, organizationId, jobRoleData)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "unable to link contact with organization"))
-		return err
-	}
-
-	// reset contact enrich attempts
-	_ = s.services.Neo4jRepositories.ContactWriteRepository.ResetEnrichAttempts(ctx, nil, tenant, contactId)
-
-	s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, contactId, model.CONTACT, utils.NewEventCompletedDetails().WithUpdate())
-	s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, organizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
-
-	// send 2 events, for contact another for organization
-	dtoData := dto.AddContactToOrganization{
-		ContactId:      contactId,
-		OrganizationId: organizationId,
-		JobTitle:       jobTitle,
-		Description:    description,
-		Primary:        primary,
-		StartedAt:      startedAt,
-		EndedAt:        endedAt,
-	}
-
-	err = s.services.RabbitMQService.PublishEvent(ctx, contactId, model.CONTACT, dtoData)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message AddContactToOrganization for contact"))
-	}
-	err = s.services.RabbitMQService.PublishEvent(ctx, organizationId, model.ORGANIZATION, dtoData)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message AddContactToOrganization for organization"))
 	}
 
 	return nil
