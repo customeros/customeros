@@ -84,13 +84,34 @@ func (r *mutationResolver) UserUpdate(ctx context.Context, input model.UserUpdat
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "request.input", input)
 
-	updatedUserEntity, err := r.Services.UserService.Update(ctx, input.ID, input.FirstName, input.LastName, input.Name, input.Timezone, input.ProfilePhotoURL)
+	if input.ID != common.GetContext(ctx).UserId {
+		if !r.Services.UserService.ContainsRole(ctx, []model.Role{model.RoleAdmin, model.RolePlatformOwner, model.RoleOwner}) {
+			graphql.AddErrorf(ctx, "user can not update other user")
+			return nil, nil
+		}
+	}
+
+	userFields := data_fields.UserFields{
+		FirstName:       utils.StringPtr(input.FirstName),
+		LastName:        utils.StringPtr(input.LastName),
+		Name:            input.Name,
+		Timezone:        input.Timezone,
+		ProfilePhotoUrl: input.ProfilePhotoURL,
+	}
+	_, err := r.Services.CommonServices.UserService.Save(ctx, nil, &input.ID, userFields)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to update user %s %s", input.FirstName, input.LastName)
 		return nil, nil
 	}
-	return mapper.MapEntityToUser(updatedUserEntity), nil
+
+	userEntity, err := r.Services.CommonServices.UserService.GetById(ctx, input.ID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "User with id %s not found", input.ID)
+		return nil, nil
+	}
+	return mapper.MapEntityToUser(userEntity), nil
 }
 
 // UserAddRole is the resolver for the user_AddRole field.
