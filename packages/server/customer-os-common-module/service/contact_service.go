@@ -2,8 +2,18 @@ package service
 
 import (
 	"context"
+	"time"
+
 	"github.com/customeros/mailsherpa/emailparser"
 	mailsherpa "github.com/customeros/mailsherpa/mailvalidate"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
+	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
+	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
+	"github.com/pkg/errors"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
@@ -12,14 +22,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
-	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
-	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
-	"github.com/pkg/errors"
-	"time"
 )
 
 type ContactService interface {
@@ -48,7 +50,6 @@ func (s *contactService) CreateContactWithOrganizationByEmail(ctx context.Contex
 
 	contactId := ""
 	_, err := utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
-
 		var innerErr error
 		contactId, innerErr = s.CreateContactByEmail(ctx, txWithPostCommit, email)
 		if innerErr != nil {
@@ -68,7 +69,7 @@ func (s *contactService) CreateContactWithOrganizationByEmail(ctx context.Contex
 			}
 
 			// TODO add transaction support
-			//s.LinkContactWithOrganization()
+			// s.LinkContactWithOrganization()
 		}
 
 		return nil, nil
@@ -162,7 +163,6 @@ func (s *contactService) Save(ctx context.Context, txWithPostCommit *utils.TxWit
 	}
 
 	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
-
 		innerErr := s.services.Neo4jRepositories.ContactWriteRepository.SaveContactInTx(ctx, txWithPostCommit.Tx, tenant, contactId, contactFields, updateOnlyIfEmpty)
 		if innerErr != nil {
 			s.log.Errorf("Error while saving contact %s: %s", contactId, err.Error())

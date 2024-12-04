@@ -40,11 +40,10 @@ func OnFlowActionEventCreated(ctx context.Context, services *service.Services, i
 	switch eventData := (*event.Data).(type) {
 
 	case *data_fields.MarkdownEventFields:
-		err := handlers.HandleCreateMarkdownEvent(c, eventData)
-		if err != nil {
-			tracing.TraceErr(c.Span, err)
-			return err
-		}
+		handlers.HandleCreateMarkdownEvent(c, eventData)
+
+	case *data_fields.ContactCreateEvent:
+		handlers.HandleCreateContact(c, eventData)
 
 	default:
 		err := fmt.Errorf("Unsupported flow action event %s", event.Name)

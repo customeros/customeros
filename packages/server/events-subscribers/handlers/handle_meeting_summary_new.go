@@ -10,6 +10,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/opentracing/opentracing-go"
+	"go.uber.org/multierr"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/events-subscribers/model"
 )
@@ -32,7 +33,26 @@ func HandleMeetingSummaryEvent(ctx model.EventContext, eventData *data_fields.Me
 	return nil
 }
 
-func publishEventCreateContact() error {
+func publishEventCreateContact(ctx model.EventContext, event *data_fields.MeetingSummaryEvent) error {
+	var err error
+
+	for _, email := range *event.ParticipantEmails {
+		flowActionEvent := dto.NewFlowActionEvent(
+			commonenum.ActionCreateContact,
+			ctx.SourceSystem,
+			ctx.SourceEvent,
+			data_fields.ContactCreateEvent{
+				Email: email,
+			},
+		)
+
+		pubErr := ctx.Services.RabbitMQService.PublishFlowActionEvent(ctx.Context, flowActionEvent)
+		if pubErr != nil {
+			tracing.TraceErr(ctx.Span, err)
+			err = multierr.Append(err, fmt.Errorf("failed to publish contact creation for email %s: %w", email, pubErr))
+		}
+	}
+
 	return nil
 }
 

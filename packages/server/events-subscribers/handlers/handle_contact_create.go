@@ -8,17 +8,15 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-subscribers/model"
 )
 
-func HandleCreateMarkdownEvent(ctx model.EventContext, eventData *data_fields.MarkdownEventFields) error {
+func HandleCreateContact(ctx model.EventContext, eventData *data_fields.ContactCreateEvent) {
 	ctx.Span, ctx.Context = opentracing.StartSpanFromContext(ctx.Context, "EventHandlers.HandleMeetingSummaryEvent")
 	defer ctx.Span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx.Context, ctx.Span)
 	tracing.LogObjectAsJson(ctx.Span, "eventData", eventData)
 
-	_, err := ctx.Services.MarkdownEventService.Save(ctx.Context, nil, nil, *eventData)
+	_, err := ctx.Services.ContactService.CreateContactWithOrganizationByEmail(ctx.Context, nil, eventData.Email)
 	if err != nil {
 		tracing.TraceErr(ctx.Span, err)
-		return err
+		// todo Implement retry logic?
 	}
-
-	return nil
 }
