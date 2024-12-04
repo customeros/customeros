@@ -10,6 +10,7 @@ import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
@@ -147,6 +148,63 @@ func TestQueryResolver_UIOrganizationsSearch_FilterByRenewalDate(t *testing.T) {
 	assertSearch(t, searchBy, []time.Time{firstOfFebruary, firstOfFebruary}, commonModel.ComparisonOperatorBetween, 3, 1)
 	assertSearch(t, searchBy, []time.Time{midOfJanuary, firstOfMarch}, commonModel.ComparisonOperatorBetween, 3, 1)
 	assertSearch(t, searchBy, []time.Time{midOfFebruary, firstOfMarch}, commonModel.ComparisonOperatorBetween, 3, 0)
+}
+
+func TestQueryResolver_UIOrganizationsSearch_FilterByForecastArr(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{RenewalSummary: neo4jentity.RenewalSummary{ArrForecast: nil}})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{RenewalSummary: neo4jentity.RenewalSummary{ArrForecast: utils.Float64Ptr(2000)}})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{RenewalSummary: neo4jentity.RenewalSummary{ArrForecast: utils.Float64Ptr(2005)}})
+
+	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+
+	searchBy := model.ColumnViewTypeOrganizationsForecastArr
+
+	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 3, 1)
+	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 3, 2)
+	assertSearch(t, searchBy, 2005, commonModel.ComparisonOperatorGte, 3, 1)
+	assertSearch(t, searchBy, 2005, commonModel.ComparisonOperatorGt, 3, 0)
+	assertSearch(t, searchBy, 2004, commonModel.ComparisonOperatorLte, 3, 1)
+	assertSearch(t, searchBy, 2005, commonModel.ComparisonOperatorLte, 3, 2)
+	assertSearch(t, searchBy, 2005, commonModel.ComparisonOperatorLt, 3, 1)
+	assertSearch(t, searchBy, 2005, commonModel.ComparisonOperatorEquals, 3, 1)
+	assertSearch(t, searchBy, 2006, commonModel.ComparisonOperatorEquals, 3, 0)
+	assertSearch(t, searchBy, 2005, commonModel.ComparisonOperatorNotEquals, 3, 2)
+	assertSearch(t, searchBy, 2010, commonModel.ComparisonOperatorNotEquals, 3, 3)
+}
+
+func TestQueryResolver_UIOrganizationsSearch_FilterByOwner(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, "owner1")
+	neo4jtest.CreateUserWithId(ctx, driver, tenantName, "owner2")
+
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "1"})
+	neo4jtest.LinkNodes(ctx, driver, "owner1", "1", "OWNS")
+
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "2"})
+	neo4jtest.LinkNodes(ctx, driver, "owner2", "2", "OWNS")
+
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "empty"})
+
+	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "User"))
+	require.Equal(t, 2, neo4jtest.GetCountOfRelationships(ctx, driver, "OWNS"))
+
+	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+
+	searchBy := model.ColumnViewTypeOrganizationsOwner
+
+	assertSearch(t, searchBy, []string{"owner1"}, commonModel.ComparisonOperatorIn, 3, 1)
+	assertSearch(t, searchBy, []string{"owner2"}, commonModel.ComparisonOperatorIn, 3, 1)
+	assertSearch(t, searchBy, []string{"owner1", "owner2"}, commonModel.ComparisonOperatorIn, 3, 2)
 }
 
 func TestQueryResolver_UIOrganizationsSearch_FilterByLastTouchpoint(t *testing.T) {
@@ -672,8 +730,6 @@ func assertSearch(t *testing.T, filterName model.ColumnViewType, searchValue any
 		client.Var("filterName", filterName),
 		client.Var("filterValue", searchValue),
 		client.Var("filterOperation", operator),
-		client.Var("sortByField", model.ColumnViewTypeOrganizationsName),
-		client.Var("sortByDirection", commonModel.SortingDirectionAsc),
 	)
 	assertRawResponseSuccess(t, rawResponse, err)
 
@@ -689,4 +745,537 @@ func assertSearch(t *testing.T, filterName model.ColumnViewType, searchValue any
 	require.Equal(t, totalAvailable, searchResult.TotalAvailable)
 	require.Equal(t, totalElements, searchResult.TotalElements)
 	require.Equal(t, int(totalElements), len(searchResult.Ids))
+}
+
+func TestQueryResolver_UIOrganizationsSearch_SortByName(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "empty", Name: ""})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "a", Name: "a"})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "b", Name: "b"})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "ab", Name: "ab"})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "c", Name: "c"})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "aa", Name: "aa"})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "abc", Name: "abc"})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "ba", Name: "ba"})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "z", Name: "z"})
+
+	require.Equal(t, 9, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+
+	expectedAsc := []string{"a", "aa", "ab", "abc", "b", "ba", "c", "z", "empty"}
+	expectedDesc := []string{"z", "c", "ba", "b", "abc", "ab", "aa", "a", "empty"}
+
+	verifySortOrder(t, model.ColumnViewTypeOrganizationsName, commonModel.SortingDirectionAsc, expectedAsc)
+	verifySortOrder(t, model.ColumnViewTypeOrganizationsName, commonModel.SortingDirectionDesc, expectedDesc)
+}
+
+func TestQueryResolver_UIOrganizationsSearch_SortByWebsite(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "empty", Website: ""})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "a", Website: "https://www.a"})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "b", Website: "https://www.b"})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "ab", Website: "https://www.ab"})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "c", Website: "https://www.c"})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "aa", Website: "https://www.aa"})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "abc", Website: "https://www.abc"})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "ba", Website: "https://www.ba"})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "z", Website: "https://www.z"})
+
+	require.Equal(t, 9, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+
+	expectedAsc := []string{"a", "aa", "ab", "abc", "b", "ba", "c", "z", "empty"}
+	expectedDesc := []string{"z", "c", "ba", "b", "abc", "ab", "aa", "a", "empty"}
+
+	verifySortOrder(t, model.ColumnViewTypeOrganizationsWebsite, commonModel.SortingDirectionAsc, expectedAsc)
+	verifySortOrder(t, model.ColumnViewTypeOrganizationsWebsite, commonModel.SortingDirectionDesc, expectedDesc)
+}
+
+func TestQueryResolver_UIOrganizationsSearch_SortByRelationship(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "empty", Relationship: ""})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "a", Relationship: "a"})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "b", Relationship: "b"})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "ab", Relationship: "ab"})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "c", Relationship: "c"})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "aa", Relationship: "aa"})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "abc", Relationship: "abc"})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "ba", Relationship: "ba"})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "z", Relationship: "z"})
+
+	require.Equal(t, 9, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+
+	expectedAsc := []string{"a", "aa", "ab", "abc", "b", "ba", "c", "z", "empty"}
+	expectedDesc := []string{"z", "c", "ba", "b", "abc", "ab", "aa", "a", "empty"}
+
+	verifySortOrder(t, model.ColumnViewTypeOrganizationsRelationship, commonModel.SortingDirectionAsc, expectedAsc)
+	verifySortOrder(t, model.ColumnViewTypeOrganizationsRelationship, commonModel.SortingDirectionDesc, expectedDesc)
+}
+
+func TestQueryResolver_UIOrganizationsSearch_SortByOnboardingStatus(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "empty", OnboardingDetails: neo4jentity.OnboardingDetails{SortingOrder: nil}})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "1", OnboardingDetails: neo4jentity.OnboardingDetails{SortingOrder: utils.Int64Ptr(1)}})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "2", OnboardingDetails: neo4jentity.OnboardingDetails{SortingOrder: utils.Int64Ptr(2)}})
+
+	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+
+	expectedAsc := []string{"1", "2", "empty"}
+	expectedDesc := []string{"2", "1", "empty"}
+
+	verifySortOrder(t, model.ColumnViewTypeOrganizationsOnboardingStatus, commonModel.SortingDirectionAsc, expectedAsc)
+	verifySortOrder(t, model.ColumnViewTypeOrganizationsOnboardingStatus, commonModel.SortingDirectionDesc, expectedDesc)
+}
+
+func TestQueryResolver_UIOrganizationsSearch_SortByRenewalLikelihood(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "empty", RenewalSummary: neo4jentity.RenewalSummary{RenewalLikelihoodOrder: nil}})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "1", RenewalSummary: neo4jentity.RenewalSummary{RenewalLikelihoodOrder: utils.Int64Ptr(1)}})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "2", RenewalSummary: neo4jentity.RenewalSummary{RenewalLikelihoodOrder: utils.Int64Ptr(2)}})
+
+	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+
+	expectedAsc := []string{"1", "2", "empty"}
+	expectedDesc := []string{"2", "1", "empty"}
+
+	verifySortOrder(t, model.ColumnViewTypeOrganizationsRenewalLikelihood, commonModel.SortingDirectionAsc, expectedAsc)
+	verifySortOrder(t, model.ColumnViewTypeOrganizationsRenewalLikelihood, commonModel.SortingDirectionDesc, expectedDesc)
+}
+
+func TestQueryResolver_UIOrganizationsSearch_SortByRenewalDate(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	firstOfDecember := utils.FirstTimeOfMonth(2023, 12)
+	firstOfJanuary := utils.FirstTimeOfMonth(2024, 1)
+
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "empty", RenewalSummary: neo4jentity.RenewalSummary{NextRenewalAt: nil}})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "1", RenewalSummary: neo4jentity.RenewalSummary{NextRenewalAt: &firstOfDecember}})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "2", RenewalSummary: neo4jentity.RenewalSummary{NextRenewalAt: &firstOfJanuary}})
+
+	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+
+	expectedAsc := []string{"1", "2", "empty"}
+	expectedDesc := []string{"2", "1", "empty"}
+
+	verifySortOrder(t, model.ColumnViewTypeOrganizationsRenewalDate, commonModel.SortingDirectionAsc, expectedAsc)
+	verifySortOrder(t, model.ColumnViewTypeOrganizationsRenewalDate, commonModel.SortingDirectionDesc, expectedDesc)
+}
+
+func TestQueryResolver_UIOrganizationsSearch_SortByForecastArr(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "empty", RenewalSummary: neo4jentity.RenewalSummary{ArrForecast: nil}})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "1", RenewalSummary: neo4jentity.RenewalSummary{ArrForecast: utils.Float64Ptr(1)}})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "2", RenewalSummary: neo4jentity.RenewalSummary{ArrForecast: utils.Float64Ptr(2)}})
+
+	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+
+	expectedAsc := []string{"1", "2", "empty"}
+	expectedDesc := []string{"2", "1", "empty"}
+
+	verifySortOrder(t, model.ColumnViewTypeOrganizationsForecastArr, commonModel.SortingDirectionAsc, expectedAsc)
+	verifySortOrder(t, model.ColumnViewTypeOrganizationsForecastArr, commonModel.SortingDirectionDesc, expectedDesc)
+}
+
+func TestQueryResolver_UIOrganizationsSearch_SortByOwner(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{Id: "owner1", FirstName: "owner1"})
+	neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{Id: "owner2", FirstName: "owner2"})
+
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "1"})
+	neo4jtest.LinkNodes(ctx, driver, "owner1", "1", "OWNS")
+
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "2"})
+	neo4jtest.LinkNodes(ctx, driver, "owner2", "2", "OWNS")
+
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "empty"})
+
+	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "User"))
+	require.Equal(t, 2, neo4jtest.GetCountOfRelationships(ctx, driver, "OWNS"))
+
+	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+
+	expectedAsc := []string{"1", "2", "empty"}
+	expectedDesc := []string{"2", "1", "empty"}
+
+	verifySortOrder(t, model.ColumnViewTypeOrganizationsOwner, commonModel.SortingDirectionAsc, expectedAsc)
+	verifySortOrder(t, model.ColumnViewTypeOrganizationsOwner, commonModel.SortingDirectionDesc, expectedDesc)
+}
+
+func TestQueryResolver_UIOrganizationsSearch_SortByLastTouchpoint(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "empty", LastTouchpointType: nil})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "a", LastTouchpointType: utils.StringPtr("a")})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "b", LastTouchpointType: utils.StringPtr("b")})
+
+	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+
+	expectedAsc := []string{"a", "b", "empty"}
+	expectedDesc := []string{"b", "a", "empty"}
+
+	verifySortOrder(t, model.ColumnViewTypeOrganizationsLastTouchpoint, commonModel.SortingDirectionAsc, expectedAsc)
+	verifySortOrder(t, model.ColumnViewTypeOrganizationsLastTouchpoint, commonModel.SortingDirectionDesc, expectedDesc)
+}
+
+func TestQueryResolver_UIOrganizationsSearch_SortByLastTouchpointDate(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	firstOfDecember := utils.FirstTimeOfMonth(2023, 12)
+	firstOfJanuary := utils.FirstTimeOfMonth(2024, 1)
+
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "empty", LastTouchpointAt: nil})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "1", LastTouchpointAt: &firstOfDecember})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "2", LastTouchpointAt: &firstOfJanuary})
+
+	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+
+	expectedAsc := []string{"1", "2", "empty"}
+	expectedDesc := []string{"2", "1", "empty"}
+
+	verifySortOrder(t, model.ColumnViewTypeOrganizationsLastTouchpointDate, commonModel.SortingDirectionAsc, expectedAsc)
+	verifySortOrder(t, model.ColumnViewTypeOrganizationsLastTouchpointDate, commonModel.SortingDirectionDesc, expectedDesc)
+}
+
+func TestQueryResolver_UIOrganizationsSearch_SortByStage(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "empty", Stage: ""})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "a", Stage: "a"})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "b", Stage: "b"})
+
+	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+
+	expectedAsc := []string{"a", "b", "empty"}
+	expectedDesc := []string{"b", "a", "empty"}
+
+	verifySortOrder(t, model.ColumnViewTypeOrganizationsStage, commonModel.SortingDirectionAsc, expectedAsc)
+	verifySortOrder(t, model.ColumnViewTypeOrganizationsStage, commonModel.SortingDirectionDesc, expectedDesc)
+}
+
+func TestQueryResolver_UIOrganizationsSearch_SortByLeadsource(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "empty", LeadSource: ""})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "a", LeadSource: "a"})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "b", LeadSource: "b"})
+
+	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+
+	expectedAsc := []string{"a", "b", "empty"}
+	expectedDesc := []string{"b", "a", "empty"}
+
+	verifySortOrder(t, model.ColumnViewTypeOrganizationsLeadSource, commonModel.SortingDirectionAsc, expectedAsc)
+	verifySortOrder(t, model.ColumnViewTypeOrganizationsLeadSource, commonModel.SortingDirectionDesc, expectedDesc)
+}
+
+func TestQueryResolver_UIOrganizationsSearch_SortByCreatedDate(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	firstOfDecember := utils.FirstTimeOfMonth(2023, 12)
+	firstOfJanuary := utils.FirstTimeOfMonth(2024, 1)
+
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "1", CreatedAt: firstOfDecember})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "2", CreatedAt: firstOfJanuary})
+
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+
+	expectedAsc := []string{"1", "2"}
+	expectedDesc := []string{"2", "1"}
+
+	verifySortOrder(t, model.ColumnViewTypeOrganizationsCreatedDate, commonModel.SortingDirectionAsc, expectedAsc)
+	verifySortOrder(t, model.ColumnViewTypeOrganizationsCreatedDate, commonModel.SortingDirectionDesc, expectedDesc)
+}
+
+func TestQueryResolver_UIOrganizationsSearch_SortByEmployeeCount(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "1", Employees: 1})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "2", Employees: 2})
+
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+
+	expectedAsc := []string{"1", "2"}
+	expectedDesc := []string{"2", "1"}
+
+	verifySortOrder(t, model.ColumnViewTypeOrganizationsEmployeeCount, commonModel.SortingDirectionAsc, expectedAsc)
+	verifySortOrder(t, model.ColumnViewTypeOrganizationsEmployeeCount, commonModel.SortingDirectionDesc, expectedDesc)
+}
+
+func TestQueryResolver_UIOrganizationsSearch_SortByYearFounded(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "empty", YearFounded: nil})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "1", YearFounded: utils.Int64Ptr(1)})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "2", YearFounded: utils.Int64Ptr(2)})
+
+	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+
+	expectedAsc := []string{"1", "2", "empty"}
+	expectedDesc := []string{"2", "1", "empty"}
+
+	verifySortOrder(t, model.ColumnViewTypeOrganizationsYearFounded, commonModel.SortingDirectionAsc, expectedAsc)
+	verifySortOrder(t, model.ColumnViewTypeOrganizationsYearFounded, commonModel.SortingDirectionDesc, expectedDesc)
+}
+
+func TestQueryResolver_UIOrganizationsSearch_SortByIndustry(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "empty", Industry: ""})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "a", Industry: "a"})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "b", Industry: "b"})
+
+	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+
+	expectedAsc := []string{"a", "b", "empty"}
+	expectedDesc := []string{"b", "a", "empty"}
+
+	verifySortOrder(t, model.ColumnViewTypeOrganizationsIndustry, commonModel.SortingDirectionAsc, expectedAsc)
+	verifySortOrder(t, model.ColumnViewTypeOrganizationsIndustry, commonModel.SortingDirectionDesc, expectedDesc)
+}
+
+func TestQueryResolver_UIOrganizationsSearch_SortByChurnDate(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	firstOfDecember := utils.FirstTimeOfMonth(2023, 12)
+	firstOfJanuary := utils.FirstTimeOfMonth(2024, 1)
+
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "empty", DerivedData: neo4jentity.DerivedData{ChurnedAt: nil}})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "1", DerivedData: neo4jentity.DerivedData{ChurnedAt: &firstOfDecember}})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "2", DerivedData: neo4jentity.DerivedData{ChurnedAt: &firstOfJanuary}})
+
+	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+
+	expectedAsc := []string{"1", "2", "empty"}
+	expectedDesc := []string{"2", "1", "empty"}
+
+	verifySortOrder(t, model.ColumnViewTypeOrganizationsChurnDate, commonModel.SortingDirectionAsc, expectedAsc)
+	verifySortOrder(t, model.ColumnViewTypeOrganizationsChurnDate, commonModel.SortingDirectionDesc, expectedDesc)
+}
+
+func TestQueryResolver_UIOrganizationsSearch_SortLtv(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "a", DerivedData: neo4jentity.DerivedData{Ltv: float64(1)}})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "b", DerivedData: neo4jentity.DerivedData{Ltv: float64(2)}})
+
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+
+	expectedAsc := []string{"a", "b"}
+	expectedDesc := []string{"b", "a"}
+
+	verifySortOrder(t, model.ColumnViewTypeOrganizationsLtv, commonModel.SortingDirectionAsc, expectedAsc)
+	verifySortOrder(t, model.ColumnViewTypeOrganizationsLtv, commonModel.SortingDirectionDesc, expectedDesc)
+}
+
+func TestQueryResolver_UIOrganizationsSearch_SortByCountry(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "1"})
+	neo4jtest.CreateLocation(ctx, driver, tenantName, neo4jentity.LocationEntity{Id: "l1", Country: "C1"})
+	neo4jtest.LinkNodes(ctx, driver, "1", "l1", "ASSOCIATED_WITH")
+
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "2"})
+	neo4jtest.CreateLocation(ctx, driver, tenantName, neo4jentity.LocationEntity{Id: "l2", Country: "C2"})
+	neo4jtest.LinkNodes(ctx, driver, "2", "l2", "ASSOCIATED_WITH")
+
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "empty"})
+
+	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Location"))
+	require.Equal(t, 2, neo4jtest.GetCountOfRelationships(ctx, driver, "ASSOCIATED_WITH"))
+
+	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+
+	expectedAsc := []string{"1", "2", "empty"}
+	expectedDesc := []string{"2", "1", "empty"}
+
+	verifySortOrder(t, model.ColumnViewTypeOrganizationsCountry, commonModel.SortingDirectionAsc, expectedAsc)
+	verifySortOrder(t, model.ColumnViewTypeOrganizationsCountry, commonModel.SortingDirectionDesc, expectedDesc)
+}
+
+func TestQueryResolver_UIOrganizationsSearch_SortByCity(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "1"})
+	neo4jtest.CreateLocation(ctx, driver, tenantName, neo4jentity.LocationEntity{Id: "l1", Locality: "C1"})
+	neo4jtest.LinkNodes(ctx, driver, "1", "l1", "ASSOCIATED_WITH")
+
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "2"})
+	neo4jtest.CreateLocation(ctx, driver, tenantName, neo4jentity.LocationEntity{Id: "l2", Locality: "C2"})
+	neo4jtest.LinkNodes(ctx, driver, "2", "l2", "ASSOCIATED_WITH")
+
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "empty"})
+
+	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Location"))
+	require.Equal(t, 2, neo4jtest.GetCountOfRelationships(ctx, driver, "ASSOCIATED_WITH"))
+
+	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+
+	expectedAsc := []string{"1", "2", "empty"}
+	expectedDesc := []string{"2", "1", "empty"}
+
+	verifySortOrder(t, model.ColumnViewTypeOrganizationsCity, commonModel.SortingDirectionAsc, expectedAsc)
+	verifySortOrder(t, model.ColumnViewTypeOrganizationsCity, commonModel.SortingDirectionDesc, expectedDesc)
+}
+
+func TestQueryResolver_UIOrganizationsSearch_SortByIsPublic(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "empty"}) // false by default
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "1", IsPublic: true})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "2", IsPublic: false})
+
+	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+
+	expectedAsc := []string{"1", "2", "empty"}
+	expectedDesc := []string{"2", "empty", "1"}
+
+	verifySortOrder(t, model.ColumnViewTypeOrganizationsIsPublic, commonModel.SortingDirectionAsc, expectedAsc)
+	verifySortOrder(t, model.ColumnViewTypeOrganizationsIsPublic, commonModel.SortingDirectionDesc, expectedDesc)
+}
+
+func TestQueryResolver_UIOrganizationsSearch_SortByParentOrganization(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "subsidiary1"})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "parent1", Name: "Parent1"})
+	neo4jtest.LinkNodes(ctx, driver, "subsidiary1", "parent1", "SUBSIDIARY_OF")
+
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "subsidiary2"})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "parent2", Name: "Parent2"})
+	neo4jtest.LinkNodes(ctx, driver, "subsidiary2", "parent2", "SUBSIDIARY_OF")
+
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "empty"})
+
+	require.Equal(t, 5, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+
+	sortAsc := assertSort(t, model.ColumnViewTypeOrganizationsParentOrganization, commonModel.SortingDirectionAsc)
+	assert.Equal(t, "subsidiary1", sortAsc[0])
+	assert.Equal(t, "subsidiary2", sortAsc[1])
+
+	sortDesc := assertSort(t, model.ColumnViewTypeOrganizationsParentOrganization, commonModel.SortingDirectionDesc)
+	assert.Equal(t, "subsidiary2", sortDesc[0])
+	assert.Equal(t, "subsidiary1", sortDesc[1])
+}
+
+func TestQueryResolver_UIOrganizationsSearch_SortByUpdatedDate(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	firstOfDecember := utils.FirstTimeOfMonth(2023, 12)
+	firstOfJanuary := utils.FirstTimeOfMonth(2024, 1)
+
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "empty"}) // default to now
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "1", UpdatedAt: firstOfDecember})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "2", UpdatedAt: firstOfJanuary})
+
+	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+
+	expectedAsc := []string{"1", "2", "empty"}
+	expectedDesc := []string{"empty", "2", "1"}
+
+	verifySortOrder(t, model.ColumnViewTypeOrganizationsUpdatedDate, commonModel.SortingDirectionAsc, expectedAsc)
+	verifySortOrder(t, model.ColumnViewTypeOrganizationsUpdatedDate, commonModel.SortingDirectionDesc, expectedDesc)
+}
+
+func verifySortOrder(t *testing.T, sortBy model.ColumnViewType, direction commonModel.SortingDirection, expectedOrder []string) {
+	sortedResult := assertSort(t, sortBy, direction)
+	assert.Equal(t, len(expectedOrder), len(sortedResult), "Mismatch in result length")
+	for i, expected := range expectedOrder {
+		assert.Equal(t, expected, sortedResult[i], "Mismatch at index %d", i)
+	}
+}
+
+func assertSort(t *testing.T, sortBy model.ColumnViewType, sortDirection commonModel.SortingDirection) []string {
+	rawResponse, err := c.RawPost(getQuery("organization/ui_organizations_sort"),
+		client.Var("limit", 10),
+		client.Var("sortByField", sortBy.String()),
+		client.Var("sortByDirection", sortDirection),
+	)
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var organizations struct {
+		Ui_Organizations_Search model.OrganizationSearchResult
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &organizations)
+	require.Nil(t, err)
+	require.NotNil(t, organizations)
+
+	return organizations.Ui_Organizations_Search.Ids
 }

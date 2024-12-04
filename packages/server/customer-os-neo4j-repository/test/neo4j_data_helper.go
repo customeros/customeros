@@ -284,7 +284,7 @@ func CreateOrganization(ctx context.Context, driver *neo4j.DriverWithContext, te
 		"description":                   organization.Description,
 		"website":                       organization.Website,
 		"industry":                      organization.Industry,
-		"isPublic":                      organization.IsPublic,
+		"isPublic":                      utils.BoolDefaultIfNil(organization.IsPublic, false),
 		"subIndustry":                   organization.SubIndustry,
 		"industryGroup":                 organization.IndustryGroup,
 		"targetAudience":                organization.TargetAudience,
