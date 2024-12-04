@@ -25,6 +25,7 @@ import (
 type ContactService interface {
 	Save(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, id *string, contactFields data_fields.ContactFields, updateOnlyIfEmpty bool, options ...ServiceOptions) (string, error)
 	CreateContactByLinkedIn(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, linkedInUrl string, options ...ServiceOptions) (string, error)
+	CreateContactWithOrganizationByEmail(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, email string) (string, error)
 	CreateContactByEmail(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, email string, options ...ServiceOptions) (string, error)
 	HideContact(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, contactId string) error
 	ShowContact(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, contactId string) error
@@ -37,6 +38,47 @@ type ContactService interface {
 type contactService struct {
 	log      logger.Logger
 	services *Services
+}
+
+func (s *contactService) CreateContactWithOrganizationByEmail(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, email string) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.CreateContactWithOrganizationByEmail")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogKV("email", email)
+
+	contactId := ""
+	_, err := utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
+
+		var innerErr error
+		contactId, innerErr = s.CreateContactByEmail(ctx, txWithPostCommit, email)
+		if innerErr != nil {
+			return "", innerErr
+		}
+
+		mailValidation := mailsherpa.ValidateEmailSyntax(email)
+
+		validDomainForOrganization := s.services.DomainService.AcceptedDomainForOrganization(ctx, mailValidation.Domain)
+
+		if validDomainForOrganization {
+			_, innerErr := s.services.OrganizationService.Save(ctx, txWithPostCommit, nil, data_fields.OrganizationFields{
+				Domains: []string{mailValidation.Domain},
+			})
+			if innerErr != nil {
+				return "", innerErr
+			}
+
+			// TODO add transaction support
+			//s.LinkContactWithOrganization()
+		}
+
+		return nil, nil
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+
+	return contactId, nil
 }
 
 func NewContactService(log logger.Logger, services *Services) ContactService {
