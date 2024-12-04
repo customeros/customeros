@@ -45,6 +45,15 @@ type GrainParticipant struct {
 	ConfirmedAttendee bool    `json:"confirmed_attendee"`
 }
 
+func (g *GrainRecording) participantEmails() []string {
+	emails := make([]string, len(g.Participants))
+
+	for v, participant := range g.Participants {
+		emails[v] = *participant.Email
+	}
+	return emails
+}
+
 func (g *GrainRecordingData) cleanPayload() error {
 	if g.RecordingData.OwnersStr != "" {
 		ownersJson := utils.ReplaceSingleQuotesWithDoubleQuotes(g.RecordingData.OwnersStr)

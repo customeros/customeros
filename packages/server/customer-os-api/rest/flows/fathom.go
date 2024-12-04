@@ -72,14 +72,14 @@ func handleFathomAISummaryZapier(ctx *rest.HTTPContext) {
 	ctx.GinContext.JSON(http.StatusAccepted, rest.BuildBaseResponse(rest.StatusProcessing))
 
 	go func() {
-		if err := publishMeetingSummaryCreatedEvent(ctx, aiSummaryData); err != nil {
+		if err := publishFathomMeetingSummaryCreatedEvent(ctx, aiSummaryData); err != nil {
 			tracing.TraceErr(ctx.Span, errors.Wrap(err, "failed to process Fathom AI summary from zapier"))
 		}
 	}()
 	return
 }
 
-func publishMeetingSummaryCreatedEvent(ctx *rest.HTTPContext, aiSummaryData *FathomZapierPayload) error {
+func publishFathomMeetingSummaryCreatedEvent(ctx *rest.HTTPContext, aiSummaryData *FathomZapierPayload) error {
 	var meetingSummary data_fields.MeetingSummaryEvent
 
 	content, err := aiSummaryData.toMarkdownContent()
@@ -105,10 +105,10 @@ func publishMeetingSummaryCreatedEvent(ctx *rest.HTTPContext, aiSummaryData *Fat
 		return err
 	}
 
-	err = ctx.Services.CommonServices.RabbitMQService.PublishWebhookEvent(*ctx.ServiceContext, event)
-	if err != nil {
+	pubErr := ctx.Services.CommonServices.RabbitMQService.PublishWebhookEvent(*ctx.ServiceContext, event)
+	if pubErr != nil {
 		tracing.TraceErr(ctx.Span, errors.Wrap(err, "failed to publish event"))
 	}
 
-	return err
+	return nil
 }

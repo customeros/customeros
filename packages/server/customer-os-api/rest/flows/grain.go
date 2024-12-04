@@ -5,12 +5,12 @@ import (
 	"strings"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	commontracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/pkg/errors"
-	"go.uber.org/multierr"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 )
@@ -22,9 +22,11 @@ func GrainZapier(c *rest.HTTPContext) {
 	defer span.Finish()
 	commontracing.TagComponentRest(span)
 
-	tenant := rest.ValidateTenant(c.GinContext, *c.ServiceContext, c.Span)
-	if tenant == "" {
-		rest.SendError(c.GinContext, c.Span, http.StatusForbidden, rest.ErrForbidden)
+	tenant, err := c.Services.CommonServices.PostgresRepositories.TenantRepository.GetTenant(ctx, c.GinContext.Param("tenantId"))
+	if err != nil {
+		err := errors.Wrap(err, "Unable to identify tenant")
+		tracing.TraceErr(span, err)
+		rest.SendError(c.GinContext, c.Span, http.StatusUnauthorized, rest.ErrUnauthorized)
 		return
 	}
 	c.Tenant = tenant
@@ -66,45 +68,38 @@ func handleGrainNewRecordingEventZapier(ctx *rest.HTTPContext) {
 	ctx.GinContext.JSON(http.StatusAccepted, rest.BuildBaseResponse(rest.StatusProcessing))
 
 	go func() {
-		if err := createEventFromGrainRecordingZapier(ctx, grainData); err != nil {
+		if err := publishGrainMeetingSummaryCreatedEvent(ctx, grainData); err != nil {
 			tracing.TraceErr(ctx.Span, errors.Wrap(err, "failed to process Grain AI summary from zapier"))
 		}
 	}()
 	return
 }
 
-func createEventFromGrainRecordingZapier(ctx *rest.HTTPContext, grainData *GrainRecordingData) error {
-	var event data_fields.MarkdownEventFields
-	var allErrs error
+func publishGrainMeetingSummaryCreatedEvent(ctx *rest.HTTPContext, grainData *GrainRecordingData) error {
+	var meeting data_fields.MeetingSummaryEvent
 
 	content := grainData.MeetingNoteContent()
-	event.Content = &content
+	meeting.Content = &content
+	participants := grainData.RecordingData.participantEmails()
+	meeting.ParticipantEmails = &participants
+
 	if grainData.RecordingData.StartDatetime.IsZero() {
-		event.CreatedAt = utils.NowPtr()
+		meeting.Timestamp = utils.NowPtr()
 	} else {
-		event.CreatedAt = utils.TimePtr(grainData.RecordingData.StartDatetime.UTC())
+		meeting.Timestamp = utils.TimePtr(grainData.RecordingData.StartDatetime.UTC())
 	}
-	source := neo4jentity.DataSourceGrain
-	event.Source = &source
 
-	orgIds, err := getParticipantOrganizationIds(ctx, grainData.RecordingData.getDomains())
+	event, err := dto.NewWebhookEvent(enum.Grain, "meeting_summary", "created", &meeting)
 	if err != nil {
-		allErrs = multierr.Append(allErrs, errors.Wrap(err, "failed to get organization id for participant"))
-		tracing.TraceErr(ctx.Span, err)
+		tracing.TraceErr(ctx.Span, errors.Wrap(err, "failed to build webhook event"))
+		return err
 	}
 
-	orgIds = utils.RemoveDuplicates(orgIds)
-	orgIds = utils.RemoveEmpties(orgIds)
+	pubErr := ctx.Services.CommonServices.RabbitMQService.PublishWebhookEvent(*ctx.ServiceContext, event)
 
-	for _, orgId := range orgIds {
-		event.OrganizationId = &orgId
-		_, err := ctx.Services.CommonServices.MarkdownEventService.Save(*ctx.ServiceContext, nil, nil, event)
-		if err != nil {
-			allErrs = multierr.Append(allErrs, errors.Wrap(err, "failed to get organization id for participant"))
-			tracing.TraceErr(ctx.Span, err)
-		}
+	if pubErr != nil {
+		tracing.TraceErr(ctx.Span, errors.Wrap(err, "failed to publish event"))
 	}
 
-	// write event to db
 	return nil
 }
