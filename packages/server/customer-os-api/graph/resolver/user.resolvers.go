@@ -7,7 +7,6 @@ package resolver
 import (
 	"context"
 	"fmt"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
@@ -20,7 +19,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
-	commonTracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	opentracing "github.com/opentracing/opentracing-go"
@@ -34,14 +32,23 @@ func (r *mutationResolver) UserCreate(ctx context.Context, input model.UserInput
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "request.input", input)
 
-	userId, err := r.Services.UserService.Create(ctx, *mapper.MapUserInputToEntity(input))
+	userFields := data_fields.UserFields{
+		FirstName:       utils.StringPtr(input.FirstName),
+		LastName:        utils.StringPtr(input.LastName),
+		Name:            input.Name,
+		Source:          utils.StringPtr(neo4jentity.DataSourceOpenline.String()),
+		Timezone:        input.Timezone,
+		ProfilePhotoUrl: input.ProfilePhotoURL,
+		Internal:        utils.BoolPtr(false),
+		Bot:             utils.BoolPtr(false),
+		Test:            utils.BoolPtr(false),
+	}
+	userId, err := r.Services.CommonServices.UserService.Save(ctx, nil, nil, userFields)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to create user %s %s", input.FirstName, input.LastName)
 		return nil, nil
 	}
-
-	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 
 	if input.Email != nil {
 		_, err = r.Services.CommonServices.EmailService.Merge(ctx, nil, common.GetTenantFromContext(ctx),

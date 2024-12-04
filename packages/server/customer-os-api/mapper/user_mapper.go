@@ -1,25 +1,10 @@
 package mapper
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 )
-
-func MapUserInputToEntity(input model.UserInput) *neo4jentity.UserEntity {
-	userEntity := neo4jentity.UserEntity{
-		FirstName:       input.FirstName,
-		LastName:        input.LastName,
-		Name:            utils.IfNotNilString(input.Name),
-		Source:          neo4jentity.DataSourceOpenline,
-		SourceOfTruth:   neo4jentity.DataSourceOpenline,
-		Timezone:        utils.IfNotNilString(input.Timezone),
-		ProfilePhotoUrl: utils.IfNotNilString(input.ProfilePhotoURL),
-		AppSource:       utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
-	}
-	return &userEntity
-}
 
 func MapEntityToUser(userEntity *neo4jentity.UserEntity) *model.User {
 	if userEntity == nil {
