@@ -717,7 +717,7 @@ func (s *contactService) linkOrphanContactsToOrganizationBaseOnLinkedinScrapIn(c
 					}
 				}
 
-				err = s.commonServices.ContactService.LinkContactWithOrganization(innerCtx, orpanContact.ContactId, organizationId, positionName, "",
+				err = s.commonServices.ContactService.LinkContactWithOrganization(innerCtx, nil, orpanContact.ContactId, organizationId, positionName, "",
 					neo4jentity.DataSourceOpenline.String(), false, nil, nil)
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "ContactService.LinkContactWithOrganization"))

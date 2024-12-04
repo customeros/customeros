@@ -646,7 +646,7 @@ func (c *contactListenerImpl) enrichContactWithScrapInEnrichDetails(ctx context.
 				}
 
 				// link contact with organization
-				err = c.services.ContactService.LinkContactWithOrganization(ctx, contact.Id, organizationEntity.ID, positionName, "",
+				err = c.services.ContactService.LinkContactWithOrganization(ctx, nil, contact.Id, organizationEntity.ID, positionName, "",
 					neo4jentity.DataSourceOpenline.String(), false, positionStartedAt, positionEndedAt)
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "ContactClient.LinkWithOrganization"))
