@@ -7,8 +7,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/constants"
-	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
@@ -24,14 +22,7 @@ type UserUpdateFields struct {
 }
 
 type UserWriteRepository interface {
-	// Deprecated: Use CreateUserInTxNew instead
-	CreateUser(ctx context.Context, input neo4jentity.UserEntity) error
-	// Deprecated: Use CreateUserInTxNew instead
-	CreateUserInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, input neo4jentity.UserEntity) error
-	CreateUserInTxNew(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, userId string, data data_fields.UserFields) error
-
-	// Deprecated: Use UpdateUserInTx instead
-	UpdateUser(ctx context.Context, tenant, userId string, data UserUpdateFields) error
+	CreateUserInTx(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, userId string, data data_fields.UserFields) error
 	UpdateUserInTx(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, userId string, data data_fields.UserFields) error
 
 	AddRole(ctx context.Context, userId, role string) error
@@ -56,96 +47,8 @@ func (r *userWriteRepository) prepareWriteSession(ctx context.Context) neo4j.Ses
 	return utils.NewNeo4jWriteSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 }
 
-func (r *userWriteRepository) CreateUser(c context.Context, input neo4jentity.UserEntity) error {
-	span, ctx := opentracing.StartSpanFromContext(c, "UserWriteRepository.CreateUser")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.SetTag(tracing.SpanTagEntityId, input.Id)
-
-	tracing.LogObjectAsJson(span, "input", input)
-
-	tenant := common.GetTenantFromContext(ctx)
-
-	session := r.prepareWriteSession(ctx)
-	defer session.Close(ctx)
-
-	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		return nil, r.CreateUserInTx(ctx, tx, tenant, input)
-	})
-	return err
-}
-
-func (r *userWriteRepository) CreateUserInTx(c context.Context, tx neo4j.ManagedTransaction, tenant string, input neo4jentity.UserEntity) error {
-	span, ctx := opentracing.StartSpanFromContext(c, "UserWriteRepository.CreateUserInTx")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.SetTag(tracing.SpanTagEntityId, input.Id)
-
-	tracing.LogObjectAsJson(span, "input", input)
-
-	if input.Source == "" {
-		input.Source = constants.SourceOpenline
-	}
-	if input.SourceOfTruth == "" {
-		input.SourceOfTruth = constants.SourceOpenline
-	}
-
-	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}) 
-		 MERGE (t)<-[:USER_BELONGS_TO_TENANT]-(u:User:User_%s {id:$id}) 
-		 ON CREATE SET 	u.name = $name,
-						u.firstName = $firstName,
-						u.lastName = $lastName,
-						u.source = $source,
-						u.sourceOfTruth = $sourceOfTruth,
-						u.appSource = $appSource,
-						u.createdAt = $createdAt,
-						u.updatedAt = datetime(),
-						u.internal = $internal,
-						u.test = $test,
-						u.roles = $roles,
-						u.bot = $bot,
-						u.profilePhotoUrl = $profilePhotoUrl,
-						u.timezone = $timezone
-		 ON MATCH SET 	u.name = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR u.name is null OR u.name = '' THEN $name ELSE u.name END,
-						u.firstName = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR u.firstName is null OR u.firstName = '' THEN $firstName ELSE u.firstName END,
-						u.lastName = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR u.lastName is null OR u.lastName = '' THEN $lastName ELSE u.lastName END,
-						u.timezone = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR u.timezone is null OR u.timezone = '' THEN $timezone ELSE u.timezone END,
-						u.roles = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR u.roles is null THEN $roles ELSE u.roles END,
-						u.profilePhotoUrl = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR u.profilePhotoUrl is null OR u.profilePhotoUrl = '' THEN $profilePhotoUrl ELSE u.profilePhotoUrl END,
-						u.internal = $internal,
-						u.bot = $bot,
-						u.updatedAt = datetime(),
-						u.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE u.sourceOfTruth END`, tenant)
-	params := map[string]any{
-		"tenant":          tenant,
-		"id":              input.Id,
-		"name":            input.Name,
-		"firstName":       input.FirstName,
-		"lastName":        input.LastName,
-		"internal":        input.Internal,
-		"test":            input.Test,
-		"roles":           input.Roles,
-		"bot":             input.Bot,
-		"profilePhotoUrl": input.ProfilePhotoUrl,
-		"timezone":        input.Timezone,
-		"source":          input.Source,
-		"sourceOfTruth":   input.SourceOfTruth,
-		"appSource":       input.AppSource,
-		"createdAt":       utils.NowIfZero(input.CreatedAt),
-		"overwrite":       input.SourceOfTruth == constants.SourceOpenline,
-	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
-
-	if err := utils.ExecuteQueryInTx(ctx, tx, cypher, params); err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-	return nil
-}
-
-func (r *userWriteRepository) CreateUserInTxNew(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, userId string, data data_fields.UserFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserWriteRepository.CreateUserInTxNew")
+func (r *userWriteRepository) CreateUserInTx(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, userId string, data data_fields.UserFields) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserWriteRepository.CreateUserInTx")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.SetTag(tracing.SpanTagEntityId, userId)
@@ -200,48 +103,6 @@ func (r *userWriteRepository) CreateUserInTxNew(ctx context.Context, tx *neo4j.M
 		tracing.TraceErr(span, err)
 	}
 
-	return err
-}
-
-func (r *userWriteRepository) UpdateUser(c context.Context, tenant, userId string, data UserUpdateFields) error {
-	span, ctx := opentracing.StartSpanFromContext(c, "UserWriteRepository.UpdateUser")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.SetTag(tracing.SpanTagEntityId, userId)
-	tracing.LogObjectAsJson(span, "data", data)
-
-	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User:User_%s {id:$id})
-		 SET	u.name = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR u.name is null OR u.name = '' THEN $name ELSE u.name END,
-				u.firstName = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR u.firstName is null OR u.firstName = '' THEN $firstName ELSE u.firstName END,
-				u.lastName = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR u.lastName is null OR u.lastName = '' THEN $lastName ELSE u.lastName END,
-				u.timezone = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR u.timezone is null OR u.timezone = '' THEN $timezone ELSE u.timezone END,
-				u.profilePhotoUrl = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR u.profilePhotoUrl is null OR u.profilePhotoUrl = '' THEN $profilePhotoUrl ELSE u.profilePhotoUrl END,
-				u.updatedAt = datetime(),
-				u.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE u.sourceOfTruth END`, tenant)
-	params := map[string]any{
-		"id":              userId,
-		"tenant":          tenant,
-		"name":            data.Name,
-		"firstName":       data.FirstName,
-		"lastName":        data.LastName,
-		"sourceOfTruth":   data.Source,
-		"profilePhotoUrl": data.ProfilePhotoUrl,
-		"timezone":        data.Timezone,
-		"overwrite":       data.Source == constants.SourceOpenline,
-	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
-
-	session := r.prepareWriteSession(ctx)
-	defer session.Close(ctx)
-
-	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		_, err := tx.Run(ctx, cypher, params)
-		return nil, err
-	})
-	if err != nil {
-		tracing.TraceErr(span, err)
-	}
 	return err
 }
 

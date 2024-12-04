@@ -114,7 +114,7 @@ func (s *userService) Save(ctx context.Context, txWithPostCommit *utils.TxWithPo
 
 		var innerErr error
 		if createFlow {
-			innerErr = s.services.Neo4jRepositories.UserWriteRepository.CreateUserInTxNew(ctx, txWithPostCommit.Tx, tenant, userId, userFields)
+			innerErr = s.services.Neo4jRepositories.UserWriteRepository.CreateUserInTx(ctx, txWithPostCommit.Tx, tenant, userId, userFields)
 		} else {
 			innerErr = s.services.Neo4jRepositories.UserWriteRepository.UpdateUserInTx(ctx, txWithPostCommit.Tx, tenant, userId, userFields)
 		}
