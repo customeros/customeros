@@ -38,6 +38,7 @@ func (r *flowActionRepository) InitializeActions(ctx context.Context) error {
 	tracing.TagComponentPostgresRepository(span)
 
 	requiredActions := []entity.FlowAction{
+		// Fathom
 		{
 			EventName:   commonenum.EventFathomMeetingSummaryCreated.String(),
 			ActionType:  commonenum.ActionCreateTimelineEvent.String(),
@@ -46,10 +47,11 @@ func (r *flowActionRepository) InitializeActions(ctx context.Context) error {
 		},
 		{
 			EventName:   commonenum.EventFathomMeetingSummaryCreated.String(),
-			ActionType:  commonenum.ActionCreateContacts.String(),
+			ActionType:  commonenum.ActionCreateContact.String(),
 			Description: "Create contacts for each participant (if they don't exist)",
 			Enabled:     true,
 		},
+		// Grain
 		{
 			EventName:   commonenum.EventGrainMeetingSummaryCreated.String(),
 			ActionType:  commonenum.ActionCreateTimelineEvent.String(),
@@ -58,7 +60,7 @@ func (r *flowActionRepository) InitializeActions(ctx context.Context) error {
 		},
 		{
 			EventName:   commonenum.EventGrainMeetingSummaryCreated.String(),
-			ActionType:  commonenum.ActionCreateContacts.String(),
+			ActionType:  commonenum.ActionCreateContact.String(),
 			Description: "Create contacts for each participant (if they don't exist)",
 			Enabled:     true,
 		},
