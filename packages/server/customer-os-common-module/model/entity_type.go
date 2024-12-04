@@ -12,6 +12,7 @@ const (
 	EMAIL                 EntityType = "EMAIL"
 	FLOW                  EntityType = "FLOW"
 	FLOW_ACTION           EntityType = "FLOW_ACTION"
+	FLOW_ACTION_EVENT     EntityType = "FLOW_ACTION_EVENT"
 	FLOW_PARTICIPANT      EntityType = "FLOW_PARTICIPANT"
 	FLOW_SENDER           EntityType = "FLOW_SENDER"
 	INTERACTION_EVENT     EntityType = "INTERACTION_EVENT"

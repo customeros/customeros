@@ -51,12 +51,6 @@ func (r *flowActionRepository) InitializeActions(ctx context.Context) error {
 			Enabled:     true,
 		},
 		{
-			EventName:   commonenum.EventFathomMeetingSummaryCreated.String(),
-			ActionType:  commonenum.ActionCreateOrganizations.String(),
-			Description: "Create organizations for each participant (if they don't exist)",
-			Enabled:     true,
-		},
-		{
 			EventName:   commonenum.EventGrainMeetingSummaryCreated.String(),
 			ActionType:  commonenum.ActionCreateTimelineEvent.String(),
 			Description: "Add meeting summary to the timeline of each participant",
@@ -66,12 +60,6 @@ func (r *flowActionRepository) InitializeActions(ctx context.Context) error {
 			EventName:   commonenum.EventGrainMeetingSummaryCreated.String(),
 			ActionType:  commonenum.ActionCreateContacts.String(),
 			Description: "Create contacts for each participant (if they don't exist)",
-			Enabled:     true,
-		},
-		{
-			EventName:   commonenum.EventGrainMeetingSummaryCreated.String(),
-			ActionType:  commonenum.ActionCreateOrganizations.String(),
-			Description: "Create organizations for each participant (if they don't exist)",
 			Enabled:     true,
 		},
 	}

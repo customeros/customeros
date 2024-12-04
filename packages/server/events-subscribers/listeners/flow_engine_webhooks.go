@@ -10,6 +10,9 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/events-subscribers/handlers"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-subscribers/model"
 )
 
 func OnWebhookEventCreated(ctx context.Context, services *service.Services, input any) error {
@@ -18,16 +21,27 @@ func OnWebhookEventCreated(ctx context.Context, services *service.Services, inpu
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "input", input)
 
-	event, err := getWebhookEvent(ctx, input)
+	tenant, event, err := getWebhookEvent(ctx, input)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 
+	c := model.EventContext{
+		Context:  ctx,
+		Span:     span,
+		Services: services,
+		Tenant:   tenant,
+	}
+
 	// determine event handler //
 	switch eventData := (*event.Data).(type) {
+
 	case *data_fields.MeetingSummaryEvent:
-		services.ActionMeetingSummaryService.HandleMeetingSummaryEvent(ctx, eventData, event.ExternalSystemId)
+		c.SourceSystem = event.ExternalSystemId
+		c.SourceEvent = event.Name
+		handlers.HandleMeetingSummaryEvent(c, eventData)
+
 	default:
 		err := fmt.Errorf("Unsupported event %s", event.Name)
 		tracing.TraceErr(span, err)
@@ -37,13 +51,14 @@ func OnWebhookEventCreated(ctx context.Context, services *service.Services, inpu
 	return nil
 }
 
-func getWebhookEvent(ctx context.Context, input any) (*dto.WebhookEvent[any], error) {
+func getWebhookEvent(ctx context.Context, input any) (string, *dto.WebhookEvent[any], error) {
 	message := input.(*dto.Event)
+	tenant := message.Event.Tenant
 	// check message data type before conversion
 	if message.Event.Data == nil {
 		err := errors.New("message data is nil")
-		return nil, err
+		return tenant, nil, err
 	}
 
-	return message.Event.Data.(*dto.WebhookEvent[any]), nil
+	return tenant, message.Event.Data.(*dto.WebhookEvent[any]), nil
 }

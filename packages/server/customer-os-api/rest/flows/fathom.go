@@ -99,7 +99,11 @@ func publishMeetingSummaryCreatedEvent(ctx *rest.HTTPContext, aiSummaryData *Fat
 		meetingSummary.Timestamp = utils.TimePtr(aiSummaryData.Meeting.ScheduledStartTime.UTC())
 	}
 
-	event := dto.NewWebhookEvent(enum.Fathom, "meeting_summary", "created", &meetingSummary)
+	event, err := dto.NewWebhookEvent(enum.Fathom, "meeting_summary", "created", &meetingSummary)
+	if err != nil {
+		tracing.TraceErr(ctx.Span, errors.Wrap(err, "failed to build webhook event"))
+		return err
+	}
 
 	err = ctx.Services.CommonServices.RabbitMQService.PublishWebhookEvent(*ctx.ServiceContext, event)
 	if err != nil {

@@ -99,8 +99,9 @@ func main() {
 	commonServices.RabbitMQService.RegisterHandler(dto.RequestRefreshLastTouchpoint{}, listeners.OnRequestLastTouchpointRefresh)
 	commonServices.RabbitMQService.RegisterHandler(dto.RequestEnrichOrganization{}, listeners.OnRequestedEnrichOrganization)
 
-	// webhooks
-	commonServices.RabbitMQService.RegisterHandler(dto.WebhookEvent{}, listeners.OnWebhookEventCreated)
+	// FlowEngine
+	commonServices.RabbitMQService.RegisterHandler(dto.WebhookEvent[any]{}, listeners.OnWebhookEventCreated)
+	commonServices.RabbitMQService.RegisterHandler(dto.FlowActionEvent[any]{}, listeners.OnFlowActionEventCreated)
 
 	// Listen for messages
 	commonServices.RabbitMQService.ListenQueue(commonService.EventsQueueName)
