@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Check for required environment variable
+ Check for required environment variable
 if [ -z "${HURL_TENANT_API_KEY}" ]; then
     echo "❌ Error: HURL_TENANT_API_KEY environment variable is required"
     exit 1
@@ -23,6 +23,7 @@ do
 
     # Generate a new UUID for this specific test
     NEW_UUID=$(uuidgen)
+    RANDOM_STRING=$(cat /dev/urandom | LC_ALL=C tr -dc 'a-z' | fold -w 10 | head -n 1)
 
     # Get the test name from the file
     test_name=""
@@ -35,7 +36,9 @@ do
     done < "$test_file"
 
     # Run hurl command with verbose output to capture all details
-    hurl --very-verbose --test --continue-on-error --variable "custom_id=$NEW_UUID" --variable "api_key=$HURL_TENANT_API_KEY" "$test_file" > temp_output.txt 2>&1
+    hurl --very-verbose --test --continue-on-error --variable "custom_id=$NEW_UUID" --variable "random_str=$RANDOM_STRING" --variable "api_key=$HURL_TENANT_API_KEY" "$test_file" > temp_output.txt 2>&1
+#    hurl --very-verbose --variables-file <(echo "custom_id=$NEW_UUID api_key=$HURL_TENANT_API_KEY") --test "$test_file"
+
     TEST_EXIT_CODE=$?
 
     # Determine test status
