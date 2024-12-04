@@ -1,6 +1,6 @@
 #!/bin/bash
 
- Check for required environment variable
+# Check for required environment variable
 if [ -z "${HURL_TENANT_API_KEY}" ]; then
     echo "❌ Error: HURL_TENANT_API_KEY environment variable is required"
     exit 1
