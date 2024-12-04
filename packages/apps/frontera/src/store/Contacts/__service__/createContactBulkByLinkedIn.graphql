@@ -1,0 +1,3 @@
+mutation createContactBulkByLinkedIn($linkedInUrls: [String!]!, $flowId: String) {
+  contact_CreateBulkByLinkedIn(linkedInUrls: $linkedInUrls, flowId: $flowId)
+}

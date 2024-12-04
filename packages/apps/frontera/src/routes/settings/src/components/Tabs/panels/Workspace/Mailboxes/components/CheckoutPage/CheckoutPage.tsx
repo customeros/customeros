@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
 import { loadStripe, StripeElementsOptions } from '@stripe/stripe-js';
@@ -10,6 +10,7 @@ import {
   PaymentElement,
 } from '@stripe/react-stripe-js';
 
+import { cn } from '@ui/utils/cn';
 import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
 import { ChevronRight } from '@ui/media/icons/ChevronRight';
@@ -19,6 +20,7 @@ export const CheckoutForm = observer(() => {
   const stripe = useStripe();
   const elements = useElements();
   const navigate = useNavigate();
+
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
 
@@ -32,7 +34,9 @@ export const CheckoutForm = observer(() => {
     const { error: submitError } = await elements.submit();
 
     if (submitError) {
-      setErrorMessage(submitError.message || 'An unknown error occured');
+      setErrorMessage(
+        submitError.message || 'Looks like we’re having trouble right now',
+      );
 
       return;
     }
@@ -40,17 +44,14 @@ export const CheckoutForm = observer(() => {
     const res = await store.mailboxes.getPaymentIntent();
 
     if (!stripe) {
-      store.ui.toastError(
-        'Stripe has not loaded yet.',
-        'stripe-not-loaded-yet',
-      );
+      store.ui.toastError('Stripe has not loaded yet', 'stripe-not-loaded-yet');
 
       return;
     }
 
     if (!res?.clientSecret) {
       store.ui.toastError(
-        'Failled initializing payment.',
+        'We were unable to start this payment',
         'missing-client-secret-stripe-error',
       );
 
@@ -70,16 +71,13 @@ export const CheckoutForm = observer(() => {
 
     if (error) {
       store.ui.toastError(
-        'Could not process your payment',
+        `We couldn't process your payment`,
         'stripe-processing',
       );
     } else {
       await store.mailboxes.buyDomains(paymentIntent.id);
       store.mailboxes.resetBuyFlow();
-      store.ui.toastSuccess(
-        'Mailboxes aquired successfully',
-        'mailbox-buy-success',
-      );
+      store.ui.toastSuccess('Mailboxes bought', 'mailbox-buy-success');
       navigate('/settings?tab=mailboxes');
     }
 
@@ -130,13 +128,20 @@ const options: StripeElementsOptions = {
 export const CheckoutPage = observer(() => {
   const store = useStore();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const campaign = searchParams.get('campaign');
+  const campaignParam = campaign ? `&campaign=${campaign}` : '';
 
   return (
     <div className='py-2 px-6 w-[full] border-r-[1px]'>
       <div className='flex items-center justify-start gap-1 mb-4'>
         <span
-          className='font-semibold text-gray-500 hover:text-gray-700 hover:cursor-pointer'
+          className={cn(
+            'font-semibold text-gray-500',
+            !campaign && 'hover:cursor-pointer hover:text-gray-700',
+          )}
           onClick={() => {
+            if (campaign) return;
             navigate('/settings?tab=mailboxes');
             store.mailboxes.resetBuyFlow();
           }}
@@ -145,8 +150,10 @@ export const CheckoutPage = observer(() => {
         </span>
         <ChevronRight className='mt-0.5 text-gray-400 size-3' />
         <span
-          onClick={() => navigate('/settings?tab=mailboxes&view=buy')}
           className='font-semibold text-gray-500 hover:text-gray-700 hover:cursor-pointer'
+          onClick={() =>
+            navigate('/settings?tab=mailboxes&view=buy' + campaignParam)
+          }
         >
           Add new
         </span>

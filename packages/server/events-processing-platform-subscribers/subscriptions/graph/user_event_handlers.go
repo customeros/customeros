@@ -2,15 +2,8 @@ package graph
 
 import (
 	"context"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
-	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/aggregate"
@@ -30,129 +23,6 @@ func NewUserEventHandler(log logger.Logger, services *service.Services) *UserEve
 		log:      log,
 		services: services,
 	}
-}
-
-func (h *UserEventHandler) OnUserCreate(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserEventHandler.OnUserCreate")
-	defer span.Finish()
-	setEventSpanTagsAndLogFields(span, evt)
-
-	var eventData events.UserCreateEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "evt.GetJsonData")
-	}
-
-	userId := aggregate.GetUserObjectID(evt.AggregateID, eventData.Tenant)
-
-	session := utils.NewNeo4jWriteSession(ctx, *h.services.CommonServices.Neo4jRepositories.Neo4jDriver)
-	defer session.Close(ctx)
-
-	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		var err error
-
-		err = h.services.CommonServices.Neo4jRepositories.UserWriteRepository.CreateUserInTx(ctx, tx, eventData.Tenant, neo4jentity.UserEntity{
-			Id:              userId,
-			Name:            eventData.Name,
-			FirstName:       eventData.FirstName,
-			LastName:        eventData.LastName,
-			CreatedAt:       eventData.CreatedAt,
-			UpdatedAt:       eventData.UpdatedAt,
-			Internal:        eventData.Internal,
-			Test:            eventData.Test,
-			Bot:             eventData.Bot,
-			ProfilePhotoUrl: eventData.ProfilePhotoUrl,
-			Timezone:        eventData.Timezone,
-			Source:          neo4jentity.DecodeDataSource(eventData.SourceFields.Source),
-			SourceOfTruth:   neo4jentity.DecodeDataSource(eventData.SourceFields.SourceOfTruth),
-			AppSource:       helper.GetAppSource(eventData.SourceFields.AppSource),
-		})
-		if err != nil {
-			h.log.Errorf("Error while saving user %s: %s", userId, err.Error())
-			return nil, err
-		}
-		if eventData.ExternalSystem.Available() {
-			externalSystemData := neo4jmodel.ExternalSystem{
-				ExternalSystemId: eventData.ExternalSystem.ExternalSystemId,
-				ExternalUrl:      eventData.ExternalSystem.ExternalUrl,
-				ExternalId:       eventData.ExternalSystem.ExternalId,
-				ExternalIdSecond: eventData.ExternalSystem.ExternalIdSecond,
-				ExternalSource:   eventData.ExternalSystem.ExternalSource,
-				SyncDate:         eventData.ExternalSystem.SyncDate,
-			}
-			err = h.services.CommonServices.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntityInTx(ctx, &tx, eventData.Tenant, userId, model.NodeLabelUser, externalSystemData)
-			if err != nil {
-				h.log.Errorf("Error while link user %s with external system %s: %s", userId, eventData.ExternalSystem.ExternalSystemId, err.Error())
-				return nil, err
-			}
-		}
-		return nil, nil
-	})
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	return nil
-}
-
-func (h *UserEventHandler) OnUserUpdate(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserEventHandler.OnUserUpdate")
-	defer span.Finish()
-	setEventSpanTagsAndLogFields(span, evt)
-
-	var eventData events.UserUpdateEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "evt.GetJsonData")
-	}
-
-	userId := aggregate.GetUserObjectID(evt.AggregateID, eventData.Tenant)
-	data := neo4jrepository.UserUpdateFields{
-		Name:            eventData.Name,
-		Source:          helper.GetSource(eventData.Source),
-		FirstName:       eventData.FirstName,
-		LastName:        eventData.LastName,
-		ProfilePhotoUrl: eventData.ProfilePhotoUrl,
-		Timezone:        eventData.Timezone,
-	}
-	err := h.services.CommonServices.Neo4jRepositories.UserWriteRepository.UpdateUser(ctx, eventData.Tenant, userId, data)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Error while saving user %s: %s", userId, err.Error())
-		return err
-	}
-
-	if eventData.ExternalSystem.Available() {
-		session := utils.NewNeo4jWriteSession(ctx, *h.services.CommonServices.Neo4jRepositories.Neo4jDriver)
-		defer session.Close(ctx)
-
-		_, err = session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-			//var err error
-			if eventData.ExternalSystem.Available() {
-				externalSystemData := neo4jmodel.ExternalSystem{
-					ExternalSystemId: eventData.ExternalSystem.ExternalSystemId,
-					ExternalUrl:      eventData.ExternalSystem.ExternalUrl,
-					ExternalId:       eventData.ExternalSystem.ExternalId,
-					ExternalIdSecond: eventData.ExternalSystem.ExternalIdSecond,
-					ExternalSource:   eventData.ExternalSystem.ExternalSource,
-					SyncDate:         eventData.ExternalSystem.SyncDate,
-				}
-				innerErr := h.services.CommonServices.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntityInTx(ctx, &tx, eventData.Tenant, userId, model.NodeLabelUser, externalSystemData)
-				if innerErr != nil {
-					h.log.Errorf("Error while link user %s with external system %s: %s", userId, eventData.ExternalSystem.ExternalSystemId, err.Error())
-					return nil, innerErr
-				}
-			}
-			return nil, nil
-		})
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
-	}
-
-	return nil
 }
 
 func (h *UserEventHandler) OnJobRoleLinkedToUser(ctx context.Context, evt eventstore.Event) error {

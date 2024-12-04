@@ -15,8 +15,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
-	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
-	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	jobrolepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/job_role"
 	userpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/user"
 	"github.com/opentracing/opentracing-go"
@@ -30,10 +28,7 @@ import (
 )
 
 type UserService interface {
-	Create(ctx context.Context, UserEntity neo4jentity.UserEntity) (string, error)
-	Update(ctx context.Context, userId, firstName, lastName string, name, timezone, profilePhotoURL *string) (*neo4jentity.UserEntity, error)
 	GetAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model2.SortBy) (*utils.Pagination, error)
-
 	AddRole(ctx context.Context, userId string, role model.Role) (*neo4jentity.UserEntity, error)
 	AddRoleInTenant(ctx context.Context, userId string, tenant string, role model.Role) (*neo4jentity.UserEntity, error)
 	RemoveRole(ctx context.Context, userId string, role model.Role) (*neo4jentity.UserEntity, error)
@@ -68,42 +63,6 @@ func NewUserService(log logger.Logger, repositories *repository.Repositories, gr
 
 func (s *userService) getNeo4jDriver() neo4j.DriverWithContext {
 	return *s.repositories.Drivers.Neo4jDriver
-}
-
-func (s *userService) Update(ctx context.Context, userId, firstName, lastName string, name, timezone, profilePhotoURL *string) (*neo4jentity.UserEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserService.Update")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("userId", userId))
-
-	if userId != common.GetContext(ctx).UserId {
-		if !s.ContainsRole(ctx, []model.Role{model.RoleAdmin, model.RolePlatformOwner, model.RoleOwner}) {
-			return nil, fmt.Errorf("user can not update other user")
-		}
-	}
-
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err := utils.CallEventsPlatformGRPCWithRetry[*userpb.UserIdGrpcResponse](func() (*userpb.UserIdGrpcResponse, error) {
-		return s.grpcClients.UserClient.UpsertUser(ctx, &userpb.UpsertUserGrpcRequest{
-			Tenant:         common.GetTenantFromContext(ctx),
-			LoggedInUserId: common.GetUserIdFromContext(ctx),
-			Id:             userId,
-			SourceFields: &commonpb.SourceFields{
-				Source:    string(neo4jentity.DataSourceOpenline),
-				AppSource: constants.AppSourceCustomerOsApi,
-			},
-			FirstName:       firstName,
-			LastName:        lastName,
-			Name:            utils.IfNotNilString(name),
-			Timezone:        utils.IfNotNilString(timezone),
-			ProfilePhotoUrl: utils.IfNotNilString(profilePhotoURL),
-		})
-	})
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-	return s.services.CommonServices.UserService.GetById(ctx, userId)
 }
 
 func (s *userService) ContainsRole(parentCtx context.Context, allowedRoles []model.Role) bool {
@@ -335,40 +294,6 @@ func (s *userService) GetAll(parentCtx context.Context, page, limit int, filter 
 	}
 	paginatedResult.SetRows(&users)
 	return &paginatedResult, nil
-}
-
-func (s *userService) Create(ctx context.Context, userEntity neo4jentity.UserEntity) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserService.Create")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("userEntity", userEntity))
-
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := utils.CallEventsPlatformGRPCWithRetry[*userpb.UserIdGrpcResponse](func() (*userpb.UserIdGrpcResponse, error) {
-		return s.grpcClients.UserClient.UpsertUser(ctx, &userpb.UpsertUserGrpcRequest{
-			Tenant: common.GetTenantFromContext(ctx),
-			SourceFields: &commonpb.SourceFields{
-				Source:    string(userEntity.Source),
-				AppSource: userEntity.AppSource,
-			},
-			LoggedInUserId:  common.GetUserIdFromContext(ctx),
-			FirstName:       userEntity.FirstName,
-			LastName:        userEntity.LastName,
-			Name:            userEntity.Name,
-			Internal:        false,
-			Bot:             false,
-			ProfilePhotoUrl: userEntity.ProfilePhotoUrl,
-			Timezone:        userEntity.Timezone,
-		})
-	})
-	if err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("Error from events processing %s", err.Error())
-		return "", err
-	}
-
-	neo4jrepository.WaitForNodeCreatedInNeo4j(ctx, s.repositories.Neo4jRepositories, response.Id, model2.NodeLabelUser, span)
-	return response.Id, nil
 }
 
 func (s *userService) addPlayerDbRelationshipToUser(relationship dbtype.Relationship, userEntity *neo4jentity.UserEntity) {

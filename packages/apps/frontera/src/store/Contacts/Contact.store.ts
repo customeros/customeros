@@ -70,9 +70,17 @@ export class ContactStore extends Syncable<Contact> {
   get flows(): FlowStore[] | undefined {
     if (!this.value.flows?.length) return undefined;
 
-    return this.value.flows.map((flow) => {
-      return this.root.flows?.value.get(flow.metadata.id) as FlowStore;
-    });
+    return this.value.flows.reduce((acc, flow) => {
+      const flowStore = this.root.flows?.value.get(
+        flow.metadata.id,
+      ) as FlowStore;
+
+      if (flowStore) {
+        acc.push(flowStore);
+      }
+
+      return acc;
+    }, [] as FlowStore[]);
   }
 
   get flowsIds(): string[] | undefined {
@@ -122,7 +130,7 @@ export class ContactStore extends Syncable<Contact> {
 
   deletePersona(personaId: string) {
     this.value.tags = (this.value?.tags || []).filter(
-      (id) => id.id !== personaId,
+      (tag) => tag.metadata.id !== personaId,
     );
   }
 

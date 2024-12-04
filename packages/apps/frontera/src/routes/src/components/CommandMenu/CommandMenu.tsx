@@ -44,6 +44,7 @@ import {
   EditPhoneNumber,
   ContactCommands,
   EditContactFlow,
+  AddContactsBulk,
   ChangeFlowStatus,
   ChangeArrEstimate,
   FlowsBulkCommands,
@@ -68,7 +69,6 @@ import {
   SetOpportunityNextSteps,
   DeleteConfirmationModal,
   GetBrowserExtensionLink,
-  AddContactViaLinkedInUrl,
   OrganizationBulkCommands,
   InstallLinkedInExtension,
   RenameOrganizationProperty,
@@ -106,6 +106,7 @@ const Commands: Record<CommandMenuType, ReactElement> = {
   UnlinkContactFromFlow: <UnlinkContactFromFlow />,
   ConfirmBulkFlowEdit: <ConfirmBulkFlowEdit />,
   ConfirmSingleFlowEdit: <ConfirmSingleFlowEdit />,
+  AddContactsBulk: <AddContactsBulk />,
 
   // Opportunity
   OpportunityHub: <OpportunityHub />,
@@ -123,7 +124,6 @@ const Commands: Record<CommandMenuType, ReactElement> = {
   ChangeBulkArrEstimate: <ChangeBulkArrEstimate />,
   MergeConfirmationModal: <MergeConfirmationModal />,
   AddNewOrganization: <AddNewOrganization />,
-  AddContactViaLinkedInUrl: <AddContactViaLinkedInUrl />,
   RenameOrganizationProperty: <RenameOrganizationProperty />,
 
   // Flows

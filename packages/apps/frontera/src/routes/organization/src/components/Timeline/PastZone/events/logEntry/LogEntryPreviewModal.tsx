@@ -178,7 +178,10 @@ export const LogEntryPreviewModal = ({
                   logEntry?.update((value) => {
                     value.tags = hashtags.map(
                       (option) =>
-                        ({ id: option.value, name: option.label } as Tag),
+                        ({
+                          metadata: { id: option.value },
+                          name: option.label,
+                        } as Tag),
                     );
 
                     return value;

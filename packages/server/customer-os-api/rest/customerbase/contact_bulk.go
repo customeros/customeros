@@ -198,7 +198,7 @@ func handleBulkJSONRequest(ctx rest.HTTPContext) {
 				Description: validationErrors[0].Description,
 			},
 		}
-		ctx.GinContext.JSON(http.StatusCreated, resp)
+		ctx.GinContext.JSON(http.StatusPartialContent, resp)
 	case fail == total:
 		rest.SendError(ctx.GinContext, ctx.Span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("No valid contacts found in request"))
 	default:

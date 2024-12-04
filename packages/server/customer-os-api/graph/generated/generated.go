@@ -1112,6 +1112,7 @@ type ComplexityRoot struct {
 		UserRemoveRole                             func(childComplexity int, id string, role model.Role) int
 		UserRemoveRoleInTenant                     func(childComplexity int, id string, tenant string, role model.Role) int
 		UserUpdate                                 func(childComplexity int, input model.UserUpdateInput) int
+		UserUpdateOnboardingDetails                func(childComplexity int, input model.UserOnboardingDetailsInput) int
 		WorkflowCreate                             func(childComplexity int, input model.WorkflowCreateInput) int
 		WorkflowUpdate                             func(childComplexity int, input model.WorkflowUpdateInput) int
 	}
@@ -1377,7 +1378,9 @@ type ComplexityRoot struct {
 		BillableInfo                       func(childComplexity int) int
 		Contact                            func(childComplexity int, id string) int
 		ContactByEmail                     func(childComplexity int, email string) int
+		ContactByLinkedIn                  func(childComplexity int, linkedInURL string) int
 		ContactByPhone                     func(childComplexity int, e164 string) int
+		ContactExistsByLinkedIn            func(childComplexity int, linkedInURL string) int
 		Contacts                           func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model1.SortBy) int
 		Contract                           func(childComplexity int, id string) int
 		Contracts                          func(childComplexity int, pagination *model.Pagination) int
@@ -1420,8 +1423,10 @@ type ComplexityRoot struct {
 		Organization                       func(childComplexity int, id string) int
 		OrganizationByCustomID             func(childComplexity int, customID string) int
 		OrganizationByCustomerOsID         func(childComplexity int, customerOsID string) int
+		OrganizationByLinkedIn             func(childComplexity int, linkedInURL string) int
 		OrganizationCheckWebsite           func(childComplexity int, website string) int
 		OrganizationDistinctOwners         func(childComplexity int) int
+		OrganizationExistsByLinkedIn       func(childComplexity int, linkedInURL string) int
 		Organizations                      func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model1.SortBy) int
 		OrganizationsHiddenAfter           func(childComplexity int, date time.Time) int
 		PhoneNumber                        func(childComplexity int, id string) int
@@ -1643,6 +1648,7 @@ type ComplexityRoot struct {
 		LastName         func(childComplexity int) int
 		Mailboxes        func(childComplexity int) int
 		Name             func(childComplexity int) int
+		Onboarding       func(childComplexity int) int
 		PhoneNumbers     func(childComplexity int) int
 		ProfilePhotoURL  func(childComplexity int) int
 		Roles            func(childComplexity int) int
@@ -1651,6 +1657,14 @@ type ComplexityRoot struct {
 		Test             func(childComplexity int) int
 		Timezone         func(childComplexity int) int
 		UpdatedAt        func(childComplexity int) int
+	}
+
+	UserOnboardingDetails struct {
+		OnboardingCrmStepCompleted       func(childComplexity int) int
+		OnboardingInboundStepCompleted   func(childComplexity int) int
+		OnboardingMailstackStepCompleted func(childComplexity int) int
+		OnboardingOutboundStepCompleted  func(childComplexity int) int
+		ShowOnboardingPage               func(childComplexity int) int
 	}
 
 	UserPage struct {
@@ -1965,6 +1979,7 @@ type MutationResolver interface {
 	UserRemoveRoleInTenant(ctx context.Context, id string, tenant string, role model.Role) (*model.User, error)
 	UserDelete(ctx context.Context, id string) (*model.Result, error)
 	UserDeleteInTenant(ctx context.Context, id string, tenant string) (*model.Result, error)
+	UserUpdateOnboardingDetails(ctx context.Context, input model.UserOnboardingDetailsInput) (*model.User, error)
 	CustomerUserAddJobRole(ctx context.Context, id string, jobRoleInput model.JobRoleInput) (*model.CustomerUser, error)
 	TableViewDefCreate(ctx context.Context, input model.TableViewDefCreateInput) (*model.TableViewDef, error)
 	TableViewDefUpdate(ctx context.Context, input model.TableViewDefUpdateInput) (*model.TableViewDef, error)
@@ -2035,6 +2050,8 @@ type QueryResolver interface {
 	Contacts(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model1.SortBy) (*model.ContactsPage, error)
 	ContactByEmail(ctx context.Context, email string) (*model.Contact, error)
 	ContactByPhone(ctx context.Context, e164 string) (*model.Contact, error)
+	ContactByLinkedIn(ctx context.Context, linkedInURL string) (*model.Contact, error)
+	ContactExistsByLinkedIn(ctx context.Context, linkedInURL string) (bool, error)
 	Contract(ctx context.Context, id string) (*model.Contract, error)
 	Contracts(ctx context.Context, pagination *model.Pagination) (*model.ContractPage, error)
 	CustomFieldTemplateList(ctx context.Context) ([]*model.CustomFieldTemplate, error)
@@ -2078,6 +2095,8 @@ type QueryResolver interface {
 	OrganizationDistinctOwners(ctx context.Context) ([]*model.User, error)
 	OrganizationCheckWebsite(ctx context.Context, website string) (*model.WebsiteDetails, error)
 	OrganizationsHiddenAfter(ctx context.Context, date time.Time) ([]string, error)
+	OrganizationByLinkedIn(ctx context.Context, linkedInURL string) (*model.Organization, error)
+	OrganizationExistsByLinkedIn(ctx context.Context, linkedInURL string) (bool, error)
 	UIOrganization(ctx context.Context, ids string) (*model.OrganizationUIDetails, error)
 	UIOrganizations(ctx context.Context, ids []string) ([]*model.OrganizationUIDetails, error)
 	UIOrganizationsSearch(ctx context.Context, limit *int, where *model.Filter, sort *model1.SortBy) (*model.OrganizationSearchResult, error)
@@ -8505,6 +8524,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.UserUpdate(childComplexity, args["input"].(model.UserUpdateInput)), true
 
+	case "Mutation.user_UpdateOnboardingDetails":
+		if e.complexity.Mutation.UserUpdateOnboardingDetails == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_user_UpdateOnboardingDetails_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UserUpdateOnboardingDetails(childComplexity, args["input"].(model.UserOnboardingDetailsInput)), true
+
 	case "Mutation.workflow_Create":
 		if e.complexity.Mutation.WorkflowCreate == nil {
 			break
@@ -10064,6 +10095,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.ContactByEmail(childComplexity, args["email"].(string)), true
 
+	case "Query.contact_ByLinkedIn":
+		if e.complexity.Query.ContactByLinkedIn == nil {
+			break
+		}
+
+		args, err := ec.field_Query_contact_ByLinkedIn_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.ContactByLinkedIn(childComplexity, args["linkedInUrl"].(string)), true
+
 	case "Query.contact_ByPhone":
 		if e.complexity.Query.ContactByPhone == nil {
 			break
@@ -10075,6 +10118,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.ContactByPhone(childComplexity, args["e164"].(string)), true
+
+	case "Query.contact_ExistsByLinkedIn":
+		if e.complexity.Query.ContactExistsByLinkedIn == nil {
+			break
+		}
+
+		args, err := ec.field_Query_contact_ExistsByLinkedIn_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.ContactExistsByLinkedIn(childComplexity, args["linkedInUrl"].(string)), true
 
 	case "Query.contacts":
 		if e.complexity.Query.Contacts == nil {
@@ -10530,6 +10585,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.OrganizationByCustomerOsID(childComplexity, args["customerOsId"].(string)), true
 
+	case "Query.organization_ByLinkedIn":
+		if e.complexity.Query.OrganizationByLinkedIn == nil {
+			break
+		}
+
+		args, err := ec.field_Query_organization_ByLinkedIn_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.OrganizationByLinkedIn(childComplexity, args["linkedInUrl"].(string)), true
+
 	case "Query.organization_CheckWebsite":
 		if e.complexity.Query.OrganizationCheckWebsite == nil {
 			break
@@ -10548,6 +10615,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.OrganizationDistinctOwners(childComplexity), true
+
+	case "Query.organization_ExistsByLinkedIn":
+		if e.complexity.Query.OrganizationExistsByLinkedIn == nil {
+			break
+		}
+
+		args, err := ec.field_Query_organization_ExistsByLinkedIn_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.OrganizationExistsByLinkedIn(childComplexity, args["linkedInUrl"].(string)), true
 
 	case "Query.organizations":
 		if e.complexity.Query.Organizations == nil {
@@ -11782,6 +11861,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.User.Name(childComplexity), true
 
+	case "User.onboarding":
+		if e.complexity.User.Onboarding == nil {
+			break
+		}
+
+		return e.complexity.User.Onboarding(childComplexity), true
+
 	case "User.phoneNumbers":
 		if e.complexity.User.PhoneNumbers == nil {
 			break
@@ -11837,6 +11923,41 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.User.UpdatedAt(childComplexity), true
+
+	case "UserOnboardingDetails.onboardingCrmStepCompleted":
+		if e.complexity.UserOnboardingDetails.OnboardingCrmStepCompleted == nil {
+			break
+		}
+
+		return e.complexity.UserOnboardingDetails.OnboardingCrmStepCompleted(childComplexity), true
+
+	case "UserOnboardingDetails.onboardingInboundStepCompleted":
+		if e.complexity.UserOnboardingDetails.OnboardingInboundStepCompleted == nil {
+			break
+		}
+
+		return e.complexity.UserOnboardingDetails.OnboardingInboundStepCompleted(childComplexity), true
+
+	case "UserOnboardingDetails.onboardingMailstackStepCompleted":
+		if e.complexity.UserOnboardingDetails.OnboardingMailstackStepCompleted == nil {
+			break
+		}
+
+		return e.complexity.UserOnboardingDetails.OnboardingMailstackStepCompleted(childComplexity), true
+
+	case "UserOnboardingDetails.onboardingOutboundStepCompleted":
+		if e.complexity.UserOnboardingDetails.OnboardingOutboundStepCompleted == nil {
+			break
+		}
+
+		return e.complexity.UserOnboardingDetails.OnboardingOutboundStepCompleted(childComplexity), true
+
+	case "UserOnboardingDetails.showOnboardingPage":
+		if e.complexity.UserOnboardingDetails.ShowOnboardingPage == nil {
+			break
+		}
+
+		return e.complexity.UserOnboardingDetails.ShowOnboardingPage(childComplexity), true
 
 	case "UserPage.content":
 		if e.complexity.UserPage.Content == nil {
@@ -12034,6 +12155,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputTenantSettingsOpportunityStageConfigurationInput,
 		ec.unmarshalInputTimeRange,
 		ec.unmarshalInputUserInput,
+		ec.unmarshalInputUserOnboardingDetailsInput,
 		ec.unmarshalInputUserUpdateInput,
 		ec.unmarshalInputWorkflowCreateInput,
 		ec.unmarshalInputWorkflowUpdateInput,
@@ -12417,6 +12539,8 @@ enum EntityType {
     contacts(pagination: Pagination, where: Filter, sort: [SortBy!]): ContactsPage!
     contact_ByEmail(email: String!) :Contact!
     contact_ByPhone(e164: String!) :Contact!
+    contact_ByLinkedIn(linkedInUrl: String!): Contact @hasRole(roles: [ADMIN, USER]) @hasTenant
+    contact_ExistsByLinkedIn(linkedInUrl: String!): Boolean! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 extend type Mutation {
@@ -14868,6 +14992,8 @@ input OpportunityRenewalUpdateAllForOrganizationInput {
     organization_DistinctOwners: [User!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_CheckWebsite(website: String!): WebsiteDetails! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organizations_HiddenAfter(date: Time!): [String!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organization_ByLinkedIn(linkedInUrl: String!): Organization @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organization_ExistsByLinkedIn(linkedInUrl: String!): Boolean! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 extend type Mutation {
@@ -15817,6 +15943,7 @@ type Tag {
     metadata:   Metadata!
     name:       String!
     entityType: EntityType!
+
     id:         ID @deprecated(reason: "Use metadata.id")
     createdAt:  Time @deprecated(reason: "Use metadata.created")
     updatedAt:  Time @deprecated(reason: "Use metadata.lastUpdated")
@@ -16103,6 +16230,7 @@ extend type Mutation {
     user_RemoveRoleInTenant(id: ID!, tenant: String!, role: Role!): User! @hasRole(roles: [ADMIN, PLATFORM_OWNER])
     user_Delete(id: ID!): Result! @hasRole(roles: [ADMIN, OWNER]) @hasTenant
     user_DeleteInTenant(id: ID!, tenant: String!): Result! @hasRole(roles: [ADMIN, PLATFORM_OWNER])
+    user_UpdateOnboardingDetails(input: UserOnboardingDetailsInput!): User! @hasRole(roles: [ADMIN, OWNER]) @hasTenant
 
     customer_user_AddJobRole(id: ID!, jobRoleInput: JobRoleInput!) : CustomerUser! @hasRole(roles: [ADMIN, OWNER, PLATFORM_OWNER]) @hasTenant
 }
@@ -16147,6 +16275,7 @@ type User {
     phoneNumbers: [PhoneNumber!]! @goField(forceResolver: true)
     mailboxes: [String!]! @goField(forceResolver: true)
     hasLinkedInToken: Boolean! @goField(forceResolver: true)
+    onboarding: UserOnboardingDetails!
 
     """
     Timestamp of user creation.
@@ -16161,6 +16290,14 @@ type User {
     source: DataSource!
     sourceOfTruth: DataSource!
     appSource: String!
+}
+
+type UserOnboardingDetails {
+    showOnboardingPage:                 Boolean!
+    onboardingInboundStepCompleted:     Boolean!
+    onboardingOutboundStepCompleted:    Boolean!
+    onboardingCrmStepCompleted:         Boolean!
+    onboardingMailstackStepCompleted:   Boolean!
 }
 
 """
@@ -16246,6 +16383,15 @@ input UserUpdateInput {
     name: String
     timezone: String
     profilePhotoUrl: String
+}
+
+input UserOnboardingDetailsInput {
+    id: ID!
+    showOnboardingPage:                 Boolean
+    onboardingInboundStepCompleted:     Boolean
+    onboardingOutboundStepCompleted:    Boolean
+    onboardingCrmStepCompleted:         Boolean
+    onboardingMailstackStepCompleted:   Boolean
 }
 
 type CustomerUser {
@@ -16334,35 +16480,35 @@ enum ColumnViewType {
     INVOICES_INVOICE_PREVIEW
     INVOICES_ORGANIZATION
 
-    ORGANIZATIONS_AVATAR # no search
-    ORGANIZATIONS_NAME #search done
-    ORGANIZATIONS_WEBSITE #search done
-    ORGANIZATIONS_RELATIONSHIP #search done
-    ORGANIZATIONS_ONBOARDING_STATUS #search done
-    ORGANIZATIONS_RENEWAL_LIKELIHOOD #search done
-    ORGANIZATIONS_RENEWAL_DATE #search done
-    ORGANIZATIONS_FORECAST_ARR #search done
-    ORGANIZATIONS_OWNER #search done
-    ORGANIZATIONS_LAST_TOUCHPOINT #todo search
-    ORGANIZATIONS_LAST_TOUCHPOINT_DATE #search done
-    ORGANIZATIONS_STAGE #search done
-    ORGANIZATIONS_CONTACT_COUNT #deprecate
-    ORGANIZATIONS_SOCIALS #search done
-    ORGANIZATIONS_LEAD_SOURCE #search done
-    ORGANIZATIONS_CREATED_DATE #search done
-    ORGANIZATIONS_EMPLOYEE_COUNT #search done
-    ORGANIZATIONS_YEAR_FOUNDED #search done
-    ORGANIZATIONS_INDUSTRY #search done
-    ORGANIZATIONS_CHURN_DATE #search done
-    ORGANIZATIONS_LTV #search done
-    ORGANIZATIONS_COUNTRY #todo search
-    ORGANIZATIONS_CITY #todo search
+    ORGANIZATIONS_AVATAR # no search, no sort
+    ORGANIZATIONS_NAME #search, sort done
+    ORGANIZATIONS_WEBSITE #search, sort done
+    ORGANIZATIONS_RELATIONSHIP #search, sort done
+    ORGANIZATIONS_ONBOARDING_STATUS #search, sort done
+    ORGANIZATIONS_RENEWAL_LIKELIHOOD #search, sort done
+    ORGANIZATIONS_RENEWAL_DATE #search, sort done
+    ORGANIZATIONS_FORECAST_ARR #search, sort done
+    ORGANIZATIONS_OWNER #search, sort done
+    ORGANIZATIONS_LAST_TOUCHPOINT #search, sort done
+    ORGANIZATIONS_LAST_TOUCHPOINT_DATE #search, sort done
+    ORGANIZATIONS_STAGE #search, sort done
+    ORGANIZATIONS_CONTACT_COUNT #deprecated
+    ORGANIZATIONS_SOCIALS #search done, no sort
+    ORGANIZATIONS_LEAD_SOURCE #search, sort done
+    ORGANIZATIONS_CREATED_DATE #search, sort done
+    ORGANIZATIONS_EMPLOYEE_COUNT #search, sort done
+    ORGANIZATIONS_YEAR_FOUNDED #search, sort done
+    ORGANIZATIONS_INDUSTRY #search, sort done
+    ORGANIZATIONS_CHURN_DATE #search, sort done
+    ORGANIZATIONS_LTV #search, sort done
+    ORGANIZATIONS_COUNTRY #search, sort done
+    ORGANIZATIONS_CITY #search, sort done
     ORGANIZATIONS_HEADQUARTERS #deprecated
-    ORGANIZATIONS_IS_PUBLIC #search done
-    ORGANIZATIONS_LINKEDIN_FOLLOWER_COUNT #no search
-    ORGANIZATIONS_TAGS #search done
-    ORGANIZATIONS_PARENT_ORGANIZATION #todo search by parent org name
-    ORGANIZATIONS_UPDATED_DATE #search done
+    ORGANIZATIONS_IS_PUBLIC #search, sort done
+    ORGANIZATIONS_LINKEDIN_FOLLOWER_COUNT #no search, no sort
+    ORGANIZATIONS_TAGS #search done, no sort
+    ORGANIZATIONS_PARENT_ORGANIZATION #search done
+    ORGANIZATIONS_UPDATED_DATE #search, sort done
 
     CONTACTS_AVATAR
     CONTACTS_NAME
@@ -24610,6 +24756,38 @@ func (ec *executionContext) field_Mutation_user_RemoveRole_argsRole(
 	return zeroVal, nil
 }
 
+func (ec *executionContext) field_Mutation_user_UpdateOnboardingDetails_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	arg0, err := ec.field_Mutation_user_UpdateOnboardingDetails_argsInput(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_user_UpdateOnboardingDetails_argsInput(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (model.UserOnboardingDetailsInput, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["input"]
+	if !ok {
+		var zeroVal model.UserOnboardingDetailsInput
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+	if tmp, ok := rawArgs["input"]; ok {
+		return ec.unmarshalNUserOnboardingDetailsInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐUserOnboardingDetailsInput(ctx, tmp)
+	}
+
+	var zeroVal model.UserOnboardingDetailsInput
+	return zeroVal, nil
+}
+
 func (ec *executionContext) field_Mutation_user_Update_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -25006,6 +25184,38 @@ func (ec *executionContext) field_Query_contact_ByEmail_argsEmail(
 	return zeroVal, nil
 }
 
+func (ec *executionContext) field_Query_contact_ByLinkedIn_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	arg0, err := ec.field_Query_contact_ByLinkedIn_argsLinkedInURL(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["linkedInUrl"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Query_contact_ByLinkedIn_argsLinkedInURL(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (string, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["linkedInUrl"]
+	if !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("linkedInUrl"))
+	if tmp, ok := rawArgs["linkedInUrl"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
 func (ec *executionContext) field_Query_contact_ByPhone_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -25031,6 +25241,38 @@ func (ec *executionContext) field_Query_contact_ByPhone_argsE164(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("e164"))
 	if tmp, ok := rawArgs["e164"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_contact_ExistsByLinkedIn_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	arg0, err := ec.field_Query_contact_ExistsByLinkedIn_argsLinkedInURL(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["linkedInUrl"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Query_contact_ExistsByLinkedIn_argsLinkedInURL(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (string, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["linkedInUrl"]
+	if !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("linkedInUrl"))
+	if tmp, ok := rawArgs["linkedInUrl"]; ok {
 		return ec.unmarshalNString2string(ctx, tmp)
 	}
 
@@ -26440,6 +26682,38 @@ func (ec *executionContext) field_Query_organization_ByCustomerOsId_argsCustomer
 	return zeroVal, nil
 }
 
+func (ec *executionContext) field_Query_organization_ByLinkedIn_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	arg0, err := ec.field_Query_organization_ByLinkedIn_argsLinkedInURL(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["linkedInUrl"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Query_organization_ByLinkedIn_argsLinkedInURL(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (string, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["linkedInUrl"]
+	if !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("linkedInUrl"))
+	if tmp, ok := rawArgs["linkedInUrl"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
 func (ec *executionContext) field_Query_organization_CheckWebsite_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -26465,6 +26739,38 @@ func (ec *executionContext) field_Query_organization_CheckWebsite_argsWebsite(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("website"))
 	if tmp, ok := rawArgs["website"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_organization_ExistsByLinkedIn_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	arg0, err := ec.field_Query_organization_ExistsByLinkedIn_argsLinkedInURL(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["linkedInUrl"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Query_organization_ExistsByLinkedIn_argsLinkedInURL(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (string, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["linkedInUrl"]
+	if !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("linkedInUrl"))
+	if tmp, ok := rawArgs["linkedInUrl"]; ok {
 		return ec.unmarshalNString2string(ctx, tmp)
 	}
 
@@ -27590,6 +27896,8 @@ func (ec *executionContext) fieldContext_Action_createdBy(_ context.Context, fie
 				return ec.fieldContext_User_mailboxes(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_User_onboarding(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -31065,6 +31373,8 @@ func (ec *executionContext) fieldContext_Comment_createdBy(_ context.Context, fi
 				return ec.fieldContext_User_mailboxes(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_User_onboarding(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -32701,6 +33011,8 @@ func (ec *executionContext) fieldContext_Contact_connectedUsers(_ context.Contex
 				return ec.fieldContext_User_mailboxes(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_User_onboarding(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -32848,6 +33160,8 @@ func (ec *executionContext) fieldContext_Contact_owner(_ context.Context, field 
 				return ec.fieldContext_User_mailboxes(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_User_onboarding(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -33993,6 +34307,8 @@ func (ec *executionContext) fieldContext_Contract_createdBy(_ context.Context, f
 				return ec.fieldContext_User_mailboxes(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_User_onboarding(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -34283,6 +34599,8 @@ func (ec *executionContext) fieldContext_Contract_owner(_ context.Context, field
 				return ec.fieldContext_User_mailboxes(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_User_onboarding(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -40959,6 +41277,8 @@ func (ec *executionContext) fieldContext_Email_users(_ context.Context, field gr
 				return ec.fieldContext_User_mailboxes(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_User_onboarding(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -44585,6 +44905,8 @@ func (ec *executionContext) fieldContext_FlowSender_user(_ context.Context, fiel
 				return ec.fieldContext_User_mailboxes(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_User_onboarding(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -45335,6 +45657,8 @@ func (ec *executionContext) fieldContext_GlobalCache_user(_ context.Context, fie
 				return ec.fieldContext_User_mailboxes(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_User_onboarding(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -55456,6 +55780,8 @@ func (ec *executionContext) fieldContext_LogEntry_createdBy(_ context.Context, f
 				return ec.fieldContext_User_mailboxes(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_User_onboarding(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -74654,6 +74980,8 @@ func (ec *executionContext) fieldContext_Mutation_user_Create(ctx context.Contex
 				return ec.fieldContext_User_mailboxes(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_User_onboarding(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -74775,6 +75103,8 @@ func (ec *executionContext) fieldContext_Mutation_user_Update(ctx context.Contex
 				return ec.fieldContext_User_mailboxes(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_User_onboarding(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -74908,6 +75238,8 @@ func (ec *executionContext) fieldContext_Mutation_user_AddRole(ctx context.Conte
 				return ec.fieldContext_User_mailboxes(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_User_onboarding(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -75041,6 +75373,8 @@ func (ec *executionContext) fieldContext_Mutation_user_RemoveRole(ctx context.Co
 				return ec.fieldContext_User_mailboxes(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_User_onboarding(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -75167,6 +75501,8 @@ func (ec *executionContext) fieldContext_Mutation_user_AddRoleInTenant(ctx conte
 				return ec.fieldContext_User_mailboxes(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_User_onboarding(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -75293,6 +75629,8 @@ func (ec *executionContext) fieldContext_Mutation_user_RemoveRoleInTenant(ctx co
 				return ec.fieldContext_User_mailboxes(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_User_onboarding(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -75498,6 +75836,141 @@ func (ec *executionContext) fieldContext_Mutation_user_DeleteInTenant(ctx contex
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_user_DeleteInTenant_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_user_UpdateOnboardingDetails(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_user_UpdateOnboardingDetails(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().UserUpdateOnboardingDetails(rctx, fc.Args["input"].(model.UserOnboardingDetailsInput))
+		}
+
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "OWNER"})
+			if err != nil {
+				var zeroVal *model.User
+				return zeroVal, err
+			}
+			if ec.directives.HasRole == nil {
+				var zeroVal *model.User
+				return zeroVal, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				var zeroVal *model.User
+				return zeroVal, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.User); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.User`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.User)
+	fc.Result = res
+	return ec.marshalNUser2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_user_UpdateOnboardingDetails(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_User_id(ctx, field)
+			case "firstName":
+				return ec.fieldContext_User_firstName(ctx, field)
+			case "lastName":
+				return ec.fieldContext_User_lastName(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
+			case "internal":
+				return ec.fieldContext_User_internal(ctx, field)
+			case "bot":
+				return ec.fieldContext_User_bot(ctx, field)
+			case "test":
+				return ec.fieldContext_User_test(ctx, field)
+			case "timezone":
+				return ec.fieldContext_User_timezone(ctx, field)
+			case "profilePhotoUrl":
+				return ec.fieldContext_User_profilePhotoUrl(ctx, field)
+			case "roles":
+				return ec.fieldContext_User_roles(ctx, field)
+			case "emails":
+				return ec.fieldContext_User_emails(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_User_phoneNumbers(ctx, field)
+			case "mailboxes":
+				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "hasLinkedInToken":
+				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_User_onboarding(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_User_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_User_updatedAt(ctx, field)
+			case "jobRoles":
+				return ec.fieldContext_User_jobRoles(ctx, field)
+			case "calendars":
+				return ec.fieldContext_User_calendars(ctx, field)
+			case "source":
+				return ec.fieldContext_User_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_User_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_User_appSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_user_UpdateOnboardingDetails_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -76523,6 +76996,8 @@ func (ec *executionContext) fieldContext_Note_createdBy(_ context.Context, field
 				return ec.fieldContext_User_mailboxes(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_User_onboarding(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -78266,6 +78741,8 @@ func (ec *executionContext) fieldContext_Opportunity_createdBy(_ context.Context
 				return ec.fieldContext_User_mailboxes(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_User_onboarding(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -78385,6 +78862,8 @@ func (ec *executionContext) fieldContext_Opportunity_owner(_ context.Context, fi
 				return ec.fieldContext_User_mailboxes(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_User_onboarding(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -80632,6 +81111,8 @@ func (ec *executionContext) fieldContext_Organization_owner(_ context.Context, f
 				return ec.fieldContext_User_mailboxes(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_User_onboarding(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -85312,6 +85793,8 @@ func (ec *executionContext) fieldContext_OrganizationUiDetails_owner(_ context.C
 				return ec.fieldContext_User_mailboxes(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_User_onboarding(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -86794,6 +87277,8 @@ func (ec *executionContext) fieldContext_PhoneNumber_users(_ context.Context, fi
 				return ec.fieldContext_User_mailboxes(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_User_onboarding(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -87900,6 +88385,249 @@ func (ec *executionContext) fieldContext_Query_contact_ByPhone(ctx context.Conte
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_contact_ByPhone_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_contact_ByLinkedIn(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_contact_ByLinkedIn(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().ContactByLinkedIn(rctx, fc.Args["linkedInUrl"].(string))
+		}
+
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				var zeroVal *model.Contact
+				return zeroVal, err
+			}
+			if ec.directives.HasRole == nil {
+				var zeroVal *model.Contact
+				return zeroVal, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				var zeroVal *model.Contact
+				return zeroVal, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Contact); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.Contact`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Contact)
+	fc.Result = res
+	return ec.marshalOContact2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContact(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_contact_ByLinkedIn(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "metadata":
+				return ec.fieldContext_Contact_metadata(ctx, field)
+			case "id":
+				return ec.fieldContext_Contact_id(ctx, field)
+			case "title":
+				return ec.fieldContext_Contact_title(ctx, field)
+			case "prefix":
+				return ec.fieldContext_Contact_prefix(ctx, field)
+			case "name":
+				return ec.fieldContext_Contact_name(ctx, field)
+			case "firstName":
+				return ec.fieldContext_Contact_firstName(ctx, field)
+			case "lastName":
+				return ec.fieldContext_Contact_lastName(ctx, field)
+			case "username":
+				return ec.fieldContext_Contact_username(ctx, field)
+			case "description":
+				return ec.fieldContext_Contact_description(ctx, field)
+			case "timezone":
+				return ec.fieldContext_Contact_timezone(ctx, field)
+			case "profilePhotoUrl":
+				return ec.fieldContext_Contact_profilePhotoUrl(ctx, field)
+			case "hide":
+				return ec.fieldContext_Contact_hide(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Contact_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Contact_updatedAt(ctx, field)
+			case "label":
+				return ec.fieldContext_Contact_label(ctx, field)
+			case "source":
+				return ec.fieldContext_Contact_source(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Contact_appSource(ctx, field)
+			case "tags":
+				return ec.fieldContext_Contact_tags(ctx, field)
+			case "jobRoles":
+				return ec.fieldContext_Contact_jobRoles(ctx, field)
+			case "organizations":
+				return ec.fieldContext_Contact_organizations(ctx, field)
+			case "latestOrganizationWithJobRole":
+				return ec.fieldContext_Contact_latestOrganizationWithJobRole(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_Contact_phoneNumbers(ctx, field)
+			case "emails":
+				return ec.fieldContext_Contact_emails(ctx, field)
+			case "primaryEmail":
+				return ec.fieldContext_Contact_primaryEmail(ctx, field)
+			case "locations":
+				return ec.fieldContext_Contact_locations(ctx, field)
+			case "socials":
+				return ec.fieldContext_Contact_socials(ctx, field)
+			case "connectedUsers":
+				return ec.fieldContext_Contact_connectedUsers(ctx, field)
+			case "customFields":
+				return ec.fieldContext_Contact_customFields(ctx, field)
+			case "owner":
+				return ec.fieldContext_Contact_owner(ctx, field)
+			case "flows":
+				return ec.fieldContext_Contact_flows(ctx, field)
+			case "timelineEvents":
+				return ec.fieldContext_Contact_timelineEvents(ctx, field)
+			case "timelineEventsTotalCount":
+				return ec.fieldContext_Contact_timelineEventsTotalCount(ctx, field)
+			case "enrichDetails":
+				return ec.fieldContext_Contact_enrichDetails(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_contact_ByLinkedIn_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_contact_ExistsByLinkedIn(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_contact_ExistsByLinkedIn(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().ContactExistsByLinkedIn(rctx, fc.Args["linkedInUrl"].(string))
+		}
+
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				var zeroVal bool
+				return zeroVal, err
+			}
+			if ec.directives.HasRole == nil {
+				var zeroVal bool
+				return zeroVal, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				var zeroVal bool
+				return zeroVal, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(bool); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be bool`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_contact_ExistsByLinkedIn(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_contact_ExistsByLinkedIn_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -92015,6 +92743,8 @@ func (ec *executionContext) fieldContext_Query_organization_DistinctOwners(_ con
 				return ec.fieldContext_User_mailboxes(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_User_onboarding(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -92216,6 +92946,327 @@ func (ec *executionContext) fieldContext_Query_organizations_HiddenAfter(ctx con
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_organizations_HiddenAfter_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_organization_ByLinkedIn(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_organization_ByLinkedIn(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().OrganizationByLinkedIn(rctx, fc.Args["linkedInUrl"].(string))
+		}
+
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				var zeroVal *model.Organization
+				return zeroVal, err
+			}
+			if ec.directives.HasRole == nil {
+				var zeroVal *model.Organization
+				return zeroVal, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				var zeroVal *model.Organization
+				return zeroVal, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Organization); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.Organization`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Organization)
+	fc.Result = res
+	return ec.marshalOOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganization(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_organization_ByLinkedIn(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "metadata":
+				return ec.fieldContext_Organization_metadata(ctx, field)
+			case "accountDetails":
+				return ec.fieldContext_Organization_accountDetails(ctx, field)
+			case "contracts":
+				return ec.fieldContext_Organization_contracts(ctx, field)
+			case "opportunities":
+				return ec.fieldContext_Organization_opportunities(ctx, field)
+			case "customerOsId":
+				return ec.fieldContext_Organization_customerOsId(ctx, field)
+			case "customFields":
+				return ec.fieldContext_Organization_customFields(ctx, field)
+			case "referenceId":
+				return ec.fieldContext_Organization_referenceId(ctx, field)
+			case "description":
+				return ec.fieldContext_Organization_description(ctx, field)
+			case "domains":
+				return ec.fieldContext_Organization_domains(ctx, field)
+			case "slackChannelId":
+				return ec.fieldContext_Organization_slackChannelId(ctx, field)
+			case "employeeGrowthRate":
+				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
+			case "employees":
+				return ec.fieldContext_Organization_employees(ctx, field)
+			case "headquarters":
+				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "industry":
+				return ec.fieldContext_Organization_industry(ctx, field)
+			case "industryGroup":
+				return ec.fieldContext_Organization_industryGroup(ctx, field)
+			case "lastFundingAmount":
+				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
+			case "lastFundingRound":
+				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
+			case "lastTouchpoint":
+				return ec.fieldContext_Organization_lastTouchpoint(ctx, field)
+			case "locations":
+				return ec.fieldContext_Organization_locations(ctx, field)
+			case "logo":
+				return ec.fieldContext_Organization_logo(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
+			case "icon":
+				return ec.fieldContext_Organization_icon(ctx, field)
+			case "iconUrl":
+				return ec.fieldContext_Organization_iconUrl(ctx, field)
+			case "market":
+				return ec.fieldContext_Organization_market(ctx, field)
+			case "name":
+				return ec.fieldContext_Organization_name(ctx, field)
+			case "notes":
+				return ec.fieldContext_Organization_notes(ctx, field)
+			case "owner":
+				return ec.fieldContext_Organization_owner(ctx, field)
+			case "parentCompanies":
+				return ec.fieldContext_Organization_parentCompanies(ctx, field)
+			case "public":
+				return ec.fieldContext_Organization_public(ctx, field)
+			case "socialMedia":
+				return ec.fieldContext_Organization_socialMedia(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
+			case "subsidiaries":
+				return ec.fieldContext_Organization_subsidiaries(ctx, field)
+			case "tags":
+				return ec.fieldContext_Organization_tags(ctx, field)
+			case "targetAudience":
+				return ec.fieldContext_Organization_targetAudience(ctx, field)
+			case "timelineEvents":
+				return ec.fieldContext_Organization_timelineEvents(ctx, field)
+			case "valueProposition":
+				return ec.fieldContext_Organization_valueProposition(ctx, field)
+			case "website":
+				return ec.fieldContext_Organization_website(ctx, field)
+			case "yearFounded":
+				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "stage":
+				return ec.fieldContext_Organization_stage(ctx, field)
+			case "stageLastUpdated":
+				return ec.fieldContext_Organization_stageLastUpdated(ctx, field)
+			case "relationship":
+				return ec.fieldContext_Organization_relationship(ctx, field)
+			case "leadSource":
+				return ec.fieldContext_Organization_leadSource(ctx, field)
+			case "icpFit":
+				return ec.fieldContext_Organization_icpFit(ctx, field)
+			case "hide":
+				return ec.fieldContext_Organization_hide(ctx, field)
+			case "contacts":
+				return ec.fieldContext_Organization_contacts(ctx, field)
+			case "jobRoles":
+				return ec.fieldContext_Organization_jobRoles(ctx, field)
+			case "emails":
+				return ec.fieldContext_Organization_emails(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
+			case "suggestedMergeTo":
+				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
+			case "timelineEventsTotalCount":
+				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
+			case "externalLinks":
+				return ec.fieldContext_Organization_externalLinks(ctx, field)
+			case "issueSummaryByStatus":
+				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
+			case "contactCount":
+				return ec.fieldContext_Organization_contactCount(ctx, field)
+			case "inboundCommsCount":
+				return ec.fieldContext_Organization_inboundCommsCount(ctx, field)
+			case "outboundCommsCount":
+				return ec.fieldContext_Organization_outboundCommsCount(ctx, field)
+			case "enrichDetails":
+				return ec.fieldContext_Organization_enrichDetails(ctx, field)
+			case "isCustomer":
+				return ec.fieldContext_Organization_isCustomer(ctx, field)
+			case "socials":
+				return ec.fieldContext_Organization_socials(ctx, field)
+			case "isPublic":
+				return ec.fieldContext_Organization_isPublic(ctx, field)
+			case "note":
+				return ec.fieldContext_Organization_note(ctx, field)
+			case "id":
+				return ec.fieldContext_Organization_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Organization_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Organization_updatedAt(ctx, field)
+			case "source":
+				return ec.fieldContext_Organization_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Organization_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Organization_appSource(ctx, field)
+			case "customId":
+				return ec.fieldContext_Organization_customId(ctx, field)
+			case "lastTouchPointAt":
+				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
+			case "lastTouchPointType":
+				return ec.fieldContext_Organization_lastTouchPointType(ctx, field)
+			case "lastTouchPointTimelineEventId":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
+			case "lastTouchPointTimelineEvent":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
+			case "subsidiaryOf":
+				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_organization_ByLinkedIn_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_organization_ExistsByLinkedIn(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_organization_ExistsByLinkedIn(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().OrganizationExistsByLinkedIn(rctx, fc.Args["linkedInUrl"].(string))
+		}
+
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				var zeroVal bool
+				return zeroVal, err
+			}
+			if ec.directives.HasRole == nil {
+				var zeroVal bool
+				return zeroVal, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				var zeroVal bool
+				return zeroVal, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(bool); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be bool`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_organization_ExistsByLinkedIn(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_organization_ExistsByLinkedIn_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -94133,6 +95184,8 @@ func (ec *executionContext) fieldContext_Query_user(ctx context.Context, field g
 				return ec.fieldContext_User_mailboxes(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_User_onboarding(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -94266,6 +95319,8 @@ func (ec *executionContext) fieldContext_Query_user_ByEmail(ctx context.Context,
 				return ec.fieldContext_User_mailboxes(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_User_onboarding(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -94895,6 +95950,8 @@ func (ec *executionContext) fieldContext_Reminder_owner(_ context.Context, field
 				return ec.fieldContext_User_mailboxes(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_User_onboarding(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -96352,6 +97409,8 @@ func (ec *executionContext) fieldContext_ServiceLineItem_createdBy(_ context.Con
 				return ec.fieldContext_User_mailboxes(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_User_onboarding(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -101782,6 +102841,62 @@ func (ec *executionContext) fieldContext_User_hasLinkedInToken(_ context.Context
 	return fc, nil
 }
 
+func (ec *executionContext) _User_onboarding(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_User_onboarding(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Onboarding, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.UserOnboardingDetails)
+	fc.Result = res
+	return ec.marshalNUserOnboardingDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐUserOnboardingDetails(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_User_onboarding(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "showOnboardingPage":
+				return ec.fieldContext_UserOnboardingDetails_showOnboardingPage(ctx, field)
+			case "onboardingInboundStepCompleted":
+				return ec.fieldContext_UserOnboardingDetails_onboardingInboundStepCompleted(ctx, field)
+			case "onboardingOutboundStepCompleted":
+				return ec.fieldContext_UserOnboardingDetails_onboardingOutboundStepCompleted(ctx, field)
+			case "onboardingCrmStepCompleted":
+				return ec.fieldContext_UserOnboardingDetails_onboardingCrmStepCompleted(ctx, field)
+			case "onboardingMailstackStepCompleted":
+				return ec.fieldContext_UserOnboardingDetails_onboardingMailstackStepCompleted(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UserOnboardingDetails", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _User_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_User_createdAt(ctx, field)
 	if err != nil {
@@ -102138,6 +103253,226 @@ func (ec *executionContext) fieldContext_User_appSource(_ context.Context, field
 	return fc, nil
 }
 
+func (ec *executionContext) _UserOnboardingDetails_showOnboardingPage(ctx context.Context, field graphql.CollectedField, obj *model.UserOnboardingDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserOnboardingDetails_showOnboardingPage(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ShowOnboardingPage, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserOnboardingDetails_showOnboardingPage(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserOnboardingDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserOnboardingDetails_onboardingInboundStepCompleted(ctx context.Context, field graphql.CollectedField, obj *model.UserOnboardingDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserOnboardingDetails_onboardingInboundStepCompleted(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.OnboardingInboundStepCompleted, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserOnboardingDetails_onboardingInboundStepCompleted(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserOnboardingDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserOnboardingDetails_onboardingOutboundStepCompleted(ctx context.Context, field graphql.CollectedField, obj *model.UserOnboardingDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserOnboardingDetails_onboardingOutboundStepCompleted(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.OnboardingOutboundStepCompleted, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserOnboardingDetails_onboardingOutboundStepCompleted(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserOnboardingDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserOnboardingDetails_onboardingCrmStepCompleted(ctx context.Context, field graphql.CollectedField, obj *model.UserOnboardingDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserOnboardingDetails_onboardingCrmStepCompleted(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.OnboardingCrmStepCompleted, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserOnboardingDetails_onboardingCrmStepCompleted(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserOnboardingDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserOnboardingDetails_onboardingMailstackStepCompleted(ctx context.Context, field graphql.CollectedField, obj *model.UserOnboardingDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserOnboardingDetails_onboardingMailstackStepCompleted(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.OnboardingMailstackStepCompleted, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserOnboardingDetails_onboardingMailstackStepCompleted(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserOnboardingDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _UserPage_content(ctx context.Context, field graphql.CollectedField, obj *model.UserPage) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_UserPage_content(ctx, field)
 	if err != nil {
@@ -102205,6 +103540,8 @@ func (ec *executionContext) fieldContext_UserPage_content(_ context.Context, fie
 				return ec.fieldContext_User_mailboxes(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_User_onboarding(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -102381,6 +103718,8 @@ func (ec *executionContext) fieldContext_UserParticipant_userParticipant(_ conte
 				return ec.fieldContext_User_mailboxes(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_User_onboarding(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -110995,6 +112334,68 @@ func (ec *executionContext) unmarshalInputUserInput(ctx context.Context, obj int
 				return it, err
 			}
 			it.JobRoles = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputUserOnboardingDetailsInput(ctx context.Context, obj interface{}) (model.UserOnboardingDetailsInput, error) {
+	var it model.UserOnboardingDetailsInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"id", "showOnboardingPage", "onboardingInboundStepCompleted", "onboardingOutboundStepCompleted", "onboardingCrmStepCompleted", "onboardingMailstackStepCompleted"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "id":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ID = data
+		case "showOnboardingPage":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("showOnboardingPage"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ShowOnboardingPage = data
+		case "onboardingInboundStepCompleted":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("onboardingInboundStepCompleted"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OnboardingInboundStepCompleted = data
+		case "onboardingOutboundStepCompleted":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("onboardingOutboundStepCompleted"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OnboardingOutboundStepCompleted = data
+		case "onboardingCrmStepCompleted":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("onboardingCrmStepCompleted"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OnboardingCrmStepCompleted = data
+		case "onboardingMailstackStepCompleted":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("onboardingMailstackStepCompleted"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OnboardingMailstackStepCompleted = data
 		}
 	}
 
@@ -120407,6 +121808,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "user_UpdateOnboardingDetails":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_user_UpdateOnboardingDetails(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "customer_user_AddJobRole":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_customer_user_AddJobRole(ctx, field)
@@ -122982,6 +124390,47 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "contact_ByLinkedIn":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_contact_ByLinkedIn(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "contact_ExistsByLinkedIn":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_contact_ExistsByLinkedIn(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "contract":
 			field := field
 
@@ -123871,6 +125320,47 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_organizations_HiddenAfter(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "organization_ByLinkedIn":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_organization_ByLinkedIn(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "organization_ExistsByLinkedIn":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_organization_ExistsByLinkedIn(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -125930,6 +127420,11 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "onboarding":
+			out.Values[i] = ec._User_onboarding(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
 		case "createdAt":
 			out.Values[i] = ec._User_createdAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -126026,6 +127521,65 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			out.Values[i] = ec._User_appSource(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var userOnboardingDetailsImplementors = []string{"UserOnboardingDetails"}
+
+func (ec *executionContext) _UserOnboardingDetails(ctx context.Context, sel ast.SelectionSet, obj *model.UserOnboardingDetails) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, userOnboardingDetailsImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("UserOnboardingDetails")
+		case "showOnboardingPage":
+			out.Values[i] = ec._UserOnboardingDetails_showOnboardingPage(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "onboardingInboundStepCompleted":
+			out.Values[i] = ec._UserOnboardingDetails_onboardingInboundStepCompleted(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "onboardingOutboundStepCompleted":
+			out.Values[i] = ec._UserOnboardingDetails_onboardingOutboundStepCompleted(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "onboardingCrmStepCompleted":
+			out.Values[i] = ec._UserOnboardingDetails_onboardingCrmStepCompleted(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "onboardingMailstackStepCompleted":
+			out.Values[i] = ec._UserOnboardingDetails_onboardingMailstackStepCompleted(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
 			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -131188,6 +132742,21 @@ func (ec *executionContext) marshalNUser2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenl
 
 func (ec *executionContext) unmarshalNUserInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐUserInput(ctx context.Context, v interface{}) (model.UserInput, error) {
 	res, err := ec.unmarshalInputUserInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNUserOnboardingDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐUserOnboardingDetails(ctx context.Context, sel ast.SelectionSet, v *model.UserOnboardingDetails) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._UserOnboardingDetails(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNUserOnboardingDetailsInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐUserOnboardingDetailsInput(ctx context.Context, v interface{}) (model.UserOnboardingDetailsInput, error) {
+	res, err := ec.unmarshalInputUserOnboardingDetailsInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 

@@ -17,9 +17,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
-	commonTracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	opentracing "github.com/opentracing/opentracing-go"
@@ -33,14 +33,23 @@ func (r *mutationResolver) UserCreate(ctx context.Context, input model.UserInput
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "request.input", input)
 
-	userId, err := r.Services.UserService.Create(ctx, *mapper.MapUserInputToEntity(input))
+	userFields := data_fields.UserFields{
+		FirstName:       utils.StringPtr(input.FirstName),
+		LastName:        utils.StringPtr(input.LastName),
+		Name:            input.Name,
+		Source:          utils.StringPtr(neo4jentity.DataSourceOpenline.String()),
+		Timezone:        input.Timezone,
+		ProfilePhotoUrl: input.ProfilePhotoURL,
+		Internal:        utils.BoolPtr(false),
+		Bot:             utils.BoolPtr(false),
+		Test:            utils.BoolPtr(false),
+	}
+	userId, err := r.Services.CommonServices.UserService.Save(ctx, nil, nil, userFields)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to create user %s %s", input.FirstName, input.LastName)
 		return nil, nil
 	}
-
-	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 
 	if input.Email != nil {
 		_, err = r.Services.CommonServices.EmailService.Merge(ctx, nil, common.GetTenantFromContext(ctx),
@@ -76,13 +85,34 @@ func (r *mutationResolver) UserUpdate(ctx context.Context, input model.UserUpdat
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "request.input", input)
 
-	updatedUserEntity, err := r.Services.UserService.Update(ctx, input.ID, input.FirstName, input.LastName, input.Name, input.Timezone, input.ProfilePhotoURL)
+	if input.ID != common.GetContext(ctx).UserId {
+		if !r.Services.UserService.ContainsRole(ctx, []model.Role{model.RoleAdmin, model.RolePlatformOwner, model.RoleOwner}) {
+			graphql.AddErrorf(ctx, "user can not update other user")
+			return nil, nil
+		}
+	}
+
+	userFields := data_fields.UserFields{
+		FirstName:       utils.StringPtr(input.FirstName),
+		LastName:        utils.StringPtr(input.LastName),
+		Name:            input.Name,
+		Timezone:        input.Timezone,
+		ProfilePhotoUrl: input.ProfilePhotoURL,
+	}
+	_, err := r.Services.CommonServices.UserService.Save(ctx, nil, &input.ID, userFields)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to update user %s %s", input.FirstName, input.LastName)
 		return nil, nil
 	}
-	return mapper.MapEntityToUser(updatedUserEntity), nil
+
+	userEntity, err := r.Services.CommonServices.UserService.GetById(ctx, input.ID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "User with id %s not found", input.ID)
+		return nil, nil
+	}
+	return mapper.MapEntityToUser(userEntity), nil
 }
 
 // UserAddRole is the resolver for the user_AddRole field.
@@ -161,6 +191,34 @@ func (r *mutationResolver) UserDelete(ctx context.Context, id string) (*model.Re
 // UserDeleteInTenant is the resolver for the user_DeleteInTenant field.
 func (r *mutationResolver) UserDeleteInTenant(ctx context.Context, id string, tenant string) (*model.Result, error) {
 	panic(fmt.Errorf("not implemented: UserDeleteInTenant - user_DeleteInTenant"))
+}
+
+// UserUpdateOnboardingDetails is the resolver for the user_UpdateOnboardingDetails field.
+func (r *mutationResolver) UserUpdateOnboardingDetails(ctx context.Context, input model.UserOnboardingDetailsInput) (*model.User, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.UserUpdateOnboardingDetails", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "request.input", input)
+
+	_, err := r.Services.CommonServices.UserService.Save(ctx, nil, &input.ID, data_fields.UserFields{
+		ShowOnboardingPage:               input.ShowOnboardingPage,
+		OnboardingInboundStepCompleted:   input.OnboardingInboundStepCompleted,
+		OnboardingOutboundStepCompleted:  input.OnboardingOutboundStepCompleted,
+		OnboardingCrmStepCompleted:       input.OnboardingCrmStepCompleted,
+		OnboardingMailstackStepCompleted: input.OnboardingMailstackStepCompleted,
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to update onboarding details for user %s", input.ID)
+		return nil, nil
+	}
+	userEntity, err := r.Services.CommonServices.UserService.GetById(ctx, input.ID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "User with id %s not found", input.ID)
+		return nil, err
+	}
+	return mapper.MapEntityToUser(userEntity), nil
 }
 
 // CustomerUserAddJobRole is the resolver for the customer_user_AddJobRole field.

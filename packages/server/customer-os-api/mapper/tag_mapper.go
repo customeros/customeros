@@ -30,13 +30,9 @@ func MapEntityToTag(entity *neo4jentity.TagEntity) *model.Tag {
 			AppSource:   entity.AppSource,
 			Source:      MapDataSourceToModel(entity.Source),
 		},
-		ID:         utils.StringPtr(entity.Id),
-		CreatedAt:  utils.TimePtr(entity.CreatedAt),
-		UpdatedAt:  utils.TimePtr(entity.UpdatedAt),
-		Source:     utils.ToPtr(MapDataSourceToModel(entity.Source)),
-		AppSource:  utils.StringPtr(entity.AppSource),
 		Name:       entity.Name,
 		EntityType: model.EntityType(entity.EntityType.String()),
+		ID:         utils.StringPtr(entity.Id),
 	}
 }
 

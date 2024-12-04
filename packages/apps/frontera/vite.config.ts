@@ -1,10 +1,72 @@
 import path from 'path';
-import { defineConfig } from 'vite';
+import { cpus } from 'node:os';
 import react from '@vitejs/plugin-react';
+import { Plugin, defineConfig } from 'vite';
 import graphqlLoader from 'vite-plugin-graphql-loader';
+
+interface SourcemapExclude {
+  excludeNodeModules?: boolean;
+}
+
+export function sourcemapExclude(opts?: SourcemapExclude): Plugin {
+  return {
+    name: 'sourcemap-exclude',
+    transform(code: string, id: string) {
+      if (opts?.excludeNodeModules && id.includes('node_modules')) {
+        return {
+          code,
+          // https://github.com/rollup/rollup/blob/master/docs/plugin-development/index.md#source-code-transformations
+          map: { mappings: '' },
+        };
+      }
+    },
+  };
+}
+
+const allowedSourcemapPackages = [
+  'mobx',
+  'mobx-react-lite',
+  'lodash',
+  'phoenix',
+  'react',
+];
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  // uncommenting the build underneath to produce sourcmaps will cause the build process to fail due to a bug in vite
+  // check this issue: https://github.com/vitejs/vite/issues/2433
+  build: {
+    sourcemap: true,
+    rollupOptions: {
+      maxParallelFileOps: Math.max(1, cpus().length - 1),
+      output: {
+        manualChunks: (id) => {
+          if (id.includes('node_modules')) {
+            return 'vendor';
+          }
+        },
+        sourcemapIgnoreList: (relativeSourcePath) => {
+          const normalizedPath = path.normalize(relativeSourcePath);
+
+          // Check if the path is in node_modules but exclude packages in the allowed list
+          if (normalizedPath.includes('node_modules')) {
+            return !allowedSourcemapPackages.some((pkg) =>
+              normalizedPath.includes(pkg),
+            );
+          }
+
+          return false; // Do not ignore other paths
+        },
+      },
+      onwarn(warning, defaultHandler) {
+        if (warning.code === 'SOURCEMAP_ERROR') {
+          return;
+        }
+
+        defaultHandler(warning);
+      },
+    },
+  },
   plugins: [
     react({
       babel: {
@@ -19,6 +81,7 @@ export default defineConfig({
       },
     }),
     graphqlLoader(),
+    sourcemapExclude({ excludeNodeModules: true }),
   ],
   resolve: {
     alias: {

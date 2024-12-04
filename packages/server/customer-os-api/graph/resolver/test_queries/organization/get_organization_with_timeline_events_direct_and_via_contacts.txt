@@ -29,7 +29,9 @@ query GetOrganizationById($organizationId: ID!, $from: Time!, $size: Int!){
               sourceOfTruth
               appSource
               tags {
-                id
+                metadata {
+                    id
+                }
                 name
               }
             }

@@ -4,10 +4,9 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/constants"
-	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
@@ -23,10 +22,8 @@ type UserUpdateFields struct {
 }
 
 type UserWriteRepository interface {
-	CreateUser(ctx context.Context, input neo4jentity.UserEntity) error
-	CreateUserInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, input neo4jentity.UserEntity) error
-
-	UpdateUser(ctx context.Context, tenant, userId string, data UserUpdateFields) error
+	CreateUserInTx(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, userId string, data data_fields.UserFields) error
+	UpdateUserInTx(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, userId string, data data_fields.UserFields) error
 
 	AddRole(ctx context.Context, userId, role string) error
 	AddRoleInTx(ctx context.Context, tx neo4j.ManagedTransaction, userId, role string) error
@@ -50,39 +47,12 @@ func (r *userWriteRepository) prepareWriteSession(ctx context.Context) neo4j.Ses
 	return utils.NewNeo4jWriteSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 }
 
-func (r *userWriteRepository) CreateUser(c context.Context, input neo4jentity.UserEntity) error {
-	span, ctx := opentracing.StartSpanFromContext(c, "UserWriteRepository.CreateUser")
+func (r *userWriteRepository) CreateUserInTx(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, userId string, data data_fields.UserFields) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserWriteRepository.CreateUserInTx")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.SetTag(tracing.SpanTagEntityId, input.Id)
-
-	tracing.LogObjectAsJson(span, "input", input)
-
-	tenant := common.GetTenantFromContext(ctx)
-
-	session := r.prepareWriteSession(ctx)
-	defer session.Close(ctx)
-
-	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		return nil, r.CreateUserInTx(ctx, tx, tenant, input)
-	})
-	return err
-}
-
-func (r *userWriteRepository) CreateUserInTx(c context.Context, tx neo4j.ManagedTransaction, tenant string, input neo4jentity.UserEntity) error {
-	span, ctx := opentracing.StartSpanFromContext(c, "UserWriteRepository.CreateUserInTx")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.SetTag(tracing.SpanTagEntityId, input.Id)
-
-	tracing.LogObjectAsJson(span, "input", input)
-
-	if input.Source == "" {
-		input.Source = constants.SourceOpenline
-	}
-	if input.SourceOfTruth == "" {
-		input.SourceOfTruth = constants.SourceOpenline
-	}
+	span.SetTag(tracing.SpanTagEntityId, userId)
+	tracing.LogObjectAsJson(span, "data", data)
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}) 
 		 MERGE (t)<-[:USER_BELONGS_TO_TENANT]-(u:User:User_%s {id:$id}) 
@@ -90,7 +60,6 @@ func (r *userWriteRepository) CreateUserInTx(c context.Context, tx neo4j.Managed
 						u.firstName = $firstName,
 						u.lastName = $lastName,
 						u.source = $source,
-						u.sourceOfTruth = $sourceOfTruth,
 						u.appSource = $appSource,
 						u.createdAt = $createdAt,
 						u.updatedAt = datetime(),
@@ -99,84 +68,127 @@ func (r *userWriteRepository) CreateUserInTx(c context.Context, tx neo4j.Managed
 						u.roles = $roles,
 						u.bot = $bot,
 						u.profilePhotoUrl = $profilePhotoUrl,
-						u.timezone = $timezone
-		 ON MATCH SET 	u.name = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR u.name is null OR u.name = '' THEN $name ELSE u.name END,
-						u.firstName = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR u.firstName is null OR u.firstName = '' THEN $firstName ELSE u.firstName END,
-						u.lastName = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR u.lastName is null OR u.lastName = '' THEN $lastName ELSE u.lastName END,
-						u.timezone = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR u.timezone is null OR u.timezone = '' THEN $timezone ELSE u.timezone END,
-						u.roles = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR u.roles is null THEN $roles ELSE u.roles END,
-						u.profilePhotoUrl = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR u.profilePhotoUrl is null OR u.profilePhotoUrl = '' THEN $profilePhotoUrl ELSE u.profilePhotoUrl END,
-						u.internal = $internal,
-						u.bot = $bot,
-						u.updatedAt = datetime(),
-						u.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE u.sourceOfTruth END`, tenant)
+						u.timezone = $timezone`, tenant)
+	roles := []string{}
+	if data.Roles != nil {
+		roles = *data.Roles
+	}
 	params := map[string]any{
 		"tenant":          tenant,
-		"id":              input.Id,
-		"name":            input.Name,
-		"firstName":       input.FirstName,
-		"lastName":        input.LastName,
-		"internal":        input.Internal,
-		"test":            input.Test,
-		"roles":           input.Roles,
-		"bot":             input.Bot,
-		"profilePhotoUrl": input.ProfilePhotoUrl,
-		"timezone":        input.Timezone,
-		"source":          input.Source,
-		"sourceOfTruth":   input.SourceOfTruth,
-		"appSource":       input.AppSource,
-		"createdAt":       utils.NowIfZero(input.CreatedAt),
-		"overwrite":       input.SourceOfTruth == constants.SourceOpenline,
+		"id":              userId,
+		"createdAt":       utils.IfNotNilTimeWithDefault(data.CreatedAt, utils.Now()),
+		"name":            utils.IfNotNilString(data.Name),
+		"firstName":       utils.IfNotNilString(data.FirstName),
+		"lastName":        utils.IfNotNilString(data.LastName),
+		"internal":        utils.IfNotNilBool(data.Internal),
+		"test":            utils.IfNotNilBool(data.Test),
+		"bot":             utils.IfNotNilBool(data.Bot),
+		"roles":           roles,
+		"profilePhotoUrl": utils.IfNotNilString(data.ProfilePhotoUrl),
+		"timezone":        utils.IfNotNilString(data.Timezone),
+		"source":          utils.IfNotNilString(data.Source),
+		"appSource":       utils.IfNotNilString(data.AppSource),
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	if err := utils.ExecuteQueryInTx(ctx, tx, cypher, params); err != nil {
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
+	})
+	if err != nil {
 		tracing.TraceErr(span, err)
-		return err
 	}
-	return nil
+
+	return err
 }
 
-func (r *userWriteRepository) UpdateUser(c context.Context, tenant, userId string, data UserUpdateFields) error {
-	span, ctx := opentracing.StartSpanFromContext(c, "UserWriteRepository.UpdateUser")
+func (r *userWriteRepository) UpdateUserInTx(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, userId string, data data_fields.UserFields) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserWriteRepository.UpdateUser")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.SetTag(tracing.SpanTagEntityId, userId)
 	tracing.LogObjectAsJson(span, "data", data)
 
-	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User:User_%s {id:$id})
-		 SET	u.name = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR u.name is null OR u.name = '' THEN $name ELSE u.name END,
-				u.firstName = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR u.firstName is null OR u.firstName = '' THEN $firstName ELSE u.firstName END,
-				u.lastName = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR u.lastName is null OR u.lastName = '' THEN $lastName ELSE u.lastName END,
-				u.timezone = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR u.timezone is null OR u.timezone = '' THEN $timezone ELSE u.timezone END,
-				u.profilePhotoUrl = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR u.profilePhotoUrl is null OR u.profilePhotoUrl = '' THEN $profilePhotoUrl ELSE u.profilePhotoUrl END,
-				u.updatedAt = datetime(),
-				u.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE u.sourceOfTruth END`, tenant)
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$id}) SET u.updatedAt=datetime()`
 	params := map[string]any{
-		"id":              userId,
-		"tenant":          tenant,
-		"name":            data.Name,
-		"firstName":       data.FirstName,
-		"lastName":        data.LastName,
-		"sourceOfTruth":   data.Source,
-		"profilePhotoUrl": data.ProfilePhotoUrl,
-		"timezone":        data.Timezone,
-		"overwrite":       data.Source == constants.SourceOpenline,
+		"id":     userId,
+		"tenant": tenant,
 	}
+
+	if data.Name != nil {
+		params["name"] = *data.Name
+		cypher += ", u.name=$name"
+	}
+	if data.FirstName != nil {
+		params["firstName"] = *data.FirstName
+		cypher += ", u.firstName=$firstName"
+	}
+	if data.LastName != nil {
+		params["lastName"] = *data.LastName
+		cypher += ", u.lastName=$lastName"
+	}
+	if data.Timezone != nil {
+		params["timezone"] = *data.Timezone
+		cypher += ", u.timezone=$timezone"
+	}
+	if data.ProfilePhotoUrl != nil {
+		params["profilePhotoUrl"] = *data.ProfilePhotoUrl
+		cypher += ", u.profilePhotoUrl=$profilePhotoUrl"
+	}
+	if data.Bot != nil {
+		params["bot"] = *data.Bot
+		cypher += ", u.bot=$bot"
+	}
+	if data.Internal != nil {
+		params["internal"] = *data.Internal
+		cypher += ", u.internal=$internal"
+	}
+	if data.Test != nil {
+		params["test"] = *data.Test
+		cypher += ", u.test=$test"
+	}
+	if data.ShowOnboardingPage != nil {
+		params["showOnboardingPage"] = *data.ShowOnboardingPage
+		cypher += ", u.showOnboardingPage=$showOnboardingPage"
+	}
+	if data.OnboardingInboundStepCompleted != nil {
+		params["onboardingInboundStepCompleted"] = *data.OnboardingInboundStepCompleted
+		cypher += ", u.onboardingInboundStepCompleted=$onboardingInboundStepCompleted"
+	}
+	if data.OnboardingOutboundStepCompleted != nil {
+		params["onboardingOutboundStepCompleted"] = *data.OnboardingOutboundStepCompleted
+		cypher += ", u.onboardingOutboundStepCompleted=$onboardingOutboundStepCompleted"
+	}
+	if data.OnboardingCrmStepCompleted != nil {
+		params["onboardingCrmStepCompleted"] = *data.OnboardingCrmStepCompleted
+		cypher += ", u.onboardingCrmStepCompleted=$onboardingCrmStepCompleted"
+	}
+	if data.OnboardingMailstackStepCompleted != nil {
+		params["onboardingMailstackStepCompleted"] = *data.OnboardingMailstackStepCompleted
+		cypher += ", u.onboardingMailstackStepCompleted=$onboardingMailstackStepCompleted"
+	}
+
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
 	session := r.prepareWriteSession(ctx)
 	defer session.Close(ctx)
 
-	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, cypher, params)
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
+
 	return err
 }
 

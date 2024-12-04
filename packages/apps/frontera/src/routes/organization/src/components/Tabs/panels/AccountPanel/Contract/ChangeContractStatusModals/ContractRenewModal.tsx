@@ -10,7 +10,7 @@ import { useStore } from '@shared/hooks/useStore';
 import { Radio, RadioGroup } from '@ui/form/Radio/Radio';
 import { RefreshCw05 } from '@ui/media/icons/RefreshCw05';
 import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
-import { DatePickerUnderline2 } from '@ui/form/DatePicker/DatePickerUnderline2.tsx';
+import { DatePickerUnderline } from '@ui/form/DatePicker/DatePickerUnderline';
 
 interface ContractEndModalProps {
   contractId: string;
@@ -158,7 +158,7 @@ export const ContractRenewsModal = ({
                   On{' '}
                   {value === RenewContract.CustomDate ? (
                     <div className='ml-1'>
-                      <DatePickerUnderline2
+                      <DatePickerUnderline
                         onChange={(e) => setRenewsAt(e)}
                         value={renewsAtData || new Date().toString()}
                       />

@@ -95,7 +95,9 @@ query getTimelineEvents($ids: [ID!]!) {
       }
 
       issueTags: tags {
-        id
+        metadata {
+          id
+        }
         name
       }
     }
@@ -164,7 +166,9 @@ query getTimelineEvents($ids: [ID!]!) {
         }
       }
       tags {
-        id
+        metadata {
+          id
+        }
         name
       }
       source

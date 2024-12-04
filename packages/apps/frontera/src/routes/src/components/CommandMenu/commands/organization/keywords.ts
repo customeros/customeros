@@ -2,11 +2,14 @@ export const organizationKeywords = {
   add_contact: [
     'add',
     'contact',
+    'upload',
+    'import',
     'new',
     'create',
     'person',
     'individual',
-    'entry',
+    'email',
+    'linkedin',
   ],
   change_or_add_tags: ['change', 'add', 'tags', 'update', 'edit'],
   rename_org: [

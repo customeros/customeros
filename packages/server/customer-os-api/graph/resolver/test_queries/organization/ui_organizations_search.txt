@@ -1,4 +1,4 @@
-query UiOrganizationsSearch($limit: Int!, $filterName: String!, $filterValue: Any!, $filterOperation: ComparisonOperator!, $sortByField: String!, $sortByDirection: SortingDirection!) {
+query UiOrganizationsSearch($limit: Int!, $filterName: String!, $filterValue: Any!, $filterOperation: ComparisonOperator!) {
   ui_organizations_search(
     limit: $limit
     where: {
@@ -8,7 +8,6 @@ query UiOrganizationsSearch($limit: Int!, $filterName: String!, $filterValue: An
         }
       ]
     }
-    sort: { by: $sortByField, direction: $sortByDirection }
   ) {
     ids
     totalElements

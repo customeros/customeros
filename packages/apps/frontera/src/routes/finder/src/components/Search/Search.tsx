@@ -15,7 +15,9 @@ import { Input } from '@ui/form/Input/Input';
 import { Star06 } from '@ui/media/icons/Star06';
 import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
+import { Button } from '@ui/form/Button/Button.tsx';
 import { Tag, TagLabel } from '@ui/presentation/Tag';
+import { UserPlus01 } from '@ui/media/icons/UserPlus01.tsx';
 import { TableIdType, TableViewType } from '@graphql/types';
 import { UserPresence } from '@shared/components/UserPresence';
 import {
@@ -129,13 +131,10 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
   const createNewEntityModalType:
     | null
     | 'CreateNewFlow'
-    | 'AddContactViaLinkedInUrl'
+    | 'AddContactsBulk'
     | 'AddNewOrganization' = match(tableType)
     .with(TableViewType.Flow, (): 'CreateNewFlow' => 'CreateNewFlow')
-    .with(
-      TableViewType.Contacts,
-      (): 'AddContactViaLinkedInUrl' => 'AddContactViaLinkedInUrl',
-    )
+    .with(TableViewType.Contacts, (): 'AddContactsBulk' => 'AddContactsBulk')
     .with(
       TableViewType.Organizations,
       (): 'AddNewOrganization' => 'AddNewOrganization',
@@ -255,6 +254,20 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
           />
         )}
 
+      {tableViewDef?.value.tableId === TableIdType.Contacts && (
+        <Button
+          size='xs'
+          variant='outline'
+          colorScheme='primary'
+          leftIcon={<UserPlus01 />}
+          onClick={() => {
+            store.ui.commandMenu.setOpen(true);
+            store.ui.commandMenu.setType('AddContactsBulk');
+          }}
+        >
+          Add contacts
+        </Button>
+      )}
       {tableViewDef?.value.tableId !== TableIdType.FlowActions && (
         <TableViewMenu />
       )}

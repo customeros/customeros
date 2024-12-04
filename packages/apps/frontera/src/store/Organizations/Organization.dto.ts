@@ -188,6 +188,7 @@ export class Organization extends Entity<OrganizationDatum> {
       url,
       followersCount: 0,
       __typename: 'Social',
+      alias: '',
     });
   }
 

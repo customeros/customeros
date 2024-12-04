@@ -68,6 +68,7 @@ query getOrganizations(
         id
         url
         followersCount
+        alias
       }
       employees
       tags {

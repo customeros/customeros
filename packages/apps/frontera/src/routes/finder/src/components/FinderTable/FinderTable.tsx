@@ -1,15 +1,10 @@
 import { useParams, useSearchParams } from 'react-router-dom';
-import {
-  useRef,
-  useState,
-  useEffect,
-  type Dispatch,
-  type SetStateAction,
-} from 'react';
+import { useRef, useEffect, type Dispatch, type SetStateAction } from 'react';
 
 import { match } from 'ts-pattern';
 import { useKeyBindings } from 'rooks';
 import { observer } from 'mobx-react-lite';
+import { ColumnSort } from '@tanstack/table-core';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
 import { useColumnSizing } from '@finder/hooks/useColumnSizing';
 import { useTableActions } from '@invoices/hooks/useTableActions';
@@ -43,14 +38,22 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
   const tableRef = useRef<TableInstance<object> | null>(null);
   const preset = searchParams?.get('preset');
   const tableViewDef = store.tableViewDefs.getById(preset ?? '1');
-
   const contactsPreset = store.tableViewDefs.contactsPreset;
 
-  const [sorting, setSorting] = useState<SortingState>([
+  const sortingData = tableViewDef?.getSorting();
+  const defaultSorting =
     preset === contactsPreset
-      ? { id: ColumnViewType.ContactsCreatedAt, desc: true }
-      : { id: ColumnViewType.OrganizationsLastTouchpoint, desc: true },
-  ]);
+      ? [{ id: ColumnViewType.ContactsCreatedAt, desc: true }]
+      : [{ id: ColumnViewType.OrganizationsLastTouchpoint, desc: true }];
+
+  const sorting: ColumnSort[] = !sortingData?.id
+    ? defaultSorting
+    : [
+        {
+          id: sortingData.id,
+          desc: sortingData.desc,
+        },
+      ];
 
   const searchTerm = searchParams?.get('search');
   const { reset, targetId, isConfirming, onConfirm } = useTableActions();
@@ -70,8 +73,6 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
       typeof updaterOrValue === 'function'
         ? updaterOrValue(sorting)
         : updaterOrValue;
-
-    setSorting(updaterOrValue);
 
     tableViewDef?.setSorting(next[0]?.id, next[0]?.desc);
   };

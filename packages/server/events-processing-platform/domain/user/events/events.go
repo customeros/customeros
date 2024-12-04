@@ -2,111 +2,17 @@ package events
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/models"
-	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/pkg/errors"
 	"time"
 )
 
 const (
-	UserCreateV1          = "V1_USER_CREATE"
-	UserUpdateV1          = "V1_USER_UPDATE"
 	UserPhoneNumberLinkV1 = "V1_USER_PHONE_NUMBER_LINK"
-	// Deprecated
-	UserEmailLinkV1 = "V1_USER_EMAIL_LINK"
-	// Deprecated
-	UserEmailUnlinkV1 = "V1_USER_EMAIL_UNLINK"
-	UserJobRoleLinkV1 = "V1_USER_JOB_ROLE_LINK"
-	UserAddRoleV1     = "V1_USER_ADD_ROLE"
-	UserRemoveRoleV1  = "V1_USER_REMOVE_ROLE"
-	//Deprecated
-	UserAddPlayerV1 = "V1_USER_ADD_PLAYER"
+	UserJobRoleLinkV1     = "V1_USER_JOB_ROLE_LINK"
+	UserAddRoleV1         = "V1_USER_ADD_ROLE"
+	UserRemoveRoleV1      = "V1_USER_REMOVE_ROLE"
 )
-
-type UserCreateEvent struct {
-	Tenant          string                `json:"tenant" validate:"required"`
-	Name            string                `json:"name"`
-	FirstName       string                `json:"firstName"`
-	LastName        string                `json:"lastName"`
-	SourceFields    cmnmod.Source         `json:"sourceFields"`
-	CreatedAt       time.Time             `json:"createdAt"`
-	UpdatedAt       time.Time             `json:"updatedAt"`
-	Internal        bool                  `json:"internal"`
-	Test            bool                  `json:"test"`
-	Bot             bool                  `json:"bot"`
-	ProfilePhotoUrl string                `json:"profilePhotoUrl"`
-	Timezone        string                `json:"timezone"`
-	ExternalSystem  cmnmod.ExternalSystem `json:"externalSystem,omitempty"`
-}
-
-func NewUserCreateEvent(aggregate eventstore.Aggregate, dataFields models.UserDataFields, sourceFields cmnmod.Source, externalSystem cmnmod.ExternalSystem, createdAt, updatedAt time.Time) (eventstore.Event, error) {
-	eventData := UserCreateEvent{
-		Tenant:          aggregate.GetTenant(),
-		Name:            dataFields.Name,
-		FirstName:       dataFields.FirstName,
-		LastName:        dataFields.LastName,
-		Internal:        dataFields.Internal,
-		Bot:             dataFields.Bot,
-		Test:            dataFields.Test,
-		ProfilePhotoUrl: dataFields.ProfilePhotoUrl,
-		Timezone:        dataFields.Timezone,
-		SourceFields:    sourceFields,
-		CreatedAt:       createdAt,
-		UpdatedAt:       updatedAt,
-	}
-	if externalSystem.Available() {
-		eventData.ExternalSystem = externalSystem
-	}
-
-	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "failed to validate UserCreateEvent")
-	}
-
-	event := eventstore.NewBaseEvent(aggregate, UserCreateV1)
-	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "error setting json data for UserCreateEvent")
-	}
-	return event, nil
-}
-
-type UserUpdateEvent struct {
-	Tenant          string                `json:"tenant" validate:"required"`
-	Source          string                `json:"source"`
-	UpdatedAt       time.Time             `json:"updatedAt"`
-	Name            string                `json:"name"`
-	FirstName       string                `json:"firstName"`
-	LastName        string                `json:"lastName"`
-	ProfilePhotoUrl string                `json:"profilePhotoUrl"`
-	Timezone        string                `json:"timezone"`
-	ExternalSystem  cmnmod.ExternalSystem `json:"externalSystem,omitempty"`
-}
-
-func NewUserUpdateEvent(aggregate eventstore.Aggregate, dataFields models.UserDataFields, source string, updatedAt time.Time, externalSystem cmnmod.ExternalSystem) (eventstore.Event, error) {
-	eventData := UserUpdateEvent{
-		Tenant:          aggregate.GetTenant(),
-		Name:            dataFields.Name,
-		FirstName:       dataFields.FirstName,
-		LastName:        dataFields.LastName,
-		ProfilePhotoUrl: dataFields.ProfilePhotoUrl,
-		Timezone:        dataFields.Timezone,
-		UpdatedAt:       updatedAt,
-		Source:          source,
-	}
-	if externalSystem.Available() {
-		eventData.ExternalSystem = externalSystem
-	}
-
-	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "failed to validate UserUpdateEvent")
-	}
-
-	event := eventstore.NewBaseEvent(aggregate, UserUpdateV1)
-	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "error setting json data for UserUpdateEvent")
-	}
-	return event, nil
-}
 
 type UserLinkJobRoleEvent struct {
 	Tenant    string    `json:"tenant" validate:"required"`

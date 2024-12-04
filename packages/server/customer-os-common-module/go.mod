@@ -27,7 +27,7 @@ require (
 	github.com/h2non/filetype v1.1.3
 	github.com/machinebox/graphql v0.2.2
 	github.com/mitchellh/mapstructure v1.5.0
-	github.com/mrz1836/postmark v1.6.5
+	github.com/mrz1836/postmark v1.6.6
 	github.com/neo4j/neo4j-go-driver/v5 v5.27.0
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai v0.0.0-20241028063002-b2d4aaf8096f
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository v0.0.0-20241202190357-68898897475c

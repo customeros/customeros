@@ -8,7 +8,12 @@ import (
 type UserProperty string
 
 const (
-	UserPropertyLastLogin UserProperty = "lastLogin"
+	UserPropertyLastLogin                        UserProperty = "lastLogin"
+	UserPropertyShowOnboardingPage               UserProperty = "showOnboardingPage"
+	UserPropertyOnboardingInboundStepCompleted   UserProperty = "onboardingInboundStepCompleted"
+	UserPropertyOnboardingOutboundStepCompleted  UserProperty = "onboardingOutboundStepCompleted"
+	UserPropertyOnboardingCrmStepCompleted       UserProperty = "onboardingCrmStepCompleted"
+	UserPropertyOnboardingMailstackStepCompleted UserProperty = "onboardingMailstackStepCompleted"
 )
 
 type UserEntity struct {
@@ -32,10 +37,19 @@ type UserEntity struct {
 
 	InteractionEventParticipantDetails   InteractionEventParticipantDetails
 	InteractionSessionParticipantDetails InteractionSessionParticipantDetails
+	OnboardingDetails                    UserOnboardingDetails
 
 	// Indirect properties
 	DefaultForPlayer bool
 	Tenant           string
+}
+
+type UserOnboardingDetails struct {
+	ShowOnboardingPage               bool
+	OnboardingInboundStepCompleted   bool
+	OnboardingOutboundStepCompleted  bool
+	OnboardingCrmStepCompleted       bool
+	OnboardingMailstackStepCompleted bool
 }
 
 type UserEntities []UserEntity

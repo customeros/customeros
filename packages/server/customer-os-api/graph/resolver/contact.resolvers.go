@@ -1136,6 +1136,64 @@ func (r *queryResolver) ContactByPhone(ctx context.Context, e164 string) (*model
 	return mapper.MapEntityToContact(contactEntity), nil
 }
 
+// ContactByLinkedIn is the resolver for the contact_ByLinkedIn field.
+func (r *queryResolver) ContactByLinkedIn(ctx context.Context, linkedInURL string) (*model.Contact, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.ContactByLinkedIn", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogKV("request.linkedInURL", linkedInURL)
+
+	socialEntity := neo4jentity.SocialEntity{
+		Url: linkedInURL,
+	}
+	if !socialEntity.IsLinkedin() {
+		return nil, nil
+	}
+
+	_, existingContactId, err := r.Services.CommonServices.ContactService.CheckContactExistsWithLinkedIn(ctx, linkedInURL, "", "")
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to check contact by linkedin url %s", linkedInURL)
+		return nil, nil
+	}
+	if existingContactId == "" {
+		return nil, nil
+	}
+
+	contactEntity, err := r.Services.ContactService.GetById(ctx, existingContactId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get contact by id %s", existingContactId)
+		return nil, nil
+	}
+
+	return mapper.MapEntityToContact(contactEntity), nil
+}
+
+// ContactExistsByLinkedIn is the resolver for the contact_ExistsByLinkedIn field.
+func (r *queryResolver) ContactExistsByLinkedIn(ctx context.Context, linkedInURL string) (bool, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.ContactExistsByLinkedIn", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogKV("request.linkedInURL", linkedInURL)
+
+	socialEntity := neo4jentity.SocialEntity{
+		Url: linkedInURL,
+	}
+	if !socialEntity.IsLinkedin() {
+		return false, nil
+	}
+
+	contactFound, _, err := r.Services.CommonServices.ContactService.CheckContactExistsWithLinkedIn(ctx, linkedInURL, "", "")
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to check contact by linkedin url %s", linkedInURL)
+		return false, nil
+	}
+
+	return contactFound, nil
+}
+
 // Contact returns generated.ContactResolver implementation.
 func (r *Resolver) Contact() generated.ContactResolver { return &contactResolver{r} }
 

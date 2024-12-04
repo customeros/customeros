@@ -19,12 +19,7 @@ query contact($id: ID!) {
         created
         lastUpdated
       }
-      id
       name
-      source
-      updatedAt
-      createdAt
-      appSource
     }
     flows {
       metadata {
@@ -43,7 +38,9 @@ query contact($id: ID!) {
       totalAvailable
     }
     tags {
-      id
+      metadata {
+        id
+      }
       name
     }
     jobRoles {

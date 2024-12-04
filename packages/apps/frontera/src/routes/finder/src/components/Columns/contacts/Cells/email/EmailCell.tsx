@@ -107,7 +107,7 @@ export const EmailCell = observer(
           <MenuList align='start' className='max-w-[600px] w-[250px]'>
             {orgActive && !!domains?.length && (
               <MenuItem onClick={() => contactStore?.findEmail()}>
-                <div className='overflow-hidden inline-flex text-ellipsis w-[200px]'>
+                <div className=' flex overflow-hidden items-center text-ellipsis w-[200px]'>
                   {isEnrichingEmail ? (
                     <Tooltip label={`Finding email at ${orgActive}`}>
                       <Spinner
@@ -117,11 +117,13 @@ export const EmailCell = observer(
                       />
                     </Tooltip>
                   ) : (
-                    <Star06 className='mr-2 text-gray-500' />
+                    <Star06 className='mr-2 text-gray-500 size-4' />
                   )}
-                  {isEnrichingEmail
-                    ? `Finding email at ${orgActive}`
-                    : `Find email at ${orgActive}`}
+                  <p className='w-[190px] truncate'>
+                    {isEnrichingEmail
+                      ? `Finding email at ${orgActive}`
+                      : `Find email at ${orgActive}`}
+                  </p>
                 </div>
               </MenuItem>
             )}

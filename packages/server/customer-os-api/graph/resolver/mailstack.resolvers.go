@@ -22,12 +22,11 @@ func (r *mutationResolver) MailstackGetPaymentIntent(ctx context.Context, domain
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.MailstackGetPaymentIntent", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-
 	span.LogKV("request.domains", domains)
 	span.LogKV("request.usernames", usernames)
+	span.LogFields(tracingLog.Float64("request.amount", amount))
 
-	amountInt := int64(amount * 100)
-	stripeClientSecret, err := r.Services.CommonServices.MailstackService.GetPaymentIntent(ctx, domains, usernames, amountInt)
+	stripeClientSecret, err := r.Services.CommonServices.MailstackService.GetPaymentIntent(ctx, domains, usernames, int64(amount))
 	if err != nil {
 		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to register buy domains with mailboxes")

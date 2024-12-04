@@ -14,7 +14,6 @@ export type CommandMenuType =
   | 'RenameOpportunityName'
   | 'ChangeArrEstimate'
   | 'OpportunityCommands'
-  | 'AddContactViaLinkedInUrl'
   | 'RenameOrganizationProperty'
   | 'DeleteConfirmationModal'
   | 'OrganizationBulkCommands'
@@ -56,6 +55,7 @@ export type CommandMenuType =
   | 'InstallLinkedInExtension'
   | 'FlowValidationMessage'
   | 'ConfirmEmailContentChanges'
+  | 'AddContactsBulk'
   | 'ContactBulkCommands';
 
 export type Context = {

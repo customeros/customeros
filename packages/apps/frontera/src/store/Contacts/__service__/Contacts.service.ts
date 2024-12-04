@@ -32,11 +32,13 @@ import UpdateContactPhoneNumberDocument from './updateContactPhoneNumber.graphql
 import RemoveContactPhoneNumberDocument from './removeContactPhoneNumber.graphql';
 import FindWorkContactEmailMutationDocument from './findWorkContactEmail.graphql';
 import RemoveTagsFromContactMutationDocument from './removeTagsFromContact.graphql';
+import CreateContactBulkByEmailMutationDocument from './createContactBulkByEmail.graphql';
 import SetPrimaryEmailForContactMutationDocument from './setPrimaryEmailForContact.graphql';
 import {
   AddJobRoleMutation,
   AddJobRoleMutationVariables,
 } from './addJobRole.generated';
+import CreateContactBulkByLinkedInMutationDocument from './createContactBulkByLinkedIn.graphql';
 import {
   CreateContactMutation,
   CreateContactMutationVariables,
@@ -101,6 +103,14 @@ import {
   SetPrimaryEmailForContactMutation,
   SetPrimaryEmailForContactMutationVariables,
 } from './setPrimaryEmailForContact.generated';
+import {
+  CreateContactBulkByEmailMutation,
+  CreateContactBulkByEmailMutationVariables,
+} from './createContactBulkByEmail.generated.ts';
+import {
+  CreateContactBulkByLinkedInMutation,
+  CreateContactBulkByLinkedInMutationVariables,
+} from './createContactBulkByLinkedIn.generated.ts';
 import {
   CreateContactMutation as CreateContactForOrgMutation,
   CreateContactMutationVariables as CreateContactForOrgMutationVariables,
@@ -263,6 +273,24 @@ class ContactService {
     >(RemoveTagsFromContactMutationDocument, payload);
   }
 
+  async createContactBulkByEmail(
+    payload: CreateContactBulkByEmailMutationVariables,
+  ) {
+    return this.transport.graphql.request<
+      CreateContactBulkByEmailMutation,
+      CreateContactBulkByEmailMutationVariables
+    >(CreateContactBulkByEmailMutationDocument, payload);
+  }
+
+  async createContactBulkByLinkedIn(
+    payload: CreateContactBulkByLinkedInMutationVariables,
+  ) {
+    return this.transport.graphql.request<
+      CreateContactBulkByLinkedInMutation,
+      CreateContactBulkByLinkedInMutationVariables
+    >(CreateContactBulkByLinkedInMutationDocument, payload);
+  }
+
   public async mutateOperation(operation: Operation, store: ContactStore) {
     const diff = operation.diff?.[0];
     const type = diff?.op;
@@ -313,14 +341,27 @@ class ContactService {
           });
         }
       })
-      .with(['socials', ...P.array()], ([_]) => {
+      .with(['socials', ...P.array()], async ([_]) => {
         if (type === 'add') {
-          this.addSocial({
-            contactId: contactId!,
-            input: {
-              url: value.url,
-            },
-          });
+          try {
+            await this.addSocial({
+              contactId: contactId!,
+              input: {
+                url: value.url,
+              },
+            });
+          } catch (e) {
+            store.root.ui.toastError(
+              'This LinkedIn is already used by another contact',
+              'contact-social',
+            );
+
+            const foundIdx = store.value.socials.findIndex(
+              (social) => social.url === value.url,
+            );
+
+            store.value.socials[foundIdx].url = '';
+          }
         }
 
         if (type === 'update') {
@@ -357,13 +398,13 @@ class ContactService {
       .with(['emails', 0, ...P.array()], () => {
         if (type === 'update') {
           const findIndex = store.value.emails.findIndex(
-            (email) => email === value,
+            (email) => email.email === value,
           );
 
           this.updateContactEmail({
             contactId: contactId!,
             input: {
-              email: value.email,
+              email: value,
               primary: store.value.emails[findIndex].primary || false,
             },
             previousEmail: oldValue as string,

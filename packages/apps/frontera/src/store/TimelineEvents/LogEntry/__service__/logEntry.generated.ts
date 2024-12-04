@@ -13,7 +13,11 @@ export type GetLogEntryQuery = {
     contentType?: string | null;
     createdAt: any;
     updatedAt: any;
-    tags: Array<{ __typename?: 'Tag'; id?: string | null; name: string }>;
+    tags: Array<{
+      __typename?: 'Tag';
+      name: string;
+      metadata: { __typename?: 'Metadata'; id: string };
+    }>;
     createdBy?: {
       __typename?: 'User';
       id: string;

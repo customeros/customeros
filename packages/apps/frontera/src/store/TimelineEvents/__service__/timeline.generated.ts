@@ -605,8 +605,8 @@ export type TimelineQuery = {
           }>;
           issueTags?: Array<{
             __typename?: 'Tag';
-            id?: string | null;
             name: string;
+            metadata: { __typename?: 'Metadata'; id: string };
           } | null> | null;
         }
       | {
@@ -630,7 +630,11 @@ export type TimelineQuery = {
               email?: string | null;
             }> | null;
           } | null;
-          tags: Array<{ __typename?: 'Tag'; id?: string | null; name: string }>;
+          tags: Array<{
+            __typename?: 'Tag';
+            name: string;
+            metadata: { __typename?: 'Metadata'; id: string };
+          }>;
           externalLinks: Array<{
             __typename?: 'ExternalSystem';
             type: Types.ExternalSystemType;
@@ -638,7 +642,6 @@ export type TimelineQuery = {
             externalSource?: string | null;
           }>;
         }
-      | { __typename: 'MarkdownEvent' }
       | {
           __typename: 'MarkdownEvent';
           content?: string | null;

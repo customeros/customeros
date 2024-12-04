@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/coserrors"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
@@ -98,22 +98,34 @@ func (s *socialService) Update(ctx context.Context, socialEntity neo4jentity.Soc
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
+
+	// reset alias and external id if linkedin url changed
+	var alias, externalId *string
 	currentSocialEntity := neo4jmapper.MapDbNodeToSocialEntity(socialDbNode)
 	if currentSocialEntity.IsLinkedin() {
-		if currentSocialEntity.Alias != "" || currentSocialEntity.ExternalId != "" {
-			return currentSocialEntity, coserrors.ErrOperationNotAllowed
+		if currentSocialEntity.Url != socialEntity.Url {
+			alias = utils.StringPtr("")
+			externalId = utils.StringPtr("")
 		}
 	}
 
 	// update social in DB
-	updatedSocialNode, err := s.services.Neo4jRepositories.SocialWriteRepository.Update(ctx, tenant, socialEntity)
+	updatedSocialNode, err := s.services.Neo4jRepositories.SocialWriteRepository.Update(ctx, tenant, socialEntity.Id, socialEntity.Url, alias, externalId)
 	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to update social"))
 		return nil, err
 	}
 
-	err = s.services.RabbitMQService.PublishEvent(ctx, socialEntity.Id, model.SOCIAL, dto.UpdateSocial{
+	updateSocialDto := dto.UpdateSocial{
 		Url: socialEntity.Url,
-	})
+	}
+	if alias != nil {
+		updateSocialDto.Alias = *alias
+	}
+	if externalId != nil {
+		updateSocialDto.ExternalId = *externalId
+	}
+	err = s.services.RabbitMQService.PublishEvent(ctx, socialEntity.Id, model.SOCIAL, updateSocialDto)
 
 	// get linked entities
 	linkedEntities, err := s.services.Neo4jRepositories.CommonReadRepository.GetDbNodesLinkedTo(ctx, tenant, socialEntity.Id, model.SOCIAL.Neo4jLabel(), "HAS")
@@ -134,7 +146,9 @@ func (s *socialService) Update(ctx context.Context, socialEntity neo4jentity.Soc
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateSocialForContact"))
 			}
-			s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, id, model.CONTACT, utils.NewEventCompletedDetails().WithUpdate())
+			if common.GetAppSourceFromContext(ctx) != constants.AppSourceCustomerOsApi {
+				s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, id, model.CONTACT, utils.NewEventCompletedDetails().WithUpdate())
+			}
 		} else if utils.Contains(labels, model.ORGANIZATION.Neo4jLabel()) {
 			err = s.services.RabbitMQService.PublishEvent(ctx, id, model.ORGANIZATION, dto.UpdateSocialForOrganization{
 				SocialId:  socialEntity.Id,
@@ -143,7 +157,10 @@ func (s *socialService) Update(ctx context.Context, socialEntity neo4jentity.Soc
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateSocialForOrganization"))
 			}
-			s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, id, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
+
+			if common.GetAppSourceFromContext(ctx) != constants.AppSourceCustomerOsApi {
+				s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, id, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
+			}
 		}
 	}
 

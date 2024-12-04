@@ -75,6 +75,7 @@ export const CustomFieldModal = observer(
   }: NewCustomFieldModalProps) => {
     const store = useStore();
     const inputRef = useRef<HTMLInputElement>(null);
+    const endOfOptionsRef = useRef<HTMLDivElement>(null);
     const [searchParams] = useSearchParams();
     const [name, setName] = useState<string>('');
 
@@ -188,17 +189,21 @@ export const CustomFieldModal = observer(
       }
     }, [isOpen]);
 
+    useEffect(() => {
+      endOfOptionsRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [newOption]);
+
     return (
       <Modal open={isOpen} onOpenChange={(value) => onOpenChange(value)}>
         <ModalPortal>
           <ModalOverlay />
-          <ModalContent>
-            <ModalHeader>
+          <ModalContent className='max-h-[480px]  overflow-auto'>
+            <ModalHeader className='top-0 sticky bg-white z-[9999]'>
               <p className='text-lg font-semibold'>{title}</p>
               <ModalCloseButton asChild />
             </ModalHeader>
-            <ModalBody className='flex flex-col gap-4'>
-              <div className='flex flex-col gap-2'>
+            <ModalBody className='flex flex-col gap-4 '>
+              <div className='flex flex-col gap-2 '>
                 <div>
                   {!isEdit ? (
                     <>
@@ -334,7 +339,6 @@ export const CustomFieldModal = observer(
                         )}
                       </Droppable>
                     </DragDropContext>
-
                     <Button
                       size='xs'
                       variant='ghost'
@@ -353,11 +357,12 @@ export const CustomFieldModal = observer(
                     >
                       Add option
                     </Button>
+                    <div ref={endOfOptionsRef} />
                   </div>
                 )}
               </div>
             </ModalBody>
-            <ModalFooter className='flex gap-3'>
+            <ModalFooter className='flex gap-3 sticky bottom-0 bg-white'>
               <ModalCloseButton asChild>
                 <Button className='w-full'>Cancel</Button>
               </ModalCloseButton>

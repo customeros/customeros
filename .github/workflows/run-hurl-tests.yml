@@ -1,0 +1,81 @@
+name: Hurl Tests
+
+on:
+  workflow_dispatch:
+  repository_dispatch:
+    types:
+      - customer-os-api * deployed
+
+concurrency:
+  group: ${{ github.workflow }}-global
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Hurl
+        run: |
+          curl -LO https://github.com/Orange-OpenSource/hurl/releases/download/4.2.0/hurl_4.2.0_amd64.deb
+          sudo dpkg -i hurl_4.2.0_amd64.deb
+
+      - name: Make runner script executable
+        run: chmod +x ./packages/server/customer-os-api/test/hurl/run-test.sh
+
+      - name: Run Tests and Capture Output
+        id: run_tests
+        working-directory: ./packages/server/customer-os-api/test/hurl
+        env:
+          HURL_TENANT_API_KEY: ${{ secrets.HURL_TENANT_API_KEY }}
+        run: |
+          ./run-test.sh
+          exit_code=$?
+          echo "status=$exit_code" >> $GITHUB_OUTPUT
+          exit $exit_code
+
+      - name: Parse Test Results
+        if: always()
+        id: parse_results
+        working-directory: ./packages/server/customer-os-api/test/hurl
+        run: |
+          # Count passed and failed tests from the Test Summary section
+          PASSED_TESTS=$(grep -c "✅ Passed:" test-output.txt || echo "0")
+          FAILED_TESTS=$(grep -c "❌ Failed:" test-output.txt || echo "0")
+          TOTAL_TESTS=$((PASSED_TESTS + FAILED_TESTS))
+          
+          # Store results in environment variables
+          echo "passed_tests=$PASSED_TESTS" >> $GITHUB_ENV
+          echo "failed_tests=$FAILED_TESTS" >> $GITHUB_ENV
+          echo "total_tests=$TOTAL_TESTS" >> $GITHUB_ENV
+
+      - name: Send test results to Slack
+        if: always()
+        env:
+          PASSED_TESTS: ${{ env.passed_tests }}
+          FAILED_TESTS: ${{ env.failed_tests }}
+          TOTAL_TESTS: ${{ env.total_tests }}
+        run: |
+          BUILD_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          
+          # Create basic message with test results
+          MESSAGE="<$BUILD_URL|Hurl Test Results>:\n✅ $PASSED_TESTS passed, ❌ $FAILED_TESTS failed ($TOTAL_TESTS total)"
+          
+          # Add trigger information if it's a repository dispatch
+          if [ "${{ github.event_name }}" == "repository_dispatch" ]; then
+            TRIGGER_SOURCE=$(echo "${{ github.event.action }}" | cut -d ' ' -f 1)
+            NEW_VERSION="${{ github.event.client_payload.version }}"
+            OLD_VERSION="${{ github.event.client_payload.old_version }}"
+          
+            VERSION_INFO=""
+            if [ ! -z "$NEW_VERSION" ] && [ ! -z "$OLD_VERSION" ]; then
+              VERSION_INFO=" - new version: $NEW_VERSION / old version: v$OLD_VERSION"
+            fi
+          
+            MESSAGE="$MESSAGE\nTriggered by \`$TRIGGER_SOURCE\`$VERSION_INFO"
+          fi
+          
+          curl --fail -X POST -H 'Content-type: application/json' --data "{
+            \"text\": \"$MESSAGE\"
+          }" ${{ secrets.SLACK_FE_TESTS_WEBHOOK_URL }}

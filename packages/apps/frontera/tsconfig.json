@@ -5,6 +5,8 @@
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "skipLibCheck": true,
+    "sourceMap": true,
+    "inlineSources": true,
 
     /* Bundler mode */
     "moduleResolution": "bundler",

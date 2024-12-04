@@ -18,6 +18,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
@@ -407,8 +408,7 @@ func (r *mutationResolver) FlowDummy1Email(ctx context.Context, flowsCount int, 
 
 	userIds := make([]string, 0)
 	for i := 1; i <= userCount; i++ {
-		userId := uuid.New().String()
-		err := r.Services.CommonServices.Neo4jRepositories.UserWriteRepository.CreateUser(ctx, neo4jentity.UserEntity{Id: userId})
+		userId, err := r.Services.CommonServices.UserService.Save(ctx, nil, nil, data_fields.UserFields{})
 		if err != nil {
 			tracing.TraceErr(span, err)
 			graphql.AddErrorf(ctx, "")

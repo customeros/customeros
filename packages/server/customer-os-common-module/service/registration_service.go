@@ -3,9 +3,9 @@ package service
 import (
 	"context"
 	"fmt"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"strings"
 
-	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
@@ -118,10 +118,10 @@ func (s *registrationService) setupTestUser(ctx context.Context, span opentracin
 
 	var testUserId string
 	if existingTestUser == nil {
-		testUserId, err = s.services.UserService.CreateUser(ctx, neo4jentity.UserEntity{
-			FirstName: "Test",
-			LastName:  "Sender",
-			Test:      true,
+		testUserId, err = s.services.UserService.Save(ctx, nil, nil, data_fields.UserFields{
+			FirstName: utils.StringPtr("Test"),
+			LastName:  utils.StringPtr("Sender"),
+			Test:      utils.BoolPtr(true),
 		})
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "cannot create test user"))

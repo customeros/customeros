@@ -22,7 +22,7 @@ func (r *mutationResolver) AddTag(ctx context.Context, input model.AddTagInput) 
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "CommonResolver.AddTag", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.Object("request", input))
+	tracing.LogObjectAsJson(span, "request", input)
 
 	tenant := common.GetTenantFromContext(ctx)
 
