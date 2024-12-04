@@ -91,7 +91,17 @@ export class Syncable<T extends object> {
   }
 
   public async load(data: T) {
-    requestIdleCallback(() => {
+    // safari does not support requestIdleCallback yet
+    let rIC;
+
+    if ('requestIdleCallback' in window) {
+      rIC = requestIdleCallback;
+    } else {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      rIC = (cb: any) => setTimeout(cb, 1);
+    }
+
+    rIC(() => {
       runInAction(() => {
         Object.assign(this.value, data);
         Object.assign(this.snapshot, data);
