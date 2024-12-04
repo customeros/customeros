@@ -14,7 +14,7 @@ type MeResponse struct {
 	Tenant string `json:"tenant"`
 }
 
-func AuthorizeMe(services *service.Services) gin.HandlerFunc {
+func AuthorizeMe(s *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "AuthorizeMe", c.Request.Header)
 		defer span.Finish()

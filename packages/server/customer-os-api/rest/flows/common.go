@@ -1,17 +1,22 @@
 package flows
 
 import (
+	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/pkg/errors"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
 
-func getParticipantOrganizationIds(ctx *rest.HTTPContext, domains []string) ([]string, error) {
+func getParticipantOrganizationIds(c *gin.Context, s *service.Services, domains []string) ([]string, error) {
+	span, ctx := tracing.StartTracerSpan(c.Request.Context(), "flows.getParticipantOrganizationIds")
+	defer span.Finish()
+	tracing.TagComponentRest(span)
+
 	var results []string
-	tenantDomains, err := ctx.Services.CommonServices.WorkspaceService.GetWorkspaceDomainsForTenant(*ctx.ServiceContext)
+	tenantDomains, err := s.CommonServices.WorkspaceService.GetWorkspaceDomainsForTenant(ctx)
 	if err != nil {
 		return results, err
 	}
@@ -24,9 +29,9 @@ func getParticipantOrganizationIds(ctx *rest.HTTPContext, domains []string) ([]s
 				domain,
 			},
 		}
-		orgId, err := ctx.Services.CommonServices.OrganizationService.Save(*ctx.ServiceContext, nil, nil, dataFields)
+		orgId, err := s.CommonServices.OrganizationService.Save(ctx, nil, nil, dataFields)
 		if err != nil {
-			tracing.TraceErr(ctx.Span, errors.Wrap(err, "Error saving organization by domain"))
+			tracing.TraceErr(span, errors.Wrap(err, "Error saving organization by domain"))
 		}
 
 		results = append(results, orgId)

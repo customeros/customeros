@@ -1,9 +1,12 @@
 package flows
 
 import (
+	"context"
 	"net/http"
 	"strings"
 
+	"github.com/gin-gonic/gin"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -12,70 +15,83 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/pkg/errors"
 
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
 
-func GrainZapier(c *rest.HTTPContext) {
-	ctx, span := commontracing.StartHttpServerTracerSpanWithHeader(c.GinContext.Request.Context(), "Grain", c.GinContext.Request.Header)
-	c.ServiceContext = &ctx
-	c.Span = span
+func GrainZapier(c *gin.Context, s *service.Services) {
+	ctx, span := commontracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "Flows.Grain", c.Request.Header)
 	defer span.Finish()
 	commontracing.TagComponentRest(span)
 
-	tenant, err := c.Services.CommonServices.PostgresRepositories.TenantRepository.GetTenant(ctx, c.GinContext.Param("tenantId"))
+	tenant, err := s.CommonServices.PostgresRepositories.TenantRepository.GetTenant(ctx, c.Param("tenantId"))
 	if err != nil {
 		err := errors.Wrap(err, "Unable to identify tenant")
 		tracing.TraceErr(span, err)
-		rest.SendError(c.GinContext, c.Span, http.StatusUnauthorized, rest.ErrUnauthorized)
+		rest.SendError(c, span, http.StatusUnauthorized, rest.ErrUnauthorized)
 		return
 	}
-	c.Tenant = tenant
 
-	if !strings.HasPrefix(c.GinContext.ContentType(), "application/json") {
-		rest.SendError(c.GinContext, c.Span, http.StatusBadRequest, rest.ErrUnsupportedContentType)
+	// update context with tenant, pass this where tenant is needed
+	ctx = common.WithCustomContext(ctx, &common.CustomContext{
+		Tenant:    tenant,
+		AppSource: constants.AppSourceCustomerOsApiRest,
+	})
+
+	if !strings.HasPrefix(c.ContentType(), "application/json") {
+		rest.SendError(c, span, http.StatusBadRequest, rest.ErrUnsupportedContentType)
 	}
 
-	if c.GinContext.Request.UserAgent() == "" {
-		rest.SendError(c.GinContext, c.Span, http.StatusForbidden, rest.ErrForbidden)
+	if c.Request.UserAgent() == "" {
+		rest.SendError(c, span, http.StatusForbidden, rest.ErrForbidden)
 	}
 
-	if !strings.EqualFold(c.GinContext.Request.UserAgent(), "Zapier") {
-		rest.SendError(c.GinContext, c.Span, http.StatusForbidden, rest.ErrForbidden)
+	if !strings.EqualFold(c.Request.UserAgent(), "Zapier") {
+		rest.SendError(c, span, http.StatusForbidden, rest.ErrForbidden)
 	}
 
-	handleGrainNewRecordingEventZapier(c)
+	handleGrainNewRecordingEventZapier(c, ctx, s)
 }
 
-func handleGrainNewRecordingEventZapier(ctx *rest.HTTPContext) {
+func handleGrainNewRecordingEventZapier(c *gin.Context, ctx context.Context, s *service.Services) {
+	span, _ := commontracing.StartTracerSpan(c.Request.Context(), "Flows.handleGrainNewRecorderEventZapier")
+	defer span.Finish()
+	commontracing.TagComponentRest(span)
+
 	var grainDataPayload GrainRecordingData
-	err := ctx.GinContext.BindJSON(&grainDataPayload)
+	err := c.BindJSON(&grainDataPayload)
 	if err != nil {
-		rest.SendError(ctx.GinContext, ctx.Span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Unable to parse payload from Zapier"))
+		rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Unable to parse payload from Zapier"))
 		return
 	}
 
 	grainData := &grainDataPayload
 	err = grainData.cleanPayload()
 	if err != nil {
-		rest.SendError(ctx.GinContext, ctx.Span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Unable to normalize payload from Zapier"))
+		rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Unable to normalize payload from Zapier"))
 		return
 	}
 
 	if grainData.RecordingData.IntelligenceNotesMD == "" {
-		rest.SendError(ctx.GinContext, ctx.Span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("No Grain meeting in payload"))
+		rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("No Grain meeting in payload"))
 	}
 
-	ctx.GinContext.JSON(http.StatusAccepted, rest.BuildBaseResponse(rest.StatusProcessing))
+	c.JSON(http.StatusAccepted, rest.BuildBaseResponse(rest.StatusProcessing))
 
 	go func() {
-		if err := publishGrainMeetingSummaryCreatedEvent(ctx, grainData); err != nil {
-			tracing.TraceErr(ctx.Span, errors.Wrap(err, "failed to process Grain AI summary from zapier"))
+		if err := publishGrainMeetingSummaryCreatedEvent(c, ctx, s, grainData); err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to process Grain AI summary from zapier"))
 		}
 	}()
 	return
 }
 
-func publishGrainMeetingSummaryCreatedEvent(ctx *rest.HTTPContext, grainData *GrainRecordingData) error {
+func publishGrainMeetingSummaryCreatedEvent(c *gin.Context, ctx context.Context, s *service.Services, grainData *GrainRecordingData) error {
+	span, _ := commontracing.StartTracerSpan(c.Request.Context(), "Flows.publishGrainMeetingSummaryEvent")
+	defer span.Finish()
+	commontracing.TagComponentRest(span)
+
 	var meeting data_fields.MeetingSummaryEvent
 
 	content := grainData.MeetingNoteContent()
@@ -91,14 +107,14 @@ func publishGrainMeetingSummaryCreatedEvent(ctx *rest.HTTPContext, grainData *Gr
 
 	event, err := dto.NewWebhookEvent(enum.Grain, "meeting_summary", "created", &meeting)
 	if err != nil {
-		tracing.TraceErr(ctx.Span, errors.Wrap(err, "failed to build webhook event"))
+		tracing.TraceErr(span, errors.Wrap(err, "failed to build webhook event"))
 		return err
 	}
 
-	pubErr := ctx.Services.CommonServices.RabbitMQService.PublishWebhookEvent(*ctx.ServiceContext, event)
+	pubErr := s.CommonServices.RabbitMQService.PublishWebhookEvent(ctx, event)
 
 	if pubErr != nil {
-		tracing.TraceErr(ctx.Span, errors.Wrap(err, "failed to publish event"))
+		tracing.TraceErr(span, errors.Wrap(err, "failed to publish event"))
 	}
 
 	return nil

@@ -30,7 +30,7 @@ type CreateWebhookResponse struct {
 	Hook CreateWebhookRecord `json:"hook"`
 }
 
-func CreateWebhook(services *service.Services, baseURL, flowsPath string) gin.HandlerFunc {
+func CreateWebhook(s *service.Services, baseURL, flowsPath string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "CreateWebhook", c.Request.Header)
 		defer span.Finish()
@@ -48,13 +48,13 @@ func CreateWebhook(services *service.Services, baseURL, flowsPath string) gin.Ha
 			return
 		}
 
-		integration, err := services.WebhookService.GetIntegration(strings.ToLower(req.Integration))
+		integration, err := s.WebhookService.GetIntegration(strings.ToLower(req.Integration))
 		if err != nil {
 			rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("please provide a valid integration value"))
 			return
 		}
 
-		webhookPath, secret, err := services.WebhookService.CreateIntegrationWebhook(ctx, tenant, integration)
+		webhookPath, secret, err := s.WebhookService.CreateIntegrationWebhook(ctx, tenant, integration)
 		if err != nil {
 			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer.WithMessage("Unable to create webhook"))
 			return
@@ -95,7 +95,7 @@ type ActiveWebhookRecord struct {
 	Active      bool      `json:"active"`
 }
 
-func GetActiveWebhooks(services *service.Services, baseURL, flowsPath string) gin.HandlerFunc {
+func GetActiveWebhooks(s *service.Services, baseURL, flowsPath string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "GetActiveWebhooks", c.Request.Header)
 		defer span.Finish()
@@ -107,7 +107,7 @@ func GetActiveWebhooks(services *service.Services, baseURL, flowsPath string) gi
 			return
 		}
 
-		count, webhooks, err := services.CommonServices.PostgresRepositories.FlowWebhooksRepository.FindAllActiveWebhooks(ctx, tenant)
+		count, webhooks, err := s.CommonServices.PostgresRepositories.FlowWebhooksRepository.FindAllActiveWebhooks(ctx, tenant)
 		if err != nil {
 			err = fmt.Errorf("Unable to lookup active webhooks for %s: %v", tenant, err)
 			tracing.TraceErr(span, err)
@@ -150,7 +150,7 @@ func GetActiveWebhooks(services *service.Services, baseURL, flowsPath string) gi
 	}
 }
 
-func RotateWebhook(services *service.Services, baseURL, flowsPath string) gin.HandlerFunc {
+func RotateWebhook(s *service.Services, baseURL, flowsPath string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "RotateWebhook", c.Request.Header)
 		defer span.Finish()
@@ -163,7 +163,7 @@ func RotateWebhook(services *service.Services, baseURL, flowsPath string) gin.Ha
 			return
 		}
 		tenantId := c.Param("tenantId")
-		validTenant, err := services.WebhookService.ValidateTenantId(ctx, tenant, tenantId)
+		validTenant, err := s.WebhookService.ValidateTenantId(ctx, tenant, tenantId)
 		if err != nil {
 			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer.WithMessage("Unable to verify webhook ownership"))
 			return
@@ -176,14 +176,14 @@ func RotateWebhook(services *service.Services, baseURL, flowsPath string) gin.Ha
 		// Lookup integration
 		webhookPath := strings.TrimSuffix(c.Request.URL.Path, "/rotate")
 		webhookPath = strings.TrimPrefix(webhookPath, flowsPath)
-		integration, err := services.WebhookService.GetIntegrationFromWebhookPath(ctx, tenant, webhookPath)
+		integration, err := s.WebhookService.GetIntegrationFromWebhookPath(ctx, tenant, webhookPath)
 		if err != nil {
 			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer.WithMessage("Unable to identify webhook"))
 			return
 		}
 
 		// Call create to rotate webhook as it will automatically handle rotation
-		webhookPath, secret, err := services.WebhookService.CreateIntegrationWebhook(ctx, tenant, integration)
+		webhookPath, secret, err := s.WebhookService.CreateIntegrationWebhook(ctx, tenant, integration)
 		if err != nil {
 			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer.WithMessage("Unable to rotate webhook"))
 			return
@@ -202,7 +202,7 @@ func RotateWebhook(services *service.Services, baseURL, flowsPath string) gin.Ha
 	}
 }
 
-func DeactivateWebhook(services *service.Services) gin.HandlerFunc {
+func DeactivateWebhook(s *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "RotateWebhook", c.Request.Header)
 		defer span.Finish()
@@ -215,7 +215,7 @@ func DeactivateWebhook(services *service.Services) gin.HandlerFunc {
 			return
 		}
 		tenantId := c.Param("tenantId")
-		validTenant, err := services.WebhookService.ValidateTenantId(ctx, tenant, tenantId)
+		validTenant, err := s.WebhookService.ValidateTenantId(ctx, tenant, tenantId)
 		if err != nil {
 			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer.WithMessage("Unable to verify webhook ownership"))
 			return
@@ -226,7 +226,7 @@ func DeactivateWebhook(services *service.Services) gin.HandlerFunc {
 		}
 
 		// Call to deactivate webhook
-		deactErr := services.WebhookService.DeactivateWebhook(ctx, strings.TrimSuffix(c.Request.URL.Path, "/rotate"))
+		deactErr := s.WebhookService.DeactivateWebhook(ctx, strings.TrimSuffix(c.Request.URL.Path, "/rotate"))
 		if deactErr != nil {
 			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer)
 			return
@@ -260,25 +260,16 @@ func HandleWebhook(s *service.Services, flowsPath string) gin.HandlerFunc {
 			return
 		}
 
-		// build http context
-		httpContext := rest.HTTPContext{
-			GinContext:     c,
-			ServiceContext: &ctx,
-			Span:           span,
-			Services:       s,
-			Tenant:         tenant,
-		}
-
 		switch integration {
 		case enum.CalCom:
-			CalDotCom(&httpContext)
+			CalDotCom(c, s)
 		// todo
 		case enum.Fathom:
-			FathomZapier(&httpContext)
+			FathomZapier(c, s)
 		case enum.Grain:
-			GrainZapier(&httpContext)
+			GrainZapier(c, s)
 		case enum.Postmark:
-			PostmarkInboundEmail(&httpContext)
+			PostmarkInboundEmail(c, s)
 		// todo
 		default:
 			rest.SendError(c, span, http.StatusNotFound, rest.ErrNotFound)
