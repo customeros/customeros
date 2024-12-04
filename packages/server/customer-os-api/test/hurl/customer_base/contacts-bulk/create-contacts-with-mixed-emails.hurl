@@ -4,13 +4,13 @@ Content-Type: application/json
 X-CUSTOMER-OS-API-KEY: {{api_key}}
 [
     {
-        "email": "hurl-{{random_str}}-one@gmail.com"
+        "email": "hurl-{{random_str}}a@gmail.com"
     },
     {
-        "email": "hurl-{{random_str}}-two@gmail.com"
+        "email": "hurl-{{random_str}}b@gmail.com"
     },
     {
-        "email": "hurl-{{random_str}}-three@gmail.com"
+        "email": "hurl-{{random_str}}b@gmail.com"
     },
     {
         "email": "test@example.com"
