@@ -91,7 +91,10 @@ export class Syncable<T extends object> {
   }
 
   public async load(data: T) {
-    requestIdleCallback(() => {
+    // safari does not support requestIdleCallback yet
+    const rIC = requestIdleCallback ?? setTimeout;
+
+    rIC(() => {
       runInAction(() => {
         Object.assign(this.value, data);
         Object.assign(this.snapshot, data);
