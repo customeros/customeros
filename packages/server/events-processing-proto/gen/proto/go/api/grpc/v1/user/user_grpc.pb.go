@@ -22,7 +22,6 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type UserGrpcServiceClient interface {
-	UpsertUser(ctx context.Context, in *UpsertUserGrpcRequest, opts ...grpc.CallOption) (*UserIdGrpcResponse, error)
 	LinkJobRoleToUser(ctx context.Context, in *LinkJobRoleToUserGrpcRequest, opts ...grpc.CallOption) (*UserIdGrpcResponse, error)
 	LinkPhoneNumberToUser(ctx context.Context, in *LinkPhoneNumberToUserGrpcRequest, opts ...grpc.CallOption) (*UserIdGrpcResponse, error)
 	AddRole(ctx context.Context, in *AddRoleGrpcRequest, opts ...grpc.CallOption) (*UserIdGrpcResponse, error)
@@ -35,15 +34,6 @@ type userGrpcServiceClient struct {
 
 func NewUserGrpcServiceClient(cc grpc.ClientConnInterface) UserGrpcServiceClient {
 	return &userGrpcServiceClient{cc}
-}
-
-func (c *userGrpcServiceClient) UpsertUser(ctx context.Context, in *UpsertUserGrpcRequest, opts ...grpc.CallOption) (*UserIdGrpcResponse, error) {
-	out := new(UserIdGrpcResponse)
-	err := c.cc.Invoke(ctx, "/userGrpcService/UpsertUser", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
 }
 
 func (c *userGrpcServiceClient) LinkJobRoleToUser(ctx context.Context, in *LinkJobRoleToUserGrpcRequest, opts ...grpc.CallOption) (*UserIdGrpcResponse, error) {
@@ -86,7 +76,6 @@ func (c *userGrpcServiceClient) RemoveRole(ctx context.Context, in *RemoveRoleGr
 // All implementations should embed UnimplementedUserGrpcServiceServer
 // for forward compatibility
 type UserGrpcServiceServer interface {
-	UpsertUser(context.Context, *UpsertUserGrpcRequest) (*UserIdGrpcResponse, error)
 	LinkJobRoleToUser(context.Context, *LinkJobRoleToUserGrpcRequest) (*UserIdGrpcResponse, error)
 	LinkPhoneNumberToUser(context.Context, *LinkPhoneNumberToUserGrpcRequest) (*UserIdGrpcResponse, error)
 	AddRole(context.Context, *AddRoleGrpcRequest) (*UserIdGrpcResponse, error)
@@ -97,9 +86,6 @@ type UserGrpcServiceServer interface {
 type UnimplementedUserGrpcServiceServer struct {
 }
 
-func (UnimplementedUserGrpcServiceServer) UpsertUser(context.Context, *UpsertUserGrpcRequest) (*UserIdGrpcResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpsertUser not implemented")
-}
 func (UnimplementedUserGrpcServiceServer) LinkJobRoleToUser(context.Context, *LinkJobRoleToUserGrpcRequest) (*UserIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method LinkJobRoleToUser not implemented")
 }
@@ -122,24 +108,6 @@ type UnsafeUserGrpcServiceServer interface {
 
 func RegisterUserGrpcServiceServer(s grpc.ServiceRegistrar, srv UserGrpcServiceServer) {
 	s.RegisterService(&UserGrpcService_ServiceDesc, srv)
-}
-
-func _UserGrpcService_UpsertUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpsertUserGrpcRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(UserGrpcServiceServer).UpsertUser(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/userGrpcService/UpsertUser",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserGrpcServiceServer).UpsertUser(ctx, req.(*UpsertUserGrpcRequest))
-	}
-	return interceptor(ctx, in, info, handler)
 }
 
 func _UserGrpcService_LinkJobRoleToUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -221,10 +189,6 @@ var UserGrpcService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "userGrpcService",
 	HandlerType: (*UserGrpcServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "UpsertUser",
-			Handler:    _UserGrpcService_UpsertUser_Handler,
-		},
 		{
 			MethodName: "LinkJobRoleToUser",
 			Handler:    _UserGrpcService_LinkJobRoleToUser_Handler,

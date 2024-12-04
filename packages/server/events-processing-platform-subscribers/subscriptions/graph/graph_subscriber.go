@@ -251,13 +251,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 	case orgevents.OrganizationAddLocationV1:
 		_ = s.organizationEventHandler.OnLocationAddedToOrganization(ctx, evt)
 		return nil
-
-	case userevents.UserCreateV1:
-		_ = s.userEventHandler.OnUserCreate(ctx, evt)
-		return nil
-	case userevents.UserUpdateV1:
-		_ = s.userEventHandler.OnUserUpdate(ctx, evt)
-		return nil
 	case userevents.UserPhoneNumberLinkV1:
 		_ = s.userEventHandler.OnPhoneNumberLinkedToUser(ctx, evt)
 		return nil

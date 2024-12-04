@@ -1,32 +1,8 @@
 package command
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/models"
-	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
-	"time"
 )
-
-type UpsertUserCommand struct {
-	eventstore.BaseCommand
-	IsCreateCommand bool
-	DataFields      models.UserDataFields
-	Source          cmnmod.Source
-	ExternalSystem  cmnmod.ExternalSystem
-	CreatedAt       *time.Time
-	UpdatedAt       *time.Time
-}
-
-func NewUpsertUserCommand(objectID, tenant, userId string, source cmnmod.Source, externalSystem cmnmod.ExternalSystem, dataFields models.UserDataFields, createdAt, updatedAt *time.Time) *UpsertUserCommand {
-	return &UpsertUserCommand{
-		BaseCommand:    eventstore.NewBaseCommand(objectID, tenant, userId),
-		DataFields:     dataFields,
-		Source:         source,
-		ExternalSystem: externalSystem,
-		CreatedAt:      createdAt,
-		UpdatedAt:      updatedAt,
-	}
-}
 
 type LinkJobRoleCommand struct {
 	eventstore.BaseCommand

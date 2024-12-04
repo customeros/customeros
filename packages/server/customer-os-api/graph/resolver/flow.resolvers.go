@@ -7,6 +7,7 @@ package resolver
 import (
 	"context"
 	"fmt"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"sync"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -407,8 +408,7 @@ func (r *mutationResolver) FlowDummy1Email(ctx context.Context, flowsCount int, 
 
 	userIds := make([]string, 0)
 	for i := 1; i <= userCount; i++ {
-		userId := uuid.New().String()
-		err := r.Services.CommonServices.Neo4jRepositories.UserWriteRepository.CreateUser(ctx, neo4jentity.UserEntity{Id: userId})
+		userId, err := r.Services.CommonServices.UserService.Save(ctx, nil, nil, data_fields.UserFields{})
 		if err != nil {
 			tracing.TraceErr(span, err)
 			graphql.AddErrorf(ctx, "")
