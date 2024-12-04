@@ -16480,35 +16480,35 @@ enum ColumnViewType {
     INVOICES_INVOICE_PREVIEW
     INVOICES_ORGANIZATION
 
-    ORGANIZATIONS_AVATAR # no search
-    ORGANIZATIONS_NAME #search done
-    ORGANIZATIONS_WEBSITE #search done
-    ORGANIZATIONS_RELATIONSHIP #search done
-    ORGANIZATIONS_ONBOARDING_STATUS #search done
-    ORGANIZATIONS_RENEWAL_LIKELIHOOD #search done
-    ORGANIZATIONS_RENEWAL_DATE #search done
-    ORGANIZATIONS_FORECAST_ARR #search done
-    ORGANIZATIONS_OWNER #search done
-    ORGANIZATIONS_LAST_TOUCHPOINT #search done
-    ORGANIZATIONS_LAST_TOUCHPOINT_DATE #search done
-    ORGANIZATIONS_STAGE #search done
-    ORGANIZATIONS_CONTACT_COUNT #deprecate
-    ORGANIZATIONS_SOCIALS #search done
-    ORGANIZATIONS_LEAD_SOURCE #search done
-    ORGANIZATIONS_CREATED_DATE #search done
-    ORGANIZATIONS_EMPLOYEE_COUNT #search done
-    ORGANIZATIONS_YEAR_FOUNDED #search done
-    ORGANIZATIONS_INDUSTRY #search done
-    ORGANIZATIONS_CHURN_DATE #search done
-    ORGANIZATIONS_LTV #search done
-    ORGANIZATIONS_COUNTRY #search done
-    ORGANIZATIONS_CITY #search done
+    ORGANIZATIONS_AVATAR # no search, no sort
+    ORGANIZATIONS_NAME #search, sort done
+    ORGANIZATIONS_WEBSITE #search, sort done
+    ORGANIZATIONS_RELATIONSHIP #search, sort done
+    ORGANIZATIONS_ONBOARDING_STATUS #search, sort done
+    ORGANIZATIONS_RENEWAL_LIKELIHOOD #search, sort done
+    ORGANIZATIONS_RENEWAL_DATE #search, sort done
+    ORGANIZATIONS_FORECAST_ARR #search, sort done
+    ORGANIZATIONS_OWNER #search, sort done
+    ORGANIZATIONS_LAST_TOUCHPOINT #search, sort done
+    ORGANIZATIONS_LAST_TOUCHPOINT_DATE #search, sort done
+    ORGANIZATIONS_STAGE #search, sort done
+    ORGANIZATIONS_CONTACT_COUNT #deprecated
+    ORGANIZATIONS_SOCIALS #search done, no sort
+    ORGANIZATIONS_LEAD_SOURCE #search, sort done
+    ORGANIZATIONS_CREATED_DATE #search, sort done
+    ORGANIZATIONS_EMPLOYEE_COUNT #search, sort done
+    ORGANIZATIONS_YEAR_FOUNDED #search, sort done
+    ORGANIZATIONS_INDUSTRY #search, sort done
+    ORGANIZATIONS_CHURN_DATE #search, sort done
+    ORGANIZATIONS_LTV #search, sort done
+    ORGANIZATIONS_COUNTRY #search, sort done
+    ORGANIZATIONS_CITY #search, sort done
     ORGANIZATIONS_HEADQUARTERS #deprecated
-    ORGANIZATIONS_IS_PUBLIC #search done
-    ORGANIZATIONS_LINKEDIN_FOLLOWER_COUNT #no search
-    ORGANIZATIONS_TAGS #search done
+    ORGANIZATIONS_IS_PUBLIC #search, sort done
+    ORGANIZATIONS_LINKEDIN_FOLLOWER_COUNT #no search, no sort
+    ORGANIZATIONS_TAGS #search done, no sort
     ORGANIZATIONS_PARENT_ORGANIZATION #search done
-    ORGANIZATIONS_UPDATED_DATE #search done
+    ORGANIZATIONS_UPDATED_DATE #search, sort done
 
     CONTACTS_AVATAR
     CONTACTS_NAME
