@@ -52,7 +52,7 @@ func registerPublicRoutes(ctx context.Context, r *gin.Engine, services *service.
 	setupPublicRoute(ctx, r, services, "GET", "/invoice/:invoiceId/paymentLink", rest.GetInvoicePaymentLink(services))
 
 	setupPublicRoute(ctx, r, services, "POST", fmt.Sprintf("%s/dmarc", webhooksV1Path), flows.PostmarkDMARCMonitor(services))
-	setupPublicRoute(ctx, r, services, "POST", fmt.Sprintf("%s/:tenantId/:integrationId", flowsV1Path), flows.HandleWebhook(services))
+	setupPublicRoute(ctx, r, services, "POST", fmt.Sprintf("%s/:tenantId/i/:integrationId", flowsV1Path), flows.HandleWebhook(services, flowsV1Path))
 }
 
 func registerHealthRoutes(ctx context.Context, r *gin.Engine, services *service.Services, cache *commoncaches.Cache) {

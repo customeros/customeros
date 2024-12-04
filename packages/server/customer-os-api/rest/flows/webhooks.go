@@ -239,7 +239,7 @@ func DeactivateWebhook(services *service.Services) gin.HandlerFunc {
 	}
 }
 
-func HandleWebhook(s *service.Services) gin.HandlerFunc {
+func HandleWebhook(s *service.Services, flowsPath string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "Webhooks", c.Request.Header)
 		defer span.Finish()
@@ -253,7 +253,8 @@ func HandleWebhook(s *service.Services) gin.HandlerFunc {
 			return
 		}
 
-		integration, err := s.WebhookService.GetIntegrationFromWebhookPath(ctx, tenant, c.Request.URL.Path)
+		webhookPath := strings.TrimPrefix(c.Request.URL.Path, flowsPath)
+		integration, err := s.WebhookService.GetIntegrationFromWebhookPath(ctx, tenant, webhookPath)
 		if err != nil {
 			rest.SendError(c, span, http.StatusNotFound, rest.ErrNotFound.WithMessage("Webhook not found"))
 			return

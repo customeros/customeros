@@ -1,6 +1,8 @@
 package flows
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"net/http"
 	"strings"
 
@@ -30,6 +32,10 @@ func FathomZapier(c *rest.HTTPContext) {
 		return
 	}
 	c.Tenant = tenant
+	c.ServiceContext = utils.ToPtr(common.WithCustomContext(*c.ServiceContext, &common.CustomContext{
+		Tenant:    tenant,
+		AppSource: constants.AppSourceCustomerOsApiRest,
+	}))
 
 	if !strings.HasPrefix(c.GinContext.ContentType(), "application/json") {
 		rest.SendError(c.GinContext, c.Span, http.StatusBadRequest, rest.ErrUnsupportedContentType)
@@ -41,10 +47,10 @@ func FathomZapier(c *rest.HTTPContext) {
 		return
 	}
 
-	if !strings.EqualFold(c.GinContext.Request.UserAgent(), "Zapier") {
-		rest.SendError(c.GinContext, c.Span, http.StatusForbidden, rest.ErrForbidden)
-		return
-	}
+	//if !strings.EqualFold(c.GinContext.Request.UserAgent(), "Zapier") {
+	//	rest.SendError(c.GinContext, c.Span, http.StatusForbidden, rest.ErrForbidden)
+	//	return
+	//}
 
 	handleFathomAISummaryZapier(c)
 }

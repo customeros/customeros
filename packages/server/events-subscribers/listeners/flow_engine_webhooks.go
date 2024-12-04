@@ -2,6 +2,7 @@ package listeners
 
 import (
 	"fmt"
+	commonenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
@@ -21,8 +22,14 @@ func OnWebhookEventCreated(ctx context.Context, services *service.Services, inpu
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "input", input)
 
-	tenant, event, err := getWebhookEvent(ctx, input)
+	tenant, webhookEvent, err := getWebhookEvent(ctx, input)
 	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	if webhookEvent.Data == nil {
+		err := errors.New("webhookEvent.Data is nil")
 		tracing.TraceErr(span, err)
 		return err
 	}
@@ -35,15 +42,15 @@ func OnWebhookEventCreated(ctx context.Context, services *service.Services, inpu
 	}
 
 	// determine event handler //
-	switch eventData := (*event.Data).(type) {
+	switch webhookEvent.Name {
 
-	case *data_fields.MeetingSummaryEvent:
-		c.SourceSystem = event.ExternalSystemId
-		c.SourceEvent = event.Name
-		handlers.HandleMeetingSummaryEvent(c, eventData)
+	case commonenum.EventFathomMeetingSummaryCreated:
+		c.SourceSystem = webhookEvent.ExternalSystemId
+		c.SourceEvent = webhookEvent.Name
+		return handlers.HandleMeetingSummaryEvent(c, (*webhookEvent.Data).(*data_fields.MeetingSummaryEvent))
 
 	default:
-		err := fmt.Errorf("Unsupported event %s", event.Name)
+		err := fmt.Errorf("Unsupported event %s", webhookEvent.Name)
 		tracing.TraceErr(span, err)
 		return err
 	}
