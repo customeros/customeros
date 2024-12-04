@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"strings"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -104,7 +105,16 @@ func (r *flowWebhooksRepository) DisableWebhook(ctx context.Context, webhookPath
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	return r.gormDb.
-		Where("webhook_path = ? AND enabled = true", webhookPath).
-		Update("enabled", false).Error
+	err := r.gormDb.
+		Model(&entity.FlowWebhooks{}).
+		Where("webhook_path = ?", webhookPath).
+		Where("enabled = ?", true).
+		UpdateColumn("enabled", false).
+		UpdateColumn("updated_at", utils.Now()).
+		Error
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

@@ -101,7 +101,12 @@ func (w *webhookService) CreateIntegrationWebhook(ctx context.Context, tenant st
 		return "", "", err
 	}
 
-	integrationHash := integration.IntegrationID(webhook.RotationCount + 1)
+	rotationCount := count
+	if webhook != nil {
+		rotationCount = webhook.RotationCount
+	}
+
+	integrationHash := integration.IntegrationID(rotationCount + 1)
 	span.LogFields(log.String("integrationHash", integrationHash))
 	secret, err := utils.GenerateSecret()
 	span.LogFields(log.String("secret", secret))
@@ -118,7 +123,7 @@ func (w *webhookService) CreateIntegrationWebhook(ctx context.Context, tenant st
 
 	// disable existing webhook for tenant/integration if exists
 	if count != 0 {
-		err := w.DeactivateWebhook(ctx, webhook.WebhookPath)
+		err = w.DeactivateWebhook(ctx, webhook.WebhookPath)
 		if err != nil {
 			err = fmt.Errorf("Unable to deactivate existing webhook for %s and %s: %v", tenant, integration.String(), err)
 			tracing.TraceErr(span, err)
