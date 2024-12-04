@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
@@ -11,11 +12,11 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/repository"
-	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	userpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/user"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -161,56 +162,40 @@ func (s *userService) syncUser(ctx context.Context, syncMutex *sync.Mutex, userI
 		span.LogFields(log.Bool("found matching user", matchingUserExists))
 
 		// Create new user id if not found
-		userId = utils.NewUUIDIfEmpty(userId)
-		userInput.Id = userId
-		span.LogFields(log.String("userId", userId))
+		var inputUserId *string = nil
+		if userId != "" {
+			inputUserId = &userId
+		}
 
 		// Create or update user
-		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = CallEventsPlatformGRPCWithRetry[*userpb.UserIdGrpcResponse](func() (*userpb.UserIdGrpcResponse, error) {
-			return s.grpcClients.UserClient.UpsertUser(ctx, &userpb.UpsertUserGrpcRequest{
-				Tenant:          tenant,
-				Id:              userId,
-				LoggedInUserId:  "",
-				FirstName:       userInput.FirstName,
-				LastName:        userInput.LastName,
-				Name:            userInput.Name,
-				CreatedAt:       utils.ConvertTimeToTimestampPtr(userInput.CreatedAt),
-				UpdatedAt:       utils.ConvertTimeToTimestampPtr(userInput.UpdatedAt),
-				Internal:        false,
-				ProfilePhotoUrl: userInput.ProfilePhotoUrl,
-				Timezone:        userInput.Timezone,
-				Bot:             userInput.Bot,
-				SourceFields: &commonpb.SourceFields{
-					Source:    userInput.ExternalSystem,
-					AppSource: appSource,
-				},
-				ExternalSystemFields: &commonpb.ExternalSystemFields{
-					ExternalSystemId: userInput.ExternalSystem,
-					ExternalId:       userInput.ExternalId,
-					ExternalUrl:      userInput.ExternalUrl,
-					ExternalIdSecond: userInput.ExternalIdSecond,
-					ExternalSource:   userInput.ExternalSourceEntity,
-					SyncDate:         utils.ConvertTimeToTimestampPtr(&syncDate),
-				},
-			})
-		})
+		userFields := data_fields.UserFields{
+			FirstName:       utils.StringPtr(userInput.FirstName),
+			LastName:        utils.StringPtr(userInput.LastName),
+			Name:            utils.StringPtr(userInput.Name),
+			CreatedAt:       userInput.CreatedAt,
+			Internal:        utils.BoolPtr(false),
+			Source:          utils.StringPtr(userInput.ExternalSystem),
+			Bot:             utils.BoolPtr(userInput.Bot),
+			Timezone:        utils.StringPtr(userInput.Timezone),
+			ProfilePhotoUrl: utils.StringPtr(userInput.ProfilePhotoUrl),
+			ExternalSystem: &neo4jmodel.ExternalSystem{
+				ExternalSystemId: userInput.ExternalSystem,
+				ExternalId:       userInput.ExternalId,
+				ExternalUrl:      userInput.ExternalUrl,
+				ExternalIdSecond: userInput.ExternalIdSecond,
+				ExternalSource:   userInput.ExternalSourceEntity,
+				SyncDate:         &syncDate,
+			},
+		}
+		userId, err = s.services.CommonServices.UserService.Save(ctx, nil, inputUserId, userFields)
 		if err != nil {
 			failedSync = true
-			tracing.TraceErr(span, err, log.String("grpcMethod", "UpsertUser"))
-			reason = fmt.Sprintf("failed sending event to upsert user with external reference %s for tenant %s :%s", userInput.ExternalId, tenant, err)
+			tracing.TraceErr(span, err)
+			reason = fmt.Sprintf("failed to save user with external reference %s for tenant %s :%s", userInput.ExternalId, tenant, err)
 			s.log.Error(reason)
 		}
-		// Wait for user to be created in neo4j
-		if !failedSync && !matchingUserExists {
-			for i := 1; i <= constants.MaxRetryCheckDataInNeo4jAfterEventRequest; i++ {
-				found, findErr := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, tenant, userId, commonmodel.NodeLabelUser)
-				if found && findErr == nil {
-					break
-				}
-				time.Sleep(utils.BackOffExponentialDelay(i))
-			}
-		}
+		userInput.Id = userId
+		span.LogFields(log.String("userId", userId))
 	}
 	if !failedSync && userInput.HasEmail() {
 		_, err = s.services.CommonServices.EmailService.Merge(ctx, nil, tenant,
