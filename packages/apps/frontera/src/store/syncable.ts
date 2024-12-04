@@ -97,7 +97,7 @@ export class Syncable<T extends object> {
     if ('requestIdleCallback' in window) {
       rIC = requestIdleCallback;
     } else {
-      rIC = setTimeout;
+      rIC = (cb) => setTimeout(cb, 1);
     }
 
     rIC(() => {
