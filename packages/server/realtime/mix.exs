@@ -71,7 +71,8 @@ defmodule Realtime.MixProject do
   defp aliases do
     [
       setup: ["deps.get"],
-      dev: ["phx.server"]
+      dev: ["phx.server"],
+      clean: ["deps.clean --unused --unlock"]
     ]
   end
 end
