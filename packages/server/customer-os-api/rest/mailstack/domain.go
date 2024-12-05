@@ -36,7 +36,7 @@ import (
 // @Failure 406 {object} rest.ErrorResponse "Not Acceptable - Domain TLD not supported or premium domain"
 // @Failure 409 {object} rest.ErrorResponse "Conflict - Domain already registered"
 // @Failure 500 {object} rest.ErrorResponse "Internal server error - Configuration failed or service unavailable"
-// @Router /domains [post]
+// @Router /mailstack/v1/domains [post]
 // @Security ApiKeyAuth
 func RegisterNewDomain(services *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -171,7 +171,7 @@ func registerDomain(ctx context.Context, tenant, domain, website string, service
 // @Failure 401 {object} rest.ErrorResponse "Unauthorized - Missing or invalid API key"
 // @Failure 404 {object} rest.ErrorResponse "Not Found - Domain not found or not owned by tenant"
 // @Failure 500 {object} rest.ErrorResponse "Internal server error - Configuration failed or service unavailable"
-// @Router /domains/configure [post]
+// @Router /mailstack/v1/domains/configure [post]
 // @Security ApiKeyAuth
 func ConfigureDomain(services *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -272,7 +272,7 @@ func configureDomain(ctx context.Context, tenant, domain, redirectWebsite string
 // @Success 200 {object} DomainsResponse "Successfully retrieved domain list"
 // @Failure 401 {object} rest.ErrorResponse "Unauthorized - Missing or invalid API key"
 // @Failure 500 {object} rest.ErrorResponse "Internal server error - Unable to retrieve domains"
-// @Router /domains [get]
+// @Router /mailstack/v1/domains [get]
 // @Security ApiKeyAuth
 func GetDomains(services *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
