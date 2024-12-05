@@ -27,6 +27,7 @@ import (
 type OrganizationService interface {
 	GetById(ctx context.Context, tenant, organizationId string) (*neo4jentity.OrganizationEntity, error)
 
+	CreateFromGlobalOrganization(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, globalOrgId int64) (string, error)
 	Save(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, id *string, dataFields data_fields.OrganizationFields) (string, error)
 	LinkWithDomain(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, organizationId, domain string) error
 
@@ -51,6 +52,23 @@ func NewOrganizationService(services *Services) OrganizationService {
 	return &organizationService{
 		services: services,
 	}
+}
+
+func (s *organizationService) CreateFromGlobalOrganization(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, globalOrgId int64) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.CreateFromGlobalOrganization")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Int64("globalOrgId", globalOrgId))
+
+	// read postgres by global org id
+	// prepare data fields
+	// call save
+
+	datFields := data_fields.OrganizationFields{
+		GlobalOrgId: utils.Int64Ptr(globalOrgId),
+	}
+
+	return s.Save(ctx, txWithPostCommit, nil, datFields)
 }
 
 func (s *organizationService) GetById(ctx context.Context, tenant, organizationId string) (*neo4jentity.OrganizationEntity, error) {
@@ -87,16 +105,18 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 	organizationId := ""
 
 	// prepare primary domain from website
-	primaryDomainFromWebsite := ""
+	primaryDomain := utils.IfNotNilString(input.PrimaryDomain)
 	adjustedWebsite := utils.IfNotNilString(input.Website)
-	if utils.IfNotNilString(input.Website) != "" {
-		primaryDomainFromWebsite, adjustedWebsite = s.services.DomainService.GetPrimaryDomainForOrganizationWebsite(ctx, *input.Website)
-		span.LogFields(log.String("process.primaryDomainFromWebsite", primaryDomainFromWebsite))
-		span.LogFields(log.String("process.adjustedWebsite", adjustedWebsite))
+	if input.GlobalOrgId != nil {
+		if utils.IfNotNilString(input.Website) != "" {
+			primaryDomain, adjustedWebsite = s.services.DomainService.GetPrimaryDomainForOrganizationWebsite(ctx, *input.Website)
+			span.LogFields(log.String("process.primaryDomainFromWebsite", primaryDomain))
+			span.LogFields(log.String("process.adjustedWebsite", adjustedWebsite))
+		}
 	}
 
 	// prepare domains in advance
-	err = s.services.DomainService.MergeDomain(ctx, primaryDomainFromWebsite)
+	err = s.services.DomainService.MergeDomain(ctx, primaryDomain)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to merge domain"))
 	}
@@ -116,8 +136,8 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 
 	if createFlow {
 		domains := input.Domains
-		if utils.IfNotNilString(input.Website) != "" && primaryDomainFromWebsite != "" {
-			domains = append(domains, primaryDomainFromWebsite)
+		if primaryDomain != "" {
+			domains = append(domains, primaryDomain)
 		}
 		domains = utils.RemoveEmpties(domains)
 		domains = utils.RemoveDuplicates(domains)
@@ -254,7 +274,7 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 		}
 		// if no name is provided, we try to extract if from domain
 		if utils.IfNotNilString(input.Name) == "" {
-			domain := primaryDomainFromWebsite
+			domain := primaryDomain
 			if domain == "" && len(input.Domains) > 0 {
 				domain = input.Domains[0]
 			}
@@ -306,9 +326,9 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 
 		if utils.IfNotNilString(input.Website) != "" && adjustedWebsite != "" {
 			input.Website = utils.StringPtr(adjustedWebsite)
-			if primaryDomainFromWebsite != "" {
-				newDomains = append(newDomains, primaryDomainFromWebsite)
-				err = s.LinkWithDomain(ctx, txWithPostCommit, organizationId, primaryDomainFromWebsite)
+			if primaryDomain != "" {
+				newDomains = append(newDomains, primaryDomain)
+				err = s.LinkWithDomain(ctx, txWithPostCommit, organizationId, primaryDomain)
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "failed to link with domain"))
 					return nil, err
@@ -412,8 +432,8 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 			// request enrich organization by primary domain if in creaate mode or organization not enriched yet
 			if createFlow || existingOrganizationEntity.EnrichDetails.EnrichedAt == nil {
 				// select primary domain from new domains
-				primaryDomain := primaryDomainFromWebsite
-				if primaryDomain == "" && len(newDomains) > 0 {
+				localPrimaryDomain := primaryDomain
+				if localPrimaryDomain == "" && len(newDomains) > 0 {
 					newDomains = utils.RemoveEmpties(newDomains)
 					newDomains = utils.RemoveDuplicates(newDomains)
 					for _, domain := range newDomains {
@@ -421,14 +441,14 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 						if err != nil {
 							tracing.TraceErr(span, err)
 						} else if domainEntity != nil && domainEntity.IsPrimary != nil && *domainEntity.IsPrimary {
-							primaryDomain = domain
+							localPrimaryDomain = domain
 							break
 						}
 					}
 				}
 				// invoke enrich organization by domain
-				if primaryDomain != "" {
-					err = s.services.RabbitMQService.PublishEvent(ctx, organizationId, model.ORGANIZATION, dto.RequestEnrichOrganization{Url: primaryDomain})
+				if localPrimaryDomain != "" {
+					err = s.services.RabbitMQService.PublishEvent(ctx, organizationId, model.ORGANIZATION, dto.RequestEnrichOrganization{Url: localPrimaryDomain})
 					if err != nil {
 						tracing.TraceErr(span, err)
 					}

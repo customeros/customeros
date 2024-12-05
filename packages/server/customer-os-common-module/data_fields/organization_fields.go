@@ -6,11 +6,13 @@ import (
 )
 
 type OrganizationFields struct {
+	GlobalOrgId        *int64                              `json:"globalOrgId,omitempty"`
 	AppSource          *string                             `json:"appSource,omitempty"`
 	Source             *string                             `json:"source,omitempty"`
 	ExternalSystem     *model.ExternalSystem               `json:"externalSystem,omitempty"`
 	Name               *string                             `json:"name,omitempty"`
 	Website            *string                             `json:"website,omitempty"`
+	PrimaryDomain      *string                             `json:"primaryDomain,omitempty"`
 	Domains            []string                            `json:"domains,omitempty"`
 	Stage              *neo4jenum.OrganizationStage        `json:"stage,omitempty"`
 	Relationship       *neo4jenum.OrganizationRelationship `json:"relationship,omitempty"`
