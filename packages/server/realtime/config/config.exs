@@ -29,15 +29,6 @@ config :logger, :console,
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 
-# config :opentelemetry,
-#   resource: %{service: %{name: "realtime"}},
-#   span_processor: :batch,
-#   traces_exporter: :otlp
-
-# config :opentelemetry_exporter,
-#   otlp_protocol: :http_protobuf,
-#   otlp_endpoint: "http://localhost:16686"
-
 config :opentelemetry, :processors,
   otel_batch_processor: %{
     exporter: {:otel_exporter_stdout, []}

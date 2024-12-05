@@ -38,7 +38,7 @@ defmodule Realtime.RabbitMQConsumer do
   end
 
   def handle_info({:basic_deliver, payload, meta}, state) do
-    Tracer.with_span "popescu" do
+    Tracer.with_span "RabbitMQConsumer.handle_info" do
       Logger.info("Received message on queue: #{@queue_name}")
 
       case Jason.decode(payload) do
@@ -73,6 +73,15 @@ defmodule Realtime.RabbitMQConsumer do
               true -> message
             end
 
+          Tracer.set_attributes(%{
+            tenant: tenant,
+            entity_type: entity_type,
+            entity_ids: entity_ids,
+            channel_topic: channel_topic,
+            action_type: action_type,
+            payload: payload
+          })
+
           case channel_topic do
             nil ->
               Logger.warning(
@@ -95,8 +104,6 @@ defmodule Realtime.RabbitMQConsumer do
       end
 
       AMQP.Basic.ack(state.channel, meta.delivery_tag)
-
-      Tracer.set_attributes(%{payload: payload})
 
       {:noreply, state}
     end
