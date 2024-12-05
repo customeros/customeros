@@ -81,8 +81,6 @@ func main() {
 
 	// Register listeners
 	commonServices.RabbitMQService.RegisterHandler(dto.FlowOn{}, listeners.Handle_FlowOn)
-	commonServices.RabbitMQService.RegisterHandler(dto.FlowOff{}, listeners.Handle_FlowOff)
-	commonServices.RabbitMQService.RegisterHandler(dto.FlowArchive{}, listeners.Handle_FlowArchive)
 	commonServices.RabbitMQService.RegisterHandler(dto.FlowParticipantSchedule{}, listeners.Handle_FlowParticipantSchedule)
 	commonServices.RabbitMQService.RegisterHandler(dto.FlowComputeParticipantsRequirements{}, listeners.Handle_FlowComputeParticipantsRequirements)
 	commonServices.RabbitMQService.RegisterHandler(dto.FlowParticipantGoalAchieved{}, listeners.Handle_FlowParticipantGoalAchieved)

@@ -508,6 +508,11 @@ func initializeUser(c context.Context, services *service.Services, provider, pro
 	span, ctx := opentracing.StartSpanFromContext(c, "Registration.initializeUser")
 	defer span.Finish()
 
+	innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+		Tenant:    tenant,
+		AppSource: constants.AppSourceUserAdminApi,
+	})
+
 	userId := ""
 	playerId := ""
 
@@ -535,11 +540,14 @@ func initializeUser(c context.Context, services *service.Services, provider, pro
 		span.LogFields(tracingLog.Object("player", "not found"))
 	}
 
+	defaultWorkSchedule := postgresEntity.UserWorkingSchedule{
+		UserId:    userId,
+		DayRange:  "Mon-Fri",
+		StartHour: "09:00",
+		EndHour:   "18:00",
+	}
+
 	if userId == "" {
-		innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
-			Tenant:    tenant,
-			AppSource: constants.AppSourceUserAdminApi,
-		})
 		userId, err = services.CommonServices.UserService.Save(innerCtx, nil, nil, data_fields.UserFields{
 			FirstName: firstName,
 			LastName:  lastName,
@@ -560,23 +568,30 @@ func initializeUser(c context.Context, services *service.Services, provider, pro
 			return err
 		}
 
-		workSchedule := postgresEntity.UserWorkingSchedule{
-			UserId:    userId,
-			DayRange:  "Mon-Fri",
-			StartHour: "09:00",
-			EndHour:   "18:00",
-		}
-		err = services.CommonServices.PostgresRepositories.UserWorkingScheduleRepository.Store(innerCtx, tenant, &workSchedule)
+		err = services.CommonServices.PostgresRepositories.UserWorkingScheduleRepository.Store(innerCtx, tenant, &defaultWorkSchedule)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
 		}
-
 	} else {
 		err = addDefaultMissingRoles(ctx, services, tenant, userId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
+		}
+
+		workingSchedule, err := services.CommonServices.PostgresRepositories.UserWorkingScheduleRepository.GetForUser(ctx, tenant, userId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+
+		if len(workingSchedule) == 0 {
+			err = services.CommonServices.PostgresRepositories.UserWorkingScheduleRepository.Store(innerCtx, tenant, &defaultWorkSchedule)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return err
+			}
 		}
 	}
 

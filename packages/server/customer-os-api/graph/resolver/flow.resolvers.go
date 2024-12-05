@@ -259,6 +259,54 @@ func (r *mutationResolver) FlowChangeStatus(ctx context.Context, id string, stat
 	return mapper.MapEntityToFlow(e), nil
 }
 
+// FlowOn is the resolver for the flow_On field.
+func (r *mutationResolver) FlowOn(ctx context.Context, id string) (*model.Flow, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.FlowOn", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	e, err := r.Services.CommonServices.FlowService.FlowOn(ctx, id)
+	if err != nil || e == nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "")
+		return nil, err
+	}
+
+	return mapper.MapEntityToFlow(e), nil
+}
+
+// FlowOff is the resolver for the flow_Off field.
+func (r *mutationResolver) FlowOff(ctx context.Context, id string) (*model.Flow, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.FlowOff", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	e, err := r.Services.CommonServices.FlowService.FlowOff(ctx, id)
+	if err != nil || e == nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "")
+		return nil, err
+	}
+
+	return mapper.MapEntityToFlow(e), nil
+}
+
+// FlowArchive is the resolver for the flow_Archive field.
+func (r *mutationResolver) FlowArchive(ctx context.Context, id string) (*model.Result, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.FlowArchive", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	e, err := r.Services.CommonServices.FlowService.FlowArchive(ctx, id)
+	if err != nil || e == nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "")
+		return &model.Result{Result: false}, err
+	}
+
+	return &model.Result{Result: true}, nil
+}
+
 // FlowParticipantAdd is the resolver for the flowParticipant_Add field.
 func (r *mutationResolver) FlowParticipantAdd(ctx context.Context, flowID string, entityID string, entityType commonModel.EntityType) (*model.FlowParticipant, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.FlowParticipantAdd", graphql.GetOperationContext(ctx))
@@ -415,7 +463,8 @@ func (r *mutationResolver) FlowDummy1Email(ctx context.Context, flowsCount int, 
 			return nil, err
 		}
 
-		userEmail := fmt.Sprintf("user%d@test.com", i)
+		username := fmt.Sprintf("user%d", i)
+		userEmail := fmt.Sprintf("%s@test.com", username)
 		mailboxdId := uuid.New().String()
 
 		err = r.Services.CommonServices.Neo4jRepositories.EmailWriteRepository.CreateEmail(ctx, nil, tenant, mailboxdId, repository.EmailCreateFields{RawEmail: userEmail})
@@ -437,7 +486,8 @@ func (r *mutationResolver) FlowDummy1Email(ctx context.Context, flowsCount int, 
 			mailbox := entity.TenantSettingsMailbox{
 				Tenant:                  tenant,
 				MailboxUsername:         mailboxUsername,
-				Username:                userEmail,
+				Username:                username,
+				UserId:                  userId,
 				MinMinutesBetweenEmails: 10,
 				MaxMinutesBetweenEmails: 10,
 			}
@@ -451,7 +501,6 @@ func (r *mutationResolver) FlowDummy1Email(ctx context.Context, flowsCount int, 
 			mailbox = entity.TenantSettingsMailbox{
 				Tenant:                  tenant,
 				MailboxUsername:         mailboxUsername,
-				Username:                userEmail,
 				LastRampUpAt:            utils.Now(),
 				RampUpCurrent:           40,
 				RampUpMax:               40,

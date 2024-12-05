@@ -12,6 +12,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	opentracing "github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
@@ -29,8 +30,8 @@ func (r *mutationResolver) MailstackGetPaymentIntent(ctx context.Context, domain
 	stripeClientSecret, err := r.Services.CommonServices.MailstackService.GetPaymentIntent(ctx, domains, usernames, int64(amount))
 	if err != nil {
 		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
-		r.log.Errorf("Failed to register buy domains with mailboxes")
-		graphql.AddErrorf(ctx, "Failed to register buy domains with mailboxes")
+		r.log.Errorf("Failed to get payment intent")
+		graphql.AddErrorf(ctx, "Failed to get payment intent")
 		return nil, nil
 	}
 
@@ -69,6 +70,8 @@ func (r *mutationResolver) MailstackSetUser(ctx context.Context, mailbox string,
 	span.LogKV("request.mailbox", mailbox)
 	span.LogKV("request.userID", userID)
 
+	tenant := common.GetTenantFromContext(ctx)
+
 	mailboxEntity, err := r.Services.Repositories.PostgresRepositories.TenantSettingsMailboxRepository.GetByMailbox(ctx, mailbox)
 	if err != nil {
 		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
@@ -94,6 +97,8 @@ func (r *mutationResolver) MailstackSetUser(ctx context.Context, mailbox string,
 		graphql.AddErrorf(ctx, "Failed to merge mailbox %s", mailbox)
 		return &model.Result{Result: false}, nil
 	}
+
+	r.Services.CommonServices.RabbitMQService.PublishEventCompleted(ctx, tenant, userID, commonModel.USER, utils.NewEventCompletedDetails().WithUpdate())
 
 	return &model.Result{Result: true}, nil
 }

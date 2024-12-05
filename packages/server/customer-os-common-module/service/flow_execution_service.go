@@ -454,28 +454,24 @@ func (s *flowExecutionService) scheduleEmailAction(ctx context.Context, txWithPo
 		mailboxesScheduledAt[""] = utils.TimePtr(time.Date(9999, 1, 1, 0, 0, 0, 0, time.UTC))
 
 		for _, flowActionSender := range *flowSenders {
-			emailEntitites, err := s.services.EmailService.GetAllEmailsForEntityIds(ctx, tenant, model.USER, []string{*flowActionSender.UserId})
+			if flowActionSender.UserId == nil {
+				continue
+			}
+
+			mailboxes, err := s.services.PostgresRepositories.TenantSettingsMailboxRepository.GetAllByUserId(ctx, *flowActionSender.UserId)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return err
 			}
 
-			for _, emailEntity := range *emailEntitites {
-				mailboxes, err := s.services.PostgresRepositories.TenantSettingsMailboxRepository.GetAllByUsername(ctx, emailEntity.RawEmail)
+			for _, mailbox := range mailboxes {
+				scheduledAt, err := s.services.Neo4jRepositories.FlowActionExecutionReadRepository.GetFirstSlotForMailbox(ctx, txWithPostCommit.Tx, mailbox.MailboxUsername)
 				if err != nil {
 					tracing.TraceErr(span, err)
 					return err
 				}
 
-				for _, mailbox := range mailboxes {
-					scheduledAt, err := s.services.Neo4jRepositories.FlowActionExecutionReadRepository.GetFirstSlotForMailbox(ctx, txWithPostCommit.Tx, mailbox.MailboxUsername)
-					if err != nil {
-						tracing.TraceErr(span, err)
-						return err
-					}
-
-					mailboxesScheduledAt[mailbox.MailboxUsername] = scheduledAt
-				}
+				mailboxesScheduledAt[mailbox.MailboxUsername] = scheduledAt
 			}
 		}
 
@@ -494,18 +490,13 @@ func (s *flowExecutionService) scheduleEmailAction(ctx context.Context, txWithPo
 			return errors.New("No mailbox available")
 		}
 
-		user, err := s.services.UserService.FindUserByEmail(ctx, fastestMailbox)
+		mailbox, err := s.services.PostgresRepositories.TenantSettingsMailboxRepository.GetByMailbox(ctx, fastestMailbox)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
 		}
 
-		if user == nil {
-			tracing.TraceErr(span, errors.New("User not found"))
-			return errors.New("User not found")
-		}
-
-		flowExecutionSettings, err = s.upsertFlowExecutionSettings(ctx, txWithPostCommit.Tx, tenant, flowId, flowParticipant, &fastestMailbox, &user.Id)
+		flowExecutionSettings, err = s.upsertFlowExecutionSettings(ctx, txWithPostCommit.Tx, tenant, flowId, flowParticipant, &fastestMailbox, &mailbox.UserId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
@@ -1138,7 +1129,12 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 
 				}
 
-				userNode, err := s.services.Neo4jRepositories.UserReadRepository.GetFirstUserByEmail(ctx, tenant, *scheduledActionExecution.Mailbox)
+				mailbox, err = s.services.PostgresRepositories.TenantSettingsMailboxRepository.GetByMailbox(ctx, *scheduledActionExecution.Mailbox)
+				if err != nil {
+					return nil, errors.Wrap(err, "failed to get mailbox by mailbox")
+				}
+
+				userNode, err := s.services.Neo4jRepositories.UserReadRepository.GetUserById(ctx, tenant, mailbox.UserId)
 				if err != nil {
 					return nil, errors.Wrap(err, "failed to get first user by email")
 				}
@@ -1431,17 +1427,6 @@ func getWorkingHoursForDay(day time.Time, schedules []*postgresentity.UserWorkin
 		}
 	}
 	return time.Time{}, time.Time{} // No working hours for this day
-}
-
-// Helper to get the earliest working start time of the next working day
-func startOfNextWorkingDay(t time.Time, schedules []*postgresentity.UserWorkingSchedule) time.Time {
-	for {
-		start, _ := getWorkingHoursForDay(t, schedules)
-		if !start.IsZero() {
-			return start
-		}
-		t = t.AddDate(0, 0, 1) // Move to the next day
-	}
 }
 
 // Helper function to check if a day is within a day range like "Mon-Wed"

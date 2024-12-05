@@ -12,10 +12,6 @@ type RequestRefreshLastTouchpoint struct{}
 
 type FlowOn struct{}
 
-type FlowOff struct{}
-
-type FlowArchive struct{}
-
 type FlowParticipantSchedule struct{}
 
 type MailstackProvisionBuyRequest struct{}
