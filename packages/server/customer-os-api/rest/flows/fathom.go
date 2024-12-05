@@ -116,21 +116,16 @@ func publishFathomMeetingSummaryCreatedEvent(c *gin.Context, ctx context.Context
 		meetingSummary.Timestamp = utils.TimePtr(aiSummaryData.Meeting.ScheduledStartTime.UTC())
 	}
 
-    event := dto.WebhookEvent[data_fields.MeetingSummaryEvent] {
-        ExternalSystemId: enum.Fathom,
-        Name: enum
-    }
-
-	event, err := dto.NewWebhookEvent(
-        enum.Fathom, "meeting_summary", "created", ""&meetingSummary)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to build webhook event"))
-		return err
+	event := dto.WebhookEvent{
+		ExternalSystemId: enum.Fathom,
+		Name:             commonenum.EventFathomMeetingSummaryCreated,
+		DataType:         data_fields.MeetingSummaryEvent{}.Type(),
+		Data:             meetingSummary,
 	}
 
 	pubErr := s.CommonServices.RabbitMQService.PublishWebhookEvent(ctx, event)
 	if pubErr != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to publish event"))
+		tracing.TraceErr(span, errors.Wrap(pubErr, "failed to publish event"))
 	}
 
 	return nil

@@ -5,11 +5,11 @@ import (
 )
 
 type MeetingSummaryEvent struct {
-	ParticipantEmails *[]string  `json:"participantEmails"`
-	Content           *string    `json:"content"`
-	Timestamp         *time.Time `json:"timestamp"`
+	ParticipantEmails *[]string  `json:"participantEmails,omitempty"`
+	Content           *string    `json:"content,omitempty"`
+	Timestamp         *time.Time `json:"timestamp,omitempty"`
 }
 
-func (m *MeetingSummaryEvent) Type() string {
+func (m MeetingSummaryEvent) Type() string {
 	return "MeetingSummaryEvent"
 }

@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"fmt"
+	"github.com/pkg/errors"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
@@ -15,8 +16,8 @@ import (
 	"go.uber.org/multierr"
 )
 
-func HandleMeetingSummaryEvent(c context.Context, s *service.Services, sourceEvent commonenum.FlowEvent, eventData *data_fields.MeetingSummaryEvent) error {
-	span, ctx := opentracing.StartSpanFromContext(c, "EventHandlers.HandleMeetingSummaryEvent")
+func HandleMeetingSummaryEvent(ctx context.Context, s *service.Services, sourceEvent commonenum.FlowEvent, eventData *data_fields.MeetingSummaryEvent) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EventHandlers.HandleMeetingSummaryEvent")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "eventData", eventData)
@@ -26,7 +27,13 @@ func HandleMeetingSummaryEvent(c context.Context, s *service.Services, sourceEve
 
 	err := publishCreateMarkdownEvent(ctx, s, sourceEvent, eventData)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "failed to publish markdown event"))
+		return err
+	}
+
+	err = publishEventCreateContact(ctx, s, sourceEvent, eventData)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to publish contact creation event"))
 		return err
 	}
 
@@ -50,7 +57,7 @@ func publishEventCreateContact(c context.Context, s *service.Services, sourceEve
 			ExternalSystemId: system,
 			SourceEvent:      sourceEvent,
 			Name:             commonenum.ActionCreateContact,
-			DataType:         "ContactCreateEvent",
+			DataType:         data_fields.ContactCreateEvent{}.Type(),
 			Data: data_fields.ContactCreateEvent{
 				Email: email,
 			},
@@ -96,7 +103,7 @@ func publishCreateMarkdownEvent(c context.Context, s *service.Services, sourceEv
 		ExternalSystemId: system,
 		SourceEvent:      sourceEvent,
 		Name:             commonenum.ActionCreateTimelineEvent,
-		DataType:         "MarkdownEventFields",
+		DataType:         data_fields.MarkdownEventFields{}.Type(),
 		Data:             &mdEvent,
 	}
 
