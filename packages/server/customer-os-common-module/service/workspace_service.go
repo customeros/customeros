@@ -2,19 +2,24 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+
+	"github.com/customeros/mailsherpa/mailvalidate"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
 
 type WorkspaceService interface {
 	MergeToTenant(ctx context.Context, workspaceEntity neo4jentity.WorkspaceEntity, tenant string) (bool, error)
 	GetWorkspaceDomainsForTenant(ctx context.Context) ([]string, error)
+	CheckEmailBelongsToTenant(ctx context.Context, email string) (bool, error)
 }
 
 type workspaceService struct {
@@ -25,6 +30,25 @@ func NewWorkspaceService(services *Services) WorkspaceService {
 	return &workspaceService{
 		services: services,
 	}
+}
+
+func (s *workspaceService) CheckEmailBelongsToTenant(ctx context.Context, email string) (bool, error) {
+	tenantDomains, err := s.GetWorkspaceDomainsForTenant(ctx)
+	if err != nil {
+		return false, err
+	}
+
+	validation := mailvalidate.ValidateEmailSyntax(email)
+	if !validation.IsValid {
+		return false, errors.New("Email is invalid")
+	}
+
+	for _, domain := range tenantDomains {
+		if domain == validation.Domain {
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
 func (s *workspaceService) MergeToTenant(ctx context.Context, workspaceEntity neo4jentity.WorkspaceEntity, tenant string) (bool, error) {

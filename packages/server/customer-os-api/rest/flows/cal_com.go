@@ -10,66 +10,66 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	commontracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/pkg/errors"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
 
-func CalDotCom(c *rest.HTTPContext) {
-	ctx, span := commontracing.StartHttpServerTracerSpanWithHeader(c.GinContext.Request.Context(), "CalDotCom", c.GinContext.Request.Header)
-	c.ServiceContext = &ctx
-	c.Span = span
+func CalDotCom(c *gin.Context, s *service.Services) {
+	span, ctx := commontracing.StartTracerSpan(c.Request.Context(), "Flows.CalDotCom")
 	defer span.Finish()
 	commontracing.TagComponentRest(span)
 
-	if !strings.HasPrefix(c.GinContext.ContentType(), "application/json") {
-		rest.SendError(c.GinContext, c.Span, http.StatusBadRequest, rest.ErrUnsupportedContentType)
+	if !strings.HasPrefix(c.ContentType(), "application/json") {
+		rest.SendError(c, span, http.StatusBadRequest, rest.ErrUnsupportedContentType)
 		return
 	}
 
 	// Read the raw body
-	body, err := io.ReadAll(c.GinContext.Request.Body)
+	body, err := io.ReadAll(c.Request.Body)
 	if err != nil {
-		rest.SendError(c.GinContext, c.Span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Unable to read message body"))
+		rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Unable to read message body"))
 		return
 	}
 	// Important: Restore the body for later use
-	c.GinContext.Request.Body = io.NopCloser(bytes.NewBuffer(body))
+	c.Request.Body = io.NopCloser(bytes.NewBuffer(body))
 
 	// Get the signature from header
-	signature := c.GinContext.GetHeader("X-Cal-Signature-256")
+	signature := c.GetHeader("X-Cal-Signature-256")
 	if signature == "" {
-		rest.SendError(c.GinContext, c.Span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Missing signature header"))
+		rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Missing signature header"))
 		return
 	}
 
 	// determine tenant
-	tenant, err := c.Services.Repositories.PostgresRepositories.TenantRepository.GetTenant(ctx, c.GinContext.Param("tenantId"))
+	tenant, err := s.Repositories.PostgresRepositories.TenantRepository.GetTenant(ctx, c.Param("tenantId"))
 	if err != nil {
-		tracing.TraceErr(c.Span, err)
-		rest.SendError(c.GinContext, c.Span, http.StatusInternalServerError, rest.ErrInternalServer.WithMessage("Unable to identify tenant"))
+		tracing.TraceErr(span, err)
+		rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer.WithMessage("Unable to identify tenant"))
 		return
 	}
 
 	// lookup secret
-	webhook, err := c.Services.Repositories.PostgresRepositories.FlowWebhooksRepository.FindWebhookByPath(ctx, tenant, c.GinContext.Request.URL.Path)
+	webhook, err := s.Repositories.PostgresRepositories.FlowWebhooksRepository.FindWebhookByPath(ctx, tenant, c.Request.URL.Path)
 	if err != nil {
-		tracing.TraceErr(c.Span, err)
-		rest.SendError(c.GinContext, c.Span, http.StatusInternalServerError, rest.ErrNotFound)
+		tracing.TraceErr(span, err)
+		rest.SendError(c, span, http.StatusInternalServerError, rest.ErrNotFound)
 		return
 	}
 
 	valid, err := VerifyCalWebhookSignature(body, signature, webhook.Secret)
 	if err != nil {
-		tracing.TraceErr(c.Span, err)
-		rest.SendError(c.GinContext, c.Span, http.StatusInternalServerError, rest.ErrInternalServer.WithMessage("Unable to verify message payloar"))
+		tracing.TraceErr(span, err)
+		rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer.WithMessage("Unable to verify message payloar"))
 		return
 	}
 
 	if !valid {
-		rest.SendError(c.GinContext, c.Span, http.StatusUnauthorized, rest.ErrUnauthorized)
+		rest.SendError(c, span, http.StatusUnauthorized, rest.ErrUnauthorized)
 		return
 	}
 
@@ -92,12 +92,16 @@ func VerifyCalWebhookSignature(payload []byte, signature string, secretKey strin
 	return hmac.Equal([]byte(expectedSignature), []byte(signature)), nil
 }
 
-func handleCalDotComEvent(ctx *rest.HTTPContext) {
+func handleCalDotComEvent(c *gin.Context) {
+	span, _ := commontracing.StartTracerSpan(c.Request.Context(), "Flows.handleCalDotComEvent")
+	defer span.Finish()
+	commontracing.TagComponentRest(span)
+
 	var webhook CalDotComPayload
-	err := ctx.GinContext.BindJSON(&webhook)
+	err := c.BindJSON(&webhook)
 	if err != nil {
-		rest.SendError(ctx.GinContext, ctx.Span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Unable to parse cal.com payload"))
-		tracing.TraceErr(ctx.Span, errors.Wrap(err, "Unable to parse cal.com payload"))
+		rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Unable to parse cal.com payload"))
+		tracing.TraceErr(span, errors.Wrap(err, "Unable to parse cal.com payload"))
 		return
 
 	}
@@ -115,6 +119,6 @@ func handleCalDotComEvent(ctx *rest.HTTPContext) {
 	return
 }
 
-func processBookingCreatedEvent(ctx *rest.HTTPContext, payload *CalDotComPayload) error {
+func processBookingCreatedEvent(c *gin.Context, payload *CalDotComPayload) error {
 	return nil
 }

@@ -64,14 +64,21 @@ func (w *webhookService) ValidateTenantId(ctx context.Context, tenant, tenantId 
 func (w *webhookService) GetIntegrationFromWebhookPath(ctx context.Context, tenant, webhookPath string) (enum.ExternalSystemId, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebhookService.GetIntegrationFromWebhookPath")
 	defer span.Finish()
-	span.LogFields(log.String("tenant", tenant))
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("webhookPath", webhookPath))
 
-	path := strings.TrimPrefix(webhookPath, "/")
+	path := strings.Trim(webhookPath, "/")
 	webhook, err := w.services.Repositories.PostgresRepositories.FlowWebhooksRepository.FindWebhookByPath(ctx, tenant, path)
 	if err != nil {
 		err = fmt.Errorf("Unable to lookup webhook path: %v", err)
 		tracing.TraceErr(span, err)
+		return enum.NotSet, err
+	}
+
+	if !webhook.Enabled {
+		err = fmt.Errorf("Webhook is disabled: %v", err)
+		tracing.TraceErr(span, err)
+		return enum.NotSet, err
 	}
 
 	return enum.DecodeExternalSystemId(webhook.Integration), nil
@@ -86,6 +93,7 @@ func (w *webhookService) CreateIntegrationWebhook(ctx context.Context, tenant st
 	var newWebhook entity.FlowWebhooks
 
 	tenantHash, err := w.repositories.PostgresRepositories.TenantRepository.GetHashID(ctx, tenant)
+	span.LogFields(log.String("tenantHash", tenantHash))
 	if err != nil {
 		err = fmt.Errorf("Unable to get HashID for tenant %s: %v", tenant, err)
 		tracing.TraceErr(span, err)
@@ -100,10 +108,18 @@ func (w *webhookService) CreateIntegrationWebhook(ctx context.Context, tenant st
 		return "", "", err
 	}
 
-	integrationHash := integration.IntegrationID(webhook.RotationCount + 1)
+	rotationCount := count
+	if webhook != nil {
+		rotationCount = webhook.RotationCount
+	}
+
+	integrationHash := integration.IntegrationID(rotationCount + 1)
+	span.LogFields(log.String("integrationHash", integrationHash))
 	secret, err := utils.GenerateSecret()
+	span.LogFields(log.String("secret", secret))
 	if err != nil {
 		err = fmt.Errorf("Unable to generate webhook secret: %v", err)
+		tracing.TraceErr(span, err)
 	}
 
 	newWebhook.TenantName = tenant
@@ -114,7 +130,7 @@ func (w *webhookService) CreateIntegrationWebhook(ctx context.Context, tenant st
 
 	// disable existing webhook for tenant/integration if exists
 	if count != 0 {
-		err := w.DeactivateWebhook(ctx, webhook.WebhookPath)
+		err = w.DeactivateWebhook(ctx, webhook.WebhookPath)
 		if err != nil {
 			err = fmt.Errorf("Unable to deactivate existing webhook for %s and %s: %v", tenant, integration.String(), err)
 			tracing.TraceErr(span, err)

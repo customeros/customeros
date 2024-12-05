@@ -28,9 +28,9 @@ type FlowEventRecord struct {
 	Description string `json:"description"`
 }
 
-func GetEvents(services *service.Services) gin.HandlerFunc {
+func GetEvents(s *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "GetEvents", c.Request.Header)
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "Flows.GetEvents", c.Request.Header)
 		defer span.Finish()
 		tracing.TagComponentRest(span)
 
@@ -40,7 +40,7 @@ func GetEvents(services *service.Services) gin.HandlerFunc {
 			return
 		}
 
-		events, err := services.Repositories.PostgresRepositories.FlowEventsRepository.GetAllFlowEvents(ctx)
+		events, err := s.Repositories.PostgresRepositories.FlowEventsRepository.GetAllFlowEvents(ctx)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer)

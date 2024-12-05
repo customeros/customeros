@@ -20,3 +20,7 @@ type MarkdownEventFields struct {
 func (fields MarkdownEventFields) ExternalSystemAvailable() bool {
 	return fields.ExternalSystem != nil && fields.ExternalSystem.Available()
 }
+
+func (fields MarkdownEventFields) Type() string {
+	return "MarkdownEventFields"
+}

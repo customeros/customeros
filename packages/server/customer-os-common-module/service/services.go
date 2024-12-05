@@ -2,14 +2,16 @@ package service
 
 import (
 	"context"
+
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	neo4jRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
+	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
+	"gorm.io/gorm"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
-	neo4jRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
-	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
-	"gorm.io/gorm"
 )
 
 type Services struct {
@@ -131,7 +133,7 @@ func InitServices(globalConfig *config.GlobalConfig, db *gorm.DB, driver *neo4j.
 	// TODO remove, and refactor
 	services.SyncService = NewSyncService(services)
 
-	//init app cache
+	// init app cache
 	personalEmailProviderEntities, err := services.PostgresRepositories.PersonalEmailProviderRepository.GetPersonalEmailProviders()
 	if err != nil {
 		log.Fatalf("Error getting personal email providers: %s", err.Error())

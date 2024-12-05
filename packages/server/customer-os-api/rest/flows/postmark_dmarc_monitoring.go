@@ -23,7 +23,7 @@ import (
 
 func PostmarkDMARCMonitor(s *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "PostmarkInboundEmail", c.Request.Header)
+		_, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "Flows.PostmarkDMARCMonitor", c.Request.Header)
 		defer span.Finish()
 		tracing.TagComponentRest(span)
 
@@ -34,15 +34,8 @@ func PostmarkDMARCMonitor(s *service.Services) gin.HandlerFunc {
 			return
 		}
 
-		httpContext := rest.HTTPContext{
-			GinContext:     c,
-			ServiceContext: &ctx,
-			Span:           span,
-			Services:       s,
-		}
-
 		// Parse email data
-		emailData, err := parseInboundEmail(&httpContext)
+		emailData, err := parseInboundEmail(c)
 		if err != nil {
 			tracing.LogObjectAsJson(span, "body", c.Request.Body)
 			tracing.TraceErr(span, err)
@@ -65,7 +58,7 @@ func PostmarkDMARCMonitor(s *service.Services) gin.HandlerFunc {
 
 			var err error
 			if emailData.IsMonitorEmail() {
-				err = processDmarcMonitoringReport(httpContext, &emailData)
+				err = processDmarcMonitoringReport(c, s, &emailData)
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "failed to process DMARC report"))
 				}
@@ -74,7 +67,11 @@ func PostmarkDMARCMonitor(s *service.Services) gin.HandlerFunc {
 	}
 }
 
-func processDmarcMonitoringReport(ctx rest.HTTPContext, emailData *PostmarkInboundEmailData) error {
+func processDmarcMonitoringReport(c *gin.Context, s *service.Services, emailData *PostmarkInboundEmailData) error {
+	span, ctx := tracing.StartTracerSpan(c.Request.Context(), "Flows.processDmarcMonitoringReport")
+	defer span.Finish()
+	tracing.TagComponentRest(span)
+
 	// Get attachment, unzip, feed file to dmark analyzer service
 	attachment := emailData.Attachments[0]
 	if attachment.ContentType != "application/zip" && attachment.ContentType != "application/gzip" {
@@ -88,19 +85,23 @@ func processDmarcMonitoringReport(ctx rest.HTTPContext, emailData *PostmarkInbou
 		return fmt.Errorf("cannot parse dmarc report %s from attachment: %v", attachment.Name, err)
 	}
 	for _, report := range reports {
-		dbReport := buildDMARCReport(ctx, report, provider)
+		dbReport := buildDMARCReport(c, s, report, provider)
 		// todo - if tenant is empty, don't send report to database
 		// leaving this in for now to verify everything is working as expected
-		ctx.Services.Repositories.PostgresRepositories.MailStackDomainRepository.CreateDMARCReport(
-			*ctx.ServiceContext, ctx.Tenant, &dbReport)
+		s.Repositories.PostgresRepositories.MailStackDomainRepository.CreateDMARCReport(
+			ctx, dbReport.Tenant, &dbReport)
 	}
 	return nil
 }
 
-func buildDMARCReport(ctx rest.HTTPContext, report dmarcstats.Report, provider string) entity.DMARCMonitoring {
-	tenant, err := ctx.Services.CommonServices.MailstackService.GetTenantForMailstackDomain(*ctx.ServiceContext, report.Domain)
+func buildDMARCReport(c *gin.Context, s *service.Services, report dmarcstats.Report, provider string) entity.DMARCMonitoring {
+	span, ctx := tracing.StartTracerSpan(c.Request.Context(), "Flows.buildDMARCReport")
+	defer span.Finish()
+	tracing.TagComponentRest(span)
+
+	tenant, err := s.CommonServices.MailstackService.GetTenantForMailstackDomain(ctx, report.Domain)
 	if err != nil {
-		tracing.TraceErr(ctx.Span, fmt.Errorf("Unable to get tenant for domain %s: %v", report.Domain, err))
+		tracing.TraceErr(span, fmt.Errorf("Unable to get tenant for domain %s: %v", report.Domain, err))
 	}
 
 	jsonReport, _ := json.Marshal(report)

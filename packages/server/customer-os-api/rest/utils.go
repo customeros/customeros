@@ -15,8 +15,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/opentracing/opentracing-go"
-
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
 
 // BaseResponse represents the standard API response structure
@@ -25,14 +23,6 @@ type BaseResponse struct {
 	RequestID string `json:"requestId" example:"1234567890abcdef"`
 	// Status indicates the result of the operation ("success" or "error")
 	Status string `json:"status" example:"success"`
-}
-
-type HTTPContext struct {
-	GinContext     *gin.Context
-	ServiceContext *context.Context
-	Span           opentracing.Span
-	Services       *service.Services
-	Tenant         string
 }
 
 type Status string

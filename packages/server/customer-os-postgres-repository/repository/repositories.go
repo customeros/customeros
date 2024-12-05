@@ -9,199 +9,199 @@ import (
 type Repositories struct {
 	Db *gorm.DB
 
-	CommonRepository                            CommonRepository
 	AiLocationMappingRepository                 AiLocationMappingRepository
 	AiPromptLogRepository                       AiPromptLogRepository
-	AppKeyRepository                            AppKeyRepository
-	PersonalIntegrationRepository               PersonalIntegrationRepository
-	PersonalEmailProviderRepository             PersonalEmailProviderRepository
-	TenantWebhookApiKeyRepository               TenantWebhookApiKeyRepository
-	TenantWebhookRepository                     TenantWebhookRepository
-	SlackChannelRepository                      SlackChannelRepository
-	PostmarkApiKeyRepository                    PostmarkApiKeyRepository
-	GoogleServiceAccountKeyRepository           GoogleServiceAccountKeyRepository
-	CurrencyRateRepository                      CurrencyRateRepository
-	EventBufferRepository                       EventBufferRepository
-	TableViewDefinitionRepository               TableViewDefinitionRepository
-	TrackingAllowedOriginRepository             TrackingAllowedOriginRepository
-	ExternalAppKeysRepository                   ExternalAppKeysRepository
-	EnrichDetailsBetterContactRepository        EnrichDetailsBetterContactRepository
-	EnrichDetailsScrapInRepository              EnrichDetailsScrapInRepository
-	EnrichDetailsBrandfetchRepository           EnrichDetailsBrandfetchRepository
-	EnrichDetailsPrefilterTrackingRepository    EnrichDetailsPrefilterTrackingRepository
-	EnrichDetailsTrackingRepository             EnrichDetailsTrackingRepository
-	UserEmailImportPageTokenRepository          UserEmailImportStateRepository
-	RawEmailRepository                          RawEmailRepository
-	OAuthTokenRepository                        OAuthTokenRepository
-	SlackSettingsRepository                     SlackSettingsRepository
-	SlackChannelNotificationRepository          SlackChannelNotificationRepository
-	WorkflowRepository                          WorkflowRepository
-	IndustryMappingRepository                   IndustryMappingRepository
-	TrackingRepository                          TrackingRepository
-	TenantSettingsRepository                    TenantSettingsRepository
-	TenantSettingsOpportunityStageRepository    TenantSettingsOpportunityStageRepository
-	TenantSettingsMailboxRepository             TenantSettingsMailboxRepository
-	TenantSettingsEmailExclusionRepository      TenantSettingsEmailExclusionRepository
-	EmailLookupRepository                       EmailLookupRepository
-	EmailTrackingRepository                     EmailTrackingRepository
-	TenantRepository                            TenantRepository
-	CacheIpDataRepository                       CacheIpDataRepository
-	CacheIpHunterRepository                     CacheIpHunterRepository
-	CacheEmailValidationRepository              CacheEmailValidationRepository
-	CacheEmailValidationDomainRepository        CacheEmailValidationDomainRepository
-	StatsApiCallsRepository                     StatsApiCallsRepository
-	CosApiEnrichPersonTempResultRepository      CosApiEnrichPersonTempResultRepository
-	OranizationWebsiteHostingPlatformRepository OrganizationWebsiteHostingPlatformRepository
-	CustomerOsIdsRepository                     CustomerOsIdsRepository
-	CacheEmailScrubbyRepository                 CacheEmailScrubbyRepository
-	CacheEmailTrueinboxRepository               CacheEmailTrueinboxRepository
-	CacheEmailEnrowRepository                   CacheEmailEnrowRepository
-	EmailValidationRecordRepository             EmailValidationRecordRepository
-	EmailValidationRequestBulkRepository        EmailValidationRequestBulkRepository
 	ApiBillableEventRepository                  ApiBillableEventRepository
-	MailStackDomainRepository                   MailStackDomainRepository
-	BrowserConfigRepository                     BrowserConfigRepository
+	AppKeyRepository                            AppKeyRepository
 	BrowserAutomationRunRepository              BrowserAutomationRunRepository
 	BrowserAutomationRunResultRepository        BrowserAutomationRunResultRepository
+	BrowserConfigRepository                     BrowserConfigRepository
+	CacheEmailEnrowRepository                   CacheEmailEnrowRepository
+	CacheEmailScrubbyRepository                 CacheEmailScrubbyRepository
+	CacheEmailTrueinboxRepository               CacheEmailTrueinboxRepository
+	CacheEmailValidationDomainRepository        CacheEmailValidationDomainRepository
+	CacheEmailValidationRepository              CacheEmailValidationRepository
+	CacheIpDataRepository                       CacheIpDataRepository
+	CacheIpHunterRepository                     CacheIpHunterRepository
+	CommonRepository                            CommonRepository
+	CosApiEnrichPersonTempResultRepository      CosApiEnrichPersonTempResultRepository
+	CurrencyRateRepository                      CurrencyRateRepository
+	CustomerOsIdsRepository                     CustomerOsIdsRepository
+	EmailLookupRepository                       EmailLookupRepository
 	EmailMessageRepository                      EmailMessageRepository
-	UserWorkingScheduleRepository               UserWorkingScheduleRepository
-	MailstackBuyRequestRepository               MailstackBuyRequestRepository
-	FlowWebhooksRepository                      FlowWebhooksRepository
+	EmailTrackingRepository                     EmailTrackingRepository
+	EmailValidationRecordRepository             EmailValidationRecordRepository
+	EmailValidationRequestBulkRepository        EmailValidationRequestBulkRepository
+	EnrichDetailsBetterContactRepository        EnrichDetailsBetterContactRepository
+	EnrichDetailsBrandfetchRepository           EnrichDetailsBrandfetchRepository
+	EnrichDetailsPrefilterTrackingRepository    EnrichDetailsPrefilterTrackingRepository
+	EnrichDetailsScrapInRepository              EnrichDetailsScrapInRepository
+	EnrichDetailsTrackingRepository             EnrichDetailsTrackingRepository
+	EventBufferRepository                       EventBufferRepository
+	ExternalAppKeysRepository                   ExternalAppKeysRepository
+	FlowActionRepository                        FlowActionRepository
 	FlowEventsRepository                        FlowEventsRepository
+	FlowWebhooksRepository                      FlowWebhooksRepository
+	GoogleServiceAccountKeyRepository           GoogleServiceAccountKeyRepository
+	IndustryMappingRepository                   IndustryMappingRepository
+	MailStackDomainRepository                   MailStackDomainRepository
+	MailstackBuyRequestRepository               MailstackBuyRequestRepository
+	OAuthTokenRepository                        OAuthTokenRepository
+	OranizationWebsiteHostingPlatformRepository OrganizationWebsiteHostingPlatformRepository
+	PersonalEmailProviderRepository             PersonalEmailProviderRepository
+	PersonalIntegrationRepository               PersonalIntegrationRepository
+	PostmarkApiKeyRepository                    PostmarkApiKeyRepository
+	RawEmailRepository                          RawEmailRepository
+	SlackChannelNotificationRepository          SlackChannelNotificationRepository
+	SlackChannelRepository                      SlackChannelRepository
+	SlackSettingsRepository                     SlackSettingsRepository
+	StatsApiCallsRepository                     StatsApiCallsRepository
+	TableViewDefinitionRepository               TableViewDefinitionRepository
+	TenantRepository                            TenantRepository
+	TenantSettingsEmailExclusionRepository      TenantSettingsEmailExclusionRepository
+	TenantSettingsMailboxRepository             TenantSettingsMailboxRepository
+	TenantSettingsOpportunityStageRepository    TenantSettingsOpportunityStageRepository
+	TenantSettingsRepository                    TenantSettingsRepository
+	TenantWebhookApiKeyRepository               TenantWebhookApiKeyRepository
+	TenantWebhookRepository                     TenantWebhookRepository
+	TrackingAllowedOriginRepository             TrackingAllowedOriginRepository
+	TrackingRepository                          TrackingRepository
+	UserEmailImportPageTokenRepository          UserEmailImportStateRepository
+	UserWorkingScheduleRepository               UserWorkingScheduleRepository
+	WorkflowRepository                          WorkflowRepository
 }
 
 func InitRepositories(db *gorm.DB) *Repositories {
 	repositories := &Repositories{
-		Db:                                          db,
-		CommonRepository:                            NewCommonRepository(db),
+		Db: db,
+
 		AiLocationMappingRepository:                 NewAiLocationMappingRepository(db),
 		AiPromptLogRepository:                       NewAiPromptLogRepository(db),
-		AppKeyRepository:                            NewAppKeyRepo(db),
-		PersonalIntegrationRepository:               NewPersonalIntegrationsRepo(db),
-		PersonalEmailProviderRepository:             NewPersonalEmailProviderRepository(db),
-		TenantWebhookApiKeyRepository:               NewTenantWebhookApiKeyRepository(db),
-		TenantWebhookRepository:                     NewTenantWebhookRepo(db),
-		SlackChannelRepository:                      NewSlackChannelRepository(db),
-		PostmarkApiKeyRepository:                    NewPostmarkApiKeyRepo(db),
-		GoogleServiceAccountKeyRepository:           NewGoogleServiceAccountKeyRepository(db),
-		CurrencyRateRepository:                      NewCurrencyRateRepository(db),
-		EventBufferRepository:                       NewEventBufferRepository(db),
-		TableViewDefinitionRepository:               NewTableViewDefinitionRepository(db),
-		TrackingAllowedOriginRepository:             NewTrackingAllowedOriginRepository(db),
-		ExternalAppKeysRepository:                   NewExternalAppKeysRepository(db),
-		EnrichDetailsBetterContactRepository:        NewEnrichDetailsBetterContactRepository(db),
-		EnrichDetailsScrapInRepository:              NewEnrichDetailsScrapInRepository(db),
-		EnrichDetailsBrandfetchRepository:           NewEnrichDetailsBrandfetchRepository(db),
-		EnrichDetailsPrefilterTrackingRepository:    NewEnrichDetailsPrefilterTrackingRepository(db),
-		EnrichDetailsTrackingRepository:             NewEnrichDetailsTrackingRepository(db),
-		UserEmailImportPageTokenRepository:          NewUserEmailImportStateRepository(db),
-		RawEmailRepository:                          NewRawEmailRepository(db),
-		OAuthTokenRepository:                        NewOAuthTokenRepository(db),
-		SlackSettingsRepository:                     NewSlackSettingsRepository(db),
-		SlackChannelNotificationRepository:          NewSlackChannelNotificationRepository(db),
-		WorkflowRepository:                          NewWorkflowRepository(db),
-		IndustryMappingRepository:                   NewIndustryMappingRepository(db),
-		TrackingRepository:                          NewTrackingRepository(db),
-		TenantSettingsRepository:                    NewTenantSettingsRepository(db),
-		TenantSettingsOpportunityStageRepository:    NewTenantSettingsOpportunityStageRepository(db),
-		TenantSettingsMailboxRepository:             NewTenantSettingsMailboxRepository(db),
-		TenantSettingsEmailExclusionRepository:      NewEmailExclusionRepository(db),
-		EmailLookupRepository:                       NewEmailLookupRepository(db),
-		EmailTrackingRepository:                     NewEmailTrackingRepository(db),
-		TenantRepository:                            NewTenantRepository(db),
-		CacheIpDataRepository:                       NewCacheIpDataRepository(db),
-		CacheIpHunterRepository:                     NewCacheIpHunterRepository(db),
-		CacheEmailValidationRepository:              NewCacheEmailValidationRepository(db),
-		CacheEmailValidationDomainRepository:        NewCacheEmailValidationDomainRepository(db),
-		StatsApiCallsRepository:                     NewStatsApiCallsRepository(db),
-		CosApiEnrichPersonTempResultRepository:      NewCosApiEnrichPersonTempResultRepository(db),
-		OranizationWebsiteHostingPlatformRepository: NewOrganizationWebsiteHostingPlatformRepository(db),
-		CustomerOsIdsRepository:                     NewCustomerOsIdsRepository(db),
-		CacheEmailScrubbyRepository:                 NewCacheEmailScrubbyRepository(db),
-		CacheEmailTrueinboxRepository:               NewCacheEmailTrueinboxRepository(db),
-		CacheEmailEnrowRepository:                   NewCacheEmailEnrowRepository(db),
-		EmailValidationRecordRepository:             NewEmailValidationRecordRepository(db),
-		EmailValidationRequestBulkRepository:        NewEmailValidationRequestBulkRepository(db),
 		ApiBillableEventRepository:                  NewApiBillableEventRepository(db),
-		MailStackDomainRepository:                   NewMailStackDomainRepository(db),
-		BrowserConfigRepository:                     NewBrowserConfigRepository(db),
+		AppKeyRepository:                            NewAppKeyRepo(db),
 		BrowserAutomationRunRepository:              NewBrowserAutomationRunRepository(db),
 		BrowserAutomationRunResultRepository:        NewBrowserAutomationRunResultRepository(db),
+		BrowserConfigRepository:                     NewBrowserConfigRepository(db),
+		CacheEmailEnrowRepository:                   NewCacheEmailEnrowRepository(db),
+		CacheEmailScrubbyRepository:                 NewCacheEmailScrubbyRepository(db),
+		CacheEmailTrueinboxRepository:               NewCacheEmailTrueinboxRepository(db),
+		CacheEmailValidationDomainRepository:        NewCacheEmailValidationDomainRepository(db),
+		CacheEmailValidationRepository:              NewCacheEmailValidationRepository(db),
+		CacheIpDataRepository:                       NewCacheIpDataRepository(db),
+		CacheIpHunterRepository:                     NewCacheIpHunterRepository(db),
+		CommonRepository:                            NewCommonRepository(db),
+		CosApiEnrichPersonTempResultRepository:      NewCosApiEnrichPersonTempResultRepository(db),
+		CurrencyRateRepository:                      NewCurrencyRateRepository(db),
+		CustomerOsIdsRepository:                     NewCustomerOsIdsRepository(db),
+		EmailLookupRepository:                       NewEmailLookupRepository(db),
 		EmailMessageRepository:                      NewEmailMessageRepository(db),
-		UserWorkingScheduleRepository:               NewUserWorkingScheduleRepository(db),
-		MailstackBuyRequestRepository:               NewMailstackBuyRequestRepository(db),
-		FlowWebhooksRepository:                      NewFlowWebhooksRepository(db),
+		EmailTrackingRepository:                     NewEmailTrackingRepository(db),
+		EmailValidationRecordRepository:             NewEmailValidationRecordRepository(db),
+		EmailValidationRequestBulkRepository:        NewEmailValidationRequestBulkRepository(db),
+		EnrichDetailsBetterContactRepository:        NewEnrichDetailsBetterContactRepository(db),
+		EnrichDetailsBrandfetchRepository:           NewEnrichDetailsBrandfetchRepository(db),
+		EnrichDetailsPrefilterTrackingRepository:    NewEnrichDetailsPrefilterTrackingRepository(db),
+		EnrichDetailsScrapInRepository:              NewEnrichDetailsScrapInRepository(db),
+		EnrichDetailsTrackingRepository:             NewEnrichDetailsTrackingRepository(db),
+		EventBufferRepository:                       NewEventBufferRepository(db),
+		ExternalAppKeysRepository:                   NewExternalAppKeysRepository(db),
+		FlowActionRepository:                        NewFlowActionRepository(db),
 		FlowEventsRepository:                        NewFlowEventsRepository(db),
+		FlowWebhooksRepository:                      NewFlowWebhooksRepository(db),
+		GoogleServiceAccountKeyRepository:           NewGoogleServiceAccountKeyRepository(db),
+		IndustryMappingRepository:                   NewIndustryMappingRepository(db),
+		MailStackDomainRepository:                   NewMailStackDomainRepository(db),
+		MailstackBuyRequestRepository:               NewMailstackBuyRequestRepository(db),
+		OAuthTokenRepository:                        NewOAuthTokenRepository(db),
+		OranizationWebsiteHostingPlatformRepository: NewOrganizationWebsiteHostingPlatformRepository(db),
+		PersonalEmailProviderRepository:             NewPersonalEmailProviderRepository(db),
+		PersonalIntegrationRepository:               NewPersonalIntegrationsRepo(db),
+		PostmarkApiKeyRepository:                    NewPostmarkApiKeyRepo(db),
+		RawEmailRepository:                          NewRawEmailRepository(db),
+		SlackChannelNotificationRepository:          NewSlackChannelNotificationRepository(db),
+		SlackChannelRepository:                      NewSlackChannelRepository(db),
+		SlackSettingsRepository:                     NewSlackSettingsRepository(db),
+		StatsApiCallsRepository:                     NewStatsApiCallsRepository(db),
+		TableViewDefinitionRepository:               NewTableViewDefinitionRepository(db),
+		TenantRepository:                            NewTenantRepository(db),
+		TenantSettingsEmailExclusionRepository:      NewEmailExclusionRepository(db),
+		TenantSettingsMailboxRepository:             NewTenantSettingsMailboxRepository(db),
+		TenantSettingsOpportunityStageRepository:    NewTenantSettingsOpportunityStageRepository(db),
+		TenantSettingsRepository:                    NewTenantSettingsRepository(db),
+		TenantWebhookApiKeyRepository:               NewTenantWebhookApiKeyRepository(db),
+		TenantWebhookRepository:                     NewTenantWebhookRepo(db),
+		TrackingAllowedOriginRepository:             NewTrackingAllowedOriginRepository(db),
+		TrackingRepository:                          NewTrackingRepository(db),
+		UserEmailImportPageTokenRepository:          NewUserEmailImportStateRepository(db),
+		UserWorkingScheduleRepository:               NewUserWorkingScheduleRepository(db),
+		WorkflowRepository:                          NewWorkflowRepository(db),
 	}
 
 	return repositories
 }
 
 func (r *Repositories) Migration(db *gorm.DB) {
-	//err = db.AutoMigrate(&entity.AppKey{})
-	//if err != nil {
-	//	panic(err)
-	//}
-
 	err := db.AutoMigrate(
-		&entity.Tenant{},
 		&entity.AiLocationMapping{},
 		&entity.AiPromptLog{},
-		&entity.FlowWebhooks{},
-		&entity.FlowEvent{},
-		&entity.PersonalIntegration{},
-		&entity.PersonalEmailProvider{},
-		&entity.TenantWebhookApiKey{},
-		&entity.TenantWebhook{},
-		&entity.SlackChannel{},
-		&entity.PostmarkApiKey{},
-		&entity.DMARCMonitoring{},
-		&entity.MailstackReputationEntity{},
-		&entity.GoogleServiceAccountKey{},
-		&entity.CurrencyRate{},
-		&entity.EventBuffer{},
-		&entity.TableViewDefinition{},
-		&entity.TrackingAllowedOrigin{},
-		&entity.TenantSettingsEmailExclusion{},
-		&entity.ExternalAppKeys{},
-		&entity.EnrichDetailsBetterContact{},
-		&entity.EnrichDetailsScrapIn{},
-		&entity.EnrichDetailsBrandfetch{},
-		&entity.UserEmailImportState{},
-		&entity.UserEmailImportStateHistory{},
-		&entity.RawEmail{},
-		&entity.OAuthTokenEntity{},
-		&entity.SlackSettingsEntity{},
-		&entity.SlackChannelNotification{},
-		&entity.Workflow{},
-		&entity.IndustryMapping{},
-		&entity.Tracking{},
-		&entity.EnrichDetailsPreFilterTracking{},
-		&entity.EnrichDetailsTracking{},
-		&entity.TenantSettings{},
-		&entity.TenantSettingsOpportunityStage{},
-		&entity.TenantSettingsMailbox{},
-		&entity.EmailLookup{},
-		&entity.EmailTracking{},
-		&entity.CacheIpData{},
-		&entity.CacheIpHunter{},
+		&entity.ApiBillableEvent{},
+		&entity.CacheEmailEnrow{},
+		&entity.CacheEmailScrubby{},
+		&entity.CacheEmailTrueinbox{},
 		&entity.CacheEmailValidation{},
 		&entity.CacheEmailValidationDomain{},
-		&entity.CacheEmailScrubby{},
-		&entity.StatsApiCalls{},
+		&entity.CacheIpData{},
+		&entity.CacheIpHunter{},
 		&entity.CosApiEnrichPersonTempResult{},
-		&entity.OrganizationWebsiteHostingPlatform{},
+		&entity.CurrencyRate{},
 		&entity.CustomerOsIds{},
-		&entity.CacheEmailTrueinbox{},
-		&entity.CacheEmailEnrow{},
+		&entity.DMARCMonitoring{},
+		&entity.EmailLookup{},
+		&entity.EmailMessage{},
+		&entity.EmailTracking{},
 		&entity.EmailValidationRecord{},
 		&entity.EmailValidationRequestBulk{},
-		&entity.ApiBillableEvent{},
+		&entity.EnrichDetailsBetterContact{},
+		&entity.EnrichDetailsBrandfetch{},
+		&entity.EnrichDetailsPreFilterTracking{},
+		&entity.EnrichDetailsScrapIn{},
+		&entity.EnrichDetailsTracking{},
+		&entity.EventBuffer{},
+		&entity.ExternalAppKeys{},
+		&entity.FlowAction{},
+		&entity.FlowEvent{},
+		&entity.FlowWebhooks{},
+		&entity.GoogleServiceAccountKey{},
+		&entity.IndustryMapping{},
 		&entity.MailStackDomain{},
-		&entity.EmailMessage{},
-		&entity.UserWorkingSchedule{},
 		&entity.MailstackBuyRequest{},
-		&entity.MailstackBuyRequestDomain{})
+		&entity.MailstackBuyRequestDomain{},
+		&entity.MailstackReputationEntity{},
+		&entity.OAuthTokenEntity{},
+		&entity.OrganizationWebsiteHostingPlatform{},
+		&entity.PersonalEmailProvider{},
+		&entity.PersonalIntegration{},
+		&entity.PostmarkApiKey{},
+		&entity.RawEmail{},
+		&entity.SlackChannel{},
+		&entity.SlackChannelNotification{},
+		&entity.SlackSettingsEntity{},
+		&entity.StatsApiCalls{},
+		&entity.TableViewDefinition{},
+		&entity.Tenant{},
+		&entity.TenantSettings{},
+		&entity.TenantSettingsEmailExclusion{},
+		&entity.TenantSettingsMailbox{},
+		&entity.TenantSettingsOpportunityStage{},
+		&entity.TenantWebhook{},
+		&entity.TenantWebhookApiKey{},
+		&entity.Tracking{},
+		&entity.TrackingAllowedOrigin{},
+		&entity.UserEmailImportState{},
+		&entity.UserEmailImportStateHistory{},
+		&entity.UserWorkingSchedule{},
+		&entity.Workflow{},
+	)
 	if err != nil {
 		panic(err)
 	}

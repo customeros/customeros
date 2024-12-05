@@ -1,90 +1,107 @@
 package flows
 
 import (
+	"context"
 	"net/http"
 	"strings"
 
+	"github.com/gin-gonic/gin"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	commonenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	commontracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/pkg/errors"
 
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
 
-func FathomZapier(c *rest.HTTPContext) {
-	ctx, span := commontracing.StartHttpServerTracerSpanWithHeader(c.GinContext.Request.Context(), "Fathom", c.GinContext.Request.Header)
-	c.ServiceContext = &ctx
-	c.Span = span
+func FathomZapier(c *gin.Context, s *service.Services) {
+	ctx, span := commontracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "Flows.FathomZapier", c.Request.Header)
 	defer span.Finish()
 	commontracing.TagComponentRest(span)
 
-	tenant, err := c.Services.CommonServices.PostgresRepositories.TenantRepository.GetTenant(ctx, c.GinContext.Param("tenantId"))
+	tenant, err := s.CommonServices.PostgresRepositories.TenantRepository.GetTenant(ctx, c.Param("tenantId"))
 	if err != nil {
 		err := errors.Wrap(err, "Unable to identify tenant")
 		tracing.TraceErr(span, err)
-		rest.SendError(c.GinContext, c.Span, http.StatusUnauthorized, rest.ErrUnauthorized)
-		return
-	}
-	c.Tenant = tenant
-
-	if !strings.HasPrefix(c.GinContext.ContentType(), "application/json") {
-		rest.SendError(c.GinContext, c.Span, http.StatusBadRequest, rest.ErrUnsupportedContentType)
+		rest.SendError(c, span, http.StatusUnauthorized, rest.ErrUnauthorized)
 		return
 	}
 
-	if c.GinContext.Request.UserAgent() == "" {
-		rest.SendError(c.GinContext, c.Span, http.StatusForbidden, rest.ErrForbidden)
+	// update context with tenant, pass this where tenant is needed
+	ctx = common.WithCustomContext(ctx, &common.CustomContext{
+		Tenant:    tenant,
+		AppSource: constants.AppSourceCustomerOsApiRest,
+	})
+
+	if !strings.HasPrefix(c.ContentType(), "application/json") {
+		rest.SendError(c, span, http.StatusBadRequest, rest.ErrUnsupportedContentType)
 		return
 	}
 
-	if !strings.EqualFold(c.GinContext.Request.UserAgent(), "Zapier") {
-		rest.SendError(c.GinContext, c.Span, http.StatusForbidden, rest.ErrForbidden)
+	if c.Request.UserAgent() == "" {
+		rest.SendError(c, span, http.StatusForbidden, rest.ErrForbidden)
 		return
 	}
 
-	handleFathomAISummaryZapier(c)
+	if !strings.EqualFold(c.Request.UserAgent(), "Zapier") {
+		rest.SendError(c, span, http.StatusForbidden, rest.ErrForbidden)
+		return
+	}
+
+	handleFathomAISummaryZapier(c, ctx, s)
 }
 
-func handleFathomAISummaryZapier(ctx *rest.HTTPContext) {
+func handleFathomAISummaryZapier(c *gin.Context, ctx context.Context, s *service.Services) {
+	span, _ := commontracing.StartTracerSpan(c.Request.Context(), "Flows.handleFathomAISummaryZapier")
+	defer span.Finish()
+	commontracing.TagComponentRest(span)
+
 	var aiSummaryDataPayload FathomZapierPayload
-	err := ctx.GinContext.BindJSON(&aiSummaryDataPayload)
+	err := c.BindJSON(&aiSummaryDataPayload)
 	if err != nil {
-		rest.SendError(ctx.GinContext, ctx.Span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Unable to parse payload from Zapier"))
+		rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Unable to parse payload from Zapier"))
 		return
 	}
 
 	aiSummaryData := &aiSummaryDataPayload
 	err = aiSummaryData.toCleanPayload()
 	if err != nil {
-		rest.SendError(ctx.GinContext, ctx.Span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Unable to normalize payload from Zapier"))
+		rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Unable to normalize payload from Zapier"))
 		return
 	}
 
 	if aiSummaryData.AISummary.HTMLFormatted == "" {
-		rest.SendError(ctx.GinContext, ctx.Span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("No Fathom summary data"))
+		rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("No Fathom summary data"))
 		return
 	}
 
-	ctx.GinContext.JSON(http.StatusAccepted, rest.BuildBaseResponse(rest.StatusProcessing))
+	c.JSON(http.StatusAccepted, rest.BuildBaseResponse(rest.StatusProcessing))
 
 	go func() {
-		if err := createEventFromFathomAISummaryZapier(ctx, aiSummaryData); err != nil {
-			tracing.TraceErr(ctx.Span, errors.Wrap(err, "failed to process Fathom AI summary from zapier"))
+		if err := publishFathomMeetingSummaryCreatedEvent(c, ctx, s, aiSummaryData); err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to process Fathom AI summary from zapier"))
 		}
 	}()
 	return
 }
 
-func createEventFromFathomAISummaryZapier(ctx *rest.HTTPContext, aiSummaryData *FathomZapierPayload) error {
-	var meetingSummary data_fields.MeetingSummaryFields
+func publishFathomMeetingSummaryCreatedEvent(c *gin.Context, ctx context.Context, s *service.Services, aiSummaryData *FathomZapierPayload) error {
+	span, _ := commontracing.StartTracerSpan(c.Request.Context(), "Flows.publishFathomMeetingSummaryCreatedEvent")
+	defer span.Finish()
+	commontracing.TagComponentRest(span)
+
+	var meetingSummary data_fields.MeetingSummaryEvent
 
 	content, err := aiSummaryData.toMarkdownContent()
 	if err != nil {
-		tracing.TraceErr(ctx.Span, errors.Wrap(err, "failed to convert Fathom AI summary to markdown"))
+		tracing.TraceErr(span, errors.Wrap(err, "failed to convert Fathom AI summary to markdown"))
 		return err
 	}
 
@@ -99,10 +116,17 @@ func createEventFromFathomAISummaryZapier(ctx *rest.HTTPContext, aiSummaryData *
 		meetingSummary.Timestamp = utils.TimePtr(aiSummaryData.Meeting.ScheduledStartTime.UTC())
 	}
 
-	err = ctx.Services.CommonServices.RabbitMQService.PublishEvent(*ctx.ServiceContext, "", model.FLOW_EVENT, dto.MeetingSummaryCreated{meetingSummary})
-	if err != nil {
-		tracing.TraceErr(ctx.Span, errors.Wrap(err, "failed to publish event"))
+	event := dto.WebhookEvent{
+		ExternalSystemId: enum.Fathom,
+		Name:             commonenum.EventFathomMeetingSummaryCreated,
+		DataType:         data_fields.MeetingSummaryEvent{}.Type(),
+		Data:             meetingSummary,
 	}
 
-	return err
+	pubErr := s.CommonServices.RabbitMQService.PublishWebhookEvent(ctx, event)
+	if pubErr != nil {
+		tracing.TraceErr(span, errors.Wrap(pubErr, "failed to publish event"))
+	}
+
+	return nil
 }

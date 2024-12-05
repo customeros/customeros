@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
 	"gorm.io/gorm"
 
@@ -46,7 +47,7 @@ func (r *flowWebhooksRepository) FindWebhookByPath(ctx context.Context, tenantNa
 
 	var webhook entity.FlowWebhooks
 	webhookPath = strings.TrimPrefix(webhookPath, "/")
-	err := r.gormDb.
+	err := r.gormDb.Model(&entity.FlowWebhooks{}).
 		Where("tenant_name = ? AND webhook_path = ?", tenantName, webhookPath).
 		First(&webhook).Error
 
@@ -104,7 +105,14 @@ func (r *flowWebhooksRepository) DisableWebhook(ctx context.Context, webhookPath
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	return r.gormDb.
-		Where("webhook_path = ? AND enabled = true", webhookPath).
-		Update("enabled", false).Error
+	err := r.gormDb.
+		Model(&entity.FlowWebhooks{}).
+		Where("webhook_path = ? AND enabled = ?", webhookPath, true).
+		UpdateColumns(map[string]interface{}{
+			"enabled":    false,
+			"updated_at": utils.Now(),
+		}).
+		Error
+
+	return err
 }

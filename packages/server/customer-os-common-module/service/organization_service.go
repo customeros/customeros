@@ -3,14 +3,10 @@ package service
 import (
 	"context"
 	"fmt"
+	"time"
+
 	mailsherpa "github.com/customeros/mailsherpa/mailvalidate"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/constants"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
@@ -19,7 +15,13 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-	"time"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
 
 type OrganizationService interface {
@@ -223,7 +225,7 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 	}
 	tracing.TagEntity(span, organizationId)
 
-	//validate stage and relationship combination all the time (from input or existing computed )
+	// validate stage and relationship combination all the time (from input or existing computed )
 	stage := input.GetStageStr()
 	relationship := input.GetRelationshipStr()
 	if stage == "" && existingOrganizationEntity != nil && existingOrganizationEntity.Stage != "" {
@@ -250,7 +252,7 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 				input.Source = utils.StringPtr(neo4jentity.DataSourceOpenline.String())
 			}
 		}
-		//if no name is provided, we try to extract if from domain
+		// if no name is provided, we try to extract if from domain
 		if utils.IfNotNilString(input.Name) == "" {
 			domain := primaryDomainFromWebsite
 			if domain == "" && len(input.Domains) > 0 {
@@ -268,7 +270,7 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 		input.Hide = utils.BoolPtr(false)
 	}
 
-	//generate customerOsId if not provided or if it is empty in the db
+	// generate customerOsId if not provided or if it is empty in the db
 	if createFlow || (existingOrganizationEntity != nil && existingOrganizationEntity.CustomerOsId == "") {
 		customerOsId, err := s.generateCustomerOSId(ctx, tenant)
 		if err != nil {
@@ -288,7 +290,6 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 	newDomains := make([]string, 0)
 
 	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
-
 		err = s.services.Neo4jRepositories.OrganizationWriteRepository.Save(ctx, txWithPostCommit.Tx, tenant, organizationId, input)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to save organization"))
@@ -619,7 +620,6 @@ func (s *organizationService) LinkWithDomain(ctx context.Context, txWithPostComm
 	}
 
 	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
-
 		domainLinkedSuccessfully, err := s.services.Neo4jRepositories.OrganizationWriteRepository.LinkWithDomain(ctx, txWithPostCommit.Tx, tenant, organizationId, domain)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to link domain in neo4j"))
@@ -722,8 +722,8 @@ func (s *organizationService) RefreshLastTouchpoint(ctx context.Context, organiz
 	}
 	tenant := common.GetTenantFromContext(ctx)
 
-	//fetch the real touchpoint
-	//if it doesn't exist, check for the Created Action
+	// fetch the real touchpoint
+	// if it doesn't exist, check for the Created Action
 	var lastTouchpointId string
 	var lastTouchpointAt *time.Time
 	var timelineEventNode *dbtype.Node

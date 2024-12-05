@@ -2,17 +2,18 @@ package service
 
 import (
 	"context"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
 
 type MarkdownEventService interface {
@@ -88,7 +89,6 @@ func (s *markdownEventService) Save(ctx context.Context, txWithPostCommit *utils
 	tracing.TagEntity(span, markdownEventId)
 
 	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
-
 		if createFlow {
 			innerErr := s.services.Neo4jRepositories.MarkdownEventWriteRepository.CreateInTx(ctx, txWithPostCommit.Tx, tenant, markdownEventId, input)
 			if innerErr != nil {
@@ -109,7 +109,7 @@ func (s *markdownEventService) Save(ctx context.Context, txWithPostCommit *utils
 			// send events
 			if createFlow {
 				// historify markdown event
-				err = s.services.RabbitMQService.PublishEvent(ctx, markdownEventId, model.MARKDOWN_EVENT, dto.CreateMarkdownEvent{input})
+				err = s.services.RabbitMQService.PublishEvent(ctx, markdownEventId, model.MARKDOWN_EVENT, input)
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateContact"))
 				}
