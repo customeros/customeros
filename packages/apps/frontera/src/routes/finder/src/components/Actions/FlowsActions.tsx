@@ -26,7 +26,10 @@ export const FlowSequencesTableActions = ({
 
   const [targetId, setTargetId] = useState<string | null>(null);
   const selectCount = selection?.length;
-  const clearSelection = () => table.resetRowSelection();
+
+  const clearSelection = () => {
+    table.resetRowSelection();
+  };
 
   const onOpenCommandK = () => {
     if (selection.length === 1) {
@@ -47,16 +50,12 @@ export const FlowSequencesTableActions = ({
   };
 
   const handleOpen = (type: CommandMenuType, property?: string) => {
+    store.ui.commandMenu.setCallback(() => clearSelection());
+
     if (selection?.length > 1) {
       store.ui.commandMenu.setContext({
         ids: selection,
         entity: 'Flows',
-        property: property,
-      });
-    } else {
-      store.ui.commandMenu.setContext({
-        ids: [focusedId || ''],
-        entity: 'Flow',
         property: property,
       });
     }
@@ -125,7 +124,9 @@ export const FlowSequencesTableActions = ({
       handleOpen={handleOpen}
       selectCount={selectCount}
       onOpenCommandK={onOpenCommandK}
-      onHide={() => handleOpen('DeleteConfirmationModal')}
+      onHide={() => {
+        handleOpen('DeleteConfirmationModal');
+      }}
     />
   );
 };
