@@ -33,7 +33,7 @@ export const columns: Column[] = [
     id: 'rampUpCurrent',
     minSize: 128,
     cell: (props) => <p>{props.getValue()}</p>,
-    header: () => <p className='text-sm'>Daily Email Limit</p>,
+    header: () => <p className='text-sm'>Daily Email Limit(Max 40)</p>,
     skeleton: () => null,
   }),
   // columnHelper.accessor('status', {

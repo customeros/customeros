@@ -18,7 +18,7 @@ export const BaseBundleCard = observer(() => {
   return (
     <Card className='py-2 px-3 bg-white'>
       <CardHeader className='flex items-center justify-between font-medium text-sm'>
-        <span>Base bundle</span>
+        <span>Starter bundle</span>
         <span>$199.99</span>
       </CardHeader>
       <CardContent className='p-0'>

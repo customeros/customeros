@@ -102,7 +102,7 @@ export const CheckoutForm = observer(() => {
           loadingText='Processing...'
           isDisabled={!stripe || !elements}
         >
-          Pay
+          {`Pay $${(store.mailboxes.totalAmount / 100).toFixed(2)}`}
         </Button>
         {errorMessage && <div>{errorMessage}</div>}
       </form>
