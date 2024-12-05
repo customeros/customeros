@@ -2,7 +2,6 @@ package listeners
 
 import (
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"reflect"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
@@ -10,6 +9,7 @@ import (
 	commonenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
@@ -65,7 +65,10 @@ func OnWebhookEventCreated(ctx context.Context, s *service.Services, input any) 
 }
 
 func getWebhookEvent(input any) (commonenum.FlowEvent, *dto.WebhookEvent, error) {
-	message := input.(*dto.Event)
+	message, ok := input.(*dto.Event)
+	if !ok {
+		return commonenum.NotSet, nil, fmt.Errorf("failed to cast to Event")
+	}
 	// check message data type before conversion
 	if message.Event.Data == nil {
 		err := errors.New("message data is nil")

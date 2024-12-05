@@ -3,10 +3,10 @@ package repository
 import (
 	"context"
 	"errors"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"strings"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
 	"gorm.io/gorm"
 
@@ -107,14 +107,12 @@ func (r *flowWebhooksRepository) DisableWebhook(ctx context.Context, webhookPath
 
 	err := r.gormDb.
 		Model(&entity.FlowWebhooks{}).
-		Where("webhook_path = ?", webhookPath).
-		Where("enabled = ?", true).
-		UpdateColumn("enabled", false).
-		UpdateColumn("updated_at", utils.Now()).
+		Where("webhook_path = ? AND enabled = ?", webhookPath, true).
+		UpdateColumns(map[string]interface{}{
+			"enabled":    false,
+			"updated_at": utils.Now(),
+		}).
 		Error
-	if err != nil {
-		return err
-	}
 
-	return nil
+	return err
 }
