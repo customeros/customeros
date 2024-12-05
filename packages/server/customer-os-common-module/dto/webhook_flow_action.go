@@ -6,10 +6,10 @@ import (
 	commonenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 )
 
-type FlowActionEvent[T any] struct {
+type FlowActionEvent struct {
 	ExternalSystemId enum.ExternalSystemId
 	SourceEvent      commonenum.FlowEvent
 	Name             commonenum.FlowAction
 	DataType         string
-	Data             *T
+	Data             any
 }

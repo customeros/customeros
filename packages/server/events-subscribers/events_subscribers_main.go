@@ -101,7 +101,7 @@ func main() {
 
 	// FlowEngine
 	commonServices.RabbitMQService.RegisterHandler(dto.WebhookEvent{}, listeners.OnWebhookEventCreated)
-	commonServices.RabbitMQService.RegisterHandler(dto.FlowActionEvent[any]{}, listeners.OnFlowActionEventCreated)
+	commonServices.RabbitMQService.RegisterHandler(dto.FlowActionEvent{}, listeners.OnFlowActionEventCreated)
 
 	// Listen for messages
 	commonServices.RabbitMQService.ListenQueue(commonService.EventsQueueName)

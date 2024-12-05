@@ -13,11 +13,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/opentracing/opentracing-go"
 	"go.uber.org/multierr"
-
-	"github.com/openline-ai/openline-customer-os/packages/server/events-subscribers/model"
 )
 
-func HandleMeetingSummaryEvent(c context.Context, s *service.Services, eventName commonenum.FlowEvent, eventData *data_fields.MeetingSummaryEvent) error {
+func HandleMeetingSummaryEvent(c context.Context, s *service.Services, sourceEvent commonenum.FlowEvent, eventData *data_fields.MeetingSummaryEvent) error {
 	span, ctx := opentracing.StartSpanFromContext(c, "EventHandlers.HandleMeetingSummaryEvent")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
@@ -26,7 +24,7 @@ func HandleMeetingSummaryEvent(c context.Context, s *service.Services, eventName
 	// todo lookup which actions are configured as part of flow for tenant
 	// only trigger events for actions that are turned on
 
-	err := publishCreateMarkdownEvent(ctx, eventData)
+	err := publishCreateMarkdownEvent(ctx, s, sourceEvent, eventData)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -35,27 +33,28 @@ func HandleMeetingSummaryEvent(c context.Context, s *service.Services, eventName
 	return nil
 }
 
-func publishEventCreateContact(c context.Context, s *service.Services, eventName commonenum.FlowEvent, eventData *data_fields.MeetingSummaryEvent) error {
+func publishEventCreateContact(c context.Context, s *service.Services, sourceEvent commonenum.FlowEvent, eventData *data_fields.MeetingSummaryEvent) error {
 	span, ctx := opentracing.StartSpanFromContext(c, "EventHandlers.publishEventCreateContact")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 
 	var err error
 
-	system, err := eventName.ExternalSystem()
+	system, err := sourceEvent.ExternalSystem()
 	if err != nil {
 		return err
 	}
 
 	for _, email := range *eventData.ParticipantEmails {
-		flowActionEvent := dto.NewFlowActionEvent(
-			commonenum.ActionCreateContact,
-			system,
-			eventName,
-			data_fields.ContactCreateEvent{
+		flowActionEvent := dto.FlowActionEvent{
+			ExternalSystemId: system,
+			SourceEvent:      sourceEvent,
+			Name:             commonenum.ActionCreateContact,
+			DataType:         "ContactCreateEvent",
+			Data: data_fields.ContactCreateEvent{
 				Email: email,
 			},
-		)
+		}
 
 		pubErr := s.RabbitMQService.PublishFlowActionEvent(ctx, flowActionEvent)
 		if pubErr != nil {
@@ -67,29 +66,39 @@ func publishEventCreateContact(c context.Context, s *service.Services, eventName
 	return nil
 }
 
-func publishCreateMarkdownEvent(ctx model.EventContext, event *data_fields.MeetingSummaryEvent) error {
+func publishCreateMarkdownEvent(c context.Context, s *service.Services, sourceEvent commonenum.FlowEvent, eventData *data_fields.MeetingSummaryEvent) error {
+	span, ctx := opentracing.StartSpanFromContext(c, "EventHandlers.publishCreateMarkdownEvent")
+	defer span.Finish()
+	tracing.SetDefaultListenerSpanTags(ctx, span)
+
 	var mdEvent data_fields.MarkdownEventFields
 	var sourceId entity.DataSource
 
-	switch ctx.SourceSystem {
+	system, err := sourceEvent.ExternalSystem()
+	if err != nil {
+		return err
+	}
+
+	switch system {
 	case enum.Fathom:
 		sourceId = entity.DataSourceFathom
 	case enum.Grain:
 		sourceId = entity.DataSourceGrain
 	default:
-		return fmt.Errorf("Unuspported source: %v", ctx.SourceSystem)
+		return fmt.Errorf("Unuspported source: %v", system)
 	}
 
 	mdEvent.Source = &sourceId
-	mdEvent.Content = event.Content
-	mdEvent.CreatedAt = event.Timestamp
+	mdEvent.Content = eventData.Content
+	mdEvent.CreatedAt = eventData.Timestamp
 
-	flowActionEvent := dto.NewFlowActionEvent(
-		commonenum.ActionCreateTimelineEvent,
-		ctx.SourceSystem,
-		ctx.SourceEvent,
-		mdEvent,
-	)
+	flowActionEvent := dto.FlowActionEvent{
+		ExternalSystemId: system,
+		SourceEvent:      sourceEvent,
+		Name:             commonenum.ActionCreateTimelineEvent,
+		DataType:         "MarkdownEventFields",
+		Data:             &mdEvent,
+	}
 
-	return ctx.Services.RabbitMQService.PublishFlowActionEvent(ctx.Context, flowActionEvent)
+	return s.RabbitMQService.PublishFlowActionEvent(ctx, flowActionEvent)
 }

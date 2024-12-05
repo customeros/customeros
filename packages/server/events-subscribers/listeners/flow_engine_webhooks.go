@@ -14,7 +14,6 @@ import (
 	"golang.org/x/net/context"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/events-subscribers/handlers"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-subscribers/model"
 )
 
 func OnWebhookEventCreated(c context.Context, s *service.Services, input any) error {

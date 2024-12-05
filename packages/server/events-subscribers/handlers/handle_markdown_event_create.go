@@ -1,22 +1,25 @@
 package handlers
 
 import (
+	"context"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/opentracing/opentracing-go"
-
-	"github.com/openline-ai/openline-customer-os/packages/server/events-subscribers/model"
 )
 
-func HandleCreateMarkdownEvent(ctx model.EventContext, eventData *data_fields.MarkdownEventFields) {
-	ctx.Span, ctx.Context = opentracing.StartSpanFromContext(ctx.Context, "EventHandlers.HandleMeetingSummaryEvent")
-	defer ctx.Span.Finish()
-	tracing.SetDefaultListenerSpanTags(ctx.Context, ctx.Span)
-	tracing.LogObjectAsJson(ctx.Span, "eventData", eventData)
+func HandleCreateMarkdownEvent(c context.Context, s *service.Services, eventData *data_fields.MarkdownEventFields) error {
+	span, ctx := opentracing.StartSpanFromContext(c, "EventHandlers.HandleCreateMarkdownEvent")
+	defer span.Finish()
+	tracing.SetDefaultListenerSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "eventData", eventData)
 
-	_, err := ctx.Services.MarkdownEventService.Save(ctx.Context, nil, nil, *eventData)
+	_, err := s.MarkdownEventService.Save(ctx, nil, nil, *eventData)
 	if err != nil {
-		tracing.TraceErr(ctx.Span, err)
+		tracing.TraceErr(span, err)
 		// todo Implement retry logic?
+		return err
 	}
+	return nil
 }

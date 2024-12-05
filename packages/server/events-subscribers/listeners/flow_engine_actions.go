@@ -3,6 +3,7 @@ package listeners
 import (
 	"fmt"
 
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
@@ -12,56 +13,69 @@ import (
 	"golang.org/x/net/context"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/events-subscribers/handlers"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-subscribers/model"
 )
 
-func OnFlowActionEventCreated(ctx context.Context, services *service.Services, input any) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "Listeners.OnFlowActionEventCreated")
+func OnFlowActionEventCreated(c context.Context, s *service.Services, input any) error {
+	span, ctx := opentracing.StartSpanFromContext(c, "Listeners.OnFlowActionEventCreated")
 	defer span.Finish()
-	tracing.SetDefaultListenerSpanTags(ctx, span)
+	tracing.SetDefaultListenerSpanTags(c, span)
 	tracing.LogObjectAsJson(span, "input", input)
 
-	tenant, event, err := getFlowActionEvent(ctx, input)
+	ctx, flowActionEvent, err := getFlowActionEvent(ctx, input)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 
-	c := model.EventContext{
-		Context:      ctx,
-		Span:         span,
-		Services:     services,
-		Tenant:       tenant,
-		SourceEvent:  event.SourceEvent,
-		SourceSystem: event.ExternalSystemId,
-	}
-
-	// determine event handler //
-	switch eventData := (*event.Data).(type) {
-
-	case *data_fields.MarkdownEventFields:
-		handlers.HandleCreateMarkdownEvent(c, eventData)
-
-	case *data_fields.ContactCreateEvent:
-		handlers.HandleCreateContact(c, eventData)
-
-	default:
-		err := fmt.Errorf("Unsupported flow action event %s", event.Name)
+	if flowActionEvent.Data == nil {
+		err := errors.New("flowActionEvent.Data is nil")
 		tracing.TraceErr(span, err)
 		return err
 	}
 
-	return nil
+	// determine event handler //
+	switch flowActionEvent.DataType {
+
+	case "MarkdownEventFields":
+		eventData, ok := flowActionEvent.Data.(*data_fields.MarkdownEventFields)
+		if !ok {
+			return fmt.Errorf("failed to cast to MarkdownEventFields, got type: %T", flowActionEvent.Data)
+		}
+		return handlers.HandleCreateMarkdownEvent(c, s, eventData)
+
+	case "ContactCreateEvent":
+		eventData, ok := flowActionEvent.Data.(*data_fields.ContactCreateEvent)
+		if !ok {
+			return fmt.Errorf("failed to cast to ContactCreateEvent, got type: %T", flowActionEvent.Data)
+		}
+		return handlers.HandleCreateContact(c, s, eventData)
+
+	default:
+		err := fmt.Errorf("Unsupported flow action event %s", flowActionEvent.Name)
+		tracing.TraceErr(span, err)
+		return err
+	}
 }
 
-func getFlowActionEvent(ctx context.Context, input any) (string, *dto.FlowActionEvent[any], error) {
+func getFlowActionEvent(c context.Context, input any) (context.Context, *dto.FlowActionEvent, error) {
 	message := input.(*dto.Event)
 	tenant := message.Event.Tenant
 	// check message data type before conversion
 	if message.Event.Data == nil {
 		err := errors.New("message data is nil")
-		return tenant, nil, err
+		return c, nil, err
 	}
 
-	return tenant, message.Event.Data.(*dto.FlowActionEvent[any]), nil
+	// update context with tenant, pass this where tenant is needed
+	ctx := common.WithCustomContext(c, &common.CustomContext{
+		Tenant: tenant,
+	})
+
+	eventData, ok := message.Event.Data.(*dto.FlowActionEvent)
+	if !ok {
+		err := errors.New("event is not a webhook event")
+		return ctx, nil, err
+	}
+
+	return ctx, eventData, nil
 }

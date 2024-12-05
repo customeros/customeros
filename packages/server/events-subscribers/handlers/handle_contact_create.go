@@ -1,22 +1,25 @@
 package handlers
 
 import (
+	"context"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/opentracing/opentracing-go"
-
-	"github.com/openline-ai/openline-customer-os/packages/server/events-subscribers/model"
 )
 
-func HandleCreateContact(ctx model.EventContext, eventData *data_fields.ContactCreateEvent) {
-	ctx.Span, ctx.Context = opentracing.StartSpanFromContext(ctx.Context, "EventHandlers.HandleMeetingSummaryEvent")
-	defer ctx.Span.Finish()
-	tracing.SetDefaultListenerSpanTags(ctx.Context, ctx.Span)
-	tracing.LogObjectAsJson(ctx.Span, "eventData", eventData)
+func HandleCreateContact(c context.Context, s *service.Services, eventData *data_fields.ContactCreateEvent) error {
+	span, ctx := opentracing.StartSpanFromContext(c, "EventHandlers.HandleCreateContact")
+	defer span.Finish()
+	tracing.SetDefaultListenerSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "eventData", eventData)
 
-	_, err := ctx.Services.ContactService.CreateContactWithOrganizationByEmail(ctx.Context, nil, eventData.Email)
+	_, err := s.ContactService.CreateContactWithOrganizationByEmail(ctx, nil, eventData.Email)
 	if err != nil {
-		tracing.TraceErr(ctx.Span, err)
+		tracing.TraceErr(span, err)
+		return err
 		// todo Implement retry logic?
 	}
+	return nil
 }
