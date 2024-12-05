@@ -51,7 +51,9 @@ export const WelcomeSidenavItem = observer(
         {
           onSuccess: () => {
             if (isActive) {
-              navigate('/finder');
+              navigate(
+                `/finder?preset=${store.tableViewDefs.organizationsPreset}`,
+              );
             }
           },
         },

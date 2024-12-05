@@ -3,17 +3,18 @@ import { useNavigate } from 'react-router-dom';
 import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
 
+import { Send03 } from '@ui/media/icons/Send03';
 import { useStore } from '@shared/hooks/useStore';
-import { Send03 } from '@ui/media/icons/Send03.tsx';
-import { LogIn03 } from '@ui/media/icons/LogIn03.tsx';
-import { Inbox01 } from '@ui/media/icons/Inbox01.tsx';
-import { Shuffle01 } from '@ui/media/icons/Shuffle01.tsx';
-import { WelcomePage } from '@ui/media/logos/WelcomePage.tsx';
-import { LinkedinOutline } from '@ui/media/icons/LinkedinOutline.tsx';
+import { Inbox01 } from '@ui/media/icons/Inbox01';
+import { Shuffle01 } from '@ui/media/icons/Shuffle01';
+import { Building07 } from '@ui/media/icons/Building07';
+import { Settings01 } from '@ui/media/icons/Settings01';
+import { WelcomePage } from '@ui/media/logos/WelcomePage';
+import { LinkedinOutline } from '@ui/media/icons/LinkedinOutline';
 
-import { LongArrow } from './src/assets/LongArrow.tsx';
-import { OnboardingCard } from './src/components/OnboardingCard.tsx';
-import { DecorativePattern } from './src/assets/DecorativePattern.tsx';
+import { LongArrow } from './src/assets/LongArrow';
+import { OnboardingCard } from './src/components/OnboardingCard';
+import { DecorativePattern } from './src/assets/DecorativePattern';
 
 export const OnboardingPage = observer(() => {
   const { globalCache, tableViewDefs, mailboxes } = useStore();
@@ -83,7 +84,7 @@ export const OnboardingPage = observer(() => {
             isFeatured={false}
             contentTitle='Explore a sequence'
             subtitle='Automated, surgical, reputable'
-            titleIcon={<Inbox01 className='text-inherit' />}
+            titleIcon={<Send03 className='text-inherit' />}
             contentIcon={<Shuffle01 className='text-inherit' />}
             onClick={() => handleOnboardingStepClick('outbound')}
             isCompleted={onboarding?.onboardingOutboundStepCompleted}
@@ -100,8 +101,8 @@ export const OnboardingPage = observer(() => {
             onClick={() => handleOnboardingStepClick('crm')}
             isCompleted={onboarding?.onboardingCrmStepCompleted}
             contentIcon={<LinkedinOutline className='size-5' />}
-            titleIcon={<Send03 className='size-6 text-inherit' />}
-            description='Discover how to orchestrate a multichannel outbound campaign.'
+            titleIcon={<Building07 className='size-6 text-inherit' />}
+            description='...then enrich their email and mobile number in one click'
           />{' '}
         </div>
         <div>
@@ -109,13 +110,13 @@ export const OnboardingPage = observer(() => {
             title='Mailstack'
             timeInMinutes='5'
             isFeatured={false}
-            titleIcon={<LogIn03 />}
-            contentIcon={<Inbox01 />}
+            titleIcon={<Inbox01 />}
+            contentIcon={<Settings01 />}
             contentTitle='Setup my mailboxes'
             subtitle='High-deliverability email infrastructure'
             onClick={() => handleOnboardingStepClick('mailstack')}
             isCompleted={onboarding?.onboardingMailstackStepCompleted}
-            description='Discover how to orchestrate a multichannel outbound campaign.'
+            description='Setup your high-reputation domains and senders, for pain-free outbound with optimal deliverability.'
           />
         </div>
       </div>
