@@ -11,10 +11,10 @@ type TenantSettingsMailbox struct {
 	MailboxUsername string `gorm:"column:mailbox_username;type:varchar(255)" json:"mailboxUsername"`
 	MailboxPassword string `gorm:"column:mailbox_password;type:varchar(255)" json:"mailboxPassword"`
 
-	Domain string `gorm:"column:domain;type:varchar(255)" json:"domain"`
+	Domain   string `gorm:"column:domain;type:varchar(255)" json:"domain"`
+	Username string `gorm:"column:user_name;type:varchar(255)" json:"userName"`
 
-	Username string `gorm:"column:user_name;type:varchar(255)" json:"userName"` //Deprecated
-	UserId   string `gorm:"column:user_id;type:varchar(255)" json:"userId"`
+	UserId string `gorm:"column:user_id;type:varchar(255)" json:"userId"` // linked user in neo4j
 
 	ForwardingTo   string `gorm:"column:forwarding_to;type:text" json:"forwardingTo"`
 	WebmailEnabled bool   `gorm:"column:webmail_enabled;type:boolean" json:"webmailEnabled"`

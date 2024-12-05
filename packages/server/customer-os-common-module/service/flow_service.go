@@ -27,6 +27,9 @@ type FlowService interface {
 	FlowsGetListWithSender(ctx context.Context, senderIds []string) (*neo4jentity.FlowEntities, error)
 	FlowMerge(ctx context.Context, tx *neo4j.ManagedTransaction, entity *neo4jentity.FlowEntity) (*neo4jentity.FlowEntity, error)
 	FlowChangeStatus(ctx context.Context, id string, status neo4jentity.FlowStatus) (*neo4jentity.FlowEntity, error)
+	FlowOn(ctx context.Context, id string) (*neo4jentity.FlowEntity, error)
+	FlowOff(ctx context.Context, id string) (*neo4jentity.FlowEntity, error)
+	FlowArchive(ctx context.Context, id string) (*neo4jentity.FlowEntity, error)
 
 	FlowActionGetStart(ctx context.Context, flowId string) (*neo4jentity.FlowActionEntity, error)
 	FlowActionGetNext(ctx context.Context, actionId string) ([]*neo4jentity.FlowActionEntity, error)
@@ -604,48 +607,160 @@ func (s *flowService) FlowChangeStatus(ctx context.Context, id string, status ne
 		return flow, nil
 	}
 
-	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, nil, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
+	if status == neo4jentity.FlowStatusOn {
 
-		var triggerEvent interface{}
-
-		if status == neo4jentity.FlowStatusOn {
-
-			if flow.FirstStartedAt == nil {
-				flow.FirstStartedAt = utils.TimePtr(utils.Now())
-			}
-
-			triggerEvent = dto.FlowOn{}
-		} else if status == neo4jentity.FlowStatusOff {
-			triggerEvent = dto.FlowOff{}
-		} else if status == neo4jentity.FlowStatusArchived {
-			triggerEvent = dto.FlowArchive{}
+		if flow.FirstStartedAt == nil {
+			flow.FirstStartedAt = utils.TimePtr(utils.Now())
 		}
 
-		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
-			err := s.services.RabbitMQService.PublishEvent(ctx, flow.Id, model.FLOW, triggerEvent)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				return err
-			}
-
-			return nil
-		})
-
 		flow.Status = status
-
-		node, err = s.services.Neo4jRepositories.FlowWriteRepository.Merge(ctx, txWithPostCommit.Tx, flow)
+		_, err = s.services.Neo4jRepositories.FlowWriteRepository.Merge(ctx, nil, flow)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err
 		}
 
-		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
-			s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, flow.Id, model.FLOW, utils.NewEventCompletedDetails().WithUpdate())
-			return nil
-		})
+		err := s.services.RabbitMQService.PublishEvent(ctx, flow.Id, model.FLOW, dto.FlowOn{})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
 
-		return nil, nil
-	})
+	} else if status == neo4jentity.FlowStatusOff {
+		_, err := s.FlowOff(ctx, flow.Id)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+	} else if status == neo4jentity.FlowStatusArchived {
+		_, err := s.FlowArchive(ctx, flow.Id)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+	}
+
+	s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, flow.Id, model.FLOW, utils.NewEventCompletedDetails().WithUpdate())
+
+	flow.Status = status
+
+	return flow, nil
+}
+
+func (s *flowService) FlowOn(ctx context.Context, id string) (*neo4jentity.FlowEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowOn")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	node, err := s.services.Neo4jRepositories.FlowReadRepository.GetById(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if node == nil {
+		tracing.TraceErr(span, errors.New("flow not found"))
+		return nil, errors.New("flow not found")
+	}
+
+	flow := mapper.MapDbNodeToFlowEntity(node)
+
+	if flow.Status == neo4jentity.FlowStatusOn {
+		return flow, nil
+	}
+
+	flow.Status = neo4jentity.FlowStatusOn
+
+	node, err = s.services.Neo4jRepositories.FlowWriteRepository.Merge(ctx, nil, flow)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, flow.Id, model.FLOW, utils.NewEventCompletedDetails().WithUpdate())
+
+	err = s.services.RabbitMQService.PublishEvent(ctx, flow.Id, model.FLOW, dto.FlowOn{})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return mapper.MapDbNodeToFlowEntity(node), nil
+}
+
+func (s *flowService) FlowOff(ctx context.Context, id string) (*neo4jentity.FlowEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowOff")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	node, err := s.services.Neo4jRepositories.FlowReadRepository.GetById(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if node == nil {
+		tracing.TraceErr(span, errors.New("flow not found"))
+		return nil, errors.New("flow not found")
+	}
+
+	flow := mapper.MapDbNodeToFlowEntity(node)
+
+	if flow.Status == neo4jentity.FlowStatusOff {
+		return flow, nil
+	}
+
+	flow.Status = neo4jentity.FlowStatusOff
+	node, err = s.services.Neo4jRepositories.FlowWriteRepository.Merge(ctx, nil, flow)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	err = s.services.Neo4jRepositories.FlowActionExecutionWriteRepository.DeleteScheduledForFlow(ctx, flow.Id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	err = s.services.FlowExecutionService.UpdateAllParticipantsFlowRequirements(ctx, flow.Id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return mapper.MapDbNodeToFlowEntity(node), nil
+}
+
+func (s *flowService) FlowArchive(ctx context.Context, id string) (*neo4jentity.FlowEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowArchive")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	node, err := s.services.Neo4jRepositories.FlowReadRepository.GetById(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if node == nil {
+		tracing.TraceErr(span, errors.New("flow not found"))
+		return nil, errors.New("flow not found")
+	}
+
+	flow := mapper.MapDbNodeToFlowEntity(node)
+
+	if flow.Status == neo4jentity.FlowStatusArchived {
+		return flow, nil
+	}
+
+	flow.Status = neo4jentity.FlowStatusArchived
+	node, err = s.services.Neo4jRepositories.FlowWriteRepository.Merge(ctx, nil, flow)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	err = s.services.Neo4jRepositories.FlowActionExecutionWriteRepository.DeleteScheduledForFlow(ctx, flow.Id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err

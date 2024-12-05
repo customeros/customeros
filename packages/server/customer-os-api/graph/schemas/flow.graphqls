@@ -9,7 +9,10 @@ extend type Query {
 
 extend type Mutation {
     flow_Merge(input: FlowMergeInput!): Flow! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    flow_ChangeStatus(id: ID!, status: FlowStatus!): Flow! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    flow_ChangeStatus(id: ID!, status: FlowStatus!): Flow! @hasRole(roles: [ADMIN, USER]) @hasTenant #deprecated
+    flow_On(id: ID!): Flow! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    flow_Off(id: ID!): Flow! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    flow_Archive(id: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
     flowParticipant_Add(flowId: ID!, entityId: ID!, entityType: FlowEntityType!): FlowParticipant! @hasRole(roles: [ADMIN, USER]) @hasTenant
     flowParticipant_AddBulk(flowId: ID!, entityIds: [ID!]!, entityType: FlowEntityType!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
