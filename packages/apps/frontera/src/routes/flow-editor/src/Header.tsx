@@ -185,7 +185,7 @@ export const Header = observer(
                 leftIcon={<UserPlus01 />}
                 onClick={() =>
                   store.ui.commandMenu.setOpen(true, {
-                    type: 'AddContactsBulk',
+                    type: 'AddContactsToFlow',
                     context: {
                       entity: 'Flow',
                       ids: [id],

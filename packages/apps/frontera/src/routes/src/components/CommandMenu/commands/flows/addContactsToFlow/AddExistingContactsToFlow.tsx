@@ -12,7 +12,7 @@ import { useStore } from '@shared/hooks/useStore';
 import { useModKey } from '@shared/hooks/useModKey';
 import { Command, CommandInput } from '@ui/overlay/CommandMenu';
 
-export const AddContactsToFlow = observer(() => {
+export const AddExistingContacts = observer(() => {
   const { contacts, ui, flows, organizations } = useStore();
   const [search, setSearch] = useState('');
 
@@ -41,26 +41,28 @@ export const AddContactsToFlow = observer(() => {
           threshold: 0.3,
           isCaseSensitive: false,
         })
-          .search(removeAccents(search), { limit: 40 })
+          .search(removeAccents(search), { limit: 10 })
           .map((r) => r.item)
-      : arr.slice(0, 40),
+      : arr.slice(0, 10),
   );
 
   return (
-    <Command shouldFilter={false} label='Add contact to flow...'>
-      <CommandInput
-        value={search}
-        onValueChange={setSearch}
-        placeholder='Add contacts to flow...'
-        label={`Flow - ${selectedFlow.value.name}`}
-        onKeyDownCapture={(e) => {
-          if (e.key === ' ') {
-            e.stopPropagation();
-          }
-        }}
-      />
+    <>
+      <div className='-mt-3 '>
+        <CommandInput
+          value={search}
+          onValueChange={setSearch}
+          className='text-sm p-0 -ml-2'
+          placeholder='Add contacts to flow...'
+          onKeyDownCapture={(e) => {
+            if (e.key === ' ') {
+              e.stopPropagation();
+            }
+          }}
+        />
+      </div>
 
-      <Command.List>
+      <Command.List className='!px-0'>
         {contactsOptions.map((contactStore) => {
           const isSelected = contactStore?.flowsIds?.includes(selectedFlowId);
 
@@ -107,7 +109,7 @@ export const AddContactsToFlow = observer(() => {
           );
         })}
       </Command.List>
-    </Command>
+    </>
   );
 });
 

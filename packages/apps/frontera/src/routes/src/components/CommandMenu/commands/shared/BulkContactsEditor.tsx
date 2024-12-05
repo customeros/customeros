@@ -17,7 +17,7 @@ import {
   InitialConfigType,
 } from '@lexical/react/LexicalComposer';
 
-import { InputValidationPlugin } from './InputValidationPlugin';
+import { InputValidationPlugin } from '@ui/form/Editor/plugins/InputValidationPlugin.tsx';
 
 const theme: EditorThemeClasses = {
   paragraph: 'my-0',
