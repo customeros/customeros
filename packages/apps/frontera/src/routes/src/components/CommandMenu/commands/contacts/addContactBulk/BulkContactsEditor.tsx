@@ -130,7 +130,7 @@ export const BulkContactsEditor = forwardRef<LexicalEditor | null, EditorProps>(
                     size,
                     className: placeholderClassName,
                   }),
-                  'absolute top-0 text-gray-400 p-2',
+                  'absolute top-0 text-gray-400 p-2 text-sm',
                 )}
               >
                 {type === 'email' ? (

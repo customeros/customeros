@@ -386,6 +386,7 @@ export class ContactsStore extends SyncableGroup<Contact, ContactStore> {
   async createBulkByEmail({
     emails,
     options,
+    flowId,
   }: {
     flowId?: string;
     emails: string[];
@@ -400,6 +401,7 @@ export class ContactsStore extends SyncableGroup<Contact, ContactStore> {
       const { contact_CreateBulkByEmail } =
         await this.service.createContactBulkByEmail({
           emails,
+          flowId,
         });
 
       runInAction(() => {
@@ -429,6 +431,7 @@ export class ContactsStore extends SyncableGroup<Contact, ContactStore> {
   async createBulkByLinkedIn({
     linkedInUrls,
     options,
+    flowId,
   }: {
     flowId?: string;
     linkedInUrls: string[];
@@ -443,6 +446,7 @@ export class ContactsStore extends SyncableGroup<Contact, ContactStore> {
       const { contact_CreateBulkByLinkedIn } =
         await this.service.createContactBulkByLinkedIn({
           linkedInUrls,
+          flowId,
         });
 
       runInAction(() => {

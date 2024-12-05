@@ -6,10 +6,10 @@ import { observer } from 'mobx-react-lite';
 import { useLocalStorage } from 'usehooks-ts';
 
 import { cn } from '@ui/utils/cn';
+import { validateEmail } from '@utils/email';
 import { SelectOption } from '@ui/utils/types';
 import { Copy01 } from '@ui/media/icons/Copy01';
 import { useStore } from '@shared/hooks/useStore';
-import { validateEmail } from '@shared/util/emailValidation';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
 import { useContactCardMeta } from '@organization/state/ContactCardMeta.atom';
