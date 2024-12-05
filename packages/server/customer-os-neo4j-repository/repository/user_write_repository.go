@@ -291,11 +291,13 @@ func (r *userWriteRepository) RegisterLogin(ctx context.Context, tenant, userId 
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.SetTag(tracing.SpanTagEntityId, userId)
 
-	cypher := `MATCH (u:User {id:$userId})-[:USER_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) 
-			SET u.lastLogin = datetime()`
+	cypher := `MATCH (u:User {id:$userId})-[:USER_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
+			SET u.lastLogin = $now,
+				u.firstLogin = CASE WHEN u.firstLogin IS NULL THEN $now ELSE u.firstLogin END`
 	params := map[string]any{
 		"userId": userId,
 		"tenant": tenant,
+		"now":    utils.Now(),
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

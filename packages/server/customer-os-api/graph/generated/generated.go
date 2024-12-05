@@ -626,6 +626,7 @@ type ComplexityRoot struct {
 		ContractsExist      func(childComplexity int) int
 		GCliCache           func(childComplexity int) int
 		InactiveEmailTokens func(childComplexity int) int
+		IsFirstLogin        func(childComplexity int) int
 		IsOwner             func(childComplexity int) int
 		Mailboxes           func(childComplexity int) int
 		MaxARRForecastValue func(childComplexity int) int
@@ -4806,6 +4807,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.GlobalCache.InactiveEmailTokens(childComplexity), true
+
+	case "GlobalCache.isFirstLogin":
+		if e.complexity.GlobalCache.IsFirstLogin == nil {
+			break
+		}
+
+		return e.complexity.GlobalCache.IsFirstLogin(childComplexity), true
 
 	case "GlobalCache.isOwner":
 		if e.complexity.GlobalCache.IsOwner == nil {
@@ -12476,17 +12484,17 @@ input BillingProfileLinkEmailInput {
 }
 
 type GlobalCache {
-    user: User!
-    isOwner: Boolean!
-    inactiveEmailTokens: [GlobalCacheEmailToken!]!
-    activeEmailTokens: [GlobalCacheEmailToken!]!
-    mailboxes: [String!]!
-    gCliCache: [GCliItem!]!
-    minARRForecastValue: Float!
-    maxARRForecastValue: Float!
-    contractsExist: Boolean!
-
-    cdnLogoUrl: String!
+    user:                   User!
+    isOwner:                Boolean!
+    inactiveEmailTokens:    [GlobalCacheEmailToken!]!
+    activeEmailTokens:      [GlobalCacheEmailToken!]!
+    mailboxes:              [String!]!
+    gCliCache:              [GCliItem!]!
+    minARRForecastValue:    Float!
+    maxARRForecastValue:    Float!
+    contractsExist:         Boolean!
+    isFirstLogin:           Boolean!
+    cdnLogoUrl:             String!
 }
 
 type GlobalCacheEmailToken {
@@ -46183,6 +46191,50 @@ func (ec *executionContext) _GlobalCache_contractsExist(ctx context.Context, fie
 }
 
 func (ec *executionContext) fieldContext_GlobalCache_contractsExist(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "GlobalCache",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _GlobalCache_isFirstLogin(ctx context.Context, field graphql.CollectedField, obj *model.GlobalCache) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_GlobalCache_isFirstLogin(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IsFirstLogin, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_GlobalCache_isFirstLogin(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "GlobalCache",
 		Field:      field,
@@ -88409,6 +88461,8 @@ func (ec *executionContext) fieldContext_Query_global_Cache(_ context.Context, f
 				return ec.fieldContext_GlobalCache_maxARRForecastValue(ctx, field)
 			case "contractsExist":
 				return ec.fieldContext_GlobalCache_contractsExist(ctx, field)
+			case "isFirstLogin":
+				return ec.fieldContext_GlobalCache_isFirstLogin(ctx, field)
 			case "cdnLogoUrl":
 				return ec.fieldContext_GlobalCache_cdnLogoUrl(ctx, field)
 			}
@@ -118248,6 +118302,11 @@ func (ec *executionContext) _GlobalCache(ctx context.Context, sel ast.SelectionS
 			}
 		case "contractsExist":
 			out.Values[i] = ec._GlobalCache_contractsExist(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "isFirstLogin":
+			out.Values[i] = ec._GlobalCache_isFirstLogin(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

@@ -133,5 +133,12 @@ func (r *queryResolver) GlobalCache(ctx context.Context) (*model.GlobalCache, er
 		response.CdnLogoURL = attachmentById.CdnUrl
 	}
 
+	// set is first login (if user first and last login are same)
+	if user.FirstLogin != nil && user.LastLogin != nil && user.FirstLogin.Equal(*user.LastLogin) {
+		response.IsFirstLogin = true
+	} else {
+		response.IsFirstLogin = false
+	}
+
 	return response, nil
 }

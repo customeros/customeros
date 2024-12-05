@@ -211,6 +211,7 @@ func MapDbNodeToUserEntity(dbNode *dbtype.Node) *entity.UserEntity {
 		ProfilePhotoUrl: utils.GetStringPropOrEmpty(props, "profilePhotoUrl"),
 		Timezone:        utils.GetStringPropOrEmpty(props, "timezone"),
 		LastLogin:       utils.GetTimePropOrNil(props, string(entity.UserPropertyLastLogin)),
+		FirstLogin:      utils.GetTimePropOrNil(props, string(entity.UserPropertyFirstLogin)),
 		OnboardingDetails: entity.UserOnboardingDetails{
 			ShowOnboardingPage:               utils.GetBoolPropOrTrue(props, string(entity.UserPropertyShowOnboardingPage)),
 			OnboardingInboundStepCompleted:   utils.GetBoolPropOrFalse(props, string(entity.UserPropertyOnboardingInboundStepCompleted)),
