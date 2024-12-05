@@ -58,7 +58,7 @@ export const Mailboxes = observer(() => {
     };
   }, [showMailboxes]);
 
-  if (!campaign && !hasMailboxes && showMailboxes) {
+  if (!hasMailboxes && showMailboxes) {
     return <EmptyMailboxes onUpdate={goBuy} />;
   }
 
