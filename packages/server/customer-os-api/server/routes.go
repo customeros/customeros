@@ -62,7 +62,7 @@ func registerHealthRoutes(ctx context.Context, r *gin.Engine, s *service.Service
 func registerEnrichRoutes(ctx context.Context, r *gin.Engine, s *service.Services, cache *commoncaches.Cache) {
 	setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/person", enrichV1Path), s, cache, restenrich.EnrichPerson(s))
 	setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/person/results/:id", enrichV1Path), s, cache, restenrich.EnrichPersonCallback(s))
-	setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/organizaiton", enrichV1Path), s, cache, restenrich.EnrichOrganization(s))
+	setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/organization", enrichV1Path), s, cache, restenrich.EnrichOrganization(s))
 }
 
 func registerVerifyRoutes(ctx context.Context, r *gin.Engine, s *service.Services, cache *commoncaches.Cache) {

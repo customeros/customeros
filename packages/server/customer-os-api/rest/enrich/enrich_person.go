@@ -35,11 +35,8 @@ const (
 
 // EnrichPersonResponse represents the response for person enrichment
 // @Description Response structure for person enrichment operations
-type EnrichPersonResponse struct {
-	// Operation status
-	// required: true
-	// enum: success,error,warning
-	Status string `json:"status" example:"success"`
+type EnrichPersonResponse struct { // Inherits standard response fields
+	rest.BaseResponse
 
 	// Optional message providing additional information
 	// required: false
@@ -401,7 +398,7 @@ func EnrichPerson(services *service.Services) gin.HandlerFunc {
 
 		// Compose response
 		response := EnrichPersonResponse{
-			Status: "success",
+			BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
 		}
 		if enrichedPersonData != nil {
 			response.Data = *enrichedPersonData
@@ -572,7 +569,7 @@ func EnrichPersonCallback(services *service.Services) gin.HandlerFunc {
 
 		// Compose response
 		response := EnrichPersonResponse{
-			Status: "success",
+			BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
 		}
 
 		// extract scrapin data
