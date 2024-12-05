@@ -10,13 +10,6 @@ type FlowActionEvent[T any] struct {
 	ExternalSystemId enum.ExternalSystemId
 	SourceEvent      commonenum.FlowEvent
 	Name             commonenum.FlowAction
+	DataType         string
 	Data             *T
-}
-
-func NewFlowActionEvent(eventName commonenum.FlowAction, externalSystem enum.ExternalSystemId, sourceEvent commonenum.FlowEvent, data any) FlowActionEvent[any] {
-	return FlowActionEvent[any]{
-		ExternalSystemId: externalSystem,
-		SourceEvent:      sourceEvent,
-		Data:             &data,
-	}
 }

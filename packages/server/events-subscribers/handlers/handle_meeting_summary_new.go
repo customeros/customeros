@@ -1,11 +1,13 @@
 package handlers
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	commonenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
@@ -15,40 +17,49 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-subscribers/model"
 )
 
-func HandleMeetingSummaryEvent(ctx model.EventContext, eventData *data_fields.MeetingSummaryEvent) error {
-	ctx.Span, ctx.Context = opentracing.StartSpanFromContext(ctx.Context, "EventHandlers.HandleMeetingSummaryEvent")
-	defer ctx.Span.Finish()
-	tracing.SetDefaultListenerSpanTags(ctx.Context, ctx.Span)
-	tracing.LogObjectAsJson(ctx.Span, "eventData", eventData)
+func HandleMeetingSummaryEvent(c context.Context, s *service.Services, eventName commonenum.FlowEvent, eventData *data_fields.MeetingSummaryEvent) error {
+	span, ctx := opentracing.StartSpanFromContext(c, "EventHandlers.HandleMeetingSummaryEvent")
+	defer span.Finish()
+	tracing.SetDefaultListenerSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "eventData", eventData)
 
 	// todo lookup which actions are configured as part of flow for tenant
 	// only trigger events for actions that are turned on
 
 	err := publishCreateMarkdownEvent(ctx, eventData)
 	if err != nil {
-		tracing.TraceErr(ctx.Span, err)
+		tracing.TraceErr(span, err)
 		return err
 	}
 
 	return nil
 }
 
-func publishEventCreateContact(ctx model.EventContext, event *data_fields.MeetingSummaryEvent) error {
+func publishEventCreateContact(c context.Context, s *service.Services, eventName commonenum.FlowEvent, eventData *data_fields.MeetingSummaryEvent) error {
+	span, ctx := opentracing.StartSpanFromContext(c, "EventHandlers.publishEventCreateContact")
+	defer span.Finish()
+	tracing.SetDefaultListenerSpanTags(ctx, span)
+
 	var err error
 
-	for _, email := range *event.ParticipantEmails {
+	system, err := eventName.ExternalSystem()
+	if err != nil {
+		return err
+	}
+
+	for _, email := range *eventData.ParticipantEmails {
 		flowActionEvent := dto.NewFlowActionEvent(
 			commonenum.ActionCreateContact,
-			ctx.SourceSystem,
-			ctx.SourceEvent,
+			system,
+			eventName,
 			data_fields.ContactCreateEvent{
 				Email: email,
 			},
 		)
 
-		pubErr := ctx.Services.RabbitMQService.PublishFlowActionEvent(ctx.Context, flowActionEvent)
+		pubErr := s.RabbitMQService.PublishFlowActionEvent(ctx, flowActionEvent)
 		if pubErr != nil {
-			tracing.TraceErr(ctx.Span, err)
+			tracing.TraceErr(span, err)
 			err = multierr.Append(err, fmt.Errorf("failed to publish contact creation for email %s: %w", email, pubErr))
 		}
 	}

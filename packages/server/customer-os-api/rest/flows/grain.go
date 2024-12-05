@@ -9,6 +9,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
+	commonenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	commontracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -105,16 +106,18 @@ func publishGrainMeetingSummaryCreatedEvent(c *gin.Context, ctx context.Context,
 		meeting.Timestamp = utils.TimePtr(grainData.RecordingData.StartDatetime.UTC())
 	}
 
-	event, err := dto.NewWebhookEvent(enum.Grain, "meeting_summary", "created", &meeting)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to build webhook event"))
-		return err
+	// build webhook event
+	event := dto.WebhookEvent{
+		ExternalSystemId: enum.Grain,
+		Name:             commonenum.EventGrainMeetingSummaryCreated,
+		DataType:         "MeetingSummaryEvent",
+		Data:             &meeting,
 	}
 
 	pubErr := s.CommonServices.RabbitMQService.PublishWebhookEvent(ctx, event)
 
 	if pubErr != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to publish event"))
+		tracing.TraceErr(span, errors.Wrap(pubErr, "failed to publish event"))
 	}
 
 	return nil

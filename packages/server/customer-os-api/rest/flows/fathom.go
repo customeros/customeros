@@ -18,6 +18,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
+	commonenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 )
 
 func FathomZapier(c *gin.Context, s *service.Services) {
@@ -115,7 +116,13 @@ func publishFathomMeetingSummaryCreatedEvent(c *gin.Context, ctx context.Context
 		meetingSummary.Timestamp = utils.TimePtr(aiSummaryData.Meeting.ScheduledStartTime.UTC())
 	}
 
-	event, err := dto.NewWebhookEvent(enum.Fathom, "meeting_summary", "created", &meetingSummary)
+    event := dto.WebhookEvent[data_fields.MeetingSummaryEvent] {
+        ExternalSystemId: enum.Fathom,
+        Name: enum
+    }
+
+	event, err := dto.NewWebhookEvent(
+        enum.Fathom, "meeting_summary", "created", ""&meetingSummary)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to build webhook event"))
 		return err

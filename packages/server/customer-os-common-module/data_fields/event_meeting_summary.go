@@ -5,9 +5,9 @@ import (
 )
 
 type MeetingSummaryEvent struct {
-	ParticipantEmails *[]string
-	Content           *string
-	Timestamp         *time.Time
+	ParticipantEmails *[]string  `json:"participantEmails"`
+	Content           *string    `json:"content"`
+	Timestamp         *time.Time `json:"timestamp"`
 }
 
 func (m *MeetingSummaryEvent) Type() string {

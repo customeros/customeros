@@ -8,27 +8,11 @@ import (
 	commonenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 )
 
-type WebhookEvent[T any] struct {
+type WebhookEvent struct {
 	ExternalSystemId enum.ExternalSystemId
-	Resource         string
-	Action           string
 	Name             commonenum.FlowEvent
-	Data             *T
-}
-
-func NewWebhookEvent(externalSystem enum.ExternalSystemId, resource, action string, data any) (WebhookEvent[any], error) {
-	eventName, err := getEventName(externalSystem, resource, action)
-	if err != nil {
-		return WebhookEvent[any]{}, err
-	}
-	event := WebhookEvent[any]{
-		ExternalSystemId: externalSystem,
-		Resource:         resource,
-		Action:           action,
-		Name:             eventName,
-		Data:             &data,
-	}
-	return event, nil
+	DataType         string
+	Data             any
 }
 
 func getEventName(externalSystem enum.ExternalSystemId, resource, action string) (commonenum.FlowEvent, error) {
