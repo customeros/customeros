@@ -7,7 +7,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/opentracing/opentracing-go"
@@ -55,28 +54,24 @@ func (s *domainService) GetPrimaryDomainForOrganizationWebsite(ctx context.Conte
 		return "", returnedWebsiteUrl
 	}
 
-	domain := ""
 	isPrimary, primaryDomain := domaincheck.PrimaryDomainCheck(websiteUrl)
 	span.LogFields(log.Bool("isPrimary", isPrimary), log.String("primaryDomain", primaryDomain))
-	if isPrimary {
-		domain = utils.ExtractDomain(websiteUrl)
-	} else if primaryDomain != "" {
-		domain = primaryDomain
+	if !isPrimary && primaryDomain != "" {
 		returnedWebsiteUrl = primaryDomain
 	}
 
-	if domain == "" {
+	if primaryDomain == "" {
 		return "", returnedWebsiteUrl
 	}
 
 	// TODO: this to be moved into linking org with domain
-	if !s.AcceptedDomainForOrganization(ctx, domain) {
+	if !s.AcceptedDomainForOrganization(ctx, primaryDomain) {
 		return "", returnedWebsiteUrl
 	}
 
-	span.LogKV("result.domain", domain, "result.websiteUrl", returnedWebsiteUrl)
+	span.LogKV("result.primaryDomain", primaryDomain, "result.returnedWebsiteUrl", returnedWebsiteUrl)
 
-	return domain, returnedWebsiteUrl
+	return primaryDomain, returnedWebsiteUrl
 }
 
 func (s *domainService) IsKnownCompanyHostingUrl(ctx context.Context, website string) bool {
