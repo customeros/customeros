@@ -2423,9 +2423,12 @@ export type Mutation = {
   flowParticipant_DeleteBulk: Result;
   flowSender_Delete: Result;
   flowSender_Merge: FlowSender;
+  flow_Archive: Result;
   flow_ChangeStatus: Flow;
   flow_Dummy_1Email: Result;
   flow_Merge: Flow;
+  flow_Off: Flow;
+  flow_On: Flow;
   interactionEvent_LinkAttachment: Result;
   invoice_NextDryRunForContract: Scalars['ID']['output'];
   invoice_Pay: Invoice;
@@ -2527,6 +2530,7 @@ export type Mutation = {
   user_RemoveRole: User;
   user_RemoveRoleInTenant: User;
   user_Update: User;
+  user_UpdateOnboardingDetails: User;
   workflow_Create: Workflow;
   workflow_Update: ActionResponse;
 };
@@ -2837,6 +2841,10 @@ export type MutationFlowSender_MergeArgs = {
   input: FlowSenderMergeInput;
 };
 
+export type MutationFlow_ArchiveArgs = {
+  id: Scalars['ID']['input'];
+};
+
 export type MutationFlow_ChangeStatusArgs = {
   id: Scalars['ID']['input'];
   status: FlowStatus;
@@ -2851,6 +2859,14 @@ export type MutationFlow_Dummy_1EmailArgs = {
 
 export type MutationFlow_MergeArgs = {
   input: FlowMergeInput;
+};
+
+export type MutationFlow_OffArgs = {
+  id: Scalars['ID']['input'];
+};
+
+export type MutationFlow_OnArgs = {
+  id: Scalars['ID']['input'];
 };
 
 export type MutationInteractionEvent_LinkAttachmentArgs = {
@@ -3286,6 +3302,10 @@ export type MutationUser_RemoveRoleInTenantArgs = {
 
 export type MutationUser_UpdateArgs = {
   input: UserUpdateInput;
+};
+
+export type MutationUser_UpdateOnboardingDetailsArgs = {
+  input: UserOnboardingDetailsInput;
 };
 
 export type MutationWorkflow_CreateArgs = {
@@ -4031,7 +4051,9 @@ export type Query = {
   /** Fetch a single contact from customerOS by contact ID. */
   contact?: Maybe<Contact>;
   contact_ByEmail: Contact;
+  contact_ByLinkedIn?: Maybe<Contact>;
   contact_ByPhone: Contact;
+  contact_ExistsByLinkedIn: Scalars['Boolean']['output'];
   /**
    * Fetch paginated list of contacts
    * Possible values for sort:
@@ -4085,8 +4107,10 @@ export type Query = {
   organization?: Maybe<Organization>;
   organization_ByCustomId?: Maybe<Organization>;
   organization_ByCustomerOsId?: Maybe<Organization>;
+  organization_ByLinkedIn?: Maybe<Organization>;
   organization_CheckWebsite: WebsiteDetails;
   organization_DistinctOwners: Array<User>;
+  organization_ExistsByLinkedIn: Scalars['Boolean']['output'];
   organizations: OrganizationPage;
   organizations_HiddenAfter: Array<Scalars['String']['output']>;
   phoneNumber: PhoneNumber;
@@ -4125,8 +4149,16 @@ export type QueryContact_ByEmailArgs = {
   email: Scalars['String']['input'];
 };
 
+export type QueryContact_ByLinkedInArgs = {
+  linkedInUrl: Scalars['String']['input'];
+};
+
 export type QueryContact_ByPhoneArgs = {
   e164: Scalars['String']['input'];
+};
+
+export type QueryContact_ExistsByLinkedInArgs = {
+  linkedInUrl: Scalars['String']['input'];
 };
 
 export type QueryContactsArgs = {
@@ -4271,8 +4303,16 @@ export type QueryOrganization_ByCustomerOsIdArgs = {
   customerOsId: Scalars['String']['input'];
 };
 
+export type QueryOrganization_ByLinkedInArgs = {
+  linkedInUrl: Scalars['String']['input'];
+};
+
 export type QueryOrganization_CheckWebsiteArgs = {
   website: Scalars['String']['input'];
+};
+
+export type QueryOrganization_ExistsByLinkedInArgs = {
+  linkedInUrl: Scalars['String']['input'];
 };
 
 export type QueryOrganizationsArgs = {
@@ -4655,9 +4695,19 @@ export enum TableViewType {
 
 export type Tag = {
   __typename?: 'Tag';
+  /** @deprecated Use metadata.appSource */
+  appSource?: Maybe<Scalars['String']['output']>;
+  /** @deprecated Use metadata.created */
+  createdAt?: Maybe<Scalars['Time']['output']>;
   entityType: EntityType;
+  /** @deprecated Use metadata.id */
+  id?: Maybe<Scalars['ID']['output']>;
   metadata: Metadata;
   name: Scalars['String']['output'];
+  /** @deprecated Use metadata.source */
+  source?: Maybe<DataSource>;
+  /** @deprecated Use metadata.lastUpdated */
+  updatedAt?: Maybe<Scalars['Time']['output']>;
 };
 
 export type TagIdOrNameInput = {
@@ -4948,6 +4998,7 @@ export type User = {
   lastName: Scalars['String']['output'];
   mailboxes: Array<Scalars['String']['output']>;
   name?: Maybe<Scalars['String']['output']>;
+  onboarding: UserOnboardingDetails;
   phoneNumbers: Array<PhoneNumber>;
   profilePhotoUrl?: Maybe<Scalars['String']['output']>;
   roles: Array<Role>;
@@ -4991,6 +5042,24 @@ export type UserInput = {
   name?: InputMaybe<Scalars['String']['input']>;
   profilePhotoUrl?: InputMaybe<Scalars['String']['input']>;
   timezone?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type UserOnboardingDetails = {
+  __typename?: 'UserOnboardingDetails';
+  onboardingCrmStepCompleted: Scalars['Boolean']['output'];
+  onboardingInboundStepCompleted: Scalars['Boolean']['output'];
+  onboardingMailstackStepCompleted: Scalars['Boolean']['output'];
+  onboardingOutboundStepCompleted: Scalars['Boolean']['output'];
+  showOnboardingPage: Scalars['Boolean']['output'];
+};
+
+export type UserOnboardingDetailsInput = {
+  id: Scalars['ID']['input'];
+  onboardingCrmStepCompleted?: InputMaybe<Scalars['Boolean']['input']>;
+  onboardingInboundStepCompleted?: InputMaybe<Scalars['Boolean']['input']>;
+  onboardingMailstackStepCompleted?: InputMaybe<Scalars['Boolean']['input']>;
+  onboardingOutboundStepCompleted?: InputMaybe<Scalars['Boolean']['input']>;
+  showOnboardingPage?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 /**

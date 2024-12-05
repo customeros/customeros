@@ -2,7 +2,6 @@ import React, { useRef } from 'react';
 
 import { observer } from 'mobx-react-lite';
 
-import { FlowStatus } from '@graphql/types';
 import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
 import {
@@ -24,12 +23,9 @@ export const StopFlow = observer(() => {
   };
 
   const handleConfirm = () => {
-    flow?.update((f) => {
-      f.status = FlowStatus.Off;
-
-      return f;
+    flow?.stopFlow({
+      onSuccess: () => handleClose(),
     });
-    handleClose();
   };
 
   return (
@@ -60,7 +56,9 @@ export const StopFlow = observer(() => {
             colorScheme='primary'
             ref={confirmButtonRef}
             onClick={handleConfirm}
+            isLoading={flow?.isLoading}
             data-test='flow-actions-confirm-stop'
+            loadingText={`Stopping ${flow?.value.name}...`}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 handleConfirm();

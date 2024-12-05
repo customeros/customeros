@@ -53,19 +53,46 @@ export class FlowStore implements Store<Flow> {
     this.value.metadata.id = id;
   }
 
-  async saveStatus() {
+  async startFlow({ onSuccess }: { onSuccess?: () => void }) {
     this.isLoading = true;
 
     try {
-      await this.service.changeStatus({
+      const { flow_On } = await this.service.startFlow({
         id: this.id,
-        status: this.value.status as FlowStatus,
+      });
+
+      runInAction(() => {
+        if (flow_On?.metadata?.id) {
+          this.value.status = FlowStatus.Off;
+          onSuccess && onSuccess();
+        }
       });
     } catch (error) {
-      this.root.ui.toastError(
-        "We couldn't update the flow",
-        'update-flow-error',
-      );
+      this.root.ui.toastError("We couldn't start the flow", 'start-flow-error');
+    } finally {
+      runInAction(() => {
+        this.invalidate();
+      });
+      this.isLoading = false;
+    }
+  }
+
+  async stopFlow({ onSuccess }: { onSuccess?: () => void }) {
+    this.isLoading = true;
+
+    try {
+      const { flow_Off } = await this.service.stopFlow({
+        id: this.id,
+      });
+
+      runInAction(() => {
+        if (flow_Off?.metadata?.id) {
+          this.value.status = FlowStatus.Off;
+          onSuccess && onSuccess();
+        }
+      });
+    } catch (error) {
+      this.root.ui.toastError("We couldn't stop the flow", 'stop-flow-error');
     } finally {
       runInAction(() => {
         this.invalidate();
@@ -78,14 +105,10 @@ export class FlowStore implements Store<Flow> {
     const diff = operation.diff?.[0];
     const path = diff?.path;
 
-    match(path)
-      .with(['status', ...P.array()], () => {
-        this.saveStatus();
-      })
-      .with(['name', ...P.array()], () => {
-        // todo COS-5311 - use another mutation to not update nodes and edges when updating the name
-        this.updateFlow({ nodes: this.value.nodes, edges: this.value.edges });
-      });
+    match(path).with(['name', ...P.array()], () => {
+      // todo COS-5311 - use another mutation to not update nodes and edges when updating the name
+      this.updateFlow({ nodes: this.value.nodes, edges: this.value.edges });
+    });
   }
 
   get parsedNodes() {
