@@ -430,6 +430,12 @@ func (s *flowService) FlowMerge(ctx context.Context, tx *neo4j.ManagedTransactio
 
 	e := flowEntity.(*neo4jentity.FlowEntity)
 
+	err = s.services.Neo4jRepositories.FlowActionExecutionWriteRepository.RelinkWithActions(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
 	//todo check if something is actually changed
 	err = s.services.RabbitMQService.PublishEvent(ctx, e.Id, model.FLOW, dto.FlowComputeParticipantsRequirements{})
 	if err != nil {
