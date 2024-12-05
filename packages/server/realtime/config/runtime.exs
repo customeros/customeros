@@ -31,8 +31,8 @@ if config_env() == :dev do
   end)
 end
 
-jeager_host = System.get_env("JAEGER_AGENT_HOST") || "localhost"
-jeager_port = String.to_integer(System.get_env("JAEGER_AGENT_PORT")) || 4318
+jeager_host = System.get_env("JAEGER_AGENT_HOST", "localhost")
+jeager_port = String.to_integer(System.get_env("JAEGER_AGENT_PORT", "4318"))
 
 config :opentelemetry,
        :resource,
