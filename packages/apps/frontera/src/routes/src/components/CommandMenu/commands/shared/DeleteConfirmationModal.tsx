@@ -131,19 +131,19 @@ export const DeleteConfirmationModal = observer(() => {
             }
           },
         });
+        context.callback?.();
+
         store.ui.commandMenu.setType('FlowHub');
         store.ui.commandMenu.clearCallback();
         store.ui.commandMenu.clearContext();
-
-        context.callback?.();
       })
       .with('Flows', () => {
         store.flows.archiveMany(context.ids);
+        context.callback?.();
         store.ui.commandMenu.setType('FlowHub');
+
         store.ui.commandMenu.clearCallback();
         store.ui.commandMenu.clearContext();
-
-        context.callback?.();
       })
       .with('TableViewDef', () => {
         store.tableViewDefs.archive(context.ids?.[0], {
