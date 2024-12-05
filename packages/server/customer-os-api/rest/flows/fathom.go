@@ -9,6 +9,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
+	commonenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	commontracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -18,7 +19,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
-	commonenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 )
 
 func FathomZapier(c *gin.Context, s *service.Services) {
@@ -50,10 +50,10 @@ func FathomZapier(c *gin.Context, s *service.Services) {
 		return
 	}
 
-	//if !strings.EqualFold(c.GinContext.Request.UserAgent(), "Zapier") {
-	//	rest.SendError(c.GinContext, c.Span, http.StatusForbidden, rest.ErrForbidden)
-	//	return
-	//}
+	if !strings.EqualFold(c.Request.UserAgent(), "Zapier") {
+		rest.SendError(c, span, http.StatusForbidden, rest.ErrForbidden)
+		return
+	}
 
 	handleFathomAISummaryZapier(c, ctx, s)
 }
