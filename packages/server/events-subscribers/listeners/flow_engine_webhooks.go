@@ -67,30 +67,30 @@ func OnWebhookEventCreated(ctx context.Context, s *service.Services, input any) 
 func getWebhookEvent(input any) (commonenum.FlowEvent, *dto.WebhookEvent, error) {
 	message, ok := input.(*dto.Event)
 	if !ok {
-		return commonenum.NotSet, nil, fmt.Errorf("failed to cast to Event")
+		return commonenum.EventNotSet, nil, fmt.Errorf("failed to cast to Event")
 	}
 	// check message data type before conversion
 	if message.Event.Data == nil {
 		err := errors.New("message data is nil")
-		return commonenum.NotSet, nil, err
+		return commonenum.EventNotSet, nil, err
 	}
 
 	webhookEvent, ok := message.Event.Data.(*dto.WebhookEvent)
 	if !ok {
 		err := errors.New("event is not a webhook event")
-		return commonenum.NotSet, nil, err
+		return commonenum.EventNotSet, nil, err
 	}
 
 	webhookData, ok := webhookEvent.Data.(map[string]interface{})
 	if !ok {
 		err := errors.New("event data is not a map")
-		return commonenum.NotSet, nil, err
+		return commonenum.EventNotSet, nil, err
 	}
 
 	webhookDataPtr := reflect.New(eventDataTypes[webhookEvent.DataType]).Interface()
 	err := utils.Decode(webhookData, webhookDataPtr)
 	if err != nil {
-		return commonenum.NotSet, nil, err
+		return commonenum.EventNotSet, nil, err
 	}
 
 	webhookEvent.Data = webhookDataPtr

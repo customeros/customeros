@@ -12,7 +12,8 @@ type FlowEvent string
 const (
 	EventFathomMeetingSummaryCreated FlowEvent = "fathom.meeting_summary.created"
 	EventGrainMeetingSummaryCreated  FlowEvent = "grain.meeting_summary.created"
-	NotSet                           FlowEvent = ""
+	EventMailstackEmailReceived      FlowEvent = "mailstack.email.received"
+	EventNotSet                      FlowEvent = ""
 )
 
 func (e FlowEvent) String() string {
@@ -31,7 +32,7 @@ func (e FlowEvent) Parse() (system, resource, action string, err error) {
 func (e FlowEvent) ExternalSystem() (system enum.ExternalSystemId, err error) {
 	systemId, _, _, err := e.Parse()
 	if err != nil {
-		return enum.ExternalSystemId(NotSet), fmt.Errorf("invalid event name")
+		return enum.ExternalSystemId(EventNotSet), fmt.Errorf("invalid event name")
 	}
 
 	return enum.DecodeExternalSystemId(systemId), nil
@@ -39,7 +40,11 @@ func (e FlowEvent) ExternalSystem() (system enum.ExternalSystemId, err error) {
 
 func GetFlowEvent(s string) (FlowEvent, error) {
 	switch FlowEvent(s) {
-	case EventFathomMeetingSummaryCreated, EventGrainMeetingSummaryCreated:
+	case
+		EventFathomMeetingSummaryCreated,
+		EventGrainMeetingSummaryCreated,
+		EventMailstackEmailReceived:
+
 		return FlowEvent(s), nil
 	default:
 		return "", fmt.Errorf("invalid FlowEvent: %s", s)

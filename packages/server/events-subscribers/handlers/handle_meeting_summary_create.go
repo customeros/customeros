@@ -158,7 +158,7 @@ func handleMarkdownEventPublishing(ctx context.Context, span opentracing.Span, s
 	flowActionEvent := dto.FlowActionEvent{
 		ExternalSystemId: system,
 		SourceEvent:      sourceEvent,
-		Name:             commonenum.ActionCreateTimelineEvent,
+		Name:             commonenum.ActionTimelineEventCreate,
 		DataType:         data_fields.MarkdownEventFields{}.Type(),
 		Data:             mdEvent,
 	}
@@ -184,7 +184,7 @@ func createFlowActionEventCreateContact(system enum.ExternalSystemId, sourceEven
 	return dto.FlowActionEvent{
 		ExternalSystemId: system,
 		SourceEvent:      sourceEvent,
-		Name:             commonenum.ActionCreateContact,
+		Name:             commonenum.ActionContactCreate,
 		DataType:         data_fields.ContactCreateEvent{}.Type(),
 		Data: data_fields.ContactCreateEvent{
 			Email: email,

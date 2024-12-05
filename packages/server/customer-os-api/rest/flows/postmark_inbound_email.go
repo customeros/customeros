@@ -2,7 +2,6 @@ package flows
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"runtime/debug"
@@ -10,15 +9,14 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
 
 const EXTERNAL_SYSTEM = "mailstack"
@@ -75,7 +73,7 @@ func processInboundEmail(c *gin.Context, s *service.Services, emailData *Postmar
 	defer span.Finish()
 	tracing.TagComponentRest(span)
 
-	tenant, err := getTenant(c, s, emailData)
+	tenant, err := getTenantFromEmail(c, s, emailData)
 	if err != nil {
 		return err
 	}
@@ -87,6 +85,12 @@ func processInboundEmail(c *gin.Context, s *service.Services, emailData *Postmar
 	})
 
 	participants := emailData.AllParticipantEmails()
+	if len(participants) == 0 {
+		err := errors.New("no email participants")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
 	username, err := getUsername(ctx, s, participants)
 	if err != nil || username == "" {
 		span.LogFields(tracingLog.Bool("mailbox.found", false))
@@ -95,6 +99,13 @@ func processInboundEmail(c *gin.Context, s *service.Services, emailData *Postmar
 	}
 
 	messageId := emailData.GetHeaderValue("Message-Id")
+	if messageId == "" {
+		err := errors.New("email messageId is empty")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	// probably don't need this if we drop db and go events
 	emailExistsInDb, err := s.CommonServices.PostgresRepositories.RawEmailRepository.EmailExistsByMessageId(
 		ctx, EXTERNAL_SYSTEM, tenant, username, messageId,
 	)
@@ -107,31 +118,32 @@ func processInboundEmail(c *gin.Context, s *service.Services, emailData *Postmar
 		return nil
 	}
 
-	dbEmailEntity := emailData.ToRawDbObject()
-	jsonEmailEntity, err := json.Marshal(dbEmailEntity)
-	if err != nil {
-		return fmt.Errorf("Unable to produce JSON email object for db: %v", err)
+	emailMessage := emailData.ToEmailMessageData()
+
+	emailAnalysis := s.MailService.ProcessEmailCheck(ctx, tenant, &emailMessage)
+	if emailAnalysis.IsBulkMail {
+		return nil
 	}
 
-	dbErr := s.CommonServices.PostgresRepositories.RawEmailRepository.Store(
-		ctx, EXTERNAL_SYSTEM, tenant, username, dbEmailEntity.ProviderMessageId, messageId, string(jsonEmailEntity), dbEmailEntity.Sent, entity.REAL_TIME,
-	)
-	if dbErr != nil {
-		span.LogFields(tracingLog.Object("raw_email", jsonEmailEntity))
-		tracing.TraceErr(span, err)
-		return fmt.Errorf("Error writing email to db: %v", err)
-	}
-
-	// Check to see if email is a reply to a flow.  If so, mark as complete.
-	// This should be handled in the email processor common service, not here.
-	// Same with goal achieved.
-	// Move slack notifications to processing service
-	// Handle attachments
-
-	return nil
+	return publishEmailEvents(ctx, &emailMessage)
 }
 
-func getTenant(c *gin.Context, s *service.Services, emailData *PostmarkInboundEmailData) (string, error) {
+// Filter spam
+
+// Determine what type of email it is
+// Create event
+// email.bounced
+// email.autoreply
+// email.reply
+// email.new_thread
+// contact.create
+
+// Check to see if email is a reply to a flow.  If so, mark as complete.
+// This should be handled in the email processor common service, not here.
+// Same with goal achieved.
+// Move slack notifications to processing service
+
+func getTenantFromEmail(c *gin.Context, s *service.Services, emailData *PostmarkInboundEmailData) (string, error) {
 	span, ctx := tracing.StartTracerSpan(c.Request.Context(), "Flows.getTenant")
 	defer span.Finish()
 	tracing.TagComponentRest(span)

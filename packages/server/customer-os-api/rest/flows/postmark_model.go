@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/customeros/mailsherpa/mailvalidate"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 )
@@ -182,6 +183,12 @@ func (p *PostmarkInboundEmailData) ToRawDbObject() entity.EmailRawData {
 	result.Bcc = EmailWithBrackets(p.AllBccEmails())
 
 	return result
+}
+
+func (p *PostmarkInboundEmailData) ToEmailMessageData() service.EmailMessageData {
+	var e service.EmailMessageData
+
+	return e
 }
 
 func (p *PostmarkInboundEmailData) DMARCReportProvider() string {
