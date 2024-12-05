@@ -54,7 +54,7 @@ jobs:
         with:
           repository: customeros/cloud
           path: './cloud'
-          token: ${{ secrets.REPO_ACCESS_TOKEN }}
+          token: ${{ secrets.FE_TESTS_GITHUB_TOKEN }}
           ref: main
 
       - name: Run deploy script
