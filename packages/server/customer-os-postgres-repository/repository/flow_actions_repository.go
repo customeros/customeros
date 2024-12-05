@@ -41,26 +41,26 @@ func (r *flowActionRepository) InitializeActions(ctx context.Context) error {
 		// Fathom
 		{
 			EventName:   commonenum.EventFathomMeetingSummaryCreated.String(),
-			ActionType:  commonenum.ActionCreateTimelineEvent.String(),
+			ActionType:  commonenum.ActionTimelineEventCreate.String(),
 			Description: "Add meeting summary to the timeline of each participant",
 			Enabled:     true,
 		},
 		{
 			EventName:   commonenum.EventFathomMeetingSummaryCreated.String(),
-			ActionType:  commonenum.ActionCreateContact.String(),
+			ActionType:  commonenum.ActionContactCreate.String(),
 			Description: "Create contacts for each participant (if they don't exist)",
 			Enabled:     true,
 		},
 		// Grain
 		{
 			EventName:   commonenum.EventGrainMeetingSummaryCreated.String(),
-			ActionType:  commonenum.ActionCreateTimelineEvent.String(),
+			ActionType:  commonenum.ActionTimelineEventCreate.String(),
 			Description: "Add meeting summary to the timeline of each participant",
 			Enabled:     true,
 		},
 		{
 			EventName:   commonenum.EventGrainMeetingSummaryCreated.String(),
-			ActionType:  commonenum.ActionCreateContact.String(),
+			ActionType:  commonenum.ActionContactCreate.String(),
 			Description: "Create contacts for each participant (if they don't exist)",
 			Enabled:     true,
 		},
