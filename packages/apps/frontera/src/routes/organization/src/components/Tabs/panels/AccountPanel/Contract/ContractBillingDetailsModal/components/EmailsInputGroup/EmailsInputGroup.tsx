@@ -7,12 +7,12 @@ import { ContractStore } from '@store/Contracts/Contract.store';
 import { cn } from '@ui/utils/cn';
 import { Contact } from '@graphql/types';
 import { InputProps } from '@ui/form/Input';
+import { validateEmail } from '@utils/email';
 import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { SelectOption } from '@shared/types/SelectOptions';
 import { Divider } from '@ui/presentation/Divider/Divider';
-import { validateEmail } from '@shared/util/emailValidation';
 import { useOutsideClick } from '@ui/utils/hooks/useOutsideClick';
 import { EmailSelect } from '@organization/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/components/EmailsInputGroup/EmailSelect';
 

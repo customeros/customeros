@@ -3,13 +3,13 @@ import React, { useState, MouseEvent, KeyboardEvent } from 'react';
 import { observer } from 'mobx-react-lite';
 
 import { cn } from '@ui/utils/cn';
+import { validateEmail } from '@utils/email';
 import { Spinner } from '@ui/feedback/Spinner';
 import { ColumnViewType } from '@graphql/types';
 import { Mail01 } from '@ui/media/icons/Mail01';
 import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
 import { ButtonGroup } from '@ui/form/ButtonGroup';
-import { validateEmail } from '@shared/util/emailValidation';
 import { LinkedinOutline } from '@ui/media/icons/LinkedinOutline';
 import { validLinkedInProfileUrl } from '@utils/linkedinValidation';
 import { Command, CommandCancelIconButton } from '@ui/overlay/CommandMenu';
@@ -57,9 +57,16 @@ export const AddContactsBulk = observer(() => {
     const contactsPreset = store.tableViewDefs.contactsPreset;
     const tableViewDef = store.tableViewDefs.getById(contactsPreset ?? '');
 
+    const flowPayload =
+      store.ui.commandMenu.context?.entity === 'Flow' &&
+      store.ui.commandMenu.context?.ids?.[0]
+        ? { flowId: store.ui.commandMenu.context.ids[0] }
+        : {};
+
     if (type === 'email') {
       store.contacts.createBulkByEmail({
         emails: contactsDataArr,
+        ...flowPayload,
         options: {
           onSuccess: () => {
             tableViewDef?.setSorting(ColumnViewType.ContactsUpdatedAt, true);
@@ -77,6 +84,7 @@ export const AddContactsBulk = observer(() => {
     if (type === 'linkedin') {
       store.contacts.createBulkByLinkedIn({
         linkedInUrls: contactsDataArr,
+        ...flowPayload,
         options: {
           onSuccess: () => {
             tableViewDef?.setSorting(ColumnViewType.ContactsUpdatedAt, true);
@@ -135,6 +143,7 @@ export const AddContactsBulk = observer(() => {
           })}
         >
           <BulkContactsEditor
+            size='sm'
             type={type}
             namespace={'add-new-contacts-bulk'}
             className={'max-h-[324px] overflow-y-auto p-2'}
@@ -198,6 +207,14 @@ export const AddContactsBulk = observer(() => {
                 return setShowEmptyError(true);
               }
               handleAddContacts();
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                if (!data.trim().length) {
+                  return setShowEmptyError(true);
+                }
+                handleAddContacts();
+              }
             }}
           >
             Add {validLinesCount > 1 ? validLinesCount : ''}{' '}

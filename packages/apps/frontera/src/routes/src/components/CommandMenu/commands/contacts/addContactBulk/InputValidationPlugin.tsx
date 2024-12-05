@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { $getRoot, TextNode, ParagraphNode } from 'lexical';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 
-import { validateEmail } from '@shared/util/emailValidation';
+import { validateEmail } from '@utils/email';
 import { validLinkedInProfileUrl } from '@utils/linkedinValidation';
 
 export function InputValidationPlugin({
