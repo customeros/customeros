@@ -44,7 +44,7 @@ require (
 	go.temporal.io/sdk v1.30.1
 	go.uber.org/zap v1.27.0
 	golang.org/x/net v0.31.0
-	golang.org/x/sync v0.9.0
+	golang.org/x/sync v0.10.0
 	google.golang.org/grpc v1.68.0
 	google.golang.org/protobuf v1.35.2
 	gorm.io/driver/postgres v1.5.11
