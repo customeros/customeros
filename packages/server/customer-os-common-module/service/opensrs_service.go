@@ -37,7 +37,7 @@ type MailboxDetails struct {
 type OpenSrsService interface {
 	SendEmail(ctx context.Context, request *entity.EmailMessage) error
 	SetupDomain(ctx context.Context, tenant, domain string) error
-	SetupMailbox(ctx context.Context, tenant, domain, username, password string, forwardingTo []string, webmailEnabled bool) error
+	SetupMailbox(ctx context.Context, tenant, username, password string, forwardingTo []string, webmailEnabled bool) error
 	GetMailboxDetails(ctx context.Context, email string) (MailboxDetails, error)
 }
 
@@ -340,12 +340,12 @@ func (s *openSRSService) setEmailDomainInOpenSRS(ctx context.Context, domain, dk
 	return nil
 }
 
-func (s *openSRSService) SetupMailbox(ctx context.Context, tenant, domain, username, password string, forwardingTo []string, webmailEnabled bool) error {
+func (s *openSRSService) SetupMailbox(ctx context.Context, tenant, username, password string, forwardingTo []string, webmailEnabled bool) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpensrsService.SetupMailbox")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	tracing.TagTenant(span, tenant)
-	span.LogKV("domain", domain, "username", username)
+	span.LogKV("username", username)
 	span.LogFields(log.Bool("webmailEnabled", webmailEnabled), log.Object("forwardingTo", forwardingTo))
 
 	// Define the API endpoint for adding a mailbox (replace with your environment's URL)
@@ -381,7 +381,7 @@ func (s *openSRSService) SetupMailbox(ctx context.Context, tenant, domain, usern
 			"user":     s.services.GlobalConfig.ExternalServices.OpenSRSConfig.Username,
 			"password": s.services.GlobalConfig.ExternalServices.OpenSRSConfig.ApiKey,
 		},
-		"user":       username + "@" + domain,
+		"user":       username,
 		"attributes": attributes,
 	}
 

@@ -102,72 +102,38 @@ func validateContact(record *ContactRecord) (error, string) {
 	return nil, errValue
 }
 
-func processContact(c *gin.Context, s *service.Services, record ContactRecord) string {
-	span, _ := tracing.StartTracerSpan(c.Request.Context(), "Customerbase.processContact")
-	defer span.Finish()
-	tracing.TagComponentRest(span)
 
-	emailEntity, contactId := findExistingContactByEmail(c, s, record.Email)
-	if emailEntity == nil && contactId == "" {
-		contactId = createNewContactByLinkedin(c, s, record.LinkedInURL)
-	}
-
-	if emailEntity == nil && record.Email != "" {
-		associateEmail(c, s, record.Email, contactId)
-	}
-	return contactId
-}
-
-func findExistingContactByEmail(c *gin.Context, s *service.Services, email string) (*neo4jentity.EmailEntity, string) {
-	span, ctx := tracing.StartTracerSpan(c.Request.Context(), "Customerbase.findExistingContactByEmail")
-	defer span.Finish()
-	tracing.TagComponentRest(span)
-
-	if email == "" {
-		return nil, ""
-	}
-	emailEntity, err := s.EmailService.GetByEmailAddress(ctx, email)
-	if err != nil {
-		span.LogFields(log.String("result", "Failed to get email entity"))
-		return nil, ""
-	}
-
-	if emailEntity == nil {
-		return nil, ""
-	}
-
-	contacts, err := s.ContactService.GetContactsForEmails(ctx, []string{emailEntity.Id})
-	if err != nil {
-		span.LogFields(log.String("result", "Failed to get contacts for email"))
-		return nil, ""
-	}
-
-	if contacts != nil && len(*contacts) > 0 {
-		return emailEntity, (*contacts)[0].Id
-	}
-
-	return emailEntity, ""
-}
-
-func createNewContactByLinkedin(c *gin.Context, s *service.Services, linkedInURL string) string {
-	span, ctx := tracing.StartTracerSpan(c.Request.Context(), "Customerbase.createNewContactByLinkedin")
-	defer span.Finish()
-	tracing.TagComponentRest(span)
-
-	contactId, err := s.CommonServices.ContactService.CreateContactByLinkedIn(ctx, nil, linkedInURL)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to save contact"))
+func processContact(ctx rest.HTTPContext, record ContactRecord) string {
+	if record.LinkedInURL == "" && record.Email == "" {
 		return ""
 	}
-	return contactId
+
+	createdContactId := ""
+	var err error
+	if record.LinkedInURL != "" {
+		createdContactId, err = ctx.Services.CommonServices.ContactService.CreateContactByLinkedIn(*ctx.ServiceContext, nil, record.LinkedInURL)
+		if err != nil {
+			tracing.TraceErr(ctx.Span, errors.Wrap(err, "failed to save contact"))
+			return ""
+		}
+	}
+
+	if record.Email != "" {
+		if createdContactId == "" {
+			createdContactId, err = ctx.Services.CommonServices.ContactService.CreateContactByEmail(*ctx.ServiceContext, nil, record.Email)
+			if err != nil {
+				tracing.TraceErr(ctx.Span, errors.Wrap(err, "failed to save contact"))
+				return ""
+			}
+		} else {
+			associateEmailWithContact(ctx, record.Email, createdContactId)
+		}
+	}
+	return createdContactId
 }
 
-func associateEmail(c *gin.Context, s *service.Services, email, contactId string) {
-	span, ctx := tracing.StartTracerSpan(c.Request.Context(), "Customerbase.associateEmail")
-	defer span.Finish()
-	tracing.TagComponentRest(span)
-
-	_, err := s.CommonServices.EmailService.Merge(ctx, nil, common.GetTenantFromContext(ctx),
+func associateEmailWithContact(ctx rest.HTTPContext, email, contactId string) {
+	_, err := ctx.Services.CommonServices.EmailService.Merge(*ctx.ServiceContext, nil, ctx.Tenant,
 		commonservice.EmailFields{
 			Email:     email,
 			Source:    neo4jentity.DataSourceOpenline,
