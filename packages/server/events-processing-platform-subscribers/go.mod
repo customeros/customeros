@@ -43,8 +43,8 @@ require (
 	github.com/testcontainers/testcontainers-go v0.34.0
 	go.temporal.io/sdk v1.30.1
 	go.uber.org/zap v1.27.0
-	golang.org/x/net v0.31.0
-	golang.org/x/sync v0.9.0
+	golang.org/x/net v0.32.0
+	golang.org/x/sync v0.10.0
 	google.golang.org/grpc v1.68.0
 	google.golang.org/protobuf v1.35.2
 	gorm.io/driver/postgres v1.5.11
@@ -180,9 +180,9 @@ require (
 	github.com/yusufpapurcu/wmi v1.2.3 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/crypto v0.29.0 // indirect
-	golang.org/x/sys v0.27.0 // indirect
-	golang.org/x/text v0.20.0
+	golang.org/x/crypto v0.30.0 // indirect
+	golang.org/x/sys v0.28.0 // indirect
+	golang.org/x/text v0.21.0
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20241113202542-65e8d215514f // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
