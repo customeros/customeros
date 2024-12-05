@@ -106,54 +106,35 @@ func validateContact(record *ContactRecord) (error, string) {
 }
 
 func processContact(ctx rest.HTTPContext, record ContactRecord) string {
-	emailEntity, contactId := findExistingContactByEmail(ctx, record.Email)
-	if emailEntity == nil && contactId == "" {
-		contactId = createNewContactByLinkedin(ctx, record.LinkedInURL)
-	}
-
-	if emailEntity == nil && record.Email != "" {
-		associateEmail(ctx, record.Email, contactId)
-	}
-	return contactId
-}
-
-func findExistingContactByEmail(ctx rest.HTTPContext, email string) (*neo4jentity.EmailEntity, string) {
-	if email == "" {
-		return nil, ""
-	}
-	emailEntity, err := ctx.Services.EmailService.GetByEmailAddress(*ctx.ServiceContext, email)
-	if err != nil {
-		ctx.Span.LogFields(log.String("result", "Failed to get email entity"))
-		return nil, ""
-	}
-
-	if emailEntity == nil {
-		return nil, ""
-	}
-
-	contacts, err := ctx.Services.ContactService.GetContactsForEmails(*ctx.ServiceContext, []string{emailEntity.Id})
-	if err != nil {
-		ctx.Span.LogFields(log.String("result", "Failed to get contacts for email"))
-		return nil, ""
-	}
-
-	if contacts != nil && len(*contacts) > 0 {
-		return emailEntity, (*contacts)[0].Id
-	}
-
-	return emailEntity, ""
-}
-
-func createNewContactByLinkedin(ctx rest.HTTPContext, linkedInURL string) string {
-	contactId, err := ctx.Services.CommonServices.ContactService.CreateContactByLinkedIn(*ctx.ServiceContext, nil, linkedInURL)
-	if err != nil {
-		tracing.TraceErr(ctx.Span, errors.Wrap(err, "failed to save contact"))
+	if record.LinkedInURL == "" && record.Email == "" {
 		return ""
 	}
-	return contactId
+
+	createdContactId := ""
+	var err error
+	if record.LinkedInURL != "" {
+		createdContactId, err = ctx.Services.CommonServices.ContactService.CreateContactByLinkedIn(*ctx.ServiceContext, nil, record.LinkedInURL)
+		if err != nil {
+			tracing.TraceErr(ctx.Span, errors.Wrap(err, "failed to save contact"))
+			return ""
+		}
+	}
+
+	if record.Email != "" {
+		if createdContactId == "" {
+			createdContactId, err = ctx.Services.CommonServices.ContactService.CreateContactByEmail(*ctx.ServiceContext, nil, record.Email)
+			if err != nil {
+				tracing.TraceErr(ctx.Span, errors.Wrap(err, "failed to save contact"))
+				return ""
+			}
+		} else {
+			associateEmailWithContact(ctx, record.Email, createdContactId)
+		}
+	}
+	return createdContactId
 }
 
-func associateEmail(ctx rest.HTTPContext, email, contactId string) {
+func associateEmailWithContact(ctx rest.HTTPContext, email, contactId string) {
 	_, err := ctx.Services.CommonServices.EmailService.Merge(*ctx.ServiceContext, nil, ctx.Tenant,
 		commonservice.EmailFields{
 			Email:     email,
