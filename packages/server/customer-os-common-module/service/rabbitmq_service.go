@@ -151,11 +151,11 @@ func (r *RabbitMQService) PublishEvent(ctx context.Context, entityId string, ent
 	return r.PublishEventOnExchange(ctx, entityId, entityType, message, EventsExchangeName, EventsRoutingKey)
 }
 
-func (r *RabbitMQService) PublishWebhookEvent(ctx context.Context, event dto.WebhookEvent[any]) error {
+func (r *RabbitMQService) PublishWebhookEvent(ctx context.Context, event dto.WebhookEvent) error {
 	return r.PublishEvent(ctx, "", model.WEBHOOK_EVENT, event)
 }
 
-func (r *RabbitMQService) PublishFlowActionEvent(ctx context.Context, event dto.FlowActionEvent[any]) error {
+func (r *RabbitMQService) PublishFlowActionEvent(ctx context.Context, event dto.FlowActionEvent) error {
 	return r.PublishEvent(ctx, "", model.FLOW_ACTION_EVENT, event)
 }
 
