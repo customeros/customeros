@@ -102,8 +102,11 @@ func validateContact(record *ContactRecord) (error, string) {
 	return nil, errValue
 }
 
+func processContact(c *gin.Context, s *service.Services, record ContactRecord) string {
+	span, ctx := tracing.StartTracerSpan(c.Request.Context(), "Customerbase.processContact")
+	defer span.Finish()
+	tracing.TagComponentRest(span)
 
-func processContact(ctx rest.HTTPContext, record ContactRecord) string {
 	if record.LinkedInURL == "" && record.Email == "" {
 		return ""
 	}
@@ -111,29 +114,33 @@ func processContact(ctx rest.HTTPContext, record ContactRecord) string {
 	createdContactId := ""
 	var err error
 	if record.LinkedInURL != "" {
-		createdContactId, err = ctx.Services.CommonServices.ContactService.CreateContactByLinkedIn(*ctx.ServiceContext, nil, record.LinkedInURL)
+		createdContactId, err = s.CommonServices.ContactService.CreateContactByLinkedIn(ctx, nil, record.LinkedInURL)
 		if err != nil {
-			tracing.TraceErr(ctx.Span, errors.Wrap(err, "failed to save contact"))
+			tracing.TraceErr(span, errors.Wrap(err, "failed to save contact"))
 			return ""
 		}
 	}
 
 	if record.Email != "" {
 		if createdContactId == "" {
-			createdContactId, err = ctx.Services.CommonServices.ContactService.CreateContactByEmail(*ctx.ServiceContext, nil, record.Email)
+			createdContactId, err = s.CommonServices.ContactService.CreateContactByEmail(ctx, nil, record.Email)
 			if err != nil {
-				tracing.TraceErr(ctx.Span, errors.Wrap(err, "failed to save contact"))
+				tracing.TraceErr(span, errors.Wrap(err, "failed to save contact"))
 				return ""
 			}
 		} else {
-			associateEmailWithContact(ctx, record.Email, createdContactId)
+			associateEmailWithContact(c, s, record.Email, createdContactId)
 		}
 	}
 	return createdContactId
 }
 
-func associateEmailWithContact(ctx rest.HTTPContext, email, contactId string) {
-	_, err := ctx.Services.CommonServices.EmailService.Merge(*ctx.ServiceContext, nil, ctx.Tenant,
+func associateEmailWithContact(c *gin.Context, s *service.Services, email, contactId string) {
+	span, ctx := tracing.StartTracerSpan(c.Request.Context(), "Customerbase.associateEmailWithContact")
+	defer span.Finish()
+	tracing.TagComponentRest(span)
+
+	_, err := s.CommonServices.EmailService.Merge(ctx, nil, common.GetTenantFromContext(ctx),
 		commonservice.EmailFields{
 			Email:     email,
 			Source:    neo4jentity.DataSourceOpenline,
