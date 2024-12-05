@@ -46,26 +46,8 @@ defaults:
 jobs:
   test:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        test-group: [
-          "repository",
-          "rest",
-          "other"
-        ]
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: stable
-          cache: true
-        env:
-          GOPROXY: "direct"
-          GOSUMDB: "off"
-          GOMODCACHE: ${{ github.workspace }}/go/pkg/mod
 
       - name: Checkout deploy scripts
         uses: actions/checkout@v4
