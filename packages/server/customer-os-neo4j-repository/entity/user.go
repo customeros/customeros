@@ -9,6 +9,7 @@ type UserProperty string
 
 const (
 	UserPropertyLastLogin                        UserProperty = "lastLogin"
+	UserPropertyFirstLogin                       UserProperty = "firstLogin"
 	UserPropertyShowOnboardingPage               UserProperty = "showOnboardingPage"
 	UserPropertyOnboardingInboundStepCompleted   UserProperty = "onboardingInboundStepCompleted"
 	UserPropertyOnboardingOutboundStepCompleted  UserProperty = "onboardingOutboundStepCompleted"
@@ -31,6 +32,7 @@ type UserEntity struct {
 	Timezone        string     `neo4jDb:"property:timezone;lookupName:TIMEZONE;supportCaseSensitive:true"`
 	ProfilePhotoUrl string     `neo4jDb:"property:profilePhotoUrl;lookupName:PROFILE_PHOTO_URL;supportCaseSensitive:true"`
 	LastLogin       *time.Time
+	FirstLogin      *time.Time
 	Internal        bool
 	Test            bool
 	Bot             bool
