@@ -119,7 +119,6 @@ export class MailboxesStore extends SyncableGroup<Mailbox, MailboxStore> {
         (d) => d !== domain,
       );
 
-      // this.validateBaseBundle();
       this.invalidBaseBundle = '';
     });
   }
@@ -129,13 +128,12 @@ export class MailboxesStore extends SyncableGroup<Mailbox, MailboxStore> {
       const newSet = new Set([...this.baseBundle, ...this.extendedBundle]);
 
       newSet.delete(domain);
+      this.domainSuggestions.push(domain);
 
       const newArr = Array.from(newSet);
 
       this.baseBundle = new Set(newArr.splice(0, 5));
       this.extendedBundle = new Set(newArr);
-
-      // this.validateBaseBundle();
 
       this.invalidBaseBundle = '';
       this.invalidDomains = this.invalidDomains.filter((d) => d !== domain);
@@ -283,7 +281,9 @@ export class MailboxesStore extends SyncableGroup<Mailbox, MailboxStore> {
         });
 
       runInAction(() => {
-        this.domainSuggestions = mailstack_DomainPurchaseSuggestions;
+        this.domainSuggestions = mailstack_DomainPurchaseSuggestions.filter(
+          (d) => !this.baseBundle.has(d) && !this.extendedBundle.has(d),
+        );
       });
     } catch (err) {
       runInAction(() => {
