@@ -63,7 +63,7 @@ export class FlowStore implements Store<Flow> {
 
       runInAction(() => {
         if (flow_On?.metadata?.id) {
-          this.value.status = FlowStatus.Off;
+          this.value.status = FlowStatus.On;
           onSuccess && onSuccess();
         }
       });
