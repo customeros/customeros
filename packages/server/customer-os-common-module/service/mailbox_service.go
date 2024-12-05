@@ -85,7 +85,7 @@ func (s *mailboxService) CreateMailbox(ctx context.Context, tx *gorm.DB, request
 	}
 
 	// Save mailbox
-	if err := s.createMailbox(ctx, span, tx, request, mailboxEmail, linkedUserFound); err != nil {
+	if err := s.createMailbox(ctx, span, tx, request, mailboxEmail, userId); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to save mailbox settings"))
 		return err
 	}
@@ -158,7 +158,7 @@ func (s *mailboxService) verifyMailboxNotExists(ctx context.Context, span opentr
 	return nil
 }
 
-func (s *mailboxService) createMailbox(ctx context.Context, span opentracing.Span, tx *gorm.DB, request CreateMailboxRequest, mailboxEmail string, linkedUserFound bool) error {
+func (s *mailboxService) createMailbox(ctx context.Context, span opentracing.Span, tx *gorm.DB, request CreateMailboxRequest, mailboxEmail string, userId string) error {
 	tenant := common.GetTenantFromContext(ctx)
 	tenantSettingsMailbox := entity.TenantSettingsMailbox{
 		Tenant:          tenant,
@@ -166,12 +166,10 @@ func (s *mailboxService) createMailbox(ctx context.Context, span opentracing.Spa
 		MailboxUsername: mailboxEmail,
 		MailboxPassword: request.Password,
 		Username:        request.Username,
+		UserId:          userId,
 		ForwardingTo:    strings.Join(request.ForwardingTo, ","),
 		WebmailEnabled:  request.WebmailEnabled,
 		Status:          entity.MailboxStatusPendingProvisioning,
-	}
-	if linkedUserFound {
-		tenantSettingsMailbox.Username = request.LinkedUserEmail
 	}
 	err := s.services.PostgresRepositories.TenantSettingsMailboxRepository.Merge(ctx, tx, &tenantSettingsMailbox)
 	if err != nil {

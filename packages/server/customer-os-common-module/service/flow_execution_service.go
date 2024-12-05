@@ -454,28 +454,24 @@ func (s *flowExecutionService) scheduleEmailAction(ctx context.Context, txWithPo
 		mailboxesScheduledAt[""] = utils.TimePtr(time.Date(9999, 1, 1, 0, 0, 0, 0, time.UTC))
 
 		for _, flowActionSender := range *flowSenders {
-			emailEntitites, err := s.services.EmailService.GetAllEmailsForEntityIds(ctx, tenant, model.USER, []string{*flowActionSender.UserId})
+			if flowActionSender.UserId == nil {
+				continue
+			}
+
+			mailboxes, err := s.services.PostgresRepositories.TenantSettingsMailboxRepository.GetAllByUserId(ctx, *flowActionSender.UserId)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return err
 			}
 
-			for _, emailEntity := range *emailEntitites {
-				mailboxes, err := s.services.PostgresRepositories.TenantSettingsMailboxRepository.GetAllByUsername(ctx, emailEntity.RawEmail)
+			for _, mailbox := range mailboxes {
+				scheduledAt, err := s.services.Neo4jRepositories.FlowActionExecutionReadRepository.GetFirstSlotForMailbox(ctx, txWithPostCommit.Tx, mailbox.MailboxUsername)
 				if err != nil {
 					tracing.TraceErr(span, err)
 					return err
 				}
 
-				for _, mailbox := range mailboxes {
-					scheduledAt, err := s.services.Neo4jRepositories.FlowActionExecutionReadRepository.GetFirstSlotForMailbox(ctx, txWithPostCommit.Tx, mailbox.MailboxUsername)
-					if err != nil {
-						tracing.TraceErr(span, err)
-						return err
-					}
-
-					mailboxesScheduledAt[mailbox.MailboxUsername] = scheduledAt
-				}
+				mailboxesScheduledAt[mailbox.MailboxUsername] = scheduledAt
 			}
 		}
 

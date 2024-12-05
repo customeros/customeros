@@ -328,28 +328,17 @@ func (r *userResolver) Mailboxes(ctx context.Context, obj *model.User) ([]string
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.user", obj.ID))
 
-	emailEntities, err := r.Services.EmailService.GetAllFor(ctx, commonModel.USER, obj.ID)
+	mailboxes := make([]string, 0)
+
+	mb, err := r.Services.Repositories.PostgresRepositories.TenantSettingsMailboxRepository.GetAllByUserId(ctx, obj.ID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get mailboxes for user %s", obj.ID)
 		return nil, err
 	}
 
-	mailboxes := make([]string, 0)
-
-	if emailEntities != nil {
-		for _, email := range *emailEntities {
-			mb, err := r.Services.Repositories.PostgresRepositories.TenantSettingsMailboxRepository.GetAllByUsername(ctx, email.RawEmail)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				graphql.AddErrorf(ctx, "Failed to get mailboxes for user %s", obj.ID)
-				return nil, err
-			}
-
-			for _, mailbox := range mb {
-				mailboxes = append(mailboxes, mailbox.MailboxUsername)
-			}
-		}
+	for _, mailbox := range mb {
+		mailboxes = append(mailboxes, mailbox.MailboxUsername)
 	}
 
 	return mailboxes, nil
