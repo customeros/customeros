@@ -72,6 +72,13 @@ func (w *webhookService) GetIntegrationFromWebhookPath(ctx context.Context, tena
 	if err != nil {
 		err = fmt.Errorf("Unable to lookup webhook path: %v", err)
 		tracing.TraceErr(span, err)
+		return enum.NotSet, err
+	}
+
+	if !webhook.Enabled {
+		err = fmt.Errorf("Webhook is disabled: %v", err)
+		tracing.TraceErr(span, err)
+		return enum.NotSet, err
 	}
 
 	return enum.DecodeExternalSystemId(webhook.Integration), nil

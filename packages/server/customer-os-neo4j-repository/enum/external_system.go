@@ -30,6 +30,7 @@ const (
 	WeConnect      ExternalSystemId = "weconnect"
 	ZendeskSell    ExternalSystemId = "zendesk-sell"
 	ZendeskSupport ExternalSystemId = "zendesk_support"
+	NotSet         ExternalSystemId = ""
 )
 
 var validExternalSystems = func() map[string]ExternalSystemId {

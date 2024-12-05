@@ -177,8 +177,8 @@ func RotateWebhook(s *service.Services, baseURL, flowsPath string) gin.HandlerFu
 		webhookPath := strings.TrimSuffix(c.Request.URL.Path, "/rotate")
 		webhookPath = strings.TrimPrefix(webhookPath, flowsPath)
 		integration, err := s.WebhookService.GetIntegrationFromWebhookPath(ctx, tenant, webhookPath)
-		if err != nil {
-			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer.WithMessage("Unable to identify webhook"))
+		if err != nil || integration == enum.NotSet {
+			rest.SendError(c, span, http.StatusNotFound, rest.ErrNotFound.WithMessage("Unable to identify webhook"))
 			return
 		}
 
