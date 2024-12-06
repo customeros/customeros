@@ -40,7 +40,7 @@ func (r *flowTransitionsRegistryRepository) GetUniqueFromNodes(ctx context.Conte
 
 	var uniqueFromNodes []FromNodeRecord
 	err := r.gormDb.WithContext(ctx).
-		Table("flow_transitions_registry").
+		Model(&entity.FlowTransitionsRegistry{}).
 		Distinct("from_node", "from_node_type").
 		Where("enabled = true").
 		Order("from_node DESC").
