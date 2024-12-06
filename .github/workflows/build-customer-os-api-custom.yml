@@ -2,8 +2,7 @@ name: customer-os-api-custom
 
 on:
   push:
-    branches-ignore:
-      - 'otter'
+    branches: [ "silviu/cos-6153-use-branch-name-as-image-version" ]  # Replace with your desired branch name
     paths:
       - packages/server/customer-os-common-module/**
       - packages/server/customer-os-postgres-repository/**
