@@ -2,7 +2,7 @@ name: customer-os-api-custom
 
 on:
   push:
-    branches: [ "silviu/cos-6148-test-workflow" ]  # Replace with your desired branch name
+    branches: [ "silviu/cos-6153-use-branch-name-as-image-version" ]  # Replace with your desired branch name
     paths:
       - packages/server/customer-os-common-module/**
       - packages/server/customer-os-postgres-repository/**
@@ -14,20 +14,6 @@ on:
       - packages/server/customer-os-api/**
       - .github/workflows/build-customer-os-api.yml
       - .github/workflows/build-customer-os-api-custom.yml
-  pull_request:
-    paths:
-      - packages/server/customer-os-common-module/**
-      - packages/server/customer-os-postgres-repository/**
-      - packages/server/customer-os-neo4j-repository/**
-      - packages/server/events-processing-proto/**
-      - packages/server/events/**
-      - packages/server/validation-api/**
-      - packages/server/enrichment-api/**
-      - packages/server/customer-os-api/**
-      - .github/workflows/build-customer-os-api.yml
-      - .github/workflows/build-customer-os-api-custom.yml
-  release:
-    types: [ created, edited ]
   workflow_dispatch:
 
 env:
@@ -315,10 +301,23 @@ jobs:
       - name: Generate version
         id: version
         run: |
-          VERSION=$(date +'matt.v%Y%m%d.%H%M')
+          if [ "${{ github.event_name }}" = "push" ]; then
+            # For push events, use the branch name but replace slashes with dashes
+            VERSION=$(echo "${GITHUB_REF#refs/heads/}" | tr '/' '-')
+          elif [ "${{ github.event_name }}" = "pull_request" ]; then
+            VERSION="pr-${{ github.event.pull_request.number }}"
+          elif [ "${{ github.event_name }}" = "release" ]; then
+            VERSION="${GITHUB_REF#refs/tags/}"
+          else
+            # For workflow_dispatch and other events, fallback to a timestamp
+            VERSION=$(date +'v%Y%m%d.%H%M')
+          fi
+          
+          VERSION=$(echo "$VERSION" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9.-]/-/g')
+          
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           git tag $VERSION
-          git push origin $VERSION
+          git push origin $VERSION -f
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
