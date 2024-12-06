@@ -16,16 +16,8 @@ type Config struct {
 		Bucket string `env:"AWS_S3_BUCKET,required"`
 	}
 
-	Postgres struct {
-		Host            string `env:"POSTGRES_HOST,required"`
-		Port            string `env:"POSTGRES_PORT,required"`
-		User            string `env:"POSTGRES_USER,required,unset"`
-		Db              string `env:"POSTGRES_DB,required"`
-		Password        string `env:"POSTGRES_PASSWORD,required,unset"`
-		MaxConn         int    `env:"POSTGRES_DB_MAX_CONN"`
-		MaxIdleConn     int    `env:"POSTGRES_DB_MAX_IDLE_CONN"`
-		ConnMaxLifetime int    `env:"POSTGRES_DB_CONN_MAX_LIFETIME"`
-	}
+	PostgresConfig      config.PostgresConfig
+	PostgresAsyncConfig config.PostgresAsyncConfig
 
 	Service struct {
 		CustomerOsAPI                  string `env:"CUSTOMER_OS_API,required"`

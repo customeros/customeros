@@ -25,11 +25,12 @@ type Config struct {
 		ClientSecret                     string `env:"SLACK_CLIENT_SECRET,required"`
 		NotifyNewTenantRegisteredWebhook string `env:"SLACK_NOTIFY_NEW_TENANT_REGISTERED_WEBHOOK,required"`
 	}
-	GrpcClientConfig config.GrpcClientConfig
-	Postgres         config.PostgresConfig
-	Neo4j            config.Neo4jConfig
-	Jaeger           tracing.JaegerConfig
-	RabbitMQConfig   config.RabbitMQConfig
-	OpenSRSConfig    config.OpenSRSConfig
-	PostmarkConfig   config.PostmarkConfig
+	GrpcClientConfig    config.GrpcClientConfig
+	PostgresConfig      config.PostgresConfig
+	PostgresAsyncConfig config.PostgresAsyncConfig
+	Neo4j               config.Neo4jConfig
+	Jaeger              tracing.JaegerConfig
+	RabbitMQConfig      config.RabbitMQConfig
+	OpenSRSConfig       config.OpenSRSConfig
+	PostmarkConfig      config.PostmarkConfig
 }

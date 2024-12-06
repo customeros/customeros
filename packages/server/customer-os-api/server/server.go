@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"github.com/sirupsen/logrus"
 	"io"
 	"net/http"
 	"os"
@@ -85,8 +86,14 @@ func (server *server) Run(parentCtx context.Context) error {
 	registerPrometheusMetrics()
 
 	// Initialize postgres db
-	db, _ := InitDB(server.cfg, server.log)
-	defer db.SqlDB.Close()
+	postgresDb, err := commonConfig.InitPostgres(&commonConfig.GlobalConfig{
+		PostgresConfig:      &server.cfg.PostgresConfig,
+		PostgresAsyncConfig: &server.cfg.PostgresAsyncConfig,
+	})
+	if err != nil {
+		logrus.Fatalf("failed opening connection to postgres: %v", err.Error())
+	}
+	defer postgresDb.Close()
 
 	// Setting up Neo4j
 	neo4jDriver, err := commonConfig.NewNeo4jDriver(server.cfg.Neo4j)
@@ -119,7 +126,7 @@ func (server *server) Run(parentCtx context.Context) error {
 			PostmarkConfig:   server.cfg.ExternalServices.PostmarkConfig,
 			CloudflareConfig: server.cfg.ExternalServices.CloudflareConfig,
 		},
-	}, db.GormDB, &neo4jDriver, server.cfg.Neo4j.Database, grpcContainer, server.log)
+	}, postgresDb, &neo4jDriver, server.cfg.Neo4j.Database, grpcContainer, server.log)
 
 	// Setting up Gin
 	r := gin.Default()
@@ -131,11 +138,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	}
 	adminApiHandler := cosHandler.NewAdminApiHandler(server.cfg, commonServices)
 
-	// Initialize postgres db
-	postgresDb, _ := InitDB(server.cfg, server.log)
-	defer postgresDb.SqlDB.Close()
-
-	serviceContainer := service.InitServices(server.log, &neo4jDriver, server.cfg, commonServices, grpcContainer, postgresDb.GormDB)
+	serviceContainer := service.InitServices(server.log, &neo4jDriver, postgresDb, server.cfg, commonServices, grpcContainer)
 	r.Use(cors.New(corsConfig))
 	r.Use(ginzap.GinzapWithConfig(server.log.Logger(), &ginzap.Config{
 		TimeFormat: time.RFC3339,
@@ -240,13 +243,6 @@ func isIntrospectionQuery(req *http.Request) bool {
 		}
 	}
 	return false
-}
-
-func InitDB(cfg *config.Config, log logger.Logger) (db *commonConfig.StorageDB, err error) {
-	if db, err = commonConfig.NewPostgresDBConn(cfg.Postgres); err != nil {
-		log.Fatalf("Could not open db connection: %s", err.Error())
-	}
-	return
 }
 
 func (server *server) graphqlHandler(grpcContainer *grpc_client.Clients, serviceContainer *service.Services) gin.HandlerFunc {

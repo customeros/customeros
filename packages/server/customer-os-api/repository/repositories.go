@@ -2,9 +2,9 @@ package repository
 
 import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
-	"gorm.io/gorm"
 )
 
 type Repositories struct {
@@ -52,14 +52,14 @@ type Drivers struct {
 	Neo4jDriver *neo4j.DriverWithContext
 }
 
-func InitRepos(driver *neo4j.DriverWithContext, database string, gormDb *gorm.DB) *Repositories {
+func InitRepos(driver *neo4j.DriverWithContext, database string, postgresDB *commonConfig.PostgresDB) *Repositories {
 	repositories := Repositories{
 		Drivers: Drivers{
 			Neo4jDriver: driver,
 		},
 	}
 	repositories.Neo4jRepositories = neo4jrepository.InitNeo4jRepositories(driver, database)
-	repositories.PostgresRepositories = postgresRepository.InitRepositories(gormDb)
+	repositories.PostgresRepositories = postgresRepository.InitRepositories(postgresDB)
 
 	repositories.OrganizationRepository = NewOrganizationRepository(driver, database)
 	repositories.ContactRepository = NewContactRepository(driver, database)

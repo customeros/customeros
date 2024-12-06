@@ -17,10 +17,11 @@ type Config struct {
 	TrueinboxConfig TrueinboxConfig
 	EnrowConfig     EnrowConfig
 
-	Postgres config.PostgresConfig
-	Neo4j    config.Neo4jConfig
-	Jaeger   tracing.JaegerConfig
-	Logger   logger.Config
+	PostgresConfig      config.PostgresConfig
+	PostgresAsyncConfig config.PostgresAsyncConfig
+	Neo4j               config.Neo4jConfig
+	Jaeger              tracing.JaegerConfig
+	Logger              logger.Config
 }
 
 type SmartyConfig struct {

@@ -12,13 +12,14 @@ import (
 )
 
 type Config struct {
-	ApiPort     string `env:"PORT" envDefault:"10006" validate:"required"`
-	MetricsPort string `env:"PORT_METRICS" envDefault:"10006" validate:"required"`
-	Logger      logger.Config
-	Postgres    config.PostgresConfig
-	Neo4j       config.Neo4jConfig
-	Jaeger      tracing.JaegerConfig
-	Metrics     metrics.Config
+	ApiPort             string `env:"PORT" envDefault:"10006" validate:"required"`
+	MetricsPort         string `env:"PORT_METRICS" envDefault:"10006" validate:"required"`
+	Logger              logger.Config
+	PostgresConfig      config.PostgresConfig
+	PostgresAsyncConfig config.PostgresAsyncConfig
+	Neo4j               config.Neo4jConfig
+	Jaeger              tracing.JaegerConfig
+	Metrics             metrics.Config
 }
 
 func InitConfig() (*Config, error) {

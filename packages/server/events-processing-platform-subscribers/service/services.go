@@ -10,7 +10,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventbuffer"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
-	"gorm.io/gorm"
 )
 
 type Services struct {
@@ -22,12 +21,12 @@ type Services struct {
 	FileStoreApiService     fsc.FileStoreApiService
 }
 
-func InitServices(cfg *config.Config, es eventstore.AggregateStore, log logger.Logger, grpcClients *grpc_client.Clients, db *gorm.DB, driver *neo4j.DriverWithContext) *Services {
+func InitServices(cfg *config.Config, es eventstore.AggregateStore, log logger.Logger, grpcClients *grpc_client.Clients, postgresDB *commonConfig.PostgresDB, driver *neo4j.DriverWithContext) *Services {
 	services := Services{}
 
 	services.CommonServices = commonService.InitServices(&commonConfig.GlobalConfig{
 		RabbitMQConfig: &cfg.RabbitMQConfig,
-	}, db, driver, cfg.Neo4j.Database, grpcClients, log)
+	}, postgresDB, driver, cfg.Neo4j.Database, grpcClients, log)
 
 	services.Es = es
 

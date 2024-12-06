@@ -7,7 +7,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail-raw/repository"
 	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
-	"gorm.io/gorm"
 )
 
 type Services struct {
@@ -17,21 +16,17 @@ type Services struct {
 
 	CommonServices *commonService.Services
 
-	UserService    UserService
-	TenantService  TenantService
 	EmailService   EmailService
 	MeetingService MeetingService
 }
 
-func InitServices(driver *neo4j.DriverWithContext, gormDb *gorm.DB, cfg *config.Config, logger *logger.ExtendedLogger) *Services {
+func InitServices(driver *neo4j.DriverWithContext, postgresDB *commonConfig.PostgresDB, cfg *config.Config, logger *logger.ExtendedLogger) *Services {
 	services := new(Services)
 	services.cfg = cfg
-	services.Repositories = repository.InitRepos(driver, gormDb)
+	services.Repositories = repository.InitRepos(driver, postgresDB)
 
-	services.CommonServices = commonService.InitServices(&commonConfig.GlobalConfig{GoogleOAuthConfig: &cfg.GoogleOAuthConfig, AzureOAuthConfig: &cfg.AzureOAuthConfig}, gormDb, driver, cfg.Neo4jDb.Database, nil, logger)
+	services.CommonServices = commonService.InitServices(&commonConfig.GlobalConfig{GoogleOAuthConfig: &cfg.GoogleOAuthConfig, AzureOAuthConfig: &cfg.AzureOAuthConfig}, postgresDB, driver, cfg.Neo4jDb.Database, nil, logger)
 
-	services.TenantService = NewTenantService(services.Repositories)
-	services.UserService = NewUserService(services.Repositories)
 	services.EmailService = NewEmailService(cfg, services.Repositories, services)
 	services.MeetingService = NewMeetingService(cfg, services.Repositories, services)
 

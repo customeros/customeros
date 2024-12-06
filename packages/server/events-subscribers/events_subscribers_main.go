@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"github.com/sirupsen/logrus"
 	"io"
 	"log"
 
@@ -23,14 +24,9 @@ const (
 	AppName = "events-subscribers"
 )
 
-func InitDB(cfg *config.Config, appLogger logger.Logger) (db *config.StorageDB, err error) {
-	if db, err = config.NewDBConn(cfg); err != nil {
-		appLogger.Fatalf("Coud not open db connection: %s", err.Error())
-	}
-	return
-}
-
 func main() {
+	ctx := context.Background()
+
 	cfg := loadConfiguration()
 
 	appLogger := logger.NewExtendedAppLogger(&cfg.Logger)
@@ -43,14 +39,19 @@ func main() {
 		defer tracingCloser.Close()
 	}
 
-	db, _ := InitDB(cfg, appLogger)
-	defer db.SqlDB.Close()
+	postgresDb, err := commonConfig.InitPostgres(&commonConfig.GlobalConfig{
+		PostgresConfig:      &cfg.PostgresConfig,
+		PostgresAsyncConfig: &cfg.PostgresAsyncConfig,
+	})
+	if err != nil {
+		logrus.Fatalf("failed opening connection to postgres: %v", err.Error())
+	}
+	defer postgresDb.Close()
 
-	neo4jDriver, err := config.NewDriver(cfg)
+	neo4jDriver, err := commonConfig.NewNeo4jDriver(cfg.Neo4j)
 	if err != nil {
 		appLogger.Fatalf("Could not establish connection with neo4j at: %v, error: %v", cfg.Neo4j.Target, err.Error())
 	}
-	ctx := context.Background()
 	defer neo4jDriver.Close(ctx)
 
 	// Events processing
@@ -77,7 +78,7 @@ func main() {
 			NamecheapConfig:  cfg.NamecheapConfig,
 			CloudflareConfig: cfg.CloudflareConfig,
 		},
-	}, db.GormDB, &neo4jDriver, cfg.Neo4j.Database, eventsProcessingGrpcClient, appLogger)
+	}, postgresDb, &neo4jDriver, cfg.Neo4j.Database, eventsProcessingGrpcClient, appLogger)
 
 	// Register listeners
 	commonServices.RabbitMQService.RegisterHandler(dto.FlowOn{}, listeners.Handle_FlowOn)

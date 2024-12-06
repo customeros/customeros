@@ -9,6 +9,7 @@ import (
 	localCron "github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/cron"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/logger"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/service"
+	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/opentracing/opentracing-go"
@@ -36,11 +37,14 @@ func main() {
 		defer tracingCloser.Close()
 	}
 
-	sqlDb, gormDb, errPostgres := syncGmailConfig.NewPostgresClient(config)
-	if errPostgres != nil {
-		logrus.Fatalf("failed opening connection to postgres: %v", errPostgres.Error())
+	postgresDb, err := commonConfig.InitPostgres(&commonConfig.GlobalConfig{
+		PostgresConfig:      &config.PostgresConfig,
+		PostgresAsyncConfig: &config.PostgresAsyncConfig,
+	})
+	if err != nil {
+		logrus.Fatalf("failed opening connection to postgres: %v", err.Error())
 	}
-	defer sqlDb.Close()
+	defer postgresDb.Close()
 
 	neo4jDriver, errNeo4j := syncGmailConfig.NewDriver(config)
 	if errNeo4j != nil {
@@ -58,7 +62,7 @@ func main() {
 	grpcContainer := grpc_client.InitClients(gRPCconn)
 
 	appCache := caches.NewCache()
-	services := service.InitServices(config, neo4jDriver, gormDb, grpcContainer, appCache, appLogger)
+	services := service.InitServices(config, neo4jDriver, postgresDb, grpcContainer, appCache, appLogger)
 
 	//init app cache
 	personalEmailProviderEntities, err := services.Repositories.PostgresRepositories.PersonalEmailProviderRepository.GetPersonalEmailProviders()
