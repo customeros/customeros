@@ -5,6 +5,8 @@ import { ColumnDef as ColumnDefinition } from '@tanstack/react-table';
 import { createColumnHelper } from '@ui/presentation/Table';
 
 import { UserCell, MailboxCell } from './cells';
+import { SenderHeader } from './header/SenderHeader';
+import { RampUpCurrentHeader } from './header/RampUpCurrentHeader';
 
 type ColumnDatum = Mailbox;
 
@@ -26,14 +28,14 @@ export const columns: Column[] = [
     id: 'user',
     minSize: 200,
     cell: (props) => <UserCell id={props.getValue()} />,
-    header: () => <p className='text-sm'>User</p>,
+    header: SenderHeader,
     skeleton: () => null,
   }),
   columnHelper.accessor('rampUpCurrent', {
     id: 'rampUpCurrent',
     minSize: 200,
-    cell: (props) => <p>{props.getValue()}</p>,
-    header: () => <p className='text-sm'>Daily Email Limit(Max 40)</p>,
+    cell: (props) => <p>{props.getValue()} / 40</p>,
+    header: RampUpCurrentHeader,
     skeleton: () => null,
   }),
   // columnHelper.accessor('status', {
