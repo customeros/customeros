@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"golang.org/x/net/context"
 	"gorm.io/gorm"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
@@ -208,4 +209,8 @@ func (r *Repositories) Migration(db *gorm.DB) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func (r *Repositories) InitData(ctx context.Context, postgresRepos *Repositories) {
+	// TODO Init data
 }
