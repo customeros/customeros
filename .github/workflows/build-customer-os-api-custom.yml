@@ -135,6 +135,7 @@ jobs:
           go tool cover -func=cover.out | sed -r 's/[[:space:]]+/|/g' | sed -r 's/$/|/g' | sed -r 's/^/|/g' | tail -n 1 > test-coverage.txt
           coverage=$(cat test-coverage.txt | awk -F'|' '{gsub(/%/, "", $(NF-1)); print $(NF-1)}')
           echo "computed_coverage=$coverage" >> $GITHUB_OUTPUT
+
   test-resolver:
     runs-on: ubuntu-latest
     strategy:
@@ -292,6 +293,8 @@ jobs:
   build-publish:
     needs: [ test, test-resolver ]
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -335,3 +338,15 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
           cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
+
+  trigger-deployment:
+    needs: [build-publish]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Customer OS API Workflow
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.FE_TESTS_GITHUB_TOKEN }}
+          repository: customeros/cloud
+          event-type: deploy-customer-os-api
+          client-payload: '{"image_version": "${{ needs.build-publish.outputs.version }}"}'
