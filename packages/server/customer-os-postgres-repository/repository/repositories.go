@@ -41,7 +41,9 @@ type Repositories struct {
 	EnrichDetailsTrackingRepository             EnrichDetailsTrackingRepository
 	EventBufferRepository                       EventBufferRepository
 	ExternalAppKeysRepository                   ExternalAppKeysRepository
+	FlowActionExecutionRepository               FlowActionExecutionRepository
 	FlowActionRegistryRepository                FlowActionRegistryRepository
+	FlowExecutionRepository                     FlowExecutionRepository
 	FlowListenerRegistryRepository              FlowListenerRegistryRepository
 	FlowTransitionsRegistryRepository           FlowTransitionsRegistryRepository
 	FlowWebhooksRepository                      FlowWebhooksRepository
@@ -109,7 +111,9 @@ func InitRepositories(db *gorm.DB) *Repositories {
 		EnrichDetailsTrackingRepository:             NewEnrichDetailsTrackingRepository(db),
 		EventBufferRepository:                       NewEventBufferRepository(db),
 		ExternalAppKeysRepository:                   NewExternalAppKeysRepository(db),
+		FlowActionExecutionRepository:               NewFlowActionExecutionRepository(db),
 		FlowActionRegistryRepository:                NewFlowActionRegistryRepository(db),
+		FlowExecutionRepository:                     NewFlowExecutionRepository(db),
 		FlowListenerRegistryRepository:              NewFlowListenerRegistryRepository(db),
 		FlowTransitionsRegistryRepository:           NewFlowTransitionsRegistryRepository(db),
 		FlowWebhooksRepository:                      NewFlowWebhooksRepository(db),
@@ -175,6 +179,8 @@ func (r *Repositories) Migration(db *gorm.DB) {
 		&entity.EventBuffer{},
 		&entity.ExternalAppKeys{},
 		&entity.FlowActionRegistry{},
+		&entity.ActionExecution{},
+		&entity.FlowExecution{},
 		&entity.FlowListenerRegistry{},
 		&entity.FlowTransitionsRegistry{},
 		&entity.FlowWebhooks{},
