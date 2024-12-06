@@ -5,9 +5,9 @@ import "fmt"
 type FlowAction string
 
 const (
-	ActionCreateTimelineEvent FlowAction = "create.timeline_event"
-	ActionCreateContact       FlowAction = "create.contact"
-	ActionCreateOrganization  FlowAction = "create_organization"
+	ActionContactCreate       FlowAction = "contact.create"
+	ActionOrganizationCreate  FlowAction = "organization.create"
+	ActionTimelineEventCreate FlowAction = "timeline_event.create"
 )
 
 func (t FlowAction) String() string {
@@ -16,10 +16,12 @@ func (t FlowAction) String() string {
 
 func GetFlowAction(s string) (FlowAction, error) {
 	switch FlowAction(s) {
-	case ActionCreateTimelineEvent,
-		ActionCreateContact,
-		ActionCreateOrganization:
+	case
+		ActionContactCreate,
+		ActionOrganizationCreate,
+		ActionTimelineEventCreate:
 		return FlowAction(s), nil
+
 	default:
 		return "", fmt.Errorf("invalid FlowAction: %s", s)
 	}

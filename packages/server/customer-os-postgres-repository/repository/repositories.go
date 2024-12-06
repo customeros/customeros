@@ -39,8 +39,8 @@ type Repositories struct {
 	EnrichDetailsTrackingRepository             EnrichDetailsTrackingRepository
 	EventBufferRepository                       EventBufferRepository
 	ExternalAppKeysRepository                   ExternalAppKeysRepository
-	FlowActionRepository                        FlowActionRepository
-	FlowEventsRepository                        FlowEventsRepository
+	FlowActionRegistryRepository                FlowActionRegistryRepository
+	FlowListenerRegistryRepository              FlowListenerRegistryRepository
 	FlowWebhooksRepository                      FlowWebhooksRepository
 	GoogleServiceAccountKeyRepository           GoogleServiceAccountKeyRepository
 	IndustryMappingRepository                   IndustryMappingRepository
@@ -106,8 +106,8 @@ func InitRepositories(db *gorm.DB) *Repositories {
 		EnrichDetailsTrackingRepository:             NewEnrichDetailsTrackingRepository(db),
 		EventBufferRepository:                       NewEventBufferRepository(db),
 		ExternalAppKeysRepository:                   NewExternalAppKeysRepository(db),
-		FlowActionRepository:                        NewFlowActionRepository(db),
-		FlowEventsRepository:                        NewFlowEventsRepository(db),
+		FlowActionRegistryRepository:                NewFlowActionRegistryRepository(db),
+		FlowListenerRegistryRepository:              NewFlowListenerRegistryRepository(db),
 		FlowWebhooksRepository:                      NewFlowWebhooksRepository(db),
 		GoogleServiceAccountKeyRepository:           NewGoogleServiceAccountKeyRepository(db),
 		IndustryMappingRepository:                   NewIndustryMappingRepository(db),
@@ -170,8 +170,8 @@ func (r *Repositories) Migration(db *gorm.DB) {
 		&entity.EnrichDetailsTracking{},
 		&entity.EventBuffer{},
 		&entity.ExternalAppKeys{},
-		&entity.FlowAction{},
-		&entity.FlowEvent{},
+		&entity.FlowActionRegistry{},
+		&entity.FlowListenerRegistry{},
 		&entity.FlowWebhooks{},
 		&entity.GoogleServiceAccountKey{},
 		&entity.IndustryMapping{},
@@ -208,4 +208,8 @@ func (r *Repositories) Migration(db *gorm.DB) {
 	if err != nil {
 		panic(err)
 	}
+
+	r.FlowActionRegistryRepository.InitializeActions(ctx)
+	r.FlowListenerRegistryRepository.InitializeFlowListenerEvents(ctx)
+
 }
