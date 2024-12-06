@@ -35,7 +35,7 @@ export const AddContactsToFlow = observer(() => {
   ) => {
     e.stopPropagation();
     e.preventDefault();
-    store.ui.commandMenu.toggle('AddContactsBulk');
+    store.ui.commandMenu.toggle('AddContactsToFlow');
     store.ui.commandMenu.clearContext();
   };
 
@@ -115,7 +115,7 @@ export const AddContactsToFlow = observer(() => {
       <article className='relative w-full p-6 flex flex-col border-b border-b-gray-100 max-h-[580px]'>
         <div className='flex items-center justify-between mb-2'>
           <h1 className='text-base font-semibold'>
-            Add one or many contacts via...
+            Add one or many contacts...
           </h1>
           <CommandCancelIconButton onClose={handleClose} />
         </div>

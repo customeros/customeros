@@ -1,3 +1,5 @@
+import { useSearchParams } from 'react-router-dom';
+
 import { observer } from 'mobx-react-lite';
 
 import { Eye } from '@ui/media/icons/Eye.tsx';
@@ -26,6 +28,7 @@ export const ContactCommands = observer(() => {
   const id = (store.ui.commandMenu.context.ids as string[])?.[0];
   const contact = store.contacts.value.get(id);
   const label = `Contact - ${contact?.name}`;
+  const [searchParams] = useSearchParams();
 
   return (
     <CommandsContainer label={label}>
@@ -34,6 +37,13 @@ export const ContactCommands = observer(() => {
           leftAccessory={<User03 />}
           keywords={contactKeywords.add_contact}
           onSelect={() => {
+            if (
+              searchParams?.get('preset') ===
+              store.tableViewDefs.flowContactsPreset
+            ) {
+              return store.ui.commandMenu.setType('AddContactsToFlow');
+            }
+
             store.ui.commandMenu.setType('AddContactsBulk');
           }}
         >
