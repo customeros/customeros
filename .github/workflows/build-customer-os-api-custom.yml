@@ -14,20 +14,6 @@ on:
       - packages/server/customer-os-api/**
       - .github/workflows/build-customer-os-api.yml
       - .github/workflows/build-customer-os-api-custom.yml
-  pull_request:
-    paths:
-      - packages/server/customer-os-common-module/**
-      - packages/server/customer-os-postgres-repository/**
-      - packages/server/customer-os-neo4j-repository/**
-      - packages/server/events-processing-proto/**
-      - packages/server/events/**
-      - packages/server/validation-api/**
-      - packages/server/enrichment-api/**
-      - packages/server/customer-os-api/**
-      - .github/workflows/build-customer-os-api.yml
-      - .github/workflows/build-customer-os-api-custom.yml
-  release:
-    types: [ created, edited ]
   workflow_dispatch:
 
 env:
@@ -331,7 +317,7 @@ jobs:
           
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           git tag $VERSION
-          git push origin $VERSION
+          git push origin $VERSION -f
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
