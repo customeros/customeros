@@ -21,6 +21,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/service"
 	"github.com/opentracing/opentracing-go"
+	"github.com/sirupsen/logrus"
 	"io"
 	"log"
 	"net/http"
@@ -30,21 +31,6 @@ import (
 )
 
 const apiPort = "10000"
-
-func InitDB(cfg *config.Config) (db *config.StorageDB, err error) {
-	if db, err = config.NewDBConn(
-		cfg.Postgres.Host,
-		cfg.Postgres.Port,
-		cfg.Postgres.Db,
-		cfg.Postgres.User,
-		cfg.Postgres.Password,
-		cfg.Postgres.MaxConn,
-		cfg.Postgres.MaxIdleConn,
-		cfg.Postgres.ConnMaxLifetime); err != nil {
-		log.Fatalf("Coud not open db connection: %s", err.Error())
-	}
-	return
-}
 
 func main() {
 	parentCtx := context.Background()
@@ -70,10 +56,16 @@ func main() {
 	defer neo4jDriver.Close(ctx)
 
 	// initialize db
-	db, _ := InitDB(cfg)
-	defer db.SqlDB.Close()
+	postgresDb, err := commonconf.InitPostgres(&commonconf.GlobalConfig{
+		PostgresConfig:      &cfg.PostgresConfig,
+		PostgresAsyncConfig: &cfg.PostgresAsyncConfig,
+	})
+	if err != nil {
+		logrus.Fatalf("failed opening connection to postgres: %v", err.Error())
+	}
+	defer postgresDb.Close()
 
-	commonServices := commonservice.InitServices(&commonconf.GlobalConfig{}, db.GormDB, &neo4jDriver, cfg.Neo4j.Database, nil, appLogger)
+	commonServices := commonservice.InitServices(&commonconf.GlobalConfig{}, postgresDb, &neo4jDriver, cfg.Neo4j.Database, nil, appLogger)
 
 	graphqlClient := graphql.NewClient(cfg.Service.CustomerOsAPI)
 	services := service.InitServices(cfg, commonServices, graphqlClient, appLogger)

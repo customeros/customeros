@@ -8,6 +8,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/ai-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/ai-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai/dto"
+	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	"github.com/sirupsen/logrus"
@@ -16,21 +17,20 @@ import (
 
 const defaultAnthropicModel = "claude-3-haiku-20240307"
 
-func InitDB(cfg *config.Config) (db *config.StorageDB, err error) {
-	if db, err = config.NewDBConn(cfg); err != nil {
-		logrus.Fatalf("Coud not open db connection: %s", err.Error())
-	}
-	return
-}
-
 func main() {
 	cfg := loadConfiguration()
 	config.InitLogger(cfg)
 
-	db, _ := InitDB(cfg)
-	defer db.SqlDB.Close()
+	postgresDb, err := commonConfig.InitPostgres(&commonConfig.GlobalConfig{
+		PostgresConfig:      &cfg.PostgresConfig,
+		PostgresAsyncConfig: &cfg.PostgresAsyncConfig,
+	})
+	if err != nil {
+		logrus.Fatalf("failed opening connection to postgres: %v", err.Error())
+	}
+	defer postgresDb.Close()
 
-	services := service.InitServices(cfg, db, logger.NewAppLogger(nil))
+	services := service.InitServices(cfg, postgresDb, logger.NewAppLogger(nil))
 
 	// Setting up Gin
 	r := gin.Default()

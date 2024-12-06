@@ -6,7 +6,6 @@ import (
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/logger"
-	"gorm.io/gorm"
 )
 
 type Services struct {
@@ -18,9 +17,9 @@ type Services struct {
 	IpIntelligenceService        IpIntelligenceService
 }
 
-func InitServices(config *config.Config, gormDb *gorm.DB, driver *neo4j.DriverWithContext, log logger.Logger) *Services {
+func InitServices(config *config.Config, postgresDB *commonConfig.PostgresDB, driver *neo4j.DriverWithContext, log logger.Logger) *Services {
 	services := &Services{
-		CommonServices: commonService.InitServices(&commonConfig.GlobalConfig{}, gormDb, driver, config.Neo4j.Database, nil, log),
+		CommonServices: commonService.InitServices(&commonConfig.GlobalConfig{}, postgresDB, driver, config.Neo4j.Database, nil, log),
 	}
 
 	services.AddressValidationService = NewAddressValidationService(config, services)

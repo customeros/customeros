@@ -4,14 +4,12 @@ import (
 	"context"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	neo4jRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
-	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
-	"gorm.io/gorm"
-
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	neo4jRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
+	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 )
 
 type Services struct {
@@ -71,13 +69,13 @@ type Services struct {
 	SyncService SyncService
 }
 
-func InitServices(globalConfig *config.GlobalConfig, db *gorm.DB, driver *neo4j.DriverWithContext, neo4jDatabase string, grpcClients *grpc_client.Clients, log logger.Logger) *Services {
+func InitServices(globalConfig *config.GlobalConfig, postgresDB *config.PostgresDB, driver *neo4j.DriverWithContext, neo4jDatabase string, grpcClients *grpc_client.Clients, log logger.Logger) *Services {
 	services := &Services{
 		GlobalConfig:         globalConfig,
 		Cache:                caches.NewCommonCache(),
 		Logger:               log,
 		GrpcClients:          grpcClients,
-		PostgresRepositories: postgresRepository.InitRepositories(db),
+		PostgresRepositories: postgresRepository.InitRepositories(postgresDB),
 		Neo4jRepositories:    neo4jRepository.InitNeo4jRepositories(driver, neo4jDatabase),
 	}
 

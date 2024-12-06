@@ -12,18 +12,19 @@ import (
 )
 
 type Config struct {
-	ServiceName        string `env:"SERVICE_NAME" envDefault:"events-processing-platform"`
-	Logger             logger.Config
-	EventStoreConfig   eventstoredb.EventStoreConfig
-	GrpcClientConfig   config.GrpcClientConfig
-	Neo4j              config.Neo4jConfig
-	Postgres           config.PostgresConfig
-	Jaeger             tracing.JaegerConfig
-	RabbitMQConfig     config.RabbitMQConfig
-	Subscriptions      Subscriptions
-	Services           Services
-	EventNotifications EventNotifications
-	Temporal           config.TemporalConfig
+	ServiceName         string `env:"SERVICE_NAME" envDefault:"events-processing-platform"`
+	Logger              logger.Config
+	EventStoreConfig    eventstoredb.EventStoreConfig
+	GrpcClientConfig    config.GrpcClientConfig
+	Neo4j               config.Neo4jConfig
+	PostgresConfig      config.PostgresConfig
+	PostgresAsyncConfig config.PostgresAsyncConfig
+	Jaeger              tracing.JaegerConfig
+	RabbitMQConfig      config.RabbitMQConfig
+	Subscriptions       Subscriptions
+	Services            Services
+	EventNotifications  EventNotifications
+	Temporal            config.TemporalConfig
 }
 
 type Subscriptions struct {

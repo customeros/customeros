@@ -36,8 +36,8 @@ var (
 	driver         *neo4j.DriverWithContext
 
 	postgresContainer testcontainers.Container
-	postgresGormDB    *gorm.DB
-	postgresSqlDB     *sql.DB
+	gormDB            *gorm.DB
+	sqlDB             *sql.DB
 
 	rabbitMqContainer testcontainers.Container
 	rabbitMqUrl       string
@@ -64,7 +64,7 @@ func TestMain(m *testing.M) {
 		neo4jt.TerminateNeo4j(dbContainer, ctx)
 	}(neo4jContainer, *driver, context.Background())
 
-	postgresContainer, postgresGormDB, postgresSqlDB = neo4jt.InitTestDB()
+	postgresContainer, gormDB, sqlDB = neo4jt.InitTestDB()
 	defer func(postgresContainer testcontainers.Container, ctx context.Context) {
 		neo4jt.TerminatePostgres(postgresContainer, ctx)
 	}(postgresContainer, context.Background())
@@ -93,6 +93,11 @@ func prepareClient() {
 	})
 	appLogger.InitLogger()
 
+	postgresDB := &commonConfig.PostgresDB{
+		GormDB: gormDB,
+		SqlDB:  sqlDB,
+	}
+
 	testDialFactory := events_platform.NewTestDialFactory()
 	gRPCconn, _ := testDialFactory.GetEventsProcessingPlatformConn()
 
@@ -101,8 +106,8 @@ func prepareClient() {
 		RabbitMQConfig: &commonConfig.RabbitMQConfig{
 			Url: rabbitMqUrl,
 		},
-	}, postgresGormDB, driver, "neo4j", grpcClient, appLogger)
-	customerOsApiServices = service.InitServices(appLogger, driver, &config.Config{}, commonServices, grpcClient, postgresGormDB)
+	}, postgresDB, driver, "neo4j", grpcClient, appLogger)
+	customerOsApiServices = service.InitServices(appLogger, driver, postgresDB, &config.Config{}, commonServices, grpcClient)
 	graphResolver := NewResolver(appLogger, customerOsApiServices, customerOsApiServices.CommonServices.GrpcClients, &config.Config{})
 	loader := dataloader.NewDataLoader(customerOsApiServices)
 	customCtx := &common.CustomContext{

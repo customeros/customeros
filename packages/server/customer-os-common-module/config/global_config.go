@@ -1,14 +1,15 @@
 package config
 
 type GlobalConfig struct {
-	PostgresConfig    *PostgresConfig
-	Neo4jConfig       *Neo4jConfig
-	GoogleOAuthConfig *GoogleOAuthConfig
-	AzureOAuthConfig  *AzureOAuthConfig
-	GrpcClientConfig  *GrpcClientConfig
-	TemporalConfig    *TemporalConfig
-	RabbitMQConfig    *RabbitMQConfig
-	NovuConfig        *NovuConfig
+	PostgresConfig      *PostgresConfig
+	PostgresAsyncConfig *PostgresAsyncConfig
+	Neo4jConfig         *Neo4jConfig
+	GoogleOAuthConfig   *GoogleOAuthConfig
+	AzureOAuthConfig    *AzureOAuthConfig
+	GrpcClientConfig    *GrpcClientConfig
+	TemporalConfig      *TemporalConfig
+	RabbitMQConfig      *RabbitMQConfig
+	NovuConfig          *NovuConfig
 
 	// Customer OS
 	InternalServices InternalServices

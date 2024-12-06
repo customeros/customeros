@@ -3,14 +3,13 @@ package repository
 import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/config"
+	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	neo4jRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
-	"gorm.io/gorm"
 )
 
 type Repositories struct {
-	Neo4jDriver    *neo4j.DriverWithContext
-	PostgresDriver *gorm.DB
+	Neo4jDriver *neo4j.DriverWithContext
 
 	PostgresRepositories *postgresRepository.Repositories
 	Neo4jRepositories    *neo4jRepository.Repositories
@@ -28,16 +27,15 @@ type Repositories struct {
 	MeetingRepository          MeetingRepository
 }
 
-func InitRepos(cfg *config.Config, driver *neo4j.DriverWithContext, gormDb *gorm.DB) *Repositories {
+func InitRepos(cfg *config.Config, driver *neo4j.DriverWithContext, postgresDB *commonConfig.PostgresDB) *Repositories {
 	repositories := Repositories{
-		Neo4jDriver:    driver,
-		PostgresDriver: gormDb,
+		Neo4jDriver: driver,
 
-		PostgresRepositories: postgresRepository.InitRepositories(gormDb),
+		PostgresRepositories: postgresRepository.InitRepositories(postgresDB),
 		Neo4jRepositories:    neo4jRepository.InitNeo4jRepositories(driver, cfg.Neo4jDb.Database),
 
-		RawEmailRepository:         NewRawEmailRepository(gormDb),
-		RawCalendarEventRepository: NewRawCalendarEventRepository(gormDb),
+		RawEmailRepository:         NewRawEmailRepository(postgresDB.AsyncGormDB),
+		RawCalendarEventRepository: NewRawCalendarEventRepository(postgresDB.AsyncGormDB),
 
 		EmailRepository:            NewEmailRepository(driver),
 		InteractionEventRepository: NewInteractionEventRepository(driver),

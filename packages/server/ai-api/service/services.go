@@ -14,9 +14,9 @@ type Services struct {
 	OpenAiService    OpenAiService
 }
 
-func InitServices(cfg *config.Config, db *config.StorageDB, appLogger logger.Logger) *Services {
+func InitServices(cfg *config.Config, postgresDB *commonConfig.PostgresDB, appLogger logger.Logger) *Services {
 	services := &Services{
-		CommonServices: commonService.InitServices(&commonConfig.GlobalConfig{}, db.GormDB, nil, "", nil, appLogger),
+		CommonServices: commonService.InitServices(&commonConfig.GlobalConfig{}, postgresDB, nil, "", nil, appLogger),
 	}
 
 	services.OpenAiService = NewOpenAiService(cfg)

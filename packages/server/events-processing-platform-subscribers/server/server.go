@@ -90,8 +90,14 @@ func (server *Server) Start(parentCtx context.Context) error {
 	}
 
 	// Initialize postgres db
-	postgresDb, _ := InitPostgresDB(server.Config, server.Log)
-	defer postgresDb.SqlDB.Close()
+	postgresDb, err := commonconf.InitPostgres(&commonconf.GlobalConfig{
+		PostgresConfig:      &server.Config.PostgresConfig,
+		PostgresAsyncConfig: &server.Config.PostgresAsyncConfig,
+	})
+	if err != nil {
+		logrus.Fatalf("failed opening connection to postgres: %v", err.Error())
+	}
+	defer postgresDb.Close()
 
 	// Setting up Neo4j
 	neo4jDriver, err := commonconf.NewNeo4jDriver(server.Config.Neo4j)
@@ -111,7 +117,7 @@ func (server *Server) Start(parentCtx context.Context) error {
 	defer df.Close(gRPCconn)
 	grpcClients := grpc_client.InitClients(gRPCconn)
 
-	server.Services = service.InitServices(server.Config, server.AggregateStore, server.Log, grpcClients, postgresDb.GormDB, &neo4jDriver)
+	server.Services = service.InitServices(server.Config, server.AggregateStore, server.Log, grpcClients, postgresDb, &neo4jDriver)
 
 	// Setting up cache
 	industryMap, _ := server.Services.CommonServices.PostgresRepositories.IndustryMappingRepository.GetAllIndustryMappingsAsMap(ctx)
@@ -137,13 +143,6 @@ func (server *Server) waitShootDown(duration time.Duration) {
 		time.Sleep(duration)
 		server.doneCh <- struct{}{}
 	}()
-}
-
-func InitPostgresDB(cfg *config.Config, log logger.Logger) (db *commonconf.StorageDB, err error) {
-	if db, err = commonconf.NewPostgresDBConn(cfg.Postgres); err != nil {
-		log.Fatalf("Could not open db connection: %s", err.Error())
-	}
-	return
 }
 
 func (server *Server) InitSubscribers(ctx context.Context, grpcClients *grpc_client.Clients, esdb *esdb.Client, cancel context.CancelFunc) {

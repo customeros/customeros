@@ -4,19 +4,13 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	neo4jrepo "github.com/openline-ai/openline-customer-os/packages/runner/sync-slack/repository/neo4j"
 	postgresrepo "github.com/openline-ai/openline-customer-os/packages/runner/sync-slack/repository/postgres"
-	commonrepo "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository"
-	"gorm.io/gorm"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
+	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 )
 
-type Dbs struct {
-	Neo4jDriver *neo4j.DriverWithContext
-	GormDb      *gorm.DB
-}
-
 type Repositories struct {
-	Dbs Dbs
+	PostgresRepositories *postgresRepository.Repositories
 
-	CommonRepositories          *commonrepo.Repositories
 	TenantSettingsRepository    postgresrepo.TenantSettingsRepository
 	SlackSyncSettingsRepository postgresrepo.SlackSyncSettingsRepository
 	SlackSyncRunRepository      postgresrepo.SlackSyncRunRepository
@@ -25,16 +19,13 @@ type Repositories struct {
 	OrganizationRepository neo4jrepo.OrganizationRepository
 }
 
-func InitRepositories(driver *neo4j.DriverWithContext, gormDb *gorm.DB) *Repositories {
+func InitRepositories(driver *neo4j.DriverWithContext, postgresDB *config.PostgresDB) *Repositories {
 	repositories := Repositories{
-		Dbs: Dbs{
-			Neo4jDriver: driver,
-			GormDb:      gormDb,
-		},
-		CommonRepositories:          commonrepo.InitRepositories(gormDb, driver),
-		TenantSettingsRepository:    postgresrepo.NewTenantSettingsRepository(gormDb),
-		SlackSyncSettingsRepository: postgresrepo.NewSlackSyncSettingsRepository(gormDb),
-		SlackSyncRunRepository:      postgresrepo.NewSlackSyncRunRepository(gormDb),
+		PostgresRepositories: postgresRepository.InitRepositories(postgresDB),
+
+		TenantSettingsRepository:    postgresrepo.NewTenantSettingsRepository(postgresDB.GormDB),
+		SlackSyncSettingsRepository: postgresrepo.NewSlackSyncSettingsRepository(postgresDB.GormDB),
+		SlackSyncRunRepository:      postgresrepo.NewSlackSyncRunRepository(postgresDB.GormDB),
 
 		TenantRepository:       neo4jrepo.NewTenantRepository(driver),
 		OrganizationRepository: neo4jrepo.NewOrganizationRepository(driver),

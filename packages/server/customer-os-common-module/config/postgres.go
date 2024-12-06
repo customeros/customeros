@@ -5,66 +5,88 @@ import (
 	"fmt"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
+	gormLogger "gorm.io/gorm/logger"
 	"io"
 	"log"
 	"os"
 	"time"
 )
 
-type StorageDB struct {
+type PostgresDB struct {
 	SqlDB  *sql.DB
 	GormDB *gorm.DB
+
+	AsyncSqlDB  *sql.DB
+	AsyncGormDB *gorm.DB
 }
 
-func NewPostgresDBConn(cfg PostgresConfig) (*StorageDB, error) {
-	connectString := fmt.Sprintf("host=%s port=%s dbname=%s user=%s password=%s ",
-		cfg.Host, cfg.Port, cfg.Db, cfg.User, cfg.Password)
-	gormDb, err := gorm.Open(postgres.Open(connectString), initConfig(cfg))
+func InitPostgres(cfg *GlobalConfig) (*PostgresDB, error) {
+	var err error
+	db := &PostgresDB{}
+
+	db.SqlDB, db.GormDB, err = NewPostgresDBConn(cfg.PostgresConfig.Host, cfg.PostgresConfig.Port, cfg.PostgresConfig.User, cfg.PostgresConfig.Password, cfg.PostgresConfig.Db, cfg.PostgresConfig.LogLevel, cfg.PostgresConfig.MaxConn, cfg.PostgresConfig.MaxIdleConn, cfg.PostgresConfig.ConnMaxLifetime)
+	if err != nil {
+		log.Fatalf("failed to connect to postgres: %v", err)
+		return nil, err
+	}
+	db.AsyncSqlDB, db.AsyncGormDB, err = NewPostgresDBConn(cfg.PostgresAsyncConfig.Host, cfg.PostgresAsyncConfig.Port, cfg.PostgresAsyncConfig.User, cfg.PostgresAsyncConfig.Password, cfg.PostgresAsyncConfig.Db, cfg.PostgresAsyncConfig.LogLevel, cfg.PostgresAsyncConfig.MaxConn, cfg.PostgresAsyncConfig.MaxIdleConn, cfg.PostgresAsyncConfig.ConnMaxLifetime)
+	if err != nil {
+		log.Fatalf("failed to connect to postgres: %v", err)
+		return nil, err
+	}
+
+	return db, nil
+}
+
+func (db *PostgresDB) Close() {
+	db.SqlDB.Close()
+	db.AsyncSqlDB.Close()
+}
+
+func NewPostgresDBConn(host, port, user, password, db, logLevel string, maxConn, maxIdleConn, connMaxLifetime int) (*sql.DB, *gorm.DB, error) {
+	connectString := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s", host, port, user, password, db)
+	gormDb, err := gorm.Open(postgres.Open(connectString), initConfig(logLevel))
 
 	var sqlDb *sql.DB
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	if sqlDb, err = gormDb.DB(); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	if err = sqlDb.Ping(); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	sqlDb.SetMaxIdleConns(cfg.MaxIdleConn)
-	sqlDb.SetMaxOpenConns(cfg.MaxConn)
-	sqlDb.SetConnMaxLifetime(time.Duration(cfg.ConnMaxLifetime) * time.Second)
+	sqlDb.SetMaxIdleConns(maxConn)
+	sqlDb.SetMaxOpenConns(maxIdleConn)
+	sqlDb.SetConnMaxLifetime(time.Duration(connMaxLifetime) * time.Second)
 
-	return &StorageDB{
-		SqlDB:  sqlDb,
-		GormDB: gormDb,
-	}, nil
+	return sqlDb, gormDb, nil
 }
 
 // initConfig Initialize Config
-func initConfig(cfg PostgresConfig) *gorm.Config {
+func initConfig(logLevel string) *gorm.Config {
 	return &gorm.Config{
 		AllowGlobalUpdate: true,
-		Logger:            initLog(cfg),
+		Logger:            initLog(logLevel),
 	}
 }
 
 // initLog Connection Log Configuration
-func initLog(cfg PostgresConfig) logger.Interface {
-	var logLevel = logger.Silent
-	switch cfg.LogLevel {
+func initLog(logLevel string) gormLogger.Interface {
+	var postgresLogLevel = gormLogger.Silent
+	switch logLevel {
 	case "ERROR":
-		logLevel = logger.Error
+		postgresLogLevel = gormLogger.Error
 	case "WARN":
-		logLevel = logger.Warn
+		postgresLogLevel = gormLogger.Warn
 	case "INFO":
-		logLevel = logger.Info
+		postgresLogLevel = gormLogger.Info
 	}
-	newLogger := logger.New(log.New(io.MultiWriter(os.Stdout), "\r\n", log.LstdFlags), logger.Config{
+	newLogger := gormLogger.New(log.New(io.MultiWriter(os.Stdout), "\r\n", log.LstdFlags), gormLogger.Config{
 		Colorful:      true,
-		LogLevel:      logLevel,
+		LogLevel:      postgresLogLevel,
 		SlowThreshold: time.Second,
 	})
 	return newLogger

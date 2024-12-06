@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail-raw/config"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail-raw/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail-raw/logger"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail-raw/service"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/robfig/cron"
 	"github.com/sirupsen/logrus"
@@ -32,9 +32,9 @@ func StartCronJobs(config *config.Config, services *service.Services) *cron.Cron
 			lockAndRunEmailsJob(jobLock, config, services, postgresEntity.HISTORY, syncEmailsInState)
 		}(&jobLock2)
 
-		go func(jobLock *sync.Mutex) {
-			lockAndRunJob(jobLock, config, services, syncCalendarEventsForOauthTokens)
-		}(&jobLock3)
+		//go func(jobLock *sync.Mutex) {
+		//	lockAndRunJob(jobLock, config, services, syncCalendarEventsForOauthTokens)
+		//}(&jobLock3)
 
 	})
 	if err != nil {
@@ -73,7 +73,7 @@ func syncEmailsInState(config *config.Config, services *service.Services, state 
 
 	ctx := context.Background()
 
-	tenants, err := services.TenantService.GetAllTenants(ctx)
+	tenants, err := services.CommonServices.TenantService.GetAllTenants(ctx)
 	if err != nil {
 		logrus.Errorf("failed to get tenants: %v", err)
 		return
@@ -84,7 +84,7 @@ func syncEmailsInState(config *config.Config, services *service.Services, state 
 
 	for _, tenant := range tenants {
 
-		go func(tenant entity.TenantEntity) {
+		go func(tenant neo4jentity.TenantEntity) {
 			defer wg.Done()
 
 			logrus.Infof("syncing emails for tenant: %s", tenant.Name)
@@ -105,7 +105,7 @@ func syncEmailsInState(config *config.Config, services *service.Services, state 
 			if privateKey != "" && serviceEmail != "" {
 				//import with service account
 
-				usersForTenant, err := services.UserService.GetAllUsersForTenant(ctx, tenant.Name)
+				usersForTenant, err := services.CommonServices.UserService.GetAllUsersForTenant(ctx, tenant.Name)
 				if err != nil {
 					logrus.Error(err)
 					return
