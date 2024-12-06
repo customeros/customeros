@@ -92,6 +92,12 @@ func (s *globalOrganizationService) SyncScrapInToGlobalOrganization() {
 			continue
 		}
 
+		// check if website is accepted
+		if !s.commonServices.DomainService.AcceptedDomainForOrganization(ctx, data.Company.WebsiteUrl) ||
+			!s.commonServices.DomainService.AcceptedDomainForOrganization(ctx, primaryDomain) {
+			continue
+		}
+
 		// if global organization already exists, update otherwise create
 		globalOrganization, err := s.commonServices.PostgresRepositories.GlobalOrganizationRepository.GetByPrimaryDomain(ctx, primaryDomain)
 		if err != nil {
