@@ -30,7 +30,7 @@ func (f *flowExecutionRepository) Save(ctx context.Context, executionRecord enti
 
 	if executionRecord.Tenant == "" || executionRecord.FlowID == "" || executionRecord.EntityID == "" {
 		span.LogFields(log.Object("executionRecord", executionRecord))
-		err := errors.New("Params missing")
+		err := errors.New("Tenant, FlowID, or EntityID missing")
 		tracing.TraceErr(span, err)
 		return "", err
 	}
