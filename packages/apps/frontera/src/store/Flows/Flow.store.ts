@@ -151,7 +151,7 @@ export class FlowStore implements Store<Flow> {
         this.value.nodes = flow_Merge?.nodes ?? '[]';
         this.value.edges = flow_Merge?.edges ?? '[]';
         this.root.ui.toastSuccess(
-          `${this.value.name} saved`,
+          `Flow changes published`,
           `update-flow-success-${this.id}`,
         );
         setTimeout(() => {
@@ -166,7 +166,7 @@ export class FlowStore implements Store<Flow> {
           options.onError();
         }
         this.root.ui.toastError(
-          "We couldn't update the flow",
+          "We couldn't publish the flow changes",
           'update-flow-error',
         );
       });

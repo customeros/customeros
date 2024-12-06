@@ -12,21 +12,22 @@ import {
   ReactFlow,
   Background,
   MarkerType,
-  OnNodeDrag,
   NodeChange,
+  OnNodeDrag,
   getIncomers,
   getOutgoers,
-  useNodesState,
-  useEdgesState,
-  OnNodesDelete,
   OnEdgesDelete,
   OnNodesChange,
-  OnBeforeDelete,
+  OnNodesDelete,
+  useEdgesState,
+  useNodesState,
   FitViewOptions,
+  OnBeforeDelete,
   applyNodeChanges,
   SelectionDragHandler,
 } from '@xyflow/react';
 
+import { FlowStatus } from '@graphql/types';
 import { useStore } from '@shared/hooks/useStore';
 
 import { nodeTypes } from './nodes';
@@ -37,6 +38,7 @@ import { useUndoRedo, useKeyboardShortcuts } from './hooks';
 import { HelperLines, FlowBuilderToolbar } from './components';
 
 import '@xyflow/react/dist/style.css';
+
 const edgeTypes = {
   baseEdge: BasicEdge,
 };
@@ -45,7 +47,6 @@ const edgeTypes = {
 export const FlowBuilder = observer(
   ({
     onHasNewChanges,
-    showSidePanel,
     onToggleSidePanel,
   }: {
     showSidePanel: boolean;
@@ -133,6 +134,7 @@ export const FlowBuilder = observer(
 
     const customApplyNodeChanges = useCallback(
       (changes: NodeChange[], nodes: Node[]): Node[] => {
+        if (!changes.length) return nodes;
         // reset the helper lines (clear existing lines, if any)
         setHelperLineHorizontal(undefined);
         setHelperLineVertical(undefined);
@@ -292,7 +294,7 @@ export const FlowBuilder = observer(
 
         const shouldProhibitChanges =
           changes.every((change) => change.type === 'remove') &&
-          nodes.length === changes.length;
+          nodes?.length === changes.length;
 
         if (shouldProhibitChanges) return;
         onNodesChange(changes);
@@ -304,7 +306,7 @@ export const FlowBuilder = observer(
           )
         ) {
           // avoid setting new changes flag  to true on nodes init
-          if (nodes.length !== changes.length) {
+          if (nodes?.length !== changes.length) {
             onHasNewChanges();
           }
         }
@@ -404,10 +406,6 @@ export const FlowBuilder = observer(
               ui.flowCommandMenu.setOpen(false);
             }
 
-            if (showSidePanel) {
-              onToggleSidePanel(false);
-            }
-
             if (ui.flowActionSidePanel.isOpen) {
               if (ui.flowActionSidePanel.context.hasUnsavedChanges) {
                 ui.commandMenu.setType('ConfirmEmailContentChanges');
@@ -419,10 +417,6 @@ export const FlowBuilder = observer(
               ui.flowActionSidePanel.setOpen(false);
 
               return;
-            }
-
-            if (showSidePanel) {
-              onToggleSidePanel(false);
             }
           }}
           onNodeClick={(event, node) => {
@@ -439,7 +433,7 @@ export const FlowBuilder = observer(
               return;
             }
 
-            if (node.type === 'wait') {
+            if (node.type === 'wait' && flow.value.status === FlowStatus.Off) {
               setNodes((nds) =>
                 nds.map((n) =>
                   n.id === node.id

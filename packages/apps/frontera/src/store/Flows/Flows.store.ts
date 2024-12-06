@@ -99,6 +99,26 @@ export class FlowsStore implements GroupStore<Flow> {
     }
   }
 
+  async invalidateId({ id }: { id: string }) {
+    this.isLoading = true;
+
+    try {
+      const { flow } = await this.service.getFlow(id);
+
+      runInAction(() => {
+        this.load([flow]);
+      });
+    } catch (e) {
+      runInAction(() => {
+        this.error = (e as Error)?.message;
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+      });
+    }
+  }
+
   async create(
     name: string,
     options?: { onSuccess?: (serverId: string) => void },

@@ -6,10 +6,9 @@ type Config struct {
 	CronScheduleUpdateContract string `env:"CRON_SCHEDULE_UPDATE_CONTRACT" envDefault:"0 */15 * * * *"`
 
 	// Organizations
-	// Defaults to each 5 minutes
-	CronScheduleRefreshLastTouchpoint string `env:"CRON_SCHEDULE_REFRESH_LAST_TOUCHPOINT" envDefault:"30 */1 * * * *"`
-	// Defaults to each 15 minutes
-	CronScheduleUpdateOrganization string `env:"CRON_SCHEDULE_UPDATE_ORGANIZATION" envDefault:"0 */15 * * * *"`
+	CronScheduleRefreshLastTouchpoint   string `env:"CRON_SCHEDULE_REFRESH_LAST_TOUCHPOINT" envDefault:"30 */1 * * * *"`
+	CronScheduleUpdateOrganization      string `env:"CRON_SCHEDULE_UPDATE_ORGANIZATION" envDefault:"0 */15 * * * *"`
+	CronScheduleSyncScrapinToGlobalOrgs string `env:"CRON_SCHEDULE_SYNC_SCRAPIN_TO_GLOBAL_ORGS" envDefault:"0 */1 * * * *"`
 
 	// Contacts
 	CronScheduleUpkeepContacts                            string `env:"CRON_SCHEDULE_UPKEEP_CONTACTS" envDefault:"0 */15 * * * *"`

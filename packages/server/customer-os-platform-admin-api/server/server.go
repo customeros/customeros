@@ -59,6 +59,7 @@ func (server *server) Run(parentCtx context.Context) error {
 
 	postgresRepositories := postgresRepository.InitRepositories(postgresDb.GormDB)
 	postgresRepositories.Migration(postgresDb.GormDB)
+	postgresRepositories.InitData(ctx, postgresRepositories)
 
 	// Setting up Neo4j
 	neo4jDriver, err := commonconf.NewNeo4jDriver(server.cfg.Neo4j)

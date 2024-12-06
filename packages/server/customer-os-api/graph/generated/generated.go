@@ -639,6 +639,15 @@ type ComplexityRoot struct {
 		Provider func(childComplexity int) int
 	}
 
+	GlobalOrganization struct {
+		ID            func(childComplexity int) int
+		IconURL       func(childComplexity int) int
+		LogoURL       func(childComplexity int) int
+		Name          func(childComplexity int) int
+		PrimaryDomain func(childComplexity int) int
+		Website       func(childComplexity int) int
+	}
+
 	InteractionEvent struct {
 		ActionItems                  func(childComplexity int) int
 		Actions                      func(childComplexity int) int
@@ -1069,6 +1078,7 @@ type ComplexityRoot struct {
 		OrganizationRemoveSubsidiary               func(childComplexity int, organizationID string, subsidiaryID string) int
 		OrganizationRemoveTag                      func(childComplexity int, input model.OrganizationTagInput) int
 		OrganizationSave                           func(childComplexity int, input model.OrganizationSaveInput) int
+		OrganizationSaveByGlobalOrganization       func(childComplexity int, globalOrganizationID int64) int
 		OrganizationSetOwner                       func(childComplexity int, organizationID string, userID string) int
 		OrganizationShow                           func(childComplexity int, id string) int
 		OrganizationShowAll                        func(childComplexity int, ids []string) int
@@ -1410,6 +1420,7 @@ type ComplexityRoot struct {
 		Flows                              func(childComplexity int) int
 		GcliSearch                         func(childComplexity int, keyword string, limit *int) int
 		GlobalCache                        func(childComplexity int) int
+		GlobalOrganizationsSearch          func(childComplexity int, searchTerm string, limit int) int
 		InteractionEvent                   func(childComplexity int, id string) int
 		Invoice                            func(childComplexity int, id string) int
 		InvoiceByNumber                    func(childComplexity int, number string) int
@@ -1929,6 +1940,7 @@ type MutationResolver interface {
 	OpportunityRenewalUpdate(ctx context.Context, input model.OpportunityRenewalUpdateInput, ownerUserID *string) (*model.Opportunity, error)
 	OpportunityRenewalUpdateAllForOrganization(ctx context.Context, input model.OpportunityRenewalUpdateAllForOrganizationInput) (*model.Organization, error)
 	OrganizationSave(ctx context.Context, input model.OrganizationSaveInput) (*model.Organization, error)
+	OrganizationSaveByGlobalOrganization(ctx context.Context, globalOrganizationID int64) (*model.Organization, error)
 	OrganizationHide(ctx context.Context, id string) (string, error)
 	OrganizationHideAll(ctx context.Context, ids []string) (*model.Result, error)
 	OrganizationShow(ctx context.Context, id string) (string, error)
@@ -2080,6 +2092,7 @@ type QueryResolver interface {
 	FlowParticipant(ctx context.Context, id string) (*model.FlowParticipant, error)
 	FlowEmailVariables(ctx context.Context) ([]*model.EmailVariableEntity, error)
 	FlowTestEmailSender(ctx context.Context) (string, error)
+	GlobalOrganizationsSearch(ctx context.Context, searchTerm string, limit int) ([]*model.GlobalOrganization, error)
 	InteractionEvent(ctx context.Context, id string) (*model.InteractionEvent, error)
 	Invoice(ctx context.Context, id string) (*model.Invoice, error)
 	Invoices(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model1.SortBy, organizationID *string) (*model.InvoicesPage, error)
@@ -4863,6 +4876,48 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.GlobalCacheEmailToken.Provider(childComplexity), true
+
+	case "GlobalOrganization.id":
+		if e.complexity.GlobalOrganization.ID == nil {
+			break
+		}
+
+		return e.complexity.GlobalOrganization.ID(childComplexity), true
+
+	case "GlobalOrganization.iconUrl":
+		if e.complexity.GlobalOrganization.IconURL == nil {
+			break
+		}
+
+		return e.complexity.GlobalOrganization.IconURL(childComplexity), true
+
+	case "GlobalOrganization.logoUrl":
+		if e.complexity.GlobalOrganization.LogoURL == nil {
+			break
+		}
+
+		return e.complexity.GlobalOrganization.LogoURL(childComplexity), true
+
+	case "GlobalOrganization.name":
+		if e.complexity.GlobalOrganization.Name == nil {
+			break
+		}
+
+		return e.complexity.GlobalOrganization.Name(childComplexity), true
+
+	case "GlobalOrganization.primaryDomain":
+		if e.complexity.GlobalOrganization.PrimaryDomain == nil {
+			break
+		}
+
+		return e.complexity.GlobalOrganization.PrimaryDomain(childComplexity), true
+
+	case "GlobalOrganization.website":
+		if e.complexity.GlobalOrganization.Website == nil {
+			break
+		}
+
+		return e.complexity.GlobalOrganization.Website(childComplexity), true
 
 	case "InteractionEvent.actionItems":
 		if e.complexity.InteractionEvent.ActionItems == nil {
@@ -8010,6 +8065,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.OrganizationSave(childComplexity, args["input"].(model.OrganizationSaveInput)), true
 
+	case "Mutation.organization_SaveByGlobalOrganization":
+		if e.complexity.Mutation.OrganizationSaveByGlobalOrganization == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_organization_SaveByGlobalOrganization_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.OrganizationSaveByGlobalOrganization(childComplexity, args["globalOrganizationId"].(int64)), true
+
 	case "Mutation.organization_SetOwner":
 		if e.complexity.Mutation.OrganizationSetOwner == nil {
 			break
@@ -10445,6 +10512,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.GlobalCache(childComplexity), true
+
+	case "Query.globalOrganizations_Search":
+		if e.complexity.Query.GlobalOrganizationsSearch == nil {
+			break
+		}
+
+		args, err := ec.field_Query_globalOrganizations_Search_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.GlobalOrganizationsSearch(childComplexity, args["searchTerm"].(string), args["limit"].(int)), true
 
 	case "Query.interactionEvent":
 		if e.complexity.Query.InteractionEvent == nil {
@@ -14172,6 +14251,18 @@ enum FlowEntityType {
     CONTACT
 }
 `, BuiltIn: false},
+	{Name: "../schemas/global_organization.graphqls", Input: `extend type Query {
+    globalOrganizations_Search(searchTerm: String!, limit: Int!): [GlobalOrganization!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+
+type GlobalOrganization {
+    id:             Int64!
+    name:           String!
+    primaryDomain:  String!
+    website:        String!
+    logoUrl:        String!
+    iconUrl:        String!
+}`, BuiltIn: false},
 	{Name: "../schemas/interaction_event.graphqls", Input: `union InteractionEventParticipant = EmailParticipant | PhoneNumberParticipant | ContactParticipant | UserParticipant | OrganizationParticipant | JobRoleParticipant
 union InteractionSessionParticipant = EmailParticipant | PhoneNumberParticipant | ContactParticipant | UserParticipant
 
@@ -15051,6 +15142,7 @@ input OpportunityRenewalUpdateAllForOrganizationInput {
 
 extend type Mutation {
     organization_Save(input: OrganizationSaveInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organization_SaveByGlobalOrganization(globalOrganizationId: Int64!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
     organization_Hide(id: ID!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_HideAll(ids: [ID!]!): Result @hasRole(roles: [ADMIN, USER]) @hasTenant
@@ -22834,6 +22926,38 @@ func (ec *executionContext) field_Mutation_organization_RemoveTag_argsInput(
 	return zeroVal, nil
 }
 
+func (ec *executionContext) field_Mutation_organization_SaveByGlobalOrganization_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	arg0, err := ec.field_Mutation_organization_SaveByGlobalOrganization_argsGlobalOrganizationID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["globalOrganizationId"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_organization_SaveByGlobalOrganization_argsGlobalOrganizationID(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (int64, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["globalOrganizationId"]
+	if !ok {
+		var zeroVal int64
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("globalOrganizationId"))
+	if tmp, ok := rawArgs["globalOrganizationId"]; ok {
+		return ec.unmarshalNInt642int64(ctx, tmp)
+	}
+
+	var zeroVal int64
+	return zeroVal, nil
+}
+
 func (ec *executionContext) field_Mutation_organization_Save_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -26331,6 +26455,65 @@ func (ec *executionContext) field_Query_gcli_Search_argsLimit(
 	}
 
 	var zeroVal *int
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_globalOrganizations_Search_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	arg0, err := ec.field_Query_globalOrganizations_Search_argsSearchTerm(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["searchTerm"] = arg0
+	arg1, err := ec.field_Query_globalOrganizations_Search_argsLimit(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["limit"] = arg1
+	return args, nil
+}
+func (ec *executionContext) field_Query_globalOrganizations_Search_argsSearchTerm(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (string, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["searchTerm"]
+	if !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("searchTerm"))
+	if tmp, ok := rawArgs["searchTerm"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_globalOrganizations_Search_argsLimit(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (int, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["limit"]
+	if !ok {
+		var zeroVal int
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
+	if tmp, ok := rawArgs["limit"]; ok {
+		return ec.unmarshalNInt2int(ctx, tmp)
+	}
+
+	var zeroVal int
 	return zeroVal, nil
 }
 
@@ -46369,6 +46552,270 @@ func (ec *executionContext) _GlobalCacheEmailToken_provider(ctx context.Context,
 func (ec *executionContext) fieldContext_GlobalCacheEmailToken_provider(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "GlobalCacheEmailToken",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _GlobalOrganization_id(ctx context.Context, field graphql.CollectedField, obj *model.GlobalOrganization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_GlobalOrganization_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_GlobalOrganization_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "GlobalOrganization",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _GlobalOrganization_name(ctx context.Context, field graphql.CollectedField, obj *model.GlobalOrganization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_GlobalOrganization_name(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_GlobalOrganization_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "GlobalOrganization",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _GlobalOrganization_primaryDomain(ctx context.Context, field graphql.CollectedField, obj *model.GlobalOrganization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_GlobalOrganization_primaryDomain(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PrimaryDomain, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_GlobalOrganization_primaryDomain(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "GlobalOrganization",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _GlobalOrganization_website(ctx context.Context, field graphql.CollectedField, obj *model.GlobalOrganization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_GlobalOrganization_website(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Website, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_GlobalOrganization_website(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "GlobalOrganization",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _GlobalOrganization_logoUrl(ctx context.Context, field graphql.CollectedField, obj *model.GlobalOrganization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_GlobalOrganization_logoUrl(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LogoURL, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_GlobalOrganization_logoUrl(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "GlobalOrganization",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _GlobalOrganization_iconUrl(ctx context.Context, field graphql.CollectedField, obj *model.GlobalOrganization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_GlobalOrganization_iconUrl(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IconURL, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_GlobalOrganization_iconUrl(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "GlobalOrganization",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -69392,6 +69839,241 @@ func (ec *executionContext) fieldContext_Mutation_organization_Save(ctx context.
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_organization_SaveByGlobalOrganization(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_organization_SaveByGlobalOrganization(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().OrganizationSaveByGlobalOrganization(rctx, fc.Args["globalOrganizationId"].(int64))
+		}
+
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				var zeroVal *model.Organization
+				return zeroVal, err
+			}
+			if ec.directives.HasRole == nil {
+				var zeroVal *model.Organization
+				return zeroVal, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				var zeroVal *model.Organization
+				return zeroVal, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Organization); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.Organization`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Organization)
+	fc.Result = res
+	return ec.marshalNOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganization(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_organization_SaveByGlobalOrganization(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "metadata":
+				return ec.fieldContext_Organization_metadata(ctx, field)
+			case "accountDetails":
+				return ec.fieldContext_Organization_accountDetails(ctx, field)
+			case "contracts":
+				return ec.fieldContext_Organization_contracts(ctx, field)
+			case "opportunities":
+				return ec.fieldContext_Organization_opportunities(ctx, field)
+			case "customerOsId":
+				return ec.fieldContext_Organization_customerOsId(ctx, field)
+			case "customFields":
+				return ec.fieldContext_Organization_customFields(ctx, field)
+			case "referenceId":
+				return ec.fieldContext_Organization_referenceId(ctx, field)
+			case "description":
+				return ec.fieldContext_Organization_description(ctx, field)
+			case "domains":
+				return ec.fieldContext_Organization_domains(ctx, field)
+			case "slackChannelId":
+				return ec.fieldContext_Organization_slackChannelId(ctx, field)
+			case "employeeGrowthRate":
+				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
+			case "employees":
+				return ec.fieldContext_Organization_employees(ctx, field)
+			case "headquarters":
+				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "industry":
+				return ec.fieldContext_Organization_industry(ctx, field)
+			case "industryGroup":
+				return ec.fieldContext_Organization_industryGroup(ctx, field)
+			case "lastFundingAmount":
+				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
+			case "lastFundingRound":
+				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
+			case "lastTouchpoint":
+				return ec.fieldContext_Organization_lastTouchpoint(ctx, field)
+			case "locations":
+				return ec.fieldContext_Organization_locations(ctx, field)
+			case "logo":
+				return ec.fieldContext_Organization_logo(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
+			case "icon":
+				return ec.fieldContext_Organization_icon(ctx, field)
+			case "iconUrl":
+				return ec.fieldContext_Organization_iconUrl(ctx, field)
+			case "market":
+				return ec.fieldContext_Organization_market(ctx, field)
+			case "name":
+				return ec.fieldContext_Organization_name(ctx, field)
+			case "notes":
+				return ec.fieldContext_Organization_notes(ctx, field)
+			case "owner":
+				return ec.fieldContext_Organization_owner(ctx, field)
+			case "parentCompanies":
+				return ec.fieldContext_Organization_parentCompanies(ctx, field)
+			case "public":
+				return ec.fieldContext_Organization_public(ctx, field)
+			case "socialMedia":
+				return ec.fieldContext_Organization_socialMedia(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
+			case "subsidiaries":
+				return ec.fieldContext_Organization_subsidiaries(ctx, field)
+			case "tags":
+				return ec.fieldContext_Organization_tags(ctx, field)
+			case "targetAudience":
+				return ec.fieldContext_Organization_targetAudience(ctx, field)
+			case "timelineEvents":
+				return ec.fieldContext_Organization_timelineEvents(ctx, field)
+			case "valueProposition":
+				return ec.fieldContext_Organization_valueProposition(ctx, field)
+			case "website":
+				return ec.fieldContext_Organization_website(ctx, field)
+			case "yearFounded":
+				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "stage":
+				return ec.fieldContext_Organization_stage(ctx, field)
+			case "stageLastUpdated":
+				return ec.fieldContext_Organization_stageLastUpdated(ctx, field)
+			case "relationship":
+				return ec.fieldContext_Organization_relationship(ctx, field)
+			case "leadSource":
+				return ec.fieldContext_Organization_leadSource(ctx, field)
+			case "icpFit":
+				return ec.fieldContext_Organization_icpFit(ctx, field)
+			case "hide":
+				return ec.fieldContext_Organization_hide(ctx, field)
+			case "contacts":
+				return ec.fieldContext_Organization_contacts(ctx, field)
+			case "jobRoles":
+				return ec.fieldContext_Organization_jobRoles(ctx, field)
+			case "emails":
+				return ec.fieldContext_Organization_emails(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
+			case "suggestedMergeTo":
+				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
+			case "timelineEventsTotalCount":
+				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
+			case "externalLinks":
+				return ec.fieldContext_Organization_externalLinks(ctx, field)
+			case "issueSummaryByStatus":
+				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
+			case "contactCount":
+				return ec.fieldContext_Organization_contactCount(ctx, field)
+			case "inboundCommsCount":
+				return ec.fieldContext_Organization_inboundCommsCount(ctx, field)
+			case "outboundCommsCount":
+				return ec.fieldContext_Organization_outboundCommsCount(ctx, field)
+			case "enrichDetails":
+				return ec.fieldContext_Organization_enrichDetails(ctx, field)
+			case "isCustomer":
+				return ec.fieldContext_Organization_isCustomer(ctx, field)
+			case "socials":
+				return ec.fieldContext_Organization_socials(ctx, field)
+			case "isPublic":
+				return ec.fieldContext_Organization_isPublic(ctx, field)
+			case "note":
+				return ec.fieldContext_Organization_note(ctx, field)
+			case "id":
+				return ec.fieldContext_Organization_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Organization_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Organization_updatedAt(ctx, field)
+			case "source":
+				return ec.fieldContext_Organization_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Organization_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Organization_appSource(ctx, field)
+			case "customId":
+				return ec.fieldContext_Organization_customId(ctx, field)
+			case "lastTouchPointAt":
+				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
+			case "lastTouchPointType":
+				return ec.fieldContext_Organization_lastTouchPointType(ctx, field)
+			case "lastTouchPointTimelineEventId":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
+			case "lastTouchPointTimelineEvent":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
+			case "subsidiaryOf":
+				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_organization_SaveByGlobalOrganization_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_organization_Hide(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_organization_Hide(ctx, field)
 	if err != nil {
@@ -90866,6 +91548,109 @@ func (ec *executionContext) fieldContext_Query_flow_testEmailSender(_ context.Co
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
 		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_globalOrganizations_Search(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_globalOrganizations_Search(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().GlobalOrganizationsSearch(rctx, fc.Args["searchTerm"].(string), fc.Args["limit"].(int))
+		}
+
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				var zeroVal []*model.GlobalOrganization
+				return zeroVal, err
+			}
+			if ec.directives.HasRole == nil {
+				var zeroVal []*model.GlobalOrganization
+				return zeroVal, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				var zeroVal []*model.GlobalOrganization
+				return zeroVal, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*model.GlobalOrganization); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.GlobalOrganization`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.GlobalOrganization)
+	fc.Result = res
+	return ec.marshalNGlobalOrganization2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐGlobalOrganizationᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_globalOrganizations_Search(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_GlobalOrganization_id(ctx, field)
+			case "name":
+				return ec.fieldContext_GlobalOrganization_name(ctx, field)
+			case "primaryDomain":
+				return ec.fieldContext_GlobalOrganization_primaryDomain(ctx, field)
+			case "website":
+				return ec.fieldContext_GlobalOrganization_website(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_GlobalOrganization_logoUrl(ctx, field)
+			case "iconUrl":
+				return ec.fieldContext_GlobalOrganization_iconUrl(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type GlobalOrganization", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_globalOrganizations_Search_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
 	}
 	return fc, nil
 }
@@ -118382,6 +119167,70 @@ func (ec *executionContext) _GlobalCacheEmailToken(ctx context.Context, sel ast.
 	return out
 }
 
+var globalOrganizationImplementors = []string{"GlobalOrganization"}
+
+func (ec *executionContext) _GlobalOrganization(ctx context.Context, sel ast.SelectionSet, obj *model.GlobalOrganization) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, globalOrganizationImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("GlobalOrganization")
+		case "id":
+			out.Values[i] = ec._GlobalOrganization_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "name":
+			out.Values[i] = ec._GlobalOrganization_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "primaryDomain":
+			out.Values[i] = ec._GlobalOrganization_primaryDomain(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "website":
+			out.Values[i] = ec._GlobalOrganization_website(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "logoUrl":
+			out.Values[i] = ec._GlobalOrganization_logoUrl(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "iconUrl":
+			out.Values[i] = ec._GlobalOrganization_iconUrl(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var interactionEventImplementors = []string{"InteractionEvent", "Node", "TimelineEvent"}
 
 func (ec *executionContext) _InteractionEvent(ctx context.Context, sel ast.SelectionSet, obj *model.InteractionEvent) graphql.Marshaler {
@@ -121963,6 +122812,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "organization_SaveByGlobalOrganization":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_organization_SaveByGlobalOrganization(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "organization_Hide":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_organization_Hide(ctx, field)
@@ -125384,6 +126240,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_flow_testEmailSender(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "globalOrganizations_Search":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_globalOrganizations_Search(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -130758,6 +131636,60 @@ func (ec *executionContext) marshalNGlobalCacheEmailToken2ᚖgithubᚗcomᚋopen
 		return graphql.Null
 	}
 	return ec._GlobalCacheEmailToken(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNGlobalOrganization2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐGlobalOrganizationᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.GlobalOrganization) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNGlobalOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐGlobalOrganization(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNGlobalOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐGlobalOrganization(ctx context.Context, sel ast.SelectionSet, v *model.GlobalOrganization) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._GlobalOrganization(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNID2string(ctx context.Context, v interface{}) (string, error) {

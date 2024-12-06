@@ -3,8 +3,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { observer } from 'mobx-react-lite';
 
 import { Button } from '@ui/form/Button/Button';
-import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
+import { Inbox01 } from '@ui/media/icons/Inbox01';
 import { DotSingle } from '@ui/media/icons/DotSingle';
 import { InfoCircle } from '@ui/media/icons/InfoCircle';
 import { ChevronRight } from '@ui/media/icons/ChevronRight';
@@ -46,17 +46,14 @@ export const CheckoutCard = observer(() => {
       <Card className='py-2 px-3 bg-white mt-2'>
         <CardContent className='p-0'>
           <div className='mb-2 bg-gray-100 w-full flex items-center gap-2 rounded-lg py-1 px-2 leading-4'>
-            <IconButton
-              size='xxs'
-              variant='ghost'
-              onClick={onOpen}
-              aria-label='info'
-              className='p-[1px] mr-2'
-              icon={<InfoCircle className='size-5' />}
-            />
+            <Inbox01 className='ml-1 text-gray-500 size-6 mr-2' />
             {store.mailboxes.usernamesCount === 0 ? (
               <span className='text-gray-700 text-sm'>
                 Add usernames to see how many emails you can send
+                <InfoCircle
+                  onClick={onOpen}
+                  className='size-3 ml-1 text-gray-500 cursor-pointer hover:text-gray-700'
+                />
               </span>
             ) : (
               <p className='text-sm'>
@@ -68,6 +65,10 @@ export const CheckoutCard = observer(() => {
                   {`${noOfEmails} emails`}
                 </span>{' '}
                 per month
+                <InfoCircle
+                  onClick={onOpen}
+                  className='size-3 ml-1 text-gray-500 cursor-pointer hover:text-gray-700'
+                />
               </p>
             )}
           </div>
@@ -115,13 +116,12 @@ export const CheckoutCard = observer(() => {
         body={
           <div className='space-y-4'>
             <p className='text-sm'>
-              Two mailboxes per domain has shown to be effective for maintaining
-              deliverability, avoiding spam filters, and supporting rotation and
-              inbox warming.
+              To maintain deliverability and avoid spam filters, we auto-warm
+              and rotate mailboxes, limiting each to a maximum of 40 emails per
+              day.
             </p>
             <p className='text-sm'>
-              For optimized sending, we auto rotate mailboxes and limit each to
-              40 emails a day.
+              Using two mailboxes per domain has proven especially effective.
             </p>
           </div>
         }

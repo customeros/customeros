@@ -11,9 +11,14 @@ import { useTableActions } from '@invoices/hooks/useTableActions';
 import { OpportunitiesTableActions } from '@finder/components/Actions/OpportunityActions';
 
 import { useStore } from '@shared/hooks/useStore';
-import { Invoice, TableViewType, ColumnViewType } from '@graphql/types';
 import { Table, SortingState, TableInstance } from '@ui/presentation/Table';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
+import {
+  Invoice,
+  TableIdType,
+  TableViewType,
+  ColumnViewType,
+} from '@graphql/types';
 
 import { SidePanel } from '../SidePanel';
 import { EmptyState } from '../EmptyState/EmptyState';
@@ -62,6 +67,7 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
 
   const tableType =
     tableViewDef?.value?.tableType || TableViewType.Organizations;
+  const tableId = tableViewDef?.value?.tableId || TableIdType.Organizations;
 
   const columns = computeFinderColumns(store, {
     tableType,
@@ -326,23 +332,22 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
         TableViewType.Organizations,
         () => store.organizations?.totalElements === 0,
       )
-      .with(TableViewType.Contacts, () => store.contacts?.totalElements === 0)
+      .with(TableViewType.Contacts, () => {
+        if (tableId === TableIdType.FlowContacts && params.id) {
+          return (
+            store.flows.value.get(params.id)?.value.participants.length === 0
+          );
+        }
+
+        return store.contacts?.totalElements === 0;
+      })
       .with(TableViewType.Invoices, () => store.invoices?.totalElements === 0)
       .with(TableViewType.Contracts, () => store.contracts?.totalElements === 0)
       .with(TableViewType.Flow, () => store.flows?.totalElements === 0)
       .otherwise(() => false);
   };
 
-  const checkIfLoading = () => {
-    return match(tableType)
-      .with(TableViewType.Contacts, () => store.contacts?.isLoading)
-      .with(TableViewType.Invoices, () => store.invoices?.isLoading)
-      .with(TableViewType.Contracts, () => store.contracts?.isLoading)
-      .with(TableViewType.Flow, () => store.flows?.isLoading)
-      .otherwise(() => false);
-  };
-
-  if (checkIfEmpty() && checkIfLoading()) {
+  if (checkIfEmpty()) {
     return <EmptyState />;
   }
 

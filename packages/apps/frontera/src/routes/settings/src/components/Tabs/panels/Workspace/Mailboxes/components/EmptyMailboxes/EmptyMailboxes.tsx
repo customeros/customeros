@@ -74,7 +74,7 @@ export const EmptyMailboxes = ({ onUpdate }: EmptyMailboxesProps) => {
 
         <div className='flex items-center py-2 px-3 border rounded-md border-grayModern-200 mt-4'>
           <Sale03 className='text-gray-500 mr-2' />
-          <span>
+          <span className='text-sm'>
             Get the <span className='font-medium'>Starter bundle</span> for{' '}
             <span className='text-success-500 font-medium'>$199.99/month</span>
           </span>

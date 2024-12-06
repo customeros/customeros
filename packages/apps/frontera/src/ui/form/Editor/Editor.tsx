@@ -108,6 +108,7 @@ interface EditorProps extends VariantProps<typeof contentEditableVariants> {
   dataTest?: string;
   className?: string;
   placeholder?: string;
+  isReadOnly?: boolean;
   usePlainText?: boolean;
   defaultHtmlValue?: string;
   mentionsOptions?: string[];
@@ -148,6 +149,7 @@ export const Editor = forwardRef<LexicalEditor | null, EditorProps>(
       onKeyDown,
       placeholder = 'Type something',
       showToolbarBottom = false,
+      isReadOnly = false,
     },
     ref,
   ) => {
@@ -161,6 +163,7 @@ export const Editor = forwardRef<LexicalEditor | null, EditorProps>(
       theme,
       onError,
       nodes,
+      editable: !isReadOnly,
     };
 
     const EditorPlugin = usePlainText ? PlainTextPlugin : RichTextPlugin;

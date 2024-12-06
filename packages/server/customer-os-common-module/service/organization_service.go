@@ -79,8 +79,10 @@ func (s *organizationService) CreateFromGlobalOrganization(ctx context.Context, 
 		Domains:          globalOrganization.Domains,
 		Description:      utils.StringPtr(globalOrganization.Description),
 		Website:          utils.StringPtr(globalOrganization.Website),
+		LogoUrl:          utils.StringPtr(globalOrganization.LogoUrl),
 		IconUrl:          utils.StringPtr(globalOrganization.IconUrl),
 		LinkedInUrl:      utils.StringPtr(globalOrganization.LinkedInUrl),
+		LinkedInAlias:    utils.StringPtr(globalOrganization.LinkedInAlias),
 		ValueProposition: utils.StringPtr(globalOrganization.ValueProposition),
 		TargetAudience:   utils.StringPtr(globalOrganization.TargetAudience),
 	}
@@ -137,6 +139,10 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 			span.LogFields(log.String("process.primaryDomainFromWebsite", primaryDomain))
 			span.LogFields(log.String("process.adjustedWebsite", adjustedWebsite))
 		}
+	}
+
+	if primaryDomain != "" && adjustedWebsite == "" {
+		adjustedWebsite = primaryDomain
 	}
 
 	// prepare domains in advance
@@ -213,7 +219,7 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 		if utils.IfNotNilString(input.LinkedInUrl) != "" {
 			linkedInUrl := utils.IfNotNilString(input.LinkedInUrl)
 			if (neo4jentity.SocialEntity{Url: linkedInUrl}).IsLinkedin() {
-				linkedInAlreadyUsed, existingOrganizationId, err := s.CheckOrganizationExistsWithLinkedIn(ctx, linkedInUrl, "", "")
+				linkedInAlreadyUsed, existingOrganizationId, err := s.CheckOrganizationExistsWithLinkedIn(ctx, linkedInUrl, utils.IfNotNilString(input.LinkedInAlias), "")
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "unable to check organization exists with linkedIn"))
 					return "", err
@@ -406,6 +412,7 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 					},
 					neo4jentity.SocialEntity{
 						Url:       linkedInUrl,
+						Alias:     utils.IfNotNilString(input.LinkedInAlias),
 						Source:    neo4jentity.DecodeDataSource(utils.IfNotNilString(input.Source)),
 						AppSource: utils.IfNotNilString(input.AppSource),
 					})

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 
 import { useUnmount } from 'usehooks-ts';
@@ -7,6 +7,7 @@ import { useReactFlow } from '@xyflow/react';
 import { FlowStore } from '@store/Flows/Flow.store';
 
 import { cn } from '@ui/utils/cn';
+import { FlowStatus } from '@graphql/types';
 import { Spinner } from '@ui/feedback/Spinner';
 import { Button } from '@ui/form/Button/Button';
 import { User01 } from '@ui/media/icons/User01';
@@ -45,7 +46,9 @@ export const Header = observer(
     const contactsStore = store.contacts;
     const showFinder = searchParams.get('show') === 'finder';
     const flowContactsPreset = store.tableViewDefs.flowContactsPreset;
-    const canSave = hasChanges;
+    const canSave = hasChanges && flow.value.status === FlowStatus.Off;
+    const [showPublishChangesButton, setShowPublishChangesButton] =
+      useState(false);
 
     useEffect(() => {
       if (!store.ui.commandMenu.isOpen) {
@@ -77,8 +80,9 @@ export const Header = observer(
       const handleBeforeUnload = (event: BeforeUnloadEvent) => {
         if (hasChanges) {
           event.preventDefault();
+          setShowPublishChangesButton(true);
 
-          return `Changes you’ve made will NOT be saved`;
+          return `Changes you’ve made will NOT be published.`;
         }
       };
 
@@ -185,7 +189,7 @@ export const Header = observer(
                 leftIcon={<UserPlus01 />}
                 onClick={() =>
                   store.ui.commandMenu.setOpen(true, {
-                    type: 'AddContactsBulk',
+                    type: 'AddContactsToFlow',
                     context: {
                       entity: 'Flow',
                       ids: [id],
@@ -196,7 +200,7 @@ export const Header = observer(
                 Add contacts
               </Button>
             )}
-            {canSave && (
+            {showPublishChangesButton && canSave && (
               <Button
                 size='xs'
                 variant='outline'

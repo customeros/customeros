@@ -12,6 +12,7 @@ import (
 
 const (
 	organizationGroup               = "organization"
+	globalOrganizationGroup         = "globalOrganization"
 	contractGroup                   = "contract"
 	orphanContactsGroup             = "orphanContactsGroup"
 	invoiceGroup                    = "invoice"
@@ -41,6 +42,7 @@ var jobLocks = struct {
 }{
 	locks: map[string]*sync.Mutex{
 		organizationGroup:               {},
+		globalOrganizationGroup:         {},
 		contactGroup:                    {},
 		contactBettercontactGroup:       {},
 		askForLinkedInConnectionsGroup:  {},
@@ -314,6 +316,13 @@ func StartCron(cont *container.Container) *cron.Cron {
 		cont.Log.Fatalf("Could not add cron job %s: %v", "checkMailstackDomainReputation", err.Error())
 	}
 
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleSyncScrapinToGlobalOrgs, func() {
+		lockAndRunJob(cont, globalOrganizationGroup, syncScrapinToGlobalOrgs)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "syncScrapinToGlobalOrgs", err.Error())
+	}
+
 	c.Start()
 
 	return c
@@ -471,4 +480,8 @@ func checkDomains(cont *container.Container) {
 
 func checkMailstackDomainReputation(cont *container.Container) {
 	service.NewMailstackService(cont.Cfg, cont.Log, cont.CommonServices).CheckMailstackDomainReputation()
+}
+
+func syncScrapinToGlobalOrgs(cont *container.Container) {
+	service.NewGlobalOrganizationService(cont.Cfg, cont.Log, cont.CommonServices).SyncScrapInToGlobalOrganization()
 }

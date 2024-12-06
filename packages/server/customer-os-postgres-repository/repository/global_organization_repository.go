@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
@@ -13,7 +14,9 @@ import (
 type GlobalOrganizationRepository interface {
 	GetById(ctx context.Context, id uint64) (*entity.GlobalOrganization, error)
 	GetByPrimaryDomain(ctx context.Context, domain string) (*entity.GlobalOrganization, error)
-	Create(ctx context.Context, organization entity.GlobalOrganization) (*entity.GlobalOrganization, error)
+	Create(ctx context.Context, organization *entity.GlobalOrganization) (*entity.GlobalOrganization, error)
+	Update(ctx context.Context, organization *entity.GlobalOrganization) (*entity.GlobalOrganization, error)
+	Search(ctx context.Context, searchTerm string, limit int) ([]*entity.GlobalOrganization, error)
 }
 
 type globalOrganizationRepository struct {
@@ -66,7 +69,7 @@ func (r *globalOrganizationRepository) GetByPrimaryDomain(ctx context.Context, d
 	return organization, nil
 }
 
-func (r *globalOrganizationRepository) Create(ctx context.Context, organization entity.GlobalOrganization) (*entity.GlobalOrganization, error) {
+func (r *globalOrganizationRepository) Create(ctx context.Context, organization *entity.GlobalOrganization) (*entity.GlobalOrganization, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.Create")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -77,5 +80,40 @@ func (r *globalOrganizationRepository) Create(ctx context.Context, organization 
 		tracing.TraceErr(span, result.Error)
 		return nil, result.Error
 	}
-	return &organization, nil
+	return organization, nil
+}
+
+func (r *globalOrganizationRepository) Update(ctx context.Context, organization *entity.GlobalOrganization) (*entity.GlobalOrganization, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.Update")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+	tracing.LogObjectAsJson(span, "organization", organization)
+
+	organization.UpdatedAt = utils.Now()
+	result := r.db.WithContext(ctx).Save(organization)
+	if result.Error != nil {
+		tracing.TraceErr(span, result.Error)
+		return nil, result.Error
+	}
+	return organization, nil
+}
+
+func (r *globalOrganizationRepository) Search(ctx context.Context, searchTerm string, limit int) ([]*entity.GlobalOrganization, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.SearchOrganizations")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+	span.LogFields(tracingLog.String("searchTerm", searchTerm))
+
+	organizations := make([]*entity.GlobalOrganization, 0)
+	result := r.db.WithContext(ctx).
+		Select("id, name, primary_domain, website, logo_url, icon_url").
+		Where("name ILIKE ? OR primary_domain ILIKE ?", "%"+searchTerm+"%", "%"+searchTerm+"%").
+		Limit(limit).
+		Find(&organizations)
+	if result.Error != nil {
+		tracing.TraceErr(span, result.Error)
+		return nil, result.Error
+	}
+	span.LogFields(tracingLog.Int("found", len(organizations)))
+	return organizations, nil
 }

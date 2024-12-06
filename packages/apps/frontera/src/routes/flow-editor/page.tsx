@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
 import { FinderTable } from '@finder/components/FinderTable';
@@ -10,6 +10,7 @@ import { cn } from '@ui/utils/cn';
 import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
 import { ViewSettings } from '@shared/components/ViewSettings';
+import { LoadingScreen } from '@shared/components/SplashScreen/components';
 import {
   TableIdType,
   TableViewType,
@@ -21,9 +22,37 @@ import { FlowSettingsPanel } from './src/components';
 
 import '@xyflow/react/dist/style.css';
 
-export const FlowEditor = () => {
+export const FlowEditor = observer(() => {
+  const store = useStore();
+  const navigate = useNavigate();
+  const { id } = useParams();
+  const [isLoading, setIsLoading] = useState(true);
+
   const [hasNewChanges, setHasNewChanges] = useState(false);
   const [isSidePanelOpen, setIsSidePanelOpen] = useState<boolean>(false);
+
+  if (typeof id === 'undefined') {
+    navigate('/finder');
+
+    return;
+  }
+
+  useEffect(() => {
+    if (!store.flows.value.has(id) && store.flows.isLoading) {
+      setIsLoading(true);
+      store.flows.invalidateId({ id });
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isLoading && store.flows.value.has(id)) {
+      setIsLoading(false);
+    }
+  }, [store.flows.value.has(id)]);
+
+  if (isLoading) {
+    return <LoadingScreen hide={false} isLoaded={false} showSplash={true} />;
+  }
 
   return (
     <ReactFlowProvider>
@@ -43,7 +72,7 @@ export const FlowEditor = () => {
       </div>
     </ReactFlowProvider>
   );
-};
+});
 
 const FlowContent = observer(
   ({

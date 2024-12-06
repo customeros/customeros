@@ -153,7 +153,7 @@ const columns: Record<string, Column> = {
     'value.phoneNumbers',
     {
       id: ColumnViewType.ContactsPhoneNumbers,
-      minSize: 125,
+      minSize: 144,
       maxSize: 650,
       enableResizing: true,
       enableColumnFilter: false,
@@ -500,7 +500,7 @@ const columns: Record<string, Column> = {
     'value.connectedUsers',
     {
       id: ColumnViewType.ContactsConnections,
-      minSize: 150,
+      minSize: 178,
       maxSize: 600,
       enableColumnFilter: false,
       enableSorting: true,
