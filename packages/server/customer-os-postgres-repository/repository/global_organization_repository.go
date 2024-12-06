@@ -38,7 +38,6 @@ func (r *globalOrganizationRepository) GetById(ctx context.Context, id uint64) (
 	if result.Error != nil {
 		span.LogFields(tracingLog.Bool("found", false))
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			tracing.TraceErr(span, result.Error)
 			return nil, nil
 		}
 		tracing.TraceErr(span, result.Error)
@@ -59,7 +58,6 @@ func (r *globalOrganizationRepository) GetByPrimaryDomain(ctx context.Context, d
 	if result.Error != nil {
 		span.LogFields(tracingLog.Bool("found", false))
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			tracing.TraceErr(span, result.Error)
 			return nil, nil
 		}
 		tracing.TraceErr(span, result.Error)
