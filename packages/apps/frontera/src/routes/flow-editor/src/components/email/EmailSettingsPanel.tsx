@@ -8,6 +8,7 @@ import { render } from '@react-email/render';
 import { FlowActionType } from '@store/Flows/types';
 
 import { cn } from '@ui/utils/cn';
+import { FlowStatus } from '@graphql/types';
 import { Button } from '@ui/form/Button/Button';
 import { Editor } from '@ui/form/Editor/Editor';
 import { IconButton } from '@ui/form/IconButton';
@@ -54,7 +55,8 @@ export const EmailSettingsPanel = observer(() => {
 
   const { takeSnapshot } = useUndoRedo();
 
-  const flow = flows.value.get(flowId)?.value?.name;
+  const flow = flows.value.get(flowId);
+  const flowName = flow?.value?.name;
 
   useEffect(() => {
     const isSubjectChanged = subject !== data?.subject;
@@ -206,7 +208,7 @@ export const EmailSettingsPanel = observer(() => {
           </div>
         </div>
 
-        <div className='px-4 overflow-y-auto min-h-[50%] h-full'>
+        <div className={cn('px-4 overflow-y-auto min-h-[50%] h-full')}>
           <Tooltip
             align='start'
             label={
@@ -228,6 +230,7 @@ export const EmailSettingsPanel = observer(() => {
                 placeholder='Subject'
                 variableOptions={variables}
                 namespace='flow-email-editor-subject'
+                isReadOnly={flow?.value?.status === FlowStatus.On}
                 onChange={(html) => setSubject(extractPlainText(html))}
                 defaultHtmlValue={convertPlainTextToHtml(subject ?? '')}
                 onKeyDown={(e) => {
@@ -262,6 +265,7 @@ export const EmailSettingsPanel = observer(() => {
               namespace='flow-email-editor'
               defaultHtmlValue={bodyTemplate}
               placeholderClassName='text-sm '
+              isReadOnly={flow?.value?.status === FlowStatus.On}
               className='text-sm cursor-text email-editor h-full'
               onChange={(e) => {
                 setBodyTemplate(e);
@@ -280,8 +284,8 @@ export const EmailSettingsPanel = observer(() => {
         {/*  Set up a test email...*/}
         {/*</Button>*/}
         <EmailEditorModal
-          flowName={flow}
           subject={subject}
+          flowName={flowName}
           action={data?.action}
           variables={variables}
           setSubject={setSubject}
@@ -291,6 +295,7 @@ export const EmailSettingsPanel = observer(() => {
           bodyTemplate={bodyTemplate}
           setBodyTemplate={setBodyTemplate}
           handleCancel={() => setFocusMode(false)}
+          isReadOnly={flow?.value?.status === FlowStatus.On}
         />
       </article>
     </div>
