@@ -2,7 +2,8 @@ name: customer-os-api-custom
 
 on:
   push:
-    branches: [ "silviu/cos-6148-test-workflow" ]  # Replace with your desired branch name
+    branches-ignore:
+      - 'otter'
     paths:
       - packages/server/customer-os-common-module/**
       - packages/server/customer-os-postgres-repository/**
