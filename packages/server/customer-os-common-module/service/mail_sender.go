@@ -35,10 +35,6 @@ func (s *mailService) SendMail(ctx context.Context, emailMessage *postgresentity
 		return err
 	}
 
-	if err := s.setFromName(ctx, span, emailMessage); err != nil {
-		return err
-	}
-
 	if err := s.sendEmailBasedOnProvider(ctx, span, emailMessage, oauthToken); err != nil {
 		return err
 	}
@@ -136,24 +132,6 @@ func (s *mailService) setReplyReferences(emailMessage *postgresentity.EmailMessa
 		emailMessage.ProviderReferences = emailChannelData.ProviderMessageId
 	}
 	emailMessage.ProviderInReplyTo = emailChannelData.ProviderMessageId
-}
-
-func (s *mailService) setFromName(ctx context.Context, span opentracing.Span, emailMessage *postgresentity.EmailMessage) error {
-	userNode, err := s.services.Neo4jRepositories.UserReadRepository.GetFirstUserByEmail(ctx, emailMessage.Tenant, emailMessage.From)
-	if err != nil {
-		err = errors.Wrap(err, "failed to get first user by email")
-		tracing.TraceErr(span, err)
-		return err
-	}
-	if userNode == nil {
-		err := errors.New("user not found")
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	user := neo4jmapper.MapDbNodeToUserEntity(userNode)
-	emailMessage.FromName = user.FirstName + " " + user.LastName
-	return nil
 }
 
 func (s *mailService) sendEmailBasedOnProvider(
