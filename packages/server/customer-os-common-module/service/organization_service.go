@@ -141,6 +141,10 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 		}
 	}
 
+	if primaryDomain != "" && adjustedWebsite == "" {
+		adjustedWebsite = primaryDomain
+	}
+
 	// prepare domains in advance
 	err = s.services.DomainService.MergeDomain(ctx, primaryDomain)
 	if err != nil {
