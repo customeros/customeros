@@ -83,6 +83,10 @@ func InitRepositories(postgresDB *config.PostgresDB) *Repositories {
 		Db:      postgresDB.GormDB,
 		AsyncDb: postgresDB.AsyncGormDB,
 
+		OAuthTokenRepository:              NewOAuthTokenRepository(postgresDB.AsyncGormDB),
+		RawEmailRepository:                NewRawEmailRepository(postgresDB.AsyncGormDB),
+		GoogleServiceAccountKeyRepository: NewGoogleServiceAccountKeyRepository(postgresDB.AsyncGormDB),
+
 		AiLocationMappingRepository:                 NewAiLocationMappingRepository(postgresDB.GormDB),
 		AiPromptLogRepository:                       NewAiPromptLogRepository(postgresDB.GormDB),
 		ApiBillableEventRepository:                  NewApiBillableEventRepository(postgresDB.GormDB),
@@ -119,16 +123,13 @@ func InitRepositories(postgresDB *config.PostgresDB) *Repositories {
 		FlowListenerRegistryRepository:              NewFlowListenerRegistryRepository(postgresDB.GormDB),
 		FlowTransitionsRegistryRepository:           NewFlowTransitionsRegistryRepository(postgresDB.GormDB),
 		FlowWebhooksRepository:                      NewFlowWebhooksRepository(postgresDB.GormDB),
-		GoogleServiceAccountKeyRepository:           NewGoogleServiceAccountKeyRepository(postgresDB.GormDB),
 		IndustryMappingRepository:                   NewIndustryMappingRepository(postgresDB.GormDB),
 		MailStackDomainRepository:                   NewMailStackDomainRepository(postgresDB.GormDB),
 		MailstackBuyRequestRepository:               NewMailstackBuyRequestRepository(postgresDB.GormDB),
-		OAuthTokenRepository:                        NewOAuthTokenRepository(postgresDB.AsyncGormDB),
 		OranizationWebsiteHostingPlatformRepository: NewOrganizationWebsiteHostingPlatformRepository(postgresDB.GormDB),
 		PersonalEmailProviderRepository:             NewPersonalEmailProviderRepository(postgresDB.GormDB),
 		PersonalIntegrationRepository:               NewPersonalIntegrationsRepo(postgresDB.GormDB),
 		PostmarkApiKeyRepository:                    NewPostmarkApiKeyRepo(postgresDB.GormDB),
-		RawEmailRepository:                          NewRawEmailRepository(postgresDB.AsyncGormDB),
 		SlackChannelNotificationRepository:          NewSlackChannelNotificationRepository(postgresDB.GormDB),
 		SlackChannelRepository:                      NewSlackChannelRepository(postgresDB.GormDB),
 		SlackSettingsRepository:                     NewSlackSettingsRepository(postgresDB.GormDB),
@@ -186,7 +187,6 @@ func (r *Repositories) Migration(postgresDB *config.PostgresDB) {
 		&entity.FlowListenerRegistry{},
 		&entity.FlowTransitionsRegistry{},
 		&entity.FlowWebhooks{},
-		&entity.GoogleServiceAccountKey{},
 		&entity.IndustryMapping{},
 		&entity.MailStackDomain{},
 		&entity.MailstackBuyRequest{},
@@ -221,6 +221,7 @@ func (r *Repositories) Migration(postgresDB *config.PostgresDB) {
 	}
 
 	err = postgresDB.AsyncGormDB.AutoMigrate(
+		&entity.GoogleServiceAccountKey{},
 		&entity.OAuthTokenEntity{},
 		&entity.RawEmail{},
 	)

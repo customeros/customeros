@@ -94,8 +94,8 @@ func prepareClient() {
 	appLogger.InitLogger()
 
 	postgresDB := &commonConfig.PostgresDB{
-		GormDB: gormDB,
-		SqlDB:  sqlDB,
+		GormDB:      gormDB,
+		AsyncGormDB: gormDB,
 	}
 
 	testDialFactory := events_platform.NewTestDialFactory()
