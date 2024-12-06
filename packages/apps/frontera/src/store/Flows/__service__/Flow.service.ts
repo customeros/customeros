@@ -1,20 +1,26 @@
 import type { Transport } from '@store/transport';
 
+import { Flow } from '@graphql/types';
+
+import FlowOnDocument from './flowOn.graphql';
+import GetFlowDocument from './getFlow.graphql';
+import FlowOffDocument from './flowOff.graphql';
+import GetFlowsDocument from './getFlows.graphql';
+import MergeFlowDocument from './flowMerge.graphql';
+import ArchiveFlowDocument from './flowArchive.graphql';
+import { FlowOnMutation, FlowOnMutationVariables } from './flowOn.generated.ts';
+import {
+  FlowOffMutation,
+  FlowOffMutationVariables,
+} from './flowOff.generated.ts';
 import {
   FlowMergeMutation,
   FlowMergeMutationVariables,
-} from '@store/Flows/__service__/flowMerge.generated';
+} from './flowMerge.generated';
 import {
-  FlowChangeStatusMutation,
-  FlowChangeStatusMutationVariables,
-} from '@store/Flows/__service__/changeFlowStatus.generated';
-
-import { Flow } from '@graphql/types';
-
-import GetFlowDocument from './getFlow.graphql';
-import GetFlowsDocument from './getFlows.graphql';
-import MergeFlowDocument from './flowMerge.graphql';
-import ChangeStatusDocument from './changeFlowStatus.graphql';
+  FlowArchiveMutation,
+  FlowArchiveMutationVariables,
+} from './flowArchive.generated.ts';
 
 class FlowService {
   private static instance: FlowService | null = null;
@@ -52,11 +58,25 @@ class FlowService {
     >(MergeFlowDocument, payload);
   }
 
-  async changeStatus(payload: FlowChangeStatusMutationVariables) {
+  async archiveFlow(payload: FlowArchiveMutationVariables) {
     return this.transport.graphql.request<
-      FlowChangeStatusMutation,
-      FlowChangeStatusMutationVariables
-    >(ChangeStatusDocument, payload);
+      FlowArchiveMutation,
+      FlowArchiveMutationVariables
+    >(ArchiveFlowDocument, payload);
+  }
+
+  async startFlow(payload: FlowOnMutationVariables) {
+    return this.transport.graphql.request<
+      FlowOnMutation,
+      FlowOnMutationVariables
+    >(FlowOnDocument, payload);
+  }
+
+  async stopFlow(payload: FlowOffMutationVariables) {
+    return this.transport.graphql.request<
+      FlowOffMutation,
+      FlowOffMutationVariables
+    >(FlowOffDocument, payload);
   }
 }
 

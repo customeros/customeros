@@ -1,0 +1,7 @@
+mutation flowOn($id: ID!) {
+  flow_On(id: $id) {
+    metadata {
+      id
+    }
+  }
+}

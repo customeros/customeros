@@ -2,7 +2,6 @@ import React, { useRef } from 'react';
 
 import { observer } from 'mobx-react-lite';
 
-import { FlowStatus } from '@graphql/types';
 import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
 import {
@@ -15,7 +14,6 @@ export const StartFlow = observer(() => {
   const store = useStore();
   const context = store.ui.commandMenu.context;
   const flow = store.flows.value.get(context.ids?.[0]);
-
   const confirmButtonRef = useRef<HTMLButtonElement>(null);
 
   const handleClose = () => {
@@ -32,14 +30,9 @@ export const StartFlow = observer(() => {
       return;
     }
 
-    flow?.update((f) => {
-      f.status = FlowStatus.On;
-
-      return f;
+    flow?.startFlow({
+      onSuccess: () => handleClose(),
     });
-    store.ui.commandMenu.setOpen(false);
-
-    store.ui.commandMenu.clearContext();
   };
 
   return (
@@ -70,7 +63,9 @@ export const StartFlow = observer(() => {
             colorScheme='primary'
             ref={confirmButtonRef}
             onClick={handleConfirm}
+            isLoading={flow?.isLoading}
             data-test='flow-actions-confirm-stop'
+            loadingText={`Starting ${flow?.value.name}...`}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 handleConfirm();

@@ -236,12 +236,11 @@ export class FlowsStore implements GroupStore<Flow> {
     const flow = this.value.get(id);
 
     try {
-      const { flow_ChangeStatus } = await this.service.changeStatus({
+      const { flow_Archive } = await this.service.archiveFlow({
         id,
-        status: FlowStatus.Archived,
       });
 
-      if (flow_ChangeStatus.metadata.id) {
+      if (flow_Archive.result) {
         runInAction(() => {
           flow?.update(
             (seq) => {
@@ -273,40 +272,26 @@ export class FlowsStore implements GroupStore<Flow> {
     }
   };
 
+  // todo update with proper bulk mutation when BE is ready
   archiveMany = async (ids: string[], options?: { onSuccess?: () => void }) => {
     this.isLoading = true;
 
     try {
-      const results = await Promise.all(
+      await Promise.all(
         ids.map((id) =>
-          this.service.changeStatus({
+          this.service.archiveFlow({
             id,
-            status: FlowStatus.Archived,
           }),
         ),
       );
 
-      const successfulIds = results.map(
-        ({ flow_ChangeStatus }) => flow_ChangeStatus?.metadata?.id,
-      );
-
       runInAction(() => {
-        successfulIds.forEach((id) => {
-          this.value
-            .get(id)
-            ?.update((seq) => ({ ...seq, status: FlowStatus.Archived }), {
-              mutate: false,
-            });
-        });
-
-        if (successfulIds.length > 0) {
-          this.sync({ action: 'DELETE', ids: successfulIds });
-          this.root.ui.toastSuccess(
-            `${successfulIds.length} flows archived`,
-            'archive-flows-success',
-          );
-          options?.onSuccess?.();
-        }
+        this.sync({ action: 'DELETE', ids: ids });
+        this.root.ui.toastSuccess(
+          `${ids.length} flows archived`,
+          'archive-flows-success',
+        );
+        options?.onSuccess?.();
       });
     } catch (err) {
       this.error = (err as Error).message;
