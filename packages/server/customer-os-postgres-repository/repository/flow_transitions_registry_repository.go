@@ -14,7 +14,8 @@ import (
 
 type FlowTransitionsRegistryRepository interface {
 	InitializeFlowTransitions(ctx context.Context) error
-	GetFlowTransitionsByNode(ctx context.Context, fromNode string) ([]entity.FlowTransitionsRegistry, error)
+	GetUniqueFromNodes(ctx context.Context) ([]FromNodeRecord, error)
+	GetFlowTransitionsByNode(ctx context.Context, fromNode enum.FlowNodeType) ([]entity.FlowTransitionsRegistry, error)
 	GetAllFlowTransitions(ctx context.Context) ([]entity.FlowTransitionsRegistry, error)
 	CreateFlowTransition(ctx context.Context, transition *entity.FlowTransitionsRegistry) error
 }
@@ -23,77 +24,119 @@ type flowTransitionsRegistryRepository struct {
 	gormDb *gorm.DB
 }
 
+type FromNodeRecord struct {
+	FromNode     string `gorm:"column:from_node"`
+	FromNodeType string `gorm:"column:from_node_type"`
+}
+
 func NewFlowTransitionsRegistryRepository(gormDb *gorm.DB) FlowTransitionsRegistryRepository {
 	return &flowTransitionsRegistryRepository{gormDb: gormDb}
 }
 
-func (r *flowTransitionsRegistryRepository) FindFlowAction(ctx context.Context, actionName string) (entity.FlowActionRegistry, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionRegistryRepository.FindFlowAction")
+func (r *flowTransitionsRegistryRepository) GetUniqueFromNodes(ctx context.Context) ([]FromNodeRecord, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowTransitionRegistryRepository.GetUniqueFromNodes")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	var action entity.FlowActionRegistry
+	var uniqueFromNodes []FromNodeRecord
 	err := r.gormDb.WithContext(ctx).
-		Where("action = ? AND enabled = true", actionName).
-		First(&action).Error
+		Distinct("from_node").
+		Where("enabled = true").
+		Order("from_node DESC").
+		Find(&uniqueFromNodes).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		err = nil
 	}
 
-	return action, err
+	return uniqueFromNodes, err
 }
 
-func (r *flowTransitionsRegistryRepository) CreateFlowAction(ctx context.Context, action *entity.FlowActionRegistry) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionRegistryRepository.CreateFlowAction")
+func (r *flowTransitionsRegistryRepository) GetFlowTransitionsByNode(ctx context.Context, fromNode enum.FlowNodeType) ([]entity.FlowTransitionsRegistry, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowTransitionRegistryRepository.GetFlowTransitionsByNode")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	return r.gormDb.WithContext(ctx).Create(action).Error
+	var transition []entity.FlowTransitionsRegistry
+	err := r.gormDb.WithContext(ctx).
+		Where("from_node = ? AND enabled = true", fromNode).
+		Order("to_node_type DESC").
+		Find(&transition).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		err = nil
+	}
+
+	return transition, err
+}
+
+func (r *flowTransitionsRegistryRepository) GetAllFlowTransitions(ctx context.Context) ([]entity.FlowTransitionsRegistry, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowTransactionRegistryRepository.GetAllFlowTransactions")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	var transitions []entity.FlowTransitionsRegistry
+	err := r.gormDb.WithContext(ctx).
+		Where("enabled = true").
+		Order("from_node DESC").
+		Find(&transitions).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		err = nil
+	}
+
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+
+	return transitions, err
+}
+
+func (r *flowTransitionsRegistryRepository) CreateFlowTransition(ctx context.Context, transition *entity.FlowTransitionsRegistry) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowTransactionRegistryRepository.CreateFlowTransition")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	return r.gormDb.WithContext(ctx).Create(transition).Error
 }
 
 func (r *flowTransitionsRegistryRepository) InitializeFlowTransitions(ctx context.Context) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionRegistryRepository.InitializeActions")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowTransitionsRegistry.InitializeFlowTransitions")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	requiredActions := []entity.FlowActionRegistry{
+	required := []entity.FlowTransitionsRegistry{
 		{
-			Action:       enum.ActionContactCreate.String(),
-			FriendlyName: "Create a Contact",
-			Description:  "Creates a new Contact",
-			Enabled:      true,
-		},
-		{
-			Action:       enum.ActionOrganizationCreate.String(),
-			FriendlyName: "Create an Organization",
-			Description:  "Creates a new Organization",
-			Enabled:      true,
-		},
-		{
-			Action:       enum.ActionTimelineEventCreate.String(),
-			FriendlyName: "Add Event to Timeline",
-			Description:  "Adds a new event to the Organization Timeline",
+			FromNodeType: enum.NodeFlowListenerEvent.String(),
+			FromNode:     enum.EventFathomMeetingSummaryCreated.String(),
+			ToNodeType:   enum.NodeFlowAction.String(),
+			ToNode:       enum.ActionTimelineEventCreate.String(),
 			Enabled:      true,
 		},
 		// ... add more here
 	}
 
-	for _, action := range requiredActions {
-		existingAction, err := r.FindFlowAction(ctx, action.Action)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
+	dbTransitions, err := r.GetAllFlowTransitions(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	for _, transition := range required {
+		exists := false
+
+		for _, t := range dbTransitions {
+			if t.FromNode == transition.FromNode && t.ToNode == transition.ToNode {
+				exists = true
+			}
 		}
 
-		if existingAction.Action != "" {
-			continue
-		}
-
-		createErr := r.CreateFlowAction(ctx, &action)
-		if err != nil {
-			tracing.TraceErr(span, createErr)
-			return createErr
+		if !exists {
+			createErr := r.CreateFlowTransition(ctx, &transition)
+			if createErr != nil {
+				tracing.TraceErr(span, err)
+				return err
+			}
 		}
 	}
 

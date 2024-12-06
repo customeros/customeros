@@ -10,27 +10,26 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
 
-type FlowEventsResponse struct {
+type FlowListenerEventsResponse struct {
 	rest.BaseResponse
-	Events []FlowEventRecord `json:"events"`
+	Events []FlowListenerEventRecord `json:"events"`
 }
 
-type FlowEventSingleResponse struct {
+type FlowListenerEventSingleResponse struct {
 	rest.BaseResponse
-	Event FlowEventRecord `json:"event"`
+	Event FlowListenerEventRecord `json:"event"`
 }
 
-type FlowEventRecord struct {
+type FlowListenerEventRecord struct {
 	System      string `json:"system"`
-	Resource    string `json:"resource"`
-	Action      string `json:"action"`
+	Event       string `json:"event"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
 }
 
-func GetEvents(s *service.Services) gin.HandlerFunc {
+func GetListeners(s *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "Flows.GetEvents", c.Request.Header)
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "Flows.GetListeners", c.Request.Header)
 		defer span.Finish()
 		tracing.TagComponentRest(span)
 
@@ -40,35 +39,34 @@ func GetEvents(s *service.Services) gin.HandlerFunc {
 			return
 		}
 
-		events, err := s.Repositories.PostgresRepositories.FlowEventsRepository.GetAllFlowEvents(ctx)
+		events, err := s.Repositories.PostgresRepositories.FlowListenerRegistryRepository.GetAllFlowListenerEvents(ctx)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer)
 			return
 		}
 
-		results := make([]FlowEventRecord, len(events))
+		results := make([]FlowListenerEventRecord, len(events))
 
 		for i, event := range events {
-			record := FlowEventRecord{
+			record := FlowListenerEventRecord{
 				System:      event.ExternalSystem,
-				Resource:    event.Resource,
-				Action:      event.Action,
-				Name:        event.EventName,
+				Event:       event.ListenerEvent,
+				Name:        event.FriendlyName,
 				Description: event.Description,
 			}
 			results[i] = record
 		}
 
 		if len(events) == 1 {
-			c.JSON(http.StatusOK, FlowEventSingleResponse{
+			c.JSON(http.StatusOK, FlowListenerEventSingleResponse{
 				BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
 				Event:        results[0],
 			})
 			return
 		}
 
-		c.JSON(http.StatusOK, FlowEventsResponse{
+		c.JSON(http.StatusOK, FlowListenerEventsResponse{
 			BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
 			Events:       results,
 		})

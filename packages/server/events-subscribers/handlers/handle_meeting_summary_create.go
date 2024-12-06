@@ -17,7 +17,7 @@ import (
 	"go.uber.org/multierr"
 )
 
-func HandleMeetingSummaryEvent(ctx context.Context, s *service.Services, sourceEvent commonenum.FlowEvent, eventData *data_fields.MeetingSummaryEvent) error {
+func HandleMeetingSummaryEvent(ctx context.Context, s *service.Services, sourceEvent commonenum.FlowListenerEvent, eventData *data_fields.MeetingSummaryEvent) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EventHandlers.HandleMeetingSummaryEvent")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
@@ -38,7 +38,7 @@ func HandleMeetingSummaryEvent(ctx context.Context, s *service.Services, sourceE
 	return nil
 }
 
-func publishEventCreateContact(ctx context.Context, s *service.Services, sourceEvent commonenum.FlowEvent, eventData *data_fields.MeetingSummaryEvent) error {
+func publishEventCreateContact(ctx context.Context, s *service.Services, sourceEvent commonenum.FlowListenerEvent, eventData *data_fields.MeetingSummaryEvent) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EventHandlers.publishEventCreateContact")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
@@ -64,7 +64,7 @@ func publishEventCreateContact(ctx context.Context, s *service.Services, sourceE
 }
 
 func handleContactEventPublishing(ctx context.Context, span opentracing.Span, s *service.Services,
-	system enum.ExternalSystemId, sourceEvent commonenum.FlowEvent, email string, tenantDomains []string,
+	system enum.ExternalSystemId, sourceEvent commonenum.FlowListenerEvent, email string, tenantDomains []string,
 ) error {
 	cleanEmail := mailvalidate.ValidateEmailSyntax(email)
 	if !cleanEmail.IsValid {
@@ -84,7 +84,7 @@ func handleContactEventPublishing(ctx context.Context, span opentracing.Span, s 
 	return nil
 }
 
-func publishCreateMarkdownEvent(ctx context.Context, s *service.Services, sourceEvent commonenum.FlowEvent, eventData *data_fields.MeetingSummaryEvent) error {
+func publishCreateMarkdownEvent(ctx context.Context, s *service.Services, sourceEvent commonenum.FlowListenerEvent, eventData *data_fields.MeetingSummaryEvent) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EventHandlers.publishCreateMarkdownEvent")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
@@ -134,7 +134,7 @@ func createMarkdownEvent(system enum.ExternalSystemId, eventData *data_fields.Me
 }
 
 func handleMarkdownEventPublishing(ctx context.Context, span opentracing.Span, s *service.Services,
-	system enum.ExternalSystemId, sourceEvent commonenum.FlowEvent, email string, tenantDomains []string,
+	system enum.ExternalSystemId, sourceEvent commonenum.FlowListenerEvent, email string, tenantDomains []string,
 	mdEvent *data_fields.MarkdownEventFields,
 ) error {
 	cleanEmail := mailvalidate.ValidateEmailSyntax(email)
@@ -158,7 +158,7 @@ func handleMarkdownEventPublishing(ctx context.Context, span opentracing.Span, s
 	flowActionEvent := dto.FlowActionEvent{
 		ExternalSystemId: system,
 		SourceEvent:      sourceEvent,
-		Name:             commonenum.ActionCreateTimelineEvent,
+		Name:             commonenum.ActionTimelineEventCreate,
 		DataType:         data_fields.MarkdownEventFields{}.Type(),
 		Data:             mdEvent,
 	}
@@ -180,11 +180,11 @@ func isEmailInDomains(emailDomain string, tenantDomains []string) bool {
 	return false
 }
 
-func createFlowActionEventCreateContact(system enum.ExternalSystemId, sourceEvent commonenum.FlowEvent, email string) dto.FlowActionEvent {
+func createFlowActionEventCreateContact(system enum.ExternalSystemId, sourceEvent commonenum.FlowListenerEvent, email string) dto.FlowActionEvent {
 	return dto.FlowActionEvent{
 		ExternalSystemId: system,
 		SourceEvent:      sourceEvent,
-		Name:             commonenum.ActionCreateContact,
+		Name:             commonenum.ActionContactCreate,
 		DataType:         data_fields.ContactCreateEvent{}.Type(),
 		Data: data_fields.ContactCreateEvent{
 			Email: email,
