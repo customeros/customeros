@@ -36,6 +36,7 @@ export const EmailSettingsPanel = observer(() => {
   const variables = flowEmailVariables?.value.get('CONTACT')?.variables;
   const data = ui.flowActionSidePanel.context.node?.data;
 
+  const [isDragging, setIsDragging] = useState(false);
   const [subject, setSubject] = useState(data?.subject ?? '');
   const [bodyTemplate, setBodyTemplate] = useState(data?.bodyTemplate ?? '');
 
@@ -172,133 +173,157 @@ export const EmailSettingsPanel = observer(() => {
   };
 
   return (
-    <div
-      onClick={(e) => e.stopPropagation()}
-      onKeyDown={(e) => e.stopPropagation()}
-      className='pl-4 -ml-4 fixed z-50 top-[0px] bottom-0 right-0 w-[400px] h-full  '
-    >
-      <article className=' h-full bg-white  border-l flex flex-col gap-1 animate-slideLeft'>
-        <div className='flex justify-between items-center border-b border-gray-200 p-4 y-2 h-[41px]'>
-          <div className='flex items-center gap-2'>
-            <h1 className='font-medium'>Email {}</h1>
-            <Tooltip label='Focus mode'>
-              <IconButton
-                size='xs'
-                variant='ghost'
-                icon={<ZenCircle />}
-                aria-label={'Focus mode'}
-                onClick={() => setFocusMode(true)}
-              />
-            </Tooltip>
-          </div>
+    <>
+      {isDragging && (
+        <div
+          onClick={(e) => e.stopPropagation()}
+          className='absolute transparent top-0 bottom-0 left-0 right-0 z-[49]'
+          onMouseUp={(e) => {
+            e.stopPropagation();
+            setIsDragging(false);
+          }}
+        ></div>
+      )}
+      <div
+        onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
+        className='pl-4 -ml-4 fixed z-50 top-[0px] bottom-0 right-0 w-[400px] h-full  '
+        onMouseUp={(e) => {
+          e.stopPropagation();
+          setIsDragging(false);
+        }}
+        onMouseDown={(e) => {
+          e.stopPropagation();
+          setIsDragging(true);
+        }}
+      >
+        <article className=' h-full bg-white  border-l flex flex-col gap-1 animate-slideLeft'>
+          <div className='flex justify-between items-center border-b border-gray-200 p-4 y-2 h-[41px]'>
+            <div className='flex items-center gap-2'>
+              <h1 className='font-medium'>Email {}</h1>
+              <Tooltip label='Focus mode'>
+                <IconButton
+                  size='xs'
+                  variant='ghost'
+                  icon={<ZenCircle />}
+                  aria-label={'Focus mode'}
+                  onClick={() => setFocusMode(true)}
+                />
+              </Tooltip>
+            </div>
 
-          <div className='flex gap-2'>
-            <div>
-              {ui.flowActionSidePanel.context.hasUnsavedChanges && (
-                <Button size='xs' variant='ghost' onClick={handleCancelChanges}>
-                  Discard changes
+            <div className='flex gap-2'>
+              <div>
+                {ui.flowActionSidePanel.context.hasUnsavedChanges && (
+                  <Button
+                    size='xs'
+                    variant='ghost'
+                    onClick={handleCancelChanges}
+                  >
+                    Discard changes
+                  </Button>
+                )}
+              </div>
+              <div>
+                <Button size='xs' variant='outline' onClick={handleSave}>
+                  Done
                 </Button>
-              )}
-            </div>
-            <div>
-              <Button size='xs' variant='outline' onClick={handleSave}>
-                Done
-              </Button>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className={cn('px-4 overflow-y-auto min-h-[50%] h-full')}>
-          <Tooltip
-            align='start'
-            label={
-              data?.action === FlowActionType.EMAIL_REPLY
-                ? `Reply to email subjects can't be edited`
-                : ''
-            }
-          >
-            <div
-              className={cn({
-                'cursor-not-allowed':
-                  data?.action === FlowActionType.EMAIL_REPLY,
-              })}
+          <div className={cn('px-4 overflow-y-auto min-h-[50%] h-full')}>
+            <Tooltip
+              align='start'
+              label={
+                data?.action === FlowActionType.EMAIL_REPLY
+                  ? `Reply to email subjects can't be edited`
+                  : ''
+              }
             >
+              <div
+                className={cn({
+                  'cursor-not-allowed':
+                    data?.action === FlowActionType.EMAIL_REPLY,
+                })}
+              >
+                <Editor
+                  size='md'
+                  usePlainText
+                  ref={inputRef}
+                  placeholder='Subject'
+                  variableOptions={variables}
+                  namespace='flow-email-editor-subject'
+                  isReadOnly={flow?.value?.status === FlowStatus.On}
+                  onChange={(html) => setSubject(extractPlainText(html))}
+                  defaultHtmlValue={convertPlainTextToHtml(subject ?? '')}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Tab') {
+                      e.preventDefault();
+                      editorRef.current?.focus();
+                    }
+                  }}
+                  placeholderClassName={cn(
+                    'text-sm font-medium h-auto cursor-text ',
+                    {
+                      'pointer-events-none text-gray-400':
+                        data?.action === FlowActionType.EMAIL_REPLY,
+                    },
+                  )}
+                  className={cn(
+                    `text-sm font-medium h-auto cursor-text email-editor-subject`,
+                    {
+                      'pointer-events-none text-gray-400':
+                        data?.action === FlowActionType.EMAIL_REPLY,
+                    },
+                  )}
+                />
+              </div>
+            </Tooltip>
+            <div className='min-h-[60vh] mb-2'>
               <Editor
-                size='md'
-                usePlainText
-                ref={inputRef}
-                placeholder='Subject'
+                ref={editorRef}
+                placeholder={placeholder}
                 variableOptions={variables}
-                namespace='flow-email-editor-subject'
+                dataTest='flow-email-editor'
+                namespace='flow-email-editor'
+                defaultHtmlValue={bodyTemplate}
+                placeholderClassName='text-sm '
                 isReadOnly={flow?.value?.status === FlowStatus.On}
-                onChange={(html) => setSubject(extractPlainText(html))}
-                defaultHtmlValue={convertPlainTextToHtml(subject ?? '')}
-                onKeyDown={(e) => {
-                  if (e.key === 'Tab') {
-                    e.preventDefault();
-                    editorRef.current?.focus();
-                  }
+                className='text-sm cursor-text email-editor h-full'
+                onChange={(e) => {
+                  setBodyTemplate(e);
                 }}
-                placeholderClassName={cn(
-                  'text-sm font-medium h-auto cursor-text ',
-                  {
-                    'pointer-events-none text-gray-400':
-                      data?.action === FlowActionType.EMAIL_REPLY,
-                  },
-                )}
-                className={cn(
-                  `text-sm font-medium h-auto cursor-text email-editor-subject`,
-                  {
-                    'pointer-events-none text-gray-400':
-                      data?.action === FlowActionType.EMAIL_REPLY,
-                  },
-                )}
               />
             </div>
-          </Tooltip>
-          <div className='min-h-[60vh] mb-2'>
-            <Editor
-              ref={editorRef}
-              placeholder={placeholder}
-              variableOptions={variables}
-              dataTest='flow-email-editor'
-              namespace='flow-email-editor'
-              defaultHtmlValue={bodyTemplate}
-              placeholderClassName='text-sm '
-              isReadOnly={flow?.value?.status === FlowStatus.On}
-              className='text-sm cursor-text email-editor h-full'
-              onChange={(e) => {
-                setBodyTemplate(e);
-              }}
-            />
           </div>
-        </div>
-        {/*<Button*/}
-        {/*  size='lg'*/}
-        {/*  isDisabled*/}
-        {/*  variant='ghost'*/}
-        {/*  colorScheme='primary'*/}
-        {/*  leftIcon={<MailAdd className='text-inherit size-4' />}*/}
-        {/*  className='text-primary-700 w-full text-sm absolute bottom-0 py-4 rounded-none border-t border-solid border-gray-200'*/}
-        {/*>*/}
-        {/*  Set up a test email...*/}
-        {/*</Button>*/}
-        <EmailEditorModal
-          subject={subject}
-          flowName={flowName}
-          action={data?.action}
-          variables={variables}
-          setSubject={setSubject}
-          handleSave={handleSave}
-          isEditorOpen={focusMode}
-          placeholder={placeholder}
-          bodyTemplate={bodyTemplate}
-          setBodyTemplate={setBodyTemplate}
-          handleCancel={() => setFocusMode(false)}
-          isReadOnly={flow?.value?.status === FlowStatus.On}
-        />
-      </article>
-    </div>
+          {/*<Button*/}
+          {/*  size='lg'*/}
+          {/*  isDisabled*/}
+          {/*  variant='ghost'*/}
+          {/*  colorScheme='primary'*/}
+          {/*  leftIcon={<MailAdd className='text-inherit size-4' />}*/}
+          {/*  className='text-primary-700 w-full text-sm absolute bottom-0 py-4 rounded-none border-t border-solid border-gray-200'*/}
+          {/*>*/}
+          {/*  Set up a test email...*/}
+          {/*</Button>*/}
+          <EmailEditorModal
+            subject={subject}
+            flowName={flowName}
+            action={data?.action}
+            variables={variables}
+            setSubject={setSubject}
+            handleSave={handleSave}
+            isEditorOpen={focusMode}
+            placeholder={placeholder}
+            bodyTemplate={bodyTemplate}
+            setBodyTemplate={setBodyTemplate}
+            handleCancel={() => setFocusMode(false)}
+            isReadOnly={flow?.value?.status === FlowStatus.On}
+          />
+        </article>
+      </div>
+    </>
   );
 });
 
