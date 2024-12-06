@@ -106,7 +106,7 @@ func GetOrganization(s *service.Services) gin.HandlerFunc {
 
 		orgID := c.Param("id")
 		if orgID == "" {
-			rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Invalid organization ID a"))
+			rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Invalid organization ID"))
 			return
 		}
 
@@ -114,7 +114,7 @@ func GetOrganization(s *service.Services) gin.HandlerFunc {
 
 		switch {
 		case status == rest.StatusError:
-			rest.SendError(c, span, http.StatusNotFound, rest.ErrNotFound.WithMessage("Organization does not exist a"))
+			rest.SendError(c, span, http.StatusNotFound, rest.ErrNotFound.WithMessage("Organization does not exist"))
 			return
 		case status == rest.StatusPartialSuccess:
 			c.JSON(http.StatusPartialContent, "Unable to retrieve full organization data")
