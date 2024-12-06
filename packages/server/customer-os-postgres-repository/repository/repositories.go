@@ -69,6 +69,7 @@ type Repositories struct {
 	UserEmailImportPageTokenRepository          UserEmailImportStateRepository
 	UserWorkingScheduleRepository               UserWorkingScheduleRepository
 	WorkflowRepository                          WorkflowRepository
+	GlobalOrganizationRepository                GlobalOrganizationRepository
 }
 
 func InitRepositories(db *gorm.DB) *Repositories {
@@ -135,6 +136,7 @@ func InitRepositories(db *gorm.DB) *Repositories {
 		UserEmailImportPageTokenRepository:          NewUserEmailImportStateRepository(db),
 		UserWorkingScheduleRepository:               NewUserWorkingScheduleRepository(db),
 		WorkflowRepository:                          NewWorkflowRepository(db),
+		GlobalOrganizationRepository:                NewGlobalOrganizationRepository(db),
 	}
 
 	return repositories
@@ -201,6 +203,7 @@ func (r *Repositories) Migration(db *gorm.DB) {
 		&entity.UserEmailImportStateHistory{},
 		&entity.UserWorkingSchedule{},
 		&entity.Workflow{},
+		&entity.GlobalOrganization{},
 	)
 	if err != nil {
 		panic(err)

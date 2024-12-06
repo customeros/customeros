@@ -1,0 +1,81 @@
+package repository
+
+import (
+	"context"
+	"errors"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	"github.com/opentracing/opentracing-go"
+	tracingLog "github.com/opentracing/opentracing-go/log"
+	"gorm.io/gorm"
+)
+
+type GlobalOrganizationRepository interface {
+	GetById(ctx context.Context, id uint64) (*entity.GlobalOrganization, error)
+	GetByPrimaryDomain(ctx context.Context, domain string) (*entity.GlobalOrganization, error)
+	Create(ctx context.Context, organization entity.GlobalOrganization) (*entity.GlobalOrganization, error)
+}
+
+type globalOrganizationRepository struct {
+	db *gorm.DB
+}
+
+func NewGlobalOrganizationRepository(gormDb *gorm.DB) GlobalOrganizationRepository {
+	return &globalOrganizationRepository{db: gormDb}
+}
+
+func (r *globalOrganizationRepository) GetById(ctx context.Context, id uint64) (*entity.GlobalOrganization, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.GetById")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+	span.LogFields(tracingLog.Uint64("id", id))
+
+	organization := &entity.GlobalOrganization{}
+	result := r.db.WithContext(ctx).Where("id = ?", id).First(organization)
+	if result.Error != nil {
+		span.LogFields(tracingLog.Bool("found", false))
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			tracing.TraceErr(span, result.Error)
+			return nil, nil
+		}
+		tracing.TraceErr(span, result.Error)
+		return nil, result.Error
+	}
+	span.LogFields(tracingLog.Bool("found", true))
+	return organization, nil
+}
+
+func (r *globalOrganizationRepository) GetByPrimaryDomain(ctx context.Context, domain string) (*entity.GlobalOrganization, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.GetByPrimaryDomain")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+	span.LogFields(tracingLog.String("domain", domain))
+
+	organization := &entity.GlobalOrganization{}
+	result := r.db.WithContext(ctx).Where("primary_domain = ?", domain).First(organization)
+	if result.Error != nil {
+		span.LogFields(tracingLog.Bool("found", false))
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			tracing.TraceErr(span, result.Error)
+			return nil, nil
+		}
+		tracing.TraceErr(span, result.Error)
+		return nil, result.Error
+	}
+	span.LogFields(tracingLog.Bool("found", true))
+	return organization, nil
+}
+
+func (r *globalOrganizationRepository) Create(ctx context.Context, organization entity.GlobalOrganization) (*entity.GlobalOrganization, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.Create")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+	tracing.LogObjectAsJson(span, "organization", organization)
+
+	result := r.db.WithContext(ctx).Create(&organization)
+	if result.Error != nil {
+		tracing.TraceErr(span, result.Error)
+		return nil, result.Error
+	}
+	return &organization, nil
+}
