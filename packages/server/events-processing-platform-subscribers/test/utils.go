@@ -12,7 +12,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/mocked_grpc"
-	postgrest "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/postgres"
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
 	"gorm.io/gorm"
@@ -23,7 +22,9 @@ import (
 type TestDatabase struct {
 	Neo4jContainer testcontainers.Container
 	Driver         *neo4j.DriverWithContext
-	GormDB         *gorm.DB
+
+	postgresContainer testcontainers.Container
+	GormDB            *gorm.DB
 
 	CommonServices *commonService.Services
 	Services       *service.Services
@@ -43,14 +44,21 @@ func SetupTestDatabase() (TestDatabase, func()) {
 
 	testDBs.Neo4jContainer, testDBs.Driver = neo4jtest.InitTestNeo4jDB()
 
-	postgresContainer, postgresGormDB, _ := postgrest.InitTestDB()
-	testDBs.GormDB = postgresGormDB
+	testDBs.postgresContainer, testDBs.GormDB, _ = neo4jt.InitTestDB()
+	defer func(postgresContainer testcontainers.Container, ctx context.Context) {
+		neo4jt.TerminatePostgres(postgresContainer, ctx)
+	}(testDBs.postgresContainer, context.Background())
 
 	rabbitMqContainer, rabbitMqUrl := neo4jt.InitTestRabbitMQ()
 
 	testDialFactory := mocked_grpc.NewMockedTestDialFactory()
 	grpcConn, _ := testDialFactory.GetEventsProcessingPlatformConn()
 	testDBs.GrpcClients = grpc_client.InitClients(grpcConn)
+
+	postgresGormDB := &commonConfig.PostgresDB{
+		GormDB:      testDBs.GormDB,
+		AsyncGormDB: testDBs.GormDB,
+	}
 
 	testDBs.CommonServices = commonService.InitServices(&commonConfig.GlobalConfig{
 		RabbitMQConfig: &commonConfig.RabbitMQConfig{
@@ -64,8 +72,8 @@ func SetupTestDatabase() (TestDatabase, func()) {
 	shutdown := func() {
 		neo4jtest.CloseDriver(*testDBs.Driver)
 		neo4jtest.Terminate(testDBs.Neo4jContainer, context.Background())
-		postgrest.Terminate(postgresContainer, context.Background())
-		postgrest.Terminate(rabbitMqContainer, context.Background())
+		neo4jt.TerminatePostgres(testDBs.postgresContainer, context.Background())
+		neo4jt.TerminateRabbitMQ(rabbitMqContainer, context.Background())
 	}
 	return testDBs, shutdown
 }
