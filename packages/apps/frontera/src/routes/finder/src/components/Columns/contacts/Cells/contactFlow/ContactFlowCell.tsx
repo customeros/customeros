@@ -1,4 +1,4 @@
-import { useRef, useState, ReactElement } from 'react';
+import { useRef, ReactElement } from 'react';
 
 import { observer } from 'mobx-react-lite';
 
@@ -31,7 +31,6 @@ const icons: Record<string, ReactElement> = {
 export const ContactFlowCell = observer(
   ({ contactId }: ContactNameCellProps) => {
     const store = useStore();
-    const [isEditing, setIsEditing] = useState(false);
 
     const contactStore = store.contacts.value.get(contactId);
     const itemRef = useRef<HTMLDivElement>(null);
@@ -39,12 +38,11 @@ export const ContactFlowCell = observer(
     const contactFlows = contactStore?.flows;
 
     const open = () => {
-      setIsEditing(true);
       store.ui.commandMenu.setType('EditContactFlow');
       store.ui.commandMenu.setOpen(true);
     };
 
-    if (!contactFlows?.length && !isEditing) {
+    if (!contactFlows?.length) {
       return (
         <div
           onDoubleClick={open}
