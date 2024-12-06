@@ -134,6 +134,7 @@ export const FlowBuilder = observer(
 
     const customApplyNodeChanges = useCallback(
       (changes: NodeChange[], nodes: Node[]): Node[] => {
+        if (!changes.length) return nodes;
         // reset the helper lines (clear existing lines, if any)
         setHelperLineHorizontal(undefined);
         setHelperLineVertical(undefined);
@@ -293,7 +294,7 @@ export const FlowBuilder = observer(
 
         const shouldProhibitChanges =
           changes.every((change) => change.type === 'remove') &&
-          nodes.length === changes.length;
+          nodes?.length === changes.length;
 
         if (shouldProhibitChanges) return;
         onNodesChange(changes);
@@ -305,7 +306,7 @@ export const FlowBuilder = observer(
           )
         ) {
           // avoid setting new changes flag  to true on nodes init
-          if (nodes.length !== changes.length) {
+          if (nodes?.length !== changes.length) {
             onHasNewChanges();
           }
         }
