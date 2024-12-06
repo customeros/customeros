@@ -30,7 +30,7 @@ func (f *flowActionExecutionRepository) Save(ctx context.Context, executionRecor
 
 	if executionRecord.Action == "" || executionRecord.FlowExecutionID == "" {
 		span.LogFields(log.Object("executionRecord", executionRecord))
-		err := errors.New("Action or FlowExectionID missing")
+		err := errors.New("Action or FlowExecutionID missing")
 		tracing.TraceErr(span, err)
 		return "", err
 	}
