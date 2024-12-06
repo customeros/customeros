@@ -6,7 +6,7 @@ import (
 )
 
 type OrganizationFields struct {
-	GlobalOrgId        *int64                              `json:"globalOrgId,omitempty"`
+	GlobalOrgId        *uint64                             `json:"globalOrgId,omitempty"`
 	AppSource          *string                             `json:"appSource,omitempty"`
 	Source             *string                             `json:"source,omitempty"`
 	ExternalSystem     *model.ExternalSystem               `json:"externalSystem,omitempty"`

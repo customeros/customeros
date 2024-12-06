@@ -27,7 +27,7 @@ import (
 type OrganizationService interface {
 	GetById(ctx context.Context, tenant, organizationId string) (*neo4jentity.OrganizationEntity, error)
 
-	CreateFromGlobalOrganization(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, globalOrgId int64) (string, error)
+	CreateFromGlobalOrganization(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, globalOrgId uint64) (string, error)
 	Save(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, id *string, dataFields data_fields.OrganizationFields) (string, error)
 	LinkWithDomain(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, organizationId, domain string) error
 
@@ -54,18 +54,42 @@ func NewOrganizationService(services *Services) OrganizationService {
 	}
 }
 
-func (s *organizationService) CreateFromGlobalOrganization(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, globalOrgId int64) (string, error) {
+func (s *organizationService) CreateFromGlobalOrganization(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, globalOrgId uint64) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.CreateFromGlobalOrganization")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Int64("globalOrgId", globalOrgId))
+	span.LogFields(log.Uint64("globalOrgId", globalOrgId))
 
-	// read postgres by global org id
-	// prepare data fields
-	// call save
+	globalOrganization, err := s.services.PostgresRepositories.GlobalOrganizationRepository.GetById(ctx, globalOrgId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+
+	if globalOrganization == nil {
+		err = errors.New(fmt.Sprintf("Global organization with id %d not found", globalOrgId))
+		tracing.TraceErr(span, err)
+		return "", err
+	}
 
 	datFields := data_fields.OrganizationFields{
-		GlobalOrgId: utils.Int64Ptr(globalOrgId),
+		GlobalOrgId:      utils.ToPtr(globalOrgId),
+		Name:             utils.StringPtr(globalOrganization.Name),
+		PrimaryDomain:    utils.StringPtr(globalOrganization.PrimaryDomain),
+		Domains:          globalOrganization.Domains,
+		Description:      utils.StringPtr(globalOrganization.Description),
+		Website:          utils.StringPtr(globalOrganization.Website),
+		IconUrl:          utils.StringPtr(globalOrganization.IconUrl),
+		LinkedInUrl:      utils.StringPtr(globalOrganization.LinkedInUrl),
+		ValueProposition: utils.StringPtr(globalOrganization.ValueProposition),
+		TargetAudience:   utils.StringPtr(globalOrganization.TargetAudience),
+	}
+
+	if globalOrganization.YearFounded > 0 {
+		datFields.YearFounded = utils.Int64Ptr(int64(globalOrganization.YearFounded))
+	}
+	if globalOrganization.EmployeeCount > 0 {
+		datFields.Employees = utils.Int64Ptr(int64(globalOrganization.EmployeeCount))
 	}
 
 	return s.Save(ctx, txWithPostCommit, nil, datFields)
