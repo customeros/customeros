@@ -75,6 +75,32 @@ func (r *mutationResolver) OrganizationSave(ctx context.Context, input model.Org
 	return mapper.MapEntityToOrganization(organizationEntity), nil
 }
 
+// OrganizationSaveByGlobalOrganization is the resolver for the organization_SaveByGlobalOrganization field.
+func (r *mutationResolver) OrganizationSaveByGlobalOrganization(ctx context.Context, globalOrganizationID int64) (*model.Organization, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationSaveByGlobalOrganization", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "request.globalOrganizationID", globalOrganizationID)
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	organizationId, err := r.Services.CommonServices.OrganizationService.CreateFromGlobalOrganization(ctx, nil, uint64(globalOrganizationID))
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to save organization")
+		return nil, err
+	}
+
+	organizationEntity, err := r.Services.CommonServices.OrganizationService.GetById(ctx, tenant, organizationId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to fetch organization details")
+		return nil, err
+	}
+
+	return mapper.MapEntityToOrganization(organizationEntity), nil
+}
+
 // OrganizationHide is the resolver for the organization_Hide field.
 func (r *mutationResolver) OrganizationHide(ctx context.Context, id string) (string, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationHide", graphql.GetOperationContext(ctx))

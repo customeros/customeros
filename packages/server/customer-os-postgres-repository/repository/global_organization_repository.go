@@ -16,6 +16,7 @@ type GlobalOrganizationRepository interface {
 	GetByPrimaryDomain(ctx context.Context, domain string) (*entity.GlobalOrganization, error)
 	Create(ctx context.Context, organization *entity.GlobalOrganization) (*entity.GlobalOrganization, error)
 	Update(ctx context.Context, organization *entity.GlobalOrganization) (*entity.GlobalOrganization, error)
+	Search(ctx context.Context, searchTerm string, limit int) ([]*entity.GlobalOrganization, error)
 }
 
 type globalOrganizationRepository struct {
@@ -95,4 +96,24 @@ func (r *globalOrganizationRepository) Update(ctx context.Context, organization 
 		return nil, result.Error
 	}
 	return organization, nil
+}
+
+func (r *globalOrganizationRepository) Search(ctx context.Context, searchTerm string, limit int) ([]*entity.GlobalOrganization, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.SearchOrganizations")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+	span.LogFields(tracingLog.String("searchTerm", searchTerm))
+
+	organizations := make([]*entity.GlobalOrganization, 0)
+	result := r.db.WithContext(ctx).
+		Select("id, name, primary_domain, website, logo_url, icon_url").
+		Where("name ILIKE ? OR primary_domain ILIKE ?", "%"+searchTerm+"%", "%"+searchTerm+"%").
+		Limit(limit).
+		Find(&organizations)
+	if result.Error != nil {
+		tracing.TraceErr(span, result.Error)
+		return nil, result.Error
+	}
+	span.LogFields(tracingLog.Int("found", len(organizations)))
+	return organizations, nil
 }

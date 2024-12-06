@@ -1,0 +1,12 @@
+extend type Query {
+    globalOrganizations_Search(searchTerm: String!, limit: Int!): [GlobalOrganization!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+
+type GlobalOrganization {
+    id:             Int64!
+    name:           String!
+    primaryDomain:  String!
+    website:        String!
+    logoUrl:        String!
+    iconUrl:        String!
+}
