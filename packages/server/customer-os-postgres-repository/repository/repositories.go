@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"gorm.io/gorm"
 
