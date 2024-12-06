@@ -97,7 +97,7 @@ func createAllTables(db *gorm.DB) {
 		AsyncGormDB: db,
 	}
 
-	postgresRepository.InitRepositories(&postgresDB).Migration(db)
+	postgresRepository.InitRepositories(&postgresDB).Migration(&postgresDB)
 }
 
 // initLog Connection Log Configuration

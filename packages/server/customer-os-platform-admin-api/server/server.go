@@ -64,7 +64,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	defer postgresDb.Close()
 
 	postgresRepositories := postgresRepository.InitRepositories(postgresDb)
-	postgresRepositories.Migration(postgresDb.GormDB)
+	postgresRepositories.Migration(postgresDb)
 	postgresRepositories.InitData(ctx, postgresRepositories)
 
 	// Setting up Neo4j

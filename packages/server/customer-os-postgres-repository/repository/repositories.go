@@ -124,12 +124,12 @@ func InitRepositories(postgresDB *config.PostgresDB) *Repositories {
 		IndustryMappingRepository:                   NewIndustryMappingRepository(postgresDB.GormDB),
 		MailStackDomainRepository:                   NewMailStackDomainRepository(postgresDB.GormDB),
 		MailstackBuyRequestRepository:               NewMailstackBuyRequestRepository(postgresDB.GormDB),
-		OAuthTokenRepository:                        NewOAuthTokenRepository(postgresDB.GormDB),
+		OAuthTokenRepository:                        NewOAuthTokenRepository(postgresDB.AsyncGormDB),
 		OranizationWebsiteHostingPlatformRepository: NewOrganizationWebsiteHostingPlatformRepository(postgresDB.GormDB),
 		PersonalEmailProviderRepository:             NewPersonalEmailProviderRepository(postgresDB.GormDB),
 		PersonalIntegrationRepository:               NewPersonalIntegrationsRepo(postgresDB.GormDB),
 		PostmarkApiKeyRepository:                    NewPostmarkApiKeyRepo(postgresDB.GormDB),
-		RawEmailRepository:                          NewRawEmailRepository(postgresDB.GormDB),
+		RawEmailRepository:                          NewRawEmailRepository(postgresDB.AsyncGormDB),
 		SlackChannelNotificationRepository:          NewSlackChannelNotificationRepository(postgresDB.GormDB),
 		SlackChannelRepository:                      NewSlackChannelRepository(postgresDB.GormDB),
 		SlackSettingsRepository:                     NewSlackSettingsRepository(postgresDB.GormDB),
@@ -153,8 +153,8 @@ func InitRepositories(postgresDB *config.PostgresDB) *Repositories {
 	return repositories
 }
 
-func (r *Repositories) Migration(db *gorm.DB) {
-	err := db.AutoMigrate(
+func (r *Repositories) Migration(postgresDB *config.PostgresDB) {
+	err := postgresDB.GormDB.AutoMigrate(
 		&entity.AiLocationMapping{},
 		&entity.AiPromptLog{},
 		&entity.ApiBillableEvent{},
@@ -193,12 +193,10 @@ func (r *Repositories) Migration(db *gorm.DB) {
 		&entity.MailstackBuyRequest{},
 		&entity.MailstackBuyRequestDomain{},
 		&entity.MailstackReputationEntity{},
-		&entity.OAuthTokenEntity{},
 		&entity.OrganizationWebsiteHostingPlatform{},
 		&entity.PersonalEmailProvider{},
 		&entity.PersonalIntegration{},
 		&entity.PostmarkApiKey{},
-		&entity.RawEmail{},
 		&entity.SlackChannel{},
 		&entity.SlackChannelNotification{},
 		&entity.SlackSettingsEntity{},
@@ -218,6 +216,14 @@ func (r *Repositories) Migration(db *gorm.DB) {
 		&entity.UserWorkingSchedule{},
 		&entity.Workflow{},
 		&entity.GlobalOrganization{},
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	err = postgresDB.AsyncGormDB.AutoMigrate(
+		&entity.OAuthTokenEntity{},
+		&entity.RawEmail{},
 	)
 	if err != nil {
 		panic(err)

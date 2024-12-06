@@ -7,6 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail-raw/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail-raw/logger"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail-raw/service"
+	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/robfig/cron"
@@ -113,14 +114,14 @@ func syncEmailsInState(config *config.Config, services *service.Services, state 
 
 				emailsToSync := make([]string, 0)
 				for _, user := range usersForTenant {
-					emailsForUser, err := services.EmailService.FindEmailsForUser(tenant.Name, user.Id)
+					emailsForUser, err := services.CommonServices.EmailService.GetAllEmailsForEntityIds(ctx, tenant.Name, commonModel.USER, []string{user.Id})
 					if err != nil {
 						logrus.Infof("failed to find email for user: %v", err)
 						return
 					}
 
-					if len(emailsForUser) > 0 {
-						for _, emailForUser := range emailsForUser {
+					if emailsForUser != nil && len(*emailsForUser) > 0 {
+						for _, emailForUser := range *emailsForUser {
 							if emailForUser.Email == serviceEmail {
 								continue
 							}
