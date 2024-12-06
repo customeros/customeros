@@ -91,7 +91,6 @@ func (fsas *fileStoreApiService) GetFileMetadata(tenantName, fileId string, span
 }
 
 func (fsas *fileStoreApiService) GetFileBytes(tenantName, fileId string, span opentracing.Span) (*[]byte, error) {
-
 	url := fmt.Sprintf("%s/file/%s/download", fsas.conf.ApiPath, fileId)
 	log.Printf("DownloadFile: url: %s", url)
 	req, err := http.NewRequest("GET", url, nil)
@@ -160,25 +159,25 @@ func sendRequest(conf *FileStoreApiConfig, tenantName, basePath, fileId, fileNam
 	// Create a form file field for the file
 	fileWriter, err := writer.CreateFormFile("file", fileName)
 	if err != nil {
-		ext.LogError(span, err)
+		ext.LogError(span, errors.Wrap(err, "writer.CreateFormFile"))
 		return nil, err
 	}
 
 	// Copy the file content (bytes) to the form file field
 	_, err = fileWriter.Write(fileBytes)
 	if err != nil {
-		ext.LogError(span, err)
+		ext.LogError(span, errors.Wrap(err, "fileWriter.Write"))
 		return nil, err
 	}
 
 	err = addMultipartValue(writer, basePath, "basePath")
 	if err != nil {
-		ext.LogError(span, err)
+		ext.LogError(span, errors.Wrap(err, "addMultipartValue basePath"))
 		return nil, errors.Wrap(err, "addMultipartValue basePath")
 	}
 	err = addMultipartValue(writer, fileId, "fileId")
 	if err != nil {
-		ext.LogError(span, err)
+		ext.LogError(span, errors.Wrap(err, "addMultipartValue fileId"))
 		return nil, errors.Wrap(err, "addMultipartValue fileId")
 	}
 
@@ -188,7 +187,7 @@ func sendRequest(conf *FileStoreApiConfig, tenantName, basePath, fileId, fileNam
 	url := fmt.Sprintf("%s/file", conf.ApiPath)
 	req, err := http.NewRequest("POST", url, &requestBody)
 	if err != nil {
-		ext.LogError(span, err)
+		ext.LogError(span, errors.Wrap(err, "http.NewRequest"))
 		return nil, fmt.Errorf("UploadSingleMultipartFile: failed to create new request: %w", err)
 	}
 
@@ -201,7 +200,7 @@ func sendRequest(conf *FileStoreApiConfig, tenantName, basePath, fileId, fileNam
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		ext.LogError(span, err)
+		ext.LogError(span, errors.Wrap(err, "client.Do"))
 		return nil, fmt.Errorf("UploadSingleMultipartFile: failed to perform request: %w", err)
 	}
 
@@ -209,7 +208,7 @@ func sendRequest(conf *FileStoreApiConfig, tenantName, basePath, fileId, fileNam
 	if resp.StatusCode == http.StatusOK {
 		var fileResponse FileDTO
 		if err := json.NewDecoder(resp.Body).Decode(&fileResponse); err != nil {
-			ext.LogError(span, err)
+			ext.LogError(span, errors.Wrap(err, "json.NewDecoder.Decode"))
 			return nil, fmt.Errorf("UploadSingleMultipartFile: failed to decode response: %w", err)
 		}
 		return &fileResponse, nil
@@ -217,12 +216,12 @@ func sendRequest(conf *FileStoreApiConfig, tenantName, basePath, fileId, fileNam
 		var responseBody bytes.Buffer
 		_, err = io.Copy(&responseBody, resp.Body)
 		if err != nil {
-			ext.LogError(span, err)
+			ext.LogError(span, errors.Wrap(err, "io.Copy"))
 			return nil, err
 		}
 
 		err = fmt.Errorf("Got error from File Store API: Status: %d Response: %s", resp.StatusCode, responseBody.String())
-		ext.LogError(span, err)
+		ext.LogError(span, errors.Wrap(err, "Got error from File Store API"))
 		return nil, err
 	}
 }

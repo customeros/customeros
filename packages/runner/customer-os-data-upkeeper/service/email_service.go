@@ -342,6 +342,9 @@ func (s *emailService) checkAndUpdateBulkRequests(ctx context.Context, requestsT
 				continue
 			}
 
+			// log csv content size
+			span.LogFields(log.Int("csvContent.size.request."+requestID, len(csvContent)))
+
 			// Upload result file to S3
 			basePath := fmt.Sprintf("/EMAIL_VALIDATION/BULK/%d", utils.Now().Year())
 			filesStoreService := fsc.NewFileStoreApiService(&s.cfg.FileStoreApiConfig)
