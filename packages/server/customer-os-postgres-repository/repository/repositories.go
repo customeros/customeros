@@ -83,9 +83,10 @@ func InitRepositories(postgresDB *config.PostgresDB) *Repositories {
 		Db:      postgresDB.GormDB,
 		AsyncDb: postgresDB.AsyncGormDB,
 
-		OAuthTokenRepository:              NewOAuthTokenRepository(postgresDB.AsyncGormDB),
-		RawEmailRepository:                NewRawEmailRepository(postgresDB.AsyncGormDB),
-		GoogleServiceAccountKeyRepository: NewGoogleServiceAccountKeyRepository(postgresDB.AsyncGormDB),
+		OAuthTokenRepository:               NewOAuthTokenRepository(postgresDB.AsyncGormDB),
+		RawEmailRepository:                 NewRawEmailRepository(postgresDB.AsyncGormDB),
+		GoogleServiceAccountKeyRepository:  NewGoogleServiceAccountKeyRepository(postgresDB.AsyncGormDB),
+		UserEmailImportPageTokenRepository: NewUserEmailImportStateRepository(postgresDB.AsyncGormDB),
 
 		AiLocationMappingRepository:                 NewAiLocationMappingRepository(postgresDB.GormDB),
 		AiPromptLogRepository:                       NewAiPromptLogRepository(postgresDB.GormDB),
@@ -144,7 +145,6 @@ func InitRepositories(postgresDB *config.PostgresDB) *Repositories {
 		TenantWebhookRepository:                     NewTenantWebhookRepo(postgresDB.GormDB),
 		TrackingAllowedOriginRepository:             NewTrackingAllowedOriginRepository(postgresDB.GormDB),
 		TrackingRepository:                          NewTrackingRepository(postgresDB.GormDB),
-		UserEmailImportPageTokenRepository:          NewUserEmailImportStateRepository(postgresDB.GormDB),
 		UserWorkingScheduleRepository:               NewUserWorkingScheduleRepository(postgresDB.GormDB),
 		WorkflowRepository:                          NewWorkflowRepository(postgresDB.GormDB),
 		GlobalOrganizationRepository:                NewGlobalOrganizationRepository(postgresDB.GormDB),
@@ -210,8 +210,6 @@ func (r *Repositories) Migration(postgresDB *config.PostgresDB) {
 		&entity.TenantWebhookApiKey{},
 		&entity.Tracking{},
 		&entity.TrackingAllowedOrigin{},
-		&entity.UserEmailImportState{},
-		&entity.UserEmailImportStateHistory{},
 		&entity.UserWorkingSchedule{},
 		&entity.Workflow{},
 		&entity.GlobalOrganization{},
@@ -224,6 +222,8 @@ func (r *Repositories) Migration(postgresDB *config.PostgresDB) {
 		&entity.GoogleServiceAccountKey{},
 		&entity.OAuthTokenEntity{},
 		&entity.RawEmail{},
+		&entity.UserEmailImportState{},
+		&entity.UserEmailImportStateHistory{},
 	)
 	if err != nil {
 		panic(err)
