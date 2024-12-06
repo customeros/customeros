@@ -27,12 +27,29 @@ export const HeaderInputName = observer(() => {
     }
   }, [showFinder]);
 
+  const handleSaveOnBlur = () => {
+    const trimmedName = name.trim();
+
+    if (trimmedName.length > 0) {
+      flow?.update((value) => {
+        value.name = trimmedName;
+
+        return value;
+      });
+
+      return;
+    }
+    setName(flow?.value.name);
+  };
+
   return (
     <>
       <ResizableInput
         ref={inputRef}
         variant='unstyled'
         readOnly={showFinder}
+        placeholder={'Flow name'}
+        onBlur={handleSaveOnBlur}
         data-test='flows-flow-name-input'
         value={store.flows.isLoading ? 'Loading flow…' : name}
         onChange={(e) => {
@@ -52,13 +69,6 @@ export const HeaderInputName = observer(() => {
 
             navigate(-1);
           }
-        }}
-        onBlur={() => {
-          flow?.update((value) => {
-            value.name = name;
-
-            return value;
-          });
         }}
       />
     </>

@@ -1,10 +1,11 @@
 import { useParams } from 'react-router-dom';
-import { FC, MouseEventHandler } from 'react';
+import { FC, useState, useEffect, MouseEventHandler } from 'react';
 
 import { observer } from 'mobx-react-lite';
 import {
   BaseEdge,
   EdgeProps,
+  useReactFlow,
   EdgeLabelRenderer,
   getSmoothStepPath,
 } from '@xyflow/react';
@@ -22,6 +23,14 @@ export const BasicEdge: FC<
   const [edgePath, labelX, labelY] = getSmoothStepPath({
     ...props,
   });
+
+  const [showButton, setShowButton] = useState(false);
+  const { getNodes } = useReactFlow();
+
+  useEffect(() => {
+    if (getNodes().length === 2) setShowButton(true);
+  }, []);
+
   const { ui, flows } = useStore();
   const flowId = useParams()?.id as string;
   const flowWasStarted = flows.value.get(flowId)?.value?.firstStartedAt;
@@ -94,6 +103,7 @@ export const BasicEdge: FC<
               'bg-gray-300 border-4 border-white text-transparent hover:bg-gray-700 hover:text-white focus:bg-inherit focus:text-inherit rounded-full scale-[0.3635] transition-all ease-in-out ',
               {
                 'scale-100 !bg-gray-700 text-white border-2':
+                  showButton ||
                   data?.isHovered ||
                   (ui.flowCommandMenu.isOpen &&
                     id === ui.flowCommandMenu.context.id),
