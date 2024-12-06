@@ -1,0 +1,19 @@
+mutation userUpdateOnboardingDetails($input: UserOnboardingDetailsInput!) {
+  user_UpdateOnboardingDetails(input: $input) {
+    id
+    emails {
+      email
+      rawEmail
+      primary
+    }
+    firstName
+    lastName
+    onboarding {
+      showOnboardingPage
+      onboardingInboundStepCompleted
+      onboardingOutboundStepCompleted
+      onboardingCrmStepCompleted
+      onboardingMailstackStepCompleted
+    }
+  }
+}

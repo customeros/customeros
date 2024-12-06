@@ -10,6 +10,14 @@ query global_Cache {
       }
       firstName
       lastName
+      mailboxes
+      onboarding {
+        showOnboardingPage
+        onboardingInboundStepCompleted
+        onboardingOutboundStepCompleted
+        onboardingCrmStepCompleted
+        onboardingMailstackStepCompleted
+      }
     }
     inactiveEmailTokens {
       email
@@ -37,3 +45,4 @@ query global_Cache {
     isFirstLogin
   }
 }
+

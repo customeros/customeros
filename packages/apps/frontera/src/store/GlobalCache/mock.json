@@ -1,6 +1,7 @@
 {
   "data": {
       "global_Cache": {
+          "isFirstLogin": false,
           "cdnLogoUrl": "",
           "user": {
               "id": "5d650cbd-4fbb-49ac-ba3a-f36d14c5f7b3",
@@ -11,6 +12,13 @@
                       "primary": true
                   }
               ],
+              "onboarding": {
+                  "onboardingCrmStepCompleted": false,
+                  "onboardingInboundStepCompleted": false,
+                  "onboardingMailstackStepCompleted": false,
+                  "onboardingOutboundStepCompleted": false,
+                  "showOnboardingPage": false
+              },
               "firstName": "customerostest",
               "lastName": ""
           },

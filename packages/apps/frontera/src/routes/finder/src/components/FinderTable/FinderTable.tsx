@@ -1,4 +1,4 @@
-import { useParams, useSearchParams } from 'react-router-dom';
+import { useParams, useLocation, useSearchParams } from 'react-router-dom';
 import { useRef, useEffect, type Dispatch, type SetStateAction } from 'react';
 
 import { match } from 'ts-pattern';
@@ -34,6 +34,8 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
   const store = useStore();
   const params = useParams();
   const [searchParams] = useSearchParams();
+  const location = useLocation();
+
   const enableFeature = useFeatureIsOn('gp-dedicated-1');
   const tableRef = useRef<TableInstance<object> | null>(null);
   const preset = searchParams?.get('preset');
@@ -170,10 +172,34 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
       store.ui.commandMenu.setType('OpportunityHub');
     } else if (tableType === TableViewType.Flow) {
       store.ui.commandMenu.setType('FlowHub');
+
+      if (location?.state?.fromOnboarding) {
+        store.ui.commandMenu.setType('CreateNewFlow');
+        store.ui.commandMenu.setOpen(true);
+      }
     } else {
       store.ui.commandMenu.setType('ContactHub');
     }
   }, [tableViewDef?.value.id]);
+
+  useEffect(() => {
+    if (location?.state?.fromOnboarding && tableType === TableViewType.Flow) {
+      setTimeout(() => {
+        store.ui.commandMenu.setType('CreateNewFlow');
+        store.ui.commandMenu.setOpen(true);
+      }, 100);
+    }
+
+    if (
+      location?.state?.fromOnboarding &&
+      tableType === TableViewType.Contacts
+    ) {
+      setTimeout(() => {
+        store.ui.commandMenu.setType('AddContactsBulk');
+        store.ui.commandMenu.setOpen(true);
+      }, 100);
+    }
+  }, [location.state?.fromOnboarding]);
 
   useEffect(() => {
     store.ui.setSearchCount(data.length);

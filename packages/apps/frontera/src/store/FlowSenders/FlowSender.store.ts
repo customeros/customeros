@@ -92,11 +92,11 @@ export const getDefaultValue = (): FlowSender => ({
     timezone: '',
     mailboxes: [],
     onboarding: {
-      onboardingCrmStepCompleted: false,
-      onboardingInboundStepCompleted: false,
-      onboardingMailstackStepCompleted: false,
-      onboardingOutboundStepCompleted: false,
       showOnboardingPage: false,
+      onboardingInboundStepCompleted: false,
+      onboardingOutboundStepCompleted: false,
+      onboardingMailstackStepCompleted: false,
+      onboardingCrmStepCompleted: false,
     },
   },
 });
