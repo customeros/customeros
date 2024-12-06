@@ -6,8 +6,10 @@ import (
 )
 
 type Config struct {
-	Neo4jDb    config.Neo4jConfig
-	PostgresDb config.PostgresConfig
+	Neo4jDb config.Neo4jConfig
+
+	PostgresConfig      config.PostgresConfig
+	PostgresAsyncConfig config.PostgresAsyncConfig
 
 	GoogleOAuthConfig config.GoogleOAuthConfig
 	AzureOAuthConfig  config.AzureOAuthConfig

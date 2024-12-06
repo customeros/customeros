@@ -1,4 +1,0 @@
-interface PagedResult {
-    totalPages: Int!
-    totalElements: Int64!
-}

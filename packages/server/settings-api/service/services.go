@@ -2,11 +2,10 @@ package service
 
 import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	commconf "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
+	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/config"
-	"gorm.io/gorm"
 )
 
 type Services struct {
@@ -18,9 +17,9 @@ type Services struct {
 	SlackSettingsService        SlackSettingsService
 }
 
-func InitServices(cfg *config.Config, db *gorm.DB, driver *neo4j.DriverWithContext, logger logger.Logger) *Services {
+func InitServices(cfg *config.Config, driver *neo4j.DriverWithContext, postgresDB *commonConfig.PostgresDB, logger logger.Logger) *Services {
 	services := &Services{
-		CommonServices: commonService.InitServices(&commconf.GlobalConfig{}, db, driver, cfg.Neo4j.Database, nil, logger),
+		CommonServices: commonService.InitServices(&commonConfig.GlobalConfig{}, postgresDB, driver, cfg.Neo4j.Database, nil, logger),
 	}
 
 	services.TenantSettingsService = NewTenantSettingsService(services, logger, cfg)

@@ -6,19 +6,19 @@ import (
 	"github.com/gin-contrib/cors"
 	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
-	commonconf "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
+	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-platform-admin-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-platform-admin-api/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-platform-admin-api/route"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-platform-admin-api/service"
 	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/sirupsen/logrus"
 	"os"
 	"os/signal"
 	"syscall"
@@ -54,15 +54,21 @@ func (server *server) Run(parentCtx context.Context) error {
 	registerPrometheusMetrics()
 
 	// Initialize postgres db
-	postgresDb, _ := InitDB(server.cfg, server.log)
-	defer postgresDb.SqlDB.Close()
+	postgresDb, err := commonConfig.InitPostgres(&commonConfig.GlobalConfig{
+		PostgresConfig:      &server.cfg.PostgresConfig,
+		PostgresAsyncConfig: &server.cfg.PostgresAsyncConfig,
+	})
+	if err != nil {
+		logrus.Fatalf("failed opening connection to postgres: %v", err.Error())
+	}
+	defer postgresDb.Close()
 
-	postgresRepositories := postgresRepository.InitRepositories(postgresDb.GormDB)
-	postgresRepositories.Migration(postgresDb.GormDB)
+	postgresRepositories := postgresRepository.InitRepositories(postgresDb)
+	postgresRepositories.Migration(postgresDb)
 	postgresRepositories.InitData(ctx, postgresRepositories)
 
 	// Setting up Neo4j
-	neo4jDriver, err := commonconf.NewNeo4jDriver(server.cfg.Neo4j)
+	neo4jDriver, err := commonConfig.NewNeo4jDriver(server.cfg.Neo4j)
 	if err != nil {
 		server.log.Fatalf("Could not establish connection with neo4j at: %v, error: %v", server.cfg.Neo4j.Target, err.Error())
 	}
@@ -95,9 +101,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	r.Use(bodyLoggerMiddleware)
 
 	// Setting up services
-	serviceContainer := service.InitServices(&neo4jDriver, postgresDb.GormDB, server.cfg, grpcContainer, server.log)
-
-	route.AddOrganizationRoutes(ctx, r, serviceContainer, server.log, serviceContainer.CommonServices.Cache)
+	service.InitServices(&neo4jDriver, postgresDb, server.cfg, grpcContainer, server.log)
 
 	r.GET("/health", HealthCheckHandler)
 	r.GET("/readiness", ReadinessHandler)
@@ -120,13 +124,6 @@ func (server *server) Run(parentCtx context.Context) error {
 	<-server.doneCh
 	server.log.Infof("Application %s exited properly", constants.ServiceName)
 	return nil
-}
-
-func InitDB(cfg *config.Config, log logger.Logger) (db *commonconf.StorageDB, err error) {
-	if db, err = commonconf.NewPostgresDBConn(cfg.Postgres); err != nil {
-		log.Fatalf("Could not open db connection: %s", err.Error())
-	}
-	return
 }
 
 func HealthCheckHandler(c *gin.Context) {

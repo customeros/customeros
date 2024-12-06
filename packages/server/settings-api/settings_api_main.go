@@ -6,6 +6,7 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	_ "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/config"
@@ -14,20 +15,16 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/routes"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/service"
 	"github.com/opentracing/opentracing-go"
+	"github.com/sirupsen/logrus"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"io"
 	"log"
 )
 
-func InitDB(cfg *config.Config, appLogger logger.Logger) (db *config.StorageDB, err error) {
-	if db, err = config.NewDBConn(cfg); err != nil {
-		appLogger.Fatalf("Coud not open db connection: %s", err.Error())
-	}
-	return
-}
-
 func main() {
+	ctx := context.Background()
+
 	cfg := loadConfiguration()
 
 	// Initialize logger
@@ -41,17 +38,24 @@ func main() {
 		defer tracingCloser.Close()
 	}
 
-	db, _ := InitDB(cfg, appLogger)
-	defer db.SqlDB.Close()
+	// Initialize postgres db
+	postgresDb, err := commonConfig.InitPostgres(&commonConfig.GlobalConfig{
+		PostgresConfig:      &cfg.PostgresConfig,
+		PostgresAsyncConfig: &cfg.PostgresAsyncConfig,
+	})
+	if err != nil {
+		logrus.Fatalf("failed opening connection to postgres: %v", err.Error())
+	}
+	defer postgresDb.Close()
 
-	neo4jDriver, err := config.NewDriver(cfg)
+	// Setting up Neo4j
+	neo4jDriver, err := commonConfig.NewNeo4jDriver(cfg.Neo4j)
 	if err != nil {
 		appLogger.Fatalf("Could not establish connection with neo4j at: %v, error: %v", cfg.Neo4j.Target, err.Error())
 	}
-	ctx := context.Background()
 	defer neo4jDriver.Close(ctx)
 
-	services := service.InitServices(cfg, db.GormDB, &neo4jDriver, appLogger)
+	services := service.InitServices(cfg, &neo4jDriver, postgresDb, appLogger)
 
 	// Setting up Gin
 	r := gin.Default()

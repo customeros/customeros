@@ -8,6 +8,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/logger"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/service"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/tracing"
+	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
@@ -63,12 +64,14 @@ func main() {
 		opentracing.SetGlobalTracer(tracer)
 	}
 
-	db, errPostgres := config.NewDBConn(cfg)
-	if errPostgres != nil {
-		logrus.Fatalf("Coud not open db connection: %s", errPostgres.Error())
-		return
+	postgresDb, err := commonConfig.InitPostgres(&commonConfig.GlobalConfig{
+		PostgresConfig:      &cfg.PostgresConfig,
+		PostgresAsyncConfig: &cfg.PostgresAsyncConfig,
+	})
+	if err != nil {
+		logrus.Fatalf("failed opening connection to postgres: %v", err.Error())
 	}
-	defer db.SqlDB.Close()
+	defer postgresDb.Close()
 
 	ctx := context.Background()
 
@@ -84,7 +87,6 @@ func main() {
 
 	// gRPC
 	var gRPCconn *grpc.ClientConn
-	var err error
 	if cfg.GrpcClientConfig.EventsProcessingPlatformEnabled {
 		df := grpc_client.NewDialFactory(&cfg.GrpcClientConfig)
 		gRPCconn, err = df.GetEventsProcessingPlatformConn()
@@ -96,7 +98,7 @@ func main() {
 
 	// Services
 	grpcContainer := grpc_client.InitClients(gRPCconn)
-	services := service.InitServices(cfg, appLogger, neo4jDriver, db.GormDB, airbyteStoreDb, grpcContainer)
+	services := service.InitServices(cfg, appLogger, neo4jDriver, postgresDb, airbyteStoreDb, grpcContainer)
 
 	services.InitService.Init()
 

@@ -7,11 +7,12 @@ import (
 	localcron "github.com/openline-ai/openline-customer-os/packages/runner/sync-tracking/cron"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-tracking/logger"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-tracking/service"
-	commconf "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
+	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/robfig/cron"
+	"github.com/sirupsen/logrus"
 	"io"
 	"os"
 	"os/signal"
@@ -34,11 +35,17 @@ func main() {
 	ctx := context.Background()
 
 	// Initialize postgres db
-	postgresDb, _ := InitDB(cfg, appLogger)
-	defer postgresDb.SqlDB.Close()
+	postgresDb, err := commonConfig.InitPostgres(&commonConfig.GlobalConfig{
+		PostgresConfig:      &cfg.PostgresConfig,
+		PostgresAsyncConfig: &cfg.PostgresAsyncConfig,
+	})
+	if err != nil {
+		logrus.Fatalf("failed opening connection to postgres: %v", err.Error())
+	}
+	defer postgresDb.Close()
 
 	// Neo4j DB
-	neo4jDriver, errNeo4j := commconf.NewNeo4jDriver(cfg.Neo4j)
+	neo4jDriver, errNeo4j := commonConfig.NewNeo4jDriver(cfg.Neo4j)
 	if errNeo4j != nil {
 		appLogger.Fatalf("failed opening connection to neo4j: %v", errNeo4j.Error())
 	}
@@ -53,7 +60,7 @@ func main() {
 	}
 	grpcClient := grpc_client.InitClients(gRPCconn)
 
-	services := service.InitServices(cfg, &neo4jDriver, postgresDb.GormDB, grpcClient, appLogger)
+	services := service.InitServices(cfg, &neo4jDriver, postgresDb, grpcClient, appLogger)
 
 	cronJub := localcron.StartCron(cfg, services)
 
@@ -98,11 +105,4 @@ func initTracing(cfg *config.Config, appLogger logger.Logger) io.Closer {
 	}
 	opentracing.SetGlobalTracer(tracer)
 	return closer
-}
-
-func InitDB(cfg *config.Config, log logger.Logger) (db *commconf.StorageDB, err error) {
-	if db, err = commconf.NewPostgresDBConn(cfg.Postgres); err != nil {
-		log.Fatalf("Could not open db connection: %s", err.Error())
-	}
-	return
 }

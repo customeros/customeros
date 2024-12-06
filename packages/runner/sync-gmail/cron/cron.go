@@ -32,9 +32,9 @@ func StartCron(config *config.Config, services *service.Services) *cron.Cron {
 			lockAndRunJob(jobLock, services, syncEmails)
 		}(&jobLock1)
 
-		go func(jobLock *sync.Mutex) {
-			lockAndRunJob(jobLock, services, syncCalendarEvents)
-		}(&jobLock2)
+		//go func(jobLock *sync.Mutex) {
+		//	lockAndRunJob(jobLock, services, syncCalendarEvents)
+		//}(&jobLock2)
 	})
 	if err != nil {
 		logrus.Fatalf("Could not add cron job: %v", err.Error())

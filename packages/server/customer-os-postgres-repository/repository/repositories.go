@@ -2,14 +2,15 @@ package repository
 
 import (
 	"context"
-
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"gorm.io/gorm"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 )
 
 type Repositories struct {
-	Db *gorm.DB
+	Db      *gorm.DB
+	AsyncDb *gorm.DB
 
 	AiLocationMappingRepository                 AiLocationMappingRepository
 	AiPromptLogRepository                       AiPromptLogRepository
@@ -77,81 +78,83 @@ type Repositories struct {
 	GlobalOrganizationRepository                GlobalOrganizationRepository
 }
 
-func InitRepositories(db *gorm.DB) *Repositories {
+func InitRepositories(postgresDB *config.PostgresDB) *Repositories {
 	repositories := &Repositories{
-		Db: db,
+		Db:      postgresDB.GormDB,
+		AsyncDb: postgresDB.AsyncGormDB,
 
-		AiLocationMappingRepository:                 NewAiLocationMappingRepository(db),
-		AiPromptLogRepository:                       NewAiPromptLogRepository(db),
-		ApiBillableEventRepository:                  NewApiBillableEventRepository(db),
-		AppKeyRepository:                            NewAppKeyRepo(db),
-		BrowserAutomationRunRepository:              NewBrowserAutomationRunRepository(db),
-		BrowserAutomationRunResultRepository:        NewBrowserAutomationRunResultRepository(db),
-		BrowserConfigRepository:                     NewBrowserConfigRepository(db),
-		CacheEmailEnrowRepository:                   NewCacheEmailEnrowRepository(db),
-		CacheEmailScrubbyRepository:                 NewCacheEmailScrubbyRepository(db),
-		CacheEmailTrueinboxRepository:               NewCacheEmailTrueinboxRepository(db),
-		CacheEmailValidationDomainRepository:        NewCacheEmailValidationDomainRepository(db),
-		CacheEmailValidationRepository:              NewCacheEmailValidationRepository(db),
-		CacheIpDataRepository:                       NewCacheIpDataRepository(db),
-		CacheIpHunterRepository:                     NewCacheIpHunterRepository(db),
-		CommonRepository:                            NewCommonRepository(db),
-		CosApiEnrichPersonTempResultRepository:      NewCosApiEnrichPersonTempResultRepository(db),
-		CurrencyRateRepository:                      NewCurrencyRateRepository(db),
-		CustomerOsIdsRepository:                     NewCustomerOsIdsRepository(db),
-		EmailLookupRepository:                       NewEmailLookupRepository(db),
-		EmailMessageRepository:                      NewEmailMessageRepository(db),
-		EmailTrackingRepository:                     NewEmailTrackingRepository(db),
-		EmailValidationRecordRepository:             NewEmailValidationRecordRepository(db),
-		EmailValidationRequestBulkRepository:        NewEmailValidationRequestBulkRepository(db),
-		EnrichDetailsBetterContactRepository:        NewEnrichDetailsBetterContactRepository(db),
-		EnrichDetailsBrandfetchRepository:           NewEnrichDetailsBrandfetchRepository(db),
-		EnrichDetailsPrefilterTrackingRepository:    NewEnrichDetailsPrefilterTrackingRepository(db),
-		EnrichDetailsScrapInRepository:              NewEnrichDetailsScrapInRepository(db),
-		EnrichDetailsTrackingRepository:             NewEnrichDetailsTrackingRepository(db),
-		EventBufferRepository:                       NewEventBufferRepository(db),
-		ExternalAppKeysRepository:                   NewExternalAppKeysRepository(db),
-		FlowActionExecutionRepository:               NewFlowActionExecutionRepository(db),
-		FlowActionRegistryRepository:                NewFlowActionRegistryRepository(db),
-		FlowExecutionRepository:                     NewFlowExecutionRepository(db),
-		FlowListenerRegistryRepository:              NewFlowListenerRegistryRepository(db),
-		FlowTransitionsRegistryRepository:           NewFlowTransitionsRegistryRepository(db),
-		FlowWebhooksRepository:                      NewFlowWebhooksRepository(db),
-		GoogleServiceAccountKeyRepository:           NewGoogleServiceAccountKeyRepository(db),
-		IndustryMappingRepository:                   NewIndustryMappingRepository(db),
-		MailStackDomainRepository:                   NewMailStackDomainRepository(db),
-		MailstackBuyRequestRepository:               NewMailstackBuyRequestRepository(db),
-		OAuthTokenRepository:                        NewOAuthTokenRepository(db),
-		OranizationWebsiteHostingPlatformRepository: NewOrganizationWebsiteHostingPlatformRepository(db),
-		PersonalEmailProviderRepository:             NewPersonalEmailProviderRepository(db),
-		PersonalIntegrationRepository:               NewPersonalIntegrationsRepo(db),
-		PostmarkApiKeyRepository:                    NewPostmarkApiKeyRepo(db),
-		RawEmailRepository:                          NewRawEmailRepository(db),
-		SlackChannelNotificationRepository:          NewSlackChannelNotificationRepository(db),
-		SlackChannelRepository:                      NewSlackChannelRepository(db),
-		SlackSettingsRepository:                     NewSlackSettingsRepository(db),
-		StatsApiCallsRepository:                     NewStatsApiCallsRepository(db),
-		TableViewDefinitionRepository:               NewTableViewDefinitionRepository(db),
-		TenantRepository:                            NewTenantRepository(db),
-		TenantSettingsEmailExclusionRepository:      NewEmailExclusionRepository(db),
-		TenantSettingsMailboxRepository:             NewTenantSettingsMailboxRepository(db),
-		TenantSettingsOpportunityStageRepository:    NewTenantSettingsOpportunityStageRepository(db),
-		TenantSettingsRepository:                    NewTenantSettingsRepository(db),
-		TenantWebhookApiKeyRepository:               NewTenantWebhookApiKeyRepository(db),
-		TenantWebhookRepository:                     NewTenantWebhookRepo(db),
-		TrackingAllowedOriginRepository:             NewTrackingAllowedOriginRepository(db),
-		TrackingRepository:                          NewTrackingRepository(db),
-		UserEmailImportPageTokenRepository:          NewUserEmailImportStateRepository(db),
-		UserWorkingScheduleRepository:               NewUserWorkingScheduleRepository(db),
-		WorkflowRepository:                          NewWorkflowRepository(db),
-		GlobalOrganizationRepository:                NewGlobalOrganizationRepository(db),
+		OAuthTokenRepository:              NewOAuthTokenRepository(postgresDB.AsyncGormDB),
+		RawEmailRepository:                NewRawEmailRepository(postgresDB.AsyncGormDB),
+		GoogleServiceAccountKeyRepository: NewGoogleServiceAccountKeyRepository(postgresDB.AsyncGormDB),
+
+		AiLocationMappingRepository:                 NewAiLocationMappingRepository(postgresDB.GormDB),
+		AiPromptLogRepository:                       NewAiPromptLogRepository(postgresDB.GormDB),
+		ApiBillableEventRepository:                  NewApiBillableEventRepository(postgresDB.GormDB),
+		AppKeyRepository:                            NewAppKeyRepo(postgresDB.GormDB),
+		BrowserAutomationRunRepository:              NewBrowserAutomationRunRepository(postgresDB.GormDB),
+		BrowserAutomationRunResultRepository:        NewBrowserAutomationRunResultRepository(postgresDB.GormDB),
+		BrowserConfigRepository:                     NewBrowserConfigRepository(postgresDB.GormDB),
+		CacheEmailEnrowRepository:                   NewCacheEmailEnrowRepository(postgresDB.GormDB),
+		CacheEmailScrubbyRepository:                 NewCacheEmailScrubbyRepository(postgresDB.GormDB),
+		CacheEmailTrueinboxRepository:               NewCacheEmailTrueinboxRepository(postgresDB.GormDB),
+		CacheEmailValidationDomainRepository:        NewCacheEmailValidationDomainRepository(postgresDB.GormDB),
+		CacheEmailValidationRepository:              NewCacheEmailValidationRepository(postgresDB.GormDB),
+		CacheIpDataRepository:                       NewCacheIpDataRepository(postgresDB.GormDB),
+		CacheIpHunterRepository:                     NewCacheIpHunterRepository(postgresDB.GormDB),
+		CommonRepository:                            NewCommonRepository(postgresDB.GormDB),
+		CosApiEnrichPersonTempResultRepository:      NewCosApiEnrichPersonTempResultRepository(postgresDB.GormDB),
+		CurrencyRateRepository:                      NewCurrencyRateRepository(postgresDB.GormDB),
+		CustomerOsIdsRepository:                     NewCustomerOsIdsRepository(postgresDB.GormDB),
+		EmailLookupRepository:                       NewEmailLookupRepository(postgresDB.GormDB),
+		EmailMessageRepository:                      NewEmailMessageRepository(postgresDB.GormDB),
+		EmailTrackingRepository:                     NewEmailTrackingRepository(postgresDB.GormDB),
+		EmailValidationRecordRepository:             NewEmailValidationRecordRepository(postgresDB.GormDB),
+		EmailValidationRequestBulkRepository:        NewEmailValidationRequestBulkRepository(postgresDB.GormDB),
+		EnrichDetailsBetterContactRepository:        NewEnrichDetailsBetterContactRepository(postgresDB.GormDB),
+		EnrichDetailsBrandfetchRepository:           NewEnrichDetailsBrandfetchRepository(postgresDB.GormDB),
+		EnrichDetailsPrefilterTrackingRepository:    NewEnrichDetailsPrefilterTrackingRepository(postgresDB.GormDB),
+		EnrichDetailsScrapInRepository:              NewEnrichDetailsScrapInRepository(postgresDB.GormDB),
+		EnrichDetailsTrackingRepository:             NewEnrichDetailsTrackingRepository(postgresDB.GormDB),
+		EventBufferRepository:                       NewEventBufferRepository(postgresDB.GormDB),
+		ExternalAppKeysRepository:                   NewExternalAppKeysRepository(postgresDB.GormDB),
+		FlowActionExecutionRepository:               NewFlowActionExecutionRepository(postgresDB.GormDB),
+		FlowActionRegistryRepository:                NewFlowActionRegistryRepository(postgresDB.GormDB),
+		FlowExecutionRepository:                     NewFlowExecutionRepository(postgresDB.GormDB),
+		FlowListenerRegistryRepository:              NewFlowListenerRegistryRepository(postgresDB.GormDB),
+		FlowTransitionsRegistryRepository:           NewFlowTransitionsRegistryRepository(postgresDB.GormDB),
+		FlowWebhooksRepository:                      NewFlowWebhooksRepository(postgresDB.GormDB),
+		IndustryMappingRepository:                   NewIndustryMappingRepository(postgresDB.GormDB),
+		MailStackDomainRepository:                   NewMailStackDomainRepository(postgresDB.GormDB),
+		MailstackBuyRequestRepository:               NewMailstackBuyRequestRepository(postgresDB.GormDB),
+		OranizationWebsiteHostingPlatformRepository: NewOrganizationWebsiteHostingPlatformRepository(postgresDB.GormDB),
+		PersonalEmailProviderRepository:             NewPersonalEmailProviderRepository(postgresDB.GormDB),
+		PersonalIntegrationRepository:               NewPersonalIntegrationsRepo(postgresDB.GormDB),
+		PostmarkApiKeyRepository:                    NewPostmarkApiKeyRepo(postgresDB.GormDB),
+		SlackChannelNotificationRepository:          NewSlackChannelNotificationRepository(postgresDB.GormDB),
+		SlackChannelRepository:                      NewSlackChannelRepository(postgresDB.GormDB),
+		SlackSettingsRepository:                     NewSlackSettingsRepository(postgresDB.GormDB),
+		StatsApiCallsRepository:                     NewStatsApiCallsRepository(postgresDB.GormDB),
+		TableViewDefinitionRepository:               NewTableViewDefinitionRepository(postgresDB.GormDB),
+		TenantRepository:                            NewTenantRepository(postgresDB.GormDB),
+		TenantSettingsEmailExclusionRepository:      NewEmailExclusionRepository(postgresDB.GormDB),
+		TenantSettingsMailboxRepository:             NewTenantSettingsMailboxRepository(postgresDB.GormDB),
+		TenantSettingsOpportunityStageRepository:    NewTenantSettingsOpportunityStageRepository(postgresDB.GormDB),
+		TenantSettingsRepository:                    NewTenantSettingsRepository(postgresDB.GormDB),
+		TenantWebhookApiKeyRepository:               NewTenantWebhookApiKeyRepository(postgresDB.GormDB),
+		TenantWebhookRepository:                     NewTenantWebhookRepo(postgresDB.GormDB),
+		TrackingAllowedOriginRepository:             NewTrackingAllowedOriginRepository(postgresDB.GormDB),
+		TrackingRepository:                          NewTrackingRepository(postgresDB.GormDB),
+		UserEmailImportPageTokenRepository:          NewUserEmailImportStateRepository(postgresDB.GormDB),
+		UserWorkingScheduleRepository:               NewUserWorkingScheduleRepository(postgresDB.GormDB),
+		WorkflowRepository:                          NewWorkflowRepository(postgresDB.GormDB),
+		GlobalOrganizationRepository:                NewGlobalOrganizationRepository(postgresDB.GormDB),
 	}
 
 	return repositories
 }
 
-func (r *Repositories) Migration(db *gorm.DB) {
-	err := db.AutoMigrate(
+func (r *Repositories) Migration(postgresDB *config.PostgresDB) {
+	err := postgresDB.GormDB.AutoMigrate(
 		&entity.AiLocationMapping{},
 		&entity.AiPromptLog{},
 		&entity.ApiBillableEvent{},
@@ -184,18 +187,15 @@ func (r *Repositories) Migration(db *gorm.DB) {
 		&entity.FlowListenerRegistry{},
 		&entity.FlowTransitionsRegistry{},
 		&entity.FlowWebhooks{},
-		&entity.GoogleServiceAccountKey{},
 		&entity.IndustryMapping{},
 		&entity.MailStackDomain{},
 		&entity.MailstackBuyRequest{},
 		&entity.MailstackBuyRequestDomain{},
 		&entity.MailstackReputationEntity{},
-		&entity.OAuthTokenEntity{},
 		&entity.OrganizationWebsiteHostingPlatform{},
 		&entity.PersonalEmailProvider{},
 		&entity.PersonalIntegration{},
 		&entity.PostmarkApiKey{},
-		&entity.RawEmail{},
 		&entity.SlackChannel{},
 		&entity.SlackChannelNotification{},
 		&entity.SlackSettingsEntity{},
@@ -215,6 +215,15 @@ func (r *Repositories) Migration(db *gorm.DB) {
 		&entity.UserWorkingSchedule{},
 		&entity.Workflow{},
 		&entity.GlobalOrganization{},
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	err = postgresDB.AsyncGormDB.AutoMigrate(
+		&entity.GoogleServiceAccountKey{},
+		&entity.OAuthTokenEntity{},
+		&entity.RawEmail{},
 	)
 	if err != nil {
 		panic(err)

@@ -2,13 +2,13 @@ package service
 
 import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/repository"
-	"gorm.io/gorm"
 )
 
 type Services struct {
@@ -34,12 +34,12 @@ type Services struct {
 
 func InitServices(log logger.Logger,
 	driver *neo4j.DriverWithContext,
-	gormDB *gorm.DB,
+	postgresDB *commonConfig.PostgresDB,
 	cfg *config.Config,
 	commonServices *commonService.Services,
 	grpcClients *grpc_client.Clients,
 	cache *caches.Cache) *Services {
-	repositories := repository.InitRepos(driver, gormDB, cfg.Neo4j.Database)
+	repositories := repository.InitRepos(driver, postgresDB, cfg.Neo4j.Database)
 
 	services := Services{
 		CommonServices:            commonServices,

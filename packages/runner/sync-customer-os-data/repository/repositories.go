@@ -4,6 +4,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/logger"
+	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	"gorm.io/gorm"
 )
@@ -32,17 +33,17 @@ type Repositories struct {
 	MeetingRepository          MeetingRepository
 }
 
-func InitRepos(driver *neo4j.DriverWithContext, gormDB *gorm.DB, airbyteStoreDb *config.RawDataStoreDB, log logger.Logger) *Repositories {
+func InitRepos(driver *neo4j.DriverWithContext, postgresDB *commonConfig.PostgresDB, airbyteStoreDb *config.RawDataStoreDB, log logger.Logger) *Repositories {
 	repositories := Repositories{
 		Dbs: Dbs{
 			Neo4jDriver:    driver,
-			GormDB:         gormDB,
+			GormDB:         postgresDB.GormDB,
 			RawDataStoreDB: airbyteStoreDb,
 		},
-		PostgresRepositories:         postgresRepository.InitRepositories(gormDB),
-		TenantSyncSettingsRepository: NewTenantSyncSettingsRepository(gormDB),
-		TenantSettingsRepository:     NewTenantSettingsRepository(gormDB),
-		SyncRunRepository:            NewSyncRunRepository(gormDB),
+		PostgresRepositories:         postgresRepository.InitRepositories(postgresDB),
+		TenantSyncSettingsRepository: NewTenantSyncSettingsRepository(postgresDB.GormDB),
+		TenantSettingsRepository:     NewTenantSettingsRepository(postgresDB.GormDB),
+		SyncRunRepository:            NewSyncRunRepository(postgresDB.GormDB),
 		ContactRepository:            NewContactRepository(driver),
 		EmailRepository:              NewEmailRepository(driver),
 		ExternalSystemRepository:     NewExternalSystemRepository(driver),

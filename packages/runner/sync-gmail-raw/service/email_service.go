@@ -5,11 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail-raw/config"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail-raw/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail-raw/repository"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"time"
@@ -22,27 +19,7 @@ type emailService struct {
 }
 
 type EmailService interface {
-	FindEmailsForUser(tenant, userId string) ([]*entity.EmailEntity, error)
 	SyncEmailsForState(ctx context.Context, importState *postgresEntity.UserEmailImportState) (*postgresEntity.UserEmailImportState, error)
-}
-
-func (s *emailService) FindEmailsForUser(tenant, userId string) ([]*entity.EmailEntity, error) {
-	ctx := context.Background()
-
-	emails, err := s.repositories.EmailRepository.FindEmailsForUser(ctx, tenant, userId)
-	if err != nil {
-		return nil, fmt.Errorf("unable to find user by email: %v", err)
-	}
-	if emails == nil {
-		return nil, nil
-	}
-
-	emailsEntities := make([]*entity.EmailEntity, len(emails))
-	for i, email := range emails {
-		emailsEntities[i] = s.mapDbNodeToEmailEntity(*email)
-	}
-
-	return emailsEntities, nil
 }
 
 func (s *emailService) SyncEmailsForState(ctx context.Context, importState *postgresEntity.UserEmailImportState) (*postgresEntity.UserEmailImportState, error) {
@@ -129,16 +106,6 @@ func JSONMarshal(t interface{}) ([]byte, error) {
 	encoder.SetEscapeHTML(false)
 	err := encoder.Encode(t)
 	return buffer.Bytes(), err
-}
-
-func (s *emailService) mapDbNodeToEmailEntity(node dbtype.Node) *entity.EmailEntity {
-	props := utils.GetPropsFromNode(node)
-	result := entity.EmailEntity{
-		Id:       utils.GetStringPropOrEmpty(props, "id"),
-		Email:    utils.GetStringPropOrEmpty(props, "email"),
-		RawEmail: utils.GetStringPropOrEmpty(props, "rawEmail"),
-	}
-	return &result
 }
 
 func NewEmailService(cfg *config.Config, repositories *repository.Repositories, services *Services) EmailService {

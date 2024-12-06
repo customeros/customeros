@@ -2,6 +2,10 @@ package config
 
 import (
 	"fmt"
+	"gorm.io/gorm/logger"
+	"io"
+	"log"
+	"os"
 	"sync"
 	"time"
 
@@ -48,6 +52,31 @@ func (s *RawDataStoreDB) CreateDBHandler(ctx *Context) *gorm.DB {
 	cacheHandler.Set(ctx.Schema, gormDb, gocache.DefaultExpiration)
 
 	return gormDb
+}
+
+func initConfig(cfg *Config) *gorm.Config {
+	return &gorm.Config{
+		AllowGlobalUpdate: true,
+		Logger:            initLog(cfg),
+	}
+}
+
+func initLog(cfg *Config) logger.Interface {
+	var logLevel = logger.Silent
+	switch cfg.PostgresConfig.LogLevel {
+	case "ERROR":
+		logLevel = logger.Error
+	case "WARN":
+		logLevel = logger.Warn
+	case "INFO":
+		logLevel = logger.Info
+	}
+	newLogger := logger.New(log.New(io.MultiWriter(os.Stdout), "\r\n", log.LstdFlags), logger.Config{
+		Colorful:      true,
+		LogLevel:      logLevel,
+		SlowThreshold: time.Second,
+	})
+	return newLogger
 }
 
 func (s *RawDataStoreDB) GetDBHandler(ctx *Context) *gorm.DB {

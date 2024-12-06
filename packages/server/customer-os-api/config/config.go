@@ -25,13 +25,14 @@ type Config struct {
 	Admin struct {
 		Key string `env:"ADMIN_KEY,required"`
 	}
-	GrpcClientConfig config.GrpcClientConfig
-	Postgres         config.PostgresConfig
-	Neo4j            config.Neo4jConfig
-	RabbitMQConfig   config.RabbitMQConfig
-	Jaeger           tracing.JaegerConfig
-	Metrics          metrics.Config
-	AppConfig        struct {
+	GrpcClientConfig    config.GrpcClientConfig
+	PostgresConfig      config.PostgresConfig
+	PostgresAsyncConfig config.PostgresAsyncConfig
+	Neo4j               config.Neo4jConfig
+	RabbitMQConfig      config.RabbitMQConfig
+	Jaeger              tracing.JaegerConfig
+	Metrics             metrics.Config
+	AppConfig           struct {
 		AllowOrigins           []string `env:"ALLOW_ORIGINS" envDefault:"*"`
 		AllowHeaders           []string `env:"ALLOW_HEADERS" envDefault:"x-openline-username"`
 		TrackingPublicUrl      string   `env:"TRACKING_PUBLIC_URL" envDefault:"https://custosmetrics.com"`
