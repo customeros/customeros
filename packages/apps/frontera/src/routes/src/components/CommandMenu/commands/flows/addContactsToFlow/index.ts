@@ -1,1 +1,1 @@
-export { AddExistingContacts } from './AddExistingContactsToFlow';
+export { AddContactsToFlow } from './AddContactsToFlow';
