@@ -42,6 +42,7 @@ query global_Cache {
     minARRForecastValue
     maxARRForecastValue
     contractsExist
+    isFirstLogin
   }
 }
 

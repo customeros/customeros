@@ -12,6 +12,7 @@ export type GlobalCacheQuery = {
     minARRForecastValue: number;
     maxARRForecastValue: number;
     contractsExist: boolean;
+    isFirstLogin: boolean;
     user: {
       __typename?: 'User';
       id: string;

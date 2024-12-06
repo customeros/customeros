@@ -65,6 +65,12 @@ export const SplashScreen = observer(
             );
           } else {
             if (pathname === '/') {
+              if (store.globalCache.value?.isFirstLogin) {
+                navigate('/welcome');
+
+                return;
+              }
+
               navigate(
                 '/finder' +
                   (pathname !== '/'

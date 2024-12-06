@@ -2,8 +2,6 @@ import { RootStore } from '@store/root';
 import { Transport } from '@store/transport';
 import { runInAction, makeAutoObservable } from 'mobx';
 
-import { GlobalCache } from '@graphql/types';
-
 import mock from './mock.json';
 import { GlobalCacheQuery } from './__service__/getGlobalCache.generated';
 import { GlobalCacheService } from './__service__/GlobalCache.service.ts';
@@ -29,7 +27,8 @@ export class GlobalCacheStore {
 
   async load() {
     if (this.root.demoMode) {
-      this.value = mock.data.global_Cache as unknown as GlobalCache;
+      this.value = mock.data
+        .global_Cache as unknown as GlobalCacheQuery['global_Cache'];
       this.isBootstrapped = true;
 
       return;

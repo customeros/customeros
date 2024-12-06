@@ -1741,6 +1741,7 @@ export type GlobalCache = {
   contractsExist: Scalars['Boolean']['output'];
   gCliCache: Array<GCliItem>;
   inactiveEmailTokens: Array<GlobalCacheEmailToken>;
+  isFirstLogin: Scalars['Boolean']['output'];
   isOwner: Scalars['Boolean']['output'];
   mailboxes: Array<Scalars['String']['output']>;
   maxARRForecastValue: Scalars['Float']['output'];

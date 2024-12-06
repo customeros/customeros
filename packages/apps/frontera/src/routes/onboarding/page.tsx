@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { match } from 'ts-pattern';
@@ -21,6 +22,15 @@ export const OnboardingPage = observer(() => {
   const navigate = useNavigate();
 
   const onboarding = globalCache.value?.user?.onboarding;
+
+  useEffect(() => {
+    if (
+      !globalCache.isLoading &&
+      !globalCache.value?.user.onboarding.showOnboardingPage
+    ) {
+      navigate('/finder');
+    }
+  }, [globalCache.value?.user.onboarding, globalCache.isLoading]);
 
   const handleOnboardingStepClick = (
     step: 'outbound' | 'crm' | 'mailstack',
