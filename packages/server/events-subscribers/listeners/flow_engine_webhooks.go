@@ -64,7 +64,7 @@ func OnWebhookEventCreated(ctx context.Context, s *service.Services, input any) 
 	return nil
 }
 
-func getWebhookEvent(input any) (commonenum.FlowEvent, *dto.WebhookEvent, error) {
+func getWebhookEvent(input any) (commonenum.FlowListenerEvent, *dto.WebhookEvent, error) {
 	message, ok := input.(*dto.Event)
 	if !ok {
 		return commonenum.NotSet, nil, fmt.Errorf("failed to cast to Event")
