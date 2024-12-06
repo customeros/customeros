@@ -11,9 +11,14 @@ import { useTableActions } from '@invoices/hooks/useTableActions';
 import { OpportunitiesTableActions } from '@finder/components/Actions/OpportunityActions';
 
 import { useStore } from '@shared/hooks/useStore';
-import { Invoice, TableViewType, ColumnViewType } from '@graphql/types';
 import { Table, SortingState, TableInstance } from '@ui/presentation/Table';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
+import {
+  Invoice,
+  TableIdType,
+  TableViewType,
+  ColumnViewType,
+} from '@graphql/types';
 
 import { SidePanel } from '../SidePanel';
 import { EmptyState } from '../EmptyState/EmptyState';
@@ -62,6 +67,7 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
 
   const tableType =
     tableViewDef?.value?.tableType || TableViewType.Organizations;
+  const tableId = tableViewDef?.value?.tableId || TableIdType.Organizations;
 
   const columns = computeFinderColumns(store, {
     tableType,
@@ -321,6 +327,10 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
   );
 
   const checkIfEmpty = () => {
+    if (tableId === TableIdType.FlowContacts && params.id) {
+      return store.flows.value.get(params.id)?.value.participants.length === 0;
+    }
+
     return match(tableType)
       .with(
         TableViewType.Organizations,
@@ -342,7 +352,7 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
       .otherwise(() => false);
   };
 
-  if (checkIfEmpty() && checkIfLoading()) {
+  if (checkIfEmpty() || checkIfLoading()) {
     return <EmptyState />;
   }
 

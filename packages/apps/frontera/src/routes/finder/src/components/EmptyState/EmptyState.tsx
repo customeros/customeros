@@ -104,6 +104,18 @@ export const EmptyState = observer(() => {
             store.ui.commandMenu.setOpen(true);
           },
         };
+      case TableIdType.FlowContacts:
+        return {
+          title: 'No contacts yet',
+          description:
+            'Add contacts to start scheduling messages. Once live, the flow will automatically schedule contacts when the trigger conditions are met.',
+          buttonLabel: 'Add contacts',
+          dataTest: 'flow-add-contacts',
+          onClick: () => {
+            store.ui.commandMenu.setType('AddContactsToFlow');
+            store.ui.commandMenu.setOpen(true);
+          },
+        };
       default:
         return {
           title: "We couldn't find any organizations",
