@@ -7,11 +7,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 )
 
 type FlowTransitionResponse struct {
@@ -41,50 +41,46 @@ func GetTransitions(s *service.Services) gin.HandlerFunc {
 		defer span.Finish()
 		tracing.TagComponentRest(span)
 
-		// Validate tenant
 		tenant := rest.ValidateTenant(c, ctx, span)
 		if tenant == "" {
 			rest.SendError(c, span, http.StatusUnauthorized, rest.ErrInvalidAPIKey)
 			return
 		}
 
+		// Get query params
+		from := c.Query("from")
 		var allFromNodes []repository.FromNodeRecord
 		var err error
 
-		// Get query params and filter if necessary
-		from := c.Query("from")
 		if from != "" {
-			_, err := enum.GetFlowEvent(from)
-			if err != nil {
+			// Check if it's a valid event or action
+			if _, err := enum.GetFlowEvent(from); err == nil {
 				allFromNodes = append(allFromNodes, repository.FromNodeRecord{
 					FromNode:     from,
 					FromNodeType: enum.NodeFlowListenerEvent.String(),
 				})
-			}
-			_, err = enum.GetFlowAction(from)
-			if err != nil {
+			} else if _, err := enum.GetFlowAction(from); err == nil {
 				allFromNodes = append(allFromNodes, repository.FromNodeRecord{
 					FromNode:     from,
 					FromNodeType: enum.NodeFlowAction.String(),
 				})
+			} else {
+				rest.SendError(c, span, http.StatusNotFound,
+					rest.ErrNotFound.WithMessage("Could not find any records for "+from))
+				return
 			}
-			if len(allFromNodes) == 0 {
-				rest.SendError(c, span, http.StatusNotFound, rest.ErrNotFound.WithMessage("Could not find any records for "+from))
+		} else {
+			// Get all from nodes if no specific one requested
+			allFromNodes, err = s.Repositories.PostgresRepositories.FlowTransitionsRegistryRepository.GetUniqueFromNodes(ctx)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer)
+				return
 			}
 		}
 
-		// Get all from nodes
-		allFromNodes, err = s.Repositories.PostgresRepositories.FlowTransitionsRegistryRepository.GetUniqueFromNodes(ctx)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer)
-			return
-		}
-
-		// Build transition records
 		results := buildTransitionRecords(ctx, span, s, allFromNodes)
 
-		// Send response
 		if len(results) == 1 {
 			c.JSON(http.StatusOK, FlowTransitionSingleResponse{
 				BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
@@ -101,8 +97,8 @@ func GetTransitions(s *service.Services) gin.HandlerFunc {
 }
 
 func buildTransitionRecords(ctx context.Context, span opentracing.Span, s *service.Services,
-	allFromNodes []repository.FromNodeRecord) []FlowTransitionRecord {
-
+	allFromNodes []repository.FromNodeRecord,
+) []FlowTransitionRecord {
 	results := make([]FlowTransitionRecord, len(allFromNodes))
 
 	for i, from := range allFromNodes {
