@@ -48,8 +48,33 @@ func GetTransitions(s *service.Services) gin.HandlerFunc {
 			return
 		}
 
+		var allFromNodes []repository.FromNodeRecord
+		var err error
+
+		// Get query params and filter if necessary
+		from := c.Query("from")
+		if from != "" {
+			_, err := enum.GetFlowEvent(from)
+			if err != nil {
+				allFromNodes = append(allFromNodes, repository.FromNodeRecord{
+					FromNode:     from,
+					FromNodeType: enum.NodeFlowListenerEvent.String(),
+				})
+			}
+			_, err = enum.GetFlowAction(from)
+			if err != nil {
+				allFromNodes = append(allFromNodes, repository.FromNodeRecord{
+					FromNode:     from,
+					FromNodeType: enum.NodeFlowAction.String(),
+				})
+			}
+			if len(allFromNodes) == 0 {
+				rest.SendError(c, span, http.StatusNotFound, rest.ErrNotFound.WithMessage("Could not find any records for "+from))
+			}
+		}
+
 		// Get all from nodes
-		allFromNodes, err := s.Repositories.PostgresRepositories.FlowTransitionsRegistryRepository.GetUniqueFromNodes(ctx)
+		allFromNodes, err = s.Repositories.PostgresRepositories.FlowTransitionsRegistryRepository.GetUniqueFromNodes(ctx)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer)
