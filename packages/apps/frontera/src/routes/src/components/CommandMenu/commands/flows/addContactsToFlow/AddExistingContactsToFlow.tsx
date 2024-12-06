@@ -4,6 +4,7 @@ import Fuse from 'fuse.js';
 import { observer } from 'mobx-react-lite';
 import { FlowStore } from '@store/Flows/Flow.store';
 import { ContactStore } from '@store/Contacts/Contact.store';
+import { FlowParticipantStore } from '@store/FlowParticipants/FlowParticipant.store.ts';
 
 import { Avatar } from '@ui/media/Avatar';
 import { Check } from '@ui/media/icons/Check';
@@ -12,8 +13,8 @@ import { useStore } from '@shared/hooks/useStore';
 import { useModKey } from '@shared/hooks/useModKey';
 import { Command, CommandInput } from '@ui/overlay/CommandMenu';
 
-export const AddContactsToFlow = observer(() => {
-  const { contacts, ui, flows, organizations } = useStore();
+export const AddExistingContacts = observer(() => {
+  const { contacts, ui, flows, organizations, flowParticipants } = useStore();
   const [search, setSearch] = useState('');
 
   const context = ui.commandMenu.context;
@@ -27,7 +28,29 @@ export const AddContactsToFlow = observer(() => {
 
       return;
     }
-    selectedFlow?.linkContact(opt.id);
+    const isSelected = opt?.flowsIds?.includes(selectedFlowId);
+
+    if (isSelected) {
+      const participant = opt?.flows
+        ?.find((flow) => flow?.id === selectedFlowId)
+        ?.value.participants.find(
+          (participant) => participant.entityId === opt.id,
+        );
+
+      const flowParticipant =
+        participant?.metadata.id &&
+        (flowParticipants.value.get(
+          participant.metadata.id,
+        ) as FlowParticipantStore);
+
+      if (flowParticipant) {
+        flowParticipant?.deleteFlowParticipant();
+
+        return;
+      }
+    } else {
+      selectedFlow?.linkContact(opt.id);
+    }
   };
 
   useModKey('Enter', () => {
@@ -41,26 +64,28 @@ export const AddContactsToFlow = observer(() => {
           threshold: 0.3,
           isCaseSensitive: false,
         })
-          .search(removeAccents(search), { limit: 40 })
+          .search(removeAccents(search), { limit: 7 })
           .map((r) => r.item)
-      : arr.slice(0, 40),
+      : arr.slice(0, 7),
   );
 
   return (
-    <Command shouldFilter={false} label='Add contact to flow...'>
-      <CommandInput
-        value={search}
-        onValueChange={setSearch}
-        placeholder='Add contacts to flow...'
-        label={`Flow - ${selectedFlow.value.name}`}
-        onKeyDownCapture={(e) => {
-          if (e.key === ' ') {
-            e.stopPropagation();
-          }
-        }}
-      />
+    <>
+      <div className='-mt-3 '>
+        <CommandInput
+          value={search}
+          onValueChange={setSearch}
+          className='text-sm p-0 -ml-2'
+          placeholder='Add contacts to flow...'
+          onKeyDownCapture={(e) => {
+            if (e.key === ' ') {
+              e.stopPropagation();
+            }
+          }}
+        />
+      </div>
 
-      <Command.List>
+      <Command.List className='!px-0'>
         {contactsOptions.map((contactStore) => {
           const isSelected = contactStore?.flowsIds?.includes(selectedFlowId);
 
@@ -107,7 +132,7 @@ export const AddContactsToFlow = observer(() => {
           );
         })}
       </Command.List>
-    </Command>
+    </>
   );
 });
 

@@ -14,7 +14,7 @@ import { LinkedinOutline } from '@ui/media/icons/LinkedinOutline';
 import { validLinkedInProfileUrl } from '@utils/linkedinValidation';
 import { Command, CommandCancelIconButton } from '@ui/overlay/CommandMenu';
 
-import { BulkContactsEditor } from './BulkContactsEditor';
+import { BulkContactsEditor } from '../shared/BulkContactsEditor';
 
 export const AddContactsBulk = observer(() => {
   const store = useStore();
@@ -101,7 +101,7 @@ export const AddContactsBulk = observer(() => {
   };
 
   return (
-    <Command shouldFilter={false} label='Add contact to flow...'>
+    <Command shouldFilter={false} label='Add contacts'>
       <article className='relative w-full p-6 flex flex-col border-b border-b-gray-100 max-h-[580px]'>
         <div className='flex items-center justify-between mb-2'>
           <h1 className='text-base font-semibold'>
