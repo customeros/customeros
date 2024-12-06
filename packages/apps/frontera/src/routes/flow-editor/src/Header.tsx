@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 
 import { useUnmount } from 'usehooks-ts';
@@ -46,6 +46,8 @@ export const Header = observer(
     const showFinder = searchParams.get('show') === 'finder';
     const flowContactsPreset = store.tableViewDefs.flowContactsPreset;
     const canSave = hasChanges;
+    const [showPublishChangesButton, setShowPublishChangesButton] =
+      useState(false);
 
     useEffect(() => {
       if (!store.ui.commandMenu.isOpen) {
@@ -77,8 +79,9 @@ export const Header = observer(
       const handleBeforeUnload = (event: BeforeUnloadEvent) => {
         if (hasChanges) {
           event.preventDefault();
+          setShowPublishChangesButton(true);
 
-          return `Changes you’ve made will NOT be saved`;
+          return `Changes you’ve made will NOT be published.`;
         }
       };
 
@@ -196,7 +199,7 @@ export const Header = observer(
                 Add contacts
               </Button>
             )}
-            {canSave && (
+            {showPublishChangesButton && canSave && (
               <Button
                 size='xs'
                 variant='outline'

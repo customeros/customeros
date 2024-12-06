@@ -8,7 +8,7 @@ import { Spinner } from '@ui/feedback/Spinner';
 import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
 import { DotLive } from '@ui/media/icons/DotLive';
-import { PauseCircle } from '@ui/media/icons/PauseCircle';
+import { StopCircle } from '@ui/media/icons/StopCircle.tsx';
 import { Tag, TagLabel, TagLeftIcon } from '@ui/presentation/Tag';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
 
@@ -203,7 +203,7 @@ export const FlowStatusMenu = observer(
                   <DotLive className='text-success-500 mr-1 [&>*:nth-child(1)]:fill-success-200 [&>*:nth-child(1)]:stroke-success-300 [&>*:nth-child(2)]:fill-success-600 ' />
                 </div>
               </TagLeftIcon>
-              <TagLabel className='text-success-500'>Live</TagLabel>
+              <TagLabel className='text-success-500 font-medium'>Live</TagLabel>
             </Tag>
           </MenuButton>
           <MenuList align='end' side='bottom' className='p-0 z-[11]'>
@@ -217,7 +217,7 @@ export const FlowStatusMenu = observer(
                 })
               }
             >
-              <PauseCircle className='mr-1 text-gray-500' />
+              <StopCircle className='mr-1 text-gray-500' />
               Stop flow...
             </MenuItem>
           </MenuList>

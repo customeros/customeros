@@ -45,7 +45,6 @@ const edgeTypes = {
 export const FlowBuilder = observer(
   ({
     onHasNewChanges,
-    showSidePanel,
     onToggleSidePanel,
   }: {
     showSidePanel: boolean;
@@ -404,10 +403,6 @@ export const FlowBuilder = observer(
               ui.flowCommandMenu.setOpen(false);
             }
 
-            if (showSidePanel) {
-              onToggleSidePanel(false);
-            }
-
             if (ui.flowActionSidePanel.isOpen) {
               if (ui.flowActionSidePanel.context.hasUnsavedChanges) {
                 ui.commandMenu.setType('ConfirmEmailContentChanges');
@@ -419,10 +414,6 @@ export const FlowBuilder = observer(
               ui.flowActionSidePanel.setOpen(false);
 
               return;
-            }
-
-            if (showSidePanel) {
-              onToggleSidePanel(false);
             }
           }}
           onNodeClick={(event, node) => {
