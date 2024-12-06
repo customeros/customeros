@@ -8,7 +8,7 @@ import (
 
 type WebhookEvent struct {
 	ExternalSystemId enum.ExternalSystemId
-	Name             commonenum.FlowEvent
+	Name             commonenum.FlowListenerEvent
 	DataType         string
 	Data             interface{}
 }

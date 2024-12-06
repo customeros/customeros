@@ -8,7 +8,7 @@ import (
 
 type FlowActionEvent struct {
 	ExternalSystemId enum.ExternalSystemId
-	SourceEvent      commonenum.FlowEvent
+	SourceEvent      commonenum.FlowListenerEvent
 	Name             commonenum.FlowAction
 	DataType         string
 	Data             any
