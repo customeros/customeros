@@ -40,7 +40,7 @@ func (r *flowTransitionsRegistryRepository) GetUniqueFromNodes(ctx context.Conte
 
 	var uniqueFromNodes []FromNodeRecord
 	err := r.gormDb.WithContext(ctx).
-		Distinct("from_node").
+		Distinct("from_node", "from_node_type").
 		Where("enabled = true").
 		Order("from_node DESC").
 		Find(&uniqueFromNodes).Error
@@ -134,8 +134,8 @@ func (r *flowTransitionsRegistryRepository) InitializeFlowTransitions(ctx contex
 		if !exists {
 			createErr := r.CreateFlowTransition(ctx, &transition)
 			if createErr != nil {
-				tracing.TraceErr(span, err)
-				return err
+				tracing.TraceErr(span, createErr)
+				return createErr
 			}
 		}
 	}
