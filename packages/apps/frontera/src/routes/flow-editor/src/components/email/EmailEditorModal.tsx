@@ -19,6 +19,7 @@ interface EmailEditorModalProps {
   flowName?: string;
   placeholder: string;
   bodyTemplate: string;
+  isReadOnly?: boolean;
   isEditorOpen: boolean;
   handleSave: () => void;
   action?: FlowActionType;
@@ -41,6 +42,7 @@ export const EmailEditorModal = observer(
     variables,
     action,
     handleSave,
+    isReadOnly,
   }: EmailEditorModalProps) => {
     const inputRef = useRef<LexicalEditor>(null);
     const editorRef = useRef<LexicalEditor>(null);
@@ -91,6 +93,7 @@ export const EmailEditorModal = observer(
                   usePlainText
                   ref={inputRef}
                   placeholder='Subject'
+                  isReadOnly={isReadOnly}
                   variableOptions={variables}
                   namespace='flow-email-editor-subject'
                   onChange={(html) => setSubject(extractPlainText(html))}
@@ -114,6 +117,7 @@ export const EmailEditorModal = observer(
               <div className='h-[60vh] mb-10'>
                 <Editor
                   ref={editorRef}
+                  isReadOnly={isReadOnly}
                   placeholder={placeholder}
                   variableOptions={variables}
                   dataTest='flow-email-editor'

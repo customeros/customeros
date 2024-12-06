@@ -327,32 +327,27 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
   );
 
   const checkIfEmpty = () => {
-    if (tableId === TableIdType.FlowContacts && params.id) {
-      return store.flows.value.get(params.id)?.value.participants.length === 0;
-    }
-
     return match(tableType)
       .with(
         TableViewType.Organizations,
         () => store.organizations?.totalElements === 0,
       )
-      .with(TableViewType.Contacts, () => store.contacts?.totalElements === 0)
+      .with(TableViewType.Contacts, () => {
+        if (tableId === TableIdType.FlowContacts && params.id) {
+          return (
+            store.flows.value.get(params.id)?.value.participants.length === 0
+          );
+        }
+
+        return store.contacts?.totalElements === 0;
+      })
       .with(TableViewType.Invoices, () => store.invoices?.totalElements === 0)
       .with(TableViewType.Contracts, () => store.contracts?.totalElements === 0)
       .with(TableViewType.Flow, () => store.flows?.totalElements === 0)
       .otherwise(() => false);
   };
 
-  const checkIfLoading = () => {
-    return match(tableType)
-      .with(TableViewType.Contacts, () => store.contacts?.isLoading)
-      .with(TableViewType.Invoices, () => store.invoices?.isLoading)
-      .with(TableViewType.Contracts, () => store.contracts?.isLoading)
-      .with(TableViewType.Flow, () => store.flows?.isLoading)
-      .otherwise(() => false);
-  };
-
-  if (checkIfEmpty() || checkIfLoading()) {
+  if (checkIfEmpty()) {
     return <EmptyState />;
   }
 

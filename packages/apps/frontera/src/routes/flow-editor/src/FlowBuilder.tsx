@@ -12,21 +12,22 @@ import {
   ReactFlow,
   Background,
   MarkerType,
-  OnNodeDrag,
   NodeChange,
+  OnNodeDrag,
   getIncomers,
   getOutgoers,
-  useNodesState,
-  useEdgesState,
-  OnNodesDelete,
   OnEdgesDelete,
   OnNodesChange,
-  OnBeforeDelete,
+  OnNodesDelete,
+  useEdgesState,
+  useNodesState,
   FitViewOptions,
+  OnBeforeDelete,
   applyNodeChanges,
   SelectionDragHandler,
 } from '@xyflow/react';
 
+import { FlowStatus } from '@graphql/types';
 import { useStore } from '@shared/hooks/useStore';
 
 import { nodeTypes } from './nodes';
@@ -37,6 +38,7 @@ import { useUndoRedo, useKeyboardShortcuts } from './hooks';
 import { HelperLines, FlowBuilderToolbar } from './components';
 
 import '@xyflow/react/dist/style.css';
+
 const edgeTypes = {
   baseEdge: BasicEdge,
 };
@@ -430,7 +432,7 @@ export const FlowBuilder = observer(
               return;
             }
 
-            if (node.type === 'wait') {
+            if (node.type === 'wait' && flow.value.status === FlowStatus.Off) {
               setNodes((nds) =>
                 nds.map((n) =>
                   n.id === node.id
