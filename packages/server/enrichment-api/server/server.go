@@ -6,7 +6,7 @@ import (
 	"github.com/gin-contrib/cors"
 	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
-	commonconf "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
+	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
@@ -17,6 +17,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/sirupsen/logrus"
 	"os"
 	"os/signal"
 	"syscall"
@@ -52,18 +53,24 @@ func (server *server) Run(parentCtx context.Context) error {
 	registerPrometheusMetrics()
 
 	// Initialize postgres db
-	postgresDb, _ := InitDB(server.cfg, server.log)
-	defer postgresDb.SqlDB.Close()
+	postgresDb, err := commonConfig.InitPostgres(&commonConfig.GlobalConfig{
+		PostgresConfig:      &server.cfg.PostgresConfig,
+		PostgresAsyncConfig: &server.cfg.PostgresAsyncConfig,
+	})
+	if err != nil {
+		logrus.Fatalf("failed opening connection to postgres: %v", err.Error())
+	}
+	defer postgresDb.Close()
 
 	// Setting up Neo4j
-	neo4jDriver, err := commonconf.NewNeo4jDriver(server.cfg.Neo4j)
+	neo4jDriver, err := commonConfig.NewNeo4jDriver(server.cfg.Neo4j)
 	if err != nil {
 		server.log.Fatalf("Could not establish connection with neo4j at: %v, error: %v", server.cfg.Neo4j.Target, err.Error())
 	}
 	defer neo4jDriver.Close(ctx)
 
 	// Setting up common services
-	services := service.InitServices(server.cfg, postgresDb.GormDB, &neo4jDriver, server.log)
+	services := service.InitServices(server.cfg, postgresDb, &neo4jDriver, server.log)
 
 	// Setting up Gin
 	r := gin.Default()
@@ -105,13 +112,6 @@ func (server *server) Run(parentCtx context.Context) error {
 	<-server.doneCh
 	server.log.Infof("Application %s exited properly", constants.ServiceName)
 	return nil
-}
-
-func InitDB(cfg *config.Config, log logger.Logger) (db *commonconf.StorageDB, err error) {
-	if db, err = commonconf.NewPostgresDBConn(cfg.Postgres); err != nil {
-		log.Fatalf("Could not open db connection: %s", err.Error())
-	}
-	return
 }
 
 func HealthCheckHandler(c *gin.Context) {

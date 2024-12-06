@@ -1,6 +1,11 @@
 package config
 
+import "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
+
 type Config struct {
+	PostgresConfig      config.PostgresConfig
+	PostgresAsyncConfig config.PostgresAsyncConfig
+
 	ApiPort  string `env:"PORT" envDefault:"10101" validate:"required"`
 	LogLevel string `env:"LOG_LEVEL" envDefault:"INFO"`
 
@@ -12,17 +17,5 @@ type Config struct {
 	Anthropic struct {
 		ApiPath string `env:"ANTHROPIC_API_PATH,required" envDefault:"https://api.anthropic.com/v1/messages"`
 		ApiKey  string `env:"ANTHROPIC_API_KEY,required" envDefault:""`
-	}
-
-	Postgres struct {
-		Host            string `env:"POSTGRES_HOST,required"`
-		Port            string `env:"POSTGRES_PORT,required"`
-		User            string `env:"POSTGRES_USER,required,unset"`
-		Db              string `env:"POSTGRES_DB,required"`
-		Password        string `env:"POSTGRES_PASSWORD,required,unset"`
-		MaxConn         int    `env:"POSTGRES_DB_MAX_CONN"`
-		MaxIdleConn     int    `env:"POSTGRES_DB_MAX_IDLE_CONN"`
-		ConnMaxLifetime int    `env:"POSTGRES_DB_CONN_MAX_LIFETIME"`
-		LogLevel        string `env:"POSTGRES_LOG_LEVEL" envDefault:"WARN"`
 	}
 }

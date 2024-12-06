@@ -5,8 +5,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/logger"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/repository"
+	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
-	"gorm.io/gorm"
 )
 
 type Services struct {
@@ -25,8 +25,8 @@ type Services struct {
 	InteractionEventDefaultSyncService SyncService
 }
 
-func InitServices(cfg *config.Config, log logger.Logger, driver *neo4j.DriverWithContext, controlDb *gorm.DB, airbyteStoreDb *config.RawDataStoreDB, grpcClients *grpc_client.Clients) *Services {
-	repositories := repository.InitRepos(driver, controlDb, airbyteStoreDb, log)
+func InitServices(cfg *config.Config, log logger.Logger, driver *neo4j.DriverWithContext, postgresDB *commonConfig.PostgresDB, airbyteStoreDb *config.RawDataStoreDB, grpcClients *grpc_client.Clients) *Services {
+	repositories := repository.InitRepos(driver, postgresDB, airbyteStoreDb, log)
 
 	services := new(Services)
 

@@ -5,11 +5,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/caches"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/repository"
-	config2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
+	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
-	"gorm.io/gorm"
 )
 
 type Services struct {
@@ -25,8 +24,8 @@ type Services struct {
 	MeetingService MeetingService
 }
 
-func InitServices(cfg *config.Config, driver *neo4j.DriverWithContext, gormDb *gorm.DB, grpcClients *grpc_client.Clients, cache *caches.Cache, appLogger logger.Logger) *Services {
-	repositories := repository.InitRepos(cfg, driver, gormDb)
+func InitServices(cfg *config.Config, driver *neo4j.DriverWithContext, postgresDB *commonConfig.PostgresDB, grpcClients *grpc_client.Clients, cache *caches.Cache, appLogger logger.Logger) *Services {
+	repositories := repository.InitRepos(cfg, driver, postgresDB)
 
 	services := new(Services)
 	services.cfg = cfg
@@ -37,9 +36,9 @@ func InitServices(cfg *config.Config, driver *neo4j.DriverWithContext, gormDb *g
 	services.SyncService = NewSyncService(cfg, repositories, services)
 	services.MeetingService = NewMeetingService(cfg, repositories, services)
 
-	services.CommonServices = commonService.InitServices(&config2.GlobalConfig{
+	services.CommonServices = commonService.InitServices(&commonConfig.GlobalConfig{
 		RabbitMQConfig: &cfg.RabbitMQConfig,
-	}, repositories.PostgresDriver, repositories.Neo4jDriver, "neo4j", grpcClients, appLogger)
+	}, postgresDB, repositories.Neo4jDriver, "neo4j", grpcClients, appLogger)
 
 	return services
 }

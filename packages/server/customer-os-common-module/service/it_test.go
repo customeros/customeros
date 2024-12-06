@@ -60,11 +60,16 @@ func prepareClient() {
 	})
 	appLogger.InitLogger()
 
+	postgresDB := &config.PostgresDB{
+		GormDB:      postgresGormDB,
+		AsyncGormDB: postgresGormDB,
+	}
+
 	CommonServices = InitServices(&config.GlobalConfig{
 		//RabbitMQConfig: &config.RabbitMQConfig{
 		//	Url: "amqp://127.0.0.1:5672/",
 		//},
-	}, postgresGormDB, driver, "neo4j", nil, appLogger)
+	}, postgresDB, driver, "neo4j", nil, appLogger)
 }
 
 func initContext() context.Context {

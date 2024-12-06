@@ -8,6 +8,7 @@ import (
 	localCron "github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail-raw/cron"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail-raw/logger"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail-raw/service"
+	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/robfig/cron"
 	"github.com/sirupsen/logrus"
 	"os"
@@ -20,11 +21,14 @@ func main() {
 
 	config := loadConfiguration()
 
-	sqlDb, gormDb, errPostgres := syncGmailRawConfig.NewPostgresClient(config)
-	if errPostgres != nil {
-		logrus.Fatalf("failed opening connection to postgres: %v", errPostgres.Error())
+	postgresDb, err := commonConfig.InitPostgres(&commonConfig.GlobalConfig{
+		PostgresConfig:      &config.PostgresConfig,
+		PostgresAsyncConfig: &config.PostgresAsyncConfig,
+	})
+	if err != nil {
+		logrus.Fatalf("failed opening connection to postgres: %v", err.Error())
 	}
-	defer sqlDb.Close()
+	defer postgresDb.Close()
 
 	neo4jDriver, errNeo4j := syncGmailRawConfig.NewDriver(config)
 	if errNeo4j != nil {
@@ -37,7 +41,7 @@ func main() {
 	appLogger.InitLogger()
 	appLogger.WithName("sync-gmail-raw")
 
-	services := service.InitServices(neo4jDriver, gormDb, config, appLogger)
+	services := service.InitServices(neo4jDriver, postgresDb, config, appLogger)
 
 	cronJobs := localCron.StartCronJobs(config, services)
 

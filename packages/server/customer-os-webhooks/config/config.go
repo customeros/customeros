@@ -12,16 +12,17 @@ import (
 )
 
 type Config struct {
-	ApiPort           string `env:"PORT" envDefault:"10004" validate:"required"`
-	MetricsPort       string `env:"PORT_METRICS" envDefault:"10004" validate:"required"`
-	GrpcClientConfig  config.GrpcClientConfig
-	ConcurrencyConfig ConcurrencyConfig
-	Logger            logger.Config
-	Postgres          config.PostgresConfig
-	Neo4j             config.Neo4jConfig
-	RabbitMQConfig    config.RabbitMQConfig
-	Jaeger            tracing.JaegerConfig
-	Metrics           metrics.Config
+	ApiPort             string `env:"PORT" envDefault:"10004" validate:"required"`
+	MetricsPort         string `env:"PORT_METRICS" envDefault:"10004" validate:"required"`
+	GrpcClientConfig    config.GrpcClientConfig
+	ConcurrencyConfig   ConcurrencyConfig
+	Logger              logger.Config
+	PostgresConfig      config.PostgresConfig
+	PostgresAsyncConfig config.PostgresAsyncConfig
+	Neo4j               config.Neo4jConfig
+	RabbitMQConfig      config.RabbitMQConfig
+	Jaeger              tracing.JaegerConfig
+	Metrics             metrics.Config
 
 	BetterContactCallbackApiKey string `env:"BETTER_CONTACT_CALLBACK_API_KEY" validate:"required"`
 	EnrowCallbackApiKey         string `env:"ENROW_CALLBACK_API_KEY" validate:"required"`

@@ -2,11 +2,10 @@ package service
 
 import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	commonconfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
+	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/enrichment-api/config"
-	"gorm.io/gorm"
 )
 
 type Services struct {
@@ -17,9 +16,9 @@ type Services struct {
 	BrandfetchService    BrandfetchService
 }
 
-func InitServices(config *config.Config, gormDb *gorm.DB, driver *neo4j.DriverWithContext, logger logger.Logger) *Services {
+func InitServices(config *config.Config, postgresDB *commonConfig.PostgresDB, driver *neo4j.DriverWithContext, logger logger.Logger) *Services {
 	services := &Services{
-		CommonServices: commonservice.InitServices(&commonconfig.GlobalConfig{}, gormDb, driver, config.Neo4j.Database, nil, logger),
+		CommonServices: commonservice.InitServices(&commonConfig.GlobalConfig{}, postgresDB, driver, config.Neo4j.Database, nil, logger),
 	}
 	services.Logger = logger
 	services.ScrapeInService = NewScrapeInService(config, services, logger)

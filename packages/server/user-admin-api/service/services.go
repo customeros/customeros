@@ -8,7 +8,6 @@ import (
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/config"
-	"gorm.io/gorm"
 )
 
 type Services struct {
@@ -20,7 +19,7 @@ type Services struct {
 	RegistrationService RegistrationService
 }
 
-func InitServices(cfg *config.Config, db *gorm.DB, driver *neo4j.DriverWithContext, grpcClients *grpc_client.Clients, cache *caches.Cache, appLogger logger.Logger) *Services {
+func InitServices(cfg *config.Config, driver *neo4j.DriverWithContext, postgresDB *commonConfig.PostgresDB, grpcClients *grpc_client.Clients, cache *caches.Cache, appLogger logger.Logger) *Services {
 	services := Services{
 		Cache:       cache,
 		GrpcClients: grpcClients,
@@ -33,7 +32,7 @@ func InitServices(cfg *config.Config, db *gorm.DB, driver *neo4j.DriverWithConte
 			OpenSRSConfig:  cfg.OpenSRSConfig,
 			PostmarkConfig: cfg.PostmarkConfig,
 		},
-	}, db, driver, cfg.Neo4j.Database, grpcClients, appLogger)
+	}, postgresDB, driver, cfg.Neo4j.Database, grpcClients, appLogger)
 	services.RegistrationService = NewRegistrationService(&services)
 
 	return &services

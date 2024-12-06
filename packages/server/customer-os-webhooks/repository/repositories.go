@@ -2,11 +2,11 @@ package repository
 
 import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	repository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/repository/postgres"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/repository/postgres/entity"
-	"gorm.io/gorm"
 )
 
 type Repositories struct {
@@ -33,15 +33,15 @@ type Drivers struct {
 	Neo4jDriver *neo4j.DriverWithContext
 }
 
-func InitRepos(driver *neo4j.DriverWithContext, gormDb *gorm.DB, neo4jDatabase string) *Repositories {
+func InitRepos(driver *neo4j.DriverWithContext, postgresDB *commonConfig.PostgresDB, neo4jDatabase string) *Repositories {
 	repositories := Repositories{
 		Drivers: Drivers{
 			Neo4jDriver: driver,
 		},
 		neo4jDatabase:            neo4jDatabase,
-		PostgresRepositories:     postgresRepository.InitRepositories(gormDb),
+		PostgresRepositories:     postgresRepository.InitRepositories(postgresDB),
 		Neo4jRepositories:        neo4jrepository.InitNeo4jRepositories(driver, neo4jDatabase),
-		SyncRunWebhookRepository: repository.NewSyncRunWebhookRepository(gormDb),
+		SyncRunWebhookRepository: repository.NewSyncRunWebhookRepository(postgresDB.GormDB),
 	}
 	repositories.UserRepository = NewUserRepository(driver)
 	repositories.LocationRepository = NewLocationRepository(driver)
@@ -54,7 +54,7 @@ func InitRepos(driver *neo4j.DriverWithContext, gormDb *gorm.DB, neo4jDatabase s
 	repositories.InteractionEventRepository = NewInteractionEventRepository(driver, neo4jDatabase)
 	repositories.CommentRepository = NewCommentRepository(driver, neo4jDatabase)
 
-	err := gormDb.AutoMigrate(&postgresentity.SyncRunWebhook{})
+	err := postgresDB.GormDB.AutoMigrate(&postgresentity.SyncRunWebhook{})
 	if err != nil {
 		panic(err)
 	}

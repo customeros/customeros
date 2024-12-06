@@ -12,6 +12,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/robfig/cron"
+	"github.com/sirupsen/logrus"
 	"io"
 	"os"
 	"os/signal"
@@ -34,8 +35,14 @@ func main() {
 	ctx := context.Background()
 
 	// Initialize postgres db
-	postgresDb, _ := InitDB(cfg, appLogger)
-	defer postgresDb.SqlDB.Close()
+	postgresDb, err := commonConfig.InitPostgres(&commonConfig.GlobalConfig{
+		PostgresConfig:      &cfg.PostgresConfig,
+		PostgresAsyncConfig: &cfg.PostgresAsyncConfig,
+	})
+	if err != nil {
+		logrus.Fatalf("failed opening connection to postgres: %v", err.Error())
+	}
+	defer postgresDb.Close()
 
 	// Neo4j DB
 	neo4jDriver, errNeo4j := commonConfig.NewNeo4jDriver(cfg.Neo4j)
@@ -50,7 +57,7 @@ func main() {
 	cntnr := &container.Container{
 		Cfg:            cfg,
 		Log:            appLogger,
-		Repositories:   repository.InitRepositories(&neo4jDriver, postgresDb.GormDB),
+		Repositories:   repository.InitRepositories(&neo4jDriver, postgresDb),
 		RawDataStoreDB: rawDataStoreDb,
 	}
 
@@ -100,11 +107,4 @@ func initTracing(cfg *config.Config, appLogger logger.Logger) io.Closer {
 		return closer
 	}
 	return nil
-}
-
-func InitDB(cfg *config.Config, log logger.Logger) (db *commonConfig.StorageDB, err error) {
-	if db, err = commonConfig.NewPostgresDBConn(cfg.Postgres); err != nil {
-		log.Fatalf("Could not open db connection: %s", err.Error())
-	}
-	return
 }
