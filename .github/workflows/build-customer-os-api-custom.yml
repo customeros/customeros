@@ -28,6 +28,7 @@ on:
       - .github/workflows/build-customer-os-api-custom.yml
   release:
     types: [ created, edited ]
+  workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
@@ -334,19 +335,3 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
           cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
-
-      - name: Checkout deploy scripts
-        uses: actions/checkout@v4
-        with:
-          repository: customeros/cloud
-          path: './cloud'
-          token: ${{ secrets.FE_TESTS_GITHUB_TOKEN }}
-          ref: main
-
-      - name: Run deploy script
-        working-directory: ./cloud/deployment/sandbox/_deployment
-        env:
-          IMAGE_VERSION: ${{ steps.version.outputs.version }}
-        run: |
-          chmod +x ./customer-os-api.sh
-          ./customer-os-api.sh
