@@ -165,7 +165,7 @@ require (
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/smartystreets/smartystreets-go-sdk v1.20.1 // indirect
 	github.com/sosodev/duration v1.3.1 // indirect
-	github.com/stripe/stripe-go/v81 v81.1.0 // indirect
+	github.com/stripe/stripe-go/v81 v81.1.1 // indirect
 	github.com/tetratelabs/wazero v1.8.0 // indirect
 	github.com/tklauser/go-sysconf v0.3.12 // indirect
 	github.com/tklauser/numcpus v0.6.1 // indirect
