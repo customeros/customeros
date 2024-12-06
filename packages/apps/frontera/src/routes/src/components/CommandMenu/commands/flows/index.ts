@@ -10,4 +10,3 @@ export * from './FlowValidationMessage';
 export * from './GetBrowserExtensionLink';
 export * from './InstallLinkedInExtension';
 export * from './ConfirmEmailContentChanges';
-export * from './addContactsToFlow';
