@@ -79,7 +79,9 @@ func registerCustomerBaseRoutes(ctx context.Context, r *gin.Engine, s *service.S
 }
 
 func registerFlowRoutes(ctx context.Context, r *gin.Engine, s *service.Services, cache *commoncaches.Cache) {
-	setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/events", flowsV1Path), s, cache, flows.GetEvents(s))
+	setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/actions", flowsV1Path), s, cache, flows.GetActions(s))
+	setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/listeners", flowsV1Path), s, cache, flows.GetListeners(s))
+	setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/transitions", flowsV1Path), s, cache, flows.GetTransitions(s))
 	setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/hooks", flowsV1Path), s, cache, flows.GetActiveWebhooks(s, CustomerOSAPIURL(), flowsV1Path))
 	setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/hooks", flowsV1Path), s, cache, flows.CreateWebhook(s, CustomerOSAPIURL(), flowsV1Path))
 	setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/:tenantId/i/:integrationId/rotate", flowsV1Path), s, cache, flows.RotateWebhook(s, CustomerOSAPIURL(), flowsV1Path))

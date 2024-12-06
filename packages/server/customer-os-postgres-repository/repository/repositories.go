@@ -41,6 +41,7 @@ type Repositories struct {
 	ExternalAppKeysRepository                   ExternalAppKeysRepository
 	FlowActionRegistryRepository                FlowActionRegistryRepository
 	FlowListenerRegistryRepository              FlowListenerRegistryRepository
+	FlowTransitionsRegistryRepository           FlowTransitionsRegistryRepository
 	FlowWebhooksRepository                      FlowWebhooksRepository
 	GoogleServiceAccountKeyRepository           GoogleServiceAccountKeyRepository
 	IndustryMappingRepository                   IndustryMappingRepository
@@ -108,6 +109,7 @@ func InitRepositories(db *gorm.DB) *Repositories {
 		ExternalAppKeysRepository:                   NewExternalAppKeysRepository(db),
 		FlowActionRegistryRepository:                NewFlowActionRegistryRepository(db),
 		FlowListenerRegistryRepository:              NewFlowListenerRegistryRepository(db),
+		FlowTransitionsRegistryRepository:           NewFlowTransitionsRegistryRepository(db),
 		FlowWebhooksRepository:                      NewFlowWebhooksRepository(db),
 		GoogleServiceAccountKeyRepository:           NewGoogleServiceAccountKeyRepository(db),
 		IndustryMappingRepository:                   NewIndustryMappingRepository(db),
@@ -172,6 +174,7 @@ func (r *Repositories) Migration(db *gorm.DB) {
 		&entity.ExternalAppKeys{},
 		&entity.FlowActionRegistry{},
 		&entity.FlowListenerRegistry{},
+		&entity.FlowTransitionsRegistry{},
 		&entity.FlowWebhooks{},
 		&entity.GoogleServiceAccountKey{},
 		&entity.IndustryMapping{},
@@ -211,5 +214,6 @@ func (r *Repositories) Migration(db *gorm.DB) {
 
 	r.FlowActionRegistryRepository.InitializeActions(ctx)
 	r.FlowListenerRegistryRepository.InitializeFlowListenerEvents(ctx)
+	r.FlowTransitionsRegistryRepository.InitializeFlowTransitions(ctx)
 
 }

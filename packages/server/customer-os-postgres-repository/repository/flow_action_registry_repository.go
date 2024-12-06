@@ -16,6 +16,7 @@ type FlowActionRegistryRepository interface {
 	InitializeActions(ctx context.Context) error
 	FindFlowAction(ctx context.Context, actionName string) (entity.FlowActionRegistry, error)
 	CreateFlowAction(ctx context.Context, action *entity.FlowActionRegistry) error
+	GetAllFlowActions(ctx context.Context) ([]entity.FlowActionRegistry, error)
 }
 
 type flowActionRegistryRepository struct {
@@ -24,6 +25,25 @@ type flowActionRegistryRepository struct {
 
 func NewFlowActionRegistryRepository(gormDb *gorm.DB) FlowActionRegistryRepository {
 	return &flowActionRegistryRepository{gormDb: gormDb}
+}
+
+func (r *flowActionRegistryRepository) GetAllFlowActions(ctx context.Context) ([]entity.FlowActionRegistry, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionRegistryRepository.GetAllFlowActions")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	var actions []entity.FlowActionRegistry
+	err := r.gormDb.WithContext(ctx).
+		Where("enabled = true").
+		Order("action DESC").
+		Find(&actions).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		err = nil
+	}
+
+	return actions, err
+
 }
 
 func (r *flowActionRegistryRepository) FindFlowAction(ctx context.Context, actionName string) (entity.FlowActionRegistry, error) {
