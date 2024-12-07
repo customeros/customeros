@@ -34,7 +34,7 @@ func OnFlowActionEventCreated(ctx context.Context, s *service.Services, input an
 		return err
 	}
 
-	// determine event handler //
+	// determine event handler
 	switch flowActionEvent.DataType {
 
 	case "MarkdownEventFields":

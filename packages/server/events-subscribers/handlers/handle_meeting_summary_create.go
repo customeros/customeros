@@ -25,6 +25,9 @@ func HandleMeetingSummaryEvent(ctx context.Context, s *service.Services, sourceE
 
 	// TODO: lookup which actions are configured as part of flow for tenant
 	// only trigger events for actions that are turned on
+	// actions that do not have a flow enabled go to dead events store
+
+	// TODO make this a single event
 	if err := publishCreateMarkdownEvent(ctx, s, sourceEvent, eventData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to publish markdown event"))
 		return err
