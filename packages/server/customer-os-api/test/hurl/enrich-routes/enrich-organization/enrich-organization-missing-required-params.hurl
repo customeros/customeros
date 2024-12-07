@@ -1,4 +1,4 @@
-# Test: Enrich non-existing Organization
+# Test: Enrich Organization Missing Required Params
 GET https://api.customeros.ai/enrich/v1/organization
 Content-Type: application/json
 X-CUSTOMER-OS-API-KEY: {{api_key}}

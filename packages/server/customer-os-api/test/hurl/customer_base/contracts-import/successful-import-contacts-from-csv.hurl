@@ -1,4 +1,4 @@
-# Test successful CSV upload
+# Test: Successful Import Contacts From CSV
 POST https://api.customeros.ai/customerbase/v1/contacts/import
 Content-Type: multipart/form-data; boundary=boundary
 X-CUSTOMER-OS-API-KEY: {{api_key}}
