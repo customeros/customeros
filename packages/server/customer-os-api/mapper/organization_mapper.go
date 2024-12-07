@@ -123,7 +123,7 @@ func prepareOrganizationEnrichDetails(requestedAt, enrichedAt, failedAt *time.Ti
 
 func MapOrganizationSaveInputToEntity(input model.OrganizationSaveInput) *data_fields.OrganizationFields {
 	mapped := data_fields.OrganizationFields{
-		Source:             utils.StringPtr(constants.SourceOpenline),
+		Source:             utils.StringPtr(neo4jentity.DataSourceOpenline.String()),
 		AppSource:          utils.StringPtr(constants.AppSourceCustomerOsApi),
 		Domains:            input.Domains,
 		ReferenceId:        input.ReferenceID,

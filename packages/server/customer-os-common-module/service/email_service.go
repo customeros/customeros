@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -37,8 +38,8 @@ type EmailService interface {
 	SetPrimary(ctx context.Context, email string, forEntity LinkWith) error
 	GetPrimaryEmailForEntityId(ctx context.Context, entityType commonmodel.EntityType, entityId string) (*neo4jentity.EmailEntity, error)
 	GetPrimaryEmailsForEntityIds(ctx context.Context, entityType commonmodel.EntityType, entityIds []string) (*neo4jentity.EmailEntities, error)
-
 	linkEmail(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, emailId, email, appSource string, primary bool, linkWith LinkWith) error
+	UpdateEmailValidationDetails(ctx context.Context, emailId string, validationFields data_fields.EmailValidationFields) error
 }
 
 func NewEmailService(services *Services) EmailService {
@@ -580,4 +581,26 @@ func (s *emailService) GetPrimaryEmailsForEntityIds(ctx context.Context, entityT
 		emailEntities = append(emailEntities, *emailEntity)
 	}
 	return &emailEntities, nil
+}
+
+func (s *emailService) UpdateEmailValidationDetails(ctx context.Context, emailId string, validationFields data_fields.EmailValidationFields) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.UpdateEmailValidationDetails")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.TagEntity(span, emailId)
+	tracing.LogObjectAsJson(span, "validationFields", validationFields)
+
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+
+	err = s.services.Neo4jRepositories.EmailWriteRepository.EmailValidated(ctx, tenant, emailId, validationFields)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+
+	return err
 }
