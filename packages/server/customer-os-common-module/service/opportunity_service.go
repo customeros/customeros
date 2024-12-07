@@ -403,7 +403,7 @@ func (s *opportunityService) CloseWon(ctx context.Context, txWithPostCommit *uti
 						Tenant:     tenant,
 						ContractId: contractEntity.Id,
 						SourceFields: &commonpb.SourceFields{
-							Source:    constants.SourceOpenline,
+							Source:    neo4jentity.DataSourceOpenline.String(),
 							AppSource: common.GetAppSourceFromContext(ctx),
 						},
 					})

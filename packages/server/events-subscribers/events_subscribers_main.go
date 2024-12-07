@@ -72,6 +72,7 @@ func main() {
 		InternalServices: commonConfig.InternalServices{
 			EnrichmentApiConfig: cfg.InternalServices.EnrichmentApi,
 			AiApiConfig:         cfg.InternalServices.AiApi,
+			ValidationApiConfig: cfg.InternalServices.ValidationApi,
 		},
 		ExternalServices: commonConfig.ExternalServices{
 			OpenSRSConfig:    cfg.OpenSRSConfig,
@@ -97,6 +98,9 @@ func main() {
 	// organization
 	commonServices.RabbitMQService.RegisterHandler(dto.RequestRefreshLastTouchpoint{}, listeners.OnRequestLastTouchpointRefresh)
 	commonServices.RabbitMQService.RegisterHandler(dto.RequestEnrichOrganization{}, listeners.OnRequestedEnrichOrganization)
+
+	// email
+	commonServices.RabbitMQService.RegisterHandler(dto.RequestValidateEmail{}, listeners.OnRequestedValidateEmail)
 
 	// FlowEngine
 	commonServices.RabbitMQService.RegisterHandler(dto.WebhookEvent{}, listeners.OnWebhookEventCreated)

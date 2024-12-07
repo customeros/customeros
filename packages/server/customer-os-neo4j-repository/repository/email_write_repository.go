@@ -2,6 +2,7 @@ package repository
 
 import (
 	"fmt"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"strings"
 	"time"
 
@@ -31,35 +32,9 @@ type EmailCreateFields struct {
 	CreatedAt time.Time         `json:"createdAt"`
 }
 
-type EmailValidatedFields struct {
-	EmailAddress      string    `json:"emailAddress"`
-	Domain            string    `json:"domain"`
-	IsCatchAll        bool      `json:"isCatchAll"`
-	Deliverable       string    `json:"deliverable"`
-	IsValidSyntax     bool      `json:"isValidSyntax"`
-	Username          string    `json:"username"`
-	ValidatedAt       time.Time `json:"validatedAt"`
-	IsRoleAccount     bool      `json:"isRoleAccount"`
-	IsSystemGenerated bool      `json:"isSystemGenerated"`
-	IsRisky           bool      `json:"isRisky"`
-	IsFirewalled      bool      `json:"isFirewalled"`
-	Provider          string    `json:"provider"`
-	Firewall          string    `json:"firewall"`
-	IsMailboxFull     bool      `json:"isMailboxFull"`
-	IsFreeAccount     bool      `json:"isFreeAccount"`
-	SmtpSuccess       bool      `json:"smtpSuccess"`
-	ResponseCode      string    `json:"responseCode"`
-	ErrorCode         string    `json:"errorCode"`
-	Description       string    `json:"description"`
-	IsPrimaryDomain   bool      `json:"isPrimaryDomain"`
-	PrimaryDomain     string    `json:"primaryDomain"`
-	AlternateEmail    string    `json:"alternateEmail"`
-	RetryValidation   bool      `json:"retryValidation"`
-}
-
 type EmailWriteRepository interface {
 	CreateEmail(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, emailId string, data EmailCreateFields) error
-	EmailValidated(ctx context.Context, tenant, emailId string, data EmailValidatedFields) error
+	EmailValidated(ctx context.Context, tenant, emailId string, data data_fields.EmailValidationFields) error
 	CleanEmailValidation(ctx context.Context, tenant, emailId string) error
 	LinkWithContact(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, contactId, emailId string, primary bool) error
 	LinkWithOrganization(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId, emailId string, primary bool) error
@@ -123,7 +98,7 @@ func (r *emailWriteRepository) CreateEmail(ctx context.Context, tx *neo4j.Manage
 	return err
 }
 
-func (r *emailWriteRepository) EmailValidated(ctx context.Context, tenant, emailId string, data EmailValidatedFields) error {
+func (r *emailWriteRepository) EmailValidated(ctx context.Context, tenant, emailId string, data data_fields.EmailValidationFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailWriteRepository.EmailValidated")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
@@ -160,7 +135,7 @@ func (r *emailWriteRepository) EmailValidated(ctx context.Context, tenant, email
 				WHERE shouldMergeDomain
 				MERGE (d:Domain {domain:$domain})
 				ON CREATE SET 	d.id=randomUUID(), 
-								d.createdAt=$now, 
+								d.createdAt=datetime(), 
 								d.updatedAt=datetime(),
 								d.source=$source
 				WITH d, e
@@ -191,8 +166,7 @@ func (r *emailWriteRepository) EmailValidated(ctx context.Context, tenant, email
 		"primaryDomain":      data.PrimaryDomain,
 		"alternateEmail":     data.AlternateEmail,
 		"retryValidation":    data.RetryValidation,
-		"now":                utils.Now(),
-		"source":             constants.SourceOpenline,
+		"source":             entity.DataSourceOpenline.String(),
 	}
 
 	span.LogFields(log.String("cypher", cypher))

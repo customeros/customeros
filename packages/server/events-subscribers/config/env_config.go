@@ -24,4 +24,5 @@ type Config struct {
 type InternalServices struct {
 	EnrichmentApi config.EnrichmentAPIConfig
 	AiApi         config.AiAPIConfig
+	ValidationApi config.ValidationAPIConfig
 }
