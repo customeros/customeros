@@ -6,7 +6,6 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	"io"
 	"net/http"
 	"net/url"
@@ -171,9 +170,9 @@ func (s *emailService) ValidateEmails() {
 				AppSource: constants.AppSourceDataUpkeeper,
 			})
 
-			err = s.commonServices.RabbitMQService.PublishEvent(innerCtx, record.EmailId, model.EMAIL, dto.RequestValidateEmail{})
+			err = s.commonServices.EmailService.RequestEmailValidation(innerCtx, record.EmailId)
 			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "Error publishing email validation request"))
+				tracing.TraceErr(span, errors.Wrap(err, "Error requesting email validation"))
 				s.log.Errorf("Error publishing email validation request: %s", err.Error())
 			}
 
