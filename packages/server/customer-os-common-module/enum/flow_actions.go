@@ -6,6 +6,10 @@ type FlowAction string
 
 const (
 	ActionContactCreate       FlowAction = "contact.create"
+	ActionEmailSendNew        FlowAction = "email.send_new"
+	ActionEmailSendReply      FlowAction = "email.send_reply"
+	ActionLinkedinConnect     FlowAction = "linkedin.connect"
+	ActionLinkedinMessage     FlowAction = "linkedin.message"
 	ActionOrganizationCreate  FlowAction = "organization.create"
 	ActionTimelineEventCreate FlowAction = "timeline_event.create"
 )
@@ -18,6 +22,10 @@ func GetFlowAction(s string) (FlowAction, error) {
 	switch FlowAction(s) {
 	case
 		ActionContactCreate,
+		ActionEmailSendNew,
+		ActionEmailSendReply,
+		ActionLinkedinConnect,
+		ActionLinkedinMessage,
 		ActionOrganizationCreate,
 		ActionTimelineEventCreate:
 		return FlowAction(s), nil

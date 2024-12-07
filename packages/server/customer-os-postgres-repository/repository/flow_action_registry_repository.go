@@ -43,7 +43,6 @@ func (r *flowActionRegistryRepository) GetAllFlowActions(ctx context.Context) ([
 	}
 
 	return actions, err
-
 }
 
 func (r *flowActionRegistryRepository) FindFlowAction(ctx context.Context, actionName string) (entity.FlowActionRegistry, error) {
@@ -84,6 +83,30 @@ func (r *flowActionRegistryRepository) InitializeActions(ctx context.Context) er
 			Enabled:      true,
 		},
 		{
+			Action:       enum.ActionEmailSendNew.String(),
+			FriendlyName: "Send an email",
+			Description:  "Begins a new email thread",
+			Enabled:      true,
+		},
+		{
+			Action:       enum.ActionEmailSendReply.String(),
+			FriendlyName: "Reply to an email thread",
+			Description:  "Sends a reply to an existing email thread",
+			Enabled:      true,
+		},
+		{
+			Action:       enum.ActionLinkedinConnect.String(),
+			FriendlyName: "Send Linkedin Connection Request",
+			Description:  "Sends a connection request on LinkedIn",
+			Enabled:      true,
+		},
+		{
+			Action:       enum.ActionLinkedinMessage.String(),
+			FriendlyName: "Send Linkedin Message",
+			Description:  "Sends a direct message to a LinkedIn connection",
+			Enabled:      true,
+		},
+		{
 			Action:       enum.ActionOrganizationCreate.String(),
 			FriendlyName: "Create an Organization",
 			Description:  "Creates a new Organization",
@@ -117,5 +140,4 @@ func (r *flowActionRegistryRepository) InitializeActions(ctx context.Context) er
 	}
 
 	return nil
-
 }

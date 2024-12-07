@@ -11,6 +11,7 @@ type FlowListenerEvent string
 
 const (
 	EventFathomMeetingSummaryCreated FlowListenerEvent = "fathom.meeting_summary.created"
+	EventFlowContactAdded            FlowListenerEvent = "flow.contact.added"
 	EventGrainMeetingSummaryCreated  FlowListenerEvent = "grain.meeting_summary.created"
 	NotSet                           FlowListenerEvent = ""
 )

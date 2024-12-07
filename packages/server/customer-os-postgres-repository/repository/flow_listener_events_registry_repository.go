@@ -43,6 +43,13 @@ func (r *flowListenerRegistryRepository) InitializeFlowListenerEvents(ctx contex
 			Enabled:        true,
 		},
 		{
+			ExternalSystem: "flow",
+			ListenerEvent:  commonenum.EventFlowContactAdded.String(),
+			FriendlyName:   "Contact added to Flow",
+			Description:    "A new Contact has been added to a Flow",
+			Enabled:        true,
+		},
+		{
 			ExternalSystem: "grain",
 			ListenerEvent:  commonenum.EventGrainMeetingSummaryCreated.String(),
 			FriendlyName:   "Grain Meeting Summary Created",
