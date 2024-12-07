@@ -6,20 +6,17 @@ import (
 
 	"github.com/customeros/mailwatcher/blscan"
 	"github.com/customeros/mailwatcher/domainage"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
-
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	"github.com/opentracing/opentracing-go"
 )
 
 func (s *mailboxService) ReputationScore(ctx context.Context, domain, tenant string) (int, error) {
 	span, ctx := s.initializeTracing(ctx, "MailboxService.ReputationScore")
-	span.LogFields(
-		log.String("domain", domain),
-	)
 	defer span.Finish()
+	tracing.TagTenant(span, tenant)
+	span.LogKV("domain", domain)
 
 	domainAgePenalty := s.domainAgePenalty(span, domain)
 	blacklistPenaltyPct := s.blacklistPenaltyPercent(domain)
