@@ -3,9 +3,8 @@ package server
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
-	validator "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/eventbuffer"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/subscriber"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstoredb"
 	"github.com/opentracing/opentracing-go"
 	"os"
@@ -207,17 +206,6 @@ func (server *Server) InitSubscribers(ctx context.Context, grpcClients *grpc_cli
 			err := invoiceSubscriber.Connect(ctx, invoiceSubscriber.ProcessEvents)
 			if err != nil {
 				server.Log.Errorf("(invoiceSubscriber.Connect) err: {%s}", err.Error())
-				cancel()
-			}
-		}()
-	}
-
-	if server.Config.Subscriptions.EnrichSubscription.Enabled {
-		enrichSubscriber := subscriber.NewEnrichSubscriber(server.Log, esdb, server.Config, server.Services, server.caches, grpcClients)
-		go func() {
-			err := enrichSubscriber.Connect(ctx, enrichSubscriber.ProcessEvents)
-			if err != nil {
-				server.Log.Errorf("(enrichSubscriber.Connect) err: {%s}", err.Error())
 				cancel()
 			}
 		}()

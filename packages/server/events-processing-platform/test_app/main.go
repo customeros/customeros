@@ -11,7 +11,6 @@ import (
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
 	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
-	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
 	iepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/interaction_event"
 	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
 	issuepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/issue"
@@ -35,7 +34,6 @@ type Clients struct {
 	InteractionEventClient iepb.InteractionEventGrpcServiceClient
 	OrganizationClient     organizationpb.OrganizationGrpcServiceClient
 	ContactClient          contactpb.ContactGrpcServiceClient
-	EmailClient            emailpb.EmailGrpcServiceClient
 	PhoneNumberClient      phonenumberpb.PhoneNumberGrpcServiceClient
 	IssueClient            issuepb.IssueGrpcServiceClient
 	CommentClient          commentpb.CommentGrpcServiceClient
@@ -58,7 +56,6 @@ func InitClients() {
 		InteractionEventClient: iepb.NewInteractionEventGrpcServiceClient(conn),
 		OrganizationClient:     organizationpb.NewOrganizationGrpcServiceClient(conn),
 		ContactClient:          contactpb.NewContactGrpcServiceClient(conn),
-		EmailClient:            emailpb.NewEmailGrpcServiceClient(conn),
 		PhoneNumberClient:      phonenumberpb.NewPhoneNumberGrpcServiceClient(conn),
 		IssueClient:            issuepb.NewIssueGrpcServiceClient(conn),
 		CommentClient:          commentpb.NewCommentGrpcServiceClient(conn),

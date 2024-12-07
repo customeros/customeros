@@ -4,7 +4,6 @@ import (
 	commentpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/comment"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
 	contract_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
-	email_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
 	eventstorepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/event_store"
 	interactioneventpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/interaction_event"
 	interactionsessionpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/interaction_session"
@@ -23,7 +22,6 @@ import (
 type Clients struct {
 	ContactClient            contactpb.ContactGrpcServiceClient
 	ContractClient           contract_grpc_service.ContractGrpcServiceClient
-	EmailClient              email_grpc_service.EmailGrpcServiceClient
 	InvoiceClient            invoice_grpc_service.InvoiceGrpcServiceClient
 	JobRoleClient            job_role_grpc_service.JobRoleGrpcServiceClient
 	OpportunityClient        opportunity_grpc_service.OpportunityGrpcServiceClient
@@ -47,7 +45,6 @@ func InitClients(conn *grpc.ClientConn) *Clients {
 		ContactClient:            contactpb.NewContactGrpcServiceClient(conn),
 		OrganizationClient:       organization_grpc_service.NewOrganizationGrpcServiceClient(conn),
 		PhoneNumberClient:        phone_number_grpc_service.NewPhoneNumberGrpcServiceClient(conn),
-		EmailClient:              email_grpc_service.NewEmailGrpcServiceClient(conn),
 		UserClient:               userpb.NewUserGrpcServiceClient(conn),
 		JobRoleClient:            job_role_grpc_service.NewJobRoleGrpcServiceClient(conn),
 		ContractClient:           contract_grpc_service.NewContractGrpcServiceClient(conn),

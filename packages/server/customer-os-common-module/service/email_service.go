@@ -11,8 +11,6 @@ import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
-	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
-	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -99,25 +97,6 @@ func (s *emailService) Merge(ctx context.Context, txWithPostCommit *utils.TxWith
 			}
 
 			txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
-				// send event to register email in eventstore
-				ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-				_, err = utils.CallEventsPlatformGRPCWithRetry[*emailpb.EmailIdGrpcResponse](func() (*emailpb.EmailIdGrpcResponse, error) {
-					return s.services.GrpcClients.EmailClient.UpsertEmailV2(ctx, &emailpb.UpsertEmailRequest{
-						Tenant:         tenant,
-						EmailId:        emailId,
-						LoggedInUserId: common.GetUserIdFromContext(ctx),
-						RawEmail:       emailFields.Email,
-						CreatedAt:      utils.ConvertTimeToTimestampPtr(&createdAt),
-						SourceFields: &commonpb.SourceFields{
-							Source:    emailFields.Source.String(),
-							AppSource: emailFields.AppSource,
-						},
-					})
-				})
-				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "failed to upsert email"))
-				}
-
 				// send email event to rabbit mq
 				err = s.services.RabbitMQService.PublishEvent(ctx, emailId, commonmodel.NodeLabelEmail, dto.NewRegisterEmailEvent(emailFields.Email, emailFields.Source.String()))
 				if err != nil {
