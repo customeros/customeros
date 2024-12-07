@@ -6,6 +6,7 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	"io"
 	"net/http"
 	"net/url"
@@ -24,7 +25,6 @@ import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	postgresrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
-	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
 	validationcsv "github.com/openline-ai/openline-customer-os/packages/server/validation-api/csv"
 	validationmodel "github.com/openline-ai/openline-customer-os/packages/server/validation-api/model"
 	"github.com/opentracing/opentracing-go"
@@ -166,16 +166,15 @@ func (s *emailService) ValidateEmails() {
 		}
 
 		for _, record := range records {
-			_, err = utils.CallEventsPlatformGRPCWithRetry[*emailpb.EmailIdGrpcResponse](func() (*emailpb.EmailIdGrpcResponse, error) {
-				return s.commonServices.GrpcClients.EmailClient.RequestEmailValidation(ctx, &emailpb.RequestEmailValidationGrpcRequest{
-					Tenant:    record.Tenant,
-					Id:        record.EmailId,
-					AppSource: constants.AppSourceDataUpkeeper,
-				})
+			innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+				Tenant:    record.Tenant,
+				AppSource: constants.AppSourceDataUpkeeper,
 			})
+
+			err = s.commonServices.RabbitMQService.PublishEvent(innerCtx, record.EmailId, model.EMAIL, dto.RequestValidateEmail{})
 			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "Error requesting email validation"))
-				s.log.Errorf("Error validating email {%s}: %s", record.EmailId, err.Error())
+				tracing.TraceErr(span, errors.Wrap(err, "Error publishing email validation request"))
+				s.log.Errorf("Error publishing email validation request: %s", err.Error())
 			}
 
 			err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, record.Tenant, model.NodeLabelEmail, record.EmailId, string(neo4jentity.EmailPropertyValidationRequestedAt), utils.NowPtr())
