@@ -65,6 +65,10 @@ func addTrackingRoutes(rg *gin.RouterGroup, services *service.Services) {
 		tracking.UserAgent = utils.SanitizeUTF8(tracking.UserAgent)
 		tracking.Referrer = utils.SanitizeUTF8(tracking.Referrer)
 		tracking.Origin = utils.SanitizeUTF8(tracking.Origin)
+		tracking.Href = utils.SanitizeUTF8(tracking.Href)
+		tracking.Search = utils.SanitizeUTF8(tracking.Search)
+		tracking.Hostname = utils.SanitizeUTF8(tracking.Hostname)
+		tracking.Pathname = utils.SanitizeUTF8(tracking.Pathname)
 
 		_, err = services.CommonServices.PostgresRepositories.TrackingRepository.Store(ctx, tracking)
 		if err != nil {
