@@ -38,6 +38,7 @@ type EmailService interface {
 	GetPrimaryEmailsForEntityIds(ctx context.Context, entityType commonmodel.EntityType, entityIds []string) (*neo4jentity.EmailEntities, error)
 	linkEmail(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, emailId, email, appSource string, primary bool, linkWith LinkWith) error
 	UpdateEmailValidationDetails(ctx context.Context, emailId string, validationFields data_fields.EmailValidationFields) error
+	RequestEmailValidation(ctx context.Context, emailId string) error
 }
 
 func NewEmailService(services *Services) EmailService {
@@ -581,5 +582,25 @@ func (s *emailService) UpdateEmailValidationDetails(ctx context.Context, emailId
 		tracing.TraceErr(span, err)
 	}
 
+	return err
+}
+
+func (s *emailService) RequestEmailValidation(ctx context.Context, emailId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.RequestEmailValidation")
+	defer span.Finish()
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.TagEntity(span, emailId)
+
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	err = s.services.RabbitMQService.PublishEvent(ctx, emailId, commonmodel.EMAIL, dto.RequestValidateEmail{})
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Error publishing email validation request"))
+	}
 	return err
 }
