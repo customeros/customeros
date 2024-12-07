@@ -14,7 +14,7 @@ replace github.com/openline-ai/openline-customer-os/packages/server/events-proce
 
 require (
 	github.com/caarlos0/env/v6 v6.10.1
-	github.com/customeros/mailsherpa v0.3.6
+	github.com/customeros/mailsherpa v0.3.7
 	github.com/gin-contrib/cors v1.7.2
 	github.com/gin-gonic/gin v1.10.0
 	github.com/google/uuid v1.6.0
@@ -28,7 +28,6 @@ require (
 	github.com/sirupsen/logrus v1.9.3
 	github.com/smartystreets/smartystreets-go-sdk v1.20.1
 	golang.org/x/net v0.32.0
-	gorm.io/gorm v1.25.12
 )
 
 require (
@@ -123,4 +122,5 @@ require (
 	google.golang.org/protobuf v1.35.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gorm.io/driver/postgres v1.5.11 // indirect
+	gorm.io/gorm v1.25.12 // indirect
 )

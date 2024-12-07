@@ -47,7 +47,6 @@ require (
 	golang.org/x/sync v0.10.0
 	google.golang.org/grpc v1.68.1
 	google.golang.org/protobuf v1.35.2
-	gorm.io/driver/postgres v1.5.11
 	gorm.io/gorm v1.25.12
 )
 
@@ -66,7 +65,7 @@ require (
 	github.com/cloudwego/base64x v0.1.4 // indirect
 	github.com/cloudwego/iasm v0.2.0 // indirect
 	github.com/containerd/platforms v0.2.1 // indirect
-	github.com/customeros/mailsherpa v0.3.6 // indirect
+	github.com/customeros/mailsherpa v0.3.7 // indirect
 	github.com/customeros/mailwatcher v0.1.4 // indirect
 	github.com/distribution/reference v0.6.0 // indirect
 	github.com/emersion/go-message v0.18.1 // indirect
@@ -130,6 +129,7 @@ require (
 	golang.org/x/time v0.8.0 // indirect
 	google.golang.org/api v0.210.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20241113202542-65e8d215514f // indirect
+	gorm.io/driver/postgres v1.5.11 // indirect
 )
 
 require (

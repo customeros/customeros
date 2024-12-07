@@ -15,7 +15,7 @@ replace github.com/openline-ai/openline-customer-os/packages/server/events-proce
 require (
 	github.com/biter777/countries v1.7.5
 	github.com/caarlos0/env/v6 v6.10.1
-	github.com/customeros/mailsherpa v0.3.6
+	github.com/customeros/mailsherpa v0.3.7
 	github.com/forPelevin/gomoji v1.2.0
 	github.com/gin-contrib/cors v1.7.2
 	github.com/gin-contrib/zap v1.1.4
@@ -27,8 +27,8 @@ require (
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.20.5
+	github.com/sirupsen/logrus v1.9.3
 	golang.org/x/net v0.32.0
-	gorm.io/gorm v1.25.12
 )
 
 require (
@@ -102,7 +102,6 @@ require (
 	github.com/rabbitmq/amqp091-go v1.10.0 // indirect
 	github.com/rdegges/go-ipify v0.0.0-20150526035502-2d94a6a86c40 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
-	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/stripe/stripe-go/v81 v81.1.0 // indirect
 	github.com/tetratelabs/wazero v1.8.0 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
@@ -130,4 +129,5 @@ require (
 	google.golang.org/protobuf v1.35.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gorm.io/driver/postgres v1.5.11 // indirect
+	gorm.io/gorm v1.25.12 // indirect
 )
