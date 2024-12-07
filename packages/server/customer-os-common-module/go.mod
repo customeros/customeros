@@ -18,7 +18,7 @@ require (
 	github.com/cenkalti/backoff/v4 v4.3.0
 	github.com/coocood/freecache v1.2.4
 	github.com/customeros/mailsherpa v0.3.6
-	github.com/customeros/mailwatcher v0.1.4
+	github.com/customeros/mailwatcher v0.1.6
 	github.com/docker/docker v27.3.1+incompatible
 	github.com/emersion/go-message v0.18.1
 	github.com/forPelevin/gomoji v1.2.0

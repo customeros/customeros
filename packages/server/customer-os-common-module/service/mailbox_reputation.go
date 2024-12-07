@@ -49,6 +49,11 @@ func (s *mailboxService) domainAgePenalty(span opentracing.Span, domain string) 
 		tracing.TraceErr(span, fmt.Errorf("Cannot determine domain dates: %v", err))
 		return 0
 	}
+
+	if !domainDates.Success {
+		return 0
+	}
+
 	domainAgeInDays := domainDates.CreationAge
 
 	switch {

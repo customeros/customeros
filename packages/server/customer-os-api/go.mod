@@ -22,7 +22,7 @@ require (
 	github.com/99designs/gqlgen v0.17.57
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/customeros/mailsherpa v0.3.6
-	github.com/customeros/mailwatcher v0.1.4
+	github.com/customeros/mailwatcher v0.1.6
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gin-contrib/cors v1.7.2
 	github.com/gin-contrib/zap v1.1.4
@@ -42,6 +42,7 @@ require (
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.20.5
+	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.10.0
 	github.com/swaggo/swag v1.16.4
 	github.com/testcontainers/testcontainers-go v0.34.0
@@ -162,7 +163,6 @@ require (
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/shirou/gopsutil/v3 v3.23.12 // indirect
 	github.com/shoenig/go-m1cpu v0.1.6 // indirect
-	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/smartystreets/smartystreets-go-sdk v1.20.1 // indirect
 	github.com/sosodev/duration v1.3.1 // indirect
 	github.com/stripe/stripe-go/v81 v81.1.0 // indirect
