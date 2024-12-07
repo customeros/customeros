@@ -8,6 +8,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
+	"github.com/pkg/errors"
 	"gorm.io/gorm"
 	"time"
 )
@@ -233,13 +234,12 @@ func (r *trackingRepositoryImpl) Store(ctx context.Context, tracking entity.Trac
 	}
 
 	err := r.gormDb.Save(&tracking).Error
-
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "error saving tracking in database"))
 		return "", err
 	}
 
-	span.LogFields(tracingLog.String("tracking.id", tracking.ID))
+	span.LogFields(tracingLog.String("response.trackingId", tracking.ID))
 
 	return tracking.ID, nil
 }
