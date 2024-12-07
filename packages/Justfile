@@ -1,0 +1,127 @@
+# Common module paths
+server_modules := "server/customer-os-postgres-repository server/customer-os-common-module server/events-subscribers server/ai-api server/customer-os-api server/customer-os-neo4j-repository server/customer-os-platform-admin-api server/customer-os-webhooks server/events server/events-processing-platform server/events-processing-platform-subscribers server/file-store-api server/settings-api server/user-admin-api server/validation-api server/email-tracking-api server/enrichment-api"
+
+runner_modules := "runner/customer-os-data-upkeeper runner/sync-gmail-raw runner/sync-gmail runner/sync-customer-os-data runner/sync-tracking runner/sync-slack runner/customer-os-dedup runner/integrity-checker"
+
+# Output directory for binaries
+bin_dir := "bin"
+
+# Build all services
+build-all: ensure-bin-dir
+    #!/usr/bin/env bash
+    echo "Building server services..."
+    for module in {{server_modules}}; do
+        if [[ ! -d "$module" ]]; then
+            echo "Skipping $module - directory not found"
+            continue
+        fi
+        
+        # Look for *main.go files only in the root of the module
+        main_file=$(find "$module" -maxdepth 1 -name "*main.go" | head -n 1)
+        if [[ -z "$main_file" ]]; then
+            echo "No main.go found in root of $module - skipping"
+            continue
+        fi
+        
+        echo "Building $module using $main_file"
+        binary_name=$(basename $module)
+        (cd "$module" && go build -o "../../{{bin_dir}}/server/$binary_name" "$(basename $main_file)") || exit 1
+    done
+    
+    echo "Building runner services..."
+    for module in {{runner_modules}}; do
+        if [[ ! -d "$module" ]]; then
+            echo "Skipping $module - directory not found"
+            continue
+        fi
+        
+        # Look for *main.go files only in the root of the module
+        main_file=$(find "$module" -maxdepth 1 -name "*main.go" | head -n 1)
+        if [[ -z "$main_file" ]]; then
+            echo "No main.go found in root of $module - skipping"
+            continue
+        fi
+        
+        echo "Building $module using $main_file"
+        binary_name=$(basename $module)
+        (cd "$module" && go build -o "../../{{bin_dir}}/runner/$binary_name" "$(basename $main_file)") || exit 1
+    done
+    
+    echo "All services built successfully!"
+
+# Ensure binary output directories exist
+ensure-bin-dir:
+    mkdir -p {{bin_dir}}/server {{bin_dir}}/runner
+
+# Build a specific service
+build SERVICE:
+    @if [ -f "{{SERVICE}}/main.go" ]; then \
+        mkdir -p {{bin_dir}}/$(dirname {{SERVICE}}); \
+        go build -o {{bin_dir}}/{{SERVICE}} {{SERVICE}}/main.go; \
+    else \
+        echo "No main.go found in {{SERVICE}}"; \
+        exit 1; \
+    fi
+
+# Build and tidy everything (useful for CI)
+ci: tidy-all build-all
+
+# Clean build artifacts
+clean:
+    rm -rf {{bin_dir}}
+
+# Show outdated dependencies for all modules
+outdated:
+    #!/usr/bin/env bash
+    echo "Checking outdated dependencies..."
+    for module in {{server_modules}} {{runner_modules}}; do
+        if [[ ! -d "$module" ]]; then
+            continue
+        fi
+        echo -e "\n=== $module ==="
+        (cd "$module" && go list -u -m all | grep -v "indirect" | grep "\[" || echo "All dependencies are up to date")
+    done
+
+# Run tests for a specific service
+test SERVICE:
+    @if [[ ! -d "{{SERVICE}}" ]]; then \
+        echo "Service directory not found: {{SERVICE}}"; \
+        exit 1; \
+    fi; \
+    cd "{{SERVICE}}" && go test -v ./...
+
+# Tidy all Go modules
+tidy-all:
+    #!/usr/bin/env bash
+    echo "Tidying server modules..."
+    for module in {{server_modules}}; do
+        echo "Tidying $module"
+        (cd $module && go mod tidy) || exit 1
+    done
+    
+    echo "Tidying runner modules..."
+    for module in {{runner_modules}}; do
+        echo "Tidying $module"
+        (cd $module && go mod tidy) || exit 1
+    done
+    
+    echo "All modules tidied successfully!"
+
+# Tidy a specific module
+tidy MODULE:
+    @cd {{MODULE}} && go mod tidy
+
+# Update specific dependency across all modules
+update dep:
+    #!/usr/bin/env bash
+    echo "Updating {{dep}} in all modules..."
+    for module in {{server_modules}} {{runner_modules}}; do
+        if [[ ! -d "$module" ]]; then
+            continue
+        fi
+        echo "=== Updating {{dep}} in $module ==="
+        (cd "$module" && \
+         go get -u {{dep}} && \
+         go mod tidy)
+    done
+
