@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"gorm.io/gorm"
 
@@ -44,6 +45,7 @@ type Repositories struct {
 	ExternalAppKeysRepository                   ExternalAppKeysRepository
 	FlowActionExecutionRepository               FlowActionExecutionRepository
 	FlowActionRegistryRepository                FlowActionRegistryRepository
+	FlowDeadListenerEventsRepository            FlowDeadListenerEventsRepository
 	FlowExecutionRepository                     FlowExecutionRepository
 	FlowListenerRegistryRepository              FlowListenerRegistryRepository
 	FlowTransitionsRegistryRepository           FlowTransitionsRegistryRepository
@@ -120,6 +122,7 @@ func InitRepositories(postgresDB *config.PostgresDB) *Repositories {
 		ExternalAppKeysRepository:                   NewExternalAppKeysRepository(postgresDB.GormDB),
 		FlowActionExecutionRepository:               NewFlowActionExecutionRepository(postgresDB.GormDB),
 		FlowActionRegistryRepository:                NewFlowActionRegistryRepository(postgresDB.GormDB),
+		FlowDeadListenerEventsRepository:            NewFlowDeadListenerEventsRepository(postgresDB.GormDB),
 		FlowExecutionRepository:                     NewFlowExecutionRepository(postgresDB.GormDB),
 		FlowListenerRegistryRepository:              NewFlowListenerRegistryRepository(postgresDB.GormDB),
 		FlowTransitionsRegistryRepository:           NewFlowTransitionsRegistryRepository(postgresDB.GormDB),
@@ -183,6 +186,7 @@ func (r *Repositories) Migration(postgresDB *config.PostgresDB) {
 		&entity.ExternalAppKeys{},
 		&entity.FlowActionRegistry{},
 		&entity.ActionExecution{},
+		&entity.FlowDeadListenerEvents{},
 		&entity.FlowExecution{},
 		&entity.FlowListenerRegistry{},
 		&entity.FlowTransitionsRegistry{},
@@ -235,6 +239,7 @@ func (r *Repositories) InitData(ctx context.Context, postgresRepos *Repositories
 	if err != nil {
 		panic(err)
 	}
+
 	err = r.FlowListenerRegistryRepository.InitializeFlowListenerEvents(ctx)
 	if err != nil {
 		panic(err)
