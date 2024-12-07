@@ -27,6 +27,9 @@ func NewSubscriptions(log logger.Logger, db *esdb.Client, cfg *config.Config) *S
 }
 
 func (s *Subscriptions) RefreshSubscriptions(ctx context.Context) error {
+
+	_ = s.permanentlyDeletePersistentSubscription(ctx, "enrich-v3")
+
 	graphSubscriptionSettings := esdb.SubscriptionSettingsDefault()
 	graphSubscriptionSettings.ExtraStatistics = true
 	graphSubscriptionSettings.CheckpointLowerBound = s.cfg.Subscriptions.GraphSubscription.CheckpointLowerBound
@@ -75,21 +78,6 @@ func (s *Subscriptions) RefreshSubscriptions(ctx context.Context) error {
 		s.cfg.Subscriptions.OrganizationSubscription.GroupName,
 		&esdb.SubscriptionFilter{Type: esdb.StreamFilterType, Prefixes: []string{s.cfg.Subscriptions.OrganizationSubscription.Prefix}},
 		&organizationSubscriptionSettings,
-		false,
-		false,
-		esdb.End{},
-	); err != nil {
-		return err
-	}
-
-	enrichSubscriptionSettings := esdb.SubscriptionSettingsDefault()
-	enrichSubscriptionSettings.MessageTimeout = s.cfg.Subscriptions.EnrichSubscription.MessageTimeoutSec * 1000
-	enrichSubscriptionSettings.CheckpointLowerBound = s.cfg.Subscriptions.EnrichSubscription.CheckpointLowerBound
-	enrichSubscriptionSettings.ExtraStatistics = true
-	if err := s.subscribeToAll(ctx,
-		s.cfg.Subscriptions.EnrichSubscription.GroupName,
-		nil,
-		&enrichSubscriptionSettings,
 		false,
 		false,
 		esdb.End{},

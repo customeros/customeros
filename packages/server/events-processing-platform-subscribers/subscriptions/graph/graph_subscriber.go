@@ -7,7 +7,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	orgevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	contactevent "github.com/openline-ai/openline-customer-os/packages/server/events/event/contact/event"
-	emailevents "github.com/openline-ai/openline-customer-os/packages/server/events/event/email/event"
 	reminderevents "github.com/openline-ai/openline-customer-os/packages/server/events/event/reminder/event"
 	"github.com/opentracing/opentracing-go"
 	"strings"
@@ -42,7 +41,6 @@ type GraphSubscriber struct {
 	phoneNumberEventHandler     *PhoneNumberEventHandler
 	contactEventHandler         *ContactEventHandler
 	organizationEventHandler    *OrganizationEventHandler
-	emailEventHandler           *EmailEventHandler
 	userEventHandler            *UserEventHandler
 	locationEventHandler        *LocationEventHandler
 	jobRoleEventHandler         *JobRoleEventHandler
@@ -63,7 +61,6 @@ func NewGraphSubscriber(log logger.Logger, db *esdb.Client, services *service.Se
 		contactEventHandler:         NewContactEventHandler(log, services, grpcClients),
 		organizationEventHandler:    NewOrganizationEventHandler(log, services, grpcClients, cache),
 		phoneNumberEventHandler:     NewPhoneNumberEventHandler(log, services, grpcClients),
-		emailEventHandler:           NewEmailEventHandler(log, services, grpcClients),
 		userEventHandler:            NewUserEventHandler(log, services),
 		locationEventHandler:        NewLocationEventHandler(services),
 		jobRoleEventHandler:         NewJobRoleEventHandler(services),
@@ -185,10 +182,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return nil
 	case phonenumberevents.PhoneNumberValidatedV1:
 		_ = s.phoneNumberEventHandler.OnPhoneNumberValidated(ctx, evt)
-		return nil
-
-	case emailevents.EmailValidatedV2:
-		_ = s.emailEventHandler.OnEmailValidatedV2(ctx, evt)
 		return nil
 
 	case contactevent.ContactPhoneNumberLinkV1:
