@@ -42,8 +42,6 @@ func (a *OpportunityAggregate) HandleGRPCRequest(ctx context.Context, request an
 	defer span.Finish()
 
 	switch r := request.(type) {
-	case *opportunitypb.CreateOpportunityGrpcRequest:
-		return nil, a.createOpportunity(ctx, r)
 	case *opportunitypb.UpdateOpportunityGrpcRequest:
 		return nil, a.updateOpportunity(ctx, r)
 	case *opportunitypb.CreateRenewalOpportunityGrpcRequest:
@@ -54,55 +52,6 @@ func (a *OpportunityAggregate) HandleGRPCRequest(ctx context.Context, request an
 		tracing.TraceErr(span, eventstore.ErrInvalidRequestType)
 		return nil, eventstore.ErrInvalidRequestType
 	}
-}
-
-func (a *OpportunityAggregate) createOpportunity(ctx context.Context, request *opportunitypb.CreateOpportunityGrpcRequest) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "OpportunityAggregate.createOpportunity")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
-	tracing.LogObjectAsJson(span, "request", request)
-
-	createdAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.CreatedAt), utils.Now())
-	updatedAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.UpdatedAt), createdAtNotNil)
-
-	sourceFields := commonmodel.Source{}
-	sourceFields.FromGrpc(request.SourceFields)
-	sourceFields.SetDefaultValues()
-
-	externalSystem := commonmodel.ExternalSystem{}
-	externalSystem.FromGrpc(request.ExternalSystemFields)
-
-	dataFields := model.OpportunityDataFields{
-		Name:              request.Name,
-		MaxAmount:         request.MaxAmount,
-		InternalType:      model.OpportunityInternalType(request.InternalType),
-		ExternalType:      request.ExternalType,
-		InternalStage:     model.OpportunityInternalStage(request.InternalStage),
-		ExternalStage:     request.ExternalStage,
-		EstimatedClosedAt: utils.TimestampProtoToTimePtr(request.EstimatedCloseDate),
-		OwnerUserId:       request.OwnerUserId,
-		CreatedByUserId:   utils.StringFirstNonEmpty(request.CreatedByUserId, request.LoggedInUserId),
-		GeneralNotes:      request.GeneralNotes,
-		NextSteps:         request.NextSteps,
-		OrganizationId:    request.OrganizationId,
-		Currency:          request.Currency,
-		LikelihoodRate:    request.LikelihoodRate,
-	}
-
-	createEvent, err := events.NewOpportunityCreateEvent(a, dataFields, sourceFields, externalSystem, createdAtNotNil, updatedAtNotNil)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewOpportunityCreateEvent")
-	}
-	eventstore.EnrichEventWithMetadataExtended(&createEvent, span, eventstore.EventMetadata{
-		Tenant: a.Tenant,
-		UserId: request.LoggedInUserId,
-		App:    sourceFields.AppSource,
-	})
-
-	return a.Apply(createEvent)
 }
 
 func (a *OpportunityAggregate) updateOpportunity(ctx context.Context, request *opportunitypb.UpdateOpportunityGrpcRequest) error {

@@ -31,32 +31,6 @@ func NewOpportunityService(log logger.Logger, commandHandlers *command_handler.C
 	}
 }
 
-func (s *opportunityService) CreateOpportunity(ctx context.Context, request *opportunitypb.CreateOpportunityGrpcRequest) (*opportunitypb.OpportunityIdGrpcResponse, error) {
-	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OpportunityService.CreateOpportunity")
-	defer span.Finish()
-	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	tracing.LogObjectAsJson(span, "request", request)
-
-	// Validate organization ID
-	if request.OrganizationId == "" {
-		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("organizationId"))
-	}
-	opportunityId := uuid.New().String()
-	span.SetTag(tracing.SpanTagEntityId, opportunityId)
-
-	initAggregateFunc := func() eventstore.Aggregate {
-		return aggregate.NewOpportunityAggregateWithTenantAndID(request.Tenant, opportunityId)
-	}
-	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request); err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("(CreateRenewalOpportunity) tenant:{%v}, err: %v", request.Tenant, err.Error())
-		return nil, grpcerr.ErrResponse(err)
-	}
-
-	// Return the ID of the newly created opportunity
-	return &opportunitypb.OpportunityIdGrpcResponse{Id: opportunityId}, nil
-}
-
 func (s *opportunityService) UpdateOpportunity(ctx context.Context, request *opportunitypb.UpdateOpportunityGrpcRequest) (*opportunitypb.OpportunityIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OpportunityService.UpdateOpportunity")
 	defer span.Finish()
@@ -193,13 +167,4 @@ func (s *opportunityService) UpdateRenewalOpportunityNextCycleDate(ctx context.C
 
 	// Return the ID of the newly created opportunity
 	return &opportunitypb.OpportunityIdGrpcResponse{Id: request.OpportunityId}, nil
-}
-
-func containsOpportunityMaskFieldAll(fields []opportunitypb.OpportunityMaskField) bool {
-	for _, field := range fields {
-		if field == opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_ALL {
-			return true
-		}
-	}
-	return false
 }
