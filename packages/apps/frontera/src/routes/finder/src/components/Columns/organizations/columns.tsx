@@ -274,9 +274,8 @@ export const columns: Record<string, Column> = {
       const row = props.getValue();
 
       const owner = row?.value?.owner;
-      const orgId = row?.id;
 
-      return <OwnerCell id={orgId} owner={owner} />;
+      return <OwnerCell ownerId={owner?.id} />;
     },
     header: (props) => (
       <THead<HTMLInputElement>
