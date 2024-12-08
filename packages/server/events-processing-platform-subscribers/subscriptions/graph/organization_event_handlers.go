@@ -18,12 +18,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/model"
-	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
-	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -836,22 +833,21 @@ func (h *OrganizationEventHandler) handleStageChange(ctx context.Context, tenant
 		}
 
 		// create default opportunity
-		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
-			return h.grpcClients.OpportunityClient.CreateOpportunity(ctx, &opportunitypb.CreateOpportunityGrpcRequest{
-				Tenant:         tenant,
-				OrganizationId: orgAfterUpdate.ID,
-				Name:           orgAfterUpdate.Name,
-				OwnerUserId:    ownerId,
-				InternalType:   opportunitypb.OpportunityInternalType_NBO,
-				InternalStage:  opportunitypb.OpportunityInternalStage_OPEN,
-				ExternalStage:  defaultStage,
-				SourceFields: &commonpb.SourceFields{
-					Source:    constants.SourceOpenline,
-					AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
-				},
-			})
-		})
+		opportunityFields := neo4jrepository.OpportunitySaveFields{
+			AppSource:           constants.AppSourceEventProcessingPlatformSubscribers,
+			Source:              neo4jentity.DataSourceOpenline.String(),
+			OwnerId:             ownerId,
+			UpdateOwnerId:       true,
+			Name:                orgAfterUpdate.Name,
+			UpdateName:          true,
+			InternalType:        neo4jenum.OpportunityInternalTypeNBO.String(),
+			UpdateInternalType:  true,
+			InternalStage:       neo4jenum.OpportunityInternalStageOpen.String(),
+			UpdateInternalStage: true,
+			ExternalStage:       defaultStage,
+			UpdateExternalStage: true,
+		}
+		_, err = h.services.CommonServices.OpportunityService.Save(ctx, nil, tenant, &orgAfterUpdate.ID, nil, &opportunityFields)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while creating default opportunity for organization %s: %s", orgAfterUpdate.ID, err.Error())
