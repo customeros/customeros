@@ -297,16 +297,11 @@ func (r *mutationResolver) OrganizationRemoveSocial(ctx context.Context, organiz
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.organizationID", organizationID), log.String("request.socialID", socialID))
 
-	ctx = commontracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err := utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-		return r.Clients.OrganizationClient.RemoveSocial(ctx, &organizationpb.RemoveSocialGrpcRequest{
-			Tenant:         common.GetTenantFromContext(ctx),
-			LoggedInUserId: common.GetUserIdFromContext(ctx),
-			OrganizationId: organizationID,
-			SocialId:       socialID,
-			AppSource:      constants.AppSourceCustomerOsApi,
-		})
-	})
+	err := r.Services.CommonServices.SocialService.RemoveSocialFromEntity(ctx, nil, commonservice.LinkWith{
+		Id:   organizationID,
+		Type: commonmodel.ORGANIZATION,
+	},
+		socialID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to remove social %s from organization %s", socialID, organizationID)

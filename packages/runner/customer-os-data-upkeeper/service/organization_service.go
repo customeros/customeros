@@ -324,52 +324,36 @@ func (s *organizationService) removeEmptySocials(ctx context.Context) {
 	tracing.TagComponentCronJob(span)
 
 	limit := 100
+	minutesSinceLastUpdate := 180 // 3 hours
 
-	for {
-		select {
-		case <-ctx.Done():
-			s.log.Infof("Context cancelled, stopping")
-			return
-		default:
-			// continue as normal
-		}
+	records, err := s.commonServices.Neo4jRepositories.SocialReadRepository.GetEmptySocialsForEntityType(ctx, model.NodeLabelOrganization, minutesSinceLastUpdate, limit)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error getting socials: %v", err)
+		return
+	}
 
-		minutesSinceLastUpdate := 180
-		records, err := s.commonServices.Neo4jRepositories.SocialReadRepository.GetEmptySocialsForEntityType(ctx, model.NodeLabelOrganization, minutesSinceLastUpdate, limit)
+	// no record
+	if len(records) == 0 {
+		return
+	}
+
+	//remove socials from organization
+	for _, record := range records {
+		innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+			Tenant:    record.Tenant,
+			AppSource: constants.AppSourceDataUpkeeper,
+		})
+		err = s.commonServices.SocialService.RemoveSocialFromEntity(innerCtx, nil,
+			commonService.LinkWith{
+				Id:   record.LinkedEntityId,
+				Type: model.ORGANIZATION,
+			},
+			record.SocialId)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			s.log.Errorf("Error getting socials: %v", err)
-			return
+			s.log.Errorf("Error removing social {%s}: %s", record.SocialId, err.Error())
 		}
-
-		// no record
-		if len(records) == 0 {
-			return
-		}
-
-		//remove socials from organization
-		for _, record := range records {
-			_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-				return s.eventsProcessingClient.OrganizationClient.RemoveSocial(ctx, &organizationpb.RemoveSocialGrpcRequest{
-					Tenant:         record.Tenant,
-					OrganizationId: record.LinkedEntityId,
-					SocialId:       record.SocialId,
-					AppSource:      constants.AppSourceDataUpkeeper,
-				})
-			})
-			if err != nil {
-				tracing.TraceErr(span, err)
-				s.log.Errorf("Error removing social {%s}: %s", record.SocialId, err.Error())
-			}
-		}
-
-		// if less than limit records are returned, we are done
-		if len(records) < limit {
-			return
-		}
-
-		// force exit after single iteration
-		return
 	}
 }
 
@@ -380,52 +364,39 @@ func (s *organizationService) removeDuplicatedSocials(ctx context.Context, now t
 
 	limit := 100
 
-	for {
-		select {
-		case <-ctx.Done():
-			s.log.Infof("Context cancelled, stopping")
-			return
-		default:
-			// continue as normal
-		}
-
-		records, err := s.commonServices.Neo4jRepositories.SocialReadRepository.GetDuplicatedSocialsForEntityType(ctx, model.NodeLabelOrganization, 180, limit)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			s.log.Errorf("Error getting socials: %v", err)
-			return
-		}
-
-		// no record
-		if len(records) == 0 {
-			return
-		}
-
-		//remove socials from organization
-		for _, record := range records {
-			_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-				return s.eventsProcessingClient.OrganizationClient.RemoveSocial(ctx, &organizationpb.RemoveSocialGrpcRequest{
-					Tenant:         record.Tenant,
-					OrganizationId: record.LinkedEntityId,
-					SocialId:       record.SocialId,
-					AppSource:      constants.AppSourceDataUpkeeper,
-				})
-			})
-			if err != nil {
-				tracing.TraceErr(span, err)
-				s.log.Errorf("Error removing social {%s}: %s", record.SocialId, err.Error())
-			}
-
-		}
-
-		// if less than limit records are returned, we are done
-		if len(records) < limit {
-			return
-		}
-
-		// force exit after single iteration
+	records, err := s.commonServices.Neo4jRepositories.SocialReadRepository.GetDuplicatedSocialsForEntityType(ctx, model.NodeLabelOrganization, 180, limit)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error getting socials: %v", err)
 		return
 	}
+
+	// no record
+	if len(records) == 0 {
+		return
+	}
+
+	//remove socials from organization
+	for _, record := range records {
+		innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+			Tenant:    record.Tenant,
+			AppSource: constants.AppSourceDataUpkeeper,
+		})
+
+		// remove social
+		err = s.commonServices.SocialService.RemoveSocialFromEntity(innerCtx, nil,
+			commonService.LinkWith{
+				Id:   record.LinkedEntityId,
+				Type: model.ORGANIZATION,
+			},
+			record.SocialId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Error removing social {%s}: %s", record.SocialId, err.Error())
+		}
+
+	}
+
 }
 
 func (s *organizationService) adjustIndustries(ctx context.Context) {

@@ -33,7 +33,6 @@ type OrganizationGrpcServiceClient interface {
 	AddParentOrganization(ctx context.Context, in *AddParentOrganizationGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	RemoveParentOrganization(ctx context.Context, in *RemoveParentOrganizationGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	UpdateOnboardingStatus(ctx context.Context, in *UpdateOnboardingStatusGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
-	RemoveSocial(ctx context.Context, in *RemoveSocialGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	UpdateOrganizationOwner(ctx context.Context, in *UpdateOrganizationOwnerGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	CreateBillingProfile(ctx context.Context, in *CreateBillingProfileGrpcRequest, opts ...grpc.CallOption) (*BillingProfileIdGrpcResponse, error)
 	UpdateBillingProfile(ctx context.Context, in *UpdateBillingProfileGrpcRequest, opts ...grpc.CallOption) (*BillingProfileIdGrpcResponse, error)
@@ -143,15 +142,6 @@ func (c *organizationGrpcServiceClient) UpdateOnboardingStatus(ctx context.Conte
 	return out, nil
 }
 
-func (c *organizationGrpcServiceClient) RemoveSocial(ctx context.Context, in *RemoveSocialGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error) {
-	out := new(OrganizationIdGrpcResponse)
-	err := c.cc.Invoke(ctx, "/organizationGrpcService/RemoveSocial", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *organizationGrpcServiceClient) UpdateOrganizationOwner(ctx context.Context, in *UpdateOrganizationOwnerGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error) {
 	out := new(OrganizationIdGrpcResponse)
 	err := c.cc.Invoke(ctx, "/organizationGrpcService/UpdateOrganizationOwner", in, out, opts...)
@@ -247,7 +237,6 @@ type OrganizationGrpcServiceServer interface {
 	AddParentOrganization(context.Context, *AddParentOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	RemoveParentOrganization(context.Context, *RemoveParentOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	UpdateOnboardingStatus(context.Context, *UpdateOnboardingStatusGrpcRequest) (*OrganizationIdGrpcResponse, error)
-	RemoveSocial(context.Context, *RemoveSocialGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	UpdateOrganizationOwner(context.Context, *UpdateOrganizationOwnerGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	CreateBillingProfile(context.Context, *CreateBillingProfileGrpcRequest) (*BillingProfileIdGrpcResponse, error)
 	UpdateBillingProfile(context.Context, *UpdateBillingProfileGrpcRequest) (*BillingProfileIdGrpcResponse, error)
@@ -292,9 +281,6 @@ func (UnimplementedOrganizationGrpcServiceServer) RemoveParentOrganization(conte
 }
 func (UnimplementedOrganizationGrpcServiceServer) UpdateOnboardingStatus(context.Context, *UpdateOnboardingStatusGrpcRequest) (*OrganizationIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateOnboardingStatus not implemented")
-}
-func (UnimplementedOrganizationGrpcServiceServer) RemoveSocial(context.Context, *RemoveSocialGrpcRequest) (*OrganizationIdGrpcResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RemoveSocial not implemented")
 }
 func (UnimplementedOrganizationGrpcServiceServer) UpdateOrganizationOwner(context.Context, *UpdateOrganizationOwnerGrpcRequest) (*OrganizationIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateOrganizationOwner not implemented")
@@ -515,24 +501,6 @@ func _OrganizationGrpcService_UpdateOnboardingStatus_Handler(srv interface{}, ct
 	return interceptor(ctx, in, info, handler)
 }
 
-func _OrganizationGrpcService_RemoveSocial_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RemoveSocialGrpcRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(OrganizationGrpcServiceServer).RemoveSocial(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/organizationGrpcService/RemoveSocial",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OrganizationGrpcServiceServer).RemoveSocial(ctx, req.(*RemoveSocialGrpcRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _OrganizationGrpcService_UpdateOrganizationOwner_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UpdateOrganizationOwnerGrpcRequest)
 	if err := dec(in); err != nil {
@@ -741,10 +709,6 @@ var OrganizationGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateOnboardingStatus",
 			Handler:    _OrganizationGrpcService_UpdateOnboardingStatus_Handler,
-		},
-		{
-			MethodName: "RemoveSocial",
-			Handler:    _OrganizationGrpcService_RemoveSocial_Handler,
 		},
 		{
 			MethodName: "UpdateOrganizationOwner",
