@@ -6,7 +6,6 @@ import (
 	commentpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/comment"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
 	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
-	countrypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/country"
 	eventstorepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/event_store"
 	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
 	issuepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/issue"
@@ -82,6 +81,5 @@ func RegisterGrpcServices(grpcServer *grpc.Server, services *service.Services) {
 	contractpb.RegisterContractGrpcServiceServer(grpcServer, services.ContractService)
 	servicelineitempb.RegisterServiceLineItemGrpcServiceServer(grpcServer, services.ServiceLineItemService)
 	invoicepb.RegisterInvoiceGrpcServiceServer(grpcServer, services.InvoiceService)
-	countrypb.RegisterCountryGrpcServiceServer(grpcServer, services.CountryService)
 	eventstorepb.RegisterEventStoreGrpcServiceServer(grpcServer, services.EventStoreService)
 }
