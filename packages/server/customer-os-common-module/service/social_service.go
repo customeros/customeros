@@ -22,6 +22,7 @@ import (
 type SocialService interface {
 	GetById(ctx context.Context, socialId string) (*neo4jentity.SocialEntity, error)
 	AddSocialToEntity(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, linkWith LinkWith, socialEntity neo4jentity.SocialEntity) (string, error)
+	RemoveSocialFromEntity(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, linkWith LinkWith, socialId string) error
 	Update(ctx context.Context, entity neo4jentity.SocialEntity) (*neo4jentity.SocialEntity, error)
 	PermanentlyDelete(ctx context.Context, tenant, socialId string) error
 	GetAllForEntities(ctx context.Context, tenant string, linkedEntityType model.EntityType, linkedEntityIds []string) (*neo4jentity.SocialEntities, error)
@@ -361,6 +362,81 @@ func (s *socialService) AddSocialToEntity(ctx context.Context, txWithPostCommit 
 	})
 
 	return socialId, err
+}
+
+func (s *socialService) RemoveSocialFromEntity(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, linkWith LinkWith, socialId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialService.RemoveSocialFromEntity")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(
+		log.String("linkWith.id", linkWith.Id),
+		log.String("linkWith.type", string(linkWith.Type)),
+		log.String("socialEntity.id", socialId))
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+
+	// get social entity
+	socialEntity, err := s.GetById(ctx, socialId)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to get social entity"))
+		return err
+	}
+
+	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
+		// validate linked entity exists
+		exists, err := s.services.Neo4jRepositories.CommonReadRepository.ExistsByIdInTx(ctx, *txWithPostCommit.Tx, tenant, linkWith.Id, linkWith.Type.Neo4jLabel())
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to check linked entity exists"))
+			return nil, err
+		}
+		if !exists {
+			err = errors.Errorf("linked entity %s with id %s not found", linkWith.Type.String(), linkWith.Id)
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+
+		// neo query to remove social from entity
+		err = s.services.Neo4jRepositories.SocialWriteRepository.RemoveSocialForEntityById(ctx, tenant, linkWith.Id, linkWith.Type.Neo4jLabel(), socialId)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to remove social from entity"))
+			return nil, err
+		}
+
+		// send events for linked entity
+		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
+			switch linkWith.Type {
+			case model.CONTACT:
+				err = s.services.RabbitMQService.PublishEvent(ctx, linkWith.Id, model.CONTACT, dto.RemoveSocialFromContact{
+					SocialId: socialId,
+					Social:   socialEntity.Url,
+				})
+				if err != nil {
+					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message RemoveSocialFromContact"))
+				}
+				s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, linkWith.Id, model.CONTACT, utils.NewEventCompletedDetails().WithUpdate())
+			case model.ORGANIZATION:
+				err = s.services.RabbitMQService.PublishEvent(ctx, linkWith.Id, model.ORGANIZATION, dto.RemoveSocialFromOrganization{
+					SocialId: socialId,
+					Social:   socialEntity.Url,
+				})
+				if err != nil {
+					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message RemoveSocialFromOrganization"))
+				}
+				s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, linkWith.Id, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
+			}
+			return nil
+		})
+
+		return nil, nil
+	})
+
+	return err
 }
 
 func normalizeSocialUrl(url string) string {
