@@ -6,7 +6,6 @@ import (
 )
 
 type MockOpportunityServiceCallbacks struct {
-	CreateOpportunity        func(context.Context, *opportunitypb.CreateOpportunityGrpcRequest) (*opportunitypb.OpportunityIdGrpcResponse, error)
 	UpdateOpportunity        func(context.Context, *opportunitypb.UpdateOpportunityGrpcRequest) (*opportunitypb.OpportunityIdGrpcResponse, error)
 	UpdateRenewalOpportunity func(context.Context, *opportunitypb.UpdateRenewalOpportunityGrpcRequest) (*opportunitypb.OpportunityIdGrpcResponse, error)
 	CreateRenewalOpportunity func(context.Context, *opportunitypb.CreateRenewalOpportunityGrpcRequest) (*opportunitypb.OpportunityIdGrpcResponse, error)
@@ -20,13 +19,6 @@ func SetOpportunityCallbacks(callbacks *MockOpportunityServiceCallbacks) {
 
 type MockOpportunityService struct {
 	opportunitypb.UnimplementedOpportunityGrpcServiceServer
-}
-
-func (MockOpportunityService) CreateOpportunity(context context.Context, proto *opportunitypb.CreateOpportunityGrpcRequest) (*opportunitypb.OpportunityIdGrpcResponse, error) {
-	if opportunityCallbacks.CreateOpportunity == nil {
-		panic("opportunityCallbacks.CreateOpportunity is not set")
-	}
-	return opportunityCallbacks.CreateOpportunity(context, proto)
 }
 
 func (MockOpportunityService) UpdateOpportunity(context context.Context, proto *opportunitypb.UpdateOpportunityGrpcRequest) (*opportunitypb.OpportunityIdGrpcResponse, error) {
