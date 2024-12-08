@@ -40,43 +40,12 @@ func (a *OrganizationAggregate) HandleGRPCRequest(ctx context.Context, request a
 	switch r := request.(type) {
 	case *organizationpb.UnLinkDomainFromOrganizationGrpcRequest:
 		return nil, a.unlinkDomain(ctx, r)
-	case *organizationpb.RemoveSocialGrpcRequest:
-		return nil, a.removeSocial(ctx, r)
 	case *organizationpb.OrganizationAddLocationGrpcRequest:
 		return a.addLocation(ctx, r)
 	default:
 		tracing.TraceErr(span, eventstore.ErrInvalidRequestType)
 		return nil, eventstore.ErrInvalidRequestType
 	}
-}
-
-func (a *OrganizationAggregate) removeSocial(ctx context.Context, request *organizationpb.RemoveSocialGrpcRequest) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.removeSocial")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
-	tracing.LogObjectAsJson(span, "request", request)
-
-	socialId := request.SocialId
-	if socialId == "" {
-		if existingSocialId := a.Organization.GetSocialIdForUrl(request.Url); existingSocialId != "" {
-			socialId = existingSocialId
-		}
-	}
-
-	event, err := organizationEvents.NewOrganizationRemoveSocialEvent(a, socialId, request.Url)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewOrganizationRemoveSocialEvent")
-	}
-	eventstore.EnrichEventWithMetadataExtended(&event, span, eventstore.EventMetadata{
-		Tenant: a.GetTenant(),
-		UserId: request.LoggedInUserId,
-		App:    request.AppSource,
-	})
-
-	return a.Apply(event)
 }
 
 func (a *OrganizationAggregate) addLocation(ctx context.Context, request *organizationpb.OrganizationAddLocationGrpcRequest) (string, error) {

@@ -10,34 +10,6 @@ import (
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 )
 
-const (
-	FieldMaskName               = "name"
-	FieldMaskTargetAudience     = "targetAudience"
-	FieldMaskValueProposition   = "valueProposition"
-	FieldMaskIndustry           = "industry"
-	FieldMaskSubIndustry        = "subIndustry"
-	FieldMaskIndustryGroup      = "industryGroup"
-	FieldMaskMarket             = "market"
-	FieldMaskHide               = "hide"
-	FieldMaskDescription        = "description"
-	FieldMaskNote               = "note"
-	FieldMaskIsPublic           = "isPublic"
-	FieldMaskEmployees          = "employees"
-	FieldMaskLastFundingRound   = "lastFundingRound"
-	FieldMaskLastFundingAmount  = "lastFundingAmount"
-	FieldMaskReferenceId        = "referenceId"
-	FieldMaskWebsite            = "website"
-	FieldMaskYearFounded        = "yearFounded"
-	FieldMaskHeadquarters       = "headquarters"
-	FieldMaskLogoUrl            = "logoUrl"
-	FieldMaskIconUrl            = "iconUrl"
-	FieldMaskEmployeeGrowthRate = "employeeGrowthRate"
-	FieldMaskSlackChannelId     = "slackChannelId"
-	FieldMaskRelationship       = "relationship"
-	FieldMaskStage              = "stage"
-	FieldMaskIcpFit             = "icpFit"
-)
-
 type CustomFieldDataType string
 
 const (
@@ -83,7 +55,6 @@ type Organization struct {
 	PhoneNumbers      map[string]OrganizationPhoneNumber `json:"phoneNumbers"`
 	// Deprecated
 	LocationIds         []string                      `json:"locationIds,omitempty"`
-	Socials             map[string]common.Social      `json:"socials,omitempty"`
 	CustomFields        map[string]CustomField        `json:"customFields,omitempty"`
 	ExternalSystems     []common.ExternalSystem       `json:"externalSystems"`
 	ParentOrganizations map[string]ParentOrganization `json:"parentOrganizations,omitempty"`
@@ -133,18 +104,6 @@ type ParentOrganization struct {
 
 func (o *Organization) String() string {
 	return fmt.Sprintf("Organization{ID: %s, Name: %s, Description: %s, Website: %s, Industry: %s, IsPublic: %t, SourceFields: %s, CreatedAt: %s, UpdatedAt: %s}", o.ID, o.Name, o.Description, o.Website, o.Industry, o.IsPublic, o.Source, o.CreatedAt, o.UpdatedAt)
-}
-
-func (o *Organization) GetSocialIdForUrl(url string) string {
-	if o.Socials == nil {
-		return ""
-	}
-	for key, social := range o.Socials {
-		if social.Url == url {
-			return key
-		}
-	}
-	return ""
 }
 
 func (o *Organization) GetLocationIdForDetails(location common.Location) string {

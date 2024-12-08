@@ -256,25 +256,6 @@ func (s *organizationService) UpdateOnboardingStatus(ctx context.Context, reques
 	return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
 }
 
-func (s *organizationService) RemoveSocial(ctx context.Context, request *organizationpb.RemoveSocialGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
-	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.RemoveSocial")
-	defer span.Finish()
-	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	tracing.LogObjectAsJson(span, "request", request)
-	span.SetTag(tracing.SpanTagEntityId, request.OrganizationId)
-
-	initAggregateFunc := func() eventstore.Aggregate {
-		return aggregate.NewOrganizationAggregateWithTenantAndID(request.Tenant, request.OrganizationId)
-	}
-	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request); err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("(RemoveSocial.HandleGRPCRequest) tenant:{%s}, organization ID: {%s}, err: %s", request.Tenant, request.OrganizationId, err.Error())
-		return nil, grpcerr.ErrResponse(err)
-	}
-
-	return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
-}
-
 func (s *organizationService) AddLocation(ctx context.Context, request *organizationpb.OrganizationAddLocationGrpcRequest) (*locationpb.LocationIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.AddLocation")
 	defer span.Finish()

@@ -149,39 +149,6 @@ func (h *OrganizationEventHandler) OnDomainUnlinkedFromOrganization(ctx context.
 	return nil
 }
 
-func (h *OrganizationEventHandler) OnSocialRemovedFromOrganization(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnSocialRemovedFromOrganization")
-	defer span.Finish()
-	setEventSpanTagsAndLogFields(span, evt)
-
-	var eventData events.OrganizationRemoveSocialEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "evt.GetJsonData")
-	}
-	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
-	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
-	span.SetTag(tracing.SpanTagEntityId, organizationId)
-
-	if eventData.SocialId != "" {
-		err := h.services.CommonServices.Neo4jRepositories.SocialWriteRepository.RemoveSocialForEntityById(ctx, eventData.Tenant, organizationId, commonmodel.NodeLabelOrganization, eventData.SocialId)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil
-		}
-	} else {
-		err := h.services.CommonServices.Neo4jRepositories.SocialWriteRepository.RemoveSocialForEntityByUrl(ctx, eventData.Tenant, organizationId, commonmodel.NodeLabelOrganization, eventData.Url)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil
-		}
-	}
-
-	h.services.CommonServices.RabbitMQService.PublishEventCompleted(ctx, eventData.Tenant, organizationId, commonmodel.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
-
-	return nil
-}
-
 func (h *OrganizationEventHandler) OnRefreshArr(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnRefreshArr")
 	defer span.Finish()
