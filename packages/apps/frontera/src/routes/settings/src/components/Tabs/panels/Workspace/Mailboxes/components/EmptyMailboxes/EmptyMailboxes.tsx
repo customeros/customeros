@@ -27,7 +27,9 @@ export const EmptyMailboxes = ({ onUpdate }: EmptyMailboxesProps) => {
             built to scale—send 10,000+ emails per month with professional-grade
             tools that do the hard work for you.
           </p>
-          <p className='font-medium pt-3 mb-1'>The Starter bundle gives you:</p>
+          <p className='text-sm font-medium pt-3 mb-1'>
+            The Starter bundle gives you:
+          </p>
           <div className='px-3 gap-1'>
             <div className='flex items-center gap-2 py-1'>
               <CheckCircle className='text-success-500' />

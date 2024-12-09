@@ -181,7 +181,7 @@ export class MailboxesStore extends SyncableGroup<Mailbox, MailboxStore> {
       }
 
       if (!isValidUrl) {
-        this.invalidRedirectUrl = 'Invalid URL';
+        this.invalidRedirectUrl = 'This URL appears to be invalid';
 
         valid = false;
 
