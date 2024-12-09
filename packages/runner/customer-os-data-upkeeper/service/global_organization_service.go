@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"github.com/biter777/countries"
 	"github.com/customeros/mailsherpa/domaincheck"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/logger"
@@ -17,6 +18,7 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"net/http"
+	"strings"
 )
 
 type GlobalOrganizationService interface {
@@ -153,6 +155,21 @@ func (s *globalOrganizationService) SyncScrapInToGlobalOrganization() {
 		}
 		if data.Company.Logo != "" {
 			globalOrganization.LogoUrl = data.Company.Logo
+		}
+		if data.Company.Headquarter.City != "" {
+			globalOrganization.City = data.Company.Headquarter.City
+		}
+		if data.Company.Headquarter.Country != "" {
+			if strings.ToUpper(data.Company.Headquarter.Country) == "OO" {
+				globalOrganization.Country = ""
+			} else {
+				country := countries.ByName(data.Company.Headquarter.Country)
+				if country != countries.Unknown {
+					globalOrganization.Country = country.String()
+				} else {
+					globalOrganization.Country = data.Company.Headquarter.Country
+				}
+			}
 		}
 
 		if createGlobalOrg {
