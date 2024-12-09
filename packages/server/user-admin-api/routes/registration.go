@@ -4,6 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	"log"
+	"net/http"
+	"strings"
+	"time"
+
+	"github.com/customeros/mailsherpa/mailvalidate"
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/constants"
@@ -27,10 +34,6 @@ import (
 	tokenOauth "golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	googleOauth "google.golang.org/api/oauth2/v2"
-	"log"
-	"net/http"
-	"strings"
-	"time"
 )
 
 func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services *service.Services) {
@@ -163,6 +166,11 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 				}
 
 				tenantName = &signInRequest.Tenant
+			}
+
+			saveErr := saveIP(ginContext, services, signInRequest.LoggedInEmail)
+			if saveErr != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "unable to save IP address"))
 			}
 
 			span.SetTag(tracing.SpanTagTenant, *tenantName)
@@ -843,6 +851,51 @@ func registerNewTenantAsLeadInProviderTenant(ctx context.Context, config *config
 	//}
 
 	//span.LogFields(tracingLog.Object("email sent: ", mapBody))
+
+	return nil
+}
+
+func saveIP(c *gin.Context, s *service.Services, email string) error {
+	span, ctx := opentracing.StartSpanFromContext(c.Request.Context(), "registration.saveIP")
+	defer span.Finish()
+
+	var clientIP string
+	originalIP := c.Request.Header["X-Original-Forwarded-For"][0]
+	cloudflareIP := c.Request.Header["Cf-Connecting-Ip"][0]
+
+	if cloudflareIP == "" && originalIP == "" {
+		return nil
+	}
+
+	if cloudflareIP != "" {
+		clientIP = cloudflareIP
+	} else {
+		clientIP = originalIP
+	}
+
+	validEmail := mailvalidate.ValidateEmailSyntax(email)
+	if !validEmail.IsValid {
+		err := errors.New("Email is invalid")
+		span.LogKV("email", email)
+		tracing.TraceErr(span, err)
+	}
+
+	if validEmail.IsFreeAccount || validEmail.IsRoleAccount || validEmail.IsSystemGenerated {
+		return nil
+	}
+
+	details := entity.EnrichDetailsTracking{
+		IP:             clientIP,
+		CompanyDomain:  &validEmail.Domain,
+		CompanyWebsite: &validEmail.Domain,
+		SourceEmail:    &validEmail.CleanEmail,
+	}
+
+	err := s.CommonServices.PostgresRepositories.EnrichDetailsTrackingRepository.RegisterRequest(ctx, details)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
 
 	return nil
 }
