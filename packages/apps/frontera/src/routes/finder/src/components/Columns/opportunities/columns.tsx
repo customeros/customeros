@@ -28,10 +28,8 @@ const columnHelper = createColumnHelper<ColumnDatum>();
 export const columns: Record<string, Column> = {
   [ColumnViewType.OpportunitiesName]: columnHelper.accessor((row) => row, {
     id: ColumnViewType.OpportunitiesName,
-    minSize: 160,
-    size: 160,
+    minSize: 94,
     maxSize: 400,
-    enableColumnFilter: false,
     enableSorting: true,
     enableResizing: true,
     cell: (props) => {
@@ -54,7 +52,7 @@ export const columns: Record<string, Column> = {
     (row) => row,
     {
       id: ColumnViewType.OpportunitiesOrganization,
-      minSize: 125,
+      minSize: 119,
       maxSize: 400,
       enableColumnFilter: false,
       enableResizing: true,
@@ -84,7 +82,7 @@ export const columns: Record<string, Column> = {
     'value.externalStage',
     {
       id: ColumnViewType.OpportunitiesStage,
-      minSize: 160,
+      minSize: 76,
       maxSize: 400,
       enableColumnFilter: false,
       enableResizing: true,
@@ -132,7 +130,7 @@ export const columns: Record<string, Column> = {
   ),
   [ColumnViewType.OpportunitiesOwner]: columnHelper.accessor('value.owner', {
     id: ColumnViewType.OpportunitiesOwner,
-    minSize: 110,
+    minSize: 83,
     size: 110,
     maxSize: 400,
     enableColumnFilter: false,
@@ -164,7 +162,7 @@ export const columns: Record<string, Column> = {
     'value.stageLastUpdated',
     {
       id: ColumnViewType.OpportunitiesTimeInStage,
-      minSize: 140,
+      minSize: 126,
       size: 140,
       maxSize: 400,
       enableColumnFilter: false,
@@ -192,7 +190,7 @@ export const columns: Record<string, Column> = {
     'value.metadata.created',
     {
       id: ColumnViewType.OpportunitiesCreatedDate,
-      minSize: 154,
+      minSize: 91,
       size: 154,
       maxSize: 400,
       enableColumnFilter: false,
@@ -220,7 +218,7 @@ export const columns: Record<string, Column> = {
     'value.nextSteps',
     {
       id: ColumnViewType.OpportunitiesNextStep,
-      minSize: 154,
+      minSize: 109,
       size: 154,
       maxSize: 400,
       enableColumnFilter: false,
@@ -253,3 +251,5 @@ export const getOpportunityColumnsConfig = (
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): ColumnDef<ColumnDatum, any>[] =>
   getColumnConfig<ColumnDatum>(columns, tableViewDef);
+
+// --header-OPPORTUNITIES_CREATED_DATE-size: 79;

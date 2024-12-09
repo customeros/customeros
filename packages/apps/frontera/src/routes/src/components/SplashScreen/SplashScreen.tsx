@@ -19,6 +19,7 @@ const privatePaths = [
   '/invoices',
   '/flow-editor',
   '/renewals',
+  '/welcome',
   '/customer-map',
 ];
 

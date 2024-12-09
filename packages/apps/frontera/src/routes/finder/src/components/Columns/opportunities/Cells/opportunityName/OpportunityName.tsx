@@ -20,15 +20,15 @@ export const OpportunityName = observer(
 
     return (
       <div
-        className='flex items-center gap-1'
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
+        className='flex items-center gap-1 overflow-hidden'
         onDoubleClick={() => {
           store.ui.commandMenu.setType('RenameOpportunityName');
           store.ui.commandMenu.setOpen(true);
         }}
       >
-        <p>{opportunityName}</p>
+        <p className='truncate'>{opportunityName}</p>
         {isHovered && (
           <IconButton
             size='xxs'

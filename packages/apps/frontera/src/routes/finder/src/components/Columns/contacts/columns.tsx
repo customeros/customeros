@@ -518,7 +518,7 @@ const columns: Record<string, Column> = {
   }),
   [ColumnViewType.ContactsFlowStatus]: columnHelper.accessor((row) => row, {
     id: ColumnViewType.ContactsFlowStatus,
-    minSize: 10,
+    minSize: 127,
     maxSize: 600,
     enableResizing: true,
     enableColumnFilter: false,
@@ -539,7 +539,7 @@ const columns: Record<string, Column> = {
   }),
   [ColumnViewType.ContactsFlowNextAction]: columnHelper.accessor((row) => row, {
     id: ColumnViewType.ContactsFlowNextAction,
-    minSize: 10,
+    minSize: 147,
     maxSize: 600,
     enableResizing: true,
     enableColumnFilter: false,

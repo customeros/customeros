@@ -41,7 +41,7 @@ export const FavoritesSection = observer(
 
     if (
       !favoritesView.length &&
-      store.globalCache.value?.user?.onboarding?.showOnboardingPage
+      !store.globalCache.value?.user?.onboarding?.showOnboardingPage
     )
       return null;
 

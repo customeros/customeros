@@ -27,6 +27,12 @@ export const SuccessPage = observer(() => {
         );
 
         setTimeout(() => {
+          if (store.globalCache.value?.isFirstLogin) {
+            navigate('/welcome');
+
+            return;
+          }
+
           const decoratedPath = match(originPath)
             .with(
               P.string.startsWith('/finder'),
