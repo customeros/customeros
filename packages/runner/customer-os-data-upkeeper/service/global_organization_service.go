@@ -161,13 +161,13 @@ func (s *globalOrganizationService) SyncScrapInToGlobalOrganization() {
 		}
 		if data.Company.Headquarter.Country != "" {
 			if strings.ToUpper(data.Company.Headquarter.Country) == "OO" {
-				globalOrganization.Country = ""
+				globalOrganization.CountryA2 = ""
 			} else {
 				country := countries.ByName(data.Company.Headquarter.Country)
 				if country != countries.Unknown {
-					globalOrganization.Country = country.String()
+					globalOrganization.CountryA2 = country.Alpha2()
 				} else {
-					globalOrganization.Country = data.Company.Headquarter.Country
+					globalOrganization.CountryA2 = ""
 				}
 			}
 		}
