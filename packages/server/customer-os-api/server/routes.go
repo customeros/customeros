@@ -19,6 +19,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/flows"
 	restmailstack "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/mailstack"
 	restoutreach "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/outreach"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/tracking"
 	restverify "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/verify"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
@@ -51,8 +52,16 @@ func registerPublicRoutes(ctx context.Context, r *gin.Engine, s *service.Service
 	setupPublicRoute(ctx, r, "GET", "/invoice/:invoiceId/pay", rest.RedirectToPayInvoice(s))
 	setupPublicRoute(ctx, r, "GET", "/invoice/:invoiceId/paymentLink", rest.GetInvoicePaymentLink(s))
 
+	// Internal Webhooks
 	setupPublicRoute(ctx, r, "POST", fmt.Sprintf("%s/dmarc", webhooksV1Path), flows.PostmarkDMARCMonitor(s))
+
+	// Flow Wehbooks
 	setupPublicRoute(ctx, r, "POST", fmt.Sprintf("%s/:tenantId/i/:integrationId", flowsV1Path), flows.HandleWebhook(s, flowsV1Path))
+
+	//tracking
+	setupPublicRoute(ctx, r, "GET", "/v1/l", tracking.TrackLinkRequest(s))
+	setupPublicRoute(ctx, r, "GET", "/v1/s", tracking.TrackOpenRequest(s))
+	setupPublicRoute(ctx, r, "GET", "/v1/u", tracking.TrackUnsubscribeRequest(s))
 }
 
 func registerHealthRoutes(ctx context.Context, r *gin.Engine, s *service.Services, cache *commoncaches.Cache) {

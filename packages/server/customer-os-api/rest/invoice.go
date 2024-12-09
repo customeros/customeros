@@ -57,6 +57,7 @@ func RedirectToPayInvoice(services *service.Services) gin.HandlerFunc {
 			AppSource: constants.AppSourceCustomerOsApiRest,
 		})
 
+		// Save Client IP
 		saveErr := saveIP(ctx, services, clientIP, invoiceID, tenant)
 		if saveErr != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "Error saving clientIP"))
@@ -183,7 +184,10 @@ func getClientIP(c *gin.Context) string {
 	if cloudflareIP[0] != "" {
 		return cloudflareIP[0]
 	}
-	return originalIP[0]
+	if originalIP[0] != "" {
+		return originalIP[0]
+	}
+	return ""
 }
 
 func saveIP(ctx context.Context, s *service.Services, clientIP, invoiceID, tenant string) error {
@@ -223,7 +227,7 @@ func saveIP(ctx context.Context, s *service.Services, clientIP, invoiceID, tenan
 		SourceEmail:    &verifyEmail.CleanEmail,
 	}
 
-	createErr := s.Repositories.PostgresRepositories.EnrichDetailsTrackingRepository.RegisterRequest(ctx, details)
+	createErr := s.Repositories.PostgresRepositories.EnrichDetailsTrackingRepository.Save(ctx, details)
 	if createErr != nil {
 		tracing.TraceErr(span, createErr)
 		return createErr

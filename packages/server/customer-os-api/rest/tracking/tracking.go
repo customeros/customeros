@@ -1,33 +1,23 @@
-package route
+package tracking
 
 import (
-	"context"
-	"github.com/gin-gonic/gin"
-	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/email-tracking-api/logger"
-	tracingLog "github.com/opentracing/opentracing-go/log"
-	"github.com/pkg/errors"
 	"net/http"
 	"strings"
+
+	"github.com/customeros/mailsherpa/mailvalidate"
+	"github.com/gin-gonic/gin"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
+	"github.com/pkg/errors"
 )
 
-func AddEmailTrackRoute(ctx context.Context, route *gin.Engine, log logger.Logger, commonServices *commonservice.Services) {
-	route.GET("/v1/l",
-		tracing.TracingEnhancer(ctx, "/v1/l"),
-		trackLinkRequest(commonServices, log))
-	route.GET("/v1/s",
-		tracing.TracingEnhancer(ctx, "/v1/s"),
-		trackOpenRequest(commonServices, log))
-	route.GET("/v1/u",
-		tracing.TracingEnhancer(ctx, "/v1/u"),
-		trackUnsubscribeRequest(commonServices, log))
-}
-
-func trackLinkRequest(commonServices *commonservice.Services, log logger.Logger) gin.HandlerFunc {
+func TrackLinkRequest(s *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "trackLinkRequest", c.Request.Header)
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "tracking.trackLinkRequest", c.Request.Header)
 		defer span.Finish()
 
 		// Extract the 'c' query parameter
@@ -38,9 +28,9 @@ func trackLinkRequest(commonServices *commonservice.Services, log logger.Logger)
 		}
 
 		// Check email lookup id
-		emailLookup, err := commonServices.PostgresRepositories.EmailLookupRepository.GetById(ctx, emailLookupId)
+		emailLookup, err := s.CommonServices.PostgresRepositories.EmailLookupRepository.GetById(ctx, emailLookupId)
 		if err != nil {
-			log.Error(ctx, "Error retrieving email lookup", err)
+			tracing.TraceErr(span, errors.Wrap(err, "Error retrieving email lookup"))
 			c.String(http.StatusInternalServerError, "An error occurred")
 			return
 		}
@@ -53,17 +43,17 @@ func trackLinkRequest(commonServices *commonservice.Services, log logger.Logger)
 		}
 		// if email lookup is not of expected type, return 400
 		if emailLookup.Type != postgresentity.EmailLookupTypeLink {
-			log.Error(ctx, "Email lookup is not of expected type")
+			tracing.TraceErr(span, errors.Wrap(err, "Email lookup is not of expected type"))
 			c.String(http.StatusNotFound, "Not found")
 			return
 		}
 
 		if emailLookup.TrackClicks {
-			// Get IP address and email address
-			ipAddress := c.ClientIP()
+			// Save IP data
+			ipAddress, err := saveIP(c, s, emailLookup)
 
 			// Store click data
-			_, err = commonServices.PostgresRepositories.EmailTrackingRepository.Register(ctx, postgresentity.EmailTracking{
+			_, err = s.CommonServices.PostgresRepositories.EmailTrackingRepository.Register(ctx, postgresentity.EmailTracking{
 				Tenant:      emailLookup.Tenant,
 				MessageId:   emailLookup.MessageId,
 				LinkId:      emailLookup.LinkId,
@@ -73,7 +63,7 @@ func trackLinkRequest(commonServices *commonservice.Services, log logger.Logger)
 				Campaign:    emailLookup.Campaign,
 			})
 			if err != nil {
-				log.Error(ctx, "Error storing click data", err)
+				tracing.TraceErr(span, errors.Wrap(err, "Email storing click data"))
 			}
 		}
 
@@ -92,25 +82,24 @@ func ensureAbsoluteURL(url string) string {
 	return "https://" + url
 }
 
-func trackOpenRequest(commonServices *commonservice.Services, log logger.Logger) gin.HandlerFunc {
+func TrackOpenRequest(s *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "trackOpenRequest", c.Request.Header)
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "tracking.trackOpenRequest", c.Request.Header)
 		defer span.Finish()
 
 		// Extract the 'c' query parameter
 		emailLookupId := c.Query("c")
-		span.LogFields(tracingLog.String("emailLookupId", emailLookupId))
+		span.LogFields(log.String("emailLookupId", emailLookupId))
 		if emailLookupId == "" {
 			err := errors.New("Missing required parameter")
 			tracing.TraceErr(span, err)
-			log.Error(ctx, err.Error())
 			return
 		}
 
 		// Check email lookup id
-		emailLookup, err := commonServices.PostgresRepositories.EmailLookupRepository.GetById(ctx, emailLookupId)
+		emailLookup, err := s.CommonServices.PostgresRepositories.EmailLookupRepository.GetById(ctx, emailLookupId)
 		if err != nil {
-			log.Error(ctx, "Error retrieving email lookup", err)
+			tracing.TraceErr(span, errors.Wrap(err, "Error retrieving email lookup"))
 			return
 		}
 		tracing.LogObjectAsJson(span, "emailLookup", emailLookup)
@@ -120,7 +109,7 @@ func trackOpenRequest(commonServices *commonservice.Services, log logger.Logger)
 		}
 		// if email lookup is not of expected type, return 400
 		if emailLookup.Type != postgresentity.EmailLookupTypeSpyPixel {
-			log.Error(ctx, "Email lookup is not of expected type")
+			tracing.TraceErr(span, errors.Wrap(err, "Email lookup is not of expected type"))
 			return
 		}
 		if emailLookup.TrackOpens {
@@ -128,7 +117,7 @@ func trackOpenRequest(commonServices *commonservice.Services, log logger.Logger)
 			ipAddress := c.ClientIP()
 
 			// Store click data
-			_, err = commonServices.PostgresRepositories.EmailTrackingRepository.Register(ctx, postgresentity.EmailTracking{
+			_, err = s.CommonServices.PostgresRepositories.EmailTrackingRepository.Register(ctx, postgresentity.EmailTracking{
 				Tenant:      emailLookup.Tenant,
 				MessageId:   emailLookup.MessageId,
 				RecipientId: emailLookup.RecipientId,
@@ -137,15 +126,15 @@ func trackOpenRequest(commonServices *commonservice.Services, log logger.Logger)
 				IP:          ipAddress,
 			})
 			if err != nil {
-				log.Error(ctx, "Error storing email open data", err)
+				tracing.TraceErr(span, errors.Wrap(err, "Error storing email open data"))
 			}
 		}
 	}
 }
 
-func trackUnsubscribeRequest(commonServices *commonservice.Services, log logger.Logger) gin.HandlerFunc {
+func TrackUnsubscribeRequest(s *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "trackUnsubscribeRequest", c.Request.Header)
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "tracking.trackUnsubscribeRequest", c.Request.Header)
 		defer span.Finish()
 
 		// Extract the 'c' query parameter
@@ -156,9 +145,9 @@ func trackUnsubscribeRequest(commonServices *commonservice.Services, log logger.
 		}
 
 		// Check email lookup id
-		emailLookup, err := commonServices.PostgresRepositories.EmailLookupRepository.GetById(ctx, emailLookupId)
+		emailLookup, err := s.CommonServices.PostgresRepositories.EmailLookupRepository.GetById(ctx, emailLookupId)
 		if err != nil {
-			log.Error(ctx, "Error retrieving email lookup", err)
+			tracing.TraceErr(span, errors.Wrap(err, "Error retrieving email lookup"))
 			c.String(http.StatusInternalServerError, "An error occurred")
 			return
 		}
@@ -171,7 +160,7 @@ func trackUnsubscribeRequest(commonServices *commonservice.Services, log logger.
 		}
 		// if email lookup is not of expected type, return 400
 		if emailLookup.Type != postgresentity.EmailLookupTypeUnsubscribe {
-			log.Error(ctx, "Email lookup is not of expected type")
+			tracing.TraceErr(span, errors.Wrap(err, "Email lookup is not of expected type"))
 			c.String(http.StatusNotFound, "Not found")
 			return
 		}
@@ -180,7 +169,7 @@ func trackUnsubscribeRequest(commonServices *commonservice.Services, log logger.
 		ipAddress := c.ClientIP()
 
 		// Store click data
-		_, err = commonServices.PostgresRepositories.EmailTrackingRepository.Register(ctx, postgresentity.EmailTracking{
+		_, err = s.CommonServices.PostgresRepositories.EmailTrackingRepository.Register(ctx, postgresentity.EmailTracking{
 			Tenant:      emailLookup.Tenant,
 			MessageId:   emailLookup.MessageId,
 			LinkId:      emailLookup.LinkId,
@@ -190,10 +179,49 @@ func trackUnsubscribeRequest(commonServices *commonservice.Services, log logger.
 			Campaign:    emailLookup.Campaign,
 		})
 		if err != nil {
-			log.Error(ctx, "Error storing unsubscribe data", err)
+			tracing.TraceErr(span, errors.Wrap(err, "Error storing unsubscribe data"))
 		}
 
 		// Redirect to the specified URL
 		c.Redirect(http.StatusFound, ensureAbsoluteURL(emailLookup.UnsubscribeUrl))
 	}
+}
+
+func saveIP(c *gin.Context, s *service.Services, emailLookup *entity.EmailLookup) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(c.Request.Context(), "tracking.saveIP")
+	defer span.Finish()
+	originalIP := c.Request.Header["X-Original-Forwarded-For"][0]
+	cloudflareIP := c.Request.Header["Cf-Connecting-Ip"][0]
+
+	var clientIP string
+	if cloudflareIP == "" && originalIP == "" {
+		return "", nil
+	}
+	if cloudflareIP != "" {
+		clientIP = cloudflareIP
+	} else {
+		clientIP = originalIP
+	}
+
+	emailMessage, err := s.Repositories.PostgresRepositories.EmailMessageRepository.GetByProviderMessageId(ctx, emailLookup.Tenant, emailLookup.MessageId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return clientIP, err
+	}
+
+	emailVerify := mailvalidate.ValidateEmailSyntax(emailMessage.From)
+
+	details := entity.EnrichDetailsTracking{
+		IP:             clientIP,
+		CompanyDomain:  &emailVerify.Domain,
+		CompanyWebsite: &emailVerify.Domain,
+		SourceEmail:    &emailVerify.CleanEmail,
+	}
+
+	err = s.Repositories.PostgresRepositories.EnrichDetailsTrackingRepository.Save(ctx, details)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return clientIP, err
+	}
+	return clientIP, nil
 }

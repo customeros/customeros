@@ -524,7 +524,7 @@ func (s *trackingService) askAndStoreSnitcherData(c context.Context, ip string) 
 	}
 
 	// Store response
-	err = s.services.CommonServices.PostgresRepositories.EnrichDetailsTrackingRepository.RegisterRequest(ctx, entity.EnrichDetailsTracking{
+	err = s.services.CommonServices.PostgresRepositories.EnrichDetailsTrackingRepository.Save(ctx, entity.EnrichDetailsTracking{
 		CreatedAt:      utils.Now(),
 		IP:             ip,
 		CompanyName:    companyName,
