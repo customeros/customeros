@@ -204,7 +204,7 @@ func syncPostmarkInteractionEventHandler(services *service.Services, cfg *config
 		}
 
 		// TODO remove this hack
-		err = processEmailForFlows(ctx, services, tenantByName, postmarkEmailWebhookData.FromFull.Email, participants, postmarkEmailWebhookData.Subject, postmarkEmailWebhookData)
+		err = processEmailForFlows(ctx, services, tenantByName, username, participants, postmarkEmailWebhookData.Subject, postmarkEmailWebhookData)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			log.Errorf("(SyncInteractionEvent) error processing email for flows: %s", err.Error())
@@ -404,12 +404,12 @@ func mapPostmarkToEmailRawData(tenant string, pmData model.PostmarkEmailWebhookD
 // if the sender is a user in the system, it means that this is outbound communication
 // we mark the contacts that received this email as COMPLETED in the flows that they are in
 // this is a hack for now as we should identify the flow that the contact is in and mark the contact as COMPLETED only in that specific flow
-func processEmailForFlows(ctx context.Context, services *service.Services, tenant, fromEmailAddress string, participantsEmailAddresses []string, emailSubject string, input model.PostmarkEmailWebhookData) error {
+func processEmailForFlows(ctx context.Context, services *service.Services, tenant, mailboxUsername string, participantsEmailAddresses []string, emailSubject string, input model.PostmarkEmailWebhookData) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventService.processEmailForFlows")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	mailbox, err := services.CommonServices.PostgresRepositories.TenantSettingsMailboxRepository.GetByMailbox(ctx, fromEmailAddress)
+	mailbox, err := services.CommonServices.PostgresRepositories.TenantSettingsMailboxRepository.GetByMailbox(ctx, mailboxUsername)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
