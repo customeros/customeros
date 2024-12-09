@@ -38,27 +38,6 @@
 </div>
 
 
-## 👋 Overview
-
-CustomerOS is an open source development platform that enables the flexible and rapid development of customer-centric applications.
-
-| Feature               | Description | Status|
-|-----------------------|-------------|-------|
-| **Analytics API**     |Privacy-centric replacement for Google Analytics| Roadmap|
-| **Auth**              |End-to-end identity solution for easy user authentication, sign-in, and permissions using OAuth.| Demo |
-| **customerDB**        |Backend server that host your customer data in a secure, compliant, and standards based way. | Demo|
-| **customerOS API**    |GraphQL API for reading, writing, and manipulating customer data.| Demo|
-| **Event trackers**    |First party event trackers fully integrated with customerDB, allowing you full visibility into how your customers are engaging with your apps and content | Preview|
-| **Launcher**          |Web application with built in SSO to launch into any app built into customerOS| Demo|
-| **Message store API** |gRPC API for high-speed communication between customerOS and communications clients (like [Oasis][oasis]) | Demo|
-| **Settings**          |Web application where you configure and administer all Openline services| Roadmap|
-| **Web components**    |A library of web components that make it easy to interact with customer data in your front end applications| Roadmap|
-
-- Roadmap: Coming soon!
-- Demo: We're still working out the kinks
-- Preview: We're using it in Production.  So are Openline Insiders.
-- Stable: Battle tested. Everyone is using it in Production.
-
 ## 🚀 Installation
 
 1. Download and install the [CustomerOS CLI][cli]
