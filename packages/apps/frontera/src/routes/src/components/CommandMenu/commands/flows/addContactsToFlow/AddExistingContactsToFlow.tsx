@@ -64,9 +64,9 @@ export const AddExistingContacts = observer(() => {
           threshold: 0.3,
           isCaseSensitive: false,
         })
-          .search(removeAccents(search), { limit: 7 })
+          .search(removeAccents(search), { limit: 10 })
           .map((r) => r.item)
-      : arr.slice(0, 7),
+      : arr.slice(0, 10),
   );
 
   return (
@@ -76,7 +76,7 @@ export const AddExistingContacts = observer(() => {
           value={search}
           onValueChange={setSearch}
           className='text-sm p-0 -ml-2'
-          placeholder='Add contacts to flow...'
+          placeholder='Search a contact…'
           onKeyDownCapture={(e) => {
             if (e.key === ' ') {
               e.stopPropagation();

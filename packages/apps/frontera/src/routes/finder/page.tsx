@@ -73,8 +73,8 @@ export const FinderPage = observer(() => {
   };
 
   return (
-    <div className='flex w-full items-start'>
-      <div className='w-[100%] bg-white'>
+    <div className='flex w-full items-start h-full'>
+      <div className='w-[100%] bg-white h-full'>
         <Search open={open} onOpen={onOpen} onClose={onClose} />
         <div className='flex justify-between mx-4 my-2 items-start'>
           <FinderFilters
