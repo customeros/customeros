@@ -14,7 +14,6 @@ import {
 import {
   Tag,
   Contact,
-  DataSource,
   ContactInput,
 } from '@shared/types/__generated__/graphql.types';
 
@@ -124,6 +123,7 @@ export class ContactsStore extends SyncableGroup<Contact, ContactStore> {
         this.error = (e as Error)?.message;
       });
     } finally {
+      this.isLoading = false;
       this.isBootstrapped = true;
     }
   }
@@ -206,183 +206,6 @@ export class ContactsStore extends SyncableGroup<Contact, ContactStore> {
     }
   }
 
-  async createWithSocial({
-    socialUrl,
-    organizationId,
-    options,
-  }: {
-    socialUrl: string;
-    organizationId: string;
-    options?: {
-      onSuccess?: (serverId: string) => void;
-    };
-  }) {
-    this.isLoading = true;
-
-    const newContact = new ContactStore(
-      this.root,
-      this.transport,
-      ContactStore.getDefaultValue(),
-    );
-
-    const tempId = newContact.value.id;
-    const socialId = crypto.randomUUID();
-
-    newContact.value.socials = [
-      {
-        metadata: {
-          id: socialId,
-          source: DataSource.Openline,
-          sourceOfTruth: DataSource.Openline,
-          appSource: 'organization',
-          created: new Date().toISOString(),
-          lastUpdated: new Date().toISOString(),
-        },
-        id: socialId,
-        externalId: '',
-        url: socialUrl,
-        appSource: 'OPENLINE',
-        createdAt: new Date().toISOString(),
-        sourceOfTruth: DataSource.Openline,
-        source: DataSource.Openline,
-        alias: socialUrl,
-        followersCount: 0,
-        updatedAt: new Date().toISOString(),
-      },
-    ];
-
-    let serverId: string | undefined;
-
-    this.value.set(tempId, newContact);
-
-    const organization = this.root.organizations.value.get(organizationId);
-
-    if (organization) {
-      organization?.value?.contacts.content.unshift(newContact.value);
-      organization.commit({ syncOnly: true });
-    }
-
-    try {
-      const { contact_CreateForOrganization } =
-        await this.service.createContactForOrganization({
-          organizationId,
-          input: {
-            socialUrl,
-          },
-        });
-
-      runInAction(() => {
-        serverId = contact_CreateForOrganization.id;
-        newContact.value.id = serverId;
-        this.value.set(serverId, newContact);
-        this.value.delete(tempId);
-
-        this.sync({ action: 'APPEND', ids: [serverId] });
-        this.isLoading = false;
-      });
-      this.root.ui.toastSuccess(
-        `Contact created for ${organization?.value?.name}`,
-        'create-contract-error',
-      );
-    } catch (e) {
-      this.root.ui.toastError(
-        `We couldn't create this contact. Please try again.`,
-        'create-contract-error',
-      );
-      runInAction(() => {
-        this.error = (e as Error)?.message;
-      });
-    } finally {
-      serverId && options?.onSuccess?.(serverId);
-      setTimeout(() => {
-        if (serverId) {
-          this.value.get(serverId)?.invalidate();
-        }
-      }, 2000);
-    }
-  }
-
-  async createWithoutOrg({
-    socialUrl,
-    options,
-  }: {
-    socialUrl: string;
-    options?: {
-      onSuccess?: (serverId: string) => void;
-    };
-  }) {
-    this.isLoading = true;
-
-    const newContact = new ContactStore(
-      this.root,
-      this.transport,
-      ContactStore.getDefaultValue(),
-    );
-    const tempId = newContact.value.id;
-    const socialId = crypto.randomUUID();
-    let serverId: string | undefined = undefined;
-
-    newContact.value.socials = [
-      {
-        metadata: {
-          id: socialId,
-          source: DataSource.Openline,
-          sourceOfTruth: DataSource.Openline,
-          appSource: 'organization',
-          created: new Date().toISOString(),
-          lastUpdated: new Date().toISOString(),
-        },
-        id: socialId,
-        externalId: '',
-        url: socialUrl,
-        appSource: 'OPENLINE',
-        createdAt: new Date().toISOString(),
-        sourceOfTruth: DataSource.Openline,
-        source: DataSource.Openline,
-        alias: socialUrl,
-        followersCount: 0,
-        updatedAt: new Date().toISOString(),
-      },
-    ];
-    this.value.set(tempId, newContact);
-
-    try {
-      const { contact_Create } = await this.service.createContact({
-        contactInput: {
-          socialUrl,
-        },
-      });
-
-      runInAction(() => {
-        serverId = contact_Create;
-        newContact.value.id = serverId;
-        this.value.set(serverId, newContact);
-        this.value.delete(tempId);
-
-        this.sync({ action: 'APPEND', ids: [serverId] });
-        this.isLoading = false;
-      });
-
-      this.root.ui.toastSuccess(`Contact created`, 'create-contact-success');
-    } catch (e) {
-      this.root.ui.toastError(
-        `We couldn't create this contact. Please try again.`,
-        'create-contact-error',
-      );
-      runInAction(() => {
-        this.error = (e as Error)?.message;
-      });
-    } finally {
-      serverId && options?.onSuccess?.(serverId);
-
-      setTimeout(() => {
-        if (serverId) {
-          this.value.get(serverId)?.invalidate();
-        }
-      }, 2000);
-    }
-  }
-
   async createBulkByEmail({
     emails,
     options,
@@ -421,8 +244,10 @@ export class ContactsStore extends SyncableGroup<Contact, ContactStore> {
         options?.onError?.(this.error);
       });
     } finally {
+      this.isLoading = false;
       setTimeout(() => {
         this.isBootstrapped = false;
+
         this.bootstrap();
       }, 300);
     }
@@ -466,6 +291,8 @@ export class ContactsStore extends SyncableGroup<Contact, ContactStore> {
         options?.onError?.(this.error);
       });
     } finally {
+      this.isLoading = false;
+
       setTimeout(() => {
         this.isBootstrapped = false;
         this.bootstrap();
