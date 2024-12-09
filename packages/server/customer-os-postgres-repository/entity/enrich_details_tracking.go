@@ -14,7 +14,7 @@ type EnrichDetailsTracking struct {
 	CompanyName    *string   `gorm:"column:company_name;type:varchar(255);" json:"companyName"`
 	CompanyDomain  *string   `gorm:"column:company_domain;type:varchar(255);" json:"companyDomain"`
 	CompanyWebsite *string   `gorm:"column:company_website;type:varchar(255);" json:"companyWebsite"`
-	SourceEmail    *string   `gorm:"column:company_website;type:varchar(255);" json:"companyWebsite"`
+	SourceEmail    *string   `gorm:"column:source_email;type:varchar(255);" json:"sourceEmail"`
 	Response       string    `gorm:"column:response;type:text;" json:"response"`
 }
 
