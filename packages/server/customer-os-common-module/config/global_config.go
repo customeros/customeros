@@ -17,7 +17,6 @@ type GlobalConfig struct {
 }
 
 type InternalServices struct {
-	FronteraPublicPath     string `env:"FRONTERA_PUBLIC_PATH,required" envDefault:"http://localhost:5173"`
 	UserAdminApiPublicPath string `env:"USER_ADMIN_API_PUBLIC_PATH,required" envDefault:"http://localhost:4001"`
 	EnrichmentApiConfig    EnrichmentAPIConfig
 	AiApiConfig            AiAPIConfig
