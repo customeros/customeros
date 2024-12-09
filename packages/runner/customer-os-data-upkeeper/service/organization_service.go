@@ -575,7 +575,7 @@ func (s *organizationService) SendReminders() {
 		})
 
 		reminder := neo4jmapper.MapDbNodeToReminderEntity(reminderNode)
-		err := s.commonServices.ReminderService.SendNotification(innerCtx, reminder.Id, s.cfg.InternalServices.FronteraPublicPath)
+		err := s.commonServices.ReminderService.SendNotification(innerCtx, reminder.Id, s.cfg.NovuConfig.FronteraUrl)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error sending reminder {%s}: %s", reminder.Id, err.Error())
