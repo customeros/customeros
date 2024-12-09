@@ -8,7 +8,6 @@ import (
 	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	orgaggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
 	orgevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
-	reminder "github.com/openline-ai/openline-customer-os/packages/server/events/event/reminder/event"
 	"github.com/pkg/errors"
 	"os"
 	"os/signal"
@@ -142,9 +141,6 @@ func (eb *EventBufferWatcher) handleEvent(ctx context.Context, evt eventstore.Ev
 			return err
 		}
 		return err
-	case reminder.ReminderNotificationV1:
-		// TODO: implement the logic for the reminder and generic events
-		return nil
 	default:
 		return errors.New("Event type not supported")
 	}

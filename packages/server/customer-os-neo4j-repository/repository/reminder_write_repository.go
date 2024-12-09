@@ -21,7 +21,7 @@ type ReminderUpdateFields struct {
 }
 
 type ReminderWriteRepository interface {
-	CreateReminder(ctx context.Context, tenant, id, userId, organizationId, content, source, appSource string, createdAt, dueDate time.Time) error
+	CreateReminder(ctx context.Context, tenant, id, userId, organizationId, content string, createdAt, dueDate time.Time) error
 	UpdateReminder(ctx context.Context, tenant, id string, data ReminderUpdateFields) error
 	DeleteReminder(ctx context.Context, tenant, id string) error
 }
@@ -38,7 +38,7 @@ func NewReminderWriteRepository(driver *neo4j.DriverWithContext, database string
 	}
 }
 
-func (r *reminderWriteRepository) CreateReminder(ctx context.Context, tenant, id, userId, organizationId, content, source, appSource string, createdAt, dueDate time.Time) error {
+func (r *reminderWriteRepository) CreateReminder(ctx context.Context, tenant, id, userId, organizationId, content string, createdAt, dueDate time.Time) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ReminderWriteRepository.CreateReminder")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
@@ -51,9 +51,8 @@ func (r *reminderWriteRepository) CreateReminder(ctx context.Context, tenant, id
 					r:Reminder_%s,
 					r.createdAt=$createdAt,
 					r.updatedAt=datetime(),	
-					r.source=$source,
-					r.sourceOfTruth=$source,
-					r.appSource=$appSource,
+					r.userId=$userId,	
+					r.organizationId=$organizationId,	
 					r.content=$content,	
 					r.dueDate=$dueDate,
 					r.dismissed=$dismissed
@@ -73,8 +72,6 @@ func (r *reminderWriteRepository) CreateReminder(ctx context.Context, tenant, id
 		"userId":         userId,
 		"organizationId": organizationId,
 		"content":        content,
-		"source":         source,
-		"appSource":      appSource,
 		"createdAt":      createdAt,
 		"dueDate":        dueDate,
 		"dismissed":      false,

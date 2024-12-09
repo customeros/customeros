@@ -26,6 +26,7 @@ import (
 type OrganizationService interface {
 	RefreshLastTouchpoint()
 	UpkeepOrganizations()
+	SendReminders()
 }
 
 type organizationService struct {
@@ -548,5 +549,35 @@ func (s *organizationService) checkOrganizations(ctx context.Context) {
 
 		// force exit after single iteration
 		return
+	}
+}
+
+func (s *organizationService) SendReminders() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel() // Cancel context on exit
+
+	span, ctx := tracing.StartTracerSpan(ctx, "OrganizationService.SendReminders")
+	defer span.Finish()
+	tracing.TagComponentCronJob(span)
+
+	readyToSendNodes, err := s.commonServices.Neo4jRepositories.ReminderReadRepository.GetReadyToSend(ctx, utils.Now())
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error getting reminders to send: %v", err)
+		return
+	}
+
+	for _, reminderNode := range readyToSendNodes {
+		innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+			Tenant:    model.GetTenantFromLabels(reminderNode.Labels, model.NodeLabelReminder),
+			AppSource: constants.AppSourceDataUpkeeper,
+		})
+
+		reminder := neo4jmapper.MapDbNodeToReminderEntity(reminderNode)
+		err := s.commonServices.ReminderService.SendNotification(innerCtx, reminder.Id, s.cfg.InternalServices.FronteraPublicPath)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Error sending reminder {%s}: %s", reminder.Id, err.Error())
+		}
 	}
 }

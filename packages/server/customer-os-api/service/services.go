@@ -50,7 +50,6 @@ type Services struct {
 	BillingProfileService      BillingProfileService
 	InvoiceService             InvoiceService
 	SlackService               SlackService
-	ReminderService            ReminderService
 	EnrichmentService          EnrichmentService
 	WebhookService             WebhookService
 }
@@ -71,7 +70,6 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, postgresDB
 		BillableService:            NewBillableService(log, repositories),
 		LogEntryService:            NewLogEntryService(log, repositories),
 		CommentService:             NewCommentService(log, repositories),
-		ReminderService:            NewReminderService(log, repositories, grpcClients),
 	}
 	services.Repositories = repositories
 	services.BankAccountService = NewBankAccountService(log, repositories, grpcClients, &services)

@@ -11,7 +11,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	orgevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
-	reminder "github.com/openline-ai/openline-customer-os/packages/server/events/event/reminder/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/pkg/errors"
 	"golang.org/x/sync/errgroup"
@@ -19,20 +18,18 @@ import (
 )
 
 type NotificationsSubscriber struct {
-	log                  logger.Logger
-	db                   *esdb.Client
-	cfg                  *config.Config
-	orgEventHandler      *OrganizationEventHandler
-	reminderEventHandler *ReminderEventHandler
+	log             logger.Logger
+	db              *esdb.Client
+	cfg             *config.Config
+	orgEventHandler *OrganizationEventHandler
 }
 
 func NewNotificationsSubscriber(log logger.Logger, db *esdb.Client, services *service.Services, cfg *config.Config) *NotificationsSubscriber {
 	return &NotificationsSubscriber{
-		log:                  log,
-		db:                   db,
-		cfg:                  cfg,
-		orgEventHandler:      NewOrganizationEventHandler(log, services, cfg),
-		reminderEventHandler: NewReminderEventHandler(log, services, cfg),
+		log:             log,
+		db:              db,
+		cfg:             cfg,
+		orgEventHandler: NewOrganizationEventHandler(log, services, cfg),
 	}
 }
 
@@ -111,7 +108,6 @@ func (s *NotificationsSubscriber) When(ctx context.Context, evt eventstore.Event
 
 	acceptedEventTypes := []string{
 		orgevents.OrganizationUpdateOwnerNotificationV1,
-		reminder.ReminderNotificationV1,
 	}
 
 	if !utils.Contains(acceptedEventTypes, evt.GetEventType()) {
@@ -128,8 +124,6 @@ func (s *NotificationsSubscriber) When(ctx context.Context, evt eventstore.Event
 	switch evt.GetEventType() {
 	case orgevents.OrganizationUpdateOwnerNotificationV1:
 		return s.orgEventHandler.OnOrganizationUpdateOwner(ctx, evt)
-	case reminder.ReminderNotificationV1:
-		return s.reminderEventHandler.OnReminderNotification(ctx, evt)
 	default:
 		return nil
 	}
