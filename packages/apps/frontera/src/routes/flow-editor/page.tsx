@@ -110,7 +110,7 @@ const FlowContent = observer(
     return (
       <>
         {showFinder && (
-          <div className='flex justify-start flex-col bg-white '>
+          <div className='flex justify-start flex-col bg-white h-full '>
             <div className='mt-2 mb-2 bg-white ml-1 flex items-center justify-between'>
               <FinderFilters
                 tableId={tableId || TableIdType.Organizations}

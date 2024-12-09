@@ -127,7 +127,7 @@ export const AddContactsToFlow = observer(() => {
               onClick={() => setType('linkedin')}
               leftIcon={<LinkedinOutline className='text-inherit' />}
               className={cn('bg-white !border-r w-full', {
-                'bg-gray-50 text-gray-500 font-normal': type === 'email',
+                'bg-gray-50 text-gray-500 font-normal': type !== 'linkedin',
                 'text-primary-600 hover:text-primary-600': type === 'linkedin',
               })}
             >
@@ -138,7 +138,7 @@ export const AddContactsToFlow = observer(() => {
               onClick={() => setType('email')}
               leftIcon={<Mail01 className='text-inherit' />}
               className={cn('bg-white px-4 w-full border-l-0', {
-                'bg-gray-50 text-gray-500 font-normal': type === 'linkedin',
+                'bg-gray-50 text-gray-500 font-normal': type !== 'email',
                 'text-primary-600 hover:text-primary-600': type === 'email',
               })}
             >
@@ -149,7 +149,7 @@ export const AddContactsToFlow = observer(() => {
               onClick={() => setType('existing')}
               leftIcon={<User03 className='text-inherit' />}
               className={cn('bg-white px-4 w-full', {
-                'bg-gray-50 text-gray-500 font-normal': type === 'linkedin',
+                'bg-gray-50 text-gray-500 font-normal': type !== 'existing',
                 'text-primary-600 hover:text-primary-600': type === 'existing',
               })}
             >
@@ -216,7 +216,7 @@ export const AddContactsToFlow = observer(() => {
                 } per line`}
             </div>
 
-            <div className='flex justify-between gap-3 mt-2'>
+            <div className='flex justify-between gap-3 mt-6'>
               <Button
                 size='sm'
                 variant='outline'
