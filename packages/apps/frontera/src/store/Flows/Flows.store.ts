@@ -307,10 +307,11 @@ export class FlowsStore implements GroupStore<Flow> {
 
       runInAction(() => {
         this.sync({ action: 'DELETE', ids: ids });
-        this.root.ui.toastSuccess(
-          `${ids.length} flows archived`,
-          'archive-flows-success',
-        );
+        ids.map((id) => this.value.delete(id)),
+          this.root.ui.toastSuccess(
+            `${ids.length} flows archived`,
+            'archive-flows-success',
+          );
         options?.onSuccess?.();
       });
     } catch (err) {
