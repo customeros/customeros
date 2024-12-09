@@ -6,10 +6,11 @@ type Config struct {
 	CronScheduleUpdateContract string `env:"CRON_SCHEDULE_UPDATE_CONTRACT" envDefault:"0 */15 * * * *"`
 
 	// Organizations
-	CronScheduleRefreshLastTouchpoint      string `env:"CRON_SCHEDULE_REFRESH_LAST_TOUCHPOINT" envDefault:"30 */1 * * * *"`
-	CronScheduleUpdateOrganization         string `env:"CRON_SCHEDULE_UPDATE_ORGANIZATION" envDefault:"0 */15 * * * *"`
-	CronScheduleSyncScrapinToGlobalOrgs    string `env:"CRON_SCHEDULE_SYNC_SCRAPIN_TO_GLOBAL_ORGS" envDefault:"0 */1 * * * *"`
-	CronScheduleSendOrganizationsReminders string `env:"CRON_SCHEDULE_SEND_ORGANIZATIONS_REMINDERS" envDefault:"0 */1 * * * *"`
+	CronScheduleRefreshLastTouchpoint       string `env:"CRON_SCHEDULE_REFRESH_LAST_TOUCHPOINT" envDefault:"30 */1 * * * *"`
+	CronScheduleUpdateOrganization          string `env:"CRON_SCHEDULE_UPDATE_ORGANIZATION" envDefault:"0 */15 * * * *"`
+	CronScheduleSendOrganizationsReminders  string `env:"CRON_SCHEDULE_SEND_ORGANIZATIONS_REMINDERS" envDefault:"0 */1 * * * *"`
+	CronScheduleProcessWebsiteForGlobalOrgs string `env:"CRON_SCHEDULE_PROCESS_WEBSITE_FOR_GLOBAL_ORGS" envDefault:"0 */1 * * * *"`
+	CronScheduleSyncScrapinToGlobalOrgs     string `env:"CRON_SCHEDULE_SYNC_SCRAPIN_TO_GLOBAL_ORGS" envDefault:"0 */1 * * * *"`
 
 	// Contacts
 	CronScheduleUpkeepContacts                            string `env:"CRON_SCHEDULE_UPKEEP_CONTACTS" envDefault:"0 */15 * * * *"`

@@ -325,6 +325,13 @@ func StartCron(cont *container.Container) *cron.Cron {
 		cont.Log.Fatalf("Could not add cron job %s: %v", "syncScrapinToGlobalOrgs", err.Error())
 	}
 
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleProcessWebsiteForGlobalOrgs, func() {
+		lockAndRunJob(cont, globalOrganizationGroup, processWebsiteForGlobalOrgs)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "processWebsiteForGlobalOrgs", err.Error())
+	}
+
 	err = c.AddFunc(cont.Cfg.Cron.CronScheduleSendOrganizationsReminders, func() {
 		lockAndRunJob(cont, reminderGroup, sendReminders)
 	})
@@ -493,6 +500,10 @@ func checkMailstackDomainReputation(cont *container.Container) {
 
 func syncScrapinToGlobalOrgs(cont *container.Container) {
 	service.NewGlobalOrganizationService(cont.Cfg, cont.Log, cont.CommonServices).SyncScrapInToGlobalOrganization()
+}
+
+func processWebsiteForGlobalOrgs(cont *container.Container) {
+	service.NewGlobalOrganizationService(cont.Cfg, cont.Log, cont.CommonServices).ScrapinCompanyByWebsite()
 }
 
 func sendReminders(cont *container.Container) {

@@ -17,6 +17,9 @@ import (
 	"strings"
 )
 
+const SCRAPIN string = "SCRAPIN"
+const BRANDFETCH string = "BRANDFETCH"
+
 func RegisterRoutes(ctx context.Context, r *gin.Engine, services *service.Services) {
 	r.GET("/enrichPerson",
 		tracing.TracingEnhancer(ctx, "GET /enrichPerson"),
@@ -30,6 +33,10 @@ func RegisterRoutes(ctx context.Context, r *gin.Engine, services *service.Servic
 		tracing.TracingEnhancer(ctx, "GET /enrichOrganization"),
 		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.ENRICHMENT_API, security.WithCache(services.CommonServices.Cache)),
 		enrichOrganization(services))
+	r.GET("/scrapinOrganization",
+		tracing.TracingEnhancer(ctx, "GET /enrichOrganization"),
+		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.ENRICHMENT_API, security.WithCache(services.CommonServices.Cache)),
+		scrapinOrganization(services))
 }
 
 func enrichPerson(services *service.Services) gin.HandlerFunc {
@@ -205,7 +212,7 @@ func enrichOrganization(services *service.Services) gin.HandlerFunc {
 
 		foundByLinkedInUrl := scrapinResponseBody != nil && scrapinResponseBody.Company != nil
 
-		// Step 2 - Scrapin by email
+		// Step 2 - Scrapin by domain
 		if !foundByLinkedInUrl && domain != "" {
 			_, response, err := services.ScrapeInService.ScrapInSearchCompany(ctx, domain)
 			if err != nil {
@@ -255,9 +262,9 @@ func enrichOrganization(services *service.Services) gin.HandlerFunc {
 			})
 			return
 		}
-		primaryEnrichSource := "SCRAPIN"
+		primaryEnrichSource := SCRAPIN
 		if scrapinResponseBody == nil || scrapinResponseBody.Success == false {
-			primaryEnrichSource = "BRANDFETCH"
+			primaryEnrichSource = BRANDFETCH
 		}
 
 		// combine data
@@ -281,6 +288,97 @@ func enrichOrganization(services *service.Services) gin.HandlerFunc {
 		}
 		tracing.LogObjectAsJson(span, "response.body", outputStr)
 
+		c.JSON(http.StatusOK, output)
+	}
+}
+
+func scrapinOrganization(services *service.Services) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		span, ctx := opentracing.StartSpanFromContext(c.Request.Context(), "scrapinOrganization")
+		defer span.Finish()
+
+		var request model.EnrichOrganizationRequest
+
+		if err := c.BindJSON(&request); err != nil {
+			tracing.TraceErr(span, err)
+			services.Logger.Errorf("Fail reading request: %v", err.Error())
+			c.JSON(http.StatusBadRequest, model.EnrichOrganizationResponse{
+				Status:  "error",
+				Message: "Invalid request body",
+				Success: false,
+			})
+			return
+		}
+		request.Normalize()
+
+		tracing.LogObjectAsJson(span, "request", request)
+
+		// validate mandatory parameters
+		if request.LinkedinUrl == "" && request.Domain == "" {
+			tracing.TraceErr(span, errors.New("Missing linkedin and domain parameters"))
+			services.Logger.Errorf("Missing linkedin and domain parameters")
+			c.JSON(http.StatusBadRequest, model.EnrichOrganizationResponse{
+				Status:  "error",
+				Message: "Missing linkedin and domain parameters",
+				Success: false,
+			})
+			return
+		}
+
+		var scrapinResponseBody *postgresEntity.ScrapInResponseBody
+		domain := request.Domain
+
+		// Step 1 - Scrapin by linked in url
+		if request.LinkedinUrl != "" {
+			_, response, err := services.ScrapeInService.ScrapInCompanyProfile(ctx, request.LinkedinUrl)
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "ScrapInCompanyProfile"))
+				c.JSON(http.StatusInternalServerError, model.EnrichOrganizationResponse{
+					Status:  "error",
+					Message: "Internal server error",
+					Success: false,
+				})
+				return
+			}
+			scrapinResponseBody = response
+		}
+
+		foundByLinkedInUrl := scrapinResponseBody != nil && scrapinResponseBody.Company != nil
+
+		// Step 2 - Scrapin by domain
+		if !foundByLinkedInUrl && domain != "" {
+			_, response, err := services.ScrapeInService.ScrapInSearchCompany(ctx, domain)
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "ScrapInSearchCompany"))
+				c.JSON(http.StatusInternalServerError, model.EnrichOrganizationResponse{
+					Status:  "error",
+					Message: "Internal server error",
+					Success: false,
+				})
+				return
+			}
+			scrapinResponseBody = response
+		}
+
+		if scrapinResponseBody == nil || scrapinResponseBody.Success == false {
+			output := model.EnrichOrganizationResponse{
+				Status:              "error",
+				Success:             false,
+				PrimaryEnrichSource: SCRAPIN,
+			}
+			c.JSON(http.StatusNotFound, output)
+			return
+		}
+
+		responseData := model.EnrichOrganizationResponseData{}
+		updateResponseWithScrapinData(&responseData, scrapinResponseBody, domain)
+		normalizeCountry(&responseData.Location)
+		output := model.EnrichOrganizationResponse{
+			Status:              "success",
+			Data:                responseData,
+			Success:             true,
+			PrimaryEnrichSource: SCRAPIN,
+		}
 		c.JSON(http.StatusOK, output)
 	}
 }
