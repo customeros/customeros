@@ -1,5 +1,4 @@
 extend type Query {
-    ui_organization(ids: ID!): OrganizationUiDetails! @hasRole(roles: [ADMIN, USER]) @hasTenant
     ui_organizations(ids: [ID!]): [OrganizationUiDetails!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
     ui_organizations_search(limit: Int, where: Filter, sort: SortBy): OrganizationSearchResult! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
@@ -18,6 +17,7 @@ type OrganizationUiDetails {
     # organizations props on node
     id:                     ID!
     createdAt:              Time!
+    updatedAt:              Time!
 
     name:                   String!
     notes:                  String

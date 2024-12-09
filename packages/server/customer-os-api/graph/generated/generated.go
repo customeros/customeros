@@ -1340,6 +1340,7 @@ type ComplexityRoot struct {
 		Stage                           func(childComplexity int) int
 		Subsidiaries                    func(childComplexity int) int
 		Tags                            func(childComplexity int) int
+		UpdatedAt                       func(childComplexity int) int
 		ValueProposition                func(childComplexity int) int
 		Website                         func(childComplexity int) int
 		YearFounded                     func(childComplexity int) int
@@ -1458,7 +1459,6 @@ type ComplexityRoot struct {
 		TenantBillingProfiles              func(childComplexity int) int
 		TenantSettings                     func(childComplexity int) int
 		TimelineEvents                     func(childComplexity int, ids []string) int
-		UIOrganization                     func(childComplexity int, ids string) int
 		UIOrganizations                    func(childComplexity int, ids []string) int
 		UIOrganizationsSearch              func(childComplexity int, limit *int, where *model.Filter, sort *model1.SortBy) int
 		User                               func(childComplexity int, id string) int
@@ -2119,7 +2119,6 @@ type QueryResolver interface {
 	OrganizationsHiddenAfter(ctx context.Context, date time.Time) ([]string, error)
 	OrganizationByLinkedIn(ctx context.Context, linkedInURL string) (*model.Organization, error)
 	OrganizationExistsByLinkedIn(ctx context.Context, linkedInURL string) (bool, error)
-	UIOrganization(ctx context.Context, ids string) (*model.OrganizationUIDetails, error)
 	UIOrganizations(ctx context.Context, ids []string) ([]*model.OrganizationUIDetails, error)
 	UIOrganizationsSearch(ctx context.Context, limit *int, where *model.Filter, sort *model1.SortBy) (*model.OrganizationSearchResult, error)
 	PhoneNumber(ctx context.Context, id string) (*model.PhoneNumber, error)
@@ -9945,6 +9944,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.OrganizationUiDetails.Tags(childComplexity), true
 
+	case "OrganizationUiDetails.updatedAt":
+		if e.complexity.OrganizationUiDetails.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.OrganizationUiDetails.UpdatedAt(childComplexity), true
+
 	case "OrganizationUiDetails.valueProposition":
 		if e.complexity.OrganizationUiDetails.ValueProposition == nil {
 			break
@@ -10925,18 +10931,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.TimelineEvents(childComplexity, args["ids"].([]string)), true
-
-	case "Query.ui_organization":
-		if e.complexity.Query.UIOrganization == nil {
-			break
-		}
-
-		args, err := ec.field_Query_ui_organization_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Query.UIOrganization(childComplexity, args["ids"].(string)), true
 
 	case "Query.ui_organizations":
 		if e.complexity.Query.UIOrganizations == nil {
@@ -15589,7 +15583,6 @@ enum OrganizationStage {
     UNQUALIFIED
 }`, BuiltIn: false},
 	{Name: "../schemas/organizationV2.graphqls", Input: `extend type Query {
-    ui_organization(ids: ID!): OrganizationUiDetails! @hasRole(roles: [ADMIN, USER]) @hasTenant
     ui_organizations(ids: [ID!]): [OrganizationUiDetails!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
     ui_organizations_search(limit: Int, where: Filter, sort: SortBy): OrganizationSearchResult! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
@@ -15608,6 +15601,7 @@ type OrganizationUiDetails {
     # organizations props on node
     id:                     ID!
     createdAt:              Time!
+    updatedAt:              Time!
 
     name:                   String!
     notes:                  String
@@ -27587,38 +27581,6 @@ func (ec *executionContext) field_Query_timelineEvents_argsIds(
 	}
 
 	var zeroVal []string
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Query_ui_organization_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	arg0, err := ec.field_Query_ui_organization_argsIds(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["ids"] = arg0
-	return args, nil
-}
-func (ec *executionContext) field_Query_ui_organization_argsIds(
-	ctx context.Context,
-	rawArgs map[string]interface{},
-) (string, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["ids"]
-	if !ok {
-		var zeroVal string
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("ids"))
-	if tmp, ok := rawArgs["ids"]; ok {
-		return ec.unmarshalNID2string(ctx, tmp)
-	}
-
-	var zeroVal string
 	return zeroVal, nil
 }
 
@@ -85421,6 +85383,50 @@ func (ec *executionContext) fieldContext_OrganizationUiDetails_createdAt(_ conte
 	return fc, nil
 }
 
+func (ec *executionContext) _OrganizationUiDetails_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationUiDetails_updatedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpdatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationUiDetails_updatedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationUiDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _OrganizationUiDetails_name(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_OrganizationUiDetails_name(ctx, field)
 	if err != nil {
@@ -94708,183 +94714,6 @@ func (ec *executionContext) fieldContext_Query_organization_ExistsByLinkedIn(ctx
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_ui_organization(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_ui_organization(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().UIOrganization(rctx, fc.Args["ids"].(string))
-		}
-
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
-			if err != nil {
-				var zeroVal *model.OrganizationUIDetails
-				return zeroVal, err
-			}
-			if ec.directives.HasRole == nil {
-				var zeroVal *model.OrganizationUIDetails
-				return zeroVal, errors.New("directive hasRole is not implemented")
-			}
-			return ec.directives.HasRole(ctx, nil, directive0, roles)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.HasTenant == nil {
-				var zeroVal *model.OrganizationUIDetails
-				return zeroVal, errors.New("directive hasTenant is not implemented")
-			}
-			return ec.directives.HasTenant(ctx, nil, directive1)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.OrganizationUIDetails); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.OrganizationUIDetails`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.OrganizationUIDetails)
-	fc.Result = res
-	return ec.marshalNOrganizationUiDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationUIDetails(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Query_ui_organization(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_OrganizationUiDetails_id(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_OrganizationUiDetails_createdAt(ctx, field)
-			case "name":
-				return ec.fieldContext_OrganizationUiDetails_name(ctx, field)
-			case "notes":
-				return ec.fieldContext_OrganizationUiDetails_notes(ctx, field)
-			case "description":
-				return ec.fieldContext_OrganizationUiDetails_description(ctx, field)
-			case "industry":
-				return ec.fieldContext_OrganizationUiDetails_industry(ctx, field)
-			case "market":
-				return ec.fieldContext_OrganizationUiDetails_market(ctx, field)
-			case "website":
-				return ec.fieldContext_OrganizationUiDetails_website(ctx, field)
-			case "logoUrl":
-				return ec.fieldContext_OrganizationUiDetails_logoUrl(ctx, field)
-			case "iconUrl":
-				return ec.fieldContext_OrganizationUiDetails_iconUrl(ctx, field)
-			case "stage":
-				return ec.fieldContext_OrganizationUiDetails_stage(ctx, field)
-			case "relationship":
-				return ec.fieldContext_OrganizationUiDetails_relationship(ctx, field)
-			case "lastFundingRound":
-				return ec.fieldContext_OrganizationUiDetails_lastFundingRound(ctx, field)
-			case "leadSource":
-				return ec.fieldContext_OrganizationUiDetails_leadSource(ctx, field)
-			case "valueProposition":
-				return ec.fieldContext_OrganizationUiDetails_valueProposition(ctx, field)
-			case "slackChannelId":
-				return ec.fieldContext_OrganizationUiDetails_slackChannelId(ctx, field)
-			case "public":
-				return ec.fieldContext_OrganizationUiDetails_public(ctx, field)
-			case "employees":
-				return ec.fieldContext_OrganizationUiDetails_employees(ctx, field)
-			case "yearFounded":
-				return ec.fieldContext_OrganizationUiDetails_yearFounded(ctx, field)
-			case "enrichedAt":
-				return ec.fieldContext_OrganizationUiDetails_enrichedAt(ctx, field)
-			case "enrichedFailedAt":
-				return ec.fieldContext_OrganizationUiDetails_enrichedFailedAt(ctx, field)
-			case "enrichedRequestedAt":
-				return ec.fieldContext_OrganizationUiDetails_enrichedRequestedAt(ctx, field)
-			case "ltv":
-				return ec.fieldContext_OrganizationUiDetails_ltv(ctx, field)
-			case "churnedAt":
-				return ec.fieldContext_OrganizationUiDetails_churnedAt(ctx, field)
-			case "renewalSummaryArrForecast":
-				return ec.fieldContext_OrganizationUiDetails_renewalSummaryArrForecast(ctx, field)
-			case "renewalSummaryMaxArrForecast":
-				return ec.fieldContext_OrganizationUiDetails_renewalSummaryMaxArrForecast(ctx, field)
-			case "renewalSummaryRenewalLikelihood":
-				return ec.fieldContext_OrganizationUiDetails_renewalSummaryRenewalLikelihood(ctx, field)
-			case "renewalSummaryNextRenewalAt":
-				return ec.fieldContext_OrganizationUiDetails_renewalSummaryNextRenewalAt(ctx, field)
-			case "onboardingStatus":
-				return ec.fieldContext_OrganizationUiDetails_onboardingStatus(ctx, field)
-			case "onboardingStatusUpdatedAt":
-				return ec.fieldContext_OrganizationUiDetails_onboardingStatusUpdatedAt(ctx, field)
-			case "onboardingComments":
-				return ec.fieldContext_OrganizationUiDetails_onboardingComments(ctx, field)
-			case "lastTouchPointAt":
-				return ec.fieldContext_OrganizationUiDetails_lastTouchPointAt(ctx, field)
-			case "lastTouchPointType":
-				return ec.fieldContext_OrganizationUiDetails_lastTouchPointType(ctx, field)
-			case "contracts":
-				return ec.fieldContext_OrganizationUiDetails_contracts(ctx, field)
-			case "contacts":
-				return ec.fieldContext_OrganizationUiDetails_contacts(ctx, field)
-			case "contactCount":
-				return ec.fieldContext_OrganizationUiDetails_contactCount(ctx, field)
-			case "socialMedia":
-				return ec.fieldContext_OrganizationUiDetails_socialMedia(ctx, field)
-			case "tags":
-				return ec.fieldContext_OrganizationUiDetails_tags(ctx, field)
-			case "locations":
-				return ec.fieldContext_OrganizationUiDetails_locations(ctx, field)
-			case "owner":
-				return ec.fieldContext_OrganizationUiDetails_owner(ctx, field)
-			case "parentId":
-				return ec.fieldContext_OrganizationUiDetails_parentId(ctx, field)
-			case "parentName":
-				return ec.fieldContext_OrganizationUiDetails_parentName(ctx, field)
-			case "subsidiaries":
-				return ec.fieldContext_OrganizationUiDetails_subsidiaries(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type OrganizationUiDetails", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_ui_organization_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Query_ui_organizations(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_ui_organizations(ctx, field)
 	if err != nil {
@@ -94962,6 +94791,8 @@ func (ec *executionContext) fieldContext_Query_ui_organizations(ctx context.Cont
 				return ec.fieldContext_OrganizationUiDetails_id(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_OrganizationUiDetails_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_OrganizationUiDetails_updatedAt(ctx, field)
 			case "name":
 				return ec.fieldContext_OrganizationUiDetails_name(ctx, field)
 			case "notes":
@@ -125241,6 +125072,11 @@ func (ec *executionContext) _OrganizationUiDetails(ctx context.Context, sel ast.
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "updatedAt":
+			out.Values[i] = ec._OrganizationUiDetails_updatedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "name":
 			out.Values[i] = ec._OrganizationUiDetails_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -126922,28 +126758,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_organization_ExistsByLinkedIn(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
-				return res
-			}
-
-			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx,
-					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "ui_organization":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_ui_organization(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -133218,10 +133032,6 @@ func (ec *executionContext) marshalNOrganizationSearchResult2ᚖgithubᚗcomᚋo
 func (ec *executionContext) unmarshalNOrganizationTagInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationTagInput(ctx context.Context, v interface{}) (model.OrganizationTagInput, error) {
 	res, err := ec.unmarshalInputOrganizationTagInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNOrganizationUiDetails2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationUIDetails(ctx context.Context, sel ast.SelectionSet, v model.OrganizationUIDetails) graphql.Marshaler {
-	return ec._OrganizationUiDetails(ctx, sel, &v)
 }
 
 func (ec *executionContext) marshalNOrganizationUiDetails2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationUIDetailsᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.OrganizationUIDetails) graphql.Marshaler {
