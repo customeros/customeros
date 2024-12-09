@@ -582,6 +582,7 @@ func MapDbNodeToReminderEntity(dbNode *dbtype.Node) *entity.ReminderEntity {
 		Content:        utils.GetStringPropOrEmpty(props, "content"),
 		DueDate:        utils.GetTimePropOrEpochStart(props, "dueDate"),
 		Dismissed:      utils.GetBoolPropOrFalse(props, "dismissed"),
+		Sent:           utils.GetBoolPropOrFalse(props, "sent"),
 	}
 	return &reminder
 }

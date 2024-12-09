@@ -15,9 +15,11 @@ type ReminderUpdateFields struct {
 	Content         *string
 	DueDate         *time.Time
 	Dismissed       *bool
+	Sent            *bool
 	UpdateContent   bool
 	UpdateDueDate   bool
 	UpdateDismissed bool
+	UpdateSent      bool
 }
 
 type ReminderWriteRepository interface {
@@ -55,7 +57,8 @@ func (r *reminderWriteRepository) CreateReminder(ctx context.Context, tenant, id
 					r.organizationId=$organizationId,	
 					r.content=$content,	
 					r.dueDate=$dueDate,
-					r.dismissed=$dismissed
+					r.dismissed=$dismissed,
+					r.sent=$sent
 					
 				WITH t, r	
 			
@@ -75,6 +78,7 @@ func (r *reminderWriteRepository) CreateReminder(ctx context.Context, tenant, id
 		"createdAt":      createdAt,
 		"dueDate":        dueDate,
 		"dismissed":      false,
+		"sent":           false,
 	}
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
@@ -111,6 +115,10 @@ func (r *reminderWriteRepository) UpdateReminder(ctx context.Context, tenant, id
 	if data.UpdateDismissed {
 		cypher += ", r.dismissed = $dismissed"
 		params["dismissed"] = *data.Dismissed
+	}
+	if data.UpdateSent {
+		cypher += ", r.sent = $sent"
+		params["sent"] = *data.Sent
 	}
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)

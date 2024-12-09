@@ -11,4 +11,5 @@ type ReminderEntity struct {
 	Content        string    `json:"content"`
 	DueDate        time.Time `json:"dueDate"`
 	Dismissed      bool      `json:"dismissed"`
+	Sent           bool      `json:"sent"`
 }

@@ -568,8 +568,9 @@ func (s *organizationService) SendReminders() {
 	}
 
 	for _, reminderNode := range readyToSendNodes {
+		tenant := model.GetTenantFromLabels(reminderNode.Labels, model.NodeLabelReminder)
 		innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
-			Tenant:    model.GetTenantFromLabels(reminderNode.Labels, model.NodeLabelReminder),
+			Tenant:    tenant,
 			AppSource: constants.AppSourceDataUpkeeper,
 		})
 
@@ -578,6 +579,13 @@ func (s *organizationService) SendReminders() {
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error sending reminder {%s}: %s", reminder.Id, err.Error())
+			return
+		}
+
+		err = s.commonServices.ReminderService.UpdateReminder(ctx, tenant, reminder.Id, nil, nil, nil, utils.BoolPtr(true))
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return
 		}
 	}
 }

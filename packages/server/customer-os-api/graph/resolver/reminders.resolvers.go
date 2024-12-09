@@ -39,7 +39,7 @@ func (r *mutationResolver) ReminderUpdate(ctx context.Context, input model.Remin
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "request.input", input)
 
-	err := r.Services.CommonServices.ReminderService.UpdateReminder(ctx, common.GetTenantFromContext(ctx), input.ID, input.Content, input.DueDate, input.Dismissed)
+	err := r.Services.CommonServices.ReminderService.UpdateReminder(ctx, common.GetTenantFromContext(ctx), input.ID, input.Content, input.DueDate, input.Dismissed, nil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to update reminder")
