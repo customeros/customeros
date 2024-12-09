@@ -805,7 +805,7 @@ func (s *contactService) callEnrichmentApiFindWorkEmail(ctx context.Context, det
 		return nil, err
 	}
 	requestBody := []byte(string(requestJSON))
-	req, err := http.NewRequest("GET", s.cfg.EnrichmentApi.Url+"/findWorkEmail", bytes.NewBuffer(requestBody))
+	req, err := http.NewRequest("GET", s.cfg.EnrichmentApiConfig.Url+"/findWorkEmail", bytes.NewBuffer(requestBody))
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to create request"))
 		return nil, err
@@ -814,7 +814,7 @@ func (s *contactService) callEnrichmentApiFindWorkEmail(ctx context.Context, det
 	req = tracing.InjectSpanContextIntoHTTPRequest(req, span)
 
 	// Set the request headers
-	req.Header.Set(security.ApiKeyHeader, s.cfg.EnrichmentApi.ApiKey)
+	req.Header.Set(security.ApiKeyHeader, s.cfg.EnrichmentApiConfig.ApiKey)
 	req.Header.Set(security.TenantHeader, details.Tenant)
 
 	// Make the HTTP request
