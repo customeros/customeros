@@ -609,6 +609,8 @@ func DefaultColumns(tableId string) postgresEntity.Columns {
 		return postgresEntity.Columns{
 			Columns: []postgresEntity.ColumnView{
 				{ColumnId: 1, ColumnType: model.ColumnViewTypeContactsAvatar.String(), Width: 100, Visible: true, Name: "Avatar", Filter: ""},
+				{ColumnId: 13, ColumnType: model.ColumnViewTypeContactsFlowStatus.String(), Width: 100, Visible: true, Name: "Status in Flow", Filter: ""},
+				{ColumnId: 14, ColumnType: model.ColumnViewTypeContactsFlowNextAction.String(), Width: 100, Visible: true, Name: "Next action", Filter: ""},
 				{ColumnId: 2, ColumnType: model.ColumnViewTypeContactsName.String(), Width: 100, Visible: true, Name: "Name", Filter: ""},
 				{ColumnId: 3, ColumnType: model.ColumnViewTypeContactsOrganization.String(), Width: 100, Visible: true, Name: "Organization", Filter: ""},
 				{ColumnId: 4, ColumnType: model.ColumnViewTypeContactsPrimaryEmail.String(), Width: 100, Visible: true, Name: "Primary email", Filter: ""},
@@ -620,8 +622,6 @@ func DefaultColumns(tableId string) postgresEntity.Columns {
 				{ColumnId: 10, ColumnType: model.ColumnViewTypeContactsCountry.String(), Width: 100, Visible: true, Name: "Country", Filter: ""},
 				{ColumnId: 11, ColumnType: model.ColumnViewTypeContactsRegion.String(), Width: 100, Visible: true, Name: "Region", Filter: ""},
 				{ColumnId: 12, ColumnType: model.ColumnViewTypeContactsCity.String(), Width: 100, Visible: true, Name: "City", Filter: ""},
-				{ColumnId: 13, ColumnType: model.ColumnViewTypeContactsFlowStatus.String(), Width: 100, Visible: true, Name: "Status in Flow", Filter: ""},
-				{ColumnId: 14, ColumnType: model.ColumnViewTypeContactsFlowNextAction.String(), Width: 100, Visible: true, Name: "Next action", Filter: ""},
 				{ColumnId: 15, ColumnType: model.ColumnViewTypeContactsUpdatedAt.String(), Width: 100, Visible: false, Name: "Updated at", Filter: ""},
 				{ColumnId: 16, ColumnType: model.ColumnViewTypeContactsCreatedAt.String(), Width: 100, Visible: false, Name: "Created at", Filter: ""},
 			},
