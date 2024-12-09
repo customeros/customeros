@@ -21,7 +21,7 @@ export const TextCell = ({
 
   if (!text)
     return (
-      <div data-test={dataTest} className='text-gray-400'>
+      <div data-test={dataTest} className='text-gray-400 truncate'>
         {isEnriching ? 'Enriching' : `${unknownText}`}
       </div>
     );

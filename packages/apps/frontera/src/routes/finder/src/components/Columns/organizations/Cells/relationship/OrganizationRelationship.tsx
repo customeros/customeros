@@ -28,15 +28,15 @@ export const OrganizationRelationshipCell = observer(
 
     return (
       <div
-        className='flex gap-1 items-center cursor-pointer group/relationship'
+        className='flex items-center cursor-pointer group/relationship overflow-hidden'
         onClick={() => {
           store.ui.commandMenu.setType('ChangeRelationship');
           store.ui.commandMenu.setOpen(true);
         }}
       >
         <p
-          data-test='organization-relationship-in-all-orgs-table'
           className={cn('text-gray-700', !value && 'text-gray-400')}
+          data-test='organization-relationship-in-all-orgs-table truncate'
         >
           {value?.label
             ? value.label

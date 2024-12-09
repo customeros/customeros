@@ -13,18 +13,17 @@ export const OwnerCell = observer(({ ownerId }: OwnerProps) => {
 
   return (
     <div
-      className='flex w-full gap-1 items-center cursor-pointer'
+      data-test='organization-owner-in-all-orgs-table'
       onClick={() => {
         store.ui.commandMenu.setType('AssignOwner');
         store.ui.commandMenu.setOpen(true);
       }}
+      className={cn(
+        'inline w-full gap-1 items-center cursor-pointer truncate',
+        ownerId ? 'text-gray-700' : 'text-gray-400',
+      )}
     >
-      <p
-        data-test='organization-owner-in-all-orgs-table'
-        className={cn(ownerId ? 'text-gray-700' : 'text-gray-400')}
-      >
-        {userOwner?.name ?? 'No owner'}
-      </p>
+      {userOwner?.name ?? 'No owner'}
     </div>
   );
 });
