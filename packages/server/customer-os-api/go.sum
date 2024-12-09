@@ -7,8 +7,8 @@ cloud.google.com/go/compute/metadata v0.5.2 h1:UxK4uu/Tn+I3p2dYWTfiX4wva7aYlKixA
 cloud.google.com/go/compute/metadata v0.5.2/go.mod h1:C66sj2AluDcIqakBq/M8lw8/ybHgOZqin2obFxa/E5k=
 dario.cat/mergo v1.0.0 h1:AGCNq9Evsj31mOgNPcLyXc+4PNABt905YmuqPYYpBWk=
 dario.cat/mergo v1.0.0/go.mod h1:uNxQE+84aUszobStD9th8a29P2fMDhsBdgRYvZOxGmk=
-github.com/99designs/gqlgen v0.17.57 h1:Ak4p60BRq6QibxY0lEc0JnQhDurfhxA67sp02lMjmPc=
-github.com/99designs/gqlgen v0.17.57/go.mod h1:Jx61hzOSTcR4VJy/HFIgXiQ5rJ0Ypw8DxWLjbYDAUw0=
+github.com/99designs/gqlgen v0.17.58 h1:IqoOcSLMk6LnKvLECkRNPP5Z/jApXYvnzm+qvGkYdhc=
+github.com/99designs/gqlgen v0.17.58/go.mod h1:vQJzWXyGya2TYL7cig1G4OaCQzyck031MgYBlUwaI9I=
 github.com/AdaLogics/go-fuzz-headers v0.0.0-20230811130428-ced1acdcaa24 h1:bvDV9vkmnHYOMsOr4WLk+Vo07yKIzd94sVoIqshQ4bU=
 github.com/AdaLogics/go-fuzz-headers v0.0.0-20230811130428-ced1acdcaa24/go.mod h1:8o94RPi1/7XTJvwPpRSzSUedZrtlirdB3r9Z20bi2f8=
 github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 h1:L/gRVlceqvL25UVaW/CKtUDjefjrs0SPonmDGUVOYP0=
