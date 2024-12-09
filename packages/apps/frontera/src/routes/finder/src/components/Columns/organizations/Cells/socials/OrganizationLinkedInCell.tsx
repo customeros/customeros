@@ -1,14 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 import { observer } from 'mobx-react-lite';
 
 import { useStore } from '@shared/hooks/useStore';
-import { getFormattedLink } from '@utils/getExternalLink';
-
-import {
-  LinkedInInput,
-  LinkedInDisplay,
-} from '../../../shared/Filters/abstract/LinkedIn';
+import { getExternalUrl, getFormattedLink } from '@utils/getExternalLink';
 
 interface SocialsCellProps {
   organizationId: string;
@@ -17,104 +12,53 @@ interface SocialsCellProps {
 export const OrganizationLinkedInCell = observer(
   ({ organizationId }: SocialsCellProps) => {
     const store = useStore();
-    const [isHovered, setIsHovered] = useState(false);
-    const [isEdit, setIsEdit] = useState(false);
     const [metaKey, setMetaKey] = useState(false);
     const organization = store.organizations.getById(organizationId);
 
-    const enrichedOrganizations = organization?.value?.enrichDetails;
-
-    const enrichingStatus =
-      !enrichedOrganizations?.enrichedAt &&
-      enrichedOrganizations?.requestedAt &&
-      !enrichedOrganizations?.failedAt;
-
-    useEffect(() => {
-      store.ui.setIsEditingTableCell(isEdit);
-    }, [isEdit, store.ui]);
-
-    const handleAddSocial = (url: string) => {
-      if (!organization || url === 'Unknown' || url === '') return;
-
-      const formattedValue =
-        url.includes('https://www') || url.includes('linkedin.com')
-          ? getFormattedLink(url).replace(/^linkedin\.com\//, '')
-          : `in/${url}`;
-
-      organization.draft();
-      organization.addSocial(`linkedin.com/${formattedValue}`);
-      organization.commit();
-
-      setIsEdit(false);
-    };
-
-    const handleUpdateSocial = (url: string) => {
-      if (!organization.value) return;
-      const linkedinId = organization?.value?.socialMedia.find((social) =>
-        social.url.includes('linkedin'),
-      )?.id;
-
-      if (!linkedinId) return;
-
-      const idx = organization.value?.socialMedia.findIndex(
-        (s) => s.id === linkedinId,
-      );
-
-      organization.draft();
-
-      if (idx !== -1) {
-        const formattedValue =
-          url.includes('https://www') || url.includes('linkedin.com')
-            ? getFormattedLink(url).replace(/^linkedin\.com\//, '')
-            : `in/${url}`;
-
-        organization.value.socialMedia[
-          idx
-        ].url = `linkedin.com/${formattedValue}`;
-      }
-
-      if (url === '') {
-        organization.value.socialMedia.splice(idx, 1);
-      }
-
-      organization.commit();
-    };
-
-    const toggleEditMode = () => setIsEdit(!isEdit);
     const linkedIn = organization?.value?.socialMedia.find((social) =>
       social.url.includes('linkedin'),
     );
 
-    if (!organization?.value?.socialMedia?.length || !linkedIn) {
-      return (
-        <LinkedInInput
-          type='company'
-          isEdit={isEdit}
-          metaKey={metaKey}
-          isHovered={isHovered}
-          setIsEdit={setIsEdit}
-          setMetaKey={setMetaKey}
-          setIsHovered={setIsHovered}
-          enrichedStatus={enrichingStatus}
-          handleAddSocial={handleAddSocial}
-        />
-      );
+    if (organization.isEnriching && !linkedIn) {
+      return <span className='text-gray-400'>Enriching...</span>;
     }
 
+    if (!linkedIn) {
+      return <span className='text-gray-400'>Not set</span>;
+    }
+
+    const link = linkedIn.url;
+    const alias = linkedIn.alias;
+    const formattedLink = getFormattedLink(link).replace(
+      /^linkedin\.com\/(?:in\/|company\/)?/,
+      '/',
+    );
+
+    const displayLink = alias ? `/${alias}` : formattedLink;
+    const url = formattedLink
+      ? link.includes('linkedin')
+        ? getExternalUrl(`https://linkedin.com/company${displayLink}`)
+        : getExternalUrl(link)
+      : '';
+
     return (
-      <LinkedInDisplay
-        type='company'
-        isEdit={isEdit}
-        metaKey={metaKey}
-        link={linkedIn.url}
-        isHovered={isHovered}
-        setIsEdit={setIsEdit}
-        alias={linkedIn.alias}
-        setMetaKey={setMetaKey}
-        setIsHovered={setIsHovered}
-        toggleEditMode={toggleEditMode}
-        handleUpdateSocial={handleUpdateSocial}
-      />
+      <div
+        className='flex items-center cursor-pointer'
+        onKeyUp={() => metaKey && setMetaKey(false)}
+        onKeyDown={(e) => e.metaKey && setMetaKey(true)}
+        onClick={(e) => {
+          if (e.metaKey) {
+            e.stopPropagation();
+            window.open(url, '_blank', 'noopener');
+
+            return;
+          }
+          store.ui.commandMenu.setType('EditCompanyLinkedin');
+          store.ui.commandMenu.setOpen(true);
+        }}
+      >
+        <p className='text-gray-700 truncate'>{displayLink}</p>
+      </div>
     );
   },
 );

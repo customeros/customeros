@@ -6,4 +6,5 @@ export * from './AddNewOrganizations';
 export * from './RelationshipSubItemGroup';
 export * from './UpdateHealthStatusSubItemGroup';
 export * from './MergeConfirmationModal';
+export * from './EditCompanyLinkedin';
 export * from './keywords.ts';
