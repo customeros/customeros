@@ -696,7 +696,7 @@ func (s *trackingService) notifyOnSlack(c context.Context, r *entity.Tracking) e
 										"type": "button",
 										"text": {
 											"type": "plain_text",
-											"text": "Open in CustomerOS"
+											"text": "View in CustomerOS"
 										},
 										"url": "{placeholder_view_organization_url}",
 										"value": "click_me_123",

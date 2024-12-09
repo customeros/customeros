@@ -4,6 +4,11 @@ package rest
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"strings"
+	"time"
+
+	"github.com/customeros/mailsherpa/mailvalidate"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
@@ -16,13 +21,11 @@ import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
-	"net/http"
-	"strings"
-	"time"
 )
 
 func RedirectToPayInvoice(services *service.Services) gin.HandlerFunc {
@@ -30,6 +33,8 @@ func RedirectToPayInvoice(services *service.Services) gin.HandlerFunc {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "RedirectToPayInvoice", c.Request.Header)
 		defer span.Finish()
 		tracing.TagComponentRest(span)
+
+		clientIP := getClientIP(c)
 
 		// Get invoice ID from path parameter
 		invoiceID := c.Param("invoiceId")
@@ -51,6 +56,11 @@ func RedirectToPayInvoice(services *service.Services) gin.HandlerFunc {
 			Tenant:    tenant,
 			AppSource: constants.AppSourceCustomerOsApiRest,
 		})
+
+		saveErr := saveIP(ctx, services, clientIP, invoiceID, tenant)
+		if saveErr != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "Error saving clientIP"))
+		}
 
 		// get organization linked to invoice
 		organizationDbNode, err := services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByInvoiceId(innerCtx, tenant, invoice.Id)
@@ -164,6 +174,62 @@ func GetInvoicePaymentLink(services *service.Services) gin.HandlerFunc {
 			return
 		}
 	}
+}
+
+func getClientIP(c *gin.Context) string {
+	originalIP := c.Request.Header["X-Original-Forwarded-For"]
+	cloudflareIP := c.Request.Header["Cf-Connecting-Ip"]
+
+	if cloudflareIP[0] != "" {
+		return cloudflareIP[0]
+	}
+	return originalIP[0]
+}
+
+func saveIP(ctx context.Context, s *service.Services, clientIP, invoiceID, tenant string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "Rest.SaveIP")
+	defer span.Finish()
+	span.LogKV("clientIP", clientIP)
+
+	if clientIP == "" {
+		return nil
+	}
+
+	contracts, err := s.ContractService.GetContractsForInvoices(ctx, []string{invoiceID})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	if len(*contracts) == 0 {
+		err := errors.New("Could not find contract for invoice")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	invoiceEmail := (*contracts)[0].InvoiceEmail
+	verifyEmail := mailvalidate.ValidateEmailSyntax(invoiceEmail)
+	if !verifyEmail.IsValid {
+		err := errors.New("Invalid invoice email address")
+		span.LogKV("invoiceEmail", invoiceEmail)
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	details := entity.EnrichDetailsTracking{
+		IP:             clientIP,
+		CompanyDomain:  &verifyEmail.Domain,
+		CompanyWebsite: &verifyEmail.Domain,
+		SourceEmail:    &verifyEmail.CleanEmail,
+	}
+
+	createErr := s.Repositories.PostgresRepositories.EnrichDetailsTrackingRepository.RegisterRequest(ctx, details)
+	if createErr != nil {
+		tracing.TraceErr(span, createErr)
+		return createErr
+	}
+	return nil
+
 }
 
 type ApiRequestCreatePaymentLinks struct {
