@@ -588,18 +588,13 @@ func (s *scrapinService) ScrapInSearchCompany(ctx context.Context, domain string
 				span.LogFields(log.String("result.inputPrimaryDomain", inputPrimaryDomain), log.String("result.outputPrimaryDomain", outputPrimaryDomain))
 				if inputPrimaryDomain != "" && inputPrimaryDomain == outputPrimaryDomain {
 					return latestEnrichDetailsScrapInRecordWithCompanyFound.ID, data, nil
-				} else {
-					tracing.TraceErr(span, errors.New("Scrapin retuned different company domain, expected: "+inputPrimaryDomain+", got: "+data.Company.WebsiteUrl))
 				}
 			}
 			return 0, nil, nil
 		}
 	}
 
-	if data != nil && data.Company != nil {
-		if data.Company.WebsiteUrl == "" {
-			return recordId, data, nil
-		}
+	if data != nil && data.Company != nil && data.Company.WebsiteUrl != "" {
 		// check primary domain matches
 		inputIsPrimary, inputAltPrimaryDomain := domaincheck.PrimaryDomainCheck(domain)
 		outputIsPrimary, outputAltPrimaryDomain := domaincheck.PrimaryDomainCheck(data.Company.WebsiteUrl)
@@ -615,7 +610,7 @@ func (s *scrapinService) ScrapInSearchCompany(ctx context.Context, domain string
 		if inputPrimaryDomain != "" && inputPrimaryDomain == outputPrimaryDomain {
 			return recordId, data, nil
 		} else {
-			tracing.TraceErr(span, errors.New("Scrapin retuned different company domain, expected: "+inputPrimaryDomain+", got: "+data.Company.WebsiteUrl))
+			tracing.TraceErr(span, errors.New("Scrapin retuned different company domain, expected: "+inputPrimaryDomain+", got: "+outputPrimaryDomain))
 		}
 	}
 

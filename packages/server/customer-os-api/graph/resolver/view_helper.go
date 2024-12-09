@@ -172,7 +172,7 @@ func DefaultTableViewDefinitionOrganization(span opentracing.Span) (postgresEnti
 		Icon:           "Building07",
 		Filters:        ``,
 		DefaultFilters: ``,
-		Sorting:        `{"id": "ORGANIZATIONS_LAST_TOUCHPOINT", "desc": true}`,
+		Sorting:        `{"id": "ORGANIZATIONS_UPDATED_DATE", "desc": true}`,
 		IsPreset:       true,
 		IsShared:       false,
 	}, nil
@@ -196,7 +196,7 @@ func DefaultTableViewDefinitionCustomers(span opentracing.Span) (postgresEntity.
 		Icon:           "CheckHeart",
 		Filters:        ``,
 		DefaultFilters: fmt.Sprintf(`{"AND":[{"filter":{"includeEmpty":false,"operation":"EQ","property":"RELATIONSHIP","value":["%s"]}}]}`, neo4jenum.OrganizationRelationshipCustomer.String()),
-		Sorting:        `{"id": "ORGANIZATIONS_LAST_TOUCHPOINT", "desc": true}`,
+		Sorting:        `{"id": "ORGANIZATIONS_UPDATED_DATE", "desc": true}`,
 		IsPreset:       true,
 		IsShared:       false,
 	}, nil
@@ -220,7 +220,7 @@ func DefaultTableViewDefinitionTargets(span opentracing.Span) (postgresEntity.Ta
 		Icon:           "Target05",
 		Filters:        ``,
 		DefaultFilters: fmt.Sprintf(`{"AND":[{"filter":{"includeEmpty":false,"operation":"EQ","property":"STAGE","value":["%s"]}},{"filter":{"includeEmpty":false,"operation":"EQ","property":"RELATIONSHIP","value":["%s"]}}]}`, neo4jenum.Target.String(), neo4jenum.OrganizationRelationshipProspect.String()),
-		Sorting:        `{"id": "ORGANIZATIONS_LAST_TOUCHPOINT", "desc": true}`,
+		Sorting:        `{"id": "ORGANIZATIONS_UPDATED_DATE", "desc": true}`,
 		IsPreset:       true,
 		IsShared:       false,
 	}, nil
