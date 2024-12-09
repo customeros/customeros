@@ -150,7 +150,6 @@ const FlowContent = observer(
         {isSidePanelOpen && (
           <FlowSettingsPanel
             id={id}
-            nodes={getNodes()}
             hasChanges={hasNewChanges}
             onToggleHasChanges={setHasNewChanges}
             onToggleSidePanel={setIsSidePanelOpen}

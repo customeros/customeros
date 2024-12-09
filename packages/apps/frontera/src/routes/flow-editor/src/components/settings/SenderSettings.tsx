@@ -46,7 +46,7 @@ export const SenderSettings = observer(
                 />
               ))}
           </div>
-          <SenderDropdown flowId={id} />
+          <SenderDropdown flowId={id} hasEmailNodes={hasEmailNodes} />
         </div>
         <Divider />
         <div className='flex flex-col gap-2'>

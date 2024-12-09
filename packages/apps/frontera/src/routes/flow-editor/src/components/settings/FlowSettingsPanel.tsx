@@ -1,4 +1,4 @@
-import { Node } from '@xyflow/react';
+import { useNodes } from '@xyflow/react';
 import { FlowActionType } from '@store/Flows/types';
 
 import { IconButton } from '@ui/form/IconButton';
@@ -13,18 +13,17 @@ import { NoEmailNodesPanel } from './NoEmailNodesPanel';
 
 export const FlowSettingsPanel = ({
   id,
-  nodes,
   hasChanges,
   onToggleHasChanges,
   onToggleSidePanel,
 }: {
   id: string;
-  nodes: Node[];
   hasChanges: boolean;
   onToggleSidePanel: (status: boolean) => void;
   onToggleHasChanges: (status: boolean) => void;
 }) => {
   const store = useStore();
+  const nodes = useNodes();
 
   const hasEmailNodes = nodes.some(
     (node) =>

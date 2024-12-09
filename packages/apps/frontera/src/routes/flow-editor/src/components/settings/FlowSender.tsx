@@ -1,25 +1,23 @@
 import { ReactNode } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
 import { FlowSenderStore } from '@store/FlowSenders/FlowSender.store';
 
 import { Avatar } from '@ui/media/Avatar';
 import { User01 } from '@ui/media/icons/User01';
-import { Delete } from '@ui/media/icons/Delete';
 import { Mail01 } from '@ui/media/icons/Mail01';
 import { Button } from '@ui/form/Button/Button';
 import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
+import { Inbox01 } from '@ui/media/icons/Inbox01';
+import { XCircle } from '@ui/media/icons/XCircle';
 import { useChannel } from '@shared/hooks/useChannel';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { DotsVertical } from '@ui/media/icons/DotsVertical';
 import { LinkedinBlue } from '@ui/media/logos/LinkedinBlue';
 import { LinkedinOutline } from '@ui/media/icons/LinkedinOutline';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@ui/overlay/Popover/Popover';
 
 export const FlowSender = observer(
   ({
@@ -34,6 +32,7 @@ export const FlowSender = observer(
     hasLinkedInNodes: boolean;
   }) => {
     const store = useStore();
+    const navigate = useNavigate();
     const flowSender = store.flowSenders.value.get(id) as FlowSenderStore;
     const userMailboxes = flowSender?.user?.value?.mailboxes;
     const hasLinkedInToken = flowSender?.user?.value?.hasLinkedInToken;
@@ -70,7 +69,7 @@ export const FlowSender = observer(
             {flowSender?.user?.name ?? 'Unnamed'}
           </span>
         </div>
-        <div className='flex items-center'>
+        <div className='flex items-center gap-1'>
           {hasLinkedInNodes && (
             <>
               {!hasLinkedInToken && (
@@ -92,33 +91,20 @@ export const FlowSender = observer(
 
           {hasEmailNodes && (
             <div>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    size='xxs'
-                    variant='ghost'
-                    className='gap-1'
-                    leftIcon={<Mail01 className='text-inherit ' />}
-                  >
-                    {userMailboxes?.length ?? 0}{' '}
-                    {userMailboxes?.length === 1 ? 'mailbox' : 'mailboxes'}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent
-                  align='end'
-                  side='bottom'
-                  className={'px-4 py-3 '}
+              <Tooltip label='Add mailboxes'>
+                <Button
+                  size='xxs'
+                  variant='ghost'
+                  className='gap-1'
+                  leftIcon={<Mail01 className='text-inherit ' />}
+                  onClick={() => {
+                    navigate('/settings?tab=mailboxes&view=buy');
+                  }}
                 >
-                  <p className='text-sm font-medium mb-1'>Linked mailboxes</p>
-                  <ul className='list-disc px-4 text-sm'>
-                    {userMailboxes?.map((mailbox) => (
-                      <li className='' key={`mailbox-item-${mailbox}`}>
-                        {mailbox}
-                      </li>
-                    ))}
-                  </ul>
-                </PopoverContent>
-              </Popover>
+                  {userMailboxes?.length ?? 0}{' '}
+                  {userMailboxes?.length === 1 ? 'mailbox' : 'mailboxes'}
+                </Button>
+              </Tooltip>
             </div>
           )}
 
@@ -147,6 +133,7 @@ const FlowSenderMenu = observer(
     children: ReactNode;
   }) => {
     const store = useStore();
+    const navigate = useNavigate();
 
     return (
       <Menu>
@@ -156,13 +143,21 @@ const FlowSenderMenu = observer(
         >
           {children}
         </MenuButton>
-        <MenuList align='end' side='bottom' className='min-w-[280px]'>
+        <MenuList align='end' side='bottom' className='min-w-[180px]'>
+          <MenuItem
+            onClick={() => {
+              navigate('/settings?tab=mailboxes');
+            }}
+          >
+            <Inbox01 />
+            Edit mailboxes
+          </MenuItem>
           <MenuItem
             onClick={() => {
               store.flowSenders.deleteFlowSender(senderId, flowId);
             }}
           >
-            <Delete />
+            <XCircle />
             Remove sender
           </MenuItem>
         </MenuList>
