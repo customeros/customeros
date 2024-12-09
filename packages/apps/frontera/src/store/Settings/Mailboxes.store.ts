@@ -80,9 +80,11 @@ export class MailboxesStore extends SyncableGroup<Mailbox, MailboxStore> {
   }
 
   get totalAmount() {
+    const baseBundlePrice = this.value.size > 0 ? 0 : 199.99;
+
     // multiply by 100 to convert to cents (required by stripe)
     return parseFloat(
-      ((199.99 + this.extendedBundle.size * 18.99) * 100).toFixed(2),
+      ((baseBundlePrice + this.extendedBundle.size * 18.99) * 100).toFixed(2),
     );
   }
 
@@ -109,7 +111,7 @@ export class MailboxesStore extends SyncableGroup<Mailbox, MailboxStore> {
 
   public selectDomain(domain: string) {
     runInAction(() => {
-      if (this.baseBundle.size < 5) {
+      if (this.value.size === 0 && this.baseBundle.size < 5) {
         this.baseBundle.add(domain);
       } else {
         this.extendedBundle.add(domain);
@@ -132,7 +134,9 @@ export class MailboxesStore extends SyncableGroup<Mailbox, MailboxStore> {
 
       const newArr = Array.from(newSet);
 
-      this.baseBundle = new Set(newArr.splice(0, 5));
+      if (this.value.size === 0) {
+        this.baseBundle = new Set(newArr.splice(0, 5));
+      }
       this.extendedBundle = new Set(newArr);
 
       this.invalidBaseBundle = '';
@@ -234,11 +238,13 @@ export class MailboxesStore extends SyncableGroup<Mailbox, MailboxStore> {
 
   public async validateBuy({ onSuccess }: { onSuccess?: () => void }) {
     // sync validations
-    const valid = [
-      this.validateRedirectUrl(),
-      this.validateUsernames(),
-      this.validateBaseBundle(),
-    ].every(Boolean);
+    const validators = [this.validateRedirectUrl(), this.validateUsernames()];
+
+    if (this.value.size === 0) {
+      validators.push(this.validateBaseBundle());
+    }
+
+    const valid = validators.every(Boolean);
 
     // set fields as dirty so we force show any errors on submit
     // assuming the user never touched the fields

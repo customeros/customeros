@@ -21,6 +21,7 @@ export const CheckoutCard = observer(() => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { open, onOpen, onClose } = useDisclosure();
+  const hasMailboxes = store.mailboxes.value.size > 0;
 
   const handlePaymentView = async () => {
     const campaign = searchParams.get('campaign');
@@ -37,9 +38,10 @@ export const CheckoutCard = observer(() => {
 
   const noOfMailboxes = store.mailboxes.mailboxesCount;
   const noOfEmails = formatNumberWithComma(noOfMailboxes * 1200);
-  const total = (199.99 + store.mailboxes.extendedBundle.size * 18.99).toFixed(
-    2,
-  );
+  const total = (
+    (hasMailboxes ? 0 : 199.99) +
+    store.mailboxes.extendedBundle.size * 18.99
+  ).toFixed(2);
 
   return (
     <>

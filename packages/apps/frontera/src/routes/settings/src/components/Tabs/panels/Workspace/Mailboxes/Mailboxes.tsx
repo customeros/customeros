@@ -68,7 +68,7 @@ export const Mailboxes = observer(() => {
 
   return (
     <div className='overflow-y-auto h-full'>
-      <div className='grid grid-cols-2 gap-2 max-w-[800px] h-full'>
+      <div className='grid grid-cols-2 max-w-[800px] h-full'>
         {showBuyFlow && (
           <>
             <div className='pb-[12px] pt-[8px] px-6 flex flex-col border-r-[1px]'>
@@ -95,8 +95,8 @@ export const Mailboxes = observer(() => {
               <div className='pb-[12px] pt-[8px] px-6 flex flex-col h-full border-r-[1px]'>
                 <p className='mb-4 font-semibold'>Checkout</p>
                 <div className='flex flex-col gap-2'>
-                  <BaseBundleCard />
-                  {noOfDomains >= 5 && <ExtendedBundleCard />}
+                  {!hasMailboxes && <BaseBundleCard />}
+                  {(hasMailboxes || noOfDomains >= 5) && <ExtendedBundleCard />}
                   {noOfDomains > 0 && <CheckoutCard />}
                 </div>
               </div>

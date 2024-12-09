@@ -13,12 +13,16 @@ export const UsersCard = observer(() => {
   const store = useStore();
   const { open, onOpen, onClose } = useDisclosure();
   const [error1, error2] = store.mailboxes.invalidUsernames;
+  const hasDomains =
+    store.mailboxes.value.size > 0
+      ? store.mailboxes.extendedBundle.size > 0
+      : store.mailboxes.baseBundle.size > 0;
 
   const dirty = store.mailboxes.dirty;
   const isUsername1Dirty = dirty.get('username1') || false;
   const isUsername2Dirty = dirty.get('username2') || false;
 
-  if (store.mailboxes.baseBundle.size === 0) return null;
+  if (!hasDomains) return null;
 
   return (
     <>
