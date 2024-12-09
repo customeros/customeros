@@ -383,7 +383,7 @@ export class OrganizationsService {
               input: {
                 organizationId,
                 tag: {
-                  id: value.metadata.id,
+                  name: value.name,
                   entityType: EntityType.Organization,
                 },
               },
@@ -432,7 +432,10 @@ export class OrganizationsService {
                     await this.addTag({
                       input: {
                         organizationId,
-                        tag: { id: tag?.metadata.id, name: tag?.name },
+                        tag: {
+                          name: tag?.name,
+                          entityType: EntityType.Organization,
+                        },
                       },
                     });
                   });
