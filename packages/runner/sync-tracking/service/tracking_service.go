@@ -5,8 +5,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-tracking/config"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-tracking/constants"
+	"io"
+	"net"
+	"net/http"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
@@ -18,10 +20,9 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-	"io"
-	"net"
-	"net/http"
-	"strings"
+
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-tracking/config"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-tracking/constants"
 )
 
 type TrackingService interface {
@@ -233,38 +234,6 @@ func (s *trackingService) CreateOrganizationsFromTrackedData(ctx context.Context
 	}
 
 	return nil
-}
-
-func (s *trackingService) NotifyOnSlack(ctx context.Context) {
-	span, ctx := tracing.StartTracerSpan(ctx, "TrackingService.NotifyOnSlack")
-	defer span.Finish()
-
-	if s.cfg.SlackBotApiKey == "" {
-		span.LogFields(log.String("skip", "no slack bot api key"))
-		return
-	}
-
-	limit := 100
-	notifyOnSlackRecords, err := s.services.CommonServices.PostgresRepositories.TrackingRepository.GetForSlackNotifications(ctx, limit)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to get records for slack notifications"))
-		s.services.Logger.Errorf("failed to get records for slack notifications: %s", err.Error())
-		return
-	}
-
-	if len(notifyOnSlackRecords) == 0 {
-		span.LogFields(log.String("skip", "no records to notify"))
-		return
-	}
-
-	for _, r := range notifyOnSlackRecords {
-		err := s.notifyOnSlack(ctx, r)
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to notify on slack"))
-		}
-	}
-
-	return
 }
 
 func (s *trackingService) processNewRecord(c context.Context, newRecord *entity.Tracking) error {
@@ -487,7 +456,7 @@ func (s *trackingService) askAndStoreSnitcherData(c context.Context, ip string) 
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+s.cfg.SnitcherApi.ApiKey)
 
-	//Perform the request
+	// Perform the request
 	resp, err := client.Do(req)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -532,7 +501,6 @@ func (s *trackingService) askAndStoreSnitcherData(c context.Context, ip string) 
 		CompanyWebsite: companyWebsite,
 		Response:       string(responseBody),
 	})
-
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, fmt.Errorf("failed to store response: %v", err)
@@ -545,281 +513,6 @@ func (s *trackingService) askAndStoreSnitcherData(c context.Context, ip string) 
 	}
 
 	return byIP, nil
-}
-
-func (s *trackingService) notifyOnSlack(c context.Context, r *entity.Tracking) error {
-	span, ctx := opentracing.StartSpanFromContext(c, "TrackingService.notifyOnSlack")
-	defer span.Finish()
-
-	record, err := s.services.CommonServices.PostgresRepositories.TrackingRepository.GetById(ctx, r.ID)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to get tracking record"))
-		return err
-	}
-	if record.Tenant != "" {
-		tracing.TagTenant(span, record.Tenant)
-	}
-
-	err = s.services.CommonServices.PostgresRepositories.TrackingRepository.IncrementNotificationTry(ctx, record.ID)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to increment notification try"))
-	}
-
-	if record.Notified || record.OrganizationId == nil {
-		return nil
-	}
-
-	snitcherData, err := s.services.CommonServices.PostgresRepositories.EnrichDetailsTrackingRepository.GetByIP(ctx, record.IP)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	if snitcherData == nil {
-		tracing.TraceErr(span, errors.New("snitcher record is nil"))
-		return nil
-	}
-
-	var snitcherDataResponse entity.SnitcherResponseBody
-	err = json.Unmarshal([]byte(snitcherData.Response), &snitcherDataResponse)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	//skip notification if the identified company domain is the same as the workspace domain in the tenant ( basically skip employees from triggering notifications)
-	if record.OrganizationDomain != nil && *record.OrganizationDomain != "" {
-
-		workspaceNodeList, err := s.services.CommonServices.Neo4jRepositories.WorkspaceReadRepository.GetAllForTenant(ctx, record.Tenant)
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to get workspace nodes"))
-			return err
-		}
-
-		for _, workspaceNode := range workspaceNodeList {
-			props := utils.GetPropsFromNode(*workspaceNode)
-			domainName := utils.GetStringPropOrEmpty(props, "name")
-			if domainName == *record.OrganizationDomain {
-				err := s.services.CommonServices.PostgresRepositories.TrackingRepository.MarkAsNotified(ctx, record.ID)
-				if err != nil {
-					tracing.TraceErr(span, err)
-					return err
-				}
-
-				span.LogFields(log.String("skip", "workspace is the same as organization domain"))
-				return nil
-			}
-		}
-	}
-
-	var organizationName, organizationLocation, organizationWebsiteUrl, organizationLinkedIn, referrer string
-
-	if record.OrganizationName != nil && *record.OrganizationName != "" {
-		organizationName = *record.OrganizationName
-	} else if snitcherDataResponse.Company.Name != "" {
-		organizationName = snitcherDataResponse.Company.Name
-	} else if snitcherDataResponse.Company.Domain != "" {
-		organizationName = utils.CapitalizeAllParts(utils.GetDomainWithoutTLD(snitcherDataResponse.Company.Domain), []string{"-", "_", "."})
-	} else {
-		// organization name is unknown
-		return nil
-	}
-
-	organizationLocation = snitcherDataResponse.LocationToString()
-
-	if snitcherDataResponse.Company != nil && snitcherDataResponse.Company.Website != "" {
-		t := strings.Replace(snitcherDataResponse.Company.Website, "https://", "", -1)
-		t = strings.Replace(t, "http://", "", -1)
-		organizationWebsiteUrl = fmt.Sprintf(`<%s|%s>`, snitcherDataResponse.Company.Website, t)
-	} else {
-		organizationWebsiteUrl = "Unknown"
-	}
-
-	if snitcherDataResponse.Company != nil && snitcherDataResponse.Company.Profiles != nil && snitcherDataResponse.Company.Profiles.Linkedin != nil && snitcherDataResponse.Company.Profiles.Linkedin.Url != "" {
-		t := strings.Replace(snitcherDataResponse.Company.Profiles.Linkedin.Url, "https://linkedin.com/companies", "", -1)
-		organizationLinkedIn = fmt.Sprintf(`<%s|%s>`, snitcherDataResponse.Company.Profiles.Linkedin.Url, t)
-	} else {
-		organizationLinkedIn = "Unknown"
-	}
-
-	if record.Referrer != "" {
-		referrer = record.Referrer
-	} else {
-		referrer = "Direct"
-	}
-
-	if organizationWebsiteUrl == "Unknown" && organizationLinkedIn == "Unknown" && organizationLocation == "Unknown" {
-		// do not notify if there is no information to show
-		return nil
-	}
-
-	// check no notification was sent past 24 hours for same organization
-	if record.OrganizationDomain != nil && *record.OrganizationDomain != "" {
-		notificationSent, err := s.services.CommonServices.PostgresRepositories.TrackingRepository.WasNotifiedRecently(ctx, *record.OrganizationDomain, 24)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
-		if notificationSent {
-			// do not notify if notification was sent in the past 24 hours
-			return nil
-		}
-	}
-
-	slackBlock := `
-						[
-							{
-								"type": "header",
-								"text": {
-									"type": "plain_text",
-									"text": "A visitor from {placeholder_organization_name} is on your website",
-									"emoji": true
-								}
-							},
-							{
-								"type": "divider"
-							},
-							{
-								"type": "section",
-								"text": {
-									"type": "mrkdwn",
-									"text": "*Location:* {placeholder_location}\n*Website:* {placeholder_website}\n*LinkedIn:* {placeholder_linkedin}\n*Source:* {placeholder_referrer}"
-								}
-							},
-							{
-								"type": "divider"
-							},
-							{
-								"type": "actions",
-								"elements": [
-									{
-										"type": "button",
-										"text": {
-											"type": "plain_text",
-											"text": "View in CustomerOS"
-										},
-										"url": "{placeholder_view_organization_url}",
-										"value": "click_me_123",
-										"action_id": "actionId-0"
-									}
-								]
-							}
-						]`
-
-	slackBlock = strings.Replace(slackBlock, "{placeholder_organization_name}", organizationName, -1)
-	slackBlock = strings.Replace(slackBlock, "{placeholder_location}", organizationLocation, -1)
-	slackBlock = strings.Replace(slackBlock, "{placeholder_website}", organizationWebsiteUrl, -1)
-	slackBlock = strings.Replace(slackBlock, "{placeholder_linkedin}", organizationLinkedIn, -1)
-	slackBlock = strings.Replace(slackBlock, "{placeholder_referrer}", referrer, -1)
-	slackBlock = strings.Replace(slackBlock, "{placeholder_view_organization_url}", "https://app.customeros.ai/organization/"+*record.OrganizationId+"?tab=about", -1)
-
-	slackChannels, err := s.services.CommonServices.PostgresRepositories.SlackChannelNotificationRepository.GetSlackChannels(ctx, record.Tenant, "REVEAL-AI")
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	for _, slackChannel := range slackChannels {
-		//do not notify old tracking records
-		if slackChannel.CreatedAt.After(record.CreatedAt) {
-			err := s.services.CommonServices.PostgresRepositories.TrackingRepository.MarkAsNotified(ctx, record.ID)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				return err
-			}
-			continue
-		}
-
-		err = s.sendSlackMessage(ctx, slackChannel.Tenant, slackChannel.ChannelId, slackBlock)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
-
-		err := s.services.CommonServices.PostgresRepositories.TrackingRepository.MarkAsNotified(ctx, record.ID)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (s *trackingService) sendSlackMessage(ctx context.Context, tenant, channel, blocks string) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "TrackingService.sendSlackMessage")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	span.LogFields(log.String("channel", channel))
-
-	// Create HTTP client
-	client := &http.Client{}
-
-	requestBody := map[string]interface{}{
-		"channel":      channel,
-		"unfurl_links": false,
-		"unfurl_media": false,
-		"blocks":       blocks,
-	}
-
-	// Marshal the request body
-	requestBodyBytes, err := json.Marshal(requestBody)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to marshal request body"))
-		return fmt.Errorf("failed to marshal request body: %v", err)
-	}
-
-	span.LogFields(log.String("request.body", string(requestBodyBytes)))
-
-	// Create POST request
-	req, err := http.NewRequest("POST", "https://slack.com/api/chat.postMessage", bytes.NewBuffer(requestBodyBytes))
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to create POST request"))
-		return fmt.Errorf("failed to create POST request: %v", err)
-	}
-
-	botApiKey := ""
-	// prepare bot key
-	slackSettings, err := s.services.CommonServices.PostgresRepositories.SlackSettingsRepository.Get(ctx, tenant)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to get slack settings"))
-	}
-	if slackSettings == nil {
-		span.LogFields(log.String("skip", "slack settings not found"))
-		s.services.Logger.Warnf("slack settings not found for tenant %s", tenant)
-		return nil
-	} else {
-		botApiKey = slackSettings.AccessToken
-	}
-
-	// display last first 8 and last 3 chars
-	maskedBotApiKey := ""
-	if len(botApiKey) > 11 {
-		maskedBotApiKey = botApiKey[:8] + "..." + botApiKey[len(botApiKey)-3:]
-	}
-	span.LogFields(log.String("bot.api.key", maskedBotApiKey))
-
-	// Set headers
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+botApiKey)
-
-	//Perform the request
-	resp, err := client.Do(req)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to perform POST request"))
-		return fmt.Errorf("failed to perform POST request: %v", err)
-	}
-	defer resp.Body.Close()
-
-	responseBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to read response body"))
-		return fmt.Errorf("failed to read response body: %v", err)
-	}
-
-	span.LogFields(log.String("response.body", string(responseBody)))
-
-	return nil
 }
 
 func (s *trackingService) callVerifyAPIForIpData(ctx context.Context, ipAddress string) (*validationmodel.IpLookupResponse, error) {

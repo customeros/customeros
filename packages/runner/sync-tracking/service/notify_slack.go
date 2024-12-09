@@ -1,15 +1,54 @@
 package service
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"strings"
 
+	"github.com/customeros/mailsherpa/domaincheck"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
+	"github.com/pkg/errors"
 )
+
+func (s *trackingService) NotifyOnSlack(ctx context.Context) {
+	span, ctx := tracing.StartTracerSpan(ctx, "TrackingService.NotifyOnSlack")
+	defer span.Finish()
+
+	if s.cfg.SlackBotApiKey == "" {
+		span.LogFields(log.String("skip", "no slack bot api key"))
+		return
+	}
+
+	limit := 100
+	notifyOnSlackRecords, err := s.services.CommonServices.PostgresRepositories.TrackingRepository.GetForSlackNotifications(ctx, limit)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to get records for slack notifications"))
+		s.services.Logger.Errorf("failed to get records for slack notifications: %s", err.Error())
+		return
+	}
+
+	if len(notifyOnSlackRecords) == 0 {
+		span.LogFields(log.String("skip", "no records to notify"))
+		return
+	}
+
+	for _, r := range notifyOnSlackRecords {
+		err := s.notifyOnSlack(ctx, r)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to notify on slack"))
+		}
+	}
+
+	return
+}
 
 func (s *trackingService) notifyOnSlack(c context.Context, r *entity.Tracking) error {
 	span, ctx := opentracing.StartSpanFromContext(c, "TrackingService.notifyOnSlack")
@@ -29,7 +68,7 @@ func (s *trackingService) notifyOnSlack(c context.Context, r *entity.Tracking) e
 		return err
 	}
 
-	if shouldSkipNotification(ctx, span, record) {
+	if s.shouldSkipNotification(ctx, span, record) {
 		return nil
 	}
 
@@ -107,27 +146,122 @@ func (s *trackingService) isWorkspaceDomain(ctx context.Context, span opentracin
 }
 
 func (s *trackingService) buildSlackNotification(record *entity.Tracking, globalOrg *entity.GlobalOrganization) string {
-	referrer := record.Referrer
-	if referrer == "" {
-		referrer = "Direct"
+	// Build the text content for the section based on available data
+	var contentLines []string
+	contentLines = append(contentLines, fmt.Sprintf("*%s*", globalOrg.Name))
+
+	// Add optional fields only if they're not empty
+	if globalOrg.Website != "" {
+		contentLines = append(contentLines, fmt.Sprintf("*Website:* %s", globalOrg.Website))
+	}
+	if globalOrg.LinkedInUrl != "" {
+		contentLines = append(contentLines, fmt.Sprintf("*LinkedIn:* %s", globalOrg.LinkedInUrl))
+	}
+	// Only add location if both city and country are available
+	if globalOrg.City != "" && globalOrg.CountryA2 != "" {
+		contentLines = append(contentLines, fmt.Sprintf("*Location:* %s, %s", globalOrg.City, globalOrg.CountryA2))
+	}
+	// Add source/referrer only if it exists
+	referrer := "Direct"
+	if record.Referrer != "" {
+		referrer = record.Referrer
+	}
+	contentLines = append(contentLines, fmt.Sprintf("*Source:* %s", referrer))
+
+	// Join the lines with newlines
+	sectionContent := strings.Join(contentLines, "\n")
+
+	// Create the notification blocks based on logo availability
+	var layoutBlocks string
+	if globalOrg.LogoUrl != "" {
+		// With logo - in same section as content
+		layoutBlocks = fmt.Sprintf(`[
+			{
+				"type": "header",
+				"text": {
+					"type": "plain_text",
+					"text": "A visitor from %s is on your website",
+					"emoji": true
+				}
+			},
+			{
+				"type": "divider"
+			},
+			{
+				"type": "section",
+				"text": {
+					"type": "mrkdwn",
+					"text": "%s"
+				},
+				"accessory": {
+					"type": "image",
+					"image_url": "%s",
+					"alt_text": "%s logo"
+				}
+			},
+			{
+				"type": "divider"
+			},
+			{
+				"type": "actions",
+				"elements": [
+					{
+						"type": "button",
+						"text": {
+							"type": "plain_text",
+							"text": "View in CustomerOS"
+						},
+						"url": "https://app.customeros.ai/organization/%s?tab=about",
+						"value": "click_me_123",
+						"action_id": "actionId-0"
+					}
+				]
+			}
+		]`, globalOrg.Name, sectionContent, globalOrg.LogoUrl, globalOrg.Name, *record.OrganizationId)
+	} else {
+		// Without logo - use simple layout
+		layoutBlocks = fmt.Sprintf(`[
+			{
+				"type": "header",
+				"text": {
+					"type": "plain_text",
+					"text": "A visitor from %s is on your website",
+					"emoji": true
+				}
+			},
+			{
+				"type": "divider"
+			},
+			{
+				"type": "section",
+				"text": {
+					"type": "mrkdwn",
+					"text": "%s"
+				}
+			},
+			{
+				"type": "divider"
+			},
+			{
+				"type": "actions",
+				"elements": [
+					{
+						"type": "button",
+						"text": {
+							"type": "plain_text",
+							"text": "View in CustomerOS"
+						},
+						"url": "https://app.customeros.ai/organization/%s?tab=about",
+						"value": "click_me_123",
+						"action_id": "actionId-0"
+					}
+				]
+			}
+		]`, globalOrg.Name, sectionContent, *record.OrganizationId)
 	}
 
-	slackBlock := `[{"type":"header",...}]` // Your existing slack block template
-
-	replacements := map[string]string{
-		"{placeholder_organization_name}":     globalOrg.Name,
-		"{placeholder_location}":              organizationLocation,
-		"{placeholder_website}":               globalOrg.Website,
-		"{placeholder_linkedin}":              globalOrg.LinkedInUrl,
-		"{placeholder_referrer}":              referrer,
-		"{placeholder_view_organization_url}": fmt.Sprintf("https://app.customeros.ai/organization/%s?tab=about", *record.OrganizationId),
-	}
-
-	for placeholder, value := range replacements {
-		slackBlock = strings.Replace(slackBlock, placeholder, value, -1)
-	}
-
-	return slackBlock
+	// Clean up any extra whitespace from the template
+	return strings.ReplaceAll(strings.ReplaceAll(layoutBlocks, "\t", ""), "\n", "")
 }
 
 func (s *trackingService) sendNotifications(ctx context.Context, span opentracing.Span, record *entity.Tracking, slackBlock string) error {
@@ -157,5 +291,81 @@ func (s *trackingService) sendNotifications(ctx context.Context, span opentracin
 			return err
 		}
 	}
+	return nil
+}
+
+func (s *trackingService) sendSlackMessage(ctx context.Context, tenant, channel, blocks string) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "TrackingService.sendSlackMessage")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, tenant)
+	span.LogFields(log.String("channel", channel))
+
+	// Create HTTP client
+	client := &http.Client{}
+
+	requestBody := map[string]interface{}{
+		"channel":      channel,
+		"unfurl_links": false,
+		"unfurl_media": false,
+		"blocks":       blocks,
+	}
+
+	// Marshal the request body
+	requestBodyBytes, err := json.Marshal(requestBody)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to marshal request body"))
+		return fmt.Errorf("failed to marshal request body: %v", err)
+	}
+
+	span.LogFields(log.String("request.body", string(requestBodyBytes)))
+
+	// Create POST request
+	req, err := http.NewRequest("POST", "https://slack.com/api/chat.postMessage", bytes.NewBuffer(requestBodyBytes))
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to create POST request"))
+		return fmt.Errorf("failed to create POST request: %v", err)
+	}
+
+	botApiKey := ""
+	// prepare bot key
+	slackSettings, err := s.services.CommonServices.PostgresRepositories.SlackSettingsRepository.Get(ctx, tenant)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to get slack settings"))
+	}
+	if slackSettings == nil {
+		span.LogFields(log.String("skip", "slack settings not found"))
+		s.services.Logger.Warnf("slack settings not found for tenant %s", tenant)
+		return nil
+	} else {
+		botApiKey = slackSettings.AccessToken
+	}
+
+	// display last first 8 and last 3 chars
+	maskedBotApiKey := ""
+	if len(botApiKey) > 11 {
+		maskedBotApiKey = botApiKey[:8] + "..." + botApiKey[len(botApiKey)-3:]
+	}
+	span.LogFields(log.String("bot.api.key", maskedBotApiKey))
+
+	// Set headers
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+botApiKey)
+
+	// Perform the request
+	resp, err := client.Do(req)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to perform POST request"))
+		return fmt.Errorf("failed to perform POST request: %v", err)
+	}
+	defer resp.Body.Close()
+
+	responseBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to read response body"))
+		return fmt.Errorf("failed to read response body: %v", err)
+	}
+
+	span.LogFields(log.String("response.body", string(responseBody)))
+
 	return nil
 }
