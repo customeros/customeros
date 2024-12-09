@@ -329,7 +329,7 @@ func StartCron(cont *container.Container) *cron.Cron {
 		lockAndRunJob(cont, reminderGroup, sendReminders)
 	})
 	if err != nil {
-		cont.Log.Fatalf("Could not add cron job %s: %v", "syncScrapinToGlobalOrgs", err.Error())
+		cont.Log.Fatalf("Could not add cron job %s: %v", "sendReminders ", err.Error())
 	}
 
 	c.Start()
