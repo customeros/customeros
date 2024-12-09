@@ -1,0 +1,12 @@
+# Test: Unsuccessful Import Contacts From CSV unable to read file
+POST https://api.customeros.ai/customerbase/v1/contacts/import
+Content-Type: multipart/form-data
+X-CUSTOMER-OS-API-KEY: {{api_key}}
+[MultipartFormData]
+file: file,unsuccessful-import-contacts-from-csv-unable-to-read-file.csv;
+
+HTTP 400
+[Asserts]
+jsonpath "$.requestId" exists
+jsonpath "$.status" == "error"
+jsonpath "$.message" == "Unable to read file"
