@@ -11,7 +11,7 @@ export const SenderHeader = () => {
         <span className='text-sm'>Sender</span>
         <InfoCircle
           onClick={onOpen}
-          className='size-4 text-gray-500 cursor-pointer hover:text-gray-700'
+          className='size-3 text-gray-500 cursor-pointer hover:text-gray-700'
         />
       </div>
 
