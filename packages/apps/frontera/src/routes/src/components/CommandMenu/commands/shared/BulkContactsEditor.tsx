@@ -1,6 +1,6 @@
 import type { EditorThemeClasses } from 'lexical';
 
-import React, { useRef, useEffect, forwardRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 
 import { twMerge } from 'tailwind-merge';
 import { cva, VariantProps } from 'class-variance-authority';
@@ -58,99 +58,95 @@ interface EditorProps extends VariantProps<typeof contentEditableVariants> {
   onKeyDown?: (e: React.KeyboardEvent<HTMLDivElement>) => void;
 }
 
-export const BulkContactsEditor = forwardRef<LexicalEditor | null, EditorProps>(
-  ({
-    size,
-    onBlur,
-    dataTest,
-    className,
+export const BulkContactsEditor = ({
+  size,
+  onBlur,
+  dataTest,
+  className,
+  namespace,
+  placeholderClassName,
+  onKeyDown,
+  type,
+  onChange,
+}: EditorProps) => {
+  const editor = useRef<LexicalEditor | null>(null);
+
+  const initialConfig: InitialConfigType = {
     namespace,
-    placeholderClassName,
-    onKeyDown,
-    type,
-    onChange,
-  }) => {
-    const editor = useRef<LexicalEditor | null>(null);
+    theme,
+    onError,
+  };
 
-    const initialConfig: InitialConfigType = {
-      namespace,
-      theme,
-      onError,
-    };
+  useEffect(() => {
+    if (editor.current) {
+      editor.current?.update(() => {
+        const root = $getRoot();
 
-    useEffect(() => {
-      if (editor.current) {
-        editor.current?.update(() => {
-          const root = $getRoot();
-
-          root.clear(); // Clear all nodes and reset to an empty editor state
-        });
-      }
-    }, [type]);
-
-    const onChangeHandler = (editorState: EditorState) => {
-      const editorStateTextString = editorState.read(() => {
-        return $getRoot().getTextContent();
+        root.clear(); // Clear all nodes and reset to an empty editor state
       });
+    }
+  }, [type]);
 
-      if (onChange) {
-        onChange(editorStateTextString);
-      }
-    };
+  const onChangeHandler = (editorState: EditorState) => {
+    const editorStateTextString = editorState.read(() => {
+      return $getRoot().getTextContent();
+    });
 
-    return (
-      <div className='relative w-full h-full lexical-editor cursor-text min-h-[88px]'>
-        <LexicalComposer initialConfig={initialConfig}>
-          <EditorRefPlugin editorRef={editor} />
-          <HistoryPlugin />
-          <AutoFocusPlugin />
-          <OnChangePlugin ignoreSelectionChange onChange={onChangeHandler} />
-          <InputValidationPlugin type={type} />
+    if (onChange) {
+      onChange(editorStateTextString);
+    }
+  };
 
-          <PlainTextPlugin
-            ErrorBoundary={LexicalErrorBoundary}
-            contentEditable={
-              <ContentEditable
-                onBlur={onBlur}
-                spellCheck='false'
-                data-test={dataTest}
-                onKeyDown={(e) =>
-                  onKeyDown ? onKeyDown(e) : e.stopPropagation()
-                }
-                className={twMerge(
-                  contentEditableVariants({ size, className }),
-                )}
-              />
-            }
-            placeholder={
-              <div
-                onClick={() => editor.current?.focus()}
-                className={twMerge(
-                  contentEditableVariants({
-                    size,
-                    className: placeholderClassName,
-                  }),
-                  'absolute top-0 text-gray-400 p-2 text-sm',
-                )}
-              >
-                {type === 'email' ? (
-                  <>
-                    <p>ivy@green.tech</p>
-                    <p>pete@moss.ai</p>
-                    <p>sue@flay.com</p>
-                  </>
-                ) : (
-                  <>
-                    <p>linkedin.com/in/ivy-green</p>
-                    <p>linkedin.com/in/pete-moss</p>
-                    <p>linkedin.com/in/sue-flay</p>
-                  </>
-                )}
-              </div>
-            }
-          />
-        </LexicalComposer>
-      </div>
-    );
-  },
-);
+  return (
+    <div className='relative w-full h-full lexical-editor cursor-text min-h-[88px]'>
+      <LexicalComposer initialConfig={initialConfig}>
+        <EditorRefPlugin editorRef={editor} />
+        <HistoryPlugin />
+        <AutoFocusPlugin />
+        <OnChangePlugin ignoreSelectionChange onChange={onChangeHandler} />
+        <InputValidationPlugin type={type} />
+
+        <PlainTextPlugin
+          ErrorBoundary={LexicalErrorBoundary}
+          contentEditable={
+            <ContentEditable
+              onBlur={onBlur}
+              spellCheck='false'
+              data-test={dataTest}
+              className={twMerge(contentEditableVariants({ size, className }))}
+              onKeyDown={(e) =>
+                onKeyDown ? onKeyDown(e) : e.stopPropagation()
+              }
+            />
+          }
+          placeholder={
+            <div
+              onClick={() => editor.current?.focus()}
+              className={twMerge(
+                contentEditableVariants({
+                  size,
+                  className: placeholderClassName,
+                }),
+                'absolute top-0 text-gray-400 p-2 text-sm',
+              )}
+            >
+              {type === 'email' ? (
+                <>
+                  <p>ivy@green.tech</p>
+                  <p>pete@moss.ai</p>
+                  <p>sue@flay.com</p>
+                </>
+              ) : (
+                <>
+                  <p>linkedin.com/in/ivy-green</p>
+                  <p>linkedin.com/in/pete-moss</p>
+                  <p>linkedin.com/in/sue-flay</p>
+                </>
+              )}
+            </div>
+          }
+        />
+      </LexicalComposer>
+    </div>
+  );
+};

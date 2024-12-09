@@ -32,7 +32,7 @@ const columns: Record<string, Column> = {
   [ColumnViewType.InvoicesIssueDate]: columnHelper.accessor((row) => row, {
     id: ColumnViewType.InvoicesIssueDate,
     size: 150,
-    minSize: 150,
+    minSize: 108,
     maxSize: 300,
     enableResizing: true,
     enableColumnFilter: false,
@@ -52,7 +52,7 @@ const columns: Record<string, Column> = {
   [ColumnViewType.InvoicesIssueDatePast]: columnHelper.accessor((row) => row, {
     id: ColumnViewType.InvoicesIssueDatePast,
     size: 150,
-    minSize: 150,
+    minSize: 106,
     maxSize: 300,
     enableResizing: true,
     enableColumnFilter: false,
@@ -71,7 +71,7 @@ const columns: Record<string, Column> = {
   [ColumnViewType.InvoicesDueDate]: columnHelper.accessor((row) => row, {
     id: ColumnViewType.InvoicesDueDate,
     size: 150,
-    minSize: 150,
+    minSize: 98,
     maxSize: 300,
     enableResizing: true,
     enableColumnFilter: false,
@@ -90,7 +90,7 @@ const columns: Record<string, Column> = {
   [ColumnViewType.InvoicesContract]: columnHelper.accessor((row) => row, {
     id: ColumnViewType.InvoicesContract,
     size: 160,
-    minSize: 160,
+    minSize: 94,
     maxSize: 600,
     enableResizing: true,
     enableColumnFilter: false,
@@ -116,7 +116,7 @@ const columns: Record<string, Column> = {
   [ColumnViewType.InvoicesOrganization]: columnHelper.accessor((row) => row, {
     id: ColumnViewType.InvoicesOrganization,
     size: 160,
-    minSize: 160,
+    minSize: 119,
     maxSize: 600,
     enableResizing: true,
     enableColumnFilter: false,
@@ -138,7 +138,7 @@ const columns: Record<string, Column> = {
   [ColumnViewType.InvoicesBillingCycle]: columnHelper.accessor((row) => row, {
     id: ColumnViewType.InvoicesBillingCycle,
     size: 150,
-    minSize: 150,
+    minSize: 117,
     maxSize: 300,
     enableResizing: true,
     enableColumnFilter: false,
@@ -158,7 +158,7 @@ const columns: Record<string, Column> = {
   [ColumnViewType.InvoicesInvoiceStatus]: columnHelper.accessor((row) => row, {
     id: ColumnViewType.InvoicesInvoiceStatus,
     size: 175,
-    minSize: 175,
+    minSize: 130,
     maxSize: 300,
     enableResizing: true,
     enableColumnFilter: false,
@@ -178,7 +178,7 @@ const columns: Record<string, Column> = {
   [ColumnViewType.InvoicesAmount]: columnHelper.accessor((row) => row, {
     id: ColumnViewType.InvoicesAmount,
     size: 100,
-    minSize: 100,
+    minSize: 90,
     maxSize: 300,
     enableResizing: true,
     enableColumnFilter: false,
@@ -201,7 +201,7 @@ const columns: Record<string, Column> = {
   [ColumnViewType.InvoicesInvoiceNumber]: columnHelper.accessor((row) => row, {
     id: ColumnViewType.InvoicesInvoiceNumber,
     size: 120,
-    minSize: 120,
+    minSize: 12,
     maxSize: 300,
     enableResizing: true,
     enableColumnFilter: false,
@@ -222,7 +222,7 @@ const columns: Record<string, Column> = {
   [ColumnViewType.InvoicesInvoicePreview]: columnHelper.accessor((row) => row, {
     id: ColumnViewType.InvoicesInvoicePreview,
     size: 150,
-    minSize: 150,
+    minSize: 102,
     maxSize: 300,
     enableResizing: true,
     enableColumnFilter: false,

@@ -27,7 +27,7 @@ const columns: Record<string, Column> = {
   [ColumnViewType.FlowName]: columnHelper.accessor((row) => row, {
     id: ColumnViewType.FlowName,
     size: 150,
-    minSize: 150,
+    minSize: 87,
     maxSize: 300,
     enableResizing: true,
     enableColumnFilter: false,
@@ -49,7 +49,7 @@ const columns: Record<string, Column> = {
   [ColumnViewType.FlowActionName]: columnHelper.accessor((row) => row, {
     id: ColumnViewType.FlowActionName,
     size: 150,
-    minSize: 150,
+    minSize: 80,
     maxSize: 300,
     enableResizing: true,
     enableColumnFilter: false,
@@ -74,7 +74,7 @@ const columns: Record<string, Column> = {
   [ColumnViewType.FlowOnHoldCount]: columnHelper.accessor((row) => row, {
     id: ColumnViewType.FlowOnHoldCount,
     size: 150,
-    minSize: 150,
+    minSize: 91,
     maxSize: 300,
     enableResizing: true,
     enableColumnFilter: false,
@@ -104,7 +104,7 @@ const columns: Record<string, Column> = {
   [ColumnViewType.FlowReadyCount]: columnHelper.accessor((row) => row, {
     id: ColumnViewType.FlowReadyCount,
     size: 150,
-    minSize: 150,
+    minSize: 90,
     maxSize: 300,
     enableResizing: true,
     enableColumnFilter: false,
@@ -134,7 +134,7 @@ const columns: Record<string, Column> = {
   [ColumnViewType.FlowScheduledCount]: columnHelper.accessor((row) => row, {
     id: ColumnViewType.FlowScheduledCount,
     size: 150,
-    minSize: 150,
+    minSize: 107,
     maxSize: 300,
     enableResizing: true,
     enableColumnFilter: false,
@@ -164,7 +164,7 @@ const columns: Record<string, Column> = {
   [ColumnViewType.FlowInProgressCount]: columnHelper.accessor((row) => row, {
     id: ColumnViewType.FlowInProgressCount,
     size: 150,
-    minSize: 150,
+    minSize: 112,
     maxSize: 300,
     enableResizing: true,
     enableColumnFilter: false,
@@ -193,7 +193,7 @@ const columns: Record<string, Column> = {
   [ColumnViewType.FlowGoalAchievedCount]: columnHelper.accessor((row) => row, {
     id: ColumnViewType.FlowGoalAchievedCount,
     size: 150,
-    minSize: 150,
+    minSize: 130,
     maxSize: 300,
     enableResizing: true,
     enableColumnFilter: false,
@@ -219,39 +219,11 @@ const columns: Record<string, Column> = {
     },
     skeleton: () => <Skeleton className='w-[200px] h-[18px]' />,
   }),
-  // [ColumnViewType.FlowActionTotalCount]: columnHelper.accessor((row) => row, {
-  //   id: ColumnViewType.FlowActionTotalCount,
-  //   size: 150,
-  //   minSize: 150,
-  //   maxSize: 300,
-  //   enableResizing: true,
-  //   enableColumnFilter: false,
-  //   enableSorting: true,
-  //   header: (props) => (
-  //     <THead
-  //       title='Total '
-  //       filterWidth={250}
-  //       id={ColumnViewType.FlowActionTotalCount}
-  //       {...getTHeadProps(props)}
-  //     />
-  //   ),
-  //   cell: (e) => {
-  //     const total = e.getValue()?.value?.statistics?.total;
-  //
-  //     return (
-  //       <TextCell
-  //         text={`${total}`}
-  //         unknownText='No data yet'
-  //         dataTest='flow-completed-in-flows-table'
-  //       />
-  //     );
-  //   },
-  //   skeleton: () => <Skeleton className='w-[200px] h-[18px]' />,
-  // }),
+
   [ColumnViewType.FlowCompletedCount]: columnHelper.accessor((row) => row, {
     id: ColumnViewType.FlowCompletedCount,
     size: 150,
-    minSize: 150,
+    minSize: 109,
     maxSize: 300,
     enableResizing: true,
     enableColumnFilter: false,
