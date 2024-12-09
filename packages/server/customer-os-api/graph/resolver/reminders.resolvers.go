@@ -22,7 +22,7 @@ func (r *mutationResolver) ReminderCreate(ctx context.Context, input model.Remin
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "request.input", input)
 
-	id, err := r.Services.ReminderService.CreateReminder(ctx, common.GetTenantFromContext(ctx), input.UserID, input.OrganizationID, input.Content, input.DueDate)
+	id, err := r.Services.CommonServices.ReminderService.CreateReminder(ctx, common.GetTenantFromContext(ctx), input.UserID, input.OrganizationID, input.Content, input.DueDate)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to create reminder")
@@ -39,7 +39,7 @@ func (r *mutationResolver) ReminderUpdate(ctx context.Context, input model.Remin
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "request.input", input)
 
-	err := r.Services.ReminderService.UpdateReminder(ctx, common.GetTenantFromContext(ctx), input.ID, input.Content, input.DueDate, input.Dismissed)
+	err := r.Services.CommonServices.ReminderService.UpdateReminder(ctx, common.GetTenantFromContext(ctx), input.ID, input.Content, input.DueDate, input.Dismissed)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to update reminder")
@@ -56,7 +56,7 @@ func (r *queryResolver) Reminder(ctx context.Context, id string) (*model.Reminde
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.SetTag(tracing.SpanTagEntityId, id)
 
-	reminderEntity, err := r.Services.ReminderService.GetReminderById(ctx, id)
+	reminderEntity, err := r.Services.CommonServices.ReminderService.GetReminderById(ctx, id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to fetch reminder with id %s", id)
@@ -77,7 +77,7 @@ func (r *queryResolver) RemindersForOrganization(ctx context.Context, organizati
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.SetTag(tracing.SpanTagEntityId, organizationID)
 
-	reminderEntities, err := r.Services.ReminderService.RemindersForOrganization(ctx, organizationID, dismissed)
+	reminderEntities, err := r.Services.CommonServices.ReminderService.RemindersForOrganization(ctx, organizationID, dismissed)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to fetch reminders for organization with id %s", organizationID)

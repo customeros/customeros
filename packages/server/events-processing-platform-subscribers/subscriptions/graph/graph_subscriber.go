@@ -7,7 +7,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	orgevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	contactevent "github.com/openline-ai/openline-customer-os/packages/server/events/event/contact/event"
-	reminderevents "github.com/openline-ai/openline-customer-os/packages/server/events/event/reminder/event"
 	"github.com/opentracing/opentracing-go"
 	"strings"
 	"time"
@@ -50,7 +49,6 @@ type GraphSubscriber struct {
 	contractEventHandler        *ContractEventHandler
 	serviceLineItemEventHandler *ServiceLineItemEventHandler
 	invoiceEventHandler         *InvoiceEventHandler
-	reminderEventHandler        *ReminderEventHandler
 }
 
 func NewGraphSubscriber(log logger.Logger, db *esdb.Client, services *service.Services, grpcClients *grpc_client.Clients, cfg *config.Config, cache caches.Cache) *GraphSubscriber {
@@ -70,7 +68,6 @@ func NewGraphSubscriber(log logger.Logger, db *esdb.Client, services *service.Se
 		contractEventHandler:        NewContractEventHandler(log, services, grpcClients),
 		serviceLineItemEventHandler: NewServiceLineItemEventHandler(log, services, grpcClients),
 		invoiceEventHandler:         NewInvoiceEventHandler(log, services, grpcClients),
-		reminderEventHandler:        NewReminderEventHandler(log, services),
 	}
 }
 
@@ -361,13 +358,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return nil
 	case invoiceevents.InvoiceDeleteV1:
 		_ = s.invoiceEventHandler.OnInvoiceDeleteV1(ctx, evt)
-		return nil
-
-	case reminderevents.ReminderCreateV1:
-		_ = s.reminderEventHandler.OnCreate(ctx, evt)
-		return nil
-	case reminderevents.ReminderUpdateV1:
-		_ = s.reminderEventHandler.OnUpdate(ctx, evt)
 		return nil
 
 	default:

@@ -54,6 +54,8 @@ type Config struct {
 	ProcessConfig      ProcessConfig
 	EventNotifications EventNotifications
 	Limits             Limits
+
+	InternalServices commconf.InternalServices
 }
 
 type ProcessConfig struct {

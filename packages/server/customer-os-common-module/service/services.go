@@ -54,6 +54,7 @@ type Services struct {
 	DomainService              DomainService
 	OrganizationService        OrganizationService
 	TagService                 TagService
+	ReminderService            ReminderService
 	RegistrationService        RegistrationService
 	MailboxService             MailboxService
 	MailService                MailService
@@ -121,6 +122,7 @@ func InitServices(globalConfig *config.GlobalConfig, postgresDB *config.Postgres
 	services.UserService = NewUserService(services)
 	services.WorkflowService = NewWorkflowService(services)
 	services.WorkspaceService = NewWorkspaceService(services)
+	services.ReminderService = NewReminderService(services)
 	services.RegistrationService = NewRegistrationService(services)
 	services.MailboxService = NewMailboxService(log, services)
 	services.MailService = NewMailService(services)

@@ -7,8 +7,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event/contact"
 	opportunityevent "github.com/openline-ai/openline-customer-os/packages/server/events/event/opportunity"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/event/reminder"
-	reminderevent "github.com/openline-ai/openline-customer-os/packages/server/events/event/reminder/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"reflect"
 )
@@ -17,19 +15,13 @@ func InitAggregate(request event.BaseEvent) eventstore.Aggregate {
 	switch request.EntityType {
 	case model.CONTACT:
 		return contact.NewContactAggregateWithTenantAndID(request.Tenant, request.EntityId)
-	case model.REMINDER:
-		return reminder.NewReminderAggregateWithTenantAndID(request.Tenant, request.EntityId)
 	case model.OPPORTUNITY:
 		return opportunityevent.NewOpportunityAggregateWithTenantAndID(request.Tenant, request.EntityId)
 	}
 	return nil
 }
 
-var eventsRegistry = map[string]reflect.Type{
-	reminderevent.ReminderCreateV1:       reflect.TypeOf(reminderevent.ReminderCreateEvent{}),
-	reminderevent.ReminderUpdateV1:       reflect.TypeOf(reminderevent.ReminderUpdateEvent{}),
-	reminderevent.ReminderNotificationV1: reflect.TypeOf(reminderevent.ReminderNotificationEvent{}),
-}
+var eventsRegistry = map[string]reflect.Type{}
 
 func UnmarshalBaseEventPayload(eventDataBytes []byte) (interface{}, error) {
 	// Create a new instance of the type

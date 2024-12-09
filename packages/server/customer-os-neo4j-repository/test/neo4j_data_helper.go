@@ -1068,9 +1068,6 @@ func CreateReminder(ctx context.Context, driver *neo4j.DriverWithContext, tenant
 					r:Reminder_%s,
 					r.createdAt=$createdAt,
 					r.updatedAt=$createdAt,	
-					r.source=$source,
-					r.sourceOfTruth=$source,
-					r.appSource=$appSource,
 					r.content=$content,	
 					r.dueDate=$dueDate,
 					r.dismissed=$dismissed
@@ -1089,8 +1086,6 @@ func CreateReminder(ctx context.Context, driver *neo4j.DriverWithContext, tenant
 		"userId":         userId,
 		"organizationId": orgId,
 		"content":        reminderEntity.Content,
-		"source":         reminderEntity.Source,
-		"appSource":      reminderEntity.AppSource,
 		"createdAt":      createdAt,
 		"dueDate":        reminderEntity.DueDate,
 		"dismissed":      reminderEntity.Dismissed,

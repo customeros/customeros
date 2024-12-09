@@ -34,6 +34,7 @@ const (
 	processSentEmailsGroup          = "processSentEmailsGroup"
 	domainGroup                     = "domainGroup"
 	mailstackGroup                  = "mailstackGroup"
+	reminderGroup                   = "reminderGroup"
 )
 
 var jobLocks = struct {
@@ -64,6 +65,7 @@ var jobLocks = struct {
 		processSentEmailsGroup:          {},
 		domainGroup:                     {},
 		mailstackGroup:                  {},
+		reminderGroup:                   {},
 	},
 }
 
@@ -323,6 +325,13 @@ func StartCron(cont *container.Container) *cron.Cron {
 		cont.Log.Fatalf("Could not add cron job %s: %v", "syncScrapinToGlobalOrgs", err.Error())
 	}
 
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleSendOrganizationsReminders, func() {
+		lockAndRunJob(cont, reminderGroup, sendReminders)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "sendReminders ", err.Error())
+	}
+
 	c.Start()
 
 	return c
@@ -484,4 +493,8 @@ func checkMailstackDomainReputation(cont *container.Container) {
 
 func syncScrapinToGlobalOrgs(cont *container.Container) {
 	service.NewGlobalOrganizationService(cont.Cfg, cont.Log, cont.CommonServices).SyncScrapInToGlobalOrganization()
+}
+
+func sendReminders(cont *container.Container) {
+	service.NewOrganizationService(cont.Cfg, cont.Log, cont.CommonServices, cont.EventProcessingServicesClient).SendReminders()
 }

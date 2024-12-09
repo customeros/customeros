@@ -112,19 +112,6 @@ func (s *Subscriptions) RefreshSubscriptions(ctx context.Context) error {
 		return err
 	}
 
-	reminderEventSubscriptionSettings := esdb.SubscriptionSettingsDefault()
-	reminderEventSubscriptionSettings.ExtraStatistics = true
-	if err := s.subscribeToAll(ctx,
-		s.cfg.Subscriptions.ReminderSubscription.GroupName,
-		nil,
-		&reminderEventSubscriptionSettings,
-		false,
-		false,
-		esdb.End{},
-	); err != nil {
-		return err
-	}
-
 	return nil
 }
 

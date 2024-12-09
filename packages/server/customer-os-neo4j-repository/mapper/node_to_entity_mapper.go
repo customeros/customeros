@@ -574,15 +574,14 @@ func MapDbNodeToReminderEntity(dbNode *dbtype.Node) *entity.ReminderEntity {
 	}
 	props := utils.GetPropsFromNode(*dbNode)
 	reminder := entity.ReminderEntity{
-		Id:            utils.GetStringPropOrEmpty(props, "id"),
-		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Content:       utils.GetStringPropOrEmpty(props, "content"),
-		DueDate:       utils.GetTimePropOrEpochStart(props, "dueDate"),
-		Dismissed:     utils.GetBoolPropOrFalse(props, "dismissed"),
-		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:        entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Id:             utils.GetStringPropOrEmpty(props, "id"),
+		CreatedAt:      utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:      utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		UserId:         utils.GetStringPropOrEmpty(props, "userId"),
+		OrganizationId: utils.GetStringPropOrEmpty(props, "organizationId"),
+		Content:        utils.GetStringPropOrEmpty(props, "content"),
+		DueDate:        utils.GetTimePropOrEpochStart(props, "dueDate"),
+		Dismissed:      utils.GetBoolPropOrFalse(props, "dismissed"),
 	}
 	return &reminder
 }

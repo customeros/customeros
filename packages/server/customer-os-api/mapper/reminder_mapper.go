@@ -11,12 +11,9 @@ func MapEntityToReminder(entity *neo4jentity.ReminderEntity) *model.Reminder {
 	}
 
 	metadata := &model.Metadata{
-		ID:            entity.Id,
-		Created:       entity.CreatedAt,
-		LastUpdated:   entity.UpdatedAt,
-		Source:        MapDataSourceToModel(entity.Source),
-		SourceOfTruth: MapDataSourceToModel(entity.SourceOfTruth),
-		AppSource:     entity.AppSource,
+		ID:          entity.Id,
+		Created:     entity.CreatedAt,
+		LastUpdated: entity.UpdatedAt,
 	}
 
 	return &model.Reminder{

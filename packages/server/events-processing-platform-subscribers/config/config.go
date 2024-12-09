@@ -35,7 +35,6 @@ type Subscriptions struct {
 	ContractSubscription              ContractSubscription
 	NotificationsSubscription         NotificationsSubscription
 	InvoiceSubscription               InvoiceSubscription
-	ReminderSubscription              ReminderSubscription
 }
 
 type GraphSubscription struct {
@@ -99,14 +98,6 @@ type InvoiceSubscription struct {
 	BufferSizeClient  uint32 `env:"EVENT_STORE_INVOICE_NOTIFICATIONS_CLIENT_BUFFER_SIZE" envDefault:"5" validate:"required,gte=0"`
 	IgnoreEvents      bool   `env:"EVENT_STORE_INVOICE_NOTIFICATIONS_IGNORE_EVENTS" envDefault:"false"`
 	PdfConverterUrl   string `env:"EVENT_STORE_INVOICE_NOTIFICATIONS_PDF_CONVERTER_URL" envDefault:"http://localhost:11006"`
-}
-
-type ReminderSubscription struct {
-	Enabled          bool   `env:"EVENT_STORE_SUBSCRIPTIONS_REMINDER_ENABLED" envDefault:"true"`
-	GroupName        string `env:"EVENT_STORE_SUBSCRIPTIONS_REMINDER_GROUP_NAME" envDefault:"reminder-v3" validate:"required"`
-	PoolSize         int    `env:"EVENT_STORE_SUBSCRIPTIONS_REMINDER_POOL_SIZE" envDefault:"5" validate:"required,gte=0"`
-	BufferSizeClient uint32 `env:"EVENT_STORE_SUBSCRIPTIONS_REMINDER_CLIENT_BUFFER_SIZE" envDefault:"10" validate:"required,gte=0"`
-	IgnoreEvents     bool   `env:"EVENT_STORE_SUBSCRIPTIONS_REMINDER_IGNORE_EVENTS" envDefault:"false"`
 }
 
 type Services struct {
