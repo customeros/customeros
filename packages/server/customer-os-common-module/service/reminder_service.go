@@ -19,7 +19,7 @@ import (
 
 type ReminderService interface {
 	CreateReminder(ctx context.Context, tenant, userId, orgId, content string, dueDate time.Time) (string, error)
-	UpdateReminder(ctx context.Context, tenant, id string, content *string, dueDate *time.Time, dismissed *bool) error
+	UpdateReminder(ctx context.Context, tenant, id string, content *string, dueDate *time.Time, dismissed, sent *bool) error
 	GetReminderById(ctx context.Context, id string) (*neo4jentity.ReminderEntity, error)
 	RemindersForOrganization(ctx context.Context, organizationID string, dismissed *bool) ([]*neo4jentity.ReminderEntity, error)
 
@@ -59,7 +59,7 @@ func (s *reminderService) CreateReminder(ctx context.Context, tenant, userId, or
 	return reminderId, nil
 }
 
-func (s *reminderService) UpdateReminder(ctx context.Context, tenant, reminderId string, content *string, dueDate *time.Time, dismissed *bool) error {
+func (s *reminderService) UpdateReminder(ctx context.Context, tenant, reminderId string, content *string, dueDate *time.Time, dismissed, sent *bool) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ReminderService.UpdateReminder")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -84,6 +84,10 @@ func (s *reminderService) UpdateReminder(ctx context.Context, tenant, reminderId
 	if dismissed != nil {
 		updateData.Dismissed = dismissed
 		updateData.UpdateDismissed = true
+	}
+	if sent != nil {
+		updateData.Sent = sent
+		updateData.UpdateSent = true
 	}
 
 	err := s.services.Neo4jRepositories.ReminderWriteRepository.UpdateReminder(ctx, tenant, reminderId, updateData)

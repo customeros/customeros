@@ -111,7 +111,7 @@ func (r *reminderReadRepository) GetReadyToSend(ctx context.Context, dueDate tim
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	cypher := `MATCH (r:Reminder) WHERE r.dismissed = false AND r.dueDate <= $dueDate RETURN r ORDER BY r.dueDate ASC`
+	cypher := `MATCH (r:Reminder) WHERE r.dismissed = false and r.sent = false AND r.dueDate <= $dueDate RETURN r ORDER BY r.dueDate ASC`
 
 	params := map[string]any{
 		"dueDate": dueDate,
