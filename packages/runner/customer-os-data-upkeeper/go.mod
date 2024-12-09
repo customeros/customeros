@@ -17,6 +17,7 @@ replace github.com/openline-ai/openline-customer-os/packages/server/enrichment-a
 replace github.com/openline-ai/openline-customer-os/packages/server/validation-api => ../../server/validation-api
 
 require (
+	github.com/biter777/countries v1.7.5
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/cenkalti/backoff/v4 v4.3.0
 	github.com/customeros/mailsherpa v0.3.7
