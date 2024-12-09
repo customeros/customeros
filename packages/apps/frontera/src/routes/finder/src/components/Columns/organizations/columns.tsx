@@ -75,7 +75,7 @@ export const columns: Record<string, Column> = {
     'value.metadata.id',
     {
       id: ColumnViewType.OrganizationsName,
-      minSize: 160,
+      minSize: 143,
       size: 160,
       maxSize: 400,
       enableColumnFilter: false,
@@ -97,7 +97,7 @@ export const columns: Record<string, Column> = {
     'value.website',
     {
       id: ColumnViewType.OrganizationsWebsite,
-      minSize: 125,
+      minSize: 92,
       maxSize: 400,
       enableColumnFilter: false,
       enableResizing: true,
@@ -121,7 +121,7 @@ export const columns: Record<string, Column> = {
     'value.relationship',
     {
       id: ColumnViewType.OrganizationsRelationship,
-      minSize: 160,
+      minSize: 119,
       maxSize: 400,
       enableColumnFilter: false,
       enableResizing: true,
@@ -149,7 +149,7 @@ export const columns: Record<string, Column> = {
     'value.accountDetails',
     {
       id: ColumnViewType.OrganizationsOnboardingStatus,
-      minSize: 125,
+      minSize: 114,
       maxSize: 400,
       enableColumnFilter: false,
       enableResizing: true,
@@ -175,7 +175,7 @@ export const columns: Record<string, Column> = {
   ),
   [ColumnViewType.OrganizationsRenewalLikelihood]: columnHelper.accessor('id', {
     id: ColumnViewType.OrganizationsRenewalLikelihood,
-    minSize: 110,
+    minSize: 82,
     size: 110,
     maxSize: 400,
     enableColumnFilter: false,
@@ -202,7 +202,7 @@ export const columns: Record<string, Column> = {
     'value.accountDetails',
     {
       id: ColumnViewType.OrganizationsRenewalDate,
-      minSize: 156,
+      minSize: 127,
       size: 156,
       maxSize: 400,
       enableColumnFilter: false,
@@ -229,7 +229,7 @@ export const columns: Record<string, Column> = {
     'value.accountDetails',
     {
       id: ColumnViewType.OrganizationsForecastArr,
-      minSize: 154,
+      minSize: 124,
       size: 154,
       maxSize: 400,
       enableColumnFilter: false,
@@ -265,7 +265,7 @@ export const columns: Record<string, Column> = {
   ),
   [ColumnViewType.OrganizationsOwner]: columnHelper.accessor((row) => row, {
     id: ColumnViewType.OrganizationsOwner,
-    minSize: 154,
+    minSize: 82,
     size: 154,
     maxSize: 400,
     enableColumnFilter: false,
@@ -290,7 +290,7 @@ export const columns: Record<string, Column> = {
     'value.leadSource',
     {
       id: ColumnViewType.OrganizationsLeadSource,
-      minSize: 100,
+      minSize: 84,
       size: 100,
       maxSize: 400,
       enableColumnFilter: false,
@@ -321,7 +321,7 @@ export const columns: Record<string, Column> = {
     {
       id: ColumnViewType.OrganizationsCreatedDate,
       size: 145,
-      minSize: 145,
+      minSize: 122,
       maxSize: 400,
       enableResizing: true,
       enableColumnFilter: false,
@@ -345,7 +345,7 @@ export const columns: Record<string, Column> = {
     {
       id: ColumnViewType.OrganizationsYearFounded,
       size: 120,
-      minSize: 120,
+      minSize: 95,
       maxSize: 400,
       enableResizing: true,
       enableColumnFilter: false,
@@ -382,7 +382,7 @@ export const columns: Record<string, Column> = {
     {
       id: ColumnViewType.OrganizationsEmployeeCount,
       size: 125,
-      minSize: 125,
+      minSize: 110,
       maxSize: 400,
       enableResizing: true,
       enableColumnFilter: false,
@@ -420,7 +420,7 @@ export const columns: Record<string, Column> = {
     {
       id: ColumnViewType.OrganizationsSocials,
       size: 125,
-      minSize: 125,
+      minSize: 94,
       maxSize: 400,
       enableResizing: true,
       enableColumnFilter: false,
@@ -443,7 +443,7 @@ export const columns: Record<string, Column> = {
     {
       id: ColumnViewType.OrganizationsLastTouchpoint,
       size: 200,
-      minSize: 200,
+      minSize: 140,
       maxSize: 400,
       enableResizing: true,
       enableColumnFilter: false,
@@ -478,7 +478,7 @@ export const columns: Record<string, Column> = {
     {
       id: ColumnViewType.OrganizationsLastTouchpointDate,
       size: 154,
-      minSize: 154,
+      minSize: 136,
       maxSize: 400,
       enableResizing: true,
       enableColumnFilter: false,
@@ -510,7 +510,7 @@ export const columns: Record<string, Column> = {
     {
       id: ColumnViewType.OrganizationsChurnDate,
       size: 115,
-      minSize: 115,
+      minSize: 110,
       maxSize: 400,
       enableResizing: true,
       enableColumnFilter: false,
@@ -535,7 +535,7 @@ export const columns: Record<string, Column> = {
     {
       id: ColumnViewType.OrganizationsLtv,
       size: 110,
-      minSize: 100,
+      minSize: 64,
       maxSize: 600,
       enableResizing: true,
       enableColumnFilter: false,
@@ -569,7 +569,7 @@ export const columns: Record<string, Column> = {
     'value.industry',
     {
       id: ColumnViewType.OrganizationsIndustry,
-      minSize: 175,
+      minSize: 95,
       maxSize: 600,
       enableResizing: true,
       cell: (props) => {
@@ -594,7 +594,7 @@ export const columns: Record<string, Column> = {
   ),
   [ColumnViewType.OrganizationsContactCount]: columnHelper.accessor('value', {
     id: ColumnViewType.OrganizationsContactCount,
-    minSize: 90,
+    minSize: 94,
     maxSize: 400,
     enableResizing: true,
     enableColumnFilter: false,
@@ -652,7 +652,7 @@ export const columns: Record<string, Column> = {
   [ColumnViewType.OrganizationsTags]: columnHelper.accessor('value', {
     id: ColumnViewType.OrganizationsTags,
     size: 154,
-    minSize: 154,
+    minSize: 70,
     maxSize: 400,
     enableResizing: true,
     enableSorting: false,
@@ -674,7 +674,7 @@ export const columns: Record<string, Column> = {
   [ColumnViewType.OrganizationsIsPublic]: columnHelper.accessor('value', {
     id: ColumnViewType.OrganizationsIsPublic,
     size: 154,
-    minSize: 154,
+    minSize: 142,
     maxSize: 400,
     enableResizing: true,
     enableColumnFilter: false,
@@ -699,7 +699,7 @@ export const columns: Record<string, Column> = {
   [ColumnViewType.OrganizationsStage]: columnHelper.accessor('value', {
     id: ColumnViewType.OrganizationsStage,
     size: 154,
-    minSize: 154,
+    minSize: 76,
     maxSize: 400,
     enableResizing: true,
     enableColumnFilter: false,
@@ -725,7 +725,7 @@ export const columns: Record<string, Column> = {
     {
       id: ColumnViewType.OrganizationsHeadquarters,
       size: 210,
-      minSize: 210,
+      minSize: 91,
       maxSize: 400,
       enableResizing: true,
       enableColumnFilter: false,
@@ -751,8 +751,8 @@ export const columns: Record<string, Column> = {
     (row) => row,
     {
       id: ColumnViewType.OrganizationsParentOrganization,
-      size: 210,
-      minSize: 210,
+      size: 108,
+      minSize: 108,
       maxSize: 400,
       enableResizing: true,
       enableColumnFilter: false,
@@ -780,7 +780,7 @@ export const columns: Record<string, Column> = {
     'value.metadata.lastUpdated',
     {
       id: ColumnViewType.OrganizationsUpdatedDate,
-      minSize: 150,
+      minSize: 125,
       maxSize: 600,
       enableResizing: true,
       enableColumnFilter: false,
