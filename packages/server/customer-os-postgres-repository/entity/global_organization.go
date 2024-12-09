@@ -24,6 +24,8 @@ type GlobalOrganization struct {
 	IndustryGicsSubIndustryId   string    `gorm:"column:industry_gics_sub_industry_id;type:varchar(255)" json:"industryGicsSubIndustryId"`
 	YearFounded                 int       `gorm:"column:year_founded" json:"yearFounded"`
 	EmployeeCount               int64     `gorm:"column:employee_count" json:"employeeCount"`
+	City                        string    `gorm:"column:city;type:varchar(255)" json:"city"`
+	Country                     string    `gorm:"column:country;type:varchar(255)" json:"country"`
 }
 
 // TableName sets the name of the table for GORM
