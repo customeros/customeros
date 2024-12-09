@@ -34,7 +34,7 @@ const columnHelper = createColumnHelper<ColumnDatum>();
 const columns: Record<string, Column> = {
   [ColumnViewType.ContractsName]: columnHelper.accessor((row) => row, {
     id: ColumnViewType.ContractsName,
-    minSize: 160,
+    minSize: 151,
     maxSize: 650,
     enableResizing: true,
     enableColumnFilter: false,
@@ -57,7 +57,7 @@ const columns: Record<string, Column> = {
 
   [ColumnViewType.ContractsEnded]: columnHelper.accessor((row) => row, {
     id: ColumnViewType.ContractsEnded,
-    minSize: 150,
+    minSize: 80,
     maxSize: 650,
     enableResizing: true,
     enableColumnFilter: false,
@@ -89,7 +89,7 @@ const columns: Record<string, Column> = {
 
   [ColumnViewType.ContractsPeriod]: columnHelper.accessor((row) => row, {
     id: ColumnViewType.ContractsPeriod,
-    minSize: 150,
+    minSize: 81,
     maxSize: 650,
     enableResizing: true,
     enableColumnFilter: false,
@@ -114,7 +114,7 @@ const columns: Record<string, Column> = {
 
   [ColumnViewType.ContractsCurrency]: columnHelper.accessor((row) => row, {
     id: ColumnViewType.ContractsCurrency,
-    minSize: 120,
+    minSize: 97,
     maxSize: 350,
     enableResizing: true,
     enableColumnFilter: false,
@@ -140,7 +140,7 @@ const columns: Record<string, Column> = {
 
   [ColumnViewType.ContractsStatus]: columnHelper.accessor((row) => row, {
     id: ColumnViewType.ContractsStatus,
-    minSize: 100,
+    minSize: 80,
     maxSize: 650,
     enableResizing: true,
     enableColumnFilter: false,
@@ -162,7 +162,7 @@ const columns: Record<string, Column> = {
 
   [ColumnViewType.ContractsRenewal]: columnHelper.accessor((row) => row, {
     id: ColumnViewType.ContractsRenewal,
-    minSize: 150,
+    minSize: 94,
     maxSize: 650,
     enableResizing: true,
     enableColumnFilter: false,
@@ -191,7 +191,7 @@ const columns: Record<string, Column> = {
 
   [ColumnViewType.ContractsLtv]: columnHelper.accessor((row) => row, {
     id: ColumnViewType.ContractsLtv,
-    minSize: 150,
+    minSize: 63,
     maxSize: 650,
     enableResizing: true,
     enableColumnFilter: false,
@@ -217,7 +217,7 @@ const columns: Record<string, Column> = {
   }),
   [ColumnViewType.ContractsOwner]: columnHelper.accessor((row) => row, {
     id: ColumnViewType.ContractsOwner,
-    minSize: 150,
+    minSize: 83,
     maxSize: 650,
     enableResizing: true,
     enableColumnFilter: false,
@@ -238,7 +238,7 @@ const columns: Record<string, Column> = {
   }),
   [ColumnViewType.ContractsRenewalDate]: columnHelper.accessor((row) => row, {
     id: ColumnViewType.ContractsRenewalDate,
-    minSize: 150,
+    minSize: 127,
     maxSize: 650,
     enableResizing: true,
     enableColumnFilter: false,
@@ -273,7 +273,7 @@ const columns: Record<string, Column> = {
   }),
   [ColumnViewType.ContractsHealth]: columnHelper.accessor((row) => row, {
     id: ColumnViewType.ContractsHealth,
-    minSize: 150,
+    minSize: 82,
     maxSize: 650,
     enableResizing: true,
     enableColumnFilter: false,
@@ -294,7 +294,7 @@ const columns: Record<string, Column> = {
   }),
   [ColumnViewType.ContractsForecastArr]: columnHelper.accessor((row) => row, {
     id: ColumnViewType.ContractsForecastArr,
-    minSize: 150,
+    minSize: 125,
     maxSize: 650,
     enableResizing: true,
     enableColumnFilter: false,
