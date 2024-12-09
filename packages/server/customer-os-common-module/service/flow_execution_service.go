@@ -1295,6 +1295,12 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
+
+		participant.Status = entity.FlowParticipantStatusError
+		_, err = s.services.Neo4jRepositories.FlowParticipantWriteRepository.Merge(ctx, nil, participant)
+
+		s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, participant.Id, model.FLOW_PARTICIPANT, utils.NewEventCompletedDetails().WithUpdate())
+
 		return err
 	}
 

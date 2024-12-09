@@ -126,7 +126,7 @@ const (
 	FlowParticipantStatusInProgress   FlowParticipantStatus = "IN_PROGRESS"
 	FlowParticipantStatusCompleted    FlowParticipantStatus = "COMPLETED"
 	FlowParticipantStatusGoalAchieved FlowParticipantStatus = "GOAL_ACHIEVED"
-	FlowParticipantStatusGoalError    FlowParticipantStatus = "ERROR"
+	FlowParticipantStatusError        FlowParticipantStatus = "ERROR"
 )
 
 func GetFlowContactStatus(s string) FlowParticipantStatus {

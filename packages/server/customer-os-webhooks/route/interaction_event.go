@@ -176,15 +176,15 @@ func syncPostmarkInteractionEventHandler(services *service.Services, cfg *config
 		// identify mailbox
 		username := ""
 		for _, p := range participants {
-			userByEmail, err := services.CommonServices.Neo4jRepositories.UserReadRepository.GetFirstUserByEmail(ctx, tenantByName, p)
+			mailbox, err := services.CommonServices.PostgresRepositories.TenantSettingsMailboxRepository.GetByMailbox(ctx, p)
 			if err != nil {
 				tracing.TraceErr(span, err)
-				log.Errorf("(SyncInteractionEvent) error getting user by email: %s", err.Error())
+				log.Errorf("(SyncInteractionEvent) error getting mailbox: %s", err.Error())
 				c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 				return
 			}
 
-			if userByEmail != nil {
+			if mailbox != nil {
 				username = p
 				break
 			}
@@ -409,7 +409,25 @@ func processEmailForFlows(ctx context.Context, services *service.Services, tenan
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	senderUser, err := services.CommonServices.Neo4jRepositories.UserReadRepository.GetFirstUserByEmail(ctx, tenant, fromEmailAddress)
+	mailbox, err := services.CommonServices.PostgresRepositories.TenantSettingsMailboxRepository.GetByMailbox(ctx, fromEmailAddress)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	if mailbox == nil {
+		err := errors.New("mailbox not found")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	if mailbox.UserId == "" {
+		err := errors.New("mailbox user id is empty")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	senderUser, err := services.CommonServices.Neo4jRepositories.UserReadRepository.GetUserById(ctx, tenant, mailbox.UserId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
