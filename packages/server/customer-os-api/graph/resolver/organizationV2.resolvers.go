@@ -6,7 +6,6 @@ package resolver
 
 import (
 	"context"
-	"fmt"
 	"sync"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -18,11 +17,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	opentracing "github.com/opentracing/opentracing-go"
 )
-
-// UIOrganization is the resolver for the ui_organization field.
-func (r *queryResolver) UIOrganization(ctx context.Context, ids string) (*model.OrganizationUIDetails, error) {
-	panic(fmt.Errorf("not implemented: UIOrganization - ui_organization"))
-}
 
 // UIOrganizations is the resolver for the ui_organizations field.
 func (r *queryResolver) UIOrganizations(ctx context.Context, ids []string) ([]*model.OrganizationUIDetails, error) {

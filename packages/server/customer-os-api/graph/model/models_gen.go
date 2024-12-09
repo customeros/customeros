@@ -2154,6 +2154,7 @@ type OrganizationTagInput struct {
 type OrganizationUIDetails struct {
 	ID                              string                        `json:"id"`
 	CreatedAt                       time.Time                     `json:"createdAt"`
+	UpdatedAt                       time.Time                     `json:"updatedAt"`
 	Name                            string                        `json:"name"`
 	Notes                           *string                       `json:"notes,omitempty"`
 	Description                     *string                       `json:"description,omitempty"`
