@@ -2,7 +2,9 @@ package repository
 
 import (
 	"errors"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
@@ -15,7 +17,7 @@ type enrichDetailsTrackingRepository struct {
 }
 
 type EnrichDetailsTrackingRepository interface {
-	RegisterRequest(ctx context.Context, request entity.EnrichDetailsTracking) error
+	Save(ctx context.Context, request entity.EnrichDetailsTracking) error
 	GetByIP(ctx context.Context, IP string) (*entity.EnrichDetailsTracking, error)
 }
 
@@ -23,13 +25,32 @@ func NewEnrichDetailsTrackingRepository(gormDb *gorm.DB) EnrichDetailsTrackingRe
 	return &enrichDetailsTrackingRepository{gormDb: gormDb}
 }
 
-func (r enrichDetailsTrackingRepository) RegisterRequest(ctx context.Context, request entity.EnrichDetailsTracking) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsTrackingRepository.RegisterRequest")
+func (r enrichDetailsTrackingRepository) Save(ctx context.Context, request entity.EnrichDetailsTracking) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EnrichDetailsTrackingRepository.RegisterRequest")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	err := r.gormDb.Create(&request).Error
+	record, err := r.GetByIP(ctx, request.IP)
 	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	if record == nil {
+		// Create new record
+		if err := r.gormDb.WithContext(ctx).Create(&request).Error; err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+		return nil
+	}
+
+	// Update existing record
+	request.UpdatedAt = utils.Now()
+	if err := r.gormDb.WithContext(ctx).
+		Model(&entity.EnrichDetailsTracking{}).
+		Where("ip = ?", request.IP).
+		Updates(request).Error; err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}

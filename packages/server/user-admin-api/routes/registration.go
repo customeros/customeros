@@ -891,7 +891,7 @@ func saveIP(c *gin.Context, s *service.Services, email string) error {
 		SourceEmail:    &validEmail.CleanEmail,
 	}
 
-	err := s.CommonServices.PostgresRepositories.EnrichDetailsTrackingRepository.RegisterRequest(ctx, details)
+	err := s.CommonServices.PostgresRepositories.EnrichDetailsTrackingRepository.Save(ctx, details)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
