@@ -59,17 +59,21 @@ export const OnboardingCell = ({
   const label = labelMap[status];
 
   return (
-    <div className='flex items-center gap-1'>
-      <p
-        className={cn(color, 'leading-none')}
+    <div className='inline truncate items-center gap-1'>
+      <span
         data-test='organization-onboarding-in-all-orgs-table'
+        className={cn('inline truncate', color, 'leading-none')}
       >
         {label}
-      </p>
+      </span>
       {timeElapsed && (
-        <span className='text-gray-500 text-xs leading-none'>•</span>
+        <>
+          <span className='text-gray-500 text-xs leading-none mx-1'>•</span>
+          <span className='text-gray-500 text-xs leading-none'>
+            {timeElapsed}
+          </span>
+        </>
       )}
-      <p className='text-gray-500 text-xs leading-none'>{timeElapsed}</p>
     </div>
   );
 };
