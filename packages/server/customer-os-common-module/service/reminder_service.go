@@ -157,11 +157,13 @@ func (s *reminderService) SendNotification(ctx context.Context, reminderId, fron
 		return err
 	}
 
-	err = s.notificationProviderSendInAppNotification(ctx, span, WorkflowReminderInAppNotification, reminder.UserId, reminder.Content, reminder.OrganizationId, tenant)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
+	//TODO NOVU FAILS TO RECEIVE THIS NOTIFICATION
+
+	//err = s.notificationProviderSendInAppNotification(ctx, span, WorkflowReminderInAppNotification, reminder.UserId, reminder.Content, reminder.OrganizationId, tenant)
+	//if err != nil {
+	//	tracing.TraceErr(span, err)
+	//	return err
+	//}
 
 	return nil
 }
