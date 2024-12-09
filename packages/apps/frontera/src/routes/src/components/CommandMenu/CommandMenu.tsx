@@ -57,6 +57,7 @@ import {
   ChangeOrAddJobRoles,
   ContactBulkCommands,
   ConfirmBulkFlowEdit,
+  EditCompanyLinkedin,
   OrganizationCommands,
   ActiveFlowUpdateInfo,
   RenameOpportunityName,
@@ -123,6 +124,7 @@ const Commands: Record<CommandMenuType, ReactElement> = {
   OrganizationCommands: <OrganizationCommands />,
   ChangeBulkArrEstimate: <ChangeBulkArrEstimate />,
   MergeConfirmationModal: <MergeConfirmationModal />,
+  EditCompanyLinkedin: <EditCompanyLinkedin />,
   AddNewOrganization: <AddNewOrganization />,
   RenameOrganizationProperty: <RenameOrganizationProperty />,
 

@@ -28,7 +28,19 @@ export const WebsiteCell = observer(({ organizationId }: WebsiteCellProps) => {
   return (
     <div
       className='flex items-center cursor-pointer'
-      onClick={() => {
+      onKeyUp={() => metaKey && setMetaKey(false)}
+      onKeyDown={(e) => {
+        if (e.metaKey) {
+          setMetaKey(true);
+        }
+      }}
+      onClick={(e) => {
+        if (e.metaKey) {
+          e.stopPropagation();
+          window.open(getExternalUrl(website ?? '/'), '_blank', 'noopener');
+
+          return;
+        }
         store.ui.commandMenu.setType('RenameOrganizationProperty');
         store.ui.commandMenu.setContext({
           ...store.ui.commandMenu.context,
@@ -37,21 +49,7 @@ export const WebsiteCell = observer(({ organizationId }: WebsiteCellProps) => {
         store.ui.commandMenu.setOpen(true);
       }}
     >
-      <p
-        className='text-gray-700  truncate'
-        onKeyUp={() => metaKey && setMetaKey(false)}
-        onKeyDown={(e) => {
-          if (e.metaKey) {
-            setMetaKey(true);
-          }
-        }}
-        onClick={(e) => {
-          if (e.metaKey) {
-            e.stopPropagation();
-            window.open(getExternalUrl(website ?? '/'), '_blank', 'noopener');
-          }
-        }}
-      >
+      <p className='text-gray-700  truncate'>
         {website?.length && formattedLink ? (
           removeTrailingSlash(formattedLink)
         ) : enrichingStatus ? (

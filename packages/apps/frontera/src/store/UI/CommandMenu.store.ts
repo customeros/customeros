@@ -7,6 +7,7 @@ export type CommandMenuType =
   | 'OpportunityHub'
   | 'OrganizationHub'
   | 'OrganizationCommands'
+  | 'EditCompanyLinkedin'
   | 'ChangeRelationship'
   | 'ChangeStage'
   | 'UpdateHealthStatus'
