@@ -307,6 +307,24 @@ func (r *mutationResolver) FlowArchive(ctx context.Context, id string) (*model.R
 	return &model.Result{Result: true}, nil
 }
 
+// FlowArchiveBulk is the resolver for the flow_ArchiveBulk field.
+func (r *mutationResolver) FlowArchiveBulk(ctx context.Context, ids []string) (*model.Result, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.FlowArchiveBulk", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	for _, id := range ids {
+		e, err := r.Services.CommonServices.FlowService.FlowArchive(ctx, id)
+		if err != nil || e == nil {
+			tracing.TraceErr(span, err)
+			graphql.AddErrorf(ctx, "")
+			return &model.Result{Result: false}, err
+		}
+	}
+
+	return &model.Result{Result: true}, nil
+}
+
 // FlowParticipantAdd is the resolver for the flowParticipant_Add field.
 func (r *mutationResolver) FlowParticipantAdd(ctx context.Context, flowID string, entityID string, entityType commonModel.EntityType) (*model.FlowParticipant, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.FlowParticipantAdd", graphql.GetOperationContext(ctx))
