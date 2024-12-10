@@ -1305,6 +1305,7 @@ type ComplexityRoot struct {
 		Contacts                        func(childComplexity int) int
 		Contracts                       func(childComplexity int) int
 		CreatedAt                       func(childComplexity int) int
+		CustomerOsID                    func(childComplexity int) int
 		Description                     func(childComplexity int) int
 		Employees                       func(childComplexity int) int
 		EnrichedAt                      func(childComplexity int) int
@@ -1330,6 +1331,7 @@ type ComplexityRoot struct {
 		ParentID                        func(childComplexity int) int
 		ParentName                      func(childComplexity int) int
 		Public                          func(childComplexity int) int
+		ReferenceID                     func(childComplexity int) int
 		Relationship                    func(childComplexity int) int
 		RenewalSummaryArrForecast       func(childComplexity int) int
 		RenewalSummaryMaxArrForecast    func(childComplexity int) int
@@ -9699,6 +9701,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.OrganizationUiDetails.CreatedAt(childComplexity), true
 
+	case "OrganizationUiDetails.customerOsId":
+		if e.complexity.OrganizationUiDetails.CustomerOsID == nil {
+			break
+		}
+
+		return e.complexity.OrganizationUiDetails.CustomerOsID(childComplexity), true
+
 	case "OrganizationUiDetails.description":
 		if e.complexity.OrganizationUiDetails.Description == nil {
 			break
@@ -9873,6 +9882,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.OrganizationUiDetails.Public(childComplexity), true
+
+	case "OrganizationUiDetails.referenceId":
+		if e.complexity.OrganizationUiDetails.ReferenceID == nil {
+			break
+		}
+
+		return e.complexity.OrganizationUiDetails.ReferenceID(childComplexity), true
 
 	case "OrganizationUiDetails.relationship":
 		if e.complexity.OrganizationUiDetails.Relationship == nil {
@@ -15602,6 +15618,9 @@ type OrganizationUiDetails {
     id:                     ID!
     createdAt:              Time!
     updatedAt:              Time!
+
+    referenceId:            String!
+    customerOsId:           String!
 
     name:                   String!
     notes:                  String
@@ -85427,6 +85446,94 @@ func (ec *executionContext) fieldContext_OrganizationUiDetails_updatedAt(_ conte
 	return fc, nil
 }
 
+func (ec *executionContext) _OrganizationUiDetails_referenceId(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationUiDetails_referenceId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ReferenceID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationUiDetails_referenceId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationUiDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationUiDetails_customerOsId(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationUiDetails_customerOsId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CustomerOsID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationUiDetails_customerOsId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationUiDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _OrganizationUiDetails_name(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_OrganizationUiDetails_name(ctx, field)
 	if err != nil {
@@ -94793,6 +94900,10 @@ func (ec *executionContext) fieldContext_Query_ui_organizations(ctx context.Cont
 				return ec.fieldContext_OrganizationUiDetails_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_OrganizationUiDetails_updatedAt(ctx, field)
+			case "referenceId":
+				return ec.fieldContext_OrganizationUiDetails_referenceId(ctx, field)
+			case "customerOsId":
+				return ec.fieldContext_OrganizationUiDetails_customerOsId(ctx, field)
 			case "name":
 				return ec.fieldContext_OrganizationUiDetails_name(ctx, field)
 			case "notes":
@@ -125074,6 +125185,16 @@ func (ec *executionContext) _OrganizationUiDetails(ctx context.Context, sel ast.
 			}
 		case "updatedAt":
 			out.Values[i] = ec._OrganizationUiDetails_updatedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "referenceId":
+			out.Values[i] = ec._OrganizationUiDetails_referenceId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "customerOsId":
+			out.Values[i] = ec._OrganizationUiDetails_customerOsId(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
