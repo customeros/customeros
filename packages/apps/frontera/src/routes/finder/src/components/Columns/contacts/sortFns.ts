@@ -84,6 +84,7 @@ export const getContactSortFn = (columnId: string, flowId?: string) =>
         [FlowParticipantStatus.InProgress]: 5,
         [FlowParticipantStatus.Ready]: 6,
         [FlowParticipantStatus.Scheduled]: 7,
+        [FlowParticipantStatus.Scheduling]: 8,
       };
 
       return status && statusOrder?.[status];
