@@ -148,25 +148,35 @@ func (s *trackingService) isWorkspaceDomain(ctx context.Context, span opentracin
 func (s *trackingService) buildSlackNotification(record *entity.Tracking, globalOrg *entity.GlobalOrganization) string {
 	// Build the text content for the section based on available data
 	var contentLines []string
-	contentLines = append(contentLines, fmt.Sprintf("*%s*", globalOrg.Name))
+	contentLines = append(contentLines, fmt.Sprintf("<%s|*%s*> ", globalOrg.Website, globalOrg.Name))
+
+	if globalOrg.Description != "" {
+		contentLines = append(contentLines, fmt.Sprintf("%s \n"), globalOrg.Description)
+	}
 
 	// Add optional fields only if they're not empty
-	if globalOrg.Website != "" {
-		contentLines = append(contentLines, fmt.Sprintf("*Website:* %s", globalOrg.Website))
+	if globalOrg.PrimaryDomain != "" && globalOrg.Website != "" {
+		contentLines = append(contentLines, fmt.Sprintf("*Website:* <%s|%s> ", globalOrg.Website, globalOrg.PrimaryDomain))
 	}
-	if globalOrg.LinkedInUrl != "" {
-		contentLines = append(contentLines, fmt.Sprintf("*LinkedIn:* %s", globalOrg.LinkedInUrl))
+
+	if globalOrg.LinkedInUrl != "" && globalOrg.LinkedInAlias != "" {
+		contentLines = append(contentLines, fmt.Sprintf("*LinkedIn:* <%s|/%s> ", globalOrg.LinkedInUrl, globalOrg.LinkedInAlias))
 	}
+
 	// Only add location if both city and country are available
 	if globalOrg.City != "" && globalOrg.CountryA2 != "" {
-		contentLines = append(contentLines, fmt.Sprintf("*Location:* %s, %s", globalOrg.City, globalOrg.CountryA2))
+		contentLines = append(contentLines, fmt.Sprintf("*Location:* %s, %s ", globalOrg.City, globalOrg.CountryA2))
 	}
 	// Add source/referrer only if it exists
-	referrer := "Direct"
 	if record.Referrer != "" {
-		referrer = record.Referrer
+		referrer := strings.TrimPrefix(record.Referrer, "https://")
+		referrer = strings.TrimPrefix(referrer, "http://")
+		referrer = strings.TrimPrefix(referrer, "www.")
+		referrer = strings.Trim(referrer, "/")
+		contentLines = append(contentLines, fmt.Sprintf("*Source:* <%s|%s> ", record.Referrer, referrer))
+	} else {
+		contentLines = append(contentLines, "*Source:* Direct ")
 	}
-	contentLines = append(contentLines, fmt.Sprintf("*Source:* %s", referrer))
 
 	// Join the lines with newlines
 	sectionContent := strings.Join(contentLines, "\n")
@@ -260,8 +270,7 @@ func (s *trackingService) buildSlackNotification(record *entity.Tracking, global
 		]`, globalOrg.Name, sectionContent, *record.OrganizationId)
 	}
 
-	// Clean up any extra whitespace from the template
-	return strings.ReplaceAll(strings.ReplaceAll(layoutBlocks, "\t", ""), "\n", "")
+	return layoutBlocks
 }
 
 func (s *trackingService) sendNotifications(ctx context.Context, span opentracing.Span, record *entity.Tracking, slackBlock string) error {
