@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/customeros/mailsherpa/domaincheck"
+	"github.com/customeros/mailsherpa/mailvalidate"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
@@ -40,7 +41,7 @@ type scrapinService struct {
 	log      logger.Logger
 }
 
-func NewScrapeInService(config *config.Config, services *Services, log logger.Logger) ScrapinService {
+func NewScrapInService(config *config.Config, services *Services, log logger.Logger) ScrapinService {
 	return &scrapinService{
 		config:   config,
 		services: services,
@@ -284,7 +285,52 @@ func (s *scrapinService) ScrapInSearchPerson(ctx context.Context, email, firstNa
 				return 0, nil, err
 			}
 			data = &unmarshalledData
-			return latestEnrichDetailsScrapInRecordWithPersonFound.ID, data, nil
+			recordId = latestEnrichDetailsScrapInRecordWithPersonFound.ID
+		}
+	}
+
+	// validate correct person identified by checking domains of email and company
+	if data != nil && data.Person != nil {
+		inputPrimaryDomains := []string{}
+		outputPrimaryDomains := []string{}
+		// collect primary domains from input params
+		if email != "" {
+			syntaxValidation := mailvalidate.ValidateEmailSyntax(email)
+			if syntaxValidation.IsValid {
+				_, primaryDomain := domaincheck.PrimaryDomainCheck(syntaxValidation.Domain)
+				inputPrimaryDomains = append(inputPrimaryDomains, primaryDomain)
+			}
+		}
+		if domain != "" {
+			_, primaryDomain := domaincheck.PrimaryDomainCheck(domain)
+			inputPrimaryDomains = append(inputPrimaryDomains, primaryDomain)
+		}
+		// collect primary domains from scrapin results
+		for data.Company != nil {
+			_, primaryDomain := domaincheck.PrimaryDomainCheck(data.Company.WebsiteUrl)
+			outputPrimaryDomains = append(outputPrimaryDomains, primaryDomain)
+			break
+		}
+		// check if any of the input primary domains match with output primary domains
+		matchFound := false
+		if len(inputPrimaryDomains) > 0 && len(outputPrimaryDomains) > 0 {
+			for _, inputPrimaryDomain := range inputPrimaryDomains {
+				for _, outputPrimaryDomain := range outputPrimaryDomains {
+					if inputPrimaryDomain == outputPrimaryDomain {
+						matchFound = true
+						break
+					}
+				}
+				if matchFound {
+					break
+				}
+			}
+		}
+		if !matchFound {
+			span.LogFields(log.String("inputPrimaryDomains", fmt.Sprintf("%v", inputPrimaryDomains)), log.String("outputPrimaryDomains", fmt.Sprintf("%v", outputPrimaryDomains)))
+			err = errors.New("Person identified does not match with input params")
+			tracing.TraceErr(span, err)
+			return 0, nil, nil
 		}
 	}
 

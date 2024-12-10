@@ -21,7 +21,7 @@ func InitServices(config *config.Config, postgresDB *commonConfig.PostgresDB, dr
 		CommonServices: commonservice.InitServices(&commonConfig.GlobalConfig{}, postgresDB, driver, config.Neo4j.Database, nil, logger),
 	}
 	services.Logger = logger
-	services.ScrapeInService = NewScrapeInService(config, services, logger)
+	services.ScrapeInService = NewScrapInService(config, services, logger)
 	services.BettercontactService = NewBettercontactService(config, services, logger)
 	services.BrandfetchService = NewBrandfetchService(config, services, logger)
 
