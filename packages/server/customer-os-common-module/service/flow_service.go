@@ -678,21 +678,40 @@ func (s *flowService) FlowOn(ctx context.Context, id string) (*neo4jentity.FlowE
 
 	flow.Status = neo4jentity.FlowStatusOn
 
-	node, err = s.services.Neo4jRepositories.FlowWriteRepository.Merge(ctx, nil, flow)
+	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, nil, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
+
+		node, err = s.services.Neo4jRepositories.FlowWriteRepository.Merge(ctx, txWithPostCommit.Tx, flow)
+		if err != nil {
+			return nil, err
+		}
+
+		participantIdsUpdated, err := s.services.Neo4jRepositories.FlowParticipantWriteRepository.MarkReadyContactsAsScheduled(ctx, txWithPostCommit.Tx, flow.Id)
+		if err != nil {
+			return nil, err
+		}
+
+		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
+
+			s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, flow.Id, model.FLOW, utils.NewEventCompletedDetails().WithUpdate())
+			s.services.RabbitMQService.PublishEventCompletedBulk(ctx, tenant, participantIdsUpdated, model.FLOW_PARTICIPANT, utils.NewEventCompletedDetails().WithUpdate())
+
+			err = s.services.RabbitMQService.PublishEvent(ctx, flow.Id, model.FLOW, dto.FlowOn{})
+			if err != nil {
+				return err
+			}
+
+			return nil
+		})
+
+		return nil, nil
+	})
+
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
-	s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, flow.Id, model.FLOW, utils.NewEventCompletedDetails().WithUpdate())
-
-	err = s.services.RabbitMQService.PublishEvent(ctx, flow.Id, model.FLOW, dto.FlowOn{})
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	return mapper.MapDbNodeToFlowEntity(node), nil
+	return flow, nil
 }
 
 func (s *flowService) FlowOff(ctx context.Context, id string) (*neo4jentity.FlowEntity, error) {

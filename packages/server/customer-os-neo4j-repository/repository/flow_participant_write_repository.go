@@ -16,6 +16,8 @@ import (
 type FlowParticipantWriteRepository interface {
 	Merge(ctx context.Context, tx *neo4j.ManagedTransaction, entity *entity.FlowParticipantEntity) (*dbtype.Node, error)
 	Delete(ctx context.Context, tx *neo4j.ManagedTransaction, id string) error
+
+	MarkReadyContactsAsScheduled(ctx context.Context, tx *neo4j.ManagedTransaction, flowId string) ([]string, error)
 }
 
 type flowParticipantWriteRepositoryImpl struct {
@@ -108,4 +110,38 @@ func (r *flowParticipantWriteRepositoryImpl) Delete(ctx context.Context, tx *neo
 	}
 
 	return nil
+}
+
+func (r *flowParticipantWriteRepositoryImpl) MarkReadyContactsAsScheduled(ctx context.Context, tx *neo4j.ManagedTransaction, flowId string) ([]string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CommonWriteRepository.MarkReadyContactsAsScheduled")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	span.LogFields(log.String("flowId", flowId))
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name: $tenant})<-[:BELONGS_TO_TENANT]-(f:Flow_%s {id: $flowId})-[:HAS]->(fc:FlowParticipant_%s) where fc.status = 'READY' set fc.status = 'SCHEDULING' return fc.id`, tenant, tenant)
+
+	params := map[string]any{
+		"tenant": tenant,
+		"flowId": flowId,
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	result, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		qr, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return utils.ExtractAllRecordsAsString(ctx, qr, err)
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return result.([]string), nil
 }
