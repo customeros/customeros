@@ -75,11 +75,13 @@ const createNode = (
   type: FlowActionType | 'WAIT',
   position: { x: number; y: number },
   data: Partial<NodeData> & BaseContent,
+  selected: boolean = false,
 ): Node => ({
   id: `${type}-${crypto.randomUUID()}`,
   type: type === 'WAIT' ? 'wait' : 'action',
   position,
   data: { ...data, action: type },
+  selected,
 });
 
 const useFlowNodeManagement = (ui: UIStore) => {
@@ -175,6 +177,12 @@ const useFlowNodeManagement = (ui: UIStore) => {
 
     if (!sourceNode) return;
 
+    // Deselect all existing nodes
+    const deselectedNodes = nodes.map((node) => ({
+      ...node,
+      selected: false,
+    }));
+
     const isFirstEmailNode =
       type === FlowActionType.EMAIL_NEW &&
       !nodes.some((node) => node.data.action === FlowActionType.EMAIL_NEW);
@@ -201,6 +209,7 @@ const useFlowNodeManagement = (ui: UIStore) => {
         y: sourceNode.position.y + 56,
       },
       typeBasedContent,
+      true, // Ensure the new node is selected
     );
 
     if (isEmailNode || isLinkedInNode) {
@@ -218,6 +227,7 @@ const useFlowNodeManagement = (ui: UIStore) => {
           fe_waitDurationUnit: isFirstEmailNode ? 'minutes' : 'days',
           nextStepId: newNode.id,
         },
+        false, // Ensure the wait node is not selected
       );
 
       newNode.data.waitStepId = waitNode.id;
@@ -232,7 +242,7 @@ const useFlowNodeManagement = (ui: UIStore) => {
         (e) => !(e.source === source && e.target === target),
       );
 
-      setNodes([...nodes, waitNode, newNode]);
+      setNodes([...deselectedNodes, waitNode, newNode]);
       setEdges([...updatedEdges, ...newEdges]);
     } else {
       const newEdges = [
@@ -244,7 +254,7 @@ const useFlowNodeManagement = (ui: UIStore) => {
         (e) => !(e.source === source && e.target === target),
       );
 
-      setNodes([...nodes, newNode]);
+      setNodes([...deselectedNodes, newNode]);
       setEdges([...updatedEdges, ...newEdges]);
     }
   };
