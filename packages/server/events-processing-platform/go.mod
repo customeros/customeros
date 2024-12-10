@@ -76,7 +76,7 @@ require (
 	github.com/cloudwego/iasm v0.2.0 // indirect
 	github.com/containerd/continuity v0.4.2 // indirect
 	github.com/coocood/freecache v1.2.4 // indirect
-	github.com/customeros/mailsherpa v0.3.7 // indirect
+	github.com/customeros/mailsherpa v0.3.8 // indirect
 	github.com/customeros/mailwatcher v0.1.6 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/emersion/go-message v0.18.1 // indirect
