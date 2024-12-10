@@ -21,7 +21,6 @@ import RemoveTagDocument from './removeTag.graphql';
 import UpdateSocialDocument from './updateSocial.graphql';
 import RemoveSocialDocument from './removeSocial.graphql';
 import AddSubsidiaryDocument from './addSubsidiary.graphql';
-import GetOrganizationDocument from './getOrganization.graphql';
 import GetOrganizationsDocument from './getOrganizations.graphql';
 import SaveOrganizationDocument from './saveOrganization.graphql';
 import RemoveSubsidiaryDocument from './removeSubsidiary.graphql';
@@ -37,10 +36,6 @@ import {
   AddSocialMutation,
   AddSocialMutationVariables,
 } from './addSocial.generated';
-import {
-  OrganizationQuery,
-  OrganizationQueryVariables,
-} from './getOrganization.generated';
 import {
   UpdateSocialMutation,
   UpdateSocialMutationVariables,
@@ -127,13 +122,6 @@ export class OrganizationsService {
       SearchOrganizationsQuery,
       SearchOrganizationsQueryVariables
     >(SearchOrganizationsDocument, payload);
-  }
-
-  async getOrganization(id: string) {
-    return this.transport.graphql.request<
-      OrganizationQuery,
-      OrganizationQueryVariables
-    >(GetOrganizationDocument, { id });
   }
 
   async getOrganizations(payload: GetOrganizationsQueryVariables) {
@@ -289,11 +277,9 @@ export class OrganizationsService {
       })
       .with(['contracts', ...P.array()], () => {})
       .with(['contacts', ...P.array()], () => {})
-      .with(['accountDetails', 'renewalSummary', ...P.array()], async () => {
-        const amount =
-          store?.value.accountDetails?.renewalSummary?.arrForecast ?? 0;
-        const potentialAmount =
-          store?.value.accountDetails?.renewalSummary?.maxArrForecast ?? 0;
+      .with([P.string.startsWith('renewalSummary'), ...P.array()], async () => {
+        const amount = store?.value.renewalSummaryArrForecast ?? 0;
+        const potentialAmount = store?.value.renewalSummaryMaxArrForecast ?? 0;
         const rate =
           amount === 0 || potentialAmount === 0
             ? 0
@@ -303,19 +289,17 @@ export class OrganizationsService {
           input: {
             organizationId,
             renewalAdjustedRate: rate,
-            renewalLikelihood:
-              store.value.accountDetails?.renewalSummary?.renewalLikelihood,
+            renewalLikelihood: store.value.renewalSummaryRenewalLikelihood,
           },
         });
       })
-      .with(['accountDetails', 'onboarding', ...P.array()], async () => {
+      .with([P.string.startsWith('onboarding'), ...P.array()], async () => {
         await this.updateOnboardingStatus({
           input: {
             organizationId,
             status:
-              store?.value.accountDetails?.onboarding?.status ??
-              OnboardingStatus.NotApplicable,
-            comments: store?.value.accountDetails?.onboarding?.comments ?? '',
+              store?.value.onboardingStatus ?? OnboardingStatus.NotApplicable,
+            comments: store?.value.onboardingComments ?? '',
           },
         });
       })
@@ -375,7 +359,7 @@ export class OrganizationsService {
           input: { organizationId, subsidiaryId, removeExisting: false },
         });
       })
-      .with(['parentCompanies', ...P.array()], async () => {})
+      .with([P.union('parentId', 'parentName'), ...P.array()], async () => {})
       .with(['tags', ...P.array()], () => {
         match(type)
           .with('add', async () => {

@@ -12,9 +12,11 @@ import { Store, makeAutoSyncable } from '@store/store';
 import { Filter, Operation, FilterItem } from '@store/types';
 
 import {
+  SortBy,
   TableIdType,
   TableViewDef,
   TableViewType,
+  SortingDirection,
   TableViewDefUpdateInput,
 } from '@graphql/types';
 
@@ -158,6 +160,23 @@ export class TableViewDefStore implements Store<TableViewDef> {
     }
   }
 
+  toSearchPayload(): { sort: SortBy; where: Filter | null } {
+    const where = {
+      AND: this.getFilters()?.AND?.map?.((f: Filter) => ({
+        filter: omit(f.filter, 'active') as Filter['filter'],
+      })),
+    };
+    const viewDefSorting = this.getSorting();
+    const sort = {
+      by: viewDefSorting.id,
+      direction: viewDefSorting.desc
+        ? SortingDirection.Desc
+        : SortingDirection.Asc,
+    };
+
+    return { where, sort };
+  }
+
   getSorting() {
     try {
       return match(this.value.sorting)
@@ -255,7 +274,7 @@ export class TableViewDefStore implements Store<TableViewDef> {
 
       if (draft) {
         if (index !== undefined) {
-          draft.AND.splice(index, 1);
+          draft.AND?.splice(index, 1);
         } else {
           draft.AND = (draft.AND as Filter[])?.filter(
             (f) => f.filter?.property !== id,
@@ -333,7 +352,7 @@ export class TableViewDefStore implements Store<TableViewDef> {
       );
 
       if (foundIndex !== -1) {
-        draft.AND[foundIndex].filter = filter;
+        draft.AND![foundIndex]!.filter = filter;
         value.filters = JSON.stringify(draft);
       } else {
         this.appendFilter({ ...filter, active: true });
@@ -362,7 +381,7 @@ export class TableViewDefStore implements Store<TableViewDef> {
       );
 
       if (foundIndex !== -1) {
-        draft.AND[foundIndex].filter = { property, active: false };
+        draft.AND![foundIndex].filter = { property, active: false };
         value.filters = JSON.stringify(draft);
       } else {
         this.appendFilter({

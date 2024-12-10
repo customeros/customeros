@@ -27,6 +27,8 @@ export class AllOrganizationsView {
 
       const columns = JSON.stringify(viewDef?.value.columns);
 
+      this.store.search(preset);
+
       return `${viewDef?.value.filters ?? ''}-${
         viewDef?.value.defaultFilters ?? ''
       }-${viewDef?.value.sorting}-${columns}`;

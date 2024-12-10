@@ -1,6 +1,5 @@
+import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
-import { ContactsStore } from '@store/Contacts/Contacts.store';
-import { OrganizationsStore } from '@store/Organizations/Organizations.store';
 
 import { flags } from '@ui/media/flags';
 import { useStore } from '@shared/hooks/useStore';
@@ -11,30 +10,32 @@ interface ContactNameCellProps {
 }
 
 export const CountryCell = observer(({ id, type }: ContactNameCellProps) => {
-  const { organizations, contacts } = useStore();
-  const store: ContactsStore | OrganizationsStore =
-    type === 'contact' ? contacts : organizations;
-  const itemStore =
-    type === 'contact'
-      ? store.value.get(id)
-      : (store as OrganizationsStore).getById(id);
-  const country = itemStore?.country;
+  const store = useStore();
 
-  const enrichedItem = itemStore?.value?.enrichDetails;
+  const entity = match(type)
+    .with('organization', () => store.organizations.getById(id))
+    .with('contact', () => store.contacts.value.get(id))
+    .otherwise(() => null);
 
-  const enrichingStatus =
-    !enrichedItem?.enrichedAt &&
-    enrichedItem?.requestedAt &&
-    !enrichedItem?.failedAt;
+  const country = entity?.country;
+
+  const isEnriching = match(type)
+    .with('organization', () => entity?.isEnriching)
+    .with('contact', () => entity?.isEnriching)
+    .otherwise(() => false);
+
+  const alpha2 = match(type)
+    .with('organization', () => entity?.value?.locations?.[0]?.countryCodeA2)
+    .with('contact', () => entity?.value?.locations?.[0]?.countryCodeA2)
+    .otherwise(() => null);
 
   if (!country) {
     return (
       <div className='text-gray-400'>
-        {enrichingStatus ? 'Enriching...' : 'Not set'}
+        {isEnriching ? 'Enriching...' : 'Not set'}
       </div>
     );
   }
-  const alpha2 = itemStore?.value?.locations?.[0]?.countryCodeA2;
 
   return (
     <div className='flex items-center'>

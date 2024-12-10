@@ -34,7 +34,7 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
   constructor(public root: RootStore, public transport: Transport) {
     super(root, transport, {
       name: 'Organizations',
-      getId: (data) => data?.metadata?.id,
+      getId: (data) => data?.id,
       factory: Organization,
     });
 
@@ -84,16 +84,21 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
           date: lastActiveAtUTC,
         });
 
-      const { dashboardView_Organizations } =
-        await this.service.getOrganizations({
-          pagination: { limit: 1000, page: 0 },
+      const { ui_organizations_search } =
+        await this.service.searchOrganizations({
+          limit: 1000,
           sort: {
-            by: 'LAST_TOUCHPOINT',
+            by: 'ORGANIZATIONS_LAST_TOUCHPOINT',
             caseSensitive: false,
             direction: SortingDirection.Desc,
           },
           where,
         });
+
+      const dataRequest = await this.service.getOrganizationsByIds({
+        ids: ui_organizations_search.ids,
+      });
+      const data = dataRequest.ui_organizations as OrganizationDatum[];
 
       if (this.isHydrated) {
         await this.drop(idsToDrop);
@@ -103,8 +108,8 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
         });
       }
 
-      const data =
-        (dashboardView_Organizations?.content as OrganizationDatum[]) ?? [];
+      // const data =
+      //   (dashboardView_Organizations?.content as OrganizationDatum[]) ?? [];
 
       runInAction(() => {
         this.size = this.value.size;
@@ -134,27 +139,24 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
     });
 
     try {
-      // const { ui_organizations } = await this.service.getOrganizationsByIds({
-      //   ids: [],
-      // });
-      //
-      // console.log(ui_organizations);
-
-      const { dashboardView_Organizations } =
-        await this.service.getOrganizations({
-          pagination: { limit: 1000, page: 0 },
+      const { ui_organizations_search } =
+        await this.service.searchOrganizations({
+          limit: 1000,
           sort: {
-            by: 'LAST_TOUCHPOINT',
+            by: 'ORGANIZATIONS_LAST_TOUCHPOINT',
             caseSensitive: false,
             direction: SortingDirection.Desc,
           },
         });
 
-      const data = dashboardView_Organizations?.content ?? [];
-      const totalElements = dashboardView_Organizations?.totalElements;
+      const { ui_organizations } = await this.service.getOrganizationsByIds({
+        ids: ui_organizations_search.ids,
+      });
+
+      const totalElements = ui_organizations_search.totalElements;
 
       runInAction(() => {
-        data.forEach((raw) => {
+        ui_organizations.forEach((raw) => {
           if (!raw) return;
 
           const record = new Organization(this, raw);
@@ -168,13 +170,46 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
           this.totalElements = totalElements;
         }
       });
-      await this.bootstrapRest();
+      // await this.bootstrapRest();
     } catch (e) {
       runInAction(() => {
         this.error = (e as Error)?.message;
       });
     } finally {
-      this.isLoading = false;
+      runInAction(() => {
+        this.isLoading = false;
+      });
+    }
+  }
+
+  @action
+  async search(viewDefPrest: string) {
+    const viewDef = this.root.tableViewDefs.getById(viewDefPrest);
+
+    if (!viewDef) {
+      console.error(`viewDef with preset=${viewDefPrest} not found`);
+
+      return;
+    }
+
+    try {
+      runInAction(() => {
+        this.isLoading = true;
+      });
+
+      const payload = viewDef.toSearchPayload();
+
+      const { ui_organizations_search: searchResult } =
+        await this.service.searchOrganizations(payload);
+
+      const foundIds = searchResult?.ids;
+      const data = await this.service.getOrganizationsByIds({ ids: foundIds });
+
+      console.info(data.ui_organizations);
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error)?.message;
+      });
     }
   }
 
@@ -199,64 +234,25 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
   }
 
   @action
-  async bootstrapRest() {
-    let page = 1;
-
-    while (this.totalElements > this.value.size) {
-      try {
-        const { dashboardView_Organizations } =
-          await this.service.getOrganizations({
-            pagination: { limit: 1000, page },
-            sort: {
-              by: 'LAST_TOUCHPOINT',
-              caseSensitive: false,
-              direction: SortingDirection.Desc,
-            },
-          });
-
-        const data = dashboardView_Organizations?.content ?? [];
-
-        page++;
-
-        runInAction(() => {
-          data.forEach((raw) => {
-            if (!raw) return;
-
-            const record = new Organization(this, raw);
-
-            this.value.set(record.id, record);
-          });
-
-          this.size = this.value.size;
-        });
-      } catch (e) {
-        runInAction(() => {
-          this.error = (e as Error)?.message;
-        });
-        break;
-      }
-    }
-
-    runInAction(() => {
-      this.isBootstrapped = this.totalElements === this.value.size;
-      this.isBootstrapping = false;
-    });
-  }
-
-  @action
-  public async invalidate(id: string, opts?: { onFinally?: () => void }) {
+  public async invalidate(id: string) {
     try {
-      const { organization: raw } = await this.service.getOrganization(id);
+      const { ui_organizations } = await this.service.getOrganizationsByIds({
+        ids: [id],
+      });
 
-      if (!raw) return;
+      if (!ui_organizations) return;
+
+      const data = ui_organizations[0];
+
+      if (!data) return;
 
       runInAction(() => {
         const record = this.value.get(id);
 
         if (record) {
-          Object.assign(record.value, raw);
+          Object.assign(record.value, data);
         } else {
-          const record = new Organization(this, raw);
+          const record = new Organization(this, data);
 
           this.value.set(record.id, record);
         }
@@ -265,7 +261,7 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
       console.error('Failed invalidating organization with ID: ' + id);
     } finally {
       runInAction(() => {
-        opts?.onFinally?.();
+        // opts?.onFinally?.();
       });
     }
   }

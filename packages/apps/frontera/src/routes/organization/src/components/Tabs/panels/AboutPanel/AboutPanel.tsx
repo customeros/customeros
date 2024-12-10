@@ -101,7 +101,9 @@ export const AboutPanel = observer(() => {
 
       if (!idx || idx < 0) return;
 
+      organization.draft();
       organization.value!.socialMedia[idx].url = value;
+      organization.commit();
     }
   };
 
@@ -116,11 +118,11 @@ export const AboutPanel = observer(() => {
     if (!idx || idx < 0) return;
 
     if (organization.value?.socialMedia[idx].url === '') {
+      organization.draft();
       organization.value.socialMedia.splice(idx, 1);
       newInputRef.current?.focus();
+      organization.commit();
     }
-
-    organization.commit();
   };
 
   const handleSocialKeyDown = (
@@ -137,14 +139,15 @@ export const AboutPanel = observer(() => {
     if (!social) return;
 
     if (social.url === '') {
+      organization.draft();
       organization.value?.socialMedia.splice(idx, 1);
       newInputRef.current?.focus();
+      organization.commit();
     }
-
-    organization.commit();
   };
 
   const handleCreateSocial = (value: string) => {
+    organization.draft();
     organization.value?.socialMedia.push({
       id: crypto.randomUUID(),
       url: value,
@@ -171,16 +174,12 @@ export const AboutPanel = observer(() => {
     );
   };
 
-  const enrichedOrg = organization?.value.enrichDetails;
-  const enrichingStatus =
-    !enrichedOrg?.enrichedAt &&
-    enrichedOrg?.requestedAt &&
-    !enrichedOrg?.failedAt;
+  const isEnriching = organization.isEnriching;
 
   return (
     <div className='flex pt-[6px] px-6 w-full h-full overflow-y-auto flex-1 bg-gray-25 rounded-2xl'>
       <div className='flex h-full flex-col  overflow-visible w-full'>
-        {enrichingStatus && (
+        {isEnriching && (
           <div className='flex items-center justify-start gap-2 border-[1px] text-sm border-grayModern-100 bg-grayModern-50 rounded-[4px] py-1 px-2 '>
             <Spinner
               label='enriching org'
@@ -213,7 +212,7 @@ export const AboutPanel = observer(() => {
               organization.commit();
             }}
           />
-          {organization.value?.referenceId && (
+          {/* {organization.value?.referenceId && (
             <div className='h-full ml-4'>
               <Tooltip asChild={false} label={'Copy ID'}>
                 <Tag
@@ -231,7 +230,7 @@ export const AboutPanel = observer(() => {
                 </Tag>
               </Tooltip>
             </div>
-          )}
+          )} */}
         </div>
         <UrlInput
           name='website'
@@ -486,7 +485,7 @@ export const AboutPanel = observer(() => {
               <Branches id={id} isReadOnly={parentRelationshipReadOnly} />
             )}
         </div>
-        {organization?.value.customerOsId && (
+        {/* {organization?.value.customerOsId && (
           <Tooltip label='Copy ID'>
             <span
               className='py-3 w-fit text-gray-400 cursor-pointer'
@@ -500,7 +499,7 @@ export const AboutPanel = observer(() => {
               CustomerOS ID: {organization?.value.customerOsId}
             </span>
           </Tooltip>
-        )}
+        )} */}
       </div>
     </div>
   );

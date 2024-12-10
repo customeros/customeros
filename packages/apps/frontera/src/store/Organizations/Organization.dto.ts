@@ -17,12 +17,14 @@ import {
   OrganizationRelationship,
 } from '@graphql/types';
 
-import type { OrganizationQuery } from './__service__/getOrganization.generated';
+import type { GetOrganizationsByIdsQuery } from './__service__/getOrganizationsByIds.generated';
 import type { SaveOrganizationMutationVariables } from './__service__/saveOrganization.generated';
 
 import { OrganizationsStore } from './Organizations.store';
 
-export type OrganizationDatum = NonNullable<OrganizationQuery['organization']>;
+export type OrganizationDatum = NonNullable<
+  GetOrganizationsByIdsQuery['ui_organizations'][number]
+>;
 
 export class Organization extends Entity<OrganizationDatum> {
   @observable accessor value: OrganizationDatum = Organization.default();
@@ -34,12 +36,12 @@ export class Organization extends Entity<OrganizationDatum> {
 
   @computed
   get id() {
-    return this.value.metadata.id;
+    return this.value.id;
   }
 
   set id(value: string) {
     runInAction(() => {
-      this.value.metadata.id = value;
+      this.value.id = value;
     });
   }
 
@@ -56,16 +58,16 @@ export class Organization extends Entity<OrganizationDatum> {
   @computed
   get isEnriching(): boolean {
     return (
-      this.value?.enrichDetails?.requestedAt &&
-      !this.value?.enrichDetails?.enrichedAt &&
-      !this.value?.enrichDetails?.failedAt
+      this.value?.enrichedRequestedAt &&
+      !this.value?.enrichedAt &&
+      !this.value?.enrichedFailedAt
     );
   }
 
   @computed
   get contacts() {
-    return this.value.contacts.content.reduce((acc, { metadata }) => {
-      const store = this.store.root.contacts.value.get(metadata?.id);
+    return this.value.contacts.reduce((acc, id) => {
+      const store = this.store.root.contacts.value.get(id);
 
       if (store) acc.push(store.value);
 
@@ -75,8 +77,8 @@ export class Organization extends Entity<OrganizationDatum> {
 
   @computed
   get contracts() {
-    return this.value.contracts?.reduce((acc, { metadata }) => {
-      const store = this.store.root.contracts.value.get(metadata.id);
+    return this.value.contracts?.reduce((acc, id) => {
+      const store = this.store.root.contracts.value.get(id);
 
       if (store) acc.push(store.value);
 
@@ -106,20 +108,14 @@ export class Organization extends Entity<OrganizationDatum> {
 
   @computed
   get parentCompanies() {
-    return this.value.parentCompanies.reduce((acc, curr) => {
-      const id = curr?.organization?.metadata?.id;
-      const store = this.store.getById(id);
-
-      if (store) acc.push(store.value);
-
-      return acc;
-    }, [] as OrganizationDatum[]);
+    return this.value.parentId
+      ? [this.store.getById(this.value.parentId)?.value]
+      : [null];
   }
 
   @computed
   get subsidiaries() {
-    return this.value.subsidiaries.reduce((acc, curr) => {
-      const id = curr?.organization?.metadata?.id;
+    return this.value.subsidiaries.reduce((acc, id) => {
       const record = this.store.getById(id);
 
       if (record) acc.push(record.value);
@@ -135,20 +131,12 @@ export class Organization extends Entity<OrganizationDatum> {
 
   @action
   public addSubsidiary(id: string) {
-    const record = this.store.getById(id);
-
-    if (!record) return;
-
-    this.value.subsidiaries.push({
-      organization: record.value,
-    });
+    this.value.subsidiaries.push(id);
   }
 
   @action
   public removeSubsidiary(id: string) {
-    const removeIndex = this.value.subsidiaries.findIndex(
-      (org) => org.organization.metadata.id === id,
-    );
+    const removeIndex = this.value.subsidiaries.indexOf(id);
 
     this.value.subsidiaries.splice(removeIndex, 1);
   }
@@ -159,12 +147,14 @@ export class Organization extends Entity<OrganizationDatum> {
 
     if (!record) return;
 
-    this.value.parentCompanies.push({ organization: record.value });
+    this.value.parentId = id;
+    this.value.parentName = record.value.name;
   }
 
   @action
-  public clearParentCompanies() {
-    this.value.parentCompanies = [];
+  public clearParent() {
+    this.value.parentId = null;
+    this.value.parentName = null;
   }
 
   @action
