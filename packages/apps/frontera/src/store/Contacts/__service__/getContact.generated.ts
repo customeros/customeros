@@ -146,7 +146,11 @@ export type ContactQuery = {
       alias: string;
       followersCount: any;
     }>;
-    connectedUsers: Array<{ __typename?: 'User'; id: string }>;
+    connectedUsers: Array<{
+      __typename?: 'User';
+      id: string;
+      name?: string | null;
+    }>;
     enrichDetails: {
       __typename?: 'EnrichDetails';
       enrichedAt?: any | null;

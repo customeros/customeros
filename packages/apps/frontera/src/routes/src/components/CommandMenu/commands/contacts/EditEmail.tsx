@@ -1,11 +1,13 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
-import { set } from 'lodash';
 import { observer } from 'mobx-react-lite';
+import { SetEmailCase } from '@domain/Contacts/SetEmail.usecase';
 
 import { Edit03 } from '@ui/media/icons/Edit03';
 import { useStore } from '@shared/hooks/useStore';
 import { Command, CommandItem, CommandInput } from '@ui/overlay/CommandMenu';
+
+const useCase = new SetEmailCase();
 
 export const EditEmail = observer(() => {
   const store = useStore();
@@ -15,12 +17,6 @@ export const EditEmail = observer(() => {
 
   const contact = store.contacts.value.get(context.ids?.[0] as string);
 
-  const oldEmail = useMemo(
-    () =>
-      contact?.value?.emails?.[selectedId ?? 0]?.email ||
-      contact?.value?.primaryEmail?.email,
-    [contact?.isLoading, selectedId],
-  );
   const emailAdress =
     selectedId !== null
       ? contact?.value?.emails?.[selectedId ?? 0]?.email ?? ''
@@ -30,58 +26,45 @@ export const EditEmail = observer(() => {
 
   const label = `Contact - ${contact?.name}`;
 
+  useEffect(() => {
+    if (contact) {
+      useCase.setEntity(contact);
+    }
+  }, [contact?.id]);
+
+  if (!contact) return;
+
+  const primaryEmail = contact.value.primaryEmail?.email;
+
   const handleSaveEmail = () => {
+    if (store.ui.focusRow && !primaryEmail) {
+      useCase.setPrimaryEmailForContact(true);
+      useCase.setEmailForContact();
+      store.ui.setSelectionId(null);
+    }
+
+    if (selectedId && store.ui.focusRow) {
+      useCase.updateEmailForContact(selectedId);
+      store.ui.setSelectionId(null);
+    }
+
     if (selectedId !== null && !store.ui.focusRow) {
-      contact?.updateEmail({
-        previousEmail: oldEmail ?? '',
-        index: selectedId,
-        primary: false,
-      });
-      store.ui.commandMenu.setOpen(false);
+      useCase.setPreviousEmail(selectedId);
+      useCase.updateEmailForContact(selectedId);
       store.ui.setSelectionId(null);
-      store.ui.commandMenu.setType('ContactCommands');
-    }
-
-    if (selectedId === null) {
-      contact?.updateEmailPrimary(oldEmail ?? '');
-      store.ui.commandMenu.setOpen(false);
-      store.ui.setSelectionId(null);
-      store.ui.commandMenu.setType('ContactCommands');
-    }
-
-    if (store.ui.focusRow) {
-      contact?.updateEmail(
-        {
-          previousEmail: '',
-          index: selectedId ?? 0,
-          primary: false,
-        },
-        {
-          onError: (error) => {
-            setError(error);
-          },
-          invalidate: false,
-          onSuccess(serverId) {
-            if (serverId) {
-              store.ui.commandMenu.setOpen(false);
-              store.ui.setSelectionId(null);
-              store.ui.commandMenu.setType('ContactCommands');
-            }
-          },
-        },
-      );
     }
 
     if (
-      store.ui.focusRow &&
-      !contact?.value.primaryEmail?.email &&
-      selectedId === null
+      selectedId === null &&
+      contact.value.emails.length > 0 &&
+      primaryEmail
     ) {
-      contact?.updateEmailPrimary('');
-      store.ui.commandMenu.setOpen(false);
+      useCase.updatePrimaryEmailForContact();
       store.ui.setSelectionId(null);
-      store.ui.commandMenu.setType('ContactCommands');
     }
+    store.ui.commandMenu.setOpen(false);
+    store.ui.setSelectionId(null);
+    store.ui.commandMenu.setType('ContactCommands');
   };
 
   useEffect(() => {
@@ -101,10 +84,10 @@ export const EditEmail = observer(() => {
   }, [store.ui.commandMenu.isOpen]);
 
   return (
-    <Command>
+    <Command shouldFilter={false}>
       <CommandInput
         label={label}
-        value={emailAdress ?? value}
+        value={value}
         placeholder={emailAdress.length > 0 ? 'Edit email' : 'Add new email'}
         onKeyDownCapture={(e) => {
           if (e.key === ' ') {
@@ -112,23 +95,8 @@ export const EditEmail = observer(() => {
           }
         }}
         onValueChange={(newValue) => {
-          contact?.update(
-            (value) => {
-              if (selectedId !== null) {
-                setValue(newValue);
-                set(value, ['emails', selectedId ?? 0, 'email'], newValue);
-              } else {
-                if (newValue.length === 0) {
-                  set(value, 'primaryEmail', null);
-                } else {
-                  set(value, 'primaryEmail.email', newValue);
-                }
-              }
-
-              return value;
-            },
-            { mutate: false },
-          );
+          setValue(newValue);
+          useCase.setEmail(newValue);
 
           if (error) {
             setError('');
@@ -142,9 +110,7 @@ export const EditEmail = observer(() => {
       )}
       <Command.List>
         <CommandItem leftAccessory={<Edit03 />} onSelect={handleSaveEmail}>
-          {(oldEmail ?? '').length > 0
-            ? `Rename email to "${emailAdress}"`
-            : `Add new email "${emailAdress}"`}
+          {value ? `Rename email to "${value}"` : `Add new email "${value}"`}
         </CommandItem>
       </Command.List>
     </Command>

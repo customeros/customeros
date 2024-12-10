@@ -1,6 +1,7 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 
 import { observer } from 'mobx-react-lite';
+import { SetEmailCase } from '@domain/Contacts/SetEmail.usecase';
 
 import { Check } from '@ui/media/icons/Check';
 import { Spinner } from '@ui/feedback/Spinner';
@@ -16,7 +17,7 @@ import { PlusCircle } from '@ui/media/icons/PlusCircle';
 import { DotsVertical } from '@ui/media/icons/DotsVertical';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
-import { EmailValidationMessage } from '@organization/components/Tabs/panels/PeoplePanel/ContactCard/EmailValidationMessage';
+import { EmailValidationMessage } from '@organization/components/Tabs/panels/PeoplePanel/components/ContactCard/EmailValidationMessage';
 
 interface EmailCellProps {
   contactId: string;
@@ -26,12 +27,16 @@ interface EmailCellProps {
 export const EmailCell = observer(
   ({ validationDetails, contactId }: EmailCellProps) => {
     const store = useStore();
+    const useCase = new SetEmailCase();
 
     const [isHovered, setIsHovered] = useState(false);
     const [isOpened, setIsOpened] = useState(false);
     const [_, copyToClipboard] = useCopyToClipboard();
 
     const contactStore = store.contacts.value.get(contactId);
+
+    if (!contactStore) return;
+    useCase.setEntity(contactStore);
 
     const enrichedContact = contactStore?.value.enrichDetails;
 
@@ -48,7 +53,7 @@ export const EmailCell = observer(
     const orgActive =
       contactStore?.value.latestOrganizationWithJobRole?.organization?.name;
 
-    const email = contactStore?.value?.primaryEmail?.email;
+    const email = contactStore.value.emails.find((e) => e.primary)?.email;
 
     const isEnrichingEmail =
       !enrichedContact?.emailEnrichedAt &&
@@ -68,6 +73,12 @@ export const EmailCell = observer(
       ? 'Not found'
       : 'Not set';
 
+    useEffect(() => {
+      if (contactStore) {
+        useCase.setEntity(contactStore);
+      }
+    }, [contactStore?.id]);
+
     return (
       <div
         ref={ref}
@@ -75,7 +86,11 @@ export const EmailCell = observer(
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        <Menu onOpenChange={(newStatus) => setIsOpened(newStatus)}>
+        <Menu
+          onOpenChange={(newStatus) => {
+            setIsOpened(newStatus);
+          }}
+        >
           <MenuButton
             asChild
             className='text-ellipsis overflow-hidden whitespace-nowrap'
@@ -106,7 +121,7 @@ export const EmailCell = observer(
           </MenuButton>
           <MenuList align='start' className='max-w-[600px] w-[250px]'>
             {orgActive && !!domains?.length && (
-              <MenuItem onClick={() => contactStore?.findEmail()}>
+              <MenuItem onClick={() => {}}>
                 <div className=' flex overflow-hidden items-center text-ellipsis w-[200px]'>
                   {isEnrichingEmail ? (
                     <Tooltip label={`Finding email at ${orgActive}`}>
@@ -146,7 +161,7 @@ export const EmailCell = observer(
                   } as any);
                 }
                 store.ui.commandMenu.setContext({
-                  ids: [contactStore?.value.id || ''],
+                  ids: [contactStore?.id || ''],
                   entity: 'Contact',
                   property: 'email',
                 });
@@ -165,7 +180,8 @@ export const EmailCell = observer(
                 <MenuItem
                   key={email.email}
                   onClick={() => {
-                    contactStore?.setPrimaryEmail(email.id);
+                    useCase.setEmail(email.email || '');
+                    useCase.setPrimaryEmailForContact();
                   }}
                 >
                   <div className='flex items-center overflow-hidden text-ellipsis justify-between w-full [&_svg]:size-4'>
@@ -176,8 +192,9 @@ export const EmailCell = observer(
                       />
                       <p className='truncate'>{email.email}</p>
                     </div>
-                    {contactStore.value.primaryEmail?.email ===
-                      email?.email && <Check className='text-primary-600' />}
+                    {email?.primary === true && (
+                      <Check className='text-primary-600' />
+                    )}
                   </div>
                 </MenuItem>
               ))}
@@ -195,7 +212,7 @@ export const EmailCell = observer(
                 className={'ml-2'}
                 aria-label='Find work email'
                 onClick={() => {
-                  contactStore?.findEmail();
+                  contactStore.findEmail();
                 }}
               />
             </Tooltip>

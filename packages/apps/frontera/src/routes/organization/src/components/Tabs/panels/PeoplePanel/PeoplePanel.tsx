@@ -10,8 +10,11 @@ import { Users03 } from '@ui/media/icons/Users03';
 import { useStore } from '@shared/hooks/useStore';
 import { UsersPlus } from '@ui/media/icons/UsersPlus';
 import { Spinner } from '@ui/feedback/Spinner/Spinner';
-import { ContactCard } from '@organization/components/Tabs/panels/PeoplePanel/ContactCard/ContactCard';
 import { OrganizationPanel } from '@organization/components/Tabs/shared/OrganizationPanel/OrganizationPanel';
+
+import { ContactCard } from './components/ContactCard/ContactCard';
+import { ContactCardv2 } from './components/ContactCard/ContactCardv2';
+import { CreateNewContactModal } from './components/CreateNewContactModal';
 
 export const PeoplePanel = observer(() => {
   const store = useStore();
@@ -87,13 +90,6 @@ export const PeoplePanel = observer(() => {
               onClick={handleAddContact}
               dataTest='org-people-add-someone'
               isDisabled={store.contacts.isLoading}
-              rightSpinner={
-                <Spinner
-                  size='sm'
-                  label='adding'
-                  className='text-gray-300 fill-gray-400'
-                />
-              }
             >
               Add someone
             </Button>
@@ -108,8 +104,11 @@ export const PeoplePanel = observer(() => {
               contact={contact as Contact}
               organizationName={organization?.value.name}
             />
+            <ContactCardv2 id={contact.metadata.id} />
           </div>
         ))}
+
+      <CreateNewContactModal />
     </OrganizationPanel>
   );
 });

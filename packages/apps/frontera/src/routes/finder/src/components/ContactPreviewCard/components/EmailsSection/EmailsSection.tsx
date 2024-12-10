@@ -2,6 +2,7 @@ import { Fragment } from 'react';
 
 import { uniqBy } from 'lodash';
 import { observer } from 'mobx-react-lite';
+import { SetEmailCase } from '@domain/Contacts/SetEmail.usecase';
 
 import { Plus } from '@ui/media/icons/Plus';
 import { Spinner } from '@ui/feedback/Spinner';
@@ -18,7 +19,7 @@ import { PlusCircle } from '@ui/media/icons/PlusCircle';
 import { DotsVertical } from '@ui/media/icons/DotsVertical';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
-import { EmailValidationMessage } from '@organization/components/Tabs/panels/PeoplePanel/ContactCard/EmailValidationMessage';
+import { EmailValidationMessage } from '@organization/components/Tabs/panels/PeoplePanel/components/ContactCard/EmailValidationMessage';
 
 interface EmailsSectionProps {
   contactId: string | number;
@@ -58,6 +59,11 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
     enrichedContact?.emailRequestedAt &&
     !isPrimaryEmail;
 
+  const useCase = new SetEmailCase();
+
+  if (!contactStore) return;
+  useCase.setEntity(contactStore);
+
   return (
     <>
       <div className='flex items-center justify-between w-full text-sm group/menu'>
@@ -89,11 +95,11 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
               </div>
             </MenuButton>
             <MenuList>
-              {company?.name && domains?.length && (
+              {company?.name && domains && domains?.length > 0 && (
                 <MenuItem
                   className='group/find-email '
                   onClick={() => {
-                    contactStore?.findEmail();
+                    contactStore.findEmail();
                   }}
                 >
                   <div className='flex items-center gap-1'>
@@ -135,7 +141,7 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
                   } as any);
 
                   store.ui.commandMenu.setContext({
-                    ids: [contactStore?.value.id || ''],
+                    ids: [contactStore?.id || ''],
                     entity: 'Contact',
                     property: 'email',
                   });
@@ -174,7 +180,7 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
                 >
                   {email.email || 'Not set'}
                 </span>
-                {isPrimaryEmail?.id === email.id && (
+                {email.primary === true && (
                   <span className='text-gray-500 text-sm'> • Primary</span>
                 )}
               </div>
@@ -195,11 +201,12 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
                     />
                   </MenuButton>
                   <MenuList>
-                    {isPrimaryEmail?.id !== email.id && (
+                    {email.primary === false && (
                       <MenuItem
                         className='group/edit-email'
                         onClick={() => {
-                          contactStore?.setPrimaryEmail(email.id);
+                          useCase.setEmail(email.email || '');
+                          useCase.setPrimaryEmailForContact();
                         }}
                       >
                         <div className='flex items-center gap-2'>
@@ -215,7 +222,7 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
                         store.ui.setSelectionId(idx);
                         store.ui.commandMenu.setType('EditEmail');
                         store.ui.commandMenu.setContext({
-                          ids: [contactStore?.value.id ?? ''],
+                          ids: [contactStore?.id ?? ''],
                           entity: 'Contact',
                           property: 'email',
                         });

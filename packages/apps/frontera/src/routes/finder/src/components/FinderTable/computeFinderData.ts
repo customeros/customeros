@@ -7,18 +7,13 @@ import { inPlaceSort } from 'fast-sort';
 import { SortingState } from '@tanstack/table-core';
 import { TableViewDefStore } from '@store/TableViewDefs/TableViewDef.store';
 
-import { TableIdType, TableViewType } from '@graphql/types';
+import { TableViewType } from '@graphql/types';
 
 import { getFlowsFilterFns, getFlowsColumnSortFn } from '../Columns/flows';
 import {
   getOpportunitiesSortFn,
   getOpportunityFilterFns,
 } from '../Columns/opportunities';
-import {
-  getContactSortFn,
-  getContactFilterFns,
-  getContactDefaultFilterFns,
-} from '../Columns/contacts';
 import {
   getInvoicesSortFn,
   getInvoiceFilterFns,
@@ -41,7 +36,7 @@ export const computeFinderData = (
   store: RootStore,
   options: ComputeFinderDataOptions,
 ) => {
-  const { searchTerm, sorting, tableViewDef, urlParams } = options;
+  const { searchTerm, sorting, tableViewDef } = options;
 
   if (!tableViewDef) return [];
 
@@ -53,67 +48,9 @@ export const computeFinderData = (
     .with(TableViewType.Organizations, () => {
       return store.organizations.getViewById(preset ?? '');
     })
-    .with(TableViewType.Contacts, () =>
-      store.contacts?.toComputedArray((arr) => {
-        const currentFlowId = urlParams?.id as string;
-
-        if (tableViewDef?.value.tableId === TableIdType.FlowContacts) {
-          arr = arr.filter(
-            (v) =>
-              v.hasFlows &&
-              (currentFlowId ? v.getFlowById(currentFlowId) : true),
-          );
-        }
-
-        const defaultFilters = getContactDefaultFilterFns(
-          tableViewDef?.getDefaultFilters(),
-        );
-
-        const filters = getContactFilterFns(
-          tableViewDef?.getFilters(),
-          currentFlowId,
-        );
-
-        if (defaultFilters) {
-          arr = arr.filter((v) => defaultFilters.every((fn) => fn(v)));
-        }
-
-        if (filters) {
-          arr = arr.filter((v) => filters.every((fn) => fn(v)));
-        }
-
-        if (tableType) {
-          const columnId = sorting?.[0]?.id;
-          const isDesc = sorting?.[0]?.desc;
-
-          arr = inPlaceSort(arr)?.[isDesc ? 'desc' : 'asc'](
-            getContactSortFn(columnId, currentFlowId),
-          );
-        }
-
-        if (searchTerm) {
-          arr = new Fuse(arr, {
-            keys: [
-              { name: 'name', getFn: (o) => o.name },
-              {
-                name: 'organization',
-                getFn: (o) => o.value?.organizations.content?.[0]?.name,
-              },
-              {
-                name: 'email',
-                getFn: (o) => o.value?.emails?.[0]?.email || '',
-              },
-            ],
-            threshold: 0.3,
-            isCaseSensitive: false,
-          })
-            .search(removeAccents(searchTerm), { limit: 40 })
-            .map((r) => r.item);
-        }
-
-        return arr;
-      }),
-    )
+    .with(TableViewType.Contacts, () => {
+      return store.contacts.getViewById(preset ?? '');
+    })
     .with(TableViewType.Contracts, () =>
       store.contracts?.toComputedArray((arr) => {
         const defaultFilters = getContractDefaultFilters(

@@ -13,7 +13,7 @@ import { TransactionService } from './transaction';
 import { SessionStore } from './Session/Session.store';
 import { SettingsStore } from './Settings/Settings.store';
 import { InvoicesStore } from './Invoices/Invoices.store';
-import { ContactsStore } from './Contacts/Contacts.store';
+import { ContactsStore } from './Contacts/Contacts2.store';
 import { MailboxesStore } from './Settings/Mailboxes.store';
 import { ContractsStore } from './Contracts/Contracts.store';
 import { RemindersStore } from './Reminders/Reminders.store';
@@ -97,12 +97,13 @@ export class RootStore {
       this.transport,
     );
 
-    when(
-      () => this.demoMode,
-      () => {
-        console.info('Demo mode enabled');
-      },
-    );
+    this.transactions.startRunners(),
+      when(
+        () => this.demoMode,
+        () => {
+          console.info('Demo mode enabled');
+        },
+      );
 
     when(
       () => this.isAuthenticated && !this.isHydrated,
@@ -110,11 +111,6 @@ export class RootStore {
         await Persister.attemptPurge();
         await this.bootstrap();
       },
-    );
-
-    when(
-      () => this.isBootstrapped,
-      () => this.transactions.startRunners(),
     );
   }
 
@@ -169,7 +165,8 @@ export class RootStore {
     return (
       this.tableViewDefs.isBootstrapped &&
       this.settings.isBootstrapped &&
-      this.globalCache.isBootstrapped
+      this.globalCache.isBootstrapped &&
+      this.contacts.isBootstrapped
     );
   }
 
@@ -179,7 +176,8 @@ export class RootStore {
     return (
       this.tableViewDefs.isLoading ||
       this.settings.isBootstrapping ||
-      this.globalCache.isLoading
+      this.globalCache.isLoading ||
+      this.contacts.isBootstrapping
     );
   }
 

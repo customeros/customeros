@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, MouseEvent } from 'react';
+import { useRef, useEffect, MouseEvent } from 'react';
 
 import set from 'lodash/set';
 import { observer } from 'mobx-react-lite';
@@ -36,10 +36,10 @@ import {
   RightElement,
 } from '@ui/form/InputGroup/InputGroup';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog/ConfirmDeleteDialog';
-import { EmailValidationMessage } from '@organization/components/Tabs/panels/PeoplePanel/ContactCard/EmailValidationMessage';
 
-import { timezoneOptions } from '../util';
+import { timezoneOptions } from '../../util';
 import { TimezoneSelect } from './TimezoneSelect';
+import { EmailValidationMessage } from './EmailValidationMessage';
 
 const roleOptions = [
   {
@@ -194,7 +194,7 @@ export const ContactCard = observer(
                 lastUpdated: new Date().toISOString(),
               },
               entityType: EntityType.Contact,
-            });
+            } as Tag);
             contactStore?.commit();
           },
         },
@@ -218,7 +218,7 @@ export const ContactCard = observer(
       <>
         <Card
           ref={cardRef}
-          key={contactStore?.getId()}
+          key={contactStore?.id}
           className={cn(
             'bg-white w-full group rounded-lg border-[1px] border-gray-200 cursor-pointer hover:shadow-md ',
             isExpanded ? 'shadow-md' : 'shadow-xs',

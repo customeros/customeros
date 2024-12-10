@@ -125,8 +125,10 @@ export const TimelineActionButtons = observer(
     const handleEmail = () => {
       if (store.ui.dirtyEditor !== null) {
         store.ui.confirmAction(store.ui.dirtyEditor, toggleEmailEditor);
+        store.ui.setOpenEmailEditor(false);
       } else {
         toggleEmailEditor();
+        store.ui.setOpenEmailEditor(false);
       }
     };
 
@@ -149,7 +151,11 @@ export const TimelineActionButtons = observer(
             className='rounded-3xl'
             dataTest='timeline-email-button'
             leftIcon={<Mail01 color='inherit' />}
-            colorScheme={openedEditor === 'email' ? 'primary' : 'gray'}
+            colorScheme={
+              openedEditor === 'email' || store.ui.openEmailEditor
+                ? 'primary'
+                : 'gray'
+            }
           >
             Email
           </Button>

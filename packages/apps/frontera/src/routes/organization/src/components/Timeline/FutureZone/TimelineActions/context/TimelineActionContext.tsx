@@ -1,4 +1,14 @@
-import { useState, useContext, createContext, PropsWithChildren } from 'react';
+import {
+  useState,
+  useEffect,
+  useContext,
+  createContext,
+  PropsWithChildren,
+} from 'react';
+
+import { observer } from 'mobx-react-lite';
+
+import { useStore } from '@shared/hooks/useStore';
 
 export const noop = () => undefined;
 export type EditorType = 'email' | 'log-entry' | 'reminder' | null;
@@ -19,20 +29,29 @@ export const useTimelineActionContext = () => {
   return useContext(TimelineActionContextContext);
 };
 
-export const TimelineActionContextContextProvider = ({
-  children,
-}: PropsWithChildren) => {
-  const [openedEditor, setOpenedEditor] = useState<EditorType>(null);
+export const TimelineActionContextContextProvider = observer(
+  ({ children }: PropsWithChildren) => {
+    const store = useStore();
+    const [openedEditor, setOpenedEditor] = useState<EditorType>(null);
 
-  return (
-    <TimelineActionContextContext.Provider
-      value={{
-        showEditor: setOpenedEditor,
-        closeEditor: () => setOpenedEditor(null),
-        openedEditor,
-      }}
-    >
-      {children}
-    </TimelineActionContextContext.Provider>
-  );
-};
+    useEffect(() => {
+      if (store.ui.openEmailEditor) {
+        setOpenedEditor('email');
+      } else {
+        store.ui.setEmailAdress('');
+      }
+    }, [store.ui.openEmailEditor]);
+
+    return (
+      <TimelineActionContextContext.Provider
+        value={{
+          showEditor: setOpenedEditor,
+          closeEditor: () => setOpenedEditor(null),
+          openedEditor,
+        }}
+      >
+        {children}
+      </TimelineActionContextContext.Provider>
+    );
+  },
+);

@@ -20,10 +20,12 @@ export class UIStore {
   isFilteringICP: boolean = false;
   isEditingTableCell: boolean = false;
   dirtyEditor: string | null = null;
+  openEmailEditor: boolean = false;
   activeConfirmation: string | null = null;
   contactPreviewCardOpen: boolean = false;
   movedIcpOrganization: number = 0;
   focusRow: number | string | null = null;
+  emailAdress: string = '';
   commandMenu = new CommandMenuStore();
   selectionId: number | null = null;
   flowCommandMenu = new FlowStepCommandMenuStore();
@@ -115,6 +117,14 @@ export class UIStore {
 
   setSelectionId(value: number | null) {
     this.selectionId = value;
+  }
+
+  setOpenEmailEditor(value: boolean) {
+    this.openEmailEditor = value;
+  }
+
+  setEmailAdress(value: string) {
+    this.emailAdress = value;
   }
 
   purgeLocalData() {

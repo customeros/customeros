@@ -138,6 +138,7 @@ query contact($id: ID!) {
     }
     connectedUsers {
       id
+      name
     }
     updatedAt
     enrichDetails {

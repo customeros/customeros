@@ -72,7 +72,7 @@ export class Organization extends Entity<OrganizationDatum> {
     return this.value.contacts.reduce((acc, id) => {
       const store = this.store.root.contacts.value.get(id);
 
-      if (store) acc.push(store.value);
+      if (store) acc.push(store.value as Contact);
 
       return acc;
     }, [] as Contact[]);

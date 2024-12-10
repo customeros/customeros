@@ -10,7 +10,8 @@ import {
   ContactUpdateInput,
 } from '@shared/types/__generated__/graphql.types';
 
-import { ContactStore } from '../Contact.store';
+import type { Contact } from '../Contact.dto.ts';
+
 import AddJobRoleDocument from './addJobRole.graphql';
 import ContactQueryDocument from './getContact.graphql';
 import ContactsQueryDocument from './getContacts.graphql';
@@ -291,7 +292,7 @@ class ContactService {
     >(CreateContactBulkByLinkedInMutationDocument, payload);
   }
 
-  public async mutateOperation(operation: Operation, store: ContactStore) {
+  public async mutateOperation(operation: Operation, store: Contact) {
     const diff = operation.diff?.[0];
     const type = diff?.op;
     const path = diff?.path;
@@ -351,16 +352,14 @@ class ContactService {
               },
             });
           } catch (e) {
-            store.root.ui.toastError(
-              'This LinkedIn is already used by another contact',
-              'contact-social',
-            );
-
-            const foundIdx = store.value.socials.findIndex(
-              (social) => social.url === value.url,
-            );
-
-            store.value.socials[foundIdx].url = '';
+            // store..ui.toastError(
+            //   'This LinkedIn is already used by another contact',
+            //   'contact-social',
+            // );
+            // const foundIdx = store.value.socials.findIndex(
+            //   (social) => social.url === value.url,
+            // );
+            // store.value.socials[foundIdx].url = '';
           }
         }
 
@@ -395,7 +394,25 @@ class ContactService {
           });
         }
       })
-      .with(['emails', 0, ...P.array()], () => {
+      .with(['primaryEmail', ...P.array()], () => {
+        if (type === 'update') {
+          this.setPrimaryEmail({
+            contactId: contactId!,
+            email: value.email ?? value,
+          });
+        }
+      })
+      .with(['emails', ...P.array()], () => {
+        if (type === 'add') {
+          this.updateContactEmail({
+            contactId: contactId!,
+            input: {
+              email: value.email,
+            },
+            previousEmail: '',
+          });
+        }
+
         if (type === 'update') {
           const findIndex = store.value.emails.findIndex(
             (email) => email.email === value,
@@ -408,17 +425,6 @@ class ContactService {
               primary: store.value.emails[findIndex].primary || false,
             },
             previousEmail: oldValue as string,
-          });
-        }
-
-        if (type === 'add') {
-          this.updateContactEmail({
-            contactId: contactId!,
-            input: {
-              email: value.email,
-              primary: true,
-            },
-            previousEmail: '',
           });
         }
 

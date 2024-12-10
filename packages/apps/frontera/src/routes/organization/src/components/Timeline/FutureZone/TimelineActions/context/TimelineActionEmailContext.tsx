@@ -65,6 +65,7 @@ export const TimelineActionEmailContextContextProvider = observer(
     invalidateQuery: () => void;
   }>) => {
     const { open: isOpen, onOpen, onClose } = useDisclosure();
+    const [_defaultEmailAdress, setDefaultEmailAdress] = useState([]);
     const [searchParams] = useSearchParams();
     const store = useStore();
 
@@ -75,19 +76,20 @@ export const TimelineActionEmailContextContextProvider = observer(
     const queryKey = useInfiniteGetTimelineQuery.getKey(
       timelineMeta.getTimelineVariables,
     );
+
     const { virtuosoRef } = useTimelineRefContext();
     const updateTimelineCache = useUpdateCacheWithNewEvent(virtuosoRef);
     const formId = 'compose-email-timeline-footer';
-
     const defaultValues: ComposeEmailDtoI = new ComposeEmailDto({
       from: '',
       fromProvider: '',
-      to: [],
+      to: [{ value: store.ui.emailAdress, label: store.ui.emailAdress }] ?? [],
       cc: [],
       bcc: [],
       subject: '',
       content: '',
     });
+
     const { state, reset, setDefaultValues } = useForm<ComposeEmailDtoI>({
       formId,
       defaultValues,
@@ -97,6 +99,29 @@ export const TimelineActionEmailContextContextProvider = observer(
       },
     });
 
+    useEffect(() => {
+      if (store.ui.emailAdress.length > 0) {
+        const newDefaultEmailAdress = [
+          { value: store.ui.emailAdress, label: store.ui.emailAdress },
+        ];
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        setDefaultEmailAdress(newDefaultEmailAdress as any);
+
+        setDefaultValues({
+          ...state.values,
+          to: newDefaultEmailAdress,
+        });
+      } else {
+        setDefaultEmailAdress([]);
+        setDefaultValues({
+          ...state.values,
+          to: [],
+        });
+      }
+      reset();
+    }, [store.ui.emailAdress, store.ui.openEmailEditor]);
+
     const handleResetEditor = () => {
       setDefaultValues(defaultValues);
       reset();
@@ -105,7 +130,6 @@ export const TimelineActionEmailContextContextProvider = observer(
     const handleEmailSendSuccess = (response: unknown) => {
       updateTimelineCache(response, queryKey);
 
-      // no timeout needed is this case as the event id is created when this is called
       invalidateQuery();
       setIsSending(false);
       handleResetEditor();
@@ -177,10 +201,10 @@ export const TimelineActionEmailContextContextProvider = observer(
     };
 
     const handleExitEditorAndCleanData = () => {
-      handleResetEditor();
-
       onClose();
+      handleResetEditor();
       closeEditor();
+      store.ui.setEmailAdress('');
     };
 
     const handleCheckCanExitSafely = () => {
@@ -199,8 +223,9 @@ export const TimelineActionEmailContextContextProvider = observer(
 
         return false;
       } else {
-        handleResetEditor();
         onClose();
+        store.ui.setEmailAdress('');
+        handleResetEditor();
 
         return true;
       }
