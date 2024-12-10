@@ -297,23 +297,18 @@ export class FlowsStore implements GroupStore<Flow> {
     this.isLoading = true;
 
     try {
-      await Promise.all(
-        ids.map((id) =>
-          this.service.archiveFlow({
-            id,
-          }),
-        ),
-      );
-
-      runInAction(() => {
-        this.sync({ action: 'DELETE', ids: ids });
-        ids.map((id) => this.value.delete(id)),
-          this.root.ui.toastSuccess(
-            `${ids.length} flows archived`,
-            'archive-flows-success',
-          );
-        options?.onSuccess?.();
-      });
+      await this.service.archiveFlowBulk({
+        ids,
+      }),
+        runInAction(() => {
+          this.sync({ action: 'DELETE', ids: ids });
+          ids.forEach((id) => this.value.delete(id)),
+            this.root.ui.toastSuccess(
+              `${ids.length} flows archived`,
+              'archive-flows-success',
+            );
+          options?.onSuccess?.();
+        });
     } catch (err) {
       this.error = (err as Error).message;
       this.root.ui.toastError(

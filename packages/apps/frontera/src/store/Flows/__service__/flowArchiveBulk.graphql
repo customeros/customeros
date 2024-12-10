@@ -1,0 +1,5 @@
+mutation flowArchiveBulk($ids: [ID!]!) {
+  flow_ArchiveBulk(ids: $ids) {
+    result
+  }
+}
