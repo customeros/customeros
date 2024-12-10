@@ -11,6 +11,7 @@ import { Hourglass02 } from '@ui/media/icons/Hourglass02';
 import { CheckCircle } from '@ui/media/icons/CheckCircle';
 import { RefreshCw02 } from '@ui/media/icons/RefreshCw02';
 import { SlashCircle01 } from '@ui/media/icons/SlashCircle01';
+import { CalendarCheck01 } from '@ui/media/icons/CalendarCheck01';
 
 interface FlowStatusCellProps {
   contactID: string;
@@ -41,6 +42,10 @@ export const FlowStatusCell = observer(({ contactID }: FlowStatusCellProps) => {
       <CheckCircle className='size-3' />,
     ])
     .with(FlowParticipantStatus.Scheduled, () => [
+      'Scheduled',
+      <CalendarCheck01 className='size-3' />,
+    ])
+    .with(FlowParticipantStatus.Scheduling, () => [
       'Scheduling',
       <RefreshCw02 className='size-3' />,
     ])
