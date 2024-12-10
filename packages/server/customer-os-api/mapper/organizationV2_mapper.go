@@ -16,6 +16,8 @@ func MapEntityToOrganizationUIDetails(entity *neo4jentity.OrganizationEntity, ou
 	output.ID = entity.ID
 	output.CreatedAt = entity.CreatedAt
 	output.UpdatedAt = entity.UpdatedAt
+	output.CustomerOsID = entity.CustomerOsId
+	output.ReferenceID = entity.ReferenceId
 	output.Name = entity.Name
 	output.Description = utils.StringPtr(entity.Description)
 	output.Website = utils.StringPtr(entity.Website)

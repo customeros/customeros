@@ -19,6 +19,9 @@ type OrganizationUiDetails {
     createdAt:              Time!
     updatedAt:              Time!
 
+    referenceId:            String!
+    customerOsId:           String!
+
     name:                   String!
     notes:                  String
     description:            String
