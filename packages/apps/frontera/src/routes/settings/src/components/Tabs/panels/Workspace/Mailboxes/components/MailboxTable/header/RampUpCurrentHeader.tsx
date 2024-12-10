@@ -8,7 +8,7 @@ export const RampUpCurrentHeader = () => {
   return (
     <>
       <div className='flex items-center gap-1'>
-        <span className='text-sm'>Daily Email Limit </span>
+        <span className='text-sm'>Current Limit (Max 40)</span>
         <InfoCircle
           onClick={onOpen}
           className='size-3 text-gray-500 cursor-pointer hover:text-gray-700'
@@ -20,13 +20,16 @@ export const RampUpCurrentHeader = () => {
         onClose={onClose}
         onConfirm={onClose}
         confirmButtonLabel='Got it'
-        label='Email best practices'
+        label='Mailbox best practices'
         body={
           <div className='space-y-4'>
             <p className='text-sm'>
               To maintain deliverability and avoid spam filters, we auto-warm
-              and rotate mailboxes, limiting each to a maximum of 40 emails per
-              day.
+              and rotate mailboxes.
+            </p>
+            <p className='text-sm'>
+              We start with 3 emails per day and gradually increase the volume,
+              limiting each mailbox to send up to 40 emails per day.
             </p>
             <p className='text-sm'>
               Using two mailboxes per domain has proven especially effective.

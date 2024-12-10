@@ -34,7 +34,7 @@ export const columns: Column[] = [
   columnHelper.accessor('rampUpCurrent', {
     id: 'rampUpCurrent',
     minSize: 200,
-    cell: (props) => <p>{props.getValue()} / 40</p>,
+    cell: (props) => <p>{props.getValue()} emails / day</p>,
     header: RampUpCurrentHeader,
     skeleton: () => null,
   }),

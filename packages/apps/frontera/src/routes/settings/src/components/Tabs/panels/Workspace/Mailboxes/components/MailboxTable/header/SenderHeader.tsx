@@ -22,7 +22,7 @@ export const SenderHeader = () => {
         onConfirm={onClose}
         confirmButtonLabel='Got it'
         body={
-          <div>
+          <div className='text-sm'>
             We’ll use the sender’s first and last name to represent the mailbox.
             They’ll receive notifications when someone replies, and their
             responses will appear in the relevant organizational timeline
