@@ -1,3 +1,4 @@
+import { useParams } from 'react-router-dom';
 import { useMemo, ReactElement, MouseEventHandler } from 'react';
 
 import { htmlToText } from 'html-to-text';
@@ -6,6 +7,7 @@ import { FlowActionType } from '@store/Flows/types';
 import { NodeProps, useReactFlow } from '@xyflow/react';
 
 import { cn } from '@ui/utils/cn';
+import { FlowStatus } from '@graphql/types';
 import { Mail01 } from '@ui/media/icons/Mail01';
 import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
@@ -35,7 +37,12 @@ export const EmailActionNode = observer(
     };
   }) => {
     const color = colorMap?.[data.action];
-    const { ui } = useStore();
+    const { ui, flows } = useStore();
+    const flowId = useParams()?.id as string;
+    const flow = flows.value.get(flowId)?.value;
+    const flowWasStarted =
+      flow?.status === FlowStatus.On || flow?.firstStartedAt;
+
     const { deleteElements } = useReactFlow();
 
     const parsedTemplate = useMemo(
@@ -76,7 +83,7 @@ export const EmailActionNode = observer(
             </span>
           </div>
 
-          {!ui.flowActionSidePanel.isOpen && (
+          {!ui.flowActionSidePanel.isOpen && !flowWasStarted && (
             <IconButton
               size='xxs'
               variant='ghost'

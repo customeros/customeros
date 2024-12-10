@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { observer } from 'mobx-react-lite';
 import { NodeProps, ViewportPortal } from '@xyflow/react';
 
+import { FlowStatus } from '@graphql/types';
 import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
 import { UserPlus01 } from '@ui/media/icons/UserPlus01';
@@ -17,7 +18,8 @@ export const TriggerNode = (
 ) => {
   const { ui, flows } = useStore();
   const flowId = useParams()?.id as string;
-  const flowWasStarted = flows.value.get(flowId)?.value?.firstStartedAt;
+  const flow = flows.value.get(flowId)?.value;
+  const flowWasStarted = flow?.status === FlowStatus.On || flow?.firstStartedAt;
 
   return (
     <>
