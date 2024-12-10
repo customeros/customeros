@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
+import { ReactFlowProvider } from '@xyflow/react';
 import { FinderTable } from '@finder/components/FinderTable';
-import { useReactFlow, ReactFlowProvider } from '@xyflow/react';
 import { FinderFilters } from '@finder/components/FinderFilters/FinderFilters';
 
 import { cn } from '@ui/utils/cn';
@@ -89,7 +89,6 @@ const FlowContent = observer(
     const store = useStore();
 
     const [searchParams] = useSearchParams();
-    const { getNodes } = useReactFlow();
     const id = useParams().id as string;
     const preset = searchParams.get('preset');
     const showFinder = searchParams.get('show') === 'finder';
@@ -99,12 +98,7 @@ const FlowContent = observer(
     const tableType = tableViewDef?.value?.tableType;
 
     useEffect(() => {
-      const nodes = getNodes();
-
-      // open settings
-      if (nodes.length === 2) {
-        setIsSidePanelOpen(true);
-      }
+      setIsSidePanelOpen(true);
     }, []);
 
     return (
