@@ -22,6 +22,7 @@ export const Mailboxes = observer(() => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const campaign = searchParams.get('campaign');
+  const campaignParam = campaign ? `&campaign=${campaign}` : '';
 
   const hasMailboxes = store.mailboxes.value.size > 0;
 
@@ -103,7 +104,54 @@ export const Mailboxes = observer(() => {
             )}
           </>
         )}
-        {showCheckout && <CheckoutPage />}
+        {showCheckout && (
+          <>
+            {noOfDomains > 0 && (
+              <div className='pb-[12px] pt-[8px] px-6 flex flex-col h-full border-r-[1px]'>
+                <div className='flex items-center justify-start gap-1 mb-4'>
+                  <span
+                    className={cn(
+                      'font-semibold text-gray-500',
+                      !campaign && 'hover:cursor-pointer hover:text-gray-700',
+                    )}
+                    onClick={() => {
+                      if (campaign) return;
+                      navigate('/settings?tab=mailboxes');
+                      store.mailboxes.resetBuyFlow();
+                    }}
+                  >
+                    Mailboxes
+                  </span>
+                  <ChevronRight className='mt-0.5 text-gray-400 size-3' />
+                  <span
+                    className='font-semibold text-gray-500 hover:text-gray-700 hover:cursor-pointer'
+                    onClick={() =>
+                      navigate(
+                        '/settings?tab=mailboxes&view=buy' + campaignParam,
+                      )
+                    }
+                  >
+                    Add new
+                  </span>
+                  <ChevronRight className='mt-0.5 text-gray-400 size-3' />
+                  <span className='font-semibold'>Checkout</span>
+                </div>
+                <div className='flex flex-col gap-2'>
+                  {!hasMailboxes && (
+                    <BaseBundleCard readonly defaultExpanded={false} />
+                  )}
+                  {(hasMailboxes || noOfDomains >= 5) && (
+                    <ExtendedBundleCard readonly defaultExpanded={false} />
+                  )}
+                  {noOfDomains > 0 && (
+                    <CheckoutCard showTotal hideCheckoutButton />
+                  )}
+                </div>
+              </div>
+            )}
+            <CheckoutPage />
+          </>
+        )}
       </div>
     </div>
   );

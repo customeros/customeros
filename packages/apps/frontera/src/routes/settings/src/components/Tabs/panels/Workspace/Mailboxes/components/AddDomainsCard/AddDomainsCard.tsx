@@ -83,6 +83,8 @@ export const AddDomainsCard = observer(() => {
               autoFocus={store.mailboxes.domain.length === 0}
               invalid={store.mailboxes.invalidDomain.length > 0}
               onKeyDown={(e) => {
+                e.stopPropagation();
+
                 if (e.key === 'Enter') {
                   e.currentTarget.blur();
                 }

@@ -33,6 +33,9 @@ export const RedirectUrlCard = observer(() => {
           placeholder='Website URL'
           value={store.mailboxes.redirectUrl}
           invalid={dirty && store.mailboxes.invalidRedirectUrl.length > 0}
+          onKeyDown={(e) => {
+            e.stopPropagation();
+          }}
           className={cn(
             'w-full',
             (!dirty ||

@@ -50,6 +50,9 @@ export const UsersCard = observer(() => {
             placeholder='E.g. john'
             value={store.mailboxes.usernames[0]}
             invalid={isUsername1Dirty && error1.length > 0}
+            onKeyDown={(e) => {
+              e.stopPropagation();
+            }}
             className={cn(
               'w-full',
               (!isUsername1Dirty ||
@@ -87,6 +90,9 @@ export const UsersCard = observer(() => {
             placeholder='E.g. melinda'
             value={store.mailboxes.usernames[1]}
             invalid={isUsername2Dirty && error2.length > 0}
+            onKeyDown={(e) => {
+              e.stopPropagation();
+            }}
             className={cn(
               'w-full mt-0.5',
               (!isUsername2Dirty ||
