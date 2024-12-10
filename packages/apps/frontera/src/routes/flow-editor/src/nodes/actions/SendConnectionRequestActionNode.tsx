@@ -1,9 +1,11 @@
 import { MouseEventHandler } from 'react';
+import { useParams } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
 import { useReactFlow } from '@xyflow/react';
 
 import { cn } from '@ui/utils/cn';
+import { FlowStatus } from '@graphql/types';
 import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
 import { Trash01 } from '@ui/media/icons/Trash01';
@@ -11,7 +13,12 @@ import { LinkedinOutline } from '@ui/media/icons/LinkedinOutline';
 
 export const SendConnectionRequestActionNode = observer(
   ({ id }: { id: string }) => {
-    const { ui } = useStore();
+    const { ui, flows } = useStore();
+    const flowId = useParams()?.id as string;
+    const flow = flows.value.get(flowId)?.value;
+    const flowWasStarted =
+      flow?.status === FlowStatus.On || flow?.firstStartedAt;
+
     const { deleteElements } = useReactFlow();
 
     const handleDelete: MouseEventHandler = (e) => {
@@ -34,7 +41,7 @@ export const SendConnectionRequestActionNode = observer(
 
             <span className='truncate'>Send connection request</span>
           </div>
-          {!ui.flowActionSidePanel.isOpen && (
+          {!ui.flowActionSidePanel.isOpen && !flowWasStarted && (
             <IconButton
               size='xxs'
               variant='ghost'

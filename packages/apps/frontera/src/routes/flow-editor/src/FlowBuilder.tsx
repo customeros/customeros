@@ -445,7 +445,10 @@ export const FlowBuilder = observer(
               return;
             }
 
-            if (node.type === 'trigger') {
+            if (
+              node.type === 'trigger' &&
+              flow.value.status === FlowStatus.Off
+            ) {
               event.stopPropagation();
               ui.flowCommandMenu.setOpen(true);
               ui.flowCommandMenu.setType('TriggersHub');

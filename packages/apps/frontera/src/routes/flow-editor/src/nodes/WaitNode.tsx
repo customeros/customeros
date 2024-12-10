@@ -1,9 +1,11 @@
+import { useParams } from 'react-router-dom';
 import { useRef, useState, useEffect } from 'react';
 
 import { MaskElement } from 'imask';
 import { observer } from 'mobx-react-lite';
 import { NodeProps, useNodesData, useReactFlow } from '@xyflow/react';
 
+import { FlowStatus } from '@graphql/types';
 import { Button } from '@ui/form/Button/Button';
 import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
@@ -33,9 +35,10 @@ export const WaitNode = observer(
     data,
   }: NodeProps & { data: Record<string, string | number | boolean> }) => {
     const { setNodes, getNode, deleteElements } = useReactFlow();
-    const { ui } = useStore();
+    const { ui, flows } = useStore();
     const nodeData = useNodesData(id);
     const inputRef = useRef<MaskElement>();
+    const flowId = useParams()?.id as string;
 
     const [unit, setUnit] = useState<DurationUnit>(
       (data.fe_waitDurationUnit as DurationUnit) || 'days',
@@ -47,6 +50,9 @@ export const WaitNode = observer(
 
     const isEditing = nodeData?.data?.isEditing;
     const selected = getNode(id)?.selected;
+    const flow = flows.value.get(flowId)?.value;
+    const flowWasStarted =
+      flow?.status === FlowStatus.On || flow?.firstStartedAt;
 
     const convertDuration = (
       value: number,
@@ -194,7 +200,7 @@ export const WaitNode = observer(
             )}
           </div>
 
-          {!ui.flowActionSidePanel.isOpen && (
+          {!ui.flowActionSidePanel.isOpen && !flowWasStarted && (
             <IconButton
               size='xxs'
               variant='ghost'

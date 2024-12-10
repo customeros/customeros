@@ -12,6 +12,7 @@ import {
 
 import { cn } from '@ui/utils/cn';
 import { Plus } from '@ui/media/icons/Plus';
+import { FlowStatus } from '@graphql/types';
 import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
 
@@ -33,7 +34,8 @@ export const BasicEdge: FC<
 
   const { ui, flows } = useStore();
   const flowId = useParams()?.id as string;
-  const flowWasStarted = flows.value.get(flowId)?.value?.firstStartedAt;
+  const flow = flows.value.get(flowId)?.value;
+  const flowWasStarted = flow?.status === FlowStatus.On || flow?.firstStartedAt;
 
   const toggleOpen: MouseEventHandler<HTMLButtonElement> = (e) => {
     // do not open when  flow actions panel is open
