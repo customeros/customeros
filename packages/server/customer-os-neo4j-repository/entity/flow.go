@@ -122,6 +122,7 @@ type FlowParticipantStatus string
 const (
 	FlowParticipantStatusOnHold       FlowParticipantStatus = "ON_HOLD"
 	FlowParticipantStatusReady        FlowParticipantStatus = "READY"
+	FlowParticipantStatusScheduling   FlowParticipantStatus = "SCHEDULING"
 	FlowParticipantStatusScheduled    FlowParticipantStatus = "SCHEDULED"
 	FlowParticipantStatusInProgress   FlowParticipantStatus = "IN_PROGRESS"
 	FlowParticipantStatusCompleted    FlowParticipantStatus = "COMPLETED"
