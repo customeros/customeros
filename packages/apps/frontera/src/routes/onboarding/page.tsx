@@ -79,7 +79,7 @@ export const OnboardingPage = observer(() => {
           <WelcomePage className='w-[152px] h-[120px] absolute top-[20%] right-[34%]' />
           <DecorativePattern width={500} height={480} className='-mt-[100px]' />
         </div>
-        <article className='flex flex-col items-center -mt-[180px]'>
+        <article className='flex flex-col items-center top-[-180px] relative'>
           <h1 className='font-bold text-xl'>Welcome!</h1>
           <p className='mt-2'>Let’s get you started.</p>
           <p className='mt-4'>Here are a few short paths to success:</p>
