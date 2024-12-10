@@ -36,3 +36,4 @@ func (GlobalOrganization) TableName() string {
 //CREATE EXTENSION IF NOT EXISTS pg_trgm;
 //CREATE INDEX idx_global_organization_name_trgm ON global_organization USING gin (name gin_trgm_ops);
 //CREATE INDEX idx_global_organization_primary_domain_trgm ON global_organizationgo USING gin (primary_domain gin_trgm_ops);
+//CREATE INDEX idx_global_organization_domains_gin ON global_organization USING gin (domains);
