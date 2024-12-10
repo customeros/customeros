@@ -114,7 +114,7 @@ func (r *queryResolver) UIOrganizations(ctx context.Context, ids []string) ([]*m
 		defer wg.Done()
 		tracing.SetDefaultResolverSpanTags(ctx, span)
 
-		socials, err := r.Services.CommonServices.SocialService.GetAllLinkedinForEntities(ctx, tenant, commonModel.ORGANIZATION, ids)
+		socials, err := r.Services.CommonServices.SocialService.GetAllForEntities(ctx, tenant, commonModel.ORGANIZATION, ids)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			setError(err)
