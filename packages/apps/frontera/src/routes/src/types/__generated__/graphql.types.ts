@@ -1755,6 +1755,16 @@ export type GlobalCacheEmailToken = {
   provider: Scalars['String']['output'];
 };
 
+export type GlobalOrganization = {
+  __typename?: 'GlobalOrganization';
+  iconUrl: Scalars['String']['output'];
+  id: Scalars['Int64']['output'];
+  logoUrl: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  primaryDomain: Scalars['String']['output'];
+  website: Scalars['String']['output'];
+};
+
 export type InteractionEvent = Node & {
   __typename?: 'InteractionEvent';
   actionItems?: Maybe<Array<ActionItem>>;
@@ -2425,6 +2435,7 @@ export type Mutation = {
   flowSender_Delete: Result;
   flowSender_Merge: FlowSender;
   flow_Archive: Result;
+  flow_ArchiveBulk: Result;
   flow_ChangeStatus: Flow;
   flow_Dummy_1Email: Result;
   flow_Merge: Flow;
@@ -2481,6 +2492,7 @@ export type Mutation = {
   /** @deprecated No longer supported */
   organization_RemoveTag: ActionResponse;
   organization_Save: Organization;
+  organization_SaveByGlobalOrganization: Organization;
   /** @deprecated No longer supported */
   organization_SetOwner: Organization;
   organization_Show: Scalars['ID']['output'];
@@ -2846,6 +2858,10 @@ export type MutationFlow_ArchiveArgs = {
   id: Scalars['ID']['input'];
 };
 
+export type MutationFlow_ArchiveBulkArgs = {
+  ids?: InputMaybe<Array<Scalars['ID']['input']>>;
+};
+
 export type MutationFlow_ChangeStatusArgs = {
   id: Scalars['ID']['input'];
   status: FlowStatus;
@@ -3094,6 +3110,10 @@ export type MutationOrganization_RemoveTagArgs = {
 
 export type MutationOrganization_SaveArgs = {
   input: OrganizationSaveInput;
+};
+
+export type MutationOrganization_SaveByGlobalOrganizationArgs = {
+  globalOrganizationId: Scalars['Int64']['input'];
 };
 
 export type MutationOrganization_SetOwnerArgs = {
@@ -3788,6 +3808,7 @@ export type OrganizationUiDetails = {
   contacts: Array<Scalars['String']['output']>;
   contracts: Array<Scalars['String']['output']>;
   createdAt: Scalars['Time']['output'];
+  customerOsId: Scalars['String']['output'];
   description?: Maybe<Scalars['String']['output']>;
   employees?: Maybe<Scalars['Int64']['output']>;
   enrichedAt?: Maybe<Scalars['Time']['output']>;
@@ -3813,6 +3834,7 @@ export type OrganizationUiDetails = {
   parentId?: Maybe<Scalars['ID']['output']>;
   parentName?: Maybe<Scalars['String']['output']>;
   public?: Maybe<Scalars['Boolean']['output']>;
+  referenceId: Scalars['String']['output'];
   relationship?: Maybe<OrganizationRelationship>;
   renewalSummaryArrForecast?: Maybe<Scalars['Float']['output']>;
   renewalSummaryMaxArrForecast?: Maybe<Scalars['Float']['output']>;
@@ -3823,6 +3845,7 @@ export type OrganizationUiDetails = {
   stage?: Maybe<OrganizationStage>;
   subsidiaries: Array<Scalars['String']['output']>;
   tags: Array<Tag>;
+  updatedAt: Scalars['Time']['output'];
   valueProposition?: Maybe<Scalars['String']['output']>;
   website?: Maybe<Scalars['String']['output']>;
   yearFounded?: Maybe<Scalars['Int64']['output']>;
@@ -4090,6 +4113,7 @@ export type Query = {
   flow_testEmailSender: Scalars['String']['output'];
   flows: Array<Flow>;
   gcli_Search: Array<GCliItem>;
+  globalOrganizations_Search: Array<GlobalOrganization>;
   global_Cache: GlobalCache;
   interactionEvent: InteractionEvent;
   invoice: Invoice;
@@ -4128,7 +4152,6 @@ export type Query = {
   tenantBillingProfiles: Array<TenantBillingProfile>;
   tenantSettings: TenantSettings;
   timelineEvents: Array<TimelineEvent>;
-  ui_organization: OrganizationUiDetails;
   ui_organizations: Array<OrganizationUiDetails>;
   ui_organizations_search: OrganizationSearchResult;
   user: User;
@@ -4245,6 +4268,11 @@ export type QueryGcli_SearchArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
 };
 
+export type QueryGlobalOrganizations_SearchArgs = {
+  limit: Scalars['Int']['input'];
+  searchTerm: Scalars['String']['input'];
+};
+
 export type QueryInteractionEventArgs = {
   id: Scalars['ID']['input'];
 };
@@ -4357,10 +4385,6 @@ export type QueryTenantBillingProfileArgs = {
 
 export type QueryTimelineEventsArgs = {
   ids: Array<Scalars['ID']['input']>;
-};
-
-export type QueryUi_OrganizationArgs = {
-  ids: Scalars['ID']['input'];
 };
 
 export type QueryUi_OrganizationsArgs = {
