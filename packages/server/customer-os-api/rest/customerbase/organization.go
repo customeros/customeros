@@ -47,6 +47,7 @@ func CreateOrganization(s *service.Services) gin.HandlerFunc {
 
 		tenant := rest.ValidateTenant(c, ctx, span)
 		if tenant == "" {
+			rest.SendError(c, span, http.StatusUnauthorized, rest.ErrInvalidAPIKey)
 			return
 		}
 
@@ -101,6 +102,7 @@ func GetOrganization(s *service.Services) gin.HandlerFunc {
 
 		tenant := rest.ValidateTenant(c, ctx, span)
 		if tenant == "" {
+			rest.SendError(c, span, http.StatusUnauthorized, rest.ErrInvalidAPIKey)
 			return
 		}
 
@@ -152,6 +154,7 @@ func SetPrimaryExternalSystemId(s *service.Services) gin.HandlerFunc {
 
 		tenant := rest.ValidateTenant(c, ctx, span)
 		if tenant == "" {
+			rest.SendError(c, span, http.StatusUnauthorized, rest.ErrInvalidAPIKey)
 			return
 		}
 
