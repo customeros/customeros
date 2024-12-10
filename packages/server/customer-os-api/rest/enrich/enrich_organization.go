@@ -207,8 +207,8 @@ func EnrichOrganization(services *service.Services) gin.HandlerFunc {
 			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer)
 			return
 		}
-		if enrichOrganizationApiResponse.Success == false {
-			rest.SendError(c, span, http.StatusOK, &rest.ErrorResponse{
+		if enrichOrganizationApiResponse.Success == false || enrichOrganizationApiResponse.Data == nil {
+			rest.SendError(c, span, http.StatusNotFound, &rest.ErrorResponse{
 				BaseResponse: rest.BuildBaseResponse(rest.StatusWarning),
 				Message:      "Organization not found",
 			})

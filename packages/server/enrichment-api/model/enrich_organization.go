@@ -1,8 +1,9 @@
 package model
 
 import (
-	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"strings"
+
+	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 )
 
 type EnrichOrganizationRequest struct {
@@ -16,11 +17,11 @@ func (e *EnrichOrganizationRequest) Normalize() {
 }
 
 type EnrichOrganizationResponse struct {
-	Status              string                         `json:"status"`
-	Message             string                         `json:"message,omitempty"`
-	Success             bool                           `json:"success"`
-	PrimaryEnrichSource string                         `json:"primaryEnrichSource"`
-	Data                EnrichOrganizationResponseData `json:"data"`
+	Status              string                          `json:"status"`
+	Message             string                          `json:"message,omitempty"`
+	Success             bool                            `json:"success"`
+	PrimaryEnrichSource string                          `json:"primaryEnrichSource"`
+	Data                *EnrichOrganizationResponseData `json:"data"`
 }
 
 type EnrichOrganizationResponseData struct {

@@ -367,7 +367,7 @@ func EnrichPerson(services *service.Services) gin.HandlerFunc {
 			return
 		}
 		if enrichPersonApiResponse.Data == nil || enrichPersonApiResponse.PersonFound == false {
-			c.JSON(http.StatusOK,
+			c.JSON(http.StatusNotFound,
 				rest.ErrorResponse{
 					BaseResponse: rest.BuildBaseResponse(rest.StatusWarning),
 					Message:      "Person not found",
