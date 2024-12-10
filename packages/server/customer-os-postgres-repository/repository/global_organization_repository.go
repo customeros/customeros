@@ -104,8 +104,8 @@ func (r *globalOrganizationRepository) Search(ctx context.Context, searchTerm st
 
 	organizations := make([]*entity.GlobalOrganization, 0)
 	result := r.db.WithContext(ctx).
-		Select("id, name, primary_domain, website, logo_url, icon_url").
-		Where("name ILIKE ? OR primary_domain ILIKE ?", "%"+searchTerm+"%", "%"+searchTerm+"%").
+		Select("id, name, primary_domain, website, logo_url, icon_url, domains").
+		Where("name ILIKE ? OR primary_domain ILIKE ? OR (domains IS NOT NULL AND EXISTS (SELECT 1 FROM unnest(domains) AS domain WHERE domain ILIKE ?))", "%"+searchTerm+"%", "%"+searchTerm+"%", "%"+searchTerm+"%").
 		Limit(limit).
 		Find(&organizations)
 	if result.Error != nil {

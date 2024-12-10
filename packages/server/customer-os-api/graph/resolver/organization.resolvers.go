@@ -1177,6 +1177,7 @@ func (r *queryResolver) OrganizationCheckWebsite(ctx context.Context, website st
 				Website:       globalOrg.Website,
 				LogoURL:       globalOrg.LogoUrl,
 				IconURL:       globalOrg.IconUrl,
+				Domains:       globalOrg.Domains,
 			}
 			// if current domain is not primary domain, add it to other domains of the global org
 			if !isPrimary && output.Domain != primaryDomain && output.Domain != "" && !utils.Contains(globalOrg.Domains, output.Domain) {

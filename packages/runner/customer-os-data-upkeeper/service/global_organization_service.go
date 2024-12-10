@@ -230,6 +230,10 @@ func (s *globalOrganizationService) ScrapinCompanyByWebsite() {
 			continue
 		}
 
+		if primaryDomain == "" {
+			continue
+		}
+
 		// call scrapin for primary domain
 		err = s.callApiScrapinOrganization(ctx, primaryDomain)
 		if err != nil {

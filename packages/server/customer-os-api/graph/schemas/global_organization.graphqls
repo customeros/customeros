@@ -9,4 +9,5 @@ type GlobalOrganization {
     website:        String!
     logoUrl:        String!
     iconUrl:        String!
+    domains:        [String!]!
 }

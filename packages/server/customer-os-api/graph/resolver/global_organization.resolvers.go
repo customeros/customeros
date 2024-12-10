@@ -44,6 +44,7 @@ func (r *queryResolver) GlobalOrganizationsSearch(ctx context.Context, searchTer
 			Website:       globalOrganizationEntity.Website,
 			IconURL:       globalOrganizationEntity.IconUrl,
 			LogoURL:       globalOrganizationEntity.LogoUrl,
+			Domains:       globalOrganizationEntity.Domains,
 		}
 
 		globalOrganizations = append(globalOrganizations, &globalOrganization)
