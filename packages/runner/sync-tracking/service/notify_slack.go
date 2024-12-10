@@ -151,7 +151,7 @@ func (s *trackingService) buildSlackNotification(record *entity.Tracking, global
 	contentLines = append(contentLines, fmt.Sprintf("<%s|*%s*> ", globalOrg.Website, globalOrg.Name))
 
 	if globalOrg.Description != "" {
-		contentLines = append(contentLines, fmt.Sprintf("%s \n"), globalOrg.Description)
+		contentLines = append(contentLines, fmt.Sprintf("%s \n", globalOrg.Description))
 	}
 
 	// Add optional fields only if they're not empty
