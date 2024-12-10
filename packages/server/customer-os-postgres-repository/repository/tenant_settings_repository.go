@@ -1,19 +1,16 @@
 package repository
 
 import (
-	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"golang.org/x/net/context"
 	"gorm.io/gorm"
-	"log"
 )
 
 type TenantSettingsRepository interface {
 	FindForTenantName(ctx context.Context, tenantName string) (*entity.TenantSettings, error)
 	Save(ctx context.Context, tenantSettings *entity.TenantSettings) (*entity.TenantSettings, error)
-	CheckKeysExist(ctx context.Context, tenantName string, keyName []string) (bool, error)
 }
 
 type tenantSettingsRepo struct {
@@ -45,29 +42,6 @@ func (r *tenantSettingsRepo) FindForTenantName(ctx context.Context, tenantName s
 	}
 
 	return &tenantSettings, nil
-}
-
-func (r *tenantSettingsRepo) CheckKeysExist(ctx context.Context, tenantName string, keyName []string) (bool, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "TenantSettingsRepository.CheckKeysExist")
-	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-
-	var rows int64
-	exists := true
-	for _, key := range keyName {
-		log.Printf("CheckKeysExist: %s, %s", tenantName, key)
-		err := r.db.Model(&entity.GoogleServiceAccountKey{}).
-			Where(&entity.GoogleServiceAccountKey{TenantName: tenantName, Key: key}, "tenant_name", "key").Count(&rows).Error
-
-		if err != nil {
-			return false, fmt.Errorf("CheckKeysExist: %w", err)
-		}
-		if rows == 0 {
-			exists = false
-		}
-
-	}
-	return exists, nil
 }
 
 func (r *tenantSettingsRepo) Save(ctx context.Context, tenantSettings *entity.TenantSettings) (*entity.TenantSettings, error) {

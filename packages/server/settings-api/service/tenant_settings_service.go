@@ -166,15 +166,21 @@ func (s *tenantSettingsService) GetForTenant(tenantName string) (*postgresentity
 func (s *tenantSettingsService) GetServiceActivations(tenantName string) (map[string]bool, error) {
 	result := make(map[string]bool)
 	for service, keyMappings := range s.serviceMap {
-		keys := make([]string, 0)
+		hasKeys := true
 		for _, mapping := range keyMappings {
-			keys = append(keys, mapping.DbKeyName)
+
+			keyValue, err := s.services.CommonServices.PostgresRepositories.GoogleServiceAccountKeyRepository.GetApiKeyByTenantService(context.TODO(), tenantName, mapping.DbKeyName)
+			if err != nil {
+				return nil, fmt.Errorf("GetServiceActivations: %w", err)
+			}
+
+			if keyValue == "" {
+				hasKeys = false
+				break
+			}
 		}
-		active, err := s.services.CommonServices.PostgresRepositories.TenantSettingsRepository.CheckKeysExist(context.TODO(), tenantName, keys)
-		if err != nil {
-			return nil, fmt.Errorf("GetServiceActivations: %w", err)
-		}
-		result[service] = active
+
+		result[service] = hasKeys
 	}
 
 	return result, nil
