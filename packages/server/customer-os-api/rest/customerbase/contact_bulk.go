@@ -44,6 +44,9 @@ type BulkErrorDetails struct {
 	// The value that caused the error
 	// example: invalid@email..com
 	Value string `json:"value"`
+	// The location of the record that caused the error
+	// example: 17
+	RecordNumber int `json:"recordNumber"`
 	// Description of the error
 	// example: invalid email format
 	Description string `json:"description"`
@@ -84,6 +87,7 @@ func CreateBulkContacts(s *service.Services) gin.HandlerFunc {
 
 		tenant := rest.ValidateTenant(c, ctx, span)
 		if tenant == "" {
+			rest.SendError(c, span, http.StatusUnauthorized, rest.ErrInvalidAPIKey)
 			return
 		}
 
@@ -146,14 +150,15 @@ func handleBulkJSONRequest(c *gin.Context, s *service.Services) {
 	var total int
 	var validationErrors []BulkErrorDetails
 
-	for _, contact := range multipleContacts {
+	for i, contact := range multipleContacts {
 		err, errValue := validateContact(&contact)
 		total++
 		if err != nil {
 			fail++
 			errDetails := BulkErrorDetails{
-				Value:       errValue,
-				Description: fmt.Sprintf("%v", err),
+				Value:        errValue,
+				RecordNumber: i,
+				Description:  fmt.Sprintf("%v", err),
 			}
 
 			validationErrors = append(validationErrors, errDetails)
@@ -181,8 +186,9 @@ func handleBulkJSONRequest(c *gin.Context, s *service.Services) {
 				Failed:  fail,
 			},
 			Details: BulkErrorDetails{
-				Value:       validationErrors[0].Value,
-				Description: validationErrors[0].Description,
+				Value:        validationErrors[0].Value,
+				RecordNumber: validationErrors[0].RecordNumber,
+				Description:  validationErrors[0].Description,
 			},
 		}
 		c.JSON(http.StatusPartialContent, resp)
@@ -269,8 +275,9 @@ func processCSVRecords(c *gin.Context, s *service.Services, reader *csv.Reader) 
 			total++
 			fail++
 			csvErrors = append(csvErrors, BulkErrorDetails{
-				Value:       fmt.Sprintf("%s", record),
-				Description: "Unable to read record",
+				Value:        fmt.Sprintf("%s", record),
+				RecordNumber: total,
+				Description:  "Unable to read record",
 			})
 			continue
 		}
@@ -290,8 +297,9 @@ func processCSVRecords(c *gin.Context, s *service.Services, reader *csv.Reader) 
 		if err != nil {
 			fail++
 			csvErrors = append(csvErrors, BulkErrorDetails{
-				Value:       errVal,
-				Description: fmt.Sprintf("%s", err),
+				Value:        errVal,
+				RecordNumber: total,
+				Description:  fmt.Sprintf("%s", err),
 			})
 		}
 		contactRecord.ContactId = processContact(c, s, contactRecord)
@@ -317,8 +325,9 @@ func processCSVRecords(c *gin.Context, s *service.Services, reader *csv.Reader) 
 				Failed:  fail,
 			},
 			Details: BulkErrorDetails{
-				Value:       csvErrors[0].Value,
-				Description: csvErrors[0].Description,
+				Value:        csvErrors[0].Value,
+				RecordNumber: csvErrors[0].RecordNumber,
+				Description:  csvErrors[0].Description,
 			},
 		}
 		c.JSON(http.StatusCreated, resp)
