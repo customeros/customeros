@@ -1695,10 +1695,12 @@ type ComplexityRoot struct {
 		UserParticipant func(childComplexity int) int
 	}
 
-	WebsiteDetails struct {
-		Domain  func(childComplexity int) int
-		Primary func(childComplexity int) int
-		Website func(childComplexity int) int
+	WebsiteCheckDetails struct {
+		Accepted           func(childComplexity int) int
+		Domain             func(childComplexity int) int
+		GlobalOrganization func(childComplexity int) int
+		Primary            func(childComplexity int) int
+		PrimaryDomain      func(childComplexity int) int
 	}
 
 	Workflow struct {
@@ -2115,7 +2117,7 @@ type QueryResolver interface {
 	OrganizationByCustomerOsID(ctx context.Context, customerOsID string) (*model.Organization, error)
 	OrganizationByCustomID(ctx context.Context, customID string) (*model.Organization, error)
 	OrganizationDistinctOwners(ctx context.Context) ([]*model.User, error)
-	OrganizationCheckWebsite(ctx context.Context, website string) (*model.WebsiteDetails, error)
+	OrganizationCheckWebsite(ctx context.Context, website string) (*model.WebsiteCheckDetails, error)
 	OrganizationsHiddenAfter(ctx context.Context, date time.Time) ([]string, error)
 	OrganizationByLinkedIn(ctx context.Context, linkedInURL string) (*model.Organization, error)
 	OrganizationExistsByLinkedIn(ctx context.Context, linkedInURL string) (bool, error)
@@ -12133,26 +12135,40 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.UserParticipant.UserParticipant(childComplexity), true
 
-	case "WebsiteDetails.domain":
-		if e.complexity.WebsiteDetails.Domain == nil {
+	case "WebsiteCheckDetails.accepted":
+		if e.complexity.WebsiteCheckDetails.Accepted == nil {
 			break
 		}
 
-		return e.complexity.WebsiteDetails.Domain(childComplexity), true
+		return e.complexity.WebsiteCheckDetails.Accepted(childComplexity), true
 
-	case "WebsiteDetails.primary":
-		if e.complexity.WebsiteDetails.Primary == nil {
+	case "WebsiteCheckDetails.domain":
+		if e.complexity.WebsiteCheckDetails.Domain == nil {
 			break
 		}
 
-		return e.complexity.WebsiteDetails.Primary(childComplexity), true
+		return e.complexity.WebsiteCheckDetails.Domain(childComplexity), true
 
-	case "WebsiteDetails.website":
-		if e.complexity.WebsiteDetails.Website == nil {
+	case "WebsiteCheckDetails.globalOrganization":
+		if e.complexity.WebsiteCheckDetails.GlobalOrganization == nil {
 			break
 		}
 
-		return e.complexity.WebsiteDetails.Website(childComplexity), true
+		return e.complexity.WebsiteCheckDetails.GlobalOrganization(childComplexity), true
+
+	case "WebsiteCheckDetails.primary":
+		if e.complexity.WebsiteCheckDetails.Primary == nil {
+			break
+		}
+
+		return e.complexity.WebsiteCheckDetails.Primary(childComplexity), true
+
+	case "WebsiteCheckDetails.primaryDomain":
+		if e.complexity.WebsiteCheckDetails.PrimaryDomain == nil {
+			break
+		}
+
+		return e.complexity.WebsiteCheckDetails.PrimaryDomain(childComplexity), true
 
 	case "Workflow.actionParam1":
 		if e.complexity.Workflow.ActionParam1 == nil {
@@ -15145,7 +15161,7 @@ input OpportunityRenewalUpdateAllForOrganizationInput {
     organization_ByCustomerOsId(customerOsId: String!): Organization @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_ByCustomId(customId: String!): Organization @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_DistinctOwners: [User!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    organization_CheckWebsite(website: String!): WebsiteDetails! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organization_CheckWebsite(website: String!): WebsiteCheckDetails! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organizations_HiddenAfter(date: Time!): [String!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_ByLinkedIn(linkedInUrl: String!): Organization @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_ExistsByLinkedIn(linkedInUrl: String!): Boolean! @hasRole(roles: [ADMIN, USER]) @hasTenant
@@ -15511,10 +15527,12 @@ type SuggestedMergeOrganization {
     suggestedBy: String
 }
 
-type WebsiteDetails {
-    website:                        String!
-    domain:                         String!
-    primary:                        Boolean!
+type WebsiteCheckDetails {
+    accepted:           Boolean!
+    primary:            Boolean!
+    domain:             String!
+    primaryDomain:      String!
+    globalOrganization: GlobalOrganization
 }
 
 enum Market {
@@ -94151,18 +94169,18 @@ func (ec *executionContext) _Query_organization_CheckWebsite(ctx context.Context
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
 			if err != nil {
-				var zeroVal *model.WebsiteDetails
+				var zeroVal *model.WebsiteCheckDetails
 				return zeroVal, err
 			}
 			if ec.directives.HasRole == nil {
-				var zeroVal *model.WebsiteDetails
+				var zeroVal *model.WebsiteCheckDetails
 				return zeroVal, errors.New("directive hasRole is not implemented")
 			}
 			return ec.directives.HasRole(ctx, nil, directive0, roles)
 		}
 		directive2 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.HasTenant == nil {
-				var zeroVal *model.WebsiteDetails
+				var zeroVal *model.WebsiteCheckDetails
 				return zeroVal, errors.New("directive hasTenant is not implemented")
 			}
 			return ec.directives.HasTenant(ctx, nil, directive1)
@@ -94175,10 +94193,10 @@ func (ec *executionContext) _Query_organization_CheckWebsite(ctx context.Context
 		if tmp == nil {
 			return nil, nil
 		}
-		if data, ok := tmp.(*model.WebsiteDetails); ok {
+		if data, ok := tmp.(*model.WebsiteCheckDetails); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.WebsiteDetails`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.WebsiteCheckDetails`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -94190,9 +94208,9 @@ func (ec *executionContext) _Query_organization_CheckWebsite(ctx context.Context
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.WebsiteDetails)
+	res := resTmp.(*model.WebsiteCheckDetails)
 	fc.Result = res
-	return ec.marshalNWebsiteDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐWebsiteDetails(ctx, field.Selections, res)
+	return ec.marshalNWebsiteCheckDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐWebsiteCheckDetails(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_organization_CheckWebsite(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -94203,14 +94221,18 @@ func (ec *executionContext) fieldContext_Query_organization_CheckWebsite(ctx con
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "website":
-				return ec.fieldContext_WebsiteDetails_website(ctx, field)
-			case "domain":
-				return ec.fieldContext_WebsiteDetails_domain(ctx, field)
+			case "accepted":
+				return ec.fieldContext_WebsiteCheckDetails_accepted(ctx, field)
 			case "primary":
-				return ec.fieldContext_WebsiteDetails_primary(ctx, field)
+				return ec.fieldContext_WebsiteCheckDetails_primary(ctx, field)
+			case "domain":
+				return ec.fieldContext_WebsiteCheckDetails_domain(ctx, field)
+			case "primaryDomain":
+				return ec.fieldContext_WebsiteCheckDetails_primaryDomain(ctx, field)
+			case "globalOrganization":
+				return ec.fieldContext_WebsiteCheckDetails_globalOrganization(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type WebsiteDetails", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type WebsiteCheckDetails", field.Name)
 		},
 	}
 	defer func() {
@@ -104975,8 +104997,8 @@ func (ec *executionContext) fieldContext_UserParticipant_type(_ context.Context,
 	return fc, nil
 }
 
-func (ec *executionContext) _WebsiteDetails_website(ctx context.Context, field graphql.CollectedField, obj *model.WebsiteDetails) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_WebsiteDetails_website(ctx, field)
+func (ec *executionContext) _WebsiteCheckDetails_accepted(ctx context.Context, field graphql.CollectedField, obj *model.WebsiteCheckDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_WebsiteCheckDetails_accepted(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -104989,7 +105011,7 @@ func (ec *executionContext) _WebsiteDetails_website(ctx context.Context, field g
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Website, nil
+		return obj.Accepted, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -105001,70 +105023,26 @@ func (ec *executionContext) _WebsiteDetails_website(ctx context.Context, field g
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(bool)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_WebsiteDetails_website(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_WebsiteCheckDetails_accepted(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "WebsiteDetails",
+		Object:     "WebsiteCheckDetails",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _WebsiteDetails_domain(ctx context.Context, field graphql.CollectedField, obj *model.WebsiteDetails) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_WebsiteDetails_domain(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Domain, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_WebsiteDetails_domain(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "WebsiteDetails",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _WebsiteDetails_primary(ctx context.Context, field graphql.CollectedField, obj *model.WebsiteDetails) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_WebsiteDetails_primary(ctx, field)
+func (ec *executionContext) _WebsiteCheckDetails_primary(ctx context.Context, field graphql.CollectedField, obj *model.WebsiteCheckDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_WebsiteCheckDetails_primary(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -105094,14 +105072,157 @@ func (ec *executionContext) _WebsiteDetails_primary(ctx context.Context, field g
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_WebsiteDetails_primary(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_WebsiteCheckDetails_primary(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "WebsiteDetails",
+		Object:     "WebsiteCheckDetails",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _WebsiteCheckDetails_domain(ctx context.Context, field graphql.CollectedField, obj *model.WebsiteCheckDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_WebsiteCheckDetails_domain(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Domain, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_WebsiteCheckDetails_domain(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "WebsiteCheckDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _WebsiteCheckDetails_primaryDomain(ctx context.Context, field graphql.CollectedField, obj *model.WebsiteCheckDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_WebsiteCheckDetails_primaryDomain(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PrimaryDomain, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_WebsiteCheckDetails_primaryDomain(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "WebsiteCheckDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _WebsiteCheckDetails_globalOrganization(ctx context.Context, field graphql.CollectedField, obj *model.WebsiteCheckDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_WebsiteCheckDetails_globalOrganization(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.GlobalOrganization, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.GlobalOrganization)
+	fc.Result = res
+	return ec.marshalOGlobalOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐGlobalOrganization(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_WebsiteCheckDetails_globalOrganization(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "WebsiteCheckDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_GlobalOrganization_id(ctx, field)
+			case "name":
+				return ec.fieldContext_GlobalOrganization_name(ctx, field)
+			case "primaryDomain":
+				return ec.fieldContext_GlobalOrganization_primaryDomain(ctx, field)
+			case "website":
+				return ec.fieldContext_GlobalOrganization_website(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_GlobalOrganization_logoUrl(ctx, field)
+			case "iconUrl":
+				return ec.fieldContext_GlobalOrganization_iconUrl(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type GlobalOrganization", field.Name)
 		},
 	}
 	return fc, nil
@@ -128999,32 +129120,39 @@ func (ec *executionContext) _UserParticipant(ctx context.Context, sel ast.Select
 	return out
 }
 
-var websiteDetailsImplementors = []string{"WebsiteDetails"}
+var websiteCheckDetailsImplementors = []string{"WebsiteCheckDetails"}
 
-func (ec *executionContext) _WebsiteDetails(ctx context.Context, sel ast.SelectionSet, obj *model.WebsiteDetails) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, websiteDetailsImplementors)
+func (ec *executionContext) _WebsiteCheckDetails(ctx context.Context, sel ast.SelectionSet, obj *model.WebsiteCheckDetails) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, websiteCheckDetailsImplementors)
 
 	out := graphql.NewFieldSet(fields)
 	deferred := make(map[string]*graphql.FieldSet)
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
-			out.Values[i] = graphql.MarshalString("WebsiteDetails")
-		case "website":
-			out.Values[i] = ec._WebsiteDetails_website(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "domain":
-			out.Values[i] = ec._WebsiteDetails_domain(ctx, field, obj)
+			out.Values[i] = graphql.MarshalString("WebsiteCheckDetails")
+		case "accepted":
+			out.Values[i] = ec._WebsiteCheckDetails_accepted(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "primary":
-			out.Values[i] = ec._WebsiteDetails_primary(ctx, field, obj)
+			out.Values[i] = ec._WebsiteCheckDetails_primary(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "domain":
+			out.Values[i] = ec._WebsiteCheckDetails_domain(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "primaryDomain":
+			out.Values[i] = ec._WebsiteCheckDetails_primaryDomain(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "globalOrganization":
+			out.Values[i] = ec._WebsiteCheckDetails_globalOrganization(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -134134,18 +134262,18 @@ func (ec *executionContext) unmarshalNUserUpdateInput2githubᚗcomᚋopenlineᚑ
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNWebsiteDetails2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐWebsiteDetails(ctx context.Context, sel ast.SelectionSet, v model.WebsiteDetails) graphql.Marshaler {
-	return ec._WebsiteDetails(ctx, sel, &v)
+func (ec *executionContext) marshalNWebsiteCheckDetails2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐWebsiteCheckDetails(ctx context.Context, sel ast.SelectionSet, v model.WebsiteCheckDetails) graphql.Marshaler {
+	return ec._WebsiteCheckDetails(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNWebsiteDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐWebsiteDetails(ctx context.Context, sel ast.SelectionSet, v *model.WebsiteDetails) graphql.Marshaler {
+func (ec *executionContext) marshalNWebsiteCheckDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐWebsiteCheckDetails(ctx context.Context, sel ast.SelectionSet, v *model.WebsiteCheckDetails) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
 		}
 		return graphql.Null
 	}
-	return ec._WebsiteDetails(ctx, sel, v)
+	return ec._WebsiteCheckDetails(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNWorkflow2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐWorkflow(ctx context.Context, sel ast.SelectionSet, v model.Workflow) graphql.Marshaler {
@@ -135307,6 +135435,13 @@ func (ec *executionContext) marshalOGCliAttributeKeyValuePair2ᚕᚖgithubᚗcom
 	}
 
 	return ret
+}
+
+func (ec *executionContext) marshalOGlobalOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐGlobalOrganization(ctx context.Context, sel ast.SelectionSet, v *model.GlobalOrganization) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._GlobalOrganization(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOID2ᚕstringᚄ(ctx context.Context, v interface{}) ([]string, error) {

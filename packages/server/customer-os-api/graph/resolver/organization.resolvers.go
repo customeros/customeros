@@ -1120,33 +1120,80 @@ func (r *queryResolver) OrganizationDistinctOwners(ctx context.Context) ([]*mode
 }
 
 // OrganizationCheckWebsite is the resolver for the organization_CheckWebsite field.
-func (r *queryResolver) OrganizationCheckWebsite(ctx context.Context, website string) (*model.WebsiteDetails, error) {
+func (r *queryResolver) OrganizationCheckWebsite(ctx context.Context, website string) (*model.WebsiteCheckDetails, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.OrganizationCheckWebsite", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogKV("request.website", website)
 
 	if website == "" {
-		return &model.WebsiteDetails{
-			Website: website,
+		graphql.AddErrorf(ctx, "Missing input parameter")
+		return nil, nil
+	}
+
+	// step 1 get check if accepted
+	isKnownCompanyHostingUrl := r.Services.CommonServices.DomainService.IsKnownCompanyHostingUrl(ctx, website)
+	if isKnownCompanyHostingUrl {
+		return &model.WebsiteCheckDetails{
+			Accepted: false,
 		}, nil
 	}
 
-	// step 1 get domain from website
-	domain, altWebsite := r.Services.CommonServices.DomainService.GetPrimaryDomainForOrganizationWebsite(ctx, website)
-	if domain == "" {
-		return &model.WebsiteDetails{
-			Website: altWebsite,
-		}, nil
+	// step 2 get primary domain
+	isPrimary, primaryDomain := domaincheck.PrimaryDomainCheck(website)
+
+	if primaryDomain != "" {
+		isAcceptedDomain := r.Services.CommonServices.DomainService.AcceptedDomainForOrganization(ctx, primaryDomain)
+		if !isAcceptedDomain {
+			return &model.WebsiteCheckDetails{
+				Accepted:      false,
+				Primary:       isPrimary,
+				PrimaryDomain: primaryDomain,
+			}, nil
+		}
 	}
 
-	// step 2 check if domain is primary
-	isPrimary, _ := domaincheck.PrimaryDomainCheck(domain)
-	return &model.WebsiteDetails{
-		Website: altWebsite,
-		Domain:  domain,
-		Primary: isPrimary,
-	}, nil
+	output := model.WebsiteCheckDetails{
+		Accepted:      true,
+		Primary:       isPrimary,
+		PrimaryDomain: primaryDomain,
+	}
+	if isPrimary {
+		output.Domain = primaryDomain
+	} else {
+		output.Domain = utils.ExtractDomain(website)
+	}
+
+	if primaryDomain != "" {
+		globalOrg, err := r.Services.CommonServices.PostgresRepositories.GlobalOrganizationRepository.GetByPrimaryDomain(ctx, primaryDomain)
+		if err != nil {
+			tracing.TraceErr(span, err)
+		}
+		if globalOrg != nil {
+			output.GlobalOrganization = &model.GlobalOrganization{
+				ID:            int64(globalOrg.ID),
+				Name:          globalOrg.Name,
+				PrimaryDomain: globalOrg.PrimaryDomain,
+				Website:       globalOrg.Website,
+				LogoURL:       globalOrg.LogoUrl,
+				IconURL:       globalOrg.IconUrl,
+			}
+			// if current domain is not primary domain, add it to other domains of the global org
+			if !isPrimary && output.Domain != primaryDomain && output.Domain != "" && !utils.Contains(globalOrg.Domains, output.Domain) {
+				// confirm primary domain for domain
+				isPrimaryForDomain, primaryDomainForDomain := domaincheck.PrimaryDomainCheck(output.Domain)
+				if !isPrimaryForDomain && primaryDomainForDomain == primaryDomain {
+					globalOrg.Domains = append(globalOrg.Domains, output.Domain)
+					_, err = r.Services.CommonServices.PostgresRepositories.GlobalOrganizationRepository.Update(ctx, globalOrg)
+					if err != nil {
+						tracing.TraceErr(span, err)
+					}
+				}
+			}
+		}
+	}
+
+	return &output, nil
 }
 
 // OrganizationsHiddenAfter is the resolver for the organizations_HiddenAfter field.
