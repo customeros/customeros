@@ -279,9 +279,14 @@ func VerifyEmailAddress(services *service.Services) gin.HandlerFunc {
 			return
 		}
 
+		deliverable := result.Data.EmailData.Deliverable
+		if deliverable == "" {
+			deliverable = "unknown"
+		}
+
 		emailVerificationResponse := EmailVerificationRecord{
 			EmailAddress:          emailAddress,
-			Deliverable:           result.Data.EmailData.Deliverable,
+			Deliverable:           deliverable,
 			Provider:              result.Data.DomainData.Provider,
 			SecureGatewayProvider: result.Data.DomainData.SecureGatewayProvider,
 			IsCatchAll:            result.Data.DomainData.IsCatchAll,
@@ -307,7 +312,7 @@ func VerifyEmailAddress(services *service.Services) gin.HandlerFunc {
 			AlternateEmail: result.Data.EmailData.AlternateEmail,
 		}
 
-		if emailVerificationResponse.Deliverable != "unknown" && emailVerificationResponse.Deliverable != "" {
+		if emailVerificationResponse.Deliverable != "unknown" {
 			billableEvent := postgresentity.BillableEventEmailVerifiedNotCatchAll
 			if emailVerificationResponse.IsCatchAll {
 				billableEvent = postgresentity.BillableEventEmailVerifiedCatchAll
