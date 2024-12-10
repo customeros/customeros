@@ -78,19 +78,21 @@ export class FlowParticipantStore implements Store<FlowParticipant> {
   };
 
   // this is triggered only if one contact is selected and it has exactly 1 flow - otherwise bulk operation is performed
-  public deleteFlowParticipant = async () => {
+  public deleteFlowParticipant = async (flowId?: string) => {
     this.isLoading = true;
 
     const contactStore = this.contact;
     const flowName = this.contact?.flows?.[0]?.value.name;
-    const flowId = this.contact?.flows?.[0]?.value.metadata.id ?? '';
+    const flowIds = flowId
+      ? [flowId]
+      : this.contact?.flows?.map((f) => f.value.metadata.id) || [];
 
     try {
       await this.removeFlowParticipant();
       runInAction(() => {
         contactStore?.update(
           (c) => {
-            c.flows = [];
+            c.flows = c.flows?.filter((f) => f.metadata.id !== flowId);
 
             return c;
           },
@@ -108,7 +110,7 @@ export class FlowParticipantStore implements Store<FlowParticipant> {
 
         this.root.flows.sync({
           action: 'INVALIDATE',
-          ids: [flowId],
+          ids: flowIds,
         });
       });
     } catch (e) {
