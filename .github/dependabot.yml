@@ -11,20 +11,6 @@ updates:
     open-pull-requests-limit: 5
 
   - package-ecosystem: "gomod"
-    directory: "/packages/server/customer-os-analytics-api"
-    schedule:
-      interval: "daily"
-      time: "04:00"
-    open-pull-requests-limit: 3
-    labels:
-      - "gomod"
-      - "dependencies"
-      - "app/customer-os-analytics-api"
-    pull-request-branch-name:
-      separator: "-"
-    rebase-strategy: "auto"
-
-  - package-ecosystem: "gomod"
     directory: "/packages/server/customer-os-api"
     schedule:
       interval: "daily"
@@ -300,34 +286,6 @@ updates:
       - "gomod"
       - "dependencies"
       - "app/user-admin-api"
-    pull-request-branch-name:
-      separator: "-"
-    rebase-strategy: "auto"
-
-  - package-ecosystem: "gomod"
-    directory: "/packages/server/anthropic-api"
-    schedule:
-      interval: "daily"
-      time: "04:00"
-    open-pull-requests-limit: 5
-    labels:
-      - "gomod"
-      - "dependencies"
-      - "app/anthropic-api"
-    pull-request-branch-name:
-      separator: "-"
-    rebase-strategy: "auto"
-
-  - package-ecosystem: "gomod"
-    directory: "/packages/server/openai-api"
-    schedule:
-      interval: "daily"
-      time: "04:00"
-    open-pull-requests-limit: 5
-    labels:
-      - "gomod"
-      - "dependencies"
-      - "app/openai-api"
     pull-request-branch-name:
       separator: "-"
     rebase-strategy: "auto"
