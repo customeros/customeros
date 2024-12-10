@@ -505,11 +505,11 @@ func GetBulkEmailVerificationResults(services *service.Services) gin.HandlerFunc
 		bulkRequest, err := services.Repositories.PostgresRepositories.EmailValidationRequestBulkRepository.GetByRequestID(ctx, requestID)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to insert records"))
-			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer.WithMessage("Failed to retrieve results"))
+			rest.SendError(c, span, http.StatusNotFound, rest.ErrNotFound.WithMessage("invalid requestId"))
 			return
 		}
 		if bulkRequest == nil {
-			rest.SendError(c, span, http.StatusNotFound, rest.ErrNotFound.WithMessage("Unable to find request"))
+			rest.SendError(c, span, http.StatusNotFound, rest.ErrNotFound)
 			return
 		}
 
