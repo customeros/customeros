@@ -4,7 +4,7 @@ extend type Query {
     organization_ByCustomerOsId(customerOsId: String!): Organization @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_ByCustomId(customId: String!): Organization @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_DistinctOwners: [User!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    organization_CheckWebsite(website: String!): WebsiteDetails! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organization_CheckWebsite(website: String!): WebsiteCheckDetails! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organizations_HiddenAfter(date: Time!): [String!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_ByLinkedIn(linkedInUrl: String!): Organization @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_ExistsByLinkedIn(linkedInUrl: String!): Boolean! @hasRole(roles: [ADMIN, USER]) @hasTenant
@@ -370,10 +370,12 @@ type SuggestedMergeOrganization {
     suggestedBy: String
 }
 
-type WebsiteDetails {
-    website:                        String!
-    domain:                         String!
-    primary:                        Boolean!
+type WebsiteCheckDetails {
+    accepted:           Boolean!
+    primary:            Boolean!
+    domain:             String!
+    primaryDomain:      String!
+    globalOrganization: GlobalOrganization
 }
 
 enum Market {

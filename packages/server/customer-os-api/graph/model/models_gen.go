@@ -2963,10 +2963,12 @@ type UserUpdateInput struct {
 	ProfilePhotoURL *string `json:"profilePhotoUrl,omitempty"`
 }
 
-type WebsiteDetails struct {
-	Website string `json:"website"`
-	Domain  string `json:"domain"`
-	Primary bool   `json:"primary"`
+type WebsiteCheckDetails struct {
+	Accepted           bool                `json:"accepted"`
+	Primary            bool                `json:"primary"`
+	Domain             string              `json:"domain"`
+	PrimaryDomain      string              `json:"primaryDomain"`
+	GlobalOrganization *GlobalOrganization `json:"globalOrganization,omitempty"`
 }
 
 type Workflow struct {
