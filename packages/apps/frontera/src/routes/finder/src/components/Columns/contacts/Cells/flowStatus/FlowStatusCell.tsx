@@ -49,7 +49,7 @@ export const FlowStatusCell = observer(({ contactID }: FlowStatusCellProps) => {
       <Trophy01 className='size-3' />,
     ])
     .otherwise(() => [
-      <span className='text-grayModern-400'>Not in flow</span>,
+      <span className='text-grayModern-400'>No status yet</span>,
       null,
     ]);
 
