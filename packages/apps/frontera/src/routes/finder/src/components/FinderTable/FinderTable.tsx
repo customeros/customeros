@@ -155,6 +155,10 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
           store.ui.commandMenu.setContext({
             entity: 'Contact',
             ids: selectedIds,
+            meta: {
+              tableId: tableId,
+              id: params.id,
+            },
           });
         }
 
@@ -163,6 +167,10 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
           store.ui.commandMenu.setContext({
             entity: 'Contact',
             ids: selectedIds,
+            meta: {
+              tableId: tableId,
+              id: params.id,
+            },
           });
         }
       }
@@ -268,6 +276,10 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
         store.ui.commandMenu.setContext({
           entity: 'Contact',
           ids: [data?.[index]?.id],
+          meta: {
+            tableId: tableId,
+            id: params.id,
+          },
         });
       }
     }

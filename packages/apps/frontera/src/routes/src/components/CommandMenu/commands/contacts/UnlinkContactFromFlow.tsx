@@ -5,6 +5,7 @@ import { observer } from 'mobx-react-lite';
 import { ContactStore } from '@store/Contacts/Contact.store';
 import { FlowParticipantStore } from '@store/FlowParticipants/FlowParticipant.store';
 
+import { TableIdType } from '@graphql/types';
 import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
 import {
@@ -33,21 +34,36 @@ export const UnlinkContactFromFlow = observer(() => {
   const getContactFlowIds = (contactId: string) => {
     const contact = store.contacts.value.get(contactId);
 
-    if (!contact?.flows) return [];
+    return match(context.meta?.tableId)
+      .with(TableIdType.FlowContacts, () => {
+        const flow = store.flows.value.get(context.meta?.id)?.value
+          .participants;
 
-    return contact.flows
-      .map((flow) => {
-        const matchingContact = flow.value.participants.find(
-          (c) => c.entityId === contactId,
-        );
+        if (!flow) return [];
 
-        return matchingContact?.metadata.id;
+        const flowContactId = flow.find((p) => p.entityId === contactId)
+          ?.metadata.id;
+
+        return flowContactId ? [flowContactId] : [];
       })
-      .filter((id): id is string => typeof id === 'string');
+      .otherwise(() => {
+        if (!contact?.flows) return [];
+
+        return contact.flows
+          ?.map((flow) => {
+            const matchingContact = flow.value.participants.find(
+              (c) => c.entityId === contactId,
+            );
+
+            return matchingContact?.metadata.id;
+          })
+          .filter((id): id is string => typeof id === 'string');
+      });
   };
   const flowContactIds: string[] = [
     ...new Set(context.ids.flatMap((id) => getContactFlowIds(id))),
   ];
+
   const flowContact = store.flowParticipants.value.get(
     flowContactIds[0],
   ) as FlowParticipantStore;
@@ -56,29 +72,48 @@ export const UnlinkContactFromFlow = observer(() => {
     if (!context.ids?.length) return;
 
     if (flowContactIds.length > 1) {
-      store.flowParticipants.deleteFlowParticipants(flowContactIds);
+      store.flowParticipants.deleteFlowParticipants(
+        flowContactIds,
+        context?.meta?.id,
+      );
       handleClose();
 
       return;
     }
 
-    flowContact.deleteFlowParticipant();
+    flowContact.deleteFlowParticipant(context?.meta?.id);
     handleClose();
   };
 
-  const title =
-    context.ids?.length > 1
-      ? `Remove ${context.ids?.length} contacts from all flows?`
-      : `Remove ${(entity as ContactStore)?.name} from ${
-          flowContactIds.length === 1
-            ? (entity as ContactStore)?.flows?.[0]?.value?.name
-            : 'all their flows'
-        }?`;
+  const title = match(context.meta?.tableId)
+    .with(TableIdType.FlowContacts, () => {
+      const flowName = store.flows.value.get(context.meta?.id)?.value.name;
 
-  const description =
-    context.ids?.length > 1
-      ? `This will remove ${context.ids?.length} contacts from their flows and immediately stop any remaining actions`
-      : `This will remove ${flowContact.contact?.name} from their flows and immediately stop any remaining actions`;
+      return context.ids?.length > 1
+        ? `Remove ${context.ids?.length} contacts from ${flowName}?`
+        : `Remove ${(entity as ContactStore)?.name} from ${flowName}?`;
+    })
+    .otherwise(() => {
+      return context.ids?.length > 1
+        ? `Remove ${context.ids?.length} contacts from all flows?`
+        : `Remove ${(entity as ContactStore)?.name} from ${
+            flowContactIds.length === 1
+              ? (entity as ContactStore)?.flows?.[0]?.value?.name
+              : 'all their flows'
+          }?`;
+    });
+
+  const description = match(context.meta?.tableId)
+    .with(TableIdType.FlowContacts, () => {
+      return context.ids?.length > 1
+        ? `This will remove ${context.ids?.length} contacts from this flow and immediately stop any remaining actions`
+        : `This will remove ${flowContact.contact?.name} from this flow and immediately stop any remaining actions`;
+    })
+    .otherwise(() => {
+      return context.ids?.length > 1
+        ? `This will remove ${context.ids?.length} contacts from their flows and immediately stop any remaining actions`
+        : `This will remove ${flowContact.contact?.name} from their flows and immediately stop any remaining actions`;
+    });
 
   useEffect(() => {
     closeButtonRef.current?.focus();

@@ -57,7 +57,7 @@ export class FlowParticipantsStore implements GroupStore<FlowParticipant> {
     });
   };
 
-  public deleteFlowParticipants = async (ids: string[]) => {
+  public deleteFlowParticipants = async (ids: string[], flowId?: string) => {
     if (!ids.length) return;
     this.isLoading = true;
 
@@ -77,7 +77,9 @@ export class FlowParticipantsStore implements GroupStore<FlowParticipant> {
         contactStores.forEach((c) => {
           c?.update(
             (c) => {
-              c.flows = [];
+              c.flows = flowId
+                ? c.flows.filter((e) => e.metadata.id !== flowId)
+                : [];
 
               return c;
             },
