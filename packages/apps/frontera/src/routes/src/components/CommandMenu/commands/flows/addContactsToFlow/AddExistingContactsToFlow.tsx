@@ -60,7 +60,7 @@ export const AddExistingContacts = observer(() => {
   const contactsOptions = contacts.toComputedArray((arr) =>
     search
       ? new Fuse(arr, {
-          keys: ['value.name'],
+          keys: ['value.name', 'value.firstName', 'value.lastName'],
           threshold: 0.3,
           isCaseSensitive: false,
         })
