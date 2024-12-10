@@ -1,4 +1,4 @@
-# Test: successful upload with single column CSV
+# Test: Successful bulk emails upload
 POST https://api.customeros.ai/verify/v1/email/bulk
 Content-Type: multipart/form-data
 X-CUSTOMER-OS-API-KEY: {{api_key}}
