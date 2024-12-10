@@ -9,6 +9,7 @@ import { Trophy01 } from '@ui/media/icons/Trophy01';
 import { FlowParticipantStatus } from '@graphql/types';
 import { Hourglass02 } from '@ui/media/icons/Hourglass02';
 import { CheckCircle } from '@ui/media/icons/CheckCircle';
+import { RefreshCw02 } from '@ui/media/icons/RefreshCw02';
 import { SlashCircle01 } from '@ui/media/icons/SlashCircle01';
 import { CalendarCheck01 } from '@ui/media/icons/CalendarCheck01';
 
@@ -43,6 +44,10 @@ export const FlowStatusCell = observer(({ contactID }: FlowStatusCellProps) => {
     .with(FlowParticipantStatus.Scheduled, () => [
       'Scheduled',
       <CalendarCheck01 className='size-3' />,
+    ])
+    .with(FlowParticipantStatus.Scheduling, () => [
+      'Scheduling',
+      <RefreshCw02 className='size-3' />,
     ])
     .with(FlowParticipantStatus.GoalAchieved, () => [
       'Goal achieved',
