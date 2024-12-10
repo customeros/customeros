@@ -22,6 +22,7 @@ func AuthorizeMe(s *service.Services) gin.HandlerFunc {
 
 		tenant := ValidateTenant(c, ctx, span)
 		if tenant == "" {
+			SendError(c, span, http.StatusUnauthorized, ErrInvalidAPIKey)
 			return
 		}
 
