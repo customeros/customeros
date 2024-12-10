@@ -97,6 +97,10 @@ type OrganizationRecord struct {
 	// example: https://customeros.ai
 	Website string `json:"website,omitempty"`
 
+	// Organization's LinkedIn profile URL
+	// example: https://linkedin.com/company/openline
+	LinkedinUrl string `json:"linkedinUrl"`
+
 	// Lead source of the organization
 	// example: Web Search
 	LeadSource string `json:"leadSource,omitempty"`
