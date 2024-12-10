@@ -123,11 +123,7 @@ export const FlowStatusMenu = observer(
         {
           onSuccess: () => {
             onToggleHasChanges(false);
-            flow?.update((f) => {
-              f.status = FlowStatus.On;
-
-              return f;
-            });
+            flow?.startFlow();
           },
           onError: () => {
             onToggleHasChanges(true);

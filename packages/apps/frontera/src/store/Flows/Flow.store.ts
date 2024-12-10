@@ -53,7 +53,7 @@ export class FlowStore implements Store<Flow> {
     this.value.metadata.id = id;
   }
 
-  async startFlow({ onSuccess }: { onSuccess?: () => void }) {
+  async startFlow(options?: { onSuccess?: () => void }) {
     this.isLoading = true;
 
     try {
@@ -64,7 +64,7 @@ export class FlowStore implements Store<Flow> {
       runInAction(() => {
         if (flow_On?.metadata?.id) {
           this.value.status = FlowStatus.On;
-          onSuccess && onSuccess();
+          options?.onSuccess && options?.onSuccess();
         }
       });
     } catch (error) {
