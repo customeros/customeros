@@ -3,22 +3,26 @@ package route
 import (
 	"context"
 	"encoding/json"
+	"net/http"
+	"strings"
+
 	"github.com/biter777/countries"
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/enrichment-api/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/enrichment-api/service"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
-	"net/http"
-	"strings"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/enrichment-api/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/enrichment-api/service"
 )
 
-const SCRAPIN string = "SCRAPIN"
-const BRANDFETCH string = "BRANDFETCH"
+const (
+	SCRAPIN    string = "SCRAPIN"
+	BRANDFETCH string = "BRANDFETCH"
+)
 
 func RegisterRoutes(ctx context.Context, r *gin.Engine, services *service.Services) {
 	r.GET("/enrichPerson",
@@ -272,7 +276,7 @@ func enrichOrganization(services *service.Services) gin.HandlerFunc {
 
 		output := model.EnrichOrganizationResponse{
 			Status:              "success",
-			Data:                combinedData,
+			Data:                &combinedData,
 			Success:             true,
 			PrimaryEnrichSource: primaryEnrichSource,
 		}
@@ -375,7 +379,7 @@ func scrapinOrganization(services *service.Services) gin.HandlerFunc {
 		normalizeCountry(&responseData.Location)
 		output := model.EnrichOrganizationResponse{
 			Status:              "success",
-			Data:                responseData,
+			Data:                &responseData,
 			Success:             true,
 			PrimaryEnrichSource: SCRAPIN,
 		}

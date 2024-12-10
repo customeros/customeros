@@ -3,6 +3,10 @@ package listeners
 import (
 	"bytes"
 	"encoding/json"
+	"io"
+	"net/http"
+	"time"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
@@ -18,14 +22,12 @@ import (
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	locationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/location"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-subscribers/constants"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
-	"io"
-	"net/http"
-	"time"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/events-subscribers/constants"
 )
 
 type OrganizationListener interface {
@@ -135,7 +137,7 @@ func (l *organizationListenerImpl) enrichOrganization(ctx context.Context, tenan
 		return nil
 	}
 	if enrichOrganizationResponse != nil && enrichOrganizationResponse.Success == true {
-		l.updateOrganizationWithEnrichData(ctx, tenant, domain, enrichOrganizationResponse.PrimaryEnrichSource, *organizationEntity, &enrichOrganizationResponse.Data)
+		l.updateOrganizationWithEnrichData(ctx, tenant, domain, enrichOrganizationResponse.PrimaryEnrichSource, *organizationEntity, enrichOrganizationResponse.Data)
 	} else {
 		err = l.services.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, tenant, commonmodel.NodeLabelOrganization, organizationId, string(neo4jentity.OrganizationPropertyEnrichFailedAt), utils.NowPtr())
 		if err != nil {
@@ -288,7 +290,7 @@ func (l *organizationListenerImpl) updateOrganizationWithEnrichData(ctx context.
 		l.log.Errorf("Error updaing organization with enrich data: %s", err.Error())
 	}
 
-	//add location
+	// add location
 	if !data.Location.IsEmpty() {
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 		_, err := utils.CallEventsPlatformGRPCWithRetry[*locationpb.LocationIdGrpcResponse](func() (*locationpb.LocationIdGrpcResponse, error) {
@@ -316,7 +318,7 @@ func (l *organizationListenerImpl) updateOrganizationWithEnrichData(ctx context.
 		}
 	}
 
-	//add socials
+	// add socials
 	for _, social := range data.Socials {
 		l.addSocial(ctx, organizationEntity.ID, tenant, social.Url, social.Alias, social.Id, constants.AppEnrichment)
 	}
