@@ -78,9 +78,10 @@ defmodule Realtime.RabbitMQConsumer do
             entity_type: entity_type,
             entity_ids: entity_ids,
             channel_topic: channel_topic,
-            action_type: action_type,
-            payload: payload
+            action_type: action_type
           })
+
+          Tracer.add_event("_", %{payload: payload})
 
           case channel_topic do
             nil ->
