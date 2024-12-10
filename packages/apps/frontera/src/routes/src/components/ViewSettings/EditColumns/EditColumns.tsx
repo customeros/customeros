@@ -131,7 +131,12 @@ export const EditColumns = observer(({ type, tableId }: EditColumnsProps) => {
         }}
       >
         <MenuButton asChild>
-          <Button size='xs' leftIcon={<Columns02 />} data-test={`edit-columns`}>
+          <Button
+            size='xs'
+            variant='ghost'
+            leftIcon={<Columns02 />}
+            data-test={`edit-columns`}
+          >
             Edit columns
           </Button>
         </MenuButton>
