@@ -1,4 +1,4 @@
-# Test: Authorize me missing key
+# Test: Authorize me with missing key
 GET https://api.customeros.ai/me
 X-CUSTOMER-OS-API-KEY:
 

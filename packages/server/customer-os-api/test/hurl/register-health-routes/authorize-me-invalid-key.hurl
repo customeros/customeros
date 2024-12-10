@@ -1,4 +1,4 @@
-# Test: Authorize me invalid key
+# Test: Authorize me with invalid key
 GET https://api.customeros.ai/me
 X-CUSTOMER-OS-API-KEY: 131a1111-1111-1111-1111-11113b4757b1
 
