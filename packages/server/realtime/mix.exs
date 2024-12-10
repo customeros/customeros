@@ -10,6 +10,11 @@ defmodule Realtime.MixProject do
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps(),
+      releases: [
+        realtime: [
+          applications: [opentelemetry: :temporary]
+        ]
+      ],
       # , plt_add_apps: [:some_app, :another_app]
       dialyzer: [plt_add_deps: :apps_direct]
     ]
@@ -48,7 +53,12 @@ defmodule Realtime.MixProject do
       {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
       {:delta, "~> 0.2.0"},
       {:castore, "~> 1.0"},
-      {:amqp, "~> 3.3.2"}
+      {:amqp, "~> 3.3.2"},
+      {:opentelemetry, "~> 1.5"},
+      {:opentelemetry_api, "~> 1.4"},
+      {:opentelemetry_exporter, "~> 1.8"},
+      {:opentelemetry_phoenix, "~> 2.0"},
+      {:opentelemetry_bandit, "~> 0.2"}
     ]
   end
 
@@ -61,7 +71,8 @@ defmodule Realtime.MixProject do
   defp aliases do
     [
       setup: ["deps.get"],
-      dev: ["phx.server"]
+      dev: ["phx.server"],
+      clean: ["deps.clean --unused --unlock"]
     ]
   end
 end

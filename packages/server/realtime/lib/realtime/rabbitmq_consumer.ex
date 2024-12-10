@@ -2,6 +2,7 @@ defmodule Realtime.RabbitMQConsumer do
   use GenServer
   require Logger
   require Jason
+  require OpenTelemetry.Tracer, as: Tracer
   alias AMQP.{Connection, Channel}
   alias RealtimeWeb.Endpoint
 
@@ -37,64 +38,75 @@ defmodule Realtime.RabbitMQConsumer do
   end
 
   def handle_info({:basic_deliver, payload, meta}, state) do
-    Logger.info("Received message on queue: #{@queue_name}")
+    Tracer.with_span "RabbitMQConsumer.handle_info" do
+      Logger.info("Received message on queue: #{@queue_name}")
 
-    case Jason.decode(payload) do
-      {:ok, parsed} ->
-        %{
-          "tenant" => tenant,
-          "entityType" => entity_type,
-          "entityIds" => entity_ids,
-          "create" => create,
-          "update" => update,
-          "delete" => delete
-        } = parsed
+      case Jason.decode(payload) do
+        {:ok, parsed} ->
+          %{
+            "tenant" => tenant,
+            "entityType" => entity_type,
+            "entityIds" => entity_ids,
+            "create" => create,
+            "update" => update,
+            "delete" => delete
+          } = parsed
 
-        message = Map.get(parsed, "message")
-        channel_topic_prefix = Map.get(@entityToChannelMap, entity_type, :unknown)
+          message = Map.get(parsed, "message")
+          channel_topic_prefix = Map.get(@entityToChannelMap, entity_type, :unknown)
 
-        channel_topic =
-          case channel_topic_prefix do
-            :unknown ->
-              Logger.warning("Unknown entity: #{entity_type}")
-              nil
+          channel_topic =
+            case channel_topic_prefix do
+              :unknown ->
+                Logger.warning("Unknown entity: #{entity_type}")
+                nil
 
-            value ->
-              "#{value}:#{tenant}"
+              value ->
+                "#{value}:#{tenant}"
+            end
+
+          action_type =
+            cond do
+              create -> "APPEND"
+              update -> "INVALIDATE"
+              delete -> "DELETE"
+              true -> message
+            end
+
+          Tracer.set_attributes(%{
+            tenant: tenant,
+            entity_type: entity_type,
+            entity_ids: entity_ids,
+            channel_topic: channel_topic,
+            action_type: action_type,
+            payload: payload
+          })
+
+          case channel_topic do
+            nil ->
+              Logger.warning(
+                "No channel_topic detected for entity:#{entity_type} - tenant:#{tenant}, will ack and do nothing."
+              )
+
+            _ ->
+              Endpoint.broadcast!(channel_topic, "sync_group_packet", %{
+                action: action_type,
+                ids: entity_ids
+              })
+
+              Logger.info(
+                "Broadcasted notification:#{action_type} to #{channel_topic} for #{tenant}"
+              )
           end
 
-        action_type =
-          cond do
-            create -> "APPEND"
-            update -> "INVALIDATE"
-            delete -> "DELETE"
-            true -> message
-          end
+        _ ->
+          Logger.error("Failed decoding payload from JSON")
+      end
 
-        case channel_topic do
-          nil ->
-            Logger.warning(
-              "No channel_topic detected for entity:#{entity_type} - tenant:#{tenant}, will ack and do nothing."
-            )
+      AMQP.Basic.ack(state.channel, meta.delivery_tag)
 
-          _ ->
-            Endpoint.broadcast!(channel_topic, "sync_group_packet", %{
-              action: action_type,
-              ids: entity_ids
-            })
-
-            Logger.info(
-              "Broadcasted notification:#{action_type} to #{channel_topic} for #{tenant}"
-            )
-        end
-
-      _ ->
-        Logger.error("Failed decoding payload from JSON")
+      {:noreply, state}
     end
-
-    AMQP.Basic.ack(state.channel, meta.delivery_tag)
-
-    {:noreply, state}
   end
 
   def handle_info({:basic_consume_ok, _meta}, state) do

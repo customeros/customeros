@@ -31,6 +31,20 @@ if config_env() == :dev do
   end)
 end
 
+jeager_host = System.get_env("JAEGER_AGENT_HOST", "localhost")
+jeager_port = String.to_integer(System.get_env("JAEGER_AGENT_PORT", "4318"))
+
+config :opentelemetry,
+       :resource,
+       service: %{name: "Realtime"}
+
+config :opentelemetry,
+       :processors,
+       otel_batch_processor: %{
+         exporter:
+           {:opentelemetry_exporter, %{endpoints: [{:http, jeager_host, jeager_port, []}]}}
+       }
+
 if config_env() == :prod do
   # The secret key base is used to sign/encrypt cookies and other secrets.
   # A default value is used in config/dev.exs and config/test.exs but you
