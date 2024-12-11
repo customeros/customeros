@@ -1,5 +1,5 @@
 # Test: Enrich non-existing Organization
-GET https://api.customeros.ai/enrich/v1/organization
+GET {{cos_url}}/enrich/v1/organization
 Content-Type: application/json
 X-CUSTOMER-OS-API-KEY: {{api_key}}
 [QueryStringParams]

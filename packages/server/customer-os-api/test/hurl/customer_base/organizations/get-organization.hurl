@@ -1,5 +1,5 @@
 # Test: Get Organization
-POST https://api.customeros.ai/customerbase/v1/organizations
+POST {{cos_url}}/customerbase/v1/organizations
 Content-Type: application/json
 X-CUSTOMER-OS-API-KEY: {{api_key}}
 {
@@ -19,7 +19,7 @@ org_id: jsonpath "$.organization.id"
 jsonpath "$.status" == "success"
 jsonpath "$.organization.id" exists
 
-GET https://api.customeros.ai/customerbase/v1/organizations/{{org_id}}
+GET {{cos_url}}/customerbase/v1/organizations/{{org_id}}
 Content-Type: application/json
 X-CUSTOMER-OS-API-KEY: {{api_key}}
 
@@ -27,6 +27,7 @@ HTTP/2 200
 [Asserts]
 jsonpath "$.status" == "success"
 jsonpath "$.organization.id" == "{{org_id}}"
+jsonpath "$.organization.customId" == "{{custom_id}}"
 jsonpath "$.organization.icpFit" == true
 jsonpath "$.organization.leadSource" == "Web Search"
 jsonpath "$.organization.linkedinURL" == "https://linkedin.com/in/{{custom_id}}"

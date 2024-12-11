@@ -1,5 +1,5 @@
 # Test: Create Organization
-POST https://api.customeros.ai/customerbase/v1/organizations
+POST {{cos_url}}/customerbase/v1/organizations
 Content-Type: application/json
 X-CUSTOMER-OS-API-KEY: {{api_key}}
 {
@@ -9,7 +9,7 @@ X-CUSTOMER-OS-API-KEY: {{api_key}}
     "linkedinUrl": "https://linkedin.com/in/{{custom_id}}",
     "name": "Hurl-{{custom_id}}",
     "relationship": "CUSTOMER",
-    "website": "https://testify{{custom_id}}.ai"
+    "website": "https://hurl-{{custom_id}}.ai"
 }
 
 HTTP/2 201

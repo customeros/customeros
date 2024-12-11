@@ -1,5 +1,5 @@
 # Test: Create Contacts with Mixed Emails
-POST https://api.customeros.ai/customerbase/v1/contacts/bulk
+POST {{cos_url}}/customerbase/v1/contacts/bulk
 Content-Type: application/json
 X-CUSTOMER-OS-API-KEY: {{api_key}}
 [
