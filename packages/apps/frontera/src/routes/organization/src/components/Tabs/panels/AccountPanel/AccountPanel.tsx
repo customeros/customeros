@@ -56,8 +56,8 @@ const AccountPanelComponent = observer(() => {
     });
   };
 
-  const isCreating = organization?.metadata?.id
-    ? Boolean(store.contracts.isPending.get(organization?.metadata?.id))
+  const isCreating = organization?.id
+    ? Boolean(store.contracts.isPending.get(organization?.id))
     : false;
 
   if (!organizationStore?.contracts?.length) {

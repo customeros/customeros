@@ -32,9 +32,13 @@ export type GetOrganizationsByIdsQuery = {
     enrichedFailedAt?: any | null;
     enrichedRequestedAt?: any | null;
     ltv?: number | null;
+    hide: boolean;
+    domains: Array<string>;
     createdAt: any;
     updatedAt: any;
     churnedAt?: any | null;
+    customerOsId: string;
+    referenceId: string;
     renewalSummaryArrForecast?: number | null;
     renewalSummaryMaxArrForecast?: number | null;
     renewalSummaryRenewalLikelihood?: Types.OpportunityRenewalLikelihood | null;

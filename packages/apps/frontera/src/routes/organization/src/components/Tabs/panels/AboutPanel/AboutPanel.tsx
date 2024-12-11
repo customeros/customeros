@@ -212,7 +212,7 @@ export const AboutPanel = observer(() => {
               organization.commit();
             }}
           />
-          {/* {organization.value?.referenceId && (
+          {organization.value?.referenceId && (
             <div className='h-full ml-4'>
               <Tooltip asChild={false} label={'Copy ID'}>
                 <Tag
@@ -230,7 +230,7 @@ export const AboutPanel = observer(() => {
                 </Tag>
               </Tooltip>
             </div>
-          )} */}
+          )}
         </div>
         <UrlInput
           name='website'
@@ -485,7 +485,7 @@ export const AboutPanel = observer(() => {
               <Branches id={id} isReadOnly={parentRelationshipReadOnly} />
             )}
         </div>
-        {/* {organization?.value.customerOsId && (
+        {organization?.value.customerOsId && (
           <Tooltip label='Copy ID'>
             <span
               className='py-3 w-fit text-gray-400 cursor-pointer'
@@ -499,7 +499,7 @@ export const AboutPanel = observer(() => {
               CustomerOS ID: {organization?.value.customerOsId}
             </span>
           </Tooltip>
-        )} */}
+        )}
       </div>
     </div>
   );

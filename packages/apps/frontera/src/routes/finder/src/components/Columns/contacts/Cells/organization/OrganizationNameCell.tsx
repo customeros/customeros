@@ -46,7 +46,7 @@ export const OrganizationNameCell = observer(
 
     const options = organizations.map((org) => ({
       label: org.value.name,
-      value: org.value.metadata.id,
+      value: org.value.id,
     }));
 
     if (!org?.length && isEnriching) {

@@ -1,10 +1,11 @@
+import { observer } from 'mobx-react-lite';
 import ParentSize from '@visx/responsive/lib/components/ParentSize';
 
 import { cn } from '@ui/utils/cn';
 import { Skeleton } from '@ui/feedback/Skeleton';
+import { useStore } from '@shared/hooks/useStore';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { formatCurrency } from '@utils/getFormattedCurrencyNumber';
-import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
 
 import { HelpContent } from './HelpContent';
 import { ChartCard } from '../../ChartCard';
@@ -12,12 +13,12 @@ import { PercentageTrend } from '../../PercentageTrend';
 import ARRBreakdownChart, { ARRBreakdownDatum } from './ARRBreakdown.chart';
 import { useArrBreakdownQuery } from '../../../graphql/arrBreakdown.generated';
 
-export const ARRBreakdown = () => {
+export const ARRBreakdown = observer(() => {
+  const store = useStore();
   const client = getGraphQLClient();
-  const { data: globalCacheData } = useGlobalCacheQuery(client);
   const { data, isLoading } = useArrBreakdownQuery(client);
 
-  const hasContracts = globalCacheData?.global_Cache?.contractsExist;
+  const hasContracts = store.globalCache?.value?.contractsExist ?? false;
   const chartData = (data?.dashboard_ARRBreakdown?.perMonth ?? []).map((d) => ({
     month: d?.month,
     upsells: d?.upsells,
@@ -60,4 +61,4 @@ export const ARRBreakdown = () => {
       </ParentSize>
     </ChartCard>
   );
-};
+});

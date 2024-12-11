@@ -24,9 +24,9 @@ export const ChooseOpportunityOrganization = observer(() => {
   const organizationsList = useMemo(
     () =>
       store.organizations.toArray().map((org) => ({
-        id: org.value.metadata.id,
+        id: org.value.id,
         name: org.value.name,
-        logo: org.value.logo,
+        logo: org.value.logoUrl,
       })),
     [store.organizations],
   );

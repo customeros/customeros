@@ -11,15 +11,16 @@ export class VitestHelper {
     const { organization_Save } = await organizationsService.saveOrganization(
       input || { input: { name: organization_name } },
     );
+    const { metadata } = organization_Save;
 
-    trackOrganization(organization_Save.metadata.id);
+    trackOrganization(metadata.id);
     // console.info(
     //   `\nOrganization ${organization_name} was created for test "${
     //     expect.getState().currentTestName
     //   }": `,
     // );
 
-    return { organization_Save, organization_name };
+    return { id: metadata.id, name: organization_name };
   }
 }
 

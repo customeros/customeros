@@ -228,8 +228,13 @@ export const FinderTable = observer(() => {
 
   const [targetInvoiceNumber, targetInvoiceEmail] = match(tableType)
     .with(TableViewType.Invoices, () => {
-      const invoice = data?.find((i) => i.value!.metadata.id === targetId)
-        ?.value as Invoice;
+      const invoice = data?.find((i) => {
+        if ('metadata' in i.value) {
+          return i.value!.metadata.id === targetId;
+        } else {
+          return i.value.id === targetId;
+        }
+      })?.value as Invoice;
 
       const targetInvoiceNumber = invoice?.invoiceNumber || '';
       const targetInvoiceEmail = invoice?.customer?.email || '';

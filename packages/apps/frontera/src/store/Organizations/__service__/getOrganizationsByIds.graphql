@@ -22,9 +22,13 @@ query getOrganizationsByIds($ids: [ID!]) {
     enrichedFailedAt
     enrichedRequestedAt
     ltv
+    hide
+    domains
     createdAt
     updatedAt
     churnedAt
+    customerOsId
+    referenceId
     renewalSummaryArrForecast
     renewalSummaryMaxArrForecast
     renewalSummaryRenewalLikelihood

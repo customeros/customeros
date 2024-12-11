@@ -4,9 +4,7 @@ import { useState, useEffect, useContext } from 'react';
 
 import { Presence } from 'phoenix';
 
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
-
+import { useStore } from '../useStore';
 import { PhoenixSocketContext } from '../../components/Providers/SocketProvider';
 
 type Meta = {
@@ -26,7 +24,6 @@ type PresenceDiff = {
 type PresenceState = { metas: Meta[] }[];
 
 export const useChannel = (channelName: string) => {
-  const client = getGraphQLClient();
   const { socket } = useContext(PhoenixSocketContext);
 
   const [presenceState, setPresenceState] = useState<PresenceState | null>(
@@ -37,9 +34,9 @@ export const useChannel = (channelName: string) => {
   const [presence, setPresence] = useState<PresenceDiff | null>(null);
   const presentUsers = parsePresentUsers(presenceState || []);
 
-  const { data } = useGlobalCacheQuery(client);
+  const store = useStore();
 
-  const user = data?.global_Cache?.user;
+  const user = store?.globalCache?.value?.user;
   const user_id = user?.id;
   const username = (() => {
     if (!user) return;

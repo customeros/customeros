@@ -157,7 +157,7 @@ export class ContractsStore implements GroupStore<Contract> {
     const record = this.root.organizations.getById(payload.organizationId);
 
     record.draft();
-    record.value.contracts?.unshift(newContract.value);
+    record.value.contracts?.unshift(newContract.value.metadata.id);
     record.commit({ syncOnly: true });
 
     try {

@@ -55,7 +55,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
       (filter) => (row: Organization) => {
         if (!filter.active) return true;
 
-        const value = row?.value.metadata.created;
+        const value = row?.value.createdAt;
 
         return filterTypeDate(filter, value);
       },
@@ -75,8 +75,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
       (filter) => (row: Organization) => {
         if (!filter.active) return true;
 
-        const values =
-          row?.value.parentCompanies?.[0]?.organization.name?.toLowerCase();
+        const values = row?.value?.parentName?.toLowerCase();
 
         return filterTypeText(filter, values);
       },
@@ -131,8 +130,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
       { property: ColumnViewType.OrganizationsForecastArr },
       (filter) => (row: Organization) => {
         if (!filter.active) return true;
-        const forecastValue =
-          row?.value.accountDetails?.renewalSummary?.arrForecast;
+        const forecastValue = row?.value?.renewalSummaryArrForecast;
 
         if (!forecastValue) return false;
 
@@ -144,9 +142,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
       (filter) => (row: Organization) => {
         if (!filter.active) return true;
         const nextRenewalDate =
-          row?.value.accountDetails?.renewalSummary?.nextRenewalDate?.split(
-            'T',
-          )[0];
+          row?.value?.renewalSummaryNextRenewalAt?.split('T')[0];
 
         return filterTypeDate(filter, nextRenewalDate);
       },
@@ -155,7 +151,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
       { property: ColumnViewType.OrganizationsOnboardingStatus },
       (filter) => (row: Organization) => {
         if (!filter.active) return true;
-        const values = row?.value.accountDetails?.onboarding?.status;
+        const values = row?.value.onboardingStatus;
 
         if (!values)
           return (
@@ -173,8 +169,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
       { property: ColumnViewType.OrganizationsRenewalLikelihood },
       (filter) => (row: Organization) => {
         if (!filter.active) return true;
-        const values =
-          row?.value.accountDetails?.renewalSummary?.renewalLikelihood;
+        const values = row?.value.renewalSummaryRenewalLikelihood;
 
         if (!values) return filter.operation === ComparisonOperator.IsEmpty;
 
@@ -207,7 +202,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
       { property: ColumnViewType.OrganizationsLastTouchpoint },
       (filter) => (row: Organization) => {
         if (!filter.active) return true;
-        const lastTouchpoint = row?.value.lastTouchpoint?.lastTouchPointType;
+        const lastTouchpoint = row?.value?.lastTouchPointType;
 
         if (!lastTouchpoint)
           return (
@@ -225,7 +220,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
       { property: ColumnViewType.OrganizationsChurnDate },
       (filter) => (row: Organization) => {
         if (!filter.active) return true;
-        const churned = row?.value.accountDetails?.churned;
+        const churned = row?.value?.churnedAt;
 
         if (!churned) return false;
 
@@ -248,7 +243,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
       { property: ColumnViewType.OrganizationsLastTouchpointDate },
       (filter) => (row: Organization) => {
         if (!filter.active) return true;
-        const lastTouchpointAt = row?.value.lastTouchpoint?.lastTouchPointAt;
+        const lastTouchpointAt = row?.value.lastTouchPointAt;
 
         return filterTypeDate(filter, lastTouchpointAt);
       },
@@ -267,7 +262,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
       { property: ColumnViewType.OrganizationsContactCount },
       (filter) => (row: Organization) => {
         if (!filter.active) return true;
-        const contactsCount = row?.value.contacts.content.length;
+        const contactsCount = row?.value.contacts.length;
 
         return filterTypeNumber(filter, contactsCount);
       },
@@ -319,7 +314,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
       { property: ColumnViewType.OrganizationsLtv },
       (filter) => (row: Organization) => {
         if (!filter.active) return true;
-        const ltv = row?.value.accountDetails?.ltv;
+        const ltv = row?.value?.ltv;
 
         if (!ltv) return false;
 

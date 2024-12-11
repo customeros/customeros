@@ -138,6 +138,14 @@ export class OrganizationsService {
     >(GetOrganizationsByIdsDocument, payload);
   }
 
+  async getOrganization(id: string) {
+    const { ui_organizations } = await this.getOrganizationsByIds({
+      ids: [id],
+    });
+
+    return ui_organizations[0];
+  }
+
   async getArchivedOrganizationsAfter(
     payload: GetArchivedOrganizationsAfterQueryVariables,
   ) {

@@ -8,34 +8,38 @@ import { IconButton } from '@ui/form/IconButton/IconButton';
 import { Card, CardContent } from '@ui/presentation/Card/Card';
 import { CurrencyDollar } from '@ui/media/icons/CurrencyDollar';
 import { formatCurrency } from '@utils/getFormattedCurrencyNumber';
+import { Contract, OpportunityRenewalLikelihood } from '@graphql/types';
 import { InfoDialog } from '@ui/overlay/AlertDialog/InfoDialog/InfoDialog';
-import {
-  Contract,
-  RenewalSummary,
-  OpportunityRenewalLikelihood,
-} from '@graphql/types';
 import { getRenewalLikelihoodColor } from '@organization/components/Tabs/panels/AccountPanel/utils';
 import { useARRInfoModalContext } from '@organization/components/Tabs/panels/AccountPanel/context/AccountModalsContext';
 
 interface ARRForecastProps {
   name: string;
   currency?: string | null;
+  arrForecast?: number | null;
   contracts?: Contract[] | null;
-  renewalSunnary?: RenewalSummary | null;
+  maxArrForecast?: number | null;
+  renewalLikelihood?: OpportunityRenewalLikelihood | null;
 }
 
 export const ARRForecast = observer(
-  ({ renewalSunnary, name, currency = 'USD' }: ARRForecastProps) => {
+  ({
+    name,
+    arrForecast,
+    maxArrForecast,
+    renewalLikelihood,
+    currency = 'USD',
+  }: ARRForecastProps) => {
     const store = useStore();
 
     const { modal } = useARRInfoModalContext();
     const formattedMaxAmount = formatCurrency(
-      renewalSunnary?.maxArrForecast ?? 0,
+      maxArrForecast ?? 0,
       2,
       currency || 'USD',
     );
     const formattedAmount = formatCurrency(
-      renewalSunnary?.arrForecast ?? 0,
+      arrForecast ?? 0,
       2,
       currency || 'USD',
     );
@@ -48,12 +52,9 @@ export const ARRForecast = observer(
           <CardContent className='p-0 flex items-center '>
             <FeaturedIcon
               size='md'
-              colorScheme={getRenewalLikelihoodColor(
-                renewalSunnary?.renewalLikelihood,
-              )}
+              colorScheme={getRenewalLikelihoodColor(renewalLikelihood)}
               className={
-                renewalSunnary?.renewalLikelihood ===
-                OpportunityRenewalLikelihood.LowRenewal
+                renewalLikelihood === OpportunityRenewalLikelihood.LowRenewal
                   ? 'text-orangeDark-800'
                   : undefined
               }

@@ -36,7 +36,7 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
 
   const domains =
     company?.metadata.id &&
-    store.organizations.value.get(company.metadata.id)?.value?.domains;
+    store.organizations.getById(company.metadata.id)?.value?.domains;
 
   const isPrimaryEmail = contactStore?.value.primaryEmail;
 

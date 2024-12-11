@@ -9,7 +9,13 @@ export const Image = observer(
     const store = useStore();
 
     useEffect(() => {
-      if (!src || src?.startsWith('http') || src?.startsWith('blob')) return;
+      if (
+        !src ||
+        src?.startsWith('http') ||
+        src?.startsWith('blob') ||
+        src?.startsWith('/')
+      )
+        return;
 
       store.files.download(src);
 

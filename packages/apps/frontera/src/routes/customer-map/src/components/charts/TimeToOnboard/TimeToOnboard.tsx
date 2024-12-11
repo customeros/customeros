@@ -1,9 +1,10 @@
+import { observer } from 'mobx-react-lite';
 import ParentSize from '@visx/responsive/lib/components/ParentSize';
 
 import { cn } from '@ui/utils/cn';
 import { Skeleton } from '@ui/feedback/Skeleton';
+import { useStore } from '@shared/hooks/useStore';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
 
 import { HelpContent } from './HelpContent';
 import { ChartCard } from '../../ChartCard';
@@ -11,12 +12,12 @@ import { PercentageTrend } from '../../PercentageTrend';
 import TimeToOnboardChart, { TimeToOnboardDatum } from './TimeToOnboard.chart';
 import { useTimeToOnboardQuery } from '../../../graphql/timeToOnboard.generated';
 
-export const TimeToOnboard = () => {
+export const TimeToOnboard = observer(() => {
+  const store = useStore();
   const client = getGraphQLClient();
-  const { data: globalCacheData } = useGlobalCacheQuery(client);
   const { data, isLoading } = useTimeToOnboardQuery(client);
 
-  const hasContracts = globalCacheData?.global_Cache?.contractsExist;
+  const hasContracts = store.globalCache?.value?.contractsExist ?? false;
   const chartData = (data?.dashboard_TimeToOnboard?.perMonth ?? []).map(
     (d, index, arr) => {
       const decIndex = arr.findIndex((d) => d.month === 12);
@@ -64,4 +65,4 @@ export const TimeToOnboard = () => {
       </ParentSize>
     </ChartCard>
   );
-};
+});

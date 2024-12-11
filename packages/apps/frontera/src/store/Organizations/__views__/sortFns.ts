@@ -24,7 +24,7 @@ export const getOrganizationSortFn = (columnId: string) =>
     .with(
       ColumnViewType.OrganizationsOnboardingStatus,
       () => (row: Organization) =>
-        match(row?.value.accountDetails?.onboarding?.status)
+        match(row?.value.onboardingStatus)
           .with(OnboardingStatus.NotApplicable, () => null)
           .with(OnboardingStatus.NotStarted, () => 1)
           .with(OnboardingStatus.OnTrack, () => 2)
@@ -37,7 +37,7 @@ export const getOrganizationSortFn = (columnId: string) =>
     .with(
       ColumnViewType.OrganizationsRenewalLikelihood,
       () => (row: Organization) =>
-        match(row?.value.accountDetails?.renewalSummary?.renewalLikelihood)
+        match(row?.value.renewalSummaryRenewalLikelihood)
           .with(OpportunityRenewalLikelihood.HighRenewal, () => 3)
           .with(OpportunityRenewalLikelihood.MediumRenewal, () => 2)
           .with(OpportunityRenewalLikelihood.LowRenewal, () => 1)
@@ -46,24 +46,20 @@ export const getOrganizationSortFn = (columnId: string) =>
     .with(
       ColumnViewType.OrganizationsUpdatedDate,
       () => (row: Organization) => {
-        return row?.value?.metadata?.lastUpdated
-          ? new Date(row?.value?.metadata?.lastUpdated)
-          : null;
+        return row?.value?.updatedAt ? new Date(row?.value?.updatedAt) : null;
       },
     )
     .with(
       ColumnViewType.OrganizationsRenewalDate,
       () => (row: Organization) => {
-        const value =
-          row?.value.accountDetails?.renewalSummary?.nextRenewalDate;
+        const value = row?.value?.renewalSummaryNextRenewalAt;
 
         return value ? new Date(value) : null;
       },
     )
     .with(
       ColumnViewType.OrganizationsForecastArr,
-      () => (row: Organization) =>
-        row?.value.accountDetails?.renewalSummary?.arrForecast,
+      () => (row: Organization) => row?.value?.renewalSummaryArrForecast,
     )
     .with(ColumnViewType.OrganizationsOwner, () => (row: Organization) => {
       const name = row?.owner?.name ?? '';
@@ -81,9 +77,7 @@ export const getOrganizationSortFn = (columnId: string) =>
     .with(
       ColumnViewType.OrganizationsCreatedDate,
       () => (row: Organization) =>
-        row?.value.metadata?.created
-          ? new Date(row?.value.metadata?.created)
-          : null,
+        row?.value.createdAt ? new Date(row?.value.createdAt) : null,
     )
     .with(
       ColumnViewType.OrganizationsYearFounded,
@@ -100,7 +94,7 @@ export const getOrganizationSortFn = (columnId: string) =>
     .with(
       ColumnViewType.OrganizationsLastTouchpoint,
       () => (row: Organization) => {
-        const value = row?.value.lastTouchpoint?.lastTouchPointAt;
+        const value = row?.value?.lastTouchPointAt;
 
         if (!value) return null;
 
@@ -110,19 +104,19 @@ export const getOrganizationSortFn = (columnId: string) =>
     .with(
       ColumnViewType.OrganizationsLastTouchpointDate,
       () => (row: Organization) => {
-        const value = row?.value.lastTouchpoint?.lastTouchPointAt;
+        const value = row?.value?.lastTouchPointAt;
 
         return value ? new Date(value) : null;
       },
     )
     .with(ColumnViewType.OrganizationsChurnDate, () => (row: Organization) => {
-      const value = row?.value.accountDetails?.churned;
+      const value = row?.value.churnedAt;
 
       return value ? new Date(value) : null;
     })
     .with(
       ColumnViewType.OrganizationsLtv,
-      () => (row: Organization) => row?.value.accountDetails?.ltv,
+      () => (row: Organization) => row?.value?.ltv,
     )
     .with(
       ColumnViewType.OrganizationsIndustry,
@@ -130,7 +124,7 @@ export const getOrganizationSortFn = (columnId: string) =>
     )
     .with(
       ColumnViewType.OrganizationsContactCount,
-      () => (row: Organization) => row?.value.contacts?.content?.length,
+      () => (row: Organization) => row?.value.contacts?.length,
     )
     .with(
       ColumnViewType.OrganizationsLinkedinFollowerCount,
@@ -158,11 +152,7 @@ export const getOrganizationSortFn = (columnId: string) =>
     .with(
       ColumnViewType.OrganizationsParentOrganization,
       () => (row: Organization) => {
-        return (
-          row?.value.parentCompanies?.[0]?.organization?.name
-            .trim()
-            .toLowerCase() || null
-        );
+        return row?.value?.parentName?.trim().toLowerCase() || null;
       },
     )
     .otherwise(() => (_row: Organization) => false);
