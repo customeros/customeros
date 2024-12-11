@@ -144,7 +144,7 @@ func buildDeadEventFromMeetingSummary(ctx context.Context, sourceEvent commonEnu
 
 	return postgresEntity.FlowDeadEvents{
 		Tenant:    common.GetTenantFromContext(ctx),
-		NodeType:  entity.NodeTypeListener.String(),
+		NodeType:  commonEnum.NodeFlowListenerEvent.String(),
 		EventType: eventData.Type(),
 		Event:     sourceEvent.String(),
 		CreatedAt: utils.Now(),
@@ -152,32 +152,7 @@ func buildDeadEventFromMeetingSummary(ctx context.Context, sourceEvent commonEnu
 	}, nil
 }
 
-func publishEventCreateContact(ctx context.Context, s *service.Services, sourceEvent commonEnum.FlowListenerEvent, eventData *data_fields.MeetingSummaryEvent) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EventHandlers.publishEventCreateContact")
-	defer span.Finish()
-	tracing.SetDefaultListenerSpanTags(ctx, span)
-
-	system, err := sourceEvent.ExternalSystem()
-	if err != nil {
-		return err
-	}
-
-	tenantDomains, err := s.WorkspaceService.GetWorkspaceDomainsForTenant(ctx)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	var allErr error
-	for _, email := range *eventData.ParticipantEmails {
-		if err := handleContactEventPublishing(ctx, span, s, system, sourceEvent, email, tenantDomains); err != nil {
-			allErr = multierr.Append(allErr, err)
-		}
-	}
-	return allErr
-}
-
-func publishCreateMarkdownEvent(ctx context.Context, s *service.Services, sourceEvent commonEnum.FlowListenerEvent, eventData *data_fields.MeetingSummaryEvent) error {
+func publishCreateMarkdownEvent(ctx context.Context, s *service.Services, sourceEvent commonEnum.FlowListenerEvent, flowExecutionId string, eventData *data_fields.MeetingSummaryEvent) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EventHandlers.publishCreateMarkdownEvent")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
@@ -200,7 +175,7 @@ func publishCreateMarkdownEvent(ctx context.Context, s *service.Services, source
 
 	var allErr error
 	for _, email := range *eventData.ParticipantEmails {
-		if err := handleMarkdownEventPublishing(ctx, span, s, system, sourceEvent, email, tenantDomains, &mdEvent); err != nil {
+		if err := handleMarkdownEventPublishing(ctx, span, s, system, sourceEvent, email, tenantDomains, &mdEvent, flowExecutionId); err != nil {
 			allErr = multierr.Append(allErr, err)
 		}
 	}
@@ -228,7 +203,7 @@ func createMarkdownEvent(system enum.ExternalSystemId, eventData *data_fields.Me
 
 func handleMarkdownEventPublishing(ctx context.Context, span opentracing.Span, s *service.Services,
 	system enum.ExternalSystemId, sourceEvent commonEnum.FlowListenerEvent, email string, tenantDomains []string,
-	mdEvent *data_fields.MarkdownEventFields,
+	mdEvent *data_fields.MarkdownEventFields, flowExecutionId string,
 ) error {
 	cleanEmail := mailvalidate.ValidateEmailSyntax(email)
 	if !cleanEmail.IsValid {
@@ -249,6 +224,7 @@ func handleMarkdownEventPublishing(ctx context.Context, span opentracing.Span, s
 	mdEvent.OrganizationId = &id
 
 	flowActionEvent := dto.FlowActionEvent{
+		FlowExecutionId:  flowExecutionId,
 		ExternalSystemId: system,
 		SourceEvent:      sourceEvent,
 		Name:             commonEnum.ActionTimelineEventCreate,
