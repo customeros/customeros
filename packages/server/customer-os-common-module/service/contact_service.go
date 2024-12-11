@@ -44,6 +44,13 @@ type contactService struct {
 	services *Services
 }
 
+func NewContactService(log logger.Logger, services *Services) ContactService {
+	return &contactService{
+		log:      log,
+		services: services,
+	}
+}
+
 func (s *contactService) CreateContactWithOrganizationByEmail(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, email string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.CreateContactWithOrganizationByEmail")
 	defer span.Finish()
@@ -83,13 +90,6 @@ func (s *contactService) CreateContactWithOrganizationByEmail(ctx context.Contex
 	}
 
 	return contactId, nil
-}
-
-func NewContactService(log logger.Logger, services *Services) ContactService {
-	return &contactService{
-		log:      log,
-		services: services,
-	}
 }
 
 func (s *contactService) Save(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, id *string, contactFields data_fields.ContactFields, updateOnlyIfEmpty bool, options ...ServiceOptions) (string, error) {

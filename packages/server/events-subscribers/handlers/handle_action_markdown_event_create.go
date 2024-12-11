@@ -24,6 +24,12 @@ func HandleCreateMarkdownEvent(c context.Context, s *service.Services, eventData
 	}
 
 	// create any contacts that don't exist
+	_, err = s.ContactService.CreateContactWithOrganizationByEmail(ctx, nil, eventData.Email)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+		// todo Implement retry logic?
+	}
 
 	// write action execution to db
 
