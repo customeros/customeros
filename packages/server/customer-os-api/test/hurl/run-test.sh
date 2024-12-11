@@ -6,6 +6,7 @@ if [ -z "${HURL_TENANT_API_KEY}" ]; then
     exit 1
 fi
 
+COS_URL="https://api.customeros.ai"
 # Initialize arrays for final summary
 declare -a ALL_TEST_NAMES
 declare -a ALL_TEST_STATUSES
@@ -37,7 +38,7 @@ do
     done < "$test_file"
 
     # Run hurl command with verbose output to capture all details
-    hurl --very-verbose --test --continue-on-error --variable "custom_id=$capitalized_custom_id" --variable "random_str=$RANDOM_STRING" --variable "api_key=$HURL_TENANT_API_KEY" "$test_file" > temp_output.txt 2>&1
+    hurl --very-verbose --test --continue-on-error --variable "custom_id=$capitalized_custom_id" --variable "random_str=$RANDOM_STRING" --variable "cos_url=$COS_URL" --variable "api_key=$HURL_TENANT_API_KEY" "$test_file" > temp_output.txt 2>&1
 #    hurl --very-verbose --variables-file <(echo "custom_id=$NEW_UUID api_key=$HURL_TENANT_API_KEY") --test "$test_file"
 
     TEST_EXIT_CODE=$?

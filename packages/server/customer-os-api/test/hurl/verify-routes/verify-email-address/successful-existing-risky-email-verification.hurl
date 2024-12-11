@@ -1,5 +1,5 @@
 # Test: Successful existing risky email verification
-GET https://api.customeros.ai/verify/v1/email
+GET {{cos_url}}/verify/v1/email
 Content-Type: application/json
 X-CUSTOMER-OS-API-KEY: {{api_key}}
 [QueryStringParams]

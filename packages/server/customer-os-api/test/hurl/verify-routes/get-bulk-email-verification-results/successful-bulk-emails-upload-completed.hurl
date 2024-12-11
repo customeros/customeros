@@ -1,5 +1,5 @@
 # Test: Successful get bulk emails upload completed
-POST https://api.customeros.ai/verify/v1/email/bulk
+POST {{cos_url}}/verify/v1/email/bulk
 Content-Type: multipart/form-data
 X-CUSTOMER-OS-API-KEY: {{api_key}}
 [MultipartFormData]
@@ -11,7 +11,7 @@ job_id: jsonpath "$.jobId"
 [Asserts]
 jsonpath "$.message" == "File uploaded successfully"
 
-GET https://api.customeros.ai/verify/v1/email/bulk/results/{{job_id}}
+GET {{cos_url}}/verify/v1/email/bulk/results/{{job_id}}
 Content-Type: application/json
 X-CUSTOMER-OS-API-KEY: {{api_key}}
 [Options]
@@ -27,5 +27,5 @@ jsonpath "$.message" == ""
 jsonpath "$.results.totalEmails" == 2
 jsonpath "$.results.deliverable" == 0
 jsonpath "$.results.undeliverable" == 2
-jsonpath "$.results.downloadUrl" == "https://api.customeros.ai/verify/v1/email/bulk/results/{{job_id}}/download"
+jsonpath "$.results.downloadUrl" == "{{cos_url}}/verify/v1/email/bulk/results/{{job_id}}/download"
 jsonpath "$.estimatedCompletionTs" == 0

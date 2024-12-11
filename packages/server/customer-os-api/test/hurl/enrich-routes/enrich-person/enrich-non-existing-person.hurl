@@ -1,5 +1,5 @@
 # Test: Enrich non-existing Person
-GET https://api.customeros.ai/enrich/v1/person
+GET {{cos_url}}/enrich/v1/person
 Content-Type: application/json
 X-CUSTOMER-OS-API-KEY: {{api_key}}
 [QueryStringParams]

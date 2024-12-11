@@ -1,5 +1,5 @@
 # Test: Unsuccessful get bulk emails upload - unexisting jobId with invalid id
-GET https://api.customeros.ai/verify/v1/email/bulk/results/02d64272
+GET {{cos_url}}/verify/v1/email/bulk/results/02d64272
 X-CUSTOMER-OS-API-KEY: {{api_key}}
 
 HTTP 404

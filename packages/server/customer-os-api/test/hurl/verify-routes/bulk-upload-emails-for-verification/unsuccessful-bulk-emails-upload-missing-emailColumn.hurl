@@ -1,5 +1,5 @@
 # Test: Unsuccessful bulk emails upload missing emailColumn
-POST https://api.customeros.ai/verify/v1/email/bulk
+POST {{cos_url}}/verify/v1/email/bulk
 Content-Type: multipart/form-data
 X-CUSTOMER-OS-API-KEY: {{api_key}}
 [MultipartFormData]
