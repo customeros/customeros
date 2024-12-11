@@ -19,6 +19,8 @@ type OrganizationUiDetails {
     createdAt:              Time!
     updatedAt:              Time!
 
+    hide:                   Boolean!
+
     referenceId:            String!
     customerOsId:           String!
 

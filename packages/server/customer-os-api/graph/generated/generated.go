@@ -1311,6 +1311,7 @@ type ComplexityRoot struct {
 		EnrichedAt                      func(childComplexity int) int
 		EnrichedFailedAt                func(childComplexity int) int
 		EnrichedRequestedAt             func(childComplexity int) int
+		Hide                            func(childComplexity int) int
 		ID                              func(childComplexity int) int
 		IconURL                         func(childComplexity int) int
 		Industry                        func(childComplexity int) int
@@ -9739,6 +9740,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.OrganizationUiDetails.EnrichedRequestedAt(childComplexity), true
 
+	case "OrganizationUiDetails.hide":
+		if e.complexity.OrganizationUiDetails.Hide == nil {
+			break
+		}
+
+		return e.complexity.OrganizationUiDetails.Hide(childComplexity), true
+
 	case "OrganizationUiDetails.id":
 		if e.complexity.OrganizationUiDetails.ID == nil {
 			break
@@ -15631,6 +15639,8 @@ type OrganizationUiDetails {
     id:                     ID!
     createdAt:              Time!
     updatedAt:              Time!
+
+    hide:                   Boolean!
 
     referenceId:            String!
     customerOsId:           String!
@@ -85333,6 +85343,50 @@ func (ec *executionContext) fieldContext_OrganizationUiDetails_updatedAt(_ conte
 	return fc, nil
 }
 
+func (ec *executionContext) _OrganizationUiDetails_hide(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationUiDetails_hide(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Hide, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationUiDetails_hide(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationUiDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _OrganizationUiDetails_referenceId(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_OrganizationUiDetails_referenceId(ctx, field)
 	if err != nil {
@@ -94793,6 +94847,8 @@ func (ec *executionContext) fieldContext_Query_ui_organizations(ctx context.Cont
 				return ec.fieldContext_OrganizationUiDetails_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_OrganizationUiDetails_updatedAt(ctx, field)
+			case "hide":
+				return ec.fieldContext_OrganizationUiDetails_hide(ctx, field)
 			case "referenceId":
 				return ec.fieldContext_OrganizationUiDetails_referenceId(ctx, field)
 			case "customerOsId":
@@ -125177,6 +125233,11 @@ func (ec *executionContext) _OrganizationUiDetails(ctx context.Context, sel ast.
 			}
 		case "updatedAt":
 			out.Values[i] = ec._OrganizationUiDetails_updatedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "hide":
+			out.Values[i] = ec._OrganizationUiDetails_hide(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

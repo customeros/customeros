@@ -2156,6 +2156,7 @@ type OrganizationUIDetails struct {
 	ID                              string                        `json:"id"`
 	CreatedAt                       time.Time                     `json:"createdAt"`
 	UpdatedAt                       time.Time                     `json:"updatedAt"`
+	Hide                            bool                          `json:"hide"`
 	ReferenceID                     string                        `json:"referenceId"`
 	CustomerOsID                    string                        `json:"customerOsId"`
 	Name                            string                        `json:"name"`
