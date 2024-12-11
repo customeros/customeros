@@ -14,7 +14,7 @@ import { useModKey } from '@shared/hooks/useModKey';
 import { Command, CommandInput } from '@ui/overlay/CommandMenu';
 
 export const AddExistingContacts = observer(() => {
-  const { contacts, ui, flows, organizations, flowParticipants } = useStore();
+  const { contacts, ui, flows, flowParticipants } = useStore();
   const [search, setSearch] = useState('');
 
   const context = ui.commandMenu.context;
@@ -118,11 +118,9 @@ export const AddExistingContacts = observer(() => {
                     {contactStore.name?.length ? contactStore.name : 'Unnamed'}
                   </span>
 
-                  {contactStore.organizationId && (
+                  {contactStore.primaryEmail && (
                     <span className='ml-1.5 text-gray-500 line-clamp-1 max-w-[250px]'>
-                      ·{' '}
-                      {organizations.value.get(contactStore.organizationId)
-                        ?.value.name ?? ''}
+                      · {contactStore.primaryEmail?.email ?? ''}
                     </span>
                   )}
                 </div>
