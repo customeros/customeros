@@ -1,4 +1,4 @@
-# Test: Download Bulk Email Verification Results - processing
+# Test: Download Bulk Email Verification Results - completed
 POST {{cos_url}}/verify/v1/email/bulk
 Content-Type: multipart/form-data
 X-CUSTOMER-OS-API-KEY: {{api_key}}
