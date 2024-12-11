@@ -1,3 +1,5 @@
+import { useSearchParams } from 'react-router-dom';
+
 import { useNodes } from '@xyflow/react';
 import { FlowActionType } from '@store/Flows/types';
 
@@ -24,7 +26,8 @@ export const FlowSettingsPanel = ({
 }) => {
   const store = useStore();
   const nodes = useNodes();
-
+  const [searchParams] = useSearchParams();
+  const showFinder = searchParams.get('show') === 'finder';
   const hasEmailNodes = nodes.some(
     (node) =>
       node.data?.action &&
@@ -48,25 +51,28 @@ export const FlowSettingsPanel = ({
       onClick={(e) => e.stopPropagation()}
       className='fixed z-10 top-[0px] bottom-0 right-0 w-[400px] bg-white  border-l flex flex-col gap-4 animate-slideLeft'
     >
-      <div className='absolute left-[-138px] flex items-center top-[5px]'>
-        <Button
-          size='xs'
-          variant='outline'
-          colorScheme='gray'
-          leftIcon={<UserPlus01 />}
-          onClick={() =>
-            store.ui.commandMenu.setOpen(true, {
-              type: 'AddContactsToFlow',
-              context: {
-                entity: 'Flow',
-                ids: [id],
-              },
-            })
-          }
-        >
-          Add contacts
-        </Button>
-      </div>
+      {showFinder && (
+        <div className='absolute left-[-138px] flex items-center top-[5px]'>
+          <Button
+            size='xs'
+            variant='outline'
+            colorScheme='gray'
+            leftIcon={<UserPlus01 />}
+            onClick={() =>
+              store.ui.commandMenu.setOpen(true, {
+                type: 'AddContactsToFlow',
+                context: {
+                  entity: 'Flow',
+                  ids: [id],
+                },
+              })
+            }
+          >
+            Add contacts
+          </Button>
+        </div>
+      )}
+
       <div className='flex justify-between items-center border-b border-gray-200 p-4 y-2 h-[41px]'>
         <h1 className='font-medium'>Flow settings</h1>
 
