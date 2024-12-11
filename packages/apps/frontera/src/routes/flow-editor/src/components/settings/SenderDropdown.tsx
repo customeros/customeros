@@ -72,7 +72,7 @@ export const SenderDropdown = observer(
                 icon={<User01 className='text-gray-500 size-3' />}
                 className={'w-5 h-5 min-w-5 mr-2 border border-gray-200'}
               />
-              <div className='flex-1 flex text-sm gap-1'>
+              <div className='flex-1 flex items-center text-sm gap-1'>
                 {children}
                 {hasEmailNodes && (
                   <span className='text-xs text-gray-500'>
