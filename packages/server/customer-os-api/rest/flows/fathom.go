@@ -106,6 +106,7 @@ func publishFathomMeetingSummaryCreatedEvent(c *gin.Context, ctx context.Context
 	}
 
 	// build meeting summary
+	meetingSummary.MeetingID = aiSummaryData.ID
 	meetingSummary.Content = &content
 	participants := aiSummaryData.Meeting.participantEmails()
 	meetingSummary.ParticipantEmails = &participants
