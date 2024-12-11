@@ -26,7 +26,6 @@ type FlowService interface {
 	FlowsGetListWithParticipant(ctx context.Context, entityIds []string, entityType model.EntityType) (*neo4jentity.FlowEntities, error)
 	FlowsGetListWithSender(ctx context.Context, senderIds []string) (*neo4jentity.FlowEntities, error)
 	FlowMerge(ctx context.Context, tx *neo4j.ManagedTransaction, entity *neo4jentity.FlowEntity) (*neo4jentity.FlowEntity, error)
-	FlowChangeStatus(ctx context.Context, id string, status neo4jentity.FlowStatus) (*neo4jentity.FlowEntity, error)
 	FlowOn(ctx context.Context, id string) (*neo4jentity.FlowEntity, error)
 	FlowOff(ctx context.Context, id string) (*neo4jentity.FlowEntity, error)
 	FlowArchive(ctx context.Context, id string) (*neo4jentity.FlowEntity, error)
@@ -588,69 +587,6 @@ func (s *flowService) ProcessNode(ctx context.Context, tx *neo4j.ManagedTransact
 	}
 
 	return nil
-}
-
-func (s *flowService) FlowChangeStatus(ctx context.Context, id string, status neo4jentity.FlowStatus) (*neo4jentity.FlowEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowChangeStatus")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-
-	tenant := common.GetTenantFromContext(ctx)
-
-	node, err := s.services.Neo4jRepositories.FlowReadRepository.GetById(ctx, id)
-	if err != nil {
-		return nil, err
-	}
-
-	if node == nil {
-		tracing.TraceErr(span, errors.New("flow not found"))
-		return nil, errors.New("flow not found")
-	}
-
-	flow := mapper.MapDbNodeToFlowEntity(node)
-
-	if flow.Status == status {
-		return flow, nil
-	}
-
-	if status == neo4jentity.FlowStatusOn {
-
-		if flow.FirstStartedAt == nil {
-			flow.FirstStartedAt = utils.TimePtr(utils.Now())
-		}
-
-		flow.Status = status
-		_, err = s.services.Neo4jRepositories.FlowWriteRepository.Merge(ctx, nil, flow)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil, err
-		}
-
-		err := s.services.RabbitMQService.PublishEvent(ctx, flow.Id, model.FLOW, dto.FlowOn{})
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil, err
-		}
-
-	} else if status == neo4jentity.FlowStatusOff {
-		_, err := s.FlowOff(ctx, flow.Id)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil, err
-		}
-	} else if status == neo4jentity.FlowStatusArchived {
-		_, err := s.FlowArchive(ctx, flow.Id)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil, err
-		}
-	}
-
-	s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, flow.Id, model.FLOW, utils.NewEventCompletedDetails().WithUpdate())
-
-	flow.Status = status
-
-	return flow, nil
 }
 
 func (s *flowService) FlowOn(ctx context.Context, id string) (*neo4jentity.FlowEntity, error) {

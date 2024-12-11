@@ -1021,6 +1021,7 @@ type ComplexityRoot struct {
 		ExternalSystemCreate                       func(childComplexity int, input model.ExternalSystemInput) int
 		FlowArchive                                func(childComplexity int, id string) int
 		FlowArchiveBulk                            func(childComplexity int, ids []string) int
+		FlowChangeName                             func(childComplexity int, id string, name string) int
 		FlowDummy1Email                            func(childComplexity int, flowsCount int, contactsCount int, userCount int, mailboxForEachUserCount int) int
 		FlowEmailActionTest                        func(childComplexity int, subject string, bodyTemplate string, sendToEmailAddress string) int
 		FlowMerge                                  func(childComplexity int, input model.FlowMergeInput) int
@@ -1896,6 +1897,7 @@ type MutationResolver interface {
 	EmailReplaceForOrganization(ctx context.Context, organizationID string, previousEmail *string, input model.EmailInput) (*model.Email, error)
 	EmailValidate(ctx context.Context, id string) (*model.ActionResponse, error)
 	ExternalSystemCreate(ctx context.Context, input model.ExternalSystemInput) (string, error)
+	FlowChangeName(ctx context.Context, id string, name string) (*model.Flow, error)
 	FlowMerge(ctx context.Context, input model.FlowMergeInput) (*model.Flow, error)
 	FlowOn(ctx context.Context, id string) (*model.Flow, error)
 	FlowOff(ctx context.Context, id string) (*model.Flow, error)
@@ -7377,6 +7379,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.FlowArchiveBulk(childComplexity, args["ids"].([]string)), true
+
+	case "Mutation.flow_ChangeName":
+		if e.complexity.Mutation.FlowChangeName == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_flow_ChangeName_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.FlowChangeName(childComplexity, args["id"].(string), args["name"].(string)), true
 
 	case "Mutation.flow_Dummy_1Email":
 		if e.complexity.Mutation.FlowDummy1Email == nil {
@@ -14113,6 +14127,7 @@ enum ComparisonOperator {
 }
 
 extend type Mutation {
+    flow_ChangeName(id: ID!, name: String!): Flow! @hasRole(roles: [ADMIN, USER]) @hasTenant
     flow_Merge(input: FlowMergeInput!): Flow! @hasRole(roles: [ADMIN, USER]) @hasTenant
     flow_On(id: ID!): Flow! @hasRole(roles: [ADMIN, USER]) @hasTenant
     flow_Off(id: ID!): Flow! @hasRole(roles: [ADMIN, USER]) @hasTenant
@@ -20336,6 +20351,65 @@ func (ec *executionContext) field_Mutation_flow_Archive_argsID(
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
 	if tmp, ok := rawArgs["id"]; ok {
 		return ec.unmarshalNID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_flow_ChangeName_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	arg0, err := ec.field_Mutation_flow_ChangeName_argsID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	arg1, err := ec.field_Mutation_flow_ChangeName_argsName(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["name"] = arg1
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_flow_ChangeName_argsID(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (string, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["id"]
+	if !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+	if tmp, ok := rawArgs["id"]; ok {
+		return ec.unmarshalNID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_flow_ChangeName_argsName(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (string, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["name"]
+	if !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+	if tmp, ok := rawArgs["name"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
 	}
 
 	var zeroVal string
@@ -64386,6 +64460,117 @@ func (ec *executionContext) fieldContext_Mutation_externalSystem_Create(ctx cont
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_externalSystem_Create_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_flow_ChangeName(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_flow_ChangeName(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().FlowChangeName(rctx, fc.Args["id"].(string), fc.Args["name"].(string))
+		}
+
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				var zeroVal *model.Flow
+				return zeroVal, err
+			}
+			if ec.directives.HasRole == nil {
+				var zeroVal *model.Flow
+				return zeroVal, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				var zeroVal *model.Flow
+				return zeroVal, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Flow); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.Flow`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Flow)
+	fc.Result = res
+	return ec.marshalNFlow2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFlow(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_flow_ChangeName(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "metadata":
+				return ec.fieldContext_Flow_metadata(ctx, field)
+			case "name":
+				return ec.fieldContext_Flow_name(ctx, field)
+			case "description":
+				return ec.fieldContext_Flow_description(ctx, field)
+			case "nodes":
+				return ec.fieldContext_Flow_nodes(ctx, field)
+			case "edges":
+				return ec.fieldContext_Flow_edges(ctx, field)
+			case "firstStartedAt":
+				return ec.fieldContext_Flow_firstStartedAt(ctx, field)
+			case "status":
+				return ec.fieldContext_Flow_status(ctx, field)
+			case "participants":
+				return ec.fieldContext_Flow_participants(ctx, field)
+			case "senders":
+				return ec.fieldContext_Flow_senders(ctx, field)
+			case "statistics":
+				return ec.fieldContext_Flow_statistics(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Flow", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_flow_ChangeName_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -122705,6 +122890,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "externalSystem_Create":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_externalSystem_Create(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "flow_ChangeName":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_flow_ChangeName(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
