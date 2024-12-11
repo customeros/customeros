@@ -30,6 +30,7 @@ import UpdateOrganizationDocument from './updateOrganization.graphql';
 import SearchOrganizationsDocument from './searchOrganizations.graphql';
 import GetOrganizationsByIdsDocument from './getOrganizationsByIds.graphql';
 import UpdateOnboardingStatusDocument from './updateOnboardingStatus.graphql';
+import SearchGlobalOrganizationsDocument from './searchGlobalOrganizations.graphql';
 import GetArchivedOrganizationsAfterDocument from './getArchivedOrganizations.graphql';
 import UpdateAllOpportunityRenewalsDocument from './updateAllOpportunityRenewals.graphql';
 import {
@@ -48,6 +49,7 @@ import {
   GetOrganizationsQuery,
   GetOrganizationsQueryVariables,
 } from './getOrganizations.generated';
+import AddOrganizationByGlobalOrganizationIdDocument from './addOrganizationByGlobalOrganizationId.graphql';
 import {
   SaveOrganizationMutation,
   SaveOrganizationMutationVariables,
@@ -89,6 +91,10 @@ import {
   AddSubsidiaryToOrganizationMutationVariables,
 } from './addSubsidiary.generated';
 import {
+  SearchGlobalOrganizationsQuery,
+  SearchGlobalOrganizationsQueryVariables,
+} from './searchGlobalOrganizations.generated.ts';
+import {
   GetArchivedOrganizationsAfterQuery,
   GetArchivedOrganizationsAfterQueryVariables,
 } from './getArchivedOrganizations.generated';
@@ -100,6 +106,10 @@ import {
   BulkUpdateOpportunityRenewalMutation,
   BulkUpdateOpportunityRenewalMutationVariables,
 } from './updateAllOpportunityRenewals.generated';
+import {
+  AddOrganizationByGlobalOrganizationIdMutation,
+  AddOrganizationByGlobalOrganizationIdMutationVariables,
+} from './addOrganizationByGlobalOrganizationId.generated.ts';
 
 export class OrganizationsService {
   private static instance: OrganizationsService | null = null;
@@ -122,6 +132,24 @@ export class OrganizationsService {
       SearchOrganizationsQuery,
       SearchOrganizationsQueryVariables
     >(SearchOrganizationsDocument, payload);
+  }
+
+  async addOrganizationByGlobalOrgId(
+    payload: AddOrganizationByGlobalOrganizationIdMutationVariables,
+  ) {
+    return this.transport.graphql.request<
+      AddOrganizationByGlobalOrganizationIdMutation,
+      AddOrganizationByGlobalOrganizationIdMutationVariables
+    >(AddOrganizationByGlobalOrganizationIdDocument, payload);
+  }
+
+  async searchGlobalOrganizations(
+    payload: SearchGlobalOrganizationsQueryVariables,
+  ) {
+    return this.transport.graphql.request<
+      SearchGlobalOrganizationsQuery,
+      SearchGlobalOrganizationsQueryVariables
+    >(SearchGlobalOrganizationsDocument, payload);
   }
 
   async getOrganizations(payload: GetOrganizationsQueryVariables) {

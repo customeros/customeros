@@ -5,6 +5,7 @@ import set from 'lodash/set';
 import { Store } from '@store/_store';
 import { TagDatum } from '@store/Tags/Tag.store';
 import { action, computed, observable, runInAction } from 'mobx';
+import { AddOrganizationByGlobalOrganizationIdMutationVariables } from '@store/Organizations/__service__/addOrganizationByGlobalOrganizationId.generated.ts';
 
 import {
   relationshipStageMap,
@@ -269,6 +270,20 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
   }
 
   @action
+  public async getGlobalOrganizationOptions(searchTerm: string, limit: number) {
+    try {
+      const result = await this.service.searchGlobalOrganizations({
+        searchTerm,
+        limit,
+      });
+
+      return result.globalOrganizations_Search;
+    } catch (e) {
+      console.error('Failed getting options');
+    }
+  }
+
+  @action
   public async create(
     payload: SaveOrganizationMutationVariables['input'],
     opts?: { onSucces?: (serverId: string) => void },
@@ -311,6 +326,52 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
         this.value.delete(tempId);
         this.root.ui.toastError(
           'Failed to create organization.',
+          'create-org-faillure',
+        );
+      });
+    }
+  }
+
+  @action
+  public async addOrganizationByGlobalOrgId(
+    payload: AddOrganizationByGlobalOrganizationIdMutationVariables,
+    opts?: { onSuccess?: (serverId: string) => void },
+  ) {
+    console.log('🏷️ ----- payload: ', payload);
+
+    try {
+      const { organization_SaveByGlobalOrganization } =
+        await this.service.addOrganizationByGlobalOrgId({
+          globalOrganizationId: payload,
+        });
+
+      runInAction(() => {
+        const record = new Organization(
+          this,
+          organization_SaveByGlobalOrganization,
+        );
+
+        record.id = organization_SaveByGlobalOrganization.metadata.id;
+
+        this.value.set(record.id, record);
+
+        this.version++;
+
+        this.sync({
+          action: 'APPEND',
+          // ids: [record.id],
+        });
+        opts?.onSuccess?.(record.id);
+
+        this.root.ui.toastSuccess(
+          'Organization added successfully!',
+          record.id,
+        );
+      });
+    } catch (error) {
+      runInAction(() => {
+        this.root.ui.toastError(
+          'Failed to add organization.',
           'create-org-faillure',
         );
       });
