@@ -81,12 +81,15 @@ export const FlowStatusCell = observer(({ contactID }: FlowStatusCellProps) => {
     ))
     .with(FlowParticipantStatus.Scheduled, () => (
       <StatusTag
-        status='Sceduled'
+        status='Scheduled'
         icon={<CalendarCheck01 className='size-3' />}
       />
     ))
     .with(FlowParticipantStatus.Scheduling, () => (
-      <StatusTag status='Sceduling' icon={<RefreshCw02 className='size-3' />} />
+      <StatusTag
+        status='Scheduling'
+        icon={<RefreshCw02 className='size-3' />}
+      />
     ))
     .with(FlowParticipantStatus.GoalAchieved, () => (
       <StatusTag
