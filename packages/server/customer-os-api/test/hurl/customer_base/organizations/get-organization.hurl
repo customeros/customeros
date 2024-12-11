@@ -27,6 +27,7 @@ HTTP/2 200
 [Asserts]
 jsonpath "$.status" == "success"
 jsonpath "$.organization.id" == "{{org_id}}"
+jsonpath "$.organization.customId" == "{{custom_id}}"
 jsonpath "$.organization.icpFit" == true
 jsonpath "$.organization.leadSource" == "Web Search"
 jsonpath "$.organization.linkedinURL" == "https://linkedin.com/in/{{custom_id}}"

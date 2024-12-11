@@ -6,4 +6,3 @@ HTTP 401
 [Asserts]
 header "Content-Type" contains "application/json"
 jsonpath "$.errors[0].message" == "Invalid api key"
-

@@ -7,4 +7,4 @@ HTTP 404
 header "Content-Type" contains "application/json"
 jsonpath "$.requestId" exists
 jsonpath "$.status" == "error"
-jsonpath "$.message" == "Unable to find request"
+jsonpath "$.message" == "Resource not found"
