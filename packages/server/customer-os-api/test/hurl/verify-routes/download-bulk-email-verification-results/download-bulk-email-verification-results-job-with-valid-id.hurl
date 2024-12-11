@@ -1,5 +1,5 @@
-# Test: Download Bulk Email Verification Results - job with invalid id
-GET https://api.customeros.ai/verify/v1/email/bulk/results/68c2c6e7-cf25-41e2-abee-882d05ae62f1/download
+# Test: Download Bulk Email Verification Results - job with valid id
+GET {{cos_url}}/verify/v1/email/bulk/results/68c2c6e7-cf25-41e2-abee-882d05ae62f1/download
 Content-Type: application/json
 X-CUSTOMER-OS-API-KEY: {{api_key}}
 [Options]

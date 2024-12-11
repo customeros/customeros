@@ -1,5 +1,5 @@
 # Test: Successful IP intelligence lookup
-GET https://api.customeros.ai/verify/v1/ip?address=8.8.8.8
+GET {{cos_url}}/verify/v1/ip?address=8.8.8.8
 X-CUSTOMER-OS-API-KEY: {{api_key}}
 
 HTTP 200

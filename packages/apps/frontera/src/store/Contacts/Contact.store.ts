@@ -35,6 +35,7 @@ export class ContactStore extends Syncable<Contact> {
       invalidate: action,
       getChannelName: override,
       isEnriching: computed,
+      primaryEmail: computed,
     });
   }
 
@@ -97,8 +98,11 @@ export class ContactStore extends Syncable<Contact> {
     );
   }
 
-  get emailId() {
-    return this.value.emails?.[0]?.id;
+  get primaryEmail() {
+    return (
+      this.value.emails?.find((email) => email.primary) ||
+      this.value.emails?.[0]
+    );
   }
 
   get connectedUsers() {

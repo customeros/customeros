@@ -1,5 +1,5 @@
 # Test: Authorize me with missing key
-GET https://api.customeros.ai/me
+GET {{cos_url}}/me
 X-CUSTOMER-OS-API-KEY:
 
 HTTP 401

@@ -29,15 +29,16 @@ export const OrganizationPage = observer(() => {
   }
 
   useEffect(() => {
-    if (
-      !store.organizations.value.has(id) &&
-      !store.organizations.isFullyLoaded
-    ) {
-      setIsLoading(true);
-      store.organizations.invalidate(id);
+    if (store.organizations.value.has(id)) {
+      setIsLoading(false);
     }
-    setIsLoading(false);
-  }, []);
+
+    if (!store.organizations.value.has(id) && store.session.isAuthenticated) {
+      store.organizations.invalidate(id, {
+        onFinally: () => setIsLoading(false),
+      });
+    }
+  }, [store.session.isAuthenticated]);
 
   if (isLoading) {
     return <LoadingScreen hide={false} isLoaded={false} showSplash={true} />;

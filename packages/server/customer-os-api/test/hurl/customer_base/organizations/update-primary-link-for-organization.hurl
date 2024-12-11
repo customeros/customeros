@@ -1,5 +1,5 @@
 # Test: Update Primary Link
-POST https://api.customeros.ai/customerbase/v1/organizations
+POST {{cos_url}}/customerbase/v1/organizations
 Content-Type: application/json
 X-CUSTOMER-OS-API-KEY: {{api_key}}
 {
@@ -9,7 +9,7 @@ X-CUSTOMER-OS-API-KEY: {{api_key}}
     "linkedinUrl": "https://linkedin.com/in/{{custom_id}}",
     "name": "Hurl-{{custom_id}}",
     "relationship": "CUSTOMER",
-    "website": "https://testify{{custom_id}}.ai"
+    "website": "https://hurl-{{custom_id}}.ai"
 }
 
 HTTP/2 201
@@ -19,7 +19,7 @@ org_id: jsonpath "$.organization.id"
 jsonpath "$.status" == "success"
 jsonpath "$.organization.id" exists
 
-GET https://api.customeros.ai/customerbase/v1/organizations/{{org_id}}
+GET {{cos_url}}/customerbase/v1/organizations/{{org_id}}
 Content-Type: application/json
 X-CUSTOMER-OS-API-KEY: {{api_key}}
 
@@ -27,7 +27,7 @@ HTTP/2 200
 [Asserts]
 jsonpath "$.status" == "success"
 
-PUT https://api.customeros.ai/customerbase/v1/organizations/{{org_id}}/links/stripe/primary
+PUT {{cos_url}}/customerbase/v1/organizations/{{org_id}}/links/stripe/primary
 Content-Type: application/json
 X-CUSTOMER-OS-API-KEY: {{api_key}}
 {
@@ -42,7 +42,7 @@ jsonpath "$.organization.externalId" == "stripe-1234"
 jsonpath "$.organization.primary" == true
 jsonpath "$.organization.organizationId" exists
 
-PUT https://api.customeros.ai/customerbase/v1/organizations/{{org_id}}/links/stripe/primary
+PUT {{cos_url}}/customerbase/v1/organizations/{{org_id}}/links/stripe/primary
 Content-Type: application/json
 X-CUSTOMER-OS-API-KEY: {{api_key}}
 {

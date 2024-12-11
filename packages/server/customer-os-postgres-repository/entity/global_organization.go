@@ -6,7 +6,7 @@ type GlobalOrganization struct {
 	ID                          uint64    `gorm:"primary_key;autoIncrement" json:"id"`
 	Name                        string    `gorm:"column:name;type:varchar(255)" json:"name"`
 	PrimaryDomain               string    `gorm:"column:primary_domain;type:varchar(255);NOT NULL;index:idx_global_organization_primary_domain,unique" json:"primaryDomain"`
-	Domains                     []string  `gorm:"column:domains;type:text[]" json:"domains"`
+	OtherDomains                string    `gorm:"column:other_domains;type:text" json:"otherDomains"`
 	CreatedAt                   time.Time `gorm:"column:created_at;type:timestamp;DEFAULT:current_timestamp" json:"createdAt"`
 	UpdatedAt                   time.Time `gorm:"column:updated_at;type:timestamp;DEFAULT:current_timestamp" json:"updatedAt"`
 	Description                 string    `gorm:"column:description;type:text" json:"description"`
@@ -35,5 +35,5 @@ func (GlobalOrganization) TableName() string {
 
 //CREATE EXTENSION IF NOT EXISTS pg_trgm;
 //CREATE INDEX idx_global_organization_name_trgm ON global_organization USING gin (name gin_trgm_ops);
-//CREATE INDEX idx_global_organization_primary_domain_trgm ON global_organizationgo USING gin (primary_domain gin_trgm_ops);
-//CREATE INDEX idx_global_organization_domains_gin ON global_organization USING gin (domains);
+//CREATE INDEX idx_global_organization_primary_domain_trgm ON global_organization USING gin (primary_domain gin_trgm_ops);
+//CREATE INDEX idx_global_organization_other_domains_trgm ON global_organization USING gin (other_domains gin_trgm_ops);

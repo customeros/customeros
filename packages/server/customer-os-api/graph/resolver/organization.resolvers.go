@@ -1177,14 +1177,17 @@ func (r *queryResolver) OrganizationCheckWebsite(ctx context.Context, website st
 				Website:       globalOrg.Website,
 				LogoURL:       globalOrg.LogoUrl,
 				IconURL:       globalOrg.IconUrl,
-				Domains:       globalOrg.Domains,
+				Domains:       utils.StringToSlice(globalOrg.OtherDomains),
 			}
 			// if current domain is not primary domain, add it to other domains of the global org
-			if !isPrimary && output.Domain != primaryDomain && output.Domain != "" && !utils.Contains(globalOrg.Domains, output.Domain) {
+			currentGlobalOrgDomains := utils.StringToSlice(globalOrg.OtherDomains)
+			if !isPrimary && output.Domain != primaryDomain && output.Domain != "" && !utils.Contains(currentGlobalOrgDomains, output.Domain) {
 				// confirm primary domain for domain
 				isPrimaryForDomain, primaryDomainForDomain := domaincheck.PrimaryDomainCheck(output.Domain)
 				if !isPrimaryForDomain && primaryDomainForDomain == primaryDomain {
-					globalOrg.Domains = append(globalOrg.Domains, output.Domain)
+					currentGlobalOrgDomains = append(currentGlobalOrgDomains, output.Domain)
+					currentGlobalOrgDomains = utils.RemoveDuplicates(currentGlobalOrgDomains)
+					globalOrg.OtherDomains = utils.SliceToString(currentGlobalOrgDomains)
 					_, err = r.Services.CommonServices.PostgresRepositories.GlobalOrganizationRepository.Update(ctx, globalOrg)
 					if err != nil {
 						tracing.TraceErr(span, err)

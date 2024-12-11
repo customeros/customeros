@@ -36,6 +36,7 @@ export type GetFlowsQuery = {
       status: Types.FlowParticipantStatus;
       entityId: string;
       entityType: string;
+      requirementsUnmeet: Array<Types.FlowParticipantRequirementsUnmeet>;
       executions: Array<{
         __typename?: 'FlowActionExecution';
         status: Types.FlowActionExecutionStatus;

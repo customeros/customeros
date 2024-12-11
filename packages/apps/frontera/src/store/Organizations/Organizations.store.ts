@@ -244,7 +244,7 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
   }
 
   @action
-  public async invalidate(id: string) {
+  public async invalidate(id: string, opts?: { onFinally?: () => void }) {
     try {
       const { organization: raw } = await this.service.getOrganization(id);
 
@@ -255,10 +255,18 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
 
         if (record) {
           Object.assign(record.value, raw);
+        } else {
+          const record = new Organization(this, raw);
+
+          this.value.set(record.id, record);
         }
       });
     } catch (e) {
       console.error('Failed invalidating organization with ID: ' + id);
+    } finally {
+      runInAction(() => {
+        opts?.onFinally?.();
+      });
     }
   }
 

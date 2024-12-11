@@ -1,5 +1,5 @@
 # Test: Authorize me with valid key
-GET https://api.customeros.ai/me
+GET {{cos_url}}/me
 X-CUSTOMER-OS-API-KEY: {{api_key}}
 
 HTTP 200
