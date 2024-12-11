@@ -72,11 +72,10 @@ func (s *organizationService) CreateFromGlobalOrganization(ctx context.Context, 
 		return "", err
 	}
 
-	datFields := data_fields.OrganizationFields{
+	dataFields := data_fields.OrganizationFields{
 		GlobalOrgId:      utils.ToPtr(globalOrgId),
 		Name:             utils.StringPtr(globalOrganization.Name),
 		PrimaryDomain:    utils.StringPtr(globalOrganization.PrimaryDomain),
-		Domains:          globalOrganization.Domains,
 		Description:      utils.StringPtr(globalOrganization.Description),
 		Website:          utils.StringPtr(globalOrganization.Website),
 		LogoUrl:          utils.StringPtr(globalOrganization.LogoUrl),
@@ -85,16 +84,17 @@ func (s *organizationService) CreateFromGlobalOrganization(ctx context.Context, 
 		LinkedInAlias:    utils.StringPtr(globalOrganization.LinkedInAlias),
 		ValueProposition: utils.StringPtr(globalOrganization.ValueProposition),
 		TargetAudience:   utils.StringPtr(globalOrganization.TargetAudience),
+		Domains:          utils.StringToSlice(globalOrganization.OtherDomains),
 	}
 
 	if globalOrganization.YearFounded > 0 {
-		datFields.YearFounded = utils.Int64Ptr(int64(globalOrganization.YearFounded))
+		dataFields.YearFounded = utils.Int64Ptr(int64(globalOrganization.YearFounded))
 	}
 	if globalOrganization.EmployeeCount > 0 {
-		datFields.Employees = utils.Int64Ptr(int64(globalOrganization.EmployeeCount))
+		dataFields.Employees = utils.Int64Ptr(int64(globalOrganization.EmployeeCount))
 	}
 
-	return s.Save(ctx, txWithPostCommit, nil, datFields)
+	return s.Save(ctx, txWithPostCommit, nil, dataFields)
 }
 
 func (s *organizationService) GetById(ctx context.Context, tenant, organizationId string) (*neo4jentity.OrganizationEntity, error) {
@@ -133,7 +133,7 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 	// prepare primary domain from website
 	primaryDomain := utils.IfNotNilString(input.PrimaryDomain)
 	adjustedWebsite := utils.IfNotNilString(input.Website)
-	if input.GlobalOrgId != nil {
+	if input.GlobalOrgId == nil {
 		if utils.IfNotNilString(input.Website) != "" {
 			primaryDomain, adjustedWebsite = s.services.DomainService.GetPrimaryDomainForOrganizationWebsite(ctx, *input.Website)
 			span.LogFields(log.String("process.primaryDomainFromWebsite", primaryDomain))

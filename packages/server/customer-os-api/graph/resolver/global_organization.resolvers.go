@@ -6,6 +6,8 @@ package resolver
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
@@ -19,24 +21,30 @@ func (r *queryResolver) GlobalOrganizationsSearch(ctx context.Context, searchTer
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "request.searchTern", searchTerm)
 
-	if limit == 0 {
-		limit = 100
-	}
+	var globalOrganizationEntities []*postgresentity.GlobalOrganization
+	var err error
 
 	if searchTerm == "" {
-		// return empty array
-		return []*model.GlobalOrganization{}, nil
+		globalOrganizationEntities, err = r.Services.CommonServices.PostgresRepositories.GlobalOrganizationRepository.GetByPrimaryDomains(ctx, r.cfg.AppConfig.DefaultGlobalOrgPrimaryDomainsInSearch)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			graphql.AddErrorf(ctx, "Failed to get default global organizations")
+			return nil, err
+		}
+	} else {
+		if limit == 0 {
+			limit = 100
+		}
+		globalOrganizationEntities, err = r.Services.CommonServices.PostgresRepositories.GlobalOrganizationRepository.Search(ctx, searchTerm, limit)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			graphql.AddErrorf(ctx, "Failed to search global organizations")
+			return nil, err
+		}
 	}
 
-	globalOrganizationsEntities, err := r.Services.CommonServices.PostgresRepositories.GlobalOrganizationRepository.Search(ctx, searchTerm, limit)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to search global organizations")
-		return nil, err
-	}
-
-	globalOrganizations := make([]*model.GlobalOrganization, 0, len(globalOrganizationsEntities))
-	for _, globalOrganizationEntity := range globalOrganizationsEntities {
+	globalOrganizations := make([]*model.GlobalOrganization, 0, len(globalOrganizationEntities))
+	for _, globalOrganizationEntity := range globalOrganizationEntities {
 		globalOrganization := model.GlobalOrganization{
 			ID:            int64(globalOrganizationEntity.ID),
 			Name:          globalOrganizationEntity.Name,
@@ -44,7 +52,7 @@ func (r *queryResolver) GlobalOrganizationsSearch(ctx context.Context, searchTer
 			Website:       globalOrganizationEntity.Website,
 			IconURL:       globalOrganizationEntity.IconUrl,
 			LogoURL:       globalOrganizationEntity.LogoUrl,
-			Domains:       globalOrganizationEntity.Domains,
+			Domains:       utils.StringToSlice(globalOrganizationEntity.OtherDomains),
 		}
 
 		globalOrganizations = append(globalOrganizations, &globalOrganization)

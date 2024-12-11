@@ -14,6 +14,7 @@ import (
 type GlobalOrganizationRepository interface {
 	GetById(ctx context.Context, id uint64) (*entity.GlobalOrganization, error)
 	GetByPrimaryDomain(ctx context.Context, domain string) (*entity.GlobalOrganization, error)
+	GetByPrimaryDomains(ctx context.Context, domains []string) ([]*entity.GlobalOrganization, error)
 	Create(ctx context.Context, organization *entity.GlobalOrganization) (*entity.GlobalOrganization, error)
 	Update(ctx context.Context, organization *entity.GlobalOrganization) (*entity.GlobalOrganization, error)
 	Search(ctx context.Context, searchTerm string, limit int) ([]*entity.GlobalOrganization, error)
@@ -45,6 +46,22 @@ func (r *globalOrganizationRepository) GetById(ctx context.Context, id uint64) (
 	}
 	span.LogFields(tracingLog.Bool("found", true))
 	return organization, nil
+}
+
+func (r *globalOrganizationRepository) GetByPrimaryDomains(ctx context.Context, domains []string) ([]*entity.GlobalOrganization, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.GetByPrimaryDomains")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+	span.LogFields(tracingLog.Object("domains", domains))
+
+	organizations := make([]*entity.GlobalOrganization, 0)
+	result := r.db.WithContext(ctx).Where("primary_domain IN ?", domains).Find(&organizations)
+	if result.Error != nil {
+		tracing.TraceErr(span, result.Error)
+		return nil, result.Error
+	}
+	span.LogFields(tracingLog.Int("result.count", len(organizations)))
+	return organizations, nil
 }
 
 func (r *globalOrganizationRepository) GetByPrimaryDomain(ctx context.Context, domain string) (*entity.GlobalOrganization, error) {
@@ -105,7 +122,7 @@ func (r *globalOrganizationRepository) Search(ctx context.Context, searchTerm st
 	organizations := make([]*entity.GlobalOrganization, 0)
 	result := r.db.WithContext(ctx).
 		Select("id, name, primary_domain, website, logo_url, icon_url, domains").
-		Where("name ILIKE ? OR primary_domain ILIKE ? OR (domains IS NOT NULL AND EXISTS (SELECT 1 FROM unnest(domains) AS domain WHERE domain ILIKE ?))", "%"+searchTerm+"%", "%"+searchTerm+"%", "%"+searchTerm+"%").
+		Where("name ILIKE ? OR primary_domain ILIKE ? OR other_domains ILIKE ?", "%"+searchTerm+"%", "%"+searchTerm+"%", "%"+searchTerm+"%").
 		Limit(limit).
 		Find(&organizations)
 	if result.Error != nil {
