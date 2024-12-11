@@ -64,7 +64,7 @@ func HandleMeetingSummaryEvent(ctx context.Context, s *service.Services, sourceE
 		// prepare and send event to action executioner
 		switch nextFlowAction {
 		case commonEnum.ActionTimelineEventCreate:
-			if err := sendTimelineEventCreateAction(ctx, s, flow.Status.String(), flow.ID,
+			if err := publishTimelineEventCreateEvent(ctx, s, flow.Status.String(), flow.ID,
 				nextFlowNodeId, eventData, sourceEvent); err != nil {
 				tracing.TraceErr(span, err)
 				errs = multierr.Append(errs, fmt.Errorf("failed to send timeline event for flow %s: %w", flow.ID, err))
@@ -79,11 +79,10 @@ func HandleMeetingSummaryEvent(ctx context.Context, s *service.Services, sourceE
 	return errs
 }
 
-func sendTimelineEventCreateAction(
+func publishTimelineEventCreateEvent(
 	ctx context.Context, s *service.Services, flowStatus, flowId, flowNodeId string,
 	eventData *data_fields.MeetingSummaryEvent, sourceEvent commonEnum.FlowListenerEvent,
 ) error {
-
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EventHandlers.hantdleTimelineEventCreateAction")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
@@ -107,12 +106,13 @@ func sendTimelineEventCreateAction(
 		return err
 	}
 
+	// if flow is not running, send to dead event queue
 	if executionStatus != commonEnum.FlowExecutionRunning {
 		return nil
 	}
 
-	// if not blocked, send publish action execution event
-	if err := publishCreateMarkdownEvent(ctx, s, sourceEvent, flowExecutionID, eventData); err != nil {
+	// process action execution event
+	if err := processActionExecutionEvent(ctx, s, sourceEvent, flowExecutionID, eventData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to publish markdown event"))
 		return err
 	}
@@ -200,8 +200,8 @@ func buildDeadEventFromMeetingSummary(ctx context.Context, sourceEvent commonEnu
 	}, nil
 }
 
-func publishCreateMarkdownEvent(ctx context.Context, s *service.Services, sourceEvent commonEnum.FlowListenerEvent, flowExecutionId string, eventData *data_fields.MeetingSummaryEvent) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EventHandlers.publishCreateMarkdownEvent")
+func processActionExecutionEvent(ctx context.Context, s *service.Services, sourceEvent commonEnum.FlowListenerEvent, flowExecutionId string, eventData *data_fields.MeetingSummaryEvent) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EventHandlers.processActionExecutionEvent")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 
@@ -222,13 +222,69 @@ func publishCreateMarkdownEvent(ctx context.Context, s *service.Services, source
 	}
 
 	var allErr error
+	allOrgIds := make([]string, 0)
+
 	for _, email := range *eventData.ParticipantEmails {
-		if err := handleMarkdownEventPublishing(ctx, span, s, system, sourceEvent, email, tenantDomains, &mdEvent, flowExecutionId); err != nil {
+
+		// create the org if if doesn't exist
+		organizationId, err := createOrgFromEmail(ctx, s, email, tenantDomains)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			allErr = multierr.Append(allErr, err)
+		}
+
+		// if org is unique, add to all org slice
+		if organizationId != "" && !utils.IsStringInSlice(organizationId, allOrgIds) {
+			allOrgIds = append(allOrgIds, organizationId)
+		}
+
+		// create the contact if it does not exist
+		_, err = s.ContactService.CreateContactWithOrganizationByEmail(ctx, nil, email)
+		if err != nil {
+			err = fmt.Errorf("failed to create contact from email %s: %w", email, err)
+			tracing.TraceErr(span, err)
+			allErr = multierr.Append(allErr, err)
+		}
+	}
+
+	// publish event for all unique non-tenant orgs
+	for _, orgId := range allOrgIds {
+		err := handleMarkdownEventPublishing(ctx, s, system, sourceEvent, orgId, &mdEvent, flowExecutionId)
+		if err != nil {
+			tracing.TraceErr(span, err)
 			allErr = multierr.Append(allErr, err)
 		}
 	}
 
 	return allErr
+}
+
+func createOrgFromEmail(ctx context.Context, s *service.Services, email string, tenantDomains []string) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EventHandlers.createOrgFromEmail")
+	defer span.Finish()
+	tracing.SetDefaultListenerSpanTags(ctx, span)
+
+	cleanEmail := mailvalidate.ValidateEmailSyntax(email)
+	if !cleanEmail.IsValid {
+		err := fmt.Errorf("invalid email address: %s", email)
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+
+	if utils.IsStringInSlice(cleanEmail.Domain, tenantDomains) {
+		return "", nil
+	}
+
+	id, err := s.OrganizationService.Save(ctx, nil, nil, data_fields.OrganizationFields{
+		Domains: []string{cleanEmail.Domain},
+	})
+	if err != nil {
+		err = fmt.Errorf("failed to save organization for domain %s: %w", cleanEmail.Domain, err)
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+
+	return id, nil
 }
 
 func createMarkdownEvent(system enum.ExternalSystemId, eventData *data_fields.MeetingSummaryEvent) (data_fields.MarkdownEventFields, error) {
@@ -249,28 +305,17 @@ func createMarkdownEvent(system enum.ExternalSystemId, eventData *data_fields.Me
 	}, nil
 }
 
-func handleMarkdownEventPublishing(ctx context.Context, span opentracing.Span, s *service.Services,
-	system enum.ExternalSystemId, sourceEvent commonEnum.FlowListenerEvent, email string, tenantDomains []string,
+func handleMarkdownEventPublishing(ctx context.Context, s *service.Services,
+	system enum.ExternalSystemId, sourceEvent commonEnum.FlowListenerEvent, orgId string,
 	mdEvent *data_fields.MarkdownEventFields, flowExecutionId string,
 ) error {
-	cleanEmail := mailvalidate.ValidateEmailSyntax(email)
-	if !cleanEmail.IsValid {
-		return fmt.Errorf("invalid email address: %s", email)
-	}
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EventHandlers.handleMarkdownEventPublishing")
+	defer span.Finish()
+	tracing.SetDefaultListenerSpanTags(ctx, span)
 
-	if isEmailInDomains(cleanEmail.Domain, tenantDomains) {
-		return nil
-	}
+	mdEvent.OrganizationId = &orgId
 
-	id, err := s.OrganizationService.Save(ctx, nil, nil, data_fields.OrganizationFields{
-		Domains: []string{cleanEmail.Domain},
-	})
-	if err != nil {
-		return fmt.Errorf("failed to save organization for domain %s: %w", cleanEmail.Domain, err)
-	}
-
-	mdEvent.OrganizationId = &id
-
+	// build flow action event
 	flowActionEvent := dto.FlowActionEvent{
 		FlowExecutionId:  flowExecutionId,
 		ExternalSystemId: system,
@@ -280,31 +325,12 @@ func handleMarkdownEventPublishing(ctx context.Context, span opentracing.Span, s
 		Data:             mdEvent,
 	}
 
+	// publish event
 	if err := s.RabbitMQService.PublishFlowActionEvent(ctx, flowActionEvent); err != nil {
+		err = fmt.Errorf("failed to publish markdown event for org %s: %w", orgId, err)
 		tracing.TraceErr(span, err)
-		return fmt.Errorf("failed to publish markdown event for email %s: %w", email, err)
+		return err
 	}
 
 	return nil
-}
-
-func isEmailInDomains(emailDomain string, tenantDomains []string) bool {
-	for _, domain := range tenantDomains {
-		if domain == emailDomain {
-			return true
-		}
-	}
-	return false
-}
-
-func createFlowActionEventCreateContact(system enum.ExternalSystemId, sourceEvent commonEnum.FlowListenerEvent, email string) dto.FlowActionEvent {
-	return dto.FlowActionEvent{
-		ExternalSystemId: system,
-		SourceEvent:      sourceEvent,
-		Name:             commonEnum.ActionContactCreate,
-		DataType:         data_fields.ContactCreateEvent{}.Type(),
-		Data: data_fields.ContactCreateEvent{
-			Email: email,
-		},
-	}
 }

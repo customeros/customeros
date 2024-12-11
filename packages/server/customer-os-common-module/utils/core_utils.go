@@ -87,7 +87,7 @@ func Int64PtrToIntPtr(v *int64) *int {
 	if v == nil {
 		return nil
 	}
-	var output = int(*v)
+	output := int(*v)
 	return &output
 }
 
@@ -95,7 +95,7 @@ func IntPtrToInt64Ptr(v *int) *int64 {
 	if v == nil {
 		return nil
 	}
-	var output = int64(*v)
+	output := int64(*v)
 	return &output
 }
 
@@ -377,4 +377,13 @@ func BoolToString(b bool) string {
 // ReplaceSingleQuotes replaces single quotes with double quotes in a JSON-like string
 func ReplaceSingleQuotesWithDoubleQuotes(input string) string {
 	return strings.ReplaceAll(input, "'", "\"")
+}
+
+func IsStringInSlice(s string, slice []string) bool {
+	for _, v := range slice {
+		if v == s {
+			return true
+		}
+	}
+	return false
 }
