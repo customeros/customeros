@@ -97,6 +97,7 @@ func publishGrainMeetingSummaryCreatedEvent(c *gin.Context, ctx context.Context,
 
 	content := grainData.MeetingNoteContent()
 	meeting.Content = &content
+	meeting.MeetingID = grainData.RecordingData.ID
 	participants := grainData.RecordingData.participantEmails()
 	meeting.ParticipantEmails = &participants
 

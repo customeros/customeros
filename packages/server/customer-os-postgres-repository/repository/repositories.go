@@ -45,7 +45,7 @@ type Repositories struct {
 	ExternalAppKeysRepository                    ExternalAppKeysRepository
 	FlowActionExecutionRepository                FlowActionExecutionRepository
 	FlowActionRegistryRepository                 FlowActionRegistryRepository
-	FlowDeadListenerEventsRepository             FlowDeadListenerEventsRepository
+	FlowDeadEventsRepository                     FlowDeadEventsRepository
 	FlowExecutionRepository                      FlowExecutionRepository
 	FlowListenerRegistryRepository               FlowListenerRegistryRepository
 	FlowTransitionsRegistryRepository            FlowTransitionsRegistryRepository
@@ -76,7 +76,6 @@ type Repositories struct {
 	TrackingRepository                           TrackingRepository
 	UserEmailImportPageTokenRepository           UserEmailImportStateRepository
 	UserWorkingScheduleRepository                UserWorkingScheduleRepository
-	WorkflowRepository                           WorkflowRepository
 	GlobalOrganizationRepository                 GlobalOrganizationRepository
 	GlobalOrganizationWebsiteToProcessRepository GlobalOrganizationWebsiteToProcessRepository
 }
@@ -123,7 +122,7 @@ func InitRepositories(postgresDB *config.PostgresDB) *Repositories {
 		ExternalAppKeysRepository:                    NewExternalAppKeysRepository(postgresDB.GormDB),
 		FlowActionExecutionRepository:                NewFlowActionExecutionRepository(postgresDB.GormDB),
 		FlowActionRegistryRepository:                 NewFlowActionRegistryRepository(postgresDB.GormDB),
-		FlowDeadListenerEventsRepository:             NewFlowDeadListenerEventsRepository(postgresDB.GormDB),
+		FlowDeadEventsRepository:                     NewFlowDeadEventsRepository(postgresDB.GormDB),
 		FlowExecutionRepository:                      NewFlowExecutionRepository(postgresDB.GormDB),
 		FlowListenerRegistryRepository:               NewFlowListenerRegistryRepository(postgresDB.GormDB),
 		FlowTransitionsRegistryRepository:            NewFlowTransitionsRegistryRepository(postgresDB.GormDB),
@@ -150,7 +149,6 @@ func InitRepositories(postgresDB *config.PostgresDB) *Repositories {
 		TrackingAllowedOriginRepository:              NewTrackingAllowedOriginRepository(postgresDB.GormDB),
 		TrackingRepository:                           NewTrackingRepository(postgresDB.GormDB),
 		UserWorkingScheduleRepository:                NewUserWorkingScheduleRepository(postgresDB.GormDB),
-		WorkflowRepository:                           NewWorkflowRepository(postgresDB.GormDB),
 		GlobalOrganizationRepository:                 NewGlobalOrganizationRepository(postgresDB.GormDB),
 		GlobalOrganizationWebsiteToProcessRepository: NewGlobalOrganizationWebsiteToProcessRepository(postgresDB.GormDB),
 	}
@@ -188,7 +186,7 @@ func (r *Repositories) Migration(postgresDB *config.PostgresDB) {
 		&entity.ExternalAppKeys{},
 		&entity.FlowActionRegistry{},
 		&entity.ActionExecution{},
-		&entity.FlowDeadListenerEvents{},
+		&entity.FlowDeadEvents{},
 		&entity.FlowExecution{},
 		&entity.FlowListenerRegistry{},
 		&entity.FlowTransitionsRegistry{},
@@ -217,7 +215,6 @@ func (r *Repositories) Migration(postgresDB *config.PostgresDB) {
 		&entity.Tracking{},
 		&entity.TrackingAllowedOrigin{},
 		&entity.UserWorkingSchedule{},
-		&entity.Workflow{},
 		&entity.GlobalOrganization{},
 		&entity.GlobalOrganizationWebsiteToProcess{},
 	)

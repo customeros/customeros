@@ -5,8 +5,11 @@ import "fmt"
 type FlowNodeType string
 
 const (
-	NodeFlowAction        FlowNodeType = "flowAction"
-	NodeFlowListenerEvent FlowNodeType = "listenerEvent"
+	NodeFlowAction        FlowNodeType = "action"
+	NodeFlowCondition     FlowNodeType = "condition"
+	NodeFlowEnd           FlowNodeType = "end"
+	NodeFlowListenerEvent FlowNodeType = "listener"
+	NodeFlowWait          FlowNodeType = "wait"
 )
 
 func (e FlowNodeType) String() string {
@@ -17,7 +20,10 @@ func GetFlowNodeType(s string) (FlowNodeType, error) {
 	switch FlowNodeType(s) {
 	case
 		NodeFlowAction,
-		NodeFlowListenerEvent:
+		NodeFlowCondition,
+		NodeFlowEnd,
+		NodeFlowListenerEvent,
+		NodeFlowWait:
 
 		return FlowNodeType(s), nil
 	default:
