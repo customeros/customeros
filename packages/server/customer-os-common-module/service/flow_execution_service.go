@@ -174,6 +174,7 @@ func (s *flowExecutionService) UpdateParticipantFlowRequirements(ctx context.Con
 	}
 
 	status := entity.FlowParticipantStatusReady
+	newUnmeets := make([]entity.FlowParticipantRequirementsUnmeet, 0)
 
 	if requirements.PrimaryEmailRequired {
 		//identify the primary email
@@ -184,6 +185,7 @@ func (s *flowExecutionService) UpdateParticipantFlowRequirements(ctx context.Con
 
 		if primaryEmail == nil {
 			status = entity.FlowParticipantStatusOnHold
+			newUnmeets = append(newUnmeets, entity.FlowParticipantRequirementsUnmeetMissingPrimaryEmail)
 		}
 	}
 
@@ -202,18 +204,31 @@ func (s *flowExecutionService) UpdateParticipantFlowRequirements(ctx context.Con
 
 		if !found {
 			status = entity.FlowParticipantStatusOnHold
+			newUnmeets = append(newUnmeets, entity.FlowParticipantRequirementsUnmeetMissingLinkedinUrl)
 		}
 	}
 
-	if participant.Status == status {
+	//no new meets, return
+	unmeetsChanged := false
+	for _, v := range newUnmeets {
+		if !utils.ContainsElement(participant.RequirementsUnmeet, v) {
+			unmeetsChanged = true
+			break
+		}
+	}
+
+	if !unmeetsChanged && participant.Status == status {
 		return nil
 	}
 
+	participant.Status = status
+	participant.RequirementsUnmeet = newUnmeets
+
 	_, err := utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
 
-		err := s.services.Neo4jRepositories.CommonWriteRepository.UpdateStringProperty(ctx, txWithPostCommit.Tx, tenant, model.NodeLabelFlowParticipant, participant.Id, "status", string(status))
+		_, err := s.services.Neo4jRepositories.FlowParticipantWriteRepository.Merge(ctx, txWithPostCommit.Tx, participant)
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to update string property")
+			return nil, errors.Wrap(err, "failed to merge participant")
 		}
 
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {

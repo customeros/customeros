@@ -62,6 +62,7 @@ type OrganizationUiDetails {
     lastTouchPointType: LastTouchpointType
 
     # data from associated entities
+    domains:              [String!]!
     contracts:            [String!]! # in profile
     contacts:             [String!]! # in profile
     contactCount:         Int        # in table

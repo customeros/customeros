@@ -89,6 +89,7 @@ type FlowParticipant implements MetadataInterface {
     entityId: ID!
 
     status: FlowParticipantStatus!
+    requirementsUnmeet: [FlowParticipantRequirementsUnmeet!]!
 
     executions: [FlowActionExecution!]! @goField(forceResolver: true)
 }
@@ -163,6 +164,11 @@ enum FlowParticipantStatus {
     COMPLETED
     GOAL_ACHIEVED
     ERROR
+}
+
+enum FlowParticipantRequirementsUnmeet {
+    MISSING_PRIMARY_EMAIL
+    MISSING_LINKEDIN_URL
 }
 
 type EmailVariableEntity {

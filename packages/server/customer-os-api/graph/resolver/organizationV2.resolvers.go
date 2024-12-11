@@ -71,6 +71,25 @@ func (r *queryResolver) UIOrganizations(ctx context.Context, ids []string) ([]*m
 
 	wg.Add(1)
 	go func(resp *map[string]*model.OrganizationUIDetails) {
+		span, ctx := opentracing.StartSpanFromContext(ctx, "QueryResolver.UIOrganizations.GetDomains")
+		defer span.Finish()
+		defer wg.Done()
+		tracing.SetDefaultResolverSpanTags(ctx, span)
+
+		domains, err := r.Services.Repositories.Neo4jRepositories.DomainReadRepository.GetForOrganizations(ctx, tenant, ids)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			setError(err)
+			return
+		}
+
+		for _, dom := range domains {
+			(*resp)[dom.LinkedNodeId].Domains = append((*resp)[dom.LinkedNodeId].Domains, utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*dom.Node), "domain"))
+		}
+	}(&mapResponse)
+
+	wg.Add(1)
+	go func(resp *map[string]*model.OrganizationUIDetails) {
 		span, ctx := opentracing.StartSpanFromContext(ctx, "QueryResolver.UIOrganizations.GetContracts")
 		defer span.Finish()
 		defer wg.Done()
