@@ -141,4 +141,5 @@ const getDefaultValue = (): FlowParticipant => ({
     sourceOfTruth: DataSource.Openline,
   },
   status: FlowParticipantStatus.Scheduled,
+  requirementsUnmeet: [],
 });

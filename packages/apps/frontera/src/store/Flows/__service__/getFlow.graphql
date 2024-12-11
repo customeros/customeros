@@ -35,6 +35,7 @@ query getFlow($id: ID!) {
       status
       entityId
       entityType
+      requirementsUnmeet
       executions {
         metadata {
           id

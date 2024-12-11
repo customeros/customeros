@@ -245,6 +245,7 @@ export class FlowStore implements Store<Flow> {
         );
 
         const newFlowContactValue = {
+          ...newFLowContact.value,
           metadata: {
             ...newFLowContact.value.metadata,
             id: flowParticipant_Add.metadata.id,
