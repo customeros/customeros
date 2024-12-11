@@ -6,12 +6,15 @@ import { observer } from 'mobx-react-lite';
 import { useStore } from '@shared/hooks/useStore';
 import { Rocket02 } from '@ui/media/icons/Rocket02';
 import { Trophy01 } from '@ui/media/icons/Trophy01';
-import { FlowParticipantStatus } from '@graphql/types';
 import { Hourglass02 } from '@ui/media/icons/Hourglass02';
 import { CheckCircle } from '@ui/media/icons/CheckCircle';
 import { RefreshCw02 } from '@ui/media/icons/RefreshCw02';
 import { SlashCircle01 } from '@ui/media/icons/SlashCircle01';
 import { CalendarCheck01 } from '@ui/media/icons/CalendarCheck01';
+import {
+  FlowParticipantStatus,
+  FlowParticipantRequirementsUnmeet,
+} from '@graphql/types';
 
 interface FlowStatusCellProps {
   contactID: string;
@@ -26,7 +29,15 @@ export const FlowStatusCell = observer(({ contactID }: FlowStatusCellProps) => {
 
   const flowStatus = match(contact?.status)
     .with(FlowParticipantStatus.OnHold, () => [
-      'Blocked',
+      contact?.requirementsUnmeet.includes(
+        FlowParticipantRequirementsUnmeet.MissingPrimaryEmail,
+      )
+        ? 'Missing email'
+        : contact?.requirementsUnmeet.includes(
+            FlowParticipantRequirementsUnmeet.MissingLinkedinUrl,
+          )
+        ? 'Missing LinkedIn'
+        : 'Blocked',
       <SlashCircle01 className='size-3' />,
     ])
     .with(FlowParticipantStatus.Ready, () => [
