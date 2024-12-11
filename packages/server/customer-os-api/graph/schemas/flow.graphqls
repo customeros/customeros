@@ -8,6 +8,7 @@ extend type Query {
 }
 
 extend type Mutation {
+    flow_ChangeName(id: ID!, name: String!): Flow! @hasRole(roles: [ADMIN, USER]) @hasTenant
     flow_Merge(input: FlowMergeInput!): Flow! @hasRole(roles: [ADMIN, USER]) @hasTenant
     flow_On(id: ID!): Flow! @hasRole(roles: [ADMIN, USER]) @hasTenant
     flow_Off(id: ID!): Flow! @hasRole(roles: [ADMIN, USER]) @hasTenant

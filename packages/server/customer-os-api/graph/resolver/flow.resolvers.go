@@ -7,6 +7,7 @@ package resolver
 import (
 	"context"
 	"fmt"
+	"github.com/opentracing/opentracing-go/log"
 	"sync"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -152,6 +153,36 @@ func (r *flowSenderResolver) User(ctx context.Context, obj *model.FlowSender) (*
 		return nil, nil
 	}
 	return mapper.MapEntityToUser(entities), nil
+}
+
+// FlowChangeName is the resolver for the flow_ChangeName field.
+func (r *mutationResolver) FlowChangeName(ctx context.Context, id string, name string) (*model.Flow, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.FlowChangeName", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	span.LogFields(log.String("flowId", id), log.String("name", name))
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	flow, err := r.Services.CommonServices.FlowService.FlowGetById(ctx, id)
+	if err != nil || flow == nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "")
+		return nil, err
+	}
+
+	err = r.Services.CommonServices.Neo4jRepositories.CommonWriteRepository.UpdateStringProperty(ctx, nil, tenant, commonModel.NodeLabelFlow, id, "name", name)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "")
+		return nil, err
+	}
+
+	r.Services.CommonServices.RabbitMQService.PublishEventCompleted(ctx, tenant, flow.Id, commonModel.FLOW, utils.NewEventCompletedDetails().WithUpdate())
+
+	flow.Name = name
+	return mapper.MapEntityToFlow(flow), nil
 }
 
 // FlowMerge is the resolver for the flow_Merge field.
@@ -506,7 +537,7 @@ func (r *mutationResolver) FlowDummy1Email(ctx context.Context, flowsCount int, 
 	worker := func(wg *sync.WaitGroup) {
 		defer wg.Done()
 		for flowId := range jobs { // Each worker will process items from jobs channel
-			_, err := r.Services.CommonServices.FlowService.FlowChangeStatus(ctx, flowId, neo4jentity.FlowStatusOn)
+			_, err := r.Services.CommonServices.FlowService.FlowOn(ctx, flowId)
 			if err != nil {
 				errChan <- err // Send error to error channel if occurs
 			}
