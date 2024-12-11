@@ -580,11 +580,12 @@ type ComplexityRoot struct {
 	}
 
 	FlowParticipant struct {
-		EntityID   func(childComplexity int) int
-		EntityType func(childComplexity int) int
-		Executions func(childComplexity int) int
-		Metadata   func(childComplexity int) int
-		Status     func(childComplexity int) int
+		EntityID           func(childComplexity int) int
+		EntityType         func(childComplexity int) int
+		Executions         func(childComplexity int) int
+		Metadata           func(childComplexity int) int
+		RequirementsUnmeet func(childComplexity int) int
+		Status             func(childComplexity int) int
 	}
 
 	FlowSender struct {
@@ -1307,10 +1308,12 @@ type ComplexityRoot struct {
 		CreatedAt                       func(childComplexity int) int
 		CustomerOsID                    func(childComplexity int) int
 		Description                     func(childComplexity int) int
+		Domains                         func(childComplexity int) int
 		Employees                       func(childComplexity int) int
 		EnrichedAt                      func(childComplexity int) int
 		EnrichedFailedAt                func(childComplexity int) int
 		EnrichedRequestedAt             func(childComplexity int) int
+		Hide                            func(childComplexity int) int
 		ID                              func(childComplexity int) int
 		IconURL                         func(childComplexity int) int
 		Industry                        func(childComplexity int) int
@@ -4656,6 +4659,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.FlowParticipant.Metadata(childComplexity), true
+
+	case "FlowParticipant.requirementsUnmeet":
+		if e.complexity.FlowParticipant.RequirementsUnmeet == nil {
+			break
+		}
+
+		return e.complexity.FlowParticipant.RequirementsUnmeet(childComplexity), true
 
 	case "FlowParticipant.status":
 		if e.complexity.FlowParticipant.Status == nil {
@@ -9711,6 +9721,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.OrganizationUiDetails.Description(childComplexity), true
 
+	case "OrganizationUiDetails.domains":
+		if e.complexity.OrganizationUiDetails.Domains == nil {
+			break
+		}
+
+		return e.complexity.OrganizationUiDetails.Domains(childComplexity), true
+
 	case "OrganizationUiDetails.employees":
 		if e.complexity.OrganizationUiDetails.Employees == nil {
 			break
@@ -9738,6 +9755,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.OrganizationUiDetails.EnrichedRequestedAt(childComplexity), true
+
+	case "OrganizationUiDetails.hide":
+		if e.complexity.OrganizationUiDetails.Hide == nil {
+			break
+		}
+
+		return e.complexity.OrganizationUiDetails.Hide(childComplexity), true
 
 	case "OrganizationUiDetails.id":
 		if e.complexity.OrganizationUiDetails.ID == nil {
@@ -14170,6 +14194,7 @@ type FlowParticipant implements MetadataInterface {
     entityId: ID!
 
     status: FlowParticipantStatus!
+    requirementsUnmeet: [FlowParticipantRequirementsUnmeet!]!
 
     executions: [FlowActionExecution!]! @goField(forceResolver: true)
 }
@@ -14244,6 +14269,11 @@ enum FlowParticipantStatus {
     COMPLETED
     GOAL_ACHIEVED
     ERROR
+}
+
+enum FlowParticipantRequirementsUnmeet {
+    MISSING_PRIMARY_EMAIL
+    MISSING_LINKEDIN_URL
 }
 
 type EmailVariableEntity {
@@ -15632,6 +15662,8 @@ type OrganizationUiDetails {
     createdAt:              Time!
     updatedAt:              Time!
 
+    hide:                   Boolean!
+
     referenceId:            String!
     customerOsId:           String!
 
@@ -15673,6 +15705,7 @@ type OrganizationUiDetails {
     lastTouchPointType: LastTouchpointType
 
     # data from associated entities
+    domains:              [String!]!
     contracts:            [String!]! # in profile
     contacts:             [String!]! # in profile
     contactCount:         Int        # in table
@@ -43982,6 +44015,8 @@ func (ec *executionContext) fieldContext_Flow_participants(_ context.Context, fi
 				return ec.fieldContext_FlowParticipant_entityId(ctx, field)
 			case "status":
 				return ec.fieldContext_FlowParticipant_status(ctx, field)
+			case "requirementsUnmeet":
+				return ec.fieldContext_FlowParticipant_requirementsUnmeet(ctx, field)
 			case "executions":
 				return ec.fieldContext_FlowParticipant_executions(ctx, field)
 			}
@@ -44969,6 +45004,50 @@ func (ec *executionContext) fieldContext_FlowParticipant_status(_ context.Contex
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type FlowParticipantStatus does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FlowParticipant_requirementsUnmeet(ctx context.Context, field graphql.CollectedField, obj *model.FlowParticipant) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FlowParticipant_requirementsUnmeet(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RequirementsUnmeet, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]entity.FlowParticipantRequirementsUnmeet)
+	fc.Result = res
+	return ec.marshalNFlowParticipantRequirementsUnmeet2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantRequirementsUnmeetᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FlowParticipant_requirementsUnmeet(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FlowParticipant",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type FlowParticipantRequirementsUnmeet does not have child fields")
 		},
 	}
 	return fc, nil
@@ -64913,6 +64992,8 @@ func (ec *executionContext) fieldContext_Mutation_flowParticipant_Add(ctx contex
 				return ec.fieldContext_FlowParticipant_entityId(ctx, field)
 			case "status":
 				return ec.fieldContext_FlowParticipant_status(ctx, field)
+			case "requirementsUnmeet":
+				return ec.fieldContext_FlowParticipant_requirementsUnmeet(ctx, field)
 			case "executions":
 				return ec.fieldContext_FlowParticipant_executions(ctx, field)
 			}
@@ -85333,6 +85414,50 @@ func (ec *executionContext) fieldContext_OrganizationUiDetails_updatedAt(_ conte
 	return fc, nil
 }
 
+func (ec *executionContext) _OrganizationUiDetails_hide(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationUiDetails_hide(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Hide, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationUiDetails_hide(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationUiDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _OrganizationUiDetails_referenceId(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_OrganizationUiDetails_referenceId(ctx, field)
 	if err != nil {
@@ -86693,6 +86818,50 @@ func (ec *executionContext) fieldContext_OrganizationUiDetails_lastTouchPointTyp
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type LastTouchpointType does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationUiDetails_domains(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationUiDetails_domains(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Domains, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]string)
+	fc.Result = res
+	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationUiDetails_domains(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationUiDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -91510,6 +91679,8 @@ func (ec *executionContext) fieldContext_Query_flowParticipant(ctx context.Conte
 				return ec.fieldContext_FlowParticipant_entityId(ctx, field)
 			case "status":
 				return ec.fieldContext_FlowParticipant_status(ctx, field)
+			case "requirementsUnmeet":
+				return ec.fieldContext_FlowParticipant_requirementsUnmeet(ctx, field)
 			case "executions":
 				return ec.fieldContext_FlowParticipant_executions(ctx, field)
 			}
@@ -94793,6 +94964,8 @@ func (ec *executionContext) fieldContext_Query_ui_organizations(ctx context.Cont
 				return ec.fieldContext_OrganizationUiDetails_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_OrganizationUiDetails_updatedAt(ctx, field)
+			case "hide":
+				return ec.fieldContext_OrganizationUiDetails_hide(ctx, field)
 			case "referenceId":
 				return ec.fieldContext_OrganizationUiDetails_referenceId(ctx, field)
 			case "customerOsId":
@@ -94859,6 +95032,8 @@ func (ec *executionContext) fieldContext_Query_ui_organizations(ctx context.Cont
 				return ec.fieldContext_OrganizationUiDetails_lastTouchPointAt(ctx, field)
 			case "lastTouchPointType":
 				return ec.fieldContext_OrganizationUiDetails_lastTouchPointType(ctx, field)
+			case "domains":
+				return ec.fieldContext_OrganizationUiDetails_domains(ctx, field)
 			case "contracts":
 				return ec.fieldContext_OrganizationUiDetails_contracts(ctx, field)
 			case "contacts":
@@ -118741,6 +118916,11 @@ func (ec *executionContext) _FlowParticipant(ctx context.Context, sel ast.Select
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
+		case "requirementsUnmeet":
+			out.Values[i] = ec._FlowParticipant_requirementsUnmeet(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
 		case "executions":
 			field := field
 
@@ -125180,6 +125360,11 @@ func (ec *executionContext) _OrganizationUiDetails(ctx context.Context, sel ast.
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "hide":
+			out.Values[i] = ec._OrganizationUiDetails_hide(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "referenceId":
 			out.Values[i] = ec._OrganizationUiDetails_referenceId(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -125258,6 +125443,11 @@ func (ec *executionContext) _OrganizationUiDetails(ctx context.Context, sel ast.
 			out.Values[i] = ec._OrganizationUiDetails_lastTouchPointAt(ctx, field, obj)
 		case "lastTouchPointType":
 			out.Values[i] = ec._OrganizationUiDetails_lastTouchPointType(ctx, field, obj)
+		case "domains":
+			out.Values[i] = ec._OrganizationUiDetails_domains(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "contracts":
 			out.Values[i] = ec._OrganizationUiDetails_contracts(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -131456,6 +131646,83 @@ func (ec *executionContext) marshalNFlowParticipant2ᚖgithubᚗcomᚋopenline�
 		return graphql.Null
 	}
 	return ec._FlowParticipant(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNFlowParticipantRequirementsUnmeet2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantRequirementsUnmeet(ctx context.Context, v interface{}) (entity.FlowParticipantRequirementsUnmeet, error) {
+	tmp, err := graphql.UnmarshalString(v)
+	res := entity.FlowParticipantRequirementsUnmeet(tmp)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNFlowParticipantRequirementsUnmeet2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantRequirementsUnmeet(ctx context.Context, sel ast.SelectionSet, v entity.FlowParticipantRequirementsUnmeet) graphql.Marshaler {
+	res := graphql.MarshalString(string(v))
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) unmarshalNFlowParticipantRequirementsUnmeet2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantRequirementsUnmeetᚄ(ctx context.Context, v interface{}) ([]entity.FlowParticipantRequirementsUnmeet, error) {
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]entity.FlowParticipantRequirementsUnmeet, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNFlowParticipantRequirementsUnmeet2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantRequirementsUnmeet(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalNFlowParticipantRequirementsUnmeet2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantRequirementsUnmeetᚄ(ctx context.Context, sel ast.SelectionSet, v []entity.FlowParticipantRequirementsUnmeet) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNFlowParticipantRequirementsUnmeet2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantRequirementsUnmeet(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) unmarshalNFlowParticipantStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantStatus(ctx context.Context, v interface{}) (entity.FlowParticipantStatus, error) {

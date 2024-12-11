@@ -41,23 +41,26 @@ func (r *flowParticipantWriteRepositoryImpl) Merge(ctx context.Context, tx *neo4
 				fc.updatedAt = $updatedAt,
 				fc.entityId = $entityId,
 				fc.entityType = $entityType,
+				fc.requirementsUnmeet = $requirementsUnmeet,
 				fc.status = $status
 			ON CREATE SET
 				fc.createdAt = $createdAt,
 				fc.updatedAt = $updatedAt,
 				fc.entityId = $entityId,
 				fc.entityType = $entityType,
+				fc.requirementsUnmeet = $requirementsUnmeet,
 				fc.status = $status
 			RETURN fc`, common.GetTenantFromContext(ctx))
 
 	params := map[string]any{
-		"tenant":     common.GetTenantFromContext(ctx),
-		"id":         entity.Id,
-		"createdAt":  utils.NowIfZero(entity.CreatedAt),
-		"updatedAt":  utils.NowIfZero(entity.UpdatedAt),
-		"entityId":   entity.EntityId,
-		"entityType": entity.EntityType.String(),
-		"status":     entity.Status,
+		"tenant":             common.GetTenantFromContext(ctx),
+		"id":                 entity.Id,
+		"createdAt":          utils.NowIfZero(entity.CreatedAt),
+		"updatedAt":          utils.NowIfZero(entity.UpdatedAt),
+		"entityId":           entity.EntityId,
+		"entityType":         entity.EntityType.String(),
+		"requirementsUnmeet": entity.RequirementsUnmeet,
+		"status":             entity.Status,
 	}
 
 	span.LogFields(log.String("cypher", cypher))

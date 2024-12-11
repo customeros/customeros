@@ -1147,11 +1147,12 @@ type FlowMergeInput struct {
 }
 
 type FlowParticipant struct {
-	Metadata   *Metadata                    `json:"metadata"`
-	EntityType string                       `json:"entityType"`
-	EntityID   string                       `json:"entityId"`
-	Status     entity.FlowParticipantStatus `json:"status"`
-	Executions []*FlowActionExecution       `json:"executions"`
+	Metadata           *Metadata                                  `json:"metadata"`
+	EntityType         string                                     `json:"entityType"`
+	EntityID           string                                     `json:"entityId"`
+	Status             entity.FlowParticipantStatus               `json:"status"`
+	RequirementsUnmeet []entity.FlowParticipantRequirementsUnmeet `json:"requirementsUnmeet"`
+	Executions         []*FlowActionExecution                     `json:"executions"`
 }
 
 func (FlowParticipant) IsMetadataInterface()        {}
@@ -2156,6 +2157,7 @@ type OrganizationUIDetails struct {
 	ID                              string                        `json:"id"`
 	CreatedAt                       time.Time                     `json:"createdAt"`
 	UpdatedAt                       time.Time                     `json:"updatedAt"`
+	Hide                            bool                          `json:"hide"`
 	ReferenceID                     string                        `json:"referenceId"`
 	CustomerOsID                    string                        `json:"customerOsId"`
 	Name                            string                        `json:"name"`
@@ -2189,6 +2191,7 @@ type OrganizationUIDetails struct {
 	OnboardingComments              *string                       `json:"onboardingComments,omitempty"`
 	LastTouchPointAt                *time.Time                    `json:"lastTouchPointAt,omitempty"`
 	LastTouchPointType              *LastTouchpointType           `json:"lastTouchPointType,omitempty"`
+	Domains                         []string                      `json:"domains"`
 	Contracts                       []string                      `json:"contracts"`
 	Contacts                        []string                      `json:"contacts"`
 	ContactCount                    *int                          `json:"contactCount,omitempty"`

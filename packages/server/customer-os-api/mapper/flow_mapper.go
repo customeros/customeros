@@ -57,9 +57,10 @@ func MapEntityToFlowParticipant(entity *neo4jentity.FlowParticipantEntity) *mode
 			SourceOfTruth: model.DataSourceOpenline,
 			AppSource:     "",
 		},
-		Status:     entity.Status,
-		EntityID:   entity.EntityId,
-		EntityType: entity.EntityType.String(),
+		Status:             entity.Status,
+		RequirementsUnmeet: entity.RequirementsUnmeet,
+		EntityID:           entity.EntityId,
+		EntityType:         entity.EntityType.String(),
 	}
 }
 

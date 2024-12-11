@@ -75,6 +75,8 @@ type FlowParticipantEntity struct {
 	Status          FlowParticipantStatus
 	ScheduledAction *string
 	ScheduledAt     *time.Time
+
+	RequirementsUnmeet []FlowParticipantRequirementsUnmeet
 }
 
 type FlowParticipantEntities []FlowParticipantEntity
@@ -129,6 +131,21 @@ const (
 	FlowParticipantStatusGoalAchieved FlowParticipantStatus = "GOAL_ACHIEVED"
 	FlowParticipantStatusError        FlowParticipantStatus = "ERROR"
 )
+
+type FlowParticipantRequirementsUnmeet string
+
+const (
+	FlowParticipantRequirementsUnmeetMissingPrimaryEmail FlowParticipantRequirementsUnmeet = "MISSING_PRIMARY_EMAIL"
+	FlowParticipantRequirementsUnmeetMissingLinkedinUrl  FlowParticipantRequirementsUnmeet = "MISSING_LINKEDIN_URL"
+)
+
+func GetFlowParticipantRequirementsUnmeet(s []string) []FlowParticipantRequirementsUnmeet {
+	var result []FlowParticipantRequirementsUnmeet
+	for _, val := range s {
+		result = append(result, FlowParticipantRequirementsUnmeet(val))
+	}
+	return result
+}
 
 func GetFlowContactStatus(s string) FlowParticipantStatus {
 	return FlowParticipantStatus(s)
