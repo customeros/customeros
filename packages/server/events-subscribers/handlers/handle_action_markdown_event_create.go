@@ -9,17 +9,27 @@ import (
 	"github.com/opentracing/opentracing-go"
 )
 
-func HandleCreateMarkdownEvent(c context.Context, s *service.Services, eventData *data_fields.MarkdownEventFields) error {
+func HandleCreateMarkdownEvent(c context.Context, s *service.Services, eventData *data_fields.MarkdownEventFields, flowExecutionID string) error {
 	span, ctx := opentracing.StartSpanFromContext(c, "EventHandlers.HandleCreateMarkdownEvent")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "eventData", eventData)
 
+	// create markdown event on timeline
 	_, err := s.MarkdownEventService.Save(ctx, nil, nil, *eventData)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		// todo Implement retry logic?
 		return err
 	}
+
+	// create any contacts that don't exist
+
+	// write action execution to db
+
+	// fire action completed event
+
+	// if failure anywhere, fire action failed event
+
 	return nil
 }

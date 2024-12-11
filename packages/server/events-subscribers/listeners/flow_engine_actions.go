@@ -22,7 +22,7 @@ func OnFlowActionEventCreated(ctx context.Context, s *service.Services, input an
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "input", input)
 
-	flowActionEvent, err := getFlowActionEvent(input)
+	flowActionEvent, flowExecutionID, err := getFlowActionEvent(input)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -42,7 +42,7 @@ func OnFlowActionEventCreated(ctx context.Context, s *service.Services, input an
 		if !ok {
 			return fmt.Errorf("failed to cast to MarkdownEventFields, got type: %T", flowActionEvent.Data)
 		}
-		return handlers.HandleCreateMarkdownEvent(ctx, s, eventData)
+		return handlers.HandleCreateMarkdownEvent(ctx, s, eventData, flowExecutionID)
 
 	case "ContactCreateEvent":
 		eventData, ok := flowActionEvent.Data.(*data_fields.ContactCreateEvent)
@@ -58,36 +58,38 @@ func OnFlowActionEventCreated(ctx context.Context, s *service.Services, input an
 	}
 }
 
-func getFlowActionEvent(input any) (*dto.FlowActionEvent, error) {
+func getFlowActionEvent(input any) (*dto.FlowActionEvent, string, error) {
 	message, ok := input.(*dto.Event)
 	if !ok {
-		return nil, fmt.Errorf("failed to cast to Event")
+		return nil, "", fmt.Errorf("failed to cast to Event")
 	}
 	// check message data type before conversion
 	if message.Event.Data == nil {
 		err := errors.New("message data is nil")
-		return nil, err
+		return nil, "", err
 	}
 
 	flowActionEvent, ok := message.Event.Data.(*dto.FlowActionEvent)
 	if !ok {
-		err := errors.New("event is not a webhook event")
-		return nil, err
+		err := errors.New("event is not a flow action event")
+		return nil, "", err
 	}
+
+	flowExecutionID := flowActionEvent.FlowExecutionId
 
 	flowActionData, ok := flowActionEvent.Data.(map[string]interface{})
 	if !ok {
 		err := errors.New("event data is not a map")
-		return nil, err
+		return nil, flowExecutionID, err
 	}
 
 	flowActionDataPtr := reflect.New(eventDataTypes[flowActionEvent.DataType]).Interface()
 	err := utils.Decode(flowActionData, flowActionDataPtr)
 	if err != nil {
-		return nil, err
+		return nil, flowExecutionID, err
 	}
 
 	flowActionEvent.Data = flowActionDataPtr
 
-	return flowActionEvent, nil
+	return flowActionEvent, flowExecutionID, nil
 }

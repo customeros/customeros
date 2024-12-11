@@ -26,8 +26,8 @@ func HandleMeetingSummaryEvent(ctx context.Context, s *service.Services, sourceE
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "eventData", eventData)
 
+	// check to see if tenant has flows configured for this event
 	flows, err := s.WorkflowService.GetWorkflowsByListenerEvent(ctx, sourceEvent)
-
 	// send to dead events if no flows configured to receive event
 	if err != nil || len(flows) == 0 {
 		err := sendToDeadEvents(ctx, s, sourceEvent, eventData)
@@ -37,43 +37,90 @@ func HandleMeetingSummaryEvent(ctx context.Context, s *service.Services, sourceE
 		}
 	}
 
+	var errs error
 	for _, flow := range flows {
-		// lookup next action and build flow execution record
-		record, err := buildFlowExecutionRecord(ctx, flow, eventData)
+		// get next action on the flow
+		nextFlowAction, nextFlowNodeId, err := s.WorkflowService.GetFirstAction(ctx, &flow)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			return err
+			errs = multierr.Append(errs, fmt.Errorf("failed to get first action for flow %s: %w", flow.ID, err))
+			continue
 		}
 
-		// save flow execution record
-		flowExecutionID, err := s.PostgresRepositories.FlowExecutionRepository.Save(ctx, record)
+		// validate the transition to next action
+		validAction, err := s.WorkflowService.IsFlowActionValidTransitionFromListener(ctx, sourceEvent, nextFlowAction)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			return err
+			errs = multierr.Append(errs, fmt.Errorf("failed to validate transition for flow %s: %w", flow.ID, err))
+			continue
 		}
-
-		executionStatus, err := commonEnum.GetFlowExecutionStatus(record.Status)
-		if err != nil {
+		if !validAction {
+			err = fmt.Errorf("not a valid action transition for flow %s", flow.ID)
 			tracing.TraceErr(span, err)
-			return err
+			errs = multierr.Append(errs, err)
+			continue
 		}
 
-		if executionStatus != commonEnum.FlowExecutionRunning {
-			return nil
+		// prepare and send event to action executioner
+		switch nextFlowAction {
+		case commonEnum.ActionTimelineEventCreate:
+			if err := sendTimelineEventCreateAction(ctx, s, flow.Status.String(), flow.ID,
+				nextFlowNodeId, eventData, sourceEvent); err != nil {
+				tracing.TraceErr(span, err)
+				errs = multierr.Append(errs, fmt.Errorf("failed to send timeline event for flow %s: %w", flow.ID, err))
+			}
+		default:
+			err = fmt.Errorf("next flow action not handled for flow %s", flow.ID)
+			tracing.TraceErr(span, err)
+			errs = multierr.Append(errs, err)
 		}
+	}
 
-		// if not blocked, send publish action execution event
-		if err := publishCreateMarkdownEvent(ctx, s, sourceEvent, flowExecutionID, eventData); err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to publish markdown event"))
-			return err
-		}
+	return errs
+}
 
+func sendTimelineEventCreateAction(
+	ctx context.Context, s *service.Services, flowStatus, flowId, flowNodeId string,
+	eventData *data_fields.MeetingSummaryEvent, sourceEvent commonEnum.FlowListenerEvent,
+) error {
+
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EventHandlers.hantdleTimelineEventCreateAction")
+	defer span.Finish()
+	tracing.SetDefaultListenerSpanTags(ctx, span)
+
+	record, err := buildFlowExecutionRecord(ctx, flowStatus, flowId, flowNodeId, eventData)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	// save flow execution record
+	flowExecutionID, err := s.PostgresRepositories.FlowExecutionRepository.Save(ctx, record)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	executionStatus, err := commonEnum.GetFlowExecutionStatus(record.Status)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	if executionStatus != commonEnum.FlowExecutionRunning {
+		return nil
+	}
+
+	// if not blocked, send publish action execution event
+	if err := publishCreateMarkdownEvent(ctx, s, sourceEvent, flowExecutionID, eventData); err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to publish markdown event"))
+		return err
 	}
 
 	return nil
 }
 
-func buildFlowExecutionRecord(ctx context.Context, flow entity.Workflow, eventData *data_fields.MeetingSummaryEvent) (postgresEntity.FlowExecution, error) {
+func buildFlowExecutionRecord(ctx context.Context, flowStatus, flowId, flowNodeId string, eventData *data_fields.MeetingSummaryEvent) (postgresEntity.FlowExecution, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EventHandlers.buildFlowExecutionRecord")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
@@ -85,18 +132,19 @@ func buildFlowExecutionRecord(ctx context.Context, flow entity.Workflow, eventDa
 	}
 
 	record := postgresEntity.FlowExecution{
-		Tenant:        common.GetTenantFromContext(ctx),
-		FlowID:        flow.ID,
-		EntityID:      eventData.MeetingID,
-		EntityType:    commonEnum.EntityMeeting.String(),
-		Status:        commonEnum.FlowExecutionRunning.String(),
-		StartedAt:     utils.Now(),
-		CurrentAction: commonEnum.ActionTimelineEventCreate.String(),
-		CreatedAt:     utils.Now(),
-		Context:       &data,
+		Tenant:         common.GetTenantFromContext(ctx),
+		FlowID:         flowId,
+		EntityID:       eventData.MeetingID,
+		EntityType:     commonEnum.EntityMeeting.String(),
+		Status:         commonEnum.FlowExecutionRunning.String(),
+		StartedAt:      utils.NowPtr(),
+		NextStep:       commonEnum.ActionTimelineEventCreate.String(),
+		NextStepNodeId: flowNodeId,
+		CreatedAt:      utils.Now(),
+		Context:        &data,
 	}
 
-	switch flow.Status.String() {
+	switch flowStatus {
 	case "INACTIVE":
 		reason := commonEnum.FlowBlockedNotActive.String()
 		record.Status = commonEnum.FlowExecutionBlocked.String()
