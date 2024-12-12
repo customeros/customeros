@@ -101,13 +101,33 @@ export class FlowStore implements Store<Flow> {
     }
   }
 
+  async updateFlowName() {
+    this.isLoading = true;
+
+    try {
+      await this.service.changeFlowName({
+        id: this.id,
+        name: this.value.name,
+      });
+    } catch (error) {
+      this.root.ui.toastError(
+        "We couldn't update flow name",
+        'update-flow-name-error',
+      );
+    } finally {
+      runInAction(() => {
+        this.invalidate();
+      });
+      this.isLoading = false;
+    }
+  }
+
   private async save(operation: Operation) {
     const diff = operation.diff?.[0];
     const path = diff?.path;
 
     match(path).with(['name', ...P.array()], () => {
-      // todo COS-5311 - use another mutation to not update nodes and edges when updating the name
-      this.updateFlow({ nodes: this.value.nodes, edges: this.value.edges });
+      this.updateFlowName();
     });
   }
 
