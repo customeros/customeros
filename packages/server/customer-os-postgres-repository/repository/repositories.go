@@ -47,6 +47,7 @@ type Repositories struct {
 	FlowActionExecutionRepository                FlowActionExecutionRepository
 	FlowActionRegistryRepository                 FlowActionRegistryRepository
 	FlowDeadEventsRepository                     FlowDeadEventsRepository
+	FlowEdgeRepository                           FlowEdgeRepository
 	FlowExecutionRepository                      FlowExecutionRepository
 	FlowListenerRegistryRepository               FlowListenerRegistryRepository
 	FlowNodeRepository                           FlowNodeRepository
@@ -126,6 +127,7 @@ func InitRepositories(postgresDB *config.PostgresDB) *Repositories {
 		FlowActionExecutionRepository:                NewFlowActionExecutionRepository(postgresDB.GormDB),
 		FlowActionRegistryRepository:                 NewFlowActionRegistryRepository(postgresDB.GormDB),
 		FlowDeadEventsRepository:                     NewFlowDeadEventsRepository(postgresDB.GormDB),
+		FlowEdgeRepository:                           NewFlowEdgeRepository(postgresDB.GormDB),
 		FlowExecutionRepository:                      NewFlowExecutionRepository(postgresDB.GormDB),
 		FlowListenerRegistryRepository:               NewFlowListenerRegistryRepository(postgresDB.GormDB),
 		FlowNodeRepository:                           NewFlowNodeRepository(postgresDB.GormDB),
@@ -192,6 +194,7 @@ func (r *Repositories) Migration(postgresDB *config.PostgresDB) {
 		&entity.FlowActionRegistry{},
 		&entity.ActionExecution{},
 		&entity.FlowDeadEvents{},
+		&entity.FlowEdge{},
 		&entity.FlowExecution{},
 		&entity.FlowListenerRegistry{},
 		&entity.FlowNode{},

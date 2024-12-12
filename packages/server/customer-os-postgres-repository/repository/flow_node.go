@@ -14,6 +14,7 @@ import (
 type FlowNodeRepository interface {
 	CreateFlowNode(ctx context.Context, flowNode entity.FlowNode) (entity.FlowNode, error)
 	GetAllNodesForFlow(ctx context.Context, flowID string) ([]entity.FlowNode, error)
+	GetNodeById(ctx context.Context, nodeId string) (entity.FlowNode, error)
 }
 
 type flowNodeRepository struct {
@@ -36,11 +37,14 @@ func (f *flowNodeRepository) CreateFlowNode(ctx context.Context, flowNode entity
 
 	flowNode.ID = utils.GenerateNanoIdWithPrefix("node")
 
-	if flowNode.PositionX == 0 {
-		flowNode.PositionX = DefaultNodeX
+	x := DefaultNodeX
+	y := DefaultNodeY
+
+	if int(*flowNode.PositionX) == 0 {
+		flowNode.PositionX = &x
 	}
-	if flowNode.PositionY == 0 {
-		flowNode.PositionY = DefaultNodeY
+	if int(*flowNode.PositionY) == 0 {
+		flowNode.PositionY = &y
 	}
 
 	err := f.gormDb.Create(&flowNode).Error
@@ -64,4 +68,20 @@ func (f *flowNodeRepository) GetAllNodesForFlow(ctx context.Context, flowID stri
 		return nodes, err
 	}
 	return nodes, nil
+}
+
+func (f *flowNodeRepository) GetNodeById(ctx context.Context, nodeId string) (entity.FlowNode, error) {
+	span, ctx := tracing.StartTracerSpan(ctx, "FlowRepository.GetNodeById")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	var node entity.FlowNode
+	err := f.gormDb.
+		Where("tenant = ? AND id = ?", common.GetTenantFromContext(ctx), nodeId).
+		First(&node).Error
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return node, err
+	}
+	return node, nil
 }

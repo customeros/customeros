@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
@@ -63,7 +62,7 @@ func CreateFlowNode(s *service.Services) gin.HandlerFunc {
 			return
 		}
 
-		request, err := getNodeCreateRequest(c)
+		request, err := getNodeCreateRequest(c, s)
 		if err != nil {
 			rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("unable to parse payload"))
 			return
@@ -121,7 +120,6 @@ func buildFlowNodeCreateResponse(ctx context.Context, flowNode entity.FlowNode) 
 
 	response.Node.Data = &data
 	return response
-
 }
 
 func createFlowNodeRecord(ctx context.Context, request CreateFlowNodeRequest, flowId string) (entity.FlowNode, error) {

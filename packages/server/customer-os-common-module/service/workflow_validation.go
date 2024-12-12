@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -67,7 +68,6 @@ func (w *workflowService) ValidateEventType(ctx context.Context, nodeType enum.F
 	}
 
 	return false
-
 }
 
 func (w *workflowService) ValidateNodeType(ctx context.Context, nodeType string) (bool, *enum.FlowNodeType) {
@@ -80,4 +80,30 @@ func (w *workflowService) ValidateNodeType(ctx context.Context, nodeType string)
 		return false, nil
 	}
 	return true, &t
+}
+
+func (w *workflowService) ValidateTransition(ctx context.Context, fromNodeId string, toNodeId string) (bool, error) {
+	span, ctx := tracing.StartTracerSpan(ctx, "WorkflowService.ValidateTransition")
+	defer span.Finish()
+	tracing.TagComponentService(span)
+
+	fromNode, err := w.services.PostgresRepositories.FlowNodeRepository.GetNodeById(ctx, fromNodeId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return false, err
+	}
+
+	toNode, err := w.services.PostgresRepositories.FlowNodeRepository.GetNodeById(ctx, toNodeId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return false, err
+	}
+
+	ok, err := w.services.PostgresRepositories.FlowTransitionsRegistryRepository.ValidateFlowTransition(ctx, *fromNode.Event, *toNode.Event)
+	if !ok {
+		err = errors.New("invalid transition")
+		tracing.TraceErr(span, err)
+		return false, err
+	}
+	return ok, nil
 }

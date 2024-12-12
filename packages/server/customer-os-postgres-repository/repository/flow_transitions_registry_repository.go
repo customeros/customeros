@@ -18,6 +18,7 @@ type FlowTransitionsRegistryRepository interface {
 	GetFlowTransitionsByNode(ctx context.Context, fromNode enum.FlowNodeType) ([]entity.FlowTransitionsRegistry, error)
 	GetAllFlowTransitions(ctx context.Context) ([]entity.FlowTransitionsRegistry, error)
 	CreateFlowTransition(ctx context.Context, transition *entity.FlowTransitionsRegistry) error
+	ValidateFlowTransition(ctx context.Context, fromNode, toNode string) (bool, error)
 }
 
 type flowTransitionsRegistryRepository struct {
@@ -142,4 +143,26 @@ func (r *flowTransitionsRegistryRepository) InitializeFlowTransitions(ctx contex
 	}
 
 	return nil
+}
+
+func (r *flowTransitionsRegistryRepository) ValidateFlowTransition(ctx context.Context, fromNode, toNode string) (bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowTransitionsRegistry.ValidateFlowTransition")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	var transition entity.FlowTransitionsRegistry
+	err := r.gormDb.WithContext(ctx).
+		Where("enabled = true AND from_node = ? AND to_node = ?", fromNode, toNode).
+		First(&transition).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		err = nil
+	}
+
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return false, err
+	}
+
+	return true, nil
 }
