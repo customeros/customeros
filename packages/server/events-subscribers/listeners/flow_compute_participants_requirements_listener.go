@@ -48,8 +48,6 @@ func Handle_FlowComputeParticipantsRequirements(ctx context.Context, services *s
 			if err != nil {
 				return nil, err
 			}
-
-			return nil, nil
 		}
 
 		return nil, nil
