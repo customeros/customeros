@@ -35,6 +35,7 @@ func HandleMeetingSummaryEvent(ctx context.Context, s *service.Services, sourceE
 			tracing.TraceErr(span, err)
 			return err
 		}
+		return err
 	}
 
 	var errs error
@@ -106,7 +107,7 @@ func publishTimelineEventCreateEvent(
 		return err
 	}
 
-	// if flow is not running, send to dead event queue
+	// if flow is configured but not running
 	if executionStatus != commonEnum.FlowExecutionRunning {
 		return nil
 	}

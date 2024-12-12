@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"github.com/sirupsen/logrus"
 	"io"
 	"log"
 
@@ -14,6 +13,7 @@ import (
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/opentracing/opentracing-go"
+	"github.com/sirupsen/logrus"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/events-subscribers/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-subscribers/listeners"
@@ -105,6 +105,7 @@ func main() {
 	// FlowEngine
 	commonServices.RabbitMQService.RegisterHandler(dto.WebhookEvent{}, listeners.OnWebhookEventCreated)
 	commonServices.RabbitMQService.RegisterHandler(dto.FlowActionEvent{}, listeners.OnFlowActionEventCreated)
+	commonServices.RabbitMQService.RegisterHandler(dto.FlowActionExecutionResultEvent{}, listeners.OnFlowActionExecutionResultsEventCreated)
 
 	// Listen for messages
 	commonServices.RabbitMQService.ListenQueue(commonService.EventsQueueName)
