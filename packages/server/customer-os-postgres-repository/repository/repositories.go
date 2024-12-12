@@ -43,6 +43,7 @@ type Repositories struct {
 	EnrichDetailsTrackingRepository              EnrichDetailsTrackingRepository
 	EventBufferRepository                        EventBufferRepository
 	ExternalAppKeysRepository                    ExternalAppKeysRepository
+	FlowRepository                               FlowRepository
 	FlowActionExecutionRepository                FlowActionExecutionRepository
 	FlowActionRegistryRepository                 FlowActionRegistryRepository
 	FlowDeadEventsRepository                     FlowDeadEventsRepository
@@ -120,6 +121,7 @@ func InitRepositories(postgresDB *config.PostgresDB) *Repositories {
 		EnrichDetailsTrackingRepository:              NewEnrichDetailsTrackingRepository(postgresDB.GormDB),
 		EventBufferRepository:                        NewEventBufferRepository(postgresDB.GormDB),
 		ExternalAppKeysRepository:                    NewExternalAppKeysRepository(postgresDB.GormDB),
+		FlowRepository:                               NewFlowRepository(postgresDB.GormDB),
 		FlowActionExecutionRepository:                NewFlowActionExecutionRepository(postgresDB.GormDB),
 		FlowActionRegistryRepository:                 NewFlowActionRegistryRepository(postgresDB.GormDB),
 		FlowDeadEventsRepository:                     NewFlowDeadEventsRepository(postgresDB.GormDB),
@@ -184,6 +186,7 @@ func (r *Repositories) Migration(postgresDB *config.PostgresDB) {
 		&entity.EnrichDetailsTracking{},
 		&entity.EventBuffer{},
 		&entity.ExternalAppKeys{},
+		&entity.Flow{},
 		&entity.FlowActionRegistry{},
 		&entity.ActionExecution{},
 		&entity.FlowDeadEvents{},

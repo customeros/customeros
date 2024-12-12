@@ -80,6 +80,7 @@ require (
 	github.com/likexian/whois v1.15.5 // indirect
 	github.com/likexian/whois-parser v1.24.20 // indirect
 	github.com/lucasepe/codename v0.2.0 // indirect
+	github.com/matoous/go-nanoid/v2 v2.1.0 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
