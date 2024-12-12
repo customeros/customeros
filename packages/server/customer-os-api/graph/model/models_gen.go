@@ -1239,13 +1239,14 @@ type GlobalCacheEmailToken struct {
 }
 
 type GlobalOrganization struct {
-	ID            int64    `json:"id"`
-	Name          string   `json:"name"`
-	PrimaryDomain string   `json:"primaryDomain"`
-	Website       string   `json:"website"`
-	LogoURL       string   `json:"logoUrl"`
-	IconURL       string   `json:"iconUrl"`
-	Domains       []string `json:"domains"`
+	ID             int64    `json:"id"`
+	Name           string   `json:"name"`
+	PrimaryDomain  string   `json:"primaryDomain"`
+	Website        string   `json:"website"`
+	LogoURL        string   `json:"logoUrl"`
+	IconURL        string   `json:"iconUrl"`
+	Domains        []string `json:"domains"`
+	OrganizationID *string  `json:"organizationId,omitempty"`
 }
 
 type InteractionEvent struct {

@@ -10,4 +10,5 @@ type GlobalOrganization {
     logoUrl:        String!
     iconUrl:        String!
     domains:        [String!]!
+    organizationId: ID
 }
