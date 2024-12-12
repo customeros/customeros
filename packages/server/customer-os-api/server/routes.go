@@ -88,9 +88,32 @@ func registerCustomerBaseRoutes(ctx context.Context, r *gin.Engine, s *service.S
 }
 
 func registerFlowRoutes(ctx context.Context, r *gin.Engine, s *service.Services, cache *commoncaches.Cache) {
+    // flow builder
+	setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/flows", flowsV1Path), s, cache, flows.CreateFlow(s))
+	setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/flows", flowsV1Path), s, cache, ...)
+
+    // manage specific flow
+    setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/flows/:flowId", flowsV1Path), s, cache, ...)
+    setupRestRoute(ctx, r, "PUT", fmt.Sprintf("%s/flows/:flowId", flowsV1Path), s, cache, ...)
+    setupRestRoute(ctx, r, "DELETE", fmt.Sprintf("%s/flows/:flowId", flowsV1Path), s, cache, ...)
+
+    // manage flow nodes
+    setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/flows/:flowId/nodes", flowsV1Path), s, cache, ...)
+    setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/flows/:flowId/nodes", flowsV1Path), s, cache, ...)
+    setupRestRoute(ctx, r, "PUT", fmt.Sprintf("%s/flows/:flowId/nodes/:nodeId", flowsV1Path), s, cache, ...)
+    setupRestRoute(ctx, r, "DELETE", fmt.Sprintf("%s/flows/:flowId/nodes/:nodeId", flowsV1Path), s, cache, ...)
+
+    // manage flow edges
+    setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/flows/:flowId/edges", flowsV1Path), s, cache, ...)
+    setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/flows/:flowId/edges", flowsV1Path), s, cache, ...)
+    setupRestRoute(ctx, r, "DELETE", fmt.Sprintf("%s/flows/:flowId/edges/:edgeId", flowsV1Path), s, cache, ...)
+
+    // flow validation
 	setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/actions", flowsV1Path), s, cache, flows.GetActions(s))
 	setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/listeners", flowsV1Path), s, cache, flows.GetListeners(s))
 	setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/transitions", flowsV1Path), s, cache, flows.GetTransitions(s))
+
+    // webhook admin
 	setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/hooks", flowsV1Path), s, cache, flows.GetActiveWebhooks(s, CustomerOSAPIURL(), flowsV1Path))
 	setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/hooks", flowsV1Path), s, cache, flows.CreateWebhook(s, CustomerOSAPIURL(), flowsV1Path))
 	setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/:tenantId/i/:integrationId/rotate", flowsV1Path), s, cache, flows.RotateWebhook(s, CustomerOSAPIURL(), flowsV1Path))

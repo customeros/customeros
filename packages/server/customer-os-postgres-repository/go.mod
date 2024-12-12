@@ -8,6 +8,7 @@ replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-
 
 require (
 	github.com/google/uuid v1.6.0
+	github.com/matoous/go-nanoid/v2 v2.1.0
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240925071556-618778a7336e
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository v0.0.0-20241202190357-68898897475c
 	github.com/opentracing/opentracing-go v1.2.0

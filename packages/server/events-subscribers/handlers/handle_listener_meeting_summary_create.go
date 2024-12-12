@@ -133,16 +133,16 @@ func buildFlowExecutionRecord(ctx context.Context, flowStatus, flowId, flowNodeI
 	}
 
 	record := postgresEntity.FlowExecution{
-		Tenant:         common.GetTenantFromContext(ctx),
-		FlowID:         flowId,
-		EntityID:       eventData.MeetingID,
-		EntityType:     commonEnum.EntityMeeting.String(),
-		Status:         commonEnum.FlowExecutionRunning.String(),
-		StartedAt:      utils.NowPtr(),
-		NextStep:       commonEnum.ActionTimelineEventCreate.String(),
-		NextStepNodeId: flowNodeId,
-		CreatedAt:      utils.Now(),
-		Context:        &data,
+		Tenant:            common.GetTenantFromContext(ctx),
+		FlowID:            flowId,
+		EntityID:          eventData.MeetingID,
+		EntityType:        commonEnum.EntityMeeting.String(),
+		Status:            commonEnum.FlowExecutionRunning.String(),
+		StartedAt:         utils.NowPtr(),
+		CurrentStep:       commonEnum.ActionTimelineEventCreate.String(),
+		CurrentStepNodeId: flowNodeId,
+		CreatedAt:         utils.Now(),
+		Context:           &data,
 	}
 
 	switch flowStatus {

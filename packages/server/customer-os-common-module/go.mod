@@ -26,6 +26,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/h2non/filetype v1.1.3
 	github.com/machinebox/graphql v0.2.2
+	github.com/matoous/go-nanoid/v2 v2.1.0
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/mrz1836/postmark v1.6.6
 	github.com/neo4j/neo4j-go-driver/v5 v5.27.0
