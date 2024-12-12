@@ -13,7 +13,7 @@ import (
 )
 
 func HandleActionExecutionResults(c context.Context, s *service.Services, eventData *dto.FlowActionExecutionResultEvent) error {
-	span, ctx := opentracing.StartSpanFromContext(c, "EventHandlers.HandleCreateContact")
+	span, ctx := opentracing.StartSpanFromContext(c, "EventHandlers.HandleActionExecutionResults")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "eventData", eventData)
