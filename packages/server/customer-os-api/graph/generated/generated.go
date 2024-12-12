@@ -1151,8 +1151,6 @@ type ComplexityRoot struct {
 		UserRemoveRoleInTenant                     func(childComplexity int, id string, tenant string, role model.Role) int
 		UserUpdate                                 func(childComplexity int, input model.UserUpdateInput) int
 		UserUpdateOnboardingDetails                func(childComplexity int, input model.UserOnboardingDetailsInput) int
-		WorkflowCreate                             func(childComplexity int, input model.WorkflowCreateInput) int
-		WorkflowUpdate                             func(childComplexity int, input model.WorkflowUpdateInput) int
 	}
 
 	Note struct {
@@ -1492,8 +1490,6 @@ type ComplexityRoot struct {
 		User                               func(childComplexity int, id string) int
 		UserByEmail                        func(childComplexity int, email string) int
 		Users                              func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model1.SortBy) int
-		WorkflowByType                     func(childComplexity int, workflowType model.WorkflowType) int
-		Workflows                          func(childComplexity int) int
 	}
 
 	Reminder struct {
@@ -1728,15 +1724,6 @@ type ComplexityRoot struct {
 		GlobalOrganization func(childComplexity int) int
 		Primary            func(childComplexity int) int
 		PrimaryDomain      func(childComplexity int) int
-	}
-
-	Workflow struct {
-		ActionParam1 func(childComplexity int) int
-		Condition    func(childComplexity int) int
-		ID           func(childComplexity int) int
-		Live         func(childComplexity int) int
-		Name         func(childComplexity int) int
-		Type         func(childComplexity int) int
 	}
 }
 
@@ -2036,8 +2023,6 @@ type MutationResolver interface {
 	TableViewDefUpdate(ctx context.Context, input model.TableViewDefUpdateInput) (*model.TableViewDef, error)
 	TableViewDefUpdateShared(ctx context.Context, input model.TableViewDefUpdateInput) (*model.TableViewDef, error)
 	TableViewDefArchive(ctx context.Context, id string) (*model.ActionResponse, error)
-	WorkflowCreate(ctx context.Context, input model.WorkflowCreateInput) (*model.Workflow, error)
-	WorkflowUpdate(ctx context.Context, input model.WorkflowUpdateInput) (*model.ActionResponse, error)
 }
 type NoteResolver interface {
 	CreatedBy(ctx context.Context, obj *model.Note) (*model.User, error)
@@ -8835,7 +8820,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.UserUpdateOnboardingDetails(childComplexity, args["input"].(model.UserOnboardingDetailsInput)), true
 
-
 	case "Note.appSource":
 		if e.complexity.Note.AppSource == nil {
 			break
@@ -11178,25 +11162,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Users(childComplexity, args["pagination"].(*model.Pagination), args["where"].(*model.Filter), args["sort"].([]*model1.SortBy)), true
 
-	case "Query.workflow_ByType":
-		if e.complexity.Query.WorkflowByType == nil {
-			break
-		}
-
-		args, err := ec.field_Query_workflow_ByType_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Query.WorkflowByType(childComplexity, args["workflowType"].(model.WorkflowType)), true
-
-	case "Query.workflows":
-		if e.complexity.Query.Workflows == nil {
-			break
-		}
-
-		return e.complexity.Query.Workflows(childComplexity), true
-
 	case "Reminder.content":
 		if e.complexity.Reminder.Content == nil {
 			break
@@ -12352,48 +12317,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.WebsiteCheckDetails.PrimaryDomain(childComplexity), true
 
-	case "Workflow.actionParam1":
-		if e.complexity.Workflow.ActionParam1 == nil {
-			break
-		}
-
-		return e.complexity.Workflow.ActionParam1(childComplexity), true
-
-	case "Workflow.condition":
-		if e.complexity.Workflow.Condition == nil {
-			break
-		}
-
-		return e.complexity.Workflow.Condition(childComplexity), true
-
-	case "Workflow.id":
-		if e.complexity.Workflow.ID == nil {
-			break
-		}
-
-		return e.complexity.Workflow.ID(childComplexity), true
-
-	case "Workflow.live":
-		if e.complexity.Workflow.Live == nil {
-			break
-		}
-
-		return e.complexity.Workflow.Live(childComplexity), true
-
-	case "Workflow.name":
-		if e.complexity.Workflow.Name == nil {
-			break
-		}
-
-		return e.complexity.Workflow.Name(childComplexity), true
-
-	case "Workflow.type":
-		if e.complexity.Workflow.Type == nil {
-			break
-		}
-
-		return e.complexity.Workflow.Type(childComplexity), true
-
 	}
 	return 0, false
 }
@@ -12494,8 +12417,6 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputUserInput,
 		ec.unmarshalInputUserOnboardingDetailsInput,
 		ec.unmarshalInputUserUpdateInput,
-		ec.unmarshalInputWorkflowCreateInput,
-		ec.unmarshalInputWorkflowUpdateInput,
 	)
 	first := true
 
@@ -17003,45 +16924,6 @@ input ColumnViewInput {
     filter: String!
 }
 `, BuiltIn: false},
-	{Name: "../schemas/workflow.graphqls", Input: `extend type Query {
-    workflow_ByType(workflowType: WorkflowType!): Workflow! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    workflows: [Workflow!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
-}
-
-extend type Mutation {
-    workflow_Create(input: WorkflowCreateInput!): Workflow! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    workflow_Update(input: WorkflowUpdateInput!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
-}
-
-type Workflow implements Node {
-    id:             ID!
-    name:           String
-    type:           WorkflowType!
-    live:           Boolean!
-    condition:      String!
-    actionParam1:   String!
-}
-
-enum WorkflowType {
-    IDEAL_CUSTOMER_PROFILE
-    IDEAL_CONTACT_PERSONA
-}
-
-input WorkflowCreateInput {
-    type:           WorkflowType!
-    name:           String
-    live:           Boolean
-    condition:      String
-    actionParam1:   String
-}
-
-input WorkflowUpdateInput {
-    id:             ID!
-    name:           String
-    live:           Boolean
-    condition:      String
-    actionParam1:   String
-}`, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
@@ -25376,70 +25258,6 @@ func (ec *executionContext) field_Mutation_user_Update_argsInput(
 	return zeroVal, nil
 }
 
-func (ec *executionContext) field_Mutation_workflow_Create_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	arg0, err := ec.field_Mutation_workflow_Create_argsInput(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["input"] = arg0
-	return args, nil
-}
-func (ec *executionContext) field_Mutation_workflow_Create_argsInput(
-	ctx context.Context,
-	rawArgs map[string]interface{},
-) (model.WorkflowCreateInput, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["input"]
-	if !ok {
-		var zeroVal model.WorkflowCreateInput
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNWorkflowCreateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐWorkflowCreateInput(ctx, tmp)
-	}
-
-	var zeroVal model.WorkflowCreateInput
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Mutation_workflow_Update_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	arg0, err := ec.field_Mutation_workflow_Update_argsInput(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["input"] = arg0
-	return args, nil
-}
-func (ec *executionContext) field_Mutation_workflow_Update_argsInput(
-	ctx context.Context,
-	rawArgs map[string]interface{},
-) (model.WorkflowUpdateInput, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["input"]
-	if !ok {
-		var zeroVal model.WorkflowUpdateInput
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNWorkflowUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐWorkflowUpdateInput(ctx, tmp)
-	}
-
-	var zeroVal model.WorkflowUpdateInput
-	return zeroVal, nil
-}
-
 func (ec *executionContext) field_Organization_contacts_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -28123,38 +27941,6 @@ func (ec *executionContext) field_Query_users_argsSort(
 	}
 
 	var zeroVal []*model1.SortBy
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Query_workflow_ByType_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	arg0, err := ec.field_Query_workflow_ByType_argsWorkflowType(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["workflowType"] = arg0
-	return args, nil
-}
-func (ec *executionContext) field_Query_workflow_ByType_argsWorkflowType(
-	ctx context.Context,
-	rawArgs map[string]interface{},
-) (model.WorkflowType, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["workflowType"]
-	if !ok {
-		var zeroVal model.WorkflowType
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("workflowType"))
-	if tmp, ok := rawArgs["workflowType"]; ok {
-		return ec.unmarshalNWorkflowType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐWorkflowType(ctx, tmp)
-	}
-
-	var zeroVal model.WorkflowType
 	return zeroVal, nil
 }
 
@@ -78972,202 +78758,6 @@ func (ec *executionContext) fieldContext_Mutation_tableViewDef_Archive(ctx conte
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_workflow_Create(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_workflow_Create(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().WorkflowCreate(rctx, fc.Args["input"].(model.WorkflowCreateInput))
-		}
-
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
-			if err != nil {
-				var zeroVal *model.Workflow
-				return zeroVal, err
-			}
-			if ec.directives.HasRole == nil {
-				var zeroVal *model.Workflow
-				return zeroVal, errors.New("directive hasRole is not implemented")
-			}
-			return ec.directives.HasRole(ctx, nil, directive0, roles)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.HasTenant == nil {
-				var zeroVal *model.Workflow
-				return zeroVal, errors.New("directive hasTenant is not implemented")
-			}
-			return ec.directives.HasTenant(ctx, nil, directive1)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.Workflow); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.Workflow`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.Workflow)
-	fc.Result = res
-	return ec.marshalNWorkflow2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐWorkflow(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_workflow_Create(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Workflow_id(ctx, field)
-			case "name":
-				return ec.fieldContext_Workflow_name(ctx, field)
-			case "type":
-				return ec.fieldContext_Workflow_type(ctx, field)
-			case "live":
-				return ec.fieldContext_Workflow_live(ctx, field)
-			case "condition":
-				return ec.fieldContext_Workflow_condition(ctx, field)
-			case "actionParam1":
-				return ec.fieldContext_Workflow_actionParam1(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Workflow", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_workflow_Create_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_workflow_Update(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_workflow_Update(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().WorkflowUpdate(rctx, fc.Args["input"].(model.WorkflowUpdateInput))
-		}
-
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
-			if err != nil {
-				var zeroVal *model.ActionResponse
-				return zeroVal, err
-			}
-			if ec.directives.HasRole == nil {
-				var zeroVal *model.ActionResponse
-				return zeroVal, errors.New("directive hasRole is not implemented")
-			}
-			return ec.directives.HasRole(ctx, nil, directive0, roles)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.HasTenant == nil {
-				var zeroVal *model.ActionResponse
-				return zeroVal, errors.New("directive hasTenant is not implemented")
-			}
-			return ec.directives.HasTenant(ctx, nil, directive1)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.ActionResponse); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.ActionResponse`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.ActionResponse)
-	fc.Result = res
-	return ec.marshalNActionResponse2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐActionResponse(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_workflow_Update(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "accepted":
-				return ec.fieldContext_ActionResponse_accepted(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type ActionResponse", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_workflow_Update_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Note_id(ctx context.Context, field graphql.CollectedField, obj *model.Note) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Note_id(ctx, field)
 	if err != nil {
@@ -98204,7 +97794,6 @@ func (ec *executionContext) fieldContext_Query_tableViewDefs(_ context.Context, 
 	return fc, nil
 }
 
-
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query___type(ctx, field)
 	if err != nil {
@@ -106566,267 +106155,6 @@ func (ec *executionContext) fieldContext_WebsiteCheckDetails_globalOrganization(
 	return fc, nil
 }
 
-func (ec *executionContext) _Workflow_id(ctx context.Context, field graphql.CollectedField, obj *model.Workflow) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Workflow_id(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Workflow_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Workflow",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Workflow_name(ctx context.Context, field graphql.CollectedField, obj *model.Workflow) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Workflow_name(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Name, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Workflow_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Workflow",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Workflow_type(ctx context.Context, field graphql.CollectedField, obj *model.Workflow) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Workflow_type(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Type, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(model.WorkflowType)
-	fc.Result = res
-	return ec.marshalNWorkflowType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐWorkflowType(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Workflow_type(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Workflow",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type WorkflowType does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Workflow_live(ctx context.Context, field graphql.CollectedField, obj *model.Workflow) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Workflow_live(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Live, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(bool)
-	fc.Result = res
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Workflow_live(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Workflow",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Workflow_condition(ctx context.Context, field graphql.CollectedField, obj *model.Workflow) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Workflow_condition(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Condition, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Workflow_condition(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Workflow",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Workflow_actionParam1(ctx context.Context, field graphql.CollectedField, obj *model.Workflow) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Workflow_actionParam1(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ActionParam1, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Workflow_actionParam1(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Workflow",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) ___Directive_name(ctx context.Context, field graphql.CollectedField, obj *introspection.Directive) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext___Directive_name(ctx, field)
 	if err != nil {
@@ -115116,116 +114444,6 @@ func (ec *executionContext) unmarshalInputUserUpdateInput(ctx context.Context, o
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputWorkflowCreateInput(ctx context.Context, obj interface{}) (model.WorkflowCreateInput, error) {
-	var it model.WorkflowCreateInput
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
-		asMap[k] = v
-	}
-
-	fieldsInOrder := [...]string{"type", "name", "live", "condition", "actionParam1"}
-	for _, k := range fieldsInOrder {
-		v, ok := asMap[k]
-		if !ok {
-			continue
-		}
-		switch k {
-		case "type":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
-			data, err := ec.unmarshalNWorkflowType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐWorkflowType(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Type = data
-		case "name":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Name = data
-		case "live":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("live"))
-			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Live = data
-		case "condition":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("condition"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Condition = data
-		case "actionParam1":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("actionParam1"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.ActionParam1 = data
-		}
-	}
-
-	return it, nil
-}
-
-func (ec *executionContext) unmarshalInputWorkflowUpdateInput(ctx context.Context, obj interface{}) (model.WorkflowUpdateInput, error) {
-	var it model.WorkflowUpdateInput
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
-		asMap[k] = v
-	}
-
-	fieldsInOrder := [...]string{"id", "name", "live", "condition", "actionParam1"}
-	for _, k := range fieldsInOrder {
-		v, ok := asMap[k]
-		if !ok {
-			continue
-		}
-		switch k {
-		case "id":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-			data, err := ec.unmarshalNID2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.ID = data
-		case "name":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Name = data
-		case "live":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("live"))
-			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Live = data
-		case "condition":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("condition"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Condition = data
-		case "actionParam1":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("actionParam1"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.ActionParam1 = data
-		}
-	}
-
-	return it, nil
-}
-
 // endregion **************************** input.gotpl *****************************
 
 // region    ************************** interface.gotpl ***************************
@@ -115496,27 +114714,6 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._PageView(ctx, sel, obj)
-	case model.Contact:
-		return ec._Contact(ctx, sel, &obj)
-	case *model.Contact:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._Contact(ctx, sel, obj)
-	case model.Issue:
-		return ec._Issue(ctx, sel, &obj)
-	case *model.Issue:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._Issue(ctx, sel, obj)
-	case model.TenantBillingProfile:
-		return ec._TenantBillingProfile(ctx, sel, &obj)
-	case *model.TenantBillingProfile:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._TenantBillingProfile(ctx, sel, obj)
 	case model.Location:
 		return ec._Location(ctx, sel, &obj)
 	case *model.Location:
@@ -115524,13 +114721,27 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._Location(ctx, sel, obj)
-	case model.BillingProfile:
-		return ec._BillingProfile(ctx, sel, &obj)
-	case *model.BillingProfile:
+	case model.Contact:
+		return ec._Contact(ctx, sel, &obj)
+	case *model.Contact:
 		if obj == nil {
 			return graphql.Null
 		}
-		return ec._BillingProfile(ctx, sel, obj)
+		return ec._Contact(ctx, sel, obj)
+	case model.TenantBillingProfile:
+		return ec._TenantBillingProfile(ctx, sel, &obj)
+	case *model.TenantBillingProfile:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._TenantBillingProfile(ctx, sel, obj)
+	case model.Issue:
+		return ec._Issue(ctx, sel, &obj)
+	case *model.Issue:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._Issue(ctx, sel, obj)
 	case model.Social:
 		return ec._Social(ctx, sel, &obj)
 	case *model.Social:
@@ -115538,6 +114749,13 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._Social(ctx, sel, obj)
+	case model.BillingProfile:
+		return ec._BillingProfile(ctx, sel, &obj)
+	case *model.BillingProfile:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._BillingProfile(ctx, sel, obj)
 	case model.Metadata:
 		return ec._Metadata(ctx, sel, &obj)
 	case *model.Metadata:
@@ -115545,39 +114763,6 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._Metadata(ctx, sel, obj)
-	case model.InteractionSession:
-		return ec._InteractionSession(ctx, sel, &obj)
-	case *model.InteractionSession:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._InteractionSession(ctx, sel, obj)
-	case model.CustomFieldTemplate:
-		return ec._CustomFieldTemplate(ctx, sel, &obj)
-	case *model.CustomFieldTemplate:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._CustomFieldTemplate(ctx, sel, obj)
-	case model.SourceFields:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._SourceFields(ctx, sel, obj)
-	case model.Meeting:
-		return ec._Meeting(ctx, sel, &obj)
-	case *model.Meeting:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._Meeting(ctx, sel, obj)
-	case model.Attachment:
-		return ec._Attachment(ctx, sel, &obj)
-	case *model.Attachment:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._Attachment(ctx, sel, obj)
 	case model.InteractionEvent:
 		return ec._InteractionEvent(ctx, sel, &obj)
 	case *model.InteractionEvent:
@@ -115585,6 +114770,39 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._InteractionEvent(ctx, sel, obj)
+	case model.CustomFieldTemplate:
+		return ec._CustomFieldTemplate(ctx, sel, &obj)
+	case *model.CustomFieldTemplate:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._CustomFieldTemplate(ctx, sel, obj)
+	case model.Meeting:
+		return ec._Meeting(ctx, sel, &obj)
+	case *model.Meeting:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._Meeting(ctx, sel, obj)
+	case model.SourceFields:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._SourceFields(ctx, sel, obj)
+	case model.Attachment:
+		return ec._Attachment(ctx, sel, &obj)
+	case *model.Attachment:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._Attachment(ctx, sel, obj)
+	case model.InteractionSession:
+		return ec._InteractionSession(ctx, sel, &obj)
+	case *model.InteractionSession:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._InteractionSession(ctx, sel, obj)
 	case model.CustomField:
 		return ec._CustomField(ctx, sel, &obj)
 	case *model.CustomField:
@@ -115599,13 +114817,6 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._TableViewDef(ctx, sel, obj)
-	case model.Workflow:
-		return ec._Workflow(ctx, sel, &obj)
-	case *model.Workflow:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._Workflow(ctx, sel, obj)
 	default:
 		panic(fmt.Errorf("unexpected type %T", obj))
 	}
@@ -124722,20 +123933,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "workflow_Create":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_workflow_Create(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "workflow_Update":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_workflow_Update(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -130625,67 +129822,6 @@ func (ec *executionContext) _WebsiteCheckDetails(ctx context.Context, sel ast.Se
 	return out
 }
 
-var workflowImplementors = []string{"Workflow", "Node"}
-
-func (ec *executionContext) _Workflow(ctx context.Context, sel ast.SelectionSet, obj *model.Workflow) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, workflowImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	deferred := make(map[string]*graphql.FieldSet)
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("Workflow")
-		case "id":
-			out.Values[i] = ec._Workflow_id(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "name":
-			out.Values[i] = ec._Workflow_name(ctx, field, obj)
-		case "type":
-			out.Values[i] = ec._Workflow_type(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "live":
-			out.Values[i] = ec._Workflow_live(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "condition":
-			out.Values[i] = ec._Workflow_condition(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "actionParam1":
-			out.Values[i] = ec._Workflow_actionParam1(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch(ctx)
-	if out.Invalids > 0 {
-		return graphql.Null
-	}
-
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
-
-	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
-			Label:    label,
-			Path:     graphql.GetPath(ctx),
-			FieldSet: dfs,
-			Context:  ctx,
-		})
-	}
-
-	return out
-}
-
 var __DirectiveImplementors = []string{"__Directive"}
 
 func (ec *executionContext) ___Directive(ctx context.Context, sel ast.SelectionSet, obj *introspection.Directive) graphql.Marshaler {
@@ -135854,84 +134990,6 @@ func (ec *executionContext) marshalNWebsiteCheckDetails2ᚖgithubᚗcomᚋopenli
 		return graphql.Null
 	}
 	return ec._WebsiteCheckDetails(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalNWorkflow2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐWorkflow(ctx context.Context, sel ast.SelectionSet, v model.Workflow) graphql.Marshaler {
-	return ec._Workflow(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNWorkflow2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐWorkflowᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Workflow) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNWorkflow2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐWorkflow(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
-}
-
-func (ec *executionContext) marshalNWorkflow2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐWorkflow(ctx context.Context, sel ast.SelectionSet, v *model.Workflow) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._Workflow(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalNWorkflowCreateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐWorkflowCreateInput(ctx context.Context, v interface{}) (model.WorkflowCreateInput, error) {
-	res, err := ec.unmarshalInputWorkflowCreateInput(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) unmarshalNWorkflowType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐWorkflowType(ctx context.Context, v interface{}) (model.WorkflowType, error) {
-	var res model.WorkflowType
-	err := res.UnmarshalGQL(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNWorkflowType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐWorkflowType(ctx context.Context, sel ast.SelectionSet, v model.WorkflowType) graphql.Marshaler {
-	return v
-}
-
-func (ec *executionContext) unmarshalNWorkflowUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐWorkflowUpdateInput(ctx context.Context, v interface{}) (model.WorkflowUpdateInput, error) {
-	res, err := ec.unmarshalInputWorkflowUpdateInput(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {
