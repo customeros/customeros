@@ -118,7 +118,6 @@ func (r *commonRepository) PermanentlyDelete(ctx context.Context, tenant string)
 		entity.UserEmailImportState{}.TableName(),
 		entity.UserEmailImportStateHistory{}.TableName(),
 		entity.UserWorkingSchedule{}.TableName(),
-		entity.Workflow{}.TableName(),
 	}
 
 	for _, tableName := range tableNamesWithTenantNameColumn {
