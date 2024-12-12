@@ -1,6 +1,10 @@
 import type { Transport } from '@store/transport';
 
 import {
+  FlowChangeNameMutation,
+  FlowChangeNameMutationVariables,
+} from '@store/Flows/__service__/flowChangeName.generated.ts';
+import {
   FlowArchiveBulkMutation,
   FlowArchiveBulkMutationVariables,
 } from '@store/Flows/__service__/flowArchiveBulk.generated.ts';
@@ -13,6 +17,7 @@ import FlowOffDocument from './flowOff.graphql';
 import GetFlowsDocument from './getFlows.graphql';
 import MergeFlowDocument from './flowMerge.graphql';
 import ArchiveFlowDocument from './flowArchive.graphql';
+import FlowChangeNameDocument from './flowChangeName.graphql';
 import ArchiveFlowBulkDocument from './flowArchiveBulk.graphql';
 import { FlowOnMutation, FlowOnMutationVariables } from './flowOn.generated.ts';
 import {
@@ -62,6 +67,13 @@ class FlowService {
       FlowMergeMutation,
       FlowMergeMutationVariables
     >(MergeFlowDocument, payload);
+  }
+
+  async changeFlowName(payload: FlowChangeNameMutationVariables) {
+    return this.transport.graphql.request<
+      FlowChangeNameMutation,
+      FlowChangeNameMutationVariables
+    >(FlowChangeNameDocument, payload);
   }
 
   async archiveFlow(payload: FlowArchiveMutationVariables) {
