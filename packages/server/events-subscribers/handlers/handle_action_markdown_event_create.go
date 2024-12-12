@@ -2,11 +2,18 @@ package handlers
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
+	"go.uber.org/multierr"
 )
 
 func HandleCreateMarkdownEvent(c context.Context, s *service.Services, eventData *data_fields.MarkdownEventFields, flowExecutionID string) error {
@@ -16,26 +23,53 @@ func HandleCreateMarkdownEvent(c context.Context, s *service.Services, eventData
 	tracing.LogObjectAsJson(span, "eventData", eventData)
 
 	// create markdown event on timeline
-	_, err := s.MarkdownEventService.Save(ctx, nil, nil, *eventData)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		// todo Implement retry logic?
-		return err
+	id, err := s.MarkdownEventService.Save(ctx, nil, nil, *eventData)
+
+	// build execution record
+	executionRecord := entity.ActionExecution{
+		FlowExecutionID: flowExecutionID,
+		Action:          enum.ActionTimelineEventCreate.String(),
+		FlowNodeID:      "",
+		StartedAt:       utils.NowPtr(),
 	}
 
-	// create any contacts that don't exist
-	_, err = s.ContactService.CreateContactWithOrganizationByEmail(ctx, nil, eventData.Email)
 	if err != nil {
+		executionRecord.Status = enum.FlowActionExecutionFail.String()
+		errMessage := fmt.Sprintf("Unable to save markdown event: %v", err)
+		executionRecord.ErrorMessage = &errMessage
 		tracing.TraceErr(span, err)
-		return err
-		// todo Implement retry logic?
+
+	} else {
+		executionRecord.Status = enum.FlowActionExecutionSuccess.String()
+		executionRecord.CompletedAt = utils.NowPtr()
+		result := fmt.Sprintf("Markdown Event ID: %s", id)
+		executionRecord.Result = &result
 	}
 
 	// write action execution to db
+	actionExecutionId, saveErr := s.PostgresRepositories.FlowActionExecutionRepository.Save(ctx, executionRecord)
+	if saveErr != nil {
+		tracing.TraceErr(span, err)
+	}
 
-	// fire action completed event
+	// fire action completion event
+	pubErr := publishActionResultEvent(ctx, s, flowExecutionID, actionExecutionId, enum.FlowActionExecutionStatus(executionRecord.Status), executionRecord.ErrorMessage)
 
-	// if failure anywhere, fire action failed event
+	return multierr.Combine(err, saveErr, pubErr)
+}
+
+func publishActionResultEvent(
+	ctx context.Context, s *service.Services, flowExecutionId, actionExecutionId string, actionExecutionStatus enum.FlowActionExecutionStatus, errorMessage *string,
+) error {
+	resultEvent := dto.FlowActionExecutionResultEvent{
+		FlowExecutionID:       flowExecutionId,
+		FlowActionExecutionID: actionExecutionId,
+		Tenant:                common.GetTenantFromContext(ctx),
+		Status:                actionExecutionStatus,
+		ErrorMessage:          errorMessage,
+	}
+
+	s.RabbitMQService.PublishFlowActionEventResult(ctx, resultEvent)
 
 	return nil
 }

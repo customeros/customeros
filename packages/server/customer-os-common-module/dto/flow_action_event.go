@@ -1,8 +1,9 @@
 package dto
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	neoEnum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 )
 
 type FlowActionEvent struct {
@@ -12,4 +13,14 @@ type FlowActionEvent struct {
 	Name             enum.FlowAction
 	DataType         string
 	Data             any
+}
+
+type FlowActionExecutionResultEvent struct {
+	FlowExecutionID       string
+	FlowActionExecutionID string
+	Tenant                string
+	Status                enum.FlowActionExecutionStatus
+	ErrorMessage          *string
+	Data                  any
+	DataType              string
 }

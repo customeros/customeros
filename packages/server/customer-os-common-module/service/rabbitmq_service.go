@@ -159,6 +159,10 @@ func (r *RabbitMQService) PublishFlowActionEvent(ctx context.Context, event dto.
 	return r.PublishEvent(ctx, "", model.FLOW_ACTION_EVENT, event)
 }
 
+func (r *RabbitMQService) PublishFlowActionEventResult(ctx context.Context, event dto.FlowActionExecutionResultEvent) error {
+	return r.PublishEvent(ctx, "", model.FLOW_ACTION_RESULT_EVENT, event)
+}
+
 func (r *RabbitMQService) PublishEventOnExchange(ctx context.Context, entityId string, entityType model.EntityType, message interface{}, exchange, routingKey string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "RabbitMQService.PublishEventOnExchange")
 	defer span.Finish()
