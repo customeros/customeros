@@ -101,7 +101,6 @@ export const SenderStatus = observer(
             <span className='font-medium mx-1'>
               {totalMailboxes} {totalMailboxes === 1 ? 'mailbox' : 'mailboxes'}
             </span>
-            mailboxes.
           </p>
         );
       }
