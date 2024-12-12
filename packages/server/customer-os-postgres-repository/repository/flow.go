@@ -2,12 +2,10 @@ package repository
 
 import (
 	"context"
-	"fmt"
-
-	nanoid "github.com/matoous/go-nanoid/v2"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"gorm.io/gorm"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
@@ -31,7 +29,7 @@ func (f *flowRepository) CreateFlow(ctx context.Context, flow entity.Flow) (enti
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	flow.ID = fmt.Sprintf("flow-%s", nanoid.Must())
+	flow.ID = utils.GenerateNanoIdWithPrefix("flow")
 
 	err := f.gormDb.Create(&flow).Error
 	if err != nil {

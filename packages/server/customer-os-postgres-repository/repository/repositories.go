@@ -49,6 +49,7 @@ type Repositories struct {
 	FlowDeadEventsRepository                     FlowDeadEventsRepository
 	FlowExecutionRepository                      FlowExecutionRepository
 	FlowListenerRegistryRepository               FlowListenerRegistryRepository
+	FlowNodeRepository                           FlowNodeRepository
 	FlowTransitionsRegistryRepository            FlowTransitionsRegistryRepository
 	FlowWebhooksRepository                       FlowWebhooksRepository
 	GoogleServiceAccountKeyRepository            GoogleServiceAccountKeyRepository
@@ -127,6 +128,7 @@ func InitRepositories(postgresDB *config.PostgresDB) *Repositories {
 		FlowDeadEventsRepository:                     NewFlowDeadEventsRepository(postgresDB.GormDB),
 		FlowExecutionRepository:                      NewFlowExecutionRepository(postgresDB.GormDB),
 		FlowListenerRegistryRepository:               NewFlowListenerRegistryRepository(postgresDB.GormDB),
+		FlowNodeRepository:                           NewFlowNodeRepository(postgresDB.GormDB),
 		FlowTransitionsRegistryRepository:            NewFlowTransitionsRegistryRepository(postgresDB.GormDB),
 		FlowWebhooksRepository:                       NewFlowWebhooksRepository(postgresDB.GormDB),
 		IndustryMappingRepository:                    NewIndustryMappingRepository(postgresDB.GormDB),
@@ -192,6 +194,7 @@ func (r *Repositories) Migration(postgresDB *config.PostgresDB) {
 		&entity.FlowDeadEvents{},
 		&entity.FlowExecution{},
 		&entity.FlowListenerRegistry{},
+		&entity.FlowNode{},
 		&entity.FlowTransitionsRegistry{},
 		&entity.FlowWebhooks{},
 		&entity.IndustryMapping{},
