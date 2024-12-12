@@ -55,7 +55,7 @@ func CreateFlowNode(s *service.Services) gin.HandlerFunc {
 
 		// validate tenant owns the flow specified in the path
 		flowId := c.Param("flowId")
-		isValidFlow := ValidateFlowIsTenant(ctx, s, flowId)
+		isValidFlow := s.CommonServices.WorkflowService.ValidateFlowBelongsToTenant(ctx, flowId)
 		if !isValidFlow {
 			err := errors.New("Flow does not belong to tenant")
 			tracing.TraceErr(span, err)
@@ -87,19 +87,6 @@ func CreateFlowNode(s *service.Services) gin.HandlerFunc {
 
 		c.JSON(http.StatusOK, response)
 	}
-}
-
-func ValidateFlowIsTenant(ctx context.Context, s *service.Services, flowId string) bool {
-	span, ctx := tracing.StartTracerSpan(ctx, "Flows.ValidateFlowIsTenant")
-	defer span.Finish()
-	tracing.TagComponentRest(span)
-
-	flowRecord, err := s.Repositories.PostgresRepositories.FlowRepository.GetFlowByID(ctx, flowId)
-	if err == nil && flowRecord != nil {
-		return true
-	}
-
-	return false
 }
 
 func buildFlowNodeCreateResponse(ctx context.Context, flowNode entity.FlowNode) CreateFlowNodeResponse {
@@ -163,8 +150,8 @@ func createFlowNodeRecord(ctx context.Context, request CreateFlowNodeRequest, fl
 	return flowNode, nil
 }
 
-func getNodeCreateRequest(c *gin.Context) (CreateFlowNodeRequest, error) {
-	span, _ := tracing.StartTracerSpan(c.Request.Context(), "Flows.getNodeCreateRequest")
+func getNodeCreateRequest(c *gin.Context, s *service.Services) (CreateFlowNodeRequest, error) {
+	span, ctx := tracing.StartTracerSpan(c.Request.Context(), "Flows.getNodeCreateRequest")
 	defer span.Finish()
 	tracing.TagComponentRest(span)
 
@@ -174,14 +161,14 @@ func getNodeCreateRequest(c *gin.Context) (CreateFlowNodeRequest, error) {
 		return req, err
 	}
 
-	nodeOk, nodeType := validateNodeType(req.Type)
+	nodeOk, nodeType := s.CommonServices.WorkflowService.ValidateNodeType(ctx, req.Type)
 	if !nodeOk {
 		err = errors.New("node type is invalid")
 		tracing.TraceErr(span, err)
 		return req, err
 	}
 
-	eventOk := validateEventType(*nodeType, *req.Event)
+	eventOk := s.CommonServices.WorkflowService.ValidateEventType(ctx, *nodeType, *req.Event)
 	if !eventOk {
 		err = errors.New("node event is invalid")
 		tracing.TraceErr(span, err)
@@ -189,33 +176,4 @@ func getNodeCreateRequest(c *gin.Context) (CreateFlowNodeRequest, error) {
 	}
 
 	return req, nil
-}
-
-func validateEventType(nodeType enum.FlowNodeType, event string) bool {
-	switch nodeType {
-	case enum.NodeFlowEnd, enum.NodeFlowWait:
-		return true
-	case enum.NodeFlowAction:
-		_, err := enum.GetFlowAction(event)
-		if err != nil {
-			return true
-		}
-	case enum.NodeFlowListenerEvent:
-		_, err := enum.GetFlowListenerEvent(event)
-		if err != nil {
-			return true
-		}
-	default:
-		return false
-	}
-
-	return false
-}
-
-func validateNodeType(nodeType string) (bool, *enum.FlowNodeType) {
-	t, err := enum.GetFlowNodeType(nodeType)
-	if err != nil {
-		return false, nil
-	}
-	return true, &t
 }

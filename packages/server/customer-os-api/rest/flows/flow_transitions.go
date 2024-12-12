@@ -54,7 +54,7 @@ func GetTransitions(s *service.Services) gin.HandlerFunc {
 
 		if from != "" {
 			// Check if it's a valid event or action
-			if _, err := enum.GetFlowEvent(from); err == nil {
+			if _, err := enum.GetFlowListenerEvent(from); err == nil {
 				allFromNodes = append(allFromNodes, repository.FromNodeRecord{
 					FromNode:     from,
 					FromNodeType: enum.NodeFlowListenerEvent.String(),
