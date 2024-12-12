@@ -13,12 +13,17 @@ import (
 
 type FlowNodeRepository interface {
 	CreateFlowNode(ctx context.Context, flowNode entity.FlowNode) (entity.FlowNode, error)
-	GetAllNodesForFlow(ctx context.Context, FlowID string) ([]entity.FlowNode, error)
+	GetAllNodesForFlow(ctx context.Context, flowID string) ([]entity.FlowNode, error)
 }
 
 type flowNodeRepository struct {
 	gormDb *gorm.DB
 }
+
+const (
+	DefaultNodeX float64 = 100
+	DefaultNodeY float64 = 100
+)
 
 func NewFlowNodeRepository(gormDb *gorm.DB) FlowNodeRepository {
 	return &flowNodeRepository{gormDb: gormDb}
@@ -30,6 +35,13 @@ func (f *flowNodeRepository) CreateFlowNode(ctx context.Context, flowNode entity
 	tracing.TagComponentPostgresRepository(span)
 
 	flowNode.ID = utils.GenerateNanoIdWithPrefix("node")
+
+	if flowNode.PositionX == 0 {
+		flowNode.PositionX = DefaultNodeX
+	}
+	if flowNode.PositionY == 0 {
+		flowNode.PositionY = DefaultNodeY
+	}
 
 	err := f.gormDb.Create(&flowNode).Error
 	if err != nil {

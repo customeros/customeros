@@ -6,7 +6,6 @@ type FlowNodeType string
 
 const (
 	NodeFlowAction        FlowNodeType = "action"
-	NodeFlowCondition     FlowNodeType = "condition"
 	NodeFlowEnd           FlowNodeType = "end"
 	NodeFlowListenerEvent FlowNodeType = "listener"
 	NodeFlowWait          FlowNodeType = "wait"
@@ -20,7 +19,6 @@ func GetFlowNodeType(s string) (FlowNodeType, error) {
 	switch FlowNodeType(s) {
 	case
 		NodeFlowAction,
-		NodeFlowCondition,
 		NodeFlowEnd,
 		NodeFlowListenerEvent,
 		NodeFlowWait:
