@@ -1,13 +1,11 @@
 package flows
 
 import (
-	"context"
 	"errors"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
@@ -17,9 +15,20 @@ import (
 )
 
 type CreateFlowEdgeRequest struct {
+	FromNodeID string  `json:"fromNodeId"`
+	ToNodeID   string  `json:"toNodeId"`
+	Condition  *string `json:"condition"`
+	Data       *any    `json:"data"`
 }
 
 type CreateFlowEdgeRecord struct {
+	ID         string    `json:"id"`
+	FlowID     string    `json:"flowId"`
+	FromNodeID string    `json:"fromNodeId"`
+	ToNodeID   string    `json:"toNodeId"`
+	Condition  *string   `json:"condition,omitempty"`
+	CreatedAt  time.Time `json:"createdAt"`
+	Data       *any      `json:"data,omitempty"`
 }
 
 type CreateFlowEdgeResponse struct {
@@ -41,7 +50,7 @@ func CreateFlowEdge(s *service.Services) gin.HandlerFunc {
 
 		// validate tenant owns the flow specified in the path
 		flowId := c.Param("flowId")
-		isValidFlow := ValidateFlowIsTenant(ctx, s, flowId)
+		isValidFlow := s.CommonServices.WorkflowService.ValidateFlowBelongsToTenant(ctx, flowId)
 		if !isValidFlow {
 			err := errors.New("Flow does not belong to tenant")
 			tracing.TraceErr(span, err)
@@ -49,15 +58,90 @@ func CreateFlowEdge(s *service.Services) gin.HandlerFunc {
 			return
 		}
 
-		request, err := getEdgeCreateRequest(c)
+		request, err := getEdgeCreateRequest(c, s)
 		if err != nil {
 			rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("unable to parse payload"))
 			return
 		}
 
-		// create flow edge in database
-		// do this via LinkFlowNodes in workflow service
+		flowEdge, err := createFlowEdge(c, s, request, flowId)
 
-		c.JSON(http.StatusOK, response)
+		respPayload := buildCreateEdgeResponse(c, flowEdge)
+
+		c.JSON(http.StatusOK, respPayload)
 	}
+}
+
+func buildCreateEdgeResponse(c *gin.Context, flowEdge entity.FlowEdge) CreateFlowEdgeResponse {
+	response := CreateFlowEdgeRecord{
+		ID:         flowEdge.ID,
+		FlowID:     flowEdge.FlowID,
+		FromNodeID: flowEdge.FromNodeID,
+		ToNodeID:   flowEdge.ToNodeID,
+		Condition:  flowEdge.Condition,
+		CreatedAt:  flowEdge.CreatedAt,
+	}
+
+	if flowEdge.Data != nil {
+		data, err := utils.JSONBToAny(*flowEdge.Data)
+		if err == nil {
+			response.Data = &data
+		}
+	}
+
+	return CreateFlowEdgeResponse{
+		BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
+		Edge:         response,
+	}
+}
+
+func createFlowEdge(c *gin.Context, s *service.Services, request CreateFlowEdgeRequest, flowId string) (entity.FlowEdge, error) {
+	span, ctx := tracing.StartTracerSpan(c.Request.Context(), "Flows.createFlowEdge")
+	defer span.Finish()
+	tracing.TagComponentRest(span)
+
+	flowEdgeRecord := entity.FlowEdge{
+		FlowID:     flowId,
+		FromNodeID: request.FromNodeID,
+		ToNodeID:   request.ToNodeID,
+		Condition:  request.Condition,
+	}
+
+	if request.Data != nil {
+		data, err := utils.AnyToJSONB(request.Data)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return flowEdgeRecord, err
+		}
+		flowEdgeRecord.Data = &data
+	}
+
+	return s.Repositories.PostgresRepositories.FlowEdgeRepository.CreateFlowEdge(ctx, flowEdgeRecord)
+}
+
+func getEdgeCreateRequest(c *gin.Context, s *service.Services) (CreateFlowEdgeRequest, error) {
+	span, ctx := tracing.StartTracerSpan(c.Request.Context(), "Flows.getEdgeCreateRequest")
+	defer span.Finish()
+	tracing.TagComponentRest(span)
+
+	var req CreateFlowEdgeRequest
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		return req, err
+	}
+
+	// validate transition
+	ok, err := s.CommonServices.WorkflowService.ValidateTransition(ctx, req.FromNodeID, req.ToNodeID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return req, err
+	}
+
+	if !ok {
+		err = errors.New("not a valid edge between from and to nodes")
+		tracing.TraceErr(span, err)
+		return req, err
+	}
+
+	return req, nil
 }

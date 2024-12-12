@@ -58,7 +58,7 @@ func registerPublicRoutes(ctx context.Context, r *gin.Engine, s *service.Service
 	// Flow Wehbooks
 	setupPublicRoute(ctx, r, "POST", fmt.Sprintf("%s/:tenantId/i/:integrationId", flowsV1Path), flows.HandleWebhook(s, flowsV1Path))
 
-	//tracking
+	// tracking
 	setupPublicRoute(ctx, r, "GET", "/v1/l", tracking.TrackLinkRequest(s))
 	setupPublicRoute(ctx, r, "GET", "/v1/s", tracking.TrackOpenRequest(s))
 	setupPublicRoute(ctx, r, "GET", "/v1/u", tracking.TrackUnsubscribeRequest(s))

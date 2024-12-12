@@ -29,7 +29,7 @@ func (f *flowEdgeRepository) CreateFlowEdge(ctx context.Context, flowEdge entity
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	flowEdge.ID = utils.GenerateNanoIdWithPrefix("node")
+	flowEdge.ID = utils.GenerateNanoIdWithPrefix("edge")
 
 	err := f.gormDb.Create(&flowEdge).Error
 	if err != nil {
