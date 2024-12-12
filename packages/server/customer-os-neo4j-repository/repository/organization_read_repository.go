@@ -60,6 +60,7 @@ type OrganizationReadRepository interface {
 	GetMergedOrganizationIds(ctx context.Context, tenant string, mergedAfter time.Time) ([]string, error)
 	GetOrganizationsWithEmail(ctx context.Context, tenant, email string) ([]*dbtype.Node, error)
 	GetOrganizationsToCheck(ctx context.Context, minutesSinceLastUpdate, hoursSinceLastCheck, limit int) ([]TenantAndOrganization, error)
+	GetActiveOrganizationIdsByDomain(ctx context.Context, tenant string, domains []string) (map[string]string, error)
 }
 
 type organizationReadRepository struct {
@@ -1331,4 +1332,42 @@ func (r *organizationReadRepository) GetOrganizationsToCheck(ctx context.Context
 	}
 	span.LogFields(log.Int("result.count", len(output)))
 	return output, nil
+}
+
+func (r *organizationReadRepository) GetActiveOrganizationIdsByDomain(ctx context.Context, tenant string, domains []string) (map[string]string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetActiveOrganizationIdsByDomain")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
+	span.LogFields(log.String("domains", strings.Join(domains, ",")))
+
+	cypher := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS_DOMAIN]->(d:Domain)
+				WHERE d.domain IN $domains AND o.hide = false
+				RETURN d.domain as domain, o.id as orgId`
+	params := map[string]any{
+		"tenant":  tenant,
+		"domains": domains,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return queryResult.Collect(ctx)
+		}
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	output := make(map[string]string)
+	for _, v := range records.([]*neo4j.Record) {
+		output[v.Values[0].(string)] = v.Values[1].(string)
+	}
+	return output, err
 }

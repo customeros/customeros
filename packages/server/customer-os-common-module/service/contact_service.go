@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/customeros/mailsherpa/emailparser"
@@ -31,10 +32,11 @@ type ContactService interface {
 	CreateContactByEmail(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, email string, options ...ServiceOptions) (string, error)
 	HideContact(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, contactId string) error
 	ShowContact(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, contactId string) error
-	GetContactById(ctx context.Context, contactId string) (*neo4jentity.ContactEntity, error)
 	LinkContactWithOrganization(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, contactId, organizationId, jobTitle, description, source string, primary bool, startedAt, endedAt *time.Time) error
 	CheckContactExistsWithLinkedIn(ctx context.Context, url, alias, externalId string) (bool, string, error)
 	CheckContactExistsWithEmail(ctx context.Context, email string) (bool, string, error)
+	GetContactById(ctx context.Context, contactId string) (*neo4jentity.ContactEntity, error)
+	GetContactsByIds(ctx context.Context, contactIds []string) ([]*neo4jentity.ContactEntity, error)
 }
 
 type contactService struct {
@@ -314,6 +316,35 @@ func (s *contactService) GetContactById(ctx context.Context, contactId string) (
 	}
 
 	return neo4jmapper.MapDbNodeToContactEntity(contactDbNode), nil
+}
+
+func (s *contactService) GetContactsByIds(ctx context.Context, contactIds []string) ([]*neo4jentity.ContactEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.GetContactsByIds")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("contactIds", fmt.Sprintf("%v", contactIds)))
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+
+	contactDbNodes, err := s.services.Neo4jRepositories.ContactReadRepository.GetContacts(ctx, tenant, contactIds)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("error while getting contacts %s", err.Error())
+		return nil, err
+	}
+
+	contactEntities := make([]*neo4jentity.ContactEntity, 0)
+	for _, contactDbNode := range contactDbNodes {
+		contactEntities = append(contactEntities, neo4jmapper.MapDbNodeToContactEntity(contactDbNode))
+	}
+
+	return contactEntities, nil
 }
 
 func (s *contactService) LinkContactWithOrganization(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, contactId, organizationId, jobTitle, description, source string, primary bool, startedAt, endedAt *time.Time) error {

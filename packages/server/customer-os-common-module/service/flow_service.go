@@ -727,6 +727,20 @@ func (s *flowService) FlowArchive(ctx context.Context, id string) (*neo4jentity.
 		return nil, err
 	}
 
+	participantNodes, err := s.services.Neo4jRepositories.FlowParticipantReadRepository.GetList(ctx, []string{flow.Id})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	for _, v := range participantNodes {
+		err = s.FlowParticipantDelete(ctx, utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*v.Node), "id"))
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+	}
+
 	return mapper.MapDbNodeToFlowEntity(node), nil
 }
 

@@ -596,6 +596,27 @@ export type ContactTagInput = {
   tag: TagIdOrNameInput;
 };
 
+export type ContactUiDetails = {
+  __typename?: 'ContactUiDetails';
+  createdAt: Scalars['Time']['output'];
+  description: Scalars['String']['output'];
+  firstName: Scalars['String']['output'];
+  hide: Scalars['Boolean']['output'];
+  id: Scalars['ID']['output'];
+  lastName: Scalars['String']['output'];
+  linkedInAlias?: Maybe<Scalars['String']['output']>;
+  linkedInExternalId?: Maybe<Scalars['String']['output']>;
+  linkedInFollowerCount?: Maybe<Scalars['Int64']['output']>;
+  linkedInInternalId?: Maybe<Scalars['ID']['output']>;
+  linkedInUrl?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  prefix: Scalars['String']['output'];
+  profilePhotoUrl: Scalars['String']['output'];
+  tags: Array<Tag>;
+  timezone: Scalars['String']['output'];
+  updatedAt: Scalars['Time']['output'];
+};
+
 /**
  * Updates data fields associated with an existing customer record in customerOS.
  * **An `update` object.**
@@ -1769,6 +1790,7 @@ export type GlobalOrganization = {
   id: Scalars['Int64']['output'];
   logoUrl: Scalars['String']['output'];
   name: Scalars['String']['output'];
+  organizationId?: Maybe<Scalars['ID']['output']>;
   primaryDomain: Scalars['String']['output'];
   website: Scalars['String']['output'];
 };
@@ -4162,6 +4184,7 @@ export type Query = {
   tenantBillingProfiles: Array<TenantBillingProfile>;
   tenantSettings: TenantSettings;
   timelineEvents: Array<TimelineEvent>;
+  ui_contacts: Array<ContactUiDetails>;
   ui_organizations: Array<OrganizationUiDetails>;
   ui_organizations_search: OrganizationSearchResult;
   user: User;
@@ -4395,6 +4418,10 @@ export type QueryTenantBillingProfileArgs = {
 
 export type QueryTimelineEventsArgs = {
   ids: Array<Scalars['ID']['input']>;
+};
+
+export type QueryUi_ContactsArgs = {
+  ids?: InputMaybe<Array<Scalars['ID']['input']>>;
 };
 
 export type QueryUi_OrganizationsArgs = {

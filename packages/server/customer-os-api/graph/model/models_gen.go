@@ -432,6 +432,26 @@ type ContactTagInput struct {
 	Tag       *TagIDOrNameInput `json:"tag"`
 }
 
+type ContactUIDetails struct {
+	ID                    string    `json:"id"`
+	CreatedAt             time.Time `json:"createdAt"`
+	UpdatedAt             time.Time `json:"updatedAt"`
+	Hide                  bool      `json:"hide"`
+	FirstName             string    `json:"firstName"`
+	LastName              string    `json:"lastName"`
+	Name                  string    `json:"name"`
+	Prefix                string    `json:"prefix"`
+	Description           string    `json:"description"`
+	Timezone              string    `json:"timezone"`
+	ProfilePhotoURL       string    `json:"profilePhotoUrl"`
+	LinkedInInternalID    *string   `json:"linkedInInternalId,omitempty"`
+	LinkedInURL           *string   `json:"linkedInUrl,omitempty"`
+	LinkedInAlias         *string   `json:"linkedInAlias,omitempty"`
+	LinkedInExternalID    *string   `json:"linkedInExternalId,omitempty"`
+	LinkedInFollowerCount *int64    `json:"linkedInFollowerCount,omitempty"`
+	Tags                  []*Tag    `json:"tags"`
+}
+
 // Updates data fields associated with an existing customer record in customerOS.
 // **An `update` object.**
 type ContactUpdateInput struct {
@@ -1219,13 +1239,14 @@ type GlobalCacheEmailToken struct {
 }
 
 type GlobalOrganization struct {
-	ID            int64    `json:"id"`
-	Name          string   `json:"name"`
-	PrimaryDomain string   `json:"primaryDomain"`
-	Website       string   `json:"website"`
-	LogoURL       string   `json:"logoUrl"`
-	IconURL       string   `json:"iconUrl"`
-	Domains       []string `json:"domains"`
+	ID             int64    `json:"id"`
+	Name           string   `json:"name"`
+	PrimaryDomain  string   `json:"primaryDomain"`
+	Website        string   `json:"website"`
+	LogoURL        string   `json:"logoUrl"`
+	IconURL        string   `json:"iconUrl"`
+	Domains        []string `json:"domains"`
+	OrganizationID *string  `json:"organizationId,omitempty"`
 }
 
 type InteractionEvent struct {

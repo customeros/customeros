@@ -1,0 +1,25 @@
+extend type Query {
+    ui_contacts(ids: [ID!]): [ContactUiDetails!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+
+type ContactUiDetails {
+    id:                     ID!
+    createdAt:              Time!
+    updatedAt:              Time!
+    hide:                   Boolean!
+    firstName:              String!
+    lastName:               String!
+    name:                   String!
+    prefix:                 String!
+    description:            String!
+    timezone:               String!
+    profilePhotoUrl:        String!
+
+    linkedInInternalId:     ID
+    linkedInUrl:            String
+    linkedInAlias:          String
+    linkedInExternalId:     String
+    linkedInFollowerCount:  Int64
+
+    tags:                   [Tag!]!
+}

@@ -58,24 +58,24 @@ jobs:
           TOTAL_TESTS: ${{ env.total_tests }}
         run: |
           BUILD_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          
+
           # Create basic message with test results
           MESSAGE="<$BUILD_URL|Hurl Test Results>:\n✅ $PASSED_TESTS passed, ❌ $FAILED_TESTS failed ($TOTAL_TESTS total)"
-          
+
           # Add trigger information if it's a repository dispatch
           if [ "${{ github.event_name }}" == "repository_dispatch" ]; then
             TRIGGER_SOURCE=$(echo "${{ github.event.action }}" | cut -d ' ' -f 1)
             NEW_VERSION="${{ github.event.client_payload.version }}"
             OLD_VERSION="${{ github.event.client_payload.old_version }}"
-          
+
             VERSION_INFO=""
             if [ ! -z "$NEW_VERSION" ] && [ ! -z "$OLD_VERSION" ]; then
               VERSION_INFO=" - new version: $NEW_VERSION / old version: v$OLD_VERSION"
             fi
-          
+
             MESSAGE="$MESSAGE\nTriggered by \`$TRIGGER_SOURCE\`$VERSION_INFO"
           fi
-          
+
           curl --fail -X POST -H 'Content-type: application/json' --data "{
             \"text\": \"$MESSAGE\"
           }" ${{ secrets.SLACK_FE_TESTS_WEBHOOK_URL }}
