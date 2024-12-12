@@ -118,11 +118,9 @@ export const AddExistingContacts = observer(() => {
                     {contactStore.name?.length ? contactStore.name : 'Unnamed'}
                   </span>
 
-                  {contactStore.primaryEmail && (
-                    <span className='ml-1.5 text-gray-500 line-clamp-1 max-w-[250px]'>
-                      · {contactStore.primaryEmail?.email ?? ''}
-                    </span>
-                  )}
+                  <span className='ml-1.5 text-gray-500 line-clamp-1 max-w-[250px]'>
+                    · {contactStore.primaryEmail?.email ?? 'No email yet'}
+                  </span>
                 </div>
                 {isSelected && <Check />}
               </div>
