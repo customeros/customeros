@@ -12,24 +12,24 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 )
 
-type FlowDeadListenerEventsRepository interface {
-	Save(ctx context.Context, deadEvent entity.FlowDeadListenerEvents) (string, error)
+type FlowDeadEventsRepository interface {
+	Save(ctx context.Context, deadEvent entity.FlowDeadEvents) (string, error)
 }
 
-type flowDeadListenerEventsRepository struct {
+type flowDeadEventsRepository struct {
 	gormDb *gorm.DB
 }
 
-func NewFlowDeadListenerEventsRepository(gormDb *gorm.DB) FlowDeadListenerEventsRepository {
-	return &flowDeadListenerEventsRepository{gormDb: gormDb}
+func NewFlowDeadEventsRepository(gormDb *gorm.DB) FlowDeadEventsRepository {
+	return &flowDeadEventsRepository{gormDb: gormDb}
 }
 
-func (f *flowDeadListenerEventsRepository) Save(ctx context.Context, deadEvent entity.FlowDeadListenerEvents) (string, error) {
+func (f *flowDeadEventsRepository) Save(ctx context.Context, deadEvent entity.FlowDeadEvents) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowDeadListenerEventsRepository.Save")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	if deadEvent.Tenant == "" || deadEvent.ListenerEvent == "" || deadEvent.EventType == "" {
+	if deadEvent.Tenant == "" || deadEvent.Event == "" || deadEvent.EventType == "" {
 		span.LogFields(log.Object("deadEvent", deadEvent))
 		err := errors.New("Tenant, ListenerEvent, or EventType missing")
 		tracing.TraceErr(span, err)
