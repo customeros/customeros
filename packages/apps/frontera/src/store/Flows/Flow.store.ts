@@ -110,7 +110,10 @@ export class FlowStore implements Store<Flow> {
         name: this.value.name,
       });
     } catch (error) {
-      this.root.ui.toastError("We couldn't stop the flow", 'stop-flow-error');
+      this.root.ui.toastError(
+        "We couldn't update flow name",
+        'update-flow-name-error',
+      );
     } finally {
       runInAction(() => {
         this.invalidate();
