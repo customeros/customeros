@@ -24,7 +24,6 @@ const (
 	contactBettercontactGroup       = "contactEnrichWithBettercontact"
 	askForLinkedInConnectionsGroup  = "askForLinkedInConnectionsGroup"
 	processLinkedInConnectionsGroup = "processLinkedInConnectionsGroup"
-	workflowGroup                   = "workflow"
 	emailGroup                      = "email"
 	emailBulkValidationGroup        = "emailBulkValidation"
 	flowExecutionGroup              = "flowExecutionGroup"
@@ -55,7 +54,6 @@ var jobLocks = struct {
 		refreshLastTouchpointGroup:      {},
 		currencyGroup:                   {},
 		linkUnthreadIssuesGroup:         {},
-		workflowGroup:                   {},
 		emailGroup:                      {},
 		emailBulkValidationGroup:        {},
 		flowExecutionGroup:              {},
@@ -225,13 +223,6 @@ func StartCron(cont *container.Container) *cron.Cron {
 	})
 	if err != nil {
 		cont.Log.Fatalf("Could not add cron job %s: %v", "linkOrphanContactsToOrganizationBaseOnLinkedinScrapIn", err.Error())
-	}
-
-	err = c.AddFunc(cont.Cfg.Cron.CronScheduleExecuteWorkflow, func() {
-		lockAndRunJob(cont, workflowGroup, executeWorkflows)
-	})
-	if err != nil {
-		cont.Log.Fatalf("Could not add cron job %s: %v", "executeWorkflows", err.Error())
 	}
 
 	err = c.AddFunc(cont.Cfg.Cron.CronScheduleValidateEmails, func() {
@@ -444,10 +435,6 @@ func getCurrencyRatesECB(cont *container.Container) {
 
 func linkUnthreadIssues(cont *container.Container) {
 	service.NewIssueService(cont.Cfg, cont.Log, cont.Repositories).LinkUnthreadIssues()
-}
-
-func executeWorkflows(cont *container.Container) {
-	service.NewWorkflowService(cont.Cfg, cont.Log, cont.Repositories, cont.CommonServices).ExecuteWorkflows()
 }
 
 func validateEmails(cont *container.Container) {
