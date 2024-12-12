@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
@@ -43,6 +44,16 @@ func (r *queryResolver) GlobalOrganizationsSearch(ctx context.Context, searchTer
 		}
 	}
 
+	// get tenant org ids for primary domains
+	var primaryDomains []string
+	for _, globalOrganizationEntity := range globalOrganizationEntities {
+		primaryDomains = append(primaryDomains, globalOrganizationEntity.PrimaryDomain)
+	}
+	orgByDomainMap, err := r.Services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetActiveOrganizationIdsByDomain(ctx, common.GetTenantFromContext(ctx), primaryDomains)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+
 	globalOrganizations := make([]*model.GlobalOrganization, 0, len(globalOrganizationEntities))
 	for _, globalOrganizationEntity := range globalOrganizationEntities {
 		globalOrganization := model.GlobalOrganization{
@@ -53,6 +64,9 @@ func (r *queryResolver) GlobalOrganizationsSearch(ctx context.Context, searchTer
 			IconURL:       globalOrganizationEntity.IconUrl,
 			LogoURL:       globalOrganizationEntity.LogoUrl,
 			Domains:       utils.StringToSlice(globalOrganizationEntity.OtherDomains),
+		}
+		if orgId, ok := orgByDomainMap[globalOrganizationEntity.PrimaryDomain]; ok {
+			globalOrganization.OrganizationID = utils.StringPtr(orgId)
 		}
 
 		globalOrganizations = append(globalOrganizations, &globalOrganization)

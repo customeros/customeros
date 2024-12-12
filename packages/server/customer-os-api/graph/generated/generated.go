@@ -661,13 +661,14 @@ type ComplexityRoot struct {
 	}
 
 	GlobalOrganization struct {
-		Domains       func(childComplexity int) int
-		ID            func(childComplexity int) int
-		IconURL       func(childComplexity int) int
-		LogoURL       func(childComplexity int) int
-		Name          func(childComplexity int) int
-		PrimaryDomain func(childComplexity int) int
-		Website       func(childComplexity int) int
+		Domains        func(childComplexity int) int
+		ID             func(childComplexity int) int
+		IconURL        func(childComplexity int) int
+		LogoURL        func(childComplexity int) int
+		Name           func(childComplexity int) int
+		OrganizationID func(childComplexity int) int
+		PrimaryDomain  func(childComplexity int) int
+		Website        func(childComplexity int) int
 	}
 
 	InteractionEvent struct {
@@ -5068,6 +5069,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.GlobalOrganization.Name(childComplexity), true
+
+	case "GlobalOrganization.organizationId":
+		if e.complexity.GlobalOrganization.OrganizationID == nil {
+			break
+		}
+
+		return e.complexity.GlobalOrganization.OrganizationID(childComplexity), true
 
 	case "GlobalOrganization.primaryDomain":
 		if e.complexity.GlobalOrganization.PrimaryDomain == nil {
@@ -14521,6 +14529,7 @@ type GlobalOrganization {
     logoUrl:        String!
     iconUrl:        String!
     domains:        [String!]!
+    organizationId: ID
 }`, BuiltIn: false},
 	{Name: "../schemas/interaction_event.graphqls", Input: `union InteractionEventParticipant = EmailParticipant | PhoneNumberParticipant | ContactParticipant | UserParticipant | OrganizationParticipant | JobRoleParticipant
 union InteractionSessionParticipant = EmailParticipant | PhoneNumberParticipant | ContactParticipant | UserParticipant
@@ -47961,6 +47970,47 @@ func (ec *executionContext) fieldContext_GlobalOrganization_domains(_ context.Co
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _GlobalOrganization_organizationId(ctx context.Context, field graphql.CollectedField, obj *model.GlobalOrganization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_GlobalOrganization_organizationId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.OrganizationID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOID2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_GlobalOrganization_organizationId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "GlobalOrganization",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
 		},
 	}
 	return fc, nil
@@ -93221,6 +93271,8 @@ func (ec *executionContext) fieldContext_Query_globalOrganizations_Search(ctx co
 				return ec.fieldContext_GlobalOrganization_iconUrl(ctx, field)
 			case "domains":
 				return ec.fieldContext_GlobalOrganization_domains(ctx, field)
+			case "organizationId":
+				return ec.fieldContext_GlobalOrganization_organizationId(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type GlobalOrganization", field.Name)
 		},
@@ -106724,6 +106776,8 @@ func (ec *executionContext) fieldContext_WebsiteCheckDetails_globalOrganization(
 				return ec.fieldContext_GlobalOrganization_iconUrl(ctx, field)
 			case "domains":
 				return ec.fieldContext_GlobalOrganization_domains(ctx, field)
+			case "organizationId":
+				return ec.fieldContext_GlobalOrganization_organizationId(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type GlobalOrganization", field.Name)
 		},
@@ -120844,6 +120898,8 @@ func (ec *executionContext) _GlobalOrganization(ctx context.Context, sel ast.Sel
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "organizationId":
+			out.Values[i] = ec._GlobalOrganization_organizationId(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
