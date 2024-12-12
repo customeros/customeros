@@ -84,7 +84,7 @@ func publishTimelineEventCreateEvent(
 	ctx context.Context, s *service.Services, flowStatus, flowId, flowNodeId string,
 	eventData *data_fields.MeetingSummaryEvent, sourceEvent commonEnum.FlowListenerEvent,
 ) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EventHandlers.hantdleTimelineEventCreateAction")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EventHandlers.handleTimelineEventCreateAction")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 

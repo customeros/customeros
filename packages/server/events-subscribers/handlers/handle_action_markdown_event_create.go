@@ -49,7 +49,7 @@ func HandleCreateMarkdownEvent(c context.Context, s *service.Services, eventData
 	// write action execution to db
 	actionExecutionId, saveErr := s.PostgresRepositories.FlowActionExecutionRepository.Save(ctx, executionRecord)
 	if saveErr != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, saveErr)
 	}
 
 	// fire action completion event
