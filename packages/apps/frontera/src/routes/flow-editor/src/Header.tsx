@@ -60,22 +60,31 @@ export const Header = observer(
       }
     }, [store.ui.commandMenu.isOpen, id]);
 
+    // todo remove when we move to save on node by node basis
+    const handleSaveChanges = () => {
+      const nodes = getNodes();
+      const edges = getEdges();
+
+      // this should never happen
+      if (nodes.length === 0 && edges.length === 0) return;
+      onToggleHasChanges(false);
+
+      flow?.updateFlow({
+        nodes: JSON.stringify(nodes),
+        edges: JSON.stringify(edges),
+      });
+    };
+
+    useEffect(() => {
+      if (canSave) {
+        handleSaveChanges();
+      }
+    }, [showFinder]);
     useUnmount(() => {
       if (canSave) {
-        const nodes = getNodes();
-        const edges = getEdges();
-
-        // this should never happen
-        if (nodes.length === 0 && edges.length === 0) return;
-        onToggleHasChanges(false);
-
-        flow?.updateFlow({
-          nodes: JSON.stringify(nodes),
-          edges: JSON.stringify(edges),
-        });
+        handleSaveChanges();
       }
     });
-
     useEffect(() => {
       const handleBeforeUnload = (event: BeforeUnloadEvent) => {
         if (hasChanges) {
