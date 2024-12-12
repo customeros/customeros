@@ -176,6 +176,12 @@ export const FlowBuilder = observer(
     const onBeforeDelete: OnBeforeDelete = async (elements) => {
       if (flow.value.firstStartedAt) {
         ui.commandMenu.setType('ActiveFlowUpdateInfo');
+        ui.commandMenu.setContext({
+          ...ui.commandMenu.context,
+          meta: {
+            type: 'steps',
+          },
+        });
         ui.commandMenu.setOpen(true);
 
         return false;

@@ -90,7 +90,7 @@ export const SenderStatus = observer(
     }
 
     // Email and LinkedIn nodes with various combinations
-    if (hasEmailNodes && hasLinkedInNodes) {
+    if (hasEmailNodes || hasLinkedInNodes) {
       // Only mailboxes available
       if (totalMailboxes > 0 && totalLinkedInSenders === 0) {
         return (
