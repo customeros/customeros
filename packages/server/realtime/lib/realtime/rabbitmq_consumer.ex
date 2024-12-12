@@ -16,7 +16,7 @@ defmodule Realtime.RabbitMQConsumer do
     "OPPORTUNITY" => "Opportunities",
     "SERVICE_LINE_ITEM" => "ContractLineItems",
     "FLOW" => "Flows",
-    "FLOW_PARTICIPANT" => "FlowContacts",
+    "FLOW_PARTICIPANT" => "FlowParticipants",
     "USER" => "Users",
     "SYSTEM" => "System"
   }
