@@ -39,7 +39,6 @@ do
 
     # Run hurl command with verbose output to capture all details
     hurl --very-verbose --test --continue-on-error --variable "custom_id=$capitalized_custom_id" --variable "random_str=$RANDOM_STRING" --variable "cos_url=$COS_URL" --variable "api_key=$HURL_TENANT_API_KEY" "$test_file" > temp_output.txt 2>&1
-#    hurl --very-verbose --variables-file <(echo "custom_id=$NEW_UUID api_key=$HURL_TENANT_API_KEY") --test "$test_file"
 
     TEST_EXIT_CODE=$?
 
@@ -50,15 +49,63 @@ do
         test_status="❌ Failed"
         TESTS_FAILED=1
 
-        # Process the output file line by line for error locations
+        # Process the output file line by line for error details
+        in_error_block=0
+        error_location=""
+        actual_value=""
+        expected_value=""
+
         while IFS= read -r line
         do
-            # Show specific error lines
+            # Capture error location
             if [[ $line == *"--> "* && $line == *".hurl:"* ]]; then
-                echo "🔍 Error location: $line" | tee -a test-output.txt
+                # If we were processing a previous error, print it
+                if [ -n "$error_location" ]; then
+                    {
+                        echo "🔍 Error location: $error_location"
+                        [ -n "$actual_value" ] && echo "   Actual: $actual_value"
+                        [ -n "$expected_value" ] && echo "   Expected: $expected_value"
+                        echo ""
+                    } | tee -a test-output.txt
+                fi
+
+                error_location="$line"
+                actual_value=""
+                expected_value=""
+                in_error_block=1
+                continue
+            fi
+
+            # Capture actual and expected values when in an error block
+            if [ $in_error_block -eq 1 ]; then
+                # Check for status code error with carets (^^^)
+                if [[ $line =~ "^^^ actual value is" ]]; then
+                    actual_value="$(echo "$line" | sed -n 's/.*actual value is <\([^>]*\)>.*/\1/p')"
+                elif [[ $line =~ "HTTP "* ]]; then
+                    expected_value="$(echo "$line" | grep -o '[0-9]\{3\}')"
+                # Check for regular value comparisons
+                elif [[ $line == *"actual: "* ]]; then
+                    actual_value="${line#*actual: }"
+                elif [[ $line == *"expected: "* ]]; then
+                    expected_value="${line#*expected: }"
+                fi
+            fi
+
+            # Reset error block flag when we hit a blank line
+            if [[ -z "$line" && $in_error_block -eq 1 ]]; then
+                in_error_block=0
             fi
         done < temp_output.txt
-        echo "" | tee -a test-output.txt
+
+        # Print the last error if there is one
+        if [ -n "$error_location" ]; then
+            {
+                echo "🔍 Error location: $error_location"
+                [ -n "$actual_value" ] && echo "   Actual: $actual_value"
+                [ -n "$expected_value" ] && echo "   Expected: $expected_value"
+                echo ""
+            } | tee -a test-output.txt
+        fi
     fi
 
     # Add results to global arrays
