@@ -7,12 +7,13 @@ import (
 )
 
 type EnrichDetailsBrandfetch struct {
-	ID        uint64    `gorm:"primary_key;autoIncrement:true" json:"id"`
-	Domain    string    `gorm:"column:domain;type:varchar(255);DEFAULT:'';NOT NULL" json:"domain"`
-	Data      string    `gorm:"column:data;type:text;DEFAULT:'';NOT NULL" json:"data"`
-	CreatedAt time.Time `gorm:"column:created_at;type:timestamp;DEFAULT:current_timestamp" json:"createdAt"`
-	UpdatedAt time.Time `gorm:"column:updated_at;type:timestamp;;DEFAULT:current_timestamp" json:"updatedAt"`
-	Success   bool      `gorm:"column:success;type:boolean;DEFAULT:false" json:"success"`
+	ID                 uint64    `gorm:"primary_key;autoIncrement:true" json:"id"`
+	Domain             string    `gorm:"column:domain;type:varchar(255);DEFAULT:'';NOT NULL" json:"domain"`
+	Data               string    `gorm:"column:data;type:text;DEFAULT:'';NOT NULL" json:"data"`
+	CreatedAt          time.Time `gorm:"column:created_at;type:timestamp;DEFAULT:current_timestamp" json:"createdAt"`
+	UpdatedAt          time.Time `gorm:"column:updated_at;type:timestamp;;DEFAULT:current_timestamp" json:"updatedAt"`
+	Success            bool      `gorm:"column:success;type:boolean;DEFAULT:false" json:"success"`
+	SyncedToGlobalOrgs bool      `gorm:"column:synced_to_global_orgs;type:boolean;DEFAULT:false" json:"syncedToGlobalOrgs"`
 }
 
 func (EnrichDetailsBrandfetch) TableName() string {
@@ -73,8 +74,8 @@ func (b BrandfetchResponseBody) IsEmpty() bool {
 	return b.Name == "" && b.Domain == "" && b.Description == "" && b.LongDescription == ""
 }
 
-func (b BrandfetchCompany) LocationIsEmpty() bool {
-	return b.Location.City == "" && b.Location.Country == "" && b.Location.State == "" && b.Location.CountryCodeA2 == ""
+func (bc BrandfetchCompany) LocationIsEmpty() bool {
+	return bc.Location.City == "" && bc.Location.Country == "" && bc.Location.State == "" && bc.Location.CountryCodeA2 == ""
 }
 
 type BrandfetchIndustry struct {
@@ -119,4 +120,32 @@ func (bc BrandfetchCompany) GetEmployees() int64 {
 		}
 	}
 	return 0
+}
+
+func (b BrandfetchResponseBody) GetLogoUrls() []string {
+	var output []string
+	if len(b.Logos) > 0 {
+		for _, logo := range b.Logos {
+			if logo.Type == "logo" {
+				output = append(output, logo.Formats[0].Src)
+			} else if logo.Type == "other" {
+				output = append(output, logo.Formats[0].Src)
+			}
+		}
+	}
+	return output
+}
+
+func (b BrandfetchResponseBody) GetIconUrls() []string {
+	var output []string
+	if len(b.Logos) > 0 {
+		for _, logo := range b.Logos {
+			if logo.Type == "icon" {
+				output = append(output, logo.Formats[0].Src)
+			} else if logo.Type == "symbol" {
+				output = append(output, logo.Formats[0].Src)
+			}
+		}
+	}
+	return output
 }

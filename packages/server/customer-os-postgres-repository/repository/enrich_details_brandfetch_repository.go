@@ -19,6 +19,8 @@ type EnrichDetailsBrandfetchRepository interface {
 	Create(ctx context.Context, data entity.EnrichDetailsBrandfetch) (*entity.EnrichDetailsBrandfetch, error)
 	GetAllSuccessByDomain(ctx context.Context, domain string) ([]entity.EnrichDetailsBrandfetch, error)
 	GetLatestByDomain(ctx context.Context, domain string) (*entity.EnrichDetailsBrandfetch, error)
+	GetToSyncIntoGlobalOrganizations(ctx context.Context, limit int) ([]*entity.EnrichDetailsBrandfetch, error)
+	MarkSyncedToGlobalOrganizations(ctx context.Context, id uint64) error
 }
 
 func NewEnrichDetailsBrandfetchRepository(gormDb *gorm.DB) EnrichDetailsBrandfetchRepository {
@@ -75,4 +77,36 @@ func (r enrichDetailsBrandfetchRepository) Create(ctx context.Context, data enti
 	}
 
 	return &data, nil
+}
+
+func (r enrichDetailsBrandfetchRepository) GetToSyncIntoGlobalOrganizations(ctx context.Context, limit int) ([]*entity.EnrichDetailsBrandfetch, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsBrandfetchRepository.GetToSyncIntoGlobalOrganizations")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	var data []*entity.EnrichDetailsBrandfetch
+	err := r.db.
+		Where("(synced_to_global_orgs IS NULL OR synced_to_global_orgs = ?) AND success = ?", false, true).
+		Order("created_at asc").
+		Limit(limit).
+		Find(&data).Error
+	if err != nil {
+		return nil, err
+	}
+
+	span.LogFields(tracingLog.Int("result.count", len(data)))
+
+	return data, nil
+}
+
+func (r enrichDetailsBrandfetchRepository) MarkSyncedToGlobalOrganizations(ctx context.Context, id uint64) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsBrandfetchRepository.MarkSyncedToGlobalOrganizations")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	err := r.db.Model(&entity.EnrichDetailsBrandfetch{}).Where("id = ?", id).Update("synced_to_global_orgs", true).Error
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
 }

@@ -10,7 +10,7 @@ type Config struct {
 	CronScheduleUpdateOrganization          string `env:"CRON_SCHEDULE_UPDATE_ORGANIZATION" envDefault:"0 */15 * * * *"`
 	CronScheduleSendOrganizationsReminders  string `env:"CRON_SCHEDULE_SEND_ORGANIZATIONS_REMINDERS" envDefault:"0 */1 * * * *"`
 	CronScheduleProcessWebsiteForGlobalOrgs string `env:"CRON_SCHEDULE_PROCESS_WEBSITE_FOR_GLOBAL_ORGS" envDefault:"0 */1 * * * *"`
-	CronScheduleSyncScrapinToGlobalOrgs     string `env:"CRON_SCHEDULE_SYNC_SCRAPIN_TO_GLOBAL_ORGS" envDefault:"0 */1 * * * *"`
+	CronScheduleSyncDataToGlobalOrgs        string `env:"CRON_SCHEDULE_SYNC_DATA_TO_GLOBAL_ORGS" envDefault:"0 */1 * * * *"`
 
 	// Contacts
 	CronScheduleUpkeepContacts                            string `env:"CRON_SCHEDULE_UPKEEP_CONTACTS" envDefault:"0 */15 * * * *"`
