@@ -41,7 +41,7 @@ func HandleActionExecutionResults(c context.Context, s *service.Services, eventD
 			return err
 		}
 
-		if nextNodeType == enum.NodeFlowEnd {
+		if nextNodeType == enum.NodeFlowEnd.String() {
 			flowExecutionRecord.CompletedAt = utils.NowPtr()
 			flowExecutionRecord.CurrentStep = ""
 			flowExecutionRecord.CurrentStepNodeId = ""
