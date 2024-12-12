@@ -318,11 +318,11 @@ func StartCron(cont *container.Container) *cron.Cron {
 		cont.Log.Fatalf("Could not add cron job %s: %v", "checkMailstackDomainReputation", err.Error())
 	}
 
-	err = c.AddFunc(cont.Cfg.Cron.CronScheduleSyncScrapinToGlobalOrgs, func() {
-		lockAndRunJob(cont, globalOrganizationGroup, syncScrapinToGlobalOrgs)
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleSyncDataToGlobalOrgs, func() {
+		lockAndRunJob(cont, globalOrganizationGroup, syncDataToGlobalOrgs)
 	})
 	if err != nil {
-		cont.Log.Fatalf("Could not add cron job %s: %v", "syncScrapinToGlobalOrgs", err.Error())
+		cont.Log.Fatalf("Could not add cron job %s: %v", "syncDataToGlobalOrgs", err.Error())
 	}
 
 	err = c.AddFunc(cont.Cfg.Cron.CronScheduleProcessWebsiteForGlobalOrgs, func() {
@@ -498,8 +498,8 @@ func checkMailstackDomainReputation(cont *container.Container) {
 	service.NewMailstackService(cont.Cfg, cont.Log, cont.CommonServices).CheckMailstackDomainReputation()
 }
 
-func syncScrapinToGlobalOrgs(cont *container.Container) {
-	service.NewGlobalOrganizationService(cont.Cfg, cont.Log, cont.CommonServices).SyncScrapInToGlobalOrganization()
+func syncDataToGlobalOrgs(cont *container.Container) {
+	service.NewGlobalOrganizationService(cont.Cfg, cont.Log, cont.CommonServices).SyncDataIntoGlobalOrganizations()
 }
 
 func processWebsiteForGlobalOrgs(cont *container.Container) {
