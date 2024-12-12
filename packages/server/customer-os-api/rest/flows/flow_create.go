@@ -51,7 +51,7 @@ func CreateFlow(s *service.Services) gin.HandlerFunc {
 			return
 		}
 
-		request, err := getPostPayload(c)
+		request, err := getFlowCreateRequest(c)
 		if err != nil {
 			rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("unable to parse payload"))
 			return
@@ -106,7 +106,7 @@ func createFlowRecord(ctx context.Context, request CreateFlowRequest) entity.Flo
 	}
 }
 
-func getPostPayload(c *gin.Context) (CreateFlowRequest, error) {
+func getFlowCreateRequest(c *gin.Context) (CreateFlowRequest, error) {
 	span, _ := tracing.StartTracerSpan(c.Request.Context(), "Flows.getPostPayload")
 	defer span.Finish()
 	tracing.TagComponentRest(span)

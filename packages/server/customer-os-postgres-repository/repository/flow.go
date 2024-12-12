@@ -12,8 +12,9 @@ import (
 )
 
 type FlowRepository interface {
-	CreateFlow(ctx context.Context, flow entity.Flow) (entity.Flow, error)
+	CreateFlow(ctx context.Context, flowRecord entity.Flow) (entity.Flow, error)
 	GetAllFlowsForTenant(ctx context.Context) ([]entity.Flow, error)
+	GetFlowByID(ctx context.Context, flowID string) (*entity.Flow, error)
 }
 
 type flowRepository struct {
@@ -24,18 +25,18 @@ func NewFlowRepository(gormDb *gorm.DB) FlowRepository {
 	return &flowRepository{gormDb: gormDb}
 }
 
-func (f *flowRepository) CreateFlow(ctx context.Context, flow entity.Flow) (entity.Flow, error) {
+func (f *flowRepository) CreateFlow(ctx context.Context, flowRecord entity.Flow) (entity.Flow, error) {
 	span, ctx := tracing.StartTracerSpan(ctx, "FlowRepository.CreateFlow")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	flow.ID = utils.GenerateNanoIdWithPrefix("flow")
+	flowRecord.ID = utils.GenerateNanoIdWithPrefix("flow")
 
-	err := f.gormDb.Create(&flow).Error
+	err := f.gormDb.Create(&flowRecord).Error
 	if err != nil {
 		return entity.Flow{}, err
 	}
-	return flow, nil
+	return flowRecord, nil
 }
 
 func (f *flowRepository) GetAllFlowsForTenant(ctx context.Context) ([]entity.Flow, error) {
@@ -52,4 +53,23 @@ func (f *flowRepository) GetAllFlowsForTenant(ctx context.Context) ([]entity.Flo
 		return flows, err
 	}
 	return flows, nil
+}
+
+func (f *flowRepository) GetFlowByID(ctx context.Context, flowID string) (*entity.Flow, error) {
+
+	span, ctx := tracing.StartTracerSpan(ctx, "FlowRepository.GetFlowByID")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	var flow entity.Flow
+	err := f.gormDb.
+		Where("tenant = ? AND id = ?", common.GetTenantFromContext(ctx), flowID).
+		First(&flow).Error
+
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return &flow, err
+	}
+	return &flow, nil
+
 }

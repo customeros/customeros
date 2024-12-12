@@ -38,7 +38,7 @@ func (e FlowListenerEvent) ExternalSystem() (system enum.ExternalSystemId, err e
 	return enum.DecodeExternalSystemId(systemId), nil
 }
 
-func GetFlowEvent(s string) (FlowListenerEvent, error) {
+func GetFlowListenerEvent(s string) (FlowListenerEvent, error) {
 	switch FlowListenerEvent(s) {
 	case EventFathomMeetingSummaryCreated, EventGrainMeetingSummaryCreated:
 		return FlowListenerEvent(s), nil
