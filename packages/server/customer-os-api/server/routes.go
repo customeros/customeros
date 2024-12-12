@@ -105,7 +105,7 @@ func registerFlowRoutes(ctx context.Context, r *gin.Engine, s *service.Services,
 	//
 	// // manage flow edges
 	// setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/flows/:flowId/edges", flowsV1Path), s, cache, ...)
-	// setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/flows/:flowId/edges", flowsV1Path), s, cache, ...)
+	setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/flows/:flowId/edges", flowsV1Path), s, cache, flows.CreateFlowEdge(s))
 	// setupRestRoute(ctx, r, "DELETE", fmt.Sprintf("%s/flows/:flowId/edges/:edgeId", flowsV1Path), s, cache, ...)
 
 	// flow validation
