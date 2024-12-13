@@ -3,6 +3,7 @@ package repository
 import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -35,6 +36,7 @@ type TenantAndContact struct {
 }
 
 type ContactReadRepository interface {
+	CountByTenant(ctx context.Context, tenant string) (int64, error)
 	GetContact(ctx context.Context, tenant, contactId string) (*dbtype.Node, error)
 	GetContacts(ctx context.Context, tenant string, contactIds []string) ([]*dbtype.Node, error)
 	GetContactsEnrichedNotLinkedToOrganization(ctx context.Context) ([]TenantAndContactId, error)
@@ -744,4 +746,36 @@ func (r *contactReadRepository) GetContactsByLinkedIn(ctx context.Context, tenan
 	nodes := result.([]*dbtype.Node)
 	span.LogFields(log.Int("result.count", len(nodes)))
 	return nodes, err
+}
+
+func (r *contactReadRepository) CountByTenant(ctx context.Context, tenant string) (int64, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactReadRepository.CountByTenant")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
+
+	cypher := `MATCH (c:Contact)-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) WHERE c.hide = false or c.hide IS NULL
+			RETURN count(c)`
+	params := map[string]any{
+		"tenant": tenant,
+	}
+	span.LogFields(log.String("query", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	dbRecord, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return queryResult.Single(ctx)
+		}
+	})
+	if err != nil {
+		return 0, err
+	}
+	organizationsCount := dbRecord.(*db.Record).Values[0].(int64)
+	span.LogFields(log.Int64("result", organizationsCount))
+	return organizationsCount, nil
 }
