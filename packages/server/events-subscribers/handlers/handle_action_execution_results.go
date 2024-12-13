@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
@@ -18,8 +19,12 @@ func HandleActionExecutionResults(c context.Context, s *service.Services, eventD
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "eventData", eventData)
 
+	ctx = common.WithCustomContext(ctx, &common.CustomContext{
+		Tenant: eventData.Tenant,
+	})
+
 	// get existing flow execution record from db
-	flowExecutionRecord, err := s.WorkflowService.GetFlowExecutionRecord(ctx, eventData.FlowExecutionID, eventData.Tenant)
+	flowExecutionRecord, err := s.WorkflowService.GetFlowExecutionRecordById(ctx, eventData.FlowExecutionID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -35,24 +40,30 @@ func HandleActionExecutionResults(c context.Context, s *service.Services, eventD
 		flowExecutionRecord.Status = enum.FlowExecutionRunning.String()
 
 	case enum.FlowActionExecutionSuccess:
-		nextNodeType, nextNodeAction, nextNodeID, err := s.WorkflowService.GetNextStepInFlow(ctx, flowExecutionRecord.FlowID, flowExecutionRecord.CurrentStepNodeId)
+		nextStepData, err := s.WorkflowService.GetNextStepInFlow(ctx, flowExecutionRecord.FlowID, flowExecutionRecord.CurrentStepNodeId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
 		}
 
-		if nextNodeType == enum.NodeFlowEnd.String() {
+		// if next step is END
+		if nextStepData.ToNodeType == enum.NodeFlowEnd {
 			flowExecutionRecord.CompletedAt = utils.NowPtr()
 			flowExecutionRecord.CurrentStep = ""
 			flowExecutionRecord.CurrentStepNodeId = ""
 			flowExecutionRecord.Status = enum.FlowExecutionCompleted.String()
+			_, err := s.WorkflowService.SaveFlowExecutionRecord(ctx, *flowExecutionRecord)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return err
+			}
+			return nil
 		}
 
-		//to do, handle next step
-		flowExecutionRecord.CurrentStep = nextNodeAction
-		flowExecutionRecord.CurrentStepNodeId = nextNodeID
+		flowExecutionRecord.CurrentStep = nextStepData.ToNodeAction.String()
+		flowExecutionRecord.CurrentStepNodeId = nextStepData.ToNodeID
 		flowExecutionRecord.Status = enum.FlowExecutionRunning.String()
-		// fire next event
+		// todo - fire next event & handle waits
 
 	default:
 		err = errors.New("FlowActionExecutionStatus not valid")
@@ -60,7 +71,7 @@ func HandleActionExecutionResults(c context.Context, s *service.Services, eventD
 		return err
 	}
 
-	err = s.WorkflowService.SaveFlowExecution(ctx, flowExecutionRecord)
+	_, err = s.WorkflowService.SaveFlowExecutionRecord(ctx, *flowExecutionRecord)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err

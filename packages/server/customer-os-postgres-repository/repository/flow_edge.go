@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"gorm.io/gorm"
@@ -12,8 +11,8 @@ import (
 )
 
 type FlowEdgeRepository interface {
-	CreateFlowEdge(ctx context.Context, flowEdge entity.FlowEdge) (entity.FlowEdge, error)
-	GetAllEdgesForFlow(ctx context.Context, FlowID string) ([]entity.FlowEdge, error)
+	Create(ctx context.Context, flowEdge entity.FlowEdge) (*entity.FlowEdge, error)
+	FindAll(ctx context.Context, flowEdge entity.FlowEdge) (*[]entity.FlowEdge, error)
 }
 
 type flowEdgeRepository struct {
@@ -24,7 +23,7 @@ func NewFlowEdgeRepository(gormDb *gorm.DB) FlowEdgeRepository {
 	return &flowEdgeRepository{gormDb: gormDb}
 }
 
-func (f *flowEdgeRepository) CreateFlowEdge(ctx context.Context, flowEdge entity.FlowEdge) (entity.FlowEdge, error) {
+func (f *flowEdgeRepository) Create(ctx context.Context, flowEdge entity.FlowEdge) (*entity.FlowEdge, error) {
 	span, ctx := tracing.StartTracerSpan(ctx, "FlowEdgeRepository.CreateFlowEdge")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -33,23 +32,23 @@ func (f *flowEdgeRepository) CreateFlowEdge(ctx context.Context, flowEdge entity
 
 	err := f.gormDb.Create(&flowEdge).Error
 	if err != nil {
-		return entity.FlowEdge{}, err
+		return nil, err
 	}
-	return flowEdge, nil
+	return &flowEdge, nil
 }
 
-func (f *flowEdgeRepository) GetAllEdgesForFlow(ctx context.Context, flowID string) ([]entity.FlowEdge, error) {
-	span, ctx := tracing.StartTracerSpan(ctx, "FlowRepository.GetAllEdgesForFlow")
+func (f *flowEdgeRepository) FindAll(ctx context.Context, flowEdge entity.FlowEdge) (*[]entity.FlowEdge, error) {
+	span, ctx := tracing.StartTracerSpan(ctx, "FlowEdgeRepository.FindEdges")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	var nodes []entity.FlowEdge
+	var results []entity.FlowEdge
 	err := f.gormDb.
-		Where("tenant = ? AND flow_id = ?", common.GetTenantFromContext(ctx), flowID).
-		Find(&nodes).Error
+		Where(&flowEdge).
+		Find(&results).Error
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return nodes, err
+		return nil, err
 	}
-	return nodes, nil
+	return &results, nil
 }
