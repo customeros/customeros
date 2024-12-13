@@ -39,16 +39,16 @@ func GetListeners(s *service.Services) gin.HandlerFunc {
 			return
 		}
 
-		events, err := s.Repositories.PostgresRepositories.FlowListenerRegistryRepository.GetAllFlowListenerEvents(ctx)
+		events, err := s.Repositories.PostgresRepositories.FlowListenerRegistryRepository.FindAll(ctx)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer)
 			return
 		}
 
-		results := make([]FlowListenerEventRecord, len(events))
+		results := make([]FlowListenerEventRecord, len(*events))
 
-		for i, event := range events {
+		for i, event := range *events {
 			record := FlowListenerEventRecord{
 				System:      event.ExternalSystem,
 				Event:       event.ListenerEvent,
@@ -58,7 +58,7 @@ func GetListeners(s *service.Services) gin.HandlerFunc {
 			results[i] = record
 		}
 
-		if len(events) == 1 {
+		if len(*events) == 1 {
 			c.JSON(http.StatusOK, FlowListenerEventSingleResponse{
 				BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
 				Event:        results[0],

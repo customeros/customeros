@@ -50,7 +50,11 @@ func CreateFlowEdge(s *service.Services) gin.HandlerFunc {
 
 		// validate tenant owns the flow specified in the path
 		flowId := c.Param("flowId")
-		isValidFlow := s.CommonServices.WorkflowService.ValidateFlowBelongsToTenant(ctx, flowId)
+		isValidFlow, err := s.CommonServices.WorkflowService.ValidateFlowBelongsToTenant(ctx, flowId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer)
+		}
 		if !isValidFlow {
 			err := errors.New("Flow does not belong to tenant")
 			tracing.TraceErr(span, err)
@@ -72,7 +76,7 @@ func CreateFlowEdge(s *service.Services) gin.HandlerFunc {
 	}
 }
 
-func buildCreateEdgeResponse(c *gin.Context, flowEdge entity.FlowEdge) CreateFlowEdgeResponse {
+func buildCreateEdgeResponse(c *gin.Context, flowEdge *entity.FlowEdge) CreateFlowEdgeResponse {
 	response := CreateFlowEdgeRecord{
 		ID:         flowEdge.ID,
 		FlowID:     flowEdge.FlowID,
@@ -95,7 +99,7 @@ func buildCreateEdgeResponse(c *gin.Context, flowEdge entity.FlowEdge) CreateFlo
 	}
 }
 
-func createFlowEdge(c *gin.Context, s *service.Services, request CreateFlowEdgeRequest, flowId string) (entity.FlowEdge, error) {
+func createFlowEdge(c *gin.Context, s *service.Services, request CreateFlowEdgeRequest, flowId string) (*entity.FlowEdge, error) {
 	span, ctx := tracing.StartTracerSpan(c.Request.Context(), "Flows.createFlowEdge")
 	defer span.Finish()
 	tracing.TagComponentRest(span)
@@ -111,12 +115,12 @@ func createFlowEdge(c *gin.Context, s *service.Services, request CreateFlowEdgeR
 		data, err := utils.AnyToJSONB(request.Data)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			return flowEdgeRecord, err
+			return &flowEdgeRecord, err
 		}
 		flowEdgeRecord.Data = &data
 	}
 
-	return s.Repositories.PostgresRepositories.FlowEdgeRepository.CreateFlowEdge(ctx, flowEdgeRecord)
+	return s.Repositories.PostgresRepositories.FlowEdgeRepository.Create(ctx, flowEdgeRecord)
 }
 
 func getEdgeCreateRequest(c *gin.Context, s *service.Services) (CreateFlowEdgeRequest, error) {

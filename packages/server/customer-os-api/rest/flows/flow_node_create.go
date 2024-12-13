@@ -16,11 +16,9 @@ import (
 )
 
 type CreateFlowNodeRequest struct {
-	Type      string   `json:"type"`
-	Event     *string  `json:"event"`
-	PositionX *float64 `json:"positionX"`
-	PositionY *float64 `json:"positionY"`
-	Data      *any     `json:"data"`
+	Type      string  `json:"type"`
+	Event     *string `json:"event"`
+	EventData *any    `json:"eventData"`
 }
 
 type CreateFlowNodeRecord struct {
@@ -28,11 +26,9 @@ type CreateFlowNodeRecord struct {
 	FlowID    string    `json:"flowId"`
 	Type      string    `json:"type"`
 	Event     *string   `json:"event,omitempty"`
-	PositionX *float64  `json:"positionX,omitempty"`
-	PositionY *float64  `json:"positionY,omitempty"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"UpadatedAt,omitempty"`
-	Data      *any      `json:"data,omitempty"`
+	EventData *any      `json:"eventData,omitempty"`
 }
 
 type CreateFlowNodeResponse struct {
@@ -54,7 +50,11 @@ func CreateFlowNode(s *service.Services) gin.HandlerFunc {
 
 		// validate tenant owns the flow specified in the path
 		flowId := c.Param("flowId")
-		isValidFlow := s.CommonServices.WorkflowService.ValidateFlowBelongsToTenant(ctx, flowId)
+		isValidFlow, err := s.CommonServices.WorkflowService.ValidateFlowBelongsToTenant(ctx, flowId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer)
+		}
 		if !isValidFlow {
 			err := errors.New("Flow does not belong to tenant")
 			tracing.TraceErr(span, err)
@@ -76,19 +76,19 @@ func CreateFlowNode(s *service.Services) gin.HandlerFunc {
 			return
 		}
 
-		flowNode, err = s.Repositories.PostgresRepositories.FlowNodeRepository.CreateFlowNode(ctx, flowNode)
+		newFlowNode, err := s.Repositories.PostgresRepositories.FlowNodeRepository.Create(ctx, flowNode)
 		if err != nil {
 			rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest)
 			return
 		}
 
-		response := buildFlowNodeCreateResponse(ctx, flowNode)
+		response := buildFlowNodeCreateResponse(ctx, newFlowNode)
 
 		c.JSON(http.StatusOK, response)
 	}
 }
 
-func buildFlowNodeCreateResponse(ctx context.Context, flowNode entity.FlowNode) CreateFlowNodeResponse {
+func buildFlowNodeCreateResponse(ctx context.Context, flowNode *entity.FlowNode) CreateFlowNodeResponse {
 	span, ctx := tracing.StartTracerSpan(ctx, "Flows.buildFlowNodeCreateResponse")
 	defer span.Finish()
 	tracing.TagComponentRest(span)
@@ -98,8 +98,6 @@ func buildFlowNodeCreateResponse(ctx context.Context, flowNode entity.FlowNode) 
 		FlowID:    flowNode.FlowID,
 		Type:      flowNode.Type,
 		Event:     flowNode.Event,
-		PositionX: flowNode.PositionX,
-		PositionY: flowNode.PositionY,
 		CreatedAt: flowNode.CreatedAt,
 	}
 
@@ -108,17 +106,17 @@ func buildFlowNodeCreateResponse(ctx context.Context, flowNode entity.FlowNode) 
 		Node:         payload,
 	}
 
-	if flowNode.Data == nil {
+	if flowNode.EventData == nil {
 		return response
 	}
 
-	data, err := utils.JSONBToAny(*flowNode.Data)
+	data, err := utils.JSONBToAny(*flowNode.EventData)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return response
 	}
 
-	response.Node.Data = &data
+	response.Node.EventData = &data
 	return response
 }
 
@@ -128,23 +126,21 @@ func createFlowNodeRecord(ctx context.Context, request CreateFlowNodeRequest, fl
 	tracing.TagComponentRest(span)
 
 	flowNode := entity.FlowNode{
-		FlowID:    flowId,
-		Type:      request.Type,
-		Event:     request.Event,
-		PositionX: request.PositionX,
-		PositionY: request.PositionY,
+		FlowID: flowId,
+		Type:   request.Type,
+		Event:  request.Event,
 	}
 
-	if request.Data == nil {
+	if request.EventData == nil {
 		return flowNode, nil
 	}
 
-	data, err := utils.AnyToJSONB(request.Data)
+	data, err := utils.AnyToJSONB(request.EventData)
 	if err != nil {
 		return flowNode, err
 	}
 
-	flowNode.Data = &data
+	flowNode.EventData = &data
 	return flowNode, nil
 }
 

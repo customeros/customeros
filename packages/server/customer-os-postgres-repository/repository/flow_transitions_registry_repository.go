@@ -14,7 +14,7 @@ import (
 
 type FlowTransitionsRegistryRepository interface {
 	Initialize(ctx context.Context) error
-	FindAll(ctx context.Context) (*[]entity.FlowTransitionsRegistry, error)
+	FindAll(ctx context.Context, transition *entity.FlowTransitionsRegistry) (*[]entity.FlowTransitionsRegistry, error)
 	Find(ctx context.Context, transition entity.FlowTransitionsRegistry) (*entity.FlowTransitionsRegistry, error)
 	Create(ctx context.Context, transition entity.FlowTransitionsRegistry) (*entity.FlowTransitionsRegistry, error)
 }
@@ -46,14 +46,20 @@ func (r *flowTransitionsRegistryRepository) Create(ctx context.Context, transiti
 	return &transition, nil
 }
 
-func (r *flowTransitionsRegistryRepository) FindAll(ctx context.Context) (*[]entity.FlowTransitionsRegistry, error) {
+func (r *flowTransitionsRegistryRepository) FindAll(ctx context.Context, transition *entity.FlowTransitionsRegistry) (*[]entity.FlowTransitionsRegistry, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowTransitionsRegistryRepository.FindAll")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
 	var transitions []entity.FlowTransitionsRegistry
-	err := r.gormDb.WithContext(ctx).
-		Where("enabled = ?", true).
+	query := r.gormDb.WithContext(ctx).Where("enabled = ?", true)
+
+	// Add additional filters if transition is not nil
+	if transition != nil {
+		query = query.Where(transition)
+	}
+
+	err := query.
 		Order("from_node DESC").
 		Find(&transitions).Error
 	if err != nil {
@@ -105,7 +111,7 @@ func (r *flowTransitionsRegistryRepository) Initialize(ctx context.Context) erro
 		// ... add more here
 	}
 
-	dbTransitions, err := r.FindAll(ctx)
+	dbTransitions, err := r.FindAll(ctx, nil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err

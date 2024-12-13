@@ -26,7 +26,7 @@ func HandleCreateMarkdownEvent(c context.Context, s *service.Services, eventData
 	id, err := s.MarkdownEventService.Save(ctx, nil, nil, *eventData)
 
 	// build execution record
-	executionRecord := entity.ActionExecution{
+	executionRecord := entity.FlowActionExecution{
 		FlowExecutionID: flowExecutionID,
 		Action:          enum.ActionTimelineEventCreate.String(),
 		FlowNodeID:      "",
@@ -47,13 +47,13 @@ func HandleCreateMarkdownEvent(c context.Context, s *service.Services, eventData
 	}
 
 	// write action execution to db
-	actionExecutionId, saveErr := s.PostgresRepositories.FlowActionExecutionRepository.Save(ctx, executionRecord)
+	actionExecutionRecord, saveErr := s.PostgresRepositories.FlowActionExecutionRepository.Create(ctx, executionRecord)
 	if saveErr != nil {
 		tracing.TraceErr(span, saveErr)
 	}
 
 	// fire action completion event
-	pubErr := publishActionResultEvent(ctx, s, flowExecutionID, actionExecutionId, enum.FlowActionExecutionStatus(executionRecord.Status), executionRecord.ErrorMessage)
+	pubErr := publishActionResultEvent(ctx, s, flowExecutionID, actionExecutionRecord.ID, enum.FlowActionExecutionStatus(executionRecord.Status), executionRecord.ErrorMessage)
 
 	return multierr.Combine(err, saveErr, pubErr)
 }

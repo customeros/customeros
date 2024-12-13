@@ -2,9 +2,11 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -68,7 +70,11 @@ func (w *webhookService) GetIntegrationFromWebhookPath(ctx context.Context, tena
 	span.LogFields(log.String("webhookPath", webhookPath))
 
 	path := strings.Trim(webhookPath, "/")
-	webhook, err := w.services.Repositories.PostgresRepositories.FlowWebhooksRepository.FindWebhookByPath(ctx, tenant, path)
+	webhook, err := w.services.Repositories.PostgresRepositories.FlowWebhooksRepository.Find(ctx, entity.FlowWebhooks{
+		Tenant:      tenant,
+		WebhookPath: path,
+	})
+
 	if err != nil {
 		err = fmt.Errorf("Unable to lookup webhook path: %v", err)
 		tracing.TraceErr(span, err)
@@ -101,14 +107,19 @@ func (w *webhookService) CreateIntegrationWebhook(ctx context.Context, tenant st
 	}
 
 	// check if webhook already exists for tenant/integration
-	count, webhook, err := w.repositories.PostgresRepositories.FlowWebhooksRepository.FindActiveWebhook(ctx, tenant, integration.String())
+	query := entity.FlowWebhooks{
+		Tenant:      tenant,
+		Integration: integration.String(),
+	}
+
+	webhook, err := w.repositories.PostgresRepositories.FlowWebhooksRepository.Find(ctx, query)
 	if err != nil {
 		err = fmt.Errorf("Unable to check db for existing webhook: %v", err)
 		tracing.TraceErr(span, err)
 		return "", "", err
 	}
 
-	rotationCount := count
+	rotationCount := 0
 	if webhook != nil {
 		rotationCount = webhook.RotationCount
 	}
@@ -122,14 +133,14 @@ func (w *webhookService) CreateIntegrationWebhook(ctx context.Context, tenant st
 		tracing.TraceErr(span, err)
 	}
 
-	newWebhook.TenantName = tenant
+	newWebhook.Tenant = tenant
 	newWebhook.WebhookPath = fmt.Sprintf("%s/i/%s", tenantHash, integrationHash)
 	newWebhook.Integration = integration.String()
 	newWebhook.Secret = secret
 	newWebhook.RotationCount = 1
 
 	// disable existing webhook for tenant/integration if exists
-	if count != 0 {
+	if rotationCount != 0 {
 		err = w.DeactivateWebhook(ctx, webhook.WebhookPath)
 		if err != nil {
 			err = fmt.Errorf("Unable to deactivate existing webhook for %s and %s: %v", tenant, integration.String(), err)
@@ -146,21 +157,36 @@ func (w *webhookService) CreateIntegrationWebhook(ctx context.Context, tenant st
 		return "", "", err
 	}
 
-	createErr := w.repositories.PostgresRepositories.FlowWebhooksRepository.CreateWebhook(ctx, &newWebhook)
-	if createErr != nil {
+	result, err := w.repositories.PostgresRepositories.FlowWebhooksRepository.Create(ctx, newWebhook)
+	if err != nil {
 		err = fmt.Errorf("Unable to create webhook: %v", err)
 		tracing.TraceErr(span, err)
 	}
 
-	return newWebhook.WebhookPath, newWebhook.Secret, nil
+	return result.WebhookPath, result.Secret, nil
 }
 
 func (w *webhookService) DeactivateWebhook(ctx context.Context, webhookPath string) error {
+
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebhookService.Deactivate")
 	defer span.Finish()
 	span.LogFields(log.String("webhookPath", webhookPath))
 
-	err := w.repositories.PostgresRepositories.FlowWebhooksRepository.DisableWebhook(ctx, webhookPath)
+	tenant := common.GetTenantFromContext(ctx)
+	if tenant == "" {
+		err := errors.New("tenant not set in context")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	query := entity.FlowWebhooks{
+		Tenant:      tenant,
+		WebhookPath: webhookPath,
+		Enabled:     false,
+		UpdatedAt:   utils.Now(),
+	}
+
+	_, err := w.repositories.PostgresRepositories.FlowWebhooksRepository.Update(ctx, query)
 	if err != nil {
 		err = fmt.Errorf("Unable to deactivate webhook %s: %v", webhookPath, err)
 		tracing.TraceErr(span, err)

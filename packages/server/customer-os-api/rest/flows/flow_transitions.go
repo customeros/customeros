@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 
@@ -49,36 +50,16 @@ func GetTransitions(s *service.Services) gin.HandlerFunc {
 
 		// Get query params
 		from := c.Query("from")
-		var allFromNodes []repository.FromNodeRecord
-		var err error
-
-		if from != "" {
-			// Check if it's a valid event or action
-			if _, err := enum.GetFlowListenerEvent(from); err == nil {
-				allFromNodes = append(allFromNodes, repository.FromNodeRecord{
-					FromNode:     from,
-					FromNodeType: enum.NodeFlowListenerEvent.String(),
-				})
-			} else if _, err := enum.GetFlowAction(from); err == nil {
-				allFromNodes = append(allFromNodes, repository.FromNodeRecord{
-					FromNode:     from,
-					FromNodeType: enum.NodeFlowAction.String(),
-				})
-			} else {
-				rest.SendError(c, span, http.StatusNotFound,
-					rest.ErrNotFound.WithMessage("Could not find any records for "+from))
-				return
-			}
-		} else {
-			// Get all from nodes if no specific one requested
-			allFromNodes, err = s.Repositories.PostgresRepositories.FlowTransitionsRegistryRepository.GetUniqueFromNodes(ctx)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer)
-				return
-			}
+		query := entity.FlowTransitionsRegistry{
+			FromNodeType: from,
 		}
 
+		allfromNodes, err := s.Repositories.PostgresRepositories.FlowTransitionsRegistryRepository.FindAll(ctx, &query)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer)
+			return
+		}
 		results := buildTransitionRecords(ctx, span, s, allFromNodes)
 
 		if len(results) == 1 {
@@ -97,7 +78,7 @@ func GetTransitions(s *service.Services) gin.HandlerFunc {
 }
 
 func buildTransitionRecords(ctx context.Context, span opentracing.Span, s *service.Services,
-	allFromNodes []repository.FromNodeRecord,
+	allFromNodes *[]entity.FlowTransitionsRegistry,
 ) []FlowTransitionRecord {
 	results := make([]FlowTransitionRecord, len(allFromNodes))
 

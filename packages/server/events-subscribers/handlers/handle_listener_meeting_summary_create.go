@@ -172,7 +172,7 @@ func sendToDeadEvents(ctx context.Context, s *service.Services, sourceEvent comm
 		return err
 	}
 
-	_, err = s.PostgresRepositories.FlowDeadEventsRepository.Save(ctx, deadEvent)
+	_, err = s.PostgresRepositories.FlowDeadEventsRepository.Create(ctx, deadEvent)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err

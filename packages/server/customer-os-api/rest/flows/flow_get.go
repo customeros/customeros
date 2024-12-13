@@ -42,14 +42,16 @@ func GetFlows(s *service.Services) gin.HandlerFunc {
 		}
 
 		// get flows for tenant from database
-		flowRecords, err := s.Repositories.PostgresRepositories.FlowRepository.GetAllFlowsForTenant(ctx)
+		flowRecords, err := s.Repositories.PostgresRepositories.FlowRepository.FindAll(ctx, entity.Flow{
+			Tenant: tenant,
+		})
 		if err != nil {
 			rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest)
 			return
 		}
 
-		response := make([]FlowRecord, len(flowRecords))
-		for i, record := range flowRecords {
+		response := make([]FlowRecord, len(*flowRecords))
+		for i, record := range *flowRecords {
 			response[i] = buildFlowRecord(ctx, record)
 		}
 
