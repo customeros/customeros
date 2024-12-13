@@ -43,6 +43,11 @@ export const EditEmail = observer(() => {
       store.ui.setSelectionId(null);
     }
 
+    if (!primaryEmail) {
+      useCase.setPrimaryEmailForContact(true);
+      useCase.setEmailForContact();
+    }
+
     if (selectedId && store.ui.focusRow) {
       useCase.updateEmailForContact(selectedId);
       store.ui.setSelectionId(null);

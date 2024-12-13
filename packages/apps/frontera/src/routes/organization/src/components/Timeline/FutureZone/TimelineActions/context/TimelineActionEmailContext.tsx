@@ -11,6 +11,7 @@ import {
 import { observer } from 'mobx-react-lite';
 import { render } from '@react-email/render';
 
+import { useEvent } from '@shared/hooks/useEvent';
 import { useStore } from '@shared/hooks/useStore';
 import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
 import { useTimelineMeta } from '@organization/components/Timeline/state';
@@ -65,7 +66,10 @@ export const TimelineActionEmailContextContextProvider = observer(
     invalidateQuery: () => void;
   }>) => {
     const { open: isOpen, onOpen, onClose } = useDisclosure();
-    const [_defaultEmailAdress, setDefaultEmailAdress] = useState([]);
+    const [defaultEmailAdress, setDefaultEmailAdress] = useState<{
+      value: string;
+      label: string;
+    }>({ value: '', label: '' });
     const [searchParams] = useSearchParams();
     const store = useStore();
 
@@ -77,13 +81,17 @@ export const TimelineActionEmailContextContextProvider = observer(
       timelineMeta.getTimelineVariables,
     );
 
+    useEvent<{ email: string }>('openEmailEditor', (payload) => {
+      setDefaultEmailAdress({ value: payload.email, label: payload.email });
+    });
+
     const { virtuosoRef } = useTimelineRefContext();
     const updateTimelineCache = useUpdateCacheWithNewEvent(virtuosoRef);
     const formId = 'compose-email-timeline-footer';
     const defaultValues: ComposeEmailDtoI = new ComposeEmailDto({
       from: '',
       fromProvider: '',
-      to: [{ value: store.ui.emailAdress, label: store.ui.emailAdress }] ?? [],
+      to: defaultEmailAdress.label !== '' ? [defaultEmailAdress] : [],
       cc: [],
       bcc: [],
       subject: '',
@@ -100,27 +108,20 @@ export const TimelineActionEmailContextContextProvider = observer(
     });
 
     useEffect(() => {
-      if (store.ui.emailAdress.length > 0) {
-        const newDefaultEmailAdress = [
-          { value: store.ui.emailAdress, label: store.ui.emailAdress },
-        ];
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        setDefaultEmailAdress(newDefaultEmailAdress as any);
-
+      if (defaultEmailAdress.label !== '') {
         setDefaultValues({
           ...state.values,
-          to: newDefaultEmailAdress,
+          to: [defaultEmailAdress],
         });
       } else {
-        setDefaultEmailAdress([]);
+        setDefaultEmailAdress({ value: '', label: '' });
         setDefaultValues({
           ...state.values,
           to: [],
         });
       }
       reset();
-    }, [store.ui.emailAdress, store.ui.openEmailEditor]);
+    }, [defaultValues.to.length]);
 
     const handleResetEditor = () => {
       setDefaultValues(defaultValues);
@@ -204,7 +205,7 @@ export const TimelineActionEmailContextContextProvider = observer(
       onClose();
       handleResetEditor();
       closeEditor();
-      store.ui.setEmailAdress('');
+      setDefaultEmailAdress({ value: '', label: '' });
     };
 
     const handleCheckCanExitSafely = () => {
@@ -224,7 +225,8 @@ export const TimelineActionEmailContextContextProvider = observer(
         return false;
       } else {
         onClose();
-        store.ui.setEmailAdress('');
+        setDefaultEmailAdress({ value: '', label: '' });
+
         handleResetEditor();
 
         return true;

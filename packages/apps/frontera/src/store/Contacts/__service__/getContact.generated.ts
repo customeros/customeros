@@ -21,15 +21,8 @@ export type ContactQuery = {
     tags?: Array<{
       __typename?: 'Tag';
       name: string;
-      metadata: {
-        __typename?: 'Metadata';
-        id: string;
-        source: Types.DataSource;
-        sourceOfTruth: Types.DataSource;
-        appSource: string;
-        created: any;
-        lastUpdated: any;
-      };
+      entityType: Types.EntityType;
+      metadata: { __typename?: 'Metadata'; id: string };
     }> | null;
     flows: Array<{
       __typename?: 'Flow';

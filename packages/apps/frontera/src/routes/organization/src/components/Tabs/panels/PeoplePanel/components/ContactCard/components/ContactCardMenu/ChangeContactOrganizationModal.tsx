@@ -1,6 +1,10 @@
 import { observer } from 'mobx-react-lite';
 
+import { Combobox } from '@ui/form/Combobox';
 import { Button } from '@ui/form/Button/Button';
+import { useStore } from '@shared/hooks/useStore';
+import { JobRole, Metadata } from '@shared/types/__generated__/graphql.types';
+import { Popover, PopoverContent, PopoverTrigger } from '@ui/overlay/Popover';
 import {
   Modal,
   ModalBody,
@@ -8,28 +12,101 @@ import {
   ModalHeader,
   ModalContent,
   ModalOverlay,
+  ModalCloseButton,
 } from '@ui/overlay/Modal';
 
-export const ChangeContactOrganizationModal = observer(() => {
-  return (
-    <Modal>
-      <ModalOverlay />
-      <ModalContent>
-        <ModalHeader>
-          <h1>Change organization</h1>
-        </ModalHeader>
-        <ModalBody>
-          <div>
-            <p>
-              Are you sure you want to change the organization of this contact?
-            </p>
-          </div>
-        </ModalBody>
-        <ModalFooter>
-          <Button variant='ghost'>Cancel</Button>
-          <Button>Change organization</Button>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
-  );
-});
+interface ChangeContactOrganizationModalProps {
+  open: boolean;
+  contactId: string;
+  onClose: () => void;
+}
+
+export const ChangeContactOrganizationModal = observer(
+  ({ onClose, open, contactId }: ChangeContactOrganizationModalProps) => {
+    const store = useStore();
+
+    const contactStore = store.contacts.value.get(contactId);
+
+    return (
+      <Modal open={open}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>
+            <p className='font-medium'>{`Change ${contactStore?.name}'s organization `}</p>
+            <ModalCloseButton asChild />
+          </ModalHeader>
+          <ModalBody>
+            <div>
+              <p>
+                Changing this contact’s organization will move them to the
+                “Former employees” section and associate them with the newly
+                selected organization.
+              </p>
+            </div>
+
+            <Popover modal>
+              <PopoverTrigger className='w-full flex items-start justify-start mt-4 text-gray-400'>
+                <p className='text-start w-full'>Contact's new organization</p>
+              </PopoverTrigger>
+              <PopoverContent
+                align='center'
+                className='min-w-[264px] max-w-[320px] overflow-auto z-[99999]'
+              >
+                <Combobox
+                  options={store.organizations.toArray().map((o) => ({
+                    label: o.value.name,
+                    value: o.value.metadata.id,
+                  }))}
+                  onChange={(value) => {
+                    contactStore?.draft();
+                    contactStore?.value.organizations.content.push({
+                      metadata: {
+                        id: value.value,
+                      } as Metadata,
+                      id: value.value,
+                      name: value.label,
+                    });
+
+                    contactStore?.commit({ syncOnly: true });
+
+                    if (contactStore) {
+                      contactStore?.draft();
+
+                      contactStore.value.latestOrganizationWithJobRole = {
+                        organization: {
+                          metadata: {
+                            id: value.value,
+                          } as Metadata,
+                          name: value.label,
+                        },
+                        jobRole: {
+                          id: '',
+                        } as JobRole,
+                      };
+                    }
+
+                    contactStore?.commit();
+
+                    onClose();
+                  }}
+                />
+              </PopoverContent>
+            </Popover>
+          </ModalBody>
+          <ModalFooter className='flex gap-4'>
+            <Button
+              variant='outline'
+              className='w-full'
+              onClick={() => onClose()}
+            >
+              Cancel
+            </Button>
+            <Button className='w-full' colorScheme='primary'>
+              Change organization
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+    );
+  },
+);

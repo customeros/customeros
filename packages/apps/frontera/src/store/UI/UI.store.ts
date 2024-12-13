@@ -20,7 +20,6 @@ export class UIStore {
   isFilteringICP: boolean = false;
   isEditingTableCell: boolean = false;
   dirtyEditor: string | null = null;
-  openEmailEditor: boolean = false;
   activeConfirmation: string | null = null;
   contactPreviewCardOpen: boolean = false;
   movedIcpOrganization: number = 0;
@@ -117,10 +116,6 @@ export class UIStore {
 
   setSelectionId(value: number | null) {
     this.selectionId = value;
-  }
-
-  setOpenEmailEditor(value: boolean) {
-    this.openEmailEditor = value;
   }
 
   setEmailAdress(value: string) {

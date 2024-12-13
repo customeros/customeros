@@ -19,13 +19,9 @@ query contacts($pagination: Pagination!) {
       tags {
         metadata {
           id
-          source
-          sourceOfTruth
-          appSource
-          created
-          lastUpdated
         }
         name
+        entityType
       }
       updatedAt
       createdAt
@@ -45,6 +41,7 @@ query contacts($pagination: Pagination!) {
           id
         }
         name
+        entityType
       }
       primaryEmail {
         id

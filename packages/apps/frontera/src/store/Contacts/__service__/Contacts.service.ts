@@ -310,6 +310,7 @@ class ContactService {
 
       return;
     }
+
     match(path)
       .with(['latestOrganizationWithJobRole', ...P.array()], () => {
         this.linkOrganization({
@@ -444,7 +445,6 @@ class ContactService {
             input: {
               contactId: contactId!,
               tag: {
-                id: value.id,
                 name: value.name,
               },
             },
@@ -456,7 +456,7 @@ class ContactService {
             this.removeTagsFromContact({
               input: {
                 contactId: contactId!,
-                tag: { id: oldValue },
+                tag: { name: oldValue.name },
               },
             });
           }
@@ -470,7 +470,6 @@ class ContactService {
                 input: {
                   contactId: contactId!,
                   tag: {
-                    id: tag.metadata.id,
                     name: tag.name,
                   },
                 },
@@ -480,7 +479,7 @@ class ContactService {
 
           if (oldValue) {
             this.removeTagsFromContact({
-              input: { contactId: contactId!, tag: { id: oldValue } },
+              input: { contactId: contactId!, tag: { name: oldValue.name } },
             });
           }
         }

@@ -3,7 +3,6 @@ import { useParams } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
 
-import { Contact } from '@graphql/types';
 import { Button } from '@ui/form/Button/Button';
 import { IconButton } from '@ui/form/IconButton';
 import { Users03 } from '@ui/media/icons/Users03';
@@ -12,7 +11,6 @@ import { UsersPlus } from '@ui/media/icons/UsersPlus';
 import { Spinner } from '@ui/feedback/Spinner/Spinner';
 import { OrganizationPanel } from '@organization/components/Tabs/shared/OrganizationPanel/OrganizationPanel';
 
-import { ContactCard } from './components/ContactCard/ContactCard';
 import { ContactCardv2 } from './components/ContactCard/ContactCardv2';
 import { CreateNewContactModal } from './components/CreateNewContactModal';
 
@@ -98,12 +96,16 @@ export const PeoplePanel = observer(() => {
       )}
       {!!contacts.length &&
         contacts.map((contact) => (
-          <div style={{ width: '100%' }} key={contact?.metadata?.id}>
-            <ContactCard
+          <div
+            className='group/card'
+            style={{ width: '100%' }}
+            key={contact?.metadata?.id}
+          >
+            {/* <ContactCard
               id={contact?.metadata?.id}
               contact={contact as Contact}
               organizationName={organization?.value.name}
-            />
+            /> */}
             <ContactCardv2 id={contact.metadata.id} />
           </div>
         ))}

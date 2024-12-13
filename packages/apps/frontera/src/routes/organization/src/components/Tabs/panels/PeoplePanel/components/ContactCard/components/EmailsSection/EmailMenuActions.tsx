@@ -5,6 +5,7 @@ import { Copy01 } from '@ui/media/icons/Copy01';
 import { Star01 } from '@ui/media/icons/Star01';
 import { Send03 } from '@ui/media/icons/Send03';
 import { IconButton } from '@ui/form/IconButton';
+import { useEvent } from '@shared/hooks/useEvent';
 import { useStore } from '@shared/hooks/useStore';
 import { Archive } from '@ui/media/icons/Archive';
 import { Stars02 } from '@ui/media/icons/Stars02';
@@ -25,6 +26,10 @@ export const EmailMenuActions = observer(
   ({ contactId, idx, email }: EmailMenuActionsProps) => {
     const store = useStore();
     const [_, copyToClipboard] = useCopyToClipboard();
+
+    const { dispatchEvent } = useEvent<{ email: string; openEditor: string }>(
+      'openEmailEditor',
+    );
 
     const contactStore = store.contacts.value.get(contactId);
 
@@ -80,8 +85,7 @@ export const EmailMenuActions = observer(
           <MenuItem
             className='group/send-email'
             onClick={() => {
-              store.ui.setOpenEmailEditor(true);
-              store.ui.setEmailAdress(email);
+              dispatchEvent({ email: email, openEditor: 'email' });
             }}
           >
             <Send03 className='text-gray-500 group-hover/send-email:text-gray-700' />

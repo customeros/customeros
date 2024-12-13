@@ -3,7 +3,7 @@ export function getTimezone(timeZone: string): string {
     timeZone: timeZone,
     hour: '2-digit',
     minute: '2-digit',
-    hour12: true,
+    hour12: false,
   };
 
   const currentDate = new Date();

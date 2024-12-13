@@ -6,6 +6,7 @@ import { observer } from 'mobx-react-lite';
 import { Button } from '@ui/form/Button/Button';
 import { Mail01 } from '@ui/media/icons/Mail01';
 import { useStore } from '@shared/hooks/useStore';
+import { useEvent } from '@shared/hooks/useEvent';
 import { AlarmClockPlus } from '@ui/media/icons/AlarmClockPlus';
 import { MessageChatSquare } from '@ui/media/icons/MessageChatSquare';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog/ConfirmDeleteDialog';
@@ -27,7 +28,9 @@ export const TimelineActionButtons = observer(
     const store = useStore();
     const { id } = useParams();
     const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-
+    const [openEmailEditor, setOpenEmailEditor] = useState<EditorType | null>(
+      null,
+    );
     const {
       checkCanExitSafely,
       showLogEntryConfirmationDialog,
@@ -42,6 +45,10 @@ export const TimelineActionButtons = observer(
     } = useTimelineActionEmailContext();
     const { openedEditor, showEditor } = useTimelineActionContext();
     const [openOnConfirm, setOpenOnConfirm] = useState<null | EditorType>(null);
+
+    useEvent<{ openEditor: EditorType }>('openEmailEditor', (payload) => {
+      setOpenEmailEditor(payload.openEditor);
+    });
 
     useEffect(() => {
       return () => {
@@ -125,10 +132,10 @@ export const TimelineActionButtons = observer(
     const handleEmail = () => {
       if (store.ui.dirtyEditor !== null) {
         store.ui.confirmAction(store.ui.dirtyEditor, toggleEmailEditor);
-        store.ui.setOpenEmailEditor(false);
+        setOpenEmailEditor(null);
       } else {
         toggleEmailEditor();
-        store.ui.setOpenEmailEditor(false);
+        setOpenEmailEditor(null);
       }
     };
 
@@ -152,9 +159,7 @@ export const TimelineActionButtons = observer(
             dataTest='timeline-email-button'
             leftIcon={<Mail01 color='inherit' />}
             colorScheme={
-              openedEditor === 'email' || store.ui.openEmailEditor
-                ? 'primary'
-                : 'gray'
+              openedEditor === 'email' || !!openEmailEditor ? 'primary' : 'gray'
             }
           >
             Email
