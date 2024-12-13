@@ -1,5 +1,6 @@
 extend type Query {
     ui_contacts(ids: [ID!]): [ContactUiDetails!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    ui_contacts_search(limit: Int, where: Filter, sort: SortBy): ContactSearchResult! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type ContactUiDetails {
@@ -22,4 +23,10 @@ type ContactUiDetails {
     linkedInFollowerCount:  Int64
 
     tags:                   [Tag!]!
+}
+
+type ContactSearchResult{
+    ids:            [ID!]!
+    totalElements:  Int64! # length of the id array
+    totalAvailable: Int64! # everyting in db
 }
