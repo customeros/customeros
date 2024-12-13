@@ -13,10 +13,10 @@ import (
 )
 
 type FlowActionRegistryRepository interface {
-	InitializeActions(ctx context.Context) error
-	FindFlowAction(ctx context.Context, actionName string) (entity.FlowActionRegistry, error)
-	CreateFlowAction(ctx context.Context, action *entity.FlowActionRegistry) error
-	GetAllFlowActions(ctx context.Context) ([]entity.FlowActionRegistry, error)
+	Initialize(ctx context.Context) error
+	Create(ctx context.Context, flowAction entity.FlowActionRegistry) (*entity.FlowActionRegistry, error)
+	Find(ctx context.Context, flowAction entity.FlowActionRegistry) (*entity.FlowActionRegistry, error)
+	FindAll(ctx context.Context) (*[]entity.FlowActionRegistry, error)
 }
 
 type flowActionRegistryRepository struct {
@@ -27,8 +27,8 @@ func NewFlowActionRegistryRepository(gormDb *gorm.DB) FlowActionRegistryReposito
 	return &flowActionRegistryRepository{gormDb: gormDb}
 }
 
-func (r *flowActionRegistryRepository) GetAllFlowActions(ctx context.Context) ([]entity.FlowActionRegistry, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionRegistryRepository.GetAllFlowActions")
+func (r *flowActionRegistryRepository) FindAll(ctx context.Context) (*[]entity.FlowActionRegistry, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionRegistryRepository.FindAll")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
@@ -37,41 +37,55 @@ func (r *flowActionRegistryRepository) GetAllFlowActions(ctx context.Context) ([
 		Where("enabled = true").
 		Order("action DESC").
 		Find(&actions).Error
-
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		err = nil
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
 	}
 
-	return actions, err
+	return &actions, nil
 }
 
-func (r *flowActionRegistryRepository) FindFlowAction(ctx context.Context, actionName string) (entity.FlowActionRegistry, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionRegistryRepository.FindFlowAction")
+func (r *flowActionRegistryRepository) Find(ctx context.Context, flowAction entity.FlowActionRegistry) (*entity.FlowActionRegistry, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionRegistryRepository.Find")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
 	var action entity.FlowActionRegistry
-	err := r.gormDb.WithContext(ctx).
-		Where("action = ? AND enabled = true", actionName).
-		First(&action).Error
+	query := r.gormDb.WithContext(ctx).Where("enabled = ?", true)
 
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		err = nil
+	// Add additional filters based on non-zero fields in flowAction
+	if flowAction != (entity.FlowActionRegistry{}) {
+		query = query.Where(&flowAction)
 	}
 
-	return action, err
+	err := query.First(&action).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return &action, nil
 }
 
-func (r *flowActionRegistryRepository) CreateFlowAction(ctx context.Context, action *entity.FlowActionRegistry) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionRegistryRepository.CreateFlowAction")
+func (r *flowActionRegistryRepository) Create(ctx context.Context, flowAction entity.FlowActionRegistry) (*entity.FlowActionRegistry, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionRegistryRepository.Create")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	return r.gormDb.WithContext(ctx).Create(action).Error
+	err := r.gormDb.WithContext(ctx).Create(&flowAction).Error
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return &flowAction, nil
 }
 
-func (r *flowActionRegistryRepository) InitializeActions(ctx context.Context) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionRegistryRepository.InitializeActions")
+func (r *flowActionRegistryRepository) Initialize(ctx context.Context) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionRegistryRepository.Initialize")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
@@ -122,7 +136,7 @@ func (r *flowActionRegistryRepository) InitializeActions(ctx context.Context) er
 	}
 
 	for _, action := range requiredActions {
-		existingAction, err := r.FindFlowAction(ctx, action.Action)
+		existingAction, err := r.Find(ctx, action)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
@@ -132,7 +146,7 @@ func (r *flowActionRegistryRepository) InitializeActions(ctx context.Context) er
 			continue
 		}
 
-		createErr := r.CreateFlowAction(ctx, &action)
+		_, createErr := r.Create(ctx, action)
 		if err != nil {
 			tracing.TraceErr(span, createErr)
 			return createErr

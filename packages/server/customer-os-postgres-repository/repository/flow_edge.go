@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -13,6 +14,9 @@ import (
 type FlowEdgeRepository interface {
 	Create(ctx context.Context, flowEdge entity.FlowEdge) (*entity.FlowEdge, error)
 	FindAll(ctx context.Context, flowEdge entity.FlowEdge) (*[]entity.FlowEdge, error)
+	Find(ctx context.Context, flowEdge entity.FlowEdge) (*entity.FlowEdge, error)
+	Update(ctx context.Context, flowEdge entity.FlowEdge) (*entity.FlowEdge, error)
+	Delete(ctx context.Context, flowEdge entity.FlowEdge) error
 }
 
 type flowEdgeRepository struct {
@@ -28,7 +32,7 @@ func (f *flowEdgeRepository) Create(ctx context.Context, flowEdge entity.FlowEdg
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	flowEdge.ID = utils.GenerateNanoIdWithPrefix("edge")
+	flowEdge.ID = utils.GenerateNanoIdWithPrefix("edge", 16)
 
 	err := f.gormDb.Create(&flowEdge).Error
 	if err != nil {
@@ -38,7 +42,7 @@ func (f *flowEdgeRepository) Create(ctx context.Context, flowEdge entity.FlowEdg
 }
 
 func (f *flowEdgeRepository) FindAll(ctx context.Context, flowEdge entity.FlowEdge) (*[]entity.FlowEdge, error) {
-	span, ctx := tracing.StartTracerSpan(ctx, "FlowEdgeRepository.FindEdges")
+	span, ctx := tracing.StartTracerSpan(ctx, "FlowEdgeRepository.FindAll")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
@@ -51,4 +55,65 @@ func (f *flowEdgeRepository) FindAll(ctx context.Context, flowEdge entity.FlowEd
 		return nil, err
 	}
 	return &results, nil
+}
+
+func (f *flowEdgeRepository) Find(ctx context.Context, flowEdge entity.FlowEdge) (*entity.FlowEdge, error) {
+	span, ctx := tracing.StartTracerSpan(ctx, "FlowEdgeRepository.Find")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	var result entity.FlowEdge
+	err := f.gormDb.
+		Where(&flowEdge).
+		First(&result).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return &result, nil
+}
+
+func (f *flowEdgeRepository) Update(ctx context.Context, flowEdge entity.FlowEdge) (*entity.FlowEdge, error) {
+	span, ctx := tracing.StartTracerSpan(ctx, "FlowEdgeRepository.Update")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	if flowEdge.ID == "" {
+		err := errors.New("ID is missing")
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	var updatedEdge entity.FlowEdge
+	err := f.gormDb.Model(&flowEdge).Updates(&flowEdge).First(&updatedEdge).Error
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return &updatedEdge, nil
+}
+
+func (f *flowEdgeRepository) Delete(ctx context.Context, flowEdge entity.FlowEdge) error {
+	span, ctx := tracing.StartTracerSpan(ctx, "FlowEdgeRepository.Delete")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	if flowEdge.ID == "" {
+		err := errors.New("ID is missing")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	err := f.gormDb.Delete(&flowEdge).Error
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	return nil
 }

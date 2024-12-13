@@ -9,7 +9,7 @@ import (
 
 type FlowWebhooks struct {
 	ID            uint64    `gorm:"primaryKey;autoIncrement" json:"id"`
-	TenantName    string    `gorm:"column:tenant_name;type:varchar(255);not null;index" json:"tenantName" binding:"required"`
+	Tenant        string    `gorm:"column:tenant;type:varchar(255);not null;index" json:"tenant" binding:"required"`
 	CreatedAt     time.Time `gorm:"column:created_at;type:timestamp;default:current_timestamp" json:"createdAt"`
 	UpdatedAt     time.Time `gorm:"column:updated_at;type:timestamp" json:"updatedAt"`
 	WebhookPath   string    `gorm:"column:webhook_path;type:varchar(255);not null" json:"webhookPath" binding:"required"`
@@ -25,12 +25,12 @@ func (FlowWebhooks) TableName() string {
 
 func (FlowWebhooks) UniqueIndex() [][]string {
 	return [][]string{
-		{"tenant_name", "integration"},
+		{"tenant", "integration"},
 	}
 }
 
 func (fw *FlowWebhooks) BeforeCreate(*gorm.DB) error {
-	if fw.TenantName == "" {
+	if fw.Tenant == "" {
 		return errors.New("tenant name is required")
 	}
 	fw.CreatedAt = time.Now()
@@ -48,8 +48,8 @@ func (fw *FlowWebhooks) BeforeUpdate(*gorm.DB) error {
 }
 
 func (fw *FlowWebhooks) Validate() error {
-	if fw.TenantName == "" {
-		return errors.New("tenant name is required")
+	if fw.Tenant == "" {
+		return errors.New("tenant is required")
 	}
 	if fw.Integration == "" {
 		return errors.New("integration is required")

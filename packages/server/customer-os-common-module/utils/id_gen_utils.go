@@ -14,9 +14,9 @@ func GenerateHashId(s string, length int) string {
 	return hex.EncodeToString(h.Sum(nil))[:length]
 }
 
-func GenerateNanoIdWithPrefix(s string) string {
+func GenerateNanoIdWithPrefix(s string, length int) string {
 	alphabet := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-	id, err := gonanoid.Generate(alphabet, 21)
+	id, err := gonanoid.Generate(alphabet, length)
 	if err != nil {
 		panic(err)
 	}

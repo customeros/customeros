@@ -27,9 +27,9 @@ func HandleMeetingSummaryEvent(ctx context.Context, s *service.Services, sourceE
 	tracing.LogObjectAsJson(span, "eventData", eventData)
 
 	// check to see if tenant has flows configured for this event
-	flows, err := s.WorkflowService.GetWorkflowsByListenerEvent(ctx, sourceEvent)
+	flows, err := s.WorkflowService.GetFlowsByTrigger(ctx, sourceEvent)
 	// send to dead events if no flows configured to receive event
-	if err != nil || len(flows) == 0 {
+	if err != nil || len(*flows) == 0 {
 		err := sendToDeadEvents(ctx, s, sourceEvent, eventData)
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -39,17 +39,17 @@ func HandleMeetingSummaryEvent(ctx context.Context, s *service.Services, sourceE
 	}
 
 	var errs error
-	for _, flow := range flows {
+	for _, flow := range *flows {
 		// get next action on the flow
-		nextFlowAction, nextFlowNodeId, err := s.WorkflowService.GetFirstAction(ctx, &flow)
+		nextStep, err := s.WorkflowService.GetNextStepInFlow(ctx, flow.ID, flow.TriggerNodeID)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			errs = multierr.Append(errs, fmt.Errorf("failed to get first action for flow %s: %w", flow.ID, err))
+			errs = multierr.Append(errs, fmt.Errorf("failed to get next step for flow %s: %w", flow.ID, err))
 			continue
 		}
 
 		// validate the transition to next action
-		validAction, err := s.WorkflowService.IsFlowActionValidTransitionFromListener(ctx, sourceEvent, nextFlowAction)
+		validAction, err := s.WorkflowService.ValidateTransition(ctx, flow.TriggerNodeID, nextStep.ToNodeID)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			errs = multierr.Append(errs, fmt.Errorf("failed to validate transition for flow %s: %w", flow.ID, err))
@@ -63,10 +63,10 @@ func HandleMeetingSummaryEvent(ctx context.Context, s *service.Services, sourceE
 		}
 
 		// prepare and send event to action executioner
-		switch nextFlowAction {
+		switch nextStep.ToNodeAction {
 		case commonEnum.ActionTimelineEventCreate:
-			if err := publishTimelineEventCreateEvent(ctx, s, flow.Status.String(), flow.ID,
-				nextFlowNodeId, eventData, sourceEvent); err != nil {
+			if err := publishTimelineEventCreateEvent(ctx, s, flow.Status, flow.ID,
+				nextStep.ToNodeID, eventData, sourceEvent); err != nil {
 				tracing.TraceErr(span, err)
 				errs = multierr.Append(errs, fmt.Errorf("failed to send timeline event for flow %s: %w", flow.ID, err))
 			}
@@ -95,13 +95,13 @@ func publishTimelineEventCreateEvent(
 	}
 
 	// save flow execution record
-	flowExecutionID, err := s.PostgresRepositories.FlowExecutionRepository.Save(ctx, record)
+	flowExecutionRecord, err := s.WorkflowService.SaveFlowExecutionRecord(ctx, record)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 
-	executionStatus, err := commonEnum.GetFlowExecutionStatus(record.Status)
+	executionStatus, err := commonEnum.GetFlowExecutionStatus(flowExecutionRecord.Status)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -113,7 +113,7 @@ func publishTimelineEventCreateEvent(
 	}
 
 	// process action execution event
-	if err := processActionExecutionEvent(ctx, s, sourceEvent, flowExecutionID, eventData); err != nil {
+	if err := processActionExecutionEvent(ctx, s, sourceEvent, flowExecutionRecord.ID, eventData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to publish markdown event"))
 		return err
 	}
