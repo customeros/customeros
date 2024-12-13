@@ -8,7 +8,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
@@ -49,18 +48,26 @@ func GetTransitions(s *service.Services) gin.HandlerFunc {
 		}
 
 		// Get query params
-		from := c.Query("from")
+		from := c.Query("fromNode")
 		query := entity.FlowTransitionsRegistry{
-			FromNodeType: from,
+			FromNode: from,
 		}
 
-		allfromNodes, err := s.Repositories.PostgresRepositories.FlowTransitionsRegistryRepository.FindAll(ctx, &query)
+		var transitions *[]entity.FlowTransitionsRegistry
+		var err error
+
+		if from == "" {
+			transitions, err = s.Repositories.PostgresRepositories.FlowTransitionsRegistryRepository.FindAll(ctx, nil)
+		} else {
+			transitions, err = s.Repositories.PostgresRepositories.FlowTransitionsRegistryRepository.FindAll(ctx, &query)
+		}
 		if err != nil {
 			tracing.TraceErr(span, err)
 			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer)
 			return
 		}
-		results := buildTransitionRecords(ctx, span, s, allFromNodes)
+
+		results := buildTransitionRecords(ctx, span, s, transitions)
 
 		if len(results) == 1 {
 			c.JSON(http.StatusOK, FlowTransitionSingleResponse{
@@ -80,9 +87,9 @@ func GetTransitions(s *service.Services) gin.HandlerFunc {
 func buildTransitionRecords(ctx context.Context, span opentracing.Span, s *service.Services,
 	allFromNodes *[]entity.FlowTransitionsRegistry,
 ) []FlowTransitionRecord {
-	results := make([]FlowTransitionRecord, len(allFromNodes))
+	results := make([]FlowTransitionRecord, len(*allFromNodes))
 
-	for i, from := range allFromNodes {
+	for i, from := range *allFromNodes {
 		record := FlowTransitionRecord{
 			Step: from.FromNode,
 			Type: from.FromNodeType,
@@ -94,14 +101,16 @@ func buildTransitionRecords(ctx context.Context, span opentracing.Span, s *servi
 			continue
 		}
 
-		allNextSteps, err := s.Repositories.PostgresRepositories.FlowTransitionsRegistryRepository.GetFlowTransitionsByNode(ctx, enumType)
+		allNextSteps, err := s.Repositories.PostgresRepositories.FlowTransitionsRegistryRepository.FindAll(ctx, &entity.FlowTransitionsRegistry{
+			FromNodeType: enumType.String(),
+		})
 		if err != nil {
 			tracing.TraceErr(span, err)
 			continue
 		}
 
-		nextSteps := make([]NextStepRecord, len(allNextSteps))
-		for i, next := range allNextSteps {
+		nextSteps := make([]NextStepRecord, len(*allNextSteps))
+		for i, next := range *allNextSteps {
 			nextSteps[i] = NextStepRecord{
 				Step: next.ToNode,
 				Type: next.ToNodeType,

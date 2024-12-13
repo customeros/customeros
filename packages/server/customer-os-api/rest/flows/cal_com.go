@@ -11,10 +11,13 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	commontracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/pkg/errors"
 
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
@@ -53,8 +56,14 @@ func CalDotCom(c *gin.Context, s *service.Services) {
 		return
 	}
 
+	// update context with tenant, pass this where tenant is needed
+	ctx = common.WithCustomContext(ctx, &common.CustomContext{
+		Tenant:    tenant,
+		AppSource: constants.AppSourceCustomerOsApiRest,
+	})
+
 	// lookup secret
-	webhook, err := s.Repositories.PostgresRepositories.FlowWebhooksRepository.FindWebhookByPath(ctx, tenant, c.Request.URL.Path)
+	webhook, err := s.Repositories.PostgresRepositories.FlowWebhooksRepository.Find(ctx, entity.FlowWebhooks{WebhookPath: c.Request.URL.Path})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		rest.SendError(c, span, http.StatusInternalServerError, rest.ErrNotFound)
