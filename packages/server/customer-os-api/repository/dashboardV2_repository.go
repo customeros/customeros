@@ -96,7 +96,7 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 				createInOrEmptyStringFilter(filter, organizationFilter, "derivedRenewalLikelihood")
 			}
 			if filter.Filter.Property == model.ColumnViewTypeOrganizationsRenewalDate.String() {
-				createBetweenOrEmptyTimeFilter(filter, organizationFilter, "derivedNextRenewalAt")
+				createTimeFilter(filter, organizationFilter, "derivedNextRenewalAt")
 			}
 			if filter.Filter.Property == model.ColumnViewTypeOrganizationsForecastArr.String() {
 				createNumberCypherFilter(filter, organizationFilter, "renewalForecastArr")
@@ -108,7 +108,7 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 				createInOrEmptyStringFilter(filter, organizationFilter, "lastTouchpointType")
 			}
 			if filter.Filter.Property == model.ColumnViewTypeOrganizationsLastTouchpointDate.String() {
-				createBetweenOrEmptyTimeFilter(filter, organizationFilter, "lastTouchpointAt")
+				createTimeFilter(filter, organizationFilter, "lastTouchpointAt")
 			}
 			if filter.Filter.Property == model.ColumnViewTypeOrganizationsStage.String() {
 				createInOrEmptyStringFilter(filter, organizationFilter, "stage")
@@ -120,7 +120,7 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateStringCypherFilter("leadSource", filter.Filter.Value.Str, filter.Filter.Operation))
 			}
 			if filter.Filter.Property == model.ColumnViewTypeOrganizationsCreatedDate.String() {
-				createBetweenOrEmptyTimeFilter(filter, organizationFilter, "createdAt")
+				createTimeFilter(filter, organizationFilter, "createdAt")
 			}
 			if filter.Filter.Property == model.ColumnViewTypeOrganizationsEmployeeCount.String() {
 				createNumberCypherFilter(filter, organizationFilter, "employees")
@@ -132,7 +132,7 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateStringCypherFilter("industry", filter.Filter.Value.Str, filter.Filter.Operation))
 			}
 			if filter.Filter.Property == model.ColumnViewTypeOrganizationsChurnDate.String() {
-				createBetweenOrEmptyTimeFilter(filter, organizationFilter, "derivedChurnedAt")
+				createTimeFilter(filter, organizationFilter, "derivedChurnedAt")
 			}
 			if filter.Filter.Property == model.ColumnViewTypeOrganizationsLtv.String() {
 				createNumberCypherFilter(filter, organizationFilter, "derivedLtv")
@@ -156,7 +156,7 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 				parentOrganizationFilter.Filters = append(parentOrganizationFilter.Filters, utils.CreateStringCypherFilter("name", filter.Filter.Value.Str, filter.Filter.Operation))
 			}
 			if filter.Filter.Property == model.ColumnViewTypeOrganizationsUpdatedDate.String() {
-				createBetweenOrEmptyTimeFilter(filter, organizationFilter, "updatedAt")
+				createTimeFilter(filter, organizationFilter, "updatedAt")
 			}
 		}
 
@@ -354,9 +354,9 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 	}
 	if sort != nil && sort.By == model.ColumnViewTypeOrganizationsLastTouchpoint.String() {
 		if sort.Direction == commonmodel.SortingDirectionAsc {
-			aliases += "CASE WHEN o.lastTouchpointType <> \"\" and not o.lastTouchpointType is null THEN toLower(o.lastTouchpointType) ELSE 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz' END as SORT_BY "
+			aliases += "CASE WHEN o.lastTouchpointAt <> \"\" and not o.lastTouchpointAt is null THEN o.lastTouchpointAt ELSE datetime({year:2100}) END as SORT_BY "
 		} else {
-			aliases += "CASE WHEN o.lastTouchpointType <> \"\" and not o.lastTouchpointType is null THEN toLower(o.lastTouchpointType) ELSE '' END as SORT_BY "
+			aliases += "CASE WHEN o.lastTouchpointAt <> \"\" and not o.lastTouchpointAt is null THEN o.lastTouchpointAt ELSE datetime({year:1900}) END as SORT_BY "
 		}
 	}
 	if sort != nil && sort.By == model.ColumnViewTypeOrganizationsLastTouchpointDate.String() {
@@ -630,13 +630,21 @@ func createInOrEmptyStringFilter(filter *model.Filter, cypherFilter *utils.Cyphe
 	}
 }
 
-func createBetweenOrEmptyTimeFilter(filter *model.Filter, cypherFilter *utils.CypherFilter, neo4jProperty string) {
+func createTimeFilter(filter *model.Filter, cypherFilter *utils.CypherFilter, neo4jProperty string) {
 	if filter.Filter.Operation == commonmodel.ComparisonOperatorBetween && filter.Filter.Value.ArrayTime != nil && len(*filter.Filter.Value.ArrayTime) == 2 {
 		times := *filter.Filter.Value.ArrayTime
 		cypherFilter.Filters = append(cypherFilter.Filters, utils.CreateCypherFilter(neo4jProperty, times[0], commonmodel.ComparisonOperatorGte))
 		cypherFilter.Filters = append(cypherFilter.Filters, utils.CreateCypherFilter(neo4jProperty, times[1], commonmodel.ComparisonOperatorLte))
 	} else if filter.Filter.Operation == commonmodel.ComparisonOperatorIsEmpty {
 		cypherFilter.Filters = append(cypherFilter.Filters, utils.CreateCypherFilter(neo4jProperty, nil, commonmodel.ComparisonOperatorIsEmpty))
+	} else if filter.Filter.Operation == commonmodel.ComparisonOperatorGte && filter.Filter.Value.Time != nil {
+		cypherFilter.Filters = append(cypherFilter.Filters, utils.CreateCypherFilter(neo4jProperty, *filter.Filter.Value.Time, commonmodel.ComparisonOperatorGte))
+	} else if filter.Filter.Operation == commonmodel.ComparisonOperatorGt && filter.Filter.Value.Time != nil {
+		cypherFilter.Filters = append(cypherFilter.Filters, utils.CreateCypherFilter(neo4jProperty, *filter.Filter.Value.Time, commonmodel.ComparisonOperatorGt))
+	} else if filter.Filter.Operation == commonmodel.ComparisonOperatorLte && filter.Filter.Value.Time != nil {
+		cypherFilter.Filters = append(cypherFilter.Filters, utils.CreateCypherFilter(neo4jProperty, *filter.Filter.Value.Time, commonmodel.ComparisonOperatorLte))
+	} else if filter.Filter.Operation == commonmodel.ComparisonOperatorLt && filter.Filter.Value.Time != nil {
+		cypherFilter.Filters = append(cypherFilter.Filters, utils.CreateCypherFilter(neo4jProperty, *filter.Filter.Value.Time, commonmodel.ComparisonOperatorLt))
 	}
 }
 
