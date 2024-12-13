@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"log"
 	"net/http"
 	"strings"
@@ -23,17 +22,19 @@ import (
 	commonUtils "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/service"
-	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/utils"
 	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	tokenOauth "golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	googleOauth "google.golang.org/api/oauth2/v2"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/utils"
 )
 
 func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services *service.Services) {
@@ -58,6 +59,11 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 					"result": fmt.Sprintf("unable to parse json: %v", err.Error()),
 				})
 				return
+			}
+
+			saveErr := saveIP(ginContext, services, signInRequest.LoggedInEmail)
+			if saveErr != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "unable to save IP address"))
 			}
 
 			span.LogFields(tracingLog.Object("request", signInRequest))
@@ -113,7 +119,7 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 				if isNewTenant {
 					domain := commonUtils.ExtractDomain(signInRequest.LoggedInEmail)
 					isPersonalEmail := false
-					//check if the user is using a personal email provider
+					// check if the user is using a personal email provider
 					for _, personalEmailProviderItem := range personalEmailProviders {
 						domainLowercase := strings.ToLower(strings.TrimSpace(domain))
 						personalEmailProviderDomainLowercase := strings.ToLower(strings.TrimSpace(personalEmailProviderItem.ProviderDomain))
@@ -168,17 +174,12 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 				tenantName = &signInRequest.Tenant
 			}
 
-			saveErr := saveIP(ginContext, services, signInRequest.LoggedInEmail)
-			if saveErr != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "unable to save IP address"))
-			}
-
 			span.SetTag(tracing.SpanTagTenant, *tenantName)
 
 			// Handle Google provider
 			if signInRequest.Provider == "google" {
 				if isRequestEnablingOAuthSync(signInRequest) {
-					var oauthToken, _ = services.CommonServices.PostgresRepositories.OAuthTokenRepository.GetByEmail(ctx, *tenantName, signInRequest.Provider, signInRequest.OAuthTokenForEmail)
+					oauthToken, _ := services.CommonServices.PostgresRepositories.OAuthTokenRepository.GetByEmail(ctx, *tenantName, signInRequest.Provider, signInRequest.OAuthTokenForEmail)
 					if oauthToken == nil {
 						oauthToken = &postgresEntity.OAuthTokenEntity{}
 					}
@@ -209,7 +210,7 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 					}
 				}
 			} else if signInRequest.Provider == "azure-ad" {
-				var oauthToken, _ = services.CommonServices.PostgresRepositories.OAuthTokenRepository.GetByEmail(ctx, *tenantName, signInRequest.Provider, signInRequest.OAuthTokenForEmail)
+				oauthToken, _ := services.CommonServices.PostgresRepositories.OAuthTokenRepository.GetByEmail(ctx, *tenantName, signInRequest.Provider, signInRequest.OAuthTokenForEmail)
 				if oauthToken == nil {
 					oauthToken = &postgresEntity.OAuthTokenEntity{}
 				}
@@ -260,7 +261,7 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 			}
 			log.Printf("parsed json: %v", revokeRequest)
 
-			var oauthToken, _ = services.CommonServices.PostgresRepositories.OAuthTokenRepository.GetByEmail(ctx, revokeRequest.Tenant, revokeRequest.Provider, revokeRequest.Email)
+			oauthToken, _ := services.CommonServices.PostgresRepositories.OAuthTokenRepository.GetByEmail(ctx, revokeRequest.Tenant, revokeRequest.Provider, revokeRequest.Email)
 
 			if oauthToken != nil && oauthToken.RefreshToken != "" {
 				// Handle revocation based on provider
@@ -305,7 +306,7 @@ func getTenant(c context.Context, services *service.Services, personalEmailProvi
 	span.LogFields(tracingLog.String("domain", domain))
 
 	isPersonalEmail := false
-	//check if the user is using a personal email provider
+	// check if the user is using a personal email provider
 	for _, personalEmailProviderItem := range personalEmailProvider {
 		domainLowercase := strings.ToLower(strings.TrimSpace(domain))
 		personalEmailProviderDomainLowercase := strings.ToLower(strings.TrimSpace(personalEmailProviderItem.ProviderDomain))
@@ -363,7 +364,7 @@ func getTenant(c context.Context, services *service.Services, personalEmailProvi
 			return &tenant.Name, false, nil
 		}
 
-		//tenant not found by the requested login info, try to find it by another workspace with the same domain
+		// tenant not found by the requested login info, try to find it by another workspace with the same domain
 		var provider string
 		if signInRequest.Provider == "google" {
 			provider = "azure-ad"
@@ -496,7 +497,6 @@ func getUserInfoFromGoogle(c context.Context, config *config.Config, signInReque
 	client := conf.Client(ctx, &token)
 
 	oauth2Service, err := googleOauth.New(client)
-
 	if err != nil {
 		tracing.TraceErr(nil, err)
 		return nil, err
@@ -729,7 +729,7 @@ func registerNewTenantAsLeadInProviderTenant(ctx context.Context, config *config
 	span.LogFields(tracingLog.String("providerOrganizationId", *organizationId))
 	span.LogFields(tracingLog.String("providerContactId", *contactId))
 
-	//TODO EDI - send welcome email
+	// TODO EDI - send welcome email
 
 	//	type EmailPayload struct {
 	//		Channel   string   `json:"channel"`
@@ -806,7 +806,7 @@ func registerNewTenantAsLeadInProviderTenant(ctx context.Context, config *config
 	//	return err
 	//}
 
-	//body := bytes.NewBuffer(payloadBytes)
+	// body := bytes.NewBuffer(payloadBytes)
 
 	// Create new request
 	//req, err := http.NewRequest(method, url+"/mail/send", body)
@@ -850,7 +850,7 @@ func registerNewTenantAsLeadInProviderTenant(ctx context.Context, config *config
 	//	return fmt.Errorf("error: %v", mapBody["error"])
 	//}
 
-	//span.LogFields(tracingLog.Object("email sent: ", mapBody))
+	// span.LogFields(tracingLog.Object("email sent: ", mapBody))
 
 	return nil
 }
@@ -884,12 +884,15 @@ func saveIP(c *gin.Context, s *service.Services, email string) error {
 		return nil
 	}
 
+	website := fmt.Sprintf("https://%s", &validEmail.Domain)
+
 	details := entity.EnrichDetailsTracking{
 		IP:             clientIP,
 		CompanyDomain:  &validEmail.Domain,
-		CompanyWebsite: &validEmail.Domain,
+		CompanyWebsite: &website,
 		SourceEmail:    &validEmail.CleanEmail,
 	}
+	tracing.LogObjectAsJson(span, "ipToEmailDetails", details)
 
 	err := s.CommonServices.PostgresRepositories.EnrichDetailsTrackingRepository.Save(ctx, details)
 	if err != nil {
