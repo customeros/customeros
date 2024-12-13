@@ -2,20 +2,18 @@ package repository
 
 import (
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
-	"strings"
-	"time"
-
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
-
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"strings"
+	"time"
 )
 
 type EmailDeliverableStatus string
@@ -377,7 +375,20 @@ func (r *emailWriteRepository) UnlinkFromContact(ctx context.Context, tx *neo4j.
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id:$contactId})-[rel:HAS]->(e:Email)
 				WHERE e.email = $email OR e.rawEmail = $email
-				DELETE rel`
+				DELETE rel
+				
+				WITH c
+				MATCH (c)-[remainingRel:HAS]->(remainingEmail:Email)
+				
+				WITH c, COLLECT(remainingRel) AS remainingRels
+				WHERE SIZE(remainingRels) > 0
+				
+				WITH c, remainingRels, NONE(rel IN remainingRels WHERE rel.primary = true) AS noPrimary
+				WHERE noPrimary
+
+				FOREACH (rel IN [x IN remainingRels | x][0] |
+    				SET rel.primary = true
+				)`
 	params := map[string]any{
 		"tenant":    tenant,
 		"contactId": contactId,
