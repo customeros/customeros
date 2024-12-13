@@ -1,0 +1,10 @@
+query UiContactsSort($limit: Int!, $sortByField: String!, $sortByDirection: SortingDirection!) {
+  ui_contacts_search(
+    limit: $limit
+    sort: { by: $sortByField, direction: $sortByDirection }
+  ) {
+    ids
+    totalElements
+    totalAvailable
+  }
+}
