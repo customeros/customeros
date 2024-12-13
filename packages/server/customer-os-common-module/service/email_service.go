@@ -29,8 +29,8 @@ type emailService struct {
 
 type EmailService interface {
 	Merge(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, tenant string, emailFields EmailFields, linkWith *LinkWith) (*string, error)
-	ReplaceEmail(ctx context.Context, previousEmail string, emailFields EmailFields, linkWith LinkWith) (*string, error)
-	UnlinkEmail(ctx context.Context, email, appSource string, linkWith LinkWith) error
+	ReplaceEmail(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, previousEmail string, emailFields EmailFields, linkWith LinkWith) (*string, error)
+	UnlinkEmail(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, email, appSource string, linkWith LinkWith) error
 	DeleteOrphanEmail(ctx context.Context, emailId string) error
 	GetAllEmailsForEntityIds(ctx context.Context, tenant string, entityType commonmodel.EntityType, entityIds []string) (*neo4jentity.EmailEntities, error)
 	SetPrimary(ctx context.Context, email string, forEntity LinkWith) error
@@ -128,7 +128,7 @@ func (s *emailService) Merge(ctx context.Context, txWithPostCommit *utils.TxWith
 	return &emailId, nil
 }
 
-func (s *emailService) ReplaceEmail(ctx context.Context, previousEmail string, emailFields EmailFields, linkWith LinkWith) (*string, error) {
+func (s *emailService) ReplaceEmail(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, previousEmail string, emailFields EmailFields, linkWith LinkWith) (*string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.ReplaceEmail")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -141,7 +141,6 @@ func (s *emailService) ReplaceEmail(ctx context.Context, previousEmail string, e
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
-
 	tenant := common.GetTenantFromContext(ctx)
 
 	// check if linkWith is valid
@@ -161,7 +160,7 @@ func (s *emailService) ReplaceEmail(ctx context.Context, previousEmail string, e
 		return nil, nil
 	}
 
-	// check if email is alread linked to other entity of the same type
+	// check if email is already linked to other entity of the same type
 	if linkWith.Type == commonmodel.CONTACT {
 		emailUsed, existingContactId, err := s.services.ContactService.CheckContactExistsWithEmail(ctx, emailFields.Email)
 		if err != nil {
@@ -184,14 +183,23 @@ func (s *emailService) ReplaceEmail(ctx context.Context, previousEmail string, e
 		}
 	}
 
-	if previousEmail != "" {
-		err := s.UnlinkEmail(ctx, previousEmail, emailFields.AppSource, linkWith)
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to unlink email"))
+	var emailId *string
+	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
+		if previousEmail != "" {
+			err = s.UnlinkEmail(ctx, txWithPostCommit, previousEmail, emailFields.AppSource, linkWith)
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "failed to unlink email"))
+			}
 		}
-	}
 
-	return s.Merge(ctx, nil, tenant, emailFields, &linkWith)
+		emailId, err = s.Merge(ctx, txWithPostCommit, tenant, emailFields, &linkWith)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to merge email"))
+		}
+		return nil, err
+	})
+
+	return emailId, err
 }
 
 func (s *emailService) linkEmail(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, emailId, email, appSource string, primary bool, linkWith LinkWith) error {
@@ -276,7 +284,7 @@ func (s *emailService) linkEmail(ctx context.Context, txWithPostCommit *utils.Tx
 			}
 			err = s.services.Neo4jRepositories.EmailWriteRepository.LinkWithContact(ctx, txWithPostCommit.Tx, tenant, linkWith.Id, emailId, primary)
 			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "EmailWriteRepository.LinkWithContact"))
+				tracing.TraceErr(span, err)
 				return nil, err
 			}
 			// reset contact enrich attempts
@@ -319,7 +327,7 @@ func (s *emailService) linkEmail(ctx context.Context, txWithPostCommit *utils.Tx
 	return err
 }
 
-func (s *emailService) UnlinkEmail(ctx context.Context, email, appSource string, linkWith LinkWith) error {
+func (s *emailService) UnlinkEmail(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, email, appSource string, linkWith LinkWith) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.UnlinkEmail")
 	defer span.Finish()
 
@@ -357,38 +365,50 @@ func (s *emailService) UnlinkEmail(ctx context.Context, email, appSource string,
 		return err
 	}
 
-	switch linkWith.Type.String() {
-	case commonmodel.CONTACT.String():
-		err = s.services.Neo4jRepositories.EmailWriteRepository.UnlinkFromContact(ctx, tenant, linkWith.Id, email)
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "EmailWriteRepository.UnlinkFromContact"))
-			return err
-		}
-	case commonmodel.USER.String():
-		err = s.services.Neo4jRepositories.EmailWriteRepository.UnlinkFromUser(ctx, tenant, linkWith.Id, email)
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "EmailWriteRepository.UnlinkFromUser"))
-			return err
+	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
+		switch linkWith.Type.String() {
+		case commonmodel.CONTACT.String():
+			err = s.services.Neo4jRepositories.EmailWriteRepository.UnlinkFromContact(ctx, txWithPostCommit.Tx, tenant, linkWith.Id, email)
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "EmailWriteRepository.UnlinkFromContact"))
+				return nil, err
+			}
+		case commonmodel.USER.String():
+			err = s.services.Neo4jRepositories.EmailWriteRepository.UnlinkFromUser(ctx, txWithPostCommit.Tx, tenant, linkWith.Id, email)
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "EmailWriteRepository.UnlinkFromUser"))
+				return nil, err
+			}
+
+		case commonmodel.ORGANIZATION.String():
+			err = s.services.Neo4jRepositories.EmailWriteRepository.UnlinkFromOrganization(ctx, txWithPostCommit.Tx, tenant, linkWith.Id, email)
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "EmailWriteRepository.UnlinkFromOrganization"))
+				return nil, err
+			}
+		default:
+			tracing.TraceErr(span, errors.New("unsupported linkWith type "+linkWith.Type.String()))
+			return nil, errors.New("unsupported linkWith type " + linkWith.Type.String())
 		}
 
-	case commonmodel.ORGANIZATION.String():
-		err = s.services.Neo4jRepositories.EmailWriteRepository.UnlinkFromOrganization(ctx, tenant, linkWith.Id, email)
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "EmailWriteRepository.UnlinkFromOrganization"))
-			return err
-		}
-	default:
-		tracing.TraceErr(span, errors.New("unsupported linkWith type "+linkWith.Type.String()))
-		return errors.New("unsupported linkWith type " + linkWith.Type.String())
-	}
-	// publish event to rabbit mq
-	err = s.services.RabbitMQService.PublishEvent(ctx, linkWith.Id, linkWith.Type, dto.NewRemoveEmailEvent(email))
+		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
+			// publish event to rabbit mq
+			err = s.services.RabbitMQService.PublishEvent(ctx, linkWith.Id, linkWith.Type, dto.NewRemoveEmailEvent(email))
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message RemoveEmailEvent"))
+			}
+
+			// publish event for completion
+			s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, linkWith.Id, linkWith.Type, utils.NewEventCompletedDetails().WithUpdate())
+
+			return nil
+		})
+
+		return nil, nil
+	})
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message RemoveEmailEvent"))
+		tracing.TraceErr(span, err)
 	}
-
-	// publish event for completion
-	s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, linkWith.Id, linkWith.Type, utils.NewEventCompletedDetails().WithUpdate())
 
 	return err
 }

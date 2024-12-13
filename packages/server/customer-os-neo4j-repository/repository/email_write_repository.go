@@ -39,9 +39,9 @@ type EmailWriteRepository interface {
 	LinkWithContact(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, contactId, emailId string, primary bool) error
 	LinkWithOrganization(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId, emailId string, primary bool) error
 	LinkWithUser(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, userId, emailId string, primary bool) error
-	UnlinkFromUser(ctx context.Context, tenant, usedId, email string) error
-	UnlinkFromContact(ctx context.Context, tenant, contactId, email string) error
-	UnlinkFromOrganization(ctx context.Context, tenant, organizationId, email string) error
+	UnlinkFromUser(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, usedId, email string) error
+	UnlinkFromContact(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, contactId, email string) error
+	UnlinkFromOrganization(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId, email string) error
 	SetDeliverableByEmailForAllTenants(ctx context.Context, email string, deliverable EmailDeliverableStatus) error
 	SetPrimaryForEntity(ctx context.Context, tenant, entityId, email string, entityType model.EntityType) error
 	DeleteOrphanEmail(ctx context.Context, tenant, emailId string) error
@@ -333,7 +333,7 @@ func (r *emailWriteRepository) CleanEmailValidation(ctx context.Context, tenant,
 	return err
 }
 
-func (r *emailWriteRepository) UnlinkFromUser(ctx context.Context, tenant, usedId, email string) error {
+func (r *emailWriteRepository) UnlinkFromUser(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, usedId, email string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailWriteRepository.UnlinkFromUser")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
@@ -353,14 +353,21 @@ func (r *emailWriteRepository) UnlinkFromUser(ctx context.Context, tenant, usedI
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
+
 	return err
 }
 
-func (r *emailWriteRepository) UnlinkFromContact(ctx context.Context, tenant, contactId, email string) error {
+func (r *emailWriteRepository) UnlinkFromContact(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, contactId, email string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailWriteRepository.UnlinkFromContact")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
@@ -380,14 +387,21 @@ func (r *emailWriteRepository) UnlinkFromContact(ctx context.Context, tenant, co
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
+
 	return err
 }
 
-func (r *emailWriteRepository) UnlinkFromOrganization(ctx context.Context, tenant, organizationId, email string) error {
+func (r *emailWriteRepository) UnlinkFromOrganization(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId, email string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailWriteRepository.UnlinkFromOrganization")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
@@ -408,10 +422,17 @@ func (r *emailWriteRepository) UnlinkFromOrganization(ctx context.Context, tenan
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
+
 	return err
 }
 
