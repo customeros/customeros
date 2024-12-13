@@ -419,6 +419,20 @@ func (r *mutationResolver) ContactCreateBulkByLinkedIn(ctx context.Context, link
 				}
 			}
 		}
+
+		if flowID != nil {
+			flowsUpdated, err := r.Services.CommonServices.Neo4jRepositories.FlowWriteRepository.UpdateFlowStatistics(ctx, nil, *flowID)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return
+			}
+
+			if flowsUpdated != nil && len(flowsUpdated) > 0 {
+				for _, flowData := range flowsUpdated {
+					r.Services.CommonServices.RabbitMQService.PublishEventCompletedBulk(ctx, flowData.Tenant, flowData.Strings, commonmodel.FLOW, utils.NewEventCompletedDetails().WithUpdate())
+				}
+			}
+		}
 	}
 
 	// Start workers.
@@ -498,6 +512,20 @@ func (r *mutationResolver) ContactCreateBulkByEmail(ctx context.Context, emails 
 				_, err = r.Services.CommonServices.FlowService.FlowParticipantAdd(ctx, utils.IfNotNilString(flowID), contactId, commonmodel.CONTACT)
 				if err != nil {
 					tracing.TraceErr(span, err)
+				}
+			}
+		}
+
+		if flowID != nil {
+			flowsUpdated, err := r.Services.CommonServices.Neo4jRepositories.FlowWriteRepository.UpdateFlowStatistics(ctx, nil, *flowID)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return
+			}
+
+			if flowsUpdated != nil && len(flowsUpdated) > 0 {
+				for _, flowData := range flowsUpdated {
+					r.Services.CommonServices.RabbitMQService.PublishEventCompletedBulk(ctx, flowData.Tenant, flowData.Strings, commonmodel.FLOW, utils.NewEventCompletedDetails().WithUpdate())
 				}
 			}
 		}
