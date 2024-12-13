@@ -1655,6 +1655,7 @@ type Mailbox struct {
 	Domain          string    `json:"domain"`
 	Mailbox         string    `json:"mailbox"`
 	Created         time.Time `json:"created"`
+	UsedInFlows     bool      `json:"usedInFlows"`
 	RampUpRate      int       `json:"rampUpRate"`
 	RampUpMax       int       `json:"rampUpMax"`
 	RampUpCurrent   int       `json:"rampUpCurrent"`
@@ -2885,6 +2886,7 @@ type User struct {
 	Emails           []*Email               `json:"emails,omitempty"`
 	PhoneNumbers     []*PhoneNumber         `json:"phoneNumbers"`
 	Mailboxes        []string               `json:"mailboxes"`
+	MailboxesV2      []*Mailbox             `json:"mailboxesV2"`
 	HasLinkedInToken bool                   `json:"hasLinkedInToken"`
 	Onboarding       *UserOnboardingDetails `json:"onboarding"`
 	// Timestamp of user creation.

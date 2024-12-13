@@ -17,6 +17,7 @@ type Mailbox {
     domain:             String!
     mailbox:            String!
     created:            Time!
+    usedInFlows:        Boolean!
 
     rampUpRate:         Int!
     rampUpMax:          Int!
