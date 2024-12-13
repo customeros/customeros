@@ -126,3 +126,8 @@ func (r *queryResolver) UIContacts(ctx context.Context, ids []string) ([]*model.
 
 	return response, nil
 }
+
+// UIContactsSearch is the resolver for the ui_contacts_search field.
+func (r *queryResolver) UIContactsSearch(ctx context.Context, limit *int, where *model.Filter, sort *commonModel.SortBy) (*model.ContactSearchResult, error) {
+	panic(fmt.Errorf("not implemented: UIContactsSearch - ui_contacts_search"))
+}

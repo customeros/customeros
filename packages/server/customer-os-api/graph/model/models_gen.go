@@ -427,6 +427,12 @@ func (ContactParticipant) IsIssueParticipant() {}
 
 func (ContactParticipant) IsMeetingParticipant() {}
 
+type ContactSearchResult struct {
+	Ids            []string `json:"ids"`
+	TotalElements  int64    `json:"totalElements"`
+	TotalAvailable int64    `json:"totalAvailable"`
+}
+
 type ContactTagInput struct {
 	ContactID string            `json:"contactId"`
 	Tag       *TagIDOrNameInput `json:"tag"`
