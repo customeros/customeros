@@ -722,6 +722,14 @@ func TestQueryResolver_UIOrganizationsSearch_FilterByUpdatedAt(t *testing.T) {
 	assertSearch(t, searchBy, []time.Time{firstOfFebruary, firstOfFebruary}, commonModel.ComparisonOperatorBetween, 3, 1)
 	assertSearch(t, searchBy, []time.Time{midOfJanuary, firstOfMarch}, commonModel.ComparisonOperatorBetween, 3, 1)
 	assertSearch(t, searchBy, []time.Time{midOfFebruary, firstOfMarch}, commonModel.ComparisonOperatorBetween, 3, 0)
+	assertSearch(t, searchBy, firstOfJanuary, commonModel.ComparisonOperatorGte, 3, 3)
+	assertSearch(t, searchBy, firstOfJanuary, commonModel.ComparisonOperatorGt, 3, 2)
+	assertSearch(t, searchBy, firstOfFebruary, commonModel.ComparisonOperatorGte, 3, 2)
+	assertSearch(t, searchBy, firstOfFebruary, commonModel.ComparisonOperatorGt, 3, 1)
+	assertSearch(t, searchBy, firstOfJanuary, commonModel.ComparisonOperatorLt, 3, 0)
+	assertSearch(t, searchBy, firstOfJanuary, commonModel.ComparisonOperatorLte, 3, 1)
+	assertSearch(t, searchBy, firstOfFebruary, commonModel.ComparisonOperatorLt, 3, 1)
+	assertSearch(t, searchBy, firstOfFebruary, commonModel.ComparisonOperatorLte, 3, 2)
 }
 
 func assertSearch(t *testing.T, filterName model.ColumnViewType, searchValue any, operator commonModel.ComparisonOperator, totalAvailable int64, totalElements int64) {
@@ -937,14 +945,17 @@ func TestQueryResolver_UIOrganizationsSearch_SortByLastTouchpoint(t *testing.T) 
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "empty", LastTouchpointType: nil})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "a", LastTouchpointType: utils.StringPtr("a")})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "b", LastTouchpointType: utils.StringPtr("b")})
+	firstOfDecember := utils.FirstTimeOfMonth(2023, 12)
+	firstOfJanuary := utils.FirstTimeOfMonth(2024, 1)
+
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "empty", LastTouchpointAt: nil})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "1", LastTouchpointAt: &firstOfDecember})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "2", LastTouchpointAt: &firstOfJanuary})
 
 	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
 
-	expectedAsc := []string{"a", "b", "empty"}
-	expectedDesc := []string{"b", "a", "empty"}
+	expectedAsc := []string{"1", "2", "empty"}
+	expectedDesc := []string{"2", "1", "empty"}
 
 	verifySortOrder(t, model.ColumnViewTypeOrganizationsLastTouchpoint, commonModel.SortingDirectionAsc, expectedAsc)
 	verifySortOrder(t, model.ColumnViewTypeOrganizationsLastTouchpoint, commonModel.SortingDirectionDesc, expectedDesc)
