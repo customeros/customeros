@@ -884,7 +884,7 @@ func saveIP(c *gin.Context, s *service.Services, email string) error {
 		return nil
 	}
 
-	website := fmt.Sprintf("https://%s", &validEmail.Domain)
+	website := fmt.Sprintf("https://%s", validEmail.Domain)
 
 	details := entity.EnrichDetailsTracking{
 		IP:             clientIP,
