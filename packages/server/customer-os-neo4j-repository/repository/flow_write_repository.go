@@ -15,6 +15,9 @@ import (
 
 type FlowWriteRepository interface {
 	Merge(ctx context.Context, tx *neo4j.ManagedTransaction, entity *entity.FlowEntity) (*dbtype.Node, error)
+
+	UpdateStatistics(ctx context.Context) ([]*utils.StringsWithTenant, error)
+	UpdateFlowStatistics(ctx context.Context, tx *neo4j.ManagedTransaction, flowId string) ([]*utils.StringsWithTenant, error)
 }
 
 type flowWriteRepositoryImpl struct {
@@ -112,4 +115,113 @@ func (r *flowWriteRepositoryImpl) Merge(ctx context.Context, tx *neo4j.ManagedTr
 		}
 		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 	}
+}
+
+func (r *flowWriteRepositoryImpl) UpdateStatistics(ctx context.Context) ([]*utils.StringsWithTenant, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowWriteRepository.Merge")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	cypher := fmt.Sprintf(`
+			MATCH (t:Tenant)<-[:BELONGS_TO_TENANT]-(f:Flow)-[:HAS]->(fc:FlowParticipant)
+			WITH t, f, fc.status AS flowStatus, COUNT(fc.status) AS fs
+			WITH t, f, 
+				CASE flowStatus
+					WHEN 'ON_HOLD' THEN 'onHold'
+					WHEN 'READY' THEN 'ready'
+					WHEN 'SCHEDULED' THEN 'scheduled'
+					WHEN 'IN_PROGRESS' THEN 'inProgress'
+					WHEN 'COMPLETED' THEN 'completed'
+					WHEN 'GOAL_ACHIEVED' THEN 'goalAchieved'
+					ELSE null
+				END AS property, fs
+			WHERE property IS NOT NULL
+			WITH t, f, property, fs, f[property] AS oldValue
+			WHERE oldValue <> fs OR oldValue IS NULL
+			SET f[property] = fs
+			RETURN collect(f.id), t.name`)
+
+	params := map[string]any{}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		r, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return utils.ExtractAllRecordsAsStringsWithTenant(ctx, r, err)
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	flowsUpdated := result.([]*utils.StringsWithTenant)
+
+	for _, flowUpdated := range flowsUpdated {
+		span.LogFields(log.String("flowsUpdated."+flowUpdated.Tenant, fmt.Sprintf("%v", flowUpdated.Strings)))
+	}
+
+	return flowsUpdated, nil
+}
+
+func (r *flowWriteRepositoryImpl) UpdateFlowStatistics(ctx context.Context, tx *neo4j.ManagedTransaction, flowId string) ([]*utils.StringsWithTenant, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowWriteRepository.UpdateFlowStatistics")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	cypher := fmt.Sprintf(`
+			MATCH (f:Flow_%s{id:$flowId})-[:HAS]->(fc:FlowParticipant_%s)
+			WITH f, fc.status AS flowStatus, COUNT(fc.status) AS fs
+			CALL (f, flowStatus, fs){
+			  WITH f, flowStatus
+			  WITH f,
+				CASE flowStatus
+				  WHEN 'ON_HOLD' THEN 'onHold'
+				  WHEN 'READY' THEN 'ready'
+				  WHEN 'SCHEDULED' THEN 'scheduled'
+				  WHEN 'IN_PROGRESS' THEN 'inProgress'
+				  WHEN 'COMPLETED' THEN 'completed'
+				  WHEN 'GOAL_ACHIEVED' THEN 'goalAchieved'
+				  ELSE null
+				END AS property
+			  WHERE property IS NOT NULL
+			  SET f[property] = fs
+			  RETURN property
+			}
+			return f.id`, tenant, tenant)
+
+	params := map[string]any{
+		"flowId": flowId,
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	result, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		r, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return utils.ExtractAllRecordsAsStringsWithTenant(ctx, r, err)
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	flowsUpdated := result.([]*utils.StringsWithTenant)
+
+	for _, flowUpdated := range flowsUpdated {
+		span.LogFields(log.String("flowsUpdated."+flowUpdated.Tenant, fmt.Sprintf("%v", flowUpdated.Strings)))
+	}
+
+	return flowsUpdated, nil
 }

@@ -931,6 +931,7 @@ type ComplexityRoot struct {
 		RampUpMax       func(childComplexity int) int
 		RampUpRate      func(childComplexity int) int
 		ScheduledEmails func(childComplexity int) int
+		UsedInFlows     func(childComplexity int) int
 		UserID          func(childComplexity int) int
 	}
 
@@ -1687,6 +1688,7 @@ type ComplexityRoot struct {
 		JobRoles         func(childComplexity int) int
 		LastName         func(childComplexity int) int
 		Mailboxes        func(childComplexity int) int
+		MailboxesV2      func(childComplexity int) int
 		Name             func(childComplexity int) int
 		Onboarding       func(childComplexity int) int
 		PhoneNumbers     func(childComplexity int) int
@@ -2171,6 +2173,7 @@ type UserResolver interface {
 	Emails(ctx context.Context, obj *model.User) ([]*model.Email, error)
 	PhoneNumbers(ctx context.Context, obj *model.User) ([]*model.PhoneNumber, error)
 	Mailboxes(ctx context.Context, obj *model.User) ([]string, error)
+	MailboxesV2(ctx context.Context, obj *model.User) ([]*model.Mailbox, error)
 	HasLinkedInToken(ctx context.Context, obj *model.User) (bool, error)
 
 	JobRoles(ctx context.Context, obj *model.User) ([]*model.JobRole, error)
@@ -6529,6 +6532,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mailbox.ScheduledEmails(childComplexity), true
+
+	case "Mailbox.usedInFlows":
+		if e.complexity.Mailbox.UsedInFlows == nil {
+			break
+		}
+
+		return e.complexity.Mailbox.UsedInFlows(childComplexity), true
 
 	case "Mailbox.userId":
 		if e.complexity.Mailbox.UserID == nil {
@@ -12142,6 +12152,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.User.Mailboxes(childComplexity), true
 
+	case "User.mailboxesV2":
+		if e.complexity.User.MailboxesV2 == nil {
+			break
+		}
+
+		return e.complexity.User.MailboxesV2(childComplexity), true
+
 	case "User.name":
 		if e.complexity.User.Name == nil {
 			break
@@ -14953,6 +14970,7 @@ type Mailbox {
     domain:             String!
     mailbox:            String!
     created:            Time!
+    usedInFlows:        Boolean!
 
     rampUpRate:         Int!
     rampUpMax:          Int!
@@ -16590,7 +16608,8 @@ type User {
     """
     emails: [Email!] @goField(forceResolver: true)
     phoneNumbers: [PhoneNumber!]! @goField(forceResolver: true)
-    mailboxes: [String!]! @goField(forceResolver: true)
+    mailboxes: [String!]! @goField(forceResolver: true) # @deprecated
+    mailboxesV2: [Mailbox!]! @goField(forceResolver: true)
     hasLinkedInToken: Boolean! @goField(forceResolver: true)
     onboarding: UserOnboardingDetails!
 
@@ -28295,6 +28314,8 @@ func (ec *executionContext) fieldContext_Action_createdBy(_ context.Context, fie
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "mailboxesV2":
+				return ec.fieldContext_User_mailboxesV2(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "onboarding":
@@ -31772,6 +31793,8 @@ func (ec *executionContext) fieldContext_Comment_createdBy(_ context.Context, fi
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "mailboxesV2":
+				return ec.fieldContext_User_mailboxesV2(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "onboarding":
@@ -33410,6 +33433,8 @@ func (ec *executionContext) fieldContext_Contact_connectedUsers(_ context.Contex
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "mailboxesV2":
+				return ec.fieldContext_User_mailboxesV2(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "onboarding":
@@ -33559,6 +33584,8 @@ func (ec *executionContext) fieldContext_Contact_owner(_ context.Context, field 
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "mailboxesV2":
+				return ec.fieldContext_User_mailboxesV2(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "onboarding":
@@ -35457,6 +35484,8 @@ func (ec *executionContext) fieldContext_Contract_createdBy(_ context.Context, f
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "mailboxesV2":
+				return ec.fieldContext_User_mailboxesV2(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "onboarding":
@@ -35749,6 +35778,8 @@ func (ec *executionContext) fieldContext_Contract_owner(_ context.Context, field
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "mailboxesV2":
+				return ec.fieldContext_User_mailboxesV2(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "onboarding":
@@ -42427,6 +42458,8 @@ func (ec *executionContext) fieldContext_Email_users(_ context.Context, field gr
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "mailboxesV2":
+				return ec.fieldContext_User_mailboxesV2(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "onboarding":
@@ -46101,6 +46134,8 @@ func (ec *executionContext) fieldContext_FlowSender_user(_ context.Context, fiel
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "mailboxesV2":
+				return ec.fieldContext_User_mailboxesV2(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "onboarding":
@@ -46853,6 +46888,8 @@ func (ec *executionContext) fieldContext_GlobalCache_user(_ context.Context, fie
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "mailboxesV2":
+				return ec.fieldContext_User_mailboxesV2(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "onboarding":
@@ -57369,6 +57406,8 @@ func (ec *executionContext) fieldContext_LogEntry_createdBy(_ context.Context, f
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "mailboxesV2":
+				return ec.fieldContext_User_mailboxesV2(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "onboarding":
@@ -57771,6 +57810,50 @@ func (ec *executionContext) fieldContext_Mailbox_created(_ context.Context, fiel
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mailbox_usedInFlows(ctx context.Context, field graphql.CollectedField, obj *model.Mailbox) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mailbox_usedInFlows(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UsedInFlows, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mailbox_usedInFlows(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mailbox",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -77214,6 +77297,8 @@ func (ec *executionContext) fieldContext_Mutation_user_Create(ctx context.Contex
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "mailboxesV2":
+				return ec.fieldContext_User_mailboxesV2(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "onboarding":
@@ -77337,6 +77422,8 @@ func (ec *executionContext) fieldContext_Mutation_user_Update(ctx context.Contex
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "mailboxesV2":
+				return ec.fieldContext_User_mailboxesV2(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "onboarding":
@@ -77472,6 +77559,8 @@ func (ec *executionContext) fieldContext_Mutation_user_AddRole(ctx context.Conte
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "mailboxesV2":
+				return ec.fieldContext_User_mailboxesV2(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "onboarding":
@@ -77607,6 +77696,8 @@ func (ec *executionContext) fieldContext_Mutation_user_RemoveRole(ctx context.Co
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "mailboxesV2":
+				return ec.fieldContext_User_mailboxesV2(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "onboarding":
@@ -77735,6 +77826,8 @@ func (ec *executionContext) fieldContext_Mutation_user_AddRoleInTenant(ctx conte
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "mailboxesV2":
+				return ec.fieldContext_User_mailboxesV2(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "onboarding":
@@ -77863,6 +77956,8 @@ func (ec *executionContext) fieldContext_Mutation_user_RemoveRoleInTenant(ctx co
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "mailboxesV2":
+				return ec.fieldContext_User_mailboxesV2(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "onboarding":
@@ -78177,6 +78272,8 @@ func (ec *executionContext) fieldContext_Mutation_user_UpdateOnboardingDetails(c
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "mailboxesV2":
+				return ec.fieldContext_User_mailboxesV2(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "onboarding":
@@ -79034,6 +79131,8 @@ func (ec *executionContext) fieldContext_Note_createdBy(_ context.Context, field
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "mailboxesV2":
+				return ec.fieldContext_User_mailboxesV2(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "onboarding":
@@ -80779,6 +80878,8 @@ func (ec *executionContext) fieldContext_Opportunity_createdBy(_ context.Context
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "mailboxesV2":
+				return ec.fieldContext_User_mailboxesV2(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "onboarding":
@@ -80900,6 +81001,8 @@ func (ec *executionContext) fieldContext_Opportunity_owner(_ context.Context, fi
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "mailboxesV2":
+				return ec.fieldContext_User_mailboxesV2(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "onboarding":
@@ -83149,6 +83252,8 @@ func (ec *executionContext) fieldContext_Organization_owner(_ context.Context, f
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "mailboxesV2":
+				return ec.fieldContext_User_mailboxesV2(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "onboarding":
@@ -88051,6 +88156,8 @@ func (ec *executionContext) fieldContext_OrganizationUiDetails_owner(_ context.C
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "mailboxesV2":
+				return ec.fieldContext_User_mailboxesV2(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "onboarding":
@@ -89535,6 +89642,8 @@ func (ec *executionContext) fieldContext_PhoneNumber_users(_ context.Context, fi
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "mailboxesV2":
+				return ec.fieldContext_User_mailboxesV2(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "onboarding":
@@ -93913,6 +94022,8 @@ func (ec *executionContext) fieldContext_Query_mailstack_Mailboxes(_ context.Con
 				return ec.fieldContext_Mailbox_mailbox(ctx, field)
 			case "created":
 				return ec.fieldContext_Mailbox_created(ctx, field)
+			case "usedInFlows":
+				return ec.fieldContext_Mailbox_usedInFlows(ctx, field)
 			case "rampUpRate":
 				return ec.fieldContext_Mailbox_rampUpRate(ctx, field)
 			case "rampUpMax":
@@ -95237,6 +95348,8 @@ func (ec *executionContext) fieldContext_Query_organization_DistinctOwners(_ con
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "mailboxesV2":
+				return ec.fieldContext_User_mailboxesV2(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "onboarding":
@@ -97515,6 +97628,8 @@ func (ec *executionContext) fieldContext_Query_user(ctx context.Context, field g
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "mailboxesV2":
+				return ec.fieldContext_User_mailboxesV2(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "onboarding":
@@ -97650,6 +97765,8 @@ func (ec *executionContext) fieldContext_Query_user_ByEmail(ctx context.Context,
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "mailboxesV2":
+				return ec.fieldContext_User_mailboxesV2(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "onboarding":
@@ -98086,6 +98203,8 @@ func (ec *executionContext) fieldContext_Reminder_owner(_ context.Context, field
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "mailboxesV2":
+				return ec.fieldContext_User_mailboxesV2(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "onboarding":
@@ -99545,6 +99664,8 @@ func (ec *executionContext) fieldContext_ServiceLineItem_createdBy(_ context.Con
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "mailboxesV2":
+				return ec.fieldContext_User_mailboxesV2(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "onboarding":
@@ -104935,6 +105056,72 @@ func (ec *executionContext) fieldContext_User_mailboxes(_ context.Context, field
 	return fc, nil
 }
 
+func (ec *executionContext) _User_mailboxesV2(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_User_mailboxesV2(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.User().MailboxesV2(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Mailbox)
+	fc.Result = res
+	return ec.marshalNMailbox2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMailboxᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_User_mailboxesV2(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "domain":
+				return ec.fieldContext_Mailbox_domain(ctx, field)
+			case "mailbox":
+				return ec.fieldContext_Mailbox_mailbox(ctx, field)
+			case "created":
+				return ec.fieldContext_Mailbox_created(ctx, field)
+			case "usedInFlows":
+				return ec.fieldContext_Mailbox_usedInFlows(ctx, field)
+			case "rampUpRate":
+				return ec.fieldContext_Mailbox_rampUpRate(ctx, field)
+			case "rampUpMax":
+				return ec.fieldContext_Mailbox_rampUpMax(ctx, field)
+			case "rampUpCurrent":
+				return ec.fieldContext_Mailbox_rampUpCurrent(ctx, field)
+			case "userId":
+				return ec.fieldContext_Mailbox_userId(ctx, field)
+			case "scheduledEmails":
+				return ec.fieldContext_Mailbox_scheduledEmails(ctx, field)
+			case "currentFlowIds":
+				return ec.fieldContext_Mailbox_currentFlowIds(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Mailbox", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _User_hasLinkedInToken(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_User_hasLinkedInToken(ctx, field)
 	if err != nil {
@@ -105676,6 +105863,8 @@ func (ec *executionContext) fieldContext_UserPage_content(_ context.Context, fie
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "mailboxesV2":
+				return ec.fieldContext_User_mailboxesV2(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "onboarding":
@@ -105854,6 +106043,8 @@ func (ec *executionContext) fieldContext_UserParticipant_userParticipant(_ conte
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "mailboxesV2":
+				return ec.fieldContext_User_mailboxesV2(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "onboarding":
@@ -122206,6 +122397,11 @@ func (ec *executionContext) _Mailbox(ctx context.Context, sel ast.SelectionSet, 
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "usedInFlows":
+			out.Values[i] = ec._Mailbox_usedInFlows(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "rampUpRate":
 			out.Values[i] = ec._Mailbox_rampUpRate(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -129430,6 +129626,42 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 					}
 				}()
 				res = ec._User_mailboxes(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "mailboxesV2":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._User_mailboxesV2(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}

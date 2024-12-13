@@ -30,6 +30,11 @@ type StringsWithTotalCount struct {
 	Count   int64
 }
 
+type StringsWithTenant struct {
+	Strings []string
+	Tenant  string
+}
+
 type RecordsWithTotalCount struct {
 	Records []*db.Record
 	Count   int64
@@ -261,6 +266,28 @@ func ExtractAllRecordsAsDbNodeAndTenant(ctx context.Context, result neo4j.Result
 	return output, nil
 }
 
+func ExtractAllRecordsAsStringsWithTenant(ctx context.Context, result neo4j.ResultWithContext, err error) ([]*StringsWithTenant, error) {
+	if err != nil {
+		return nil, err
+	}
+	records, err := result.Collect(ctx)
+	if err != nil {
+		return nil, err
+	}
+	output := make([]*StringsWithTenant, 0)
+	for _, v := range records {
+		element := new(StringsWithTenant)
+		t := v.Values[0].([]interface{})
+		element.Strings = make([]string, len(t))
+		for i, v := range t {
+			element.Strings[i] = v.(string)
+		}
+		element.Tenant = v.Values[1].(string)
+		output = append(output, element)
+	}
+	return output, nil
+}
+
 func ExtractAllRecordsAsDbPropsAndId(ctx context.Context, result neo4j.ResultWithContext, err error) ([]*DbPropsAndId, error) {
 	if err != nil {
 		return nil, err
@@ -319,24 +346,6 @@ func ExtractAllRecordsAsDbNodePairAndId(ctx context.Context, result neo4j.Result
 	return output, nil
 }
 
-func ExtractAllRecordsAsDbNodeAndRelation(ctx context.Context, result neo4j.ResultWithContext, err error) ([]*DbNodeAndRelation, error) {
-	if err != nil {
-		return nil, err
-	}
-	records, err := result.Collect(ctx)
-	if err != nil {
-		return nil, err
-	}
-	output := make([]*DbNodeAndRelation, 0)
-	for _, v := range records {
-		element := new(DbNodeAndRelation)
-		element.Node = NodePtr(v.Values[0].(neo4j.Node))
-		element.Relationship = RelationshipPtr(v.Values[1].(neo4j.Relationship))
-		output = append(output, element)
-	}
-	return output, nil
-}
-
 func ExtractAllRecordsAsString(ctx context.Context, result neo4j.ResultWithContext, err error) ([]string, error) {
 	if err != nil {
 		return nil, err
@@ -372,17 +381,6 @@ func ExtractSingleRecordFirstValueAsNode(ctx context.Context, result neo4j.Resul
 	return &dbTypeNode, err
 }
 
-func ExtractSingleRecordAsNodeFromEagerResult(result *neo4j.EagerResult) (*dbtype.Node, error) {
-	if len(result.Records) == 0 {
-		return nil, errors.New("no records found")
-	}
-	if len(result.Records) > 1 {
-		return nil, errors.New("more than one record found")
-	}
-	node := result.Records[0].Values[0].(dbtype.Node)
-	return &node, nil
-}
-
 func ExtractSingleRecordFirstValueAsString(ctx context.Context, result neo4j.ResultWithContext, err error) (string, error) {
 	value, err := ExtractSingleRecordFirstValue(ctx, result, err)
 	if err != nil {
@@ -403,17 +401,6 @@ func ExtractSingleRecordFirstValueAsType[T any](ctx context.Context, result neo4
 	}
 
 	return converted, nil
-}
-
-func ExtractSingleRecordNodeAndRelationship(ctx context.Context, result neo4j.ResultWithContext, err error) (*dbtype.Node, *dbtype.Relationship, error) {
-	if err != nil {
-		return nil, nil, err
-	}
-	if record, err := result.Single(ctx); err != nil {
-		return nil, nil, err
-	} else {
-		return NodePtr(record.Values[0].(dbtype.Node)), RelationshipPtr(record.Values[1].(dbtype.Relationship)), nil
-	}
 }
 
 func GetPropsFromNode(node dbtype.Node) map[string]any {
