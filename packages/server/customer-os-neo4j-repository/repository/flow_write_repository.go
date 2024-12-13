@@ -178,27 +178,26 @@ func (r *flowWriteRepositoryImpl) UpdateFlowStatistics(ctx context.Context, tx *
 	tenant := common.GetTenantFromContext(ctx)
 
 	cypher := fmt.Sprintf(`
-			MATCH (f:Flow_%s{id:$flowId})-[:HAS]->(fc:FlowParticipant_%s)
-			WITH f, fc.status AS flowStatus, COUNT(fc.status) AS fs
-			CALL (f, flowStatus, fs){
-			  WITH f, flowStatus
-			  WITH f,
+			MATCH (t:Tenant{name:$tenant})<-[:BELONGS_TO_TENANT]-(f:Flow_%s)-[:HAS]->(fc:FlowParticipant_%s)
+			WITH t, f, fc.status AS flowStatus, COUNT(fc.status) AS fs
+			WITH t, f, 
 				CASE flowStatus
-				  WHEN 'ON_HOLD' THEN 'onHold'
-				  WHEN 'READY' THEN 'ready'
-				  WHEN 'SCHEDULED' THEN 'scheduled'
-				  WHEN 'IN_PROGRESS' THEN 'inProgress'
-				  WHEN 'COMPLETED' THEN 'completed'
-				  WHEN 'GOAL_ACHIEVED' THEN 'goalAchieved'
-				  ELSE null
-				END AS property
-			  WHERE property IS NOT NULL
-			  SET f[property] = fs
-			  RETURN property
-			}
-			return f.id`, tenant, tenant)
+					WHEN 'ON_HOLD' THEN 'onHold'
+					WHEN 'READY' THEN 'ready'
+					WHEN 'SCHEDULED' THEN 'scheduled'
+					WHEN 'IN_PROGRESS' THEN 'inProgress'
+					WHEN 'COMPLETED' THEN 'completed'
+					WHEN 'GOAL_ACHIEVED' THEN 'goalAchieved'
+					ELSE null
+				END AS property, fs
+			WHERE property IS NOT NULL
+			WITH t, f, property, fs, f[property] AS oldValue
+			WHERE oldValue <> fs OR oldValue IS NULL
+			SET f[property] = fs
+			RETURN collect(f.id), t.name`, tenant, tenant)
 
 	params := map[string]any{
+		"tenant": tenant,
 		"flowId": flowId,
 	}
 
