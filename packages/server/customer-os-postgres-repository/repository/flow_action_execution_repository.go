@@ -12,7 +12,9 @@ import (
 )
 
 type FlowActionExecutionRepository interface {
-	Save(ctx context.Context, executionRecord entity.ActionExecution) (string, error)
+	Create(ctx context.Context, executionRecord entity.FlowActionExecution) (*entity.FlowActionExecution, error)
+	Find(ctx context.Context, executionRecord entity.FlowActionExecution) (*entity.FlowActionExecution, error)
+	Update(ctx context.Context, executionRecord entity.FlowActionExecution) (*entity.FlowActionExecution, error)
 }
 
 type flowActionExecutionRepository struct {
@@ -23,8 +25,8 @@ func NewFlowActionExecutionRepository(gormDb *gorm.DB) FlowActionExecutionReposi
 	return &flowActionExecutionRepository{gormDb: gormDb}
 }
 
-func (f *flowActionExecutionRepository) Save(ctx context.Context, executionRecord entity.ActionExecution) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionExecutionRepository.Save")
+func (f *flowActionExecutionRepository) Create(ctx context.Context, executionRecord entity.FlowActionExecution) (*entity.FlowActionExecution, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionExecutionRepository.Create")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
@@ -32,14 +34,52 @@ func (f *flowActionExecutionRepository) Save(ctx context.Context, executionRecor
 		span.LogFields(log.Object("executionRecord", executionRecord))
 		err := errors.New("Action or FlowExecutionID missing")
 		tracing.TraceErr(span, err)
-		return "", err
+		return nil, err
 	}
 
-	err := f.gormDb.Save(&executionRecord).Error
+	err := f.gormDb.Create(&executionRecord).Error
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return "", err
+		return nil, err
 	}
 
-	return executionRecord.ID, nil
+	return &executionRecord, nil
+}
+
+func (f *flowActionExecutionRepository) Find(ctx context.Context, executionRecord entity.FlowActionExecution) (*entity.FlowActionExecution, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionExecutionRepository.Find")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	var flowActionExecution entity.FlowActionExecution
+	err := f.gormDb.
+		Where(&executionRecord).
+		First(&flowActionExecution).Error
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return &flowActionExecution, nil
+}
+
+func (f *flowActionExecutionRepository) Update(ctx context.Context, executionRecord entity.FlowActionExecution) (*entity.FlowActionExecution, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionExecutionRepository.Update")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	if executionRecord.ID == "" {
+		err := errors.New("ID is missing")
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	var updatedRecord entity.FlowActionExecution
+	err := f.gormDb.Model(&executionRecord).Updates(&executionRecord).First(&updatedRecord).Error
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return &updatedRecord, nil
 }

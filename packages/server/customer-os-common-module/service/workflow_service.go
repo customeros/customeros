@@ -15,6 +15,8 @@ import (
 
 type WorkflowService interface {
 	// Flow
+	SaveFlow(ctx context.Context, flowRecord entity.Flow) (*entity.Flow, error)
+	GetFlowsByTrigger(ctx context.Context, listenerEvent enum.FlowListenerEvent) (*[]entity.Flow, error)
 	GetNextStepInFlow(ctx context.Context, flowId, fromNodeId string) (*FlowNextStep, error)
 
 	// Flow Execution
@@ -22,6 +24,7 @@ type WorkflowService interface {
 	GetFlowExecutionRecordById(ctx context.Context, id string) (*entity.FlowExecution, error)
 
 	// FlowAction Execution
+	SaveFlowActionExecutionRecord(ctx context.Context, flowActionExecutionRecord entity.FlowActionExecution) (*entity.FlowActionExecution, error)
 
 	// Validation
 	ValidateEventType(ctx context.Context, nodeType enum.FlowNodeType, event string) bool
@@ -42,6 +45,55 @@ func NewWorkflowService(services *Services) WorkflowService {
 }
 
 // Flow
+func (w *workflowService) SaveFlow(ctx context.Context, flowRecord entity.Flow) (*entity.Flow, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WorkflowService.SaveFlow")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	if flowRecord.Tenant == "" {
+		flowRecord.Tenant = common.GetTenantFromContext(ctx)
+		if flowRecord.Tenant == "" {
+			err := errors.New("tenant not set in context")
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+	}
+
+	if flowRecord.ID == "" {
+		return w.services.PostgresRepositories.FlowRepository.Create(ctx, flowRecord)
+	}
+
+	return w.services.PostgresRepositories.FlowRepository.Update(ctx, flowRecord)
+
+}
+
+func (w *workflowService) GetFlowsByTrigger(ctx context.Context, listenerEvent enum.FlowListenerEvent) (*[]entity.Flow, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WorkflowService.GetFlowsByTrigger")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	tenant := common.GetTenantFromContext(ctx)
+	if tenant == "" {
+		err := errors.New("Tenant not set in context")
+		tracing.TraceErr(span, err)
+		return nil, err
+
+	}
+
+	query := entity.Flow{
+		Tenant:    tenant,
+		TriggerOn: listenerEvent.String(),
+	}
+
+	allFlows, err := w.services.PostgresRepositories.FlowRepository.FindAll(ctx, query)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return allFlows, nil
+}
+
 type FlowNextStep struct {
 	FlowID       string
 	FromNodeID   string
@@ -188,5 +240,33 @@ func (w *workflowService) SaveFlowExecutionRecord(ctx context.Context, flowExecu
 	}
 
 	return updatedRecord, nil
+
+}
+
+// Flow Action Execution
+
+func (w *workflowService) SaveFlowActionExecutionRecord(ctx context.Context, flowActionExecutionRecord entity.FlowActionExecution) (*entity.FlowActionExecution, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WorkflowService.SaveFlowExecutionActionRecord")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	tenant := common.GetTenantFromContext(ctx)
+	if tenant == "" {
+		err := errors.New("Tenant not set in context")
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	if flowActionExecutionRecord.ID == "" {
+		if flowActionExecutionRecord.Action == "" || flowActionExecutionRecord.FlowExecutionID == "" {
+			span.LogFields(log.Object("flowActionExecutionRecord", flowActionExecutionRecord))
+			err := errors.New("Action or FlowExecutionID missing")
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+		return w.services.PostgresRepositories.FlowActionExecutionRepository.Create(ctx, flowActionExecutionRecord)
+	}
+
+	return w.services.PostgresRepositories.FlowActionExecutionRepository.Update(ctx, flowActionExecutionRecord)
 
 }

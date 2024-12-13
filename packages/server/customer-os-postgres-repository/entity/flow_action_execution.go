@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-type ActionExecution struct {
+type FlowActionExecution struct {
 	ID              string     `gorm:"primary_key;type:uuid;default:gen_random_uuid()" json:"id"`
 	FlowExecutionID string     `gorm:"column:flow_execution_id;type:uuid;default:gen_random_uuid()" json:"flowExecutionId"`
 	FlowNodeID      string     `gorm:"column:flow_node_id;type:varchar(255)" json:"flowNodeId"`
@@ -19,6 +19,6 @@ type ActionExecution struct {
 	Result          *string    `gorm:"column:result;type:text" json:"result"`
 }
 
-func (ActionExecution) TableName() string {
+func (FlowActionExecution) TableName() string {
 	return "flow_action_execution"
 }

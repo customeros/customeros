@@ -192,7 +192,7 @@ func (r *Repositories) Migration(postgresDB *config.PostgresDB) {
 		&entity.ExternalAppKeys{},
 		&entity.Flow{},
 		&entity.FlowActionRegistry{},
-		&entity.ActionExecution{},
+		&entity.FlowActionExecution{},
 		&entity.FlowDeadEvents{},
 		&entity.FlowEdge{},
 		&entity.FlowExecution{},
