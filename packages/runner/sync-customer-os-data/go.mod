@@ -23,7 +23,7 @@ require (
 	github.com/uber/jaeger-client-go v2.30.0+incompatible
 	golang.org/x/oauth2 v0.24.0
 	golang.org/x/text v0.21.0
-	google.golang.org/grpc v1.68.1
+	google.golang.org/grpc v1.69.0
 	gorm.io/driver/postgres v1.5.11
 	gorm.io/gorm v1.25.12
 	zgo.at/zcache v1.2.0
