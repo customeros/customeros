@@ -107,7 +107,7 @@ func GetActiveWebhooks(s *service.Services, baseURL, flowsPath string) gin.Handl
 			return
 		}
 
-		count, webhooks, err := s.CommonServices.PostgresRepositories.FlowWebhooksRepository.FindAllActiveWebhooks(ctx, tenant)
+		webhooks, err := s.CommonServices.PostgresRepositories.FlowWebhooksRepository.FindAll(ctx)
 		if err != nil {
 			err = fmt.Errorf("Unable to lookup active webhooks for %s: %v", tenant, err)
 			tracing.TraceErr(span, err)
@@ -115,7 +115,7 @@ func GetActiveWebhooks(s *service.Services, baseURL, flowsPath string) gin.Handl
 			return
 		}
 
-		if count == 0 {
+		if len(*webhooks) == 0 {
 			c.JSON(http.StatusOK, NoActiveWebhooks{
 				BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
 				Message:      "No active webhooks",
@@ -123,9 +123,9 @@ func GetActiveWebhooks(s *service.Services, baseURL, flowsPath string) gin.Handl
 			return
 		}
 
-		results := make([]ActiveWebhookRecord, count)
+		results := make([]ActiveWebhookRecord, len(*webhooks))
 
-		for _, webhook := range webhooks {
+		for _, webhook := range *webhooks {
 			record := ActiveWebhookRecord{
 				URL:         fmt.Sprintf("%s%s/%s", baseURL, flowsPath, webhook.WebhookPath),
 				Integration: webhook.Integration,
@@ -135,7 +135,7 @@ func GetActiveWebhooks(s *service.Services, baseURL, flowsPath string) gin.Handl
 			results = append(results, record)
 		}
 
-		if count == 1 {
+		if len(*webhooks) == 1 {
 			c.JSON(http.StatusOK, OneActiveWebhook{
 				BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
 				Hook:         results[0],
