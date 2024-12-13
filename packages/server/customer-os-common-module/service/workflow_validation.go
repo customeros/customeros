@@ -4,8 +4,10 @@ import (
 	"context"
 	"errors"
 
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 )
 
 type FlowListenerEventRecord struct {
@@ -19,12 +21,20 @@ func (w *workflowService) ValidateListener(ctx context.Context, listenerEvent en
 	span, ctx := tracing.StartTracerSpan(ctx, "WorkflowService.ValidateListener")
 	defer span.Finish()
 	tracing.TagComponentService(span)
-	events, err := w.services.PostgresRepositories.FlowListenerRegistryRepository.GetAllFlowListenerEvents(ctx)
+
+	tenant := common.GetTenantFromContext(ctx)
+	if tenant == "" {
+		err := errors.New("tenant not set on context")
+		tracing.TraceErr(span, err)
+		return false, err
+	}
+
+	events, err := w.services.PostgresRepositories.FlowListenerRegistryRepository.FindAll(ctx)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return false, err
 	}
-	for _, event := range events {
+	for _, event := range *events {
 		if event.ListenerEvent == listenerEvent.String() {
 			return true, nil
 		}
@@ -32,17 +42,29 @@ func (w *workflowService) ValidateListener(ctx context.Context, listenerEvent en
 	return false, nil
 }
 
-func (w *workflowService) ValidateFlowBelongsToTenant(ctx context.Context, flowId string) bool {
+func (w *workflowService) ValidateFlowBelongsToTenant(ctx context.Context, flowId string) (bool, error) {
 	span, ctx := tracing.StartTracerSpan(ctx, "WorkflowService.ValidateFlowBelongsToTenant")
 	defer span.Finish()
 	tracing.TagComponentService(span)
 
-	flowRecord, err := w.services.PostgresRepositories.FlowRepository.GetFlowByID(ctx, flowId)
-	if err == nil && flowRecord != nil {
-		return true
+	tenant := common.GetTenantFromContext(ctx)
+	if tenant == "" {
+		err := errors.New("tenant not set on context")
+		tracing.TraceErr(span, err)
+		return false, err
 	}
 
-	return false
+	query := entity.Flow{
+		ID:     flowId,
+		Tenant: tenant,
+	}
+
+	flowRecord, err := w.services.PostgresRepositories.FlowRepository.Find(ctx, query)
+	if err == nil && flowRecord != nil {
+		return true, nil
+	}
+
+	return false, nil
 }
 
 func (w *workflowService) ValidateEventType(ctx context.Context, nodeType enum.FlowNodeType, event string) bool {
@@ -87,23 +109,33 @@ func (w *workflowService) ValidateTransition(ctx context.Context, fromNodeId str
 	defer span.Finish()
 	tracing.TagComponentService(span)
 
-	fromNode, err := w.services.PostgresRepositories.FlowNodeRepository.GetNodeById(ctx, fromNodeId)
+	fromNode, err := w.services.PostgresRepositories.FlowNodeRepository.Find(ctx, entity.FlowNode{
+		ID: fromNodeId,
+	})
+
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return false, err
 	}
 
-	toNode, err := w.services.PostgresRepositories.FlowNodeRepository.GetNodeById(ctx, toNodeId)
+	toNode, err := w.services.PostgresRepositories.FlowNodeRepository.Find(ctx, entity.FlowNode{
+		ID: toNodeId,
+	})
+
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return false, err
 	}
 
-	ok, err := w.services.PostgresRepositories.FlowTransitionsRegistryRepository.ValidateFlowTransition(ctx, *fromNode.Event, *toNode.Event)
-	if !ok {
+	results, err := w.services.PostgresRepositories.FlowTransitionsRegistryRepository.Find(ctx, entity.FlowTransitionsRegistry{
+		FromNodeType: fromNode.Type,
+		ToNodeType:   toNode.Type,
+	})
+
+	if results == nil {
 		err = errors.New("invalid transition")
 		tracing.TraceErr(span, err)
 		return false, err
 	}
-	return ok, nil
+	return true, nil
 }

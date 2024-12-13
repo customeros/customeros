@@ -28,7 +28,7 @@ type WorkflowService interface {
 
 	// Validation
 	ValidateEventType(ctx context.Context, nodeType enum.FlowNodeType, event string) bool
-	ValidateFlowBelongsToTenant(ctx context.Context, flowId string) bool
+	ValidateFlowBelongsToTenant(ctx context.Context, flowId string) (bool, error)
 	ValidateListener(ctx context.Context, listenerEvent enum.FlowListenerEvent) (bool, error)
 	ValidateNodeType(ctx context.Context, nodeType string) (bool, *enum.FlowNodeType)
 	ValidateTransition(ctx context.Context, fromNodeId string, toNodeId string) (bool, error)
@@ -203,7 +203,7 @@ func (w *workflowService) GetFlowExecutionRecordById(ctx context.Context, id str
 		Tenant: tenant,
 	}
 
-	result, err := w.services.PostgresRepositories.FlowExecutionRepository.FindRecord(ctx, searchParams)
+	result, err := w.services.PostgresRepositories.FlowExecutionRepository.Find(ctx, searchParams)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -224,23 +224,10 @@ func (w *workflowService) SaveFlowExecutionRecord(ctx context.Context, flowExecu
 	}
 
 	if flowExecutionRecord.ID == "" {
-		id, err := w.services.PostgresRepositories.FlowExecutionRepository.Create(ctx, flowExecutionRecord)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil, err
-		}
-		flowExecutionRecord.ID = id
-		return &flowExecutionRecord, nil
+		return w.services.PostgresRepositories.FlowExecutionRepository.Create(ctx, flowExecutionRecord)
 	}
 
-	updatedRecord, err := w.services.PostgresRepositories.FlowExecutionRepository.Update(ctx, flowExecutionRecord)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	return updatedRecord, nil
-
+	return w.services.PostgresRepositories.FlowExecutionRepository.Update(ctx, flowExecutionRecord)
 }
 
 // Flow Action Execution

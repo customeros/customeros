@@ -244,17 +244,17 @@ func (r *Repositories) Migration(postgresDB *config.PostgresDB) {
 }
 
 func (r *Repositories) InitData(ctx context.Context, postgresRepos *Repositories) {
-	err := r.FlowActionRegistryRepository.InitializeActions(ctx)
+	err := r.FlowActionRegistryRepository.Initialize(ctx)
 	if err != nil {
 		panic(err)
 	}
 
-	err = r.FlowListenerRegistryRepository.InitializeFlowListenerEvents(ctx)
+	err = r.FlowListenerRegistryRepository.Initialize(ctx)
 	if err != nil {
 		panic(err)
 	}
 
-	err = r.FlowTransitionsRegistryRepository.InitializeFlowTransitions(ctx)
+	err = r.FlowTransitionsRegistryRepository.Initialize(ctx)
 	if err != nil {
 		panic(err)
 	}

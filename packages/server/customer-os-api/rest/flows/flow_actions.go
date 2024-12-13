@@ -38,16 +38,16 @@ func GetActions(s *service.Services) gin.HandlerFunc {
 			return
 		}
 
-		actions, err := s.Repositories.PostgresRepositories.FlowActionRegistryRepository.GetAllFlowActions(ctx)
+		actions, err := s.Repositories.PostgresRepositories.FlowActionRegistryRepository.FindAll(ctx)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer)
 			return
 		}
 
-		results := make([]FlowActionRecord, len(actions))
+		results := make([]FlowActionRecord, len(*actions))
 
-		for i, action := range actions {
+		for i, action := range *actions {
 			record := FlowActionRecord{
 				Action:      action.Action,
 				Name:        action.FriendlyName,
@@ -56,7 +56,7 @@ func GetActions(s *service.Services) gin.HandlerFunc {
 			results[i] = record
 		}
 
-		if len(actions) == 1 {
+		if len(*actions) == 1 {
 			c.JSON(http.StatusOK, FlowActionSingleResponse{
 				BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
 				Action:       results[0],

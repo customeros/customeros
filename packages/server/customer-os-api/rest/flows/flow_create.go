@@ -74,7 +74,7 @@ func CreateFlow(s *service.Services) gin.HandlerFunc {
 
 		// create flow in database
 		flowRecord := createFlowRecord(ctx, request)
-		flowRecord, err = s.Repositories.PostgresRepositories.FlowRepository.CreateFlow(ctx, flowRecord)
+		result, err := s.Repositories.PostgresRepositories.FlowRepository.Create(ctx, flowRecord)
 		if err != nil {
 			rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest)
 			return
@@ -83,13 +83,13 @@ func CreateFlow(s *service.Services) gin.HandlerFunc {
 		c.JSON(http.StatusOK, CreateFlowResponse{
 			BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
 			Flow: CreateFlowRecord{
-				ID:          flowRecord.ID,
-				Name:        flowRecord.Name,
-				Description: *flowRecord.Description,
-				Trigger:     flowRecord.TriggerOn,
-				VisibleUI:   *flowRecord.VisibleInUI,
-				Status:      flowRecord.Status,
-				CreatedAt:   flowRecord.CreatedAt,
+				ID:          result.ID,
+				Name:        result.Name,
+				Description: *result.Description,
+				Trigger:     result.TriggerOn,
+				VisibleUI:   *result.VisibleInUI,
+				Status:      result.Status,
+				CreatedAt:   result.CreatedAt,
 			},
 		})
 	}
