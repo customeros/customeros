@@ -5,6 +5,7 @@ import { observer } from 'mobx-react-lite';
 import { FlowSenderStore } from '@store/FlowSenders/FlowSender.store';
 
 import { Avatar } from '@ui/media/Avatar';
+import { FlowStatus } from '@graphql/types';
 import { User01 } from '@ui/media/icons/User01';
 import { Mail01 } from '@ui/media/icons/Mail01';
 import { Button } from '@ui/form/Button/Button';
@@ -135,6 +136,23 @@ const FlowSenderMenu = observer(
     const store = useStore();
     const navigate = useNavigate();
 
+    const handleDeleteSenders = () => {
+      if (store.flows.value.get(flowId)?.value?.status === FlowStatus.On) {
+        store.ui.commandMenu.setType('ActiveFlowUpdateInfo');
+        store.ui.commandMenu.setContext({
+          ...store.ui.commandMenu.context,
+          meta: {
+            type: 'senders',
+          },
+        });
+        store.ui.commandMenu.setOpen(true);
+
+        return;
+      }
+
+      store.flowSenders.deleteFlowSender(senderId, flowId);
+    };
+
     return (
       <Menu>
         <MenuButton
@@ -152,11 +170,7 @@ const FlowSenderMenu = observer(
             <Inbox01 />
             Edit mailboxes
           </MenuItem>
-          <MenuItem
-            onClick={() => {
-              store.flowSenders.deleteFlowSender(senderId, flowId);
-            }}
-          >
+          <MenuItem onClick={handleDeleteSenders}>
             <XCircle />
             Remove sender
           </MenuItem>

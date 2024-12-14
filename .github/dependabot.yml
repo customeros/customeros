@@ -17,7 +17,7 @@ updates:
       time: "04:00"
     open-pull-requests-limit: 5
     labels:
-      - "gomod"
+      - "go"
       - "dependencies"
       - "app/customer-os-api"
     pull-request-branch-name:
@@ -31,7 +31,7 @@ updates:
       time: "04:30"
     open-pull-requests-limit: 5
     labels:
-      - "gomod"
+      - "go"
       - "dependencies"
       - "app/customer-os-webhooks"
     pull-request-branch-name:
@@ -45,7 +45,7 @@ updates:
       time: "04:00"
     open-pull-requests-limit: 3
     labels:
-      - "gomod"
+      - "go"
       - "dependencies"
       - "module/customer-os-common-module"
     pull-request-branch-name:
@@ -59,7 +59,7 @@ updates:
       time: "04:00"
     open-pull-requests-limit: 3
     labels:
-      - "gomod"
+      - "go"
       - "dependencies"
       - "module/customer-os-neo4j-repository"
     pull-request-branch-name:
@@ -73,7 +73,7 @@ updates:
       time: "04:00"
     open-pull-requests-limit: 3
     labels:
-      - "gomod"
+      - "go"
       - "dependencies"
       - "module/customer-os-postgres-repository"
     pull-request-branch-name:
@@ -87,7 +87,7 @@ updates:
       time: "04:00"
     open-pull-requests-limit: 3
     labels:
-      - "gomod"
+      - "go"
       - "dependencies"
       - "module/events-processing-proto"
     pull-request-branch-name:
@@ -101,7 +101,7 @@ updates:
       time: "04:00"
     open-pull-requests-limit: 3
     labels:
-      - "gomod"
+      - "go"
       - "dependencies"
       - "app/events-processing-platform"
     pull-request-branch-name:
@@ -115,7 +115,7 @@ updates:
       time: "04:15"
     open-pull-requests-limit: 3
     labels:
-      - "gomod"
+      - "go"
       - "dependencies"
       - "app/events-subscribers"
     pull-request-branch-name:
@@ -129,7 +129,7 @@ updates:
       time: "04:00"
     open-pull-requests-limit: 3
     labels:
-      - "gomod"
+      - "go"
       - "dependencies"
       - "app/events-processing-platform-subscribers"
     pull-request-branch-name:
@@ -143,7 +143,7 @@ updates:
       time: "04:00"
     open-pull-requests-limit: 3
     labels:
-      - "gomod"
+      - "go"
       - "dependencies"
       - "app/sync-tracked-data"
     pull-request-branch-name:
@@ -157,7 +157,7 @@ updates:
       time: "04:00"
     open-pull-requests-limit: 3
     labels:
-      - "gomod"
+      - "go"
       - "dependencies"
       - "app/sync-customer-os-data"
     pull-request-branch-name:
@@ -171,7 +171,7 @@ updates:
       time: "04:00"
     open-pull-requests-limit: 3
     labels:
-      - "gomod"
+      - "go"
       - "dependencies"
       - "app/customer-os-dedup"
     pull-request-branch-name:
@@ -185,7 +185,7 @@ updates:
       time: "04:00"
     open-pull-requests-limit: 3
     labels:
-      - "gomod"
+      - "go"
       - "dependencies"
       - "app/sync-gmail"
     pull-request-branch-name:
@@ -199,7 +199,7 @@ updates:
       time: "04:00"
     open-pull-requests-limit: 3
     labels:
-      - "gomod"
+      - "go"
       - "dependencies"
       - "app/sync-slack"
     pull-request-branch-name:
@@ -213,7 +213,7 @@ updates:
       time: "04:00"
     open-pull-requests-limit: 3
     labels:
-      - "gomod"
+      - "go"
       - "dependencies"
       - "app/integrity-checker"
     pull-request-branch-name:
@@ -227,7 +227,7 @@ updates:
       time: "04:00"
     open-pull-requests-limit: 5
     labels:
-      - "gomod"
+      - "go"
       - "dependencies"
       - "app/file-store-api"
     pull-request-branch-name:
@@ -241,7 +241,7 @@ updates:
       time: "04:00"
     open-pull-requests-limit: 5
     labels:
-      - "gomod"
+      - "go"
       - "dependencies"
       - "app/settings-api"
     pull-request-branch-name:
@@ -255,7 +255,7 @@ updates:
       time: "04:00"
     open-pull-requests-limit: 5
     labels:
-      - "gomod"
+      - "go"
       - "dependencies"
       - "app/validation-api"
     pull-request-branch-name:
@@ -269,7 +269,7 @@ updates:
       time: "06:00"
     open-pull-requests-limit: 5
     labels:
-      - "gomod"
+      - "go"
       - "dependencies"
       - "app/enrichment-api"
     pull-request-branch-name:
@@ -283,9 +283,23 @@ updates:
       time: "04:00"
     open-pull-requests-limit: 5
     labels:
-      - "gomod"
+      - "go"
       - "dependencies"
       - "app/user-admin-api"
+    pull-request-branch-name:
+      separator: "-"
+    rebase-strategy: "auto"
+
+  - package-ecosystem: "gomod"
+    directory: "/packages/server/customer-os-platform-admin-api"
+    schedule:
+      interval: "daily"
+      time: "04:00"
+    open-pull-requests-limit: 5
+    labels:
+      - "go"
+      - "dependencies"
+      - "app/customer-os-platform-admin-api"
     pull-request-branch-name:
       separator: "-"
     rebase-strategy: "auto"

@@ -46,6 +46,12 @@ export const BasicEdge: FC<
 
     if (flowWasStarted) {
       ui.commandMenu.setType('ActiveFlowUpdateInfo');
+      ui.commandMenu.setContext({
+        ...ui.commandMenu.context,
+        meta: {
+          type: 'steps',
+        },
+      });
       ui.commandMenu.setOpen(true);
 
       return;

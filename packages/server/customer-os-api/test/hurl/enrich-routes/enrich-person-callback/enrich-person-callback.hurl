@@ -13,7 +13,7 @@ requestId: jsonpath "$.requestId"
 jsonpath "$.status" == "success"
 jsonpath "$.requestId" exists
 
-GET https://api.customeros.ai/enrich/v1/person/results/{{requestId}}
+GET {{cos_url}}/enrich/v1/person/results/{{requestId}}
 Content-Type: application/json
 X-CUSTOMER-OS-API-KEY: {{api_key}}
 

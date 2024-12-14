@@ -453,7 +453,9 @@ func CreateEmail(ctx context.Context, driver *neo4j.DriverWithContext, tenant st
 
 func CreateEmailForEntity(ctx context.Context, driver *neo4j.DriverWithContext, tenant, entityId string, emailEntity entity.EmailEntity) string {
 	emailId := CreateEmail(ctx, driver, tenant, emailEntity)
-	LinkNodes(ctx, driver, entityId, emailId, "HAS")
+	LinkNodes(ctx, driver, entityId, emailId, "HAS", map[string]any{
+		"primary": emailEntity.Primary,
+	})
 	return emailId
 }
 

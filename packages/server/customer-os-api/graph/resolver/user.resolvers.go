@@ -344,6 +344,48 @@ func (r *userResolver) Mailboxes(ctx context.Context, obj *model.User) ([]string
 	return mailboxes, nil
 }
 
+// MailboxesV2 is the resolver for the mailboxesV2 field.
+func (r *userResolver) MailboxesV2(ctx context.Context, obj *model.User) ([]*model.Mailbox, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "UserResolver.MailboxesV2", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.user", obj.ID))
+
+	userIds := make([]string, 0)
+	mailboxes := make([]*model.Mailbox, 0)
+
+	mb, err := r.Services.Repositories.PostgresRepositories.TenantSettingsMailboxRepository.GetAllByUserId(ctx, obj.ID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get mailboxes for user %s", obj.ID)
+		return nil, err
+	}
+
+	for _, mailbox := range mb {
+		graphMailbox := mapper.MapEntityToMailbox(&mailbox)
+		mailboxes = append(mailboxes, graphMailbox)
+
+		if mailbox.UserId != "" {
+			userIds = append(userIds, mailbox.UserId)
+		}
+	}
+
+	usersUsedInFlows, err := r.Services.Repositories.Neo4jRepositories.FlowSenderReadRepository.GetUsersUsedInFlows(ctx, userIds)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get users used in flows")
+		return nil, err
+	}
+
+	for _, mailbox := range mailboxes {
+		if mailbox.UserID != nil && utils.Contains(usersUsedInFlows, *mailbox.UserID) {
+			mailbox.UsedInFlows = true
+		}
+	}
+
+	return mailboxes, nil
+}
+
 // HasLinkedInToken is the resolver for the hasLinkedInToken field.
 func (r *userResolver) HasLinkedInToken(ctx context.Context, obj *model.User) (bool, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "UserResolver.HasLinkedInToken", graphql.GetOperationContext(ctx))

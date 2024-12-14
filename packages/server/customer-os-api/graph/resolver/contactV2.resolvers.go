@@ -126,3 +126,77 @@ func (r *queryResolver) UIContacts(ctx context.Context, ids []string) ([]*model.
 
 	return response, nil
 }
+
+// UIContactsSearch is the resolver for the ui_contacts_search field.
+func (r *queryResolver) UIContactsSearch(ctx context.Context, limit *int, where *model.Filter, sort *commonModel.SortBy) (*model.ContactSearchResult, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.UIContactsSearch", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	if limit == nil {
+		i := 50000
+		limit = &i
+	}
+
+	var wg sync.WaitGroup
+	var firstErr error
+	var mu sync.Mutex
+
+	setError := func(err error) {
+		mu.Lock()
+		defer mu.Unlock()
+		if firstErr == nil {
+			firstErr = err
+		}
+	}
+
+	response := &model.ContactSearchResult{}
+
+	wg.Add(1)
+	go func(resp *model.ContactSearchResult) {
+		innerSpan, innerCtx := opentracing.StartSpanFromContext(ctx, "QueryResolver.UIContactsSearch.SearchContacts")
+		defer innerSpan.Finish()
+		defer wg.Done()
+		tracing.SetDefaultResolverSpanTags(innerCtx, span)
+
+		contactSearchResponse, err := r.Services.Repositories.DashboardV2Repository.GetDashboardViewContactDataV2(innerCtx, tenant, *limit, where, sort)
+		if err != nil {
+			tracing.TraceErr(innerSpan, err)
+			setError(err)
+			return
+		}
+
+		resp.TotalElements = contactSearchResponse.Count
+		resp.Ids = contactSearchResponse.Strings
+	}(response)
+
+	wg.Add(1)
+	go func(resp *model.ContactSearchResult) {
+		innerSpan, innerCtx := opentracing.StartSpanFromContext(ctx, "QueryResolver.UIContactsSearch.TotalAvailable")
+		defer innerSpan.Finish()
+		defer wg.Done()
+		tracing.SetDefaultResolverSpanTags(innerCtx, innerSpan)
+
+		totalAvailable, err := r.Services.Repositories.Neo4jRepositories.ContactReadRepository.CountByTenant(innerCtx, tenant)
+		if err != nil {
+			tracing.TraceErr(innerSpan, err)
+			setError(err)
+			return
+		}
+
+		resp.TotalAvailable = totalAvailable
+	}(response)
+
+	wg.Wait()
+
+	if firstErr != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), firstErr)
+		r.log.Errorf("Failed to get contacts: %v", firstErr)
+		graphql.AddErrorf(ctx, "Failed to get contacts: %v", firstErr)
+		return nil, nil
+	}
+
+	return response, nil
+}

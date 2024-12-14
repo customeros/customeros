@@ -427,6 +427,12 @@ func (ContactParticipant) IsIssueParticipant() {}
 
 func (ContactParticipant) IsMeetingParticipant() {}
 
+type ContactSearchResult struct {
+	Ids            []string `json:"ids"`
+	TotalElements  int64    `json:"totalElements"`
+	TotalAvailable int64    `json:"totalAvailable"`
+}
+
 type ContactTagInput struct {
 	ContactID string            `json:"contactId"`
 	Tag       *TagIDOrNameInput `json:"tag"`
@@ -1655,6 +1661,7 @@ type Mailbox struct {
 	Domain          string    `json:"domain"`
 	Mailbox         string    `json:"mailbox"`
 	Created         time.Time `json:"created"`
+	UsedInFlows     bool      `json:"usedInFlows"`
 	RampUpRate      int       `json:"rampUpRate"`
 	RampUpMax       int       `json:"rampUpMax"`
 	RampUpCurrent   int       `json:"rampUpCurrent"`
@@ -2885,6 +2892,7 @@ type User struct {
 	Emails           []*Email               `json:"emails,omitempty"`
 	PhoneNumbers     []*PhoneNumber         `json:"phoneNumbers"`
 	Mailboxes        []string               `json:"mailboxes"`
+	MailboxesV2      []*Mailbox             `json:"mailboxesV2"`
 	HasLinkedInToken bool                   `json:"hasLinkedInToken"`
 	Onboarding       *UserOnboardingDetails `json:"onboarding"`
 	// Timestamp of user creation.

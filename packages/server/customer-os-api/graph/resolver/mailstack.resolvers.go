@@ -10,6 +10,7 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
@@ -87,6 +88,7 @@ func (r *mutationResolver) MailstackSetUser(ctx context.Context, mailbox string,
 		return &model.Result{Result: false}, nil
 	}
 
+	oldUserID := mailboxEntity.UserId
 	mailboxEntity.UserId = userID
 
 	err = r.Services.Repositories.PostgresRepositories.TenantSettingsMailboxRepository.Merge(ctx, nil, mailboxEntity)
@@ -98,6 +100,7 @@ func (r *mutationResolver) MailstackSetUser(ctx context.Context, mailbox string,
 		return &model.Result{Result: false}, nil
 	}
 
+	r.Services.CommonServices.RabbitMQService.PublishEventCompleted(ctx, tenant, oldUserID, commonModel.USER, utils.NewEventCompletedDetails().WithUpdate())
 	r.Services.CommonServices.RabbitMQService.PublishEventCompleted(ctx, tenant, userID, commonModel.USER, utils.NewEventCompletedDetails().WithUpdate())
 
 	return &model.Result{Result: true}, nil
@@ -203,19 +206,27 @@ func (r *queryResolver) MailstackMailboxes(ctx context.Context) ([]*model.Mailbo
 		return nil, nil
 	}
 
+	userIds := []string{}
 	response := []*model.Mailbox{}
 	for _, mailbox := range allMailboxes {
-		response = append(response, &model.Mailbox{
-			Domain:          mailbox.Domain,
-			Mailbox:         mailbox.MailboxUsername,
-			Created:         mailbox.CreatedAt,
-			UserID:          &mailbox.UserId,
-			RampUpCurrent:   mailbox.RampUpCurrent,
-			RampUpMax:       mailbox.RampUpMax,
-			RampUpRate:      mailbox.RampUpRate,
-			CurrentFlowIds:  []string{},
-			ScheduledEmails: 0,
-		})
+		toMailbox := mapper.MapEntityToMailbox(mailbox)
+		response = append(response, toMailbox)
+		if mailbox.UserId != "" {
+			userIds = append(userIds, mailbox.UserId)
+		}
+	}
+
+	usersUsedInFlows, err := r.Services.Repositories.Neo4jRepositories.FlowSenderReadRepository.GetUsersUsedInFlows(ctx, userIds)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get users used in flows")
+		return nil, err
+	}
+
+	for _, mailbox := range response {
+		if mailbox.UserID != nil && utils.Contains(usersUsedInFlows, *mailbox.UserID) {
+			mailbox.UsedInFlows = true
+		}
 	}
 
 	return response, nil

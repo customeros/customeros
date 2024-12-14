@@ -1,4 +1,4 @@
-# Test: Redirect to pay existing invoice
+# Test: Redirect to pay existing unpaid invoice
 GET {{cos_url}}/invoice/a10f97ff-a14a-4675-807d-3079f5cadff2/pay
 Content-Type: application/json
 X-CUSTOMER-OS-API-KEY: {{api_key}}

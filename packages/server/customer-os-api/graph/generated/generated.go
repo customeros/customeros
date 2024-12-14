@@ -240,6 +240,12 @@ type ComplexityRoot struct {
 		Type               func(childComplexity int) int
 	}
 
+	ContactSearchResult struct {
+		Ids            func(childComplexity int) int
+		TotalAvailable func(childComplexity int) int
+		TotalElements  func(childComplexity int) int
+	}
+
 	ContactUiDetails struct {
 		CreatedAt             func(childComplexity int) int
 		Description           func(childComplexity int) int
@@ -931,6 +937,7 @@ type ComplexityRoot struct {
 		RampUpMax       func(childComplexity int) int
 		RampUpRate      func(childComplexity int) int
 		ScheduledEmails func(childComplexity int) int
+		UsedInFlows     func(childComplexity int) int
 		UserID          func(childComplexity int) int
 	}
 
@@ -1043,7 +1050,6 @@ type ComplexityRoot struct {
 		FlowArchive                                func(childComplexity int, id string) int
 		FlowArchiveBulk                            func(childComplexity int, ids []string) int
 		FlowChangeName                             func(childComplexity int, id string, name string) int
-		FlowDummy1Email                            func(childComplexity int, flowsCount int, contactsCount int, userCount int, mailboxForEachUserCount int) int
 		FlowEmailActionTest                        func(childComplexity int, subject string, bodyTemplate string, sendToEmailAddress string) int
 		FlowMerge                                  func(childComplexity int, input model.FlowMergeInput) int
 		FlowOff                                    func(childComplexity int, id string) int
@@ -1485,6 +1491,7 @@ type ComplexityRoot struct {
 		TenantSettings                     func(childComplexity int) int
 		TimelineEvents                     func(childComplexity int, ids []string) int
 		UIContacts                         func(childComplexity int, ids []string) int
+		UIContactsSearch                   func(childComplexity int, limit *int, where *model.Filter, sort *model1.SortBy) int
 		UIOrganizations                    func(childComplexity int, ids []string) int
 		UIOrganizationsSearch              func(childComplexity int, limit *int, where *model.Filter, sort *model1.SortBy) int
 		User                               func(childComplexity int, id string) int
@@ -1687,6 +1694,7 @@ type ComplexityRoot struct {
 		JobRoles         func(childComplexity int) int
 		LastName         func(childComplexity int) int
 		Mailboxes        func(childComplexity int) int
+		MailboxesV2      func(childComplexity int) int
 		Name             func(childComplexity int) int
 		Onboarding       func(childComplexity int) int
 		PhoneNumbers     func(childComplexity int) int
@@ -1919,7 +1927,6 @@ type MutationResolver interface {
 	FlowSenderMerge(ctx context.Context, flowID string, input model.FlowSenderMergeInput) (*model.FlowSender, error)
 	FlowSenderDelete(ctx context.Context, id string) (*model.Result, error)
 	FlowEmailActionTest(ctx context.Context, subject string, bodyTemplate string, sendToEmailAddress string) (*model.Result, error)
-	FlowDummy1Email(ctx context.Context, flowsCount int, contactsCount int, userCount int, mailboxForEachUserCount int) (*model.Result, error)
 	InteractionEventLinkAttachment(ctx context.Context, eventID string, attachmentID string) (*model.Result, error)
 	InvoiceNextDryRunForContract(ctx context.Context, contractID string) (string, error)
 	InvoiceUpdate(ctx context.Context, input model.InvoiceUpdateInput) (*model.Invoice, error)
@@ -2089,6 +2096,7 @@ type QueryResolver interface {
 	ContactByLinkedIn(ctx context.Context, linkedInURL string) (*model.Contact, error)
 	ContactExistsByLinkedIn(ctx context.Context, linkedInURL string) (bool, error)
 	UIContacts(ctx context.Context, ids []string) ([]*model.ContactUIDetails, error)
+	UIContactsSearch(ctx context.Context, limit *int, where *model.Filter, sort *model1.SortBy) (*model.ContactSearchResult, error)
 	Contract(ctx context.Context, id string) (*model.Contract, error)
 	Contracts(ctx context.Context, pagination *model.Pagination) (*model.ContractPage, error)
 	CustomFieldTemplateList(ctx context.Context) ([]*model.CustomFieldTemplate, error)
@@ -2171,6 +2179,7 @@ type UserResolver interface {
 	Emails(ctx context.Context, obj *model.User) ([]*model.Email, error)
 	PhoneNumbers(ctx context.Context, obj *model.User) ([]*model.PhoneNumber, error)
 	Mailboxes(ctx context.Context, obj *model.User) ([]string, error)
+	MailboxesV2(ctx context.Context, obj *model.User) ([]*model.Mailbox, error)
 	HasLinkedInToken(ctx context.Context, obj *model.User) (bool, error)
 
 	JobRoles(ctx context.Context, obj *model.User) ([]*model.JobRole, error)
@@ -3085,6 +3094,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ContactParticipant.Type(childComplexity), true
+
+	case "ContactSearchResult.ids":
+		if e.complexity.ContactSearchResult.Ids == nil {
+			break
+		}
+
+		return e.complexity.ContactSearchResult.Ids(childComplexity), true
+
+	case "ContactSearchResult.totalAvailable":
+		if e.complexity.ContactSearchResult.TotalAvailable == nil {
+			break
+		}
+
+		return e.complexity.ContactSearchResult.TotalAvailable(childComplexity), true
+
+	case "ContactSearchResult.totalElements":
+		if e.complexity.ContactSearchResult.TotalElements == nil {
+			break
+		}
+
+		return e.complexity.ContactSearchResult.TotalElements(childComplexity), true
 
 	case "ContactUiDetails.createdAt":
 		if e.complexity.ContactUiDetails.CreatedAt == nil {
@@ -6530,6 +6560,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mailbox.ScheduledEmails(childComplexity), true
 
+	case "Mailbox.usedInFlows":
+		if e.complexity.Mailbox.UsedInFlows == nil {
+			break
+		}
+
+		return e.complexity.Mailbox.UsedInFlows(childComplexity), true
+
 	case "Mailbox.userId":
 		if e.complexity.Mailbox.UserID == nil {
 			break
@@ -7523,18 +7560,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.FlowChangeName(childComplexity, args["id"].(string), args["name"].(string)), true
-
-	case "Mutation.flow_Dummy_1Email":
-		if e.complexity.Mutation.FlowDummy1Email == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_flow_Dummy_1Email_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.FlowDummy1Email(childComplexity, args["flowsCount"].(int), args["contactsCount"].(int), args["userCount"].(int), args["mailboxForEachUserCount"].(int)), true
 
 	case "Mutation.flowEmailActionTest":
 		if e.complexity.Mutation.FlowEmailActionTest == nil {
@@ -11102,6 +11127,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.UIContacts(childComplexity, args["ids"].([]string)), true
 
+	case "Query.ui_contacts_search":
+		if e.complexity.Query.UIContactsSearch == nil {
+			break
+		}
+
+		args, err := ec.field_Query_ui_contacts_search_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.UIContactsSearch(childComplexity, args["limit"].(*int), args["where"].(*model.Filter), args["sort"].(*model1.SortBy)), true
+
 	case "Query.ui_organizations":
 		if e.complexity.Query.UIOrganizations == nil {
 			break
@@ -12142,6 +12179,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.User.Mailboxes(childComplexity), true
 
+	case "User.mailboxesV2":
+		if e.complexity.User.MailboxesV2 == nil {
+			break
+		}
+
+		return e.complexity.User.MailboxesV2(childComplexity), true
+
 	case "User.name":
 		if e.complexity.User.Name == nil {
 			break
@@ -13119,6 +13163,7 @@ enum PersonTitle {
 }`, BuiltIn: false},
 	{Name: "../schemas/contactV2.graphqls", Input: `extend type Query {
     ui_contacts(ids: [ID!]): [ContactUiDetails!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    ui_contacts_search(limit: Int, where: Filter, sort: SortBy): ContactSearchResult! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type ContactUiDetails {
@@ -13141,6 +13186,12 @@ type ContactUiDetails {
     linkedInFollowerCount:  Int64
 
     tags:                   [Tag!]!
+}
+
+type ContactSearchResult{
+    ids:            [ID!]!
+    totalElements:  Int64! # length of the id array
+    totalAvailable: Int64! # everyting in db
 }`, BuiltIn: false},
 	{Name: "../schemas/contract.graphqls", Input: `extend type Query {
     contract(id: ID!): Contract! @hasRole(roles: [ADMIN, USER]) @hasTenant
@@ -14225,9 +14276,6 @@ extend type Mutation {
     flowSender_Delete(id: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
     flowEmailActionTest(subject: String!, bodyTemplate: String!, sendToEmailAddress: String!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
-
-    #mutations used for testing
-    flow_Dummy_1Email(flowsCount: Int!, contactsCount: Int!, userCount: Int!, mailboxForEachUserCount: Int!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 #Flow
@@ -14953,6 +15001,7 @@ type Mailbox {
     domain:             String!
     mailbox:            String!
     created:            Time!
+    usedInFlows:        Boolean!
 
     rampUpRate:         Int!
     rampUpMax:          Int!
@@ -16590,7 +16639,8 @@ type User {
     """
     emails: [Email!] @goField(forceResolver: true)
     phoneNumbers: [PhoneNumber!]! @goField(forceResolver: true)
-    mailboxes: [String!]! @goField(forceResolver: true)
+    mailboxes: [String!]! @goField(forceResolver: true) # @deprecated
+    mailboxesV2: [Mailbox!]! @goField(forceResolver: true)
     hasLinkedInToken: Boolean! @goField(forceResolver: true)
     onboarding: UserOnboardingDetails!
 
@@ -20457,119 +20507,6 @@ func (ec *executionContext) field_Mutation_flow_ChangeName_argsName(
 	}
 
 	var zeroVal string
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Mutation_flow_Dummy_1Email_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	arg0, err := ec.field_Mutation_flow_Dummy_1Email_argsFlowsCount(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["flowsCount"] = arg0
-	arg1, err := ec.field_Mutation_flow_Dummy_1Email_argsContactsCount(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["contactsCount"] = arg1
-	arg2, err := ec.field_Mutation_flow_Dummy_1Email_argsUserCount(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["userCount"] = arg2
-	arg3, err := ec.field_Mutation_flow_Dummy_1Email_argsMailboxForEachUserCount(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["mailboxForEachUserCount"] = arg3
-	return args, nil
-}
-func (ec *executionContext) field_Mutation_flow_Dummy_1Email_argsFlowsCount(
-	ctx context.Context,
-	rawArgs map[string]interface{},
-) (int, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["flowsCount"]
-	if !ok {
-		var zeroVal int
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("flowsCount"))
-	if tmp, ok := rawArgs["flowsCount"]; ok {
-		return ec.unmarshalNInt2int(ctx, tmp)
-	}
-
-	var zeroVal int
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Mutation_flow_Dummy_1Email_argsContactsCount(
-	ctx context.Context,
-	rawArgs map[string]interface{},
-) (int, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["contactsCount"]
-	if !ok {
-		var zeroVal int
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("contactsCount"))
-	if tmp, ok := rawArgs["contactsCount"]; ok {
-		return ec.unmarshalNInt2int(ctx, tmp)
-	}
-
-	var zeroVal int
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Mutation_flow_Dummy_1Email_argsUserCount(
-	ctx context.Context,
-	rawArgs map[string]interface{},
-) (int, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["userCount"]
-	if !ok {
-		var zeroVal int
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("userCount"))
-	if tmp, ok := rawArgs["userCount"]; ok {
-		return ec.unmarshalNInt2int(ctx, tmp)
-	}
-
-	var zeroVal int
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Mutation_flow_Dummy_1Email_argsMailboxForEachUserCount(
-	ctx context.Context,
-	rawArgs map[string]interface{},
-) (int, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["mailboxForEachUserCount"]
-	if !ok {
-		var zeroVal int
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("mailboxForEachUserCount"))
-	if tmp, ok := rawArgs["mailboxForEachUserCount"]; ok {
-		return ec.unmarshalNInt2int(ctx, tmp)
-	}
-
-	var zeroVal int
 	return zeroVal, nil
 }
 
@@ -27676,6 +27613,92 @@ func (ec *executionContext) field_Query_ui_contacts_argsIds(
 	return zeroVal, nil
 }
 
+func (ec *executionContext) field_Query_ui_contacts_search_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	arg0, err := ec.field_Query_ui_contacts_search_argsLimit(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["limit"] = arg0
+	arg1, err := ec.field_Query_ui_contacts_search_argsWhere(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["where"] = arg1
+	arg2, err := ec.field_Query_ui_contacts_search_argsSort(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["sort"] = arg2
+	return args, nil
+}
+func (ec *executionContext) field_Query_ui_contacts_search_argsLimit(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (*int, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["limit"]
+	if !ok {
+		var zeroVal *int
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
+	if tmp, ok := rawArgs["limit"]; ok {
+		return ec.unmarshalOInt2ᚖint(ctx, tmp)
+	}
+
+	var zeroVal *int
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_ui_contacts_search_argsWhere(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (*model.Filter, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["where"]
+	if !ok {
+		var zeroVal *model.Filter
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("where"))
+	if tmp, ok := rawArgs["where"]; ok {
+		return ec.unmarshalOFilter2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFilter(ctx, tmp)
+	}
+
+	var zeroVal *model.Filter
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_ui_contacts_search_argsSort(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (*model1.SortBy, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["sort"]
+	if !ok {
+		var zeroVal *model1.SortBy
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("sort"))
+	if tmp, ok := rawArgs["sort"]; ok {
+		return ec.unmarshalOSortBy2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐSortBy(ctx, tmp)
+	}
+
+	var zeroVal *model1.SortBy
+	return zeroVal, nil
+}
+
 func (ec *executionContext) field_Query_ui_organizations_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -28295,6 +28318,8 @@ func (ec *executionContext) fieldContext_Action_createdBy(_ context.Context, fie
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "mailboxesV2":
+				return ec.fieldContext_User_mailboxesV2(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "onboarding":
@@ -31772,6 +31797,8 @@ func (ec *executionContext) fieldContext_Comment_createdBy(_ context.Context, fi
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "mailboxesV2":
+				return ec.fieldContext_User_mailboxesV2(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "onboarding":
@@ -33410,6 +33437,8 @@ func (ec *executionContext) fieldContext_Contact_connectedUsers(_ context.Contex
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "mailboxesV2":
+				return ec.fieldContext_User_mailboxesV2(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "onboarding":
@@ -33559,6 +33588,8 @@ func (ec *executionContext) fieldContext_Contact_owner(_ context.Context, field 
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "mailboxesV2":
+				return ec.fieldContext_User_mailboxesV2(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "onboarding":
@@ -33972,6 +34003,138 @@ func (ec *executionContext) fieldContext_ContactParticipant_type(_ context.Conte
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ContactSearchResult_ids(ctx context.Context, field graphql.CollectedField, obj *model.ContactSearchResult) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ContactSearchResult_ids(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Ids, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]string)
+	fc.Result = res
+	return ec.marshalNID2ᚕstringᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ContactSearchResult_ids(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ContactSearchResult",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ContactSearchResult_totalElements(ctx context.Context, field graphql.CollectedField, obj *model.ContactSearchResult) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ContactSearchResult_totalElements(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TotalElements, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ContactSearchResult_totalElements(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ContactSearchResult",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ContactSearchResult_totalAvailable(ctx context.Context, field graphql.CollectedField, obj *model.ContactSearchResult) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ContactSearchResult_totalAvailable(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TotalAvailable, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ContactSearchResult_totalAvailable(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ContactSearchResult",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
 		},
 	}
 	return fc, nil
@@ -35457,6 +35620,8 @@ func (ec *executionContext) fieldContext_Contract_createdBy(_ context.Context, f
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "mailboxesV2":
+				return ec.fieldContext_User_mailboxesV2(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "onboarding":
@@ -35749,6 +35914,8 @@ func (ec *executionContext) fieldContext_Contract_owner(_ context.Context, field
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "mailboxesV2":
+				return ec.fieldContext_User_mailboxesV2(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "onboarding":
@@ -42427,6 +42594,8 @@ func (ec *executionContext) fieldContext_Email_users(_ context.Context, field gr
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "mailboxesV2":
+				return ec.fieldContext_User_mailboxesV2(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "onboarding":
@@ -46101,6 +46270,8 @@ func (ec *executionContext) fieldContext_FlowSender_user(_ context.Context, fiel
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "mailboxesV2":
+				return ec.fieldContext_User_mailboxesV2(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "onboarding":
@@ -46853,6 +47024,8 @@ func (ec *executionContext) fieldContext_GlobalCache_user(_ context.Context, fie
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "mailboxesV2":
+				return ec.fieldContext_User_mailboxesV2(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "onboarding":
@@ -57369,6 +57542,8 @@ func (ec *executionContext) fieldContext_LogEntry_createdBy(_ context.Context, f
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "mailboxesV2":
+				return ec.fieldContext_User_mailboxesV2(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "onboarding":
@@ -57771,6 +57946,50 @@ func (ec *executionContext) fieldContext_Mailbox_created(_ context.Context, fiel
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mailbox_usedInFlows(ctx context.Context, field graphql.CollectedField, obj *model.Mailbox) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mailbox_usedInFlows(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UsedInFlows, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mailbox_usedInFlows(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mailbox",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -66527,99 +66746,6 @@ func (ec *executionContext) fieldContext_Mutation_flowEmailActionTest(ctx contex
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_flowEmailActionTest_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_flow_Dummy_1Email(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_flow_Dummy_1Email(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().FlowDummy1Email(rctx, fc.Args["flowsCount"].(int), fc.Args["contactsCount"].(int), fc.Args["userCount"].(int), fc.Args["mailboxForEachUserCount"].(int))
-		}
-
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
-			if err != nil {
-				var zeroVal *model.Result
-				return zeroVal, err
-			}
-			if ec.directives.HasRole == nil {
-				var zeroVal *model.Result
-				return zeroVal, errors.New("directive hasRole is not implemented")
-			}
-			return ec.directives.HasRole(ctx, nil, directive0, roles)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.HasTenant == nil {
-				var zeroVal *model.Result
-				return zeroVal, errors.New("directive hasTenant is not implemented")
-			}
-			return ec.directives.HasTenant(ctx, nil, directive1)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.Result); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.Result`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.Result)
-	fc.Result = res
-	return ec.marshalNResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐResult(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_flow_Dummy_1Email(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "result":
-				return ec.fieldContext_Result_result(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Result", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_flow_Dummy_1Email_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -77214,6 +77340,8 @@ func (ec *executionContext) fieldContext_Mutation_user_Create(ctx context.Contex
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "mailboxesV2":
+				return ec.fieldContext_User_mailboxesV2(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "onboarding":
@@ -77337,6 +77465,8 @@ func (ec *executionContext) fieldContext_Mutation_user_Update(ctx context.Contex
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "mailboxesV2":
+				return ec.fieldContext_User_mailboxesV2(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "onboarding":
@@ -77472,6 +77602,8 @@ func (ec *executionContext) fieldContext_Mutation_user_AddRole(ctx context.Conte
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "mailboxesV2":
+				return ec.fieldContext_User_mailboxesV2(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "onboarding":
@@ -77607,6 +77739,8 @@ func (ec *executionContext) fieldContext_Mutation_user_RemoveRole(ctx context.Co
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "mailboxesV2":
+				return ec.fieldContext_User_mailboxesV2(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "onboarding":
@@ -77735,6 +77869,8 @@ func (ec *executionContext) fieldContext_Mutation_user_AddRoleInTenant(ctx conte
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "mailboxesV2":
+				return ec.fieldContext_User_mailboxesV2(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "onboarding":
@@ -77863,6 +77999,8 @@ func (ec *executionContext) fieldContext_Mutation_user_RemoveRoleInTenant(ctx co
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "mailboxesV2":
+				return ec.fieldContext_User_mailboxesV2(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "onboarding":
@@ -78177,6 +78315,8 @@ func (ec *executionContext) fieldContext_Mutation_user_UpdateOnboardingDetails(c
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "mailboxesV2":
+				return ec.fieldContext_User_mailboxesV2(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "onboarding":
@@ -79034,6 +79174,8 @@ func (ec *executionContext) fieldContext_Note_createdBy(_ context.Context, field
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "mailboxesV2":
+				return ec.fieldContext_User_mailboxesV2(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "onboarding":
@@ -80779,6 +80921,8 @@ func (ec *executionContext) fieldContext_Opportunity_createdBy(_ context.Context
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "mailboxesV2":
+				return ec.fieldContext_User_mailboxesV2(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "onboarding":
@@ -80900,6 +81044,8 @@ func (ec *executionContext) fieldContext_Opportunity_owner(_ context.Context, fi
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "mailboxesV2":
+				return ec.fieldContext_User_mailboxesV2(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "onboarding":
@@ -83149,6 +83295,8 @@ func (ec *executionContext) fieldContext_Organization_owner(_ context.Context, f
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "mailboxesV2":
+				return ec.fieldContext_User_mailboxesV2(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "onboarding":
@@ -88051,6 +88199,8 @@ func (ec *executionContext) fieldContext_OrganizationUiDetails_owner(_ context.C
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "mailboxesV2":
+				return ec.fieldContext_User_mailboxesV2(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "onboarding":
@@ -89535,6 +89685,8 @@ func (ec *executionContext) fieldContext_PhoneNumber_users(_ context.Context, fi
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "mailboxesV2":
+				return ec.fieldContext_User_mailboxesV2(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "onboarding":
@@ -91015,6 +91167,103 @@ func (ec *executionContext) fieldContext_Query_ui_contacts(ctx context.Context, 
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_ui_contacts_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_ui_contacts_search(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_ui_contacts_search(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().UIContactsSearch(rctx, fc.Args["limit"].(*int), fc.Args["where"].(*model.Filter), fc.Args["sort"].(*model1.SortBy))
+		}
+
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				var zeroVal *model.ContactSearchResult
+				return zeroVal, err
+			}
+			if ec.directives.HasRole == nil {
+				var zeroVal *model.ContactSearchResult
+				return zeroVal, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				var zeroVal *model.ContactSearchResult
+				return zeroVal, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.ContactSearchResult); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.ContactSearchResult`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.ContactSearchResult)
+	fc.Result = res
+	return ec.marshalNContactSearchResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContactSearchResult(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_ui_contacts_search(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "ids":
+				return ec.fieldContext_ContactSearchResult_ids(ctx, field)
+			case "totalElements":
+				return ec.fieldContext_ContactSearchResult_totalElements(ctx, field)
+			case "totalAvailable":
+				return ec.fieldContext_ContactSearchResult_totalAvailable(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ContactSearchResult", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_ui_contacts_search_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -93913,6 +94162,8 @@ func (ec *executionContext) fieldContext_Query_mailstack_Mailboxes(_ context.Con
 				return ec.fieldContext_Mailbox_mailbox(ctx, field)
 			case "created":
 				return ec.fieldContext_Mailbox_created(ctx, field)
+			case "usedInFlows":
+				return ec.fieldContext_Mailbox_usedInFlows(ctx, field)
 			case "rampUpRate":
 				return ec.fieldContext_Mailbox_rampUpRate(ctx, field)
 			case "rampUpMax":
@@ -95237,6 +95488,8 @@ func (ec *executionContext) fieldContext_Query_organization_DistinctOwners(_ con
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "mailboxesV2":
+				return ec.fieldContext_User_mailboxesV2(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "onboarding":
@@ -97515,6 +97768,8 @@ func (ec *executionContext) fieldContext_Query_user(ctx context.Context, field g
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "mailboxesV2":
+				return ec.fieldContext_User_mailboxesV2(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "onboarding":
@@ -97650,6 +97905,8 @@ func (ec *executionContext) fieldContext_Query_user_ByEmail(ctx context.Context,
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "mailboxesV2":
+				return ec.fieldContext_User_mailboxesV2(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "onboarding":
@@ -98086,6 +98343,8 @@ func (ec *executionContext) fieldContext_Reminder_owner(_ context.Context, field
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "mailboxesV2":
+				return ec.fieldContext_User_mailboxesV2(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "onboarding":
@@ -99545,6 +99804,8 @@ func (ec *executionContext) fieldContext_ServiceLineItem_createdBy(_ context.Con
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "mailboxesV2":
+				return ec.fieldContext_User_mailboxesV2(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "onboarding":
@@ -104935,6 +105196,72 @@ func (ec *executionContext) fieldContext_User_mailboxes(_ context.Context, field
 	return fc, nil
 }
 
+func (ec *executionContext) _User_mailboxesV2(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_User_mailboxesV2(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.User().MailboxesV2(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Mailbox)
+	fc.Result = res
+	return ec.marshalNMailbox2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMailboxᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_User_mailboxesV2(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "domain":
+				return ec.fieldContext_Mailbox_domain(ctx, field)
+			case "mailbox":
+				return ec.fieldContext_Mailbox_mailbox(ctx, field)
+			case "created":
+				return ec.fieldContext_Mailbox_created(ctx, field)
+			case "usedInFlows":
+				return ec.fieldContext_Mailbox_usedInFlows(ctx, field)
+			case "rampUpRate":
+				return ec.fieldContext_Mailbox_rampUpRate(ctx, field)
+			case "rampUpMax":
+				return ec.fieldContext_Mailbox_rampUpMax(ctx, field)
+			case "rampUpCurrent":
+				return ec.fieldContext_Mailbox_rampUpCurrent(ctx, field)
+			case "userId":
+				return ec.fieldContext_Mailbox_userId(ctx, field)
+			case "scheduledEmails":
+				return ec.fieldContext_Mailbox_scheduledEmails(ctx, field)
+			case "currentFlowIds":
+				return ec.fieldContext_Mailbox_currentFlowIds(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Mailbox", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _User_hasLinkedInToken(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_User_hasLinkedInToken(ctx, field)
 	if err != nil {
@@ -105676,6 +106003,8 @@ func (ec *executionContext) fieldContext_UserPage_content(_ context.Context, fie
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "mailboxesV2":
+				return ec.fieldContext_User_mailboxesV2(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "onboarding":
@@ -105854,6 +106183,8 @@ func (ec *executionContext) fieldContext_UserParticipant_userParticipant(_ conte
 				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "mailboxes":
 				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "mailboxesV2":
+				return ec.fieldContext_User_mailboxesV2(ctx, field)
 			case "hasLinkedInToken":
 				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
 			case "onboarding":
@@ -116442,6 +116773,55 @@ func (ec *executionContext) _ContactParticipant(ctx context.Context, sel ast.Sel
 	return out
 }
 
+var contactSearchResultImplementors = []string{"ContactSearchResult"}
+
+func (ec *executionContext) _ContactSearchResult(ctx context.Context, sel ast.SelectionSet, obj *model.ContactSearchResult) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, contactSearchResultImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ContactSearchResult")
+		case "ids":
+			out.Values[i] = ec._ContactSearchResult_ids(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "totalElements":
+			out.Values[i] = ec._ContactSearchResult_totalElements(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "totalAvailable":
+			out.Values[i] = ec._ContactSearchResult_totalAvailable(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var contactUiDetailsImplementors = []string{"ContactUiDetails"}
 
 func (ec *executionContext) _ContactUiDetails(ctx context.Context, sel ast.SelectionSet, obj *model.ContactUIDetails) graphql.Marshaler {
@@ -122206,6 +122586,11 @@ func (ec *executionContext) _Mailbox(ctx context.Context, sel ast.SelectionSet, 
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "usedInFlows":
+			out.Values[i] = ec._Mailbox_usedInFlows(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "rampUpRate":
 			out.Values[i] = ec._Mailbox_rampUpRate(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -123219,13 +123604,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "flowEmailActionTest":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_flowEmailActionTest(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "flow_Dummy_1Email":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_flow_Dummy_1Email(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -126547,6 +126925,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "ui_contacts_search":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_ui_contacts_search(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "contract":
 			field := field
 
@@ -129456,6 +129856,42 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "mailboxesV2":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._User_mailboxesV2(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "hasLinkedInToken":
 			field := field
 
@@ -130664,6 +131100,20 @@ func (ec *executionContext) unmarshalNContactInput2githubᚗcomᚋopenlineᚑai�
 func (ec *executionContext) unmarshalNContactOrganizationInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContactOrganizationInput(ctx context.Context, v interface{}) (model.ContactOrganizationInput, error) {
 	res, err := ec.unmarshalInputContactOrganizationInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNContactSearchResult2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContactSearchResult(ctx context.Context, sel ast.SelectionSet, v model.ContactSearchResult) graphql.Marshaler {
+	return ec._ContactSearchResult(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNContactSearchResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContactSearchResult(ctx context.Context, sel ast.SelectionSet, v *model.ContactSearchResult) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._ContactSearchResult(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNContactTagInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContactTagInput(ctx context.Context, v interface{}) (model.ContactTagInput, error) {

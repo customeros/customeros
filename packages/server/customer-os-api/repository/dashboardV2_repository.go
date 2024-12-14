@@ -18,6 +18,7 @@ import (
 
 type DashboardV2Repository interface {
 	GetDashboardViewOrganizationDataV2(ctx context.Context, tenant string, limit int, where *model.Filter, sort *commonmodel.SortBy) (*utils.StringsWithTotalCount, error)
+	GetDashboardViewContactDataV2(ctx context.Context, tenant string, limit int, where *model.Filter, sort *commonmodel.SortBy) (*utils.StringsWithTotalCount, error)
 }
 
 type dashboardV2Repository struct {
@@ -96,7 +97,7 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 				createInOrEmptyStringFilter(filter, organizationFilter, "derivedRenewalLikelihood")
 			}
 			if filter.Filter.Property == model.ColumnViewTypeOrganizationsRenewalDate.String() {
-				createBetweenOrEmptyTimeFilter(filter, organizationFilter, "derivedNextRenewalAt")
+				createTimeFilter(filter, organizationFilter, "derivedNextRenewalAt")
 			}
 			if filter.Filter.Property == model.ColumnViewTypeOrganizationsForecastArr.String() {
 				createNumberCypherFilter(filter, organizationFilter, "renewalForecastArr")
@@ -108,7 +109,7 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 				createInOrEmptyStringFilter(filter, organizationFilter, "lastTouchpointType")
 			}
 			if filter.Filter.Property == model.ColumnViewTypeOrganizationsLastTouchpointDate.String() {
-				createBetweenOrEmptyTimeFilter(filter, organizationFilter, "lastTouchpointAt")
+				createTimeFilter(filter, organizationFilter, "lastTouchpointAt")
 			}
 			if filter.Filter.Property == model.ColumnViewTypeOrganizationsStage.String() {
 				createInOrEmptyStringFilter(filter, organizationFilter, "stage")
@@ -120,7 +121,7 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateStringCypherFilter("leadSource", filter.Filter.Value.Str, filter.Filter.Operation))
 			}
 			if filter.Filter.Property == model.ColumnViewTypeOrganizationsCreatedDate.String() {
-				createBetweenOrEmptyTimeFilter(filter, organizationFilter, "createdAt")
+				createTimeFilter(filter, organizationFilter, "createdAt")
 			}
 			if filter.Filter.Property == model.ColumnViewTypeOrganizationsEmployeeCount.String() {
 				createNumberCypherFilter(filter, organizationFilter, "employees")
@@ -132,7 +133,7 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateStringCypherFilter("industry", filter.Filter.Value.Str, filter.Filter.Operation))
 			}
 			if filter.Filter.Property == model.ColumnViewTypeOrganizationsChurnDate.String() {
-				createBetweenOrEmptyTimeFilter(filter, organizationFilter, "derivedChurnedAt")
+				createTimeFilter(filter, organizationFilter, "derivedChurnedAt")
 			}
 			if filter.Filter.Property == model.ColumnViewTypeOrganizationsLtv.String() {
 				createNumberCypherFilter(filter, organizationFilter, "derivedLtv")
@@ -156,7 +157,7 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 				parentOrganizationFilter.Filters = append(parentOrganizationFilter.Filters, utils.CreateStringCypherFilter("name", filter.Filter.Value.Str, filter.Filter.Operation))
 			}
 			if filter.Filter.Property == model.ColumnViewTypeOrganizationsUpdatedDate.String() {
-				createBetweenOrEmptyTimeFilter(filter, organizationFilter, "updatedAt")
+				createTimeFilter(filter, organizationFilter, "updatedAt")
 			}
 		}
 
@@ -354,9 +355,9 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 	}
 	if sort != nil && sort.By == model.ColumnViewTypeOrganizationsLastTouchpoint.String() {
 		if sort.Direction == commonmodel.SortingDirectionAsc {
-			aliases += "CASE WHEN o.lastTouchpointType <> \"\" and not o.lastTouchpointType is null THEN toLower(o.lastTouchpointType) ELSE 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz' END as SORT_BY "
+			aliases += "CASE WHEN o.lastTouchpointAt <> \"\" and not o.lastTouchpointAt is null THEN o.lastTouchpointAt ELSE datetime({year:2100}) END as SORT_BY "
 		} else {
-			aliases += "CASE WHEN o.lastTouchpointType <> \"\" and not o.lastTouchpointType is null THEN toLower(o.lastTouchpointType) ELSE '' END as SORT_BY "
+			aliases += "CASE WHEN o.lastTouchpointAt <> \"\" and not o.lastTouchpointAt is null THEN o.lastTouchpointAt ELSE datetime({year:1900}) END as SORT_BY "
 		}
 	}
 	if sort != nil && sort.By == model.ColumnViewTypeOrganizationsLastTouchpointDate.String() {
@@ -471,63 +472,6 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 	cypherSort := utils.CypherSort{}
 	if sort != nil {
 		selectQuery += " " + sortingCypher
-		//	if sort.By == SearchSortParamName {
-		//		if sort.CaseSensitive != nil && *sort.CaseSensitive {
-		//			selectQuery += " ORDER BY NAME_FOR_SORTING " + string(sort.Direction)
-		//		} else {
-		//			selectQuery += " ORDER BY toLower(NAME_FOR_SORTING) " + string(sort.Direction)
-		//		}
-		//	} else if sort.By == SearchSortParamRelationship {
-		//		selectQuery += " ORDER BY RELATIONSHIP_FOR_SORTING " + string(sort.Direction)
-		//	} else if sort.By == SearchSortParamStage {
-		//		selectQuery += " ORDER BY STAGE_FOR_SORTING " + string(sort.Direction)
-		//	} else if sort.By == SearchSortParamIndustry {
-		//		selectQuery += " ORDER BY INDUSTRY_FOR_SORTING " + string(sort.Direction)
-		//	} else if sort.By == SearchSortParamOrganization {
-		//		cypherSort.NewSortRule("NAME", string(sort.Direction), *sort.CaseSensitive, reflect.TypeOf(neo4jentity.OrganizationEntity{})).WithCoalesce().WithAlias("parent")
-		//		cypherSort.NewSortRule("NAME", string(sort.Direction), *sort.CaseSensitive, reflect.TypeOf(neo4jentity.OrganizationEntity{})).WithCoalesce()
-		//		cypherSort.NewSortRule("NAME", string(sort.Direction), true, reflect.TypeOf(neo4jentity.OrganizationEntity{})).WithAlias("parent").WithDescending()
-		//		cypherSort.NewSortRule("NAME", string(sort.Direction), *sort.CaseSensitive, reflect.TypeOf(neo4jentity.OrganizationEntity{}))
-		//		selectQuery += string(cypherSort.SortingCypherFragment("o"))
-		//	} else if sort.By == SearchSortParamForecastArr {
-		//		selectQuery += " ORDER BY FORECAST_ARR_FOR_SORTING " + string(sort.Direction)
-		//	} else if sort.By == SearchSortParamRenewalLikelihood {
-		//		selectQuery += " ORDER BY RENEWAL_LIKELIHOOD_FOR_SORTING " + string(sort.Direction)
-		//	} else if sort.By == SearchSortParamOnboardingStatus {
-		//		selectQuery += " ORDER BY ONBOARDING_STATUS_FOR_SORTING " + string(sort.Direction) +
-		//			", ONBOARDING_UPDATED_AT_FOR_SORTING " + string(sort.Direction)
-		//	} else if sort.By == SearchSortParamRenewalCycleNext {
-		//		selectQuery += " ORDER BY RENEWAL_CYCLE_NEXT_FOR_SORTING " + string(sort.Direction)
-		//	} else if sort.By == SearchSortParamRenewalDate {
-		//		selectQuery += " ORDER BY RENEWAL_DATE_FOR_SORTING " + string(sort.Direction)
-		//	} else if sort.By == SearchSortParamChurnDate {
-		//		selectQuery += " ORDER BY CHURN_DATE_FOR_SORTING " + string(sort.Direction)
-		//	} else if sort.By == "DOMAIN" {
-		//		cypherSort.NewSortRule("DOMAIN", string(sort.Direction), *sort.CaseSensitive, reflect.TypeOf(neo4jentity.DomainEntity{}))
-		//		selectQuery += string(cypherSort.SortingCypherFragment("d"))
-		//	} else if sort.By == SearchSortParamLocation {
-		//		cypherSort.NewSortRule("COUNTRY", string(sort.Direction), *sort.CaseSensitive, reflect.TypeOf(neo4jentity.LocationEntity{}))
-		//		cypherSort.NewSortRule("REGION", string(sort.Direction), *sort.CaseSensitive, reflect.TypeOf(neo4jentity.LocationEntity{}))
-		//		cypherSort.NewSortRule("LOCALITY", string(sort.Direction), *sort.CaseSensitive, reflect.TypeOf(neo4jentity.LocationEntity{}))
-		//		selectQuery += string(cypherSort.SortingCypherFragment("l"))
-		//	} else if sort.By == "OWNER" {
-		//		if sort.CaseSensitive != nil && *sort.CaseSensitive {
-		//			selectQuery += " ORDER BY OWNER_FIRST_NAME_FOR_SORTING " + string(sort.Direction) + ", OWNER_LAST_NAME_FOR_SORTING " + string(sort.Direction)
-		//		} else {
-		//			selectQuery += " ORDER BY toLower(OWNER_FIRST_NAME_FOR_SORTING) " + string(sort.Direction) + ", toLower(OWNER_LAST_NAME_FOR_SORTING) " + string(sort.Direction)
-		//		}
-		//	} else if sort.By == SearchSortParamLastTouchpointAt || sort.By == SearchSortParamLastTouchpoint {
-		//		cypherSort.NewSortRule("LAST_TOUCHPOINT_AT", string(sort.Direction), false, reflect.TypeOf(neo4jentity.OrganizationEntity{}))
-		//		selectQuery += string(cypherSort.SortingCypherFragment("o"))
-		//	} else if sort.By == SearchSortParamLastTouchpointType {
-		//		cypherSort.NewSortRule("LAST_TOUCHPOINT_TYPE", string(sort.Direction), false, reflect.TypeOf(neo4jentity.OrganizationEntity{}))
-		//		selectQuery += string(cypherSort.SortingCypherFragment("o"))
-		//	} else if sort.By == SearchSortParamUpdatedAt {
-		//		cypherSort.NewSortRule("UPDATED_AT", string(sort.Direction), false, reflect.TypeOf(neo4jentity.OrganizationEntity{}))
-		//		selectQuery += string(cypherSort.SortingCypherFragment("o"))
-		//	}
-
-		//TODO default sort if empty sort
 	} else {
 		cypherSort.NewSortRule("UPDATED_AT", string(commonmodel.SortingDirectionDesc), false, reflect.TypeOf(neo4jentity.OrganizationEntity{}))
 		selectQuery += string(cypherSort.SortingCypherFragment("o"))
@@ -630,13 +574,21 @@ func createInOrEmptyStringFilter(filter *model.Filter, cypherFilter *utils.Cyphe
 	}
 }
 
-func createBetweenOrEmptyTimeFilter(filter *model.Filter, cypherFilter *utils.CypherFilter, neo4jProperty string) {
+func createTimeFilter(filter *model.Filter, cypherFilter *utils.CypherFilter, neo4jProperty string) {
 	if filter.Filter.Operation == commonmodel.ComparisonOperatorBetween && filter.Filter.Value.ArrayTime != nil && len(*filter.Filter.Value.ArrayTime) == 2 {
 		times := *filter.Filter.Value.ArrayTime
 		cypherFilter.Filters = append(cypherFilter.Filters, utils.CreateCypherFilter(neo4jProperty, times[0], commonmodel.ComparisonOperatorGte))
 		cypherFilter.Filters = append(cypherFilter.Filters, utils.CreateCypherFilter(neo4jProperty, times[1], commonmodel.ComparisonOperatorLte))
 	} else if filter.Filter.Operation == commonmodel.ComparisonOperatorIsEmpty {
 		cypherFilter.Filters = append(cypherFilter.Filters, utils.CreateCypherFilter(neo4jProperty, nil, commonmodel.ComparisonOperatorIsEmpty))
+	} else if filter.Filter.Operation == commonmodel.ComparisonOperatorGte && filter.Filter.Value.Time != nil {
+		cypherFilter.Filters = append(cypherFilter.Filters, utils.CreateCypherFilter(neo4jProperty, *filter.Filter.Value.Time, commonmodel.ComparisonOperatorGte))
+	} else if filter.Filter.Operation == commonmodel.ComparisonOperatorGt && filter.Filter.Value.Time != nil {
+		cypherFilter.Filters = append(cypherFilter.Filters, utils.CreateCypherFilter(neo4jProperty, *filter.Filter.Value.Time, commonmodel.ComparisonOperatorGt))
+	} else if filter.Filter.Operation == commonmodel.ComparisonOperatorLte && filter.Filter.Value.Time != nil {
+		cypherFilter.Filters = append(cypherFilter.Filters, utils.CreateCypherFilter(neo4jProperty, *filter.Filter.Value.Time, commonmodel.ComparisonOperatorLte))
+	} else if filter.Filter.Operation == commonmodel.ComparisonOperatorLt && filter.Filter.Value.Time != nil {
+		cypherFilter.Filters = append(cypherFilter.Filters, utils.CreateCypherFilter(neo4jProperty, *filter.Filter.Value.Time, commonmodel.ComparisonOperatorLt))
 	}
 }
 
@@ -693,4 +645,589 @@ func createBooleanFilter(filter *model.Filter, cypherFilter *utils.CypherFilter,
 	if (filter.Filter.Operation == commonmodel.ComparisonOperatorEquals || filter.Filter.Operation == commonmodel.ComparisonOperatorNotEquals) && filter.Filter.Value.Bool != nil {
 		cypherFilter.Filters = append(cypherFilter.Filters, utils.CreateCypherFilter(neo4jProperty, filter.Filter.Value.Bool, filter.Filter.Operation))
 	}
+}
+
+func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Context, tenant string, limit int, where *model.Filter, sort *commonmodel.SortBy) (*utils.StringsWithTotalCount, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardRepository.GetDashboardViewContactDataV2")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogFields(log.Int("limit", limit))
+	tracing.LogObjectAsJson(span, "where", where)
+	tracing.LogObjectAsJson(span, "sort", sort)
+
+	contactFilterCypher, contactFilterParams := "", make(map[string]interface{})
+	socialFilterCypher, socialFilterParams := "", make(map[string]interface{})
+	tagFilterCypher, tagFilterParams := "", make(map[string]interface{})
+	locationFilterCypher, locationFilterParams := "", make(map[string]interface{})
+	primaryEmailFilterCypher, primaryEmailFilterParams := "", make(map[string]interface{})
+
+	if where != nil {
+		contactFilter := new(utils.CypherFilter)
+		contactFilter.Negate = false
+		contactFilter.LogicalOperator = utils.AND
+		contactFilter.Filters = make([]*utils.CypherFilter, 0)
+
+		socialFilter := new(utils.CypherFilter)
+		socialFilter.Negate = false
+		socialFilter.LogicalOperator = utils.AND
+		socialFilter.Filters = make([]*utils.CypherFilter, 0)
+
+		tagFilter := new(utils.CypherFilter)
+		tagFilter.Negate = false
+		tagFilter.LogicalOperator = utils.AND
+		tagFilter.Filters = make([]*utils.CypherFilter, 0)
+
+		primaryEmailFilter := new(utils.CypherFilter)
+		primaryEmailFilter.Negate = false
+		primaryEmailFilter.LogicalOperator = utils.AND
+		primaryEmailFilter.Filters = make([]*utils.CypherFilter, 0)
+
+		locationFilter := new(utils.CypherFilter)
+		locationFilter.Negate = false
+		locationFilter.LogicalOperator = utils.OR
+		locationFilter.Filters = make([]*utils.CypherFilter, 0)
+
+		for _, filter := range where.And {
+			// TODO
+			//ColumnViewTypeContactsName                       ColumnViewType = "CONTACTS_NAME"
+			//ColumnViewTypeContactsOrganization               ColumnViewType = "CONTACTS_ORGANIZATION"
+			//ColumnViewTypeContactsEmails                     ColumnViewType = "CONTACTS_EMAILS"
+			//ColumnViewTypeContactsPersonalEmails             ColumnViewType = "CONTACTS_PERSONAL_EMAILS"
+			//ColumnViewTypeContactsPhoneNumbers               ColumnViewType = "CONTACTS_PHONE_NUMBERS"
+			//ColumnViewTypeContactsLinkedin                   ColumnViewType = "CONTACTS_LINKEDIN"
+			//ColumnViewTypeContactsPersona                    ColumnViewType = "CONTACTS_PERSONA"
+			//ColumnViewTypeContactsLastInteraction            ColumnViewType = "CONTACTS_LAST_INTERACTION"
+			//ColumnViewTypeContactsSkills                     ColumnViewType = "CONTACTS_SKILLS"
+			//ColumnViewTypeContactsSchools                    ColumnViewType = "CONTACTS_SCHOOLS"
+			//ColumnViewTypeContactsLanguages                  ColumnViewType = "CONTACTS_LANGUAGES"
+			//ColumnViewTypeContactsTimeInCurrentRole          ColumnViewType = "CONTACTS_TIME_IN_CURRENT_ROLE"
+			//ColumnViewTypeContactsExperience                 ColumnViewType = "CONTACTS_EXPERIENCE"
+			//ColumnViewTypeContactsLinkedinFollowerCount      ColumnViewType = "CONTACTS_LINKEDIN_FOLLOWER_COUNT"
+			//ColumnViewTypeContactsJobTitle                   ColumnViewType = "CONTACTS_JOB_TITLE"
+			//ColumnViewTypeContactsTags                       ColumnViewType = "CONTACTS_TAGS"
+			//ColumnViewTypeContactsConnections                ColumnViewType = "CONTACTS_CONNECTIONS"
+			//ColumnViewTypeContactsFlows                      ColumnViewType = "CONTACTS_FLOWS"
+			//ColumnViewTypeContactsFlowStatus                 ColumnViewType = "CONTACTS_FLOW_STATUS"
+			//ColumnViewTypeContactsFlowNextAction             ColumnViewType = "CONTACTS_FLOW_NEXT_ACTION"
+			//ColumnViewTypeContactsUpdatedAt                  ColumnViewType = "CONTACTS_UPDATED_AT"
+			//ColumnViewTypeContactsCreatedAt                  ColumnViewType = "CONTACTS_CREATED_AT"
+			if filter.Filter.Property == model.ColumnViewTypeContactsName.String() {
+				logicalOperator := utils.AND
+				if filter.Filter.Operation == commonmodel.ComparisonOperatorContains || filter.Filter.Operation == commonmodel.ComparisonOperatorIsNotEmpty {
+					logicalOperator = utils.OR
+				} else if filter.Filter.Operation == commonmodel.ComparisonOperatorNotContains || filter.Filter.Operation == commonmodel.ComparisonOperatorIsEmpty {
+					logicalOperator = utils.AND
+				} else {
+					continue
+				}
+				innerGroupFilter := new(utils.CypherFilter)
+				innerGroupFilter.Negate = false
+				innerGroupFilter.LogicalOperator = logicalOperator
+				innerGroupFilter.Filters = make([]*utils.CypherFilter, 0)
+				innerGroupFilter.Filters = append(innerGroupFilter.Filters, utils.CreateStringCypherFilter(string(neo4jentity.ContactPropertyFirstName), filter.Filter.Value.Str, filter.Filter.Operation))
+				innerGroupFilter.Filters = append(innerGroupFilter.Filters, utils.CreateStringCypherFilter(string(neo4jentity.ContactPropertyLastName), filter.Filter.Value.Str, filter.Filter.Operation))
+				innerGroupFilter.Filters = append(innerGroupFilter.Filters, utils.CreateStringCypherFilter(string(neo4jentity.ContactPropertyName), filter.Filter.Value.Str, filter.Filter.Operation))
+				contactFilter.Filters = append(contactFilter.Filters, innerGroupFilter)
+			}
+			if filter.Filter.Property == model.ColumnViewTypeContactsPrimaryEmail.String() {
+				logicalOperator := utils.AND
+				if filter.Filter.Operation == commonmodel.ComparisonOperatorContains || filter.Filter.Operation == commonmodel.ComparisonOperatorIsNotEmpty {
+					logicalOperator = utils.OR
+				} else if filter.Filter.Operation == commonmodel.ComparisonOperatorNotContains || filter.Filter.Operation == commonmodel.ComparisonOperatorIsEmpty {
+					logicalOperator = utils.AND
+				} else {
+					continue
+				}
+				innerGroupFilter := new(utils.CypherFilter)
+				innerGroupFilter.Negate = false
+				innerGroupFilter.LogicalOperator = logicalOperator
+				innerGroupFilter.Filters = make([]*utils.CypherFilter, 0)
+				innerGroupFilter.Filters = append(innerGroupFilter.Filters, utils.CreateStringCypherFilter(string(neo4jentity.EmailPropertyRawEmail), filter.Filter.Value.Str, filter.Filter.Operation))
+				innerGroupFilter.Filters = append(innerGroupFilter.Filters, utils.CreateStringCypherFilter(string(neo4jentity.EmailPropertyEmail), filter.Filter.Value.Str, filter.Filter.Operation))
+				primaryEmailFilter.Filters = append(contactFilter.Filters, innerGroupFilter)
+			}
+			if filter.Filter.Property == model.ColumnViewTypeContactsCountry.String() {
+				locationFilter.Filters = append(locationFilter.Filters, utils.CreateStringCypherFilter(string(neo4jentity.LocationPropertyCountry), filter.Filter.Value.Str, filter.Filter.Operation))
+			}
+			if filter.Filter.Property == model.ColumnViewTypeContactsCity.String() {
+				locationFilter.Filters = append(locationFilter.Filters, utils.CreateStringCypherFilter(string(neo4jentity.LocationPropertyLocality), filter.Filter.Value.Str, filter.Filter.Operation))
+			}
+			if filter.Filter.Property == model.ColumnViewTypeContactsRegion.String() {
+				locationFilter.Filters = append(locationFilter.Filters, utils.CreateStringCypherFilter(string(neo4jentity.LocationPropertyRegion), filter.Filter.Value.Str, filter.Filter.Operation))
+			}
+			//if filter.Filter.Property == model.ColumnViewTypeOrganizationsWebsite.String() {
+			//	contactFilter.Filters = append(contactFilter.Filters, utils.CreateStringCypherFilter("website", filter.Filter.Value.Str, filter.Filter.Operation))
+			//}
+			//if filter.Filter.Property == model.ColumnViewTypeOrganizationsRelationship.String() {
+			//	createInOrEmptyStringFilter(filter, contactFilter, "relationship")
+			//}
+			//if filter.Filter.Property == model.ColumnViewTypeOrganizationsOnboardingStatus.String() {
+			//	createInOrEmptyStringFilter(filter, contactFilter, "onboardingStatus")
+			//}
+			//if filter.Filter.Property == model.ColumnViewTypeOrganizationsRenewalLikelihood.String() {
+			//	createInOrEmptyStringFilter(filter, contactFilter, "derivedRenewalLikelihood")
+			//}
+			//if filter.Filter.Property == model.ColumnViewTypeOrganizationsRenewalDate.String() {
+			//	createTimeFilter(filter, contactFilter, "derivedNextRenewalAt")
+			//}
+			//if filter.Filter.Property == model.ColumnViewTypeOrganizationsForecastArr.String() {
+			//	createNumberCypherFilter(filter, contactFilter, "renewalForecastArr")
+			//}
+			//if filter.Filter.Property == model.ColumnViewTypeOrganizationsLastTouchpoint.String() {
+			//	createInOrEmptyStringFilter(filter, contactFilter, "lastTouchpointType")
+			//}
+			//if filter.Filter.Property == model.ColumnViewTypeOrganizationsLastTouchpointDate.String() {
+			//	createTimeFilter(filter, contactFilter, "lastTouchpointAt")
+			//}
+			//if filter.Filter.Property == model.ColumnViewTypeOrganizationsStage.String() {
+			//	createInOrEmptyStringFilter(filter, contactFilter, "stage")
+			//}
+			//if filter.Filter.Property == model.ColumnViewTypeOrganizationsSocials.String() {
+			//	socialFilter.Filters = append(socialFilter.Filters, utils.CreateStringCypherFilter("url", filter.Filter.Value.Str, filter.Filter.Operation))
+			//}
+			//if filter.Filter.Property == model.ColumnViewTypeOrganizationsLeadSource.String() {
+			//	contactFilter.Filters = append(contactFilter.Filters, utils.CreateStringCypherFilter("leadSource", filter.Filter.Value.Str, filter.Filter.Operation))
+			//}
+			//if filter.Filter.Property == model.ColumnViewTypeOrganizationsCreatedDate.String() {
+			//	createTimeFilter(filter, contactFilter, "createdAt")
+			//}
+			//if filter.Filter.Property == model.ColumnViewTypeOrganizationsEmployeeCount.String() {
+			//	createNumberCypherFilter(filter, contactFilter, "employees")
+			//}
+			//if filter.Filter.Property == model.ColumnViewTypeOrganizationsYearFounded.String() {
+			//	createNumberCypherFilter(filter, contactFilter, "yearFounded")
+			//}
+			//if filter.Filter.Property == model.ColumnViewTypeOrganizationsIndustry.String() {
+			//	contactFilter.Filters = append(contactFilter.Filters, utils.CreateStringCypherFilter("industry", filter.Filter.Value.Str, filter.Filter.Operation))
+			//}
+			//if filter.Filter.Property == model.ColumnViewTypeOrganizationsChurnDate.String() {
+			//	createTimeFilter(filter, contactFilter, "derivedChurnedAt")
+			//}
+			//if filter.Filter.Property == model.ColumnViewTypeOrganizationsLtv.String() {
+			//	createNumberCypherFilter(filter, contactFilter, "derivedLtv")
+			//}
+			//if filter.Filter.Property == model.ColumnViewTypeOrganizationsIsPublic.String() {
+			//	createBooleanFilter(filter, contactFilter, "isPublic")
+			//}
+			//if filter.Filter.Property == model.ColumnViewTypeOrganizationsTags.String() {
+			//	tagFilter.Filters = append(tagFilter.Filters, utils.CreateStringCypherFilter("name", filter.Filter.Value.Str, filter.Filter.Operation))
+			//}
+			//if filter.Filter.Property == model.ColumnViewTypeOrganizationsHeadquarters.String() {
+			//	contactFilter.Filters = append(contactFilter.Filters, utils.CreateStringCypherFilter("headquarters", filter.Filter.Value.Str, filter.Filter.Operation))
+			//}
+			//if filter.Filter.Property == model.ColumnViewTypeOrganizationsUpdatedDate.String() {
+			//	createTimeFilter(filter, contactFilter, "updatedAt")
+			//}
+		}
+
+		if len(contactFilter.Filters) > 0 {
+			contactFilterCypher, contactFilterParams = contactFilter.BuildCypherFilterFragmentWithParamName("c", "c_param_")
+		}
+		if len(socialFilter.Filters) > 0 {
+			socialFilterCypher, socialFilterParams = socialFilter.BuildCypherFilterFragmentWithParamName("s", "s_param_")
+		}
+		if len(tagFilter.Filters) > 0 {
+			tagFilterCypher, tagFilterParams = tagFilter.BuildCypherFilterFragmentWithParamName("t", "t_param_")
+		}
+		if len(locationFilter.Filters) > 0 {
+			locationFilterCypher, locationFilterParams = locationFilter.BuildCypherFilterFragmentWithParamName("l", "l_param_")
+		}
+		if len(primaryEmailFilter.Filters) > 0 {
+			primaryEmailFilterCypher, primaryEmailFilterParams = primaryEmailFilter.BuildCypherFilterFragmentWithParamName("pe", "pe_param_")
+		}
+	}
+
+	//endregion
+
+	params := map[string]any{
+		"tenant": tenant,
+		"limit":  limit,
+	}
+
+	utils.MergeMapToMap(contactFilterParams, params)
+	utils.MergeMapToMap(socialFilterParams, params)
+	utils.MergeMapToMap(tagFilterParams, params)
+	utils.MergeMapToMap(locationFilterParams, params)
+	utils.MergeMapToMap(primaryEmailFilterParams, params)
+
+	//region count selectQuery
+	countQuery := ""
+	{
+		countQuery += fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact_%s) `, tenant)
+		if socialFilterCypher != "" {
+			countQuery += ` OPTIONAL MATCH (c)-[:HAS]->(s:Social) WITH *`
+		}
+		if tagFilterCypher != "" {
+			countQuery += ` OPTIONAL MATCH (c)-[:TAGGED]->(t:Tag) WITH *`
+		}
+		if locationFilterCypher != "" {
+			countQuery += ` OPTIONAL MATCH (c)-[:ASSOCIATED_WITH]->(l:Location) WITH *`
+		}
+		if primaryEmailFilterCypher != "" {
+			countQuery += ` OPTIONAL MATCH (c)-[:HAS {primary:true}]->(pe:Email) WITH *`
+		}
+
+		countQuery += ` WHERE (c.hide = false OR c.hide IS NULL) `
+
+		if contactFilterCypher != "" || socialFilterCypher != "" || tagFilterCypher != "" || locationFilterCypher != "" || primaryEmailFilterCypher != "" {
+			countQuery += " AND "
+		}
+
+		countQueryParts := []string{}
+		if contactFilterCypher != "" {
+			countQueryParts = append(countQueryParts, contactFilterCypher)
+		}
+		if socialFilterCypher != "" {
+			countQueryParts = append(countQueryParts, socialFilterCypher)
+		}
+		if tagFilterCypher != "" {
+			countQueryParts = append(countQueryParts, tagFilterCypher)
+		}
+		if locationFilterCypher != "" {
+			countQueryParts = append(countQueryParts, locationFilterCypher)
+		}
+		if primaryEmailFilterCypher != "" {
+			countQueryParts = append(countQueryParts, primaryEmailFilterCypher)
+		}
+
+		countQuery = countQuery + strings.Join(countQueryParts, " AND ") + fmt.Sprintf(` RETURN count(distinct(c))`)
+	}
+	//end count region
+
+	selectQuery := ""
+	//region selectQuery to fetch data
+	{
+		selectQuery += fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact_%s) `, tenant)
+		if socialFilterCypher != "" {
+			selectQuery += fmt.Sprintf(` OPTIONAL MATCH (c)-[:HAS]->(s:Social_%s) WITH *`, tenant)
+		}
+		if tagFilterCypher != "" {
+			selectQuery += fmt.Sprintf(` OPTIONAL MATCH (c)-[:TAGGED]->(t:Tag_%s) WITH *`, tenant)
+		}
+		if locationFilterCypher != "" || (sort != nil && (sort.By == model.ColumnViewTypeContactsCountry.String() || sort.By == model.ColumnViewTypeContactsCity.String() || sort.By == model.ColumnViewTypeContactsRegion.String())) {
+			selectQuery += fmt.Sprintf(` OPTIONAL MATCH (c)-[:ASSOCIATED_WITH]->(l:Location_%s) WITH *`, tenant)
+		}
+		if primaryEmailFilterCypher != "" || (sort != nil && (sort.By == model.ColumnViewTypeContactsPrimaryEmail.String())) {
+			selectQuery += fmt.Sprintf(` OPTIONAL MATCH (c)-[:HAS {primary:true}]->(pe:Email_%s) WITH *`, tenant)
+		}
+		selectQuery += ` WHERE (c.hide = false OR c.hide IS NULL) `
+
+		if contactFilterCypher != "" || socialFilterCypher != "" || tagFilterCypher != "" || locationFilterCypher != "" || primaryEmailFilterCypher != "" {
+			selectQuery += " AND "
+		}
+
+		queryParts := []string{}
+		if contactFilterCypher != "" {
+			queryParts = append(queryParts, contactFilterCypher)
+		}
+		if socialFilterCypher != "" {
+			queryParts = append(queryParts, socialFilterCypher)
+		}
+		if tagFilterCypher != "" {
+			queryParts = append(queryParts, tagFilterCypher)
+		}
+		if locationFilterCypher != "" {
+			queryParts = append(queryParts, locationFilterCypher)
+		}
+		if primaryEmailFilterCypher != "" {
+			queryParts = append(queryParts, primaryEmailFilterCypher)
+		}
+		selectQuery = selectQuery + strings.Join(queryParts, " AND ")
+	}
+	//endregion
+
+	// sort region
+	aliases := ""
+
+	if sort != nil && sort.By == model.ColumnViewTypeContactsName.String() {
+		if sort.Direction == commonmodel.SortingDirectionAsc {
+			aliases += `CASE WHEN (COALESCE(c.firstName, '') + COALESCE(c.lastName, '') + COALESCE(c.name, '')) <> '' THEN toLower(COALESCE(c.firstName, '') + COALESCE(c.lastName, '') + COALESCE(c.name, '')) ELSE 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz' END as SORT_BY `
+		} else {
+			aliases += `CASE WHEN (COALESCE(c.firstName, '') + COALESCE(c.lastName, '') + COALESCE(c.name, '')) <> '' THEN toLower(COALESCE(c.firstName, '') + COALESCE(c.lastName, '') + COALESCE(c.name, '')) ELSE '' END as SORT_BY `
+		}
+	}
+	if sort != nil && sort.By == model.ColumnViewTypeContactsPrimaryEmail.String() {
+		if sort.Direction == commonmodel.SortingDirectionAsc {
+			aliases += `CASE WHEN (COALESCE(pe.email, '') + COALESCE(pe.rawEmail, '')) <> '' THEN toLower(COALESCE(pe.email, '') + COALESCE(pe.rawEmail, '')) ELSE 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz' END as SORT_BY `
+		} else {
+			aliases += `CASE WHEN (COALESCE(pe.email, '') + COALESCE(pe.rawEmail, '')) <> '' THEN toLower(COALESCE(pe.email, '') + COALESCE(pe.rawEmail, '')) ELSE '' END as SORT_BY `
+		}
+	}
+	if sort != nil && sort.By == model.ColumnViewTypeContactsCountry.String() {
+		if sort.Direction == commonmodel.SortingDirectionAsc {
+			aliases += `CASE WHEN l.country <> '' AND NOT l.country IS NULL THEN toLower(l.country) ELSE 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz' END as SORT_BY `
+		} else {
+			aliases += `CASE WHEN l.country <> '' AND NOT l.country IS NULL THEN toLower(l.country) ELSE '' END AS SORT_BY `
+		}
+	}
+	if sort != nil && sort.By == model.ColumnViewTypeContactsRegion.String() {
+		if sort.Direction == commonmodel.SortingDirectionAsc {
+			aliases += `CASE WHEN l.region <> '' AND NOT l.region IS NULL THEN toLower(l.region) ELSE 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz' END as SORT_BY `
+		} else {
+			aliases += `CASE WHEN l.region <> '' AND NOT l.region IS NULL THEN toLower(l.region) ELSE '' END AS SORT_BY `
+		}
+	}
+	if sort != nil && sort.By == model.ColumnViewTypeContactsCity.String() {
+		if sort.Direction == commonmodel.SortingDirectionAsc {
+			aliases += `CASE WHEN l.locality <> '' AND NOT l.locality IS NULL THEN toLower(l.locality) ELSE 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz' END as SORT_BY `
+		} else {
+			aliases += `CASE WHEN l.locality <> '' AND NOT l.locality IS NULL THEN toLower(l.locality) ELSE '' END AS SORT_BY `
+		}
+	}
+	//if sort != nil && sort.By == model.ColumnViewTypeOrganizationsWebsite.String() {
+	//	if sort.Direction == commonmodel.SortingDirectionAsc {
+	//		aliases += "CASE WHEN o.website <> \"\" and not o.website is null THEN toLower(o.website) ELSE 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz' END as SORT_BY "
+	//	} else {
+	//		aliases += "CASE WHEN o.website <> \"\" and not o.website is null THEN toLower(o.website) ELSE '' END as SORT_BY "
+	//	}
+	//}
+	//if sort != nil && sort.By == model.ColumnViewTypeOrganizationsRelationship.String() {
+	//	if sort.Direction == commonmodel.SortingDirectionAsc {
+	//		aliases += "CASE WHEN o.relationship <> \"\" and not o.relationship is null THEN toLower(o.relationship) ELSE 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz' END as SORT_BY "
+	//	} else {
+	//		aliases += "CASE WHEN o.relationship <> \"\" and not o.relationship is null THEN toLower(o.relationship) ELSE '' END as SORT_BY "
+	//	}
+	//}
+	//if sort != nil && sort.By == model.ColumnViewTypeOrganizationsOnboardingStatus.String() {
+	//	if sort.Direction == commonmodel.SortingDirectionAsc {
+	//		aliases += "CASE WHEN o.onboardingStatusOrder <> \"\" and not o.onboardingStatusOrder is null THEN o.onboardingStatusOrder ELSE 9999 END as SORT_BY "
+	//	} else {
+	//		aliases += "CASE WHEN o.onboardingStatusOrder <> \"\" and not o.onboardingStatusOrder is null THEN o.onboardingStatusOrder ELSE -1 END as SORT_BY "
+	//	}
+	//}
+	//if sort != nil && sort.By == model.ColumnViewTypeOrganizationsRenewalLikelihood.String() {
+	//	if sort.Direction == commonmodel.SortingDirectionAsc {
+	//		aliases += "CASE WHEN o.derivedRenewalLikelihoodOrder <> \"\" and not o.derivedRenewalLikelihoodOrder is null THEN o.derivedRenewalLikelihoodOrder ELSE 9999 END as SORT_BY "
+	//	} else {
+	//		aliases += "CASE WHEN o.derivedRenewalLikelihoodOrder <> \"\" and not o.derivedRenewalLikelihoodOrder is null THEN o.derivedRenewalLikelihoodOrder ELSE -1 END as SORT_BY "
+	//	}
+	//}
+	//if sort != nil && sort.By == model.ColumnViewTypeOrganizationsRenewalDate.String() {
+	//	if sort.Direction == commonmodel.SortingDirectionAsc {
+	//		aliases += "CASE WHEN o.derivedNextRenewalAt <> \"\" and not o.derivedNextRenewalAt is null THEN o.derivedNextRenewalAt ELSE datetime({year:2100}) END as SORT_BY "
+	//	} else {
+	//		aliases += "CASE WHEN o.derivedNextRenewalAt <> \"\" and not o.derivedNextRenewalAt is null THEN o.derivedNextRenewalAt ELSE datetime({year:1900}) END as SORT_BY "
+	//	}
+	//}
+	//if sort != nil && sort.By == model.ColumnViewTypeOrganizationsForecastArr.String() {
+	//	if sort.Direction == commonmodel.SortingDirectionAsc {
+	//		aliases += "CASE WHEN o.renewalForecastArr <> \"\" and not o.renewalForecastArr is null THEN o.renewalForecastArr ELSE 9999 END as SORT_BY "
+	//	} else {
+	//		aliases += "CASE WHEN o.renewalForecastArr <> \"\" and not o.renewalForecastArr is null THEN o.renewalForecastArr ELSE -1 END as SORT_BY "
+	//	}
+	//}
+	//if sort != nil && sort.By == model.ColumnViewTypeOrganizationsOwner.String() {
+	//	if sort.Direction == commonmodel.SortingDirectionAsc {
+	//		aliases += "CASE WHEN owner.firstName <> \"\" and not owner.firstName is null THEN toLower(owner.firstName) ELSE 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz' END as SORT_BY "
+	//	} else {
+	//		aliases += "CASE WHEN owner.firstName <> \"\" and not owner.firstName is null THEN toLower(owner.firstName) ELSE '' END as SORT_BY "
+	//	}
+	//}
+	//if sort != nil && sort.By == model.ColumnViewTypeOrganizationsLastTouchpoint.String() {
+	//	if sort.Direction == commonmodel.SortingDirectionAsc {
+	//		aliases += "CASE WHEN o.lastTouchpointAt <> \"\" and not o.lastTouchpointAt is null THEN o.lastTouchpointAt ELSE datetime({year:2100}) END as SORT_BY "
+	//	} else {
+	//		aliases += "CASE WHEN o.lastTouchpointAt <> \"\" and not o.lastTouchpointAt is null THEN o.lastTouchpointAt ELSE datetime({year:1900}) END as SORT_BY "
+	//	}
+	//}
+	//if sort != nil && sort.By == model.ColumnViewTypeOrganizationsLastTouchpointDate.String() {
+	//	if sort.Direction == commonmodel.SortingDirectionAsc {
+	//		aliases += "CASE WHEN o.lastTouchpointAt <> \"\" and not o.lastTouchpointAt is null THEN o.lastTouchpointAt ELSE datetime({year:2100}) END as SORT_BY "
+	//	} else {
+	//		aliases += "CASE WHEN o.lastTouchpointAt <> \"\" and not o.lastTouchpointAt is null THEN o.lastTouchpointAt ELSE datetime({year:1900}) END as SORT_BY "
+	//	}
+	//}
+	//if sort != nil && sort.By == model.ColumnViewTypeOrganizationsStage.String() {
+	//	if sort.Direction == commonmodel.SortingDirectionAsc {
+	//		aliases += "CASE WHEN o.stage <> \"\" and not o.stage is null THEN toLower(o.stage) ELSE 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz' END as SORT_BY "
+	//	} else {
+	//		aliases += "CASE WHEN o.stage <> \"\" and not o.stage is null THEN toLower(o.stage) ELSE '' END as SORT_BY "
+	//	}
+	//}
+	//if sort != nil && sort.By == model.ColumnViewTypeOrganizationsLeadSource.String() {
+	//	if sort.Direction == commonmodel.SortingDirectionAsc {
+	//		aliases += "CASE WHEN o.leadSource <> \"\" and not o.leadSource is null THEN toLower(o.leadSource) ELSE 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz' END as SORT_BY "
+	//	} else {
+	//		aliases += "CASE WHEN o.leadSource <> \"\" and not o.leadSource is null THEN toLower(o.leadSource) ELSE '' END as SORT_BY "
+	//	}
+	//}
+	//if sort != nil && sort.By == model.ColumnViewTypeOrganizationsCreatedDate.String() {
+	//	if sort.Direction == commonmodel.SortingDirectionAsc {
+	//		aliases += "CASE WHEN o.createdAt <> \"\" and not o.createdAt is null THEN o.createdAt ELSE datetime({year:2100}) END as SORT_BY "
+	//	} else {
+	//		aliases += "CASE WHEN o.createdAt <> \"\" and not o.createdAt is null THEN o.createdAt ELSE datetime({year:1900}) END as SORT_BY "
+	//	}
+	//}
+	//if sort != nil && sort.By == model.ColumnViewTypeOrganizationsEmployeeCount.String() {
+	//	if sort.Direction == commonmodel.SortingDirectionAsc {
+	//		aliases += "CASE WHEN o.employees <> \"\" and not o.employees is null THEN o.employees ELSE 999999999 END as SORT_BY "
+	//	} else {
+	//		aliases += "CASE WHEN o.employees <> \"\" and not o.employees is null THEN o.employees ELSE -1 END as SORT_BY "
+	//	}
+	//}
+	//if sort != nil && sort.By == model.ColumnViewTypeOrganizationsYearFounded.String() {
+	//	if sort.Direction == commonmodel.SortingDirectionAsc {
+	//		aliases += "CASE WHEN o.yearFounded <> \"\" and not o.yearFounded is null THEN o.yearFounded ELSE 999999999 END as SORT_BY "
+	//	} else {
+	//		aliases += "CASE WHEN o.yearFounded <> \"\" and not o.yearFounded is null THEN o.yearFounded ELSE -1 END as SORT_BY "
+	//	}
+	//}
+	//if sort != nil && sort.By == model.ColumnViewTypeOrganizationsIndustry.String() {
+	//	if sort.Direction == commonmodel.SortingDirectionAsc {
+	//		aliases += "CASE WHEN o.industry <> \"\" and not o.industry is null THEN toLower(o.industry) ELSE 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz' END as SORT_BY "
+	//	} else {
+	//		aliases += "CASE WHEN o.industry <> \"\" and not o.industry is null THEN toLower(o.industry) ELSE '' END as SORT_BY "
+	//	}
+	//}
+	//if sort != nil && sort.By == model.ColumnViewTypeOrganizationsChurnDate.String() {
+	//	if sort.Direction == commonmodel.SortingDirectionAsc {
+	//		aliases += "CASE WHEN o.derivedChurnedAt <> \"\" and not o.derivedChurnedAt is null THEN o.derivedChurnedAt ELSE datetime({year:2100}) END as SORT_BY "
+	//	} else {
+	//		aliases += "CASE WHEN o.derivedChurnedAt <> \"\" and not o.derivedChurnedAt is null THEN o.derivedChurnedAt ELSE datetime({year:1900}) END as SORT_BY "
+	//	}
+	//}
+	//if sort != nil && sort.By == model.ColumnViewTypeOrganizationsLtv.String() {
+	//	if sort.Direction == commonmodel.SortingDirectionAsc {
+	//		aliases += "CASE WHEN o.derivedLtv <> \"\" and not o.derivedLtv is null THEN o.derivedLtv ELSE 9999999999999999 END as SORT_BY "
+	//	} else {
+	//		aliases += "CASE WHEN o.derivedLtv <> \"\" and not o.derivedLtv is null THEN o.derivedLtv ELSE -9999999999999999 END as SORT_BY "
+	//	}
+	//}
+	//if sort != nil && sort.By == model.ColumnViewTypeOrganizationsCountry.String() {
+	//	if sort.Direction == commonmodel.SortingDirectionAsc {
+	//		aliases += "CASE WHEN l.country <> \"\" and not l.country is null THEN toLower(l.country) ELSE 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz' END as SORT_BY "
+	//	} else {
+	//		aliases += "CASE WHEN l.country <> \"\" and not l.country is null THEN toLower(l.country) ELSE '' END as SORT_BY "
+	//	}
+	//}
+	//if sort != nil && sort.By == model.ColumnViewTypeOrganizationsCity.String() {
+	//	if sort.Direction == commonmodel.SortingDirectionAsc {
+	//		aliases += "CASE WHEN l.locality <> \"\" and not l.locality is null THEN toLower(l.locality) ELSE 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz' END as SORT_BY "
+	//	} else {
+	//		aliases += "CASE WHEN l.locality <> \"\" and not l.locality is null THEN toLower(l.locality) ELSE '' END as SORT_BY "
+	//	}
+	//}
+	//if sort != nil && sort.By == model.ColumnViewTypeOrganizationsIsPublic.String() {
+	//	if sort.Direction == commonmodel.SortingDirectionAsc {
+	//		aliases += "CASE WHEN o.isPublic = true THEN 0 ELSE CASE WHEN o.isPublic = false THEN 1 ELSE 2 END END as SORT_BY "
+	//	} else {
+	//		aliases += "CASE WHEN o.isPublic = false THEN 2 ELSE CASE WHEN o.isPublic = true THEN 1 ELSE 0 END END as SORT_BY "
+	//	}
+	//}
+	//if sort != nil && sort.By == model.ColumnViewTypeOrganizationsParentOrganization.String() {
+	//	if sort.Direction == commonmodel.SortingDirectionAsc {
+	//		aliases += "CASE WHEN po.name <> \"\" and not po.name is null THEN toLower(po.name) ELSE 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz' END as SORT_BY "
+	//	} else {
+	//		aliases += "CASE WHEN po.name <> \"\" and not po.name is null THEN toLower(po.name) ELSE '' END as SORT_BY "
+	//	}
+	//}
+	//if sort != nil && sort.By == model.ColumnViewTypeOrganizationsUpdatedDate.String() {
+	//	if sort.Direction == commonmodel.SortingDirectionAsc {
+	//		aliases += "CASE WHEN o.updatedAt <> \"\" and not o.updatedAt is null THEN o.updatedAt ELSE datetime({year:2100}) END as SORT_BY "
+	//	} else {
+	//		aliases += "CASE WHEN o.updatedAt <> \"\" and not o.updatedAt is null THEN o.updatedAt ELSE datetime({year:1900}) END as SORT_BY "
+	//	}
+	//}
+
+	if len(aliases) > 0 {
+		selectQuery += " WITH *, " + aliases
+	} else {
+		selectQuery += " WITH * "
+	}
+
+	cypherSort := utils.CypherSort{}
+	if sort != nil {
+		selectQuery += " ORDER BY SORT_BY " + string(sort.Direction)
+	} else {
+		cypherSort.NewSortRule("UPDATED_AT", string(commonmodel.SortingDirectionDesc), false, reflect.TypeOf(neo4jentity.OrganizationEntity{}))
+		selectQuery += string(cypherSort.SortingCypherFragment("c"))
+	}
+
+	// end sort region
+	selectQuery += fmt.Sprintf(` RETURN distinct(c.id) `)
+	selectQuery += fmt.Sprintf(` LIMIT $limit`)
+
+	stringsWithTotalCount := &utils.StringsWithTotalCount{}
+
+	var wg sync.WaitGroup
+	var firstErr error
+	var mu sync.Mutex
+
+	setError := func(err error) {
+		mu.Lock()
+		defer mu.Unlock()
+		if firstErr == nil {
+			firstErr = err
+		}
+	}
+
+	wg.Add(1)
+	go func(ctx context.Context, result *utils.StringsWithTotalCount) {
+		innerSpan, ctx := opentracing.StartSpanFromContext(ctx, "DashboardRepository.GetDashboardViewContactDataV2.CountQuery")
+		defer innerSpan.Finish()
+		defer wg.Done()
+		tracing.SetDefaultServiceSpanTags(ctx, innerSpan)
+
+		innerSpan.LogFields(log.Object("params", params))
+		innerSpan.LogFields(log.String("countQuery", countQuery))
+
+		session := utils.NewNeo4jReadSession(ctx, *r.driver)
+		defer session.Close(ctx)
+
+		countRecord, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+			countQueryResult, err := tx.Run(ctx, countQuery, params)
+			if err != nil {
+				return nil, err
+			} else {
+				return utils.ExtractSingleRecordFirstValueAsType[int64](ctx, countQueryResult, err)
+			}
+		})
+
+		if err != nil {
+			tracing.TraceErr(innerSpan, err)
+			setError(err)
+			return
+		}
+
+		result.Count = countRecord.(int64)
+	}(ctx, stringsWithTotalCount)
+
+	wg.Add(1)
+	go func(ctx context.Context, result *utils.StringsWithTotalCount) {
+		innerSpan, ctx := opentracing.StartSpanFromContext(ctx, "DashboardRepository.GetDashboardViewContactDataV2.SelectQuery")
+		defer span.Finish()
+		defer wg.Done()
+		tracing.SetDefaultServiceSpanTags(ctx, innerSpan)
+
+		innerSpan.LogFields(log.Object("params", params))
+		innerSpan.LogFields(log.String("selectQuery", selectQuery))
+
+		session := utils.NewNeo4jReadSession(ctx, *r.driver)
+		defer session.Close(ctx)
+
+		dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+			queryResult, err := tx.Run(ctx, selectQuery, params)
+			if err != nil {
+				return nil, err
+			} else {
+				return utils.ExtractAllRecordsAsString(ctx, queryResult, err)
+			}
+		})
+
+		if err != nil {
+			tracing.TraceErr(innerSpan, err)
+			setError(err)
+			return
+		}
+
+		result.Strings = dbRecords.([]string)
+	}(ctx, stringsWithTotalCount)
+
+	wg.Wait()
+
+	if firstErr != nil {
+		return nil, firstErr
+	}
+
+	return stringsWithTotalCount, nil
 }
