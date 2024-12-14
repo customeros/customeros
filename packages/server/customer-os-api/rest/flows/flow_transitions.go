@@ -5,22 +5,23 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
+	commonEnum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
 
 type FlowTransitionResponse struct {
-	rest.BaseResponse
+	enum.BaseResponse
 	Transitions []FlowTransitionRecord `json:"transitions"`
 }
 
 type FlowTransitionSingleResponse struct {
-	rest.BaseResponse
+	enum.BaseResponse
 	Transition FlowTransitionRecord `json:"transition"`
 }
 
@@ -43,7 +44,7 @@ func GetTransitions(s *service.Services) gin.HandlerFunc {
 
 		tenant := rest.ValidateTenant(c, ctx, span)
 		if tenant == "" {
-			rest.SendError(c, span, http.StatusUnauthorized, rest.ErrInvalidAPIKey)
+			rest.SendError(c, span, http.StatusUnauthorized, enum.ErrInvalidAPIKey)
 			return
 		}
 
@@ -63,7 +64,7 @@ func GetTransitions(s *service.Services) gin.HandlerFunc {
 		}
 		if err != nil {
 			tracing.TraceErr(span, err)
-			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer)
+			rest.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer)
 			return
 		}
 
@@ -71,14 +72,14 @@ func GetTransitions(s *service.Services) gin.HandlerFunc {
 
 		if len(results) == 1 {
 			c.JSON(http.StatusOK, FlowTransitionSingleResponse{
-				BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
+				BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
 				Transition:   results[0],
 			})
 			return
 		}
 
 		c.JSON(http.StatusOK, FlowTransitionResponse{
-			BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
+			BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
 			Transitions:  results,
 		})
 	}
@@ -95,7 +96,7 @@ func buildTransitionRecords(ctx context.Context, span opentracing.Span, s *servi
 			Type: from.FromNodeType,
 		}
 
-		enumType, err := enum.GetFlowNodeType(from.FromNode)
+		enumType, err := commonEnum.GetFlowNodeType(from.FromNode)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			continue

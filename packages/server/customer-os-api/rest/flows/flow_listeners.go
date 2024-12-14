@@ -6,17 +6,18 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
 
 type FlowListenerEventsResponse struct {
-	rest.BaseResponse
+	enum.BaseResponse
 	Events []FlowListenerEventRecord `json:"events"`
 }
 
 type FlowListenerEventSingleResponse struct {
-	rest.BaseResponse
+	enum.BaseResponse
 	Event FlowListenerEventRecord `json:"event"`
 }
 
@@ -35,14 +36,14 @@ func GetListeners(s *service.Services) gin.HandlerFunc {
 
 		tenant := rest.ValidateTenant(c, ctx, span)
 		if tenant == "" {
-			rest.SendError(c, span, http.StatusUnauthorized, rest.ErrInvalidAPIKey)
+			rest.SendError(c, span, http.StatusUnauthorized, enum.ErrInvalidAPIKey)
 			return
 		}
 
 		events, err := s.Repositories.PostgresRepositories.FlowListenerRegistryRepository.FindAll(ctx)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer)
+			rest.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer)
 			return
 		}
 
@@ -60,14 +61,14 @@ func GetListeners(s *service.Services) gin.HandlerFunc {
 
 		if len(*events) == 1 {
 			c.JSON(http.StatusOK, FlowListenerEventSingleResponse{
-				BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
+				BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
 				Event:        results[0],
 			})
 			return
 		}
 
 		c.JSON(http.StatusOK, FlowListenerEventsResponse{
-			BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
+			BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
 			Events:       results,
 		})
 	}

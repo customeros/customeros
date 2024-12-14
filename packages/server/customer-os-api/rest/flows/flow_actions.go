@@ -6,17 +6,18 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
 
 type FlowActionResponse struct {
-	rest.BaseResponse
+	enum.BaseResponse
 	Actions []FlowActionRecord `json:"actions"`
 }
 
 type FlowActionSingleResponse struct {
-	rest.BaseResponse
+	enum.BaseResponse
 	Action FlowActionRecord `json:"action"`
 }
 
@@ -34,14 +35,14 @@ func GetActions(s *service.Services) gin.HandlerFunc {
 
 		tenant := rest.ValidateTenant(c, ctx, span)
 		if tenant == "" {
-			rest.SendError(c, span, http.StatusUnauthorized, rest.ErrInvalidAPIKey)
+			rest.SendError(c, span, http.StatusUnauthorized, enum.ErrInvalidAPIKey)
 			return
 		}
 
 		actions, err := s.Repositories.PostgresRepositories.FlowActionRegistryRepository.FindAll(ctx)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer)
+			rest.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer)
 			return
 		}
 
@@ -58,14 +59,14 @@ func GetActions(s *service.Services) gin.HandlerFunc {
 
 		if len(*actions) == 1 {
 			c.JSON(http.StatusOK, FlowActionSingleResponse{
-				BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
+				BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
 				Action:       results[0],
 			})
 			return
 		}
 
 		c.JSON(http.StatusOK, FlowActionResponse{
-			BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
+			BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
 			Actions:      results,
 		})
 	}

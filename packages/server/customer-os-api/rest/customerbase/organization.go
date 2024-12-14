@@ -14,11 +14,12 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
+	neoEnum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/pkg/errors"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	enummapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
@@ -47,7 +48,7 @@ func CreateOrganization(s *service.Services) gin.HandlerFunc {
 
 		tenant := rest.ValidateTenant(c, ctx, span)
 		if tenant == "" {
-			rest.SendError(c, span, http.StatusUnauthorized, rest.ErrInvalidAPIKey)
+			rest.SendError(c, span, http.StatusUnauthorized, enum.ErrInvalidAPIKey)
 			return
 		}
 
@@ -55,7 +56,7 @@ func CreateOrganization(s *service.Services) gin.HandlerFunc {
 		if err := c.ShouldBindJSON(&request); err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "Invalid request body"))
 			s.Log.Error(ctx, "Invalid request body", err)
-			rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest)
+			rest.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest)
 			return
 		}
 		if err := validateOrganizationRequest(c, s, &request); err != nil {
@@ -67,12 +68,12 @@ func CreateOrganization(s *service.Services) gin.HandlerFunc {
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "Failed to create organization"))
 			s.Log.Error(ctx, "Failed to create organization", err)
-			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer.WithMessage("Failed to create organization"))
+			rest.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer.WithMessage("Failed to create organization"))
 			return
 		}
 
 		c.JSON(http.StatusCreated, OrganizationResponse{
-			BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
+			BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
 			Organization: OrganizationRecord{
 				ID: organizationId,
 			},
@@ -102,28 +103,28 @@ func GetOrganization(s *service.Services) gin.HandlerFunc {
 
 		tenant := rest.ValidateTenant(c, ctx, span)
 		if tenant == "" {
-			rest.SendError(c, span, http.StatusUnauthorized, rest.ErrInvalidAPIKey)
+			rest.SendError(c, span, http.StatusUnauthorized, enum.ErrInvalidAPIKey)
 			return
 		}
 
 		orgID := c.Param("id")
 		if orgID == "" {
-			rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Invalid organization ID"))
+			rest.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("Invalid organization ID"))
 			return
 		}
 
 		result, status := retrieveOrganization(c, s, orgID)
 
 		switch {
-		case status == rest.StatusError:
-			rest.SendError(c, span, http.StatusNotFound, rest.ErrNotFound.WithMessage("Organization does not exist"))
+		case status == enum.StatusError:
+			rest.SendError(c, span, http.StatusNotFound, enum.ErrNotFound.WithMessage("Organization does not exist"))
 			return
-		case status == rest.StatusPartialSuccess:
+		case status == enum.StatusPartialSuccess:
 			c.JSON(http.StatusPartialContent, "Unable to retrieve full organization data")
 			return
 		default:
 			c.JSON(http.StatusOK, OrganizationResponse{
-				BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
+				BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
 				Organization: result,
 			})
 			return
@@ -154,7 +155,7 @@ func SetPrimaryExternalSystemId(s *service.Services) gin.HandlerFunc {
 
 		tenant := rest.ValidateTenant(c, ctx, span)
 		if tenant == "" {
-			rest.SendError(c, span, http.StatusUnauthorized, rest.ErrInvalidAPIKey)
+			rest.SendError(c, span, http.StatusUnauthorized, enum.ErrInvalidAPIKey)
 			return
 		}
 
@@ -162,14 +163,14 @@ func SetPrimaryExternalSystemId(s *service.Services) gin.HandlerFunc {
 
 		switch {
 		case statusCode == http.StatusBadRequest:
-			rest.SendError(c, span, statusCode, rest.ErrBadRequest)
+			rest.SendError(c, span, statusCode, enum.ErrBadRequest)
 		case statusCode == http.StatusInternalServerError:
-			rest.SendError(c, span, statusCode, rest.ErrInternalServer)
+			rest.SendError(c, span, statusCode, enum.ErrInternalServer)
 		case statusCode == http.StatusNotFound:
-			rest.SendError(c, span, statusCode, rest.ErrNotFound)
+			rest.SendError(c, span, statusCode, enum.ErrNotFound)
 		default:
 			c.JSON(statusCode, ExternalSystemResponse{
-				BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
+				BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
 				Organization: result,
 			})
 		}
@@ -182,7 +183,7 @@ func validateOrganizationRequest(c *gin.Context, s *service.Services, request *C
 	tracing.TagComponentRest(span)
 
 	if request.Name == "" && request.CustomId == "" && request.Website == "" && request.LinkedinUrl == "" {
-		rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Missing organization input fields"))
+		rest.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("Missing organization input fields"))
 		return errors.New("missing required fields")
 	}
 
@@ -190,10 +191,10 @@ func validateOrganizationRequest(c *gin.Context, s *service.Services, request *C
 	websiteDomain, _ := s.CommonServices.DomainService.GetPrimaryDomainForOrganizationWebsite(ctx, request.Website)
 	if websiteDomain != "" {
 		if exists, err := checkOrganizationExistsByDomain(ctx, s, websiteDomain); err != nil {
-			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer.WithMessage("Failed to check organization domain"))
+			rest.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer.WithMessage("Failed to check organization domain"))
 			return err
 		} else if exists {
-			rest.SendError(c, span, http.StatusConflict, rest.ErrConflict.WithMessage("Organization already exists with given domain"))
+			rest.SendError(c, span, http.StatusConflict, enum.ErrConflict.WithMessage("Organization already exists with given domain"))
 			return errors.New("organization exists")
 		}
 	}
@@ -201,10 +202,10 @@ func validateOrganizationRequest(c *gin.Context, s *service.Services, request *C
 	// Validate custom ID
 	if request.CustomId != "" {
 		if exists, err := checkOrganizationExistsByCustomId(ctx, s, request.CustomId); err != nil {
-			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer.WithMessage("Failed to check organization custom id"))
+			rest.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer.WithMessage("Failed to check organization custom id"))
 			return err
 		} else if exists {
-			rest.SendError(c, span, http.StatusConflict, rest.ErrConflict.WithMessage("Organization already exists with given custom id"))
+			rest.SendError(c, span, http.StatusConflict, enum.ErrConflict.WithMessage("Organization already exists with given custom id"))
 			return errors.New("organization exists")
 		}
 	}
@@ -212,10 +213,10 @@ func validateOrganizationRequest(c *gin.Context, s *service.Services, request *C
 	// Validate LinkedIn URL
 	if request.LinkedinUrl != "" {
 		if exists, err := checkOrganizationExistsBySocialUrl(ctx, s, request.LinkedinUrl); err != nil {
-			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer.WithMessage("Failed to check organization linkedin url"))
+			rest.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer.WithMessage("Failed to check organization linkedin url"))
 			return err
 		} else if exists {
-			rest.SendError(c, span, http.StatusConflict, rest.ErrConflict.WithMessage("Organization already exists with given linkedin url"))
+			rest.SendError(c, span, http.StatusConflict, enum.ErrConflict.WithMessage("Organization already exists with given linkedin url"))
 			return errors.New("organization exists")
 		}
 	}
@@ -250,7 +251,7 @@ func buildOrganizationFields(request CreateOrganizationRequest) data_fields.Orga
 	return fields
 }
 
-func determineOrganizationStage(relationship model.OrganizationRelationship) *enum.OrganizationStage {
+func determineOrganizationStage(relationship model.OrganizationRelationship) *neoEnum.OrganizationStage {
 	var stage model.OrganizationStage
 	switch relationship {
 	case model.OrganizationRelationshipCustomer:
@@ -265,7 +266,7 @@ func determineOrganizationStage(relationship model.OrganizationRelationship) *en
 	return utils.ToPtr(enummapper.MapStageFromModel(stage))
 }
 
-func retrieveOrganization(c *gin.Context, s *service.Services, orgID string) (OrganizationRecord, rest.Status) {
+func retrieveOrganization(c *gin.Context, s *service.Services, orgID string) (OrganizationRecord, enum.Status) {
 	span, ctx := tracing.StartTracerSpan(c.Request.Context(), "Customerbase.retrieveOrganization")
 	defer span.Finish()
 	tracing.TagComponentRest(span)
@@ -276,10 +277,10 @@ func retrieveOrganization(c *gin.Context, s *service.Services, orgID string) (Or
 		ctx, common.GetTenantFromContext(ctx), orgID)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return result, rest.StatusError
+		return result, enum.StatusError
 	}
 	if organizationDbNode == nil {
-		return result, rest.StatusError
+		return result, enum.StatusError
 	}
 
 	organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
@@ -295,10 +296,10 @@ func retrieveOrganization(c *gin.Context, s *service.Services, orgID string) (Or
 	}
 
 	if partialSuccess {
-		return result, rest.StatusPartialSuccess
+		return result, enum.StatusPartialSuccess
 	}
 
-	return result, rest.StatusSuccess
+	return result, enum.StatusSuccess
 }
 
 func handleExternalSystemUpdate(c *gin.Context, s *service.Services) (ExternalSystemRecord, int) {

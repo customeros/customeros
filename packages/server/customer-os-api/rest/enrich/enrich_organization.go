@@ -21,6 +21,7 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
@@ -30,7 +31,7 @@ import (
 // @Description Response structure for organization enrichment operations
 type EnrichOrganizationResponse struct {
 	// Inherits standard response fields
-	rest.BaseResponse
+	enum.BaseResponse
 	// Enriched organization data
 	// required: true
 	Data EnrichOrganizationData `json:"data"`
@@ -184,7 +185,7 @@ func EnrichOrganization(services *service.Services) gin.HandlerFunc {
 
 		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {
-			rest.SendError(c, span, http.StatusUnauthorized, rest.ErrUnauthorized)
+			rest.SendError(c, span, http.StatusUnauthorized, enum.ErrUnauthorized)
 			return
 		}
 
@@ -193,7 +194,7 @@ func EnrichOrganization(services *service.Services) gin.HandlerFunc {
 
 		// check linked in or email params are present
 		if strings.TrimSpace(linkedinUrl) == "" && strings.TrimSpace(domain) == "" {
-			rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Missing linkedinUrl or domain"))
+			rest.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("Missing linkedinUrl or domain"))
 			return
 		}
 
@@ -204,12 +205,12 @@ func EnrichOrganization(services *service.Services) gin.HandlerFunc {
 		// Call enrichPerson API
 		enrichOrganizationApiResponse, err := callApiEnrichOrganization(ctx, services, span, linkedinUrl, domain)
 		if err != nil || enrichOrganizationApiResponse.Status == "error" {
-			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer)
+			rest.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer)
 			return
 		}
 		if enrichOrganizationApiResponse.Success == false || enrichOrganizationApiResponse.Data == nil {
-			rest.SendError(c, span, http.StatusNotFound, &rest.ErrorResponse{
-				BaseResponse: rest.BuildBaseResponse(rest.StatusWarning),
+			rest.SendError(c, span, http.StatusNotFound, &enum.ErrorResponse{
+				BaseResponse: enum.BuildBaseResponse(enum.StatusWarning),
 				Message:      "Organization not found",
 			})
 			return
@@ -220,7 +221,7 @@ func EnrichOrganization(services *service.Services) gin.HandlerFunc {
 			socialUrls = append(socialUrls, social.Url)
 		}
 		response := EnrichOrganizationResponse{
-			BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
+			BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
 			Data: EnrichOrganizationData{
 				Name:             enrichOrganizationApiResponse.Data.Name,
 				Domain:           enrichOrganizationApiResponse.Data.Domain,

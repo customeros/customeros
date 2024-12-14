@@ -1,4 +1,4 @@
-package flows
+package integrations
 
 import (
 	"encoding/json"

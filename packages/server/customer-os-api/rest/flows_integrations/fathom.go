@@ -1,4 +1,4 @@
-package flows
+package integrations
 
 import (
 	"context"
@@ -13,10 +13,11 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	commontracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
+	neoEnum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/pkg/errors"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
@@ -30,7 +31,7 @@ func FathomZapier(c *gin.Context, s *service.Services) {
 	if err != nil {
 		err := errors.Wrap(err, "Unable to identify tenant")
 		tracing.TraceErr(span, err)
-		rest.SendError(c, span, http.StatusUnauthorized, rest.ErrUnauthorized)
+		rest.SendError(c, span, http.StatusUnauthorized, enum.ErrUnauthorized)
 		return
 	}
 
@@ -41,17 +42,17 @@ func FathomZapier(c *gin.Context, s *service.Services) {
 	})
 
 	if !strings.HasPrefix(c.ContentType(), "application/json") {
-		rest.SendError(c, span, http.StatusBadRequest, rest.ErrUnsupportedContentType)
+		rest.SendError(c, span, http.StatusBadRequest, enum.ErrUnsupportedContentType)
 		return
 	}
 
 	if c.Request.UserAgent() == "" {
-		rest.SendError(c, span, http.StatusForbidden, rest.ErrForbidden)
+		rest.SendError(c, span, http.StatusForbidden, enum.ErrForbidden)
 		return
 	}
 
 	if !strings.EqualFold(c.Request.UserAgent(), "Zapier") {
-		rest.SendError(c, span, http.StatusForbidden, rest.ErrForbidden)
+		rest.SendError(c, span, http.StatusForbidden, enum.ErrForbidden)
 		return
 	}
 
@@ -66,23 +67,23 @@ func handleFathomAISummaryZapier(c *gin.Context, ctx context.Context, s *service
 	var aiSummaryDataPayload FathomZapierPayload
 	err := c.BindJSON(&aiSummaryDataPayload)
 	if err != nil {
-		rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Unable to parse payload from Zapier"))
+		rest.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("Unable to parse payload from Zapier"))
 		return
 	}
 
 	aiSummaryData := &aiSummaryDataPayload
 	err = aiSummaryData.toCleanPayload()
 	if err != nil {
-		rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Unable to normalize payload from Zapier"))
+		rest.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("Unable to normalize payload from Zapier"))
 		return
 	}
 
 	if aiSummaryData.AISummary.HTMLFormatted == "" {
-		rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("No Fathom summary data"))
+		rest.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("No Fathom summary data"))
 		return
 	}
 
-	c.JSON(http.StatusAccepted, rest.BuildBaseResponse(rest.StatusProcessing))
+	c.JSON(http.StatusAccepted, enum.BuildBaseResponse(enum.StatusProcessing))
 
 	go func() {
 		if err := publishFathomMeetingSummaryCreatedEvent(c, ctx, s, aiSummaryData); err != nil {
@@ -118,7 +119,7 @@ func publishFathomMeetingSummaryCreatedEvent(c *gin.Context, ctx context.Context
 	}
 
 	event := dto.WebhookEvent{
-		ExternalSystemId: enum.Fathom,
+		ExternalSystemId: neoEnum.Fathom,
 		Name:             commonenum.EventFathomMeetingSummaryCreated,
 		DataType:         data_fields.MeetingSummaryEvent{}.Type(),
 		Data:             meetingSummary,

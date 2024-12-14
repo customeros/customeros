@@ -18,6 +18,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
@@ -60,13 +61,13 @@ func handleJSONRequest(c *gin.Context, s *service.Services) {
 		if err != nil {
 			errMessage := fmt.Sprintf("%s | %s", errValue, err)
 			tracing.TraceErr(span, err)
-			rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage(errMessage))
+			rest.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage(errMessage))
 			return
 
 		}
 		contact.ContactId = processContact(c, s, contact)
 		c.JSON(http.StatusOK, SingleContactResponse{
-			BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
+			BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
 			Contact:      contact,
 		})
 		return

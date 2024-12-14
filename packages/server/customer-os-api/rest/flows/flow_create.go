@@ -8,10 +8,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
+	commonEnum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
@@ -35,7 +36,7 @@ type CreateFlowRecord struct {
 }
 
 type CreateFlowResponse struct {
-	rest.BaseResponse
+	enum.BaseResponse
 	Flow CreateFlowRecord `json:"flow"`
 }
 
@@ -47,28 +48,28 @@ func CreateFlow(s *service.Services) gin.HandlerFunc {
 
 		tenant := rest.ValidateTenant(c, ctx, span)
 		if tenant == "" {
-			rest.SendError(c, span, http.StatusUnauthorized, rest.ErrInvalidAPIKey)
+			rest.SendError(c, span, http.StatusUnauthorized, enum.ErrInvalidAPIKey)
 			return
 		}
 
 		request, err := getFlowCreateRequest(c)
 		if err != nil {
-			rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("unable to parse payload"))
+			rest.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("unable to parse payload"))
 			return
 		}
 
 		// validate trigger event
-		validTrigger, err := s.CommonServices.WorkflowService.ValidateListener(ctx, enum.FlowListenerEvent(request.Trigger))
+		validTrigger, err := s.CommonServices.WorkflowService.ValidateListener(ctx, commonEnum.FlowListenerEvent(request.Trigger))
 		if err != nil {
 			tracing.TraceErr(span, err)
-			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer.WithMessage("unable to validate flow trigger event"))
+			rest.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer.WithMessage("unable to validate flow trigger event"))
 			return
 		}
 
 		if !validTrigger {
 			err := errors.New("Invalid trigger")
 			tracing.TraceErr(span, err)
-			rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("invalid trigger event"))
+			rest.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("invalid trigger event"))
 			return
 		}
 
@@ -76,12 +77,12 @@ func CreateFlow(s *service.Services) gin.HandlerFunc {
 		flowRecord := createFlowRecord(ctx, request)
 		result, err := s.Repositories.PostgresRepositories.FlowRepository.Create(ctx, flowRecord)
 		if err != nil {
-			rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest)
+			rest.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest)
 			return
 		}
 
 		c.JSON(http.StatusOK, CreateFlowResponse{
-			BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
+			BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
 			Flow: CreateFlowRecord{
 				ID:          result.ID,
 				Name:        result.Name,
@@ -102,7 +103,7 @@ func createFlowRecord(ctx context.Context, request CreateFlowRequest) entity.Flo
 		Description: &request.Description,
 		TriggerOn:   request.Trigger,
 		VisibleInUI: request.VisibleUI,
-		Status:      enum.FlowStatusInactive.String(),
+		Status:      commonEnum.FlowStatusInactive.String(),
 	}
 }
 

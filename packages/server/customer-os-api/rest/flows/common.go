@@ -1,40 +1,31 @@
 package flows
 
 import (
+	"errors"
+
 	"github.com/gin-gonic/gin"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/pkg/errors"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
 
-func getParticipantOrganizationIds(c *gin.Context, s *service.Services, domains []string) ([]string, error) {
-	span, ctx := tracing.StartTracerSpan(c.Request.Context(), "flows.getParticipantOrganizationIds")
+func validateFlowBelongsToTenant(c *gin.Context, s *service.Services) (string, bool, error) {
+	span, ctx := tracing.StartTracerSpan(c.Request.Context(), "Flows.ValidateFlowBelongsToTenant")
 	defer span.Finish()
 	tracing.TagComponentRest(span)
 
-	var results []string
-	tenantDomains, err := s.CommonServices.WorkspaceService.GetWorkspaceDomainsForTenant(ctx)
+	flowId := c.Param("flowId")
+	isValidFlow, err := s.CommonServices.WorkflowService.ValidateFlowBelongsToTenant(ctx, flowId)
 	if err != nil {
-		return results, err
+		tracing.TraceErr(span, err)
+		return flowId, false, err
 	}
-	for _, domain := range domains {
-		if utils.Contains(tenantDomains, domain) {
-			continue
-		}
-		dataFields := data_fields.OrganizationFields{
-			Domains: []string{
-				domain,
-			},
-		}
-		orgId, err := s.CommonServices.OrganizationService.Save(ctx, nil, nil, dataFields)
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "Error saving organization by domain"))
-		}
 
-		results = append(results, orgId)
+	if !isValidFlow {
+		err := errors.New("Flow does not belong to tenant")
+		tracing.TraceErr(span, err)
+		return flowId, false, nil
 	}
-	return results, nil
+
+	return flowId, true, nil
 }

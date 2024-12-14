@@ -14,6 +14,7 @@ import (
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/pkg/errors"
 
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
@@ -44,7 +45,7 @@ func GetInvoicesForOrganization(services *service.Services) gin.HandlerFunc {
 		// Extract organization ID from the path
 		orgID := c.Param("id")
 		if orgID == "" {
-			rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Invalid organization ID"))
+			rest.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("Invalid organization ID"))
 			return
 		}
 
@@ -52,11 +53,11 @@ func GetInvoicesForOrganization(services *service.Services) gin.HandlerFunc {
 		organizationDbNode, err := services.Repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByIdOrCustomerOsId(ctx, tenant, orgID)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			rest.SendError(c, span, http.StatusNotFound, rest.ErrNotFound.WithMessage("Organization does not exist"))
+			rest.SendError(c, span, http.StatusNotFound, enum.ErrNotFound.WithMessage("Organization does not exist"))
 			return
 		}
 		if organizationDbNode == nil {
-			rest.SendError(c, span, http.StatusNotFound, rest.ErrNotFound.WithMessage("Organization does not exist"))
+			rest.SendError(c, span, http.StatusNotFound, enum.ErrNotFound.WithMessage("Organization does not exist"))
 			return
 		}
 		organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
@@ -64,12 +65,12 @@ func GetInvoicesForOrganization(services *service.Services) gin.HandlerFunc {
 		invoiceEntities, err := services.CommonServices.InvoiceService.GetNonDryRunInvoicesForOrganization(ctx, tenant, organizationEntity.ID)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer)
+			rest.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer)
 			return
 		}
 
 		response := InvoicesResponse{
-			BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
+			BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
 			Invoices:     make([]InvoiceRecord, 0, len(*invoiceEntities)), // Pre-allocate slice
 		}
 

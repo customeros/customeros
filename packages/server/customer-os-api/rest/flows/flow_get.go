@@ -9,6 +9,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
@@ -25,7 +26,7 @@ type FlowRecord struct {
 }
 
 type GetAllFlowsResponse struct {
-	rest.BaseResponse
+	enum.BaseResponse
 	Flows []FlowRecord `json:"flows"`
 }
 
@@ -37,7 +38,7 @@ func GetFlows(s *service.Services) gin.HandlerFunc {
 
 		tenant := rest.ValidateTenant(c, ctx, span)
 		if tenant == "" {
-			rest.SendError(c, span, http.StatusUnauthorized, rest.ErrInvalidAPIKey)
+			rest.SendError(c, span, http.StatusUnauthorized, enum.ErrInvalidAPIKey)
 			return
 		}
 
@@ -46,7 +47,7 @@ func GetFlows(s *service.Services) gin.HandlerFunc {
 			Tenant: tenant,
 		})
 		if err != nil {
-			rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest)
+			rest.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest)
 			return
 		}
 
@@ -56,7 +57,7 @@ func GetFlows(s *service.Services) gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, GetAllFlowsResponse{
-			BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
+			BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
 			Flows:        response,
 		})
 	}
