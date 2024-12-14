@@ -3,7 +3,6 @@ package flows
 import (
 	"errors"
 	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -14,28 +13,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
-
-type CreateFlowEdgeRequest struct {
-	FromNodeID string  `json:"fromNodeId"`
-	ToNodeID   string  `json:"toNodeId"`
-	Condition  *string `json:"condition"`
-	Data       *any    `json:"data"`
-}
-
-type CreateFlowEdgeRecord struct {
-	ID         string    `json:"id"`
-	FlowID     string    `json:"flowId"`
-	FromNodeID string    `json:"fromNodeId"`
-	ToNodeID   string    `json:"toNodeId"`
-	Condition  *string   `json:"condition,omitempty"`
-	CreatedAt  time.Time `json:"createdAt"`
-	Data       *any      `json:"data,omitempty"`
-}
-
-type CreateFlowEdgeResponse struct {
-	enum.BaseResponse
-	Edge CreateFlowEdgeRecord `json:"edge"`
-}
 
 func CreateFlowEdge(s *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -77,8 +54,8 @@ func CreateFlowEdge(s *service.Services) gin.HandlerFunc {
 	}
 }
 
-func buildCreateEdgeResponse(c *gin.Context, flowEdge *entity.FlowEdge) CreateFlowEdgeResponse {
-	response := CreateFlowEdgeRecord{
+func buildCreateEdgeResponse(c *gin.Context, flowEdge *entity.FlowEdge) FlowEdgeResponse {
+	response := FlowEdgeRecord{
 		ID:         flowEdge.ID,
 		FlowID:     flowEdge.FlowID,
 		FromNodeID: flowEdge.FromNodeID,
@@ -94,7 +71,7 @@ func buildCreateEdgeResponse(c *gin.Context, flowEdge *entity.FlowEdge) CreateFl
 		}
 	}
 
-	return CreateFlowEdgeResponse{
+	return FlowEdgeResponse{
 		BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
 		Edge:         response,
 	}
@@ -110,6 +87,7 @@ func createFlowEdge(c *gin.Context, s *service.Services, request CreateFlowEdgeR
 		FromNodeID: request.FromNodeID,
 		ToNodeID:   request.ToNodeID,
 		Condition:  request.Condition,
+		Active:     true,
 	}
 
 	if request.Data != nil {

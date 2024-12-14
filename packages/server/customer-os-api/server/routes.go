@@ -97,18 +97,22 @@ func registerFlowRoutes(ctx context.Context, r *gin.Engine, s *service.Services,
 	// setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/flows/:flowId", flowsV1Path), s, cache, ...)
 	// setupRestRoute(ctx, r, "PUT", fmt.Sprintf("%s/flows/:flowId", flowsV1Path), s, cache, ...)
 	// setupRestRoute(ctx, r, "DELETE", fmt.Sprintf("%s/flows/:flowId", flowsV1Path), s, cache, ...)
-	//
-	// // manage flow nodes
+
+	// manage flow nodes
 	setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/flows/:flowId/nodes", flowsV1Path), s, cache, flows.GetFlowNodes(s))
 	setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/flows/:flowId/nodes", flowsV1Path), s, cache, flows.CreateFlowNode(s))
+
 	setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/flows/:flowId/nodes/:nodeId", flowsV1Path), s, cache, flows.GetFlowNodes(s))
-	// setupRestRoute(ctx, r, "PUT", fmt.Sprintf("%s/flows/:flowId/nodes/:nodeId", flowsV1Path), s, cache, ...)
-	// setupRestRoute(ctx, r, "DELETE", fmt.Sprintf("%s/flows/:flowId/nodes/:nodeId", flowsV1Path), s, cache, ...)
-	//
-	// // manage flow edges
-	// setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/flows/:flowId/edges", flowsV1Path), s, cache, ...)
+	setupRestRoute(ctx, r, "PUT", fmt.Sprintf("%s/flows/:flowId/nodes/:nodeId", flowsV1Path), s, cache, flows.UpdateFlowNode(s))
+	setupRestRoute(ctx, r, "DELETE", fmt.Sprintf("%s/flows/:flowId/nodes/:nodeId", flowsV1Path), s, cache, flows.DeleteFlowNode(s))
+
+	// manage flow edges
+	setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/flows/:flowId/edges", flowsV1Path), s, cache, flows.GetFlowEdges(s))
 	setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/flows/:flowId/edges", flowsV1Path), s, cache, flows.CreateFlowEdge(s))
-	// setupRestRoute(ctx, r, "DELETE", fmt.Sprintf("%s/flows/:flowId/edges/:edgeId", flowsV1Path), s, cache, ...)
+
+	setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/flows/:flowId/edges/:edgeId", flowsV1Path), s, cache, flows.GetFlowEdges(s))
+	setupRestRoute(ctx, r, "PUT", fmt.Sprintf("%s/flows/:flowId/edges/:edgeId", flowsV1Path), s, cache, flows.UpdateFlowEdge(s))
+	setupRestRoute(ctx, r, "DELETE", fmt.Sprintf("%s/flows/:flowId/edges/:edgeId", flowsV1Path), s, cache, flows.DeleteFlowEdge(s))
 
 	// flow validation
 	setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/actions", flowsV1Path), s, cache, flows.GetActions(s))

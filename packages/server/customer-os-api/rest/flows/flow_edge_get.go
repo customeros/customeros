@@ -1,0 +1,129 @@
+package flows
+
+import (
+	"errors"
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	"github.com/opentracing/opentracing-go"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/enum"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
+)
+
+func GetFlowEdges(s *service.Services) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "Flows.GetFlowEdges", c.Request.Header)
+		defer span.Finish()
+		tracing.TagComponentRest(span)
+
+		tenant := rest.ValidateTenant(c, ctx, span)
+		if tenant == "" {
+			rest.SendError(c, span, http.StatusUnauthorized, enum.ErrInvalidAPIKey)
+			return
+		}
+
+		// validate tenant owns the flow specified in the path
+		flowId := c.Param("flowId")
+		isValidFlow, err := s.CommonServices.WorkflowService.ValidateFlowBelongsToTenant(ctx, flowId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			rest.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer)
+		}
+		if !isValidFlow {
+			err := errors.New("Flow does not belong to tenant")
+			tracing.TraceErr(span, err)
+			rest.SendError(c, span, http.StatusNotFound, enum.ErrNotFound.WithMessage("unable to locate flolw"))
+			return
+		}
+
+		edgeId := c.Param("edgeId")
+
+		query := entity.FlowEdge{
+			ID:     edgeId,
+			FlowID: flowId,
+		}
+
+		switch edgeId {
+		case "":
+			getFlowEdge(c, s, query)
+		default:
+			getFlowEdges(c, s, query)
+		}
+	}
+}
+
+func getFlowEdge(c *gin.Context, s *service.Services, query entity.FlowEdge) {
+	span, ctx := opentracing.StartSpanFromContext(c.Request.Context(), "Flows.getFlowEdge")
+	defer span.Finish()
+	tracing.TagComponentRest(span)
+
+	edge, err := s.Repositories.PostgresRepositories.FlowEdgeRepository.Find(ctx, query)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		rest.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer)
+		return
+	}
+	if edge == nil {
+		rest.SendError(c, span, http.StatusNotFound, enum.ErrNotFound.WithMessage("edge does not exist"))
+		return
+	}
+
+	response := buildEdgeResponse(edge)
+	c.JSON(http.StatusOK, FlowEdgeResponse{
+		BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
+		Edge:         response,
+	})
+	return
+}
+
+func getFlowEdges(c *gin.Context, s *service.Services, query entity.FlowEdge) {
+	span, ctx := opentracing.StartSpanFromContext(c.Request.Context(), "Flows.getFlowEdges")
+	defer span.Finish()
+	tracing.TagComponentRest(span)
+
+	edges, err := s.Repositories.PostgresRepositories.FlowEdgeRepository.FindAll(ctx, query)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		rest.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer)
+		return
+	}
+	if len(*edges) == 0 {
+		rest.SendError(c, span, http.StatusNotFound, enum.ErrNotFound.WithMessage("no edges exist for this flow"))
+		return
+	}
+
+	records := make([]FlowEdgeRecord, len(*edges))
+	for i, edge := range *edges {
+		records[i] = buildEdgeResponse(&edge)
+	}
+
+	c.JSON(http.StatusOK, FlowEdgesResponse{
+		BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
+		Edges:        records,
+	})
+}
+
+func buildEdgeResponse(flowEdge *entity.FlowEdge) FlowEdgeRecord {
+	response := FlowEdgeRecord{
+		ID:         flowEdge.ID,
+		FlowID:     flowEdge.FlowID,
+		FromNodeID: flowEdge.FromNodeID,
+		ToNodeID:   flowEdge.ToNodeID,
+		Condition:  flowEdge.Condition,
+		CreatedAt:  flowEdge.CreatedAt,
+	}
+
+	if flowEdge.Data != nil {
+		data, err := utils.JSONBToAny(*flowEdge.Data)
+		if err == nil {
+			response.Data = &data
+		}
+	}
+
+	return response
+}
