@@ -695,11 +695,8 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 			//ColumnViewTypeContactsPersonalEmails             ColumnViewType = "CONTACTS_PERSONAL_EMAILS"
 			//ColumnViewTypeContactsPhoneNumbers               ColumnViewType = "CONTACTS_PHONE_NUMBERS"
 			//ColumnViewTypeContactsLinkedin                   ColumnViewType = "CONTACTS_LINKEDIN"
-			//ColumnViewTypeContactsCity                       ColumnViewType = "CONTACTS_CITY"
 			//ColumnViewTypeContactsPersona                    ColumnViewType = "CONTACTS_PERSONA"
 			//ColumnViewTypeContactsLastInteraction            ColumnViewType = "CONTACTS_LAST_INTERACTION"
-			//ColumnViewTypeContactsCountry                    ColumnViewType = "CONTACTS_COUNTRY"
-			//ColumnViewTypeContactsRegion                     ColumnViewType = "CONTACTS_REGION"
 			//ColumnViewTypeContactsSkills                     ColumnViewType = "CONTACTS_SKILLS"
 			//ColumnViewTypeContactsSchools                    ColumnViewType = "CONTACTS_SCHOOLS"
 			//ColumnViewTypeContactsLanguages                  ColumnViewType = "CONTACTS_LANGUAGES"
@@ -748,6 +745,15 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 				innerGroupFilter.Filters = append(innerGroupFilter.Filters, utils.CreateStringCypherFilter(string(neo4jentity.EmailPropertyRawEmail), filter.Filter.Value.Str, filter.Filter.Operation))
 				innerGroupFilter.Filters = append(innerGroupFilter.Filters, utils.CreateStringCypherFilter(string(neo4jentity.EmailPropertyEmail), filter.Filter.Value.Str, filter.Filter.Operation))
 				primaryEmailFilter.Filters = append(contactFilter.Filters, innerGroupFilter)
+			}
+			if filter.Filter.Property == model.ColumnViewTypeContactsCountry.String() {
+				locationFilter.Filters = append(locationFilter.Filters, utils.CreateStringCypherFilter(string(neo4jentity.LocationPropertyCountry), filter.Filter.Value.Str, filter.Filter.Operation))
+			}
+			if filter.Filter.Property == model.ColumnViewTypeContactsCity.String() {
+				locationFilter.Filters = append(locationFilter.Filters, utils.CreateStringCypherFilter(string(neo4jentity.LocationPropertyLocality), filter.Filter.Value.Str, filter.Filter.Operation))
+			}
+			if filter.Filter.Property == model.ColumnViewTypeContactsRegion.String() {
+				locationFilter.Filters = append(locationFilter.Filters, utils.CreateStringCypherFilter(string(neo4jentity.LocationPropertyRegion), filter.Filter.Value.Str, filter.Filter.Operation))
 			}
 			//if filter.Filter.Property == model.ColumnViewTypeOrganizationsWebsite.String() {
 			//	contactFilter.Filters = append(contactFilter.Filters, utils.CreateStringCypherFilter("website", filter.Filter.Value.Str, filter.Filter.Operation))
@@ -799,12 +805,6 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 			//}
 			//if filter.Filter.Property == model.ColumnViewTypeOrganizationsLtv.String() {
 			//	createNumberCypherFilter(filter, contactFilter, "derivedLtv")
-			//}
-			//if filter.Filter.Property == model.ColumnViewTypeOrganizationsCountry.String() {
-			//	locationFilter.Filters = append(locationFilter.Filters, utils.CreateStringCypherFilter("country", filter.Filter.Value.Str, filter.Filter.Operation))
-			//}
-			//if filter.Filter.Property == model.ColumnViewTypeOrganizationsCity.String() {
-			//	locationFilter.Filters = append(locationFilter.Filters, utils.CreateStringCypherFilter("locality", filter.Filter.Value.Str, filter.Filter.Operation))
 			//}
 			//if filter.Filter.Property == model.ColumnViewTypeOrganizationsIsPublic.String() {
 			//	createBooleanFilter(filter, contactFilter, "isPublic")
@@ -904,7 +904,7 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 		if tagFilterCypher != "" {
 			selectQuery += fmt.Sprintf(` OPTIONAL MATCH (c)-[:TAGGED]->(t:Tag_%s) WITH *`, tenant)
 		}
-		if locationFilterCypher != "" || (sort != nil && (sort.By == model.ColumnViewTypeContactsCountry.String() || sort.By == model.ColumnViewTypeContactsCity.String())) {
+		if locationFilterCypher != "" || (sort != nil && (sort.By == model.ColumnViewTypeContactsCountry.String() || sort.By == model.ColumnViewTypeContactsCity.String() || sort.By == model.ColumnViewTypeContactsRegion.String())) {
 			selectQuery += fmt.Sprintf(` OPTIONAL MATCH (c)-[:ASSOCIATED_WITH]->(l:Location_%s) WITH *`, tenant)
 		}
 		if primaryEmailFilterCypher != "" || (sort != nil && (sort.By == model.ColumnViewTypeContactsPrimaryEmail.String())) {
@@ -951,6 +951,27 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 			aliases += `CASE WHEN (COALESCE(pe.email, '') + COALESCE(pe.rawEmail, '')) <> '' THEN toLower(COALESCE(pe.email, '') + COALESCE(pe.rawEmail, '')) ELSE 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz' END as SORT_BY `
 		} else {
 			aliases += `CASE WHEN (COALESCE(pe.email, '') + COALESCE(pe.rawEmail, '')) <> '' THEN toLower(COALESCE(pe.email, '') + COALESCE(pe.rawEmail, '')) ELSE '' END as SORT_BY `
+		}
+	}
+	if sort != nil && sort.By == model.ColumnViewTypeContactsCountry.String() {
+		if sort.Direction == commonmodel.SortingDirectionAsc {
+			aliases += `CASE WHEN l.country <> '' AND NOT l.country IS NULL THEN toLower(l.country) ELSE 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz' END as SORT_BY `
+		} else {
+			aliases += `CASE WHEN l.country <> '' AND NOT l.country IS NULL THEN toLower(l.country) ELSE '' END AS SORT_BY `
+		}
+	}
+	if sort != nil && sort.By == model.ColumnViewTypeContactsRegion.String() {
+		if sort.Direction == commonmodel.SortingDirectionAsc {
+			aliases += `CASE WHEN l.region <> '' AND NOT l.region IS NULL THEN toLower(l.region) ELSE 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz' END as SORT_BY `
+		} else {
+			aliases += `CASE WHEN l.region <> '' AND NOT l.region IS NULL THEN toLower(l.region) ELSE '' END AS SORT_BY `
+		}
+	}
+	if sort != nil && sort.By == model.ColumnViewTypeContactsCity.String() {
+		if sort.Direction == commonmodel.SortingDirectionAsc {
+			aliases += `CASE WHEN l.locality <> '' AND NOT l.locality IS NULL THEN toLower(l.locality) ELSE 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz' END as SORT_BY `
+		} else {
+			aliases += `CASE WHEN l.locality <> '' AND NOT l.locality IS NULL THEN toLower(l.locality) ELSE '' END AS SORT_BY `
 		}
 	}
 	//if sort != nil && sort.By == model.ColumnViewTypeOrganizationsWebsite.String() {
