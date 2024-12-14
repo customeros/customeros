@@ -129,6 +129,168 @@ func TestQueryResolver_UIContactsSearch_SortByPrimaryEmail_WithNoPrimaryEmail(t 
 	verifyContactSortOrder(t, model.ColumnViewTypeContactsPrimaryEmail, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
+func TestQueryResolver_UIContactsSearch_FilterByCountry(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "1"})
+	neo4jtest.CreateLocation(ctx, driver, tenantName, neo4jentity.LocationEntity{Id: "l1", Country: "C1"})
+	neo4jtest.LinkNodes(ctx, driver, "1", "l1", "ASSOCIATED_WITH")
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "2"})
+	neo4jtest.CreateLocation(ctx, driver, tenantName, neo4jentity.LocationEntity{Id: "l2", Country: "C2"})
+	neo4jtest.LinkNodes(ctx, driver, "2", "l2", "ASSOCIATED_WITH")
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "3"})
+
+	searchBy := model.ColumnViewTypeContactsCountry
+
+	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 3, 1)
+	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 3, 2)
+	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorContains, 3, 2)
+	assertContactSearch(t, searchBy, "c", commonModel.ComparisonOperatorContains, 3, 2)
+	assertContactSearch(t, searchBy, "c1", commonModel.ComparisonOperatorContains, 3, 1)
+	assertContactSearch(t, searchBy, "c2", commonModel.ComparisonOperatorContains, 3, 1)
+	assertContactSearch(t, searchBy, "c3", commonModel.ComparisonOperatorContains, 3, 0)
+
+	assertContactSearch(t, searchBy, "c1", commonModel.ComparisonOperatorNotContains, 3, 1)
+	assertContactSearch(t, searchBy, "c2", commonModel.ComparisonOperatorNotContains, 3, 1)
+	assertContactSearch(t, searchBy, "c3", commonModel.ComparisonOperatorNotContains, 3, 2)
+}
+
+func TestQueryResolver_UIContactsSearch_SortByCountry(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "1"})
+	neo4jtest.CreateLocation(ctx, driver, tenantName, neo4jentity.LocationEntity{Id: "l1", Country: "C1"})
+	neo4jtest.LinkNodes(ctx, driver, "1", "l1", "ASSOCIATED_WITH")
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "2"})
+	neo4jtest.CreateLocation(ctx, driver, tenantName, neo4jentity.LocationEntity{Id: "l2", Country: "C2"})
+	neo4jtest.LinkNodes(ctx, driver, "2", "l2", "ASSOCIATED_WITH")
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "empty"})
+
+	expectedAsc := []string{"1", "2", "empty"}
+	expectedDesc := []string{"2", "1", "empty"}
+
+	verifyContactSortOrder(t, model.ColumnViewTypeContactsCountry, commonModel.SortingDirectionAsc, expectedAsc)
+	verifyContactSortOrder(t, model.ColumnViewTypeContactsCountry, commonModel.SortingDirectionDesc, expectedDesc)
+}
+
+func TestQueryResolver_UIContactsSearch_FilterByRegion(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "1"})
+	neo4jtest.CreateLocation(ctx, driver, tenantName, neo4jentity.LocationEntity{Id: "l1", Region: "r1"})
+	neo4jtest.LinkNodes(ctx, driver, "1", "l1", "ASSOCIATED_WITH")
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "2"})
+	neo4jtest.CreateLocation(ctx, driver, tenantName, neo4jentity.LocationEntity{Id: "l2", Region: "r2"})
+	neo4jtest.LinkNodes(ctx, driver, "2", "l2", "ASSOCIATED_WITH")
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "3"})
+
+	searchBy := model.ColumnViewTypeContactsRegion
+
+	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 3, 1)
+	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 3, 2)
+	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorContains, 3, 2)
+	assertContactSearch(t, searchBy, "r", commonModel.ComparisonOperatorContains, 3, 2)
+	assertContactSearch(t, searchBy, "r1", commonModel.ComparisonOperatorContains, 3, 1)
+	assertContactSearch(t, searchBy, "r2", commonModel.ComparisonOperatorContains, 3, 1)
+	assertContactSearch(t, searchBy, "r3", commonModel.ComparisonOperatorContains, 3, 0)
+
+	assertContactSearch(t, searchBy, "r1", commonModel.ComparisonOperatorNotContains, 3, 1)
+	assertContactSearch(t, searchBy, "r2", commonModel.ComparisonOperatorNotContains, 3, 1)
+	assertContactSearch(t, searchBy, "r3", commonModel.ComparisonOperatorNotContains, 3, 2)
+}
+
+func TestQueryResolver_UIContactsSearch_SortByRegion(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "1"})
+	neo4jtest.CreateLocation(ctx, driver, tenantName, neo4jentity.LocationEntity{Id: "l1", Region: "region-aaa"})
+	neo4jtest.LinkNodes(ctx, driver, "1", "l1", "ASSOCIATED_WITH")
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "2"})
+	neo4jtest.CreateLocation(ctx, driver, tenantName, neo4jentity.LocationEntity{Id: "l2", Region: "region-BBB"})
+	neo4jtest.LinkNodes(ctx, driver, "2", "l2", "ASSOCIATED_WITH")
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "empty"})
+
+	expectedAsc := []string{"1", "2", "empty"}
+	expectedDesc := []string{"2", "1", "empty"}
+
+	verifyContactSortOrder(t, model.ColumnViewTypeContactsRegion, commonModel.SortingDirectionAsc, expectedAsc)
+	verifyContactSortOrder(t, model.ColumnViewTypeContactsRegion, commonModel.SortingDirectionDesc, expectedDesc)
+}
+
+func TestQueryResolver_UIContactsSearch_FilterByCity(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "1"})
+	neo4jtest.CreateLocation(ctx, driver, tenantName, neo4jentity.LocationEntity{Id: "l1", Locality: "c1"})
+	neo4jtest.LinkNodes(ctx, driver, "1", "l1", "ASSOCIATED_WITH")
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "2"})
+	neo4jtest.CreateLocation(ctx, driver, tenantName, neo4jentity.LocationEntity{Id: "l2", Locality: "c2"})
+	neo4jtest.LinkNodes(ctx, driver, "2", "l2", "ASSOCIATED_WITH")
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "3"})
+
+	searchBy := model.ColumnViewTypeContactsCity
+
+	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 3, 1)
+	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 3, 2)
+	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorContains, 3, 2)
+	assertContactSearch(t, searchBy, "c", commonModel.ComparisonOperatorContains, 3, 2)
+	assertContactSearch(t, searchBy, "c1", commonModel.ComparisonOperatorContains, 3, 1)
+	assertContactSearch(t, searchBy, "c2", commonModel.ComparisonOperatorContains, 3, 1)
+	assertContactSearch(t, searchBy, "c3", commonModel.ComparisonOperatorContains, 3, 0)
+
+	assertContactSearch(t, searchBy, "c1", commonModel.ComparisonOperatorNotContains, 3, 1)
+	assertContactSearch(t, searchBy, "c2", commonModel.ComparisonOperatorNotContains, 3, 1)
+	assertContactSearch(t, searchBy, "c3", commonModel.ComparisonOperatorNotContains, 3, 2)
+}
+
+func TestQueryResolver_UIContactsSearch_SortByCity(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "1"})
+	neo4jtest.CreateLocation(ctx, driver, tenantName, neo4jentity.LocationEntity{Id: "l1", Locality: "L1"})
+	neo4jtest.LinkNodes(ctx, driver, "1", "l1", "ASSOCIATED_WITH")
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "2"})
+	neo4jtest.CreateLocation(ctx, driver, tenantName, neo4jentity.LocationEntity{Id: "l2", Locality: "L2"})
+	neo4jtest.LinkNodes(ctx, driver, "2", "l2", "ASSOCIATED_WITH")
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "empty"})
+
+	expectedAsc := []string{"1", "2", "empty"}
+	expectedDesc := []string{"2", "1", "empty"}
+
+	verifyContactSortOrder(t, model.ColumnViewTypeContactsCity, commonModel.SortingDirectionAsc, expectedAsc)
+	verifyContactSortOrder(t, model.ColumnViewTypeContactsCity, commonModel.SortingDirectionDesc, expectedDesc)
+}
+
 func assertContactSearch(t *testing.T, filterName model.ColumnViewType, searchValue any, operator commonModel.ComparisonOperator, totalAvailable int64, totalElements int64) {
 	rawResponse, err := c.RawPost(getQuery("contact/ui_contacts_search"),
 		client.Var("limit", 10),
@@ -682,41 +844,6 @@ func assertContactSort(t *testing.T, sortBy model.ColumnViewType, sortDirection 
 //	assertSearch(t, searchBy, "c3", commonModel.ComparisonOperatorNotContains, 3, 2)
 //}
 //
-//func TestQueryResolver_UIOrganizationsSearch_FilterByCity(t *testing.T) {
-//	ctx := context.Background()
-//	defer tearDownTestCase(ctx)(t)
-//
-//	neo4jtest.CreateTenant(ctx, driver, tenantName)
-//
-//	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "org1"})
-//	neo4jtest.CreateLocation(ctx, driver, tenantName, neo4jentity.LocationEntity{Id: "l1", Locality: "C1"})
-//	neo4jtest.LinkNodes(ctx, driver, "org1", "l1", "ASSOCIATED_WITH")
-//
-//	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "org2"})
-//	neo4jtest.CreateLocation(ctx, driver, tenantName, neo4jentity.LocationEntity{Id: "l2", Locality: "C2"})
-//	neo4jtest.LinkNodes(ctx, driver, "org2", "l2", "ASSOCIATED_WITH")
-//
-//	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "org3"})
-//
-//	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
-//	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Location"))
-//	require.Equal(t, 2, neo4jtest.GetCountOfRelationships(ctx, driver, "ASSOCIATED_WITH"))
-//
-//	searchBy := model.ColumnViewTypeOrganizationsCity
-//
-//	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 3, 1)
-//	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 3, 2)
-//	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorContains, 3, 2)
-//	assertSearch(t, searchBy, "c", commonModel.ComparisonOperatorContains, 3, 2)
-//	assertSearch(t, searchBy, "c1", commonModel.ComparisonOperatorContains, 3, 1)
-//	assertSearch(t, searchBy, "c2", commonModel.ComparisonOperatorContains, 3, 1)
-//	assertSearch(t, searchBy, "c3", commonModel.ComparisonOperatorContains, 3, 0)
-//
-//	assertSearch(t, searchBy, "c1", commonModel.ComparisonOperatorNotContains, 3, 1)
-//	assertSearch(t, searchBy, "c2", commonModel.ComparisonOperatorNotContains, 3, 1)
-//	assertSearch(t, searchBy, "c3", commonModel.ComparisonOperatorNotContains, 3, 2)
-//}
-//
 //func TestQueryResolver_UIOrganizationsSearch_FilterByHeadquarters(t *testing.T) {
 //	ctx := context.Background()
 //	defer tearDownTestCase(ctx)(t)
@@ -1252,63 +1379,7 @@ func assertContactSort(t *testing.T, sortBy model.ColumnViewType, sortDirection 
 //	verifySortOrder(t, model.ColumnViewTypeOrganizationsLtv, commonModel.SortingDirectionDesc, expectedDesc)
 //}
 //
-//func TestQueryResolver_UIOrganizationsSearch_SortByCountry(t *testing.T) {
-//	ctx := context.Background()
-//	defer tearDownTestCase(ctx)(t)
 //
-//	neo4jtest.CreateTenant(ctx, driver, tenantName)
-//
-//	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "1"})
-//	neo4jtest.CreateLocation(ctx, driver, tenantName, neo4jentity.LocationEntity{Id: "l1", Country: "C1"})
-//	neo4jtest.LinkNodes(ctx, driver, "1", "l1", "ASSOCIATED_WITH")
-//
-//	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "2"})
-//	neo4jtest.CreateLocation(ctx, driver, tenantName, neo4jentity.LocationEntity{Id: "l2", Country: "C2"})
-//	neo4jtest.LinkNodes(ctx, driver, "2", "l2", "ASSOCIATED_WITH")
-//
-//	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "empty"})
-//
-//	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
-//	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Location"))
-//	require.Equal(t, 2, neo4jtest.GetCountOfRelationships(ctx, driver, "ASSOCIATED_WITH"))
-//
-//	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
-//
-//	expectedAsc := []string{"1", "2", "empty"}
-//	expectedDesc := []string{"2", "1", "empty"}
-//
-//	verifySortOrder(t, model.ColumnViewTypeOrganizationsCountry, commonModel.SortingDirectionAsc, expectedAsc)
-//	verifySortOrder(t, model.ColumnViewTypeOrganizationsCountry, commonModel.SortingDirectionDesc, expectedDesc)
-//}
-//
-//func TestQueryResolver_UIOrganizationsSearch_SortByCity(t *testing.T) {
-//	ctx := context.Background()
-//	defer tearDownTestCase(ctx)(t)
-//
-//	neo4jtest.CreateTenant(ctx, driver, tenantName)
-//
-//	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "1"})
-//	neo4jtest.CreateLocation(ctx, driver, tenantName, neo4jentity.LocationEntity{Id: "l1", Locality: "C1"})
-//	neo4jtest.LinkNodes(ctx, driver, "1", "l1", "ASSOCIATED_WITH")
-//
-//	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "2"})
-//	neo4jtest.CreateLocation(ctx, driver, tenantName, neo4jentity.LocationEntity{Id: "l2", Locality: "C2"})
-//	neo4jtest.LinkNodes(ctx, driver, "2", "l2", "ASSOCIATED_WITH")
-//
-//	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "empty"})
-//
-//	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
-//	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Location"))
-//	require.Equal(t, 2, neo4jtest.GetCountOfRelationships(ctx, driver, "ASSOCIATED_WITH"))
-//
-//	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
-//
-//	expectedAsc := []string{"1", "2", "empty"}
-//	expectedDesc := []string{"2", "1", "empty"}
-//
-//	verifySortOrder(t, model.ColumnViewTypeOrganizationsCity, commonModel.SortingDirectionAsc, expectedAsc)
-//	verifySortOrder(t, model.ColumnViewTypeOrganizationsCity, commonModel.SortingDirectionDesc, expectedDesc)
-//}
 //
 //func TestQueryResolver_UIOrganizationsSearch_SortByIsPublic(t *testing.T) {
 //	ctx := context.Background()
