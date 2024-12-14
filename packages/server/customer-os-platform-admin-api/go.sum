@@ -96,8 +96,8 @@ github.com/gin-contrib/cors v1.7.2 h1:oLDHxdg8W/XDoN/8zamqk/Drgt4oVZDvaV0YmvVICQ
 github.com/gin-contrib/cors v1.7.2/go.mod h1:SUJVARKgQ40dmrzgXEVxj2m7Ig1v1qIboQkPDTQ9t2E=
 github.com/gin-contrib/sse v0.1.0 h1:Y/yl/+YNO8GZSjAhjMsSuLt29uWRFHdHYUb5lYOV9qE=
 github.com/gin-contrib/sse v0.1.0/go.mod h1:RHrZQHXnP2xjPF+u1gW/2HnVO7nvIa9PG3Gm+fLHvGI=
-github.com/gin-contrib/zap v0.2.0 h1:HLvt3rZXyC8XC+s2lHzMFow3UDqiEbfrBWJyHHS6L8A=
-github.com/gin-contrib/zap v0.2.0/go.mod h1:eqfbe9ZmI+GgTZF6nRiC2ZwDeM4DK1Viwc8OxTCphh0=
+github.com/gin-contrib/zap v1.1.4 h1:xvxTybg6XBdNtcQLH3Tf0lFr4vhDkwzgLLrIGlNTqIo=
+github.com/gin-contrib/zap v1.1.4/go.mod h1:7lgEpe91kLbeJkwBTPgtVBy4zMa6oSBEcvj662diqKQ=
 github.com/gin-gonic/gin v1.10.0 h1:nTuyha1TYqgedzytsKYqna+DfLos46nTv2ygFy86HFU=
 github.com/gin-gonic/gin v1.10.0/go.mod h1:4PMNQiOhvDRa013RKVbsiNwoyezlm2rm0uX/T7kzp5Y=
 github.com/go-logr/logr v1.2.2/go.mod h1:jdQByPbusPIv2/zmleS9BjJVeZ6kBagPoEUsqbVz/1A=
