@@ -15,10 +15,10 @@ func GenerateHashId(s string, length int) string {
 }
 
 func GenerateNanoIdWithPrefix(s string, length int) string {
-	alphabet := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	alphabet := "abcdefghijklmnopqrstuvwxyz0123456789"
 	id, err := gonanoid.Generate(alphabet, length)
 	if err != nil {
 		panic(err)
 	}
-	return fmt.Sprintf("%s-%s", s, id)
+	return fmt.Sprintf("%s_%s", s, id)
 }

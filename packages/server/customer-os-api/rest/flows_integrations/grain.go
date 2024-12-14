@@ -1,4 +1,4 @@
-package flows
+package integrations
 
 import (
 	"context"
@@ -13,10 +13,11 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	commontracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
+	neoEnum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/pkg/errors"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
@@ -30,7 +31,7 @@ func GrainZapier(c *gin.Context, s *service.Services) {
 	if err != nil {
 		err := errors.Wrap(err, "Unable to identify tenant")
 		tracing.TraceErr(span, err)
-		rest.SendError(c, span, http.StatusUnauthorized, rest.ErrUnauthorized)
+		rest.SendError(c, span, http.StatusUnauthorized, enum.ErrUnauthorized)
 		return
 	}
 
@@ -41,15 +42,15 @@ func GrainZapier(c *gin.Context, s *service.Services) {
 	})
 
 	if !strings.HasPrefix(c.ContentType(), "application/json") {
-		rest.SendError(c, span, http.StatusBadRequest, rest.ErrUnsupportedContentType)
+		rest.SendError(c, span, http.StatusBadRequest, enum.ErrUnsupportedContentType)
 	}
 
 	if c.Request.UserAgent() == "" {
-		rest.SendError(c, span, http.StatusForbidden, rest.ErrForbidden)
+		rest.SendError(c, span, http.StatusForbidden, enum.ErrForbidden)
 	}
 
 	if !strings.EqualFold(c.Request.UserAgent(), "Zapier") {
-		rest.SendError(c, span, http.StatusForbidden, rest.ErrForbidden)
+		rest.SendError(c, span, http.StatusForbidden, enum.ErrForbidden)
 	}
 
 	handleGrainNewRecordingEventZapier(c, ctx, s)
@@ -63,22 +64,22 @@ func handleGrainNewRecordingEventZapier(c *gin.Context, ctx context.Context, s *
 	var grainDataPayload GrainRecordingData
 	err := c.BindJSON(&grainDataPayload)
 	if err != nil {
-		rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Unable to parse payload from Zapier"))
+		rest.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("Unable to parse payload from Zapier"))
 		return
 	}
 
 	grainData := &grainDataPayload
 	err = grainData.cleanPayload()
 	if err != nil {
-		rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Unable to normalize payload from Zapier"))
+		rest.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("Unable to normalize payload from Zapier"))
 		return
 	}
 
 	if grainData.RecordingData.IntelligenceNotesMD == "" {
-		rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("No Grain meeting in payload"))
+		rest.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("No Grain meeting in payload"))
 	}
 
-	c.JSON(http.StatusAccepted, rest.BuildBaseResponse(rest.StatusProcessing))
+	c.JSON(http.StatusAccepted, enum.BuildBaseResponse(enum.StatusProcessing))
 
 	go func() {
 		if err := publishGrainMeetingSummaryCreatedEvent(c, ctx, s, grainData); err != nil {
@@ -109,7 +110,7 @@ func publishGrainMeetingSummaryCreatedEvent(c *gin.Context, ctx context.Context,
 
 	// build webhook event
 	event := dto.WebhookEvent{
-		ExternalSystemId: enum.Grain,
+		ExternalSystemId: neoEnum.Grain,
 		Name:             commonenum.EventGrainMeetingSummaryCreated,
 		DataType:         "MeetingSummaryEvent",
 		Data:             &meeting,

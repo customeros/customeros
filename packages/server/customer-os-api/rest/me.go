@@ -6,11 +6,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
 
 type MeResponse struct {
-	BaseResponse
+	enum.BaseResponse
 	Tenant string `json:"tenant"`
 }
 
@@ -22,12 +23,12 @@ func AuthorizeMe(s *service.Services) gin.HandlerFunc {
 
 		tenant := ValidateTenant(c, ctx, span)
 		if tenant == "" {
-			SendError(c, span, http.StatusUnauthorized, ErrInvalidAPIKey)
+			SendError(c, span, http.StatusUnauthorized, enum.ErrInvalidAPIKey)
 			return
 		}
 
 		c.JSON(http.StatusOK, MeResponse{
-			BaseResponse: BuildBaseResponse(StatusSuccess),
+			BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
 			Tenant:       tenant,
 		})
 		return

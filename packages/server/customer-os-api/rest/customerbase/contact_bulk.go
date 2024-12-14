@@ -12,6 +12,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/pkg/errors"
 
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
@@ -20,7 +21,7 @@ import (
 // @Description Response structure for bulk operations with single error detail
 type BulkResponse struct {
 	// Inherits standard response fields
-	rest.BaseResponse
+	enum.BaseResponse
 	// Summary of the bulk operation
 	Summary BulkSummary `json:"summary,omitempty"`
 	// Error details if any
@@ -31,7 +32,7 @@ type BulkResponse struct {
 // @Description Response structure for bulk operations with multiple error details
 type BulkResponseMultipleErrors struct {
 	// Inherits standard response fields
-	rest.BaseResponse
+	enum.BaseResponse
 	// Summary of the bulk operation
 	Summary BulkSummary `json:"summary,omitempty"`
 	// List of error details
@@ -87,7 +88,7 @@ func CreateBulkContacts(s *service.Services) gin.HandlerFunc {
 
 		tenant := rest.ValidateTenant(c, ctx, span)
 		if tenant == "" {
-			rest.SendError(c, span, http.StatusUnauthorized, rest.ErrInvalidAPIKey)
+			rest.SendError(c, span, http.StatusUnauthorized, enum.ErrInvalidAPIKey)
 			return
 		}
 
@@ -121,7 +122,7 @@ func ImportContacts(s *service.Services) gin.HandlerFunc {
 		}
 		contentType := c.GetHeader("Content-Type")
 		if !strings.HasPrefix(contentType, "multipart/form-data") {
-			rest.SendError(c, span, http.StatusBadRequest, rest.ErrUnsupportedContentType)
+			rest.SendError(c, span, http.StatusBadRequest, enum.ErrUnsupportedContentType)
 			return
 		}
 
@@ -136,13 +137,13 @@ func handleBulkJSONRequest(c *gin.Context, s *service.Services) {
 
 	var multipleContacts []ContactRecord
 	if err := c.ShouldBindJSON(&multipleContacts); err != nil {
-		rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest)
+		rest.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest)
 		tracing.TraceErr(span, err)
 		return
 	}
 
 	if len(multipleContacts) == 0 {
-		rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("No contacts provided"))
+		rest.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("No contacts provided"))
 		return
 	}
 
@@ -169,7 +170,7 @@ func handleBulkJSONRequest(c *gin.Context, s *service.Services) {
 	switch {
 	case fail == 0:
 		resp := BulkResponse{
-			BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
+			BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
 			Summary: BulkSummary{
 				Total:   total,
 				Success: total,
@@ -179,7 +180,7 @@ func handleBulkJSONRequest(c *gin.Context, s *service.Services) {
 		c.JSON(http.StatusCreated, resp)
 	case fail == 1:
 		resp := BulkResponse{
-			BaseResponse: rest.BuildBaseResponse(rest.StatusPartialSuccess),
+			BaseResponse: enum.BuildBaseResponse(enum.StatusPartialSuccess),
 			Summary: BulkSummary{
 				Total:   total,
 				Success: total - fail,
@@ -193,10 +194,10 @@ func handleBulkJSONRequest(c *gin.Context, s *service.Services) {
 		}
 		c.JSON(http.StatusPartialContent, resp)
 	case fail == total:
-		rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("No valid contacts found in request"))
+		rest.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("No valid contacts found in request"))
 	default:
 		resp := BulkResponseMultipleErrors{
-			BaseResponse: rest.BuildBaseResponse(rest.StatusPartialSuccess),
+			BaseResponse: enum.BuildBaseResponse(enum.StatusPartialSuccess),
 			Summary: BulkSummary{
 				Total:   total,
 				Success: total - fail,
@@ -235,7 +236,7 @@ func validateFileHeaders(c *gin.Context, reader *csv.Reader) error {
 
 	headers, err := reader.Read()
 	if err != nil {
-		rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Unable to read file"))
+		rest.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("Unable to read file"))
 		return err
 	}
 
@@ -251,7 +252,7 @@ func validateFileHeaders(c *gin.Context, reader *csv.Reader) error {
 	}
 
 	if !hasEmail || !hasLinkedIn {
-		rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Missing required headers: email, linkedin_url"))
+		rest.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("Missing required headers: email, linkedin_url"))
 		return errors.New("invalid headers")
 	}
 	return nil
@@ -308,7 +309,7 @@ func processCSVRecords(c *gin.Context, s *service.Services, reader *csv.Reader) 
 	switch {
 	case fail == 0:
 		resp := BulkResponse{
-			BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
+			BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
 			Summary: BulkSummary{
 				Total:   total,
 				Success: total,
@@ -318,7 +319,7 @@ func processCSVRecords(c *gin.Context, s *service.Services, reader *csv.Reader) 
 		c.JSON(http.StatusCreated, resp)
 	case fail == 1:
 		resp := BulkResponse{
-			BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
+			BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
 			Summary: BulkSummary{
 				Total:   total,
 				Success: total - fail,
@@ -332,10 +333,10 @@ func processCSVRecords(c *gin.Context, s *service.Services, reader *csv.Reader) 
 		}
 		c.JSON(http.StatusCreated, resp)
 	case fail == total:
-		rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("No valid contacts found in request"))
+		rest.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("No valid contacts found in request"))
 	default:
 		resp := BulkResponseMultipleErrors{
-			BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
+			BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
 			Summary: BulkSummary{
 				Total:   total,
 				Success: total - fail,

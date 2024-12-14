@@ -1,8 +1,9 @@
 package entity
 
 import (
-	"gorm.io/datatypes"
 	"time"
+
+	"gorm.io/datatypes"
 )
 
 type FlowNode struct {
@@ -12,6 +13,7 @@ type FlowNode struct {
 	Event     *string   `gorm:"column:event;type:varchar(255)" json:"event"`
 	CreatedAt time.Time `gorm:"column:created_at;autoCreateTime" json:"createdAt"`
 	UpdatedAt time.Time `gorm:"column:updated_at;autoUpdateTime" json:"updatedAt"`
+	Active    bool      `gorm:"column:active;type:boolean;default:true" json:"active"`
 
 	// used to store wait time config, email subject & template, etc
 	EventData *datatypes.JSON `gorm:"column:data;type:jsonb" json:"data"`

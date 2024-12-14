@@ -1,4 +1,4 @@
-package flows
+package integrations
 
 import (
 	"bytes"
@@ -18,6 +18,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
@@ -28,14 +29,14 @@ func CalDotCom(c *gin.Context, s *service.Services) {
 	commontracing.TagComponentRest(span)
 
 	if !strings.HasPrefix(c.ContentType(), "application/json") {
-		rest.SendError(c, span, http.StatusBadRequest, rest.ErrUnsupportedContentType)
+		rest.SendError(c, span, http.StatusBadRequest, enum.ErrUnsupportedContentType)
 		return
 	}
 
 	// Read the raw body
 	body, err := io.ReadAll(c.Request.Body)
 	if err != nil {
-		rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Unable to read message body"))
+		rest.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("Unable to read message body"))
 		return
 	}
 	// Important: Restore the body for later use
@@ -44,7 +45,7 @@ func CalDotCom(c *gin.Context, s *service.Services) {
 	// Get the signature from header
 	signature := c.GetHeader("X-Cal-Signature-256")
 	if signature == "" {
-		rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Missing signature header"))
+		rest.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("Missing signature header"))
 		return
 	}
 
@@ -52,7 +53,7 @@ func CalDotCom(c *gin.Context, s *service.Services) {
 	tenant, err := s.Repositories.PostgresRepositories.TenantRepository.GetTenant(ctx, c.Param("tenantId"))
 	if err != nil {
 		tracing.TraceErr(span, err)
-		rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer.WithMessage("Unable to identify tenant"))
+		rest.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer.WithMessage("Unable to identify tenant"))
 		return
 	}
 
@@ -66,19 +67,19 @@ func CalDotCom(c *gin.Context, s *service.Services) {
 	webhook, err := s.Repositories.PostgresRepositories.FlowWebhooksRepository.Find(ctx, entity.FlowWebhooks{WebhookPath: c.Request.URL.Path})
 	if err != nil {
 		tracing.TraceErr(span, err)
-		rest.SendError(c, span, http.StatusInternalServerError, rest.ErrNotFound)
+		rest.SendError(c, span, http.StatusInternalServerError, enum.ErrNotFound)
 		return
 	}
 
 	valid, err := VerifyCalWebhookSignature(body, signature, webhook.Secret)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer.WithMessage("Unable to verify message payloar"))
+		rest.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer.WithMessage("Unable to verify message payloar"))
 		return
 	}
 
 	if !valid {
-		rest.SendError(c, span, http.StatusUnauthorized, rest.ErrUnauthorized)
+		rest.SendError(c, span, http.StatusUnauthorized, enum.ErrUnauthorized)
 		return
 	}
 
@@ -109,7 +110,7 @@ func handleCalDotComEvent(c *gin.Context) {
 	var webhook CalDotComPayload
 	err := c.BindJSON(&webhook)
 	if err != nil {
-		rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Unable to parse cal.com payload"))
+		rest.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("Unable to parse cal.com payload"))
 		tracing.TraceErr(span, errors.Wrap(err, "Unable to parse cal.com payload"))
 		return
 

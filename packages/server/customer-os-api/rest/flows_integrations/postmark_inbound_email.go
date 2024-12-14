@@ -1,4 +1,4 @@
-package flows
+package integrations
 
 import (
 	"context"
@@ -17,6 +17,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
@@ -31,7 +32,7 @@ func PostmarkInboundEmail(c *gin.Context, s *service.Services) {
 	// Validate Postmark User-Agent
 	if c.Request.UserAgent() == "" || !strings.EqualFold(c.Request.UserAgent(), "Postmark") {
 		tracing.TraceErr(span, fmt.Errorf("Invalid user agent %s", c.Request.UserAgent()))
-		rest.SendError(c, span, http.StatusForbidden, rest.ErrForbidden)
+		rest.SendError(c, span, http.StatusForbidden, enum.ErrForbidden)
 		return
 	}
 
@@ -40,7 +41,7 @@ func PostmarkInboundEmail(c *gin.Context, s *service.Services) {
 	if err != nil {
 		tracing.LogObjectAsJson(span, "body", c.Request.Body)
 		tracing.TraceErr(span, err)
-		rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest)
+		rest.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest)
 		return
 	}
 

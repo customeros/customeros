@@ -1,4 +1,4 @@
-package flows
+package integrations
 
 import (
 	"archive/zip"
@@ -17,6 +17,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/pkg/errors"
 
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
@@ -30,7 +31,7 @@ func PostmarkDMARCMonitor(s *service.Services) gin.HandlerFunc {
 		// Validate Postmark User-Agent
 		if c.Request.UserAgent() == "" || !strings.EqualFold(c.Request.UserAgent(), "Postmark") {
 			tracing.TraceErr(span, fmt.Errorf("Invalid user agent %s", c.Request.UserAgent()))
-			rest.SendError(c, span, http.StatusForbidden, rest.ErrForbidden)
+			rest.SendError(c, span, http.StatusForbidden, enum.ErrForbidden)
 			return
 		}
 
@@ -39,12 +40,12 @@ func PostmarkDMARCMonitor(s *service.Services) gin.HandlerFunc {
 		if err != nil {
 			tracing.LogObjectAsJson(span, "body", c.Request.Body)
 			tracing.TraceErr(span, err)
-			rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest)
+			rest.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest)
 			return
 		}
 
 		// Return accepted response immediately
-		c.JSON(http.StatusAccepted, rest.BuildBaseResponse(rest.StatusProcessing))
+		c.JSON(http.StatusAccepted, enum.BuildBaseResponse(enum.StatusProcessing))
 
 		// Process email asynchronously
 		go func() {

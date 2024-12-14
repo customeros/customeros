@@ -16,7 +16,6 @@ type FlowNodeRepository interface {
 	FindAll(ctx context.Context, flowNode entity.FlowNode) (*[]entity.FlowNode, error)
 	Find(ctx context.Context, flowNode entity.FlowNode) (*entity.FlowNode, error)
 	Update(ctx context.Context, flowNode entity.FlowNode) (*entity.FlowNode, error)
-	Delete(ctx context.Context, flowNode entity.FlowNode) error
 }
 
 type flowNodeRepository struct {
@@ -95,24 +94,4 @@ func (f *flowNodeRepository) Update(ctx context.Context, flowNode entity.FlowNod
 	}
 
 	return &updatedNode, nil
-}
-
-func (f *flowNodeRepository) Delete(ctx context.Context, flowNode entity.FlowNode) error {
-	span, ctx := tracing.StartTracerSpan(ctx, "FlowNodeRepository.Delete")
-	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-
-	if flowNode.ID == "" {
-		err := errors.New("ID is missing")
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	err := f.gormDb.Delete(&flowNode).Error
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	return nil
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
@@ -32,7 +33,7 @@ type CreateFlowEdgeRecord struct {
 }
 
 type CreateFlowEdgeResponse struct {
-	rest.BaseResponse
+	enum.BaseResponse
 	Edge CreateFlowEdgeRecord `json:"edge"`
 }
 
@@ -44,7 +45,7 @@ func CreateFlowEdge(s *service.Services) gin.HandlerFunc {
 
 		tenant := rest.ValidateTenant(c, ctx, span)
 		if tenant == "" {
-			rest.SendError(c, span, http.StatusUnauthorized, rest.ErrInvalidAPIKey)
+			rest.SendError(c, span, http.StatusUnauthorized, enum.ErrInvalidAPIKey)
 			return
 		}
 
@@ -53,18 +54,18 @@ func CreateFlowEdge(s *service.Services) gin.HandlerFunc {
 		isValidFlow, err := s.CommonServices.WorkflowService.ValidateFlowBelongsToTenant(ctx, flowId)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer)
+			rest.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer)
 		}
 		if !isValidFlow {
 			err := errors.New("Flow does not belong to tenant")
 			tracing.TraceErr(span, err)
-			rest.SendError(c, span, http.StatusNotFound, rest.ErrNotFound.WithMessage("unable to locate flolw"))
+			rest.SendError(c, span, http.StatusNotFound, enum.ErrNotFound.WithMessage("unable to locate flolw"))
 			return
 		}
 
 		request, err := getEdgeCreateRequest(c, s)
 		if err != nil {
-			rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("unable to parse payload"))
+			rest.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("unable to parse payload"))
 			return
 		}
 
@@ -94,7 +95,7 @@ func buildCreateEdgeResponse(c *gin.Context, flowEdge *entity.FlowEdge) CreateFl
 	}
 
 	return CreateFlowEdgeResponse{
-		BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
+		BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
 		Edge:         response,
 	}
 }
