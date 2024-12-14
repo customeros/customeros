@@ -57,6 +57,78 @@ func TestQueryResolver_UIContactsSearch_SortByName(t *testing.T) {
 	verifyContactSortOrder(t, model.ColumnViewTypeContactsName, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
+func TestQueryResolver_UIContactsSearch_FilterByPrimaryEmail(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	contact1 := neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{FirstName: "A"})
+	contact2 := neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{FirstName: "B"})
+	contact3 := neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{FirstName: "C"})
+	contact4 := neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{FirstName: "D"})
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{FirstName: "E"})
+
+	neo4jtest.CreateEmailForEntity(ctx, driver, tenantName, contact1, neo4jentity.EmailEntity{Email: "aaa111@gmail.com", Primary: true})
+	neo4jtest.CreateEmailForEntity(ctx, driver, tenantName, contact1, neo4jentity.EmailEntity{Email: "bbb222@gmail.com", Primary: false})
+	neo4jtest.CreateEmailForEntity(ctx, driver, tenantName, contact2, neo4jentity.EmailEntity{Email: "aaa333@gmail.com", Primary: false})
+	neo4jtest.CreateEmailForEntity(ctx, driver, tenantName, contact2, neo4jentity.EmailEntity{Email: "ccc444@gmail.com", Primary: true})
+	neo4jtest.CreateEmailForEntity(ctx, driver, tenantName, contact3, neo4jentity.EmailEntity{RawEmail: "aaa.aaa@gmail.com", Primary: true})
+	neo4jtest.CreateEmailForEntity(ctx, driver, tenantName, contact4, neo4jentity.EmailEntity{RawEmail: "aaa111@gmail.com", Primary: false})
+
+	require.Equal(t, 5, neo4jtest.GetCountOfNodes(ctx, driver, commonModel.NodeLabelContact))
+	require.Equal(t, 6, neo4jtest.GetCountOfNodes(ctx, driver, commonModel.NodeLabelEmail))
+
+	searchBy := model.ColumnViewTypeContactsPrimaryEmail
+	searchTerm := "aa"
+
+	assertContactSearch(t, searchBy, searchTerm, commonModel.ComparisonOperatorIsEmpty, 5, 2)
+	assertContactSearch(t, searchBy, searchTerm, commonModel.ComparisonOperatorIsNotEmpty, 5, 3)
+	assertContactSearch(t, searchBy, searchTerm, commonModel.ComparisonOperatorContains, 5, 2)
+	assertContactSearch(t, searchBy, searchTerm, commonModel.ComparisonOperatorNotContains, 5, 1)
+}
+
+func TestQueryResolver_UIContactsSearch_SortByPrimaryEmail(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	contact1 := neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "c1"})
+	contact2 := neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "c2"})
+	contact3 := neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "c3"})
+
+	neo4jtest.CreateEmailForEntity(ctx, driver, tenantName, contact1, neo4jentity.EmailEntity{Email: "bbb@gmail.com", Primary: true})
+	neo4jtest.CreateEmailForEntity(ctx, driver, tenantName, contact2, neo4jentity.EmailEntity{Email: "aaa@gmail.com", Primary: false})
+	neo4jtest.CreateEmailForEntity(ctx, driver, tenantName, contact3, neo4jentity.EmailEntity{RawEmail: "aaa@gmail.com", Primary: true})
+
+	expectedAsc := []string{contact3, contact1, contact2}
+	expectedDesc := []string{contact1, contact3, contact2}
+
+	verifyContactSortOrder(t, model.ColumnViewTypeContactsPrimaryEmail, commonModel.SortingDirectionAsc, expectedAsc)
+	verifyContactSortOrder(t, model.ColumnViewTypeContactsPrimaryEmail, commonModel.SortingDirectionDesc, expectedDesc)
+}
+
+func TestQueryResolver_UIContactsSearch_SortByPrimaryEmail_WithNoPrimaryEmail(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	contact1 := neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{})
+	contact2 := neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{})
+	contact3 := neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{})
+
+	neo4jtest.CreateEmailForEntity(ctx, driver, tenantName, contact1, neo4jentity.EmailEntity{Email: "aaa@gmail.com", Primary: true})
+	neo4jtest.CreateEmailForEntity(ctx, driver, tenantName, contact2, neo4jentity.EmailEntity{RawEmail: "bbb@gmail.com", Primary: true})
+
+	expectedAsc := []string{contact1, contact2, contact3}
+	expectedDesc := []string{contact2, contact1, contact3}
+
+	verifyContactSortOrder(t, model.ColumnViewTypeContactsPrimaryEmail, commonModel.SortingDirectionAsc, expectedAsc)
+	verifyContactSortOrder(t, model.ColumnViewTypeContactsPrimaryEmail, commonModel.SortingDirectionDesc, expectedDesc)
+}
+
 func assertContactSearch(t *testing.T, filterName model.ColumnViewType, searchValue any, operator commonModel.ComparisonOperator, totalAvailable int64, totalElements int64) {
 	rawResponse, err := c.RawPost(getQuery("contact/ui_contacts_search"),
 		client.Var("limit", 10),
@@ -107,7 +179,6 @@ func assertContactSort(t *testing.T, sortBy model.ColumnViewType, sortDirection 
 	return contacts.Ui_Contacts_Search.Ids
 }
 
-//
 //func TestQueryResolver_UIOrganizationsSearch_FilterByWebsite(t *testing.T) {
 //	ctx := context.Background()
 //	defer tearDownTestCase(ctx)(t)
