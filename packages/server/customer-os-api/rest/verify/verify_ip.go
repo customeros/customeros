@@ -19,6 +19,7 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
@@ -27,7 +28,7 @@ import (
 // @Description Response containing IP intelligence data including threats, geolocation, and network information
 type IpIntelligenceResponse struct {
 	// Inherits standard response fields
-	rest.BaseResponse
+	enum.BaseResponse
 	// IP intelligence details
 	// required: true
 	IP IpIntelligenceRecord `json:"ip,omitempty"`
@@ -208,7 +209,7 @@ func IpIntelligence(services *service.Services) gin.HandlerFunc {
 
 		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {
-			rest.SendError(c, span, http.StatusUnauthorized, rest.ErrUnauthorized)
+			rest.SendError(c, span, http.StatusUnauthorized, enum.ErrUnauthorized)
 			return
 		}
 		logger := services.Log
@@ -216,13 +217,13 @@ func IpIntelligence(services *service.Services) gin.HandlerFunc {
 		// Check if address is provided
 		ipAddress := c.Query("address")
 		if ipAddress == "" {
-			rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Missing parameter: address"))
+			rest.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("Missing parameter: address"))
 			return
 		}
 		span.LogFields(log.String("address", ipAddress))
 
 		if net.ParseIP(ipAddress) == nil {
-			rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("IP address is not valid"))
+			rest.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("IP address is not valid"))
 			logger.Warnf("Invalid IP address format: %s", ipAddress)
 			return
 		}
@@ -232,14 +233,14 @@ func IpIntelligence(services *service.Services) gin.HandlerFunc {
 		})
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to marshal request"))
-			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer)
+			rest.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer)
 			return
 		}
 		requestBody := []byte(string(requestJSON))
 		req, err := http.NewRequest("POST", services.Cfg.InternalServices.ValidationApi+"/ipLookup", bytes.NewBuffer(requestBody))
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to create request"))
-			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer)
+			rest.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer)
 			return
 		}
 		// Inject span context into the HTTP request
@@ -254,7 +255,7 @@ func IpIntelligence(services *service.Services) gin.HandlerFunc {
 		response, err := client.Do(req)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to perform request"))
-			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer)
+			rest.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer)
 		}
 		defer response.Body.Close()
 
@@ -262,7 +263,7 @@ func IpIntelligence(services *service.Services) gin.HandlerFunc {
 		err = json.NewDecoder(response.Body).Decode(&result)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to decode response"))
-			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer)
+			rest.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer)
 			return
 		}
 
@@ -324,7 +325,7 @@ func IpIntelligence(services *service.Services) gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, IpIntelligenceResponse{
-			BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
+			BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
 			IP:           ipIntelligenceResponse,
 		})
 	}

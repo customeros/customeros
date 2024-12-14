@@ -1,7 +1,9 @@
 // @openapi 3.0.0
 package customerbase
 
-import "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
+import (
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/enum"
+)
 
 // Contact Types
 
@@ -25,7 +27,7 @@ type ContactRecord struct {
 // @Description Response structure for single contact operations
 type SingleContactResponse struct {
 	// Inherits standard response fields
-	rest.BaseResponse
+	enum.BaseResponse
 	// The contact information
 	Contact ContactRecord `json:"contact,omitempty"`
 }
@@ -34,7 +36,7 @@ type SingleContactResponse struct {
 // @Description Response structure for multiple contact operations
 type ContactsResponse struct {
 	// Inherits standard response fields
-	rest.BaseResponse
+	enum.BaseResponse
 	// List of contacts
 	Contacts []ContactRecord `json:"contacts,omitempty"`
 }
@@ -129,7 +131,7 @@ type OrganizationRecord struct {
 // @Description Response structure for single organization operations
 type OrganizationResponse struct {
 	// Inherits standard response fields
-	rest.BaseResponse
+	enum.BaseResponse
 	// The organization information
 	Organization OrganizationRecord `json:"organization,omitempty"`
 }
@@ -138,7 +140,7 @@ type OrganizationResponse struct {
 // @Description Response structure for multiple organization operations
 type OrganizationsResponse struct {
 	// Inherits standard response fields
-	rest.BaseResponse
+	enum.BaseResponse
 	// List of organizations
 	Organizations []OrganizationRecord `json:"organizations,omitempty"`
 }
@@ -178,7 +180,7 @@ type ExternalSystemRecord struct {
 // @Description Response structure for external system operations
 type ExternalSystemResponse struct {
 	// Inherits standard response fields
-	rest.BaseResponse
+	enum.BaseResponse
 	// The external system information
 	Organization ExternalSystemRecord `json:"organization,omitempty"`
 }

@@ -3,9 +3,6 @@ package restmailstack
 
 import (
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
-	service2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"net/http"
 	"regexp"
 	"strings"
@@ -13,11 +10,15 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/coserrors"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	service2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
@@ -54,7 +55,7 @@ func RegisterNewMailbox(services *service.Services) gin.HandlerFunc {
 		// get domain from path
 		domain := c.Param("domain")
 		if domain == "" {
-			rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Missing parameter: domain"))
+			rest.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("Missing parameter: domain"))
 			return
 		}
 		span.LogKV("request.domain", domain)
@@ -63,7 +64,7 @@ func RegisterNewMailbox(services *service.Services) gin.HandlerFunc {
 		tenant := common.GetTenantFromContext(ctx)
 		// if tenant missing return auth error
 		if tenant == "" {
-			rest.SendError(c, span, http.StatusUnauthorized, rest.ErrUnauthorized)
+			rest.SendError(c, span, http.StatusUnauthorized, enum.ErrUnauthorized)
 			span.LogFields(tracingLog.String("result", "Missing tenant in context"))
 			return
 		}
@@ -75,13 +76,13 @@ func RegisterNewMailbox(services *service.Services) gin.HandlerFunc {
 			// log body
 			body, _ := c.GetRawData()
 			span.LogFields(tracingLog.String("request.body", string(body)))
-			rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest)
+			rest.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest)
 			return
 		}
 
 		username := strings.TrimSpace(mailboxRequest.Username)
 		if username == "" {
-			rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Missing parameter: username"))
+			rest.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("Missing parameter: username"))
 			return
 		}
 		span.LogKV("request.username", username)
@@ -95,7 +96,7 @@ func RegisterNewMailbox(services *service.Services) gin.HandlerFunc {
 
 		// validate username format
 		if err := validateMailboxUsername(username); err != nil {
-			rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("username is invalid"))
+			rest.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("username is invalid"))
 			return
 		}
 
@@ -119,30 +120,29 @@ func RegisterNewMailbox(services *service.Services) gin.HandlerFunc {
 			WebmailEnabled:  mailboxRequest.WebmailEnabled,
 			ForwardingTo:    forwardingTo,
 		})
-
 		if err != nil {
 			if errors.Is(err, coserrors.ErrDomainNotFound) {
-				rest.SendError(c, span, http.StatusNotFound, rest.ErrNotFound.WithMessage("Domain not found"))
+				rest.SendError(c, span, http.StatusNotFound, enum.ErrNotFound.WithMessage("Domain not found"))
 				return
 			} else if errors.Is(err, coserrors.ErrMailboxExists) {
-				rest.SendError(c, span, http.StatusConflict, rest.ErrConflict.WithMessage("Username already exists"))
+				rest.SendError(c, span, http.StatusConflict, enum.ErrConflict.WithMessage("Username already exists"))
 				return
 			} else {
-				rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer.WithMessage("Mailbox setup failed, please contact support"))
+				rest.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer.WithMessage("Mailbox setup failed, please contact support"))
 				return
 			}
 		}
 
 		mailbox, err := services.CommonServices.PostgresRepositories.TenantSettingsMailboxRepository.GetByMailbox(ctx, username+"@"+domain)
 		if err != nil {
-			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer.WithMessage("Error retrieving mailbox"))
+			rest.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer.WithMessage("Error retrieving mailbox"))
 			tracing.TraceErr(span, errors.Wrap(err, "Error retrieving mailbox"))
 			return
 		}
 
 		err = services.CommonServices.RabbitMQService.PublishEvent(ctx, mailbox.ID, model.MAILBOX, dto.MailstackProvisionMailbox{})
 		if err != nil {
-			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer.WithMessage("Error provisioning mailbox"))
+			rest.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer.WithMessage("Error provisioning mailbox"))
 			tracing.TraceErr(span, errors.Wrap(err, "Error provisioning mailbox"))
 			return
 		}
@@ -151,7 +151,7 @@ func RegisterNewMailbox(services *service.Services) gin.HandlerFunc {
 			response.Password = password
 		}
 		c.JSON(http.StatusOK, MailboxResponse{
-			BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
+			BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
 			Mailbox:      response,
 		})
 	}
@@ -191,7 +191,7 @@ func GetMailboxes(services *service.Services) gin.HandlerFunc {
 		// get domain from path
 		domain := c.Param("domain")
 		if domain == "" {
-			rest.SendError(c, span, http.StatusBadRequest, rest.ErrBadRequest.WithMessage("Missing parameter: domain"))
+			rest.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("Missing parameter: domain"))
 			return
 		}
 		span.LogKV("request.domain", domain)
@@ -200,7 +200,7 @@ func GetMailboxes(services *service.Services) gin.HandlerFunc {
 		tenant := common.GetTenantFromContext(ctx)
 		// if tenant missing return auth error
 		if tenant == "" {
-			rest.SendError(c, span, http.StatusUnauthorized, rest.ErrUnauthorized)
+			rest.SendError(c, span, http.StatusUnauthorized, enum.ErrUnauthorized)
 			span.LogFields(tracingLog.String("result", "Missing tenant in context"))
 			return
 		}
@@ -208,20 +208,20 @@ func GetMailboxes(services *service.Services) gin.HandlerFunc {
 		// get mailboxes for domain from postgres
 		mailboxRecords, err := services.CommonServices.PostgresRepositories.TenantSettingsMailboxRepository.GetAllByDomain(ctx, domain)
 		if err != nil {
-			rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer.WithMessage("Error retrieving mailboxes"))
+			rest.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer.WithMessage("Error retrieving mailboxes"))
 			tracing.TraceErr(span, errors.Wrap(err, "Error retrieving mailboxes"))
 			return
 		}
 
 		response := MailboxesResponse{
-			BaseResponse: rest.BuildBaseResponse(rest.StatusSuccess),
+			BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
 			Mailboxes:    make([]MailboxRecord, 0, len(mailboxRecords)),
 		}
 		for _, mailboxRecord := range mailboxRecords {
 			mailboxDetails, err := services.CommonServices.OpenSrsService.GetMailboxDetails(ctx, mailboxRecord.MailboxUsername)
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "Error getting mailbox details"))
-				rest.SendError(c, span, http.StatusInternalServerError, rest.ErrInternalServer.WithMessage("Error getting mailbox details"))
+				rest.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer.WithMessage("Error getting mailbox details"))
 				return
 			}
 			response.Mailboxes = append(response.Mailboxes, MailboxRecord{
