@@ -17,6 +17,7 @@ import (
 	restcustomerbase "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/customerbase"
 	restenrich "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/enrich"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/flows"
+	integrations "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/flows_integrations"
 	restmailstack "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/mailstack"
 	restoutreach "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/outreach"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/tracking"
@@ -53,7 +54,7 @@ func registerPublicRoutes(ctx context.Context, r *gin.Engine, s *service.Service
 	setupPublicRoute(ctx, r, "GET", "/invoice/:invoiceId/paymentLink", rest.GetInvoicePaymentLink(s))
 
 	// Internal Webhooks
-	setupPublicRoute(ctx, r, "POST", fmt.Sprintf("%s/dmarc", webhooksV1Path), flows.PostmarkDMARCMonitor(s))
+	setupPublicRoute(ctx, r, "POST", fmt.Sprintf("%s/dmarc", webhooksV1Path), integrations.PostmarkDMARCMonitor(s))
 
 	// Flow Wehbooks
 	setupPublicRoute(ctx, r, "POST", fmt.Sprintf("%s/:tenantId/i/:integrationId", flowsV1Path), flows.HandleWebhook(s, flowsV1Path))

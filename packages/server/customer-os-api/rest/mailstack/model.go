@@ -1,7 +1,9 @@
 // @openapi 3.0.0
 package restmailstack
 
-import "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
+import (
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/enum"
+)
 
 // RegisterNewDomainRequest represents the domain registration request
 // @Description Request payload for registering a new domain for mail services
@@ -39,7 +41,7 @@ type ConfigureDomainRequest struct {
 // @Description Response containing domain details and status
 type DomainResponse struct {
 	// Inherits standard response fields
-	rest.BaseResponse
+	enum.BaseResponse
 	// Domain information
 	// required: true
 	Domain DomainRecord `json:"domain"`
@@ -49,7 +51,7 @@ type DomainResponse struct {
 // @Description Response containing list of domains and status
 type DomainsResponse struct {
 	// Inherits standard response fields
-	rest.BaseResponse
+	enum.BaseResponse
 	// List of domains
 	// required: true
 	Domains []DomainRecord `json:"domains"`
@@ -122,7 +124,7 @@ type MailboxRequest struct {
 // @Description Response containing mailbox details and status
 type MailboxResponse struct {
 	// Inherits standard response fields
-	rest.BaseResponse
+	enum.BaseResponse
 	// Mailbox information
 	// required: false
 	Mailbox MailboxRecord `json:"mailbox,omitempty"`
@@ -132,7 +134,7 @@ type MailboxResponse struct {
 // @Description Response containing list of mailboxes and status
 type MailboxesResponse struct {
 	// Inherits standard response fields
-	rest.BaseResponse
+	enum.BaseResponse
 	// List of mailboxes
 	// required: false
 	Mailboxes []MailboxRecord `json:"mailboxes,omitempty"`
