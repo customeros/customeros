@@ -67,7 +67,7 @@ func (f *flowRepository) FindAll(ctx context.Context, flowRecord entity.Flow) (*
 	}
 
 	var flows []entity.Flow
-	query := f.gormDb.Where("tenant = ? AND status != ?", flowRecord.Tenant, enum.FlowStatusArchived)
+	query := f.gormDb.Where("status != ?", enum.FlowStatusArchived)
 
 	// Add additional filters based on non-zero fields in flowRecord
 	if flowRecord != (entity.Flow{}) {
@@ -84,7 +84,6 @@ func (f *flowRepository) FindAll(ctx context.Context, flowRecord entity.Flow) (*
 }
 
 func (f *flowRepository) Find(ctx context.Context, flowRecord entity.Flow) (*entity.Flow, error) {
-
 	span, ctx := tracing.StartTracerSpan(ctx, "FlowRepository.Find")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -103,13 +102,11 @@ func (f *flowRepository) Find(ctx context.Context, flowRecord entity.Flow) (*ent
 		Where(&flowRecord).
 		Where("status != ?", enum.FlowStatusArchived).
 		First(&flow).Error
-
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
 	return &flow, nil
-
 }
 
 func (f *flowRepository) Update(ctx context.Context, flowRecord entity.Flow) (*entity.Flow, error) {
