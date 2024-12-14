@@ -104,6 +104,7 @@ func createFlowNodeRecord(ctx context.Context, request CreateFlowNodeRequest, fl
 		FlowID: flowId,
 		Type:   request.Type,
 		Event:  request.Event,
+		Active: true,
 	}
 
 	if request.EventData == nil {
