@@ -148,7 +148,13 @@ func (s *trackingService) isWorkspaceDomain(ctx context.Context, span opentracin
 func (s *trackingService) buildSlackNotification(record *entity.Tracking, globalOrg *entity.GlobalOrganization) string {
 	// Build the text content for the section based on available data
 	var contentLines []string
-	contentLines = append(contentLines, fmt.Sprintf("<%s|*%s*> ", globalOrg.Website, globalOrg.Name))
+
+	website := globalOrg.Website
+	if !strings.HasPrefix(strings.ToLower(website), "https://") || !strings.HasPrefix(strings.ToLower(website), "http://") {
+		website = "https://" + website
+	}
+
+	contentLines = append(contentLines, fmt.Sprintf("<%s|*%s*> ", website, globalOrg.Name))
 
 	if globalOrg.Description != "" {
 		contentLines = append(contentLines, fmt.Sprintf("%s \n", globalOrg.Description))
@@ -156,7 +162,7 @@ func (s *trackingService) buildSlackNotification(record *entity.Tracking, global
 
 	// Add optional fields only if they're not empty
 	if globalOrg.PrimaryDomain != "" && globalOrg.Website != "" {
-		contentLines = append(contentLines, fmt.Sprintf("*Website:* <%s|%s> ", globalOrg.Website, globalOrg.PrimaryDomain))
+		contentLines = append(contentLines, fmt.Sprintf("*Website:* <%s|%s> ", website, globalOrg.PrimaryDomain))
 	}
 
 	if globalOrg.LinkedInUrl != "" && globalOrg.LinkedInAlias != "" {
