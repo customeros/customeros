@@ -155,6 +155,10 @@ message NextPreviewInvoiceForContractRequest {
   string tenant = 1;
   string contractId = 2;
   string appSource = 3;
+  string currency = 4;
+  int64 billingCycleInMonths = 5;
+  google.protobuf.Timestamp invoicePeriodStart = 6; // mandatory
+  google.protobuf.Timestamp invoicePeriodEnd = 7; // mandatory
 }
 
 message InvoiceIdResponse {

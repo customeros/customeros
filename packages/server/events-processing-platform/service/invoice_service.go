@@ -2,12 +2,10 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoice"
 	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
@@ -18,9 +16,6 @@ import (
 	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
 	utils2 "github.com/openline-ai/openline-customer-os/packages/server/events/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
-	"github.com/pkg/errors"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"time"
 )
 
@@ -47,43 +42,6 @@ func (s *invoiceService) NextPreviewInvoiceForContract(ctx context.Context, requ
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, "")
 	tracing.LogObjectAsJson(span, "request", request)
 
-	// check and fetch contract
-	contractExists, err := s.checkContractExists(ctx, request.Tenant, request.ContractId)
-	if err != nil {
-		s.log.Error(err, "error checking contract existence")
-		return nil, status.Errorf(codes.Internal, "error checking contract existence: %v", err)
-	}
-	if !contractExists {
-		return nil, status.Errorf(codes.NotFound, "contract with ID %s not found", request.ContractId)
-	}
-
-	contract, err := s.getContract(ctx, request.Tenant, request.ContractId)
-	if err != nil {
-		s.log.Errorf("Error while getting contract %s: %s", request.ContractId, err.Error())
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	//get last issued on cycle invoice for contract
-	//lastIssuedOnCycleInvoiceForContract, err := s.GetLastIssuedOnCycleInvoiceForContract(ctx, request.Tenant, request.EntityId)
-	//if err != nil {
-	//	s.log.Errorf("Error while getting last issued on cycle invoice for contract %s: %s", request.EntityId, err.Error())
-	//	tracing.TraceErr(span, err)
-	//	return nil, err
-	//}
-
-	var invoicePeriodStart, invoicePeriodEnd time.Time
-	if contract.NextInvoiceDate != nil {
-		invoicePeriodStart = *contract.NextInvoiceDate
-	} else if contract.InvoicingStartDate != nil {
-		invoicePeriodStart = *contract.InvoicingStartDate
-	} else {
-		err = fmt.Errorf("contract has no next invoice date or invoicing start date")
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-	invoicePeriodEnd = s.calculateInvoiceCycleEnd(ctx, invoicePeriodStart, request.Tenant, *contract)
-
 	now := utils.Now()
 	invoiceId := uuid.New().String()
 
@@ -98,10 +56,10 @@ func (s *invoiceService) NextPreviewInvoiceForContract(ctx context.Context, requ
 		SourceFields: &commonpb.SourceFields{
 			AppSource: utils2.AppSourceEventProcessingPlatform,
 		},
-		InvoicePeriodStart:   utils.ConvertTimeToTimestampPtr(&invoicePeriodStart),
-		InvoicePeriodEnd:     utils.ConvertTimeToTimestampPtr(&invoicePeriodEnd),
-		Currency:             contract.Currency.String(),
-		BillingCycleInMonths: contract.BillingCycleInMonths,
+		InvoicePeriodStart:   request.InvoicePeriodStart,
+		InvoicePeriodEnd:     request.InvoicePeriodEnd,
+		Currency:             request.Currency,
+		BillingCycleInMonths: request.BillingCycleInMonths,
 		Note:                 "",
 		DryRun:               true,
 		Preview:              true,
@@ -130,7 +88,7 @@ func (s *invoiceService) GetLastIssuedOnCycleInvoiceForContract(ctx context.Cont
 	}
 }
 
-func (s *invoiceService) getContract(ctx context.Context, tenant, contractId string) (*neo4jentity.ContractEntity, error) {
+func (s *invoiceService) getContract2(ctx context.Context, tenant, contractId string) (*neo4jentity.ContractEntity, error) {
 	contractNode, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractById(ctx, tenant, contractId)
 	if err != nil {
 		return nil, err
@@ -152,16 +110,6 @@ func (s *invoiceService) NewInvoiceForContract(ctx context.Context, request *inv
 		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("invoicePeriodEnd"))
 	} else if request.ContractId == "" {
 		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("contractId"))
-	}
-
-	// Check if the contract aggregate exists
-	contractExists, err := s.checkContractExists(ctx, request.Tenant, request.ContractId)
-	if err != nil {
-		s.log.Error(err, "error checking contract existence")
-		return nil, status.Errorf(codes.Internal, "error checking contract existence: %v", err)
-	}
-	if !contractExists {
-		return nil, status.Errorf(codes.NotFound, "contract with ID %s not found", request.ContractId)
 	}
 
 	invoiceId := uuid.New().String()
@@ -295,20 +243,6 @@ func (s *invoiceService) PayInvoiceNotification(ctx context.Context, request *in
 	}
 
 	return &invoicepb.InvoiceIdResponse{Id: request.InvoiceId}, nil
-}
-
-func (s *invoiceService) checkContractExists(ctx context.Context, tenant, contractId string) (bool, error) {
-	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(tenant, contractId)
-	err := s.aggregateStore.Exists(ctx, contractAggregate.GetID())
-	if err != nil {
-		if errors.Is(err, eventstore.ErrAggregateNotFound) {
-			return false, nil
-		} else {
-			return false, err
-		}
-	}
-
-	return true, nil // The contract exists
 }
 
 func (s *invoiceService) RequestFillInvoice(ctx context.Context, request *invoicepb.RequestFillInvoiceRequest) (*invoicepb.InvoiceIdResponse, error) {
