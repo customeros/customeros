@@ -39,6 +39,7 @@ type CypherFilterItem struct {
 	Value                any
 	DbNodePropertyProps  map[string]string
 	ComparisonOperator   model.ComparisonOperator
+	Coalesce             bool
 }
 
 type CypherFilter struct {
@@ -223,6 +224,7 @@ func (f *CypherFilter) BuildCypherFilterFragmentWithParamName(nodeAlias string, 
 						Value:                f.Details.Value,
 						SupportCaseSensitive: f.Details.SupportCaseSensitive,
 						CaseSensitive:        f.Details.CaseSensitive,
+						Coalesce:             true,
 					},
 					LogicalOperator: L_NONE,
 				},
@@ -261,9 +263,15 @@ func (f *CypherFilter) BuildCypherFilterFragmentWithParamName(nodeAlias string, 
 			if toLower {
 				cypherStr.WriteString("toLower(")
 			}
+			if f.Details.Coalesce {
+				cypherStr.WriteString("coalesce(")
+			}
 			cypherStr.WriteString(nodeAlias)
 			cypherStr.WriteString(".")
 			cypherStr.WriteString(f.Details.NodeProperty)
+			if f.Details.Coalesce {
+				cypherStr.WriteString(", '')")
+			}
 			if toLower {
 				cypherStr.WriteString(")")
 			}
