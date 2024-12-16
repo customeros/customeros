@@ -23,6 +23,28 @@ export const UserCell = observer(({ id }: UserCellProps) => {
   const user = mailbox?.user;
   const { open, onToggle } = useDisclosure();
 
+  if (mailbox?.value?.scheduledEmails > 0) {
+    return (
+      <p
+        tabIndex={0}
+        role={'button'}
+        className={cn('hover:text-gray-500', !user && 'text-gray-400')}
+        onClick={() => {
+          store.ui.commandMenu.setType('ActiveFlowUpdateInfo');
+          store.ui.commandMenu.setContext({
+            ...store.ui.commandMenu.context,
+            meta: {
+              type: 'senders',
+            },
+          });
+          store.ui.commandMenu.setOpen(true);
+        }}
+      >
+        {user?.name || 'Not set yet'}
+      </p>
+    );
+  }
+
   return (
     <Popover open={open} onOpenChange={onToggle}>
       <PopoverTrigger>
