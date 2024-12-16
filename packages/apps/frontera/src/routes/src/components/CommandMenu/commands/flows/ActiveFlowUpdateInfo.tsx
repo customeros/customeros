@@ -25,8 +25,8 @@ export const ActiveFlowUpdateInfo = observer(() => {
         Once a flow has gone live the first time, you can only edit content and
         basic settings.
         <p className='mt-2'>
-          To add or remove a step, you’d have to duplicate the flow or create a
-          new one.{' '}
+          To add or remove a step, you should duplicate the flow or create a new
+          one.
         </p>
       </>
     ))
