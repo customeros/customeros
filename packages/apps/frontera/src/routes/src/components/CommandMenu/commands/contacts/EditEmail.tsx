@@ -100,6 +100,7 @@ export const EditEmail = observer(() => {
           }
         }}
         onValueChange={(newValue) => {
+          if (newValue.length === 0) return;
           setValue(newValue);
           useCase.setEmail(newValue);
 

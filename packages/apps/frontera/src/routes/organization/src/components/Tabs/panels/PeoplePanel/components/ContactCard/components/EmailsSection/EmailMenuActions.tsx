@@ -33,7 +33,7 @@ export const EmailMenuActions = observer(
 
     const contactStore = store.contacts.value.get(contactId);
 
-    const isPrimaryEmail = contactStore?.value.emails[idx].primary;
+    const isPrimaryEmail = contactStore?.value.emails[idx]?.primary;
     const useCase = new SetEmailCase();
 
     if (!contactStore) return;

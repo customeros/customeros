@@ -28,14 +28,14 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
     (contactStore?.value?.organizations?.content?.length ?? 1) - 1;
   const company = contactStore?.value.organizations?.content?.[activeCompany];
 
-  const isPrimaryEmail = contactStore?.value.primaryEmail;
+  const isPrimaryEmail = contactStore?.value?.primaryEmail;
 
   const allEmails = uniqBy(
     contactStore
       ? [
           ...contactStore.value.emails,
-          ...(contactStore.value.primaryEmail
-            ? [contactStore.value.primaryEmail]
+          ...(contactStore.value?.primaryEmail
+            ? [contactStore.value?.primaryEmail]
             : []),
         ]
       : [],
@@ -50,16 +50,16 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
 
   return (
     <div>
-      <div className='flex items-start w-full'>
-        <div className='flex mr-4'>
-          <Mail01 className='mt-1 text-gray-500' />
+      <div className='flex justify-center items-center w-full'>
+        <div className='flex mr-4 items-center justify-between'>
+          <Mail01 className='text-gray-500 mt-0.5' />
         </div>
 
         <div className='flex flex-col flex-9 w-full'>
           {allEmails.length === 0 && (
             <div className='flex w-full gap-2 items-center'>
-              <span
-                className='text-gray-400 cursor-pointer'
+              <p
+                className='text-gray-400 cursor-pointer text-sm'
                 onClick={() => {
                   store.ui.setSelectionId(
                     contactStore?.value.emails.length || 1,
@@ -89,7 +89,7 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
                   : enrichedContact?.emailFound
                   ? 'Work email not found'
                   : 'Work email'}
-              </span>
+              </p>
               {isEnrichingEmail ? (
                 <Tooltip label={`Finding email at ${company?.name}`}>
                   <Spinner
@@ -104,8 +104,8 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
                   variant='ghost'
                   icon={<Star06 />}
                   onClick={() => {}}
+                  className='mt-0.5'
                   colorScheme='grayModern'
-                  className='size-5 mt-0.5'
                   aria-label='enrich-work-email'
                 />
               )}
@@ -114,15 +114,15 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
           {allEmails?.map((email, idx) => (
             <Fragment key={`${idx}-${email.id}`}>
               <div className=' flex items-center justify-between w-full'>
-                <div key={email.id} className='flex items-center gap-1'>
-                  <span
+                <div key={email.id} className='flex items-center'>
+                  <p
                     className='text-sm max-w-[230px] text-ellipsis overflow-hidden'
                     onClick={() =>
                       copyToClipboard(email?.email || '', 'Email copied')
                     }
                   >
                     {email.email || 'Not set'}
-                  </span>
+                  </p>
                   {contactStore?.value.emails.length !== 1 && email.primary && (
                     <span className='text-gray-500 text-sm'> • Primary</span>
                   )}
