@@ -71,6 +71,7 @@ func (s *contactService) UpkeepContacts() {
 	s.hideContactsWithGroupOrSystemGeneratedEmail(ctx)
 	s.checkContacts(ctx)
 	s.updateContactNamesFromEmails(ctx)
+	s.setPrimaryJobRole(ctx)
 }
 
 func (s *contactService) removeEmptySocials(ctx context.Context) {
@@ -380,6 +381,35 @@ func (s *contactService) updateContactNamesFromEmails(ctx context.Context) {
 		// force exit after single iteration
 		return
 	}
+}
+
+func (s *contactService) setPrimaryJobRole(ctx context.Context) {
+	span, ctx := tracing.StartTracerSpan(ctx, "ContactService.setPrimaryJobRole")
+	defer span.Finish()
+	tracing.TagComponentCronJob(span)
+
+	limit := 500
+
+	records, err := s.commonServices.Neo4jRepositories.ContactReadRepository.GetContactsToSetPrimaryJobRole(ctx, limit)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error getting contacts: %v", err)
+		return
+	}
+
+	//remove socials from contact
+	for _, record := range records {
+		innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+			Tenant:    record.Tenant,
+			AppSource: constants.AppSourceDataUpkeeper,
+		})
+		err = s.commonServices.ContactService.SetPrimaryJobRole(innerCtx, nil, record.ContactId, nil)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			continue
+		}
+	}
+
 }
 
 func (s *contactService) AskForWorkEmailOnBetterContact() {
