@@ -2,6 +2,8 @@ package flows
 
 import (
 	"errors"
+	"fmt"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -15,6 +17,11 @@ func validateFlowBelongsToTenant(c *gin.Context, s *service.Services) (string, b
 	tracing.TagComponentRest(span)
 
 	flowId := c.Param("flowId")
+	flowPrefix := strings.HasPrefix(strings.ToLower(flowId), "flow_")
+	if !flowPrefix {
+		flowId = fmt.Sprintf("flow_%s", flowId)
+	}
+
 	isValidFlow, err := s.CommonServices.WorkflowService.ValidateFlowBelongsToTenant(ctx, flowId)
 	if err != nil {
 		tracing.TraceErr(span, err)

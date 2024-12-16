@@ -2,7 +2,9 @@ package flows
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -38,6 +40,10 @@ func GetFlowNodes(s *service.Services) gin.HandlerFunc {
 		}
 
 		nodeId := c.Param("nodeId")
+		nodePrefix := strings.HasPrefix(strings.ToLower(nodeId), "node_")
+		if !nodePrefix {
+			nodeId = fmt.Sprintf("node_%s", nodeId)
+		}
 
 		switch nodeId {
 		case "":

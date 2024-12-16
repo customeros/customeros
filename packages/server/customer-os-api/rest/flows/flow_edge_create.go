@@ -27,16 +27,13 @@ func CreateFlowEdge(s *service.Services) gin.HandlerFunc {
 		}
 
 		// validate tenant owns the flow specified in the path
-		flowId := c.Param("flowId")
-		isValidFlow, err := s.CommonServices.WorkflowService.ValidateFlowBelongsToTenant(ctx, flowId)
+		flowId, belongsToTenant, err := validateFlowBelongsToTenant(c, s)
 		if err != nil {
-			tracing.TraceErr(span, err)
 			rest.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer)
+			return
 		}
-		if !isValidFlow {
-			err := errors.New("Flow does not belong to tenant")
-			tracing.TraceErr(span, err)
-			rest.SendError(c, span, http.StatusNotFound, enum.ErrNotFound.WithMessage("unable to locate flolw"))
+		if !belongsToTenant {
+			rest.SendError(c, span, http.StatusNotFound, enum.ErrNotFound.WithMessage("unable to locate flow"))
 			return
 		}
 
