@@ -549,18 +549,18 @@ const TableBody = <T extends object>({
             tabIndex={1}
             key={row.id}
             data-index={virtualRow.index}
-            // ref={rowVirtualizer.measureElement}
             data-selected={row?.getIsSelected()}
             data-focused={row?.index === focusedRowIndex}
-            style={{
-              minWidth: minW,
-              top: top,
-            }}
             onFocus={() => {
               setFocusedRowIndex(row?.index);
             }}
             onMouseOver={() => {
               setFocusedRowIndex(row?.index);
+            }}
+            style={{
+              minWidth: minW,
+              height: `${virtualRow.size}px`,
+              top: top,
             }}
             className={twMerge(
               hoverStyle,
