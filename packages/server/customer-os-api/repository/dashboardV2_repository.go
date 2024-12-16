@@ -567,8 +567,10 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 }
 
 func createInOrEmptyStringFilter(filter *model.Filter, cypherFilter *utils.CypherFilter, neo4jProperty string) {
-	if filter.Filter.Operation == commonmodel.ComparisonOperatorIsEmpty && filter.Filter.Value.Str != nil {
+	if filter.Filter.Operation == commonmodel.ComparisonOperatorIsEmpty {
 		cypherFilter.Filters = append(cypherFilter.Filters, utils.CreateCypherFilter(neo4jProperty, nil, commonmodel.ComparisonOperatorIsEmpty))
+	} else if filter.Filter.Operation == commonmodel.ComparisonOperatorIsNotEmpty {
+		cypherFilter.Filters = append(cypherFilter.Filters, utils.CreateCypherFilter(neo4jProperty, nil, commonmodel.ComparisonOperatorIsNotEmpty))
 	} else if filter.Filter.Operation == commonmodel.ComparisonOperatorIn && filter.Filter.Value.ArrayStr != nil {
 		cypherFilter.Filters = append(cypherFilter.Filters, utils.CreateCypherFilter(neo4jProperty, filter.Filter.Value.ArrayStr, commonmodel.ComparisonOperatorIn))
 	} else if filter.Filter.Operation == commonmodel.ComparisonOperatorNotIn && filter.Filter.Value.ArrayStr != nil {
@@ -765,9 +767,6 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 			//}
 			//if filter.Filter.Property == model.ColumnViewTypeOrganizationsOnboardingStatus.String() {
 			//	createInOrEmptyStringFilter(filter, contactFilter, "onboardingStatus")
-			//}
-			//if filter.Filter.Property == model.ColumnViewTypeOrganizationsRenewalLikelihood.String() {
-			//	createInOrEmptyStringFilter(filter, contactFilter, "derivedRenewalLikelihood")
 			//}
 			//if filter.Filter.Property == model.ColumnViewTypeOrganizationsRenewalDate.String() {
 			//	createTimeFilter(filter, contactFilter, "derivedNextRenewalAt")
@@ -995,13 +994,6 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 	//		aliases += "CASE WHEN o.onboardingStatusOrder <> \"\" and not o.onboardingStatusOrder is null THEN o.onboardingStatusOrder ELSE 9999 END as SORT_BY "
 	//	} else {
 	//		aliases += "CASE WHEN o.onboardingStatusOrder <> \"\" and not o.onboardingStatusOrder is null THEN o.onboardingStatusOrder ELSE -1 END as SORT_BY "
-	//	}
-	//}
-	//if sort != nil && sort.By == model.ColumnViewTypeOrganizationsRenewalLikelihood.String() {
-	//	if sort.Direction == commonmodel.SortingDirectionAsc {
-	//		aliases += "CASE WHEN o.derivedRenewalLikelihoodOrder <> \"\" and not o.derivedRenewalLikelihoodOrder is null THEN o.derivedRenewalLikelihoodOrder ELSE 9999 END as SORT_BY "
-	//	} else {
-	//		aliases += "CASE WHEN o.derivedRenewalLikelihoodOrder <> \"\" and not o.derivedRenewalLikelihoodOrder is null THEN o.derivedRenewalLikelihoodOrder ELSE -1 END as SORT_BY "
 	//	}
 	//}
 	//if sort != nil && sort.By == model.ColumnViewTypeOrganizationsRenewalDate.String() {

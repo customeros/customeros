@@ -39,13 +39,21 @@ func MapOpportunityRenewalLikelihoodFromString(input *string) string {
 
 func MapOpportunityRenewalLikelihoodToModelPtr(input string) *model.OpportunityRenewalLikelihood {
 	switch input {
-	case string(neo4jenum.RenewalLikelihoodHigh):
+	case neo4jenum.RenewalLikelihoodHigh.String():
 		return utils.Ptr(model.OpportunityRenewalLikelihoodHighRenewal)
-	case string(neo4jenum.RenewalLikelihoodMedium):
+	case neo4jenum.RenewalLikelihoodMedium.String():
 		return utils.Ptr(model.OpportunityRenewalLikelihoodMediumRenewal)
-	case string(neo4jenum.RenewalLikelihoodLow):
+	case neo4jenum.RenewalLikelihoodLow.String():
 		return utils.Ptr(model.OpportunityRenewalLikelihoodLowRenewal)
-	case string(neo4jenum.RenewalLikelihoodZero):
+	case neo4jenum.RenewalLikelihoodZero.String():
+		return utils.Ptr(model.OpportunityRenewalLikelihoodZeroRenewal)
+	case neo4jenum.RenewalLikelihoodHighV2.String():
+		return utils.Ptr(model.OpportunityRenewalLikelihoodHighRenewal)
+	case neo4jenum.RenewalLikelihoodMediumV2.String():
+		return utils.Ptr(model.OpportunityRenewalLikelihoodMediumRenewal)
+	case neo4jenum.RenewalLikelihoodLowV2.String():
+		return utils.Ptr(model.OpportunityRenewalLikelihoodLowRenewal)
+	case neo4jenum.RenewalLikelihoodZeroV2.String():
 		return utils.Ptr(model.OpportunityRenewalLikelihoodZeroRenewal)
 	default:
 		return nil

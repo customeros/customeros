@@ -267,7 +267,7 @@ func MapDbNodeToOrganizationEntity(dbNode *dbtype.Node) *entity.OrganizationEnti
 		RenewalSummary: entity.RenewalSummary{
 			ArrForecast:            utils.GetFloatPropOrNil(props, "renewalForecastArr"),
 			MaxArrForecast:         utils.GetFloatPropOrNil(props, "renewalForecastMaxArr"),
-			RenewalLikelihood:      utils.GetStringPropOrEmpty(props, "derivedRenewalLikelihood"),
+			RenewalLikelihood:      utils.GetStringPropOrEmpty(props, string(entity.OrganizationPropertyRenewalLikelihood)),
 			RenewalLikelihoodOrder: utils.GetInt64PropOrNil(props, "derivedRenewalLikelihoodOrder"),
 			NextRenewalAt:          utils.GetTimePropOrNil(props, "derivedNextRenewalAt"),
 		},

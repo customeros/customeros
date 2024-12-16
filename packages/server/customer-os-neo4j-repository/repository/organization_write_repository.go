@@ -520,7 +520,7 @@ func (r *organizationWriteRepository) UpdateRenewalSummary(ctx context.Context, 
 	tracing.TagComponentNeo4jRepository(span)
 	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, organizationId)
-	span.LogFields(log.Object("likelihood", likelihood), log.Object("likelihoodOrder", likelihoodOrder), log.Object("nextRenewalDate", nextRenewalDate))
+	span.LogFields(log.String("likelihood", utils.IfNotNilString(likelihood)), log.Object("likelihoodOrder", likelihoodOrder), log.Object("nextRenewalDate", nextRenewalDate))
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
 				SET org.derivedRenewalLikelihood = $derivedRenewalLikelihood,
