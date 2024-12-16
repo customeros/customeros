@@ -44,7 +44,10 @@ export const AddExistingContacts = observer(() => {
         ) as FlowParticipantStore);
 
       if (flowParticipant) {
-        flowParticipant?.deleteFlowParticipant();
+        flowParticipants?.deleteFlowParticipant(
+          selectedFlowId,
+          flowParticipant.id,
+        );
 
         return;
       }

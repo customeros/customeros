@@ -130,4 +130,67 @@ export class FlowParticipantsStore implements GroupStore<FlowParticipant> {
       });
     }
   };
+  public deleteFlowParticipant = async (
+    flowId: string,
+    participantId: string,
+  ) => {
+    this.isLoading = true;
+
+    const contactId = this.value.get(participantId)?.value?.entityId;
+
+    const flowName = this.root?.flows?.value.get(flowId)?.value.name;
+
+    if (!contactId) {
+      runInAction(() => {
+        this.root.ui.toastError(
+          `We couldn't remove a contact from a flow`,
+          'unlink-contact-from-flow-error',
+        );
+      });
+
+      return;
+    }
+
+    try {
+      await this.service.deleteFlowParticipant({
+        id: participantId,
+      });
+
+      runInAction(() => {
+        this.root.contacts.value.get(contactId)?.update(
+          (c) => {
+            c.flows = c.flows?.filter((f) => f.metadata.id !== flowId);
+
+            return c;
+          },
+          { mutate: false },
+        );
+
+        this.root.ui.toastSuccess(
+          `Contact removed from '${flowName}'`,
+          'unlink-contact-from-flow-success',
+        );
+        this.root.contacts.sync({
+          action: 'INVALIDATE',
+          ids: [contactId],
+        });
+
+        this.root.flows.sync({
+          action: 'INVALIDATE',
+          ids: [flowId],
+        });
+      });
+    } catch (e) {
+      runInAction(() => {
+        this.root.ui.toastError(
+          `We couldn't remove a contact from a flow`,
+          'unlink-contact-from-flow-error',
+        );
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+      });
+    }
+  };
 }

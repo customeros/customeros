@@ -81,7 +81,10 @@ export const UnlinkContactFromFlow = observer(() => {
       return;
     }
 
-    flowContact.deleteFlowParticipant(context?.meta?.id);
+    store.flowParticipants.deleteFlowParticipant(
+      context?.meta?.id,
+      flowContactIds[0],
+    );
     handleClose();
   };
 
