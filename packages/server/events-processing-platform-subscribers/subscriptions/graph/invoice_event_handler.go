@@ -22,6 +22,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
+	"time"
 )
 
 type InvoiceActionMetadata struct {
@@ -231,7 +232,18 @@ func (h *InvoiceEventHandler) OnInvoiceFillV1(ctx context.Context, evt eventstor
 			return err
 		}
 
-		err = h.callNextPreviewOnCycleInvoiceGRPC(ctx, eventData.Tenant, eventData.ContractId, span)
+		contractDbNode, err := h.services.CommonServices.Neo4jRepositories.ContractReadRepository.GetContractById(ctx, eventData.Tenant, eventData.ContractId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Error while getting contract %s: %s", eventData.ContractId, err.Error())
+			return err
+		}
+		contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
+
+		start := utils.ToDate(eventData.PeriodEndDate).AddDate(0, 0, 1)
+		end := h.calculateInvoiceCycleEnd(ctx, start, eventData.Tenant, *contractEntity)
+
+		err = h.callNextPreviewOnCycleInvoiceGRPC(ctx, eventData.Tenant, contractEntity.Id, eventData.Currency, eventData.BillingCycleInMonths, start, end, span)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while calling next preview invoice for contract %s: %s", eventData.ContractId, err.Error())
@@ -253,13 +265,36 @@ func (h *InvoiceEventHandler) OnInvoiceFillV1(ctx context.Context, evt eventstor
 	return nil
 }
 
-func (h *InvoiceEventHandler) callNextPreviewOnCycleInvoiceGRPC(ctx context.Context, tenant, contractId string, span opentracing.Span) error {
+func (h *InvoiceEventHandler) calculateInvoiceCycleEnd(ctx context.Context, start time.Time, tenant string, contractEntity neo4jentity.ContractEntity) time.Time {
+	nextStart := start.AddDate(0, int(contractEntity.BillingCycleInMonths), 0)
+	if start.Day() == 1 {
+		// if previous invoice was generated end of month, we need to substract extra 1 day
+		previousCycleInvoiceDbNode, err := h.services.CommonServices.Neo4jRepositories.InvoiceReadRepository.GetPreviousCycleInvoice(ctx, tenant, contractEntity.Id)
+		if err != nil {
+			tracing.TraceErr(nil, errors.Wrap(err, "Error getting previous cycle invoice"))
+		}
+		if previousCycleInvoiceDbNode != nil {
+			previousInvoice := neo4jmapper.MapDbNodeToInvoiceEntity(previousCycleInvoiceDbNode)
+			if previousInvoice.PeriodStartDate.Day() != 1 {
+				nextStart = nextStart.AddDate(0, -1, 0)
+				nextStart = time.Date(nextStart.Year(), nextStart.Month(), previousInvoice.PeriodStartDate.Day(), 0, 0, 0, 0, nextStart.Location())
+			}
+		}
+	}
+	return nextStart.AddDate(0, 0, -1)
+}
+
+func (h *InvoiceEventHandler) callNextPreviewOnCycleInvoiceGRPC(ctx context.Context, tenant, contractId, currency string, billingCycleInMonths int64, start, end time.Time, span opentracing.Span) error {
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	_, err := subscriptions.CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
 		return h.grpcClients.InvoiceClient.NextPreviewInvoiceForContract(ctx, &invoicepb.NextPreviewInvoiceForContractRequest{
-			Tenant:     tenant,
-			ContractId: contractId,
-			AppSource:  constants.AppSourceEventProcessingPlatformSubscribers,
+			Tenant:               tenant,
+			ContractId:           contractId,
+			AppSource:            constants.AppSourceEventProcessingPlatformSubscribers,
+			Currency:             currency,
+			BillingCycleInMonths: billingCycleInMonths,
+			InvoicePeriodStart:   utils.ConvertTimeToTimestampPtr(&start),
+			InvoicePeriodEnd:     utils.ConvertTimeToTimestampPtr(&end),
 		})
 	})
 	if err != nil {

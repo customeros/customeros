@@ -92,19 +92,13 @@ func (s *invoiceService) GenerateCycleInvoices() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
 
-	span, ctx := tracing.StartTracerSpan(ctx, "InvoiceService.GenerateCycleInvoices")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
-
 	if s.cfg.ProcessConfig.CycleInvoicingEnabled == false {
 		s.log.Infof("Cycle invoicing is disabled, stopping")
-		span.LogFields(log.Bool("cycle_invoicing_enabled", s.cfg.ProcessConfig.CycleInvoicingEnabled))
 		return
 	}
 
 	if s.eventsProcessingClient == nil {
 		err := errors.New("eventsProcessingClient is nil")
-		tracing.TraceErr(span, err)
 		s.log.Error(err.Error())
 		return
 	}
@@ -117,6 +111,10 @@ func (s *invoiceService) GenerateCycleInvoices() {
 	limit := 100
 
 	for {
+		span, ctx := tracing.StartTracerSpan(ctx, "InvoiceService.GenerateCycleInvoices")
+		defer span.Finish()
+		tracing.TagComponentCronJob(span)
+
 		select {
 		case <-ctx.Done():
 			s.log.Infof("Context cancelled, stopping")
@@ -139,15 +137,22 @@ func (s *invoiceService) GenerateCycleInvoices() {
 
 		//process records
 		for _, record := range records {
+			innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+				Tenant:    record.Tenant,
+				AppSource: constants.AppSourceDataUpkeeper,
+			})
+			innerSpan, innerCtx := tracing.StartTracerSpan(innerCtx, "InvoiceService.GenerateCycleInvoices.ProcessRecord")
+			defer innerSpan.Finish()
+			tracing.TagTenant(innerSpan, record.Tenant)
 			contract := neo4jmapper.MapDbNodeToContractEntity(record.Node)
 			tenant := record.Tenant
 
 			currency := contract.Currency.String()
 			if currency == "" {
-				currency = s.getTenantBaseCurrency(ctx, tenant, cachedTenantBaseCurrencies).String()
+				currency = s.getTenantBaseCurrency(innerCtx, tenant, cachedTenantBaseCurrencies).String()
 			}
 
-			isPostpaid := s.getTenantInvoicingPostpaidFlag(ctx, tenant, cachedTenantPostpaidFlags)
+			isPostpaid := s.getTenantInvoicingPostpaidFlag(innerCtx, tenant, cachedTenantPostpaidFlags)
 
 			var invoicePeriodStart, invoicePeriodEnd time.Time
 			if contract.NextInvoiceDate != nil {
@@ -155,7 +160,7 @@ func (s *invoiceService) GenerateCycleInvoices() {
 			} else {
 				invoicePeriodStart = *contract.InvoicingStartDate
 			}
-			invoicePeriodEnd = s.calculateInvoiceCycleEnd(ctx, invoicePeriodStart, tenant, *contract)
+			invoicePeriodEnd = s.calculateInvoiceCycleEnd(innerCtx, invoicePeriodStart, tenant, *contract)
 
 			readyToRequestInvoice := false
 			if isPostpaid {
@@ -163,6 +168,7 @@ func (s *invoiceService) GenerateCycleInvoices() {
 			} else {
 				readyToRequestInvoice = invoicePeriodEnd.After(invoicePeriodStart)
 			}
+
 			if readyToRequestInvoice {
 				newInvoiceRequest := invoicepb.NewInvoiceForContractRequest{
 					Tenant:               record.Tenant,
@@ -179,11 +185,12 @@ func (s *invoiceService) GenerateCycleInvoices() {
 						Source:    neo4jentity.DataSourceOpenline.String(),
 					},
 				}
+				innerCtx = tracing.InjectSpanContextIntoGrpcMetadata(innerCtx, innerSpan)
 				_, err = utils.CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
-					return s.eventsProcessingClient.InvoiceClient.NewInvoiceForContract(ctx, &newInvoiceRequest)
+					return s.eventsProcessingClient.InvoiceClient.NewInvoiceForContract(innerCtx, &newInvoiceRequest)
 				})
 				if err != nil {
-					tracing.TraceErr(span, err)
+					tracing.TraceErr(innerSpan, err)
 					s.log.Errorf("Error generating invoice for contract %s: %s", contract.Id, err.Error())
 				}
 
@@ -192,13 +199,9 @@ func (s *invoiceService) GenerateCycleInvoices() {
 					contractDataFields := data_fields.ContractSaveFields{
 						NextInvoiceDate: utils.ToPtr(nextInvoiceDate),
 					}
-					innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
-						Tenant:    tenant,
-						AppSource: constants.AppSourceDataUpkeeper,
-					})
 					_, err = s.commonServices.ContractService.Save(innerCtx, &contract.Id, contractDataFields)
 					if err != nil {
-						tracing.TraceErr(span, err)
+						tracing.TraceErr(innerSpan, err)
 						s.log.Errorf("Error updating contract %s: %s", contract.Id, err.Error())
 					}
 				}
@@ -206,7 +209,7 @@ func (s *invoiceService) GenerateCycleInvoices() {
 			// mark invoicing started
 			err = s.repositories.Neo4jRepositories.ContractWriteRepository.MarkCycleInvoicingRequested(ctx, tenant, contract.Id, utils.Now())
 			if err != nil {
-				tracing.TraceErr(span, err)
+				tracing.TraceErr(innerSpan, errors.Wrap(err, "Error marking invoicing started"))
 				s.log.Errorf("Error marking invoicing started for contract %s: %s", contract.Id, err.Error())
 				return
 			}
@@ -227,7 +230,7 @@ func (s *invoiceService) calculateInvoiceCycleEnd(ctx context.Context, start tim
 		// if previous invoice was generated end of month, we need to substract extra 1 day
 		previousCycleInvoiceDbNode, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetPreviousCycleInvoice(ctx, tenant, contractEntity.Id)
 		if err != nil {
-			tracing.TraceErr(nil, err)
+			tracing.TraceErr(nil, errors.Wrap(err, "Error getting previous cycle invoice"))
 		}
 		if previousCycleInvoiceDbNode != nil {
 			previousInvoice := neo4jmapper.MapDbNodeToInvoiceEntity(previousCycleInvoiceDbNode)
@@ -708,6 +711,7 @@ func (s *invoiceService) GenerateNextPreviewInvoices() {
 	}
 
 	referenceTime := utils.Now()
+	cachedTenantBaseCurrencies := make(map[string]neo4jenum.Currency)
 
 	for {
 		select {
@@ -735,11 +739,29 @@ func (s *invoiceService) GenerateNextPreviewInvoices() {
 			contract := neo4jmapper.MapDbNodeToContractEntity(record.Node)
 			tenant := record.Tenant
 
-			_, err := utils.CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
+			currency := contract.Currency.String()
+			if currency == "" {
+				currency = s.getTenantBaseCurrency(ctx, tenant, cachedTenantBaseCurrencies).String()
+			}
+
+			var invoicePeriodStart, invoicePeriodEnd time.Time
+			if contract.NextInvoiceDate != nil {
+				invoicePeriodStart = *contract.NextInvoiceDate
+			} else if contract.InvoicingStartDate != nil {
+				invoicePeriodStart = *contract.InvoicingStartDate
+			}
+			invoicePeriodEnd = s.calculateInvoiceCycleEnd(ctx, invoicePeriodStart, record.Tenant, *contract)
+
+			ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+			_, err = utils.CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
 				return s.eventsProcessingClient.InvoiceClient.NextPreviewInvoiceForContract(ctx, &invoicepb.NextPreviewInvoiceForContractRequest{
-					Tenant:     tenant,
-					ContractId: contract.Id,
-					AppSource:  constants.AppSourceDataUpkeeper,
+					Tenant:               tenant,
+					ContractId:           contract.Id,
+					AppSource:            constants.AppSourceDataUpkeeper,
+					Currency:             contract.Currency.String(),
+					BillingCycleInMonths: contract.BillingCycleInMonths,
+					InvoicePeriodStart:   utils.ConvertTimeToTimestampPtr(&invoicePeriodStart),
+					InvoicePeriodEnd:     utils.ConvertTimeToTimestampPtr(&invoicePeriodEnd),
 				})
 			})
 
