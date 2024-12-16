@@ -66,6 +66,7 @@ func CreateFlow(s *service.Services) gin.HandlerFunc {
 		nodeResult, err := s.Repositories.PostgresRepositories.FlowNodeRepository.Create(ctx, triggerNode)
 		if err != nil {
 			rest.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer.WithMessage("could not create trigger node"))
+			return
 		}
 
 		// update Flow with trigger node ID
