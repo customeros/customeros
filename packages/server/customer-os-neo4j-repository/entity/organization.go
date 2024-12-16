@@ -26,6 +26,7 @@ const (
 	OrganizationPropertyEnrichedAt                OrganizationProperty = "enrichedAt"
 	OrganizationPropertyEnrichFailedAt            OrganizationProperty = "enrichFailedAt"
 	OrganizationPropertyEnrichAttempts            OrganizationProperty = "techEnrichAttempts"
+	OrganizationPropertyRenewalLikelihood         OrganizationProperty = "derivedRenewalLikelihood"
 )
 
 type OrganizationEntity struct {
