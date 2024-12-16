@@ -163,10 +163,6 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
 
       runInAction(() => {
         this.size = this.value.size;
-
-        // if (this.totalElements !== totalElements) {
-        //   this.totalElements = totalElements;
-        // }
       });
     } catch (e) {
       runInAction(() => {
