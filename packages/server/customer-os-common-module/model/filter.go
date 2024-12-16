@@ -37,6 +37,7 @@ const (
 	ComparisonOperatorLte         ComparisonOperator = "LTE"
 	ComparisonOperatorGte         ComparisonOperator = "GTE"
 	ComparisonOperatorIn          ComparisonOperator = "IN"
+	ComparisonOperatorNotIn       ComparisonOperator = "NOT_IN"
 	ComparisonOperatorBetween     ComparisonOperator = "BETWEEN"
 	ComparisonOperatorIsNull      ComparisonOperator = "IS_NULL"
 	ComparisonOperatorIsNotNull   ComparisonOperator = "IS_NOT_NULL"

@@ -67,6 +67,7 @@ enum ComparisonOperator {
     LTE
     GTE
     IN
+    NOT_IN
     BETWEEN
     IS_NULL
     IS_NOT_NULL

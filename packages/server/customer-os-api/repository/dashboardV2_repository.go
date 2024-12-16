@@ -571,6 +571,8 @@ func createInOrEmptyStringFilter(filter *model.Filter, cypherFilter *utils.Cyphe
 		cypherFilter.Filters = append(cypherFilter.Filters, utils.CreateCypherFilter(neo4jProperty, nil, commonmodel.ComparisonOperatorIsEmpty))
 	} else if filter.Filter.Operation == commonmodel.ComparisonOperatorIn && filter.Filter.Value.ArrayStr != nil {
 		cypherFilter.Filters = append(cypherFilter.Filters, utils.CreateCypherFilter(neo4jProperty, filter.Filter.Value.ArrayStr, commonmodel.ComparisonOperatorIn))
+	} else if filter.Filter.Operation == commonmodel.ComparisonOperatorNotIn && filter.Filter.Value.ArrayStr != nil {
+		cypherFilter.Filters = append(cypherFilter.Filters, utils.CreateCypherFilter(neo4jProperty, filter.Filter.Value.ArrayStr, commonmodel.ComparisonOperatorNotIn))
 	}
 }
 

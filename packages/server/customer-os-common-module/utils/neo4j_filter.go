@@ -156,7 +156,7 @@ func (f *CypherFilter) BuildCypherFilterFragmentWithParamName(nodeAlias string, 
 			&CypherFilter{
 				Details: &CypherFilterItem{
 					NodeProperty:        nodeProperty,
-					ComparisonOperator:  model.ComparisonOperatorEq,
+					ComparisonOperator:  model.ComparisonOperatorEquals,
 					Value:               "",
 					DbNodePropertyProps: dbNodePropertyProps,
 				},
@@ -205,6 +205,30 @@ func (f *CypherFilter) BuildCypherFilterFragmentWithParamName(nodeAlias string, 
 			},
 		)
 		f.Details = nil
+	} else if f.Details != nil && f.Details.ComparisonOperator == model.ComparisonOperatorNotIn {
+		if f.Negate {
+			f.Negate = false
+			f.Details.ComparisonOperator = model.ComparisonOperatorIn
+		} else {
+			nodeProperty := f.Details.NodeProperty
+			dbNodePropertyProps := f.Details.DbNodePropertyProps
+			f.LogicalOperator = AND
+			f.Negate = true
+			f.Filters = append(f.Filters,
+				&CypherFilter{
+					Details: &CypherFilterItem{
+						NodeProperty:         nodeProperty,
+						ComparisonOperator:   model.ComparisonOperatorIn,
+						DbNodePropertyProps:  dbNodePropertyProps,
+						Value:                f.Details.Value,
+						SupportCaseSensitive: f.Details.SupportCaseSensitive,
+						CaseSensitive:        f.Details.CaseSensitive,
+					},
+					LogicalOperator: L_NONE,
+				},
+			)
+			f.Details = nil
+		}
 	}
 	if f.Negate {
 		cypherStr.WriteString(" NOT ")
@@ -289,6 +313,8 @@ func CypherString(c model.ComparisonOperator) string {
 	case model.ComparisonOperatorGt:
 		return ">"
 	case model.ComparisonOperatorIn:
+		return "IN"
+	case model.ComparisonOperatorNotIn:
 		return "IN"
 	case model.ComparisonOperatorBetween:
 		return "BETWEEN"
