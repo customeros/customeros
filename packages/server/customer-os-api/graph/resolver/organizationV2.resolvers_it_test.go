@@ -79,7 +79,9 @@ func TestQueryResolver_UIOrganizationsSearch_FilterByRelationship(t *testing.T) 
 
 	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 3, 1)
 	assertSearch(t, searchBy, []string{enum.OrganizationRelationshipCustomer.String()}, commonModel.ComparisonOperatorIn, 3, 1)
+	assertSearch(t, searchBy, []string{enum.OrganizationRelationshipCustomer.String()}, commonModel.ComparisonOperatorNotIn, 3, 2)
 	assertSearch(t, searchBy, []string{enum.OrganizationRelationshipProspect.String(), enum.OrganizationRelationshipCustomer.String()}, commonModel.ComparisonOperatorIn, 3, 2)
+	assertSearch(t, searchBy, []string{enum.OrganizationRelationshipProspect.String(), enum.OrganizationRelationshipCustomer.String()}, commonModel.ComparisonOperatorNotIn, 3, 1)
 }
 
 func TestQueryResolver_UIOrganizationsSearch_FilterByOnboardingStatus(t *testing.T) {
