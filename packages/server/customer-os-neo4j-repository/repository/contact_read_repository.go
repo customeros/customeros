@@ -52,6 +52,7 @@ type ContactReadRepository interface {
 	GetContactsWithEmailForNameUpdate(ctx context.Context, limit int) ([]TenantAndContactId, error)
 	GetContactsToCheck(ctx context.Context, minutesSinceLastUpdate, hoursSinceLastCheck, limit int) ([]TenantAndContact, error)
 	GetContactsByLinkedIn(ctx context.Context, tenant, url, alias, externalId string) ([]*dbtype.Node, error)
+	GetContactsToSetPrimaryJobRole(ctx context.Context, limit int) ([]TenantAndContactId, error)
 }
 
 type contactReadRepository struct {
@@ -778,4 +779,46 @@ func (r *contactReadRepository) CountByTenant(ctx context.Context, tenant string
 	organizationsCount := dbRecord.(*db.Record).Values[0].(int64)
 	span.LogFields(log.Int64("result", organizationsCount))
 	return organizationsCount, nil
+}
+
+func (r *contactReadRepository) GetContactsToSetPrimaryJobRole(ctx context.Context, limit int) ([]TenantAndContactId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactReadRepository.GetContactsToSetPrimaryJobRole")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+	span.LogFields(log.Int("limit", limit))
+
+	cypher := `MATCH (t:Tenant {active:true})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)-[:WORKS_AS]->(j:JobRole)-[:ROLE_IN]->(:Organization)
+				WHERE c.hide IS NULL OR c.hide = false
+				WITH t, c, sum(CASE WHEN j.primary = true THEN 1 ELSE 0 END) AS primaryCount
+				WHERE primaryCount <> 1
+				RETURN t.name, c.id ORDER BY c.updatedAt DESC LIMIT $limit`
+	params := map[string]any{
+		"limit": limit,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return queryResult.Collect(ctx)
+	})
+	if err != nil {
+		return nil, err
+	}
+	output := make([]TenantAndContactId, 0)
+	for _, v := range records.([]*neo4j.Record) {
+		output = append(output,
+			TenantAndContactId{
+				Tenant:    v.Values[0].(string),
+				ContactId: v.Values[1].(string),
+			})
+	}
+	span.LogFields(log.Int("result.count", len(output)))
+	return output, nil
 }
