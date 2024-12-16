@@ -4,14 +4,13 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"gorm.io/gorm"
 )
 
 type FlowWebhooks struct {
 	ID            uint64    `gorm:"primaryKey;autoIncrement" json:"id"`
 	Tenant        string    `gorm:"column:tenant;type:varchar(255);not null;index" json:"tenant" binding:"required"`
-	CreatedAt     time.Time `gorm:"column:created_at;type:timestamp;default:current_timestamp" json:"createdAt"`
-	UpdatedAt     time.Time `gorm:"column:updated_at;type:timestamp" json:"updatedAt"`
+	CreatedAt     time.Time `gorm:"column:created_at;autoCreateTime" json:"createdAt"`
+	UpdatedAt     time.Time `gorm:"column:updated_at;autoUpdateTime" json:"updatedAt"`
 	WebhookPath   string    `gorm:"column:webhook_path;type:varchar(255);not null" json:"webhookPath" binding:"required"`
 	Integration   string    `gorm:"column:integration;type:varchar(255);index" json:"integration"`
 	RotationCount int       `gorm:"column:rotation_count;type:integer" json:"rotationCount"`
@@ -27,24 +26,6 @@ func (FlowWebhooks) UniqueIndex() [][]string {
 	return [][]string{
 		{"tenant", "integration"},
 	}
-}
-
-func (fw *FlowWebhooks) BeforeCreate(*gorm.DB) error {
-	if fw.Tenant == "" {
-		return errors.New("tenant name is required")
-	}
-	fw.CreatedAt = time.Now()
-	fw.UpdatedAt = time.Now()
-	if fw.RotationCount == 0 {
-		fw.RotationCount = 1
-	}
-	fw.Enabled = true
-	return nil
-}
-
-func (fw *FlowWebhooks) BeforeUpdate(*gorm.DB) error {
-	fw.UpdatedAt = time.Now()
-	return nil
 }
 
 func (fw *FlowWebhooks) Validate() error {
