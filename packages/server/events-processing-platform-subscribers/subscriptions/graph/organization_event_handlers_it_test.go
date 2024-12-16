@@ -192,7 +192,7 @@ func TestGraphOrganizationEventHandler_OnRefreshRenewalSummary(t *testing.T) {
 	organization := neo4jmapper.MapDbNodeToOrganizationEntity(orgDbNode)
 	require.Equal(t, orgId, organization.ID)
 	require.Equal(t, int64(20), *organization.RenewalSummary.RenewalLikelihoodOrder)
-	require.Equal(t, "LOW", organization.RenewalSummary.RenewalLikelihood)
+	require.Equal(t, "LOW_RENEWAL", organization.RenewalSummary.RenewalLikelihood)
 	require.Equal(t, utils.ToDatePtr(&tomorrow), organization.RenewalSummary.NextRenewalAt)
 
 	// Check no events were generated
