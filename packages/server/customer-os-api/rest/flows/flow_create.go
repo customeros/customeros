@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
@@ -16,29 +15,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
-
-type CreateFlowRequest struct {
-	Name        string `json:"name" binding:"required"`
-	Description string `json:"description"`
-	Trigger     string `json:"triggerOn" binding:"required"`
-	VisibleUI   *bool  `json:"visible"`
-}
-
-type CreateFlowRecord struct {
-	ID          string    `json:"id"`
-	Name        string    `json:"name"`
-	Description string    `json:"description,omitempty"`
-	Trigger     string    `json:"triggerOn,omitempty"`
-	VisibleUI   bool      `json:"visible"`
-	Status      string    `json:"status"`
-	CreatedAt   time.Time `json:"createdAt"`
-	UpdatedAt   time.Time `json:"UpadatedAt,omitempty"`
-}
-
-type CreateFlowResponse struct {
-	enum.BaseResponse
-	Flow CreateFlowRecord `json:"flow"`
-}
 
 func CreateFlow(s *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -52,7 +28,7 @@ func CreateFlow(s *service.Services) gin.HandlerFunc {
 			return
 		}
 
-		request, err := getFlowCreateRequest(c)
+		request, err := getFlowRequestPayload(c)
 		if err != nil {
 			rest.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("unable to parse payload"))
 			return
@@ -74,45 +50,66 @@ func CreateFlow(s *service.Services) gin.HandlerFunc {
 		}
 
 		// create flow in database
-		flowRecord := createFlowRecord(ctx, request)
+		flowRecord := buildFlowEntity(ctx, request)
 		result, err := s.Repositories.PostgresRepositories.FlowRepository.Create(ctx, flowRecord)
 		if err != nil {
-			rest.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest)
+			rest.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer.WithMessage("could not create flow"))
 			return
 		}
 
-		c.JSON(http.StatusOK, CreateFlowResponse{
+		// create first node in database
+		triggerNode := entity.FlowNode{
+			FlowID: result.ID,
+			Type:   commonEnum.NodeFlowListenerEvent.String(),
+			Event:  &result.TriggerOn,
+		}
+		nodeResult, err := s.Repositories.PostgresRepositories.FlowNodeRepository.Create(ctx, triggerNode)
+		if err != nil {
+			rest.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer.WithMessage("could not create trigger node"))
+		}
+
+		// update Flow with trigger node ID
+		result.TriggerNodeID = nodeResult.ID
+		result, err = s.Repositories.PostgresRepositories.FlowRepository.Update(ctx, *result)
+		if err != nil {
+			rest.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer.WithMessage("could not set trigger nodeID"))
+			return
+		}
+
+		c.JSON(http.StatusOK, FlowResponse{
 			BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
-			Flow: CreateFlowRecord{
-				ID:          result.ID,
-				Name:        result.Name,
-				Description: *result.Description,
-				Trigger:     result.TriggerOn,
-				VisibleUI:   *result.VisibleInUI,
-				Status:      result.Status,
-				CreatedAt:   result.CreatedAt,
+			Flow: FlowRecord{
+				ID:            result.ID,
+				Name:          result.Name,
+				Description:   *result.Description,
+				Trigger:       result.TriggerOn,
+				TriggerNodeID: nodeResult.ID,
+				VisibleUI:     result.VisibleInUI,
+				Status:        result.Status,
+				CreatedAt:     result.CreatedAt,
 			},
 		})
 	}
 }
 
-func createFlowRecord(ctx context.Context, request CreateFlowRequest) entity.Flow {
+func buildFlowEntity(ctx context.Context, request FlowRecord) entity.Flow {
 	return entity.Flow{
-		Tenant:      common.GetTenantFromContext(ctx),
-		Name:        request.Name,
-		Description: &request.Description,
-		TriggerOn:   request.Trigger,
-		VisibleInUI: request.VisibleUI,
-		Status:      commonEnum.FlowStatusInactive.String(),
+		Tenant:        common.GetTenantFromContext(ctx),
+		Name:          request.Name,
+		Description:   &request.Description,
+		TriggerOn:     request.Trigger,
+		TriggerNodeID: request.TriggerNodeID,
+		VisibleInUI:   request.VisibleUI,
+		Status:        commonEnum.FlowStatusInactive.String(),
 	}
 }
 
-func getFlowCreateRequest(c *gin.Context) (CreateFlowRequest, error) {
-	span, _ := tracing.StartTracerSpan(c.Request.Context(), "Flows.getPostPayload")
+func getFlowRequestPayload(c *gin.Context) (FlowRecord, error) {
+	span, _ := tracing.StartTracerSpan(c.Request.Context(), "Flows.getFlowRequestPayload")
 	defer span.Finish()
 	tracing.TagComponentRest(span)
 
-	var req CreateFlowRequest
+	var req FlowRecord
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
 		return req, err

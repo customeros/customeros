@@ -3,7 +3,6 @@ package flows
 import (
 	"context"
 	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -14,27 +13,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
-
-type FlowRecord struct {
-	ID          string    `json:"id"`
-	Name        string    `json:"name"`
-	Description string    `json:"description,omitempty"`
-	Trigger     string    `json:"triggerOn,omitempty"`
-	VisibleUI   bool      `json:"visible"`
-	Status      string    `json:"status"`
-	CreatedAt   time.Time `json:"createdAt"`
-	UpdatedAt   time.Time `json:"UpadatedAt,omitempty"`
-}
-
-type GetAllFlowsResponse struct {
-	enum.BaseResponse
-	Flows []FlowRecord `json:"flows"`
-}
-
-type GetFlowResponse struct {
-	enum.BaseResponse
-	Flow FlowRecord `json:"flow"`
-}
 
 func GetFlows(s *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -88,7 +66,7 @@ func getFlow(c *gin.Context, s *service.Services, query entity.Flow) {
 		return
 	}
 
-	c.JSON(http.StatusOK, GetFlowResponse{
+	c.JSON(http.StatusOK, FlowResponse{
 		BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
 		Flow:         buildFlowRecord(ctx, *flowRecord),
 	})
@@ -110,7 +88,7 @@ func getAllFlows(c *gin.Context, s *service.Services, query entity.Flow) {
 		response[i] = buildFlowRecord(ctx, record)
 	}
 
-	c.JSON(http.StatusOK, GetAllFlowsResponse{
+	c.JSON(http.StatusOK, FlowsResponse{
 		BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
 		Flows:        response,
 	})
@@ -118,13 +96,14 @@ func getAllFlows(c *gin.Context, s *service.Services, query entity.Flow) {
 
 func buildFlowRecord(ctx context.Context, record entity.Flow) FlowRecord {
 	return FlowRecord{
-		ID:          record.ID,
-		Name:        record.Name,
-		Description: *record.Description,
-		Trigger:     record.TriggerOn,
-		VisibleUI:   *record.VisibleInUI,
-		Status:      record.Status,
-		CreatedAt:   record.CreatedAt,
-		UpdatedAt:   record.UpdatedAt,
+		ID:            record.ID,
+		Name:          record.Name,
+		Description:   *record.Description,
+		Trigger:       record.TriggerOn,
+		TriggerNodeID: record.TriggerNodeID,
+		VisibleUI:     record.VisibleInUI,
+		Status:        record.Status,
+		CreatedAt:     record.CreatedAt,
+		UpdatedAt:     record.UpdatedAt,
 	}
 }
