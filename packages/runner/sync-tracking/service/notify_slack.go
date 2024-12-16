@@ -72,7 +72,11 @@ func (s *trackingService) notifyOnSlack(c context.Context, r *entity.Tracking) e
 		return nil
 	}
 
-	slackBlock := s.buildSlackNotification(record, globalOrg)
+	slackBlock, err := s.buildSlackNotification(record, globalOrg)
+	if err != nil {
+		return err
+	}
+
 	return s.sendNotifications(ctx, span, record, slackBlock)
 }
 
@@ -145,30 +149,35 @@ func (s *trackingService) isWorkspaceDomain(ctx context.Context, span opentracin
 	return false
 }
 
-func (s *trackingService) buildSlackNotification(record *entity.Tracking, globalOrg *entity.GlobalOrganization) string {
+func (s *trackingService) buildSlackNotification(record *entity.Tracking, globalOrg *entity.GlobalOrganization) (string, error) {
 	// Build the text content for the section based on available data
 	var contentLines []string
 
 	website := globalOrg.Website
-	if !strings.HasPrefix(strings.ToLower(website), "https://") || !strings.HasPrefix(strings.ToLower(website), "http://") {
+	_, primaryDomain := domaincheck.PrimaryDomainCheck(website)
+	if primaryDomain == "" {
+		err := errors.New("primary domain does not exist")
+		return "", err
+	}
+	lowercaseWebsite := strings.ToLower(primaryDomain)
+	if !strings.HasPrefix(lowercaseWebsite, "http://") && !strings.HasPrefix(lowercaseWebsite, "https://") {
 		website = "https://" + website
 	}
-
-	contentLines = append(contentLines, fmt.Sprintf("<%s|*%s*> ", website, globalOrg.Name))
-
+	name := globalOrg.Name
+	if name == "" {
+		name = primaryDomain
+	}
+	contentLines = append(contentLines, fmt.Sprintf("<%s|*%s*> ", website, name))
 	if globalOrg.Description != "" {
 		contentLines = append(contentLines, fmt.Sprintf("%s \n", globalOrg.Description))
 	}
-
 	// Add optional fields only if they're not empty
 	if globalOrg.PrimaryDomain != "" && globalOrg.Website != "" {
-		contentLines = append(contentLines, fmt.Sprintf("*Website:* <%s|%s> ", website, globalOrg.PrimaryDomain))
+		contentLines = append(contentLines, fmt.Sprintf("*Website:* <%s|%s> ", website, primaryDomain))
 	}
-
 	if globalOrg.LinkedInUrl != "" && globalOrg.LinkedInAlias != "" {
 		contentLines = append(contentLines, fmt.Sprintf("*LinkedIn:* <%s|/%s> ", globalOrg.LinkedInUrl, globalOrg.LinkedInAlias))
 	}
-
 	// Only add location if both city and country are available
 	if globalOrg.City != "" && globalOrg.CountryA2 != "" {
 		contentLines = append(contentLines, fmt.Sprintf("*Location:* %s, %s ", globalOrg.City, globalOrg.CountryA2))
@@ -183,100 +192,69 @@ func (s *trackingService) buildSlackNotification(record *entity.Tracking, global
 	} else {
 		contentLines = append(contentLines, "*Source:* Direct ")
 	}
-
 	// Join the lines with newlines
 	sectionContent := strings.Join(contentLines, "\n")
 
-	// Create the notification blocks based on logo availability
-	var layoutBlocks string
+	// Create the section block without the accessory first
+	sectionBlock := fmt.Sprintf(`{
+		"type": "section",
+		"text": {
+			"type": "mrkdwn",
+			"text": "%s"
+		}
+	}`, sectionContent)
+
+	// If logo exists, add the accessory field
 	if globalOrg.LogoUrl != "" {
-		// With logo - in same section as content
-		layoutBlocks = fmt.Sprintf(`[
-			{
-				"type": "header",
-				"text": {
-					"type": "plain_text",
-					"text": "A visitor from %s is on your website",
-					"emoji": true
-				}
+		sectionBlock = fmt.Sprintf(`{
+			"type": "section",
+			"text": {
+				"type": "mrkdwn",
+				"text": "%s"
 			},
-			{
-				"type": "divider"
-			},
-			{
-				"type": "section",
-				"text": {
-					"type": "mrkdwn",
-					"text": "%s"
-				},
-				"accessory": {
-					"type": "image",
-					"image_url": "%s",
-					"alt_text": "%s logo"
-				}
-			},
-			{
-				"type": "divider"
-			},
-			{
-				"type": "actions",
-				"elements": [
-					{
-						"type": "button",
-						"text": {
-							"type": "plain_text",
-							"text": "View in CustomerOS"
-						},
-						"url": "https://app.customeros.ai/organization/%s?tab=about",
-						"value": "click_me_123",
-						"action_id": "actionId-0"
-					}
-				]
+			"accessory": {
+				"type": "image",
+				"image_url": "%s",
+				"alt_text": "%s logo"
 			}
-		]`, globalOrg.Name, sectionContent, globalOrg.LogoUrl, globalOrg.Name, *record.OrganizationId)
-	} else {
-		// Without logo - use simple layout
-		layoutBlocks = fmt.Sprintf(`[
-			{
-				"type": "header",
-				"text": {
-					"type": "plain_text",
-					"text": "A visitor from %s is on your website",
-					"emoji": true
-				}
-			},
-			{
-				"type": "divider"
-			},
-			{
-				"type": "section",
-				"text": {
-					"type": "mrkdwn",
-					"text": "%s"
-				}
-			},
-			{
-				"type": "divider"
-			},
-			{
-				"type": "actions",
-				"elements": [
-					{
-						"type": "button",
-						"text": {
-							"type": "plain_text",
-							"text": "View in CustomerOS"
-						},
-						"url": "https://app.customeros.ai/organization/%s?tab=about",
-						"value": "click_me_123",
-						"action_id": "actionId-0"
-					}
-				]
-			}
-		]`, globalOrg.Name, sectionContent, *record.OrganizationId)
+		}`, sectionContent, globalOrg.LogoUrl, name)
 	}
 
-	return layoutBlocks
+	// Create the final layout using the section block
+	layoutBlocks := fmt.Sprintf(`[
+		{
+			"type": "header",
+			"text": {
+				"type": "plain_text",
+				"text": "A visitor from %s is on your website",
+				"emoji": true
+			}
+		},
+		{
+			"type": "divider"
+		},
+		%s,
+		{
+			"type": "divider"
+		},
+		{
+			"type": "actions",
+			"elements": [
+				{
+					"type": "button",
+					"text": {
+						"type": "plain_text",
+						"text": "View in CustomerOS"
+					},
+					"url": "https://app.customeros.ai/organization/%s?tab=about",
+					"value": "click_me_123",
+					"action_id": "actionId-0"
+				}
+			]
+		}
+	]`, name, sectionBlock, *record.OrganizationId)
+
+	return layoutBlocks, nil
 }
 
 func (s *trackingService) sendNotifications(ctx context.Context, span opentracing.Span, record *entity.Tracking, slackBlock string) error {
