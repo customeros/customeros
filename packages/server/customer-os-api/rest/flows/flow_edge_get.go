@@ -1,8 +1,9 @@
 package flows
 
 import (
-	"errors"
+	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -28,20 +29,21 @@ func GetFlowEdges(s *service.Services) gin.HandlerFunc {
 		}
 
 		// validate tenant owns the flow specified in the path
-		flowId := c.Param("flowId")
-		isValidFlow, err := s.CommonServices.WorkflowService.ValidateFlowBelongsToTenant(ctx, flowId)
+		flowId, belongsToTenant, err := validateFlowBelongsToTenant(c, s)
 		if err != nil {
-			tracing.TraceErr(span, err)
 			rest.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer)
+			return
 		}
-		if !isValidFlow {
-			err := errors.New("Flow does not belong to tenant")
-			tracing.TraceErr(span, err)
-			rest.SendError(c, span, http.StatusNotFound, enum.ErrNotFound.WithMessage("unable to locate flolw"))
+		if !belongsToTenant {
+			rest.SendError(c, span, http.StatusNotFound, enum.ErrNotFound.WithMessage("unable to locate flow"))
 			return
 		}
 
 		edgeId := c.Param("edgeId")
+		edgePrefix := strings.HasPrefix(strings.ToLower(edgeId), "edge_")
+		if !edgePrefix {
+			edgeId = fmt.Sprintf("edge_%s", edgeId)
+		}
 
 		query := entity.FlowEdge{
 			ID:     edgeId,
