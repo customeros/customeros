@@ -70,62 +70,6 @@ export class FlowParticipantStore implements Store<FlowParticipant> {
       });
     }
   }
-
-  public removeFlowParticipant = async () => {
-    return this.service.deleteFlowParticipant({
-      id: this.id,
-    });
-  };
-
-  // this is triggered only if one contact is selected and it has exactly 1 flow - otherwise bulk operation is performed
-  public deleteFlowParticipant = async (flowId?: string) => {
-    this.isLoading = true;
-
-    const contactStore = this.contact;
-    const flowName = this.contact?.flows?.[0]?.value.name;
-    const flowIds = flowId
-      ? [flowId]
-      : this.contact?.flows?.map((f) => f.value.metadata.id) || [];
-
-    try {
-      await this.removeFlowParticipant();
-      runInAction(() => {
-        contactStore?.update(
-          (c) => {
-            c.flows = c.flows?.filter((f) => f.metadata.id !== flowId);
-
-            return c;
-          },
-          { mutate: false },
-        );
-
-        this.root.ui.toastSuccess(
-          `Contact removed from '${flowName}'`,
-          'unlink-contact-from-flow-success',
-        );
-        this.root.contacts.sync({
-          action: 'INVALIDATE',
-          ids: [this.contactId],
-        });
-
-        this.root.flows.sync({
-          action: 'INVALIDATE',
-          ids: flowIds,
-        });
-      });
-    } catch (e) {
-      runInAction(() => {
-        this.root.ui.toastError(
-          `We couldn't remove a contact from a flow`,
-          'unlink-contact-from-flow-error',
-        );
-      });
-    } finally {
-      runInAction(() => {
-        this.isLoading = false;
-      });
-    }
-  };
 }
 
 const getDefaultValue = (): FlowParticipant => ({

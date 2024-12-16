@@ -36,6 +36,8 @@ export class ContactStore extends Syncable<Contact> {
       getChannelName: override,
       isEnriching: computed,
       primaryEmail: computed,
+      flows: computed,
+      flowsIds: computed,
     });
   }
 
