@@ -95,8 +95,8 @@ func registerFlowRoutes(ctx context.Context, r *gin.Engine, s *service.Services,
 
 	// manage specific flow
 	setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/flows/:flowId", flowsV1Path), s, cache, flows.GetFlows(s))
-	// setupRestRoute(ctx, r, "PUT", fmt.Sprintf("%s/flows/:flowId", flowsV1Path), s, cache, ...)
-	// setupRestRoute(ctx, r, "DELETE", fmt.Sprintf("%s/flows/:flowId", flowsV1Path), s, cache, ...)
+	setupRestRoute(ctx, r, "PUT", fmt.Sprintf("%s/flows/:flowId", flowsV1Path), s, cache, flows.UpdateFlow(s))
+	setupRestRoute(ctx, r, "DELETE", fmt.Sprintf("%s/flows/:flowId", flowsV1Path), s, cache, flows.DeleteFlow(s))
 
 	// manage flow nodes
 	setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/flows/:flowId/nodes", flowsV1Path), s, cache, flows.GetFlowNodes(s))

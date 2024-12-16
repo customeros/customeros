@@ -4,10 +4,11 @@ import (
 	"context"
 	"errors"
 
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 )
 
 type FlowListenerEventRecord struct {
@@ -60,7 +61,7 @@ func (w *workflowService) ValidateFlowBelongsToTenant(ctx context.Context, flowI
 	}
 
 	flowRecord, err := w.services.PostgresRepositories.FlowRepository.Find(ctx, query)
-	if err == nil && flowRecord != nil {
+	if err == nil && flowRecord != nil && flowRecord.Status != enum.FlowStatusArchived.String() {
 		return true, nil
 	}
 
@@ -112,7 +113,6 @@ func (w *workflowService) ValidateTransition(ctx context.Context, fromNodeId str
 	fromNode, err := w.services.PostgresRepositories.FlowNodeRepository.Find(ctx, entity.FlowNode{
 		ID: fromNodeId,
 	})
-
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return false, err
@@ -121,7 +121,6 @@ func (w *workflowService) ValidateTransition(ctx context.Context, fromNodeId str
 	toNode, err := w.services.PostgresRepositories.FlowNodeRepository.Find(ctx, entity.FlowNode{
 		ID: toNodeId,
 	})
-
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return false, err
