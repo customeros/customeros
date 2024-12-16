@@ -156,7 +156,6 @@ func (r *mutationResolver) EmailReplaceForContact(ctx context.Context, contactID
 	}
 
 	if utils.IfNotNilString(emailId) == "" {
-		graphql.AddErrorf(ctx, "Failed to replace email %s", input.Email)
 		return nil, nil
 	}
 
