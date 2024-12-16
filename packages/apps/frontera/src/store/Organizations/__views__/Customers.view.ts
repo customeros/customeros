@@ -16,8 +16,30 @@ export class CustomersView {
 
       return preset ? this.store.getSearchTermByView(preset) : '';
     }, this.update);
+    reaction(() => {
+      const preset = this.store.root.tableViewDefs.defaultPreset;
+
+      return preset ? this.store.availableCounts.get(preset) : 0;
+    }, this.update);
     reaction(() => this.store.value.size, this.update);
     reaction(() => this.store.version, this.update);
+    reaction(() => this.store.chunk, this.update);
+    reaction(
+      () => {
+        const preset = this.store.root.tableViewDefs.defaultPreset;
+
+        if (!preset) return '';
+
+        const viewDef = this.store.root.tableViewDefs.getById(preset);
+
+        const columns = JSON.stringify(viewDef?.value.columns);
+
+        return `${viewDef?.value.filters ?? ''}-${
+          viewDef?.value.defaultFilters ?? ''
+        }-${viewDef?.value.sorting}-${columns}`;
+      },
+      () => this.store.search(this.store.root.tableViewDefs.defaultPreset!),
+    );
     reaction(() => {
       const preset = this.store.root.tableViewDefs.defaultPreset;
 

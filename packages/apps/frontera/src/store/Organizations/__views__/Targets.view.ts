@@ -26,6 +26,8 @@ export class TargetsView {
       const viewDef = this.store.root.tableViewDefs.getById(preset);
       const columns = JSON.stringify(viewDef?.value.columns);
 
+      this.store.search(preset);
+
       return `${viewDef?.value.filters ?? ''}-${
         viewDef?.value.defaultFilters ?? ''
       }-${viewDef?.value.sorting}-${columns}`;

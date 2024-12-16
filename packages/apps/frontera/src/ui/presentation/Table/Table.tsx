@@ -249,7 +249,7 @@ export const Table = <T extends object>({
       return;
     }
 
-    if (lastItem.index >= data.length - 1 && canFetchMore && !isLoading) {
+    if (lastItem.index > data.length - 1 && canFetchMore && !isLoading) {
       onFetchMore?.();
     }
   }, [
@@ -672,7 +672,7 @@ const TRow = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
         style={style}
         onClick={onClick}
         className={cn(
-          'top-0 left-0 inline-flex items-center flex-1 w-full text-sm absolute border-b bg-white border-gray-100 transition-all animate-fadeIn',
+          'top-0 left-0 inline-flex items-center flex-1 w-full text-sm absolute border-b bg-white border-gray-100',
           className,
         )}
         {...props}

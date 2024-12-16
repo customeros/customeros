@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { cssTransition, ToastContainer } from 'react-toastify';
 
 import { RecoilRoot } from 'recoil';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import { StoreProvider } from './StoreProvider';
+import { Devtools } from '../Devtools/Devtools';
 import { AnalyticsProvider } from './AnalyticsProvider';
 import { PhoenixSocketProvider } from './SocketProvider';
 import { GrowthbookProvider } from './GrowthbookProvider';
@@ -31,7 +31,7 @@ export const Providers = ({ children, isProduction }: ProvidersProps) => {
   return (
     <QueryClientProvider client={queryClient}>
       <StoreProvider>
-        <ReactQueryDevtools position='bottom' initialIsOpen={false} />
+        <Devtools />
         <PhoenixSocketProvider>
           <RecoilRoot>
             <IntegrationsProvider>

@@ -1,9 +1,10 @@
 import type { RootStore } from '@store/root';
 import type { Transport } from '@store/transport';
 
+import set from 'lodash/set';
 import { Store } from '@store/_store';
 import { TagDatum } from '@store/Tags/Tag.store';
-import { set, action, computed, runInAction } from 'mobx';
+import { action, computed, observable, runInAction } from 'mobx';
 
 import {
   relationshipStageMap,
@@ -29,7 +30,11 @@ import { Organization, type OrganizationDatum } from './Organization.dto';
 import { OrganizationsService } from './__service__/Organizations.service';
 
 export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
+  private chunkSize = 50;
   private service: OrganizationsService;
+  @observable accessor searchedIds: string[] = [];
+  @observable accessor chunk = 0;
+  @observable accessor availableCounts: Map<string, number> = new Map();
 
   constructor(public root: RootStore, public transport: Transport) {
     super(root, transport, {
@@ -40,11 +45,16 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
 
     this.service = OrganizationsService.getInstance(this.transport);
 
-    new CustomersView(this);
-    new TargetsView(this);
-    new AllOrganizationsView(this);
+    // new CustomersView(this);
+    // new TargetsView(this);
+    // new AllOrganizationsView(this);
     new CustomView(this);
-    new TeamViews(this);
+    // new TeamViews(this);
+  }
+
+  @computed
+  get canLoadNext() {
+    return this.searchedIds.length > this.chunkSize * (this.chunk + 1);
   }
 
   @computed
@@ -55,7 +65,7 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
   @action
   async getRecentChanges() {
     try {
-      if (this.root.demoMode || this.isBootstrapping) {
+      if (this.isBootstrapping) {
         return;
       }
 
@@ -86,19 +96,11 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
 
       const { ui_organizations_search } =
         await this.service.searchOrganizations({
-          limit: 1000,
-          sort: {
-            by: 'ORGANIZATIONS_LAST_TOUCHPOINT',
-            caseSensitive: false,
-            direction: SortingDirection.Desc,
-          },
+          limit: this.chunkSize,
           where,
         });
 
-      const dataRequest = await this.service.getOrganizationsByIds({
-        ids: ui_organizations_search.ids,
-      });
-      const data = dataRequest.ui_organizations as OrganizationDatum[];
+      await this.retrieve(ui_organizations_search.ids);
 
       if (this.isHydrated) {
         await this.drop(idsToDrop);
@@ -107,20 +109,6 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
           idsToDrop,
         });
       }
-
-      // const data =
-      //   (dashboardView_Organizations?.content as OrganizationDatum[]) ?? [];
-
-      runInAction(() => {
-        this.size = this.value.size;
-        data.forEach((raw) => {
-          if (!raw) return;
-
-          const record = new Organization(this, raw);
-
-          this.value.set(record.id, record);
-        });
-      });
     } catch (e) {
       runInAction(() => {
         this.error = (e as Error)?.message;
@@ -139,9 +127,21 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
     });
 
     try {
+      const urlId = (() => {
+        // get organization id from url if possible
+        // necessary to bootstrap the targeted organization on a profile view
+        const parts = window?.location?.pathname?.split('/');
+
+        if (parts.length !== 3 && parts[parts.length - 1].length !== 36) {
+          return null;
+        }
+
+        return parts[parts.length - 1];
+      })();
+
       const { ui_organizations_search } =
         await this.service.searchOrganizations({
-          limit: 1000,
+          limit: this.chunkSize,
           sort: {
             by: 'ORGANIZATIONS_LAST_TOUCHPOINT',
             caseSensitive: false,
@@ -149,28 +149,25 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
           },
         });
 
-      const { ui_organizations } = await this.service.getOrganizationsByIds({
-        ids: ui_organizations_search.ids,
-      });
+      if (urlId) {
+        const existingIndex = ui_organizations_search.ids.indexOf(urlId);
 
-      const totalElements = ui_organizations_search.totalElements;
+        if (existingIndex === -1) {
+          ui_organizations_search.ids.unshift(urlId);
+        }
+      }
+
+      await this.retrieve(ui_organizations_search.ids);
+
+      // const totalElements = ui_organizations_search.totalElements;
 
       runInAction(() => {
-        ui_organizations.forEach((raw) => {
-          if (!raw) return;
-
-          const record = new Organization(this, raw);
-
-          this.value.set(record.id, record);
-        });
-
         this.size = this.value.size;
 
-        if (this.totalElements !== totalElements) {
-          this.totalElements = totalElements;
-        }
+        // if (this.totalElements !== totalElements) {
+        //   this.totalElements = totalElements;
+        // }
       });
-      // await this.bootstrapRest();
     } catch (e) {
       runInAction(() => {
         this.error = (e as Error)?.message;
@@ -178,6 +175,8 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
     } finally {
       runInAction(() => {
         this.isLoading = false;
+        this.isBootstrapped = true;
+        this.isBootstrapping = false;
       });
     }
   }
@@ -194,18 +193,61 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
 
     try {
       runInAction(() => {
+        if (this.chunk > 0) {
+          // reset chunk if new search is performed
+          this.chunk = 0;
+        }
         this.isLoading = true;
       });
 
       const payload = viewDef.toSearchPayload();
 
       const { ui_organizations_search: searchResult } =
-        await this.service.searchOrganizations(payload);
+        await this.service.searchOrganizations({ ...payload });
 
-      const foundIds = searchResult?.ids;
-      const data = await this.service.getOrganizationsByIds({ ids: foundIds });
+      if (this.chunk === 0) {
+        const ids = (searchResult?.ids ?? []).slice(
+          this.chunkSize * this.chunk,
+          this.chunkSize * this.chunk + this.chunkSize,
+        );
 
-      console.info(data.ui_organizations);
+        // retrieve first chunk of data after new search is performed
+        await this.retrieve(ids);
+      }
+
+      runInAction(() => {
+        this.isLoading = false;
+        this.availableCounts.set(viewDefPrest, searchResult?.totalElements);
+        this.searchedIds = searchResult?.ids ?? [];
+      });
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error)?.message;
+      });
+    }
+  }
+
+  @action
+  async retrieve(ids: string[]) {
+    try {
+      const { ui_organizations } = await this.service.getOrganizationsByIds({
+        ids,
+      });
+
+      runInAction(() => {
+        ui_organizations.forEach((raw) => {
+          if (this.value.has(raw.id)) {
+            Object.assign(raw, this.value.get(raw.id)?.value);
+          } else {
+            const record = new Organization(this, raw);
+
+            this.value.set(record.id, record);
+          }
+        });
+
+        this.size = this.value.size;
+        this.version++;
+      });
     } catch (err) {
       runInAction(() => {
         this.error = (err as Error)?.message;
@@ -229,6 +271,36 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
     } catch (e) {
       runInAction(() => {
         this.error = (e as Error)?.message;
+      });
+    }
+  }
+
+  @action
+  public async loadNext() {
+    if (!this.canLoadNext) return;
+
+    runInAction(() => {
+      this.chunk++;
+    });
+
+    const ids = this.searchedIds.slice(
+      this.chunkSize * this.chunk,
+      this.chunkSize * this.chunk + this.chunkSize,
+    );
+
+    try {
+      runInAction(() => {
+        this.isLoading = true;
+      });
+
+      await this.retrieve(ids);
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error)?.message;
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
       });
     }
   }
@@ -259,10 +331,6 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
       });
     } catch (e) {
       console.error('Failed invalidating organization with ID: ' + id);
-    } finally {
-      runInAction(() => {
-        // opts?.onFinally?.();
-      });
     }
   }
 

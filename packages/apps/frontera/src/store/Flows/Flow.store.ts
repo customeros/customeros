@@ -274,6 +274,7 @@ export class FlowStore implements Store<Flow> {
           entityId: contactId,
           status: FlowParticipantStatus.Scheduled,
           executions: [],
+          requirementsUnmeet: [],
         };
 
         this.value.participants = [

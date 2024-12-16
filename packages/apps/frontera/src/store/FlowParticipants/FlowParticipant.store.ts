@@ -76,6 +76,7 @@ const getDefaultValue = (): FlowParticipant => ({
   entityId: '',
   entityType: FlowEntityType.Contact,
   executions: [],
+  requirementsUnmeet: [],
   metadata: {
     source: DataSource.Openline,
     appSource: DataSource.Openline,

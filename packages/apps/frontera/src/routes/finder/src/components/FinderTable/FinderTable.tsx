@@ -216,10 +216,18 @@ export const FinderTable = observer(() => {
     }
   }, [location.state?.fromOnboarding]);
 
+  const totalItems = match(tableType)
+    .returnType<number>()
+    .with(
+      TableViewType.Organizations,
+      () => store.organizations?.availableCounts.get(preset ?? '') ?? 0,
+    )
+    .otherwise(() => data.length ?? 50);
+
   useEffect(() => {
-    store.ui.setSearchCount(data.length);
+    store.ui.setSearchCount(totalItems);
     store.ui.setFilteredTable(data);
-  }, [data.length]);
+  }, [data.length, store.organizations?.totalElements]);
 
   const isEditing = store.ui.isEditingTableCell;
   const isFiltering = store.ui.isFilteringTable;
@@ -357,9 +365,8 @@ export const FinderTable = observer(() => {
 
   const checkIfEmpty = () => {
     return match(tableType)
-      .with(
-        TableViewType.Organizations,
-        () => store.organizations?.totalElements === 0,
+      .with(TableViewType.Organizations, () =>
+        preset ? store.organizations?.availableCounts.get(preset) === 0 : true,
       )
       .with(TableViewType.Contacts, () => {
         if (tableId === TableIdType.FlowContacts && params.id) {
@@ -385,15 +392,14 @@ export const FinderTable = observer(() => {
       {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
       <Table<any>
         data={data}
-        canFetchMore
         manualFiltering
         sorting={sorting}
         columns={columns}
         tableRef={tableRef}
         rowHeight={rowHeight}
+        totalItems={totalItems}
         getRowId={(row) => row.id}
         enableColumnResizing={true}
-        totalItems={data.length ?? 40}
         onSortingChange={handleSortChange}
         onResizeColumn={handleColumnSizing}
         onSelectionChange={onSelectionChange}
@@ -401,16 +407,14 @@ export const FinderTable = observer(() => {
         tableId={tableViewDef?.value?.tableId}
         dataTest={`finder-table-${tableType}`}
         isLoading={store.organizations.isLoading}
+        canFetchMore={store.organizations.canLoadNext}
         fullRowSelection={tableType === TableViewType.Invoices}
+        onFetchMore={() => {
+          store.organizations.loadNext();
+        }}
         enableKeyboardShortcuts={
           !isEditing && !isFiltering && !isCommandMenuPrompted
         }
-        onFetchMore={() => {
-          store.organizations.setActiveRange(
-            0,
-            store.organizations.range[1] + 40,
-          );
-        }}
         enableTableActions={
           tableType &&
           [TableViewType.Invoices, TableViewType.Contracts].includes(tableType)

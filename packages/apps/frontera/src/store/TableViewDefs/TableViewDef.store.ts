@@ -161,11 +161,24 @@ export class TableViewDefStore implements Store<TableViewDef> {
   }
 
   toSearchPayload(): { sort: SortBy; where: Filter | null } {
-    const where = {
-      AND: this.getFilters()?.AND?.map?.((f: Filter) => ({
+    console.log(this.getFilters());
+
+    const activeFilters = this.getFilters()
+      ?.AND?.filter((f: Filter) => f?.filter && 'value' in f.filter)
+      .map?.((f: Filter) => ({
         filter: omit(f.filter, 'active') as Filter['filter'],
-      })),
+      }));
+
+    const defaultFilters = this.getDefaultFilters()
+      ?.AND?.filter((f: Filter) => f?.filter && 'value' in f.filter)
+      .map?.((f: Filter) => ({
+        filter: omit(f.filter, 'active') as Filter['filter'],
+      }));
+
+    const where = {
+      AND: [...defaultFilters, ...activeFilters],
     };
+
     const viewDefSorting = this.getSorting();
     const sort = {
       by: viewDefSorting.id,

@@ -35,6 +35,7 @@ export class TeamViews {
         if (this.cachedCombos.get(preset) === combo) return;
 
         this.cachedCombos.set(preset, combo);
+        // this.store.search(preset);
 
         this.update(preset, searchTerm);
       });

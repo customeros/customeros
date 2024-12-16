@@ -1,8 +1,10 @@
 import { useSearchParams } from 'react-router-dom';
 
+import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
 import { useTablePlaceholder } from '@finder/hooks/useTablePlaceholder.tsx';
 
+import { TableViewType } from '@graphql/types';
 import { useStore } from '@shared/hooks/useStore';
 import { SearchSm } from '@ui/media/icons/SearchSm';
 
@@ -15,15 +17,25 @@ export const SearchBarFilterData = observer(
     const store = useStore();
     const [searchParams] = useSearchParams();
     const preset = searchParams.get('preset');
-    const tableViewName = store.tableViewDefs.getById(preset || '')?.value.name;
+    const tableView = store.tableViewDefs.getById(preset || '');
+    const tableViewName = tableView?.value.name;
 
     const { multi: multiResultPlaceholder, single: singleResultPlaceholder } =
       useTablePlaceholder(tableViewName);
 
-    const totalResults = store.ui.searchCount;
+    const totalResults = match(tableView?.value.tableType)
+      .returnType<number>()
+      .with(
+        TableViewType.Organizations,
+        () => store.organizations.availableCounts.get(preset ?? '') ?? 0,
+      )
+      .otherwise(() => store.ui.searchCount);
 
     const tableName =
       totalResults === 1 ? singleResultPlaceholder : multiResultPlaceholder;
+
+    const hideSearch =
+      tableView?.value?.tableType === TableViewType.Organizations;
 
     return (
       <div className='flex flex-row items-center gap-1'>
@@ -32,7 +44,7 @@ export const SearchBarFilterData = observer(
           data-test={dataTest ? dataTest : ''}
           className={'font-medium flex items-center gap-1 break-keep w-max '}
         >
-          {totalResults} {tableName}:
+          {`${totalResults} ${tableName}` + (hideSearch ? '' : ':')}
         </div>
       </div>
     );
