@@ -66,6 +66,7 @@ export const InvoicesPanel = observer(() => {
         </div>
         <div className='-ml-6 max-w-[447px]'>
           <Table<InvoiceStore>
+            rowHeight={28}
             columns={columns}
             tableRef={tableRef}
             data={invoices ?? []}

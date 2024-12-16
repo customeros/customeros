@@ -1,5 +1,11 @@
 import { useParams, useLocation, useSearchParams } from 'react-router-dom';
-import { useRef, useEffect, type Dispatch, type SetStateAction } from 'react';
+import {
+  useRef,
+  useMemo,
+  useEffect,
+  type Dispatch,
+  type SetStateAction,
+} from 'react';
 
 import { match } from 'ts-pattern';
 import { useKeyBindings } from 'rooks';
@@ -338,6 +344,17 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
     },
   );
 
+  const rowHeight = useMemo(() => {
+    return match(tableType)
+      .with(TableViewType.Organizations, () => 33)
+      .with(TableViewType.Opportunities, () => 33)
+      .with(TableViewType.Contacts, () => 33)
+      .with(TableViewType.Invoices, () => 31)
+      .with(TableViewType.Contracts, () => 29)
+      .with(TableViewType.Flow, () => 29)
+      .otherwise(() => 33);
+  }, [tableType]);
+
   const checkIfEmpty = () => {
     return match(tableType)
       .with(
@@ -373,6 +390,7 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
         sorting={sorting}
         columns={columns}
         tableRef={tableRef}
+        rowHeight={rowHeight}
         getRowId={(row) => row.id}
         enableColumnResizing={true}
         totalItems={data.length ?? 40}
