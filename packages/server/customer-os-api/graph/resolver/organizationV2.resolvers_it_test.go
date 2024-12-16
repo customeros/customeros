@@ -70,18 +70,19 @@ func TestQueryResolver_UIOrganizationsSearch_FilterByRelationship(t *testing.T) 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Relationship: ""})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
 	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Relationship: enum.OrganizationRelationshipProspect})
 	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Relationship: enum.OrganizationRelationshipCustomer})
 
-	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 4, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
 
 	searchBy := model.ColumnViewTypeOrganizationsRelationship
 
-	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 3, 1)
-	assertSearch(t, searchBy, []string{enum.OrganizationRelationshipCustomer.String()}, commonModel.ComparisonOperatorIn, 3, 1)
-	assertSearch(t, searchBy, []string{enum.OrganizationRelationshipCustomer.String()}, commonModel.ComparisonOperatorNotIn, 3, 2)
-	assertSearch(t, searchBy, []string{enum.OrganizationRelationshipProspect.String(), enum.OrganizationRelationshipCustomer.String()}, commonModel.ComparisonOperatorIn, 3, 2)
-	assertSearch(t, searchBy, []string{enum.OrganizationRelationshipProspect.String(), enum.OrganizationRelationshipCustomer.String()}, commonModel.ComparisonOperatorNotIn, 3, 1)
+	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 4, 2)
+	assertSearch(t, searchBy, []string{enum.OrganizationRelationshipCustomer.String()}, commonModel.ComparisonOperatorIn, 4, 1)
+	assertSearch(t, searchBy, []string{enum.OrganizationRelationshipCustomer.String()}, commonModel.ComparisonOperatorNotIn, 4, 3)
+	assertSearch(t, searchBy, []string{enum.OrganizationRelationshipProspect.String(), enum.OrganizationRelationshipCustomer.String()}, commonModel.ComparisonOperatorIn, 4, 2)
+	assertSearch(t, searchBy, []string{enum.OrganizationRelationshipProspect.String(), enum.OrganizationRelationshipCustomer.String()}, commonModel.ComparisonOperatorNotIn, 4, 2)
 }
 
 func TestQueryResolver_UIOrganizationsSearch_FilterByOnboardingStatus(t *testing.T) {
