@@ -17,6 +17,7 @@ type JobRoleReadRepository interface {
 	GetAllForOrganizations(ctx context.Context, tenant string, organizationIds []string) ([]*utils.DbNodeAndId, error)
 	GetAllForUsers(ctx context.Context, tenant string, userIds []string) ([]*utils.DbNodeAndId, error)
 	ExistsForContactAndOrganization(ctx context.Context, tenant, contactId, organizationId string) (bool, error)
+	GetAllForContactWithOrganizationId(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, contactId string) ([]*utils.DbNodeAndId, error)
 }
 
 type jobRoleReadRepository struct {
@@ -209,4 +210,35 @@ func (r *jobRoleReadRepository) ExistsForContactAndOrganization(ctx context.Cont
 	}
 	span.LogFields(log.Bool("result.found", len(records.([]*neo4j.Record)) > 0))
 	return len(records.([]*neo4j.Record)) > 0, err
+}
+
+func (r *jobRoleReadRepository) GetAllForContactWithOrganizationId(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, contactId string) ([]*utils.DbNodeAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleRepository.GetAllForContactWithOrganizationId")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	cypher := `MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
+			  			(c)-[:WORKS_AS]->(j:JobRole)-[:ROLE_IN]->(o:Organization)
+				RETURN j, o.id`
+	params := map[string]interface{}{
+		"contactId": contactId,
+		"tenant":    tenant,
+	}
+
+	span.LogFields(log.String("query", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	result, err := utils.ExecuteReadInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	span.LogFields(log.Int("result.count", len(result.([]*utils.DbNodeAndId))))
+	return result.([]*utils.DbNodeAndId), err
 }

@@ -37,6 +37,7 @@ type ContactService interface {
 	CheckContactExistsWithEmail(ctx context.Context, email string) (bool, string, error)
 	GetContactById(ctx context.Context, contactId string) (*neo4jentity.ContactEntity, error)
 	GetContactsByIds(ctx context.Context, contactIds []string) ([]*neo4jentity.ContactEntity, error)
+	SetPrimaryJobRole(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, contactId string, primaryOrganizationId *string) error
 }
 
 type contactService struct {
@@ -411,6 +412,16 @@ func (s *contactService) LinkContactWithOrganization(ctx context.Context, txWith
 			return nil, innerErr
 		}
 
+		// set primary job role
+		primaryOrgId := &organizationId
+		if endedAt != nil {
+			primaryOrgId = nil
+		}
+		err = s.SetPrimaryJobRole(ctx, txWithPostCommit, contactId, primaryOrgId)
+		if err != nil {
+			return nil, err
+		}
+
 		// reset contact enrich attempts
 		_ = s.services.Neo4jRepositories.ContactWriteRepository.ResetEnrichAttempts(ctx, txWithPostCommit.Tx, tenant, contactId)
 
@@ -700,4 +711,90 @@ func (s *contactService) CreateContactByEmail(ctx context.Context, txWithPostCom
 	}
 
 	return createdContactId, nil
+}
+
+func (s *contactService) SetPrimaryJobRole(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, contactId string, primaryOrganizationId *string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.SetPrimaryJobRole")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.TagEntity(span, contactId)
+	span.LogFields(log.String("primaryOrganizationId", utils.IfNotNilString(primaryOrganizationId)))
+
+	_, err := utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
+		// get job roles with org id for contact
+		jobRolesWithOrgId, err := s.services.Neo4jRepositories.JobRoleReadRepository.GetAllForContactWithOrganizationId(ctx, txWithPostCommit.Tx, common.GetTenantFromContext(ctx), contactId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+
+		// no data found, return
+		if len(jobRolesWithOrgId) == 0 {
+			return nil, nil
+		}
+
+		primaryJobRoleEntities := make([]*neo4jentity.JobRoleEntity, 0)
+		allJobRoleEntities := make([]*neo4jentity.JobRoleEntity, 0)
+		var jobRoleEntityForPrimaryOrganization *neo4jentity.JobRoleEntity
+		for _, jobRoleWithOrgId := range jobRolesWithOrgId {
+			jobRoleEntity := neo4jmapper.MapDbNodeToJobRoleEntity(jobRoleWithOrgId.Node)
+			if primaryOrganizationId != nil && jobRoleWithOrgId.LinkedNodeId == *primaryOrganizationId {
+				jobRoleEntityForPrimaryOrganization = jobRoleEntity
+			}
+			if jobRoleEntity.Primary {
+				primaryJobRoleEntities = append(primaryJobRoleEntities, jobRoleEntity)
+			}
+			allJobRoleEntities = append(allJobRoleEntities, jobRoleEntity)
+		}
+
+		jobRoleIdToBeSetPrimary := ""
+
+		// check 1 - if job role for primary organization found, set it primary
+		if jobRoleEntityForPrimaryOrganization != nil {
+			if !jobRoleEntityForPrimaryOrganization.Primary {
+				jobRoleIdToBeSetPrimary = jobRoleEntityForPrimaryOrganization.Id
+			}
+		} else {
+			if len(primaryJobRoleEntities) == 1 {
+				// single primary job role already exists, return
+				return nil, nil
+			}
+			var selectedJobRoleEntity *neo4jentity.JobRoleEntity
+			for _, jobRoleEntity := range allJobRoleEntities {
+				if jobRoleIdToBeSetPrimary == "" {
+					jobRoleIdToBeSetPrimary = jobRoleEntity.Id
+					selectedJobRoleEntity = jobRoleEntity
+				} else {
+					if utils.IsAfter(jobRoleEntity.EndedAt, selectedJobRoleEntity.EndedAt) {
+						jobRoleIdToBeSetPrimary = jobRoleEntity.Id
+						selectedJobRoleEntity = jobRoleEntity
+					}
+				}
+			}
+
+		}
+
+		if jobRoleIdToBeSetPrimary != "" {
+			// set it primary,
+			err = s.services.Neo4jRepositories.JobRoleWriteRepository.SetJobRolePrimaryInTx(ctx, txWithPostCommit.Tx, common.GetTenantFromContext(ctx), jobRoleIdToBeSetPrimary)
+			if err != nil {
+				return nil, err
+			}
+			// set other non-primary job roles as non-primary
+			if len(allJobRoleEntities) > 1 {
+				err = s.services.Neo4jRepositories.JobRoleWriteRepository.SetOtherJobRolesForContactNonPrimaryInTx(ctx, txWithPostCommit.Tx, common.GetTenantFromContext(ctx), contactId, jobRoleIdToBeSetPrimary)
+				if err != nil {
+					return nil, err
+				}
+			}
+		}
+
+		return nil, nil
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	return nil
 }

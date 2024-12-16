@@ -149,7 +149,7 @@ func (s *jobRoleService) CreateJobRole(ctx context.Context, contactId string, or
 	defer session.Close(ctx)
 	dbNode, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if entity.Primary == true {
-			err := s.services.Neo4jRepositories.JobRoleWriteRepository.SetOtherJobRolesForContactNonPrimaryInTx(ctx, tx, common.GetContext(ctx).Tenant, contactId, "")
+			err := s.services.Neo4jRepositories.JobRoleWriteRepository.SetOtherJobRolesForContactNonPrimaryInTx(ctx, &tx, common.GetContext(ctx).Tenant, contactId, "")
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return nil, err
@@ -196,7 +196,7 @@ func (s *jobRoleService) UpdateJobRole(ctx context.Context, contactId string, or
 
 	dbNode, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if entity.Primary == true {
-			err := s.services.Neo4jRepositories.JobRoleWriteRepository.SetOtherJobRolesForContactNonPrimaryInTx(ctx, tx, common.GetContext(ctx).Tenant, contactId, entity.Id)
+			err := s.services.Neo4jRepositories.JobRoleWriteRepository.SetOtherJobRolesForContactNonPrimaryInTx(ctx, &tx, common.GetContext(ctx).Tenant, contactId, entity.Id)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return nil, err

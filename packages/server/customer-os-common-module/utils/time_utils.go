@@ -244,3 +244,18 @@ func GetCurrentTimeInTimeZone(timezone string) time.Time {
 	}
 	return time.Now().In(loc)
 }
+
+// IsAfter compares two *time.Time, considering nil as far in the future.
+// if both are nil return false
+func IsAfter(t1, t2 *time.Time) bool {
+	if t1 == nil && t2 == nil {
+		return false
+	}
+	if t1 == nil {
+		return true
+	}
+	if t2 == nil {
+		return false
+	}
+	return t1.After(*t2)
+}

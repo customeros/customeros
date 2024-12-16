@@ -29,9 +29,9 @@ type JobRoleWriteRepository interface {
 	CreateJobRoleInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string, input entity.JobRoleEntity) (*dbtype.Node, error)
 	LinkWithUser(ctx context.Context, tenant, userId, jobRoleId string) error
 	LinkContactWithOrganization(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, contactId, organizationId string, data JobRoleFields) error
-
 	DeleteJobRoleInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId, roleId string) error
-	SetOtherJobRolesForContactNonPrimaryInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId, skipRoleId string) error
+	SetOtherJobRolesForContactNonPrimaryInTx(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, contactId, skipRoleId string) error
+	SetJobRolePrimaryInTx(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, roleId string) error
 	UpdateJobRoleDetails(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId, roleId string, input entity.JobRoleEntity) (*dbtype.Node, error)
 	LinkWithOrganization(ctx context.Context, tx neo4j.ManagedTransaction, tenant, roleId, organizationId string) error
 }
@@ -261,22 +261,33 @@ func (r *jobRoleWriteRepository) DeleteJobRoleInTx(ctx context.Context, tx neo4j
 	return err
 }
 
-func (r *jobRoleWriteRepository) SetOtherJobRolesForContactNonPrimaryInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId, skipRoleId string) error {
+func (r *jobRoleWriteRepository) SetOtherJobRolesForContactNonPrimaryInTx(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, contactId, skipRoleId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleRepository.SetOtherJobRolesForContactNonPrimaryInTx")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	_, err := tx.Run(ctx, `
-			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
+	cypher := `MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
 				 (c)-[:WORKS_AS]->(r:JobRole)
 			WHERE r.id <> $skipRoleId
             SET r.primary=false,
-				r.updatedAt=datetime({timezone: 'UTC'})`,
-		map[string]interface{}{
-			"tenant":     tenant,
-			"contactId":  contactId,
-			"skipRoleId": skipRoleId,
-		})
+				r.updatedAt=datetime({timezone: 'UTC'})`
+	params := map[string]interface{}{
+		"tenant":     tenant,
+		"contactId":  contactId,
+		"skipRoleId": skipRoleId,
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, cypher, params)
+		return nil, err
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+
 	return err
 }
 
@@ -299,5 +310,31 @@ func (r *jobRoleWriteRepository) LinkWithOrganization(ctx context.Context, tx ne
 			"roleId":         roleId,
 			"organizationId": organizationId,
 		})
+	return err
+}
+
+func (r *jobRoleWriteRepository) SetJobRolePrimaryInTx(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, roleId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleRepository.SetJobRolePrimaryInTx")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	cypher := fmt.Sprintf(`MATCH (j:JobRole_%s {id:$roleId})
+			SET j.primary=true,
+				j.updatedAt=datetime()`, tenant)
+	params := map[string]interface{}{
+		"roleId": roleId,
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, cypher, params)
+		return nil, err
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+
 	return err
 }
