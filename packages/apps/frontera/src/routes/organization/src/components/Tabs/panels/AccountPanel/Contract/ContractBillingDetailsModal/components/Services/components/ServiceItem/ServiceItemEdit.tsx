@@ -1,3 +1,4 @@
+import { toZonedTime } from 'date-fns-tz';
 import { observer } from 'mobx-react-lite';
 import { ContractLineItemStore } from '@store/ContractLineItems/ContractLineItem.store';
 
@@ -67,13 +68,17 @@ export const ServiceItemEdit = observer(
     const onChangeServiceStarted = (e: Date | null) => {
       if (!e) return;
 
+      const utcDate = toZonedTime(e, 'UTC');
+
       const checkExistingServiceStarted = (date: Date) => {
-        return allServices?.some((service) =>
-          DateTimeUtils.isSameDay(
-            service?.tempValue?.serviceStarted,
-            `${date}`,
-          ),
-        );
+        return allServices?.some((val) => {
+          const normalizedNew = `${date.toISOString().split('T')[0]}`;
+
+          return (
+            val.tempValue.metadata.id !== service.tempValue.metadata.id &&
+            DateTimeUtils.isSameDay(val.tempValue.serviceStarted, normalizedNew)
+          );
+        });
       };
 
       const findCurrentService = () => {
@@ -120,11 +125,11 @@ export const ServiceItemEdit = observer(
         return false;
       };
 
-      const existingServiceStarted = checkExistingServiceStarted(e);
-      const isTodayOrBefore = checkIfBeforeToday(e);
+      const existingServiceStarted = checkExistingServiceStarted(utcDate);
+      const isTodayOrBefore = checkIfBeforeToday(utcDate);
       const currentService = findCurrentService();
       const isBeforeCurrentService = checkIfBeforeCurrentService(
-        e,
+        utcDate,
         currentService,
       );
 
@@ -166,7 +171,7 @@ export const ServiceItemEdit = observer(
 
       service.updateTemp((prev) => ({
         ...prev,
-        serviceStarted: e,
+        serviceStarted: e.toISOString(),
       }));
     };
 
