@@ -47,6 +47,7 @@ func MapEntityToOrganization(entity *neo4jentity.OrganizationEntity) *model.Orga
 		Icon:               utils.StringPtr(entity.IconUrl),
 		IconURL:            utils.StringPtr(entity.IconUrl),
 		IcpFit:             entity.IcpFit,
+		ContactCount:       entity.DerivedData.ContactCount,
 		AccountDetails: &model.OrgAccountDetails{
 			RenewalSummary: &model.RenewalSummary{
 				ArrForecast:       entity.RenewalSummary.ArrForecast,

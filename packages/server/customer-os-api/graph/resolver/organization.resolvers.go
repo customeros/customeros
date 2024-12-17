@@ -912,20 +912,6 @@ func (r *organizationResolver) IssueSummaryByStatus(ctx context.Context, obj *mo
 	return issueSummaryByStatus, nil
 }
 
-// ContactCount is the resolver for the contactCount field.
-func (r *organizationResolver) ContactCount(ctx context.Context, obj *model.Organization) (int64, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
-
-	contactCount, err := dataloader.For(ctx).GetContactCountForOrganization(ctx, obj.Metadata.ID)
-	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
-		r.log.Errorf("error fetching contact count for organization %s: %s", obj.Metadata.ID, err.Error())
-		graphql.AddErrorf(ctx, "Error fetching contact count for organization %s", obj.Metadata.ID)
-		return 0, nil
-	}
-	return contactCount, nil
-}
-
 // InboundCommsCount is the resolver for the inboundCommsCount field.
 func (r *organizationResolver) InboundCommsCount(ctx context.Context, obj *model.Organization) (int64, error) {
 	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
