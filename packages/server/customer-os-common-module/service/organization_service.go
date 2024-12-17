@@ -352,6 +352,10 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 				tracing.TraceErr(span, errors.Wrap(err, "failed to merge action"))
 				return nil, err
 			}
+			err = s.services.Neo4jRepositories.OrganizationWriteRepository.RefreshContactCountByOrgId(ctx, txWithPostCommit.Tx, tenant, organizationId)
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "unable to refresh contact count by organization id"))
+			}
 		}
 
 		if utils.IfNotNilString(input.Website) != "" && adjustedWebsite != "" {

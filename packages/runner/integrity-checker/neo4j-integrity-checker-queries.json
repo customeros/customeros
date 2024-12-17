@@ -146,6 +146,10 @@
         {
           "name": "Organizations with wrong renewal likelihood",
           "query": "MATCH (o:Organization) WHERE o.derivedRenewalLikelihood IS NOT NULL AND NOT o.derivedRenewalLikelihood IN ['','ZERO_RENEWAL','LOW_RENEWAL','MEDIUM_RENEWAL','HIGH_RENEWAL'] RETURN count(o)"
+        },
+        {
+          "name": "Organizations with wrong contact count",
+          "query": "MATCH (:Tenant {active:true})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization) WITH org OPTIONAL MATCH (org)--(:JobRole)--(c:Contact) WHERE c.hide=false OR c.hide IS NULL WITH org, COUNT(DISTINCT c) AS contactCount WHERE org.derivedContactCount IS NULL OR org.derivedContactCount <> contactCount return count(org)"
         }
       ]
     },

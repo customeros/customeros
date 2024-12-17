@@ -27,6 +27,7 @@ const (
 	OrganizationPropertyEnrichFailedAt            OrganizationProperty = "enrichFailedAt"
 	OrganizationPropertyEnrichAttempts            OrganizationProperty = "techEnrichAttempts"
 	OrganizationPropertyRenewalLikelihood         OrganizationProperty = "derivedRenewalLikelihood"
+	OrganizationPropertyContactCount              OrganizationProperty = "derivedContactCount"
 )
 
 type OrganizationEntity struct {
@@ -85,9 +86,10 @@ type OrganizationEntity struct {
 }
 
 type DerivedData struct {
-	ChurnedAt   *time.Time    `neo4jDb:"property:derivedNextRenewalAt;lookupName:CHURN_DATE;supportCaseSensitive:false"`
-	Ltv         float64       `neo4jDb:"property:derivedLtv;lookupName:LTV;supportCaseSensitive:false"`
-	LtvCurrency enum.Currency `neo4jDb:"property:derivedLtvCurrency;lookupName:LTV_CURRENCY;supportCaseSensitive:false"`
+	ChurnedAt    *time.Time    `neo4jDb:"property:derivedNextRenewalAt;lookupName:CHURN_DATE;supportCaseSensitive:false"`
+	Ltv          float64       `neo4jDb:"property:derivedLtv;lookupName:LTV;supportCaseSensitive:false"`
+	LtvCurrency  enum.Currency `neo4jDb:"property:derivedLtvCurrency;lookupName:LTV_CURRENCY;supportCaseSensitive:false"`
+	ContactCount int64         `neo4jDb:"property:derivedContactCount;lookupName:CONTACT_COUNT;supportCaseSensitive:false"`
 }
 
 type RenewalSummary struct {

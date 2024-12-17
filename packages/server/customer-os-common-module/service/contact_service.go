@@ -236,8 +236,12 @@ func (s *contactService) HideContact(ctx context.Context, txWithPostCommit *util
 		contactFields := data_fields.ContactFields{Hide: utils.BoolPtr(true)}
 		err = s.services.Neo4jRepositories.ContactWriteRepository.SaveContactInTx(ctx, txWithPostCommit.Tx, tenant, contactId, contactFields, false)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			tracing.TraceErr(span, errors.Wrap(err, "unable to save contact"))
 			s.log.Errorf("error while hiding contact %s: %s", contactId, err.Error())
+		}
+		err = s.services.Neo4jRepositories.OrganizationWriteRepository.RefreshContactCountByContactId(ctx, txWithPostCommit.Tx, tenant, contactId)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "unable to refresh contact count by contact id"))
 		}
 
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
@@ -251,6 +255,10 @@ func (s *contactService) HideContact(ctx context.Context, txWithPostCommit *util
 		})
 		return nil, nil
 	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
 
 	return nil
 }
@@ -273,9 +281,13 @@ func (s *contactService) ShowContact(ctx context.Context, txWithPostCommit *util
 		contactFields := data_fields.ContactFields{Hide: utils.BoolPtr(false)}
 		err = s.services.Neo4jRepositories.ContactWriteRepository.SaveContactInTx(ctx, txWithPostCommit.Tx, tenant, contactId, contactFields, false)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			tracing.TraceErr(span, errors.Wrap(err, "unable to save contact"))
 			s.log.Errorf("error while showing contact %s: %s", contactId, err.Error())
 			return nil, err
+		}
+		err = s.services.Neo4jRepositories.OrganizationWriteRepository.RefreshContactCountByContactId(ctx, txWithPostCommit.Tx, tenant, contactId)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "unable to refresh contact count by contact id"))
 		}
 
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
@@ -291,6 +303,10 @@ func (s *contactService) ShowContact(ctx context.Context, txWithPostCommit *util
 
 		return nil, nil
 	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
 
 	return nil
 }
@@ -420,6 +436,11 @@ func (s *contactService) LinkContactWithOrganization(ctx context.Context, txWith
 		err = s.SetPrimaryJobRole(ctx, txWithPostCommit, contactId, primaryOrgId)
 		if err != nil {
 			return nil, err
+		}
+
+		err = s.services.Neo4jRepositories.OrganizationWriteRepository.RefreshContactCountByOrgId(ctx, txWithPostCommit.Tx, tenant, organizationId)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "unable to refresh contact count by organization id"))
 		}
 
 		// reset contact enrich attempts
