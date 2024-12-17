@@ -272,7 +272,7 @@ func CreateOrganization(ctx context.Context, driver *neo4j.DriverWithContext, te
 							org.derivedChurnedAt=$derivedChurnedAt,
 							org.derivedLtv=$derivedLtv,
 							org.derivedLtvCurrency=$derivedLtvCurrency,
-							org.derivedContactCount=$derivedContactCount,
+							org.derivedContactCount=$derivedContactCount
 							`, tenant)
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"id":                            orgId,
