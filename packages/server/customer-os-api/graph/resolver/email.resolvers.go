@@ -437,22 +437,6 @@ func (r *queryResolver) Email(ctx context.Context, id string) (*model.Email, err
 	return mapper.MapEntityToEmail(emailEntity), nil
 }
 
-// EmailByAddress is the resolver for the emailByAddress field.
-func (r *queryResolver) EmailByAddress(ctx context.Context, emailAddress string) (*model.Email, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.EmailByAddress", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("emailAddress", emailAddress))
-
-	emailEntity, err := r.Services.EmailService.GetByEmailAddress(ctx, emailAddress)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed getting email with emailAddress %s", emailAddress)
-		return nil, nil
-	}
-	return mapper.MapEntityToEmail(emailEntity), nil
-}
-
 // Email returns generated.EmailResolver implementation.
 func (r *Resolver) Email() generated.EmailResolver { return &emailResolver{r} }
 
