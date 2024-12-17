@@ -151,7 +151,19 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 				createBooleanFilter(filter, organizationFilter, "isPublic")
 			}
 			if filter.Filter.Property == model.ColumnViewTypeOrganizationsTags.String() {
-				tagFilter.Filters = append(tagFilter.Filters, utils.CreateStringCypherFilter("name", filter.Filter.Value.Str, filter.Filter.Operation))
+				// special case for not in tags
+				if filter.Filter.Operation == commonmodel.ComparisonOperatorNotIn && filter.Filter.Value.ArrayStr != nil {
+					rawCypher := ""
+					for _, v := range *filter.Filter.Value.ArrayStr {
+						if rawCypher != "" {
+							rawCypher += " AND "
+						}
+						rawCypher += fmt.Sprintf(` NOT (o)-[:TAGGED]->(:Tag {name:"%s"}) `, v)
+					}
+					tagFilter.Filters = append(tagFilter.Filters, utils.CreateRawCypherFilter(rawCypher))
+				} else {
+					createInOrEmptyStringFilter(filter, tagFilter, string(neo4jentity.TagPropertyName))
+				}
 			}
 			if filter.Filter.Property == model.ColumnViewTypeOrganizationsHeadquarters.String() {
 				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateStringCypherFilter("headquarters", filter.Filter.Value.Str, filter.Filter.Operation))
@@ -816,9 +828,6 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 			//}
 			//if filter.Filter.Property == model.ColumnViewTypeOrganizationsIsPublic.String() {
 			//	createBooleanFilter(filter, contactFilter, "isPublic")
-			//}
-			//if filter.Filter.Property == model.ColumnViewTypeOrganizationsTags.String() {
-			//	tagFilter.Filters = append(tagFilter.Filters, utils.CreateStringCypherFilter("name", filter.Filter.Value.Str, filter.Filter.Operation))
 			//}
 			//if filter.Filter.Property == model.ColumnViewTypeOrganizationsHeadquarters.String() {
 			//	contactFilter.Filters = append(contactFilter.Filters, utils.CreateStringCypherFilter("headquarters", filter.Filter.Value.Str, filter.Filter.Operation))
