@@ -8,8 +8,8 @@ import { gql } from 'graphql-request';
 import { Operation } from '@store/types.ts';
 import { makePayload } from '@store/util.ts';
 import { Transport } from '@store/transport.ts';
-import { runInAction, makeAutoObservable } from 'mobx';
 import { Store, makeAutoSyncable } from '@store/store.ts';
+import { computed, runInAction, makeAutoObservable } from 'mobx';
 import { ContractService } from '@store/Contracts/Contract.service.ts';
 import { ContractLineItemStore } from '@store/ContractLineItems/ContractLineItem.store.ts';
 
@@ -38,7 +38,9 @@ export class ContractStore implements Store<Contract> {
   private service: ContractService;
 
   constructor(public root: RootStore, public transport: Transport) {
-    makeAutoObservable(this);
+    makeAutoObservable(this, {
+      organization: computed,
+    });
     makeAutoSyncable(this, {
       channelName: 'Contract',
       mutator: this.save,
@@ -49,6 +51,14 @@ export class ContractStore implements Store<Contract> {
 
   get id() {
     return this.value.metadata.id;
+  }
+
+  get organization() {
+    return this.root.organizations
+      .toArray()
+      .find((e) =>
+        e?.contracts?.find((c) => c.metadata.id === this.value.metadata.id),
+      );
   }
 
   set id(id: string) {

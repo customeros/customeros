@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
+import { ContractStore } from '@store/Contracts/Contract.store.ts';
 
 import { useStore } from '@shared/hooks/useStore';
 import { TableCellTooltip } from '@ui/presentation/Table';
@@ -15,17 +16,14 @@ export const ContractCell = observer(({ contractId }: ContractCellProps) => {
 
   const store = useStore();
 
-  const contract = store.contracts.value.get(contractId);
-  const id = store.organizations
-    .toArray()
-    .find((e) => e?.contracts?.find((c) => c.metadata.id === contractId))?.id;
-
+  const contract = store.contracts.value.get(contractId) as ContractStore;
+  const org = contract.organization;
   const linkRef = useRef<HTMLParagraphElement>(null);
 
   const handleNavigate = () => {
-    if (!id) return;
+    if (!org?.id) return;
 
-    const href = getHref(id);
+    const href = getHref(org?.id);
 
     if (!href) return;
 
@@ -48,7 +46,7 @@ export const ContractCell = observer(({ contractId }: ContractCellProps) => {
           data-test='Contract-name-in-all-orgs-table'
           className='overflow-ellipsis overflow-hidden font-medium no-underline hover:no-underline cursor-pointer pr-7'
         >
-          {contract?.value?.contractName ?? 'Unknown'}
+          {contract?.value?.contractName || `${org?.value?.name}`}
         </p>
       </span>
     </TableCellTooltip>
