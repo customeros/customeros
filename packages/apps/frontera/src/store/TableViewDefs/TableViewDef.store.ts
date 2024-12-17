@@ -380,8 +380,11 @@ export class TableViewDefStore implements Store<TableViewDef> {
     this.update((values) => {
       const sorting = this.getFilters() as { id: string; desc: boolean };
 
-      if (!sorting) return values;
+      if (!sorting) {
+        values.sorting = JSON.stringify({ id: columndId, desc: isDesc });
 
+        return values;
+      }
       sorting.id = columndId;
       sorting.desc = isDesc;
 
