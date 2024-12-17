@@ -518,32 +518,34 @@ func TestQueryResolver_UIOrganizationsSearch_FilterByCountry(t *testing.T) {
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "org1"})
-	neo4jtest.CreateLocation(ctx, driver, tenantName, neo4jentity.LocationEntity{Id: "l1", Country: "C1"})
+	neo4jtest.CreateLocation(ctx, driver, tenantName, neo4jentity.LocationEntity{Id: "l1", CountryCodeA2: "CA"})
 	neo4jtest.LinkNodes(ctx, driver, "org1", "l1", "ASSOCIATED_WITH")
 
 	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "org2"})
-	neo4jtest.CreateLocation(ctx, driver, tenantName, neo4jentity.LocationEntity{Id: "l2", Country: "C2"})
+	neo4jtest.CreateLocation(ctx, driver, tenantName, neo4jentity.LocationEntity{Id: "l2", CountryCodeA2: "US"})
 	neo4jtest.LinkNodes(ctx, driver, "org2", "l2", "ASSOCIATED_WITH")
 
 	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "org3"})
+	neo4jtest.CreateLocation(ctx, driver, tenantName, neo4jentity.LocationEntity{Id: "l3"})
+	neo4jtest.LinkNodes(ctx, driver, "org3", "l3", "ASSOCIATED_WITH")
 
-	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Location"))
-	require.Equal(t, 2, neo4jtest.GetCountOfRelationships(ctx, driver, "ASSOCIATED_WITH"))
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "org4"})
+
+	require.Equal(t, 4, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Location"))
+	require.Equal(t, 3, neo4jtest.GetCountOfRelationships(ctx, driver, "ASSOCIATED_WITH"))
 
 	searchBy := model.ColumnViewTypeOrganizationsCountry
 
-	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 3, 1)
-	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 3, 2)
-	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorContains, 3, 2)
-	assertSearch(t, searchBy, "c", commonModel.ComparisonOperatorContains, 3, 2)
-	assertSearch(t, searchBy, "c1", commonModel.ComparisonOperatorContains, 3, 1)
-	assertSearch(t, searchBy, "c2", commonModel.ComparisonOperatorContains, 3, 1)
-	assertSearch(t, searchBy, "c3", commonModel.ComparisonOperatorContains, 3, 0)
+	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 4, 2)
+	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 4, 2)
+	assertSearch(t, searchBy, []string{"X"}, commonModel.ComparisonOperatorIn, 4, 0)
+	assertSearch(t, searchBy, []string{"US"}, commonModel.ComparisonOperatorIn, 4, 1)
+	assertSearch(t, searchBy, []string{"CA"}, commonModel.ComparisonOperatorIn, 4, 1)
+	assertSearch(t, searchBy, []string{"US", "CA"}, commonModel.ComparisonOperatorIn, 4, 2)
 
-	assertSearch(t, searchBy, "c1", commonModel.ComparisonOperatorNotContains, 3, 1)
-	assertSearch(t, searchBy, "c2", commonModel.ComparisonOperatorNotContains, 3, 1)
-	assertSearch(t, searchBy, "c3", commonModel.ComparisonOperatorNotContains, 3, 2)
+	assertSearch(t, searchBy, []string{"X"}, commonModel.ComparisonOperatorNotIn, 4, 4)
+	assertSearch(t, searchBy, []string{"CA"}, commonModel.ComparisonOperatorNotIn, 4, 3)
 }
 
 func TestQueryResolver_UIOrganizationsSearch_FilterByCity(t *testing.T) {

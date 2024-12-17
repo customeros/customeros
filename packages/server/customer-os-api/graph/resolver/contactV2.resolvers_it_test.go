@@ -136,28 +136,30 @@ func TestQueryResolver_UIContactsSearch_FilterByCountry(t *testing.T) {
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "1"})
-	neo4jtest.CreateLocation(ctx, driver, tenantName, neo4jentity.LocationEntity{Id: "l1", Country: "C1"})
+	neo4jtest.CreateLocation(ctx, driver, tenantName, neo4jentity.LocationEntity{Id: "l1", CountryCodeA2: "US"})
 	neo4jtest.LinkNodes(ctx, driver, "1", "l1", "ASSOCIATED_WITH")
 
 	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "2"})
-	neo4jtest.CreateLocation(ctx, driver, tenantName, neo4jentity.LocationEntity{Id: "l2", Country: "C2"})
+	neo4jtest.CreateLocation(ctx, driver, tenantName, neo4jentity.LocationEntity{Id: "l2", CountryCodeA2: "CA"})
 	neo4jtest.LinkNodes(ctx, driver, "2", "l2", "ASSOCIATED_WITH")
 
 	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "3"})
+	neo4jtest.CreateLocation(ctx, driver, tenantName, neo4jentity.LocationEntity{Id: "l3"})
+	neo4jtest.LinkNodes(ctx, driver, "3", "l3", "ASSOCIATED_WITH")
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "4"})
 
 	searchBy := model.ColumnViewTypeContactsCountry
 
-	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 3, 1)
-	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 3, 2)
-	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorContains, 3, 2)
-	assertContactSearch(t, searchBy, "c", commonModel.ComparisonOperatorContains, 3, 2)
-	assertContactSearch(t, searchBy, "c1", commonModel.ComparisonOperatorContains, 3, 1)
-	assertContactSearch(t, searchBy, "c2", commonModel.ComparisonOperatorContains, 3, 1)
-	assertContactSearch(t, searchBy, "c3", commonModel.ComparisonOperatorContains, 3, 0)
+	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 4, 2)
+	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 4, 2)
+	assertContactSearch(t, searchBy, []string{"X"}, commonModel.ComparisonOperatorIn, 4, 0)
+	assertContactSearch(t, searchBy, []string{"US"}, commonModel.ComparisonOperatorIn, 4, 1)
+	assertContactSearch(t, searchBy, []string{"CA"}, commonModel.ComparisonOperatorIn, 4, 1)
+	assertContactSearch(t, searchBy, []string{"US", "CA"}, commonModel.ComparisonOperatorIn, 4, 2)
 
-	assertContactSearch(t, searchBy, "c1", commonModel.ComparisonOperatorNotContains, 3, 1)
-	assertContactSearch(t, searchBy, "c2", commonModel.ComparisonOperatorNotContains, 3, 1)
-	assertContactSearch(t, searchBy, "c3", commonModel.ComparisonOperatorNotContains, 3, 2)
+	assertContactSearch(t, searchBy, []string{"X"}, commonModel.ComparisonOperatorNotIn, 4, 4)
+	assertContactSearch(t, searchBy, []string{"CA"}, commonModel.ComparisonOperatorNotIn, 4, 3)
 }
 
 func TestQueryResolver_UIContactsSearch_SortByCountry(t *testing.T) {

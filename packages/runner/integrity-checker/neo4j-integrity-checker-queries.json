@@ -142,6 +142,10 @@
         {
           "name": "Duplicated organizations by socials",
           "query": "MATCH (t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)--(s:Social) WHERE s.url is not null and s.url <> '' WITH t, s.url AS sharedUrl, COUNT(o) AS orgCount WHERE orgCount > 1 RETURN count(sharedUrl)"
+        },
+        {
+          "name": "Organizations with wrong renewal likelihood",
+          "query": "MATCH (o:Organization) WHERE o.derivedRenewalLikelihood IS NOT NULL AND NOT o.derivedRenewalLikelihood IN ['','ZERO_RENEWAL','LOW_RENEWAL','MEDIUM_RENEWAL','HIGH_RENEWAL'] RETURN count(o)"
         }
       ]
     },
@@ -472,7 +476,7 @@
     },
     {
       "name": "Check organization derived data consistency",
-      "query": "CALL {MATCH (org:Organization) WHERE org.derivedRenewalLikelihood IS NOT NULL AND NOT org.derivedRenewalLikelihood IN ['','ZERO','LOW','MEDIUM','HIGH'] RETURN count(org) as cnt\n     UNION ALL\n     MATCH (org:Organization) WHERE org.derivedRenewalLikelihood IS NULL AND NOT org.derivedRenewalLikelihood IS NULL RETURN count(org) as cnt\n     UNION ALL MATCH (org:Organization)--(c:Contract)-[:ACTIVE_RENEWAL]->(op:RenewalOpportunity) WHERE (org.renewalForecastMaxArr IS NULL OR org.renewalForecastMaxArr = 0) AND (op.maxAmount > 0) return count(org) AS cnt\n} RETURN sum(cnt)",
+      "query": "CALL {MATCH (org:Organization) WHERE org.derivedRenewalLikelihood IS NULL AND NOT org.derivedRenewalLikelihood IS NULL RETURN count(org) as cnt\n     UNION ALL MATCH (org:Organization)--(c:Contract)-[:ACTIVE_RENEWAL]->(op:RenewalOpportunity) WHERE (org.renewalForecastMaxArr IS NULL OR org.renewalForecastMaxArr = 0) AND (op.maxAmount > 0) return count(org) AS cnt\n} RETURN sum(cnt)",
       "description": "Checks: 2 - Organizations with wrong derivedRenewalLikelihood value. 3 - Organization with renewal likelihood but without renewal date. 4 - Organizations with missing ARR"
     },
     {
