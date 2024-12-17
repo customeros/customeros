@@ -117,6 +117,9 @@ func TestQueryResolver_Organization(t *testing.T) {
 			Comments:  "some comments",
 			UpdatedAt: now,
 		},
+		DerivedData: neo4jentity.DerivedData{
+			ContactCount: 2,
+		},
 	}
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenantName, inputOrganizationEntity)
 	neo4jt.AddDomainToOrg(ctx, driver, organizationId, "domain1.com")
