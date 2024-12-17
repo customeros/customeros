@@ -126,6 +126,9 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 			if filter.Filter.Property == model.ColumnViewTypeOrganizationsEmployeeCount.String() {
 				createNumberCypherFilter(filter, organizationFilter, "employees")
 			}
+			if filter.Filter.Property == model.ColumnViewTypeOrganizationsContactCount.String() {
+				createNumberCypherFilter(filter, organizationFilter, "derivedContactCount")
+			}
 			if filter.Filter.Property == model.ColumnViewTypeOrganizationsYearFounded.String() {
 				createNumberCypherFilter(filter, organizationFilter, "yearFounded")
 			}
@@ -393,6 +396,13 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 			aliases += "CASE WHEN o.employees <> \"\" and not o.employees is null THEN o.employees ELSE 999999999 END as SORT_BY "
 		} else {
 			aliases += "CASE WHEN o.employees <> \"\" and not o.employees is null THEN o.employees ELSE -1 END as SORT_BY "
+		}
+	}
+	if sort != nil && sort.By == model.ColumnViewTypeOrganizationsContactCount.String() {
+		if sort.Direction == commonmodel.SortingDirectionAsc {
+			aliases += `CASE WHEN o.derivedContactCount IS NOT NULL THEN o.derivedContactCount ELSE 999999999 END as SORT_BY `
+		} else {
+			aliases += `CASE WHEN o.derivedContactCount IS NOT NULL THEN o.derivedContactCount ELSE -1 END as SORT_BY `
 		}
 	}
 	if sort != nil && sort.By == model.ColumnViewTypeOrganizationsYearFounded.String() {

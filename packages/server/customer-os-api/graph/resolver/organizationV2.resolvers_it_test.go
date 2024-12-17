@@ -400,6 +400,33 @@ func TestQueryResolver_UIOrganizationsSearch_FilterByEmployeeCount(t *testing.T)
 	assertSearch(t, searchBy, 2010, commonModel.ComparisonOperatorNotEquals, 3, 3)
 }
 
+func TestQueryResolver_UIOrganizationsSearch_FilterByContactCount(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{DerivedData: neo4jentity.DerivedData{ContactCount: 2000}})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{DerivedData: neo4jentity.DerivedData{ContactCount: 2005}})
+
+	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+
+	searchBy := model.ColumnViewTypeOrganizationsContactCount
+
+	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 3, 0)
+	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 3, 3)
+	assertSearch(t, searchBy, 2005, commonModel.ComparisonOperatorGte, 3, 1)
+	assertSearch(t, searchBy, 2005, commonModel.ComparisonOperatorGt, 3, 0)
+	assertSearch(t, searchBy, 2004, commonModel.ComparisonOperatorLte, 3, 2)
+	assertSearch(t, searchBy, 2005, commonModel.ComparisonOperatorLte, 3, 3)
+	assertSearch(t, searchBy, 2005, commonModel.ComparisonOperatorLt, 3, 2)
+	assertSearch(t, searchBy, 2005, commonModel.ComparisonOperatorEquals, 3, 1)
+	assertSearch(t, searchBy, 2006, commonModel.ComparisonOperatorEquals, 3, 0)
+	assertSearch(t, searchBy, 2005, commonModel.ComparisonOperatorNotEquals, 3, 2)
+	assertSearch(t, searchBy, 2010, commonModel.ComparisonOperatorNotEquals, 3, 3)
+}
+
 func TestQueryResolver_UIOrganizationsSearch_FilterByYearFounded(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
@@ -1065,6 +1092,24 @@ func TestQueryResolver_UIOrganizationsSearch_SortByEmployeeCount(t *testing.T) {
 
 	verifySortOrder(t, model.ColumnViewTypeOrganizationsEmployeeCount, commonModel.SortingDirectionAsc, expectedAsc)
 	verifySortOrder(t, model.ColumnViewTypeOrganizationsEmployeeCount, commonModel.SortingDirectionDesc, expectedDesc)
+}
+
+func TestQueryResolver_UIOrganizationsSearch_SortByContactCount(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "1", DerivedData: neo4jentity.DerivedData{ContactCount: 1}})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "2", DerivedData: neo4jentity.DerivedData{ContactCount: 2}})
+
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+
+	expectedAsc := []string{"1", "2"}
+	expectedDesc := []string{"2", "1"}
+
+	verifySortOrder(t, model.ColumnViewTypeOrganizationsContactCount, commonModel.SortingDirectionAsc, expectedAsc)
+	verifySortOrder(t, model.ColumnViewTypeOrganizationsContactCount, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
 func TestQueryResolver_UIOrganizationsSearch_SortByYearFounded(t *testing.T) {

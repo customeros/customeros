@@ -39,6 +39,7 @@ func MapEntityToOrganizationUIDetails(entity *neo4jentity.OrganizationEntity, ou
 
 	output.Ltv = utils.Float64Ptr(entity.DerivedData.Ltv)
 	output.ChurnedAt = entity.DerivedData.ChurnedAt
+	output.ContactCount = utils.IntPtr(int(entity.DerivedData.ContactCount))
 
 	output.RenewalSummaryArrForecast = entity.RenewalSummary.ArrForecast
 	output.RenewalSummaryMaxArrForecast = entity.RenewalSummary.MaxArrForecast
@@ -56,12 +57,3 @@ func MapEntityToOrganizationUIDetails(entity *neo4jentity.OrganizationEntity, ou
 	output.EnrichedRequestedAt = entity.EnrichDetails.EnrichRequestedAt
 	output.EnrichedFailedAt = entity.EnrichDetails.EnrichFailedAt
 }
-
-//func MapEntitiesToOrganizationsV2(organizationEntities *neo4jentity.OrganizationEntities) []*model.OrganizationV2 {
-//	var organizations []*model.OrganizationV2
-//	for _, organizationEntity := range *organizationEntities {
-//
-//		organizations = append(organizations, MapEntityToOrganizationV2(&organizationEntity))
-//	}
-//	return organizations
-//}

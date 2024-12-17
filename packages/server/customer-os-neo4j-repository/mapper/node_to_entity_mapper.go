@@ -272,9 +272,10 @@ func MapDbNodeToOrganizationEntity(dbNode *dbtype.Node) *entity.OrganizationEnti
 			NextRenewalAt:          utils.GetTimePropOrNil(props, "derivedNextRenewalAt"),
 		},
 		DerivedData: entity.DerivedData{
-			ChurnedAt:   utils.GetTimePropOrNil(props, "derivedChurnedAt"),
-			Ltv:         utils.GetFloatPropOrZero(props, "derivedLtv"),
-			LtvCurrency: enum.DecodeCurrency(utils.GetStringPropOrEmpty(props, "derivedLtvCurrency")),
+			ChurnedAt:    utils.GetTimePropOrNil(props, "derivedChurnedAt"),
+			Ltv:          utils.GetFloatPropOrZero(props, "derivedLtv"),
+			LtvCurrency:  enum.DecodeCurrency(utils.GetStringPropOrEmpty(props, "derivedLtvCurrency")),
+			ContactCount: utils.GetInt64PropOrZero(props, string(entity.OrganizationPropertyContactCount)),
 		},
 		OnboardingDetails: entity.OnboardingDetails{
 			Status:       utils.GetStringPropOrEmpty(props, "onboardingStatus"),
