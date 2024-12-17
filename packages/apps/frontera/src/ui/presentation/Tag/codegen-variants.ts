@@ -41,8 +41,8 @@ const variantsClasses: Record<string, (color: string) => string> = {
 };
 
 const sizeClasses: Record<string, string> = {
-  sm: 'px-2 text-xs',
-  md: 'px-2 text-sm',
+  sm: 'px-1 text-xs',
+  md: 'px-1 text-sm',
   lg: 'px-3 text-base',
 };
 
@@ -50,7 +50,7 @@ const tagCommonClasses = `[
   'w-fit',
   'flex',
   'items-center',
-  'rounded-[6px]',
+  'rounded-[4px]',
   'leading-none',
 ]`;
 
