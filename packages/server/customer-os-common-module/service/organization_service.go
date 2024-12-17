@@ -318,6 +318,13 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 			}
 		}
 		input.Hide = utils.BoolPtr(false)
+		if input.Stage == nil || utils.IfNotNilString(input.Stage) == "" {
+			input.Stage = utils.ToPtr(neo4jenum.Lead)
+		}
+		if input.Relationship == nil || utils.IfNotNilString(input.Relationship) == "" {
+			input.Relationship = utils.ToPtr(neo4jenum.OrganizationRelationshipProspect)
+		}
+
 	}
 
 	// generate customerOsId if not provided or if it is empty in the db
