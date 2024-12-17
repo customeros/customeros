@@ -93,7 +93,7 @@ const ClippedImage = ({
         <div
           role='img'
           aria-label={name}
-          className={`w-[24px] h-[26px] bg-cover bg-center`}
+          className={`w-[24px] h-[26px] bg-cover bg-center -mr-[0.5px]`}
           style={{
             backgroundImage: `url(${url})`,
             backgroundSize: 'contain',
