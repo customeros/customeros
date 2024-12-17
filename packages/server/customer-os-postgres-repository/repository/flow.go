@@ -103,6 +103,9 @@ func (f *flowRepository) Find(ctx context.Context, flowRecord entity.Flow) (*ent
 		Where("status != ?", enum.FlowStatusArchived).
 		First(&flow).Error
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
