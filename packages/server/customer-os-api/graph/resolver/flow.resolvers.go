@@ -7,8 +7,10 @@ package resolver
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/99designs/gqlgen/graphql"
+	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
@@ -17,6 +19,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
@@ -426,6 +429,57 @@ func (r *mutationResolver) FlowSenderDelete(ctx context.Context, id string) (*mo
 
 // FlowEmailActionTest is the resolver for the flowEmailActionTest field.
 func (r *mutationResolver) FlowEmailActionTest(ctx context.Context, subject string, bodyTemplate string, sendToEmailAddress string) (*model.Result, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.FlowEmailActionTest", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	mailboxUsername := fmt.Sprintf("bcc@%s.customeros.ai", strings.ToLower(tenant))
+	mailbox, err := r.Services.CommonServices.PostgresRepositories.TenantSettingsMailboxRepository.GetByMailbox(ctx, mailboxUsername)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "")
+		return &model.Result{Result: false}, err
+	}
+
+	if mailbox == nil {
+		err := r.Services.CommonServices.RegistrationService.ConfigureTestMailbox(ctx)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			graphql.AddErrorf(ctx, "")
+			return &model.Result{Result: false}, err
+		}
+	}
+
+	fromFirstName := "Test"
+	fromLastName := "Sender"
+
+	bp := bodyTemplate
+	bp = r.Services.CommonServices.FlowExecutionService.ReplacePlaceholder(bodyTemplate, "contact_first_name", "John")
+	bp = r.Services.CommonServices.FlowExecutionService.ReplacePlaceholder(bodyTemplate, "contact_last_name", "Doe")
+	bp = r.Services.CommonServices.FlowExecutionService.ReplacePlaceholder(bodyTemplate, "contact_email", "john.doe@acme.com")
+	bp = r.Services.CommonServices.FlowExecutionService.ReplacePlaceholder(bodyTemplate, "sender_first_name", fromFirstName)
+	bp = r.Services.CommonServices.FlowExecutionService.ReplacePlaceholder(bodyTemplate, "sender_last_name", fromLastName)
+	bp = r.Services.CommonServices.FlowExecutionService.ReplacePlaceholder(bodyTemplate, "organization_name", "Acme Inc")
+
+	err = r.Services.CommonServices.MailService.SendMail(ctx, &entity.EmailMessage{
+		Status:       entity.EmailMessageStatusScheduled,
+		Tenant:       tenant,
+		ProducerId:   uuid.NewString(),
+		ProducerType: "mailstack-test-email",
+		FromName:     fromFirstName + " " + fromLastName,
+		From:         mailboxUsername,
+		To:           []string{sendToEmailAddress},
+		Subject:      subject,
+		Content:      bp,
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "")
+		return &model.Result{Result: false}, err
+	}
+
 	return &model.Result{Result: true}, nil
 }
 
