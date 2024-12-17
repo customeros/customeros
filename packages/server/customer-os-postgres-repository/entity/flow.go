@@ -15,7 +15,7 @@ type Flow struct {
 	Status         string    `gorm:"column:status;type:varchar(50);not null;default:'inactive'" json:"status"`
 	CreatedAt      time.Time `gorm:"column:created_at;autoCreateTime" json:"createdAt"`
 	UpdatedAt      time.Time `gorm:"column:updated_at;autoUpdateTime" json:"updatedAt"`
-	CreatedBy      *string   `gorm:"column:created_by;type:varchar(255);not null" json:"createdBy"`
+	CreatedBy      *string   `gorm:"column:created_by;type:varchar(255)" json:"createdBy"`
 	LastModifiedBy *string   `gorm:"column:last_modified_by;type:varchar(255)" json:"lastModifiedBy"`
 }
 
