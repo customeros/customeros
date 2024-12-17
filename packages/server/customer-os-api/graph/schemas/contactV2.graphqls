@@ -16,13 +16,33 @@ type ContactUiDetails {
     timezone:               String!
     profilePhotoUrl:        String!
 
+    enrichedAt:               Time
+    enrichedFailedAt:         Time
+    enrichedRequestedAt:      Time
+    enrichedEmailRequestedAt: Time
+    enrichedEmailEnrichedAt:  Time
+    enrichedEmailFound:       Boolean
+
     linkedInInternalId:     ID
     linkedInUrl:            String
     linkedInAlias:          String
     linkedInExternalId:     String
     linkedInFollowerCount:  Int64
 
+    primaryOrganizationId:                 String
+    primaryOrganizationName:               String
+    primaryOrganizationJobRoleId:          String
+    primaryOrganizationJobRoleTitle:       String
+    primaryOrganizationJobRoleDescription: String
+    primaryOrganizationJobRoleStartDate:   Time
+    primaryOrganizationJobRoleEndDate:     Time
+
+    emails:                 [Email!]!
+    phones:                 [String!]! #list of rawPhoneNumber
     tags:                   [Tag!]!
+    locations:              [Location!]!
+    connectedUsers:         [ID!]!
+    flows:                  [ID!]!
 }
 
 type ContactSearchResult{
