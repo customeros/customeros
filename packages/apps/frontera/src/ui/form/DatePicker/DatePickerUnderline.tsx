@@ -1,8 +1,10 @@
 import { useRef, useState } from 'react';
 import { CalendarProps } from 'react-calendar';
 
+import { format } from 'date-fns';
+import { toZonedTime, fromZonedTime } from 'date-fns-tz'; // Correct methods
+
 import { cn } from '@ui/utils/cn';
-import { DateTimeUtils } from '@utils/date';
 import {
   Popover,
   PopoverContent,
@@ -28,18 +30,8 @@ export const DatePickerUnderline = ({
 
   const handleDateInputChange = (data?: Date) => {
     if (!data) return onChange(null);
-    const date = new Date(data);
 
-    const normalizedDate = new Date(
-      Date.UTC(
-        date.getFullYear(),
-        date.getMonth(),
-        date.getDate(),
-        date.getHours(),
-        date.getMinutes(),
-        date.getSeconds(),
-      ),
-    );
+    const normalizedDate = fromZonedTime(data, 'UTC');
 
     onChange(normalizedDate);
     setIsOpen(false);
@@ -49,6 +41,8 @@ export const DatePickerUnderline = ({
     sm: 'text-sm',
     md: 'text-md',
   };
+
+  const displayDate = value ? toZonedTime(new Date(value), 'UTC') : new Date();
 
   return (
     <div ref={containerRef} className='inline-flex flex-start items-center'>
@@ -64,9 +58,7 @@ export const DatePickerUnderline = ({
           )}
         >
           <span className='underline cursor-pointer whitespace-pre pb-[1px] text-inherit border-t-[1px] border-transparent hover:text-gray-700'>{`${
-            value
-              ? DateTimeUtils.format(value.toString(), DateTimeUtils.date)
-              : 'Select date'
+            value ? format(displayDate, 'dd MMM yyyy') : 'Select date'
           }`}</span>
         </PopoverTrigger>
         <PopoverContent
@@ -79,7 +71,7 @@ export const DatePickerUnderline = ({
           <div>
             <DatePicker
               {...rest}
-              value={value ? new Date(value) : new Date()}
+              value={displayDate}
               onChange={(date) => handleDateInputChange(date as Date)}
             />
           </div>
