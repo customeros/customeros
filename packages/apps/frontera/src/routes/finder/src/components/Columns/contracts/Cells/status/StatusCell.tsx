@@ -1,4 +1,5 @@
 import { ContractStatus } from '@graphql/types';
+import { Tag, TagLabel } from '@ui/presentation/Tag';
 
 interface StatusCellProps {
   className?: string;
@@ -8,19 +9,39 @@ interface StatusCellProps {
 export function renderStatusNode(type: ContractStatus | null | undefined) {
   switch (type) {
     case ContractStatus.Draft:
-      return <>Draft</>;
+      return (
+        <Tag variant='subtle' colorScheme='grayModern'>
+          <TagLabel>Draft</TagLabel>
+        </Tag>
+      );
 
     case ContractStatus.Live:
-      return <>Live</>;
+      return (
+        <Tag variant='subtle' colorScheme='success'>
+          <TagLabel>Live</TagLabel>
+        </Tag>
+      );
 
     case ContractStatus.Ended:
-      return <>Ended</>;
+      return (
+        <Tag variant='subtle' colorScheme='grayModern'>
+          <TagLabel>Ended</TagLabel>
+        </Tag>
+      );
 
     case ContractStatus.OutOfContract:
-      return <>Out of contract</>;
+      return (
+        <Tag variant='subtle' colorScheme='warning'>
+          <TagLabel>Out of contract</TagLabel>
+        </Tag>
+      );
 
     case ContractStatus.Scheduled:
-      return <>Scheduled</>;
+      return (
+        <Tag variant='subtle' colorScheme='primary'>
+          <TagLabel>Scheduled</TagLabel>
+        </Tag>
+      );
 
     default:
       return '';
