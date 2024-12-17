@@ -114,7 +114,7 @@
         },
         {
           "name": "Organizations with missing properties",
-          "query": "MATCH (o:Organization) WHERE o.hide IS NULL OR o.createdAt IS NULL RETURN count(o)",
+          "query": "MATCH (o:Organization) WHERE o.hide IS NULL OR o.createdAt IS NULL OR o.stage IS NULL OR o.stage = '' OR o.relationship IS NULL OR o.relationship = '' RETURN count(o)",
           "description": "Organization with missing mandatory (non-null) properties."
         },
         {
