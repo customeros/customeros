@@ -5,10 +5,11 @@ import (
 	"errors"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"gorm.io/gorm"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 )
 
 type FlowActionExecutionRepository interface {
@@ -56,10 +57,12 @@ func (f *flowActionExecutionRepository) Find(ctx context.Context, executionRecor
 		Where(&executionRecord).
 		First(&flowActionExecution).Error
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
-
 	return &flowActionExecution, nil
 }
 
