@@ -26,23 +26,12 @@ func GetFlows(s *service.Services) gin.HandlerFunc {
 			return
 		}
 
-		// validate tenant owns the flow specified in the path
-		flowId, belongsToTenant, err := validateFlowBelongsToTenant(c, s)
-		if err != nil {
-			rest.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer)
-			return
-		}
-		if !belongsToTenant {
-			rest.SendError(c, span, http.StatusNotFound, enum.ErrNotFound.WithMessage("unable to locate flow"))
-			return
-		}
-
 		query := entity.Flow{
-			ID:     flowId,
+			ID:     c.Param("flowId"),
 			Tenant: tenant,
 		}
 
-		switch flowId {
+		switch query.ID {
 		case "":
 			getAllFlows(c, s, query)
 		default:
