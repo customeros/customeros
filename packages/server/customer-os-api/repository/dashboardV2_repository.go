@@ -139,7 +139,7 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 				createNumberCypherFilter(filter, organizationFilter, "derivedLtv")
 			}
 			if filter.Filter.Property == model.ColumnViewTypeOrganizationsCountry.String() {
-				locationFilter.Filters = append(locationFilter.Filters, utils.CreateStringCypherFilter("country", filter.Filter.Value.Str, filter.Filter.Operation))
+				createInOrEmptyStringFilter(filter, locationFilter, "countryCodeA2")
 			}
 			if filter.Filter.Property == model.ColumnViewTypeOrganizationsCity.String() {
 				locationFilter.Filters = append(locationFilter.Filters, utils.CreateStringCypherFilter("locality", filter.Filter.Value.Str, filter.Filter.Operation))
@@ -751,7 +751,7 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 				primaryEmailFilter.Filters = append(contactFilter.Filters, innerGroupFilter)
 			}
 			if filter.Filter.Property == model.ColumnViewTypeContactsCountry.String() {
-				locationFilter.Filters = append(locationFilter.Filters, utils.CreateStringCypherFilter(string(neo4jentity.LocationPropertyCountry), filter.Filter.Value.Str, filter.Filter.Operation))
+				createInOrEmptyStringFilter(filter, locationFilter, "countryCodeA2")
 			}
 			if filter.Filter.Property == model.ColumnViewTypeContactsCity.String() {
 				locationFilter.Filters = append(locationFilter.Filters, utils.CreateStringCypherFilter(string(neo4jentity.LocationPropertyLocality), filter.Filter.Value.Str, filter.Filter.Operation))
@@ -1085,13 +1085,6 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 	//		aliases += "CASE WHEN o.derivedLtv <> \"\" and not o.derivedLtv is null THEN o.derivedLtv ELSE 9999999999999999 END as SORT_BY "
 	//	} else {
 	//		aliases += "CASE WHEN o.derivedLtv <> \"\" and not o.derivedLtv is null THEN o.derivedLtv ELSE -9999999999999999 END as SORT_BY "
-	//	}
-	//}
-	//if sort != nil && sort.By == model.ColumnViewTypeOrganizationsCountry.String() {
-	//	if sort.Direction == commonmodel.SortingDirectionAsc {
-	//		aliases += "CASE WHEN l.country <> \"\" and not l.country is null THEN toLower(l.country) ELSE 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz' END as SORT_BY "
-	//	} else {
-	//		aliases += "CASE WHEN l.country <> \"\" and not l.country is null THEN toLower(l.country) ELSE '' END as SORT_BY "
 	//	}
 	//}
 	//if sort != nil && sort.By == model.ColumnViewTypeOrganizationsCity.String() {
