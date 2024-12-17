@@ -26,7 +26,6 @@ import {
   ColumnViewType,
 } from '@graphql/types';
 
-import { SidePanel } from '../SidePanel';
 import { EmptyState } from '../EmptyState/EmptyState';
 import { computeFinderData } from './computeFinderData';
 import { computeFinderColumns } from './computeFinderColumns';
@@ -37,11 +36,7 @@ import {
   FlowSequencesTableActions,
 } from '../Actions';
 
-interface FinderTableProps {
-  isSidePanelOpen: boolean;
-}
-
-export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
+export const FinderTable = observer(() => {
   const store = useStore();
   const params = useParams();
   const [searchParams] = useSearchParams();
@@ -497,7 +492,6 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
           return <></>;
         }}
       />
-      {isSidePanelOpen && <SidePanel />}
       {store.ui.contactPreviewCardOpen && !store.ui.isSearching && (
         <ContactPreviewCard />
       )}

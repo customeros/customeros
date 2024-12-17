@@ -91,6 +91,7 @@ export const getDefaultValue = (): FlowSender => ({
     profilePhotoUrl: '',
     timezone: '',
     mailboxes: [],
+    mailboxesV2: [],
     onboarding: {
       showOnboardingPage: false,
       onboardingInboundStepCompleted: false,

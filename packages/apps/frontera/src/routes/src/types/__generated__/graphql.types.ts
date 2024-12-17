@@ -433,6 +433,7 @@ export enum ComparisonOperator {
   Lte = 'LTE',
   NotContains = 'NOT_CONTAINS',
   NotEquals = 'NOT_EQUALS',
+  NotIn = 'NOT_IN',
   StartsWith = 'STARTS_WITH',
 }
 
@@ -591,6 +592,13 @@ export type ContactParticipant = {
   type?: Maybe<Scalars['String']['output']>;
 };
 
+export type ContactSearchResult = {
+  __typename?: 'ContactSearchResult';
+  ids: Array<Scalars['ID']['output']>;
+  totalAvailable: Scalars['Int64']['output'];
+  totalElements: Scalars['Int64']['output'];
+};
+
 export type ContactTagInput = {
   contactId: Scalars['ID']['input'];
   tag: TagIdOrNameInput;
@@ -598,9 +606,18 @@ export type ContactTagInput = {
 
 export type ContactUiDetails = {
   __typename?: 'ContactUiDetails';
+  connectedUsers: Array<Scalars['ID']['output']>;
   createdAt: Scalars['Time']['output'];
   description: Scalars['String']['output'];
+  emails: Array<Email>;
+  enrichedAt?: Maybe<Scalars['Time']['output']>;
+  enrichedEmailEnrichedAt?: Maybe<Scalars['Time']['output']>;
+  enrichedEmailFound?: Maybe<Scalars['Boolean']['output']>;
+  enrichedEmailRequestedAt?: Maybe<Scalars['Time']['output']>;
+  enrichedFailedAt?: Maybe<Scalars['Time']['output']>;
+  enrichedRequestedAt?: Maybe<Scalars['Time']['output']>;
   firstName: Scalars['String']['output'];
+  flows: Array<Scalars['ID']['output']>;
   hide: Scalars['Boolean']['output'];
   id: Scalars['ID']['output'];
   lastName: Scalars['String']['output'];
@@ -609,8 +626,17 @@ export type ContactUiDetails = {
   linkedInFollowerCount?: Maybe<Scalars['Int64']['output']>;
   linkedInInternalId?: Maybe<Scalars['ID']['output']>;
   linkedInUrl?: Maybe<Scalars['String']['output']>;
+  locations: Array<Location>;
   name: Scalars['String']['output'];
+  phones: Array<Scalars['String']['output']>;
   prefix: Scalars['String']['output'];
+  primaryOrganizationId?: Maybe<Scalars['String']['output']>;
+  primaryOrganizationJobRoleDescription?: Maybe<Scalars['String']['output']>;
+  primaryOrganizationJobRoleEndDate?: Maybe<Scalars['Time']['output']>;
+  primaryOrganizationJobRoleId?: Maybe<Scalars['String']['output']>;
+  primaryOrganizationJobRoleStartDate?: Maybe<Scalars['Time']['output']>;
+  primaryOrganizationJobRoleTitle?: Maybe<Scalars['String']['output']>;
+  primaryOrganizationName?: Maybe<Scalars['String']['output']>;
   profilePhotoUrl: Scalars['String']['output'];
   tags: Array<Tag>;
   timezone: Scalars['String']['output'];
@@ -2259,6 +2285,7 @@ export type Mailbox = {
   rampUpMax: Scalars['Int']['output'];
   rampUpRate: Scalars['Int']['output'];
   scheduledEmails: Scalars['Int64']['output'];
+  usedInFlows: Scalars['Boolean']['output'];
   userId?: Maybe<Scalars['ID']['output']>;
 };
 
@@ -2467,7 +2494,6 @@ export type Mutation = {
   flow_Archive: Result;
   flow_ArchiveBulk: Result;
   flow_ChangeName: Flow;
-  flow_Dummy_1Email: Result;
   flow_Merge: Flow;
   flow_Off: Flow;
   flow_On: Flow;
@@ -2574,8 +2600,6 @@ export type Mutation = {
   user_RemoveRoleInTenant: User;
   user_Update: User;
   user_UpdateOnboardingDetails: User;
-  workflow_Create: Workflow;
-  workflow_Update: ActionResponse;
 };
 
 export type MutationAddTagArgs = {
@@ -2895,13 +2919,6 @@ export type MutationFlow_ArchiveBulkArgs = {
 export type MutationFlow_ChangeNameArgs = {
   id: Scalars['ID']['input'];
   name: Scalars['String']['input'];
-};
-
-export type MutationFlow_Dummy_1EmailArgs = {
-  contactsCount: Scalars['Int']['input'];
-  flowsCount: Scalars['Int']['input'];
-  mailboxForEachUserCount: Scalars['Int']['input'];
-  userCount: Scalars['Int']['input'];
 };
 
 export type MutationFlow_MergeArgs = {
@@ -3357,14 +3374,6 @@ export type MutationUser_UpdateArgs = {
 
 export type MutationUser_UpdateOnboardingDetailsArgs = {
   input: UserOnboardingDetailsInput;
-};
-
-export type MutationWorkflow_CreateArgs = {
-  input: WorkflowCreateInput;
-};
-
-export type MutationWorkflow_UpdateArgs = {
-  input: WorkflowUpdateInput;
 };
 
 export type Node = {
@@ -4185,13 +4194,12 @@ export type Query = {
   tenantSettings: TenantSettings;
   timelineEvents: Array<TimelineEvent>;
   ui_contacts: Array<ContactUiDetails>;
+  ui_contacts_search: ContactSearchResult;
   ui_organizations: Array<OrganizationUiDetails>;
   ui_organizations_search: OrganizationSearchResult;
   user: User;
   user_ByEmail: User;
   users: UserPage;
-  workflow_ByType: Workflow;
-  workflows: Array<Workflow>;
 };
 
 export type QueryAttachmentArgs = {
@@ -4424,6 +4432,12 @@ export type QueryUi_ContactsArgs = {
   ids?: InputMaybe<Array<Scalars['ID']['input']>>;
 };
 
+export type QueryUi_Contacts_SearchArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  sort?: InputMaybe<SortBy>;
+  where?: InputMaybe<Filter>;
+};
+
 export type QueryUi_OrganizationsArgs = {
   ids?: InputMaybe<Array<Scalars['ID']['input']>>;
 };
@@ -4446,10 +4460,6 @@ export type QueryUsersArgs = {
   pagination?: InputMaybe<Pagination>;
   sort?: InputMaybe<Array<SortBy>>;
   where?: InputMaybe<Filter>;
-};
-
-export type QueryWorkflow_ByTypeArgs = {
-  workflowType: WorkflowType;
 };
 
 export type Reminder = MetadataInterface & {
@@ -5059,6 +5069,7 @@ export type User = {
    */
   lastName: Scalars['String']['output'];
   mailboxes: Array<Scalars['String']['output']>;
+  mailboxesV2: Array<Mailbox>;
   name?: Maybe<Scalars['String']['output']>;
   onboarding: UserOnboardingDetails;
   phoneNumbers: Array<PhoneNumber>;
@@ -5177,35 +5188,4 @@ export type WebsiteCheckDetails = {
   globalOrganization?: Maybe<GlobalOrganization>;
   primary: Scalars['Boolean']['output'];
   primaryDomain: Scalars['String']['output'];
-};
-
-export type Workflow = Node & {
-  __typename?: 'Workflow';
-  actionParam1: Scalars['String']['output'];
-  condition: Scalars['String']['output'];
-  id: Scalars['ID']['output'];
-  live: Scalars['Boolean']['output'];
-  name?: Maybe<Scalars['String']['output']>;
-  type: WorkflowType;
-};
-
-export type WorkflowCreateInput = {
-  actionParam1?: InputMaybe<Scalars['String']['input']>;
-  condition?: InputMaybe<Scalars['String']['input']>;
-  live?: InputMaybe<Scalars['Boolean']['input']>;
-  name?: InputMaybe<Scalars['String']['input']>;
-  type: WorkflowType;
-};
-
-export enum WorkflowType {
-  IdealContactPersona = 'IDEAL_CONTACT_PERSONA',
-  IdealCustomerProfile = 'IDEAL_CUSTOMER_PROFILE',
-}
-
-export type WorkflowUpdateInput = {
-  actionParam1?: InputMaybe<Scalars['String']['input']>;
-  condition?: InputMaybe<Scalars['String']['input']>;
-  id: Scalars['ID']['input'];
-  live?: InputMaybe<Scalars['Boolean']['input']>;
-  name?: InputMaybe<Scalars['String']['input']>;
 };

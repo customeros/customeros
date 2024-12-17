@@ -126,7 +126,7 @@ const FlowContent = observer(
               </div>
             </div>
 
-            <FinderTable isSidePanelOpen={false} />
+            <FinderTable />
           </div>
         )}
         <div

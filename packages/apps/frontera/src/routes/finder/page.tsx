@@ -103,7 +103,7 @@ export const FinderPage = observer(() => {
             )}
           </div>
         </div>
-        <FinderTable isSidePanelOpen={open} />
+        <FinderTable />
         <Preview />
       </div>
     </div>

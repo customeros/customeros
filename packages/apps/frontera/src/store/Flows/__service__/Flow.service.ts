@@ -19,6 +19,7 @@ import MergeFlowDocument from './flowMerge.graphql';
 import ArchiveFlowDocument from './flowArchive.graphql';
 import FlowChangeNameDocument from './flowChangeName.graphql';
 import ArchiveFlowBulkDocument from './flowArchiveBulk.graphql';
+import SendTestEmailDocument from './flowEmailActionTest.graphql';
 import { FlowOnMutation, FlowOnMutationVariables } from './flowOn.generated.ts';
 import {
   FlowOffMutation,
@@ -32,7 +33,10 @@ import {
   FlowArchiveMutation,
   FlowArchiveMutationVariables,
 } from './flowArchive.generated.ts';
-
+import {
+  FlowEmailActionTestMutation,
+  FlowEmailActionTestMutationVariables,
+} from './flowEmailActionTest.generated.ts';
 class FlowService {
   private static instance: FlowService | null = null;
   private transport: Transport;
@@ -102,6 +106,13 @@ class FlowService {
       FlowOffMutation,
       FlowOffMutationVariables
     >(FlowOffDocument, payload);
+  }
+
+  async sendTestEmail(payload: FlowEmailActionTestMutationVariables) {
+    return this.transport.graphql.request<
+      FlowEmailActionTestMutation,
+      FlowEmailActionTestMutationVariables
+    >(SendTestEmailDocument, payload);
   }
 }
 
