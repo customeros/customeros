@@ -161,7 +161,7 @@ func (s *trackingService) buildSlackNotification(record *entity.Tracking, global
 	}
 	lowercaseWebsite := strings.ToLower(primaryDomain)
 	if !strings.HasPrefix(lowercaseWebsite, "http://") && !strings.HasPrefix(lowercaseWebsite, "https://") {
-		website = "https://" + website
+		website = "https://" + primaryDomain
 	}
 	name := globalOrg.Name
 	if name == "" {
