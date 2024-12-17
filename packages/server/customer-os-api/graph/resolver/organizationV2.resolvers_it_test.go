@@ -282,6 +282,8 @@ func TestQueryResolver_UIOrganizationsSearch_FilterByStage(t *testing.T) {
 	assertSearch(t, searchBy, []string{enum.Trial.String()}, commonModel.ComparisonOperatorIn, 4, 1)
 	assertSearch(t, searchBy, []string{enum.Lead.String()}, commonModel.ComparisonOperatorIn, 4, 2)
 	assertSearch(t, searchBy, []string{enum.Trial.String(), enum.Lead.String()}, commonModel.ComparisonOperatorIn, 4, 3)
+	assertSearch(t, searchBy, []string{enum.Trial.String()}, commonModel.ComparisonOperatorNotIn, 4, 3)
+	assertSearch(t, searchBy, []string{enum.Lead.String()}, commonModel.ComparisonOperatorNotIn, 4, 2)
 }
 
 func TestQueryResolver_UIOrganizationsSearch_FilterBySocials(t *testing.T) {

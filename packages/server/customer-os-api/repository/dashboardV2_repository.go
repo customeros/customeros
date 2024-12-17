@@ -780,9 +780,6 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 			//if filter.Filter.Property == model.ColumnViewTypeOrganizationsLastTouchpointDate.String() {
 			//	createTimeFilter(filter, contactFilter, "lastTouchpointAt")
 			//}
-			//if filter.Filter.Property == model.ColumnViewTypeOrganizationsStage.String() {
-			//	createInOrEmptyStringFilter(filter, contactFilter, "stage")
-			//}
 			//if filter.Filter.Property == model.ColumnViewTypeOrganizationsSocials.String() {
 			//	socialFilter.Filters = append(socialFilter.Filters, utils.CreateStringCypherFilter("url", filter.Filter.Value.Str, filter.Filter.Operation))
 			//}
@@ -1029,13 +1026,6 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 	//		aliases += "CASE WHEN o.lastTouchpointAt <> \"\" and not o.lastTouchpointAt is null THEN o.lastTouchpointAt ELSE datetime({year:2100}) END as SORT_BY "
 	//	} else {
 	//		aliases += "CASE WHEN o.lastTouchpointAt <> \"\" and not o.lastTouchpointAt is null THEN o.lastTouchpointAt ELSE datetime({year:1900}) END as SORT_BY "
-	//	}
-	//}
-	//if sort != nil && sort.By == model.ColumnViewTypeOrganizationsStage.String() {
-	//	if sort.Direction == commonmodel.SortingDirectionAsc {
-	//		aliases += "CASE WHEN o.stage <> \"\" and not o.stage is null THEN toLower(o.stage) ELSE 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz' END as SORT_BY "
-	//	} else {
-	//		aliases += "CASE WHEN o.stage <> \"\" and not o.stage is null THEN toLower(o.stage) ELSE '' END as SORT_BY "
 	//	}
 	//}
 	//if sort != nil && sort.By == model.ColumnViewTypeOrganizationsLeadSource.String() {
