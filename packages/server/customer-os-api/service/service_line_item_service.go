@@ -627,11 +627,11 @@ func (s *serviceLineItemService) Close(ctx context.Context, serviceLineItemId st
 		return err
 	}
 
-	// First remove any future SLI
-	sliEntities, err := s.services.CommonServices.ServiceLineItemService.GetServiceLineItemsForContract(ctx, contractEntity.Id)
+	// First remove any future SLI with same parent ID
+	sliEntities, err := s.services.CommonServices.ServiceLineItemService.GetServiceLineItemsByParentId(ctx, sliEntity.ParentID)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("Error on getting service line items for contract {%s}: %s", contractEntity.Id, err.Error())
+		s.log.Errorf("Error on getting service line items by parent id {%s}: %s", sliEntity.ParentID, err.Error())
 		return err
 	}
 	for _, sli := range *sliEntities {
