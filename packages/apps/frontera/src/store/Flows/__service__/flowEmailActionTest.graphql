@@ -1,0 +1,13 @@
+mutation flowEmailActionTest(
+$subject: String!
+$bodyTemplate: String!
+$sendToEmailAddress: String!
+) {
+  flowEmailActionTest(
+    subject:$subject,
+    bodyTemplate:$bodyTemplate,
+    sendToEmailAddress:$sendToEmailAddress,
+  ) {
+    result
+  }
+}

@@ -7,7 +7,7 @@ import { inPlaceSort } from 'fast-sort';
 import { SortingState } from '@tanstack/table-core';
 import { TableViewDefStore } from '@store/TableViewDefs/TableViewDef.store';
 
-import { TableIdType, WorkflowType, TableViewType } from '@graphql/types';
+import { TableIdType, TableViewType } from '@graphql/types';
 
 import { getFlowsFilterFns, getFlowsColumnSortFn } from '../Columns/flows';
 import {
@@ -48,13 +48,6 @@ export const computeFinderData = (
   const preset = tableViewDef.value.id;
   const tableType =
     tableViewDef?.value.tableType || TableViewType.Organizations;
-
-  const getWorkFlow = store.workFlows
-    .toArray()
-    .filter((wf) => wf.value.type === WorkflowType.IdealCustomerProfile);
-
-  const getWorkFlowId = getWorkFlow.map((wf) => wf.value.id);
-  const _workFlow = store.workFlows.getByType(getWorkFlowId[0]);
 
   return match(tableType)
     .with(TableViewType.Organizations, () => {
