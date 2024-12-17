@@ -96,7 +96,7 @@ func buildTransitionRecords(ctx context.Context, span opentracing.Span, s *servi
 			Type: from.FromNodeType,
 		}
 
-		enumType, err := commonEnum.GetFlowNodeType(from.FromNode)
+		enumType, err := commonEnum.GetFlowNodeType(from.FromNodeType)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			continue
