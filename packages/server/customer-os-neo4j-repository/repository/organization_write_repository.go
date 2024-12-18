@@ -801,7 +801,7 @@ func (r *organizationWriteRepository) RefreshContactCountByContactId(ctx context
 				OPTIONAL MATCH (org)--(:JobRole)--(c:Contact)
 				WHERE c.hide=false OR c.hide IS NULL
 			WITH org, COUNT(DISTINCT c) AS contactCount
-				SET org.derivedContactCount = contactCount`
+				SET org.derivedContactCount = contactCount, org.updatedAt = datetime()`
 	params := map[string]any{
 		"tenant":    tenant,
 		"contactId": contactId,
