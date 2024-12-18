@@ -79,7 +79,6 @@ const defaultValue: User = {
   profilePhotoUrl: '',
   timezone: '',
   mailboxes: [],
-  mailboxesV2: [],
   onboarding: {
     onboardingCrmStepCompleted: false,
     onboardingInboundStepCompleted: false,
