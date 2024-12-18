@@ -13,7 +13,7 @@ import { CommandSubItem } from '@ui/overlay/CommandMenu';
 export const OwnerSubItemGroup = observer(() => {
   const store = useStore();
   const context = store.ui.commandMenu.context;
-  const users = store.users.toArray();
+  const users = store.users.tenantUsers;
 
   const entity = match(context.entity)
     .returnType<

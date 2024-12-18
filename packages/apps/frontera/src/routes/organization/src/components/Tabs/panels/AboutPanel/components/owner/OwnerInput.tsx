@@ -15,14 +15,12 @@ interface OwnerProps {
 
 export const OwnerInput = observer(({ id, owner, dataTest }: OwnerProps) => {
   const store = useStore();
-  const users = store.users.toComputedArray((arr) => {
-    return arr.filter(
-      (e) =>
-        Boolean(e.value.firstName) ||
-        Boolean(e.value.lastName) ||
-        Boolean(e.value.name),
-    );
-  });
+  const users = store.users.tenantUsers.filter(
+    (e) =>
+      Boolean(e.value.firstName) ||
+      Boolean(e.value.lastName) ||
+      Boolean(e.value.name),
+  );
 
   const options = users
     ?.map((user) => ({

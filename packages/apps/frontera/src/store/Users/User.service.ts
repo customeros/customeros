@@ -49,6 +49,8 @@ const USERS_QUERY = gql`
         profilePhotoUrl
         mailboxes
         bot
+        internal
+        test
         timezone
         hasLinkedInToken
         emails {

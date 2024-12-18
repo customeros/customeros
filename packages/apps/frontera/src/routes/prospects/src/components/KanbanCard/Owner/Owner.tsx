@@ -26,7 +26,7 @@ export const Owner = observer(({ ownerId, opportunityId }: OwnerProps) => {
   const contentRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
   const user = store.users.value.get(ownerId ?? '');
-  const users = store.users.toArray();
+  const users = store.users.tenantUsers;
 
   const options = users.map((user) => ({
     label: user?.name,

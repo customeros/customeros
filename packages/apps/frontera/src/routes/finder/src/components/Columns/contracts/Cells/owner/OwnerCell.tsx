@@ -26,14 +26,12 @@ export const OwnerCell = observer(({ id }: OwnerProps) => {
 
   const owner = opportunity?.value?.owner;
 
-  const users = store.users.toComputedArray((arr) => {
-    return arr.filter(
-      (e) =>
-        Boolean(e.value.firstName) ||
-        Boolean(e.value.lastName) ||
-        Boolean(e.value.name),
-    );
-  });
+  const users = store.users.tenantUsers.filter(
+    (e) =>
+      Boolean(e.value.firstName) ||
+      Boolean(e.value.lastName) ||
+      Boolean(e.value.name),
+  );
 
   const options = users
     ?.map((user) => ({

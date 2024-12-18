@@ -12,7 +12,7 @@ import { Command, CommandItem, CommandInput } from '@ui/overlay/CommandMenu';
 export const AssignOwner = observer(() => {
   const store = useStore();
   const context = store.ui.commandMenu.context;
-  const users = store.users.toArray();
+  const users = store.users.tenantUsers;
 
   const entity = match(context.entity)
     .returnType<
