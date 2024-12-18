@@ -20,6 +20,8 @@ const (
 	OrganizationPropertyIndustryCheckedAt         OrganizationProperty = "techIndustryCheckedAt"
 	OrganizationPropertyCheckedAt                 OrganizationProperty = "techCheckedAt"
 	OrganizationPropertyLastTouchpointRequestedAt OrganizationProperty = "techLastTouchpointRequestedAt"
+	OrganizationPropertyLastTouchpointType        OrganizationProperty = "lastTouchpointType"
+	OrganizationPropertyLastTouchpointAt          OrganizationProperty = "lastTouchpointAt"
 	OrganizationPropertyIcpFit                    OrganizationProperty = "icpFit"
 	OrganizationPropertyHiddenAt                  OrganizationProperty = "hiddenAt"
 	OrganizationPropertyEnrichRequestedAt         OrganizationProperty = "techEnrichRequestedAt"
