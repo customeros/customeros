@@ -33,20 +33,8 @@ export const RenewalForecastCell = observer(
   ({ id }: RenewalForecastCellProps) => {
     const store = useStore();
     const [isEditing, setIsEditing] = useState(false);
-
     const organization = store.organizations.getById(id);
     const contractCount = organization?.value?.contracts?.length;
-
-    if (!contractCount) {
-      return (
-        <span
-          className='text-gray-400'
-          data-test='organization-arr-forecast-in-all-orgs-table'
-        >
-          No contract
-        </span>
-      );
-    }
 
     const amount = organization?.value?.renewalSummaryArrForecast ?? null;
     const potentialAmount =
@@ -59,6 +47,17 @@ export const RenewalForecastCell = observer(
     })();
 
     const [value, setValue] = useState(initialValue);
+
+    if (!contractCount) {
+      return (
+        <span
+          className='text-gray-400'
+          data-test='organization-arr-forecast-in-all-orgs-table'
+        >
+          No contract
+        </span>
+      );
+    }
 
     const formattedAmount =
       amount !== null && amount >= 0
