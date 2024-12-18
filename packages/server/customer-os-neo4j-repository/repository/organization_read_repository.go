@@ -15,6 +15,10 @@ import (
 	"time"
 )
 
+const (
+	Relationship_Subsidiary = "SUBSIDIARY_OF"
+)
+
 type TenantAndOrganizationId struct {
 	Tenant         string
 	OrganizationId string
@@ -55,12 +59,14 @@ type OrganizationReadRepository interface {
 	GetOrganizationsForEnrichByDomain(ctx context.Context, limit, delayInMinutes int) ([]TenantAndOrganizationIdExtended, error)
 	GetOrganizationsForAdjustIndustry(ctx context.Context, delayInMinutes, limit int, validIndustries []string) ([]TenantAndOrganizationId, error)
 	GetOrganizationsForUpdateLastTouchpoint(ctx context.Context, limit, delayFromPreviousCheckMin int) ([]TenantAndOrganizationId, error)
-	GetLatestOrganizationWithJobRoleForContacts(ctx context.Context, tenant string, contactIds []string) ([]*utils.DbNodePairAndId, error)
+	GetPrimaryOrganizationsWithJobRoleForContacts(ctx context.Context, tenant string, contactIds []string) ([]*utils.DbNodePairAndId, error)
 	GetHiddenOrganizationIds(ctx context.Context, tenant string, hiddenAfter time.Time) ([]string, error)
 	GetMergedOrganizationIds(ctx context.Context, tenant string, mergedAfter time.Time) ([]string, error)
 	GetOrganizationsWithEmail(ctx context.Context, tenant, email string) ([]*dbtype.Node, error)
 	GetOrganizationsToCheck(ctx context.Context, minutesSinceLastUpdate, hoursSinceLastCheck, limit int) ([]TenantAndOrganization, error)
 	GetActiveOrganizationIdsByDomain(ctx context.Context, tenant string, domains []string) (map[string]string, error)
+	GetLinkedSubOrganizations(ctx context.Context, tenant string, parentOrganizationIds []string, relationName string) ([]*utils.DbNodeWithRelationAndId, error)
+	GetLinkedParentOrganizations(ctx context.Context, tenant string, organizationIds []string, relationName string) ([]*utils.DbNodeWithRelationAndId, error)
 }
 
 type organizationReadRepository struct {
@@ -1142,25 +1148,16 @@ func (r *organizationReadRepository) GetOrganizationsForUpdateLastTouchpoint(ctx
 	return output, nil
 }
 
-func (r *organizationReadRepository) GetLatestOrganizationWithJobRoleForContacts(ctx context.Context, tenant string, contactIds []string) ([]*utils.DbNodePairAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetLatestOrganizationWithJobRoleForContacts")
+func (r *organizationReadRepository) GetPrimaryOrganizationsWithJobRoleForContacts(ctx context.Context, tenant string, contactIds []string) ([]*utils.DbNodePairAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetPrimaryOrganizationsWithJobRoleForContacts")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
 	tracing.TagTenant(span, tenant)
 	span.LogFields(log.Object("contactIds", contactIds))
 
-	cypher := `MATCH (:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)-[:WORKS_AS]->(j:JobRole)-[:ROLE_IN]->(o:Organization)
+	cypher := `MATCH (:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)-[:WORKS_AS]->(j:JobRole {primary:true})-[:ROLE_IN]->(o:Organization)
 				WHERE c.id IN $contactIds
-				WITH c, o, j
-				ORDER BY 
-  					CASE 
-    					WHEN j.endedAt IS NULL THEN 1 
-    					ELSE 0 
-  					END DESC, 
-  					j.endedAt DESC, 
-  					j.startedAt DESC
-				WITH c, COLLECT(o)[0] AS latestOrganization, COLLECT(j)[0] AS latestJobRole
-				RETURN latestOrganization, latestJobRole, c.id`
+				RETURN o, j, c.id`
 	params := map[string]any{
 		"tenant":     tenant,
 		"contactIds": contactIds,
@@ -1370,4 +1367,70 @@ func (r *organizationReadRepository) GetActiveOrganizationIdsByDomain(ctx contex
 		output[v.Values[0].(string)] = v.Values[1].(string)
 	}
 	return output, err
+}
+
+func (r *organizationReadRepository) GetLinkedSubOrganizations(ctx context.Context, tenant string, parentOrganizationIds []string, relationName string) ([]*utils.DbNodeWithRelationAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetLinkedSubOrganizations")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
+
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(parent:Organization)<-[rel:%s]-(org:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(t)
+								WHERE parent.id IN $parentOrganizationIds
+								RETURN org, rel, parent.id ORDER BY org.name`, relationName)
+	params := map[string]any{
+		"tenant":                tenant,
+		"parentOrganizationIds": parentOrganizationIds,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsAsDbNodeWithRelationAndId(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.([]*utils.DbNodeWithRelationAndId), err
+}
+
+func (r *organizationReadRepository) GetLinkedParentOrganizations(ctx context.Context, tenant string, organizationIds []string, relationName string) ([]*utils.DbNodeWithRelationAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetLinkedParentOrganizations")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
+
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(sub:Organization)-[rel:%s]->(org:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(t)
+			WHERE sub.id IN $organizationIds
+			RETURN org, rel, sub.id ORDER BY org.name`, relationName)
+	params := map[string]any{
+		"tenant":          tenant,
+		"organizationIds": organizationIds,
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsAsDbNodeWithRelationAndId(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.([]*utils.DbNodeWithRelationAndId), err
 }

@@ -44,7 +44,7 @@ export const EmailCell = observer(
         ?.id;
 
     const domains =
-      activeOrgId && store.organizations.value.get(activeOrgId)?.value?.domains;
+      activeOrgId && store.organizations.getById(activeOrgId)?.value?.domains;
     const orgActive =
       contactStore?.value.latestOrganizationWithJobRole?.organization?.name;
 

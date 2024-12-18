@@ -40,6 +40,7 @@ type CypherFilterItem struct {
 	DbNodePropertyProps  map[string]string
 	ComparisonOperator   model.ComparisonOperator
 	Coalesce             bool
+	RawCypher            string
 }
 
 type CypherFilter struct {
@@ -95,6 +96,13 @@ func CreateCypherFilter(propertyName string, searchTerm any, comparator model.Co
 	filter.Details.Value = &searchTerm
 	filter.Details.ComparisonOperator = comparator
 	filter.Details.SupportCaseSensitive = false
+	return &filter
+}
+
+func CreateRawCypherFilter(rawCypher string) *CypherFilter {
+	filter := CypherFilter{}
+	filter.Details = new(CypherFilterItem)
+	filter.Details.RawCypher = rawCypher
 	return &filter
 }
 
@@ -255,8 +263,9 @@ func (f *CypherFilter) BuildCypherFilterFragmentWithParamName(nodeAlias string, 
 		}
 		cypherStr.WriteString(")")
 	} else {
-
-		if f.Details.ComparisonOperator == model.ComparisonOperatorCountRelation {
+		if f.Details.RawCypher != "" {
+			cypherStr.WriteString(f.Details.RawCypher)
+		} else if f.Details.ComparisonOperator == model.ComparisonOperatorCountRelation {
 			cypherStr.WriteString(f.Details.NodeProperty) //hack. you need the full condition here
 		} else {
 			toLower := f.Details.SupportCaseSensitive && !f.Details.CaseSensitive

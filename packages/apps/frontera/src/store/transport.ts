@@ -1,6 +1,13 @@
+import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
+
 import { Socket, Channel } from 'phoenix';
 import axios, { AxiosInstance } from 'axios';
-import { GraphQLClient } from 'graphql-request';
+import {
+  Variables,
+  GraphQLClient,
+  RequestDocument,
+  resolveRequestDocument,
+} from 'graphql-request';
 
 import { LatestDiff } from './types';
 
@@ -20,7 +27,7 @@ const defaultGraphqlHeaders: Record<string, string> = isTestMode
 
 export class Transport {
   http: AxiosInstance;
-  graphql: GraphQLClient;
+  graphql: TracedGraphQLClient;
   socket: Socket | null = null;
   refId: string = crypto.randomUUID();
   channels: Map<string, Channel> = new Map();
@@ -127,12 +134,74 @@ function createHttpClient(headers?: Record<string, string>) {
   return instance;
 }
 
+class TracedGraphQLClient {
+  private client: GraphQLClient;
+
+  constructor(endpoint: string, options: Record<string, unknown>) {
+    this.client = new GraphQLClient(endpoint, options);
+  }
+
+  async request<T, V extends Variables = Variables>(
+    query: RequestDocument | TypedDocumentNode<T, V>,
+    variables?: V,
+  ) {
+    const reqId = crypto.randomUUID();
+    let err: string | null = null;
+    let data: T | null = null;
+
+    // if (typeof query === 'string') {
+    //   console.log('AICI-> ', query);
+    // }
+
+    const { operationName } = resolveRequestDocument(query);
+
+    // console.log(
+    //   query?.definitions[0]?.operation,
+    //   query?.definitions[0]?.name?.value,
+    // );
+
+    try {
+      window.dispatchEvent(
+        new CustomEvent('gql-req', {
+          detail: {
+            reqId,
+            name: operationName,
+            variables,
+          },
+        }),
+      );
+
+      const response = await this.client.request<T>(
+        query,
+        variables as unknown as Record<string, unknown>,
+      );
+
+      data = response;
+
+      return response;
+    } catch (error) {
+      err = error instanceof Error ? error.message : null;
+      throw error;
+    } finally {
+      window.dispatchEvent(
+        new CustomEvent('gql-res', {
+          detail: {
+            reqId,
+            data,
+            errors: err,
+          },
+        }),
+      );
+    }
+  }
+}
+
 function createGraphqlClient(headers?: Record<string, string>) {
   const url = isTestMode
     ? import.meta.env.VITE_TEST_API_URL
     : `${import.meta.env.VITE_MIDDLEWARE_API_URL}/customer-os-api`;
 
-  return new GraphQLClient(url, {
+  return new TracedGraphQLClient(url, {
     headers,
   });
 }

@@ -181,9 +181,9 @@ func (c *contactListenerImpl) enrichContact(ctx context.Context, contactId, link
 		}
 
 		// prepare organization name for searching person
-		result, err := c.services.Neo4jRepositories.OrganizationReadRepository.GetLatestOrganizationWithJobRoleForContacts(ctx, tenant, []string{contactId})
+		result, err := c.services.Neo4jRepositories.OrganizationReadRepository.GetPrimaryOrganizationsWithJobRoleForContacts(ctx, tenant, []string{contactId})
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "OrganizationReadRepository.GetLatestOrganizationWithJobRoleForContacts"))
+			tracing.TraceErr(span, errors.Wrap(err, "OrganizationReadRepository.GetPrimaryOrganizationsWithJobRoleForContacts"))
 		}
 		var organizationEntity *neo4jentity.OrganizationEntity
 		if len(result) > 0 && result[0].Pair.First != nil {

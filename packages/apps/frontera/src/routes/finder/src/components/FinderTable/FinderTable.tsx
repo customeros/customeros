@@ -26,7 +26,6 @@ import {
   ColumnViewType,
 } from '@graphql/types';
 
-import { SidePanel } from '../SidePanel';
 import { EmptyState } from '../EmptyState/EmptyState';
 import { computeFinderData } from './computeFinderData';
 import { computeFinderColumns } from './computeFinderColumns';
@@ -37,11 +36,7 @@ import {
   FlowSequencesTableActions,
 } from '../Actions';
 
-interface FinderTableProps {
-  isSidePanelOpen: boolean;
-}
-
-export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
+export const FinderTable = observer(() => {
   const store = useStore();
   const params = useParams();
   const [searchParams] = useSearchParams();
@@ -221,10 +216,18 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
     }
   }, [location.state?.fromOnboarding]);
 
+  const totalItems = match(tableType)
+    .returnType<number>()
+    .with(
+      TableViewType.Organizations,
+      () => store.organizations?.availableCounts.get(preset ?? '') ?? 0,
+    )
+    .otherwise(() => data.length ?? 50);
+
   useEffect(() => {
-    store.ui.setSearchCount(data.length);
+    store.ui.setSearchCount(totalItems);
     store.ui.setFilteredTable(data);
-  }, [data.length]);
+  }, [data.length, store.organizations?.totalElements]);
 
   const isEditing = store.ui.isEditingTableCell;
   const isFiltering = store.ui.isFilteringTable;
@@ -233,8 +236,13 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
 
   const [targetInvoiceNumber, targetInvoiceEmail] = match(tableType)
     .with(TableViewType.Invoices, () => {
-      const invoice = data?.find((i) => i.value!.metadata.id === targetId)
-        ?.value as Invoice;
+      const invoice = data?.find((i) => {
+        if ('metadata' in i.value) {
+          return i.value!.metadata.id === targetId;
+        } else {
+          return i.value.id === targetId;
+        }
+      })?.value as Invoice;
 
       const targetInvoiceNumber = invoice?.invoiceNumber || '';
       const targetInvoiceEmail = invoice?.customer?.email || '';
@@ -357,9 +365,8 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
 
   const checkIfEmpty = () => {
     return match(tableType)
-      .with(
-        TableViewType.Organizations,
-        () => store.organizations?.totalElements === 0,
+      .with(TableViewType.Organizations, () =>
+        preset ? store.organizations?.totalElements === 0 : true,
       )
       .with(TableViewType.Contacts, () => {
         if (tableId === TableIdType.FlowContacts && params.id) {
@@ -385,15 +392,14 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
       {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
       <Table<any>
         data={data}
-        canFetchMore
         manualFiltering
         sorting={sorting}
         columns={columns}
         tableRef={tableRef}
         rowHeight={rowHeight}
+        totalItems={totalItems}
         getRowId={(row) => row.id}
         enableColumnResizing={true}
-        totalItems={data.length ?? 40}
         onSortingChange={handleSortChange}
         onResizeColumn={handleColumnSizing}
         onSelectionChange={onSelectionChange}
@@ -402,15 +408,13 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
         dataTest={`finder-table-${tableType}`}
         isLoading={store.organizations.isLoading}
         fullRowSelection={tableType === TableViewType.Invoices}
+        canFetchMore={!!preset && store.organizations.canLoadNext(preset)}
+        onFetchMore={() => {
+          store.organizations.loadNext(preset!);
+        }}
         enableKeyboardShortcuts={
           !isEditing && !isFiltering && !isCommandMenuPrompted
         }
-        onFetchMore={() => {
-          store.organizations.setActiveRange(
-            0,
-            store.organizations.range[1] + 40,
-          );
-        }}
         enableTableActions={
           tableType &&
           [TableViewType.Invoices, TableViewType.Contracts].includes(tableType)
@@ -497,7 +501,6 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
           return <></>;
         }}
       />
-      {isSidePanelOpen && <SidePanel />}
       {store.ui.contactPreviewCardOpen && !store.ui.isSearching && (
         <ContactPreviewCard />
       )}

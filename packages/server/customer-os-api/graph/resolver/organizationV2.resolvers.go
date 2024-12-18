@@ -15,6 +15,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	opentracing "github.com/opentracing/opentracing-go"
 )
 
@@ -29,12 +31,13 @@ func (r *queryResolver) UIOrganizations(ctx context.Context, ids []string) ([]*m
 	mapResponse := map[string]*model.OrganizationUIDetails{}
 	for _, id := range ids {
 		mapResponse[id] = &model.OrganizationUIDetails{
-			ID:          id,
-			Contacts:    make([]string, 0),
-			Contracts:   make([]string, 0),
-			SocialMedia: make([]*model.Social, 0),
-			Tags:        make([]*model.Tag, 0),
-			Locations:   make([]*model.Location, 0),
+			ID:           id,
+			Contacts:     make([]string, 0),
+			Contracts:    make([]string, 0),
+			SocialMedia:  make([]*model.Social, 0),
+			Tags:         make([]*model.Tag, 0),
+			Locations:    make([]*model.Location, 0),
+			Subsidiaries: make([]string, 0),
 		}
 	}
 
@@ -202,12 +205,51 @@ func (r *queryResolver) UIOrganizations(ctx context.Context, ids []string) ([]*m
 		}
 	}(&mapResponse)
 
+	wg.Add(1)
+	go func(resp *map[string]*model.OrganizationUIDetails) {
+		span, ctx := opentracing.StartSpanFromContext(ctx, "QueryResolver.UIOrganizations.GetSubsidiaries")
+		defer span.Finish()
+		defer wg.Done()
+		tracing.SetDefaultResolverSpanTags(ctx, span)
+
+		subsidiaries, err := r.Services.Repositories.Neo4jRepositories.OrganizationReadRepository.GetLinkedSubOrganizations(ctx, tenant, ids, neo4jrepository.Relationship_Subsidiary)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			setError(err)
+			return
+		}
+
+		for _, sub := range subsidiaries {
+			(*resp)[sub.LinkedNodeId].Subsidiaries = append((*resp)[sub.LinkedNodeId].Subsidiaries, utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*sub.Node), "id"))
+		}
+	}(&mapResponse)
+
+	wg.Add(1)
+	go func(resp *map[string]*model.OrganizationUIDetails) {
+		span, ctx := opentracing.StartSpanFromContext(ctx, "QueryResolver.UIOrganizations.GetParents")
+		defer span.Finish()
+		defer wg.Done()
+		tracing.SetDefaultResolverSpanTags(ctx, span)
+
+		parents, err := r.Services.Repositories.Neo4jRepositories.OrganizationReadRepository.GetLinkedParentOrganizations(ctx, tenant, ids, neo4jrepository.Relationship_Subsidiary)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			setError(err)
+			return
+		}
+
+		for _, par := range parents {
+			(*resp)[par.LinkedNodeId].ParentID = utils.StringPtr(utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*par.Node), "id"))
+			(*resp)[par.LinkedNodeId].ParentName = utils.StringPtr(utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*par.Node), string(neo4jentity.OrganizationPropertyName)))
+		}
+	}(&mapResponse)
+
 	wg.Wait()
 
 	if firstErr != nil {
 		tracing.TraceErr(opentracing.SpanFromContext(ctx), firstErr)
-		r.log.Errorf("Failed to get organizations: %v", firstErr)
-		graphql.AddErrorf(ctx, "Failed to get organizations: %v", firstErr)
+		r.log.Errorf("Failed to get organizations: %w", firstErr)
+		graphql.AddErrorf(ctx, "Failed to get organizations: %w", firstErr)
 		return nil, nil
 	}
 

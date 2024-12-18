@@ -223,5 +223,10 @@ func (s *syncService) GetEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTr
 		return "", fmt.Errorf("unable to create contact linked to organization: %s", err.Error())
 	}
 
+	err = s.services.Neo4jRepositories.OrganizationWriteRepository.RefreshContactCountByOrgId(ctx, &tx, tenant, organizationId)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "unable to refresh contact count by org id"))
+	}
+
 	return emailId, nil
 }

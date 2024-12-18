@@ -13,8 +13,7 @@ export const RenewalLikelihoodCell = observer(
   ({ id }: RenewalLikelihoodCellProps) => {
     const store = useStore();
     const organization = store.organizations.getById(id);
-    const value =
-      organization?.value?.accountDetails?.renewalSummary?.renewalLikelihood;
+    const value = organization?.value?.renewalSummaryRenewalLikelihood;
 
     const colors = value ? getLikelihoodColor(value) : 'text-gray-400';
 

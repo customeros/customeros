@@ -7,7 +7,9 @@ interface LtvCellProps {
 
 export const LtvCell = ({ currency, ltv }: LtvCellProps) => {
   if (!ltv) {
-    return <p className='text-gray-400'>Unknown</p>;
+    return (
+      <p className='text-gray-400'>{formatCurrency(0, 0, currency || 'USD')}</p>
+    );
   }
 
   return (

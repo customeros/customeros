@@ -652,11 +652,11 @@ func (s *scrapinService) ScrapInSearchCompany(ctx context.Context, domain string
 		if outputIsPrimary {
 			outputPrimaryDomain = utils.ExtractDomain(data.Company.WebsiteUrl)
 		}
-		span.LogFields(log.String("result.inputPrimaryDomain", inputPrimaryDomain), log.String("result.outputPrimaryDomain", outputPrimaryDomain))
+		span.LogKV("result.inputPrimaryDomain", inputPrimaryDomain, "outputPrimaryDomain", outputPrimaryDomain)
 		if inputPrimaryDomain != "" && inputPrimaryDomain == outputPrimaryDomain {
 			return recordId, data, nil
 		} else {
-			tracing.TraceErr(span, errors.New("Scrapin retuned different company domain, expected: "+inputPrimaryDomain+", got: "+outputPrimaryDomain))
+			span.LogKV("result.info", fmt.Sprintf("Scrapin retuned different company domain, expected: %s, got: %s", inputPrimaryDomain, outputPrimaryDomain))
 		}
 	}
 

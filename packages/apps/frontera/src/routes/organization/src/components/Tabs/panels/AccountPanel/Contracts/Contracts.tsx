@@ -1,4 +1,3 @@
-import { FC } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
@@ -11,20 +10,20 @@ import { ContractModalStatusContextProvider } from '@organization/components/Tab
 
 import { Notes } from '../Notes';
 
-interface ContractsProps {}
-
-export const Contracts: FC<ContractsProps> = observer(() => {
+export const Contracts = observer(() => {
   const id = useParams()?.id as string;
   const store = useStore();
-  const organizationStore = store.organizations.value.get(id);
-  const contracts = organizationStore?.contracts;
+  const organization = store.organizations.getById(id);
+  const contracts = organization?.contracts;
 
   return (
     <>
       <ARRForecast
-        name={organizationStore?.value.name || ''}
+        name={organization?.value.name || ''}
         currency={contracts?.[0]?.currency || 'USD'}
-        renewalSunnary={organizationStore?.value.accountDetails?.renewalSummary}
+        arrForecast={organization?.value?.renewalSummaryArrForecast}
+        maxArrForecast={organization?.value?.renewalSummaryMaxArrForecast}
+        renewalLikelihood={organization?.value?.renewalSummaryRenewalLikelihood}
       />
       {contracts?.map((c) => {
         return (
@@ -36,7 +35,7 @@ export const Contracts: FC<ContractsProps> = observer(() => {
               <ContractModalsContextProvider id={c.metadata.id}>
                 <ContractCard
                   values={c}
-                  organizationName={organizationStore?.value.name || ''}
+                  organizationName={organization?.value.name || ''}
                 />
               </ContractModalsContextProvider>
             </ContractModalStatusContextProvider>

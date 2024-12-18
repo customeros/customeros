@@ -271,7 +271,8 @@ func CreateOrganization(ctx context.Context, driver *neo4j.DriverWithContext, te
 							org.leadSource=$leadSource,
 							org.derivedChurnedAt=$derivedChurnedAt,
 							org.derivedLtv=$derivedLtv,
-							org.derivedLtvCurrency=$derivedLtvCurrency
+							org.derivedLtvCurrency=$derivedLtvCurrency,
+							org.derivedContactCount=$derivedContactCount
 							`, tenant)
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"id":                            orgId,
@@ -317,6 +318,7 @@ func CreateOrganization(ctx context.Context, driver *neo4j.DriverWithContext, te
 		"derivedChurnedAt":              utils.TimePtrAsAny(organization.DerivedData.ChurnedAt),
 		"derivedLtv":                    organization.DerivedData.Ltv,
 		"derivedLtvCurrency":            organization.DerivedData.LtvCurrency.String(),
+		"derivedContactCount":           organization.DerivedData.ContactCount,
 		"icpFit":                        organization.IcpFit,
 	})
 	return orgId
@@ -468,6 +470,8 @@ func CreateLocation(ctx context.Context, driver *neo4j.DriverWithContext, tenant
 					i.createdAt=$createdAt,
 					i.updatedAt=$updatedAt,
 					i.country=$country,
+					i.countryCodeA2=$countryCodeA2,
+					i.countryCodeA3=$countryCodeA3,
 					i.region=$region,    
 					i.locality=$locality,    
 					i.address=$address,    
@@ -497,6 +501,8 @@ func CreateLocation(ctx context.Context, driver *neo4j.DriverWithContext, tenant
 		"createdAt":     location.CreatedAt,
 		"updatedAt":     location.UpdatedAt,
 		"country":       location.Country,
+		"countryCodeA2": location.CountryCodeA2,
+		"countryCodeA3": location.CountryCodeA3,
 		"region":        location.Region,
 		"locality":      location.Locality,
 		"address":       location.Address,

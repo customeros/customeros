@@ -10,7 +10,13 @@ import {
 export const getContractSortFn = (columnId: string) =>
   match(columnId)
     .with(ColumnViewType.ContractsName, () => (row: ContractStore) => {
-      return row.value?.contractName?.trim().toLowerCase() || null;
+      if (row.value?.contractName?.trim()) {
+        return row.value?.contractName?.trim().toLowerCase();
+      }
+
+      const org = row.organization;
+
+      return org?.value?.name?.trim().toLowerCase() || null;
     })
     .with(
       ColumnViewType.ContractsPeriod,

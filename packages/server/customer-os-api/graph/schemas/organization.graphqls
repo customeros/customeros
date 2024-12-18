@@ -95,7 +95,7 @@ type Organization implements MetadataInterface {
     timelineEventsTotalCount(timelineEventTypes: [TimelineEventType!]): Int64! @goField(forceResolver: true)
     externalLinks: [ExternalSystem!]! @goField(forceResolver: true)
     issueSummaryByStatus: [IssueSummaryByStatus!]! @goField(forceResolver: true)
-    contactCount: Int64! @goField(forceResolver: true)
+    contactCount: Int64!
     inboundCommsCount: Int64! @goField(forceResolver: true)
     outboundCommsCount: Int64! @goField(forceResolver: true)
     enrichDetails: EnrichDetails!

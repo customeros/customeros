@@ -228,6 +228,7 @@ func TestQueryResolver_UIOrganizationsSearch_FilterByLastTouchpoint(t *testing.T
 	searchBy := model.ColumnViewTypeOrganizationsLastTouchpoint
 
 	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 3, 1)
+	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 3, 2)
 	assertSearch(t, searchBy, []string{"A"}, commonModel.ComparisonOperatorIn, 3, 1)
 	assertSearch(t, searchBy, []string{"B"}, commonModel.ComparisonOperatorIn, 3, 1)
 	assertSearch(t, searchBy, []string{"A", "B"}, commonModel.ComparisonOperatorIn, 3, 2)
@@ -282,6 +283,8 @@ func TestQueryResolver_UIOrganizationsSearch_FilterByStage(t *testing.T) {
 	assertSearch(t, searchBy, []string{enum.Trial.String()}, commonModel.ComparisonOperatorIn, 4, 1)
 	assertSearch(t, searchBy, []string{enum.Lead.String()}, commonModel.ComparisonOperatorIn, 4, 2)
 	assertSearch(t, searchBy, []string{enum.Trial.String(), enum.Lead.String()}, commonModel.ComparisonOperatorIn, 4, 3)
+	assertSearch(t, searchBy, []string{enum.Trial.String()}, commonModel.ComparisonOperatorNotIn, 4, 3)
+	assertSearch(t, searchBy, []string{enum.Lead.String()}, commonModel.ComparisonOperatorNotIn, 4, 2)
 }
 
 func TestQueryResolver_UIOrganizationsSearch_FilterBySocials(t *testing.T) {
@@ -325,21 +328,20 @@ func TestQueryResolver_UIOrganizationsSearch_FilterByLeadSource(t *testing.T) {
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
 	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{LeadSource: ""})
 	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{LeadSource: "A"})
 	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{LeadSource: "B"})
 	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{LeadSource: "AB"})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{LeadSource: "C"})
 
 	require.Equal(t, 5, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
 
 	searchBy := model.ColumnViewTypeOrganizationsLeadSource
 
-	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 5, 1)
-	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 5, 4)
-	assertSearch(t, searchBy, "C", commonModel.ComparisonOperatorContains, 5, 1)
-	assertSearch(t, searchBy, "A", commonModel.ComparisonOperatorContains, 5, 2)
-	assertSearch(t, searchBy, "A", commonModel.ComparisonOperatorNotContains, 5, 3)
+	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 5, 2)
+	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 5, 3)
+	assertSearch(t, searchBy, []string{"A", "B"}, commonModel.ComparisonOperatorIn, 5, 2)
+	assertSearch(t, searchBy, []string{"A"}, commonModel.ComparisonOperatorNotIn, 5, 4)
 }
 
 func TestQueryResolver_UIOrganizationsSearch_FilterByCreatedAt(t *testing.T) {
@@ -398,6 +400,33 @@ func TestQueryResolver_UIOrganizationsSearch_FilterByEmployeeCount(t *testing.T)
 	assertSearch(t, searchBy, 2010, commonModel.ComparisonOperatorNotEquals, 3, 3)
 }
 
+func TestQueryResolver_UIOrganizationsSearch_FilterByContactCount(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{DerivedData: neo4jentity.DerivedData{ContactCount: 2000}})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{DerivedData: neo4jentity.DerivedData{ContactCount: 2005}})
+
+	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+
+	searchBy := model.ColumnViewTypeOrganizationsContactCount
+
+	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 3, 0)
+	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 3, 3)
+	assertSearch(t, searchBy, 2005, commonModel.ComparisonOperatorGte, 3, 1)
+	assertSearch(t, searchBy, 2005, commonModel.ComparisonOperatorGt, 3, 0)
+	assertSearch(t, searchBy, 2004, commonModel.ComparisonOperatorLte, 3, 2)
+	assertSearch(t, searchBy, 2005, commonModel.ComparisonOperatorLte, 3, 3)
+	assertSearch(t, searchBy, 2005, commonModel.ComparisonOperatorLt, 3, 2)
+	assertSearch(t, searchBy, 2005, commonModel.ComparisonOperatorEquals, 3, 1)
+	assertSearch(t, searchBy, 2006, commonModel.ComparisonOperatorEquals, 3, 0)
+	assertSearch(t, searchBy, 2005, commonModel.ComparisonOperatorNotEquals, 3, 2)
+	assertSearch(t, searchBy, 2010, commonModel.ComparisonOperatorNotEquals, 3, 3)
+}
+
 func TestQueryResolver_UIOrganizationsSearch_FilterByYearFounded(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
@@ -433,21 +462,20 @@ func TestQueryResolver_UIOrganizationsSearch_FilterByIndustry(t *testing.T) {
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
 	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Industry: ""})
 	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Industry: "A"})
 	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Industry: "B"})
 	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Industry: "AB"})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Industry: "C"})
 
 	require.Equal(t, 5, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
 
 	searchBy := model.ColumnViewTypeOrganizationsIndustry
 
-	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 5, 1)
-	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 5, 4)
-	assertSearch(t, searchBy, "C", commonModel.ComparisonOperatorContains, 5, 1)
-	assertSearch(t, searchBy, "A", commonModel.ComparisonOperatorContains, 5, 2)
-	assertSearch(t, searchBy, "A", commonModel.ComparisonOperatorNotContains, 5, 3)
+	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 5, 2)
+	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 5, 3)
+	assertSearch(t, searchBy, []string{"A", "B"}, commonModel.ComparisonOperatorIn, 5, 2)
+	assertSearch(t, searchBy, []string{"A"}, commonModel.ComparisonOperatorNotIn, 5, 4)
 }
 
 func TestQueryResolver_UIOrganizationsSearch_FilterByChurnedAt(t *testing.T) {
@@ -518,32 +546,34 @@ func TestQueryResolver_UIOrganizationsSearch_FilterByCountry(t *testing.T) {
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "org1"})
-	neo4jtest.CreateLocation(ctx, driver, tenantName, neo4jentity.LocationEntity{Id: "l1", Country: "C1"})
+	neo4jtest.CreateLocation(ctx, driver, tenantName, neo4jentity.LocationEntity{Id: "l1", CountryCodeA2: "CA"})
 	neo4jtest.LinkNodes(ctx, driver, "org1", "l1", "ASSOCIATED_WITH")
 
 	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "org2"})
-	neo4jtest.CreateLocation(ctx, driver, tenantName, neo4jentity.LocationEntity{Id: "l2", Country: "C2"})
+	neo4jtest.CreateLocation(ctx, driver, tenantName, neo4jentity.LocationEntity{Id: "l2", CountryCodeA2: "US"})
 	neo4jtest.LinkNodes(ctx, driver, "org2", "l2", "ASSOCIATED_WITH")
 
 	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "org3"})
+	neo4jtest.CreateLocation(ctx, driver, tenantName, neo4jentity.LocationEntity{Id: "l3"})
+	neo4jtest.LinkNodes(ctx, driver, "org3", "l3", "ASSOCIATED_WITH")
 
-	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Location"))
-	require.Equal(t, 2, neo4jtest.GetCountOfRelationships(ctx, driver, "ASSOCIATED_WITH"))
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "org4"})
+
+	require.Equal(t, 4, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Location"))
+	require.Equal(t, 3, neo4jtest.GetCountOfRelationships(ctx, driver, "ASSOCIATED_WITH"))
 
 	searchBy := model.ColumnViewTypeOrganizationsCountry
 
-	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 3, 1)
-	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 3, 2)
-	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorContains, 3, 2)
-	assertSearch(t, searchBy, "c", commonModel.ComparisonOperatorContains, 3, 2)
-	assertSearch(t, searchBy, "c1", commonModel.ComparisonOperatorContains, 3, 1)
-	assertSearch(t, searchBy, "c2", commonModel.ComparisonOperatorContains, 3, 1)
-	assertSearch(t, searchBy, "c3", commonModel.ComparisonOperatorContains, 3, 0)
+	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 4, 2)
+	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 4, 2)
+	assertSearch(t, searchBy, []string{"X"}, commonModel.ComparisonOperatorIn, 4, 0)
+	assertSearch(t, searchBy, []string{"US"}, commonModel.ComparisonOperatorIn, 4, 1)
+	assertSearch(t, searchBy, []string{"CA"}, commonModel.ComparisonOperatorIn, 4, 1)
+	assertSearch(t, searchBy, []string{"US", "CA"}, commonModel.ComparisonOperatorIn, 4, 2)
 
-	assertSearch(t, searchBy, "c1", commonModel.ComparisonOperatorNotContains, 3, 1)
-	assertSearch(t, searchBy, "c2", commonModel.ComparisonOperatorNotContains, 3, 1)
-	assertSearch(t, searchBy, "c3", commonModel.ComparisonOperatorNotContains, 3, 2)
+	assertSearch(t, searchBy, []string{"X"}, commonModel.ComparisonOperatorNotIn, 4, 4)
+	assertSearch(t, searchBy, []string{"CA"}, commonModel.ComparisonOperatorNotIn, 4, 3)
 }
 
 func TestQueryResolver_UIOrganizationsSearch_FilterByCity(t *testing.T) {
@@ -652,15 +682,12 @@ func TestQueryResolver_UIOrganizationsSearch_FilterByTags(t *testing.T) {
 
 	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 3, 1)
 	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 3, 2)
-	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorContains, 3, 2)
-	assertSearch(t, searchBy, "a", commonModel.ComparisonOperatorContains, 3, 2)
-	assertSearch(t, searchBy, "b", commonModel.ComparisonOperatorContains, 3, 1)
-	assertSearch(t, searchBy, "c", commonModel.ComparisonOperatorContains, 3, 1)
-	assertSearch(t, searchBy, "d", commonModel.ComparisonOperatorContains, 3, 0)
+	assertSearch(t, searchBy, []string{"A", "B", "C"}, commonModel.ComparisonOperatorIn, 3, 2)
+	assertSearch(t, searchBy, []string{"c"}, commonModel.ComparisonOperatorIn, 3, 1)
+	assertSearch(t, searchBy, []string{"X", "Y", "Z"}, commonModel.ComparisonOperatorIn, 3, 0)
 
-	assertSearch(t, searchBy, "d", commonModel.ComparisonOperatorNotContains, 3, 2)
-	assertSearch(t, searchBy, "b", commonModel.ComparisonOperatorNotContains, 3, 2)
-	assertSearch(t, searchBy, "a", commonModel.ComparisonOperatorNotContains, 3, 2)
+	assertSearch(t, searchBy, []string{"X"}, commonModel.ComparisonOperatorNotIn, 3, 3)
+	assertSearch(t, searchBy, []string{"B", "Y"}, commonModel.ComparisonOperatorNotIn, 3, 2)
 }
 
 func TestQueryResolver_UIOrganizationsSearch_FilterByParentOrganization(t *testing.T) {
@@ -1061,6 +1088,24 @@ func TestQueryResolver_UIOrganizationsSearch_SortByEmployeeCount(t *testing.T) {
 
 	verifySortOrder(t, model.ColumnViewTypeOrganizationsEmployeeCount, commonModel.SortingDirectionAsc, expectedAsc)
 	verifySortOrder(t, model.ColumnViewTypeOrganizationsEmployeeCount, commonModel.SortingDirectionDesc, expectedDesc)
+}
+
+func TestQueryResolver_UIOrganizationsSearch_SortByContactCount(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "1", DerivedData: neo4jentity.DerivedData{ContactCount: 1}})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "2", DerivedData: neo4jentity.DerivedData{ContactCount: 2}})
+
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+
+	expectedAsc := []string{"1", "2"}
+	expectedDesc := []string{"2", "1"}
+
+	verifySortOrder(t, model.ColumnViewTypeOrganizationsContactCount, commonModel.SortingDirectionAsc, expectedAsc)
+	verifySortOrder(t, model.ColumnViewTypeOrganizationsContactCount, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
 func TestQueryResolver_UIOrganizationsSearch_SortByYearFounded(t *testing.T) {

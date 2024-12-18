@@ -1,20 +1,21 @@
+import { observer } from 'mobx-react-lite';
 import ParentSize from '@visx/responsive/lib/components/ParentSize';
 
 import { Skeleton } from '@ui/feedback/Skeleton';
+import { useStore } from '@shared/hooks/useStore';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { formatCurrency } from '@utils/getFormattedCurrencyNumber';
-import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
 
 import { HelpContent } from './HelpContent';
 import { ChartCard } from '../../ChartCard';
 import RevenueAtRiskChart, { RevenueAtRiskDatum } from './RevenueAtRisk.chart';
 import { useRevenueAtRiskQuery } from '../../../graphql/revenueAtRisk.generated';
 
-export const RevenueAtRisk = () => {
+export const RevenueAtRisk = observer(() => {
+  const store = useStore();
   const client = getGraphQLClient();
-  const { data: globalCache } = useGlobalCacheQuery(client);
   const { data, isLoading } = useRevenueAtRiskQuery(client);
-  const hasContracts = globalCache?.global_Cache?.contractsExist;
+  const hasContracts = store.globalCache?.value?.contractsExist ?? false;
   const chartData: RevenueAtRiskDatum = {
     atRisk: data?.dashboard_RevenueAtRisk?.atRisk ?? 0,
     highConfidence: data?.dashboard_RevenueAtRisk?.highConfidence ?? 0,
@@ -69,4 +70,4 @@ export const RevenueAtRisk = () => {
       </ParentSize>
     </ChartCard>
   );
-};
+});

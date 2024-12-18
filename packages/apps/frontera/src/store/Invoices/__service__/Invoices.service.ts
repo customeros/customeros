@@ -3,16 +3,13 @@ import { Operation } from '@store/types';
 import { makePayload } from '@store/util';
 import { Transport } from '@store/transport';
 
-import { InvoiceUpdateInput } from '@shared/types/__generated__/graphql.types';
-import {
-  GetInvoiceQuery,
-  GetInvoiceQueryVariables,
-} from '@shared/graphql/getInvoice.generated';
+import { InvoiceUpdateInput } from '@graphql/types';
 
 import { InvoiceStore } from '../Invoice.store';
 import GetInvoiceDocument from './getInvoice.graphql';
 import GetInvoicesDocument from './getInvoices.graphql';
 import UpdateInvoiceStatusDocument from './updateInvoiceStatus.graphql';
+import { InvoiceQuery, InvoiceQueryVariables } from './getInvoice.generated';
 import {
   GetInvoicesQuery,
   GetInvoicesQueryVariables,
@@ -39,10 +36,10 @@ export class InvoicesService {
   }
 
   async getInvoice(invoiceNumber: string) {
-    return this.transport.graphql.request<
-      GetInvoiceQuery,
-      GetInvoiceQueryVariables
-    >(GetInvoiceDocument, { id: invoiceNumber });
+    return this.transport.graphql.request<InvoiceQuery, InvoiceQueryVariables>(
+      GetInvoiceDocument,
+      { number: invoiceNumber },
+    );
   }
 
   async getInvoices(payload: GetInvoicesQueryVariables) {

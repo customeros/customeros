@@ -4,23 +4,23 @@ import { DateTimeUtils } from '@utils/date.ts';
 import { ColumnViewType } from '@graphql/types';
 
 export const csvDataMapper = {
-  [ColumnViewType.OrganizationsAvatar]: (d: Organization) => d?.value?.logo,
+  [ColumnViewType.OrganizationsAvatar]: (d: Organization) => d?.value?.logoUrl,
   [ColumnViewType.OrganizationsName]: (d: Organization) => d.value?.name,
   [ColumnViewType.OrganizationsWebsite]: (d: Organization) => d.value?.website,
   [ColumnViewType.OrganizationsRelationship]: (d: Organization) =>
     d.value?.relationship,
 
   [ColumnViewType.OrganizationsOnboardingStatus]: (d: Organization) =>
-    d?.value?.accountDetails?.onboarding?.status,
+    d?.value?.onboardingStatus,
   [ColumnViewType.OrganizationsRenewalLikelihood]: (d: Organization) =>
-    d?.value?.accountDetails?.renewalSummary?.renewalLikelihood,
+    d?.value?.renewalSummaryRenewalLikelihood,
   [ColumnViewType.OrganizationsRenewalDate]: (d: Organization) =>
     DateTimeUtils.format(
-      d?.value?.accountDetails?.renewalSummary?.nextRenewalDate,
+      d?.value?.renewalSummaryNextRenewalAt,
       DateTimeUtils.iso8601,
     ),
   [ColumnViewType.OrganizationsForecastArr]: (d: Organization) =>
-    d?.value?.accountDetails?.renewalSummary?.arrForecast,
+    d?.value?.renewalSummaryArrForecast,
 
   [ColumnViewType.OrganizationsOwner]: (d: Organization) => {
     return d.owner?.name ?? 'No owner';
@@ -28,7 +28,7 @@ export const csvDataMapper = {
   [ColumnViewType.OrganizationsLeadSource]: (d: Organization) =>
     d.value?.leadSource,
   [ColumnViewType.OrganizationsCreatedDate]: (d: Organization) =>
-    DateTimeUtils.format(d.value?.metadata.created, DateTimeUtils.iso8601),
+    DateTimeUtils.format(d.value?.createdAt, DateTimeUtils.iso8601),
   [ColumnViewType.OrganizationsYearFounded]: (d: Organization) =>
     d.value?.yearFounded,
   [ColumnViewType.OrganizationsEmployeeCount]: (d: Organization) =>
@@ -37,26 +37,19 @@ export const csvDataMapper = {
     d.value?.socialMedia.find((e) => e?.url?.includes('linkedin'))?.url,
 
   [ColumnViewType.OrganizationsLastTouchpoint]: (d: Organization) =>
-    `${d?.value?.lastTouchpoint?.lastTouchPointType} - ${DateTimeUtils.format(
-      d?.value?.lastTouchpoint?.lastTouchPointAt,
+    `${d?.value?.lastTouchPointType} - ${DateTimeUtils.format(
+      d?.value?.lastTouchPointAt,
       DateTimeUtils.iso8601,
     )}`,
   [ColumnViewType.OrganizationsLastTouchpointDate]: (d: Organization) =>
-    d?.value?.lastTouchpoint?.lastTouchPointAt
-      ? DateTimeUtils.format(
-          d.value?.lastTouchpoint.lastTouchPointAt,
-          DateTimeUtils.iso8601,
-        )
+    d?.value?.lastTouchPointAt
+      ? DateTimeUtils.format(d.value?.lastTouchPointAt, DateTimeUtils.iso8601)
       : 'Unknown',
   [ColumnViewType.OrganizationsChurnDate]: (d: Organization) =>
-    d?.value?.accountDetails?.churned
-      ? DateTimeUtils.format(
-          d.value?.accountDetails.churned,
-          DateTimeUtils.iso8601,
-        )
+    d?.value?.churnedAt
+      ? DateTimeUtils.format(d.value?.churnedAt, DateTimeUtils.iso8601)
       : 'Unknown',
-  [ColumnViewType.OrganizationsLtv]: (d: Organization) =>
-    d?.value?.accountDetails?.ltv,
+  [ColumnViewType.OrganizationsLtv]: (d: Organization) => d?.value?.ltv,
   [ColumnViewType.OrganizationsIndustry]: (d: Organization) =>
     d.value?.industry ?? 'Unknown',
   [ColumnViewType.OrganizationsContactCount]: (d: Organization) =>

@@ -51,10 +51,10 @@ export const Branches = observer(({ id, isReadOnly }: BranchesProps) => {
       </CardHeader>
       <CardContent className='flex flex-col p-0 pt-0 gap-2 items-baseline'>
         {subsidiaries?.map((organization) =>
-          organization?.metadata.id ? (
+          organization?.id ? (
             <Link
-              key={organization.metadata.id}
-              to={`/organization/${organization.metadata.id}?tab=about`}
+              key={organization.id}
+              to={`/organization/${organization.id}?tab=about`}
               className='line-clamp-1 break-keep text-gray-700 hover:text-primary-600 no-underline hover:underline'
             >
               {organization.name}

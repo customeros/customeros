@@ -1,9 +1,10 @@
 import type { RootStore } from '@store/root';
 import type { Transport } from '@store/transport';
 
+import set from 'lodash/set';
 import { Store } from '@store/_store';
 import { TagDatum } from '@store/Tags/Tag.store';
-import { set, action, computed, runInAction } from 'mobx';
+import { action, computed, observable, runInAction } from 'mobx';
 
 import {
   relationshipStageMap,
@@ -11,7 +12,6 @@ import {
   validRelationshipsForStage,
 } from '@utils/orgStageAndRelationshipStatusMap';
 import {
-  SortingDirection,
   OrganizationStage,
   ComparisonOperator,
   OrganizationRelationship,
@@ -22,6 +22,7 @@ import type { SaveOrganizationMutationVariables } from './__service__/saveOrgani
 
 import { TeamViews } from './__views__/Team.view';
 import { CustomView } from './__views__/Custom.view';
+import { ProfileView } from './__views__/Profile.view';
 import { TargetsView } from './__views__/Targets.view';
 import { CustomersView } from './__views__/Customers.view';
 import { AllOrganizationsView } from './__views__/AllOrganizations.view';
@@ -29,17 +30,22 @@ import { Organization, type OrganizationDatum } from './Organization.dto';
 import { OrganizationsService } from './__service__/Organizations.service';
 
 export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
+  chunkSize = 50;
   private service: OrganizationsService;
+  @observable accessor searchResults: Map<string, string[]> = new Map();
+  @observable accessor cursors: Map<string, number> = new Map();
+  @observable accessor availableCounts: Map<string, number> = new Map();
 
   constructor(public root: RootStore, public transport: Transport) {
     super(root, transport, {
       name: 'Organizations',
-      getId: (data) => data?.metadata?.id,
+      getId: (data) => data?.id,
       factory: Organization,
     });
 
     this.service = OrganizationsService.getInstance(this.transport);
 
+    new ProfileView(this);
     new CustomersView(this);
     new TargetsView(this);
     new AllOrganizationsView(this);
@@ -47,15 +53,25 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
     new TeamViews(this);
   }
 
+  canLoadNext(preset: string) {
+    const ids = this.searchResults.get(preset);
+    const cursor = this.cursors.get(preset) ?? 0;
+
+    if (!ids) return false;
+
+    return ids.length > this.chunkSize * (cursor + 1);
+  }
+
   @computed
   get isFullyLoaded() {
     return this.totalElements === this.value.size;
   }
 
+  // temporary unused
   @action
-  async getRecentChanges() {
+  private async _getRecentChanges() {
     try {
-      if (this.root.demoMode || this.isBootstrapping) {
+      if (this.isBootstrapping) {
         return;
       }
 
@@ -84,16 +100,13 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
           date: lastActiveAtUTC,
         });
 
-      const { dashboardView_Organizations } =
-        await this.service.getOrganizations({
-          pagination: { limit: 1000, page: 0 },
-          sort: {
-            by: 'LAST_TOUCHPOINT',
-            caseSensitive: false,
-            direction: SortingDirection.Desc,
-          },
+      const { ui_organizations_search } =
+        await this.service.searchOrganizations({
+          limit: this.chunkSize,
           where,
         });
+
+      await this.retrieve(ui_organizations_search.ids);
 
       if (this.isHydrated) {
         await this.drop(idsToDrop);
@@ -102,20 +115,6 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
           idsToDrop,
         });
       }
-
-      const data =
-        (dashboardView_Organizations?.content as OrganizationDatum[]) ?? [];
-
-      runInAction(() => {
-        this.size = this.value.size;
-        data.forEach((raw) => {
-          if (!raw) return;
-
-          const record = new Organization(this, raw);
-
-          this.value.set(record.id, record);
-        });
-      });
     } catch (e) {
       runInAction(() => {
         this.error = (e as Error)?.message;
@@ -128,145 +127,144 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
   }
 
   @action
-  async getAllData() {
-    runInAction(() => {
-      this.isBootstrapping = true;
-    });
+  async search(preset: string) {
+    const viewDef = this.root.tableViewDefs.getById(preset);
+    const cursor = (
+      this.cursors.has(preset)
+        ? this.cursors.get(preset)
+        : this.cursors.set(preset, 0).get(preset)
+    ) as number;
+
+    if (!viewDef) {
+      console.error(`viewDef with preset=${preset} not found`);
+
+      return;
+    }
 
     try {
-      // const { ui_organizations } = await this.service.getOrganizationsByIds({
-      //   ids: [],
-      // });
-      //
-      // console.log(ui_organizations);
-
-      const { dashboardView_Organizations } =
-        await this.service.getOrganizations({
-          pagination: { limit: 1000, page: 0 },
-          sort: {
-            by: 'LAST_TOUCHPOINT',
-            caseSensitive: false,
-            direction: SortingDirection.Desc,
-          },
-        });
-
-      const data = dashboardView_Organizations?.content ?? [];
-      const totalElements = dashboardView_Organizations?.totalElements;
-
       runInAction(() => {
-        data.forEach((raw) => {
-          if (!raw) return;
-
-          const record = new Organization(this, raw);
-
-          this.value.set(record.id, record);
-        });
-
-        this.size = this.value.size;
-
-        if (this.totalElements !== totalElements) {
-          this.totalElements = totalElements;
+        if (cursor > 0) {
+          // reset chunk if new search is performed
+          this.cursors.set(preset, 0);
         }
+        this.isLoading = true;
       });
-      await this.bootstrapRest();
-    } catch (e) {
+
+      const payload = viewDef.toSearchPayload();
+
+      const { ui_organizations_search: searchResult } =
+        await this.service.searchOrganizations({ ...payload });
+
+      if (cursor === 0) {
+        const ids = (searchResult?.ids ?? []).slice(
+          this.chunkSize * cursor,
+          this.chunkSize * cursor + this.chunkSize,
+        );
+
+        // retrieve first chunk of data after new search is performed
+        await this.retrieve(ids);
+      }
+
       runInAction(() => {
-        this.error = (e as Error)?.message;
+        this.isLoading = false;
+        this.availableCounts.set(preset, searchResult?.totalElements);
+        this.totalElements = searchResult?.totalAvailable ?? 0;
+        this.searchResults.set(preset, searchResult?.ids ?? []);
       });
-    } finally {
-      this.isLoading = false;
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error)?.message;
+      });
     }
   }
 
   @action
-  async bootstrap() {
-    if (this.isLoading) return;
-
+  async retrieve(ids: string[]) {
     try {
-      // const canHydrate = await this.checkIfCanHydrate();
-      //
-      // if (canHydrate) {
-      //   this.getRecentChanges();
-      // } else {
-      //   this.getAllData();
-      // }
-      this.getAllData();
-    } catch (e) {
-      runInAction(() => {
-        this.error = (e as Error)?.message;
+      const { ui_organizations } = await this.service.getOrganizationsByIds({
+        ids,
       });
-    }
-  }
 
-  @action
-  async bootstrapRest() {
-    let page = 1;
-
-    while (this.totalElements > this.value.size) {
-      try {
-        const { dashboardView_Organizations } =
-          await this.service.getOrganizations({
-            pagination: { limit: 1000, page },
-            sort: {
-              by: 'LAST_TOUCHPOINT',
-              caseSensitive: false,
-              direction: SortingDirection.Desc,
-            },
-          });
-
-        const data = dashboardView_Organizations?.content ?? [];
-
-        page++;
-
-        runInAction(() => {
-          data.forEach((raw) => {
-            if (!raw) return;
-
+      runInAction(() => {
+        ui_organizations.forEach((raw) => {
+          if (this.value.has(raw.id)) {
+            Object.assign(raw, this.value.get(raw.id)?.value);
+          } else {
             const record = new Organization(this, raw);
 
             this.value.set(record.id, record);
-          });
+          }
+        });
 
-          this.size = this.value.size;
-        });
-      } catch (e) {
-        runInAction(() => {
-          this.error = (e as Error)?.message;
-        });
-        break;
-      }
+        this.size = this.value.size;
+        this.version++;
+      });
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error)?.message;
+      });
     }
-
-    runInAction(() => {
-      this.isBootstrapped = this.totalElements === this.value.size;
-      this.isBootstrapping = false;
-    });
   }
 
   @action
-  public async invalidate(id: string, opts?: { onFinally?: () => void }) {
-    try {
-      const { organization: raw } = await this.service.getOrganization(id);
+  public async loadNext(preset: string) {
+    let cursor = this.cursors.get(preset) ?? 0;
 
-      if (!raw) return;
+    runInAction(() => {
+      cursor++;
+      this.cursors.set(preset, cursor);
+    });
+
+    const ids = this.searchResults.get(preset);
+
+    const chunkedIds = (ids ?? []).slice(
+      this.chunkSize * cursor,
+      this.chunkSize * cursor + this.chunkSize,
+    );
+
+    try {
+      runInAction(() => {
+        this.isLoading = true;
+      });
+
+      await this.retrieve(chunkedIds);
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error)?.message;
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+      });
+    }
+  }
+
+  @action
+  public async invalidate(id: string) {
+    try {
+      const { ui_organizations } = await this.service.getOrganizationsByIds({
+        ids: [id],
+      });
+
+      if (!ui_organizations) return;
+
+      const data = ui_organizations[0];
+
+      if (!data) return;
 
       runInAction(() => {
         const record = this.value.get(id);
 
         if (record) {
-          Object.assign(record.value, raw);
+          Object.assign(record.value, data);
         } else {
-          const record = new Organization(this, raw);
+          const record = new Organization(this, data);
 
           this.value.set(record.id, record);
         }
       });
     } catch (e) {
       console.error('Failed invalidating organization with ID: ' + id);
-    } finally {
-      runInAction(() => {
-        opts?.onFinally?.();
-      });
     }
   }
 

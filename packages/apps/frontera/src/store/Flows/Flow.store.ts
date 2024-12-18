@@ -274,6 +274,7 @@ export class FlowStore implements Store<Flow> {
           entityId: contactId,
           status: FlowParticipantStatus.Scheduled,
           executions: [],
+          requirementsUnmeet: [],
         };
 
         this.value.participants = [
@@ -364,6 +365,39 @@ export class FlowStore implements Store<Flow> {
         this.root.ui.toastError(
           "We couldn't add contacts to a flow",
           'link-contacts-to-flows-error',
+        );
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+      });
+    }
+  };
+
+  public sendTestEmail = async (
+    payload: {
+      subject: string;
+      bodyTemplate: string;
+      sendToEmailAddress: string;
+    },
+    options?: {
+      onSuccess: () => void;
+    },
+  ) => {
+    this.isLoading = true;
+
+    try {
+      await this.service.sendTestEmail(payload);
+
+      this.root.ui.toastSuccess('Test email sent', 'send-test-email-success');
+      runInAction(() => {
+        options?.onSuccess();
+      });
+    } catch (e) {
+      runInAction(() => {
+        this.root.ui.toastError(
+          "We couldn't send the test email",
+          'send-test-email-error',
         );
       });
     } finally {

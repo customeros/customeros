@@ -38,11 +38,11 @@ func GetFlows(s *service.Services) gin.HandlerFunc {
 		}
 
 		query := entity.Flow{
-			ID:     flowId,
+			ID:     c.Param("flowId"),
 			Tenant: tenant,
 		}
 
-		switch flowId {
+		switch query.ID {
 		case "":
 			getAllFlows(c, s, query)
 		default:

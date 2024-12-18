@@ -59,6 +59,7 @@ export class UserStore implements Store<User> {
 const defaultValue: User = {
   id: '',
   name: '',
+  mailboxesV2: [],
   firstName: '',
   lastName: '',
   emails: [],

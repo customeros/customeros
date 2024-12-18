@@ -25,17 +25,16 @@ export const ParentOrgInput = observer(
     const organization = store.organizations.getById(id);
 
     const options = data.map((org) => ({
-      value: org.value.metadata?.id,
+      value: org.value?.id,
       label: org.value.name,
     }));
 
-    const parentCompany =
-      organization?.value?.parentCompanies?.[0]?.organization;
+    const hasParent = !!organization?.value?.parentId;
 
-    const selection = parentCompany
+    const selection = hasParent
       ? {
-          value: parentCompany?.metadata?.id,
-          label: parentCompany?.name,
+          value: organization.value.parentId,
+          label: organization.value.parentName,
         }
       : null;
 
@@ -44,7 +43,7 @@ export const ParentOrgInput = observer(
         <PopoverTrigger asChild className='cursor-pointer'>
           <div className='flex items-center min-h-10'>
             <ArrowCircleBrokenUpLeft className='text-gray-500 mr-3' />
-            {parentCompany ? (
+            {hasParent ? (
               <span>{selection?.label}</span>
             ) : (
               <span className='text-gray-400'>Parent organization</span>
@@ -65,12 +64,10 @@ export const ParentOrgInput = observer(
                 const newParent = store.organizations.getById(option?.value);
 
                 if (!newParent) {
-                  const parentId =
-                    organization.value?.parentCompanies?.[0]?.organization
-                      ?.metadata?.id;
+                  const parentId = organization.value?.parentId;
 
                   organization.draft();
-                  organization.clearParentCompanies();
+                  organization.clearParent();
                   organization.commit();
 
                   const parentCompany = store.organizations.getById(parentId!);
@@ -81,9 +78,7 @@ export const ParentOrgInput = observer(
                   parentCompany.removeSubsidiary(organization.id);
                   parentCompany.commit();
                 } else {
-                  const currentParentId =
-                    organization.value?.parentCompanies?.[0]?.organization
-                      ?.metadata?.id;
+                  const currentParentId = organization.value?.parentId;
 
                   const currentParent = store.organizations.getById(
                     currentParentId!,
@@ -95,7 +90,7 @@ export const ParentOrgInput = observer(
                     currentParent.commit();
 
                     organization.draft();
-                    organization.clearParentCompanies();
+                    organization.clearParent();
                     organization.commit();
                   }
 
@@ -105,8 +100,8 @@ export const ParentOrgInput = observer(
 
                   organization.draft();
 
-                  if (!Array.isArray(!organization.value?.parentCompanies)) {
-                    organization.clearParentCompanies();
+                  if (organization.value?.parentId) {
+                    organization.clearParent();
                   }
 
                   if (newParent?.value) {

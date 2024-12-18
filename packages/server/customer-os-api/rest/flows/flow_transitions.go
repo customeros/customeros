@@ -68,7 +68,12 @@ func GetTransitions(s *service.Services) gin.HandlerFunc {
 			return
 		}
 
-		results := buildTransitionRecords(ctx, span, s, transitions)
+		results, err := buildTransitionRecords(ctx, span, s, transitions)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			rest.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer)
+			return
+		}
 
 		if len(results) == 1 {
 			c.JSON(http.StatusOK, FlowTransitionSingleResponse{
@@ -87,7 +92,7 @@ func GetTransitions(s *service.Services) gin.HandlerFunc {
 
 func buildTransitionRecords(ctx context.Context, span opentracing.Span, s *service.Services,
 	allFromNodes *[]entity.FlowTransitionsRegistry,
-) []FlowTransitionRecord {
+) ([]FlowTransitionRecord, error) {
 	results := make([]FlowTransitionRecord, len(*allFromNodes))
 
 	for i, from := range *allFromNodes {
@@ -96,10 +101,10 @@ func buildTransitionRecords(ctx context.Context, span opentracing.Span, s *servi
 			Type: from.FromNodeType,
 		}
 
-		enumType, err := commonEnum.GetFlowNodeType(from.FromNode)
+		enumType, err := commonEnum.GetFlowNodeType(from.FromNodeType)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			continue
+			return results, err
 		}
 
 		allNextSteps, err := s.Repositories.PostgresRepositories.FlowTransitionsRegistryRepository.FindAll(ctx, &entity.FlowTransitionsRegistry{
@@ -107,7 +112,7 @@ func buildTransitionRecords(ctx context.Context, span opentracing.Span, s *servi
 		})
 		if err != nil {
 			tracing.TraceErr(span, err)
-			continue
+			return results, err
 		}
 
 		nextSteps := make([]NextStepRecord, len(*allNextSteps))
@@ -122,5 +127,5 @@ func buildTransitionRecords(ctx context.Context, span opentracing.Span, s *servi
 		results[i] = record
 	}
 
-	return results
+	return results, nil
 }

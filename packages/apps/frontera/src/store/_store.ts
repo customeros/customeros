@@ -87,9 +87,10 @@ export class Store<T extends object, E extends Entity<T> = Entity<T>> {
       },
     );
 
-    window.addEventListener('focus', async () => {
-      await this.getRecentChanges();
-    });
+    // temporary commented out -> will be used in the future;
+    // window.addEventListener('focus', async () => {
+    //   await this.getRecentChanges();
+    // });
   }
 
   public getViewById(id: string) {

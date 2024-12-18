@@ -35,6 +35,8 @@ type OrganizationWriteRepository interface {
 	UpdateStringProperty(ctx context.Context, tenant, organizationId, property string, value string) error
 	Archive(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId string) error
 	ResetEnrichAttempts(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId string) error
+	RefreshContactCountByOrgId(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId string) error
+	RefreshContactCountByContactId(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, contactId string) error
 }
 
 type organizationWriteRepository struct {
@@ -737,6 +739,74 @@ func (r *organizationWriteRepository) ResetEnrichAttempts(ctx context.Context, t
 		"tenant":         tenant,
 		"organizationId": organizationId,
 	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+
+	return err
+}
+
+func (r *organizationWriteRepository) RefreshContactCountByOrgId(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.RefreshContactCountByOrgId")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
+
+	cypher := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
+			WITH org
+				OPTIONAL MATCH (org)--(:JobRole)--(c:Contact)
+				WHERE c.hide=false OR c.hide IS NULL
+			WITH org, COUNT(DISTINCT c) AS contactCount
+				SET org.derivedContactCount = contactCount`
+	params := map[string]any{
+		"tenant":         tenant,
+		"organizationId": organizationId,
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+
+	return err
+}
+
+func (r *organizationWriteRepository) RefreshContactCountByContactId(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, contactId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.RefreshContactCountByContactId")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
+
+	cypher := `MATCH (:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(:Contact {id:$contactId})--(:JobRole)--(org:Organization)
+			WITH org
+				OPTIONAL MATCH (org)--(:JobRole)--(c:Contact)
+				WHERE c.hide=false OR c.hide IS NULL
+			WITH org, COUNT(DISTINCT c) AS contactCount
+				SET org.derivedContactCount = contactCount, org.updatedAt = datetime()`
+	params := map[string]any{
+		"tenant":    tenant,
+		"contactId": contactId,
+	}
+
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 

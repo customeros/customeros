@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
@@ -16,7 +15,6 @@ export const OrganizationPage = observer(() => {
   const navigate = useNavigate();
   const params = useParams();
   const [searchParams] = useSearchParams();
-  const [isLoading, setIsLoading] = useState(true);
 
   const store = useStore();
 
@@ -28,23 +26,11 @@ export const OrganizationPage = observer(() => {
     return;
   }
 
-  useEffect(() => {
-    if (store.organizations.value.has(id)) {
-      setIsLoading(false);
-    }
-
-    if (!store.organizations.value.has(id) && store.session.isAuthenticated) {
-      store.organizations.invalidate(id, {
-        onFinally: () => setIsLoading(false),
-      });
-    }
-  }, [store.session.isAuthenticated]);
-
-  if (isLoading) {
+  if (!store.organizations.isBootstrapped) {
     return <LoadingScreen hide={false} isLoaded={false} showSplash={true} />;
   }
 
-  if (!isLoading && !store.organizations.value.has(id)) {
+  if (!store.organizations.value.has(id)) {
     throw new Error('Organization not found');
   }
 

@@ -64,8 +64,7 @@ export const OnboardingStatusModal = observer(
   ({ isOpen, onClose }: OnboardingStatusModalProps) => {
     const store = useStore();
     const id = useParams()?.id as string;
-    const organization = store.organizations.value.get(id);
-    const onboardingDetails = organization?.value?.accountDetails?.onboarding;
+    const organization = store.organizations.getById(id);
 
     const [initialStatus, setInitialStatus] = useState<OnboardingStatus>(
       OnboardingStatus.NotApplicable,
@@ -84,12 +83,10 @@ export const OnboardingStatusModal = observer(
     const handleSubmit = () => {
       if (!organization) return;
 
-      set(organization.value, 'accountDetails.onboarding.comments', comments);
-      set(
-        organization.value,
-        'accountDetails.onboarding.status',
-        initialStatus,
-      );
+      organization.draft();
+
+      set(organization.value, 'onboardingComments', comments);
+      set(organization.value, 'onboardingStatus', initialStatus);
 
       organization.commit();
 
@@ -110,7 +107,7 @@ export const OnboardingStatusModal = observer(
 
     useEffect(() => {
       setInitialStatus(
-        onboardingDetails?.status ?? OnboardingStatus.NotApplicable,
+        organization?.value?.onboardingStatus ?? OnboardingStatus.NotApplicable,
       );
     }, []);
 
@@ -141,7 +138,7 @@ export const OnboardingStatusModal = observer(
                     }}
                   />
                 </div>
-                {initialStatus !== onboardingDetails?.status && (
+                {initialStatus !== organization?.value?.onboardingStatus && (
                   <div>
                     <label htmlFor='comments' className='text-sm'>
                       <b>Reason for change</b> (optional)

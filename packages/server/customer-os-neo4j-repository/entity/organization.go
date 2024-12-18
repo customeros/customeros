@@ -3,6 +3,8 @@ package entity
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
+	"github.com/opentracing/opentracing-go"
+	"golang.org/x/net/context"
 	"time"
 )
 
@@ -12,6 +14,7 @@ const (
 	OrganizationPropertyEmployees                 OrganizationProperty = "employees"
 	OrganizationPropertyUpdatedAt                 OrganizationProperty = "updatedAt"
 	OrganizationPropertyYearFounded               OrganizationProperty = "yearFounded"
+	OrganizationPropertyName                      OrganizationProperty = "name"
 	OrganizationPropertyHide                      OrganizationProperty = "hide"
 	OrganizationPropertyStage                     OrganizationProperty = "stage"
 	OrganizationPropertyIndustry                  OrganizationProperty = "industry"
@@ -20,6 +23,8 @@ const (
 	OrganizationPropertyIndustryCheckedAt         OrganizationProperty = "techIndustryCheckedAt"
 	OrganizationPropertyCheckedAt                 OrganizationProperty = "techCheckedAt"
 	OrganizationPropertyLastTouchpointRequestedAt OrganizationProperty = "techLastTouchpointRequestedAt"
+	OrganizationPropertyLastTouchpointType        OrganizationProperty = "lastTouchpointType"
+	OrganizationPropertyLastTouchpointAt          OrganizationProperty = "lastTouchpointAt"
 	OrganizationPropertyIcpFit                    OrganizationProperty = "icpFit"
 	OrganizationPropertyHiddenAt                  OrganizationProperty = "hiddenAt"
 	OrganizationPropertyEnrichRequestedAt         OrganizationProperty = "techEnrichRequestedAt"
@@ -27,6 +32,8 @@ const (
 	OrganizationPropertyEnrichFailedAt            OrganizationProperty = "enrichFailedAt"
 	OrganizationPropertyEnrichAttempts            OrganizationProperty = "techEnrichAttempts"
 	OrganizationPropertyRenewalLikelihood         OrganizationProperty = "derivedRenewalLikelihood"
+	OrganizationPropertyContactCount              OrganizationProperty = "derivedContactCount"
+	OrganizationPropertyLeadSource                OrganizationProperty = "leadSource"
 )
 
 type OrganizationEntity struct {
@@ -85,9 +92,10 @@ type OrganizationEntity struct {
 }
 
 type DerivedData struct {
-	ChurnedAt   *time.Time    `neo4jDb:"property:derivedNextRenewalAt;lookupName:CHURN_DATE;supportCaseSensitive:false"`
-	Ltv         float64       `neo4jDb:"property:derivedLtv;lookupName:LTV;supportCaseSensitive:false"`
-	LtvCurrency enum.Currency `neo4jDb:"property:derivedLtvCurrency;lookupName:LTV_CURRENCY;supportCaseSensitive:false"`
+	ChurnedAt    *time.Time    `neo4jDb:"property:derivedNextRenewalAt;lookupName:CHURN_DATE;supportCaseSensitive:false"`
+	Ltv          float64       `neo4jDb:"property:derivedLtv;lookupName:LTV;supportCaseSensitive:false"`
+	LtvCurrency  enum.Currency `neo4jDb:"property:derivedLtvCurrency;lookupName:LTV_CURRENCY;supportCaseSensitive:false"`
+	ContactCount int64         `neo4jDb:"property:derivedContactCount;lookupName:CONTACT_COUNT;supportCaseSensitive:false"`
 }
 
 type RenewalSummary struct {
@@ -147,7 +155,11 @@ func (o OrganizationEntity) Labels(tenant string) []string {
 	}
 }
 
-func OrganizationStageAndRelationshipCompatible(stageStr, relationshipStr string) bool {
+func OrganizationStageAndRelationshipCompatible(ctx context.Context, stageStr, relationshipStr string) bool {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationStageAndRelationshipCompatible")
+	defer span.Finish()
+	span.LogKV("stage", stageStr, "relationship", relationshipStr)
+
 	stage := enum.OrganizationStage(stageStr)
 	relationship := enum.OrganizationRelationship(relationshipStr)
 

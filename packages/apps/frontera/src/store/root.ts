@@ -20,7 +20,6 @@ import { ContactsStore } from './Contacts/Contacts.store';
 import { MailboxesStore } from './Settings/Mailboxes.store';
 import { ContractsStore } from './Contracts/Contracts.store';
 import { RemindersStore } from './Reminders/Reminders.store';
-import { WorkFlowsStore } from './WorkFlows/WorkFlows.store';
 import { CustomFieldsStore } from './Settings/CustomFields.store';
 import { GlobalCacheStore } from './GlobalCache/GlobalCache.store';
 import { TableViewDefsStore } from './TableViewDefs/TableViewDefs.store';
@@ -48,7 +47,6 @@ export class RootStore {
   flowSenders: FlowSendersStore;
   contracts: ContractsStore;
   reminders: RemindersStore;
-  workFlows: WorkFlowsStore;
   windowManager: WindowManager;
   globalCache: GlobalCacheStore;
   flowParticipants: FlowParticipantsStore;
@@ -82,7 +80,6 @@ export class RootStore {
     this.contacts = new ContactsStore(this, this.transport);
     this.contracts = new ContractsStore(this, this.transport);
     this.reminders = new RemindersStore(this, this.transport);
-    this.workFlows = new WorkFlowsStore(this, this.transport);
     this.customFields = new CustomFieldsStore(this, this.transport);
     this.globalCache = new GlobalCacheStore(this, this.transport);
     this.flowSenders = new FlowSendersStore(this, this.transport);
@@ -127,8 +124,6 @@ export class RootStore {
       this.settings.bootstrap(),
       this.customFields.bootstrap(),
       this.mailboxes.bootstrap(),
-      // this.organizations.bootstrapStream(),
-      this.organizations.bootstrap(),
       this.tags.bootstrap(),
       this.opportunities.bootstrap(),
       this.invoices.bootstrap(),
@@ -136,7 +131,6 @@ export class RootStore {
       this.externalSystemInstances.bootstrap(),
       this.users.bootstrap(),
       this.contacts.bootstrap(),
-      this.workFlows.bootstrap(),
       this.flows.bootstrap(),
       this.flowEmailVariables.bootstrap(),
     ]);
@@ -174,7 +168,6 @@ export class RootStore {
     if (this.demoMode) return false;
 
     return (
-      this.organizations.isBootstrapping ||
       this.tableViewDefs.isLoading ||
       this.settings.isBootstrapping ||
       this.globalCache.isLoading

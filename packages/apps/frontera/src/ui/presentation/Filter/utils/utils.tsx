@@ -24,19 +24,13 @@ export const handleOperatorName = (
 ) => {
   return match(operator)
     .with(ComparisonOperator.Between, () => 'between')
-    .with(ComparisonOperator.Contains, () =>
-      type === 'list' && !plural
-        ? 'is'
-        : plural && type === 'list'
-        ? 'is any of'
-        : 'contains',
-    )
+    .with(ComparisonOperator.In, () => (!plural ? 'is' : 'is any of'))
     .with(ComparisonOperator.Equals, () => 'equals')
     .with(ComparisonOperator.Gt, () =>
       type === 'date' ? 'after' : 'more than',
     )
     .with(ComparisonOperator.Gte, () => 'greater than or equal to')
-    .with(ComparisonOperator.In, () => 'in')
+    .with(ComparisonOperator.Contains, () => 'contains')
     .with(ComparisonOperator.IsEmpty, () => 'is empty')
     .with(ComparisonOperator.IsNull, () => 'is null')
     .with(ComparisonOperator.Lt, () =>
@@ -45,13 +39,8 @@ export const handleOperatorName = (
     .with(ComparisonOperator.Lte, () => 'less than or equal to')
     .with(ComparisonOperator.StartsWith, () => 'starts with')
     .with(ComparisonOperator.IsNotEmpty, () => 'is not empty')
-    .with(ComparisonOperator.NotContains, () =>
-      type === 'list' && !plural
-        ? 'is not'
-        : plural && type === 'list'
-        ? 'is none of'
-        : 'does not contain',
-    )
+    .with(ComparisonOperator.NotIn, () => (!plural ? 'is not' : 'is none of'))
+    .with(ComparisonOperator.NotContains, () => 'does not contain')
     .with(ComparisonOperator.NotEquals, () => 'not equal to')
     .otherwise(() => 'unknown');
 };
@@ -64,7 +53,7 @@ export const handleOperatorIcon = (
     .with(ComparisonOperator.Between, () => (
       <SpacingWidth01 className='text-gray-500 group-hover:text-gray-700' />
     ))
-    .with(ComparisonOperator.Contains, () => (
+    .with(ComparisonOperator.In, () => (
       <CheckCircle className='text-gray-500 group-hover:text-gray-700' />
     ))
     .with(ComparisonOperator.Equals, () => (
@@ -78,7 +67,7 @@ export const handleOperatorIcon = (
       ),
     )
     .with(ComparisonOperator.Gte, () => 'greater than or equal to')
-    .with(ComparisonOperator.In, () => 'in')
+    .with(ComparisonOperator.Contains, () => 'contains')
     .with(ComparisonOperator.IsEmpty, () => (
       <CubeOutline className='text-gray-500 group-hover:text-gray-700' />
     ))
@@ -96,6 +85,9 @@ export const handleOperatorIcon = (
       <Cube01 className='text-gray-500 group-hover:text-gray-700' />
     ))
     .with(ComparisonOperator.NotContains, () => (
+      <SlashCircle01 className='text-gray-500 group-hover:text-gray-700' />
+    ))
+    .with(ComparisonOperator.NotIn, () => (
       <SlashCircle01 className='text-gray-500 group-hover:text-gray-700' />
     ))
     .with(ComparisonOperator.NotEquals, () => (

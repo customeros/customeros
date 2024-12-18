@@ -17,6 +17,7 @@ type Flow struct {
 	UpdatedAt      *time.Time `gorm:"column:updated_at;autoUpdateTime" json:"updatedAt"`
 	CreatedBy      *string    `gorm:"column:created_by;type:varchar(255)" json:"createdBy"`
 	LastModifiedBy *string    `gorm:"column:last_modified_by;type:varchar(255)" json:"lastModifiedBy"`
+
 }
 
 func (Flow) TableName() string {

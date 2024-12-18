@@ -626,7 +626,7 @@ func (b *organizationBatcher) getLatestOrganizationWithJobRoleForContacts(ctx co
 	ctx, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 
-	organizationEntities, err := b.commonOrganizationService.GetLatestOrganizationsWithJobRolesForContacts(ctx, ids)
+	organizationEntities, err := b.commonOrganizationService.GetPrimaryOrganizationsWithJobRoleForContacts(ctx, ids)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred

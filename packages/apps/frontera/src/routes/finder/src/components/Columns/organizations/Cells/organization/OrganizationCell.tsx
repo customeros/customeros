@@ -15,8 +15,7 @@ export const OrganizationCell = observer(({ id }: OrganizationCellProps) => {
 
   const name = org?.value?.name;
   const isSubsidiary = org?.value?.subsidiaries?.length > 0;
-  const parentOrganizationName =
-    org?.value?.parentCompanies?.[0]?.organization?.name;
+  const parentOrganizationName = org?.value?.parentName;
   const isEnriching = org?.isEnriching;
 
   const [tabs] = useLocalStorage<{
@@ -25,10 +24,6 @@ export const OrganizationCell = observer(({ id }: OrganizationCellProps) => {
   const navigate = useNavigate();
 
   const fullName = name || 'Unnamed';
-
-  if (isEnriching) {
-    return <p className='text-gray-400'>Enriching...</p>;
-  }
 
   const handleNavigate = () => {
     const lastPositionParams = tabs[id];
@@ -39,7 +34,11 @@ export const OrganizationCell = observer(({ id }: OrganizationCellProps) => {
     navigate(href);
   };
 
-  if (!org) return null;
+  if (isEnriching) {
+    return <p className='text-gray-400'>Enriching...</p>;
+  }
+
+  if (!org) return <p className='text-gray-400'>Not set</p>;
 
   return (
     <span className='inline'>

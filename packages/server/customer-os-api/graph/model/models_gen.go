@@ -439,23 +439,42 @@ type ContactTagInput struct {
 }
 
 type ContactUIDetails struct {
-	ID                    string    `json:"id"`
-	CreatedAt             time.Time `json:"createdAt"`
-	UpdatedAt             time.Time `json:"updatedAt"`
-	Hide                  bool      `json:"hide"`
-	FirstName             string    `json:"firstName"`
-	LastName              string    `json:"lastName"`
-	Name                  string    `json:"name"`
-	Prefix                string    `json:"prefix"`
-	Description           string    `json:"description"`
-	Timezone              string    `json:"timezone"`
-	ProfilePhotoURL       string    `json:"profilePhotoUrl"`
-	LinkedInInternalID    *string   `json:"linkedInInternalId,omitempty"`
-	LinkedInURL           *string   `json:"linkedInUrl,omitempty"`
-	LinkedInAlias         *string   `json:"linkedInAlias,omitempty"`
-	LinkedInExternalID    *string   `json:"linkedInExternalId,omitempty"`
-	LinkedInFollowerCount *int64    `json:"linkedInFollowerCount,omitempty"`
-	Tags                  []*Tag    `json:"tags"`
+	ID                                    string      `json:"id"`
+	CreatedAt                             time.Time   `json:"createdAt"`
+	UpdatedAt                             time.Time   `json:"updatedAt"`
+	Hide                                  bool        `json:"hide"`
+	FirstName                             string      `json:"firstName"`
+	LastName                              string      `json:"lastName"`
+	Name                                  string      `json:"name"`
+	Prefix                                string      `json:"prefix"`
+	Description                           string      `json:"description"`
+	Timezone                              string      `json:"timezone"`
+	ProfilePhotoURL                       string      `json:"profilePhotoUrl"`
+	EnrichedAt                            *time.Time  `json:"enrichedAt,omitempty"`
+	EnrichedFailedAt                      *time.Time  `json:"enrichedFailedAt,omitempty"`
+	EnrichedRequestedAt                   *time.Time  `json:"enrichedRequestedAt,omitempty"`
+	EnrichedEmailRequestedAt              *time.Time  `json:"enrichedEmailRequestedAt,omitempty"`
+	EnrichedEmailEnrichedAt               *time.Time  `json:"enrichedEmailEnrichedAt,omitempty"`
+	EnrichedEmailFound                    *bool       `json:"enrichedEmailFound,omitempty"`
+	LinkedInInternalID                    *string     `json:"linkedInInternalId,omitempty"`
+	LinkedInURL                           *string     `json:"linkedInUrl,omitempty"`
+	LinkedInAlias                         *string     `json:"linkedInAlias,omitempty"`
+	LinkedInExternalID                    *string     `json:"linkedInExternalId,omitempty"`
+	LinkedInFollowerCount                 *int64      `json:"linkedInFollowerCount,omitempty"`
+	PrimaryOrganizationID                 *string     `json:"primaryOrganizationId,omitempty"`
+	PrimaryOrganizationName               *string     `json:"primaryOrganizationName,omitempty"`
+	PrimaryOrganizationJobRoleID          *string     `json:"primaryOrganizationJobRoleId,omitempty"`
+	PrimaryOrganizationJobRoleTitle       *string     `json:"primaryOrganizationJobRoleTitle,omitempty"`
+	PrimaryOrganizationJobRoleDescription *string     `json:"primaryOrganizationJobRoleDescription,omitempty"`
+	PrimaryOrganizationJobRoleStartDate   *time.Time  `json:"primaryOrganizationJobRoleStartDate,omitempty"`
+	PrimaryOrganizationJobRoleEndDate     *time.Time  `json:"primaryOrganizationJobRoleEndDate,omitempty"`
+	Emails                                []*Email    `json:"emails"`
+	Phones                                []string    `json:"phones"`
+	Tags                                  []*Tag      `json:"tags"`
+	Locations                             []*Location `json:"locations"`
+	ConnectedUsers                        []string    `json:"connectedUsers"`
+	Flows                                 []string    `json:"flows"`
+	Socials                               []string    `json:"socials"`
 }
 
 // Updates data fields associated with an existing customer record in customerOS.

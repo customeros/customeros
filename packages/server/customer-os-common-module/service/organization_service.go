@@ -34,14 +34,13 @@ type OrganizationService interface {
 	Hide(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, organizationId string) error
 	Show(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, organizationId string) error
 
-	GetLatestOrganizationsWithJobRolesForContacts(ctx context.Context, contactIds []string) (*neo4jentity.OrganizationWithJobRoleEntities, error)
-
 	GetHiddenOrganizationIds(ctx context.Context, hiddenAfter time.Time) ([]string, error)
 	GetMergedOrganizationIds(ctx context.Context, mergedAfter time.Time) ([]string, error)
 	RequestRefreshLastTouchpoint(ctx context.Context, organizationId string) error
 	RefreshLastTouchpoint(ctx context.Context, organizationId string) error
 	CheckOrganizationExistsWithEmail(ctx context.Context, email string) (bool, string, error)
 	CheckOrganizationExistsWithLinkedIn(ctx context.Context, url, alias, externalId string) (bool, string, error)
+	GetPrimaryOrganizationsWithJobRoleForContacts(ctx context.Context, contactIds []string) (*neo4jentity.OrganizationWithJobRoleEntities, error)
 }
 
 type organizationService struct {
@@ -276,15 +275,17 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 	tracing.TagEntity(span, organizationId)
 
 	// validate stage and relationship combination all the time (from input or existing computed )
-	stage := input.GetStageStr()
-	relationship := input.GetRelationshipStr()
-	if stage == "" && existingOrganizationEntity != nil && existingOrganizationEntity.Stage != "" {
-		stage = existingOrganizationEntity.Stage.String()
+	stageStr := input.GetStageStr()
+	relationshipStr := input.GetRelationshipStr()
+	if stageStr != "" || relationshipStr != "" {
+		if stageStr == "" && existingOrganizationEntity != nil && existingOrganizationEntity.Stage != "" {
+			stageStr = existingOrganizationEntity.Stage.String()
+		}
+		if relationshipStr == "" && existingOrganizationEntity != nil && existingOrganizationEntity.Relationship != "" {
+			relationshipStr = existingOrganizationEntity.Relationship.String()
+		}
 	}
-	if relationship == "" && existingOrganizationEntity != nil && existingOrganizationEntity.Relationship != "" {
-		relationship = existingOrganizationEntity.Relationship.String()
-	}
-	if !neo4jentity.OrganizationStageAndRelationshipCompatible(stage, relationship) {
+	if !neo4jentity.OrganizationStageAndRelationshipCompatible(ctx, stageStr, relationshipStr) {
 		err := errors.New("Stage and Relationship are not compatible")
 		tracing.TraceErr(span, err)
 		return "", err
@@ -318,6 +319,12 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 			}
 		}
 		input.Hide = utils.BoolPtr(false)
+		if input.Relationship == nil {
+			input.Relationship = utils.ToPtr(neo4jenum.OrganizationRelationshipProspect)
+		}
+		if input.Stage == nil {
+			input.Stage = utils.ToPtr(input.Relationship.DefaultStage())
+		}
 	}
 
 	// generate customerOsId if not provided or if it is empty in the db
@@ -351,6 +358,10 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "failed to merge action"))
 				return nil, err
+			}
+			err = s.services.Neo4jRepositories.OrganizationWriteRepository.RefreshContactCountByOrgId(ctx, txWithPostCommit.Tx, tenant, organizationId)
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "unable to refresh contact count by organization id"))
 			}
 		}
 
@@ -630,13 +641,13 @@ func generateNewRandomCustomerOsId() string {
 	return customerOsID
 }
 
-func (s *organizationService) GetLatestOrganizationsWithJobRolesForContacts(ctx context.Context, contactIds []string) (*neo4jentity.OrganizationWithJobRoleEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.GetLatestOrganizationsWithJobRolesForContacts")
+func (s *organizationService) GetPrimaryOrganizationsWithJobRoleForContacts(ctx context.Context, contactIds []string) (*neo4jentity.OrganizationWithJobRoleEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.GetPrimaryOrganizationsWithJobRoleForContacts")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("contactIds", contactIds))
 
-	dbResults, err := s.services.Neo4jRepositories.OrganizationReadRepository.GetLatestOrganizationWithJobRoleForContacts(ctx, common.GetTenantFromContext(ctx), contactIds)
+	dbResults, err := s.services.Neo4jRepositories.OrganizationReadRepository.GetPrimaryOrganizationsWithJobRoleForContacts(ctx, common.GetTenantFromContext(ctx), contactIds)
 	if err != nil {
 		return nil, err
 	}

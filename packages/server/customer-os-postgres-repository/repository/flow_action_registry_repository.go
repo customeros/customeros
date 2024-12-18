@@ -142,7 +142,7 @@ func (r *flowActionRegistryRepository) Initialize(ctx context.Context) error {
 			return err
 		}
 
-		if existingAction.Action != "" {
+		if existingAction != nil && existingAction.Action != "" {
 			continue
 		}
 

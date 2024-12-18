@@ -11,8 +11,29 @@ import { OrganizationsStore } from '../Organizations.store';
 // TODO: Cache filtered and sorted results for faster subsequent access
 export class CustomView {
   private cachedCombos = new Map<string, string>();
+  private cachedSearchCombos = new Map<string, string>();
 
   constructor(private store: OrganizationsStore) {
+    autorun(() => {
+      const customViewDefs = this.store.root.tableViewDefs.customPresets;
+
+      customViewDefs.forEach((viewDef) => {
+        const preset = viewDef?.value.id;
+        const combo = [
+          viewDef.value?.defaultFilters,
+          viewDef.value?.filters,
+          viewDef.value?.sorting,
+          JSON.stringify(toJS(viewDef.value.columns)),
+        ].join('-');
+
+        if (this.cachedSearchCombos.get(preset) === combo) return;
+
+        this.cachedSearchCombos.set(preset, combo);
+
+        this.store.search(preset);
+      });
+    });
+
     autorun(() => {
       const customViewDefs = this.store.root.tableViewDefs.customPresets;
 

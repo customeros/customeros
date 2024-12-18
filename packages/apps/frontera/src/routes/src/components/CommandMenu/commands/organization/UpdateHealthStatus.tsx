@@ -46,8 +46,7 @@ export const UpdateHealthStatus = observer(() => {
         .with('Organization', () => {
           const organization = entity as Organization;
           const potentialAmount =
-            organization.value.accountDetails?.renewalSummary?.maxArrForecast ??
-            0;
+            organization.value.renewalSummaryMaxArrForecast ?? 0;
 
           set(
             organization.value,
@@ -85,8 +84,7 @@ export const UpdateHealthStatus = observer(() => {
 
   const healthStatus =
     context.entity === 'Organization' &&
-    (entity as Organization)?.value.accountDetails?.renewalSummary
-      ?.renewalLikelihood;
+    (entity as Organization)?.value.renewalSummaryRenewalLikelihood;
 
   return (
     <Command label='Change health status...'>

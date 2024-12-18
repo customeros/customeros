@@ -43,9 +43,9 @@ type User {
     """
     lastName: String!
     name: String
-    internal: Boolean!
-    bot: Boolean!
-    test: Boolean!
+    internal: Boolean! #our internal users like customer support
+    bot: Boolean! #not a human user
+    test: Boolean! #test user
     timezone: String
     profilePhotoUrl: String
 

@@ -32,6 +32,7 @@ type FlowExecutionService interface {
 	UpdateParticipantFlowRequirements(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, participant *entity.FlowParticipantEntity, requirements *FlowComputeParticipantsRequirementsInput) error
 	ScheduleFlow(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, flowId string, flowParticipant *entity.FlowParticipantEntity) error
 	ProcessActionExecution(ctx context.Context, scheduledActionExecution *entity.FlowActionExecutionEntity) error
+	ReplacePlaceholder(input, variableName, value string) string
 }
 
 type flowExecutionService struct {
@@ -1124,21 +1125,21 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 					contact := mapper.MapDbNodeToContactEntity(contactNode)
 
 					firstName, lastName := contact.DeriveFirstAndLastNames()
-					bodyTemplate = replacePlaceholders(bodyTemplate, "contact_first_name", firstName)
-					bodyTemplate = replacePlaceholders(bodyTemplate, "contact_last_name", lastName)
-					bodyTemplate = replacePlaceholders(bodyTemplate, "contact_email", toEmail)
+					bodyTemplate = s.ReplacePlaceholder(bodyTemplate, "contact_first_name", firstName)
+					bodyTemplate = s.ReplacePlaceholder(bodyTemplate, "contact_last_name", lastName)
+					bodyTemplate = s.ReplacePlaceholder(bodyTemplate, "contact_email", toEmail)
 
-					contactWithOrganizations, err := s.services.OrganizationService.GetLatestOrganizationsWithJobRolesForContacts(ctx, []string{contact.Id})
+					contactWithOrganizations, err := s.services.OrganizationService.GetPrimaryOrganizationsWithJobRoleForContacts(ctx, []string{contact.Id})
 					if err != nil {
 						return nil, errors.Wrap(err, "failed to get latest organizations with job roles for contacts")
 					}
 
 					if len(*contactWithOrganizations) > 0 {
 						contactWithOrganization := (*contactWithOrganizations)[0]
-						bodyTemplate = replacePlaceholders(bodyTemplate, "organization_name", contactWithOrganization.Organization.Name)
+						bodyTemplate = s.ReplacePlaceholder(bodyTemplate, "organization_name", contactWithOrganization.Organization.Name)
 						subjectTemplate = strings.ReplaceAll(subjectTemplate, "{{organization_name}}", contactWithOrganization.Organization.Name)
 					} else {
-						bodyTemplate = replacePlaceholders(bodyTemplate, "organization_name", "")
+						bodyTemplate = s.ReplacePlaceholder(bodyTemplate, "organization_name", "")
 						subjectTemplate = strings.ReplaceAll(subjectTemplate, "{{organization_name}}", "")
 					}
 
@@ -1160,8 +1161,8 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 
 				user := mapper.MapDbNodeToUserEntity(userNode)
 
-				bodyTemplate = replacePlaceholders(bodyTemplate, "sender_first_name", user.FirstName)
-				bodyTemplate = replacePlaceholders(bodyTemplate, "sender_last_name", user.LastName)
+				bodyTemplate = s.ReplacePlaceholder(bodyTemplate, "sender_first_name", user.FirstName)
+				bodyTemplate = s.ReplacePlaceholder(bodyTemplate, "sender_last_name", user.LastName)
 
 				addBillableEvent = true
 				emailMessage := &postgresentity.EmailMessage{
@@ -1381,9 +1382,10 @@ func (s *flowExecutionService) getEmailActionToReply(ctx context.Context, action
 	return previous, nil
 }
 
-func replacePlaceholders(input, variableName, value string) string {
+func (s *flowExecutionService) ReplacePlaceholder(input, variableName, value string) string {
 	return strings.Replace(input, "{{"+variableName+"}}", value, -1)
 }
+
 func adjustToWorkingTimeWithRandom(t time.Time, schedules []*postgresentity.UserWorkingSchedule, minRandom, maxRandom int) time.Time {
 	for {
 		// Get working hours for the current day

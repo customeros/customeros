@@ -37,9 +37,11 @@ export const FlowSender = observer(
     const flowSender = store.flowSenders.value.get(id) as FlowSenderStore;
     const userMailboxes = flowSender?.user?.value?.mailboxes;
     const hasLinkedInToken = flowSender?.user?.value?.hasLinkedInToken;
-    const { username } = useChannel(`finder:${store.session.value.tenant}`);
+    const { currentUserId } = useChannel(
+      `finder:${store.session.value.tenant}`,
+    );
 
-    const isCurrentUser = username === flowSender?.user?.name;
+    const isCurrentUser = currentUserId === flowSender?.user?.id;
 
     const handleSetUpLinkedInSender = () => {
       if (isCurrentUser) {

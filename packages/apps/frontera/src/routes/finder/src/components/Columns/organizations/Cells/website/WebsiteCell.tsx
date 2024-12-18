@@ -14,12 +14,6 @@ export const WebsiteCell = observer(({ organizationId }: WebsiteCellProps) => {
   const store = useStore();
   const [metaKey, setMetaKey] = useState(false);
   const organization = store.organizations.getById(organizationId);
-  const enrichedOrganizations = organization?.value?.enrichDetails;
-
-  const enrichingStatus =
-    !enrichedOrganizations?.enrichedAt &&
-    enrichedOrganizations?.requestedAt &&
-    !enrichedOrganizations?.failedAt;
 
   const website = organization?.value?.website;
 
@@ -52,7 +46,7 @@ export const WebsiteCell = observer(({ organizationId }: WebsiteCellProps) => {
       <p className='text-gray-700  truncate'>
         {website?.length && formattedLink ? (
           removeTrailingSlash(formattedLink)
-        ) : enrichingStatus ? (
+        ) : organization?.isEnriching ? (
           <span className='text-gray-400'>Enriching...</span>
         ) : (
           <span className='text-gray-400'>Not set</span>
