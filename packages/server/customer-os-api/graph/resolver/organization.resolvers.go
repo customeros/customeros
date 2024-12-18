@@ -499,7 +499,7 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 	// validate relationship and stage compatibility
 	stage := utils.FirstNotEmptyString(organizationDataFields.GetStageStr(), organizationEntity.Stage.String())
 	relationship := utils.FirstNotEmptyString(organizationDataFields.GetRelationshipStr(), organizationEntity.Relationship.String())
-	if !neo4jentity.OrganizationStageAndRelationshipCompatible(stage, relationship) {
+	if !neo4jentity.OrganizationStageAndRelationshipCompatible(ctx, stage, relationship) {
 		err := errors.New("Stage and Relationship are not compatible")
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Stage and Relationship are not compatible")
