@@ -43,6 +43,7 @@ func (r *flowWriteRepositoryImpl) Merge(ctx context.Context, tx *neo4j.ManagedTr
 				f.nodes = $nodes,
 				f.edges = $edges,
 				f.firstStartedAt = $firstStartedAt,
+				f.defaultName = $defaultName,
 				f.status = $status,
 				f.onHold = $onHold,
 				f.ready = $ready,
@@ -53,6 +54,7 @@ func (r *flowWriteRepositoryImpl) Merge(ctx context.Context, tx *neo4j.ManagedTr
 			ON CREATE SET
 				f.createdAt = $createdAt,
 				f.updatedAt = $updatedAt,
+				f.defaultName = $defaultName,
 				f.name = $name,
 				f.nodes = $nodes,
 				f.edges = $edges,
@@ -69,6 +71,7 @@ func (r *flowWriteRepositoryImpl) Merge(ctx context.Context, tx *neo4j.ManagedTr
 	params := map[string]any{
 		"tenant":         common.GetTenantFromContext(ctx),
 		"id":             entity.Id,
+		"defaultName":    entity.DefaultName,
 		"name":           entity.Name,
 		"nodes":          entity.Nodes,
 		"edges":          entity.Edges,

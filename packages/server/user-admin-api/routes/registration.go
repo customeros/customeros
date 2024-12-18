@@ -61,7 +61,7 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 				return
 			}
 
-			saveErr := saveIP(ginContext, services, signInRequest.LoggedInEmail)
+			saveErr := saveIP(ctx, ginContext, services, signInRequest.LoggedInEmail)
 			if saveErr != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "unable to save IP address"))
 			}
@@ -151,6 +151,27 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 
 						span.LogFields(tracingLog.String("result", "ok"))
 					}()
+				} else {
+
+					domain := commonUtils.ExtractDomain(signInRequest.LoggedInEmail)
+
+					isPersonalEmail := false
+					// check if the user is using a personal email provider
+					for _, personalEmailProviderItem := range personalEmailProviders {
+						domainLowercase := strings.ToLower(strings.TrimSpace(domain))
+						personalEmailProviderDomainLowercase := strings.ToLower(strings.TrimSpace(personalEmailProviderItem.ProviderDomain))
+						if domainLowercase == personalEmailProviderDomainLowercase {
+							isPersonalEmail = true
+							break
+						}
+					}
+
+					if !isPersonalEmail {
+						err = services.CommonServices.RegistrationService.PrepareDefaultTenantSetup(ctx, signInRequest.LoggedInEmail)
+						if err != nil {
+							tracing.TraceErr(span, err)
+						}
+					}
 				}
 			} else {
 				span.LogFields(tracingLog.String("flow", "authorization"))
@@ -855,13 +876,25 @@ func registerNewTenantAsLeadInProviderTenant(ctx context.Context, config *config
 	return nil
 }
 
-func saveIP(c *gin.Context, s *service.Services, email string) error {
-	span, ctx := opentracing.StartSpanFromContext(c.Request.Context(), "registration.saveIP")
+func saveIP(ctx context.Context, c *gin.Context, s *service.Services, email string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "registration.saveIP")
 	defer span.Finish()
 
 	var clientIP string
-	originalIP := c.Request.Header["X-Original-Forwarded-For"][0]
-	cloudflareIP := c.Request.Header["Cf-Connecting-Ip"][0]
+	var originalIP string
+	var cloudflareIP string
+
+	if c.Request.Header["X-Original-Forwarded-For"] == nil && c.Request.Header["Cf-Connecting-Ip"] == nil {
+		return nil
+	}
+
+	if c.Request.Header["X-Original-Forwarded-For"] != nil {
+		originalIP = c.Request.Header["X-Original-Forwarded-For"][0]
+	}
+
+	if c.Request.Header["Cf-Connecting-Ip"] != nil {
+		cloudflareIP = c.Request.Header["Cf-Connecting-Ip"][0]
+	}
 
 	if cloudflareIP == "" && originalIP == "" {
 		return nil

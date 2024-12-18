@@ -7,8 +7,6 @@ package resolver
 import (
 	"context"
 	"fmt"
-	"strings"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
@@ -18,6 +16,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	opentracing "github.com/opentracing/opentracing-go"
@@ -435,35 +434,20 @@ func (r *mutationResolver) FlowEmailActionTest(ctx context.Context, subject stri
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	mailboxUsername := fmt.Sprintf("bcc@%s.customeros.ai", strings.ToLower(tenant))
-	mailbox, err := r.Services.CommonServices.PostgresRepositories.TenantSettingsMailboxRepository.GetByMailbox(ctx, mailboxUsername)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "")
-		return &model.Result{Result: false}, err
-	}
-
-	if mailbox == nil {
-		err := r.Services.CommonServices.RegistrationService.ConfigureTestMailbox(ctx)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			graphql.AddErrorf(ctx, "")
-			return &model.Result{Result: false}, err
-		}
-	}
+	mailboxUsername := fmt.Sprintf("%s@%s", tenant, service.TEST_MAILBOX_DOMAIN)
 
 	fromFirstName := "Test"
 	fromLastName := "Sender"
 
 	bp := bodyTemplate
-	bp = r.Services.CommonServices.FlowExecutionService.ReplacePlaceholder(bodyTemplate, "contact_first_name", "John")
-	bp = r.Services.CommonServices.FlowExecutionService.ReplacePlaceholder(bodyTemplate, "contact_last_name", "Doe")
-	bp = r.Services.CommonServices.FlowExecutionService.ReplacePlaceholder(bodyTemplate, "contact_email", "john.doe@acme.com")
-	bp = r.Services.CommonServices.FlowExecutionService.ReplacePlaceholder(bodyTemplate, "sender_first_name", fromFirstName)
-	bp = r.Services.CommonServices.FlowExecutionService.ReplacePlaceholder(bodyTemplate, "sender_last_name", fromLastName)
-	bp = r.Services.CommonServices.FlowExecutionService.ReplacePlaceholder(bodyTemplate, "organization_name", "Acme Inc")
+	bp = r.Services.CommonServices.FlowExecutionService.ReplacePlaceholder(bp, "contact_first_name", "Justin")
+	bp = r.Services.CommonServices.FlowExecutionService.ReplacePlaceholder(bp, "contact_last_name", "Example")
+	bp = r.Services.CommonServices.FlowExecutionService.ReplacePlaceholder(bp, "contact_email", fmt.Sprintf("%s@%s", tenant, service.TEST_MAILBOX_DOMAIN))
+	bp = r.Services.CommonServices.FlowExecutionService.ReplacePlaceholder(bp, "sender_first_name", fromFirstName)
+	bp = r.Services.CommonServices.FlowExecutionService.ReplacePlaceholder(bp, "sender_last_name", fromLastName)
+	bp = r.Services.CommonServices.FlowExecutionService.ReplacePlaceholder(bp, "organization_name", "Example Inc.")
 
-	err = r.Services.CommonServices.MailService.SendMail(ctx, &entity.EmailMessage{
+	err := r.Services.CommonServices.MailService.SendMail(ctx, &entity.EmailMessage{
 		Status:       entity.EmailMessageStatusScheduled,
 		Tenant:       tenant,
 		ProducerId:   uuid.NewString(),

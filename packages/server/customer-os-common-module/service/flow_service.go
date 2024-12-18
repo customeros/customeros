@@ -271,6 +271,7 @@ func (s *flowService) FlowMerge(ctx context.Context, tx *neo4j.ManagedTransactio
 			}
 		}
 
+		toStore.DefaultName = input.DefaultName
 		toStore.Name = input.Name
 		toStore.Nodes = input.Nodes
 		toStore.Edges = input.Edges

@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"errors"
-
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/opentracing/opentracing-go"
@@ -16,7 +15,7 @@ type FlowTransitionsRegistryRepository interface {
 	Initialize(ctx context.Context) error
 	FindAll(ctx context.Context, transition *entity.FlowTransitionsRegistry) (*[]entity.FlowTransitionsRegistry, error)
 	Find(ctx context.Context, transition entity.FlowTransitionsRegistry) (*entity.FlowTransitionsRegistry, error)
-	Create(ctx context.Context, transition entity.FlowTransitionsRegistry) (*entity.FlowTransitionsRegistry, error)
+	Create(ctx context.Context, transition *entity.FlowTransitionsRegistry) (*entity.FlowTransitionsRegistry, error)
 }
 
 type flowTransitionsRegistryRepository struct {
@@ -32,7 +31,7 @@ func NewFlowTransitionsRegistryRepository(gormDb *gorm.DB) FlowTransitionsRegist
 	return &flowTransitionsRegistryRepository{gormDb: gormDb}
 }
 
-func (r *flowTransitionsRegistryRepository) Create(ctx context.Context, transition entity.FlowTransitionsRegistry) (*entity.FlowTransitionsRegistry, error) {
+func (r *flowTransitionsRegistryRepository) Create(ctx context.Context, transition *entity.FlowTransitionsRegistry) (*entity.FlowTransitionsRegistry, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowTransitionsRegistryRepository.Create")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -43,7 +42,7 @@ func (r *flowTransitionsRegistryRepository) Create(ctx context.Context, transiti
 		return nil, err
 	}
 
-	return &transition, nil
+	return transition, nil
 }
 
 func (r *flowTransitionsRegistryRepository) FindAll(ctx context.Context, transition *entity.FlowTransitionsRegistry) (*[]entity.FlowTransitionsRegistry, error) {
@@ -127,7 +126,7 @@ func (r *flowTransitionsRegistryRepository) Initialize(ctx context.Context) erro
 		}
 
 		if !exists {
-			_, createErr := r.Create(ctx, transition)
+			_, createErr := r.Create(ctx, &transition)
 			if createErr != nil {
 				tracing.TraceErr(span, createErr)
 				return createErr
