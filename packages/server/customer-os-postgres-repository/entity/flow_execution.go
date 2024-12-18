@@ -19,7 +19,7 @@ type FlowExecution struct {
 	CurrentStep       string     `gorm:"column:current_step;type:varchar(255);index" json:"currentStep"`
 	CurrentStepNodeId string     `gorm:"column:current_step_node_id;type:varchar(255);index" json:"currentStepNodeId"`
 	CreatedAt         time.Time  `gorm:"column:created_at;autoCreateTime" json:"createdAt"`
-	UpdatedAt         time.Time  `gorm:"column:updated_at;autoUpdateTime" json:"updatedAt"`
+	UpdatedAt         *time.Time `gorm:"column:updated_at;autoUpdateTime" json:"updatedAt"`
 	Context           *string    `gorm:"column:context;type:text" json:"context"`
 }
 

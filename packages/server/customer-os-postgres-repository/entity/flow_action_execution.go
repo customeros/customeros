@@ -15,7 +15,7 @@ type FlowActionExecution struct {
 	CompletedAt     *time.Time `gorm:"column:completed_at" json:"completedAt"`
 	ErrorMessage    *string    `gorm:"column:error_message;type:text" json:"errorMessage"`
 	CreatedAt       time.Time  `gorm:"column:created_at;autoCreateTime" json:"createdAt"`
-	UpdatedAt       time.Time  `gorm:"column:updated_at;autoUpdateTime" json:"updatedAt"`
+	UpdatedAt       *time.Time `gorm:"column:updated_at;autoUpdateTime" json:"updatedAt"`
 	Result          *string    `gorm:"column:result;type:text" json:"result"`
 }
 

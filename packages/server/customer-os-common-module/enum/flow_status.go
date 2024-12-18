@@ -5,9 +5,9 @@ import "fmt"
 type FlowStatus string
 
 const (
-	FlowStatusActive   FlowStatus = "ACTIVE"
-	FlowStatusArchived FlowStatus = "ARCHIVED"
-	FlowStatusInactive FlowStatus = "INACTIVE"
+	FlowStatusArchived FlowStatus = "archived"
+	FlowStatusOff      FlowStatus = "off"
+	FlowStatusOn       FlowStatus = "on"
 )
 
 func (t FlowStatus) String() string {
@@ -17,9 +17,9 @@ func (t FlowStatus) String() string {
 func GetFlowStatus(s string) (FlowStatus, error) {
 	switch FlowStatus(s) {
 	case
-		FlowStatusActive,
 		FlowStatusArchived,
-		FlowStatusInactive:
+		FlowStatusOff,
+		FlowStatusOn:
 
 		return FlowStatus(s), nil
 

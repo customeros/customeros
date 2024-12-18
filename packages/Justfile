@@ -89,9 +89,12 @@ ps:
 	cd ../deployment && podman-compose ps
 
 restart-api:
-    pkill -f "customer-os-api" || true
-    cd ./server/customer-os-api && go run . > ../../api.log 2>&1 & echo $$! > api.pid
-    echo "CustomerOS API restarted"
+	pkill -f "customer-os-platform-admin-api" || true 
+	cd ./server/customer-os-platform-admin-api && go run . > ../../admin-api.log 2>&1 & echo $$! > admin-api.pid
+	pkill -f "customer-os-api" || true
+	cd ./server/customer-os-api && go run . > ../../api.log 2>&1 & echo $$! > api.pid
+	sleep 5
+	echo "CustomerOS API restarted"
 
 start:
 	cd ../deployment && podman-compose up rabbitmq jaeger postgres neo4j eventstore -d
@@ -99,7 +102,7 @@ start:
 start-api:
     cd ./server/customer-os-platform-admin-api && go run . > ../../admin-api.log 2>&1 & echo $$! > admin-api.pid
     cd ./server/customer-os-api && go run . > ../../api.log 2>&1 & echo $$! > api.pid
-    echo "Services started. Logs in admin-api.log"
+    echo "Services started."
 
 start-api-debug:
     cd ./server/customer-os-api && dlv debug --headless --listen=:2345 --api-version=2 .

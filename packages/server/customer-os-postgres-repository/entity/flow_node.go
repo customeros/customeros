@@ -7,13 +7,13 @@ import (
 )
 
 type FlowNode struct {
-	ID        string    `gorm:"primaryKey;type:varchar(50)" json:"id"`
-	FlowID    string    `gorm:"column:flow_id;type:varchar(50);not null;index" json:"flowId"`
-	Type      string    `gorm:"column:type;type:varchar(50);not null" json:"type"`
-	Event     *string   `gorm:"column:event;type:varchar(255)" json:"event"`
-	CreatedAt time.Time `gorm:"column:created_at;autoCreateTime" json:"createdAt"`
-	UpdatedAt time.Time `gorm:"column:updated_at;autoUpdateTime" json:"updatedAt"`
-	Active    bool      `gorm:"column:active;type:boolean;default:true" json:"active"`
+	ID        string     `gorm:"primaryKey;type:varchar(50)" json:"id"`
+	FlowID    string     `gorm:"column:flow_id;type:varchar(50);not null;index" json:"flowId"`
+	Type      string     `gorm:"column:type;type:varchar(50);not null" json:"type"`
+	Event     *string    `gorm:"column:event;type:varchar(255)" json:"event"`
+	CreatedAt time.Time  `gorm:"column:created_at;autoCreateTime" json:"createdAt"`
+	UpdatedAt *time.Time `gorm:"column:updated_at;autoUpdateTime" json:"updatedAt"`
+	Active    bool       `gorm:"column:active;type:boolean;default:true" json:"active"`
 
 	// used to store wait time config, email subject & template, etc
 	EventData *datatypes.JSON `gorm:"column:data;type:jsonb" json:"data"`

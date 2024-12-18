@@ -14,14 +14,14 @@ type CreateFlowEdgeRequest struct {
 }
 
 type FlowEdgeRecord struct {
-	ID         string    `json:"id"`
-	FlowID     string    `json:"flowId"`
-	FromNodeID string    `json:"fromNodeId"`
-	ToNodeID   string    `json:"toNodeId"`
-	Condition  *string   `json:"condition,omitempty"`
-	CreatedAt  time.Time `json:"createdAt"`
-	UpdatedAt  time.Time `json:"updatedAt,omitempty"`
-	Data       *any      `json:"data,omitempty"`
+	ID         string     `json:"id"`
+	FlowID     string     `json:"flowId"`
+	FromNodeID string     `json:"fromNodeId"`
+	ToNodeID   string     `json:"toNodeId"`
+	Condition  *string    `json:"condition,omitempty"`
+	CreatedAt  time.Time  `json:"createdAt"`
+	UpdatedAt  *time.Time `json:"updatedAt,omitempty"`
+	Data       *any       `json:"data,omitempty"`
 }
 
 type FlowEdgeResponse struct {

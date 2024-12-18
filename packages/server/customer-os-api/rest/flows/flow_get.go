@@ -32,7 +32,7 @@ func GetFlows(s *service.Services) gin.HandlerFunc {
 			rest.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer)
 			return
 		}
-		if !belongsToTenant {
+		if flowId != "" && !belongsToTenant {
 			rest.SendError(c, span, http.StatusNotFound, enum.ErrNotFound.WithMessage("unable to locate flow"))
 			return
 		}

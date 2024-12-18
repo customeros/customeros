@@ -74,7 +74,6 @@ func (w *webhookService) GetIntegrationFromWebhookPath(ctx context.Context, tena
 		Tenant:      tenant,
 		WebhookPath: path,
 	})
-
 	if err != nil {
 		err = fmt.Errorf("Unable to lookup webhook path: %v", err)
 		tracing.TraceErr(span, err)
@@ -167,7 +166,6 @@ func (w *webhookService) CreateIntegrationWebhook(ctx context.Context, tenant st
 }
 
 func (w *webhookService) DeactivateWebhook(ctx context.Context, webhookPath string) error {
-
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebhookService.Deactivate")
 	defer span.Finish()
 	span.LogFields(log.String("webhookPath", webhookPath))
@@ -183,7 +181,7 @@ func (w *webhookService) DeactivateWebhook(ctx context.Context, webhookPath stri
 		Tenant:      tenant,
 		WebhookPath: webhookPath,
 		Enabled:     false,
-		UpdatedAt:   utils.Now(),
+		UpdatedAt:   utils.NowPtr(),
 	}
 
 	_, err := w.repositories.PostgresRepositories.FlowWebhooksRepository.Update(ctx, query)
