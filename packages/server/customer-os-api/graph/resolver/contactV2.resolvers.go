@@ -30,8 +30,14 @@ func (r *queryResolver) UIContacts(ctx context.Context, ids []string) ([]*model.
 	mapResponse := map[string]*model.ContactUIDetails{}
 	for _, id := range ids {
 		mapResponse[id] = &model.ContactUIDetails{
-			ID:   id,
-			Tags: make([]*model.Tag, 0),
+			ID:             id,
+			Tags:           make([]*model.Tag, 0),
+			Socials:        make([]string, 0),
+			Locations:      make([]*model.Location, 0),
+			Phones:         make([]string, 0),
+			Emails:         make([]*model.Email, 0),
+			Flows:          make([]string, 0),
+			ConnectedUsers: make([]string, 0),
 		}
 	}
 
@@ -87,6 +93,8 @@ func (r *queryResolver) UIContacts(ctx context.Context, ids []string) ([]*model.
 				(*resp)[s.DataloaderKey].LinkedInAlias = utils.StringPtr(s.Alias)
 				(*resp)[s.DataloaderKey].LinkedInExternalID = utils.StringPtr(s.ExternalId)
 				(*resp)[s.DataloaderKey].LinkedInFollowerCount = utils.Int64Ptr(s.FollowersCount)
+			} else if !s.IsLinkedin() && s.Url != "" {
+				(*resp)[s.DataloaderKey].Socials = append((*resp)[s.DataloaderKey].Socials, s.Url)
 			}
 		}
 	}(&mapResponse)
@@ -107,6 +115,128 @@ func (r *queryResolver) UIContacts(ctx context.Context, ids []string) ([]*model.
 
 		for _, t := range *tags {
 			(*resp)[t.DataloaderKey].Tags = append((*resp)[t.DataloaderKey].Tags, mapper.MapEntityToTag(&t))
+		}
+	}(&mapResponse)
+
+	wg.Add(1)
+	go func(resp *map[string]*model.ContactUIDetails) {
+		innerSpan, innerCtx := opentracing.StartSpanFromContext(ctx, "QueryResolver.UIContacts.GetPrimaryOrganizations")
+		defer innerSpan.Finish()
+		defer wg.Done()
+		tracing.SetDefaultResolverSpanTags(innerCtx, innerSpan)
+
+		primaryOrganizationsWithJobRole, err := r.Services.CommonServices.OrganizationService.GetPrimaryOrganizationsWithJobRoleForContacts(innerCtx, ids)
+		if err != nil {
+			tracing.TraceErr(innerSpan, err)
+			setError(err)
+			return
+		}
+
+		for _, o := range *primaryOrganizationsWithJobRole {
+			if (*resp)[o.DataloaderKey].PrimaryOrganizationID != nil {
+				(*resp)[o.DataloaderKey].PrimaryOrganizationID = utils.StringPtr(o.Organization.ID)
+				(*resp)[o.DataloaderKey].PrimaryOrganizationName = utils.StringPtr(o.Organization.Name)
+				(*resp)[o.DataloaderKey].PrimaryOrganizationJobRoleID = utils.StringPtr(o.JobRole.Id)
+				(*resp)[o.DataloaderKey].PrimaryOrganizationJobRoleTitle = utils.StringPtr(o.JobRole.JobTitle)
+				(*resp)[o.DataloaderKey].PrimaryOrganizationJobRoleDescription = o.JobRole.Description
+				(*resp)[o.DataloaderKey].PrimaryOrganizationJobRoleStartDate = o.JobRole.StartedAt
+				(*resp)[o.DataloaderKey].PrimaryOrganizationJobRoleEndDate = o.JobRole.EndedAt
+			}
+		}
+	}(&mapResponse)
+
+	wg.Add(1)
+	go func(resp *map[string]*model.ContactUIDetails) {
+		innerSpan, innerCtx := opentracing.StartSpanFromContext(ctx, "QueryResolver.ContactUIDetails.GetLocations")
+		defer innerSpan.Finish()
+		defer wg.Done()
+		tracing.SetDefaultResolverSpanTags(innerCtx, innerSpan)
+
+		locations, err := r.Services.CommonServices.LocationService.GetAllForContacts(innerCtx, ids)
+		if err != nil {
+			tracing.TraceErr(innerSpan, err)
+			setError(err)
+			return
+		}
+
+		for _, l := range *locations {
+			(*resp)[l.DataloaderKey].Locations = append((*resp)[l.DataloaderKey].Locations, mapper.MapEntityToLocation(&l))
+		}
+	}(&mapResponse)
+
+	wg.Add(1)
+	go func(resp *map[string]*model.ContactUIDetails) {
+		innerSpan, innerCtx := opentracing.StartSpanFromContext(ctx, "QueryResolver.ContactUIDetails.GetPhoneNumbers")
+		defer innerSpan.Finish()
+		defer wg.Done()
+		tracing.SetDefaultResolverSpanTags(innerCtx, innerSpan)
+
+		phoneNumbers, err := r.Services.PhoneNumberService.GetAllForEntityTypeByIds(innerCtx, commonModel.CONTACT, ids)
+		if err != nil {
+			tracing.TraceErr(innerSpan, err)
+			setError(err)
+			return
+		}
+
+		for _, p := range *phoneNumbers {
+			(*resp)[p.DataloaderKey].Phones = append((*resp)[p.DataloaderKey].Phones, p.RawPhoneNumber)
+		}
+	}(&mapResponse)
+
+	wg.Add(1)
+	go func(resp *map[string]*model.ContactUIDetails) {
+		innerSpan, innerCtx := opentracing.StartSpanFromContext(ctx, "QueryResolver.ContactUIDetails.GetEmails")
+		defer innerSpan.Finish()
+		defer wg.Done()
+		tracing.SetDefaultResolverSpanTags(innerCtx, innerSpan)
+
+		emails, err := r.Services.CommonServices.EmailService.GetAllEmailsForEntityIds(innerCtx, common.GetTenantFromContext(ctx), commonModel.CONTACT, ids)
+		if err != nil {
+			tracing.TraceErr(innerSpan, err)
+			setError(err)
+			return
+		}
+
+		for _, e := range *emails {
+			(*resp)[e.DataloaderKey].Emails = append((*resp)[e.DataloaderKey].Emails, mapper.MapEntityToEmail(&e))
+		}
+	}(&mapResponse)
+
+	wg.Add(1)
+	go func(resp *map[string]*model.ContactUIDetails) {
+		innerSpan, innerCtx := opentracing.StartSpanFromContext(ctx, "QueryResolver.ContactUIDetails.GetConnectedUsers")
+		defer innerSpan.Finish()
+		defer wg.Done()
+		tracing.SetDefaultResolverSpanTags(innerCtx, innerSpan)
+
+		userEntities, err := r.Services.CommonServices.UserService.GetUsersConnectedForContacts(innerCtx, ids)
+		if err != nil {
+			tracing.TraceErr(innerSpan, err)
+			setError(err)
+			return
+		}
+
+		for _, u := range *userEntities {
+			(*resp)[u.DataloaderKey].ConnectedUsers = append((*resp)[u.DataloaderKey].ConnectedUsers, u.Id)
+		}
+	}(&mapResponse)
+
+	wg.Add(1)
+	go func(resp *map[string]*model.ContactUIDetails) {
+		innerSpan, innerCtx := opentracing.StartSpanFromContext(ctx, "QueryResolver.ContactUIDetails.GetFlows")
+		defer innerSpan.Finish()
+		defer wg.Done()
+		tracing.SetDefaultResolverSpanTags(innerCtx, innerSpan)
+
+		flowEntities, err := r.Services.CommonServices.FlowService.FlowsGetListWithParticipant(ctx, ids, commonModel.CONTACT)
+		if err != nil {
+			tracing.TraceErr(innerSpan, err)
+			setError(err)
+			return
+		}
+
+		for _, f := range *flowEntities {
+			(*resp)[f.DataloaderKey].Flows = append((*resp)[f.DataloaderKey].Flows, f.Id)
 		}
 	}(&mapResponse)
 

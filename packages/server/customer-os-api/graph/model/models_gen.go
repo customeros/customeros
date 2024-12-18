@@ -474,6 +474,7 @@ type ContactUIDetails struct {
 	Locations                             []*Location `json:"locations"`
 	ConnectedUsers                        []string    `json:"connectedUsers"`
 	Flows                                 []string    `json:"flows"`
+	Socials                               []string    `json:"socials"`
 }
 
 // Updates data fields associated with an existing customer record in customerOS.

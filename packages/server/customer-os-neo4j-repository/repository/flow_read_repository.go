@@ -16,7 +16,7 @@ import (
 type FlowReadRepository interface {
 	GetList(ctx context.Context) ([]*dbtype.Node, error)
 	GetWithParticipant(ctx context.Context, tx *neo4j.ManagedTransaction, flowParticipantId string) (*dbtype.Node, error)
-	GetListWithParticipant(ctx context.Context, entityIds []string, entityType model.EntityType) ([]*utils.DbNodeAndId, error)
+	GetFlowsForParticipants(ctx context.Context, entityIds []string, entityType model.EntityType) ([]*utils.DbNodeAndId, error)
 	GetListWithSender(ctx context.Context, senderIds []string) ([]*utils.DbNodeAndId, error)
 	GetById(ctx context.Context, id string) (*dbtype.Node, error)
 }
@@ -96,8 +96,8 @@ func (r flowReadRepositoryImpl) GetWithParticipant(ctx context.Context, tx *neo4
 	return result.(*dbtype.Node), nil
 }
 
-func (r flowReadRepositoryImpl) GetListWithParticipant(ctx context.Context, entityIds []string, entityType model.EntityType) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowReadRepository.GetListWithParticipant")
+func (r flowReadRepositoryImpl) GetFlowsForParticipants(ctx context.Context, entityIds []string, entityType model.EntityType) ([]*utils.DbNodeAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowReadRepository.GetFlowsForParticipants")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 

@@ -142,7 +142,7 @@ func (s *flowService) FlowsGetListWithParticipant(ctx context.Context, entityIds
 
 	span.LogFields(log.Object("entityIds", entityIds), log.Object("entityType", entityType))
 
-	data, err := s.services.Neo4jRepositories.FlowReadRepository.GetListWithParticipant(ctx, entityIds, entityType)
+	data, err := s.services.Neo4jRepositories.FlowReadRepository.GetFlowsForParticipants(ctx, entityIds, entityType)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err

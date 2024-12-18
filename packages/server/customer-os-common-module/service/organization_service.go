@@ -34,14 +34,13 @@ type OrganizationService interface {
 	Hide(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, organizationId string) error
 	Show(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, organizationId string) error
 
-	GetLatestOrganizationsWithJobRolesForContacts(ctx context.Context, contactIds []string) (*neo4jentity.OrganizationWithJobRoleEntities, error)
-
 	GetHiddenOrganizationIds(ctx context.Context, hiddenAfter time.Time) ([]string, error)
 	GetMergedOrganizationIds(ctx context.Context, mergedAfter time.Time) ([]string, error)
 	RequestRefreshLastTouchpoint(ctx context.Context, organizationId string) error
 	RefreshLastTouchpoint(ctx context.Context, organizationId string) error
 	CheckOrganizationExistsWithEmail(ctx context.Context, email string) (bool, string, error)
 	CheckOrganizationExistsWithLinkedIn(ctx context.Context, url, alias, externalId string) (bool, string, error)
+	GetPrimaryOrganizationsWithJobRoleForContacts(ctx context.Context, contactIds []string) (*neo4jentity.OrganizationWithJobRoleEntities, error)
 }
 
 type organizationService struct {
@@ -640,13 +639,13 @@ func generateNewRandomCustomerOsId() string {
 	return customerOsID
 }
 
-func (s *organizationService) GetLatestOrganizationsWithJobRolesForContacts(ctx context.Context, contactIds []string) (*neo4jentity.OrganizationWithJobRoleEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.GetLatestOrganizationsWithJobRolesForContacts")
+func (s *organizationService) GetPrimaryOrganizationsWithJobRoleForContacts(ctx context.Context, contactIds []string) (*neo4jentity.OrganizationWithJobRoleEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.GetPrimaryOrganizationsWithJobRoleForContacts")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("contactIds", contactIds))
 
-	dbResults, err := s.services.Neo4jRepositories.OrganizationReadRepository.GetLatestOrganizationWithJobRoleForContacts(ctx, common.GetTenantFromContext(ctx), contactIds)
+	dbResults, err := s.services.Neo4jRepositories.OrganizationReadRepository.GetPrimaryOrganizationsWithJobRoleForContacts(ctx, common.GetTenantFromContext(ctx), contactIds)
 	if err != nil {
 		return nil, err
 	}
