@@ -6,6 +6,7 @@ import (
 	mapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"time"
 )
 
 func MapEntityToOrganizationUIDetails(entity *neo4jentity.OrganizationEntity, output *model.OrganizationUIDetails) {
@@ -56,4 +57,10 @@ func MapEntityToOrganizationUIDetails(entity *neo4jentity.OrganizationEntity, ou
 	output.EnrichedAt = entity.EnrichDetails.EnrichedAt
 	output.EnrichedRequestedAt = entity.EnrichDetails.EnrichRequestedAt
 	output.EnrichedFailedAt = entity.EnrichDetails.EnrichFailedAt
+	if entity.EnrichDetails.EnrichedAt == nil && entity.EnrichDetails.EnrichFailedAt == nil && entity.EnrichDetails.EnrichRequestedAt != nil {
+		// if requested is older than 1 min, remove it
+		if time.Since(*entity.EnrichDetails.EnrichRequestedAt) > time.Minute {
+			output.EnrichedRequestedAt = nil
+		}
+	}
 }
