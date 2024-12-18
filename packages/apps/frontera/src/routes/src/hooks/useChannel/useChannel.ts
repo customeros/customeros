@@ -12,6 +12,7 @@ import { PhoenixSocketContext } from '../../components/Providers/SocketProvider'
 type Meta = {
   color: string;
   phx_ref: string;
+  user_id: string;
   username: string;
   online_at: number;
   metadata: { source: string };
@@ -78,9 +79,9 @@ export const useChannel = (channelName: string) => {
     };
   }, [setPresence, socket, user_id]);
 
-  return { username, channel, presence, presentUsers };
+  return { channel, presence, presentUsers, currentUserId: user_id };
 };
 
 function parsePresentUsers(presenceState: PresenceState) {
-  return presenceState.map((p) => [p.metas?.[0].username, p.metas?.[0].color]);
+  return presenceState.map((p) => [p.metas?.[0]]);
 }
