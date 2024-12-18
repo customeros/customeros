@@ -43,6 +43,7 @@ type ContactUiDetails {
     locations:              [Location!]!
     connectedUsers:         [ID!]!
     flows:                  [ID!]!
+    socials:                [String!]!
 }
 
 type ContactSearchResult{

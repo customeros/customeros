@@ -1129,7 +1129,7 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 					bodyTemplate = s.ReplacePlaceholder(bodyTemplate, "contact_last_name", lastName)
 					bodyTemplate = s.ReplacePlaceholder(bodyTemplate, "contact_email", toEmail)
 
-					contactWithOrganizations, err := s.services.OrganizationService.GetLatestOrganizationsWithJobRolesForContacts(ctx, []string{contact.Id})
+					contactWithOrganizations, err := s.services.OrganizationService.GetPrimaryOrganizationsWithJobRoleForContacts(ctx, []string{contact.Id})
 					if err != nil {
 						return nil, errors.Wrap(err, "failed to get latest organizations with job roles for contacts")
 					}
