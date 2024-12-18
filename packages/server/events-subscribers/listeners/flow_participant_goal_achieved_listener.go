@@ -94,9 +94,9 @@ func Handle_FlowParticipantGoalAchieved(ctx context.Context, services *service.S
 
 		organizationName := ""
 		organizationPublicLink := ""
-		contactWithOrganizations, err := services.OrganizationService.GetLatestOrganizationsWithJobRolesForContacts(ctx, []string{flowParticipant.EntityId})
+		contactWithOrganizations, err := services.OrganizationService.GetPrimaryOrganizationsWithJobRoleForContacts(ctx, []string{flowParticipant.EntityId})
 		if err != nil {
-			return errors.Wrap(err, "failed to get latest organizations with job roles for contacts")
+			return errors.Wrap(err, "failed to get primary organizations with job roles for contacts")
 		}
 
 		if len(*contactWithOrganizations) > 0 {
