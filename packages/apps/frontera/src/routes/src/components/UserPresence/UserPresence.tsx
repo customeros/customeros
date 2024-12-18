@@ -7,16 +7,17 @@ interface UserPresenceProps {
 }
 
 export const UserPresence = ({ channelName }: UserPresenceProps) => {
-  const { presentUsers, username } = useChannel(channelName);
+  const { presentUsers, currentUserId } = useChannel(channelName);
 
   return (
     <div className='flex'>
-      {presentUsers.map(([user, color]) => (
+      {presentUsers.map(([user]) => (
         <UserHexagon
-          key={user}
-          name={user}
-          color={color}
-          isCurrent={user === username}
+          id={user?.user_id}
+          key={user?.user_id}
+          color={user?.color}
+          name={user?.username}
+          isCurrent={user?.user_id === currentUserId}
         />
       ))}
     </div>
