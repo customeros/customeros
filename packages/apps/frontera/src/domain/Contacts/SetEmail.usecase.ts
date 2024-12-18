@@ -2,6 +2,7 @@ import type { Contact } from '@store/Contacts/Contact.dto';
 
 import { set } from 'lodash';
 import { action, observable } from 'mobx';
+import { ContactService } from '@store/Contacts/__service__/Contacts.service';
 
 import { Email } from '@shared/types/__generated__/graphql.types';
 
@@ -9,8 +10,12 @@ export class SetEmailCase {
   @observable accessor email: string = '';
   @observable accessor oldEmail: string = '';
   @observable accessor entity: Contact | null = null;
+  @observable accessor emailError: boolean = false;
+  private service: ContactService;
 
-  constructor() {}
+  constructor() {
+    this.service = new ContactService();
+  }
 
   @action
   setEntity(entity: Contact) {
@@ -69,7 +74,9 @@ export class SetEmailCase {
   public updateEmailForContact(emailIdx: number) {
     if (this.entity) {
       this.entity.draft();
-      this.entity.value.emails[emailIdx].email = this.email;
+
+      set(this.entity.value.emails[emailIdx], 'email', this.email);
+      // this.entity.value.emails[emailIdx].email = this.email;
       this.entity.commit();
     }
   }

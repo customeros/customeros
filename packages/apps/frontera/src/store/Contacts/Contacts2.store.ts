@@ -1,12 +1,12 @@
 import { Store } from '@store/_store';
 import { RootStore } from '@store/root';
 import { Transport } from '@store/transport';
-import { action, computed, runInAction } from 'mobx';
+import { action, computed, observable, runInAction } from 'mobx';
 
 import {
   Tag,
   ContactInput,
-  Contact as ContactData,
+  SortingDirection,
 } from '@shared/types/__generated__/graphql.types';
 
 import { Contact, ContactDatum } from './Contact.dto';
@@ -15,17 +15,21 @@ import { ContactService } from './__service__/Contacts.service';
 import { FlowContactsView } from './__views__/FlowContacts.view';
 
 export class ContactsStore extends Store<ContactDatum, Contact> {
+  private chunkSize = 50;
   private service: ContactService;
+  @observable accessor searchedIds: string[] = [];
+  @observable accessor chunk = 0;
+  @observable accessor availableCounts: Map<string, number> = new Map();
 
   constructor(public root: RootStore, public transport: Transport) {
     super(root, transport, {
       name: 'Contacts',
-      getId: (data) => data?.metadata?.id,
+      getId: (data) => data?.id,
       factory: Contact,
     });
-    this.service = ContactService.getInstance(transport);
+    this.service = ContactService.getInstance();
 
-    new ContactsView(this);
+    new ContactsaView(this);
     new FlowContactsView(this);
   }
 
@@ -46,81 +50,149 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
     });
   };
 
+  @computed
+  get canLoadNext() {
+    return this.searchedIds.length > this.chunkSize * (this.chunk + 1);
+  }
+
   @action
-  async bootstrap() {
-    if (this.isBootstrapped || this.isLoading) return;
+  async getAllData() {
+    runInAction(() => {
+      this.isBootstrapping = true;
+    });
 
     try {
-      this.isLoading = true;
-
-      const { contacts } = await this.service.getContacts({
-        pagination: { limit: 1000, page: 0 },
+      const { ui_contacts_search } = await this.service.searchContacts({
+        limit: this.chunkSize,
+        sort: {
+          by: 'CONTACTS_CREATED_AT',
+          caseSensitive: false,
+          direction: SortingDirection.Desc,
+        },
       });
 
-      const data = contacts.content as ContactData[];
-      const totalElements = contacts.totalElements;
+      await this.retrieve(ui_contacts_search.ids);
+
+      // const totalElements = ui_organizations_search.totalElements;
 
       runInAction(() => {
-        data.forEach((contact) => {
-          if (!contact) return;
-          const record = new Contact(this, contact);
-
-          this.value.set(record.id, record);
-        });
         this.size = this.value.size;
-
-        if (this.totalElements !== totalElements) {
-          this.totalElements = totalElements;
-        }
       });
-
-      await this.bootstrapRest();
     } catch (e) {
       runInAction(() => {
         this.error = (e as Error)?.message;
       });
     } finally {
       runInAction(() => {
+        this.isLoading = false;
         this.isBootstrapped = true;
+        this.isBootstrapping = false;
       });
     }
   }
 
   @action
-  async bootstrapRest() {
-    let page = 1;
+  async search(viewDefPrest: string) {
+    const viewDef = this.root.tableViewDefs.getById(viewDefPrest);
 
-    while (this.totalElements > this.value.size) {
-      try {
-        const { contacts } = await this.service.getContacts({
-          pagination: { limit: 1000, page },
-        });
+    if (!viewDef) {
+      console.error(`viewDef with preset=${viewDefPrest} not found`);
 
-        const data = contacts.content as ContactData[];
-
-        page++;
-        runInAction(() => {
-          data.forEach((contact) => {
-            if (!contact) return;
-            const record = new Contact(this, contact);
-
-            this.value.set(record.id, record);
-          });
-
-          this.size = this.value.size;
-        });
-      } catch (e) {
-        runInAction(() => {
-          this.error = (e as Error)?.message;
-        });
-        break;
-      }
+      return;
     }
 
+    try {
+      runInAction(() => {
+        if (this.chunk > 0) {
+          // reset chunk if new search is performed
+          this.chunk = 0;
+        }
+        this.isLoading = true;
+      });
+
+      const payload = viewDef.toSearchPayload();
+
+      const { ui_contacts_search: searchResult } =
+        await this.service.searchContacts({ ...payload });
+
+      if (this.chunk === 0) {
+        const ids = (searchResult?.ids ?? []).slice(
+          this.chunkSize * this.chunk,
+          this.chunkSize * this.chunk + this.chunkSize,
+        );
+
+        // retrieve first chunk of data after new search is performed
+        await this.retrieve(ids);
+      }
+
+      runInAction(() => {
+        this.isLoading = false;
+        this.availableCounts.set(viewDefPrest, searchResult?.totalElements);
+        this.searchedIds = searchResult?.ids ?? [];
+      });
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error)?.message;
+      });
+    }
+  }
+
+  @action
+  async retrieve(ids: string[]) {
+    try {
+      const { ui_contacts } = await this.service.getContactsByIds({
+        ids,
+      });
+
+      runInAction(() => {
+        ui_contacts.forEach((raw) => {
+          if (this.value.has(raw.id)) {
+            Object.assign(raw, this.value.get(raw.id)?.value);
+          } else {
+            const record = new Contact(this, raw);
+
+            this.value.set(record.id, record);
+          }
+        });
+
+        this.size = this.value.size;
+        this.version++;
+      });
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error)?.message;
+      });
+    }
+  }
+
+  @action
+  public async loadNext() {
+    if (!this.canLoadNext) return;
+
     runInAction(() => {
-      this.isBootstrapped = this.totalElements === this.value.size;
-      this.isBootstrapping = false;
+      this.chunk++;
     });
+
+    const ids = this.searchedIds.slice(
+      this.chunkSize * this.chunk,
+      this.chunkSize * this.chunk + this.chunkSize,
+    );
+
+    try {
+      runInAction(() => {
+        this.isLoading = true;
+      });
+
+      await this.retrieve(ids);
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error)?.message;
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+      });
+    }
   }
 
   @action
@@ -130,7 +202,7 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
     input?: ContactInput,
   ) {
     const newContact = new Contact(this, Contact.default());
-    const tempId = newContact.value.metadata?.id;
+    const tempId = newContact.id;
     let serverId: string | undefined;
 
     this.value.set(tempId, newContact);

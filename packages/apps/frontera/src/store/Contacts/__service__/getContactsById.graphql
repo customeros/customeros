@@ -1,0 +1,73 @@
+query getContactsByIds($ids: [ID!]) {
+  ui_contacts(ids: $ids) {
+    id
+    createdAt
+    updatedAt
+    firstName
+    lastName
+    name
+    prefix
+    description
+    timezone
+    profilePhotoUrl
+    enrichedAt
+    enrichedFailedAt
+    enrichedRequestedAt
+    enrichedEmailRequestedAt
+    enrichedEmailEnrichedAt
+    enrichedEmailFound
+    linkedInInternalId
+    linkedInUrl
+    linkedInAlias
+    linkedInExternalId
+    linkedInFollowerCount
+    primaryOrganizationId
+    primaryOrganizationName
+    primaryOrganizationJobRoleId
+    primaryOrganizationJobRoleTitle
+    primaryOrganizationJobRoleDescription
+    primaryOrganizationJobRoleStartDate
+    primaryOrganizationJobRoleEndDate
+    emails {
+      id
+      primary
+      email
+      emailValidationDetails {
+        verified
+        verifyingCheckAll
+        isValidSyntax
+        isRisky
+        isFirewalled
+        provider
+        firewall
+        isCatchAll
+        canConnectSmtp
+        deliverable
+        isMailboxFull
+        isRoleAccount
+        isFreeAccount
+        smtpSuccess
+      }
+    }
+    phones
+    tags {
+      metadata {
+        id
+      }
+      name
+      entityType
+    }
+    locations {
+      id
+      address
+      locality
+      postalCode
+      country
+      countryCodeA2
+      countryCodeA3
+      region
+    }
+    connectedUsers
+    flows
+  }
+}

@@ -11,7 +11,6 @@ const useCase = new SetEmailCase();
 
 export const EditEmail = observer(() => {
   const store = useStore();
-  const [error, setError] = useState<string | null>('');
   const context = store.ui.commandMenu.context;
   const selectedId = store.ui.selectionId;
 
@@ -37,13 +36,15 @@ export const EditEmail = observer(() => {
   const primaryEmail = contact.value.primaryEmail?.email;
 
   const handleSaveEmail = () => {
+    if (!value) return;
+
     if (store.ui.focusRow && !primaryEmail) {
       useCase.setPrimaryEmailForContact(true);
       useCase.setEmailForContact();
       store.ui.setSelectionId(null);
     }
 
-    if (!primaryEmail) {
+    if (!primaryEmail && !store.ui.focusRow) {
       useCase.setPrimaryEmailForContact(true);
       useCase.setEmailForContact();
     }
@@ -67,26 +68,31 @@ export const EditEmail = observer(() => {
       useCase.updatePrimaryEmailForContact();
       store.ui.setSelectionId(null);
     }
-    store.ui.commandMenu.setOpen(false);
-    store.ui.setSelectionId(null);
-    store.ui.commandMenu.setType('ContactCommands');
+
+    // if (!useCase.emailError) {
+    //   store.ui.commandMenu.setOpen(false);
+    //   store.ui.setSelectionId(null);
+    //   store.ui.commandMenu.setType('ContactCommands');
+    // }
   };
 
-  useEffect(() => {
-    if (store.ui.commandMenu.isOpen === false) {
-      store.ui.setSelectionId(null);
-    }
-  }, [store.ui.commandMenu.isOpen]);
+  // useEffect(() => {
+  //   if (store.ui.commandMenu.isOpen === false) {
+  //     store.ui.setSelectionId(null);
+  //   }
+  // }, [store.ui.commandMenu.isOpen]);
 
-  useEffect(() => {
-    if (!contact) return;
+  // useEffect(() => {
+  //   if (!contact) return;
 
-    if (error) {
-      contact.value.emails = contact.value.emails.filter(
-        (email) => email.email !== value,
-      );
-    }
-  }, [store.ui.commandMenu.isOpen]);
+  //   if (useCase.emailError) {
+  //     contact.value.emails = contact.value.emails.filter(
+  //       (email) => email.email !== value,
+  //     );
+  //   }
+  // }, [store.ui.commandMenu.isOpen]);
+
+  const errors = useCase.emailError;
 
   return (
     <Command shouldFilter={false}>
@@ -94,22 +100,17 @@ export const EditEmail = observer(() => {
         label={label}
         value={value}
         placeholder={emailAdress.length > 0 ? 'Edit email' : 'Add new email'}
+        onValueChange={(newValue) => {
+          setValue(newValue);
+          useCase.setEmail(newValue);
+        }}
         onKeyDownCapture={(e) => {
           if (e.key === ' ') {
             e.stopPropagation();
           }
         }}
-        onValueChange={(newValue) => {
-          if (newValue.length === 0) return;
-          setValue(newValue);
-          useCase.setEmail(newValue);
-
-          if (error) {
-            setError('');
-          }
-        }}
       />
-      {error && (
+      {errors && (
         <p className='ml-5 text-xs text-error-600 mt-2'>
           This email is already used by another contact
         </p>

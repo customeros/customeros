@@ -110,7 +110,7 @@ export const PeoplePanel = observer(() => {
           </div>
         ))}
 
-      <CreateNewContactModal />
+      <CreateNewContactModal orgId={id} />
     </OrganizationPanel>
   );
 });

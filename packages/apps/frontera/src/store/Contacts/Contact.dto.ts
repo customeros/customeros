@@ -5,18 +5,13 @@ import { FlowStore } from '@store/Flows/Flow.store';
 import { countryMap } from '@assets/countries/countriesMap';
 import { action, computed, observable, runInAction } from 'mobx';
 
-import {
-  JobRole,
-  DataSource,
-  Organization,
-  OrganizationWithJobRole,
-} from '@shared/types/__generated__/graphql.types';
-
 import { ContactsStore } from './Contacts2.store';
 import { ContactService } from './__service__/Contacts.service';
-import { ContactQuery } from './__service__/getContact.generated';
+import { GetContactsByIdsQuery } from './__service__/getContactsById.generated';
 
-export type ContactDatum = NonNullable<ContactQuery['contact']>;
+export type ContactDatum = NonNullable<
+  GetContactsByIdsQuery['ui_contacts'][number]
+>;
 
 export class Contact extends Entity<ContactDatum> {
   private service: ContactService;
@@ -29,30 +24,39 @@ export class Contact extends Entity<ContactDatum> {
   ) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     super(store as any, data);
-    this.service = ContactService.getInstance(transport || store.transport);
+    this.service = ContactService.getInstance();
   }
 
   @computed
   get isEnriching(): boolean {
     return (
-      this.value?.enrichDetails?.requestedAt &&
-      !this.value?.enrichDetails?.enrichedAt &&
-      !this.value?.enrichDetails?.failedAt
+      this.value.enrichedRequestedAt &&
+      !this.value.enrichedAt &&
+      !this.value.enrichedFailedAt
+    );
+  }
+
+  @computed
+  get emailEnriching(): boolean {
+    return (
+      this.value.enrichedEmailRequestedAt &&
+      !this.value.enrichedEmailEnrichedAt &&
+      !this.value.enrichedFailedAt
     );
   }
 
   @computed
   get id() {
-    return this.value.metadata.id;
+    return this.value.id;
   }
 
   set id(id: string) {
-    this.value.metadata.id = id;
+    this.value.id = id;
   }
 
   @computed
   get organizationId() {
-    return this.value.organizations.content[0]?.metadata?.id;
+    return this.value.primaryOrganizationId;
   }
 
   get hasActiveOrganization() {
@@ -61,7 +65,8 @@ export class Contact extends Entity<ContactDatum> {
 
   @computed
   get organization() {
-    return this.store.root.organizations.value.get(this.organizationId)?.value;
+    return this.store.root.organizations.value.get(this.organizationId || '')
+      ?.value;
   }
 
   @computed
@@ -74,9 +79,7 @@ export class Contact extends Entity<ContactDatum> {
     if (!this.value.flows?.length) return undefined;
 
     return this.value.flows.reduce((acc, flow) => {
-      const flowStore = this.store.root.flows?.value.get(
-        flow.metadata.id,
-      ) as FlowStore;
+      const flowStore = this.store.root.flows?.value.get(flow) as FlowStore;
 
       if (flowStore) {
         acc.push(flowStore);
@@ -110,7 +113,7 @@ export class Contact extends Entity<ContactDatum> {
   @computed
   get connectedUsers() {
     return this.value.connectedUsers.map(
-      ({ id }) => this.store.root.users.value.get(id)?.value,
+      (id) => this.store.root.users.value.get(id)?.value,
     );
   }
 
@@ -128,38 +131,6 @@ export class Contact extends Entity<ContactDatum> {
     );
   }
 
-  async addPhoneNumber() {
-    const phoneNumber = this.value.phoneNumbers?.[0].rawPhoneNumber ?? '';
-
-    try {
-      const { phoneNumberMergeToContact } = await this.service.addPhoneNumber({
-        contactId: this.id,
-        input: {
-          phoneNumber,
-        },
-      });
-
-      set(this.value.phoneNumbers?.[0], 'id', phoneNumberMergeToContact.id);
-    } catch (e) {
-      runInAction(() => {});
-    }
-  }
-
-  async updatePhoneNumber() {
-    const phoneNumber = this.value.phoneNumbers?.[0].rawPhoneNumber ?? '';
-
-    try {
-      await this.service.updatePhoneNumber({
-        input: {
-          id: this.value.phoneNumbers[0].id,
-          phoneNumber,
-        },
-      });
-    } catch (e) {
-      runInAction(() => {});
-    }
-  }
-
   async addSocial(
     url: string,
     options?: { onSuccess?: (serverId: string) => void },
@@ -175,12 +146,12 @@ export class Contact extends Entity<ContactDatum> {
       runInAction(() => {
         const serverId = contact_AddSocial.id;
 
-        set(this.value.socials?.[0], 'id', serverId);
+        set(this.value, 'linkedInInternalId', serverId);
       });
     } catch (e) {
       runInAction(() => {});
     } finally {
-      options?.onSuccess?.(this.value.socials?.[0]?.id);
+      options?.onSuccess?.(this.value.linkedInInternalId || '');
     }
   }
 
@@ -188,7 +159,7 @@ export class Contact extends Entity<ContactDatum> {
     try {
       await this.service.findEmail({
         contactId: this.id,
-        organizationId: this.organizationId,
+        organizationId: this.organizationId || '',
       });
     } catch (e) {
       runInAction(() => {});
@@ -250,47 +221,39 @@ export class Contact extends Entity<ContactDatum> {
     return merge(
       {
         id: crypto.randomUUID(),
-        createdAt: '',
-        customFields: [],
-        emails: [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
         firstName: '',
-        jobRoles: [],
         lastName: '',
-        locations: [],
-        latestOrganizationWithJobRole: {
-          jobRole: {} as JobRole,
-          organization: {} as Organization,
-        } as OrganizationWithJobRole,
-
-        phoneNumbers: [],
-        profilePhotoUrl: '',
-        organizations: {
-          content: [],
-          totalElements: 0,
-          totalAvailable: 0,
-        },
-        flows: [],
-        socials: [],
-        timezone: '',
-        source: DataSource.Openline,
-        timelineEvents: [],
-        timelineEventsTotalCount: 0,
-        updatedAt: '',
-        appSource: DataSource.Openline,
-        description: '',
-        prefix: '',
         name: '',
-        owner: null,
+        prefix: '',
+        description: '',
+        timezone: '',
+        profilePhotoUrl: '',
+        enrichedAt: '',
+        enrichedFailedAt: '',
+        enrichedRequestedAt: '',
+        enrichedEmailRequestedAt: '',
+        enrichedEmailEnrichedAt: '',
+        enrichedEmailFound: false,
+        linkedInInternalId: '',
+        linkedInUrl: '',
+        linkedInAlias: '',
+        linkedInExternalId: '',
+        linkedInFollowerCount: 0,
+        primaryOrganizationId: '',
+        primaryOrganizationName: '',
+        primaryOrganizationJobRoleId: '',
+        primaryOrganizationJobRoleTitle: '',
+        primaryOrganizationJobRoleDescription: '',
+        primaryOrganizationJobRoleStartDate: '',
+        primaryOrganizationJobRoleEndDate: '',
+        emails: [],
+        phones: [],
         tags: [],
+        locations: [],
         connectedUsers: [],
-        metadata: {
-          id: crypto.randomUUID(),
-        },
-        enrichDetails: {
-          enrichedAt: '',
-          failedAt: '',
-          requestedAt: '',
-        },
+        flows: [],
       },
       payload ?? {},
     );

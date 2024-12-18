@@ -1,9 +1,8 @@
-import type { Transport } from '@store/transport.ts';
-
 import { P, match } from 'ts-pattern';
 import { Operation } from '@store/types';
 import { makePayload } from '@store/util';
 import { rdiffResult } from 'recursive-diff';
+import { Transport } from '@store/transport.ts';
 
 import {
   Tag,
@@ -13,9 +12,9 @@ import {
 import type { Contact } from '../Contact.dto.ts';
 
 import AddJobRoleDocument from './addJobRole.graphql';
-import ContactQueryDocument from './getContact.graphql';
-import ContactsQueryDocument from './getContacts.graphql';
 import UpdateContactDocument from './contactUpdate.graphql';
+import ContactsByIdDocument from './getContactsById.graphql';
+import SearchContactsDocument from './searchContacts.graphql';
 import UpdateContactRoleDocument from './updateJobRole.graphql';
 import UpdateContactEmailDocument from './emailReplace.graphql';
 import AddContactSocialDocument from './addContactSocial.graphql';
@@ -25,9 +24,7 @@ import LinkOrganizationDocument from './linkContactWithOrg.graphql';
 import ArchiveContactMutationDocument from './archiveContact.graphql';
 import AddTagsToContactMutationDocument from './addTagsToContact.graphql';
 import AddContactPhoneNumberDocument from './addContactPhoneNumber.graphql';
-import { ContactQuery, ContactQueryVariables } from './getContact.generated';
 import UpdateContactSocialMutationDocument from './updateContactSocial.graphql';
-import { ContactsQuery, ContactsQueryVariables } from './getContacts.generated';
 import CreateContactForOrgMutationDocument from './createContactForOrg.graphql';
 import UpdateContactPhoneNumberDocument from './updateContactPhoneNumber.graphql';
 import RemoveContactPhoneNumberDocument from './removeContactPhoneNumber.graphql';
@@ -40,6 +37,10 @@ import {
   AddJobRoleMutationVariables,
 } from './addJobRole.generated';
 import CreateContactBulkByLinkedInMutationDocument from './createContactBulkByLinkedIn.graphql';
+import {
+  SearchContactsQuery,
+  SearchContactsQueryVariables,
+} from './searchContacts.generated.ts';
 import {
   CreateContactMutation,
   CreateContactMutationVariables,
@@ -56,6 +57,10 @@ import {
   ArchiveContactMutation,
   ArchiveContactMutationVariables,
 } from './archiveContact.generated';
+import {
+  GetContactsByIdsQuery,
+  GetContactsByIdsQueryVariables,
+} from './getContactsById.generated.ts';
 import {
   UpdateContactRoleMutation,
   UpdateContactRoleMutationVariables,
@@ -118,32 +123,38 @@ import {
 } from './createContactForOrg.generated';
 class ContactService {
   private static instance: ContactService | null = null;
-  private transport: Transport;
+  private transport: Transport = Transport.getInstance();
 
-  constructor(transport: Transport) {
-    this.transport = transport;
-  }
+  constructor() {}
 
-  static getInstance(transport: Transport): ContactService {
+  static getInstance(): ContactService {
     if (!ContactService.instance) {
-      ContactService.instance = new ContactService(transport);
+      ContactService.instance = new ContactService();
     }
 
     return ContactService.instance;
   }
 
-  async getContact(contactId: string) {
-    return this.transport.graphql.request<ContactQuery, ContactQueryVariables>(
-      ContactQueryDocument,
-      { id: contactId },
-    );
+  async getContact(id: string) {
+    const { ui_contacts } = await this.getContactsByIds({
+      ids: [id],
+    });
+
+    return ui_contacts[0];
   }
 
-  async getContacts(payload: ContactsQueryVariables) {
+  async getContactsByIds(payload: GetContactsByIdsQueryVariables) {
     return this.transport.graphql.request<
-      ContactsQuery,
-      ContactsQueryVariables
-    >(ContactsQueryDocument, payload);
+      GetContactsByIdsQuery,
+      GetContactsByIdsQueryVariables
+    >(ContactsByIdDocument, payload);
+  }
+
+  async searchContacts(payload: SearchContactsQueryVariables) {
+    return this.transport.graphql.request<
+      SearchContactsQuery,
+      SearchContactsQueryVariables
+    >(SearchContactsDocument, payload);
   }
 
   async createContact(payload: CreateContactMutationVariables) {
@@ -318,31 +329,30 @@ class ContactService {
             contactId: contactId!,
             organizationId:
               value.organization?.metadata?.id ||
-              store.value.latestOrganizationWithJobRole?.organization.metadata
-                .id,
+              store.value.primaryOrganizationId,
           },
         });
       })
 
-      .with(['phoneNumbers', 0, ...P.array()], () => {
-        if (type === 'add') {
-          this.addPhoneNumber({
-            contactId: contactId!,
-            input: {
-              phoneNumber: value.rawPhoneNumber,
-            },
-          });
-        }
+      // .with(['phoneNumbers', 0, ...P.array()], () => {
+      //   if (type === 'add') {
+      //     this.addPhoneNumber({
+      //       contactId: contactId!,
+      //       input: {
+      //         phoneNumber: value.rawPhoneNumber,
+      //       },
+      //     });
+      //   }
 
-        if (type === 'update') {
-          this.updatePhoneNumber({
-            input: {
-              id: store.value.phoneNumbers[0].id,
-              phoneNumber: store.value.phoneNumbers[0].rawPhoneNumber || '',
-            },
-          });
-        }
-      })
+      //   if (type === 'update') {
+      //     this.updatePhoneNumber({
+      //       input: {
+      //         id: store.value.phoneNumbers[0].id,
+      //         phoneNumber: store.value.phoneNumbers[0].rawPhoneNumber || '',
+      //       },
+      //     });
+      //   }
+      // })
       .with(['socials', ...P.array()], async ([_]) => {
         if (type === 'add') {
           try {
@@ -367,8 +377,8 @@ class ContactService {
         if (type === 'update') {
           this.updateSocial({
             input: {
-              id: store.value.socials[0].id,
-              url: store.value.socials[0].url,
+              id: store.value.linkedInInternalId || '',
+              url: store.value.linkedInUrl || '',
             },
           });
         }
@@ -378,8 +388,8 @@ class ContactService {
           this.addJobRole({
             contactId: contactId!,
             input: {
-              description: store.value.jobRoles[0].description,
-              jobTitle: store.value.jobRoles[0].jobTitle,
+              description: store.value.primaryOrganizationJobRoleDescription,
+              jobTitle: store.value.primaryOrganizationJobRoleTitle,
             },
           });
         }
@@ -388,9 +398,9 @@ class ContactService {
           this.updateJobRole({
             contactId: contactId!,
             input: {
-              id: store.value.jobRoles[0].id,
-              description: store.value.jobRoles[0].description,
-              jobTitle: store.value.jobRoles[0].jobTitle,
+              id: store.value.primaryOrganizationJobRoleId || '',
+              description: store.value.primaryOrganizationJobRoleDescription,
+              jobTitle: store.value.primaryOrganizationJobRoleTitle,
             },
           });
         }
@@ -403,9 +413,9 @@ class ContactService {
           });
         }
       })
-      .with(['emails', ...P.array()], () => {
+      .with(['emails', ...P.array()], async () => {
         if (type === 'add') {
-          this.updateContactEmail({
+          await this.updateContactEmail({
             contactId: contactId!,
             input: {
               email: value.email,

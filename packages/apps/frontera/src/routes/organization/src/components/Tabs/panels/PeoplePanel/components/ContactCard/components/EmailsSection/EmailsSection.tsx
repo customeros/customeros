@@ -65,15 +65,17 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
                     contactStore?.value.emails.length || 1,
                   );
 
-                  contactStore?.value.emails.push({
-                    id: crypto.randomUUID(),
-                    email: '',
-                    appSource: '',
-                    contacts: [],
-                    createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString(),
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  } as any);
+                  if (contactStore?.value.emails[0]?.email !== undefined) {
+                    contactStore?.value.emails.push({
+                      id: crypto.randomUUID(),
+                      email: '',
+                      appSource: '',
+                      contacts: [],
+                      createdAt: new Date().toISOString(),
+                      updatedAt: new Date().toISOString(),
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    } as any);
+                  }
 
                   store.ui.commandMenu.setContext({
                     ids: [contactStore?.id || ''],
@@ -121,7 +123,7 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
                       copyToClipboard(email?.email || '', 'Email copied')
                     }
                   >
-                    {email.email || 'Not set'}
+                    {email?.email!.length > 0 ? email.email : 'Not set'}
                   </p>
                   {contactStore?.value.emails.length !== 1 && email.primary && (
                     <span className='text-gray-500 text-sm'> • Primary</span>

@@ -5,6 +5,7 @@ import { observer } from 'mobx-react-lite';
 import { Edit01 } from '@ui/media/icons/Edit01';
 import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
+import { Tag } from '@shared/types/__generated__/graphql.types';
 
 import { TagsCell } from '../../../shared/Cells';
 
@@ -29,7 +30,7 @@ export const ContactsTagsCell = observer(({ id }: ContactCardProps) => {
         store.ui.commandMenu.setOpen(true);
       }}
     >
-      <TagsCell tags={tags ?? []} />
+      <TagsCell tags={(tags ?? []) as Tag[]} />
       {isHovered && (
         <IconButton
           size='xxs'

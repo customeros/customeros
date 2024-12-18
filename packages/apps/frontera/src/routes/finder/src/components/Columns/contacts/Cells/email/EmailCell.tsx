@@ -38,32 +38,22 @@ export const EmailCell = observer(
     if (!contactStore) return;
     useCase.setEntity(contactStore);
 
-    const enrichedContact = contactStore?.value.enrichDetails;
-
     const isEnrichingContact = contactStore?.isEnriching;
 
     const ref = useRef(null);
 
-    const activeOrgId =
-      contactStore?.value.latestOrganizationWithJobRole?.organization?.metadata
-        ?.id;
-
+    const activeOrgId = contactStore?.value.primaryOrganizationId;
     const domains =
-      activeOrgId && store.organizations.getById(activeOrgId)?.value?.domains;
-    const orgActive =
-      contactStore?.value.latestOrganizationWithJobRole?.organization?.name;
+      activeOrgId && store.organizations.value.get(activeOrgId)?.value?.domains;
+    const orgActive = contactStore?.value.primaryOrganizationName;
 
     const email = contactStore.value.emails.find((e) => e.primary)?.email;
 
-    const isEnrichingEmail =
-      !enrichedContact?.emailEnrichedAt &&
-      enrichedContact?.emailRequestedAt &&
-      !email;
-
+    const isEnrichingEmail = contactStore?.emailEnriching;
     const enrichedEmailNotFound =
-      !enrichedContact?.emailFound &&
+      !contactStore.value.enrichedEmailFound &&
       !email &&
-      enrichedContact?.emailEnrichedAt;
+      contactStore.value.enrichedEmailEnrichedAt;
 
     const enrichingStatus = isEnrichingContact
       ? 'Enriching...'
@@ -145,7 +135,7 @@ export const EmailCell = observer(
 
             <MenuItem
               onClick={() => {
-                if (contactStore?.value.primaryEmail?.email) {
+                if (email) {
                   store.ui.setSelectionId(
                     contactStore?.value.emails.length || 0 + 1,
                   );
@@ -217,7 +207,7 @@ export const EmailCell = observer(
               />
             </Tooltip>
           )}
-        {(contactStore?.value.primaryEmail?.email ?? '').length > 0 && (
+        {(email ?? '').length > 0 && (
           <Menu onOpenChange={(newStatus) => setIsOpened(newStatus)}>
             <MenuButton asChild>
               {(isHovered || isOpened) && (
