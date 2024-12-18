@@ -68,6 +68,7 @@ func CreateFlow(s *service.Services) gin.HandlerFunc {
 			FlowID: result.ID,
 			Type:   commonEnum.NodeFlowListenerEvent.String(),
 			Event:  &result.TriggerOn,
+			Status: commonEnum.FlowNodeEdgeStatusActive.String(),
 		}
 		nodeResult, err := s.Repositories.PostgresRepositories.FlowNodeRepository.Create(ctx, triggerNode)
 		if err != nil {

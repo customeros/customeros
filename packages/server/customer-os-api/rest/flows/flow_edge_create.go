@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	commonEnum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
@@ -84,7 +85,7 @@ func createFlowEdge(c *gin.Context, s *service.Services, request CreateFlowEdgeR
 		FromNodeID: request.FromNodeID,
 		ToNodeID:   request.ToNodeID,
 		Condition:  request.Condition,
-		Active:     true,
+		Status:     commonEnum.FlowNodeEdgeStatusActive.String(),
 	}
 
 	if request.Data != nil {

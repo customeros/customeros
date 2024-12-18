@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/opentracing/opentracing-go"
@@ -103,6 +104,13 @@ func (r *flowTransitionsRegistryRepository) Initialize(ctx context.Context) erro
 		{
 			FromNodeType: enum.NodeFlowListenerEvent.String(),
 			FromNode:     enum.EventFathomMeetingSummaryCreated.String(),
+			ToNodeType:   enum.NodeFlowAction.String(),
+			ToNode:       enum.ActionTimelineEventCreate.String(),
+			Enabled:      true,
+		},
+		{
+			FromNodeType: enum.NodeFlowListenerEvent.String(),
+			FromNode:     enum.EventGrainMeetingSummaryCreated.String(),
 			ToNodeType:   enum.NodeFlowAction.String(),
 			ToNode:       enum.ActionTimelineEventCreate.String(),
 			Enabled:      true,

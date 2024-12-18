@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	commonEnum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
@@ -48,6 +49,7 @@ func GetFlowEdges(s *service.Services) gin.HandlerFunc {
 		query := entity.FlowEdge{
 			ID:     edgeId,
 			FlowID: flowId,
+			Status: commonEnum.FlowNodeEdgeStatusActive.String(),
 		}
 
 		switch edgeId {

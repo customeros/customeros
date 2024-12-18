@@ -14,7 +14,7 @@ type FlowEdge struct {
 	Condition  *string    `gorm:"column:condition;type:varchar(255)" json:"condition"`
 	CreatedAt  time.Time  `gorm:"column:created_at;autoCreateTime" json:"createdAt"`
 	UpdatedAt  *time.Time `gorm:"column:updated_at;autoUpdateTime" json:"updatedAt"`
-	Active     bool       `gorm:"column:active;type:boolean;default:true" json:"active"`
+	Status     string     `gorm:"column:status;type:varchar(50)" json:"status"`
 
 	// used to store conditional logic
 	Data *datatypes.JSON `gorm:"column:data;type:jsonb" json:"data"`

@@ -78,12 +78,12 @@ func (w *workflowService) ValidateEventType(ctx context.Context, nodeType enum.F
 		return true
 	case enum.NodeFlowAction:
 		_, err := enum.GetFlowAction(event)
-		if err != nil {
+		if err == nil {
 			return true
 		}
 	case enum.NodeFlowListenerEvent:
 		_, err := enum.GetFlowListenerEvent(event)
-		if err != nil {
+		if err == nil {
 			return true
 		}
 	default:

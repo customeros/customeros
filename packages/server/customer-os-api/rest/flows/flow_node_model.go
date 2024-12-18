@@ -18,7 +18,7 @@ type FlowNodeRecord struct {
 	Type      string     `json:"type"`
 	Event     *string    `json:"event,omitempty"`
 	CreatedAt time.Time  `json:"createdAt"`
-	UpdatedAt *time.Time `json:"UpadatedAt,omitempty"`
+	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
 	EventData *any       `json:"eventData,omitempty"`
 }
 
