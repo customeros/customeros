@@ -43,9 +43,8 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 	socialFilterCypher, socialFilterParams := "", make(map[string]interface{})
 	tagFilterCypher, tagFilterParams := "", make(map[string]interface{})
 	locationFilterCypher, locationFilterParams := "", make(map[string]interface{})
+	userFilterCypher, userFilterParams := "", make(map[string]interface{})
 	parentOrganizationFilterCypher, parentOrganizationFilterParams := "", make(map[string]interface{})
-
-	ownerId := []string{}
 
 	//ORGANIZATION, EMAIL, COUNTRY, REGION, LOCALITY
 	//region organization filters
@@ -80,6 +79,11 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 		parentOrganizationFilter.LogicalOperator = utils.OR
 		parentOrganizationFilter.Filters = make([]*utils.CypherFilter, 0)
 
+		userFilter := new(utils.CypherFilter)
+		userFilter.Negate = false
+		userFilter.LogicalOperator = utils.OR
+		userFilter.Filters = make([]*utils.CypherFilter, 0)
+
 		for _, filter := range where.And {
 			if filter.Filter.Property == model.ColumnViewTypeOrganizationsName.String() {
 				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateStringCypherFilter("name", filter.Filter.Value.Str, filter.Filter.Operation))
@@ -102,8 +106,8 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 			if filter.Filter.Property == model.ColumnViewTypeOrganizationsForecastArr.String() {
 				createNumberCypherFilter(filter, organizationFilter, "renewalForecastArr")
 			}
-			if filter.Filter.Property == model.ColumnViewTypeOrganizationsOwner.String() && filter.Filter.Value.ArrayStr != nil {
-				ownerId = *filter.Filter.Value.ArrayStr
+			if filter.Filter.Property == model.ColumnViewTypeOrganizationsOwner.String() {
+				createInOrEmptyStringFilter(filter, userFilter, "id")
 			}
 			if filter.Filter.Property == model.ColumnViewTypeOrganizationsLastTouchpoint.String() {
 				createInOrEmptyStringFilter(filter, organizationFilter, string(neo4jentity.OrganizationPropertyLastTouchpointType))
@@ -188,6 +192,9 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 		if len(locationFilter.Filters) > 0 {
 			locationFilterCypher, locationFilterParams = locationFilter.BuildCypherFilterFragmentWithParamName("l", "l_param_")
 		}
+		if len(userFilter.Filters) > 0 {
+			userFilterCypher, userFilterParams = userFilter.BuildCypherFilterFragmentWithParamName("u", "u_param_")
+		}
 		if len(parentOrganizationFilter.Filters) > 0 {
 			parentOrganizationFilterCypher, parentOrganizationFilterParams = parentOrganizationFilter.BuildCypherFilterFragmentWithParamName("po", "po_param_")
 		}
@@ -196,23 +203,23 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 	//endregion
 
 	params := map[string]any{
-		"tenant":  tenant,
-		"ownerId": ownerId,
-		"limit":   limit,
+		"tenant": tenant,
+		"limit":  limit,
 	}
 
 	utils.MergeMapToMap(organizationFilterParams, params)
 	utils.MergeMapToMap(socialFilterParams, params)
 	utils.MergeMapToMap(tagFilterParams, params)
 	utils.MergeMapToMap(locationFilterParams, params)
+	utils.MergeMapToMap(userFilterParams, params)
 	utils.MergeMapToMap(parentOrganizationFilterParams, params)
 
 	//region count selectQuery
 	countQuery := ""
 	{
 		countQuery += fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization_%s) `, tenant)
-		if len(ownerId) > 0 {
-			countQuery += ` OPTIONAL MATCH (o)<-[:OWNS]-(owner:User) WITH *`
+		if userFilterCypher != "" {
+			countQuery += ` OPTIONAL MATCH (o)<-[:OWNS]-(u:User) WITH *`
 		}
 		if socialFilterCypher != "" {
 			countQuery += ` OPTIONAL MATCH (o)-[:HAS]->(s:Social) WITH *`
@@ -229,7 +236,7 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 
 		countQuery += ` WHERE (o.hide = false OR o.hide IS NULL) `
 
-		if organizationFilterCypher != "" || socialFilterCypher != "" || tagFilterCypher != "" || locationFilterCypher != "" || parentOrganizationFilterCypher != "" || len(ownerId) > 0 {
+		if organizationFilterCypher != "" || socialFilterCypher != "" || tagFilterCypher != "" || locationFilterCypher != "" || parentOrganizationFilterCypher != "" || userFilterCypher != "" {
 			countQuery += " AND "
 		}
 
@@ -237,8 +244,8 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 		if organizationFilterCypher != "" {
 			countQueryParts = append(countQueryParts, organizationFilterCypher)
 		}
-		if len(ownerId) > 0 {
-			countQueryParts = append(countQueryParts, fmt.Sprintf(` owner.id IN $ownerId `))
+		if userFilterCypher != "" {
+			countQueryParts = append(countQueryParts, userFilterCypher)
 		}
 		if socialFilterCypher != "" {
 			countQueryParts = append(countQueryParts, socialFilterCypher)
@@ -261,8 +268,8 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 	//region selectQuery to fetch data
 	{
 		selectQuery += fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization_%s) `, tenant)
-		if len(ownerId) > 0 {
-			selectQuery += fmt.Sprintf(` OPTIONAL MATCH (o)<-[:OWNS]-(owner:User) WITH *`)
+		if userFilterCypher != "" || (sort != nil && (sort.By == model.ColumnViewTypeOrganizationsOwner.String())) {
+			selectQuery += fmt.Sprintf(` OPTIONAL MATCH (o)<-[:OWNS]-(u:User) WITH *`)
 		}
 		if socialFilterCypher != "" {
 			selectQuery += fmt.Sprintf(` OPTIONAL MATCH (o)-[:HAS]->(s:Social_%s) WITH *`, tenant)
@@ -276,12 +283,9 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 		if parentOrganizationFilterCypher != "" || sort != nil && sort.By == model.ColumnViewTypeOrganizationsParentOrganization.String() {
 			selectQuery += fmt.Sprintf(` OPTIONAL MATCH (o)-[:SUBSIDIARY_OF]->(po:Organization_%s) WITH *`, tenant)
 		}
-		if sort != nil && sort.By == model.ColumnViewTypeOrganizationsOwner.String() {
-			selectQuery += fmt.Sprintf(` OPTIONAL MATCH (o)<-[:OWNS]-(owner:User_%s) WITH *`, tenant)
-		}
 		selectQuery += ` WHERE (o.hide = false OR o.hide IS NULL) `
 
-		if organizationFilterCypher != "" || socialFilterCypher != "" || tagFilterCypher != "" || parentOrganizationFilterCypher != "" || locationFilterCypher != "" || len(ownerId) > 0 {
+		if organizationFilterCypher != "" || socialFilterCypher != "" || tagFilterCypher != "" || parentOrganizationFilterCypher != "" || locationFilterCypher != "" || userFilterCypher != "" {
 			selectQuery += " AND "
 		}
 
@@ -289,8 +293,8 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 		if organizationFilterCypher != "" {
 			queryParts = append(queryParts, organizationFilterCypher)
 		}
-		if len(ownerId) > 0 {
-			queryParts = append(queryParts, fmt.Sprintf(` owner.id IN $ownerId `))
+		if userFilterCypher != "" {
+			queryParts = append(queryParts, userFilterCypher)
 		}
 		if socialFilterCypher != "" {
 			queryParts = append(queryParts, socialFilterCypher)
@@ -363,9 +367,9 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 	}
 	if sort != nil && sort.By == model.ColumnViewTypeOrganizationsOwner.String() {
 		if sort.Direction == commonmodel.SortingDirectionAsc {
-			aliases += "CASE WHEN owner.firstName <> \"\" and not owner.firstName is null THEN toLower(owner.firstName) ELSE 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz' END as SORT_BY "
+			aliases += `CASE WHEN (COALESCE(u.firstName, '') + COALESCE(u.lastName, '') + COALESCE(u.name, '')) <> '' THEN toLower(COALESCE(u.firstName, '') + COALESCE(u.lastName, '') + COALESCE(u.name, '')) ELSE 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz' END as SORT_BY `
 		} else {
-			aliases += "CASE WHEN owner.firstName <> \"\" and not owner.firstName is null THEN toLower(owner.firstName) ELSE '' END as SORT_BY "
+			aliases += `CASE WHEN (COALESCE(u.firstName, '') + COALESCE(u.lastName, '') + COALESCE(u.name, '')) <> '' THEN toLower(COALESCE(u.firstName, '') + COALESCE(u.lastName, '') + COALESCE(u.name, '')) ELSE '' END as SORT_BY `
 		}
 	}
 	if sort != nil && sort.By == model.ColumnViewTypeOrganizationsLastTouchpoint.String() {
@@ -1024,13 +1028,6 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 	//		aliases += "CASE WHEN o.renewalForecastArr <> \"\" and not o.renewalForecastArr is null THEN o.renewalForecastArr ELSE 9999 END as SORT_BY "
 	//	} else {
 	//		aliases += "CASE WHEN o.renewalForecastArr <> \"\" and not o.renewalForecastArr is null THEN o.renewalForecastArr ELSE -1 END as SORT_BY "
-	//	}
-	//}
-	//if sort != nil && sort.By == model.ColumnViewTypeOrganizationsOwner.String() {
-	//	if sort.Direction == commonmodel.SortingDirectionAsc {
-	//		aliases += "CASE WHEN owner.firstName <> \"\" and not owner.firstName is null THEN toLower(owner.firstName) ELSE 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz' END as SORT_BY "
-	//	} else {
-	//		aliases += "CASE WHEN owner.firstName <> \"\" and not owner.firstName is null THEN toLower(owner.firstName) ELSE '' END as SORT_BY "
 	//	}
 	//}
 	//if sort != nil && sort.By == model.ColumnViewTypeOrganizationsLastTouchpoint.String() {
