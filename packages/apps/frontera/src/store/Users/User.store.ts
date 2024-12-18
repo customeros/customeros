@@ -59,6 +59,7 @@ export class UserStore implements Store<User> {
 const defaultValue: User = {
   id: '',
   name: '',
+  mailboxesV2: [],
   firstName: '',
   lastName: '',
   emails: [],
@@ -78,7 +79,6 @@ const defaultValue: User = {
   profilePhotoUrl: '',
   timezone: '',
   mailboxes: [],
-  mailboxesV2: [],
   onboarding: {
     onboardingCrmStepCompleted: false,
     onboardingInboundStepCompleted: false,

@@ -80,9 +80,9 @@ export class InvoiceStore extends Syncable<Invoice> {
     try {
       this.isLoading = true;
 
-      const { invoice } = await this.service.getInvoice(this.number);
+      const { invoice_ByNumber } = await this.service.getInvoice(this.number);
 
-      await this.load(invoice as Invoice);
+      await this.load(invoice_ByNumber as Invoice);
     } catch (err) {
       runInAction(() => {
         this.error = (err as Error)?.message;

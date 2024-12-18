@@ -131,9 +131,9 @@ export const GlobalSearchResultNavigationCommands = observer(() => {
       <Command.Group heading={filteredOrgs.length > 0 && 'Organizations'}>
         {filteredOrgs?.map((org) => (
           <Command.Item
-            key={org.metadata.id}
-            value={`${org.name}-${org.metadata.id}`}
-            onSelect={() => handleGoTo(org.metadata.id, 'about')}
+            key={org.id}
+            value={`${org.name}-${org.id}`}
+            onSelect={() => handleGoTo(org.id, 'about')}
           >
             <div className='flex items-center'>
               <Avatar
@@ -142,7 +142,7 @@ export const GlobalSearchResultNavigationCommands = observer(() => {
                 name={org.name}
                 className='mr-2'
                 variant='roundedSquare'
-                src={org.icon || org.logo || undefined}
+                src={org.iconUrl || org.logoUrl || undefined}
               />
 
               {org.name}

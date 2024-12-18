@@ -20,7 +20,7 @@ interface FilterProps {
   filterValue: string | string[];
   operatorValue: ComparisonOperator;
   onChangeOperator: (operator: string) => void;
-  onChangeFilterValue: (value: string | Date | string[]) => void;
+  onChangeFilterValue: (value: number | string | Date | string[]) => void;
   groupOptions?: { label: string; options: { id: string; label: string }[] }[];
 }
 
@@ -60,11 +60,9 @@ export const Filter = ({
         <DateFilter
           filterName={filterName}
           operatorValue={operatorValue}
-          filterValue={filterValue as string | [string | null, string | null]}
+          filterValue={filterValue as string | null}
           onChangeFilterValue={
-            onChangeFilterValue as (
-              value: string | [string | null, string | null],
-            ) => void
+            onChangeFilterValue as (value: string | null) => void
           }
         />
       )}
@@ -76,7 +74,7 @@ export const Filter = ({
           filterValue={filterValue as string}
           onChangeFilterValue={
             onChangeFilterValue as (
-              value: string | [string | null | number, string | null | number],
+              value: number | [null | number, null | number],
             ) => void
           }
         />

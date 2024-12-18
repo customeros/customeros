@@ -1,22 +1,23 @@
+import { observer } from 'mobx-react-lite';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
 import ParentSize from '@visx/responsive/lib/components/ParentSize';
 
 import { cn } from '@ui/utils/cn';
 import { Skeleton } from '@ui/feedback/Skeleton';
+import { useStore } from '@shared/hooks/useStore';
 import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { InfoDialog } from '@ui/overlay/AlertDialog/InfoDialog/InfoDialog';
-import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
 
 import { HelpContent } from './HelpContent';
 import { HelpButton } from '../../HelpButton';
 import CustomerMapChart, { CustomerMapDatum } from './CustomerMap.chart';
 import { useCustomerMapQuery } from '../../../graphql/customerMap.generated';
 
-export const CustomerMap = () => {
+export const CustomerMap = observer(() => {
+  const store = useStore();
   const client = getGraphQLClient();
   const { data, isLoading } = useCustomerMapQuery(client);
-  const { data: globalCacheData } = useGlobalCacheQuery(client);
   const { open: isOpen, onOpen, onClose } = useDisclosure();
   const isTaller = useFeatureIsOn('taller-customer-map-chart');
 
@@ -30,7 +31,7 @@ export const CustomerMap = () => {
     },
   })) as CustomerMapDatum[];
 
-  const hasContracts = globalCacheData?.global_Cache?.contractsExist;
+  const hasContracts = store?.globalCache?.value?.contractsExist ?? false;
 
   return (
     <div className='w-full group'>
@@ -75,4 +76,4 @@ export const CustomerMap = () => {
       </ParentSize>
     </div>
   );
-};
+});

@@ -44,92 +44,54 @@ describe('OrganizationsService - Integration Tests', () => {
   });
 
   it('checks create empty organization', async () => {
-    const { organization_Save, organization_name } =
-      await VitestHelper.createOrganizationForTest(organizationsService);
+    const { id, name } = await VitestHelper.createOrganizationForTest(
+      organizationsService,
+    );
 
     const sleep = (ms: number) =>
       new Promise((resolve) => setTimeout(resolve, ms));
     const maxRetries = 3;
     let retries = 0;
-    let organization;
     let assertionsPassed = false;
 
     await sleep(1000);
 
     while (retries < maxRetries && !assertionsPassed) {
       try {
-        organization = await organizationsService.getOrganization(
-          organization_Save.metadata.id,
-        );
+        const organization = await organizationsService.getOrganization(id);
 
-        expect
-          .soft(organization.organization?.accountDetails?.churned)
-          .toBeNull();
-        expect.soft(organization.organization?.accountDetails?.ltv).toBe(0);
-        expect
-          .soft(organization.organization?.accountDetails?.onboarding?.status)
-          .toBe('NOT_APPLICABLE');
-        expect
-          .soft(organization.organization?.accountDetails?.onboarding?.comments)
-          .toBe('');
-        expect
-          .soft(
-            organization.organization?.accountDetails?.onboarding?.updatedAt,
-          )
-          .toBeNull();
-        expect
-          .soft(
-            organization.organization?.accountDetails?.renewalSummary
-              ?.arrForecast,
-          )
-          .toBeNull();
-        expect
-          .soft(
-            organization.organization?.accountDetails?.renewalSummary
-              ?.maxArrForecast,
-          )
-          .toBeNull();
-        expect
-          .soft(
-            organization.organization?.accountDetails?.renewalSummary
-              ?.renewalLikelihood,
-          )
-          .toBeNull();
-        expect
-          .soft(
-            organization.organization?.accountDetails?.renewalSummary
-              ?.nextRenewalDate,
-          )
-          .toBeNull();
-        expect.soft(organization.organization?.contracts).toBeNull();
-        expect.soft(organization.organization?.description).toBe('');
-        expect.soft(organization.organization?.domains).toEqual([]);
-        expect.soft(organization.organization?.employees).toEqual(0);
-        expect.soft(organization.organization?.icon).toBe('');
-        expect.soft(organization.organization?.industry).toBe('');
-        expect.soft(organization.organization?.isCustomer).toBe(false);
-        expect(
-          organization.organization?.lastTouchpoint?.lastTouchPointAt,
-        ).not.toBeNull();
-        expect
-          .soft(organization.organization?.lastTouchpoint?.lastTouchPointType)
-          .not.toBeNull();
-        expect.soft(organization.organization?.leadSource).toBe('');
-        expect.soft(organization.organization?.locations).toEqual([]);
-        expect.soft(organization.organization?.logo).toBe('');
-        expect.soft(organization.organization?.name).toBe(organization_name);
-        expect.soft(organization.organization?.owner).toBeNull();
-        expect.soft(organization.organization?.parentCompanies).toEqual([]);
-        expect.soft(organization.organization?.public).toBe(false);
-        expect.soft(organization.organization?.relationship).toBe('');
-        expect.soft(organization.organization?.tags).toBeNull();
-        expect.soft(organization.organization?.socialMedia).toEqual([]);
-        expect.soft(organization.organization?.subsidiaries).toEqual([]);
-        expect.soft(organization.organization?.stage).toBe('');
-        expect.soft(organization.organization?.valueProposition).toBe('');
-        expect.soft(organization.organization?.yearFounded).toBeNull();
-        expect.soft(organization.organization?.website).toBe('');
-        expect.soft(organization.organization?.website).toBe('');
+        expect.soft(organization.churnedAt).toBeNull();
+        expect.soft(organization.ltv).toBe(0);
+        expect.soft(organization.onboardingStatus).toBe('NOT_APPLICABLE');
+        expect.soft(organization.onboardingComments).toBe('');
+        expect.soft(organization.onboardingStatusUpdatedAt).toBeNull();
+        expect.soft(organization.renewalSummaryArrForecast).toBeNull();
+        expect.soft(organization.renewalSummaryMaxArrForecast).toBeNull();
+        expect.soft(organization.renewalSummaryRenewalLikelihood).toBeNull();
+        expect.soft(organization?.renewalSummaryNextRenewalAt).toBeNull();
+        expect.soft(organization?.contracts).toBeNull();
+        expect.soft(organization?.description).toBe('');
+        expect.soft(organization?.employees).toEqual(0);
+        expect.soft(organization?.iconUrl).toBe('');
+        expect.soft(organization?.industry).toBe('');
+        expect(organization.lastTouchPointAt).not.toBeNull();
+        expect.soft(organization.lastTouchPointType).not.toBeNull();
+        expect.soft(organization?.leadSource).toBe('');
+        expect.soft(organization?.locations).toEqual([]);
+        expect.soft(organization?.logoUrl).toBe('');
+        expect.soft(organization?.name).toBe(name);
+        expect.soft(organization?.owner).toBeNull();
+        expect.soft(organization?.parentId).toBeNull();
+        expect.soft(organization?.parentName).toBeNull();
+        expect.soft(organization?.public).toBe(false);
+        expect.soft(organization?.relationship).toBe('');
+        expect.soft(organization?.tags).toBeNull();
+        expect.soft(organization?.socialMedia).toEqual([]);
+        expect.soft(organization?.subsidiaries).toEqual([]);
+        expect.soft(organization?.stage).toBe('');
+        expect.soft(organization?.valueProposition).toBe('');
+        expect.soft(organization?.yearFounded).toBeNull();
+        expect.soft(organization?.website).toBe('');
 
         assertionsPassed = true;
       } catch (error) {
@@ -145,7 +107,7 @@ describe('OrganizationsService - Integration Tests', () => {
   });
 
   it('adds tags to organization', async () => {
-    const { organization_Save } = await VitestHelper.createOrganizationForTest(
+    const { id } = await VitestHelper.createOrganizationForTest(
       organizationsService,
     );
 
@@ -153,32 +115,26 @@ describe('OrganizationsService - Integration Tests', () => {
 
     await organizationsService.addTag({
       input: {
-        organizationId: organization_Save.metadata.id,
+        organizationId: id,
         tag: { name: organization_tag_name },
       },
     });
 
     let organization;
 
-    organization = await organizationsService.getOrganization(
-      organization_Save.metadata.id,
-    );
-    expect(organization.organization?.tags?.[0].name).toEqual(
-      organization_tag_name,
-    );
+    organization = await organizationsService.getOrganization(id);
+    expect(organization?.tags?.[0].name).toEqual(organization_tag_name);
 
-    if (organization?.organization?.tags?.[0]?.metadata.id) {
+    if (organization?.tags?.[0]?.metadata.id) {
       await organizationsService.removeTag({
         input: {
-          organizationId: organization_Save.metadata.id,
-          tag: { id: organization.organization.tags[0].metadata.id },
+          organizationId: id,
+          tag: { id: organization?.tags[0].metadata.id },
         },
       });
 
-      organization = await organizationsService.getOrganization(
-        organization_Save.metadata.id,
-      );
-      expect(organization.organization?.tags).toBeNull();
+      organization = await organizationsService.getOrganization(id);
+      expect(organization?.tags).toBeNull();
     } else {
       throw new Error(
         'Tag removal failed: Organization or tag ID is undefined.',
@@ -187,14 +143,14 @@ describe('OrganizationsService - Integration Tests', () => {
   });
 
   it('adds social to organization', async () => {
-    const { organization_Save } = await VitestHelper.createOrganizationForTest(
+    const { id } = await VitestHelper.createOrganizationForTest(
       organizationsService,
     );
 
     const organization_initial_social_url =
       'www.IT_' + crypto.randomUUID() + '.com';
     const { organization_AddSocial } = await organizationsService.addSocial({
-      organizationId: organization_Save.metadata.id,
+      organizationId: id,
       input: {
         url: organization_initial_social_url,
       },
@@ -202,11 +158,9 @@ describe('OrganizationsService - Integration Tests', () => {
 
     let organization;
 
-    organization = await organizationsService.getOrganization(
-      organization_Save.metadata.id,
-    );
+    organization = await organizationsService.getOrganization(id);
 
-    expect(organization.organization?.socialMedia[0].url).toEqual(
+    expect(organization?.socialMedia[0].url).toEqual(
       organization_initial_social_url,
     );
 
@@ -219,11 +173,9 @@ describe('OrganizationsService - Integration Tests', () => {
         url: organization_subsequent_social_url,
       },
     });
-    organization = await organizationsService.getOrganization(
-      organization_Save.metadata.id,
-    );
+    organization = await organizationsService.getOrganization(id);
 
-    expect(organization.organization?.socialMedia[0].url).toEqual(
+    expect(organization?.socialMedia[0].url).toEqual(
       organization_subsequent_social_url,
     );
 
@@ -232,26 +184,23 @@ describe('OrganizationsService - Integration Tests', () => {
     });
 
     await new Promise((resolve) => setTimeout(resolve, 1000)); // waits for 1 second
-    organization = await organizationsService.getOrganization(
-      organization_Save.metadata.id,
-    );
+    organization = await organizationsService.getOrganization(id);
 
-    expect(organization.organization?.socialMedia.length).toBe(0);
+    expect(organization?.socialMedia.length).toBe(0);
   });
 
   it('adds subsidiary to organization', async () => {
-    const parent_organization = await VitestHelper.createOrganizationForTest(
+    const parent = await VitestHelper.createOrganizationForTest(
       organizationsService,
     );
-    const {
-      organization_Save: subsidiary_organization,
-      organization_name: subsidiary_organization_name,
-    } = await VitestHelper.createOrganizationForTest(organizationsService);
+    const subsidiary = await VitestHelper.createOrganizationForTest(
+      organizationsService,
+    );
 
     await organizationsService.addSubsidiary({
       input: {
-        organizationId: parent_organization.organization_Save.metadata.id,
-        subsidiaryId: subsidiary_organization.metadata.id,
+        organizationId: parent.id,
+        subsidiaryId: subsidiary.id,
       },
     });
 
@@ -266,13 +215,9 @@ describe('OrganizationsService - Integration Tests', () => {
 
     while (retries < maxRetries && !assertionsPassed) {
       try {
-        organization = await organizationsService.getOrganization(
-          parent_organization.organization_Save.metadata.id,
-        );
+        organization = await organizationsService.getOrganization(parent.id);
 
-        expect(
-          organization.organization?.subsidiaries[0].organization.name,
-        ).toEqual(subsidiary_organization_name);
+        expect(organization?.subsidiaries[0]).toEqual(subsidiary.id);
 
         assertionsPassed = true;
       } catch (error) {
@@ -287,19 +232,15 @@ describe('OrganizationsService - Integration Tests', () => {
     }
 
     await organizationsService.removeSubsidiary({
-      organizationId: parent_organization.organization_Save.metadata.id,
-      subsidiaryId: subsidiary_organization.metadata.id,
+      organizationId: parent.id,
+      subsidiaryId: subsidiary.id,
     });
 
     while (retries < maxRetries && !assertionsPassed) {
       try {
-        organization = await organizationsService.getOrganization(
-          parent_organization.organization_Save.metadata.id,
-        );
+        organization = await organizationsService.getOrganization(parent.id);
 
-        expect(
-          organization.organization?.subsidiaries[0].organization.name,
-        ).toBeNull();
+        expect(organization?.subsidiaries).toHaveLength(0);
 
         assertionsPassed = true;
       } catch (error) {
@@ -317,10 +258,9 @@ describe('OrganizationsService - Integration Tests', () => {
   it('retrieve archived organizations', async () => {
     const testStartDate = new Date().toISOString();
 
-    const {
-      organization_name: organization_name,
-      organization_Save: new_organization,
-    } = await VitestHelper.createOrganizationForTest(organizationsService);
+    const { name, id } = await VitestHelper.createOrganizationForTest(
+      organizationsService,
+    );
 
     const sleep = (ms: number) =>
       new Promise((resolve) => setTimeout(resolve, ms));
@@ -336,14 +276,15 @@ describe('OrganizationsService - Integration Tests', () => {
       },
     });
 
-    let hasName = (organizationName: string): boolean => {
+    const hasName = (organizationName: string): boolean => {
       return (
         retrieved_organizations?.dashboardView_Organizations?.content?.some(
           (org) => org.name === organizationName,
         ) ?? false
       );
     };
-    let organizationExistsInDashboard = hasName(organization_name);
+
+    let organizationExistsInDashboard = hasName(name);
 
     expect(organizationExistsInDashboard).toBe(true);
 
@@ -352,14 +293,12 @@ describe('OrganizationsService - Integration Tests', () => {
         date: testStartDate,
       });
 
-    expect(
-      archived_organizations.organizations_HiddenAfter.includes(
-        new_organization.metadata.id,
-      ),
-    ).toBe(false);
+    expect(archived_organizations.organizations_HiddenAfter.includes(id)).toBe(
+      false,
+    );
 
     await organizationsService.hideOrganizations({
-      ids: [new_organization.metadata.id],
+      ids: [id],
     });
 
     retrieved_organizations = await organizationsService.getOrganizations({
@@ -371,14 +310,7 @@ describe('OrganizationsService - Integration Tests', () => {
       },
     });
 
-    hasName = (organizationName: string): boolean => {
-      return (
-        retrieved_organizations?.dashboardView_Organizations?.content?.some(
-          (org) => org.name === organizationName,
-        ) ?? false
-      );
-    };
-    organizationExistsInDashboard = hasName(organization_name);
+    organizationExistsInDashboard = hasName(name);
 
     expect(organizationExistsInDashboard).toBe(false);
 
@@ -387,43 +319,33 @@ describe('OrganizationsService - Integration Tests', () => {
         date: testStartDate,
       });
 
-    expect(
-      archived_organizations.organizations_HiddenAfter.includes(
-        new_organization.metadata.id,
-      ),
-    ).toBe(true);
+    expect(archived_organizations.organizations_HiddenAfter.includes(id)).toBe(
+      true,
+    );
   });
 
   it('updates onboarding status to organization', async () => {
-    const { organization_Save } = await VitestHelper.createOrganizationForTest(
+    const { id } = await VitestHelper.createOrganizationForTest(
       organizationsService,
     );
 
     let organization;
 
-    organization = await organizationsService.getOrganization(
-      organization_Save.metadata.id,
-    );
-    expect(organization.organization?.accountDetails?.onboarding?.status).toBe(
-      'NOT_APPLICABLE',
-    );
+    organization = await organizationsService.getOrganization(id);
+    expect(organization.onboardingStatus).toBe('NOT_APPLICABLE');
     await organizationsService.updateOnboardingStatus({
       input: {
-        organizationId: organization_Save.metadata.id,
+        organizationId: id,
         status: OnboardingStatus.Stuck,
       },
     });
 
-    organization = await organizationsService.getOrganization(
-      organization_Save.metadata.id,
-    );
-    expect(organization.organization?.accountDetails?.onboarding?.status).toBe(
-      'STUCK',
-    );
+    organization = await organizationsService.getOrganization(id);
+    expect(organization?.onboardingStatus).toBe('STUCK');
   });
 
   it('updates updateAllOpportunityRenewals', async () => {
-    const { organization_Save } = await VitestHelper.createOrganizationForTest(
+    const { id } = await VitestHelper.createOrganizationForTest(
       organizationsService,
     );
 
@@ -434,7 +356,7 @@ describe('OrganizationsService - Integration Tests', () => {
 
     const { contract_Create } = await contractService.createContract({
       input: {
-        organizationId: organization_Save.metadata.id,
+        organizationId: id,
         committedPeriodInMonths: 3,
         currency: Currency.Usd,
         name: contract_name,
@@ -457,7 +379,7 @@ describe('OrganizationsService - Integration Tests', () => {
 
     await organizationsService.updateAllOpportunityRenewals({
       input: {
-        organizationId: organization_Save.metadata.id,
+        organizationId: id,
         renewalAdjustedRate: 53,
         renewalLikelihood: OpportunityRenewalLikelihood.HighRenewal,
       },
@@ -465,7 +387,7 @@ describe('OrganizationsService - Integration Tests', () => {
 
     await organizationsService.updateAllOpportunityRenewals({
       input: {
-        organizationId: organization_Save.metadata.id,
+        organizationId: id,
         renewalAdjustedRate: 53,
         renewalLikelihood: OpportunityRenewalLikelihood.HighRenewal,
       },
@@ -493,15 +415,13 @@ describe('OrganizationsService - Integration Tests', () => {
   });
 
   it('adds updates owner of the organization', async () => {
-    const { organization_Save } = await VitestHelper.createOrganizationForTest(
+    const { id } = await VitestHelper.createOrganizationForTest(
       organizationsService,
     );
 
-    let organization = await organizationsService.getOrganization(
-      organization_Save.metadata.id,
-    );
+    let organization = await organizationsService.getOrganization(id);
 
-    expect(organization.organization?.owner).toBeNull();
+    expect(organization?.owner).toBeNull();
 
     const user = await userService.getUsers({
       pagination: { limit: 1000, page: 0 },
@@ -509,14 +429,12 @@ describe('OrganizationsService - Integration Tests', () => {
 
     await organizationsService.saveOrganization({
       input: {
-        id: organization_Save.metadata.id,
+        id,
         ownerId: user.users.content[0].id,
       },
     });
 
-    organization = await organizationsService.getOrganization(
-      organization_Save.metadata.id,
-    );
-    expect(organization.organization?.owner?.id).toBe(user.users.content[0].id);
+    organization = await organizationsService.getOrganization(id);
+    expect(organization?.owner?.id).toBe(user.users.content[0].id);
   });
 });

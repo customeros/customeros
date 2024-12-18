@@ -252,14 +252,7 @@ export const Table = <T extends object>({
     if (lastItem.index >= data.length - 1 && canFetchMore && !isLoading) {
       onFetchMore?.();
     }
-  }, [
-    onFetchMore,
-    data.length,
-    isLoading,
-    totalItems,
-    virtualRows,
-    canFetchMore,
-  ]);
+  }, [onFetchMore, data.length, isLoading, virtualRows, canFetchMore]);
 
   useEffect(() => {
     if (tableRef) {
@@ -559,8 +552,8 @@ const TableBody = <T extends object>({
             }}
             style={{
               minWidth: minW,
-              height: `${virtualRow.size}px`,
               top: top,
+              height: `${virtualRow.size}px`,
             }}
             className={twMerge(
               hoverStyle,
@@ -672,7 +665,7 @@ const TRow = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
         style={style}
         onClick={onClick}
         className={cn(
-          'top-0 left-0 inline-flex items-center flex-1 w-full text-sm absolute border-b bg-white border-gray-100 transition-all animate-fadeIn',
+          'top-0 left-0 inline-flex items-center flex-1 w-full text-sm absolute border-b bg-white border-gray-100',
           className,
         )}
         {...props}

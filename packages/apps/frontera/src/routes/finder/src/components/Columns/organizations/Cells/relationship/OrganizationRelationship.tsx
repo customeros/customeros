@@ -16,12 +16,6 @@ export const OrganizationRelationshipCell = observer(
 
     const organization = store.organizations.getById(id);
 
-    const enrichedOrg = organization?.value?.enrichDetails;
-    const enrichingStatus =
-      !enrichedOrg?.enrichedAt &&
-      enrichedOrg?.requestedAt &&
-      !enrichedOrg?.failedAt;
-
     const value = relationshipOptions.find(
       (option) => option.value === organization?.value.relationship,
     );
@@ -40,7 +34,7 @@ export const OrganizationRelationshipCell = observer(
         >
           {value?.label
             ? value.label
-            : enrichingStatus
+            : organization?.isEnriching
             ? 'Enriching...'
             : 'Not set'}
         </p>

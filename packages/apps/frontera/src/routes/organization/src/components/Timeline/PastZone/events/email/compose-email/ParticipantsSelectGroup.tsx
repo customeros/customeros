@@ -23,7 +23,6 @@ interface ParticipantSelectGroupGroupProps extends InputProps {
   modal?: boolean;
   attendees: Array<string>;
   to: Array<{ label: string; value: string }>;
-
   cc: Array<{ label: string; value: string }>;
   bcc: Array<{ label: string; value: string }>;
 }

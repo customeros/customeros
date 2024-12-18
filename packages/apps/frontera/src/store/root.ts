@@ -124,8 +124,6 @@ export class RootStore {
       this.settings.bootstrap(),
       this.customFields.bootstrap(),
       this.mailboxes.bootstrap(),
-      // this.organizations.bootstrapStream(),
-      this.organizations.bootstrap(),
       this.tags.bootstrap(),
       this.opportunities.bootstrap(),
       this.invoices.bootstrap(),
@@ -170,7 +168,6 @@ export class RootStore {
     if (this.demoMode) return false;
 
     return (
-      this.organizations.isBootstrapping ||
       this.tableViewDefs.isLoading ||
       this.settings.isBootstrapping ||
       this.globalCache.isLoading

@@ -26,8 +26,7 @@ export const UpdateHealthStatusSubItemGroup = ({
     } else {
       const organization = store.organizations.value.get(selectedIds[0]);
 
-      return organization?.value.accountDetails?.renewalSummary
-        ?.renewalLikelihood;
+      return organization?.value.renewalSummaryRenewalLikelihood;
     }
   };
 

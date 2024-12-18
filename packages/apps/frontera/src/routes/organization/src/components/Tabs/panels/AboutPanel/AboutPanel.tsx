@@ -101,7 +101,9 @@ export const AboutPanel = observer(() => {
 
       if (!idx || idx < 0) return;
 
+      organization.draft();
       organization.value!.socialMedia[idx].url = value;
+      organization.commit();
     }
   };
 
@@ -116,11 +118,11 @@ export const AboutPanel = observer(() => {
     if (!idx || idx < 0) return;
 
     if (organization.value?.socialMedia[idx].url === '') {
+      organization.draft();
       organization.value.socialMedia.splice(idx, 1);
       newInputRef.current?.focus();
+      organization.commit();
     }
-
-    organization.commit();
   };
 
   const handleSocialKeyDown = (
@@ -137,14 +139,15 @@ export const AboutPanel = observer(() => {
     if (!social) return;
 
     if (social.url === '') {
+      organization.draft();
       organization.value?.socialMedia.splice(idx, 1);
       newInputRef.current?.focus();
+      organization.commit();
     }
-
-    organization.commit();
   };
 
   const handleCreateSocial = (value: string) => {
+    organization.draft();
     organization.value?.socialMedia.push({
       id: crypto.randomUUID(),
       url: value,
@@ -171,16 +174,12 @@ export const AboutPanel = observer(() => {
     );
   };
 
-  const enrichedOrg = organization?.value.enrichDetails;
-  const enrichingStatus =
-    !enrichedOrg?.enrichedAt &&
-    enrichedOrg?.requestedAt &&
-    !enrichedOrg?.failedAt;
+  const isEnriching = organization.isEnriching;
 
   return (
     <div className='flex pt-[6px] px-6 w-full h-full overflow-y-auto flex-1 bg-gray-25 rounded-2xl'>
       <div className='flex h-full flex-col  overflow-visible w-full'>
-        {enrichingStatus && (
+        {isEnriching && (
           <div className='flex items-center justify-start gap-2 border-[1px] text-sm border-grayModern-100 bg-grayModern-50 rounded-[4px] py-1 px-2 '>
             <Spinner
               label='enriching org'

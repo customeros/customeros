@@ -2,19 +2,22 @@ import { useState } from 'react';
 import { cssTransition, ToastContainer } from 'react-toastify';
 
 import { RecoilRoot } from 'recoil';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import { StoreProvider } from './StoreProvider';
+import { Devtools } from '../Devtools/Devtools';
 import { AnalyticsProvider } from './AnalyticsProvider';
 import { PhoenixSocketProvider } from './SocketProvider';
 import { GrowthbookProvider } from './GrowthbookProvider';
 import { IntegrationsProvider } from './IntegrationsProvider';
 import { NotificationsProvider } from './NotificationsProvider';
+
 interface ProvidersProps {
   isProduction?: boolean;
   children: React.ReactNode;
 }
+
+const IS_DEV = import.meta.env.DEV;
 
 export const Providers = ({ children, isProduction }: ProvidersProps) => {
   const [queryClient] = useState(
@@ -31,7 +34,7 @@ export const Providers = ({ children, isProduction }: ProvidersProps) => {
   return (
     <QueryClientProvider client={queryClient}>
       <StoreProvider>
-        <ReactQueryDevtools position='bottom' initialIsOpen={false} />
+        {IS_DEV && <Devtools />}
         <PhoenixSocketProvider>
           <RecoilRoot>
             <IntegrationsProvider>

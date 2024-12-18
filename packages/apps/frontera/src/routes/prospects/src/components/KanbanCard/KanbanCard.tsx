@@ -85,7 +85,7 @@ export const KanbanCard = observer(
     const [showNextSteps, setShowNextSteps] = useState(!!card.value.nextSteps);
 
     const organization = card.organization;
-    const logo = organization?.value.icon || organization?.value.logo;
+    const logo = organization?.value.iconUrl || organization?.value.logoUrl;
     const daysInStage = card.value?.stageLastUpdated
       ? DateTimeUtils.differenceInDays(
           new Date().toISOString(),

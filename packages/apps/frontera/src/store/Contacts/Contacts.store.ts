@@ -170,7 +170,8 @@ export class ContactsStore extends SyncableGroup<Contact, ContactStore> {
     if (organizationId) {
       const organization = this.root.organizations.value.get(organizationId);
 
-      organization?.value.contacts.content.unshift(newContact.value);
+      organization?.draft();
+      organization?.value.contacts.unshift(newContact.value?.metadata.id);
       organization?.commit({ syncOnly: true });
     }
 
@@ -309,12 +310,11 @@ export class ContactsStore extends SyncableGroup<Contact, ContactStore> {
           const organization =
             this.root.organizations.value.get(organizationId);
 
-          const foundIdx = organization?.value?.contacts.content.findIndex(
-            (c) => c?.id === id,
-          );
+          const foundIdx = organization?.value?.contacts.indexOf(id);
 
           if (foundIdx && foundIdx > -1) {
-            organization?.value?.contacts.content.splice(foundIdx, 1);
+            organization?.draft();
+            organization?.value?.contacts.splice(foundIdx, 1);
             organization?.commit({ syncOnly: true });
           }
         }
@@ -339,15 +339,13 @@ export class ContactsStore extends SyncableGroup<Contact, ContactStore> {
         const organizationId = this.value.get(id)?.organizationId;
 
         if (organizationId) {
-          const organization =
-            this.root.organizations.value.get(organizationId);
+          const organization = this.root.organizations.getById(organizationId);
 
-          const foundIdx = organization?.value?.contacts.content.findIndex(
-            (c) => c?.id === id,
-          );
+          const foundIdx = organization?.value?.contacts.indexOf(id);
 
           if (foundIdx && foundIdx > -1) {
-            organization?.value?.contacts.content.splice(foundIdx, 1);
+            organization?.draft();
+            organization?.value?.contacts.splice(foundIdx, 1);
             organization?.commit({ syncOnly: true });
           }
         }

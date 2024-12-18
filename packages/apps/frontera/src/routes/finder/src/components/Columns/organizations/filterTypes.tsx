@@ -75,12 +75,7 @@ export const getFilterTypes = (store?: RootStore) => {
       filterType: 'list',
       filterName: 'Relationship',
       filterAccesor: ColumnViewType.OrganizationsRelationship,
-      filterOperators: [
-        ComparisonOperator.Contains,
-        ComparisonOperator.NotContains,
-        ComparisonOperator.IsEmpty,
-        ComparisonOperator.IsNotEmpty,
-      ],
+      filterOperators: [ComparisonOperator.In, ComparisonOperator.NotIn],
       icon: (
         <AlignHorizontalCentre02 className='group-hover:text-gray-700 text-gray-500 mb-0.5' />
       ),
@@ -108,8 +103,8 @@ export const getFilterTypes = (store?: RootStore) => {
       filterName: 'Health',
       filterAccesor: ColumnViewType.OrganizationsRenewalLikelihood,
       filterOperators: [
-        ComparisonOperator.Contains,
-        ComparisonOperator.NotContains,
+        ComparisonOperator.In,
+        ComparisonOperator.NotIn,
         ComparisonOperator.IsEmpty,
         ComparisonOperator.IsNotEmpty,
       ],
@@ -128,8 +123,8 @@ export const getFilterTypes = (store?: RootStore) => {
       filterName: 'Onboarding status',
       filterAccesor: ColumnViewType.OrganizationsOnboardingStatus,
       filterOperators: [
-        ComparisonOperator.Contains,
-        ComparisonOperator.NotContains,
+        ComparisonOperator.In,
+        ComparisonOperator.NotIn,
         ComparisonOperator.IsEmpty,
         ComparisonOperator.IsNotEmpty,
       ],
@@ -195,8 +190,8 @@ export const getFilterTypes = (store?: RootStore) => {
       filterName: 'Owner',
       filterAccesor: ColumnViewType.OrganizationsOwner,
       filterOperators: [
-        ComparisonOperator.Contains,
-        ComparisonOperator.NotContains,
+        ComparisonOperator.In,
+        ComparisonOperator.NotIn,
         ComparisonOperator.IsEmpty,
         ComparisonOperator.IsNotEmpty,
       ],
@@ -212,8 +207,8 @@ export const getFilterTypes = (store?: RootStore) => {
       filterName: 'Source',
       filterAccesor: ColumnViewType.OrganizationsLeadSource,
       filterOperators: [
-        ComparisonOperator.Contains,
-        ComparisonOperator.NotContains,
+        ComparisonOperator.In,
+        ComparisonOperator.NotIn,
         ComparisonOperator.IsEmpty,
         ComparisonOperator.IsNotEmpty,
       ],
@@ -281,12 +276,7 @@ export const getFilterTypes = (store?: RootStore) => {
       filterType: 'list',
       filterName: 'Last touchpoint',
       filterAccesor: ColumnViewType.OrganizationsLastTouchpoint,
-      filterOperators: [
-        ComparisonOperator.Contains,
-        ComparisonOperator.NotContains,
-        ComparisonOperator.IsEmpty,
-        ComparisonOperator.IsNotEmpty,
-      ],
+      filterOperators: [ComparisonOperator.In, ComparisonOperator.NotIn],
       icon: (
         <Calendar className='group-hover:text-gray-700 text-gray-500 mb-0.5' />
       ),
@@ -346,8 +336,8 @@ export const getFilterTypes = (store?: RootStore) => {
       filterName: 'Industry',
       filterAccesor: ColumnViewType.OrganizationsIndustry,
       filterOperators: [
-        ComparisonOperator.Contains,
-        ComparisonOperator.NotContains,
+        ComparisonOperator.In,
+        ComparisonOperator.NotIn,
         ComparisonOperator.IsEmpty,
         ComparisonOperator.IsNotEmpty,
       ],
@@ -380,8 +370,8 @@ export const getFilterTypes = (store?: RootStore) => {
       filterName: 'Tags',
       filterAccesor: ColumnViewType.OrganizationsTags,
       filterOperators: [
-        ComparisonOperator.Contains,
-        ComparisonOperator.NotContains,
+        ComparisonOperator.In,
+        ComparisonOperator.NotIn,
         ComparisonOperator.IsEmpty,
         ComparisonOperator.IsNotEmpty,
       ],
@@ -399,8 +389,8 @@ export const getFilterTypes = (store?: RootStore) => {
       filterName: 'Country',
       filterAccesor: ColumnViewType.OrganizationsHeadquarters,
       filterOperators: [
-        ComparisonOperator.Contains,
-        ComparisonOperator.NotContains,
+        ComparisonOperator.In,
+        ComparisonOperator.NotIn,
         ComparisonOperator.IsEmpty,
         ComparisonOperator.IsNotEmpty,
       ],
@@ -421,8 +411,8 @@ export const getFilterTypes = (store?: RootStore) => {
       filterName: 'Ownership type',
       filterAccesor: ColumnViewType.OrganizationsIsPublic,
       filterOperators: [
-        ComparisonOperator.Contains,
-        ComparisonOperator.NotContains,
+        ComparisonOperator.In,
+        ComparisonOperator.NotIn,
         ComparisonOperator.IsEmpty,
         ComparisonOperator.IsNotEmpty,
       ],
@@ -439,8 +429,8 @@ export const getFilterTypes = (store?: RootStore) => {
       filterName: 'Stage',
       filterAccesor: ColumnViewType.OrganizationsStage,
       filterOperators: [
-        ComparisonOperator.Contains,
-        ComparisonOperator.NotContains,
+        ComparisonOperator.In,
+        ComparisonOperator.NotIn,
         ComparisonOperator.IsEmpty,
         ComparisonOperator.IsNotEmpty,
       ],

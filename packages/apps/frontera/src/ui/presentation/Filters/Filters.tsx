@@ -139,34 +139,20 @@ export const Filters = ({
     );
 
     if (filterType === 'date') {
-      if (ComparisonOperator.Lt === operation) {
-        setFilters(
-          {
-            ...filter,
-            value: [null, filter.value[0]],
-            property: filter.property,
-            operation: (operation as ComparisonOperator) || '',
-          },
-          index,
-        );
-      } else {
-        if (ComparisonOperator.Gt === operation) {
-          setFilters(
-            {
-              ...filter,
-              value: [filter.value[1], null],
-              property: filter.property,
-              operation: (operation as ComparisonOperator) || '',
-            },
-            index,
-          );
-        }
-      }
+      setFilters(
+        {
+          ...filter,
+          value: filter.value,
+          property: filter.property,
+          operation: (operation as ComparisonOperator) || '',
+        },
+        index,
+      );
     }
   };
 
   const handleChangeFilterValue = (
-    value: string | Date | string[],
+    value: string | Date | string[] | null | number,
     filter: FilterItem,
     index: number,
   ) => {
@@ -197,9 +183,7 @@ export const Filters = ({
           index,
         );
       }
-    }
-
-    if (filter.property !== 'EMAIL_VERIFICATION_PRIMARY_EMAIL') {
+    } else {
       if (Array.isArray(value) && value.length === 0) {
         setFilters(
           {

@@ -72,6 +72,7 @@ export const getDefaultValue = (): FlowSender => ({
   user: {
     id: '',
     name: '',
+    mailboxesV2: [],
     firstName: '',
     lastName: '',
     emails: [],
@@ -91,7 +92,6 @@ export const getDefaultValue = (): FlowSender => ({
     profilePhotoUrl: '',
     timezone: '',
     mailboxes: [],
-    mailboxesV2: [],
     onboarding: {
       showOnboardingPage: false,
       onboardingInboundStepCompleted: false,

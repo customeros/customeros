@@ -42,9 +42,8 @@ export const OrganizationSidenav = observer(() => {
     setSearchParams(urlSearchParams);
   };
 
-  const parentOrg = organization?.value?.parentCompanies?.[0]?.organization;
-  const parentOrgName = parentOrg?.name;
-  const parentOrgId = parentOrg?.metadata?.id;
+  const parentOrgId = organization?.value?.parentId;
+  const parentOrgName = organization?.value?.parentName;
 
   const presets = {
     targetsPreset: store.tableViewDefs.targetsPreset,
@@ -79,7 +78,7 @@ export const OrganizationSidenav = observer(() => {
         />
 
         <div className='flex flex-col line-clamp-1'>
-          {parentOrg && (
+          {parentOrgId && (
             <span
               onClick={() => navigate(`/organization/${parentOrgId}?tab=about`)}
               className='text-xs text-gray-600 truncate no-underline cursor-pointer'

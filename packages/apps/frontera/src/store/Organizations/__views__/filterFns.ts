@@ -1,6 +1,7 @@
 import type { FilterItem } from '@store/types';
 
 import { match } from 'ts-pattern';
+import { set } from 'date-fns/set';
 import { isBefore } from 'date-fns';
 import { isAfter } from 'date-fns/isAfter';
 
@@ -55,7 +56,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
       (filter) => (row: Organization) => {
         if (!filter.active) return true;
 
-        const value = row?.value.metadata.created;
+        const value = row?.value.createdAt;
 
         return filterTypeDate(filter, value);
       },
@@ -75,8 +76,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
       (filter) => (row: Organization) => {
         if (!filter.active) return true;
 
-        const values =
-          row?.value.parentCompanies?.[0]?.organization.name?.toLowerCase();
+        const values = row?.value?.parentName?.toLowerCase();
 
         return filterTypeText(filter, values);
       },
@@ -100,7 +100,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
         if (!values)
           return (
             filter.operation === ComparisonOperator.IsEmpty ||
-            filter.operation === ComparisonOperator.NotContains
+            filter.operation === ComparisonOperator.NotIn
           );
 
         return filterTypeList(
@@ -118,7 +118,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
         if (!values)
           return (
             filter.operation === ComparisonOperator.IsEmpty ||
-            filter.operation === ComparisonOperator.NotContains
+            filter.operation === ComparisonOperator.NotIn
           );
 
         return filterTypeList(
@@ -131,10 +131,9 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
       { property: ColumnViewType.OrganizationsForecastArr },
       (filter) => (row: Organization) => {
         if (!filter.active) return true;
-        const forecastValue =
-          row?.value.accountDetails?.renewalSummary?.arrForecast;
+        const forecastValue = row?.value?.renewalSummaryArrForecast;
 
-        if (!forecastValue) return false;
+        if (typeof forecastValue !== 'number') return false;
 
         return filterTypeNumber(filter, forecastValue);
       },
@@ -144,9 +143,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
       (filter) => (row: Organization) => {
         if (!filter.active) return true;
         const nextRenewalDate =
-          row?.value.accountDetails?.renewalSummary?.nextRenewalDate?.split(
-            'T',
-          )[0];
+          row?.value?.renewalSummaryNextRenewalAt?.split('T')[0];
 
         return filterTypeDate(filter, nextRenewalDate);
       },
@@ -155,7 +152,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
       { property: ColumnViewType.OrganizationsOnboardingStatus },
       (filter) => (row: Organization) => {
         if (!filter.active) return true;
-        const values = row?.value.accountDetails?.onboarding?.status;
+        const values = row?.value.onboardingStatus;
 
         if (!values)
           return (
@@ -173,8 +170,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
       { property: ColumnViewType.OrganizationsRenewalLikelihood },
       (filter) => (row: Organization) => {
         if (!filter.active) return true;
-        const values =
-          row?.value.accountDetails?.renewalSummary?.renewalLikelihood;
+        const values = row?.value.renewalSummaryRenewalLikelihood;
 
         if (!values) return filter.operation === ComparisonOperator.IsEmpty;
 
@@ -207,12 +203,12 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
       { property: ColumnViewType.OrganizationsLastTouchpoint },
       (filter) => (row: Organization) => {
         if (!filter.active) return true;
-        const lastTouchpoint = row?.value.lastTouchpoint?.lastTouchPointType;
+        const lastTouchpoint = row?.value?.lastTouchPointType;
 
         if (!lastTouchpoint)
           return (
             filter.operation === ComparisonOperator.IsEmpty ||
-            filter.operation === ComparisonOperator.NotContains
+            filter.operation === ComparisonOperator.NotIn
           );
 
         return filterTypeList(
@@ -225,7 +221,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
       { property: ColumnViewType.OrganizationsChurnDate },
       (filter) => (row: Organization) => {
         if (!filter.active) return true;
-        const churned = row?.value.accountDetails?.churned;
+        const churned = row?.value?.churnedAt;
 
         if (!churned) return false;
 
@@ -237,18 +233,19 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
       (filter) => (row: Organization) => {
         if (!filter.active) return true;
 
-        const linkedInUrl = row?.value.socialMedia?.find((v) =>
-          v.url.includes('linkedin'),
-        )?.url;
+        const linkedinSocial = row?.value.socialMedia?.find((v) =>
+          v.url.toLowerCase().includes('linkedin'),
+        );
+        const linkedInStr = linkedinSocial?.alias || linkedinSocial?.url;
 
-        return filterTypeText(filter, linkedInUrl);
+        return filterTypeText(filter, linkedInStr);
       },
     )
     .with(
       { property: ColumnViewType.OrganizationsLastTouchpointDate },
       (filter) => (row: Organization) => {
         if (!filter.active) return true;
-        const lastTouchpointAt = row?.value.lastTouchpoint?.lastTouchPointAt;
+        const lastTouchpointAt = row?.value.lastTouchPointAt;
 
         return filterTypeDate(filter, lastTouchpointAt);
       },
@@ -267,7 +264,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
       { property: ColumnViewType.OrganizationsContactCount },
       (filter) => (row: Organization) => {
         if (!filter.active) return true;
-        const contactsCount = row?.value.contacts.content.length;
+        const contactsCount = row?.value.contacts.length;
 
         return filterTypeNumber(filter, contactsCount);
       },
@@ -319,7 +316,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
       { property: ColumnViewType.OrganizationsLtv },
       (filter) => (row: Organization) => {
         if (!filter.active) return true;
-        const ltv = row?.value.accountDetails?.ltv;
+        const ltv = row?.value?.ltv;
 
         if (!ltv) return false;
 
@@ -428,14 +425,11 @@ const filterTypeList = (filter: FilterItem, value: string[] | undefined) => {
   return match(filterOperator)
     .with(ComparisonOperator.IsEmpty, () => !value?.length)
     .with(ComparisonOperator.IsNotEmpty, () => value?.length)
+    .with(ComparisonOperator.NotIn, () => {
+      return !value?.some((v) => filterValue?.includes(v));
+    })
     .with(
-      ComparisonOperator.NotContains,
-      () =>
-        !value?.length ||
-        (value?.length && !value.some((v) => filterValue?.includes(v))),
-    )
-    .with(
-      ComparisonOperator.Contains,
+      ComparisonOperator.In,
       () => value?.length && value.some((v) => filterValue?.includes(v)),
     )
     .otherwise(() => false);
@@ -447,13 +441,16 @@ const filterTypeDate = (filter: FilterItem, value: string | undefined) => {
 
   if (!value) return false;
 
+  const left = set(new Date(value), { hours: 0, minutes: 0, seconds: 0 });
+  const right = set(new Date(filterValue), {
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
+  });
+
   return match(filterOperator)
-    .with(ComparisonOperator.Lt, () =>
-      isBefore(new Date(value), new Date(filterValue)),
-    )
-    .with(ComparisonOperator.Gt, () =>
-      isAfter(new Date(value), new Date(filterValue)),
-    )
+    .with(ComparisonOperator.Lt, () => isBefore(left, right))
+    .with(ComparisonOperator.Gt, () => isAfter(left, right))
 
     .otherwise(() => true);
 };

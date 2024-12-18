@@ -1,7 +1,6 @@
 import type { RootStore } from '@store/root';
 
 import { Channel } from 'phoenix';
-import { gql } from 'graphql-request';
 import { Transport } from '@store/transport';
 import { GroupOperation } from '@store/types';
 import { runInAction, makeAutoObservable } from 'mobx';
@@ -49,10 +48,7 @@ export class TableViewDefsStore implements GroupStore<TableViewDef> {
     try {
       this.isLoading = true;
 
-      const res =
-        await this.transport.graphql.request<TABLE_VIEW_DEFS_QUERY_RESULT>(
-          TABLE_VIEW_DEFS_QUERY,
-        );
+      const res = await this.service.getTableViewDefs();
 
       this.load(res?.tableViewDefs);
       runInAction(() => {
@@ -336,32 +332,3 @@ export class TableViewDefsStore implements GroupStore<TableViewDef> {
     }
   };
 }
-
-type TABLE_VIEW_DEFS_QUERY_RESULT = { tableViewDefs: TableViewDef[] };
-const TABLE_VIEW_DEFS_QUERY = gql`
-  query tableViewDefs {
-    tableViewDefs {
-      id
-      name
-      tableType
-      tableId
-      order
-      icon
-      defaultFilters
-      filters
-      sorting
-      columns {
-        columnId
-        columnType
-        name
-        width
-        visible
-        filter
-      }
-      isPreset
-      isShared
-      createdAt
-      updatedAt
-    }
-  }
-`;

@@ -29,26 +29,25 @@ interface OnboardingStatusProps {
 export const OnboardingStatus = observer(({ id }: OnboardingStatusProps) => {
   const store = useStore();
   const organization = store.organizations.value.get(id);
-  const onboardingDetails = organization?.value?.accountDetails?.onboarding;
+  const onboardingStatus = organization?.value?.onboardingStatus;
+  const onboardingComments = organization?.value?.onboardingComments;
+  const onboardingUpdatedAt = organization?.value?.onboardingStatusUpdatedAt;
 
   const { open, onClose, onOpen } = useDisclosure();
 
-  const timeElapsed = match(onboardingDetails?.status)
+  const timeElapsed = match(onboardingStatus)
     .with(
       OnboardingStatusEnum.NotApplicable,
       OnboardingStatusEnum.Successful,
       () => '',
     )
     .otherwise(() => {
-      if (!onboardingDetails?.updatedAt) return '';
+      if (!onboardingUpdatedAt) return '';
 
-      return match(
-        DateTimeUtils.getDifferenceFromNow(onboardingDetails?.updatedAt),
-      )
+      return match(DateTimeUtils.getDifferenceFromNow(onboardingUpdatedAt))
         .with([null, 'today'], () => {
-          const [value, unit] = DateTimeUtils.getDifferenceInMinutesOrHours(
-            onboardingDetails?.updatedAt,
-          );
+          const [value, unit] =
+            DateTimeUtils.getDifferenceInMinutesOrHours(onboardingUpdatedAt);
 
           return `for ${Math.abs(value as number)} ${unit}`;
         })
@@ -59,11 +58,12 @@ export const OnboardingStatus = observer(({ id }: OnboardingStatusProps) => {
 
   const label =
     labelMap[
-      onboardingDetails?.status ?? OnboardingStatusEnum.NotApplicable
+      organization?.value?.onboardingStatus ??
+        OnboardingStatusEnum.NotApplicable
     ].toLowerCase();
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const colorScheme: any = match(onboardingDetails?.status)
+  const colorScheme: any = match(onboardingStatus)
     .returnType<string>()
     .with(
       OnboardingStatusEnum.Successful,
@@ -78,19 +78,17 @@ export const OnboardingStatus = observer(({ id }: OnboardingStatusProps) => {
     )
     .otherwise(() => 'gray');
 
-  const reason = onboardingDetails?.comments;
-
   return (
     <>
       <div
         onClick={onOpen}
         className={cn(
-          reason ? 'justify-start' : 'justify-center',
+          onboardingComments ? 'justify-start' : 'justify-center',
           'flex mt-1 ml-[15px] gap-4 w-full items-center cursor-pointer overflow-visible justify-start opacity-100',
         )}
       >
         <FeaturedIcon colorScheme={colorScheme}>
-          {onboardingDetails?.status === OnboardingStatusEnum.Successful ? (
+          {onboardingStatus === OnboardingStatusEnum.Successful ? (
             <Trophy01 />
           ) : (
             <Flag04 />
@@ -103,8 +101,8 @@ export const OnboardingStatus = observer(({ id }: OnboardingStatusProps) => {
               store.organizations?.isLoading ? '' : timeElapsed
             }`}</span>
           </div>
-          {reason && (
-            <span className='line-clamp-2 text-gray-500 text-sm'>{`“${reason}”`}</span>
+          {onboardingComments && (
+            <span className='line-clamp-2 text-gray-500 text-sm'>{`“${onboardingComments}”`}</span>
           )}
         </div>
       </div>

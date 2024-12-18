@@ -4,10 +4,8 @@ import merge from 'lodash/merge';
 import { Entity } from '@store/record';
 import { countryMap } from '@assets/countries/countriesMap';
 import { action, computed, observable, runInAction } from 'mobx';
-import { ActionStore } from '@store/TimelineEvents/Actions/Action.store';
 
 import {
-  Market,
   FundingRound,
   type Contact,
   type Contract,
@@ -17,12 +15,14 @@ import {
   OrganizationRelationship,
 } from '@graphql/types';
 
-import type { OrganizationQuery } from './__service__/getOrganization.generated';
+import type { GetOrganizationsByIdsQuery } from './__service__/getOrganizationsByIds.generated';
 import type { SaveOrganizationMutationVariables } from './__service__/saveOrganization.generated';
 
 import { OrganizationsStore } from './Organizations.store';
 
-export type OrganizationDatum = NonNullable<OrganizationQuery['organization']>;
+export type OrganizationDatum = NonNullable<
+  GetOrganizationsByIdsQuery['ui_organizations'][number]
+>;
 
 export class Organization extends Entity<OrganizationDatum> {
   @observable accessor value: OrganizationDatum = Organization.default();
@@ -34,12 +34,17 @@ export class Organization extends Entity<OrganizationDatum> {
 
   @computed
   get id() {
-    return this.value.metadata.id;
+    return this.value.id;
+  }
+
+  @computed
+  get name() {
+    return this.value.name;
   }
 
   set id(value: string) {
     runInAction(() => {
-      this.value.metadata.id = value;
+      this.value.id = value;
     });
   }
 
@@ -56,16 +61,16 @@ export class Organization extends Entity<OrganizationDatum> {
   @computed
   get isEnriching(): boolean {
     return (
-      this.value?.enrichDetails?.requestedAt &&
-      !this.value?.enrichDetails?.enrichedAt &&
-      !this.value?.enrichDetails?.failedAt
+      this.value?.enrichedRequestedAt &&
+      !this.value?.enrichedAt &&
+      !this.value?.enrichedFailedAt
     );
   }
 
   @computed
   get contacts() {
-    return this.value.contacts.content.reduce((acc, { metadata }) => {
-      const store = this.store.root.contacts.value.get(metadata?.id);
+    return this.value.contacts.reduce((acc, id) => {
+      const store = this.store.root.contacts.value.get(id);
 
       if (store) acc.push(store.value);
 
@@ -75,8 +80,8 @@ export class Organization extends Entity<OrganizationDatum> {
 
   @computed
   get contracts() {
-    return this.value.contracts?.reduce((acc, { metadata }) => {
-      const store = this.store.root.contracts.value.get(metadata.id);
+    return this.value.contracts?.reduce((acc, id) => {
+      const store = this.store.root.contracts.value.get(id);
 
       if (store) acc.push(store.value);
 
@@ -106,20 +111,14 @@ export class Organization extends Entity<OrganizationDatum> {
 
   @computed
   get parentCompanies() {
-    return this.value.parentCompanies.reduce((acc, curr) => {
-      const id = curr?.organization?.metadata?.id;
-      const store = this.store.getById(id);
-
-      if (store) acc.push(store.value);
-
-      return acc;
-    }, [] as OrganizationDatum[]);
+    return this.value.parentId
+      ? [this.store.getById(this.value.parentId)?.value]
+      : [null];
   }
 
   @computed
   get subsidiaries() {
-    return this.value.subsidiaries.reduce((acc, curr) => {
-      const id = curr?.organization?.metadata?.id;
+    return this.value.subsidiaries.reduce((acc, id) => {
       const record = this.store.getById(id);
 
       if (record) acc.push(record.value);
@@ -135,20 +134,12 @@ export class Organization extends Entity<OrganizationDatum> {
 
   @action
   public addSubsidiary(id: string) {
-    const record = this.store.getById(id);
-
-    if (!record) return;
-
-    this.value.subsidiaries.push({
-      organization: record.value,
-    });
+    this.value.subsidiaries.push(id);
   }
 
   @action
   public removeSubsidiary(id: string) {
-    const removeIndex = this.value.subsidiaries.findIndex(
-      (org) => org.organization.metadata.id === id,
-    );
+    const removeIndex = this.value.subsidiaries.indexOf(id);
 
     this.value.subsidiaries.splice(removeIndex, 1);
   }
@@ -159,12 +150,14 @@ export class Organization extends Entity<OrganizationDatum> {
 
     if (!record) return;
 
-    this.value.parentCompanies.push({ organization: record.value });
+    this.value.parentId = id;
+    this.value.parentName = record.value.name;
   }
 
   @action
-  public clearParentCompanies() {
-    this.value.parentCompanies = [];
+  public clearParent() {
+    this.value.parentId = null;
+    this.value.parentName = null;
   }
 
   @action
@@ -205,71 +198,54 @@ export class Organization extends Entity<OrganizationDatum> {
   ): OrganizationDatum {
     return merge(
       {
+        id: crypto.randomUUID(),
         name: 'Unnamed',
-        metadata: {
-          id: crypto.randomUUID(),
-          lastUpdated: new Date().toISOString(),
-          created: new Date().toISOString(),
-        },
-        hide: false,
-        owner: null,
-        contacts: {
-          content: [],
-        },
-        icon: '',
-        referenceId: '',
-        yearFounded: '',
-        enrichDetails: {
-          failedAt: '',
-          enrichedAt: '',
-          requestedAt: '',
-        },
-        customerOsId: '',
-        domains: [],
-        industry: '',
-        locations: [],
-        parentCompanies: [],
-        socialMedia: [],
-        stage: OrganizationStage.Target,
-        tags: [],
-        subsidiaries: [],
-        website: '',
-        accountDetails: {
-          onboarding: {
-            status: OnboardingStatus.NotApplicable,
-            comments: '',
-            updatedAt: '',
-          },
-          ltv: 0,
-          churned: null,
-          renewalSummary: {
-            arrForecast: null,
-            maxArrForecast: null,
-            renewalLikelihood: null,
-            nextRenewalDate: '',
-          },
-        },
-        contracts: [],
+        notes: '',
         description: '',
-        employees: 0,
-        isCustomer: false,
-        logo: '',
-        lastFundingRound: FundingRound.PreSeed,
-        lastTouchpoint: {
-          lastTouchPointTimelineEventId: crypto.randomUUID(),
-          lastTouchPointAt: new Date().toISOString(),
-          lastTouchPointType: LastTouchpointType.ActionCreated,
-          lastTouchPointTimelineEvent: ActionStore.getDefaultValue(),
-        }, // nested defaults ignored for now -> should be converted into a Store
-        leadSource: '',
-        market: Market.B2B,
+        industry: '',
+        market: '',
+        website: '',
+        logoUrl: '',
+        iconUrl: '',
         public: false,
+        stage: OrganizationStage.Target,
         relationship: OrganizationRelationship.Prospect,
-        // slackChannelId: '',
-        // stageLastUpdated: '',
-        // subIndustry: '',
-        // targetAudience: '',
+        lastFundingRound: FundingRound.PreSeed,
+        leadSource: '',
         valueProposition: '',
+        slackChannelId: '',
+        employees: 0,
+        yearFounded: '',
+        enrichedAt: null,
+        enrichedFailedAt: null,
+        enrichedRequestedAt: null,
+        ltv: 0,
+        hide: false,
+        domains: [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        churnedAt: null,
+        customerOsId: '',
+        referenceId: '',
+        renewalSummaryArrForecast: null,
+        renewalSummaryMaxArrForecast: null,
+        renewalSummaryRenewalLikelihood: null,
+        renewalSummaryNextRenewalAt: '',
+        onboardingStatus: OnboardingStatus.NotApplicable,
+        onboardingStatusUpdatedAt: '',
+        onboardingComments: '',
+        lastTouchPointAt: new Date().toISOString(),
+        lastTouchPointType: LastTouchpointType.ActionCreated,
+        contactCount: 0,
+        parentId: null,
+        parentName: null,
+        contracts: [],
+        contacts: [],
+        subsidiaries: [],
+        owner: null,
+        tags: [],
+        socialMedia: [],
+        locations: [],
       },
       payload ?? {},
     );

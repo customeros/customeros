@@ -1,9 +1,10 @@
+import { observer } from 'mobx-react-lite';
 import ParentSize from '@visx/responsive/lib/components/ParentSize';
 
 import { Skeleton } from '@ui/feedback/Skeleton';
+import { useStore } from '@shared/hooks/useStore';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { formatCurrency } from '@utils/getFormattedCurrencyNumber';
-import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
 
 import { HelpContent } from './HelpContent';
 import { ChartCard } from '../../ChartCard';
@@ -13,12 +14,12 @@ import MrrPerCustomerChart, {
   MrrPerCustomerDatum,
 } from './MrrPerCustomer.chart';
 
-export const MrrPerCustomer = () => {
+export const MrrPerCustomer = observer(() => {
+  const store = useStore();
   const client = getGraphQLClient();
-  const { data: globalCacheData } = useGlobalCacheQuery(client);
   const { data, isLoading } = useMrrPerCustomerQuery(client);
 
-  const hasContracts = globalCacheData?.global_Cache?.contractsExist;
+  const hasContracts = store?.globalCache?.value?.contractsExist ?? false;
   const chartData = (data?.dashboard_MRRPerCustomer?.perMonth ?? []).map(
     (d, index, arr) => {
       const decIndex = arr.findIndex((d) => d?.month === 12);
@@ -61,4 +62,4 @@ export const MrrPerCustomer = () => {
       </ParentSize>
     </ChartCard>
   );
-};
+});

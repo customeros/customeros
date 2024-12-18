@@ -4,9 +4,7 @@ import { useParams } from 'react-router-dom';
 import { observer } from 'mobx-react-lite';
 
 import { useStore } from '@shared/hooks/useStore';
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useTimelineMeta } from '@organization/components/Timeline/state';
-import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
 
 import { ReminderItem } from './ReminderItem';
 
@@ -18,13 +16,10 @@ export const Reminders = observer(() => {
       .get(organizationId)
       ?.map((r) => r.value) ?? [];
 
-  const client = getGraphQLClient();
   const [_, setTimelineMeta] = useTimelineMeta();
 
-  const { data: globalCacheData } = useGlobalCacheQuery(client);
-
   const remindersLength = reminders?.length ?? 0;
-  const user = globalCacheData?.global_Cache?.user;
+  const user = store.globalCache.value?.user;
   const currentOwner = [user?.firstName, user?.lastName]
     .filter(Boolean)
     .join(' ');

@@ -120,7 +120,7 @@ export class ContactStore extends Syncable<Contact> {
   }
 
   get organization() {
-    return this.root.organizations.value.get(this.organizationId)?.value;
+    return this.root.organizations.getById(this.organizationId)?.value;
   }
 
   async getRecentChanges() {}
@@ -141,7 +141,7 @@ export class ContactStore extends Syncable<Contact> {
   }
 
   get hasActiveOrganization() {
-    const org = this.root.organizations.value.get(this.organizationId);
+    const org = this.root.organizations.getById(this.organizationId);
 
     return org && !org.value.hide;
   }

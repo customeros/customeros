@@ -13,13 +13,13 @@ import { handleOperatorName } from '../../utils/utils';
 
 interface NumberFilterProps {
   filterName: string;
-  filterValue: string;
   operatorValue: string;
-  onChangeFilterValue: (value: string) => void;
+  filterValue: string | number;
+  onChangeFilterValue: (value: number) => void;
 }
 
 const formatNumberWithCommas = (value: string | number | undefined): string => {
-  if (value === undefined || value === '' || value === 0) return '';
+  if (value === undefined || value === '') return '';
   const numString = value?.toString();
 
   return numString?.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
@@ -32,7 +32,9 @@ export const NumberFilter = ({
   filterValue,
 }: NumberFilterProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [inputValue, setInputValue] = useState(filterValue);
+  const [inputValue, setInputValue] = useState<number>(
+    typeof filterValue === 'number' ? filterValue : parseFloat(filterValue),
+  );
   const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -52,7 +54,7 @@ export const NumberFilter = ({
     return null;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value;
+    const newValue = parseFloat(e.target.value === '' ? '0' : e.target.value);
 
     setInputValue(newValue);
 

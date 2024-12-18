@@ -48,11 +48,9 @@ export const RenewalForecastCell = observer(
       );
     }
 
-    const amount =
-      organization?.value?.accountDetails?.renewalSummary?.arrForecast ?? null;
+    const amount = organization?.value?.renewalSummaryArrForecast ?? null;
     const potentialAmount =
-      organization?.value?.accountDetails?.renewalSummary?.maxArrForecast ??
-      null;
+      organization?.value?.renewalSummaryMaxArrForecast ?? null;
 
     const initialValue = (() => {
       if (potentialAmount === 0) return 0;
