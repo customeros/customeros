@@ -107,7 +107,7 @@ func InitRepositories(postgresDB *config.PostgresDB) *Repositories {
 		CacheEmailValidationRepository:               NewCacheEmailValidationRepository(postgresDB.GormDB),
 		CacheIpDataRepository:                        NewCacheIpDataRepository(postgresDB.GormDB),
 		CacheIpHunterRepository:                      NewCacheIpHunterRepository(postgresDB.GormDB),
-		CommonRepository:                             NewCommonRepository(postgresDB.GormDB),
+		CommonRepository:                             NewCommonRepository(postgresDB),
 		CosApiEnrichPersonTempResultRepository:       NewCosApiEnrichPersonTempResultRepository(postgresDB.GormDB),
 		CurrencyRateRepository:                       NewCurrencyRateRepository(postgresDB.GormDB),
 		CustomerOsIdsRepository:                      NewCustomerOsIdsRepository(postgresDB.GormDB),
