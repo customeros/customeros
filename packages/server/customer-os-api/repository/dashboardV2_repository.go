@@ -112,13 +112,13 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 				createTimeFilter(filter, organizationFilter, "lastTouchpointAt")
 			}
 			if filter.Filter.Property == model.ColumnViewTypeOrganizationsStage.String() {
-				createInOrEmptyStringFilter(filter, organizationFilter, "stage")
+				createInOrEmptyStringFilter(filter, organizationFilter, string(neo4jentity.OrganizationPropertyStage))
 			}
 			if filter.Filter.Property == model.ColumnViewTypeOrganizationsSocials.String() {
 				socialFilter.Filters = append(socialFilter.Filters, utils.CreateStringCypherFilter("url", filter.Filter.Value.Str, filter.Filter.Operation))
 			}
 			if filter.Filter.Property == model.ColumnViewTypeOrganizationsLeadSource.String() {
-				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateStringCypherFilter("leadSource", filter.Filter.Value.Str, filter.Filter.Operation))
+				createInOrEmptyStringFilter(filter, organizationFilter, string(neo4jentity.OrganizationPropertyLeadSource))
 			}
 			if filter.Filter.Property == model.ColumnViewTypeOrganizationsCreatedDate.String() {
 				createTimeFilter(filter, organizationFilter, "createdAt")
@@ -133,7 +133,7 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 				createNumberCypherFilter(filter, organizationFilter, "yearFounded")
 			}
 			if filter.Filter.Property == model.ColumnViewTypeOrganizationsIndustry.String() {
-				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateStringCypherFilter("industry", filter.Filter.Value.Str, filter.Filter.Operation))
+				createInOrEmptyStringFilter(filter, organizationFilter, string(neo4jentity.OrganizationPropertyIndustry))
 			}
 			if filter.Filter.Property == model.ColumnViewTypeOrganizationsChurnDate.String() {
 				createTimeFilter(filter, organizationFilter, "derivedChurnedAt")
