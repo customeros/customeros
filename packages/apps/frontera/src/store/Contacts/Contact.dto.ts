@@ -59,10 +59,6 @@ export class Contact extends Entity<ContactDatum> {
     return this.value.primaryOrganizationId;
   }
 
-  get hasActiveOrganization() {
-    const org = this.store.root.organizations.getById(this.organizationId);
-  }
-
   @computed
   get organization() {
     return this.store.root.organizations.value.get(this.organizationId || '')

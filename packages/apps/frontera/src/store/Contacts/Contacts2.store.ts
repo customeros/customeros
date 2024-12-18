@@ -17,8 +17,8 @@ import { FlowContactsView } from './__views__/FlowContacts.view';
 export class ContactsStore extends Store<ContactDatum, Contact> {
   private chunkSize = 50;
   private service: ContactService;
-  @observable accessor searchedIds: string[] = [];
-  @observable accessor chunk = 0;
+  @observable accessor searchResults: Map<string, string[]> = new Map();
+  @observable accessor cursors: Map<string, number> = new Map();
   @observable accessor availableCounts: Map<string, number> = new Map();
 
   constructor(public root: RootStore, public transport: Transport) {
@@ -29,8 +29,17 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
     });
     this.service = ContactService.getInstance();
 
-    new ContactsaView(this);
+    new ContactsView(this);
     new FlowContactsView(this);
+  }
+
+  canLoadNext(preset: string) {
+    const ids = this.searchResults.get(preset);
+    const cursor = this.cursors.get(preset) ?? 0;
+
+    if (!ids) return false;
+
+    return ids.length > this.chunkSize * (cursor + 1);
   }
 
   @computed
@@ -49,11 +58,6 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
       this.softDelete(id);
     });
   };
-
-  @computed
-  get canLoadNext() {
-    return this.searchedIds.length > this.chunkSize * (this.chunk + 1);
-  }
 
   @action
   async getAllData() {
@@ -94,6 +98,11 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
   @action
   async search(viewDefPrest: string) {
     const viewDef = this.root.tableViewDefs.getById(viewDefPrest);
+    const cursor = (
+      this.cursors.has(viewDefPrest)
+        ? this.cursors.get(viewDefPrest)
+        : this.cursors.set(viewDefPrest, 0).get(viewDefPrest)
+    ) as number;
 
     if (!viewDef) {
       console.error(`viewDef with preset=${viewDefPrest} not found`);
@@ -103,9 +112,9 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
 
     try {
       runInAction(() => {
-        if (this.chunk > 0) {
+        if (cursor > 0) {
           // reset chunk if new search is performed
-          this.chunk = 0;
+          this.cursors.set(viewDefPrest, 0);
         }
         this.isLoading = true;
       });
@@ -115,20 +124,20 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
       const { ui_contacts_search: searchResult } =
         await this.service.searchContacts({ ...payload });
 
-      if (this.chunk === 0) {
+      if (cursor === 0) {
         const ids = (searchResult?.ids ?? []).slice(
-          this.chunkSize * this.chunk,
-          this.chunkSize * this.chunk + this.chunkSize,
+          this.chunkSize * cursor,
+          this.chunkSize * cursor + this.chunkSize,
         );
 
         // retrieve first chunk of data after new search is performed
         await this.retrieve(ids);
       }
-
       runInAction(() => {
         this.isLoading = false;
         this.availableCounts.set(viewDefPrest, searchResult?.totalElements);
-        this.searchedIds = searchResult?.ids ?? [];
+        this.totalElements = searchResult?.totalAvailable ?? 0;
+        this.searchResults.set(viewDefPrest, searchResult?.ids ?? []);
       });
     } catch (err) {
       runInAction(() => {
@@ -166,16 +175,19 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
   }
 
   @action
-  public async loadNext() {
-    if (!this.canLoadNext) return;
+  public async loadNext(preset: string) {
+    let cursor = this.cursors.get(preset) ?? 0;
 
     runInAction(() => {
-      this.chunk++;
+      cursor++;
+      this.cursors.set(preset, cursor);
     });
 
-    const ids = this.searchedIds.slice(
-      this.chunkSize * this.chunk,
-      this.chunkSize * this.chunk + this.chunkSize,
+    const ids = this.searchResults.get(preset);
+
+    const chunkedIds = (ids ?? []).slice(
+      this.chunkSize * cursor,
+      this.chunkSize * cursor + this.chunkSize,
     );
 
     try {
@@ -183,7 +195,7 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
         this.isLoading = true;
       });
 
-      await this.retrieve(ids);
+      await this.retrieve(chunkedIds);
     } catch (err) {
       runInAction(() => {
         this.error = (err as Error)?.message;
@@ -192,6 +204,35 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
       runInAction(() => {
         this.isLoading = false;
       });
+    }
+  }
+
+  @action
+  public async invalidate(id: string) {
+    try {
+      const { ui_contacts } = await this.service.getContactsByIds({
+        ids: [id],
+      });
+
+      if (!ui_contacts) return;
+
+      const data = ui_contacts[0];
+
+      if (!data) return;
+
+      runInAction(() => {
+        const record = this.value.get(id);
+
+        if (record) {
+          Object.assign(record.value, data);
+        } else {
+          const record = new Contact(this, data);
+
+          this.value.set(record.id, record);
+        }
+      });
+    } catch (e) {
+      console.error('Failed invalidating Contact with ID: ' + id);
     }
   }
 
@@ -210,7 +251,7 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
     if (organizationId) {
       const organization = this.root.organizations.value.get(organizationId);
 
-      organization?.value.contacts.content.unshift(newContact.value);
+      organization?.value.contacts.unshift(newContact.value.id);
       organization?.commit({ syncOnly: true });
     }
 
@@ -266,50 +307,26 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
     const socialId = crypto.randomUUID();
 
     (newContact.value = {
-      __typename: 'Contact',
-      metadata: {
-        id: socialId,
-      },
+      id: socialId,
+      firstName: '',
+      lastName: '',
+      name: '',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      firstName: null,
-      lastName: null,
-      name: null,
-      prefix: null,
       flows: [],
-      enrichDetails: {},
-      jobRoles: [],
       locations: [],
-      phoneNumbers: [],
       emails: [],
-      socials: [],
       connectedUsers: [],
       tags: [],
-      timezone: null,
-      organizations: {
-        content: [],
-        totalAvailable: 0,
-        totalElements: 0,
-      },
-      profilePhotoUrl: null,
-      description: null,
-      latestOrganizationWithJobRole: {
-        jobRole: {
-          id: '',
-          primary: false,
-          jobTitle: '',
-          description: '',
-          company: '',
-          startedAt: null,
-          endedAt: null,
-        },
-        organization: {
-          metadata: {
-            id: '',
-          },
-          name: '',
-        },
-      },
+      enrichedEmailEnrichedAt: null,
+      enrichedEmailFound: null,
+      enrichedFailedAt: null,
+      enrichedAt: null,
+      description: '',
+      phones: [],
+      prefix: '',
+      timezone: '',
+      profilePhotoUrl: '',
     }),
       this.value.set(tempId, newContact);
 
@@ -318,7 +335,7 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
     const organization = this.root.organizations.value.get(organizationId);
 
     if (organization) {
-      organization?.value?.contacts.content.unshift(newContact.value);
+      organization?.value?.contacts.unshift(newContact.value.id);
       organization.commit({ syncOnly: true });
     }
 
@@ -380,50 +397,26 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
     let serverId: string | undefined = undefined;
 
     (newContact.value = {
-      __typename: 'Contact',
-      metadata: {
-        id: socialId,
-      },
+      id: socialId,
+      firstName: '',
+      lastName: '',
+      name: '',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      firstName: null,
-      lastName: null,
-      name: null,
-      prefix: null,
       flows: [],
-      enrichDetails: {},
-      jobRoles: [],
       locations: [],
-      phoneNumbers: [],
       emails: [],
-      socials: [],
       connectedUsers: [],
       tags: [],
-      timezone: null,
-      organizations: {
-        content: [],
-        totalAvailable: 0,
-        totalElements: 0,
-      },
-      profilePhotoUrl: null,
-      description: null,
-      latestOrganizationWithJobRole: {
-        jobRole: {
-          id: '',
-          primary: false,
-          jobTitle: '',
-          description: '',
-          company: '',
-          startedAt: null,
-          endedAt: null,
-        },
-        organization: {
-          metadata: {
-            id: '',
-          },
-          name: '',
-        },
-      },
+      enrichedEmailEnrichedAt: null,
+      enrichedEmailFound: null,
+      enrichedFailedAt: null,
+      enrichedAt: null,
+      description: '',
+      phones: [],
+      prefix: '',
+      timezone: '',
+      profilePhotoUrl: '',
     }),
       this.value.set(tempId, newContact);
 
@@ -561,12 +554,12 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
           const organization =
             this.root.organizations.value.get(organizationId);
 
-          const foundIdx = organization?.value?.contacts.content.findIndex(
-            (c) => c?.metadata.id === id,
+          const foundIdx = organization?.value?.contacts.findIndex(
+            (c) => c === id,
           );
 
           if (foundIdx && foundIdx > -1) {
-            organization?.value?.contacts.content.splice(foundIdx, 1);
+            organization?.value?.contacts.splice(foundIdx, 1);
             organization?.commit({ syncOnly: true });
           }
         }
@@ -594,12 +587,12 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
           const organization =
             this.root.organizations.value.get(organizationId);
 
-          const foundIdx = organization?.value?.contacts.content.findIndex(
-            (c) => c?.metadata.id === id,
+          const foundIdx = organization?.value?.contacts.findIndex(
+            (c) => c === id,
           );
 
           if (foundIdx && foundIdx > -1) {
-            organization?.value?.contacts.content.splice(foundIdx, 1);
+            organization?.value?.contacts.splice(foundIdx, 1);
             organization?.commit({ syncOnly: true });
           }
         }

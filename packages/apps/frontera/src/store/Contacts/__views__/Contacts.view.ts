@@ -14,15 +14,40 @@ import { ContactsStore } from '../Contacts2.store';
 export class ContactsView {
   constructor(private store: ContactsStore) {
     reaction(() => {
-      const preset = this.store.root.tableViewDefs?.contactsPreset;
+      const preset = this.store.root.tableViewDefs.contactsPreset;
 
       return preset ? this.store.getSearchTermByView(preset) : '';
     }, this.update);
+    reaction(() => {
+      const preset = this.store.root.tableViewDefs.contactsPreset;
+
+      return preset ? this.store.availableCounts.get(preset) : 0;
+    }, this.update);
     reaction(() => this.store.value.size, this.update);
     reaction(() => this.store.version, this.update);
-
     reaction(() => {
-      const preset = this.store.root.tableViewDefs?.contactsPreset;
+      const preset = this.store.root.tableViewDefs.contactsPreset;
+
+      return this.store.cursors.get(preset!);
+    }, this.update);
+    reaction(
+      () => {
+        const preset = this.store.root.tableViewDefs.contactsPreset;
+
+        if (!preset) return '';
+
+        const viewDef = this.store.root.tableViewDefs.getById(preset);
+
+        const columns = JSON.stringify(viewDef?.value.columns);
+
+        return `${viewDef?.value.filters ?? ''}-${
+          viewDef?.value.defaultFilters ?? ''
+        }-${viewDef?.value.sorting}-${columns}`;
+      },
+      () => this.store.search(this.store.root.tableViewDefs.contactsPreset!),
+    );
+    reaction(() => {
+      const preset = this.store.root.tableViewDefs.contactsPreset;
 
       if (!preset) return '';
 
