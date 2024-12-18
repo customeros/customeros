@@ -275,15 +275,17 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 	tracing.TagEntity(span, organizationId)
 
 	// validate stage and relationship combination all the time (from input or existing computed )
-	stage := input.GetStageStr()
-	relationship := input.GetRelationshipStr()
-	if stage == "" && existingOrganizationEntity != nil && existingOrganizationEntity.Stage != "" {
-		stage = existingOrganizationEntity.Stage.String()
+	stageStr := input.GetStageStr()
+	relationshipStr := input.GetRelationshipStr()
+	if stageStr != "" || relationshipStr != "" {
+		if stageStr == "" && existingOrganizationEntity != nil && existingOrganizationEntity.Stage != "" {
+			stageStr = existingOrganizationEntity.Stage.String()
+		}
+		if relationshipStr == "" && existingOrganizationEntity != nil && existingOrganizationEntity.Relationship != "" {
+			relationshipStr = existingOrganizationEntity.Relationship.String()
+		}
 	}
-	if relationship == "" && existingOrganizationEntity != nil && existingOrganizationEntity.Relationship != "" {
-		relationship = existingOrganizationEntity.Relationship.String()
-	}
-	if !neo4jentity.OrganizationStageAndRelationshipCompatible(stage, relationship) {
+	if !neo4jentity.OrganizationStageAndRelationshipCompatible(ctx, stageStr, relationshipStr) {
 		err := errors.New("Stage and Relationship are not compatible")
 		tracing.TraceErr(span, err)
 		return "", err

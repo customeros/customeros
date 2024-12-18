@@ -3,6 +3,8 @@ package entity
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
+	"github.com/opentracing/opentracing-go"
+	"golang.org/x/net/context"
 	"time"
 )
 
@@ -153,7 +155,11 @@ func (o OrganizationEntity) Labels(tenant string) []string {
 	}
 }
 
-func OrganizationStageAndRelationshipCompatible(stageStr, relationshipStr string) bool {
+func OrganizationStageAndRelationshipCompatible(ctx context.Context, stageStr, relationshipStr string) bool {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationStageAndRelationshipCompatible")
+	defer span.Finish()
+	span.LogKV("stage", stageStr, "relationship", relationshipStr)
+
 	stage := enum.OrganizationStage(stageStr)
 	relationship := enum.OrganizationRelationship(relationshipStr)
 
