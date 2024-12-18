@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	commonenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/opentracing/opentracing-go"
@@ -47,7 +48,7 @@ func (r *flowListenerRegistryRepository) FindAll(ctx context.Context) (*[]entity
 
 	var events []entity.FlowListenerRegistry
 	err := r.gormDb.
-		Where("enabled = ?", true).
+		Where("status = ?", enum.FlowNodeEdgeStatusActive.String()).
 		Order("external_system DESC").
 		Find(&events).Error
 	if err != nil {
@@ -63,7 +64,8 @@ func (r *flowListenerRegistryRepository) Find(ctx context.Context, event *entity
 	tracing.TagComponentPostgresRepository(span)
 
 	var foundEvent entity.FlowListenerRegistry
-	query := r.gormDb.Where("enabled = ?", true)
+	query := r.gormDb.
+		Where("status = ?", enum.FlowNodeEdgeStatusActive.String())
 
 	if event != nil {
 		query = query.Where(event)

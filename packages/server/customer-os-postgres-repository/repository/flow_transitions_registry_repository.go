@@ -52,7 +52,8 @@ func (r *flowTransitionsRegistryRepository) FindAll(ctx context.Context, transit
 	tracing.TagComponentPostgresRepository(span)
 
 	var transitions []entity.FlowTransitionsRegistry
-	query := r.gormDb.WithContext(ctx).Where("enabled = ?", true)
+	query := r.gormDb.WithContext(ctx).
+		Where("status = ?", enum.FlowNodeEdgeStatusActive.String())
 
 	// Add additional filters if transition is not nil
 	if transition != nil {
@@ -76,7 +77,8 @@ func (r *flowTransitionsRegistryRepository) Find(ctx context.Context, transition
 	tracing.TagComponentPostgresRepository(span)
 
 	var foundTransition entity.FlowTransitionsRegistry
-	query := r.gormDb.WithContext(ctx).Where("enabled = ?", true)
+	query := r.gormDb.WithContext(ctx).
+		Where("status = ?", enum.FlowNodeEdgeStatusActive.String())
 
 	// Add additional filters based on non-zero fields in transition
 	if transition != (entity.FlowTransitionsRegistry{}) {

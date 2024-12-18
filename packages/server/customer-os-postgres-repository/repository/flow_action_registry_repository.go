@@ -34,7 +34,7 @@ func (r *flowAgentRegistryRepository) FindAll(ctx context.Context) (*[]entity.Fl
 
 	var actions []entity.FlowAgentRegistry
 	err := r.gormDb.WithContext(ctx).
-		Where("enabled = true").
+		Where("status = ?", enum.FlowNodeEdgeStatusActive.String()).
 		Order("action DESC").
 		Find(&actions).Error
 	if err != nil {
@@ -51,7 +51,8 @@ func (r *flowAgentRegistryRepository) Find(ctx context.Context, flowAgent entity
 	tracing.TagComponentPostgresRepository(span)
 
 	var action entity.FlowAgentRegistry
-	query := r.gormDb.WithContext(ctx).Where("enabled = ?", true)
+	query := r.gormDb.WithContext(ctx).
+		Where("status = ?", enum.FlowNodeEdgeStatusActive.String())
 
 	// Add additional filters based on non-zero fields in flowAgent
 	if flowAgent != (entity.FlowAgentRegistry{}) {

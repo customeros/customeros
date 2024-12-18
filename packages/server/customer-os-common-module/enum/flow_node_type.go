@@ -5,7 +5,7 @@ import "fmt"
 type FlowNodeType string
 
 const (
-	NodeFlowAgent         FlowNodeType = "action"
+	NodeFlowAgent         FlowNodeType = "agent"
 	NodeFlowEnd           FlowNodeType = "end"
 	NodeFlowListenerEvent FlowNodeType = "listener"
 	NodeFlowWait          FlowNodeType = "wait"
