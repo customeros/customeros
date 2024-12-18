@@ -135,7 +135,7 @@ func (r *commonRepository) PermanentlyDelete(ctx context.Context, tenant string)
 	}
 
 	for _, tableName := range asyncTablesWithTenantColumn {
-		if err := r.postgresDB.AsyncGormDB.Exec("DELETE FROM "+tableName+" WHERE tenant_name = ?", tenant).Error; err != nil {
+		if err := r.postgresDB.AsyncGormDB.Exec("DELETE FROM "+tableName+" WHERE tenant = ?", tenant).Error; err != nil {
 			tracing.TraceErr(span, err)
 			return err
 		}
