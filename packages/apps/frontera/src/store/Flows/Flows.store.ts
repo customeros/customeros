@@ -271,6 +271,21 @@ export class FlowsStore implements GroupStore<Flow> {
             { mutate: false },
           );
 
+          const contactParticipantIds = (flow?.value.participants ?? [])
+            .filter((participant) => participant.entityType === 'CONTACT')
+            .map((participant) => participant.entityId);
+
+          contactParticipantIds.forEach((contactId) => {
+            const contact = this.root.contacts.value.get(contactId);
+
+            contact?.invalidate();
+          });
+
+          this.root.contacts.sync({
+            action: 'INVALIDATE',
+            ids: contactParticipantIds,
+          });
+
           this.sync({
             action: 'DELETE',
             ids: [id],
