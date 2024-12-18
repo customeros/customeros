@@ -1,14 +1,22 @@
-import { runInAction } from 'mobx';
+import { when, runInAction } from 'mobx';
 
 import { OrganizationsStore } from '../Organizations.store';
 
 export class ProfileView {
   constructor(private store: OrganizationsStore) {
-    this.retrieveOrganizationForProfile();
+    when(
+      () => this.store.root.session.sessionToken !== null,
+      this.retrieveOrganizationForProfile,
+    );
   }
 
-  async retrieveOrganizationForProfile() {
+  retrieveOrganizationForProfile = async () => {
     try {
+      runInAction(() => {
+        this.store.isLoading = true;
+        this.store.isBootstrapping = true;
+      });
+
       const urlId = (() => {
         // get organization id from url if possible
         // necessary to bootstrap the targeted organization on a profile view
@@ -30,8 +38,10 @@ export class ProfileView {
       });
     } finally {
       runInAction(() => {
+        this.store.isBootstrapped = true;
+        this.store.isBootstrapping = false;
         this.store.isLoading = false;
       });
     }
-  }
+  };
 }

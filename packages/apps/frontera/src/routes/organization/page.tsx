@@ -26,7 +26,7 @@ export const OrganizationPage = observer(() => {
     return;
   }
 
-  if (store.organizations.isBootstrapping) {
+  if (!store.organizations.isBootstrapped) {
     return <LoadingScreen hide={false} isLoaded={false} showSplash={true} />;
   }
 
