@@ -2916,11 +2916,9 @@ export type MutationFlow_ArchiveBulkArgs = {
   ids?: InputMaybe<Array<Scalars['ID']['input']>>;
 };
 
-export type MutationFlow_Dummy_1EmailArgs = {
-  contactsCount: Scalars['Int']['input'];
-  flowsCount: Scalars['Int']['input'];
-  mailboxForEachUserCount: Scalars['Int']['input'];
-  userCount: Scalars['Int']['input'];
+export type MutationFlow_ChangeNameArgs = {
+  id: Scalars['ID']['input'];
+  name: Scalars['String']['input'];
 };
 
 export type MutationFlow_MergeArgs = {

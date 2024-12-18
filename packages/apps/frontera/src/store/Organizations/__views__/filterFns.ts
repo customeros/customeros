@@ -1,6 +1,7 @@
 import type { FilterItem } from '@store/types';
 
 import { match } from 'ts-pattern';
+import { set } from 'date-fns/set';
 import { isBefore } from 'date-fns';
 import { isAfter } from 'date-fns/isAfter';
 
@@ -99,7 +100,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
         if (!values)
           return (
             filter.operation === ComparisonOperator.IsEmpty ||
-            filter.operation === ComparisonOperator.NotContains
+            filter.operation === ComparisonOperator.NotIn
           );
 
         return filterTypeList(
@@ -117,7 +118,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
         if (!values)
           return (
             filter.operation === ComparisonOperator.IsEmpty ||
-            filter.operation === ComparisonOperator.NotContains
+            filter.operation === ComparisonOperator.NotIn
           );
 
         return filterTypeList(
@@ -132,7 +133,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
         if (!filter.active) return true;
         const forecastValue = row?.value?.renewalSummaryArrForecast;
 
-        if (!forecastValue) return false;
+        if (typeof forecastValue !== 'number') return false;
 
         return filterTypeNumber(filter, forecastValue);
       },
@@ -207,7 +208,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
         if (!lastTouchpoint)
           return (
             filter.operation === ComparisonOperator.IsEmpty ||
-            filter.operation === ComparisonOperator.NotContains
+            filter.operation === ComparisonOperator.NotIn
           );
 
         return filterTypeList(
@@ -232,11 +233,12 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
       (filter) => (row: Organization) => {
         if (!filter.active) return true;
 
-        const linkedInUrl = row?.value.socialMedia?.find((v) =>
-          v.url.includes('linkedin'),
-        )?.url;
+        const linkedinSocial = row?.value.socialMedia?.find((v) =>
+          v.url.toLowerCase().includes('linkedin'),
+        );
+        const linkedInStr = linkedinSocial?.alias || linkedinSocial?.url;
 
-        return filterTypeText(filter, linkedInUrl);
+        return filterTypeText(filter, linkedInStr);
       },
     )
     .with(
@@ -423,14 +425,11 @@ const filterTypeList = (filter: FilterItem, value: string[] | undefined) => {
   return match(filterOperator)
     .with(ComparisonOperator.IsEmpty, () => !value?.length)
     .with(ComparisonOperator.IsNotEmpty, () => value?.length)
+    .with(ComparisonOperator.NotIn, () => {
+      return !value?.some((v) => filterValue?.includes(v));
+    })
     .with(
-      ComparisonOperator.NotContains,
-      () =>
-        !value?.length ||
-        (value?.length && !value.some((v) => filterValue?.includes(v))),
-    )
-    .with(
-      ComparisonOperator.Contains,
+      ComparisonOperator.In,
       () => value?.length && value.some((v) => filterValue?.includes(v)),
     )
     .otherwise(() => false);
@@ -442,13 +441,16 @@ const filterTypeDate = (filter: FilterItem, value: string | undefined) => {
 
   if (!value) return false;
 
+  const left = set(new Date(value), { hours: 0, minutes: 0, seconds: 0 });
+  const right = set(new Date(filterValue), {
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
+  });
+
   return match(filterOperator)
-    .with(ComparisonOperator.Lt, () =>
-      isBefore(new Date(value), new Date(filterValue)),
-    )
-    .with(ComparisonOperator.Gt, () =>
-      isAfter(new Date(value), new Date(filterValue)),
-    )
+    .with(ComparisonOperator.Lt, () => isBefore(left, right))
+    .with(ComparisonOperator.Gt, () => isAfter(left, right))
 
     .otherwise(() => true);
 };

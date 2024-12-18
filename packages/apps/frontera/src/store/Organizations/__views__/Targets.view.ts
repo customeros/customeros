@@ -1,4 +1,4 @@
-import { reaction } from 'mobx';
+import { action, reaction } from 'mobx';
 import { inPlaceSort } from 'fast-sort';
 
 import type { Organization } from '../Organization.dto';
@@ -18,6 +18,22 @@ export class TargetsView {
     }, this.update);
     reaction(() => this.store.value.size, this.update);
     reaction(() => this.store.version, this.update);
+    reaction(
+      () => {
+        const preset = this.store.root.tableViewDefs.targetsPreset;
+
+        if (!preset) return '';
+
+        const viewDef = this.store.root.tableViewDefs.getById(preset);
+
+        const columns = JSON.stringify(viewDef?.value.columns);
+
+        return `${viewDef?.value.filters ?? ''}-${
+          viewDef?.value.defaultFilters ?? ''
+        }-${viewDef?.value.sorting}-${columns}`;
+      },
+      () => this.store.search(this.store.root.tableViewDefs.targetsPreset!),
+    );
     reaction(() => {
       const preset = this.store.root.tableViewDefs.targetsPreset;
 
@@ -26,14 +42,13 @@ export class TargetsView {
       const viewDef = this.store.root.tableViewDefs.getById(preset);
       const columns = JSON.stringify(viewDef?.value.columns);
 
-      this.store.search(preset);
-
       return `${viewDef?.value.filters ?? ''}-${
         viewDef?.value.defaultFilters ?? ''
       }-${viewDef?.value.sorting}-${columns}`;
     }, this.update);
   }
 
+  @action
   public update = () => {
     const preset = this.store.root.tableViewDefs.targetsPreset;
 

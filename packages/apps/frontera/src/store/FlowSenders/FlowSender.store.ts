@@ -72,6 +72,7 @@ export const getDefaultValue = (): FlowSender => ({
   user: {
     id: '',
     name: '',
+    mailboxesV2: [],
     firstName: '',
     lastName: '',
     emails: [],

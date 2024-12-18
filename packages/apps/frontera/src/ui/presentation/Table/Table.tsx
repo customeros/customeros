@@ -249,17 +249,10 @@ export const Table = <T extends object>({
       return;
     }
 
-    if (lastItem.index > data.length - 1 && canFetchMore && !isLoading) {
+    if (lastItem.index >= data.length - 1 && canFetchMore && !isLoading) {
       onFetchMore?.();
     }
-  }, [
-    onFetchMore,
-    data.length,
-    isLoading,
-    totalItems,
-    virtualRows,
-    canFetchMore,
-  ]);
+  }, [onFetchMore, data.length, isLoading, virtualRows, canFetchMore]);
 
   useEffect(() => {
     if (tableRef) {
@@ -559,8 +552,8 @@ const TableBody = <T extends object>({
             }}
             style={{
               minWidth: minW,
-              height: `${virtualRow.size}px`,
               top: top,
+              height: `${virtualRow.size}px`,
             }}
             className={twMerge(
               hoverStyle,

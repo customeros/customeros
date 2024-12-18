@@ -12,7 +12,6 @@ import {
   validRelationshipsForStage,
 } from '@utils/orgStageAndRelationshipStatusMap';
 import {
-  SortingDirection,
   OrganizationStage,
   ComparisonOperator,
   OrganizationRelationship,
@@ -23,6 +22,7 @@ import type { SaveOrganizationMutationVariables } from './__service__/saveOrgani
 
 import { TeamViews } from './__views__/Team.view';
 import { CustomView } from './__views__/Custom.view';
+import { ProfileView } from './__views__/Profile.view';
 import { TargetsView } from './__views__/Targets.view';
 import { CustomersView } from './__views__/Customers.view';
 import { AllOrganizationsView } from './__views__/AllOrganizations.view';
@@ -30,10 +30,10 @@ import { Organization, type OrganizationDatum } from './Organization.dto';
 import { OrganizationsService } from './__service__/Organizations.service';
 
 export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
-  private chunkSize = 50;
+  chunkSize = 50;
   private service: OrganizationsService;
-  @observable accessor searchedIds: string[] = [];
-  @observable accessor chunk = 0;
+  @observable accessor searchResults: Map<string, string[]> = new Map();
+  @observable accessor cursors: Map<string, number> = new Map();
   @observable accessor availableCounts: Map<string, number> = new Map();
 
   constructor(public root: RootStore, public transport: Transport) {
@@ -45,16 +45,21 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
 
     this.service = OrganizationsService.getInstance(this.transport);
 
-    // new CustomersView(this);
-    // new TargetsView(this);
-    // new AllOrganizationsView(this);
+    new ProfileView(this);
+    new CustomersView(this);
+    new TargetsView(this);
+    new AllOrganizationsView(this);
     new CustomView(this);
-    // new TeamViews(this);
+    new TeamViews(this);
   }
 
-  @computed
-  get canLoadNext() {
-    return this.searchedIds.length > this.chunkSize * (this.chunk + 1);
+  canLoadNext(preset: string) {
+    const ids = this.searchResults.get(preset);
+    const cursor = this.cursors.get(preset) ?? 0;
+
+    if (!ids) return false;
+
+    return ids.length > this.chunkSize * (cursor + 1);
   }
 
   @computed
@@ -62,8 +67,9 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
     return this.totalElements === this.value.size;
   }
 
+  // temporary unused
   @action
-  async getRecentChanges() {
+  private async _getRecentChanges() {
     try {
       if (this.isBootstrapping) {
         return;
@@ -121,77 +127,25 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
   }
 
   @action
-  async getAllData() {
-    runInAction(() => {
-      this.isBootstrapping = true;
-    });
-
-    try {
-      const urlId = (() => {
-        // get organization id from url if possible
-        // necessary to bootstrap the targeted organization on a profile view
-        const parts = window?.location?.pathname?.split('/');
-
-        if (parts.length !== 3 && parts[parts.length - 1].length !== 36) {
-          return null;
-        }
-
-        return parts[parts.length - 1];
-      })();
-
-      const { ui_organizations_search } =
-        await this.service.searchOrganizations({
-          limit: this.chunkSize,
-          sort: {
-            by: 'ORGANIZATIONS_LAST_TOUCHPOINT',
-            caseSensitive: false,
-            direction: SortingDirection.Desc,
-          },
-        });
-
-      if (urlId) {
-        const existingIndex = ui_organizations_search.ids.indexOf(urlId);
-
-        if (existingIndex === -1) {
-          ui_organizations_search.ids.unshift(urlId);
-        }
-      }
-
-      await this.retrieve(ui_organizations_search.ids);
-
-      // const totalElements = ui_organizations_search.totalElements;
-
-      runInAction(() => {
-        this.size = this.value.size;
-      });
-    } catch (e) {
-      runInAction(() => {
-        this.error = (e as Error)?.message;
-      });
-    } finally {
-      runInAction(() => {
-        this.isLoading = false;
-        this.isBootstrapped = true;
-        this.isBootstrapping = false;
-      });
-    }
-  }
-
-  @action
-  async search(viewDefPrest: string) {
-    const viewDef = this.root.tableViewDefs.getById(viewDefPrest);
+  async search(preset: string) {
+    const viewDef = this.root.tableViewDefs.getById(preset);
+    const cursor = (
+      this.cursors.has(preset)
+        ? this.cursors.get(preset)
+        : this.cursors.set(preset, 0).get(preset)
+    ) as number;
 
     if (!viewDef) {
-      console.error(`viewDef with preset=${viewDefPrest} not found`);
+      console.error(`viewDef with preset=${preset} not found`);
 
       return;
     }
 
     try {
       runInAction(() => {
-        if (this.chunk > 0) {
+        if (cursor > 0) {
           // reset chunk if new search is performed
-          this.chunk = 0;
+          this.cursors.set(preset, 0);
         }
         this.isLoading = true;
       });
@@ -201,10 +155,10 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
       const { ui_organizations_search: searchResult } =
         await this.service.searchOrganizations({ ...payload });
 
-      if (this.chunk === 0) {
+      if (cursor === 0) {
         const ids = (searchResult?.ids ?? []).slice(
-          this.chunkSize * this.chunk,
-          this.chunkSize * this.chunk + this.chunkSize,
+          this.chunkSize * cursor,
+          this.chunkSize * cursor + this.chunkSize,
         );
 
         // retrieve first chunk of data after new search is performed
@@ -213,8 +167,9 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
 
       runInAction(() => {
         this.isLoading = false;
-        this.availableCounts.set(viewDefPrest, searchResult?.totalElements);
-        this.searchedIds = searchResult?.ids ?? [];
+        this.availableCounts.set(preset, searchResult?.totalElements);
+        this.totalElements = searchResult?.totalAvailable ?? 0;
+        this.searchResults.set(preset, searchResult?.ids ?? []);
       });
     } catch (err) {
       runInAction(() => {
@@ -252,36 +207,19 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
   }
 
   @action
-  async bootstrap() {
-    if (this.isLoading) return;
-
-    try {
-      // const canHydrate = await this.checkIfCanHydrate();
-      //
-      // if (canHydrate) {
-      //   this.getRecentChanges();
-      // } else {
-      //   this.getAllData();
-      // }
-      this.getAllData();
-    } catch (e) {
-      runInAction(() => {
-        this.error = (e as Error)?.message;
-      });
-    }
-  }
-
-  @action
-  public async loadNext() {
-    if (!this.canLoadNext) return;
+  public async loadNext(preset: string) {
+    let cursor = this.cursors.get(preset) ?? 0;
 
     runInAction(() => {
-      this.chunk++;
+      cursor++;
+      this.cursors.set(preset, cursor);
     });
 
-    const ids = this.searchedIds.slice(
-      this.chunkSize * this.chunk,
-      this.chunkSize * this.chunk + this.chunkSize,
+    const ids = this.searchResults.get(preset);
+
+    const chunkedIds = (ids ?? []).slice(
+      this.chunkSize * cursor,
+      this.chunkSize * cursor + this.chunkSize,
     );
 
     try {
@@ -289,7 +227,7 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
         this.isLoading = true;
       });
 
-      await this.retrieve(ids);
+      await this.retrieve(chunkedIds);
     } catch (err) {
       runInAction(() => {
         this.error = (err as Error)?.message;

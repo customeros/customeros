@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 
-import { format } from 'date-fns';
 import { debounce } from 'lodash';
 
 import { DateTimeUtils } from '@utils/date';
@@ -16,8 +15,8 @@ import {
 interface DateValueFilterProps {
   filterName: string;
   operatorValue: string;
-  filterValue: string | [string | null, string | null];
-  onChangeFilterValue: (value: string | [string | null, string | null]) => void;
+  filterValue: string | null;
+  onChangeFilterValue: (value: string | null) => void;
 }
 
 export const DateFilter = ({
@@ -39,32 +38,18 @@ export const DateFilter = ({
   }, [filterName]);
 
   const debouncedOnChangeFilterValue = useCallback(
-    debounce((value: string | [string | null, string | null]) => {
+    debounce((value: string | null) => {
       onChangeFilterValue(value);
     }, 300),
     [onChangeFilterValue],
   );
 
-  const handleDateChange = (date: Date | Date[] | null) => {
+  const handleDateChange = (date: Date | null) => {
     if (!date) return;
 
-    if (Array.isArray(date)) {
-      const [start, end] = date;
-      const formattedStartDate = start ? format(start, 'yyyy-MM-dd') : null;
-      const formattedEndDate = end ? format(end, 'yyyy-MM-dd') : null;
+    const formattedDate = DateTimeUtils.getUTCDateAtMidnight(date);
 
-      debouncedOnChangeFilterValue([formattedStartDate, formattedEndDate]);
-    } else {
-      const formattedDate = format(date, 'yyyy-MM-dd');
-
-      if (operatorValue === ComparisonOperator.Lt) {
-        debouncedOnChangeFilterValue([null, formattedDate]);
-      } else if (operatorValue === ComparisonOperator.Gt) {
-        debouncedOnChangeFilterValue([formattedDate, null]);
-      } else {
-        debouncedOnChangeFilterValue(formattedDate);
-      }
-    }
+    debouncedOnChangeFilterValue(formattedDate);
     setIsOpen(false);
   };
 
@@ -84,10 +69,9 @@ export const DateFilter = ({
       );
     };
 
-    return ComparisonOperator.Lt === operatorValue
-      ? formatDate(filterValue?.[1])
-      : ComparisonOperator.Gt === operatorValue
-      ? formatDate(filterValue?.[0])
+    return ComparisonOperator.Lt === operatorValue ||
+      ComparisonOperator.Gt === operatorValue
+      ? formatDate(filterValue)
       : '...';
   };
 
@@ -115,8 +99,8 @@ export const DateFilter = ({
         className='py-1 min-w-[254px]'
       >
         <DatePicker
-          value={new Date(filterValue?.[0] || filterValue?.[1] || new Date())}
-          onChange={(value) => handleDateChange(value as Date | Date[] | null)}
+          value={new Date(filterValue || new Date())}
+          onChange={(value) => handleDateChange(value as Date | null)}
         />
       </PopoverContent>
     </Popover>

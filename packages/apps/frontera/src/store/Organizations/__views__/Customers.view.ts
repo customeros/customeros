@@ -23,7 +23,11 @@ export class CustomersView {
     }, this.update);
     reaction(() => this.store.value.size, this.update);
     reaction(() => this.store.version, this.update);
-    reaction(() => this.store.chunk, this.update);
+    reaction(() => {
+      const preset = this.store.root.tableViewDefs.defaultPreset;
+
+      return this.store.cursors.get(preset!);
+    }, this.update);
     reaction(
       () => {
         const preset = this.store.root.tableViewDefs.defaultPreset;

@@ -42,6 +42,10 @@ export class TableViewDefStore implements Store<TableViewDef> {
     this.value.id = id;
   }
 
+  get name() {
+    return this.value.name;
+  }
+
   reorderColumn(sourceColumnId: number, targetColumnId: number) {
     this.update((value) => {
       const fromIndex = value.columns.findIndex(
@@ -161,19 +165,19 @@ export class TableViewDefStore implements Store<TableViewDef> {
   }
 
   toSearchPayload(): { sort: SortBy; where: Filter | null } {
-    console.log(this.getFilters());
+    const activeFilters =
+      this.getFilters()
+        ?.AND?.filter((f: Filter) => f?.filter && 'value' in f.filter)
+        .map?.((f: Filter) => ({
+          filter: omit(f.filter, 'active') as Filter['filter'],
+        })) ?? [];
 
-    const activeFilters = this.getFilters()
-      ?.AND?.filter((f: Filter) => f?.filter && 'value' in f.filter)
-      .map?.((f: Filter) => ({
-        filter: omit(f.filter, 'active') as Filter['filter'],
-      }));
-
-    const defaultFilters = this.getDefaultFilters()
-      ?.AND?.filter((f: Filter) => f?.filter && 'value' in f.filter)
-      .map?.((f: Filter) => ({
-        filter: omit(f.filter, 'active') as Filter['filter'],
-      }));
+    const defaultFilters =
+      this.getDefaultFilters()
+        ?.AND?.filter((f: Filter) => f?.filter && 'value' in f.filter)
+        .map?.((f: Filter) => ({
+          filter: omit(f.filter, 'active') as Filter['filter'],
+        })) ?? [];
 
     const where = {
       AND: [...defaultFilters, ...activeFilters],

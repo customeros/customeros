@@ -1,8 +1,10 @@
+import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { useState, useEffect } from 'react';
 
+import { toJS } from 'mobx';
 import get from 'lodash/get';
 import { useKey } from 'rooks';
+import { match } from 'ts-pattern';
 import { Observer, observer } from 'mobx-react-lite';
 
 import { cn } from '@ui/utils/cn';
@@ -29,7 +31,6 @@ const devTools = new DevtoolsStore();
 export const Devtools = observer(() => {
   const store = useStore();
   const { open, onOpen, onClose, onToggle } = useDisclosure();
-  const [view, setView] = useState<'operations' | 'responses'>('operations');
 
   const defaultWidht = window.innerWidth / 2;
   const defaultX = window.innerWidth - defaultWidht * 1.5;
@@ -79,6 +80,13 @@ export const Devtools = observer(() => {
   const detailedGqlResponse = devTools.gqlResponses.get(
     devTools.openGqlOperationId ?? '',
   );
+  const detailedStore = match(devTools.detailedStore)
+    .returnType<
+      (typeof store)['organizations'] | (typeof store)['tableViewDefs'] | null
+    >()
+    .with('tableViewDefs', () => store.tableViewDefs)
+    .with('organizations', () => store.organizations)
+    .otherwise(() => null);
 
   return createPortal(
     open ? (
@@ -114,11 +122,25 @@ export const Devtools = observer(() => {
                   className='border-b rounded-t-lg border-b-gray-200 pb-0.5 pl-0.5 w-full bg-gray-50 hover:cursor-grab'
                 >
                   <ButtonGroup>
-                    <Button size='xxs' onClick={() => setView('operations')}>
+                    <Button
+                      size='xxs'
+                      onClick={() => devTools.toggleView('operations')}
+                      className={cn(
+                        devTools.view === 'operations' &&
+                          'bg-primary-100 focus:bg-primary-200 hover:bg-primary-200',
+                      )}
+                    >
                       Operations
                     </Button>
-                    <Button size='xxs' onClick={() => setView('responses')}>
-                      Responses
+                    <Button
+                      size='xxs'
+                      onClick={() => devTools.toggleView('store')}
+                      className={cn(
+                        devTools.view === 'store' &&
+                          'bg-primary-100 focus:bg-primary-200 hover:bg-primary-200',
+                      )}
+                    >
+                      Store
                     </Button>
                   </ButtonGroup>
                 </div>
@@ -137,6 +159,7 @@ export const Devtools = observer(() => {
                             variant='outline'
                             className='text-xs'
                             placeholder='Search...'
+                            value={devTools.operationsSearchTerm}
                             onChange={(e) =>
                               devTools.searchOperations(e.target.value)
                             }
@@ -144,7 +167,7 @@ export const Devtools = observer(() => {
                         </div>
 
                         <div className={cn('flex flex-col h-full')}>
-                          {view === 'operations' &&
+                          {devTools.view === 'operations' &&
                             devTools.filteredGqlOperations.map((op) => {
                               const isSelected =
                                 detailedGqlOperation?.id === op.id;
@@ -179,6 +202,33 @@ export const Devtools = observer(() => {
                                 </div>
                               );
                             })}
+                          {devTools.view === 'store' &&
+                            devTools.visibleStores.map((name) => {
+                              const isSelected =
+                                devTools.detailedStore === name;
+
+                              return (
+                                <div
+                                  key={name}
+                                  onClick={() => {
+                                    devTools.toggleStore(name);
+                                  }}
+                                  className={cn(
+                                    'border-b border-b-gray-200 cursor-pointer hover:bg-gray-50 pl-1',
+                                    isSelected && 'bg-gray-100',
+                                  )}
+                                >
+                                  <span
+                                    className={cn(
+                                      'text-xs leading-0',
+                                      isSelected && 'font-medium',
+                                    )}
+                                  >
+                                    {name}
+                                  </span>
+                                </div>
+                              );
+                            })}
                         </div>
                       </ScrollAreaViewport>
                       <ScrollAreaScrollbar orientation='vertical'>
@@ -187,44 +237,102 @@ export const Devtools = observer(() => {
                     </ScrollAreaRoot>
                   </Resizable>
 
-                  {detailedGqlResponse && (
-                    <ScrollAreaRoot className='h-full w-full overflow-hidden p-1'>
-                      <ScrollAreaViewport>
-                        <div className='flex flex-col space-y-1 w-[100px]'>
-                          <p className='text-sm font-medium'>
-                            {detailedGqlOperation?.name}
-                          </p>
-                          <pre className='text-xs'>
-                            variables:{' '}
-                            {JSON.stringify(
-                              detailedGqlOperation?.variables,
-                              null,
-                              2,
-                            )}
-                          </pre>
-                          <pre className='text-xs'>
-                            response:{' '}
-                            {JSON.stringify(detailedGqlResponse?.data, null, 2)}
-                          </pre>
+                  <ScrollAreaRoot className='h-full w-full overflow-hidden p-1'>
+                    <ScrollAreaViewport>
+                      {detailedGqlResponse &&
+                        devTools.view === 'operations' && (
+                          <>
+                            <Input
+                              size='xs'
+                              variant='outline'
+                              className='text-xs'
+                              placeholder='Search...'
+                              value={devTools.operationsSearchTerm}
+                              onChange={(e) =>
+                                devTools.searchOperations(e.target.value)
+                              }
+                            />
+                            <div className='flex flex-col space-y-1 w-[100px] pb-4'>
+                              <p className='text-sm font-medium'>
+                                {detailedGqlOperation?.name}
+                              </p>
+                              <pre className='text-xs'>
+                                variables:{' '}
+                                {JSON.stringify(
+                                  detailedGqlOperation?.variables,
+                                  null,
+                                  2,
+                                )}
+                              </pre>
+                              <pre className='text-xs'>
+                                response:{' '}
+                                {JSON.stringify(
+                                  detailedGqlResponse?.data,
+                                  null,
+                                  2,
+                                )}
+                              </pre>
 
-                          <pre className='text-xs text-error-500'>
-                            errors:{' '}
-                            {JSON.stringify(
-                              detailedGqlResponse?.errors,
-                              null,
-                              2,
-                            )}
-                          </pre>
-                        </div>
-                      </ScrollAreaViewport>
-                      <ScrollAreaScrollbar orientation='vertical'>
-                        <ScrollAreaThumb />
-                      </ScrollAreaScrollbar>
-                      <ScrollAreaScrollbar orientation='horizontal'>
-                        <ScrollAreaThumb />
-                      </ScrollAreaScrollbar>
-                    </ScrollAreaRoot>
-                  )}
+                              <pre className='text-xs text-error-500'>
+                                errors:{' '}
+                                {JSON.stringify(
+                                  detailedGqlResponse?.errors,
+                                  null,
+                                  2,
+                                )}
+                              </pre>
+                            </div>
+                          </>
+                        )}
+                      {devTools.detailedStore && devTools.view === 'store' && (
+                        <>
+                          <p className='font-medium underline capitalize mb-1'>
+                            {devTools.detailedStore}
+                          </p>
+
+                          {detailedStore &&
+                            // @ts-expect-error - TS is working against us here
+                            Array.from(detailedStore?.value)?.map(([k, v]) => {
+                              const isSelected =
+                                devTools.detailedEntityId === k;
+
+                              return (
+                                <div
+                                  key={k}
+                                  className='flex flex-col space-y-1'
+                                >
+                                  <div
+                                    onClick={() => devTools.toggleEntity(k)}
+                                    className={cn(
+                                      'flex items-center border-b borde-b-gray-200 cursor-pointer hover:bg-gray-50 py-0.5',
+                                      isSelected && 'bg-gray-100',
+                                    )}
+                                  >
+                                    <span className='text-xs font-medium mr-0.5'>
+                                      {v?.name ?? 'Unnamed'}
+                                    </span>
+                                    <span className='text-xs text-gray-500'>
+                                      ({k})
+                                    </span>
+                                  </div>
+                                  {isSelected && (
+                                    <pre className='text-xs'>
+                                      {JSON.stringify(toJS(v?.value), null, 2)}
+                                    </pre>
+                                  )}
+                                </div>
+                              );
+                            })}
+                        </>
+                      )}
+                    </ScrollAreaViewport>
+                    <ScrollAreaScrollbar orientation='vertical'>
+                      <ScrollAreaThumb />
+                    </ScrollAreaScrollbar>
+                    <ScrollAreaScrollbar orientation='horizontal'>
+                      <ScrollAreaThumb />
+                    </ScrollAreaScrollbar>
+                  </ScrollAreaRoot>
                 </div>
               </div>
             )}

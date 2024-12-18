@@ -4,10 +4,8 @@ import merge from 'lodash/merge';
 import { Entity } from '@store/record';
 import { countryMap } from '@assets/countries/countriesMap';
 import { action, computed, observable, runInAction } from 'mobx';
-import { ActionStore } from '@store/TimelineEvents/Actions/Action.store';
 
 import {
-  Market,
   FundingRound,
   type Contact,
   type Contract,
@@ -37,6 +35,11 @@ export class Organization extends Entity<OrganizationDatum> {
   @computed
   get id() {
     return this.value.id;
+  }
+
+  @computed
+  get name() {
+    return this.value.name;
   }
 
   set id(value: string) {
@@ -195,71 +198,54 @@ export class Organization extends Entity<OrganizationDatum> {
   ): OrganizationDatum {
     return merge(
       {
+        id: crypto.randomUUID(),
         name: 'Unnamed',
-        metadata: {
-          id: crypto.randomUUID(),
-          lastUpdated: new Date().toISOString(),
-          created: new Date().toISOString(),
-        },
-        hide: false,
-        owner: null,
-        contacts: {
-          content: [],
-        },
-        icon: '',
-        referenceId: '',
-        yearFounded: '',
-        enrichDetails: {
-          failedAt: '',
-          enrichedAt: '',
-          requestedAt: '',
-        },
-        customerOsId: '',
-        domains: [],
-        industry: '',
-        locations: [],
-        parentCompanies: [],
-        socialMedia: [],
-        stage: OrganizationStage.Target,
-        tags: [],
-        subsidiaries: [],
-        website: '',
-        accountDetails: {
-          onboarding: {
-            status: OnboardingStatus.NotApplicable,
-            comments: '',
-            updatedAt: '',
-          },
-          ltv: 0,
-          churned: null,
-          renewalSummary: {
-            arrForecast: null,
-            maxArrForecast: null,
-            renewalLikelihood: null,
-            nextRenewalDate: '',
-          },
-        },
-        contracts: [],
+        notes: '',
         description: '',
-        employees: 0,
-        isCustomer: false,
-        logo: '',
-        lastFundingRound: FundingRound.PreSeed,
-        lastTouchpoint: {
-          lastTouchPointTimelineEventId: crypto.randomUUID(),
-          lastTouchPointAt: new Date().toISOString(),
-          lastTouchPointType: LastTouchpointType.ActionCreated,
-          lastTouchPointTimelineEvent: ActionStore.getDefaultValue(),
-        }, // nested defaults ignored for now -> should be converted into a Store
-        leadSource: '',
-        market: Market.B2B,
+        industry: '',
+        market: '',
+        website: '',
+        logoUrl: '',
+        iconUrl: '',
         public: false,
+        stage: OrganizationStage.Target,
         relationship: OrganizationRelationship.Prospect,
-        // slackChannelId: '',
-        // stageLastUpdated: '',
-        // subIndustry: '',
-        // targetAudience: '',
+        lastFundingRound: FundingRound.PreSeed,
+        leadSource: '',
         valueProposition: '',
+        slackChannelId: '',
+        employees: 0,
+        yearFounded: '',
+        enrichedAt: null,
+        enrichedFailedAt: null,
+        enrichedRequestedAt: null,
+        ltv: 0,
+        hide: false,
+        domains: [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        churnedAt: null,
+        customerOsId: '',
+        referenceId: '',
+        renewalSummaryArrForecast: null,
+        renewalSummaryMaxArrForecast: null,
+        renewalSummaryRenewalLikelihood: null,
+        renewalSummaryNextRenewalAt: '',
+        onboardingStatus: OnboardingStatus.NotApplicable,
+        onboardingStatusUpdatedAt: '',
+        onboardingComments: '',
+        lastTouchPointAt: new Date().toISOString(),
+        lastTouchPointType: LastTouchpointType.ActionCreated,
+        contactCount: 0,
+        parentId: null,
+        parentName: null,
+        contracts: [],
+        contacts: [],
+        subsidiaries: [],
+        owner: null,
+        tags: [],
+        socialMedia: [],
+        locations: [],
       },
       payload ?? {},
     );

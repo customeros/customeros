@@ -4,7 +4,6 @@ import { useRef, useEffect, startTransition } from 'react';
 import { match } from 'ts-pattern';
 import { useKeyBindings } from 'rooks';
 import { observer } from 'mobx-react-lite';
-import { useFeatureIsOn } from '@growthbook/growthbook-react';
 import { TableViewMenu } from '@finder/components/TableViewMenu/TableViewMenu';
 import { useSearchPersistence } from '@finder/components/Search/useSearchPersistance.ts';
 import { CreateSequenceButton } from '@finder/components/Search/CreateSequenceButton.tsx';
@@ -12,8 +11,6 @@ import { TableViewsToggleNavigation } from '@finder/components/TableViewsToggleN
 import { SearchBarFilterData } from '@finder/components/SearchBarFilterData/SearchBarFilterData';
 
 import { Input } from '@ui/form/Input/Input';
-import { Star06 } from '@ui/media/icons/Star06';
-import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
 import { Button } from '@ui/form/Button/Button.tsx';
 import { Tag, TagLabel } from '@ui/presentation/Tag';
@@ -26,13 +23,7 @@ import {
   RightElement,
 } from '@ui/form/InputGroup/InputGroup';
 
-interface SearchProps {
-  open: boolean;
-  onOpen: () => void;
-  onClose: () => void;
-}
-
-export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
+export const Search = observer(() => {
   const store = useStore();
   const wrapperRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -42,12 +33,9 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
   const preset = searchParams.get('preset');
   const timeoutRef = useRef<NodeJS.Timeout>();
 
-  const displayIcp = useFeatureIsOn('icp');
   const { lastSearchForPreset } = useSearchPersistence();
 
   useEffect(() => {
-    onClose();
-
     setSearchParams(
       (prev) => {
         if (preset && lastSearchForPreset?.[preset]) {
@@ -69,7 +57,6 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
   }, [preset]);
 
   const tableViewDef = store.tableViewDefs.getById(preset || '');
-  const tableId = tableViewDef?.value.tableId;
 
   const tableType = tableViewDef?.value?.tableType;
   const totalResults = store.ui.searchCount;
@@ -141,14 +128,6 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
     )
     .otherwise(() => null);
 
-  const handleToogleFlow = () => {
-    if (open) {
-      onClose();
-    } else {
-      onOpen();
-    }
-  };
-
   const allowCreation =
     ![TableIdType.Contracts, TableIdType.FlowActions].includes(
       tableViewDef?.value?.tableId as TableIdType,
@@ -166,6 +145,7 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
           <SearchBarFilterData dataTest={'search-orgs'} />
         </LeftElement>
         <Input
+          readOnly
           size='md'
           ref={inputRef}
           autoCorrect='off'
@@ -173,19 +153,22 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
           variant='unstyled'
           onChange={handleChange}
           defaultValue={searchParams.get('search') ?? ''}
-          placeholder={
-            store.ui.isSearching !== 'organizations'
-              ? `/ to search`
-              : placeholder
-          }
           onBlur={() => {
             store.ui.setIsSearching(null);
             wrapperRef.current?.removeAttribute('data-focused');
           }}
           onFocus={() => {
+            if (tableType === TableViewType.Organizations) return;
             store.ui.setIsSearching('organizations');
             wrapperRef.current?.setAttribute('data-focused', '');
           }}
+          placeholder={(() => {
+            if (tableType === TableViewType.Organizations) return '';
+
+            return store.ui.isSearching !== 'organizations'
+              ? `/ to search`
+              : placeholder;
+          })()}
           onKeyUp={(e) => {
             if (
               e.code === 'Escape' ||
@@ -242,17 +225,6 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
       {tableViewDef?.value.tableId === TableIdType.FlowActions && (
         <CreateSequenceButton />
       )}
-
-      {tableViewDef?.value?.isPreset &&
-        TableIdType.Targets === tableId &&
-        displayIcp && (
-          <IconButton
-            size='xs'
-            icon={<Star06 />}
-            aria-label='toogle-flow'
-            onClick={handleToogleFlow}
-          />
-        )}
 
       {tableViewDef?.value.tableId === TableIdType.Contacts && (
         <Button

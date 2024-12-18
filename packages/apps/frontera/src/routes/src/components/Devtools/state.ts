@@ -17,6 +17,12 @@ export class DevtoolsStore {
   @observable accessor gqlResponses: Map<string, GqlResponse> = new Map();
   @observable accessor openGqlOperationId: string | null = null;
   @observable accessor operationsSearchTerm = '';
+  @observable accessor responseSearchTerm = '';
+  @observable accessor view: 'operations' | 'store' = 'operations';
+  @observable accessor detailedStore: string | null = null;
+  @observable accessor detailedEntityId: string | null = null;
+
+  visibleStores = ['organizations', 'tableViewDefs'];
 
   constructor() {}
 
@@ -50,5 +56,24 @@ export class DevtoolsStore {
   @action
   searchOperations(term: string) {
     this.operationsSearchTerm = term;
+  }
+
+  @action
+  searchResponse(term: string) {
+    this.responseSearchTerm = term;
+  }
+
+  @action toggleView(view: 'operations' | 'store') {
+    this.view = view;
+  }
+
+  @action
+  toggleStore(store: string | null) {
+    this.detailedStore = store;
+  }
+
+  @action
+  toggleEntity(id: string | null) {
+    this.detailedEntityId = this.detailedEntityId === id ? null : id;
   }
 }

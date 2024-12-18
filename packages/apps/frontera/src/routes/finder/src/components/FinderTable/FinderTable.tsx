@@ -366,7 +366,7 @@ export const FinderTable = observer(() => {
   const checkIfEmpty = () => {
     return match(tableType)
       .with(TableViewType.Organizations, () =>
-        preset ? store.organizations?.availableCounts.get(preset) === 0 : true,
+        preset ? store.organizations?.totalElements === 0 : true,
       )
       .with(TableViewType.Contacts, () => {
         if (tableId === TableIdType.FlowContacts && params.id) {
@@ -407,10 +407,10 @@ export const FinderTable = observer(() => {
         tableId={tableViewDef?.value?.tableId}
         dataTest={`finder-table-${tableType}`}
         isLoading={store.organizations.isLoading}
-        canFetchMore={store.organizations.canLoadNext}
         fullRowSelection={tableType === TableViewType.Invoices}
+        canFetchMore={!!preset && store.organizations.canLoadNext(preset)}
         onFetchMore={() => {
-          store.organizations.loadNext();
+          store.organizations.loadNext(preset!);
         }}
         enableKeyboardShortcuts={
           !isEditing && !isFiltering && !isCommandMenuPrompted

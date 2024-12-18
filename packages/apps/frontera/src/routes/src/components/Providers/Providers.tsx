@@ -11,10 +11,13 @@ import { PhoenixSocketProvider } from './SocketProvider';
 import { GrowthbookProvider } from './GrowthbookProvider';
 import { IntegrationsProvider } from './IntegrationsProvider';
 import { NotificationsProvider } from './NotificationsProvider';
+
 interface ProvidersProps {
   isProduction?: boolean;
   children: React.ReactNode;
 }
+
+const IS_DEV = import.meta.env.DEV;
 
 export const Providers = ({ children, isProduction }: ProvidersProps) => {
   const [queryClient] = useState(
@@ -31,7 +34,7 @@ export const Providers = ({ children, isProduction }: ProvidersProps) => {
   return (
     <QueryClientProvider client={queryClient}>
       <StoreProvider>
-        <Devtools />
+        {IS_DEV && <Devtools />}
         <PhoenixSocketProvider>
           <RecoilRoot>
             <IntegrationsProvider>

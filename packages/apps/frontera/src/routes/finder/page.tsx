@@ -10,7 +10,6 @@ import { FinderFilters } from '@finder/components/FinderFilters/FinderFilters';
 import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
 import { Divider } from '@ui/presentation/Divider';
-import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
 import { ViewSettings } from '@shared/components/ViewSettings';
 import {
   TableIdType,
@@ -24,7 +23,6 @@ export const FinderPage = observer(() => {
   const [searchParams, setSearchParams] = useSearchParams();
   const preset = searchParams.get('preset');
   const defaultPreset = store.tableViewDefs.defaultPreset;
-  const { open, onOpen, onClose } = useDisclosure({ id: 'flow-finder' });
   const currentPreset = store.tableViewDefs
     ?.toArray()
     .find((e) => e.value.id === preset)?.value?.name;
@@ -75,7 +73,7 @@ export const FinderPage = observer(() => {
   return (
     <div className='flex w-full items-start h-full'>
       <div className='w-[100%] bg-white h-full'>
-        <Search open={open} onOpen={onOpen} onClose={onClose} />
+        <Search />
         <div className='flex justify-between mx-4 my-2 items-start'>
           <FinderFilters
             tableId={tableId || TableIdType.Organizations}
