@@ -106,10 +106,10 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 				ownerId = *filter.Filter.Value.ArrayStr
 			}
 			if filter.Filter.Property == model.ColumnViewTypeOrganizationsLastTouchpoint.String() {
-				createInOrEmptyStringFilter(filter, organizationFilter, "lastTouchpointType")
+				createInOrEmptyStringFilter(filter, organizationFilter, string(neo4jentity.OrganizationPropertyLastTouchpointType))
 			}
 			if filter.Filter.Property == model.ColumnViewTypeOrganizationsLastTouchpointDate.String() {
-				createTimeFilter(filter, organizationFilter, "lastTouchpointAt")
+				createTimeFilter(filter, organizationFilter, string(neo4jentity.OrganizationPropertyLastTouchpointAt))
 			}
 			if filter.Filter.Property == model.ColumnViewTypeOrganizationsStage.String() {
 				createInOrEmptyStringFilter(filter, organizationFilter, string(neo4jentity.OrganizationPropertyStage))

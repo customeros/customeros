@@ -228,6 +228,7 @@ func TestQueryResolver_UIOrganizationsSearch_FilterByLastTouchpoint(t *testing.T
 	searchBy := model.ColumnViewTypeOrganizationsLastTouchpoint
 
 	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 3, 1)
+	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 3, 2)
 	assertSearch(t, searchBy, []string{"A"}, commonModel.ComparisonOperatorIn, 3, 1)
 	assertSearch(t, searchBy, []string{"B"}, commonModel.ComparisonOperatorIn, 3, 1)
 	assertSearch(t, searchBy, []string{"A", "B"}, commonModel.ComparisonOperatorIn, 3, 2)
