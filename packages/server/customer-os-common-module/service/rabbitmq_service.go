@@ -155,11 +155,11 @@ func (r *RabbitMQService) PublishWebhookEvent(ctx context.Context, event dto.Web
 	return r.PublishEvent(ctx, "", model.WEBHOOK_EVENT, event)
 }
 
-func (r *RabbitMQService) PublishFlowActionEvent(ctx context.Context, event dto.FlowActionEvent) error {
+func (r *RabbitMQService) PublishFlowAgentEvent(ctx context.Context, event dto.FlowAgentEvent) error {
 	return r.PublishEvent(ctx, "", model.FLOW_ACTION_EVENT, event)
 }
 
-func (r *RabbitMQService) PublishFlowActionEventResult(ctx context.Context, event dto.FlowActionExecutionResultEvent) error {
+func (r *RabbitMQService) PublishFlowAgentEventResult(ctx context.Context, event dto.FlowAgentExecutionResultEvent) error {
 	return r.PublishEvent(ctx, "", model.FLOW_ACTION_RESULT_EVENT, event)
 }
 

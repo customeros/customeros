@@ -49,13 +49,13 @@ func HandleMeetingSummaryEvent(ctx context.Context, s *service.Services, sourceE
 		}
 
 		// validate the transition to next action
-		validAction, err := s.WorkflowService.ValidateTransition(ctx, flow.TriggerNodeID, nextStep.ToNodeID)
+		validAgent, err := s.WorkflowService.ValidateTransition(ctx, flow.TriggerNodeID, nextStep.ToNodeID)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			errs = multierr.Append(errs, fmt.Errorf("failed to validate transition for flow %s: %w", flow.ID, err))
 			continue
 		}
-		if !validAction {
+		if !validAgent {
 			err = fmt.Errorf("not a valid action transition for flow %s", flow.ID)
 			tracing.TraceErr(span, err)
 			errs = multierr.Append(errs, err)
@@ -63,8 +63,8 @@ func HandleMeetingSummaryEvent(ctx context.Context, s *service.Services, sourceE
 		}
 
 		// prepare and send event to action executioner
-		switch nextStep.ToNodeAction {
-		case commonEnum.ActionTimelineEventCreate:
+		switch nextStep.ToNodeAgent {
+		case commonEnum.AgentTimelineEventCreate:
 			if err := publishTimelineEventCreateEvent(ctx, s, flow.Status, flow.ID,
 				nextStep.ToNodeID, eventData, sourceEvent); err != nil {
 				tracing.TraceErr(span, err)
@@ -84,7 +84,7 @@ func publishTimelineEventCreateEvent(
 	ctx context.Context, s *service.Services, flowStatus, flowId, flowNodeId string,
 	eventData *data_fields.MeetingSummaryEvent, sourceEvent commonEnum.FlowListenerEvent,
 ) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EventHandlers.handleTimelineEventCreateAction")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EventHandlers.handleTimelineEventCreateAgent")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 
@@ -113,7 +113,7 @@ func publishTimelineEventCreateEvent(
 	}
 
 	// process action execution event
-	if err := processActionExecutionEvent(ctx, s, sourceEvent, flowExecutionRecord.ID, eventData); err != nil {
+	if err := processAgentExecutionEvent(ctx, s, sourceEvent, flowExecutionRecord.ID, eventData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to publish markdown event"))
 		return err
 	}
@@ -139,7 +139,7 @@ func buildFlowExecutionRecord(ctx context.Context, flowStatus, flowId, flowNodeI
 		EntityType:        commonEnum.EntityMeeting.String(),
 		Status:            commonEnum.FlowExecutionRunning.String(),
 		StartedAt:         utils.NowPtr(),
-		CurrentStep:       commonEnum.ActionTimelineEventCreate.String(),
+		CurrentStep:       commonEnum.AgentTimelineEventCreate.String(),
 		CurrentStepNodeId: flowNodeId,
 		CreatedAt:         utils.Now(),
 		Context:           &data,
@@ -201,8 +201,8 @@ func buildDeadEventFromMeetingSummary(ctx context.Context, sourceEvent commonEnu
 	}, nil
 }
 
-func processActionExecutionEvent(ctx context.Context, s *service.Services, sourceEvent commonEnum.FlowListenerEvent, flowExecutionId string, eventData *data_fields.MeetingSummaryEvent) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EventHandlers.processActionExecutionEvent")
+func processAgentExecutionEvent(ctx context.Context, s *service.Services, sourceEvent commonEnum.FlowListenerEvent, flowExecutionId string, eventData *data_fields.MeetingSummaryEvent) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EventHandlers.processAgentExecutionEvent")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 
@@ -317,17 +317,17 @@ func handleMarkdownEventPublishing(ctx context.Context, s *service.Services,
 	mdEvent.OrganizationId = &orgId
 
 	// build flow action event
-	flowActionEvent := dto.FlowActionEvent{
+	flowAgentEvent := dto.FlowAgentEvent{
 		FlowExecutionId:  flowExecutionId,
 		ExternalSystemId: system,
 		SourceEvent:      sourceEvent,
-		Name:             commonEnum.ActionTimelineEventCreate,
+		Name:             commonEnum.AgentTimelineEventCreate,
 		DataType:         data_fields.MarkdownEventFields{}.Type(),
 		Data:             mdEvent,
 	}
 
 	// publish event
-	if err := s.RabbitMQService.PublishFlowActionEvent(ctx, flowActionEvent); err != nil {
+	if err := s.RabbitMQService.PublishFlowAgentEvent(ctx, flowAgentEvent); err != nil {
 		err = fmt.Errorf("failed to publish markdown event for org %s: %w", orgId, err)
 		tracing.TraceErr(span, err)
 		return err

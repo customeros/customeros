@@ -3,14 +3,14 @@ package service
 import (
 	"errors"
 
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 type WorkflowService interface {
@@ -23,8 +23,8 @@ type WorkflowService interface {
 	SaveFlowExecutionRecord(ctx context.Context, flowExecutionRecord entity.FlowExecution) (*entity.FlowExecution, error)
 	GetFlowExecutionRecordById(ctx context.Context, id string) (*entity.FlowExecution, error)
 
-	// FlowAction Execution
-	SaveFlowActionExecutionRecord(ctx context.Context, flowActionExecutionRecord entity.FlowActionExecution) (*entity.FlowActionExecution, error)
+	// FlowAgent Execution
+	SaveFlowAgentExecutionRecord(ctx context.Context, flowAgentExecutionRecord entity.FlowAgentExecution) (*entity.FlowAgentExecution, error)
 
 	// Validation
 	ValidateEventType(ctx context.Context, nodeType enum.FlowNodeType, event string) bool
@@ -64,7 +64,6 @@ func (w *workflowService) SaveFlow(ctx context.Context, flowRecord entity.Flow) 
 	}
 
 	return w.services.PostgresRepositories.FlowRepository.Update(ctx, flowRecord)
-
 }
 
 func (w *workflowService) GetFlowsByTrigger(ctx context.Context, listenerEvent enum.FlowListenerEvent) (*[]entity.Flow, error) {
@@ -95,11 +94,11 @@ func (w *workflowService) GetFlowsByTrigger(ctx context.Context, listenerEvent e
 }
 
 type FlowNextStep struct {
-	FlowID       string
-	FromNodeID   string
-	ToNodeID     string
-	ToNodeType   enum.FlowNodeType
-	ToNodeAction enum.FlowAction
+	FlowID      string
+	FromNodeID  string
+	ToNodeID    string
+	ToNodeType  enum.FlowNodeType
+	ToNodeAgent enum.FlowAgent
 }
 
 func (w *workflowService) GetNextStepInFlow(ctx context.Context, flowId, fromNodeId string) (*FlowNextStep, error) {
@@ -168,12 +167,12 @@ func (w *workflowService) GetNextStepInFlow(ctx context.Context, flowId, fromNod
 		ToNodeType: toNodeType,
 	}
 
-	if toNodeType == enum.NodeFlowAction {
-		action, err := enum.GetFlowAction(*nextNodeDetails.Event)
+	if toNodeType == enum.NodeFlowAgent {
+		action, err := enum.GetFlowAgent(*nextNodeDetails.Event)
 		if err != nil {
 			tracing.TraceErr(span, err)
 		}
-		nextStep.ToNodeAction = action
+		nextStep.ToNodeAgent = action
 	}
 	return &nextStep, nil
 }
@@ -230,10 +229,10 @@ func (w *workflowService) SaveFlowExecutionRecord(ctx context.Context, flowExecu
 	return w.services.PostgresRepositories.FlowExecutionRepository.Update(ctx, flowExecutionRecord)
 }
 
-// Flow Action Execution
+// Flow Agent Execution
 
-func (w *workflowService) SaveFlowActionExecutionRecord(ctx context.Context, flowActionExecutionRecord entity.FlowActionExecution) (*entity.FlowActionExecution, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WorkflowService.SaveFlowExecutionActionRecord")
+func (w *workflowService) SaveFlowAgentExecutionRecord(ctx context.Context, flowAgentExecutionRecord entity.FlowAgentExecution) (*entity.FlowAgentExecution, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WorkflowService.SaveFlowExecutionAgentRecord")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
@@ -244,16 +243,15 @@ func (w *workflowService) SaveFlowActionExecutionRecord(ctx context.Context, flo
 		return nil, err
 	}
 
-	if flowActionExecutionRecord.ID == "" {
-		if flowActionExecutionRecord.Action == "" || flowActionExecutionRecord.FlowExecutionID == "" {
-			span.LogFields(log.Object("flowActionExecutionRecord", flowActionExecutionRecord))
-			err := errors.New("Action or FlowExecutionID missing")
+	if flowAgentExecutionRecord.ID == "" {
+		if flowAgentExecutionRecord.Agent == "" || flowAgentExecutionRecord.FlowExecutionID == "" {
+			span.LogFields(log.Object("flowAgentExecutionRecord", flowAgentExecutionRecord))
+			err := errors.New("Agent or FlowExecutionID missing")
 			tracing.TraceErr(span, err)
 			return nil, err
 		}
-		return w.services.PostgresRepositories.FlowActionExecutionRepository.Create(ctx, flowActionExecutionRecord)
+		return w.services.PostgresRepositories.FlowAgentExecutionRepository.Create(ctx, flowAgentExecutionRecord)
 	}
 
-	return w.services.PostgresRepositories.FlowActionExecutionRepository.Update(ctx, flowActionExecutionRecord)
-
+	return w.services.PostgresRepositories.FlowAgentExecutionRepository.Update(ctx, flowAgentExecutionRecord)
 }

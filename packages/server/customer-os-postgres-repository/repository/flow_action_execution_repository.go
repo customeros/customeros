@@ -12,28 +12,28 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 )
 
-type FlowActionExecutionRepository interface {
-	Create(ctx context.Context, executionRecord entity.FlowActionExecution) (*entity.FlowActionExecution, error)
-	Find(ctx context.Context, executionRecord entity.FlowActionExecution) (*entity.FlowActionExecution, error)
-	Update(ctx context.Context, executionRecord entity.FlowActionExecution) (*entity.FlowActionExecution, error)
+type FlowAgentExecutionRepository interface {
+	Create(ctx context.Context, executionRecord entity.FlowAgentExecution) (*entity.FlowAgentExecution, error)
+	Find(ctx context.Context, executionRecord entity.FlowAgentExecution) (*entity.FlowAgentExecution, error)
+	Update(ctx context.Context, executionRecord entity.FlowAgentExecution) (*entity.FlowAgentExecution, error)
 }
 
-type flowActionExecutionRepository struct {
+type flowAgentExecutionRepository struct {
 	gormDb *gorm.DB
 }
 
-func NewFlowActionExecutionRepository(gormDb *gorm.DB) FlowActionExecutionRepository {
-	return &flowActionExecutionRepository{gormDb: gormDb}
+func NewFlowAgentExecutionRepository(gormDb *gorm.DB) FlowAgentExecutionRepository {
+	return &flowAgentExecutionRepository{gormDb: gormDb}
 }
 
-func (f *flowActionExecutionRepository) Create(ctx context.Context, executionRecord entity.FlowActionExecution) (*entity.FlowActionExecution, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionExecutionRepository.Create")
+func (f *flowAgentExecutionRepository) Create(ctx context.Context, executionRecord entity.FlowAgentExecution) (*entity.FlowAgentExecution, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowAgentExecutionRepository.Create")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	if executionRecord.Action == "" || executionRecord.FlowExecutionID == "" {
+	if executionRecord.Agent == "" || executionRecord.FlowExecutionID == "" {
 		span.LogFields(log.Object("executionRecord", executionRecord))
-		err := errors.New("Action or FlowExecutionID missing")
+		err := errors.New("Agent or FlowExecutionID missing")
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
@@ -47,15 +47,15 @@ func (f *flowActionExecutionRepository) Create(ctx context.Context, executionRec
 	return &executionRecord, nil
 }
 
-func (f *flowActionExecutionRepository) Find(ctx context.Context, executionRecord entity.FlowActionExecution) (*entity.FlowActionExecution, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionExecutionRepository.Find")
+func (f *flowAgentExecutionRepository) Find(ctx context.Context, executionRecord entity.FlowAgentExecution) (*entity.FlowAgentExecution, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowAgentExecutionRepository.Find")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	var flowActionExecution entity.FlowActionExecution
+	var flowAgentExecution entity.FlowAgentExecution
 	err := f.gormDb.
 		Where(&executionRecord).
-		First(&flowActionExecution).Error
+		First(&flowAgentExecution).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
@@ -63,11 +63,11 @@ func (f *flowActionExecutionRepository) Find(ctx context.Context, executionRecor
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
-	return &flowActionExecution, nil
+	return &flowAgentExecution, nil
 }
 
-func (f *flowActionExecutionRepository) Update(ctx context.Context, executionRecord entity.FlowActionExecution) (*entity.FlowActionExecution, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionExecutionRepository.Update")
+func (f *flowAgentExecutionRepository) Update(ctx context.Context, executionRecord entity.FlowAgentExecution) (*entity.FlowAgentExecution, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowAgentExecutionRepository.Update")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
@@ -77,7 +77,7 @@ func (f *flowActionExecutionRepository) Update(ctx context.Context, executionRec
 		return nil, err
 	}
 
-	var updatedRecord entity.FlowActionExecution
+	var updatedRecord entity.FlowAgentExecution
 	err := f.gormDb.Model(&executionRecord).Updates(&executionRecord).First(&updatedRecord).Error
 	if err != nil {
 		tracing.TraceErr(span, err)

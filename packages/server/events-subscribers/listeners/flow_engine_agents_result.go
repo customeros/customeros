@@ -13,25 +13,25 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-subscribers/handlers"
 )
 
-func OnFlowActionExecutionResultsEventCreated(ctx context.Context, s *service.Services, input any) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "Listeners.OnFlowActionExecutionResultsEventCreated")
+func OnFlowAgentExecutionResultsEventCreated(ctx context.Context, s *service.Services, input any) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "Listeners.OnFlowAgentExecutionResultsEventCreated")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "input", input)
 
-	flowActionResultsEvent, err := getFlowActionResultsEvent(input)
+	flowAgentResultsEvent, err := getFlowAgentResultsEvent(input)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 
-	if flowActionResultsEvent.FlowActionExecutionID == "" {
-		err := errors.New("flowActionExecutionResultsEvent is empty")
+	if flowAgentResultsEvent.FlowAgentExecutionID == "" {
+		err := errors.New("flowAgentExecutionResultsEvent is empty")
 		tracing.TraceErr(span, err)
 		return err
 	}
 
-	err = handlers.HandleActionExecutionResults(ctx, s, flowActionResultsEvent)
+	err = handlers.HandleAgentExecutionResults(ctx, s, flowAgentResultsEvent)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -39,7 +39,7 @@ func OnFlowActionExecutionResultsEventCreated(ctx context.Context, s *service.Se
 	return nil
 }
 
-func getFlowActionResultsEvent(input any) (*dto.FlowActionExecutionResultEvent, error) {
+func getFlowAgentResultsEvent(input any) (*dto.FlowAgentExecutionResultEvent, error) {
 	message, ok := input.(*dto.Event)
 	if !ok {
 		return nil, fmt.Errorf("failed to cast to Event")
@@ -50,11 +50,11 @@ func getFlowActionResultsEvent(input any) (*dto.FlowActionExecutionResultEvent, 
 		return nil, err
 	}
 
-	flowActionResultsEvent, ok := message.Event.Data.(*dto.FlowActionExecutionResultEvent)
+	flowAgentResultsEvent, ok := message.Event.Data.(*dto.FlowAgentExecutionResultEvent)
 	if !ok {
 		err := errors.New("event is not a flow action event")
 		return nil, err
 	}
 
-	return flowActionResultsEvent, nil
+	return flowAgentResultsEvent, nil
 }

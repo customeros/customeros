@@ -104,16 +104,16 @@ func (r *flowTransitionsRegistryRepository) Initialize(ctx context.Context) erro
 		{
 			FromNodeType: enum.NodeFlowListenerEvent.String(),
 			FromNode:     enum.EventFathomMeetingSummaryCreated.String(),
-			ToNodeType:   enum.NodeFlowAction.String(),
-			ToNode:       enum.ActionTimelineEventCreate.String(),
-			Enabled:      true,
+			ToNodeType:   enum.NodeFlowAgent.String(),
+			ToNode:       enum.AgentTimelineEventCreate.String(),
+			Status:       enum.FlowNodeEdgeStatusActive.String(),
 		},
 		{
 			FromNodeType: enum.NodeFlowListenerEvent.String(),
 			FromNode:     enum.EventGrainMeetingSummaryCreated.String(),
-			ToNodeType:   enum.NodeFlowAction.String(),
-			ToNode:       enum.ActionTimelineEventCreate.String(),
-			Enabled:      true,
+			ToNodeType:   enum.NodeFlowAgent.String(),
+			ToNode:       enum.AgentTimelineEventCreate.String(),
+			Status:       enum.FlowNodeEdgeStatusActive.String(),
 		},
 		// ... add more here
 	}

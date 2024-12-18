@@ -117,7 +117,7 @@ func registerFlowRoutes(ctx context.Context, r *gin.Engine, s *service.Services,
 	setupRestRoute(ctx, r, "DELETE", fmt.Sprintf("%s/flows/:flowId/edges/:edgeId", flowsV1Path), s, cache, flows.DeleteFlowEdge(s))
 
 	// flow validation
-	setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/actions", flowsV1Path), s, cache, flows.GetActions(s))
+	setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/actions", flowsV1Path), s, cache, flows.GetAgents(s))
 	setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/listeners", flowsV1Path), s, cache, flows.GetListeners(s))
 	setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/transitions", flowsV1Path), s, cache, flows.GetTransitions(s))
 

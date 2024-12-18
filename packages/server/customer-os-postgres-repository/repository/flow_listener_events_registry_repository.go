@@ -92,21 +92,21 @@ func (r *flowListenerRegistryRepository) Initialize(ctx context.Context) error {
 			ListenerEvent:  commonenum.EventFathomMeetingSummaryCreated.String(),
 			FriendlyName:   "Fathom Meeting Summary Created",
 			Description:    "New AI meeting summary created by Fathom",
-			Enabled:        true,
+			Status:         commonenum.FlowNodeEdgeStatusActive.String(),
 		},
 		{
 			ExternalSystem: "flow",
 			ListenerEvent:  commonenum.EventFlowContactAdded.String(),
 			FriendlyName:   "Contact added to Flow",
 			Description:    "A new Contact has been added to a Flow",
-			Enabled:        true,
+			Status:         commonenum.FlowNodeEdgeStatusActive.String(),
 		},
 		{
 			ExternalSystem: "grain",
 			ListenerEvent:  commonenum.EventGrainMeetingSummaryCreated.String(),
 			FriendlyName:   "Grain Meeting Summary Created",
 			Description:    "New AI meeting summary created by Grain",
-			Enabled:        true,
+			Status:         commonenum.FlowNodeEdgeStatusActive.String(),
 		},
 	}
 

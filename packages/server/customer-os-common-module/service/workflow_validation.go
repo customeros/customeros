@@ -76,8 +76,8 @@ func (w *workflowService) ValidateEventType(ctx context.Context, nodeType enum.F
 	switch nodeType {
 	case enum.NodeFlowEnd, enum.NodeFlowWait:
 		return true
-	case enum.NodeFlowAction:
-		_, err := enum.GetFlowAction(event)
+	case enum.NodeFlowAgent:
+		_, err := enum.GetFlowAgent(event)
 		if err == nil {
 			return true
 		}
