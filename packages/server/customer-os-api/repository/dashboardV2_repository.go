@@ -734,12 +734,10 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 			//ColumnViewTypeContactsExperience                 ColumnViewType = "CONTACTS_EXPERIENCE"
 			//ColumnViewTypeContactsLinkedinFollowerCount      ColumnViewType = "CONTACTS_LINKEDIN_FOLLOWER_COUNT"
 			//ColumnViewTypeContactsJobTitle                   ColumnViewType = "CONTACTS_JOB_TITLE"
-			//ColumnViewTypeContactsTags                       ColumnViewType = "CONTACTS_TAGS"
 			//ColumnViewTypeContactsConnections                ColumnViewType = "CONTACTS_CONNECTIONS"
 			//ColumnViewTypeContactsFlows                      ColumnViewType = "CONTACTS_FLOWS"
 			//ColumnViewTypeContactsFlowStatus                 ColumnViewType = "CONTACTS_FLOW_STATUS"
 			//ColumnViewTypeContactsFlowNextAction             ColumnViewType = "CONTACTS_FLOW_NEXT_ACTION"
-			//ColumnViewTypeContactsUpdatedAt                  ColumnViewType = "CONTACTS_UPDATED_AT"
 			if filter.Filter.Property == model.ColumnViewTypeContactsName.String() {
 				logicalOperator := utils.AND
 				if filter.Filter.Operation == commonmodel.ComparisonOperatorContains || filter.Filter.Operation == commonmodel.ComparisonOperatorIsNotEmpty {
@@ -783,6 +781,21 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 			}
 			if filter.Filter.Property == model.ColumnViewTypeContactsRegion.String() {
 				locationFilter.Filters = append(locationFilter.Filters, utils.CreateStringCypherFilter(string(neo4jentity.LocationPropertyRegion), filter.Filter.Value.Str, filter.Filter.Operation))
+			}
+			if filter.Filter.Property == model.ColumnViewTypeContactsTags.String() {
+				// special case for not in tags
+				if filter.Filter.Operation == commonmodel.ComparisonOperatorNotIn && filter.Filter.Value.ArrayStr != nil {
+					rawCypher := ""
+					for _, v := range *filter.Filter.Value.ArrayStr {
+						if rawCypher != "" {
+							rawCypher += " AND "
+						}
+						rawCypher += fmt.Sprintf(` NOT (c)-[:TAGGED]->(:Tag {name:"%s"}) `, v)
+					}
+					tagFilter.Filters = append(tagFilter.Filters, utils.CreateRawCypherFilter(rawCypher))
+				} else {
+					createInOrEmptyStringFilter(filter, tagFilter, string(neo4jentity.TagPropertyName))
+				}
 			}
 		}
 

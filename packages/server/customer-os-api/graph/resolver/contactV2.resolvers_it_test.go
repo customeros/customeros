@@ -336,6 +336,42 @@ func TestQueryResolver_UIContactsSearch_SortByUpdatedDate(t *testing.T) {
 	verifyContactSortOrder(t, model.ColumnViewTypeContactsUpdatedAt, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
+func TestQueryResolver_UIContactsSearch_FilterByTags(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "contact1"})
+	neo4jtest.CreateTag(ctx, driver, tenantName, neo4jentity.TagEntity{Id: "tag1", Name: "A"})
+	neo4jtest.CreateTag(ctx, driver, tenantName, neo4jentity.TagEntity{Id: "tag2", Name: "B"})
+	neo4jtest.LinkNodes(ctx, driver, "contact1", "tag1", "TAGGED")
+	neo4jtest.LinkNodes(ctx, driver, "contact1", "tag2", "TAGGED")
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "contact2"})
+	neo4jtest.CreateTag(ctx, driver, tenantName, neo4jentity.TagEntity{Id: "tag3", Name: "A"})
+	neo4jtest.CreateTag(ctx, driver, tenantName, neo4jentity.TagEntity{Id: "tag4", Name: "c"})
+	neo4jtest.LinkNodes(ctx, driver, "contact2", "tag3", "TAGGED")
+	neo4jtest.LinkNodes(ctx, driver, "contact2", "tag4", "TAGGED")
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "contact3"})
+
+	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, commonModel.NodeLabelContact))
+	require.Equal(t, 4, neo4jtest.GetCountOfNodes(ctx, driver, commonModel.NodeLabelTag))
+	require.Equal(t, 4, neo4jtest.GetCountOfRelationships(ctx, driver, "TAGGED"))
+
+	searchBy := model.ColumnViewTypeContactsTags
+
+	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 3, 1)
+	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 3, 2)
+	assertContactSearch(t, searchBy, []string{"A", "B", "C"}, commonModel.ComparisonOperatorIn, 3, 2)
+	assertContactSearch(t, searchBy, []string{"c"}, commonModel.ComparisonOperatorIn, 3, 1)
+	assertContactSearch(t, searchBy, []string{"X", "Y", "Z"}, commonModel.ComparisonOperatorIn, 3, 0)
+
+	assertContactSearch(t, searchBy, []string{"X"}, commonModel.ComparisonOperatorNotIn, 3, 3)
+	assertContactSearch(t, searchBy, []string{"B", "Y"}, commonModel.ComparisonOperatorNotIn, 3, 2)
+}
+
 func assertContactSearch(t *testing.T, filterName model.ColumnViewType, searchValue any, operator commonModel.ComparisonOperator, totalAvailable int64, totalElements int64) {
 	rawResponse, err := c.RawPost(getQuery("contact/ui_contacts_search"),
 		client.Var("limit", 10),
