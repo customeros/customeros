@@ -319,11 +319,11 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 			}
 		}
 		input.Hide = utils.BoolPtr(false)
-		if input.Stage == nil {
-			input.Stage = utils.ToPtr(neo4jenum.Lead)
-		}
 		if input.Relationship == nil {
 			input.Relationship = utils.ToPtr(neo4jenum.OrganizationRelationshipProspect)
+		}
+		if input.Stage == nil {
+			input.Stage = utils.ToPtr(input.Relationship.DefaultStage())
 		}
 	}
 
