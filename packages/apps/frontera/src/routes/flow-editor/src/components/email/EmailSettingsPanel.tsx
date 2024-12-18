@@ -3,12 +3,13 @@ import { useRef, useMemo, useState, useEffect } from 'react';
 
 import { LexicalEditor } from 'lexical';
 import { observer } from 'mobx-react-lite';
-import { useReactFlow } from '@xyflow/react';
 import { render } from '@react-email/render';
+import { useReactFlow } from '@xyflow/react';
 import { FlowActionType } from '@store/Flows/types';
 
 import { cn } from '@ui/utils/cn';
 import { Lotus } from '@ui/media/icons/Lotus';
+import { Check } from '@ui/media/icons/Check';
 import { Button } from '@ui/form/Button/Button';
 import { Editor } from '@ui/form/Editor/Editor';
 import { Send03 } from '@ui/media/icons/Send03';
@@ -17,6 +18,7 @@ import { useStore } from '@shared/hooks/useStore';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { ChevronUp } from '@ui/media/icons/ChevronUp';
 import { ChevronDown } from '@ui/media/icons/ChevronDown';
+import { CheckCircle } from '@ui/media/icons/CheckCircle';
 import { EmailTemplate } from '@shared/components/EmailTemplate';
 import { extractPlainText } from '@ui/form/Editor/utils/extractPlainText';
 import { convertPlainTextToHtml } from '@ui/form/Editor/utils/convertPlainTextToHtml';
@@ -246,7 +248,13 @@ export const EmailSettingsPanel = observer(() => {
                 )}
               </div>
               <div>
-                <Button size='xs' variant='outline' onClick={handleSave}>
+                <Button
+                  size='xs'
+                  variant='outline'
+                  leftIcon={<Check />}
+                  onClick={handleSave}
+                  colorScheme='primary'
+                >
                   Done
                 </Button>
               </div>
@@ -268,8 +276,11 @@ export const EmailSettingsPanel = observer(() => {
                 </Button>
               </div>
               <div>
-                <ul className='list-disc px-6'>
-                  <li>To {session.value.profile.email}</li>
+                <ul className='px-2'>
+                  <li className='flex items-center'>
+                    <CheckCircle className='text-gray-500 mr-2' />
+                    To {session.value.profile.email}
+                  </li>
                   {/* todo - fill the data of sender and test org id when the BE is ready*/}
                   {/*<li>From robertinc@testcustomeros.com</li>*/}
                   {/*/!*show only for test flow*!/*/}
@@ -345,7 +356,7 @@ export const EmailSettingsPanel = observer(() => {
               </Tooltip>
             </div>
 
-            <div className='min-h-[60vh] mb-2'>
+            <div className='min-h-[60vh] mb-2 -mt-2'>
               <Editor
                 ref={editorRef}
                 placeholder={placeholder}
