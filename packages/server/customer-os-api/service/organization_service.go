@@ -7,6 +7,7 @@ import (
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
+	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"reflect"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
@@ -338,7 +339,7 @@ func (s *organizationService) GetSubsidiariesForOrganizations(ctx context.Contex
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("parentOrganizationIds", parentOrganizationIds))
 
-	dbEntries, err := s.repositories.OrganizationRepository.GetLinkedSubOrganizations(ctx, common.GetTenantFromContext(ctx), parentOrganizationIds, repository.Relationship_Subsidiary)
+	dbEntries, err := s.repositories.Neo4jRepositories.OrganizationReadRepository.GetLinkedSubOrganizations(ctx, common.GetTenantFromContext(ctx), parentOrganizationIds, neo4jrepository.Relationship_Subsidiary)
 	if err != nil {
 		s.log.Errorf("(organizationService.GetSubsidiariesForOrganizations) Error getting linked organizations: {%v}", err.Error())
 		tracing.TraceErr(span, err)
@@ -486,7 +487,7 @@ func (s *organizationService) GetSubsidiariesOfForOrganizations(ctx context.Cont
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("organizationIds", organizationIds))
 
-	dbEntries, err := s.repositories.OrganizationRepository.GetLinkedParentOrganizations(ctx, common.GetTenantFromContext(ctx), organizationIds, repository.Relationship_Subsidiary)
+	dbEntries, err := s.repositories.Neo4jRepositories.OrganizationReadRepository.GetLinkedParentOrganizations(ctx, common.GetTenantFromContext(ctx), organizationIds, neo4jrepository.Relationship_Subsidiary)
 	if err != nil {
 		s.log.Errorf("(organizationService.GetSubsidiariesOfForOrganizations) Error getting linked parent organizations: {%v}", err.Error())
 		tracing.TraceErr(span, err)

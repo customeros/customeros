@@ -15,6 +15,10 @@ import (
 	"time"
 )
 
+const (
+	Relationship_Subsidiary = "SUBSIDIARY_OF"
+)
+
 type TenantAndOrganizationId struct {
 	Tenant         string
 	OrganizationId string
@@ -61,6 +65,8 @@ type OrganizationReadRepository interface {
 	GetOrganizationsWithEmail(ctx context.Context, tenant, email string) ([]*dbtype.Node, error)
 	GetOrganizationsToCheck(ctx context.Context, minutesSinceLastUpdate, hoursSinceLastCheck, limit int) ([]TenantAndOrganization, error)
 	GetActiveOrganizationIdsByDomain(ctx context.Context, tenant string, domains []string) (map[string]string, error)
+	GetLinkedSubOrganizations(ctx context.Context, tenant string, parentOrganizationIds []string, relationName string) ([]*utils.DbNodeWithRelationAndId, error)
+	GetLinkedParentOrganizations(ctx context.Context, tenant string, organizationIds []string, relationName string) ([]*utils.DbNodeWithRelationAndId, error)
 }
 
 type organizationReadRepository struct {
@@ -1370,4 +1376,70 @@ func (r *organizationReadRepository) GetActiveOrganizationIdsByDomain(ctx contex
 		output[v.Values[0].(string)] = v.Values[1].(string)
 	}
 	return output, err
+}
+
+func (r *organizationReadRepository) GetLinkedSubOrganizations(ctx context.Context, tenant string, parentOrganizationIds []string, relationName string) ([]*utils.DbNodeWithRelationAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetLinkedSubOrganizations")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
+
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(parent:Organization)<-[rel:%s]-(org:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(t)
+								WHERE parent.id IN $parentOrganizationIds
+								RETURN org, rel, parent.id ORDER BY org.name`, relationName)
+	params := map[string]any{
+		"tenant":                tenant,
+		"parentOrganizationIds": parentOrganizationIds,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsAsDbNodeWithRelationAndId(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.([]*utils.DbNodeWithRelationAndId), err
+}
+
+func (r *organizationReadRepository) GetLinkedParentOrganizations(ctx context.Context, tenant string, organizationIds []string, relationName string) ([]*utils.DbNodeWithRelationAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetLinkedParentOrganizations")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
+
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(sub:Organization)-[rel:%s]->(org:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(t)
+			WHERE sub.id IN $organizationIds
+			RETURN org, rel, sub.id ORDER BY org.name`, relationName)
+	params := map[string]any{
+		"tenant":          tenant,
+		"organizationIds": organizationIds,
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsAsDbNodeWithRelationAndId(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.([]*utils.DbNodeWithRelationAndId), err
 }

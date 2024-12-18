@@ -12,6 +12,7 @@ const (
 	OrganizationPropertyEmployees                 OrganizationProperty = "employees"
 	OrganizationPropertyUpdatedAt                 OrganizationProperty = "updatedAt"
 	OrganizationPropertyYearFounded               OrganizationProperty = "yearFounded"
+	OrganizationPropertyName                      OrganizationProperty = "name"
 	OrganizationPropertyHide                      OrganizationProperty = "hide"
 	OrganizationPropertyStage                     OrganizationProperty = "stage"
 	OrganizationPropertyIndustry                  OrganizationProperty = "industry"
