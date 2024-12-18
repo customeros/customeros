@@ -60,6 +60,12 @@ func (s *openSRSService) SendEmail(ctx context.Context, request *entity.EmailMes
 		return err
 	}
 
+	if mailbox == nil {
+		err = errors.New("mailbox not found")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
 	toEmail := []string{}
 	ccEmail := []string{}
 	bccEmail := []string{}

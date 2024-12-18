@@ -11,6 +11,8 @@ type FlowEntity struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 
+	DefaultName string
+
 	Name string
 
 	Nodes string
