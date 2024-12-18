@@ -43,10 +43,10 @@ func TestQueryResolver_UIContactsSearch_SortByName(t *testing.T) {
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "empty", FirstName: "", LastName: "", Name: ""})
-	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "B1-AB1", FirstName: "B1", LastName: "AB1", Name: ""})
-	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "A1", FirstName: "", LastName: "A1", Name: ""})
-	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "B1-AB2", FirstName: "B1", LastName: "", Name: "AB2"})
-	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "A2", FirstName: "", LastName: "", Name: "A2"})
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "B1-AB1", Name: "B1", FirstName: "AB1", LastName: ""})
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "A1", Name: "", FirstName: "", LastName: "A1"})
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "B1-AB2", Name: "B1", FirstName: "", LastName: "AB2"})
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "A2", Name: "A2", FirstName: "", LastName: ""})
 
 	require.Equal(t, 5, neo4jtest.GetCountOfNodes(ctx, driver, commonModel.NodeLabelContact))
 
