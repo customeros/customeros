@@ -70,9 +70,6 @@ clean:
 	rm -rf {{bin_dir}}
 	rm -rf *.log
 
-dev:
-	cd ../deployment && podman-compose up rabbitmq jaeger postgres neo4j eventstore -d
-
 logs:
     tail -f admin-api.log api.log
 
@@ -90,6 +87,14 @@ outdated:
 
 ps:
 	cd ../deployment && podman-compose ps
+
+restart-api:
+    pkill -f "customer-os-api" || true
+    cd ./server/customer-os-api && go run . > ../../api.log 2>&1 & echo $$! > api.pid
+    echo "CustomerOS API restarted"
+
+start:
+	cd ../deployment && podman-compose up rabbitmq jaeger postgres neo4j eventstore -d
 
 start-api:
     cd ./server/customer-os-platform-admin-api && go run . > ../../admin-api.log 2>&1 & echo $$! > admin-api.pid

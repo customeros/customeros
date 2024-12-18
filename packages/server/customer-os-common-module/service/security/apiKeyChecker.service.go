@@ -8,6 +8,8 @@ import (
 	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
 
 type App string
@@ -24,8 +26,10 @@ const (
 	ENRICHMENT_API       App = "enrichment-api"
 )
 
-const ApiKeyHeader = "X-Openline-API-KEY"
-const TenantApiKeyHeader = "X-CUSTOMER-OS-API-KEY"
+const (
+	ApiKeyHeader       = "X-Openline-API-KEY"
+	TenantApiKeyHeader = "X-CUSTOMER-OS-API-KEY"
+)
 
 func ApiKeyCheckerHTTP(tenantApiKeyRepo postgresRepository.TenantWebhookApiKeyRepository, appKeyRepo postgresRepository.AppKeyRepository, app App, opts ...CommonServiceOption) func(c *gin.Context) {
 	// Apply the options to configure the middleware
@@ -60,18 +64,23 @@ func ApiKeyCheckerHTTP(tenantApiKeyRepo postgresRepository.TenantWebhookApiKeyRe
 			}
 			span.LogFields(log.Bool("cached", false))
 			appKey, err := appKeyRepo.FindByKey(ctx, string(app), kh)
-
 			if err != nil {
+
 				c.JSON(http.StatusUnauthorized, gin.H{
-					"errors": []gin.H{{"message": fmt.Sprintf("Error while checking api key: %s", err.Error())}},
+					"requestId": utils.GenerateNanoIdWithPrefix("api", 16),
+					"status":    "error",
+					"message":   fmt.Sprintf("error while checking api key: %s", err.Error()),
 				})
 				c.Abort()
 				return
 			}
 
 			if appKey == nil {
+
 				c.JSON(http.StatusUnauthorized, gin.H{
-					"errors": []gin.H{{"message": "Invalid api key"}},
+					"requestId": utils.GenerateNanoIdWithPrefix("api", 16),
+					"status":    "error",
+					"message":   "invalid API key",
 				})
 				c.Abort()
 				return
@@ -103,16 +112,22 @@ func ApiKeyCheckerHTTP(tenantApiKeyRepo postgresRepository.TenantWebhookApiKeyRe
 
 			apiKey, err := tenantApiKeyRepo.GetTenantForApiKey(ctx, tenantKh)
 			if err != nil || apiKey == nil {
+
 				c.JSON(http.StatusUnauthorized, gin.H{
-					"errors": []gin.H{{"message”": "Invalid api key"}},
+					"requestId": utils.GenerateNanoIdWithPrefix("api", 16),
+					"status":    "error",
+					"message":   "invalid API key",
 				})
 				c.Abort()
 				return
 			}
 
 			if !apiKey.Enabled {
+
 				c.JSON(http.StatusUnauthorized, gin.H{
-					"errors": []gin.H{{"message”": "Api key disabled"}},
+					"requestId": utils.GenerateNanoIdWithPrefix("api", 16),
+					"status":    "error",
+					"message":   "invalid API key disabled",
 				})
 				c.Abort()
 				return
@@ -132,8 +147,11 @@ func ApiKeyCheckerHTTP(tenantApiKeyRepo postgresRepository.TenantWebhookApiKeyRe
 			c.Next()
 		} else {
 			// illegal request, terminate the current process
+
 			c.JSON(http.StatusUnauthorized, gin.H{
-				"errors": []gin.H{{"message": "Api key is required"}},
+				"requestId": utils.GenerateNanoIdWithPrefix("api", 16),
+				"status":    "error",
+				"message":   "API key is required",
 			})
 			span.LogFields(log.String("result", "Missing api key"))
 			c.Abort()
