@@ -28,6 +28,7 @@ const (
 	OrganizationPropertyEnrichAttempts            OrganizationProperty = "techEnrichAttempts"
 	OrganizationPropertyRenewalLikelihood         OrganizationProperty = "derivedRenewalLikelihood"
 	OrganizationPropertyContactCount              OrganizationProperty = "derivedContactCount"
+	OrganizationPropertyLeadSource                OrganizationProperty = "leadSource"
 )
 
 type OrganizationEntity struct {
