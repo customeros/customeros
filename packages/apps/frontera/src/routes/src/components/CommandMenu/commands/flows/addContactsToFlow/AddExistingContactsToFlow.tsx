@@ -104,7 +104,7 @@ export const AddExistingContacts = observer(() => {
                   : ''
               }
             >
-              <div className='flex justify-between w-full'>
+              <div className='flex justify-between w-full items-center'>
                 <div className='flex items-center'>
                   <Avatar
                     size='xxs'
