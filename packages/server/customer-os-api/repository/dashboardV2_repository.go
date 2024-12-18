@@ -402,9 +402,9 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 	}
 	if sort != nil && sort.By == model.ColumnViewTypeOrganizationsCreatedDate.String() {
 		if sort.Direction == commonmodel.SortingDirectionAsc {
-			aliases += "CASE WHEN o.createdAt <> \"\" and not o.createdAt is null THEN o.createdAt ELSE datetime({year:2100}) END as SORT_BY "
+			aliases += `CASE WHEN o.createdAt IS NOT NULL THEN o.createdAt ELSE datetime({year:2100}) END as SORT_BY `
 		} else {
-			aliases += "CASE WHEN o.createdAt <> \"\" and not o.createdAt is null THEN o.createdAt ELSE datetime({year:1900}) END as SORT_BY "
+			aliases += `CASE WHEN o.createdAt IS NOT NULL THEN o.createdAt ELSE datetime({year:1900}) END as SORT_BY `
 		}
 	}
 	if sort != nil && sort.By == model.ColumnViewTypeOrganizationsEmployeeCount.String() {
@@ -740,7 +740,6 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 			//ColumnViewTypeContactsFlowStatus                 ColumnViewType = "CONTACTS_FLOW_STATUS"
 			//ColumnViewTypeContactsFlowNextAction             ColumnViewType = "CONTACTS_FLOW_NEXT_ACTION"
 			//ColumnViewTypeContactsUpdatedAt                  ColumnViewType = "CONTACTS_UPDATED_AT"
-			//ColumnViewTypeContactsCreatedAt                  ColumnViewType = "CONTACTS_CREATED_AT"
 			if filter.Filter.Property == model.ColumnViewTypeContactsName.String() {
 				logicalOperator := utils.AND
 				if filter.Filter.Operation == commonmodel.ComparisonOperatorContains || filter.Filter.Operation == commonmodel.ComparisonOperatorIsNotEmpty {
@@ -941,6 +940,20 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 			aliases += `CASE WHEN l.locality <> '' AND NOT l.locality IS NULL THEN toLower(l.locality) ELSE '' END AS SORT_BY `
 		}
 	}
+	if sort != nil && sort.By == model.ColumnViewTypeContactsCreatedAt.String() {
+		if sort.Direction == commonmodel.SortingDirectionAsc {
+			aliases += `CASE WHEN c.createdAt IS NOT NULL THEN c.createdAt ELSE datetime({year:2100}) END as SORT_BY `
+		} else {
+			aliases += `CASE WHEN c.createdAt IS NOT NULL THEN c.createdAt ELSE datetime({year:1900}) END as SORT_BY `
+		}
+	}
+	if sort != nil && sort.By == model.ColumnViewTypeContactsUpdatedAt.String() {
+		if sort.Direction == commonmodel.SortingDirectionAsc {
+			aliases += `CASE WHEN c.updatedAt IS NOT NULL THEN c.updatedAt ELSE datetime({year:2100}) END as SORT_BY `
+		} else {
+			aliases += `CASE WHEN c.updatedAt IS NOT NULL THEN c.updatedAt ELSE datetime({year:1900}) END as SORT_BY `
+		}
+	}
 
 	if len(aliases) > 0 {
 		selectQuery += " WITH *, " + aliases
@@ -949,10 +962,10 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 	}
 
 	cypherSort := utils.CypherSort{}
-	if sort != nil {
+	if sort != nil && len(aliases) > 0 {
 		selectQuery += " ORDER BY SORT_BY " + string(sort.Direction)
 	} else {
-		cypherSort.NewSortRule("UPDATED_AT", string(commonmodel.SortingDirectionDesc), false, reflect.TypeOf(neo4jentity.OrganizationEntity{}))
+		cypherSort.NewSortRule("UPDATED_AT", string(commonmodel.SortingDirectionDesc), false, reflect.TypeOf(neo4jentity.ContactEntity{}))
 		selectQuery += string(cypherSort.SortingCypherFragment("c"))
 	}
 
