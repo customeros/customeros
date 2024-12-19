@@ -24,7 +24,6 @@ import (
 	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	postgresrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	enrichmentmodel "github.com/openline-ai/openline-customer-os/packages/server/enrichment-api/model"
-	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventbuffer"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -983,42 +982,20 @@ func (s *contactService) EnrichWithWorkEmailFromBetterContact() {
 					if phoneNumber != "" && !utils.Contains(currentPhones, phoneNumber) {
 						phoneLinked = true
 						// create phone number
-						eventCtx := tracing.InjectSpanContextIntoGrpcMetadata(innerCtx, span)
-						response, err := utils.CallEventsPlatformGRPCWithRetry[*phonenumberpb.PhoneNumberIdGrpcResponse](func() (*phonenumberpb.PhoneNumberIdGrpcResponse, error) {
-							return s.commonServices.GrpcClients.PhoneNumberClient.UpsertPhoneNumber(eventCtx, &phonenumberpb.UpsertPhoneNumberGrpcRequest{
-								Tenant:      record.Tenant,
-								PhoneNumber: phoneNumber,
-								SourceFields: &commonpb.SourceFields{
-									Source:    string(neo4jentity.DataSourceOpenline),
-									AppSource: constants.AppSourceDataUpkeeper,
-								},
-							})
-						})
+
+						phoneNumberId, err := s.commonServices.PhoneNumberService.Merge(ctx, phoneNumber, constants.AppSourceDataUpkeeper)
+						if err != nil {
+							tracing.TraceErr(span, err)
+							continue
+						}
+
+						err = s.commonServices.Neo4jRepositories.PhoneNumberWriteRepository.LinkWithContact(ctx, record.Tenant, record.ContactId, phoneNumberId, "WORK", false)
 						if err != nil {
 							tracing.TraceErr(span, err)
 							s.log.Errorf("Error from events processing %s", err.Error())
 							continue
 						}
 
-						neo4jrepository.WaitForNodeCreatedInNeo4j(innerCtx, s.commonServices.Neo4jRepositories, response.Id, model.NodeLabelPhoneNumber, span)
-
-						// link with contact
-						if response.Id != "" {
-							_, err = utils.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
-								return s.commonServices.GrpcClients.ContactClient.LinkPhoneNumberToContact(eventCtx, &contactpb.LinkPhoneNumberToContactGrpcRequest{
-									Tenant:        record.Tenant,
-									ContactId:     record.ContactId,
-									PhoneNumberId: response.Id,
-									Primary:       false,
-									AppSource:     constants.AppSourceDataUpkeeper,
-								})
-							})
-							if err != nil {
-								tracing.TraceErr(span, err)
-								s.log.Errorf("Error from events processing %s", err.Error())
-								continue
-							}
-						}
 						if phoneNumberForBillableEvent == "" {
 							phoneNumberForBillableEvent = phoneNumber
 						}
