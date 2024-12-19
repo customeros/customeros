@@ -60,8 +60,8 @@ const ghostButton = (color: string) => `
       'text-${color}-700',
       'hover:text-${color}-700',
       'focus:text-${color}-700',
-      'hover:bg-${color}-50',
-      'focus:bg-${color}-50',
+      'hover:bg-${color}-100',
+      'focus:bg-${color}-100',
     ]`
     : `[
       'bg-transparent',
@@ -69,8 +69,8 @@ const ghostButton = (color: string) => `
       'shadow-none',
       'hover:text-${color}-700',
       'focus:text-${color}-700',
-      'hover:bg-${color}-50',
-      'focus:bg-${color}-50',
+      'hover:bg-${color}-100',
+      'focus:bg-${color}-100',
     ]`
 },`;
 
