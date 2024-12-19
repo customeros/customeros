@@ -21,7 +21,6 @@ import (
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	phonenumberpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/phone_number"
-	userpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/user"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -192,18 +191,7 @@ func (s *phoneNumberService) UpdatePhoneNumberFor(ctx context.Context, entityTyp
 			return err
 		}
 
-		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = utils.CallEventsPlatformGRPCWithRetry[*userpb.UserIdGrpcResponse](func() (*userpb.UserIdGrpcResponse, error) {
-			return s.grpcClients.UserClient.LinkPhoneNumberToUser(ctx, &userpb.LinkPhoneNumberToUserGrpcRequest{
-				Tenant:         common.GetTenantFromContext(ctx),
-				UserId:         entityId,
-				PhoneNumberId:  phoneNumberEntity.Id,
-				Primary:        utils.IfNotNilBool(input.Primary),
-				Label:          utils.IfNotNilString(input.Label, func() string { return input.Label.String() }),
-				LoggedInUserId: common.GetUserIdFromContext(ctx),
-				AppSource:      constants.AppSourceCustomerOsApi,
-			})
-		})
+		err = s.repositories.Neo4jRepositories.PhoneNumberWriteRepository.LinkWithUser(ctx, common.GetTenantFromContext(ctx), entityId, phoneNumberEntity.Id, utils.IfNotNilString(input.Label, func() string { return input.Label.String() }), utils.IfNotNilBool(input.Primary))
 		if err != nil {
 			tracing.TraceErr(span, err)
 			graphql.AddErrorf(ctx, "Failed to add phone number %s to user %s", input.ID, entityId)

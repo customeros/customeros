@@ -21,7 +21,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
-	userpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/user"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
@@ -255,23 +254,7 @@ func (r *mutationResolver) PhoneNumberMergeToUser(ctx context.Context, userID st
 		return nil, err
 	}
 
-	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = utils.CallEventsPlatformGRPCWithRetry[*userpb.UserIdGrpcResponse](func() (*userpb.UserIdGrpcResponse, error) {
-		return r.Clients.UserClient.LinkPhoneNumberToUser(ctx, &userpb.LinkPhoneNumberToUserGrpcRequest{
-			Tenant:         common.GetTenantFromContext(ctx),
-			UserId:         userID,
-			PhoneNumberId:  phoneNumberId,
-			Primary:        utils.IfNotNilBool(input.Primary),
-			Label:          utils.IfNotNilString(input.Label, func() string { return input.Label.String() }),
-			LoggedInUserId: common.GetUserIdFromContext(ctx),
-			AppSource:      constants.AppSourceCustomerOsApi,
-		})
-	})
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to add phone number %s to user %s", phoneNumberId, userID)
-		return nil, err
-	}
+	///TODO LINK PHONE NUMBER TO USER
 
 	phoneNumberEntity, err := r.Services.PhoneNumberService.GetById(ctx, phoneNumberId)
 	if err != nil {

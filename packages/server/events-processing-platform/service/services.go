@@ -26,7 +26,6 @@ type Services struct {
 	ContactService         *contactService
 	OrganizationService    *organizationService
 	PhoneNumberService     *phoneNumberService
-	UserService            *userService
 	LocationService        *locationService
 	JobRoleService         *jobRoleService
 	IssueService           *issueService
@@ -52,7 +51,6 @@ func InitServices(cfg *config.Config, repositories *repository.Repositories, agg
 	services.ContactService = NewContactService(log, &services)
 	services.OrganizationService = NewOrganizationService(log, commandHandlers.Organization, aggregateStore, cfg, &services)
 	services.PhoneNumberService = NewPhoneNumberService(log, repositories.Neo4jRepositories, commandHandlers.PhoneNumber, &services)
-	services.UserService = NewUserService(log, aggregateStore, cfg, commandHandlers.User, &services)
 	services.LocationService = NewLocationService(log, commandHandlers.Location)
 	services.JobRoleService = NewJobRoleService(log, commandHandlers.JobRole)
 	services.IssueService = NewIssueService(log, commandHandlers.Issue)

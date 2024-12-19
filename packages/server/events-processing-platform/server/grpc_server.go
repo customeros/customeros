@@ -15,7 +15,6 @@ import (
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	phonenumpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/phone_number"
 	servicelineitempb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/service_line_item"
-	userpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/user"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/constants"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
@@ -72,7 +71,6 @@ func RegisterGrpcServices(grpcServer *grpc.Server, services *service.Services) {
 	contactpb.RegisterContactGrpcServiceServer(grpcServer, services.ContactService)
 	organizationpb.RegisterOrganizationGrpcServiceServer(grpcServer, services.OrganizationService)
 	phonenumpb.RegisterPhoneNumberGrpcServiceServer(grpcServer, services.PhoneNumberService)
-	userpb.RegisterUserGrpcServiceServer(grpcServer, services.UserService)
 	locationpb.RegisterLocationGrpcServiceServer(grpcServer, services.LocationService)
 	jobrolepb.RegisterJobRoleGrpcServiceServer(grpcServer, services.JobRoleService)
 	issuepb.RegisterIssueGrpcServiceServer(grpcServer, services.IssueService)
