@@ -19,7 +19,7 @@ require (
 	github.com/coocood/freecache v1.2.4
 	github.com/customeros/mailsherpa v0.3.8
 	github.com/customeros/mailwatcher v0.1.6
-	github.com/docker/docker v27.4.0+incompatible
+	github.com/docker/docker v27.4.1+incompatible
 	github.com/emersion/go-message v0.18.1
 	github.com/forPelevin/gomoji v1.2.0
 	github.com/gin-gonic/gin v1.10.0
