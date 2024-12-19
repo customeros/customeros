@@ -333,6 +333,12 @@ func (r *tenantWriteRepository) HardDeleteTenant(ctx context.Context, tenant str
 		commonmodel.NodeLabelInvoice,
 		commonmodel.NodeLabelInvoiceLine,
 		commonmodel.NodeLabelReminder,
+		commonmodel.NodeLabelFlow,
+		commonmodel.NodeLabelFlowParticipant,
+		commonmodel.NodeLabelFlowSender,
+		commonmodel.NodeLabelFlowAction,
+		commonmodel.NodeLabelFlowActionExecution,
+		commonmodel.NodeLabelFlowExecutionSettings,
 	}
 
 	//drop nodes with NodeLabel_Tenant
