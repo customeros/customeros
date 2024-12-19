@@ -13953,16 +13953,16 @@ directive @hasTenant on FIELD_DEFINITION`, BuiltIn: false},
 extend type Mutation {
     emailMergeToContact(contactId : ID!, input: EmailInput!): Email! @hasRole(roles: [ADMIN, USER]) @hasTenant
     emailRemoveFromContact(contactId : ID!, email: String!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    emailReplaceForContact(contactId : ID!, previousEmail: String, input: EmailInput!): Email! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    emailReplaceForContact(contactId : ID!, previousEmail: String, input: EmailInput!): Email @hasRole(roles: [ADMIN, USER]) @hasTenant
     emailSetPrimaryForContact(contactId : ID!, email: String!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
     emailMergeToUser(userId: ID!, input: EmailInput!): Email! @hasRole(roles: [ADMIN, USER]) @hasTenant
     emailRemoveFromUser(userId: ID!, email: String!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    emailReplaceForUser(userId: ID!, previousEmail: String, input: EmailInput!): Email! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    emailReplaceForUser(userId: ID!, previousEmail: String, input: EmailInput!): Email @hasRole(roles: [ADMIN, USER]) @hasTenant
 
     emailMergeToOrganization(organizationId: ID!, input: EmailInput!): Email! @hasRole(roles: [ADMIN, USER]) @hasTenant
     emailRemoveFromOrganization(organizationId: ID!, email: String!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    emailReplaceForOrganization(organizationId: ID!, previousEmail: String, input: EmailInput!): Email! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    emailReplaceForOrganization(organizationId: ID!, previousEmail: String, input: EmailInput!): Email @hasRole(roles: [ADMIN, USER]) @hasTenant
 
     email_Validate(id: ID!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
@@ -64509,14 +64509,11 @@ func (ec *executionContext) _Mutation_emailReplaceForContact(ctx context.Context
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
 	res := resTmp.(*model.Email)
 	fc.Result = res
-	return ec.marshalNEmail2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEmail(ctx, field.Selections, res)
+	return ec.marshalOEmail2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEmail(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_emailReplaceForContact(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -64933,14 +64930,11 @@ func (ec *executionContext) _Mutation_emailReplaceForUser(ctx context.Context, f
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
 	res := resTmp.(*model.Email)
 	fc.Result = res
-	return ec.marshalNEmail2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEmail(ctx, field.Selections, res)
+	return ec.marshalOEmail2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEmail(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_emailReplaceForUser(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -65264,14 +65258,11 @@ func (ec *executionContext) _Mutation_emailReplaceForOrganization(ctx context.Co
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
 	res := resTmp.(*model.Email)
 	fc.Result = res
-	return ec.marshalNEmail2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEmail(ctx, field.Selections, res)
+	return ec.marshalOEmail2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEmail(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_emailReplaceForOrganization(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -122090,9 +122081,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_emailReplaceForContact(ctx, field)
 			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "emailSetPrimaryForContact":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_emailSetPrimaryForContact(ctx, field)
@@ -122118,9 +122106,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_emailReplaceForUser(ctx, field)
 			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "emailMergeToOrganization":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_emailMergeToOrganization(ctx, field)
@@ -122139,9 +122124,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_emailReplaceForOrganization(ctx, field)
 			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "email_Validate":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_email_Validate(ctx, field)

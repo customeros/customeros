@@ -238,7 +238,9 @@ func (s *contactService) HideContact(ctx context.Context, txWithPostCommit *util
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "unable to save contact"))
 			s.log.Errorf("error while hiding contact %s: %s", contactId, err.Error())
+			return nil, err
 		}
+
 		err = s.services.Neo4jRepositories.OrganizationWriteRepository.RefreshContactCountByContactId(ctx, txWithPostCommit.Tx, tenant, contactId)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "unable to refresh contact count by contact id"))
