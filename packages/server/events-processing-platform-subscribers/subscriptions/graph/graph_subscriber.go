@@ -25,7 +25,6 @@ import (
 	locationevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/events"
 	phonenumberevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/events"
 	servicelineitemevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/event"
-	userevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/events"
 	opportunityevent "github.com/openline-ai/openline-customer-os/packages/server/events/event/opportunity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"golang.org/x/sync/errgroup"
@@ -40,7 +39,6 @@ type GraphSubscriber struct {
 	phoneNumberEventHandler     *PhoneNumberEventHandler
 	contactEventHandler         *ContactEventHandler
 	organizationEventHandler    *OrganizationEventHandler
-	userEventHandler            *UserEventHandler
 	locationEventHandler        *LocationEventHandler
 	jobRoleEventHandler         *JobRoleEventHandler
 	issueEventHandler           *IssueEventHandler
@@ -59,7 +57,6 @@ func NewGraphSubscriber(log logger.Logger, db *esdb.Client, services *service.Se
 		contactEventHandler:         NewContactEventHandler(log, services, grpcClients),
 		organizationEventHandler:    NewOrganizationEventHandler(log, services, grpcClients, cache),
 		phoneNumberEventHandler:     NewPhoneNumberEventHandler(log, services, grpcClients),
-		userEventHandler:            NewUserEventHandler(log, services),
 		locationEventHandler:        NewLocationEventHandler(services),
 		jobRoleEventHandler:         NewJobRoleEventHandler(services),
 		issueEventHandler:           NewIssueEventHandler(log, services, grpcClients),
@@ -237,18 +234,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return nil
 	case orgevents.OrganizationAddLocationV1:
 		_ = s.organizationEventHandler.OnLocationAddedToOrganization(ctx, evt)
-		return nil
-	case userevents.UserPhoneNumberLinkV1:
-		_ = s.userEventHandler.OnPhoneNumberLinkedToUser(ctx, evt)
-		return nil
-	case userevents.UserJobRoleLinkV1:
-		_ = s.userEventHandler.OnJobRoleLinkedToUser(ctx, evt)
-		return nil
-	case userevents.UserAddRoleV1:
-		_ = s.userEventHandler.OnAddRole(ctx, evt)
-		return nil
-	case userevents.UserRemoveRoleV1:
-		_ = s.userEventHandler.OnRemoveRole(ctx, evt)
 		return nil
 
 	case locationevents.LocationCreateV1:

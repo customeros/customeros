@@ -15,7 +15,6 @@ import (
 	organization_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	phone_number_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/phone_number"
 	service_line_item_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/service_line_item"
-	userpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/user"
 	"google.golang.org/grpc"
 )
 
@@ -28,7 +27,6 @@ type Clients struct {
 	OrganizationClient       organization_grpc_service.OrganizationGrpcServiceClient
 	PhoneNumberClient        phone_number_grpc_service.PhoneNumberGrpcServiceClient
 	ServiceLineItemClient    service_line_item_grpc_service.ServiceLineItemGrpcServiceClient
-	UserClient               userpb.UserGrpcServiceClient
 	LocationClient           locationpb.LocationGrpcServiceClient
 	IssueClient              issuepb.IssueGrpcServiceClient
 	InteractionEventClient   interactioneventpb.InteractionEventGrpcServiceClient
@@ -45,7 +43,6 @@ func InitClients(conn *grpc.ClientConn) *Clients {
 		ContactClient:            contactpb.NewContactGrpcServiceClient(conn),
 		OrganizationClient:       organization_grpc_service.NewOrganizationGrpcServiceClient(conn),
 		PhoneNumberClient:        phone_number_grpc_service.NewPhoneNumberGrpcServiceClient(conn),
-		UserClient:               userpb.NewUserGrpcServiceClient(conn),
 		JobRoleClient:            job_role_grpc_service.NewJobRoleGrpcServiceClient(conn),
 		ContractClient:           contract_grpc_service.NewContractGrpcServiceClient(conn),
 		ServiceLineItemClient:    service_line_item_grpc_service.NewServiceLineItemGrpcServiceClient(conn),

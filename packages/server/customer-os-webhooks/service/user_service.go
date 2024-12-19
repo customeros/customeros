@@ -13,11 +13,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/repository"
-	userpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/user"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"strings"
@@ -125,7 +123,6 @@ func (s *userService) syncUser(ctx context.Context, syncMutex *sync.Mutex, userI
 	tracing.LogObjectAsJson(span, "userInput", userInput)
 
 	var tenant = common.GetTenantFromContext(ctx)
-	var appSource = utils.StringFirstNonEmpty(userInput.AppSource, constants.AppSourceCustomerOsWebhooks)
 	var failedSync = false
 	var reason = ""
 	userInput.Normalize()
@@ -228,16 +225,8 @@ func (s *userService) syncUser(ctx context.Context, syncMutex *sync.Mutex, userI
 			}
 			// Link phone number to user
 			if !failedSync {
-				_, err = CallEventsPlatformGRPCWithRetry[*userpb.UserIdGrpcResponse](func() (*userpb.UserIdGrpcResponse, error) {
-					return s.grpcClients.UserClient.LinkPhoneNumberToUser(ctx, &userpb.LinkPhoneNumberToUserGrpcRequest{
-						Tenant:        common.GetTenantFromContext(ctx),
-						UserId:        userId,
-						PhoneNumberId: phoneNumberId,
-						Primary:       phoneNumberDtls.Primary,
-						Label:         phoneNumberDtls.Label,
-						AppSource:     appSource,
-					})
-				})
+
+				err := s.services.CommonServices.Neo4jRepositories.PhoneNumberWriteRepository.LinkWithUser(ctx, tenant, userId, phoneNumberId, phoneNumberDtls.Label, phoneNumberDtls.Primary)
 				if err != nil {
 					failedSync = true
 					tracing.TraceErr(span, err, log.String("grpcMethod", "LinkPhoneNumberToUser"))

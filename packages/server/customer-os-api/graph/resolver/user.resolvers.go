@@ -6,192 +6,20 @@ package resolver
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
-	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
-
-// UserCreate is the resolver for the userCreate field.
-func (r *mutationResolver) UserCreate(ctx context.Context, input model.UserInput) (*model.User, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.UserCreate", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.input", input)
-
-	userFields := data_fields.UserFields{
-		FirstName:       utils.StringPtr(input.FirstName),
-		LastName:        utils.StringPtr(input.LastName),
-		Name:            input.Name,
-		Source:          utils.StringPtr(neo4jentity.DataSourceOpenline.String()),
-		Timezone:        input.Timezone,
-		ProfilePhotoUrl: input.ProfilePhotoURL,
-		Internal:        utils.BoolPtr(false),
-		Bot:             utils.BoolPtr(false),
-		Test:            utils.BoolPtr(false),
-	}
-	userId, err := r.Services.CommonServices.UserService.Save(ctx, nil, nil, userFields)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to create user %s %s", input.FirstName, input.LastName)
-		return nil, nil
-	}
-
-	if input.Email != nil {
-		_, err = r.Services.CommonServices.EmailService.Merge(ctx, nil, common.GetTenantFromContext(ctx),
-			commonservice.EmailFields{
-				Email:     input.Email.Email,
-				Primary:   utils.IfNotNilBool(input.Email.Primary),
-				Source:    neo4jentity.DataSourceOpenline,
-				AppSource: constants.AppSourceCustomerOsApi,
-			}, &commonservice.LinkWith{
-				Type: commonModel.USER,
-				Id:   userId,
-			})
-		if err != nil {
-			tracing.TraceErr(span, err)
-			graphql.AddErrorf(ctx, "Failed to merge email %s", input.Email.Email)
-			return nil, err
-		}
-	}
-
-	createdUserEntity, err := r.Services.CommonServices.UserService.GetById(ctx, userId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "User details not yet available. User id: %s", userId)
-		return nil, nil
-	}
-	return mapper.MapEntityToUser(createdUserEntity), nil
-}
-
-// UserUpdate is the resolver for the user_Update field.
-func (r *mutationResolver) UserUpdate(ctx context.Context, input model.UserUpdateInput) (*model.User, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.UserUpdate", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.input", input)
-
-	if input.ID != common.GetContext(ctx).UserId {
-		if !r.Services.UserService.ContainsRole(ctx, []model.Role{model.RoleAdmin, model.RolePlatformOwner, model.RoleOwner}) {
-			graphql.AddErrorf(ctx, "user can not update other user")
-			return nil, nil
-		}
-	}
-
-	userFields := data_fields.UserFields{
-		FirstName:       utils.StringPtr(input.FirstName),
-		LastName:        utils.StringPtr(input.LastName),
-		Name:            input.Name,
-		Timezone:        input.Timezone,
-		ProfilePhotoUrl: input.ProfilePhotoURL,
-	}
-	_, err := r.Services.CommonServices.UserService.Save(ctx, nil, &input.ID, userFields)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to update user %s %s", input.FirstName, input.LastName)
-		return nil, nil
-	}
-
-	userEntity, err := r.Services.CommonServices.UserService.GetById(ctx, input.ID)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "User with id %s not found", input.ID)
-		return nil, nil
-	}
-	return mapper.MapEntityToUser(userEntity), nil
-}
-
-// UserAddRole is the resolver for the user_AddRole field.
-func (r *mutationResolver) UserAddRole(ctx context.Context, id string, role model.Role) (*model.User, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.UserAddRole", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.userID", id))
-	tracing.LogObjectAsJson(span, "request.role", role)
-
-	userResult, err := r.Services.UserService.AddRole(ctx, id, role)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to add role %s to user %s", role, id)
-		return nil, err
-	}
-	return mapper.MapEntityToUser(userResult), nil
-}
-
-// UserRemoveRole is the resolver for the user_RemoveRole field.
-func (r *mutationResolver) UserRemoveRole(ctx context.Context, id string, role model.Role) (*model.User, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.UserRemoveRole", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.userID", id))
-	tracing.LogObjectAsJson(span, "request.role", role)
-
-	userResult, err := r.Services.UserService.RemoveRole(ctx, id, role)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to remove role %s from user %s", role, id)
-		return nil, err
-	}
-	return mapper.MapEntityToUser(userResult), nil
-}
-
-// UserAddRoleInTenant is the resolver for the user_AddRoleInTenant field.
-func (r *mutationResolver) UserAddRoleInTenant(ctx context.Context, id string, tenant string, role model.Role) (*model.User, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.UserAddRoleInTenant", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.userID", id), log.String("request.tenant", tenant))
-	tracing.LogObjectAsJson(span, "request.role", role)
-
-	userResult, err := r.Services.UserService.AddRoleInTenant(ctx, id, tenant, role)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to add role %s to user %s in tenant %s", role, id, tenant)
-		return nil, err
-	}
-	return mapper.MapEntityToUser(userResult), nil
-}
-
-// UserRemoveRoleInTenant is the resolver for the user_RemoveRoleInTenant field.
-func (r *mutationResolver) UserRemoveRoleInTenant(ctx context.Context, id string, tenant string, role model.Role) (*model.User, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.UserRemoveRoleInTenant", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.userID", id), log.String("request.tenant", tenant))
-	tracing.LogObjectAsJson(span, "request.role", role)
-
-	userResult, err := r.Services.UserService.RemoveRoleInTenant(ctx, id, tenant, role)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to remove role %s from user %s in tenant %s", role, id, tenant)
-		return nil, err
-	}
-	return mapper.MapEntityToUser(userResult), nil
-}
-
-// UserDelete is the resolver for the user_Delete field.
-func (r *mutationResolver) UserDelete(ctx context.Context, id string) (*model.Result, error) {
-	panic(fmt.Errorf("not implemented: UserDelete - user_Delete"))
-}
-
-// UserDeleteInTenant is the resolver for the user_DeleteInTenant field.
-func (r *mutationResolver) UserDeleteInTenant(ctx context.Context, id string, tenant string) (*model.Result, error) {
-	panic(fmt.Errorf("not implemented: UserDeleteInTenant - user_DeleteInTenant"))
-}
 
 // UserUpdateOnboardingDetails is the resolver for the user_UpdateOnboardingDetails field.
 func (r *mutationResolver) UserUpdateOnboardingDetails(ctx context.Context, input model.UserOnboardingDetailsInput) (*model.User, error) {
@@ -219,21 +47,6 @@ func (r *mutationResolver) UserUpdateOnboardingDetails(ctx context.Context, inpu
 		return nil, err
 	}
 	return mapper.MapEntityToUser(userEntity), nil
-}
-
-// CustomerUserAddJobRole is the resolver for the customer_user_AddJobRole field.
-func (r *mutationResolver) CustomerUserAddJobRole(ctx context.Context, id string, jobRoleInput model.JobRoleInput) (*model.CustomerUser, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.CustomerUserAddJobRole", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.jobRoleInput", jobRoleInput)
-	span.LogFields(log.String("request.userID", id))
-
-	role, err := r.Services.UserService.CustomerAddJobRole(ctx, &service.CustomerAddJobRoleData{
-		UserId:        id,
-		JobRoleEntity: mapper.MapJobRoleInputToEntity(&jobRoleInput),
-	})
-	return role, err
 }
 
 // Users is the resolver for the users field.

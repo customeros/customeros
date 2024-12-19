@@ -3,16 +3,12 @@ package resolver
 import (
 	"context"
 	"github.com/99designs/gqlgen/client"
-	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/events_platform"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
-	jobRoleProto "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/job_role"
-	userProto "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/user"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -218,73 +214,6 @@ func TestQueryResolver_User_WithPhoneNumbers(t *testing.T) {
 	require.Equal(t, "+2222", *phoneNumber2.RawPhoneNumber)
 	require.Equal(t, "+2222", *phoneNumber2.E164)
 	require.Equal(t, model.PhoneNumberLabelWork, *phoneNumber2.Label)
-}
-
-func TestMutationResolver_AddJobRoleInTenant(t *testing.T) {
-	ctx := context.TODO()
-	defer tearDownTestCase(ctx)(t)
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	userId1 := neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{
-		FirstName: "first",
-		LastName:  "last",
-		Roles:     []string{"USER"},
-	})
-	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "OPENLINE")
-	calledCreateJobRole := false
-	calledLinkJobRole := false
-
-	jobRoleId, _ := uuid.NewUUID()
-	jobRoleServiceCallbacks := events_platform.MockJobRoleServiceCallbacks{
-		CreateJobRole: func(context context.Context, jobRole *jobRoleProto.CreateJobRoleGrpcRequest) (*jobRoleProto.JobRoleIdGrpcResponse, error) {
-			require.Equal(t, "openline", jobRole.Tenant)
-			require.Equal(t, "jobTitle", jobRole.JobTitle)
-			require.Equal(t, "some description", *jobRole.Description)
-			require.Equal(t, true, *jobRole.Primary)
-			calledCreateJobRole = true
-			return &jobRoleProto.JobRoleIdGrpcResponse{
-				Id: jobRoleId.String(),
-			}, nil
-		},
-	}
-	userServiceCallbacks := events_platform.MockUserServiceCallbacks{
-		LinkJobRoleToUser: func(context context.Context, request *userProto.LinkJobRoleToUserGrpcRequest) (*userProto.UserIdGrpcResponse, error) {
-			require.Equal(t, "openline", request.Tenant)
-			require.Equal(t, userId1, request.UserId)
-			require.Equal(t, jobRoleId.String(), request.JobRoleId)
-			calledLinkJobRole = true
-			return &userProto.UserIdGrpcResponse{
-				Id: userId1,
-			}, nil
-		},
-	}
-	events_platform.SetJobRoleCallbacks(&jobRoleServiceCallbacks)
-	events_platform.SetUserCallbacks(&userServiceCallbacks)
-
-	title := "jobTitle"
-	isPrimary := true
-	appSrc := "testApp"
-	desr := "some description"
-	rawResponse, err := cAdminWithTenant.RawPost(getQuery("user/customer_user_add_job_role"),
-		client.Var("userId", userId1),
-		client.Var("jobRoleInput", model.JobRoleInput{
-			OrganizationID: &organizationId,
-			JobTitle:       &title,
-			Primary:        &isPrimary,
-			AppSource:      &appSrc,
-			Description:    &desr,
-		}),
-		client.Var("tenant", "otherTenant"))
-	assertRawResponseSuccess(t, rawResponse, err)
-
-	var jobRole struct {
-		Customer_user_AddJobRole model.CustomerUser
-	}
-
-	err = decode.Decode(rawResponse.Data.(map[string]any), &jobRole)
-	require.Nil(t, err)
-	require.Equal(t, userId1, jobRole.Customer_user_AddJobRole.ID)
-	require.True(t, calledCreateJobRole)
-	require.True(t, calledLinkJobRole)
 }
 
 func TestMutationResolver_GetUserJobRoleInTenant(t *testing.T) {
