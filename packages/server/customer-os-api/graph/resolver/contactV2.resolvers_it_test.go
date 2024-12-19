@@ -372,6 +372,62 @@ func TestQueryResolver_UIContactsSearch_FilterByTags(t *testing.T) {
 	assertContactSearch(t, searchBy, []string{"B", "Y"}, commonModel.ComparisonOperatorNotIn, 3, 2)
 }
 
+func TestQueryResolver_UIContactsSearch_FilterByLinkedIn(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "1"})
+	neo4jtest.CreateSocial(ctx, driver, tenantName, neo4jentity.SocialEntity{Id: "l1", Url: "linkedin.com/in/aaa", Alias: "ab"})
+	neo4jtest.LinkNodes(ctx, driver, "1", "l1", "HAS")
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "2"})
+	neo4jtest.CreateSocial(ctx, driver, tenantName, neo4jentity.SocialEntity{Id: "l2", Url: "linkedin.com/in/ababab", Alias: "bc"})
+	neo4jtest.LinkNodes(ctx, driver, "2", "l2", "HAS")
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "3"})
+	neo4jtest.CreateSocial(ctx, driver, tenantName, neo4jentity.SocialEntity{Id: "l3", Url: "ab", Alias: "aaa"})
+	neo4jtest.LinkNodes(ctx, driver, "3", "l3", "HAS")
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "4"})
+
+	searchBy := model.ColumnViewTypeContactsLinkedin
+
+	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 4, 2)
+	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 4, 2)
+	assertContactSearch(t, searchBy, "aaa", commonModel.ComparisonOperatorContains, 4, 1)
+	assertContactSearch(t, searchBy, "ab", commonModel.ComparisonOperatorContains, 4, 2)
+	assertContactSearch(t, searchBy, "bc", commonModel.ComparisonOperatorContains, 4, 1)
+
+	assertContactSearch(t, searchBy, "xx", commonModel.ComparisonOperatorNotContains, 4, 4)
+	assertContactSearch(t, searchBy, "ab", commonModel.ComparisonOperatorNotContains, 4, 2)
+	assertContactSearch(t, searchBy, "aaa", commonModel.ComparisonOperatorNotContains, 4, 3)
+}
+
+func TestQueryResolver_UIContactsSearch_SortByLinkedIn(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "1"})
+	neo4jtest.CreateSocial(ctx, driver, tenantName, neo4jentity.SocialEntity{Id: "l1", Url: "linkedin.com/in/aaa", Alias: "ab"})
+	neo4jtest.LinkNodes(ctx, driver, "1", "l1", "HAS")
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "2"})
+	neo4jtest.CreateSocial(ctx, driver, tenantName, neo4jentity.SocialEntity{Id: "l2", Url: "linkedin.com/in/aaa", Alias: "bc"})
+	neo4jtest.LinkNodes(ctx, driver, "2", "l2", "HAS")
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "3"})
+
+	expectedAsc := []string{"1", "2", "3"}
+	expectedDesc := []string{"2", "1", "3"}
+
+	verifyContactSortOrder(t, model.ColumnViewTypeContactsLinkedin, commonModel.SortingDirectionAsc, expectedAsc)
+	verifyContactSortOrder(t, model.ColumnViewTypeContactsLinkedin, commonModel.SortingDirectionDesc, expectedDesc)
+}
+
 func assertContactSearch(t *testing.T, filterName model.ColumnViewType, searchValue any, operator commonModel.ComparisonOperator, totalAvailable int64, totalElements int64) {
 	rawResponse, err := c.RawPost(getQuery("contact/ui_contacts_search"),
 		client.Var("limit", 10),
