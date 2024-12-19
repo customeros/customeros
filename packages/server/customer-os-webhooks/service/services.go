@@ -18,7 +18,6 @@ type Services struct {
 
 	TenantService             TenantService
 	LocationService           LocationService
-	PhoneNumberService        PhoneNumberService
 	UserService               UserService
 	LogEntryService           LogEntryService
 	OrganizationService       OrganizationService
@@ -45,7 +44,6 @@ func InitServices(log logger.Logger,
 		CommonServices:            commonServices,
 		TenantService:             NewTenantService(log, repositories, cache),
 		LocationService:           NewLocationService(log, repositories, grpcClients),
-		PhoneNumberService:        NewPhoneNumberService(log, repositories, grpcClients),
 		SyncStatusService:         NewSyncStatusService(log, repositories),
 		InteractionSessionService: NewInteractionSessionService(log, repositories, grpcClients),
 	}

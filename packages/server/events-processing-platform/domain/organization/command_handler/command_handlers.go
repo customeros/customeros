@@ -9,7 +9,6 @@ import (
 
 // CommandHandlers acts as a container for all command handlers.
 type CommandHandlers struct {
-	LinkPhoneNumberCommand   LinkPhoneNumberCommandHandler
 	LinkLocationCommand      LinkLocationCommandHandler
 	UpsertCustomFieldCommand UpsertCustomFieldCommandHandler
 	AddParentCommand         AddParentCommandHandler
@@ -21,7 +20,6 @@ type CommandHandlers struct {
 
 func NewCommandHandlers(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore, ebs *eventbuffer.EventBufferStoreService) *CommandHandlers {
 	return &CommandHandlers{
-		LinkPhoneNumberCommand:   NewLinkPhoneNumberCommandHandler(log, es),
 		LinkLocationCommand:      NewLinkLocationCommandHandler(log, es),
 		UpsertCustomFieldCommand: NewUpsertCustomFieldCommandHandler(log, es),
 		AddParentCommand:         NewAddParentCommandHandler(log, es),

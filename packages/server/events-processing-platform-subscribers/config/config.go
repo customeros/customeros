@@ -28,13 +28,12 @@ type Config struct {
 }
 
 type Subscriptions struct {
-	GraphSubscription                 GraphSubscription
-	PhoneNumberValidationSubscription PhoneNumberValidationSubscription
-	LocationValidationSubscription    LocationValidationSubscription
-	OrganizationSubscription          OrganizationSubscription
-	ContractSubscription              ContractSubscription
-	NotificationsSubscription         NotificationsSubscription
-	InvoiceSubscription               InvoiceSubscription
+	GraphSubscription              GraphSubscription
+	LocationValidationSubscription LocationValidationSubscription
+	OrganizationSubscription       OrganizationSubscription
+	ContractSubscription           ContractSubscription
+	NotificationsSubscription      NotificationsSubscription
+	InvoiceSubscription            InvoiceSubscription
 }
 
 type GraphSubscription struct {
@@ -43,14 +42,6 @@ type GraphSubscription struct {
 	PoolSize             int    `env:"EVENT_STORE_SUBSCRIPTIONS_GRAPH_POOL_SIZE" envDefault:"10" validate:"required,gte=0"`
 	BufferSizeClient     uint32 `env:"EVENT_STORE_SUBSCRIPTIONS_GRAPH_CLIENT_BUFFER_SIZE" envDefault:"10" validate:"required,gte=0"`
 	CheckpointLowerBound int32  `env:"EVENT_STORE_SUBSCRIPTIONS_GRAPH_CHECKPOINT_LOWER_BOUND" envDefault:"10" validate:"required,gte=0"`
-}
-
-type PhoneNumberValidationSubscription struct {
-	Enabled          bool   `env:"EVENT_STORE_SUBSCRIPTIONS_PHONE_NUMBER_VALIDATION_ENABLED" envDefault:"true"`
-	GroupName        string `env:"EVENT_STORE_SUBSCRIPTIONS_PHONE_NUMBER_VALIDATION_GROUP_NAME" envDefault:"phoneNumberValidation-v3" validate:"required"`
-	Prefix           string `env:"EVENT_STORE_SUBSCRIPTIONS_PHONE_NUMBER_PREFIX" envDefault:"phone_number-" validate:"required"`
-	PoolSize         int    `env:"EVENT_STORE_SUBSCRIPTIONS_PHONE_NUMBER_VALIDATION_POOL_SIZE" envDefault:"5" validate:"required,gte=0"`
-	BufferSizeClient uint32 `env:"EVENT_STORE_SUBSCRIPTIONS_PHONE_NUMBER_VALIDATION_CLIENT_BUFFER_SIZE" envDefault:"10" validate:"required,gte=0"`
 }
 
 type LocationValidationSubscription struct {

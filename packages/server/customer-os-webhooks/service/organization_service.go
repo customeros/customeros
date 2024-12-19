@@ -356,28 +356,20 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 		if orgInput.HasPhoneNumbers() {
 			for _, phoneNumberDtls := range orgInput.PhoneNumbers {
 				// Create or update phone number
-				phoneNumberId, err := s.services.PhoneNumberService.CreatePhoneNumber(ctx, phoneNumberDtls.Number, orgInput.ExternalSystem, orgInput.AppSource)
+				phoneNumberId, err := s.services.CommonServices.PhoneNumberService.Merge(ctx, phoneNumberDtls.Number, orgInput.AppSource)
 				if err != nil {
 					failedSync = true
 					tracing.TraceErr(span, err)
 					reason = fmt.Sprintf("Failed to create phone number %s for organization %s: %s", phoneNumberDtls.Number, organizationId, err.Error())
 					s.log.Error(reason)
 				}
-				// Link phone number to organization
+				// Link phone number to contact
 				if phoneNumberId != "" {
-					_, err = CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-						return s.grpcClients.OrganizationClient.LinkPhoneNumberToOrganization(ctx, &organizationpb.LinkPhoneNumberToOrganizationGrpcRequest{
-							Tenant:         common.GetTenantFromContext(ctx),
-							OrganizationId: organizationId,
-							PhoneNumberId:  phoneNumberId,
-							Primary:        phoneNumberDtls.Primary,
-							Label:          phoneNumberDtls.Label,
-						})
-					})
+					err = s.services.CommonServices.Neo4jRepositories.PhoneNumberWriteRepository.LinkWithOrganization(ctx, tenant, organizationId, phoneNumberId, phoneNumberDtls.Label, phoneNumberDtls.Primary)
 					if err != nil {
 						failedSync = true
-						tracing.TraceErr(span, err, log.String("grpcFunction", "LinkPhoneNumberToOrganization"))
-						reason = fmt.Sprintf("Failed to link phone number %s for organization %s: %s", phoneNumberDtls.Number, organizationId, err.Error())
+						tracing.TraceErr(span, err, log.String("method", "LinkWithOrganization"))
+						reason = fmt.Sprintf("Failed to link phone number %s with organization %s: %s", phoneNumberDtls.Number, organizationId, err.Error())
 						s.log.Error(reason)
 					}
 				}

@@ -207,8 +207,6 @@ func (a *OrganizationAggregate) HandleCommand(ctx context.Context, cmd eventstor
 	switch c := cmd.(type) {
 	case *command.UpsertCustomFieldCommand:
 		return a.upsertCustomField(ctx, c)
-	case *command.LinkPhoneNumberCommand:
-		return a.linkPhoneNumber(ctx, c)
 	case *command.LinkLocationCommand:
 		return a.linkLocation(ctx, c)
 	case *command.AddParentCommand:
@@ -238,42 +236,6 @@ func (a *OrganizationTempAggregate) HandleCommand(ctx context.Context, cmd event
 		tracing.TraceErr(span, eventstore.ErrInvalidCommandType)
 		return eventstore.ErrInvalidCommandType
 	}
-}
-
-func (a *OrganizationAggregate) linkPhoneNumber(ctx context.Context, cmd *command.LinkPhoneNumberCommand) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.linkPhoneNumber")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
-	tracing.LogObjectAsJson(span, "command", cmd)
-
-	updatedAtNotNil := utils.Now()
-
-	event, err := organizationEvents.NewOrganizationLinkPhoneNumberEvent(a, cmd.PhoneNumberId, cmd.Label, cmd.Primary, updatedAtNotNil)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewOrganizationLinkPhoneNumberEvent")
-	}
-
-	eventstore.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
-
-	err = a.Apply(event)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	if cmd.Primary {
-		for k, v := range a.Organization.PhoneNumbers {
-			if k != cmd.PhoneNumberId && v.Primary {
-				if err = a.SetPhoneNumberNonPrimary(ctx, cmd.Tenant, k, cmd.LoggedInUserId); err != nil {
-					return err
-				}
-			}
-		}
-	}
-	return nil
 }
 
 func (a *OrganizationAggregate) SetPhoneNumberNonPrimary(ctx context.Context, tenant, phoneNumberId, userId string) error {

@@ -25,7 +25,6 @@ import (
 	location_validation_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/location"
 	notifications_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/notifications"
 	organization_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/organization"
-	phone_number_validation_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/phone_number_validation"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore/store"
 	"github.com/pkg/errors"
@@ -150,17 +149,6 @@ func (server *Server) InitSubscribers(ctx context.Context, grpcClients *grpc_cli
 			err := graphSubscriber.Connect(ctx, graphSubscriber.ProcessEvents)
 			if err != nil {
 				server.Log.Errorf("(graphSubscriber.Connect) err: {%s}", err.Error())
-				cancel()
-			}
-		}()
-	}
-
-	if server.Config.Subscriptions.PhoneNumberValidationSubscription.Enabled {
-		phoneNumberValidationSubscriber := phone_number_validation_subscription.NewPhoneNumberValidationSubscriber(server.Log, esdb, server.Config, server.Services, grpcClients)
-		go func() {
-			err := phoneNumberValidationSubscriber.Connect(ctx, phoneNumberValidationSubscriber.ProcessEvents)
-			if err != nil {
-				server.Log.Errorf("(phoneNumberValidationSubscriber.Connect) err: {%s}", err.Error())
 				cancel()
 			}
 		}()

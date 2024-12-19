@@ -159,7 +159,7 @@ type meetingParticipantBatcher struct {
 	meetingService service.MeetingService
 }
 type phoneNumberBatcher struct {
-	phoneNumberService service.PhoneNumberService
+	phoneNumberService commonservice.PhoneNumberService
 }
 type notedEntityBatcher struct {
 	noteService service.NoteService
@@ -272,7 +272,7 @@ func NewDataLoader(services *service.Services) *Loaders {
 		meetingService: services.MeetingService,
 	}
 	phoneNumberBatcher := &phoneNumberBatcher{
-		phoneNumberService: services.PhoneNumberService,
+		phoneNumberService: services.CommonServices.PhoneNumberService,
 	}
 	userBatcher := &userBatcher{
 		userService:       services.UserService,

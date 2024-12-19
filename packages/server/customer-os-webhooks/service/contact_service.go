@@ -17,7 +17,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/repository"
-	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	pkgerrors "github.com/pkg/errors"
@@ -345,7 +344,7 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 		if contactInput.HasPhoneNumbers() {
 			for _, phoneNumberDtls := range contactInput.PhoneNumbers {
 				// Create or update phone number
-				phoneNumberId, err := s.services.PhoneNumberService.CreatePhoneNumber(ctx, phoneNumberDtls.Number, contactInput.ExternalSystem, contactInput.AppSource)
+				phoneNumberId, err := s.services.CommonServices.PhoneNumberService.Merge(ctx, phoneNumberDtls.Number, contactInput.AppSource)
 				if err != nil {
 					failedSync = true
 					tracing.TraceErr(span, err)
@@ -354,19 +353,10 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 				}
 				// Link phone number to contact
 				if phoneNumberId != "" {
-					_, err = CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
-						return s.grpcClients.ContactClient.LinkPhoneNumberToContact(ctx, &contactpb.LinkPhoneNumberToContactGrpcRequest{
-							Tenant:        common.GetTenantFromContext(ctx),
-							ContactId:     contactId,
-							PhoneNumberId: phoneNumberId,
-							Primary:       phoneNumberDtls.Primary,
-							Label:         phoneNumberDtls.Label,
-							AppSource:     appSource,
-						})
-					})
+					err = s.services.CommonServices.Neo4jRepositories.PhoneNumberWriteRepository.LinkWithContact(ctx, tenant, contactId, phoneNumberId, phoneNumberDtls.Label, phoneNumberDtls.Primary)
 					if err != nil {
 						failedSync = true
-						tracing.TraceErr(span, err, log.String("grpcMethod", "LinkPhoneNumberToContact"))
+						tracing.TraceErr(span, err, log.String("method", "LinkWithContact"))
 						reason = fmt.Sprintf("Failed to link phone number %s with contact %s: %s", phoneNumberDtls.Number, contactId, err.Error())
 						s.log.Error(reason)
 					}
@@ -397,17 +387,10 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 			}
 			// Link location to contact
 			if locationId != "" {
-				_, err = CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
-					return s.grpcClients.ContactClient.LinkLocationToContact(ctx, &contactpb.LinkLocationToContactGrpcRequest{
-						Tenant:     common.GetTenantFromContext(ctx),
-						ContactId:  contactId,
-						LocationId: locationId,
-						AppSource:  appSource,
-					})
-				})
+				err = s.services.CommonServices.Neo4jRepositories.LocationWriteRepository.LinkWithContact(ctx, tenant, contactId, locationId)
 				if err != nil {
 					failedSync = true
-					tracing.TraceErr(span, err, log.String("grpcMethod", "LinkLocationToContact"))
+					tracing.TraceErr(span, err, log.String("method", "LinkWithContact"))
 					reason = fmt.Sprintf("Failed to link location %s with contact %s: %s", locationId, contactId, err.Error())
 					s.log.Error(reason)
 				}

@@ -9,7 +9,6 @@ import (
 type MockOrganizationServiceCallbacks struct {
 	AddParent                        func(context.Context, *organizationpb.AddParentOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
 	RemoveParent                     func(context.Context, *organizationpb.RemoveParentOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
-	LinkPhoneNumberToOrganization    func(context context.Context, proto *organizationpb.LinkPhoneNumberToOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
 	RefreshArr                       func(ctx context.Context, proto *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
 	RefreshRenewalSummary            func(ctx context.Context, proto *organizationpb.RefreshRenewalSummaryGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
 	UpdateOnboardingStatus           func(ctx context.Context, proto *organizationpb.UpdateOnboardingStatusGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
@@ -30,13 +29,6 @@ func SetOrganizationCallbacks(callbacks *MockOrganizationServiceCallbacks) {
 
 type MockOrganizationService struct {
 	organizationpb.UnimplementedOrganizationGrpcServiceServer
-}
-
-func (MockOrganizationService) LinkPhoneNumberToOrganization(context context.Context, proto *organizationpb.LinkPhoneNumberToOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
-	if organizationCallbacks.LinkPhoneNumberToOrganization == nil {
-		panic("organizationCallbacks.LinkPhoneNumberToOrganization is not set")
-	}
-	return organizationCallbacks.LinkPhoneNumberToOrganization(context, proto)
 }
 
 func (MockOrganizationService) AddParentOrganization(context context.Context, proto *organizationpb.AddParentOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {

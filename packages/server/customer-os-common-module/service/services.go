@@ -43,6 +43,7 @@ type Services struct {
 	LogEntryService            LogEntryService
 	MarkdownEventService       MarkdownEventService
 	OpportunityService         OpportunityService
+	PhoneNumberService         PhoneNumberService
 	SlackChannelService        SlackChannelService
 	ServiceLineItemService     ServiceLineItemService
 	TenantService              TenantService
@@ -108,6 +109,7 @@ func InitServices(globalConfig *config.GlobalConfig, postgresDB *config.Postgres
 	services.MarkdownEventService = NewMarkdownEventService(log, services)
 	services.SocialService = NewSocialService(log, services)
 	services.OpportunityService = NewOpportunityService(log, services)
+	services.PhoneNumberService = NewPhoneNumberService(services)
 	services.SocialService = NewSocialService(log, services)
 	services.MailService = NewMailService(services)
 	services.PostmarkService = NewPostmarkService(services)

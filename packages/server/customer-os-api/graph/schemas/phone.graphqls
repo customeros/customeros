@@ -13,23 +13,10 @@ extend type Mutation {
     phoneNumberRemoveFromOrganizationByE164(organizationId : ID!, e164: String!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
     phoneNumberRemoveFromOrganizationById(organizationId : ID!, id: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
-    phoneNumberMergeToUser(userId : ID!, input: PhoneNumberInput!): PhoneNumber! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    phoneNumberUpdateInUser(userId : ID!, input: PhoneNumberRelationUpdateInput!): PhoneNumber! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    phoneNumberRemoveFromUserByE164(userId : ID!, e164: String!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    phoneNumberRemoveFromUserById(userId : ID!, id: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
-
     phoneNumber_Update(input: PhoneNumberUpdateInput!): PhoneNumber! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
-"""
-Describes a phone number associated with a `Contact` in customerOS.
-**A `return` object.**
-"""
 type PhoneNumber {
-    """
-    The unique ID associated with the phone number.
-    **Required**
-    """
     id: ID!
 
     """
@@ -40,15 +27,8 @@ type PhoneNumber {
     validated: Boolean
     country: Country @goField(forceResolver: true)
 
-    """
-    Defines the type of phone number.
-    """
     label: PhoneNumberLabel
 
-    """
-    Determines if the phone number is primary or not.
-    **Required**
-    """
     primary: Boolean!
 
     createdAt: Time!
@@ -62,79 +42,25 @@ type PhoneNumber {
     organizations: [Organization!]! @goField(forceResolver: true)
 }
 
-"""
-Describes a phone number associated with a `Contact` in customerOS.
-**A `create` object.**
-"""
 input PhoneNumberInput {
-
-    """
-    The phone number in e164 format.
-    **Required**
-    """
     phoneNumber: String!
-
     countryCodeA2: String
-
-    """
-    Defines the type of phone number.
-    """
     label: PhoneNumberLabel
-
-    """
-    Determines if the phone number is primary or not.
-    **Required**
-    """
     primary: Boolean
 }
 
-"""
-Describes a phone number associated with a `Contact` in customerOS.
-**An `update` object.**
-"""
 input PhoneNumberUpdateInput {
     id:             ID!
     phoneNumber:    String!
     countryCodeA2:  String
 }
 
-"""
-Describes a phone number associated with a `Contact` in customerOS.
-**An `update` object.**
-"""
 input PhoneNumberRelationUpdateInput {
-
-    """
-    The unique ID associated with the phone number.
-    **Required**
-    """
     id: ID!
-
-    """
-    Defines the type of phone number.
-    """
     label: PhoneNumberLabel
-
-    """
-    Determines if the phone number is primary or not.
-    **Required**
-    """
     primary: Boolean
-
-    """
-    Deprecated
-    """
-    phoneNumber: String @deprecated
-    """
-    Deprecated
-    """
-    countryCodeA2: String @deprecated
 }
 
-"""
-Defines the type of phone number.
-**A `response` object. **
-"""
 enum PhoneNumberLabel {
     MAIN
     WORK

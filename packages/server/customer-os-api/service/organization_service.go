@@ -772,7 +772,7 @@ func (s *organizationService) updateLastTouchpointByPhoneNumber(ctx context.Cont
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("phoneNumber", phoneNumber))
 
-	dbNode, err := s.repositories.PhoneNumberRepository.GetByPhoneNumber(ctx, common.GetTenantFromContext(ctx), phoneNumber)
+	dbNode, err := s.repositories.Neo4jRepositories.PhoneNumberReadRepository.GetByPhoneNumber(ctx, common.GetTenantFromContext(ctx), phoneNumber)
 	if err != nil {
 		s.log.Errorf("(organizationService.updateLastTouchpointByPhoneNumber) Failed to get phone number: {%v}", err.Error())
 		tracing.TraceErr(span, err)
