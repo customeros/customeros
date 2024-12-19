@@ -690,6 +690,7 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 	tagFilterCypher, tagFilterParams := "", make(map[string]interface{})
 	locationFilterCypher, locationFilterParams := "", make(map[string]interface{})
 	primaryEmailFilterCypher, primaryEmailFilterParams := "", make(map[string]interface{})
+	primaryOrganizationFilterCypher, primaryOrganizationFilterParams := "", make(map[string]interface{})
 
 	if where != nil {
 		contactFilter := new(utils.CypherFilter)
@@ -712,6 +713,11 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 		primaryEmailFilter.LogicalOperator = utils.AND
 		primaryEmailFilter.Filters = make([]*utils.CypherFilter, 0)
 
+		primaryOrganizationFilter := new(utils.CypherFilter)
+		primaryOrganizationFilter.Negate = false
+		primaryOrganizationFilter.LogicalOperator = utils.AND
+		primaryOrganizationFilter.Filters = make([]*utils.CypherFilter, 0)
+
 		locationFilter := new(utils.CypherFilter)
 		locationFilter.Negate = false
 		locationFilter.LogicalOperator = utils.OR
@@ -719,8 +725,6 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 
 		for _, filter := range where.And {
 			// TODO
-			//ColumnViewTypeContactsName                       ColumnViewType = "CONTACTS_NAME"
-			//ColumnViewTypeContactsOrganization               ColumnViewType = "CONTACTS_ORGANIZATION"
 			//ColumnViewTypeContactsEmails                     ColumnViewType = "CONTACTS_EMAILS"
 			//ColumnViewTypeContactsPersonalEmails             ColumnViewType = "CONTACTS_PERSONAL_EMAILS"
 			//ColumnViewTypeContactsPhoneNumbers               ColumnViewType = "CONTACTS_PHONE_NUMBERS"
@@ -824,11 +828,24 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 					innerGroupFilter2.Negate = false
 					innerGroupFilter2.LogicalOperator = utils.AND
 					innerGroupFilter2.Filters = make([]*utils.CypherFilter, 0)
-					innerGroupFilter2.Filters = append(innerGroupFilter2.Filters, utils.CreateStringCypherFilter(string(neo4jentity.SocialPropertyAlias), filter.Filter.Value.Str, commonmodel.ComparisonOperatorIsNull))
+					innerGroupFilter2.Filters = append(innerGroupFilter2.Filters, utils.CreateCypherFilterIsNull(string(neo4jentity.SocialPropertyAlias)))
 					parentInnerGroupFilter.Filters = append(parentInnerGroupFilter.Filters, innerGroupFilter2)
 				}
 
 				linkedInFilter.Filters = append(linkedInFilter.Filters, parentInnerGroupFilter)
+			}
+			if filter.Filter.Property == model.ColumnViewTypeContactsOrganization.String() {
+				if filter.Filter.Operation == commonmodel.ComparisonOperatorNotContains {
+					innerGroupFilter := new(utils.CypherFilter)
+					innerGroupFilter.Negate = false
+					innerGroupFilter.LogicalOperator = utils.OR
+					innerGroupFilter.Filters = make([]*utils.CypherFilter, 0)
+					innerGroupFilter.Filters = append(innerGroupFilter.Filters, utils.CreateStringCypherFilter(string(neo4jentity.OrganizationPropertyName), filter.Filter.Value.Str, filter.Filter.Operation))
+					innerGroupFilter.Filters = append(innerGroupFilter.Filters, utils.CreateCypherFilterIsNull(string(neo4jentity.OrganizationPropertyName)))
+					primaryOrganizationFilter.Filters = append(primaryOrganizationFilter.Filters, innerGroupFilter)
+				} else {
+					primaryOrganizationFilter.Filters = append(primaryOrganizationFilter.Filters, utils.CreateStringCypherFilter(string(neo4jentity.OrganizationPropertyName), filter.Filter.Value.Str, filter.Filter.Operation))
+				}
 			}
 		}
 
@@ -847,6 +864,9 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 		if len(primaryEmailFilter.Filters) > 0 {
 			primaryEmailFilterCypher, primaryEmailFilterParams = primaryEmailFilter.BuildCypherFilterFragmentWithParamName("pe", "pe_param_")
 		}
+		if len(primaryOrganizationFilter.Filters) > 0 {
+			primaryOrganizationFilterCypher, primaryOrganizationFilterParams = primaryOrganizationFilter.BuildCypherFilterFragmentWithParamName("po", "po_param_")
+		}
 	}
 
 	//endregion
@@ -861,6 +881,7 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 	utils.MergeMapToMap(tagFilterParams, params)
 	utils.MergeMapToMap(locationFilterParams, params)
 	utils.MergeMapToMap(primaryEmailFilterParams, params)
+	utils.MergeMapToMap(primaryOrganizationFilterParams, params)
 
 	//region count selectQuery
 	countQuery := ""
@@ -878,10 +899,13 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 		if primaryEmailFilterCypher != "" {
 			countQuery += ` OPTIONAL MATCH (c)-[:HAS {primary:true}]->(pe:Email) WITH *`
 		}
+		if primaryOrganizationFilterCypher != "" {
+			countQuery += ` OPTIONAL MATCH (c)--(pj:JobRole {primary:true})--(po:Organization {hide:false}) WITH *`
+		}
 
 		countQuery += ` WHERE (c.hide = false OR c.hide IS NULL) `
 
-		if contactFilterCypher != "" || linkedInFilterCypher != "" || tagFilterCypher != "" || locationFilterCypher != "" || primaryEmailFilterCypher != "" {
+		if contactFilterCypher != "" || linkedInFilterCypher != "" || tagFilterCypher != "" || locationFilterCypher != "" || primaryEmailFilterCypher != "" || primaryOrganizationFilterCypher != "" {
 			countQuery += " AND "
 		}
 
@@ -900,6 +924,9 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 		}
 		if primaryEmailFilterCypher != "" {
 			countQueryParts = append(countQueryParts, primaryEmailFilterCypher)
+		}
+		if primaryOrganizationFilterCypher != "" {
+			countQueryParts = append(countQueryParts, primaryOrganizationFilterCypher)
 		}
 
 		countQuery = countQuery + strings.Join(countQueryParts, " AND ") + fmt.Sprintf(` RETURN count(distinct(c))`)
@@ -922,9 +949,12 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 		if primaryEmailFilterCypher != "" || (sort != nil && (sort.By == model.ColumnViewTypeContactsPrimaryEmail.String())) {
 			selectQuery += fmt.Sprintf(` OPTIONAL MATCH (c)-[:HAS {primary:true}]->(pe:Email_%s) WITH *`, tenant)
 		}
+		if primaryOrganizationFilterCypher != "" || (sort != nil && (sort.By == model.ColumnViewTypeContactsOrganization.String())) {
+			selectQuery += fmt.Sprintf(` OPTIONAL MATCH (c)--(pj:JobRole_%s {primary:true})--(po:Organization_%s {hide:false}) WITH *`, tenant, tenant)
+		}
 		selectQuery += ` WHERE (c.hide = false OR c.hide IS NULL) `
 
-		if contactFilterCypher != "" || linkedInFilterCypher != "" || tagFilterCypher != "" || locationFilterCypher != "" || primaryEmailFilterCypher != "" {
+		if contactFilterCypher != "" || linkedInFilterCypher != "" || tagFilterCypher != "" || locationFilterCypher != "" || primaryEmailFilterCypher != "" || primaryOrganizationFilterCypher != "" {
 			selectQuery += " AND "
 		}
 
@@ -943,6 +973,9 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 		}
 		if primaryEmailFilterCypher != "" {
 			queryParts = append(queryParts, primaryEmailFilterCypher)
+		}
+		if primaryOrganizationFilterCypher != "" {
+			queryParts = append(queryParts, primaryOrganizationFilterCypher)
 		}
 		selectQuery = selectQuery + strings.Join(queryParts, " AND ")
 	}
@@ -1005,6 +1038,13 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 			aliases += `CASE WHEN (COALESCE(sl.alias, '') + COALESCE(sl.url, '')) <> '' THEN toLower(COALESCE(sl.alias, '') + COALESCE(sl.url, '')) ELSE 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz' END as SORT_BY `
 		} else {
 			aliases += `CASE WHEN (COALESCE(sl.alias, '') + COALESCE(sl.url, '')) <> '' THEN toLower(COALESCE(sl.alias, '') + COALESCE(sl.url, '')) ELSE '' END as SORT_BY `
+		}
+	}
+	if sort != nil && sort.By == model.ColumnViewTypeContactsOrganization.String() {
+		if sort.Direction == commonmodel.SortingDirectionAsc {
+			aliases += `CASE WHEN po.name <> '' AND NOT po.name IS NULL THEN toLower(po.name) ELSE 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz' END as SORT_BY `
+		} else {
+			aliases += `CASE WHEN po.name <> '' AND NOT po.name IS NULL THEN toLower(po.name) ELSE '' END AS SORT_BY `
 		}
 	}
 

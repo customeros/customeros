@@ -1346,3 +1346,20 @@ func CreateInteractionSession(ctx context.Context, driver *neo4j.DriverWithConte
 	})
 	return interactionSessionId.String()
 }
+
+func LinkContactWithOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, contactId, organizationId string, jobRole entity.JobRoleEntity) {
+	jobRoleId := utils.NewUUIDIfEmpty(jobRole.Id)
+	query := fmt.Sprintf(`MATCH (c:Contact {id:$contactId}), (o:Organization {id:$organizationId})
+			MERGE (c)-[:WORKS_AS]->(jr:JobRole {id:$jobRoleId})-[:ROLE_IN]->(o)
+			ON CREATE SET
+			jr:JobRole_%s,
+			jr.jobTitle=$title,
+			jr.primary=$primary`, tenant)
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"contactId":      contactId,
+		"organizationId": organizationId,
+		"jobRoleId":      jobRoleId,
+		"title":          jobRole.JobTitle,
+		"primary":        jobRole.Primary,
+	})
+}
