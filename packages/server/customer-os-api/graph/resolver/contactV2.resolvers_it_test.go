@@ -486,6 +486,60 @@ func TestQueryResolver_UIContactsSearch_SortByOrganization(t *testing.T) {
 	verifyContactSortOrder(t, model.ColumnViewTypeContactsOrganization, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
+func TestQueryResolver_UIContactsSearch_FilterByJobTitle(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "1"})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "1"})
+	neo4jtest.LinkContactWithOrganization(ctx, driver, tenantName, "1", "1", neo4jentity.JobRoleEntity{Primary: true, JobTitle: "Aaa"})
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "2"})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "2"})
+	neo4jtest.LinkContactWithOrganization(ctx, driver, tenantName, "2", "2", neo4jentity.JobRoleEntity{Primary: false, JobTitle: "Aaa"})
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "3"})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "3"})
+	neo4jtest.LinkContactWithOrganization(ctx, driver, tenantName, "3", "3", neo4jentity.JobRoleEntity{Primary: true, JobTitle: "BB"})
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "4"})
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "5"})
+
+	searchBy := model.ColumnViewTypeContactsJobTitle
+
+	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 5, 3)
+	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 5, 2)
+	assertContactSearch(t, searchBy, "aaa", commonModel.ComparisonOperatorContains, 5, 1)
+	assertContactSearch(t, searchBy, "bb", commonModel.ComparisonOperatorContains, 5, 1)
+
+	assertContactSearch(t, searchBy, "aa", commonModel.ComparisonOperatorNotContains, 5, 4)
+}
+
+func TestQueryResolver_UIContactsSearch_SortByJobTitle(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "1"})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "1"})
+	neo4jtest.LinkContactWithOrganization(ctx, driver, tenantName, "1", "1", neo4jentity.JobRoleEntity{Primary: true, JobTitle: "Aaa"})
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "2"})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "2"})
+	neo4jtest.LinkContactWithOrganization(ctx, driver, tenantName, "2", "2", neo4jentity.JobRoleEntity{Primary: true, JobTitle: "BBB"})
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "empty"})
+
+	expectedAsc := []string{"1", "2", "empty"}
+	expectedDesc := []string{"2", "1", "empty"}
+
+	verifyContactSortOrder(t, model.ColumnViewTypeContactsJobTitle, commonModel.SortingDirectionAsc, expectedAsc)
+	verifyContactSortOrder(t, model.ColumnViewTypeContactsJobTitle, commonModel.SortingDirectionDesc, expectedDesc)
+}
+
 func assertContactSearch(t *testing.T, filterName model.ColumnViewType, searchValue any, operator commonModel.ComparisonOperator, totalAvailable int64, totalElements int64) {
 	rawResponse, err := c.RawPost(getQuery("contact/ui_contacts_search"),
 		client.Var("limit", 10),
