@@ -12,7 +12,7 @@ require (
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.3
-	golang.org/x/net v0.32.0
+	golang.org/x/net v0.33.0
 	gorm.io/datatypes v1.2.5
 	gorm.io/gorm v1.25.12
 )
