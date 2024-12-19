@@ -88,7 +88,7 @@ const RenewalDetailsForm = ({
   updateOpportunityMutation,
 }: RenewalDetailsFormProps) => {
   const store = useStore();
-  const users = store.users.toArray();
+  const users = store.users.tenantUsers;
   const formId = `renewal-details-form-${data.id}`;
   const updatedAt = data?.updatedAt
     ? DateTimeUtils.timeAgo(data?.updatedAt)
