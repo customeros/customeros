@@ -2334,43 +2334,29 @@ type Pagination struct {
 	Limit int `json:"limit"`
 }
 
-// Describes a phone number associated with a `Contact` in customerOS.
-// **A `return` object.**
 type PhoneNumber struct {
-	// The unique ID associated with the phone number.
-	// **Required**
 	ID string `json:"id"`
 	// The phone number in e164 format.
-	E164           *string  `json:"e164,omitempty"`
-	RawPhoneNumber *string  `json:"rawPhoneNumber,omitempty"`
-	Validated      *bool    `json:"validated,omitempty"`
-	Country        *Country `json:"country,omitempty"`
-	// Defines the type of phone number.
-	Label *PhoneNumberLabel `json:"label,omitempty"`
-	// Determines if the phone number is primary or not.
-	// **Required**
-	Primary       bool            `json:"primary"`
-	CreatedAt     time.Time       `json:"createdAt"`
-	UpdatedAt     time.Time       `json:"updatedAt"`
-	Source        DataSource      `json:"source"`
-	AppSource     *string         `json:"appSource,omitempty"`
-	Users         []*User         `json:"users"`
-	Contacts      []*Contact      `json:"contacts"`
-	Organizations []*Organization `json:"organizations"`
+	E164           *string           `json:"e164,omitempty"`
+	RawPhoneNumber *string           `json:"rawPhoneNumber,omitempty"`
+	Validated      *bool             `json:"validated,omitempty"`
+	Country        *Country          `json:"country,omitempty"`
+	Label          *PhoneNumberLabel `json:"label,omitempty"`
+	Primary        bool              `json:"primary"`
+	CreatedAt      time.Time         `json:"createdAt"`
+	UpdatedAt      time.Time         `json:"updatedAt"`
+	Source         DataSource        `json:"source"`
+	AppSource      *string           `json:"appSource,omitempty"`
+	Users          []*User           `json:"users"`
+	Contacts       []*Contact        `json:"contacts"`
+	Organizations  []*Organization   `json:"organizations"`
 }
 
-// Describes a phone number associated with a `Contact` in customerOS.
-// **A `create` object.**
 type PhoneNumberInput struct {
-	// The phone number in e164 format.
-	// **Required**
-	PhoneNumber   string  `json:"phoneNumber"`
-	CountryCodeA2 *string `json:"countryCodeA2,omitempty"`
-	// Defines the type of phone number.
-	Label *PhoneNumberLabel `json:"label,omitempty"`
-	// Determines if the phone number is primary or not.
-	// **Required**
-	Primary *bool `json:"primary,omitempty"`
+	PhoneNumber   string            `json:"phoneNumber"`
+	CountryCodeA2 *string           `json:"countryCodeA2,omitempty"`
+	Label         *PhoneNumberLabel `json:"label,omitempty"`
+	Primary       *bool             `json:"primary,omitempty"`
 }
 
 type PhoneNumberParticipant struct {
@@ -2382,25 +2368,12 @@ func (PhoneNumberParticipant) IsInteractionEventParticipant() {}
 
 func (PhoneNumberParticipant) IsInteractionSessionParticipant() {}
 
-// Describes a phone number associated with a `Contact` in customerOS.
-// **An `update` object.**
 type PhoneNumberRelationUpdateInput struct {
-	// The unique ID associated with the phone number.
-	// **Required**
-	ID string `json:"id"`
-	// Defines the type of phone number.
-	Label *PhoneNumberLabel `json:"label,omitempty"`
-	// Determines if the phone number is primary or not.
-	// **Required**
-	Primary *bool `json:"primary,omitempty"`
-	// Deprecated
-	PhoneNumber *string `json:"phoneNumber,omitempty"`
-	// Deprecated
-	CountryCodeA2 *string `json:"countryCodeA2,omitempty"`
+	ID      string            `json:"id"`
+	Label   *PhoneNumberLabel `json:"label,omitempty"`
+	Primary *bool             `json:"primary,omitempty"`
 }
 
-// Describes a phone number associated with a `Contact` in customerOS.
-// **An `update` object.**
 type PhoneNumberUpdateInput struct {
 	ID            string  `json:"id"`
 	PhoneNumber   string  `json:"phoneNumber"`
@@ -4892,8 +4865,6 @@ func (e PersonTitle) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
-// Defines the type of phone number.
-// **A `response` object. **
 type PhoneNumberLabel string
 
 const (

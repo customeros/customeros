@@ -35,16 +35,6 @@ message RefreshDerivedDataGrpcRequest {
   string appSource = 4;
 }
 
-message LinkPhoneNumberToOrganizationGrpcRequest {
-  string tenant = 1;
-  string organizationId = 2;
-  string phoneNumberId = 3;
-  bool primary = 4;
-  string label = 5;
-  string loggedInUserId = 6;
-  string appSource = 7;
-}
-
 message LinkEmailToBillingProfileGrpcRequest {
   string tenant = 1;
   string organizationId = 2;
@@ -237,7 +227,6 @@ message BillingProfileIdGrpcResponse {
 }
 
 service organizationGrpcService {
-  rpc LinkPhoneNumberToOrganization(LinkPhoneNumberToOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc LinkLocationToOrganization(LinkLocationToOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc UnlinkDomainFromOrganization(UnLinkDomainFromOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc UpsertCustomFieldToOrganization(CustomFieldForOrganizationGrpcRequest) returns (CustomFieldIdGrpcResponse);

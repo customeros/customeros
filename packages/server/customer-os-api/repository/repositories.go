@@ -30,8 +30,6 @@ type Repositories struct {
 	//Deprecated
 	EmailRepository EmailRepository
 	//Deprecated
-	PhoneNumberRepository PhoneNumberRepository
-	//Deprecated
 	TagRepository TagRepository
 	//Deprecated
 	SearchRepository SearchRepository
@@ -70,7 +68,6 @@ func InitRepos(driver *neo4j.DriverWithContext, database string, postgresDB *com
 	repositories.CalendarRepository = NewCalendarRepository(driver)
 	repositories.LocationRepository = NewLocationRepository(driver)
 	repositories.EmailRepository = NewEmailRepository(driver, database)
-	repositories.PhoneNumberRepository = NewPhoneNumberRepository(driver)
 	repositories.TagRepository = NewTagRepository(driver)
 	repositories.SearchRepository = NewSearchRepository(driver)
 	repositories.DashboardRepository = NewDashboardRepository(driver)

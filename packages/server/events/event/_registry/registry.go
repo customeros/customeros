@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/event/contact"
 	opportunityevent "github.com/openline-ai/openline-customer-os/packages/server/events/event/opportunity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"reflect"
@@ -13,8 +12,6 @@ import (
 
 func InitAggregate(request event.BaseEvent) eventstore.Aggregate {
 	switch request.EntityType {
-	case model.CONTACT:
-		return contact.NewContactAggregateWithTenantAndID(request.Tenant, request.EntityId)
 	case model.OPPORTUNITY:
 		return opportunityevent.NewOpportunityAggregateWithTenantAndID(request.Tenant, request.EntityId)
 	}

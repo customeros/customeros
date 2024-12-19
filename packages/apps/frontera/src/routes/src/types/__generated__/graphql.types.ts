@@ -638,6 +638,7 @@ export type ContactUiDetails = {
   primaryOrganizationJobRoleTitle?: Maybe<Scalars['String']['output']>;
   primaryOrganizationName?: Maybe<Scalars['String']['output']>;
   profilePhotoUrl: Scalars['String']['output'];
+  socials: Array<Scalars['String']['output']>;
   tags: Array<Tag>;
   timezone: Scalars['String']['output'];
   updatedAt: Scalars['Time']['output'];
@@ -2471,7 +2472,6 @@ export type Mutation = {
   customFieldUpdateInContact: CustomField;
   customFieldsMergeAndUpdateInContact: Contact;
   customer_contact_Create: CustomerContact;
-  customer_user_AddJobRole: CustomerUser;
   emailMergeToContact: Email;
   emailMergeToOrganization: Email;
   emailMergeToUser: Email;
@@ -2591,14 +2591,6 @@ export type Mutation = {
   tenant_UpdateSettings: TenantSettings;
   tenant_UpdateSettingsOpportunityStage: ActionResponse;
   tenant_hardDelete: Scalars['Boolean']['output'];
-  user_AddRole: User;
-  user_AddRoleInTenant: User;
-  user_Create: User;
-  user_Delete: Result;
-  user_DeleteInTenant: Result;
-  user_RemoveRole: User;
-  user_RemoveRoleInTenant: User;
-  user_Update: User;
   user_UpdateOnboardingDetails: User;
 };
 
@@ -2805,11 +2797,6 @@ export type MutationCustomFieldsMergeAndUpdateInContactArgs = {
 
 export type MutationCustomer_Contact_CreateArgs = {
   input: CustomerContactInput;
-};
-
-export type MutationCustomer_User_AddJobRoleArgs = {
-  id: Scalars['ID']['input'];
-  jobRoleInput: JobRoleInput;
 };
 
 export type MutationEmailMergeToContactArgs = {
@@ -3331,45 +3318,6 @@ export type MutationTenant_UpdateSettingsOpportunityStageArgs = {
 export type MutationTenant_HardDeleteArgs = {
   confirmTenant: Scalars['String']['input'];
   tenant: Scalars['String']['input'];
-};
-
-export type MutationUser_AddRoleArgs = {
-  id: Scalars['ID']['input'];
-  role: Role;
-};
-
-export type MutationUser_AddRoleInTenantArgs = {
-  id: Scalars['ID']['input'];
-  role: Role;
-  tenant: Scalars['String']['input'];
-};
-
-export type MutationUser_CreateArgs = {
-  input: UserInput;
-};
-
-export type MutationUser_DeleteArgs = {
-  id: Scalars['ID']['input'];
-};
-
-export type MutationUser_DeleteInTenantArgs = {
-  id: Scalars['ID']['input'];
-  tenant: Scalars['String']['input'];
-};
-
-export type MutationUser_RemoveRoleArgs = {
-  id: Scalars['ID']['input'];
-  role: Role;
-};
-
-export type MutationUser_RemoveRoleInTenantArgs = {
-  id: Scalars['ID']['input'];
-  role: Role;
-  tenant: Scalars['String']['input'];
-};
-
-export type MutationUser_UpdateArgs = {
-  input: UserUpdateInput;
 };
 
 export type MutationUser_UpdateOnboardingDetailsArgs = {

@@ -3,6 +3,7 @@ package repository
 import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/constants"
@@ -36,6 +37,8 @@ type PhoneNumberWriteRepository interface {
 	LinkWithOrganization(ctx context.Context, tenant, organizationId, phoneNumberId, label string, primary bool) error
 	LinkWithUser(ctx context.Context, tenant, userId, phoneNumberId, label string, primary bool) error
 	CleanPhoneNumberValidation(ctx context.Context, tenant, phoneNumberId string) error
+	RemoveRelationship(ctx context.Context, entityType commonModel.EntityType, tenant, entityId, phoneNumber string) error
+	RemoveRelationshipById(ctx context.Context, entityType commonModel.EntityType, tenant, entityId, phoneNumberId string) error
 }
 
 type phoneNumberWriteRepository struct {
@@ -313,4 +316,79 @@ func (r *phoneNumberWriteRepository) CleanPhoneNumberValidation(ctx context.Cont
 		tracing.TraceErr(span, err)
 	}
 	return err
+}
+
+func (r *phoneNumberWriteRepository) RemoveRelationship(ctx context.Context, entityType commonModel.EntityType, tenant, entityId, phoneNumber string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberWriteRepository.RemoveRelationship")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	cypher := ""
+	switch entityType {
+	case commonModel.CONTACT:
+		cypher = `MATCH (entity:Contact {id:$entityId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
+	case commonModel.USER:
+		cypher = `MATCH (entity:User {id:$entityId})-[:USER_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
+	case commonModel.ORGANIZATION:
+		cypher = `MATCH (entity:Organization {id:$entityId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
+	}
+	cypher += `MATCH (entity)-[rel:HAS]->(p:PhoneNumber)
+			WHERE p.e164 = $phoneNumber OR p.rawPhoneNumber = $phoneNumber
+            DELETE rel`
+	params := map[string]any{
+		"entityId":    entityId,
+		"phoneNumber": phoneNumber,
+		"tenant":      tenant,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	if _, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, cypher, params)
+		return nil, err
+	}); err != nil {
+		return err
+	} else {
+		return nil
+	}
+}
+
+func (r *phoneNumberWriteRepository) RemoveRelationshipById(ctx context.Context, entityType commonModel.EntityType, tenant, entityId, phoneNumberId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberWriteRepository.RemoveRelationshipById")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	cypher := ""
+	switch entityType {
+	case commonModel.CONTACT:
+		cypher = `MATCH (entity:Contact {id:$entityId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
+	case commonModel.USER:
+		cypher = `MATCH (entity:User {id:$entityId})-[:USER_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
+	case commonModel.ORGANIZATION:
+		cypher = `MATCH (entity:Organization {id:$entityId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
+	}
+	cypher += `MATCH (entity)-[rel:HAS]->(p:PhoneNumber {id:$phoneNumberId})
+            DELETE rel`
+	params := map[string]any{
+		"entityId":      entityId,
+		"phoneNumberId": phoneNumberId,
+		"tenant":        tenant,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	if _, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, cypher, params)
+		return nil, err
+	}); err != nil {
+		return err
+	} else {
+		return nil
+	}
 }

@@ -658,7 +658,7 @@ func MapDbNodeToEmailEntity(node *dbtype.Node) *entity.EmailEntity {
 
 func MapDbNodeToPhoneNumberEntity(node *dbtype.Node) *entity.PhoneNumberEntity {
 	if node == nil {
-		return &entity.PhoneNumberEntity{}
+		return nil
 	}
 	props := utils.GetPropsFromNode(*node)
 	return &entity.PhoneNumberEntity{

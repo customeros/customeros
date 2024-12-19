@@ -6,7 +6,6 @@ import (
 	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
-	phonenumberpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/phone_number"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/test/bufconn"
@@ -36,7 +35,6 @@ func (dfi MockedTestDialFactoryImpl) GetEventsProcessingPlatformConn() (*grpc.Cl
 	organizationpb.RegisterOrganizationGrpcServiceServer(server, &MockOrganizationService{})
 	opportunitypb.RegisterOpportunityGrpcServiceServer(server, &MockOpportunityService{})
 	invoicepb.RegisterInvoiceGrpcServiceServer(server, &MockInvoiceService{})
-	phonenumberpb.RegisterPhoneNumberGrpcServiceServer(server, &MockPhoneNumberService{})
 
 	go func() {
 		if err := server.Serve(listener); err != nil {

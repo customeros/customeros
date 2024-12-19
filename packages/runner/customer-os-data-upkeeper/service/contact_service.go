@@ -25,8 +25,6 @@ import (
 	postgresrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	enrichmentmodel "github.com/openline-ai/openline-customer-os/packages/server/enrichment-api/model"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
-	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
-	phonenumberpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/phone_number"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventbuffer"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"

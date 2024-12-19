@@ -9,14 +9,12 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	commentpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/comment"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
-	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
 	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
 	iepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/interaction_event"
 	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
 	issuepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/issue"
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
-	phonenumberpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/phone_number"
 	servicelineitempb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/service_line_item"
 	"google.golang.org/grpc"
 )
@@ -32,8 +30,6 @@ var contractId = "769d1fb8-50a1-44bc-aff0-0f4338bd8ff2"
 type Clients struct {
 	InteractionEventClient iepb.InteractionEventGrpcServiceClient
 	OrganizationClient     organizationpb.OrganizationGrpcServiceClient
-	ContactClient          contactpb.ContactGrpcServiceClient
-	PhoneNumberClient      phonenumberpb.PhoneNumberGrpcServiceClient
 	IssueClient            issuepb.IssueGrpcServiceClient
 	CommentClient          commentpb.CommentGrpcServiceClient
 	ContractClient         contractpb.ContractGrpcServiceClient
@@ -53,8 +49,6 @@ func InitClients() {
 	clients = &Clients{
 		InteractionEventClient: iepb.NewInteractionEventGrpcServiceClient(conn),
 		OrganizationClient:     organizationpb.NewOrganizationGrpcServiceClient(conn),
-		ContactClient:          contactpb.NewContactGrpcServiceClient(conn),
-		PhoneNumberClient:      phonenumberpb.NewPhoneNumberGrpcServiceClient(conn),
 		IssueClient:            issuepb.NewIssueGrpcServiceClient(conn),
 		CommentClient:          commentpb.NewCommentGrpcServiceClient(conn),
 		ContractClient:         contractpb.NewContractGrpcServiceClient(conn),
@@ -171,19 +165,6 @@ func testAddCustomField() {
 	print(result)
 }
 
-func testCreatePhoneNumber() {
-
-	userId := "697563a8-171c-4950-a067-1aaaaf2de1d8"
-	rawPhoneNumber := "+12345"
-
-	result, _ := clients.PhoneNumberClient.UpsertPhoneNumber(context.Background(), &phonenumberpb.UpsertPhoneNumberGrpcRequest{
-		Tenant:         tenant,
-		PhoneNumber:    rawPhoneNumber,
-		LoggedInUserId: userId,
-	})
-	print(result)
-}
-
 func testAddParentOrganization() {
 
 	orgId := "cfaaf31f-ec3b-44d1-836e-4e50834632ae"
@@ -219,36 +200,6 @@ func testRemoveParentOrganization() {
 	print(result)
 }
 
-func testContactLinkWithLocation() {
-
-	contactId := "dd7bd45e-d6d3-405c-a7ba-cd4127479c20"
-	locationId := "bafff70d-7e45-49e5-8732-6e2a362a3ee9"
-
-	result, _ := clients.ContactClient.LinkLocationToContact(context.Background(), &contactpb.LinkLocationToContactGrpcRequest{
-		Tenant:     tenant,
-		ContactId:  contactId,
-		LocationId: locationId,
-		AppSource:  appSource,
-	})
-	print(result)
-}
-
-func testContactLinkWithPhoneNumber() {
-
-	contactId := "dd7bd45e-d6d3-405c-a7ba-cd4127479c20"
-	phoneNumberId := "c21c0352-14d8-474a-afcd-167daa99e321"
-
-	result, _ := clients.ContactClient.LinkPhoneNumberToContact(context.Background(), &contactpb.LinkPhoneNumberToContactGrpcRequest{
-		Tenant:        tenant,
-		ContactId:     contactId,
-		PhoneNumberId: phoneNumberId,
-		Primary:       true,
-		Label:         "work",
-		AppSource:     appSource,
-	})
-	print(result)
-}
-
 func testOrganizationLinkWithLocation() {
 
 	orgId := "cfaaf31f-ec3b-44d1-836e-4e50834632ae"
@@ -258,21 +209,6 @@ func testOrganizationLinkWithLocation() {
 		Tenant:         tenant,
 		OrganizationId: orgId,
 		LocationId:     locationId,
-	})
-	print(result)
-}
-
-func testOrganizationLinkWithPhoneNumber() {
-
-	orgId := "cfaaf31f-ec3b-44d1-836e-4e50834632ae"
-	phoneNumberId := "c21c0352-14d8-474a-afcd-167daa99e321"
-
-	result, _ := clients.OrganizationClient.LinkPhoneNumberToOrganization(context.Background(), &organizationpb.LinkPhoneNumberToOrganizationGrpcRequest{
-		Tenant:         tenant,
-		OrganizationId: orgId,
-		PhoneNumberId:  phoneNumberId,
-		Primary:        true,
-		Label:          "work",
 	})
 	print(result)
 }

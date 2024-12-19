@@ -24,7 +24,6 @@ type Services struct {
 	ContactService             ContactService
 	OrganizationService        OrganizationService
 	CustomFieldService         CustomFieldService
-	PhoneNumberService         PhoneNumberService
 	EmailService               EmailService
 	UserService                UserService
 	CustomFieldTemplateService CustomFieldTemplateService
@@ -76,7 +75,6 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, postgresDB
 	services.UserService = NewUserService(log, repositories, grpcClients, &services)
 	services.OrganizationService = NewOrganizationService(log, repositories, grpcClients, &services)
 	services.IssueService = NewIssueService(log, repositories, &services)
-	services.PhoneNumberService = NewPhoneNumberService(log, repositories, grpcClients, &services)
 	services.CalendarService = NewCalendarService(log, repositories, &services)
 	services.EmailService = NewEmailService(log, repositories, &services, grpcClients)
 	services.ContactService = NewContactService(log, repositories, grpcClients, &services)

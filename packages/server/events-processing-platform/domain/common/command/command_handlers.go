@@ -7,7 +7,6 @@ import (
 	locationcmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/command_handler"
 	opportunitycmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/command_handler"
 	organizationcmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command_handler"
-	phonenumbercmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventbuffer"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
@@ -15,7 +14,6 @@ import (
 
 type CommandHandlers struct {
 	Organization *organizationcmdhandler.CommandHandlers
-	PhoneNumber  *phonenumbercmdhandler.CommandHandlers
 	Location     *locationcmdhandler.CommandHandlers
 	JobRole      *jobrolecmdhandler.CommandHandlers
 	Issue        *issuecmdhandler.CommandHandlers
@@ -30,7 +28,6 @@ func NewCommandHandlers(log logger.Logger,
 
 	return &CommandHandlers{
 		Organization: organizationcmdhandler.NewCommandHandlers(log, cfg, aggregateStore, ebs),
-		PhoneNumber:  phonenumbercmdhandler.NewCommandHandlers(log, cfg, aggregateStore),
 		Location:     locationcmdhandler.NewCommandHandlers(log, cfg, aggregateStore),
 		JobRole:      jobrolecmdhandler.NewCommandHandlers(log, cfg, aggregateStore),
 		Issue:        issuecmdhandler.NewCommandHandlers(log, aggregateStore),

@@ -171,7 +171,7 @@ func (r *queryResolver) UIContacts(ctx context.Context, ids []string) ([]*model.
 		defer wg.Done()
 		tracing.SetDefaultResolverSpanTags(innerCtx, innerSpan)
 
-		phoneNumbers, err := r.Services.PhoneNumberService.GetAllForEntityTypeByIds(innerCtx, commonModel.CONTACT, ids)
+		phoneNumbers, err := r.Services.CommonServices.PhoneNumberService.GetAllForEntityTypeByIds(innerCtx, commonModel.CONTACT, ids)
 		if err != nil {
 			tracing.TraceErr(innerSpan, err)
 			setError(err)

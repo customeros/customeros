@@ -3,18 +3,14 @@ package resolver
 import (
 	"context"
 	"github.com/99designs/gqlgen/client"
-	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/events_platform"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
-	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
-	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
-	phonenumberpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/phone_number"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -26,47 +22,12 @@ func TestMutationResolver_PhoneNumberMergeToContact(t *testing.T) {
 
 	// Create a default contact
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
-	phoneNumberId := uuid.New().String()
 	neo4jtest.CreateCountry(ctx, driver, neo4jentity.CountryEntity{
 		Name:      "United States",
 		CodeA2:    "US",
 		CodeA3:    "USA",
 		PhoneCode: "1",
 	})
-
-	phoneNumberServiceCalled := false
-	contactServiceCalled := false
-
-	phoneNumberServiceCallbacks := events_platform.MockPhoneNumberServiceCallbacks{
-		UpsertPhoneNumber: func(ctx context.Context, phoneNumber *phonenumberpb.UpsertPhoneNumberGrpcRequest) (*phonenumberpb.PhoneNumberIdGrpcResponse, error) {
-			require.Equal(t, tenantName, phoneNumber.Tenant)
-			require.NotNil(t, phoneNumber)
-			phoneNumberServiceCalled = true
-			neo4jtest.CreatePhoneNumber(ctx, driver, tenantName, neo4jentity.PhoneNumberEntity{
-				Id:             phoneNumberId,
-				RawPhoneNumber: "+1234567890",
-				CreatedAt:      utils.Now(),
-				UpdatedAt:      utils.Now(),
-			})
-			return &phonenumberpb.PhoneNumberIdGrpcResponse{
-				Id: phoneNumberId,
-			}, nil
-		},
-	}
-	events_platform.SetPhoneNumberCallbacks(&phoneNumberServiceCallbacks)
-
-	contactServiceCallbacks := events_platform.MockContactServiceCallbacks{
-		LinkPhoneNumberToContact: func(context context.Context, contact *contactpb.LinkPhoneNumberToContactGrpcRequest) (*contactpb.ContactIdGrpcResponse, error) {
-			require.Equal(t, tenantName, contact.Tenant)
-			require.Equal(t, contactId, contact.ContactId)
-			require.Equal(t, phoneNumberId, contact.PhoneNumberId)
-			contactServiceCalled = true
-			return &contactpb.ContactIdGrpcResponse{
-				Id: contactId,
-			}, nil
-		},
-	}
-	events_platform.SetContactCallbacks(&contactServiceCallbacks)
 
 	// Make the RawPost request and check for errors
 	rawResponse, err := c.RawPost(getQuery("phone_number/merge_phone_number_to_contact"),
@@ -78,10 +39,8 @@ func TestMutationResolver_PhoneNumberMergeToContact(t *testing.T) {
 		PhoneNumberMergeToContact model.PhoneNumber
 	}
 	err = decode.Decode(rawResponse.Data.(map[string]any), &phoneNumberStruct)
-	require.Nil(t, err, "Error unmarshalling response data")
-
-	require.True(t, phoneNumberServiceCalled, "Phone number service was not called")
-	require.True(t, contactServiceCalled, "Contact service was not called")
+	require.Nil(t, err)
+	assert.NotNil(t, phoneNumberStruct.PhoneNumberMergeToContact.ID)
 }
 
 func TestMutationResolver_PhoneNumberRemoveFromContact(t *testing.T) {
@@ -129,47 +88,12 @@ func TestMutationResolver_PhoneNumberMergeToOrganization(t *testing.T) {
 
 	// Create a default organization
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
-	phoneNumberId := uuid.New().String()
 	neo4jtest.CreateCountry(ctx, driver, neo4jentity.CountryEntity{
 		Name:      "United States",
 		CodeA2:    "US",
 		CodeA3:    "USA",
 		PhoneCode: "1",
 	})
-
-	phoneNumberServiceCalled := false
-	organizationServiceCalled := false
-
-	phoneNumberServiceCallbacks := events_platform.MockPhoneNumberServiceCallbacks{
-		UpsertPhoneNumber: func(ctx context.Context, phoneNumber *phonenumberpb.UpsertPhoneNumberGrpcRequest) (*phonenumberpb.PhoneNumberIdGrpcResponse, error) {
-			require.Equal(t, tenantName, phoneNumber.Tenant)
-			require.NotNil(t, phoneNumber)
-			phoneNumberServiceCalled = true
-			neo4jtest.CreatePhoneNumber(ctx, driver, tenantName, neo4jentity.PhoneNumberEntity{
-				Id:             phoneNumberId,
-				RawPhoneNumber: "+1234567890",
-				CreatedAt:      utils.Now(),
-				UpdatedAt:      utils.Now(),
-			})
-			return &phonenumberpb.PhoneNumberIdGrpcResponse{
-				Id: phoneNumberId,
-			}, nil
-		},
-	}
-	events_platform.SetPhoneNumberCallbacks(&phoneNumberServiceCallbacks)
-
-	organizationServiceCallbacks := events_platform.MockOrganizationServiceCallbacks{
-		LinkPhoneNumberToOrganization: func(context context.Context, organization *organizationpb.LinkPhoneNumberToOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
-			require.Equal(t, tenantName, organization.Tenant)
-			require.Equal(t, organizationId, organization.OrganizationId)
-			require.Equal(t, phoneNumberId, organization.PhoneNumberId)
-			organizationServiceCalled = true
-			return &organizationpb.OrganizationIdGrpcResponse{
-				Id: organizationId,
-			}, nil
-		},
-	}
-	events_platform.SetOrganizationCallbacks(&organizationServiceCallbacks)
 
 	// Make the RawPost request and check for errors
 	rawResponse, err := c.RawPost(getQuery("phone_number/merge_phone_number_to_organization"),
@@ -181,10 +105,8 @@ func TestMutationResolver_PhoneNumberMergeToOrganization(t *testing.T) {
 		PhoneNumberMergeToOrganization model.PhoneNumber
 	}
 	err = decode.Decode(rawResponse.Data.(map[string]any), &phoneNumberStruct)
-	require.Nil(t, err, "Error unmarshalling response data")
-
-	require.True(t, phoneNumberServiceCalled, "Phone number service was not called")
-	require.True(t, organizationServiceCalled, "Organization service was not called")
+	require.Nil(t, err)
+	assert.NotNil(t, phoneNumberStruct.PhoneNumberMergeToOrganization.ID)
 }
 
 func TestQueryResolver_GetPhoneNumber_WithParentOwners(t *testing.T) {

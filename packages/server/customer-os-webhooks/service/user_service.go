@@ -216,21 +216,20 @@ func (s *userService) syncUser(ctx context.Context, syncMutex *sync.Mutex, userI
 	if !failedSync && userInput.HasPhoneNumbers() {
 		for _, phoneNumberDtls := range userInput.PhoneNumbers {
 			// Create or update phone number
-			phoneNumberId, err := s.services.PhoneNumberService.CreatePhoneNumber(ctx, phoneNumberDtls.Number, userInput.ExternalSystem, userInput.AppSource)
+			phoneNumberId, err := s.services.CommonServices.PhoneNumberService.Merge(ctx, phoneNumberDtls.Number, userInput.AppSource)
 			if err != nil {
 				failedSync = true
 				tracing.TraceErr(span, err)
-				reason = fmt.Sprintf("Failed to create phone number for user %s: %s", userId, err.Error())
+				reason = fmt.Sprintf("Failed to create phone number %s for user %s: %s", phoneNumberDtls.Number, userId, err.Error())
 				s.log.Error(reason)
 			}
-			// Link phone number to user
-			if !failedSync {
-
-				err := s.services.CommonServices.Neo4jRepositories.PhoneNumberWriteRepository.LinkWithUser(ctx, tenant, userId, phoneNumberId, phoneNumberDtls.Label, phoneNumberDtls.Primary)
+			// Link phone number to contact
+			if phoneNumberId != "" {
+				err = s.services.CommonServices.Neo4jRepositories.PhoneNumberWriteRepository.LinkWithOrganization(ctx, tenant, userId, phoneNumberId, phoneNumberDtls.Label, phoneNumberDtls.Primary)
 				if err != nil {
 					failedSync = true
-					tracing.TraceErr(span, err, log.String("grpcMethod", "LinkPhoneNumberToUser"))
-					reason = fmt.Sprintf("Failed to link phone number %s for user %s: %s", phoneNumberDtls.Number, userId, err.Error())
+					tracing.TraceErr(span, err, log.String("method", "LinkWithUser"))
+					reason = fmt.Sprintf("Failed to link phone number %s with user %s: %s", phoneNumberDtls.Number, userId, err.Error())
 					s.log.Error(reason)
 				}
 			}

@@ -949,7 +949,7 @@ func (r *mutationResolver) ContactFindWorkEmail(ctx context.Context, contactID s
 		return &model.ActionResponse{Accepted: true}, nil
 	}
 
-	phoneNumberEntities, err := r.Services.PhoneNumberService.GetAllForEntityTypeByIds(ctx, commonmodel.CONTACT, []string{contactID})
+	phoneNumberEntities, err := r.Services.CommonServices.PhoneNumberService.GetAllForEntityTypeByIds(ctx, commonmodel.CONTACT, []string{contactID})
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}

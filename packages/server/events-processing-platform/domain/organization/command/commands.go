@@ -8,22 +8,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 )
 
-type LinkPhoneNumberCommand struct {
-	eventstore.BaseCommand
-	PhoneNumberId string `json:"phoneNumberId" validate:"required"`
-	Primary       bool
-	Label         string
-}
-
-func NewLinkPhoneNumberCommand(objectID, tenant, userId, phoneNumberId, label string, primary bool) *LinkPhoneNumberCommand {
-	return &LinkPhoneNumberCommand{
-		BaseCommand:   eventstore.NewBaseCommand(objectID, tenant, userId),
-		PhoneNumberId: phoneNumberId,
-		Primary:       primary,
-		Label:         label,
-	}
-}
-
 type LinkLocationCommand struct {
 	eventstore.BaseCommand
 	LocationId string `json:"locationId" validate:"required"`

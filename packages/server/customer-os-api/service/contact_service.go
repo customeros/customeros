@@ -18,7 +18,6 @@ import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
-	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -85,6 +84,8 @@ func (s *contactService) Create(ctx context.Context, contactDetails *ContactCrea
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("contactDetails", contactDetails))
 
+	tenant := common.GetTenantFromContext(ctx)
+
 	if contactDetails.ContactEntity == nil {
 		err := fmt.Errorf("contact entity is nil")
 		tracing.TraceErr(span, err)
@@ -147,40 +148,21 @@ func (s *contactService) Create(ctx context.Context, contactDetails *ContactCrea
 	}
 
 	if contactDetails.PhoneNumberEntity != nil {
-		s.linkPhoneNumberByEvents(ctx, contactId, utils.StringFirstNonEmpty(contactDetails.PhoneNumberEntity.AppSource, contactDetails.AppSource), *contactDetails.PhoneNumberEntity)
+		phoneNumberId, err := s.services.CommonServices.PhoneNumberService.Merge(ctx, contactDetails.PhoneNumberEntity.RawPhoneNumber, constants.AppSourceCustomerOsApi)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return contactId, err
+		}
+
+		err = s.services.Repositories.Neo4jRepositories.PhoneNumberWriteRepository.LinkWithContact(ctx, tenant, contactId, phoneNumberId, contactDetails.PhoneNumberEntity.Label, contactDetails.PhoneNumberEntity.Primary)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return contactId, err
+		}
 	}
 
 	span.LogFields(log.String("output - createdContactId", contactId))
 	return contactId, nil
-}
-
-func (s *contactService) linkPhoneNumberByEvents(ctx context.Context, contactId, appSource string, phoneNumberEntity neo4jentity.PhoneNumberEntity) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.linkPhoneNumberByEvents")
-	defer span.Finish()
-
-	phoneNumberId, err := s.services.PhoneNumberService.CreatePhoneNumberViaEvents(ctx, utils.StringFirstNonEmpty(phoneNumberEntity.RawPhoneNumber, phoneNumberEntity.E164), appSource)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("Failed to create phone number for contact %s: %s", contactId, err.Error())
-	}
-	if phoneNumberId != "" {
-		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = utils.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
-			return s.grpcClients.ContactClient.LinkPhoneNumberToContact(ctx, &contactpb.LinkPhoneNumberToContactGrpcRequest{
-				Tenant:         common.GetTenantFromContext(ctx),
-				LoggedInUserId: common.GetUserIdFromContext(ctx),
-				ContactId:      contactId,
-				PhoneNumberId:  phoneNumberId,
-				Primary:        phoneNumberEntity.Primary,
-				Label:          phoneNumberEntity.Label,
-				AppSource:      appSource,
-			})
-		})
-		if err != nil {
-			tracing.TraceErr(span, err)
-			s.log.Errorf("Failed to link phone number %s with contact %s: %s", phoneNumberId, contactId, err.Error())
-		}
-	}
 }
 
 func (s *contactService) PermanentDelete(ctx context.Context, contactId string) (bool, error) {

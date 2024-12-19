@@ -23,9 +23,7 @@ type Services struct {
 	RequestHandler           *requestHandler // generic grpc request handler
 
 	//GRPC services
-	ContactService         *contactService
 	OrganizationService    *organizationService
-	PhoneNumberService     *phoneNumberService
 	LocationService        *locationService
 	JobRoleService         *jobRoleService
 	IssueService           *issueService
@@ -48,9 +46,7 @@ func InitServices(cfg *config.Config, repositories *repository.Repositories, agg
 	services.RequestHandler = NewRequestHandler(log, aggregateStore, cfg.Utils)
 
 	//GRPC services
-	services.ContactService = NewContactService(log, &services)
 	services.OrganizationService = NewOrganizationService(log, commandHandlers.Organization, aggregateStore, cfg, &services)
-	services.PhoneNumberService = NewPhoneNumberService(log, repositories.Neo4jRepositories, commandHandlers.PhoneNumber, &services)
 	services.LocationService = NewLocationService(log, commandHandlers.Location)
 	services.JobRoleService = NewJobRoleService(log, commandHandlers.JobRole)
 	services.IssueService = NewIssueService(log, commandHandlers.Issue)

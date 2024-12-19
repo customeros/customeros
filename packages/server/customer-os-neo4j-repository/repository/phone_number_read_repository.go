@@ -18,6 +18,8 @@ type PhoneNumberReadRepository interface {
 	GetCountryCodeA2ForPhoneNumber(ctx context.Context, tenant, phoneNumberId string) (string, error)
 	GetById(ctx context.Context, tenant, phoneNumberId string) (*dbtype.Node, error)
 	GetAllForLinkedEntityIds(ctx context.Context, tenant string, entityType neo4jenum.EntityType, entityIds []string) ([]*utils.DbNodeWithRelationAndId, error)
+	Exists(ctx context.Context, tenant string, e164 string) (bool, error)
+	GetByPhoneNumber(ctx context.Context, tenant, e164 string) (*dbtype.Node, error)
 }
 
 type phoneNumberReadRepository struct {
@@ -130,6 +132,9 @@ func (r *phoneNumberReadRepository) GetById(ctx context.Context, tenant, phoneNu
 		queryResult, err := tx.Run(ctx, cypher, params)
 		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 	})
+	if err != nil && err.Error() == "Result contains no more records" {
+		return nil, nil
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -176,4 +181,61 @@ func (r *phoneNumberReadRepository) GetAllForLinkedEntityIds(ctx context.Context
 		return nil, err
 	}
 	return result.([]*utils.DbNodeWithRelationAndId), err
+}
+
+func (r *phoneNumberReadRepository) Exists(ctx context.Context, tenant string, e164 string) (bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberReadRepository.Exists")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	cypher := fmt.Sprintf("MATCH (p:PhoneNumber_%s) WHERE p.e164 = $e164 OR p.rawPhoneNumber = $e164 RETURN p LIMIT 1", tenant)
+	params := map[string]any{
+		"e164": e164,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return false, err
+		} else {
+			return queryResult.Next(ctx), nil
+
+		}
+	})
+	if err != nil {
+		return false, err
+	}
+	return result.(bool), err
+}
+
+func (r *phoneNumberReadRepository) GetByPhoneNumber(ctx context.Context, tenant, e164 string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberReadRepository.GetByPhoneNumber")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	cypher := fmt.Sprintf("MATCH (p:PhoneNumber_%s) WHERE p.e164 = $e164 OR p.rawPhoneNumber = $e164 RETURN p LIMIT 1", tenant)
+	params := map[string]any{
+		"e164": e164,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+	})
+	if err != nil && err.Error() == "Result contains no more records" {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return result.(*dbtype.Node), nil
 }

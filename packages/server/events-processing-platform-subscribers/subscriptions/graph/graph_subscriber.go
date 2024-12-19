@@ -6,7 +6,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	orgevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
-	contactevent "github.com/openline-ai/openline-customer-os/packages/server/events/event/contact/event"
 	"github.com/opentracing/opentracing-go"
 	"strings"
 	"time"
@@ -23,7 +22,6 @@ import (
 	issueevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/issue/event"
 	jobroleevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/events"
 	locationevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/events"
-	phonenumberevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/events"
 	servicelineitemevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/event"
 	opportunityevent "github.com/openline-ai/openline-customer-os/packages/server/events/event/opportunity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
@@ -36,8 +34,6 @@ type GraphSubscriber struct {
 	log                         logger.Logger
 	db                          *esdb.Client
 	cfg                         *config.Config
-	phoneNumberEventHandler     *PhoneNumberEventHandler
-	contactEventHandler         *ContactEventHandler
 	organizationEventHandler    *OrganizationEventHandler
 	locationEventHandler        *LocationEventHandler
 	jobRoleEventHandler         *JobRoleEventHandler
@@ -54,9 +50,7 @@ func NewGraphSubscriber(log logger.Logger, db *esdb.Client, services *service.Se
 		log:                         log,
 		db:                          db,
 		cfg:                         cfg,
-		contactEventHandler:         NewContactEventHandler(log, services, grpcClients),
 		organizationEventHandler:    NewOrganizationEventHandler(log, services, grpcClients, cache),
-		phoneNumberEventHandler:     NewPhoneNumberEventHandler(log, services, grpcClients),
 		locationEventHandler:        NewLocationEventHandler(services),
 		jobRoleEventHandler:         NewJobRoleEventHandler(services),
 		issueEventHandler:           NewIssueEventHandler(log, services, grpcClients),
@@ -165,25 +159,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 
 	switch evt.GetEventType() {
 
-	case phonenumberevents.PhoneNumberCreateV1:
-		_ = s.phoneNumberEventHandler.OnPhoneNumberCreate(ctx, evt)
-		return nil
-	case phonenumberevents.PhoneNumberUpdateV1:
-		_ = s.phoneNumberEventHandler.OnPhoneNumberUpdate(ctx, evt)
-		return nil
-	case phonenumberevents.PhoneNumberValidationFailedV1:
-		_ = s.phoneNumberEventHandler.OnPhoneNumberValidationFailed(ctx, evt)
-		return nil
-	case phonenumberevents.PhoneNumberValidatedV1:
-		_ = s.phoneNumberEventHandler.OnPhoneNumberValidated(ctx, evt)
-		return nil
-
-	case contactevent.ContactPhoneNumberLinkV1:
-		_ = s.contactEventHandler.OnPhoneNumberLinkToContact(ctx, evt)
-		return nil
-	case contactevent.ContactLocationLinkV1:
-		_ = s.contactEventHandler.OnLocationLinkToContact(ctx, evt)
-		return nil
 	case orgevents.OrganizationPhoneNumberLinkV1:
 		_ = s.organizationEventHandler.OnPhoneNumberLinkedToOrganization(ctx, evt)
 		return nil
