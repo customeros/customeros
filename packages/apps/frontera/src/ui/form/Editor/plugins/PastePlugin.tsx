@@ -40,6 +40,20 @@ export function LinkPastePlugin() {
             if (htmlData) {
               const parser = new DOMParser();
               const doc = parser.parseFromString(htmlData, 'text/html');
+
+              // strip all formatting enforced by pre tags
+              doc.querySelectorAll('pre')?.forEach((preEl) => {
+                if (!preEl.querySelector('code')) {
+                  const span = doc.createElement('div');
+
+                  // Move all child nodes into the new div
+                  while (preEl.firstChild) {
+                    span.appendChild(preEl.firstChild);
+                  }
+                  preEl.replaceWith(span);
+                }
+              });
+
               const nodes = $generateNodesFromDOM(editor, doc);
 
               selection.insertNodes(nodes);
