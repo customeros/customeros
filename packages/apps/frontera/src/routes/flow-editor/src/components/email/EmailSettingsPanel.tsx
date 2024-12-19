@@ -18,8 +18,8 @@ import { useStore } from '@shared/hooks/useStore';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { ChevronUp } from '@ui/media/icons/ChevronUp';
 import { ChevronDown } from '@ui/media/icons/ChevronDown';
-import { CheckCircle } from '@ui/media/icons/CheckCircle';
 import { EmailTemplate } from '@shared/components/EmailTemplate';
+import { CornerDownRightDot } from '@ui/media/icons/CornerDownRightDot';
 import { extractPlainText } from '@ui/form/Editor/utils/extractPlainText';
 import { convertPlainTextToHtml } from '@ui/form/Editor/utils/convertPlainTextToHtml';
 
@@ -184,16 +184,22 @@ export const EmailSettingsPanel = observer(() => {
       const emailContent = await prepareEmailContent(bodyTemplate);
 
       if (emailContent?.html) {
-        flow?.sendTestEmail({
-          sendToEmailAddress: session.value.profile.email,
-          subject: subject || '',
-          bodyTemplate: emailContent.html || '',
-        });
+        flow?.sendTestEmail(
+          {
+            sendToEmailAddress: session.value.profile.email,
+            subject: subject || '',
+            bodyTemplate: emailContent.html || '',
+          },
+          {
+            onFinally: () => {
+              setIsSendingTestEmail(false);
+            },
+          },
+        );
       }
     } catch (error) {
-      ui.toastError('Error sending test email', 'email-send-error');
-    } finally {
       setIsSendingTestEmail(false);
+      ui.toastError('Error sending test email', 'email-send-error');
     }
   };
 
@@ -232,7 +238,7 @@ export const EmailSettingsPanel = observer(() => {
                 onClick={() => setShowTestEmailMode(!showTestEmailMode)}
                 rightIcon={showTestEmailMode ? <ChevronUp /> : <ChevronDown />}
               >
-                Test...
+                Send test...
               </Button>
             </div>
             <div className='flex gap-2'>
@@ -278,15 +284,17 @@ export const EmailSettingsPanel = observer(() => {
               <div>
                 <ul className='px-2'>
                   <li className='flex items-center'>
-                    <CheckCircle className='text-gray-500 mr-2' />
+                    <CornerDownRightDot className='text-gray-500 mr-2 size-3' />
                     To {session.value.profile.email}
                   </li>
-                  {/* todo - fill the data of sender and test org id when the BE is ready*/}
-                  {/*<li>From robertinc@testcustomeros.com</li>*/}
-                  {/*/!*show only for test flow*!/*/}
-                  {/*<li>*/}
-                  {/*  Replies will show up in{' '}*/}
-                  {/*  <Link to={'/'} className='text-primary-700'>*/}
+                  <li className='flex items-center'>
+                    <CornerDownRightDot className='text-gray-500 mr-2 size-3' />
+                    From {session.value.tenant}@testcustomeros.com
+                  </li>
+                  {/*<li className='flex items-center'>*/}
+                  {/*  <CornerDownRightDot className='text-gray-500 mr-2 size-3' />*/}
+                  {/*  Emails will show up in{' '}*/}
+                  {/*  <Link to={'/'} className='text-primary-700 ml-1'>*/}
                   {/*    Example, Inc’s timeline*/}
                   {/*  </Link>{' '}*/}
                   {/*</li>*/}

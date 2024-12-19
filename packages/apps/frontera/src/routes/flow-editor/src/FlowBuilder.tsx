@@ -337,12 +337,15 @@ export const FlowBuilder = observer(
     return (
       <>
         <ReactFlow
+          panOnDrag
           snapToGrid
           maxZoom={5}
+          panOnScroll
           nodes={nodes}
           edges={edges}
           minZoom={0.1}
           fitView={true}
+          zoomOnScroll={false}
           onConnect={onConnect}
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
@@ -355,7 +358,6 @@ export const FlowBuilder = observer(
           // onConnectEnd={onConnectEnd}
           onNodesChange={onNodesChangeHandler}
           zoomOnPinch={!ui.flowCommandMenu.isOpen}
-          zoomOnScroll={!ui.flowCommandMenu.isOpen}
           onSelectionDragStart={onSelectionDragStart}
           defaultViewport={{ zoom: 0.4, x: 50, y: 0 }}
           preventScrolling={!ui.flowCommandMenu.isOpen}
