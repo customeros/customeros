@@ -436,13 +436,13 @@ func (r *mutationResolver) FlowEmailActionTest(ctx context.Context, subject stri
 
 	mailboxUsername := fmt.Sprintf("%s@%s", tenant, service.TEST_MAILBOX_DOMAIN)
 
-	fromFirstName := "Test"
-	fromLastName := "Sender"
+	fromFirstName := "Yu"
+	fromLastName := "Senderson"
 
 	bp := bodyTemplate
 	bp = r.Services.CommonServices.FlowExecutionService.ReplacePlaceholder(bp, "contact_first_name", "Justin")
 	bp = r.Services.CommonServices.FlowExecutionService.ReplacePlaceholder(bp, "contact_last_name", "Example")
-	bp = r.Services.CommonServices.FlowExecutionService.ReplacePlaceholder(bp, "contact_email", fmt.Sprintf("%s@%s", tenant, service.TEST_MAILBOX_DOMAIN))
+	bp = r.Services.CommonServices.FlowExecutionService.ReplacePlaceholder(bp, "contact_email", sendToEmailAddress)
 	bp = r.Services.CommonServices.FlowExecutionService.ReplacePlaceholder(bp, "sender_first_name", fromFirstName)
 	bp = r.Services.CommonServices.FlowExecutionService.ReplacePlaceholder(bp, "sender_last_name", fromLastName)
 	bp = r.Services.CommonServices.FlowExecutionService.ReplacePlaceholder(bp, "organization_name", "Example Inc.")
