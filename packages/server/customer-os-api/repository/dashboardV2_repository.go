@@ -691,6 +691,7 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 	locationFilterCypher, locationFilterParams := "", make(map[string]interface{})
 	primaryEmailFilterCypher, primaryEmailFilterParams := "", make(map[string]interface{})
 	primaryOrganizationFilterCypher, primaryOrganizationFilterParams := "", make(map[string]interface{})
+	primaryJobRoleFilterCypher, primaryJobRoleFilterParams := "", make(map[string]interface{})
 
 	if where != nil {
 		contactFilter := new(utils.CypherFilter)
@@ -718,9 +719,14 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 		primaryOrganizationFilter.LogicalOperator = utils.AND
 		primaryOrganizationFilter.Filters = make([]*utils.CypherFilter, 0)
 
+		primaryJobRoleFilter := new(utils.CypherFilter)
+		primaryJobRoleFilter.Negate = false
+		primaryJobRoleFilter.LogicalOperator = utils.AND
+		primaryJobRoleFilter.Filters = make([]*utils.CypherFilter, 0)
+
 		locationFilter := new(utils.CypherFilter)
 		locationFilter.Negate = false
-		locationFilter.LogicalOperator = utils.OR
+		locationFilter.LogicalOperator = utils.AND
 		locationFilter.Filters = make([]*utils.CypherFilter, 0)
 
 		for _, filter := range where.And {
@@ -736,7 +742,6 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 			//ColumnViewTypeContactsTimeInCurrentRole          ColumnViewType = "CONTACTS_TIME_IN_CURRENT_ROLE"
 			//ColumnViewTypeContactsExperience                 ColumnViewType = "CONTACTS_EXPERIENCE"
 			//ColumnViewTypeContactsLinkedinFollowerCount      ColumnViewType = "CONTACTS_LINKEDIN_FOLLOWER_COUNT"
-			//ColumnViewTypeContactsJobTitle                   ColumnViewType = "CONTACTS_JOB_TITLE"
 			//ColumnViewTypeContactsConnections                ColumnViewType = "CONTACTS_CONNECTIONS"
 			//ColumnViewTypeContactsFlows                      ColumnViewType = "CONTACTS_FLOWS"
 			//ColumnViewTypeContactsFlowStatus                 ColumnViewType = "CONTACTS_FLOW_STATUS"
@@ -847,6 +852,19 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 					primaryOrganizationFilter.Filters = append(primaryOrganizationFilter.Filters, utils.CreateStringCypherFilter(string(neo4jentity.OrganizationPropertyName), filter.Filter.Value.Str, filter.Filter.Operation))
 				}
 			}
+			if filter.Filter.Property == model.ColumnViewTypeContactsJobTitle.String() {
+				if filter.Filter.Operation == commonmodel.ComparisonOperatorNotContains {
+					innerGroupFilter := new(utils.CypherFilter)
+					innerGroupFilter.Negate = false
+					innerGroupFilter.LogicalOperator = utils.OR
+					innerGroupFilter.Filters = make([]*utils.CypherFilter, 0)
+					innerGroupFilter.Filters = append(innerGroupFilter.Filters, utils.CreateStringCypherFilter("jobTitle", filter.Filter.Value.Str, filter.Filter.Operation))
+					innerGroupFilter.Filters = append(innerGroupFilter.Filters, utils.CreateCypherFilterIsNull("jobTitle"))
+					primaryJobRoleFilter.Filters = append(primaryJobRoleFilter.Filters, innerGroupFilter)
+				} else {
+					primaryJobRoleFilter.Filters = append(primaryJobRoleFilter.Filters, utils.CreateStringCypherFilter("jobTitle", filter.Filter.Value.Str, filter.Filter.Operation))
+				}
+			}
 		}
 
 		if len(contactFilter.Filters) > 0 {
@@ -867,6 +885,9 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 		if len(primaryOrganizationFilter.Filters) > 0 {
 			primaryOrganizationFilterCypher, primaryOrganizationFilterParams = primaryOrganizationFilter.BuildCypherFilterFragmentWithParamName("po", "po_param_")
 		}
+		if len(primaryJobRoleFilter.Filters) > 0 {
+			primaryJobRoleFilterCypher, primaryJobRoleFilterParams = primaryJobRoleFilter.BuildCypherFilterFragmentWithParamName("pj", "pj_param_")
+		}
 	}
 
 	//endregion
@@ -882,6 +903,7 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 	utils.MergeMapToMap(locationFilterParams, params)
 	utils.MergeMapToMap(primaryEmailFilterParams, params)
 	utils.MergeMapToMap(primaryOrganizationFilterParams, params)
+	utils.MergeMapToMap(primaryJobRoleFilterParams, params)
 
 	//region count selectQuery
 	countQuery := ""
@@ -899,13 +921,13 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 		if primaryEmailFilterCypher != "" {
 			countQuery += ` OPTIONAL MATCH (c)-[:HAS {primary:true}]->(pe:Email) WITH *`
 		}
-		if primaryOrganizationFilterCypher != "" {
+		if primaryOrganizationFilterCypher != "" || primaryJobRoleFilterCypher != "" {
 			countQuery += ` OPTIONAL MATCH (c)--(pj:JobRole {primary:true})--(po:Organization {hide:false}) WITH *`
 		}
 
 		countQuery += ` WHERE (c.hide = false OR c.hide IS NULL) `
 
-		if contactFilterCypher != "" || linkedInFilterCypher != "" || tagFilterCypher != "" || locationFilterCypher != "" || primaryEmailFilterCypher != "" || primaryOrganizationFilterCypher != "" {
+		if contactFilterCypher != "" || linkedInFilterCypher != "" || tagFilterCypher != "" || locationFilterCypher != "" || primaryEmailFilterCypher != "" || primaryOrganizationFilterCypher != "" || primaryJobRoleFilterCypher != "" {
 			countQuery += " AND "
 		}
 
@@ -928,6 +950,9 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 		if primaryOrganizationFilterCypher != "" {
 			countQueryParts = append(countQueryParts, primaryOrganizationFilterCypher)
 		}
+		if primaryJobRoleFilterCypher != "" {
+			countQueryParts = append(countQueryParts, primaryJobRoleFilterCypher)
+		}
 
 		countQuery = countQuery + strings.Join(countQueryParts, " AND ") + fmt.Sprintf(` RETURN count(distinct(c))`)
 	}
@@ -949,12 +974,12 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 		if primaryEmailFilterCypher != "" || (sort != nil && (sort.By == model.ColumnViewTypeContactsPrimaryEmail.String())) {
 			selectQuery += fmt.Sprintf(` OPTIONAL MATCH (c)-[:HAS {primary:true}]->(pe:Email_%s) WITH *`, tenant)
 		}
-		if primaryOrganizationFilterCypher != "" || (sort != nil && (sort.By == model.ColumnViewTypeContactsOrganization.String())) {
+		if primaryOrganizationFilterCypher != "" || primaryJobRoleFilterCypher != "" || (sort != nil && (sort.By == model.ColumnViewTypeContactsOrganization.String() || sort.By == model.ColumnViewTypeContactsJobTitle.String())) {
 			selectQuery += fmt.Sprintf(` OPTIONAL MATCH (c)--(pj:JobRole_%s {primary:true})--(po:Organization_%s {hide:false}) WITH *`, tenant, tenant)
 		}
 		selectQuery += ` WHERE (c.hide = false OR c.hide IS NULL) `
 
-		if contactFilterCypher != "" || linkedInFilterCypher != "" || tagFilterCypher != "" || locationFilterCypher != "" || primaryEmailFilterCypher != "" || primaryOrganizationFilterCypher != "" {
+		if contactFilterCypher != "" || linkedInFilterCypher != "" || tagFilterCypher != "" || locationFilterCypher != "" || primaryEmailFilterCypher != "" || primaryOrganizationFilterCypher != "" || primaryJobRoleFilterCypher != "" {
 			selectQuery += " AND "
 		}
 
@@ -976,6 +1001,9 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 		}
 		if primaryOrganizationFilterCypher != "" {
 			queryParts = append(queryParts, primaryOrganizationFilterCypher)
+		}
+		if primaryJobRoleFilterCypher != "" {
+			queryParts = append(queryParts, primaryJobRoleFilterCypher)
 		}
 		selectQuery = selectQuery + strings.Join(queryParts, " AND ")
 	}
@@ -1045,6 +1073,13 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 			aliases += `CASE WHEN po.name <> '' AND NOT po.name IS NULL THEN toLower(po.name) ELSE 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz' END as SORT_BY `
 		} else {
 			aliases += `CASE WHEN po.name <> '' AND NOT po.name IS NULL THEN toLower(po.name) ELSE '' END AS SORT_BY `
+		}
+	}
+	if sort != nil && sort.By == model.ColumnViewTypeContactsJobTitle.String() {
+		if sort.Direction == commonmodel.SortingDirectionAsc {
+			aliases += `CASE WHEN pj.jobTitle <> '' AND NOT pj.jobTitle IS NULL THEN toLower(pj.jobTitle) ELSE 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz' END as SORT_BY `
+		} else {
+			aliases += `CASE WHEN pj.jobTitle <> '' AND NOT pj.jobTitle IS NULL THEN toLower(pj.jobTitle) ELSE '' END AS SORT_BY `
 		}
 	}
 
