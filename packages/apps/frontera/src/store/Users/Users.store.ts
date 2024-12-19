@@ -33,14 +33,14 @@ export class UsersStore implements GroupStore<User> {
       getItemId: (user) => user.id,
     });
     makeAutoObservable(this, {
-      usersWithoutBots: computed,
+      usersWithoutBotsAndInternal: computed,
       tenantUsers: computed,
     });
   }
 
-  get usersWithoutBots() {
+  get usersWithoutBotsAndInternal() {
     return this.toComputedArray((users) =>
-      users.filter((user) => !user.value.bot),
+      users.filter((user) => !user.value.bot && !user.value.internal),
     );
   }
 
