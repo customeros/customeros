@@ -19,6 +19,7 @@ import { DotsVertical } from '@ui/media/icons/DotsVertical';
 import { LinkedinBlue } from '@ui/media/logos/LinkedinBlue';
 import { LinkedinOutline } from '@ui/media/icons/LinkedinOutline';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
+import { Popover, PopoverTrigger, PopoverContent } from '@ui/overlay/Popover';
 
 export const FlowSender = observer(
   ({
@@ -92,22 +93,53 @@ export const FlowSender = observer(
             </>
           )}
 
-          {hasEmailNodes && (
+          {hasEmailNodes && !userMailboxes?.length && (
             <div>
-              <Tooltip label='Add mailboxes'>
+              <Tooltip label={'Add mailboxes'}>
                 <Button
                   size='xxs'
                   variant='ghost'
                   className='gap-1'
-                  leftIcon={<Mail01 className='text-inherit ' />}
+                  leftIcon={<Mail01 className='text-inherit' />}
                   onClick={() => {
                     navigate('/settings?tab=mailboxes&view=buy');
                   }}
                 >
-                  {userMailboxes?.length ?? 0}{' '}
-                  {userMailboxes?.length === 1 ? 'mailbox' : 'mailboxes'}
+                  0 mailboxes
                 </Button>
               </Tooltip>
+            </div>
+          )}
+
+          {hasEmailNodes && !!userMailboxes?.length && (
+            <div>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    size='xxs'
+                    variant='ghost'
+                    className='gap-1'
+                    leftIcon={<Mail01 className='text-inherit' />}
+                  >
+                    {userMailboxes.length}{' '}
+                    {userMailboxes.length === 1 ? 'mailbox' : 'mailboxes'}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent
+                  align='end'
+                  side='bottom'
+                  className={'px-4 py-3'}
+                >
+                  <p className='text-sm font-medium mb-1'>Linked mailboxes</p>
+                  <ul className='list-disc px-4 text-sm'>
+                    {userMailboxes?.map((mailbox) => (
+                      <li className='' key={`mailbox-item-${mailbox}`}>
+                        {mailbox}
+                      </li>
+                    ))}
+                  </ul>
+                </PopoverContent>
+              </Popover>
             </div>
           )}
 
