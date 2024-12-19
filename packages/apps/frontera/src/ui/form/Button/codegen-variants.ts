@@ -57,20 +57,20 @@ const ghostButton = (color: string) => `
     ? `[
       'bg-transparent',
       'shadow-none',
-      'text-${color}-500',
+      'text-${color}-700',
       'hover:text-${color}-700',
       'focus:text-${color}-700',
-      'hover:bg-${color}-50',
-      'focus:bg-${color}-50',
+      'hover:bg-${color}-100',
+      'focus:bg-${color}-100',
     ]`
     : `[
       'bg-transparent',
-      'text-${color}-500',
+      'text-${color}-700',
       'shadow-none',
       'hover:text-${color}-700',
       'focus:text-${color}-700',
-      'hover:bg-${color}-50',
-      'focus:bg-${color}-50',
+      'hover:bg-${color}-100',
+      'focus:bg-${color}-100',
     ]`
 },`;
 
@@ -143,7 +143,7 @@ const genCompoundVariant = (
       iconColor = 'text-white';
       break;
     case 'ghost':
-      iconColor = `text-${colorScheme}-600`;
+      iconColor = `text-${colorScheme}-700`;
       break;
     case 'link':
       iconColor = `text-${colorScheme}-700`;

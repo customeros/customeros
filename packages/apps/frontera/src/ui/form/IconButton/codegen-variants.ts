@@ -46,7 +46,7 @@ const genCompoundVariant = (
       iconColor = 'text-white';
       break;
     case 'ghost':
-      iconColor = `text-${colorScheme}-600`;
+      iconColor = `text-${colorScheme}-700`;
       break;
     case 'link':
       iconColor = `text-${colorScheme}-700`;
