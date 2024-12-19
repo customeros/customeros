@@ -34,7 +34,11 @@ export class SetEmailCase {
 
   @action
   setEmailFromContact() {
-    this.email = this.entity?.value.primaryEmail?.email || '';
+    const primaryEmail = this.entity?.value.emails.find(
+      (e) => e.primary,
+    )?.email;
+
+    this.email = primaryEmail ?? '';
   }
 
   @action
@@ -83,24 +87,12 @@ export class SetEmailCase {
 
   @action
   public updatePrimaryEmailForContact() {
+    const primaryEmail = this.entity?.value.emails.find((e) => e.primary);
+
     if (this.entity) {
       this.entity.draft();
-      this.entity.value.primaryEmail = {
-        ...this.entity.value.primaryEmail,
-        email: this.email,
-      } as Email;
+      primaryEmail!.email = this.email;
       this.entity.commit({ syncOnly: true });
-
-      const foundIdx = this.entity.value.emails.findIndex(
-        (e) => e.primary === true,
-      );
-
-      if (foundIdx !== -1) {
-        this.entity.draft();
-        this.entity.value.emails[foundIdx].email =
-          this.entity.value.primaryEmail?.email || '';
-        this.entity.commit();
-      }
     }
   }
 }

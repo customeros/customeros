@@ -77,15 +77,13 @@ export const ContactCardv2 = observer(({ id }: ContactCardProps) => {
           contactStore?.value.updatedAt,
         )} days ago`;
 
-  const linkedInProfile = contactStore?.value.socials.find((s) =>
-    s.url.includes('linkedin'),
-  )?.url;
+  const linkedInProfile = contactStore?.value.linkedInUrl;
 
   const email =
     contactStore?.value.emails.find((e) => e.primary)?.email ??
     contactStore?.value.emails[0]?.email;
 
-  const jobTitle = contactStore?.value?.jobRoles?.[0]?.jobTitle ?? '';
+  const jobTitle = contactStore?.value.primaryOrganizationJobRoleTitle;
 
   if (!contactStore) return null;
 
@@ -195,8 +193,8 @@ export const ContactCardv2 = observer(({ id }: ContactCardProps) => {
                 ) : (
                   <Input
                     size='xxs'
-                    value={jobTitle}
                     variant='unstyled'
+                    value={jobTitle || ''}
                     placeholder='Job title'
                     onBlur={(e) => {
                       if (e.target.value !== '') {
@@ -206,7 +204,7 @@ export const ContactCardv2 = observer(({ id }: ContactCardProps) => {
                     onChange={(e) => {
                       if (e.target.value !== '') {
                         contactStore.draft();
-                        contactStore.value.jobRoles[0].jobTitle =
+                        contactStore.value.primaryOrganizationJobRoleTitle =
                           e.target.value;
                       }
                     }}

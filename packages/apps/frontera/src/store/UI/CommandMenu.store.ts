@@ -28,7 +28,6 @@ export type CommandMenuType =
   | 'ContactCommands'
   | 'EditEmail'
   | 'EditName'
-  | 'EditPhoneNumber'
   | 'EditJobTitle'
   | 'ChangeOrAddJobRoles'
   | 'EditTimeZone'

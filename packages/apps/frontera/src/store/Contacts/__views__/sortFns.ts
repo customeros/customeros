@@ -1,12 +1,7 @@
 import { match } from 'ts-pattern';
 import countries from '@assets/countries/countries.json';
 
-import {
-  SocialInput,
-  JobRoleInput,
-  ColumnViewType,
-  FlowParticipantStatus,
-} from '@graphql/types';
+import { ColumnViewType, FlowParticipantStatus } from '@graphql/types';
 
 import type { Contact } from '../Contact.dto';
 
@@ -18,8 +13,7 @@ export const getContactSortFn = (columnId: string, flowId?: string) =>
     .with(
       ColumnViewType.ContactsOrganization,
       () => (row: Contact) =>
-        row.value?.latestOrganizationWithJobRole?.organization?.name.toLowerCase() ||
-        null,
+        row.value?.primaryOrganizationName?.toLowerCase() || null,
     )
     .with(
       ColumnViewType.ContactsCity,
@@ -32,15 +26,11 @@ export const getContactSortFn = (columnId: string, flowId?: string) =>
     .with(
       ColumnViewType.ContactsLinkedinFollowerCount,
       () => (row: Contact) => {
-        return row.value.socials.find((e: SocialInput) =>
-          e?.url?.includes('linkedin'),
-        )?.followersCount;
+        return row.value.linkedInFollowerCount;
       },
     )
     .with(ColumnViewType.ContactsJobTitle, () => (row: Contact) => {
-      return row.value.jobRoles
-        .find((e: JobRoleInput) => e.endedAt === null)
-        ?.jobTitle?.toLowerCase();
+      return row.value.primaryOrganizationJobRoleTitle;
     })
     .with(ColumnViewType.ContactsCountry, () => (row: Contact) => {
       const countryName = countries.find(
@@ -89,7 +79,7 @@ export const getContactSortFn = (columnId: string, flowId?: string) =>
         [FlowParticipantStatus.Scheduled]: 7,
       };
 
-      return status && statusOrder?.[status];
+      return status && statusOrder[status as keyof typeof statusOrder];
     })
     .with(ColumnViewType.ContactsFlowNextAction, () => (row: Contact) => {
       if (!flowId) return false;

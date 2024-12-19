@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import Fuse from 'fuse.js';
 import { useCommandState } from 'cmdk';
 import { observer } from 'mobx-react-lite';
-import { ContactStore } from '@store/Contacts/Contact.store.ts';
+import { Contact } from '@store/Contacts/Contact.dto';
 import { Organization } from '@store/Organizations/Organization.dto';
 
 import { Avatar } from '@ui/media/Avatar';
@@ -13,17 +13,13 @@ import { Command } from '@ui/overlay/CommandMenu';
 import { User03 } from '@ui/media/icons/User03.tsx';
 
 const isContact = (
-  item:
-    | { type: string; item: ContactStore }
-    | { type: string; item: Organization },
-): item is { type: 'contact'; item: ContactStore } => {
+  item: { type: string; item: Contact } | { type: string; item: Organization },
+): item is { item: Contact; type: 'contact' } => {
   return item.type === 'contact';
 };
 
 const isOrganization = (
-  item:
-    | { type: string; item: ContactStore }
-    | { type: string; item: Organization },
+  item: { type: string; item: Contact } | { type: string; item: Organization },
 ): item is { item: Organization; type: 'organization' } => {
   return item.type === 'organization';
 };
@@ -57,7 +53,7 @@ export const GlobalSearchResultNavigationCommands = observer(() => {
 
     const results = fuseCombined.search(search, { limit: 10 });
     const { filteredContacts, filteredOrgs } = results.reduce<{
-      filteredContacts: ContactStore[];
+      filteredContacts: Contact[];
       filteredOrgs: Organization['value'][];
     }>(
       (acc, result) => {
@@ -92,11 +88,16 @@ export const GlobalSearchResultNavigationCommands = observer(() => {
       <Command.Group heading={filteredContacts.length > 0 && 'Contacts'}>
         {filteredContacts?.map((contactStore) => (
           <Command.Item
-            key={contactStore.value.metadata.id}
-            onSelect={() => handleGoTo(contactStore.organizationId, 'people')}
+            key={contactStore.value.id}
+            onSelect={() =>
+              handleGoTo(
+                contactStore.value.primaryOrganizationId || '',
+                'people',
+              )
+            }
             value={
-              contactStore.name || contactStore.value.metadata.id
-                ? `${contactStore.name} ${contactStore.value.metadata.id}`
+              contactStore.name || contactStore.value.id
+                ? `${contactStore.name} ${contactStore.value.id}`
                 : ''
             }
           >

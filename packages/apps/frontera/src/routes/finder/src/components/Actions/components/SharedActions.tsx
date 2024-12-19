@@ -1,4 +1,4 @@
-import { ContactStore } from '@store/Contacts/Contact.store.ts';
+import { Contact } from '@store/Contacts/Contact.dto';
 import { CommandMenuType } from '@store/UI/CommandMenu.store.ts';
 import { ActionItem } from '@finder/components/Actions/components/ActionItem.tsx';
 
@@ -14,8 +14,8 @@ interface TableActionsProps {
   onHide: () => void;
   selectCount: number;
   onOpenCommandK: () => void;
+  table: TableInstance<Contact>;
   enableKeyboardShortcuts?: boolean;
-  table: TableInstance<ContactStore>;
   handleOpen: (type: CommandMenuType) => void;
 }
 

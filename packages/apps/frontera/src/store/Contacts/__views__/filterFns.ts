@@ -5,7 +5,6 @@ import { EmailVerificationStatus } from '@finder/components/Columns/contacts/fil
 
 import {
   Filter,
-  SocialInput,
   ColumnViewType,
   EmailDeliverable,
   ComparisonOperator,
@@ -22,336 +21,342 @@ const getFilterFn = (
 
   if (!filter) return noop;
 
-  return match(filter)
-    .with({ property: 'STAGE' }, (filter) => (row: Contact) => {
-      const filterValues = filter?.value;
+  return (
+    match(filter)
+      .with({ property: 'STAGE' }, (filter) => (row: Contact) => {
+        const filterValues = filter?.value;
 
-      if (!filterValues || !row.value?.organizations.content.length) {
-        return false;
-      }
-      const hasOrgWithMatchingStage = row.value?.organizations.content.every(
-        (o) => {
-          const stage = row.store.root?.organizations?.value.get(o.metadata.id)
-            ?.value?.stage;
-
-          return filterValues.includes(stage);
-        },
-      );
-
-      return hasOrgWithMatchingStage;
-    })
-
-    .with({ property: 'RELATIONSHIP' }, (filter) => (row: Contact) => {
-      const filterValues = filter?.value;
-
-      if (!filterValues || !row.value?.organizations.content.length) {
-        return false;
-      }
-      const hasOrgWithMatchingRelationship =
-        row.value?.organizations.content.every((o) => {
-          const stage = row.store.root?.organizations?.value.get(o.metadata.id)
-            ?.value?.relationship;
-
-          return filterValues.includes(stage);
-        });
-
-      return hasOrgWithMatchingRelationship;
-    })
-
-    .with(
-      { property: ColumnViewType.ContactsName },
-      (filter) => (row: Contact) => {
-        if (!filter.active) return true;
-        const values = row.name;
-
-        if (!values)
-          return (
-            filter.operation === ComparisonOperator.IsEmpty ||
-            filter.operation === ComparisonOperator.NotContains
-          );
-
-        return filterTypeText(filter, values);
-      },
-    )
-
-    .with(
-      { property: ColumnViewType.ContactsOrganization },
-      (filter) => (row: Contact) => {
-        if (!filter.active) return true;
-        const orgs = row.value?.organizations?.content?.map((o) =>
-          o.name.toLowerCase().trim(),
-        );
-
-        return filterTypeText(filter, orgs?.join(' '));
-      },
-    )
-
-    .with(
-      { property: ColumnViewType.ContactsPrimaryEmail },
-      (filter) => (row: Contact) => {
-        if (!filter.active) return true;
-
-        const emails = row.value.primaryEmail?.email;
-
-        return filterTypeText(filter, emails ?? undefined);
-      },
-    )
-
-    .with(
-      { property: ColumnViewType.ContactsPhoneNumbers },
-      (filter) => (row: Contact) => {
-        if (!filter.active) return true;
-        const value = row.value?.phoneNumbers?.map((p) => p.rawPhoneNumber);
-
-        if (!String(value).length) {
-          return ComparisonOperator.IsEmpty === filter.operation;
+        if (!filterValues || !row.value?.primaryOrganizationName) {
+          return false;
         }
+        const hasOrgWithMatchingStage =
+          row.store.root.organizations.value.forEach((o) => {
+            const stage = row.store.root?.organizations?.value.get(o.id)?.value
+              ?.stage;
 
-        return filterTypeText(filter, String(value) ?? undefined);
-      },
-    )
+            return filterValues.includes(stage);
+          });
 
-    .with(
-      { property: ColumnViewType.ContactsLinkedin },
-      (filter) => (row: Contact) => {
-        if (!filter.active) return true;
+        return hasOrgWithMatchingStage;
+      })
 
-        const linkedInUrl = row.value.socials?.find(
-          (v: { id: string; url: string }) => v.url.includes('linkedin'),
-        )?.url;
+      .with({ property: 'RELATIONSHIP' }, (filter) => (row: Contact) => {
+        const filterValues = filter?.value;
 
-        return filterTypeText(filter, linkedInUrl);
-      },
-    )
+        if (!filterValues || !row.value?.primaryOrganizationName) {
+          return false;
+        }
+        const hasOrgWithMatchingRelationship =
+          row.store.root?.organizations.value.forEach((o) => {
+            const stage = row.store.root?.organizations?.value.get(o.id)?.value
+              ?.relationship;
 
-    .with(
-      { property: ColumnViewType.ContactsCity },
-      (filter) => (row: Contact) => {
-        if (!filter.active) return true;
-        const cities = row.value.locations?.map((l) => l?.locality);
+            return filterValues.includes(stage);
+          });
 
-        if (!cities)
-          return (
-            filter.operation === ComparisonOperator.IsEmpty ||
-            filter.operation === ComparisonOperator.NotContains
+        return hasOrgWithMatchingRelationship;
+      })
+
+      .with(
+        { property: ColumnViewType.ContactsName },
+        (filter) => (row: Contact) => {
+          if (!filter.active) return true;
+          const values = row.name;
+
+          if (!values)
+            return (
+              filter.operation === ComparisonOperator.IsEmpty ||
+              filter.operation === ComparisonOperator.NotContains
+            );
+
+          return filterTypeText(filter, values);
+        },
+      )
+
+      .with(
+        { property: ColumnViewType.ContactsOrganization },
+        (filter) => (row: Contact) => {
+          if (!filter.active) return true;
+          const orgs = row.value.primaryOrganizationName;
+
+          return filterTypeText(filter, orgs);
+        },
+      )
+
+      .with(
+        { property: ColumnViewType.ContactsPrimaryEmail },
+        (filter) => (row: Contact) => {
+          if (!filter.active) return true;
+
+          const emails = row.value.emails
+            .filter((e) => e.primary)
+            .map((e) => e.email);
+
+          return filterTypeText(filter, emails.join('; '));
+        },
+      )
+
+      // .with(
+      //   { property: ColumnViewType.ContactsPhoneNumbers },
+      //   (filter) => (row: Contact) => {
+      //     if (!filter.active) return true;
+      //     const value = row.value?.phoneNumbers?.map((p) => p.rawPhoneNumber);
+
+      //     if (!String(value).length) {
+      //       return ComparisonOperator.IsEmpty === filter.operation;
+      //     }
+
+      //     return filterTypeText(filter, String(value) ?? undefined);
+      //   },
+      // )
+
+      .with(
+        { property: ColumnViewType.ContactsLinkedin },
+        (filter) => (row: Contact) => {
+          if (!filter.active) return true;
+
+          const linkedInUrl = row.value.linkedInUrl;
+
+          return filterTypeText(filter, linkedInUrl);
+        },
+      )
+
+      .with(
+        { property: ColumnViewType.ContactsCity },
+        (filter) => (row: Contact) => {
+          if (!filter.active) return true;
+          const cities = row.value.locations?.map((l) => l?.locality);
+
+          if (!cities)
+            return (
+              filter.operation === ComparisonOperator.IsEmpty ||
+              filter.operation === ComparisonOperator.NotContains
+            );
+
+          return filterTypeList(
+            filter,
+            cities?.some((j) => j) ? (cities as string[]) : [],
           );
+        },
+      )
 
-        return filterTypeList(
-          filter,
-          cities?.some((j) => j) ? (cities as string[]) : [],
-        );
-      },
-    )
-
-    .with(
-      { property: ColumnViewType.ContactsPersona },
-      (filter) => (row: Contact) => {
-        if (!filter.active) return true;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const tags = row.value.tags?.map((l: any) => l.metadata.id);
-
-        if (!tags)
-          return (
-            filter.operation === ComparisonOperator.IsEmpty ||
-            filter.operation === ComparisonOperator.NotContains
-          );
-
-        return filterTypeList(filter, tags);
-      },
-    )
-
-    .with(
-      { property: ColumnViewType.ContactsConnections },
-      (filter) => (row: Contact) => {
-        if (!filter.active) return true;
-        const users = row.value.connectedUsers?.map(
+      .with(
+        { property: ColumnViewType.ContactsPersona },
+        (filter) => (row: Contact) => {
+          if (!filter.active) return true;
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (l: any) => row.store.root.users.value.get(l.id)?.name,
-        );
+          const tags = row.value.tags?.map((l: any) => l.metadata.id);
 
-        if (!users.length)
-          return (
-            filter.operation === ComparisonOperator.IsEmpty ||
-            filter.operation === ComparisonOperator.NotContains
+          if (!tags)
+            return (
+              filter.operation === ComparisonOperator.IsEmpty ||
+              filter.operation === ComparisonOperator.NotContains
+            );
+
+          return filterTypeList(filter, tags);
+        },
+      )
+
+      .with(
+        { property: ColumnViewType.ContactsConnections },
+        (filter) => (row: Contact) => {
+          if (!filter.active) return true;
+          const users = row.value.connectedUsers?.map(
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (l: any) => row.store.root.users.value.get(l.id)?.name,
           );
 
-        return filterTypeList(filter, users as string[]);
-      },
-    )
+          if (!users.length)
+            return (
+              filter.operation === ComparisonOperator.IsEmpty ||
+              filter.operation === ComparisonOperator.NotContains
+            );
 
-    .with(
-      { property: ColumnViewType.ContactsLinkedinFollowerCount },
-      (filter) => (row: Contact) => {
-        if (!filter.active) return true;
+          return filterTypeList(filter, users as string[]);
+        },
+      )
 
-        const followers = row.value?.socials?.find((e: SocialInput) =>
-          e?.url?.includes('linkedin'),
-        )?.followersCount;
+      .with(
+        { property: ColumnViewType.ContactsLinkedinFollowerCount },
+        (filter) => (row: Contact) => {
+          if (!filter.active) return true;
 
-        return filterTypeNumber(filter, followers);
-      },
-    )
+          const followers = row.value?.linkedInFollowerCount;
 
-    .with(
-      { property: ColumnViewType.ContactsJobTitle },
-      (filter) => (row: Contact) => {
-        if (!filter.active) return true;
-        const jobTitles =
-          row.value?.latestOrganizationWithJobRole?.jobRole.jobTitle;
+          return filterTypeNumber(filter, followers);
+        },
+      )
 
-        return filterTypeText(filter, jobTitles);
-      },
-    )
+      .with(
+        { property: ColumnViewType.ContactsJobTitle },
+        (filter) => (row: Contact) => {
+          if (!filter.active) return true;
+          const jobTitles = row.value?.primaryOrganizationJobRoleTitle;
 
-    .with(
-      { property: ColumnViewType.ContactsCountry },
-      (filter) => (row: Contact) => {
-        if (!filter.active) return true;
+          return filterTypeText(filter, jobTitles);
+        },
+      )
 
-        const countries = row.value.locations?.map((l) => l.countryCodeA2);
+      .with(
+        { property: ColumnViewType.ContactsCountry },
+        (filter) => (row: Contact) => {
+          if (!filter.active) return true;
 
-        if (!countries)
-          return (
-            filter.operation === ComparisonOperator.IsEmpty ||
-            filter.operation === ComparisonOperator.NotContains
-          );
+          const countries = row.value.locations?.map((l) => l.countryCodeA2);
 
-        return filterTypeList(filter, countries as string[]);
-      },
-    )
-    .with({ property: ColumnViewType.ContactsRegion }, (filter) => {
-      if (!filter.active) return () => true;
+          if (!countries)
+            return (
+              filter.operation === ComparisonOperator.IsEmpty ||
+              filter.operation === ComparisonOperator.NotContains
+            );
 
-      return (row: Contact) => {
-        const locations = row.value.locations;
-        const region = locations?.[0]?.region;
+          return filterTypeList(filter, countries as string[]);
+        },
+      )
+      .with({ property: ColumnViewType.ContactsRegion }, (filter) => {
+        if (!filter.active) return () => true;
 
-        if (!region)
-          return (
-            filter.operation === ComparisonOperator.IsEmpty ||
-            filter.operation === ComparisonOperator.NotContains
-          );
+        return (row: Contact) => {
+          const locations = row.value.locations;
+          const region = locations?.[0]?.region;
 
-        return filterTypeList(filter, region ? [region] : []);
-      };
-    })
+          if (!region)
+            return (
+              filter.operation === ComparisonOperator.IsEmpty ||
+              filter.operation === ComparisonOperator.NotContains
+            );
 
-    .with({ property: ColumnViewType.ContactsFlows }, (filter) => {
-      if (!filter.active) return () => true;
+          return filterTypeList(filter, region ? [region] : []);
+        };
+      })
 
-      return (row: Contact) => {
-        const values = row.flows?.map((e) => e?.value?.metadata.id);
+      .with({ property: ColumnViewType.ContactsFlows }, (filter) => {
+        if (!filter.active) return () => true;
 
-        if ((values ?? []).length === 0)
-          return (
-            filter.operation === ComparisonOperator.IsEmpty ||
-            filter.operation === ComparisonOperator.NotContains
-          );
+        return (row: Contact) => {
+          const values = row.flows?.map((e) => e?.value?.metadata.id);
 
-        return filterTypeList(filter, Array.isArray(values) ? values : []);
-      };
-    })
+          if ((values ?? []).length === 0)
+            return (
+              filter.operation === ComparisonOperator.IsEmpty ||
+              filter.operation === ComparisonOperator.NotContains
+            );
 
-    .with({ property: ColumnViewType.ContactsTimeInCurrentRole }, (filter) => {
-      if (!filter.active) return () => true;
+          return filterTypeList(filter, Array.isArray(values) ? values : []);
+        };
+      })
 
-      return (row: Contact) => {
-        const timeInCurrentRole =
-          row.value?.latestOrganizationWithJobRole?.jobRole.startedAt;
+      .with(
+        { property: ColumnViewType.ContactsTimeInCurrentRole },
+        (filter) => {
+          if (!filter.active) return () => true;
 
-        return filterTypeDate(filter, timeInCurrentRole);
-      };
-    })
+          return (row: Contact) => {
+            const timeInCurrentRole =
+              row.value?.primaryOrganizationJobRoleStartDate;
 
-    .with(
-      { property: 'EMAIL_VERIFICATION_PRIMARY_EMAIL' },
-      (filter) => (row: Contact) => {
-        if (!filter.active) return true;
+            return filterTypeDate(filter, timeInCurrentRole);
+          };
+        },
+      )
 
-        const filterValues = filter.value;
-        const emailValidationData =
-          row.value.primaryEmail?.emailValidationDetails;
+      .with(
+        { property: 'EMAIL_VERIFICATION_PRIMARY_EMAIL' },
+        (filter) => (row: Contact) => {
+          if (!filter.active) return true;
 
-        if (emailValidationData === undefined) return false;
+          const filterValues = filter.value;
+          const emailValidationData = row.value.emails?.find(
+            (e) => e.primary,
+          )?.emailValidationDetails;
 
-        return match(filter.operation)
-          .with(ComparisonOperator.Contains, () =>
-            filterValues?.some(
-              (categoryFilter: { value: string; category: string }) =>
-                (categoryFilter.category === 'DELIVERABLE' &&
-                  isDeliverableV2(categoryFilter.value, emailValidationData)) ||
-                (categoryFilter.category === 'UNDELIVERABLE' &&
-                  isNotDeliverableV2(
-                    categoryFilter?.value,
-                    emailValidationData,
-                  )) ||
-                (categoryFilter.category === 'UNKNOWN' &&
-                  isDeliverableUnknownV2(
-                    categoryFilter.value,
-                    emailValidationData,
-                  )),
-            ),
-          )
+          if (emailValidationData === undefined) return false;
 
-          .with(ComparisonOperator.NotContains, () =>
-            filterValues.some(
-              (categoryFilter: { value: string; category: string }) =>
-                !(
-                  categoryFilter.category === 'DELIVERABLE' &&
-                  isDeliverableV2(categoryFilter.value, emailValidationData)
-                ) &&
-                !(
-                  categoryFilter.category === 'UNDELIVERABLE' &&
-                  isNotDeliverableV2(categoryFilter.value, emailValidationData)
-                ) &&
-                !(
-                  categoryFilter.category === 'UNKNOWN' &&
-                  isDeliverableUnknownV2(
-                    categoryFilter.value,
-                    emailValidationData,
-                  )
-                ),
-            ),
-          )
-          .with(
-            ComparisonOperator.IsEmpty,
-            () =>
-              !emailValidationData ||
-              Object.keys(emailValidationData).length === 0,
-          )
-          .with(
-            ComparisonOperator.IsNotEmpty,
-            () =>
-              !!emailValidationData &&
-              Object.keys(emailValidationData).length > 1,
-          )
-          .otherwise(() => true);
-      },
-    )
+          return match(filter.operation)
+            .with(ComparisonOperator.Contains, () =>
+              filterValues?.some(
+                (categoryFilter: { value: string; category: string }) =>
+                  (categoryFilter.category === 'DELIVERABLE' &&
+                    isDeliverableV2(
+                      categoryFilter.value,
+                      emailValidationData,
+                    )) ||
+                  (categoryFilter.category === 'UNDELIVERABLE' &&
+                    isNotDeliverableV2(
+                      categoryFilter?.value,
+                      emailValidationData,
+                    )) ||
+                  (categoryFilter.category === 'UNKNOWN' &&
+                    isDeliverableUnknownV2(
+                      categoryFilter.value,
+                      emailValidationData,
+                    )),
+              ),
+            )
 
-    .with(
-      { property: ColumnViewType.ContactsFlowStatus },
-      (filter) => (row: Contact) => {
-        if (!filter.active) return true;
+            .with(ComparisonOperator.NotContains, () =>
+              filterValues.some(
+                (categoryFilter: { value: string; category: string }) =>
+                  !(
+                    categoryFilter.category === 'DELIVERABLE' &&
+                    isDeliverableV2(categoryFilter.value, emailValidationData)
+                  ) &&
+                  !(
+                    categoryFilter.category === 'UNDELIVERABLE' &&
+                    isNotDeliverableV2(
+                      categoryFilter.value,
+                      emailValidationData,
+                    )
+                  ) &&
+                  !(
+                    categoryFilter.category === 'UNKNOWN' &&
+                    isDeliverableUnknownV2(
+                      categoryFilter.value,
+                      emailValidationData,
+                    )
+                  ),
+              ),
+            )
+            .with(
+              ComparisonOperator.IsEmpty,
+              () =>
+                !emailValidationData ||
+                Object.keys(emailValidationData).length === 0,
+            )
+            .with(
+              ComparisonOperator.IsNotEmpty,
+              () =>
+                !!emailValidationData &&
+                Object.keys(emailValidationData).length > 1,
+            )
+            .otherwise(() => true);
+        },
+      )
 
-        if (!row.hasFlows)
-          return (
-            filter.operation === ComparisonOperator.IsEmpty ||
-            filter.operation === ComparisonOperator.NotContains
-          );
-        if (!flowId) return false;
+      .with(
+        { property: ColumnViewType.ContactsFlowStatus },
+        (filter) => (row: Contact) => {
+          if (!filter.active) return true;
 
-        const participantStatus = row.store.root.flows.value
-          .get(flowId)
-          ?.value.participants.find((e) => e.entityId === row.id)?.status;
+          if (!row.hasFlows)
+            return (
+              filter.operation === ComparisonOperator.IsEmpty ||
+              filter.operation === ComparisonOperator.NotContains
+            );
+          if (!flowId) return false;
 
-        if (!participantStatus) return false;
+          const participantStatus = row.store.root.flows.value
+            .get(flowId)
+            ?.value.participants.find((e) => e.entityId === row.id)?.status;
 
-        return filterTypeList(filter, [participantStatus]);
-      },
-    )
+          if (!participantStatus) return false;
 
-    .otherwise(() => noop);
+          return filterTypeList(filter, [participantStatus]);
+        },
+      )
+
+      .otherwise(() => noop)
+  );
 };
 
 const filterTypeText = (

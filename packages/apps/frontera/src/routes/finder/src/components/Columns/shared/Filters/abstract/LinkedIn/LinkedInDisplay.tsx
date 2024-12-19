@@ -19,7 +19,6 @@ interface LinkedInDisplayProps {
   setIsEdit: (value: boolean) => void;
   setMetaKey: (value: boolean) => void;
   setIsHovered: (value: boolean) => void;
-  handleUpdateSocial: (url: string) => void;
 }
 
 export const LinkedInDisplay = ({
@@ -28,7 +27,6 @@ export const LinkedInDisplay = ({
   isEdit,
   setIsHovered,
   setIsEdit,
-  handleUpdateSocial,
   metaKey,
   link,
   setMetaKey,
@@ -61,9 +59,6 @@ export const LinkedInDisplay = ({
     }
   }, [isEdit]);
 
-  const handleBlur = (e: React.ChangeEvent<HTMLInputElement>) => {
-    handleUpdateSocial(e.target.value);
-  };
   const formattedLink = getFormattedLink(link).replace(
     /^linkedin\.com\/(?:in\/|company\/)?/,
     '/',
@@ -88,13 +83,9 @@ export const LinkedInDisplay = ({
           ref={inputRef}
           variant='unstyled'
           value={link || ''}
-          onChange={handleBlur}
           onKeyDown={handleKeyEvents}
           onBlur={() => setIsEdit(false)}
           onFocus={(e) => {
-            displayLink
-              ? handleUpdateSocial(`linkedin.com/${type}${displayLink}`)
-              : handleUpdateSocial('');
             e.target.focus();
             setTimeout(() => e.target.select(), 0);
           }}

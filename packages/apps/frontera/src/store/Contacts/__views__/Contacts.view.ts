@@ -10,7 +10,6 @@ import { getContactSortFn } from './sortFns';
 import { getContactFilterFns } from './filterFns';
 import { ContactsStore } from '../Contacts2.store';
 
-// TODO: Cache filtered and sorted results for faster subsequent access
 export class ContactsView {
   constructor(private store: ContactsStore) {
     reaction(() => {
@@ -47,7 +46,7 @@ export class ContactsView {
       () => this.store.search(this.store.root.tableViewDefs.contactsPreset!),
     );
     reaction(() => {
-      const preset = this.store.root.tableViewDefs.contactsPreset;
+      const preset = this.store.root.tableViewDefs?.contactsPreset;
 
       if (!preset) return '';
 

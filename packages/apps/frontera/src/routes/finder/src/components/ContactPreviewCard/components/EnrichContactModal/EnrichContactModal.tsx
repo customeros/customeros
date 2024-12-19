@@ -32,7 +32,8 @@ export const EnrichContactModal = observer(
     const store = useStore();
     const hasSubmitedRef = useRef(false);
     const [linkedin, setLinkedin] = useState(
-      () => store.contacts.value.get(String(contactId))?.value.socials[0]?.url,
+      () =>
+        store.contacts.value.get(String(contactId))?.value.linkedInUrl || '',
     );
     const [validation, setValidation] = useState<Record<'linkedin', boolean>>({
       linkedin: false,

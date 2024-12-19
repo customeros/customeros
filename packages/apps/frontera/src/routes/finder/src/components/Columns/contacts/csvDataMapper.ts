@@ -1,66 +1,54 @@
-import { ContactStore } from '@store/Contacts/Contact.store';
+import type { Contact } from '@store/Contacts/Contact.dto';
 
 import { DateTimeUtils } from '@utils/date.ts';
-import { JobRole, ColumnViewType } from '@graphql/types';
+import { ColumnViewType } from '@graphql/types';
 
 export const csvDataMapper = {
-  [ColumnViewType.ContactsAvatar]: (d: ContactStore) =>
-    d?.value?.profilePhotoUrl,
-  [ColumnViewType.ContactsName]: (d: ContactStore) => d.name,
-  [ColumnViewType.ContactsUpdatedAt]: (d: ContactStore) =>
-    DateTimeUtils.format(d.value.updatedAt, DateTimeUtils.iso8601),
-  CONTACTS_FIRST_NAME: (d: ContactStore) => d.value.firstName,
-  CONTACTS_LAST_NAME: (d: ContactStore) => d.value.lastName,
-  [ColumnViewType.ContactsCity]: (d: ContactStore) =>
+  [ColumnViewType.ContactsAvatar]: (d: Contact) => d?.value?.profilePhotoUrl,
+  [ColumnViewType.ContactsName]: (d: Contact) => d.name,
+  CONTACTS_FIRST_NAME: (d: Contact) => d.value.firstName,
+  CONTACTS_LAST_NAME: (d: Contact) => d.value.lastName,
+  [ColumnViewType.ContactsCity]: (d: Contact) =>
     d?.value?.locations?.[0]?.locality,
-  [ColumnViewType.ContactsCountry]: (d: ContactStore) => d?.country,
-  [ColumnViewType.ContactsPrimaryEmail]: (d: ContactStore) =>
-    d?.primaryEmail?.email,
-  [ColumnViewType.ContactsFlows]: (d: ContactStore) =>
-    d?.flows?.map((e) => e.value.name).join('; '),
-  [ColumnViewType.ContactsEmails]: (d: ContactStore) =>
+  [ColumnViewType.ContactsCountry]: (d: Contact) => d?.country,
+  [ColumnViewType.ContactsPrimaryEmail]: (d: Contact) =>
     d?.value?.emails
-      ?.filter((e) => e.work)
+      ?.filter((e) => e.primary)
       .map((e) => e.email)
       .join('; '),
-  [ColumnViewType.ContactsPersonalEmails]: (d: ContactStore) =>
-    d?.value?.emails
-      ?.filter((e) => !e.work)
-      .map((e) => e.email)
-      .join('; '),
+
   [ColumnViewType.ContactsExperience]: () => null,
-  [ColumnViewType.ContactsJobTitle]: (d: ContactStore) =>
-    d?.value?.jobRoles?.[0]?.jobTitle,
-  [ColumnViewType.ContactsLanguages]: (_d: ContactStore) => '',
-  [ColumnViewType.ContactsLastInteraction]: (_d: ContactStore) => '',
-  [ColumnViewType.ContactsSchools]: (_d: ContactStore) => '',
-  [ColumnViewType.ContactsSkills]: (_d: ContactStore) => '',
-  [ColumnViewType.ContactsTimeInCurrentRole]: (d: ContactStore) => {
-    const jobRole = d.value.jobRoles?.find((role: JobRole) => {
-      return role?.endedAt !== null;
-    });
+  [ColumnViewType.ContactsJobTitle]: (d: Contact) =>
+    d.value.primaryOrganizationJobRoleTitle,
+
+  [ColumnViewType.ContactsTimeInCurrentRole]: (d: Contact) => {
+    const jobRole = d.value.primaryOrganizationJobRoleEndDate
+      ? d.value.primaryOrganizationJobRoleEndDate
+      : '';
 
     if (!jobRole?.startedAt) return '';
 
     return DateTimeUtils.timeAgo(jobRole.startedAt);
   },
-  [ColumnViewType.ContactsLinkedin]: (d: ContactStore) => {
-    return d?.value?.socials.find((e) => e?.url?.includes('linkedin'))?.url;
+  [ColumnViewType.ContactsLinkedin]: (d: Contact) => {
+    return d?.value?.linkedInUrl;
   },
-  [ColumnViewType.ContactsLinkedinFollowerCount]: (d: ContactStore) =>
-    d?.value?.socials.find((e) => e?.url?.includes('linkedin'))?.followersCount,
-  [ColumnViewType.ContactsOrganization]: (d: ContactStore) =>
-    d?.value?.organizations?.content?.[0]?.name,
-  [ColumnViewType.ContactsPersona]: (d: ContactStore) =>
+  [ColumnViewType.ContactsFlows]: (d: Contact) =>
+    d?.flows?.map((e) => e.value.name).join('; '),
+  [ColumnViewType.ContactsLinkedinFollowerCount]: (d: Contact) =>
+    d?.value?.linkedInFollowerCount,
+  [ColumnViewType.ContactsOrganization]: (d: Contact) =>
+    d?.value?.primaryOrganizationName,
+  [ColumnViewType.ContactsPersona]: (d: Contact) =>
     `${(d?.value?.tags ?? [])?.map((e) => e.name).join('; ')}`?.trim(),
-  [ColumnViewType.ContactsTags]: (d: ContactStore) =>
+  [ColumnViewType.ContactsTags]: (d: Contact) =>
     `${(d?.value?.tags ?? [])?.map((e) => e.name).join('; ')}`?.trim(),
-  [ColumnViewType.ContactsPhoneNumbers]: (d: ContactStore) =>
-    d.value?.phoneNumbers?.map((e) => e?.e164)?.join('; '),
-  [ColumnViewType.ContactsConnections]: (data: ContactStore) => {
+  // [ColumnViewType.ContactsPhoneNumbers]: (d: Contact) =>
+  //   d.value?.phoneNumbers?.map((e) => e?.e164)?.join('; '),
+  [ColumnViewType.ContactsConnections]: (data: Contact) => {
     return data.connectedUsers?.map((e) => e?.name)?.join('; ');
   },
-  [ColumnViewType.ContactsRegion]: (data: ContactStore) => {
+  [ColumnViewType.ContactsRegion]: (data: Contact) => {
     return data.value?.locations?.[0]?.region;
   },
 };

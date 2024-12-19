@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import Fuse from 'fuse.js';
 import { observer } from 'mobx-react-lite';
 import { FlowStore } from '@store/Flows/Flow.store';
-import { ContactStore } from '@store/Contacts/Contact.store';
+import { Contact } from '@store/Contacts/Contact.dto';
 import { FlowParticipantStore } from '@store/FlowParticipants/FlowParticipant.store.ts';
 
 import { Avatar } from '@ui/media/Avatar';
@@ -22,7 +22,7 @@ export const AddExistingContacts = observer(() => {
 
   const selectedFlow = flows.value.get(selectedFlowId) as FlowStore;
 
-  const handleSelect = (opt: ContactStore) => {
+  const handleSelect = (opt: Contact) => {
     if (!selectedFlowId) {
       ui.toastError('No flow selected', 'no-flow-selected');
 
@@ -94,13 +94,13 @@ export const AddExistingContacts = observer(() => {
 
           return (
             <Command.Item
-              key={contactStore.value.metadata.id}
+              key={contactStore.value.id}
               onSelect={() => {
-                handleSelect(contactStore as ContactStore);
+                handleSelect(contactStore as Contact);
               }}
               value={
-                contactStore.name || contactStore.value.metadata.id
-                  ? `${contactStore.name} ${contactStore.value.metadata.id}`
+                contactStore.name || contactStore.value.id
+                  ? `${contactStore.name} ${contactStore.value.id}`
                   : ''
               }
             >
@@ -122,7 +122,9 @@ export const AddExistingContacts = observer(() => {
                   </span>
 
                   <span className='ml-1.5 text-gray-500 line-clamp-1 max-w-[250px]'>
-                    · {contactStore.primaryEmail?.email ?? 'No email yet'}
+                    ·{' '}
+                    {contactStore.value.emails.find((e) => e.primary)?.email ??
+                      'No email yet'}
                   </span>
                 </div>
                 {isSelected && <Check />}

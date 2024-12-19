@@ -4,7 +4,6 @@ import { CommandGroup } from 'cmdk';
 import { observer } from 'mobx-react-lite';
 import { TagDatum } from '@store/Tags/Tag.store';
 
-import { DataSource } from '@graphql/types';
 import { Plus } from '@ui/media/icons/Plus.tsx';
 import { Tag, EntityType } from '@graphql/types';
 import { Check } from '@ui/media/icons/Check.tsx';
@@ -57,11 +56,6 @@ export const EditPersonaTag = observer(() => {
             name: value,
             metadata: {
               id: value,
-              source: DataSource.Openline,
-              sourceOfTruth: DataSource.Openline,
-              appSource: 'organization',
-              created: new Date().toISOString(),
-              lastUpdated: new Date().toISOString(),
             },
             entityType: EntityType.Contact,
           });

@@ -3,7 +3,6 @@ import { observer } from 'mobx-react-lite';
 import { Combobox } from '@ui/form/Combobox';
 import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
-import { JobRole, Metadata } from '@shared/types/__generated__/graphql.types';
 import { Popover, PopoverContent, PopoverTrigger } from '@ui/overlay/Popover';
 import {
   Modal,
@@ -26,6 +25,8 @@ export const ChangeContactOrganizationModal = observer(
     const store = useStore();
 
     const contactStore = store.contacts.value.get(contactId);
+
+    if (!contactStore) return null;
 
     return (
       <Modal open={open}>
@@ -55,35 +56,11 @@ export const ChangeContactOrganizationModal = observer(
                 <Combobox
                   options={store.organizations.toArray().map((o) => ({
                     label: o.value.name,
-                    value: o.value.metadata.id,
+                    value: o.value.id,
                   }))}
                   onChange={(value) => {
                     contactStore?.draft();
-                    contactStore?.value.organizations.content.push({
-                      metadata: {
-                        id: value.value,
-                      } as Metadata,
-                      id: value.value,
-                      name: value.label,
-                    });
-
-                    contactStore?.commit({ syncOnly: true });
-
-                    if (contactStore) {
-                      contactStore?.draft();
-
-                      contactStore.value.latestOrganizationWithJobRole = {
-                        organization: {
-                          metadata: {
-                            id: value.value,
-                          } as Metadata,
-                          name: value.label,
-                        },
-                        jobRole: {
-                          id: '',
-                        } as JobRole,
-                      };
-                    }
+                    contactStore.value.primaryOrganizationName = value.label;
 
                     contactStore?.commit();
 

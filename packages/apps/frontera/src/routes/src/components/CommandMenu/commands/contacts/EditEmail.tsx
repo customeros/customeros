@@ -19,7 +19,7 @@ export const EditEmail = observer(() => {
   const emailAdress =
     selectedId !== null
       ? contact?.value?.emails?.[selectedId ?? 0]?.email ?? ''
-      : contact?.value?.primaryEmail?.email ?? '';
+      : contact?.value?.emails?.find((email) => email.primary)?.email ?? '';
 
   const [value, setValue] = useState(() => emailAdress);
 
@@ -33,7 +33,7 @@ export const EditEmail = observer(() => {
 
   if (!contact) return;
 
-  const primaryEmail = contact.value.primaryEmail?.email;
+  const primaryEmail = contact.value.emails.find((email) => email.primary);
 
   const handleSaveEmail = () => {
     if (!value) return;

@@ -4,7 +4,6 @@ import { observer } from 'mobx-react-lite';
 
 import { Eye } from '@ui/media/icons/Eye.tsx';
 import { Tag01 } from '@ui/media/icons/Tag01';
-import { Phone } from '@ui/media/icons/Phone';
 import { Clock } from '@ui/media/icons/Clock';
 import { Mail01 } from '@ui/media/icons/Mail01';
 import { Edit03 } from '@ui/media/icons/Edit03';
@@ -150,7 +149,7 @@ export const ContactCommands = observer(() => {
         >
           Edit name
         </CommandItem>
-        <CommandItem
+        {/* <CommandItem
           leftAccessory={<Phone />}
           keywords={contactKeywords.edit_phone_number}
           onSelect={() => {
@@ -158,7 +157,7 @@ export const ContactCommands = observer(() => {
           }}
         >
           Edit phone number
-        </CommandItem>
+        </CommandItem> */}
         <CommandItem
           leftAccessory={<Certificate02 />}
           keywords={contactKeywords.edit_job_title}

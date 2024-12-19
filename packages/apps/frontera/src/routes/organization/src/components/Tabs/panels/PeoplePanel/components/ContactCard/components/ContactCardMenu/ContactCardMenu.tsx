@@ -21,9 +21,7 @@ export const ContactCardMenu = observer(
     const { open, onOpen, onClose } = useDisclosure();
     const contactStore = store.contacts.value.get(contactId);
 
-    const linkedInProfile = contactStore?.value.socials?.find((s) =>
-      s.url.includes('linkedin'),
-    )?.url;
+    const linkedInProfile = contactStore?.value.linkedInUrl;
 
     return (
       <>
@@ -39,7 +37,9 @@ export const ContactCardMenu = observer(
           <MenuList>
             <MenuItem
               className='group/linkedin'
-              onClick={() => window.open(linkedInProfile, '_blank', 'noopener')}
+              onClick={() =>
+                window.open(linkedInProfile ?? '', '_blank', 'noopener')
+              }
             >
               <div>
                 <LinkedinOutline className='mr-2 text-gray-500 group-hover/linkedin:text-gray-700' />

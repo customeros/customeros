@@ -21,7 +21,7 @@ export class GraphqlService {
     this.organizationsService = OrganizationsService.getInstance();
     this.customFieldsService = CustomFieldsService.getInstance(this.transport);
     this.invoiceService = InvoicesService.getInstance(this.transport);
-    this.contactService = ContactService.getInstance(this.transport);
+    this.contactService = ContactService.getInstance();
     this.mailboxService = MailboxesService.getInstance(this.transport);
     this.getStore = this.getStore.bind(this);
   }

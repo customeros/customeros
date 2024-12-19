@@ -67,6 +67,7 @@ export class RootStore {
 
     this.transactions = new TransactionService(this, this.transport);
 
+    this.tableViewDefs = new TableViewDefsStore(this, this.transport);
     this.ui = new UIStore(this, this.transport);
     this.windowManager = new WindowManager(this);
     this.mail = new MailStore(this, this.transport);
@@ -85,7 +86,6 @@ export class RootStore {
     this.globalCache = new GlobalCacheStore(this, this.transport);
     this.flowSenders = new FlowSendersStore(this, this.transport);
     this.flowParticipants = new FlowParticipantsStore(this, this.transport);
-    this.tableViewDefs = new TableViewDefsStore(this, this.transport);
     this.organizations = new OrganizationsStore(this, this.transport);
     this.opportunities = new OpportunitiesStore(this, this.transport);
     this.timelineEvents = new TimelineEventsStore(this, this.transport);
@@ -127,7 +127,6 @@ export class RootStore {
       this.contracts.bootstrap(),
       this.externalSystemInstances.bootstrap(),
       this.users.bootstrap(),
-      this.contacts.bootstrap(),
       this.flows.bootstrap(),
       this.flowEmailVariables.bootstrap(),
     ]);
@@ -165,8 +164,7 @@ export class RootStore {
     return (
       this.tableViewDefs.isBootstrapped &&
       this.settings.isBootstrapped &&
-      this.globalCache.isBootstrapped &&
-      this.contacts.isBootstrapped
+      this.globalCache.isBootstrapped
     );
   }
 
@@ -176,8 +174,7 @@ export class RootStore {
     return (
       this.tableViewDefs.isLoading ||
       this.settings.isBootstrapping ||
-      this.globalCache.isLoading ||
-      this.contacts.isBootstrapping
+      this.globalCache.isLoading
     );
   }
 

@@ -13,11 +13,9 @@ export const ContactJobExperience = observer(
     const store = useStore();
     const contactStore = store.contacts.value.get(contactId);
 
-    const orgName =
-      contactStore?.value?.latestOrganizationWithJobRole?.organization?.name;
+    const orgName = contactStore?.value?.primaryOrganizationName;
 
-    const startedAt =
-      contactStore?.value?.latestOrganizationWithJobRole?.jobRole.startedAt;
+    const startedAt = contactStore?.value?.primaryOrganizationJobRoleStartDate;
 
     const timeAtOrg = startedAt ? timeAt(startedAt, orgName ?? '') : null;
 

@@ -74,17 +74,13 @@ export class FlowParticipantsStore implements GroupStore<FlowParticipant> {
       });
 
       runInAction(() => {
-        contactStores.forEach((c) => {
-          c?.update(
-            (c) => {
-              c.flows = flowId
-                ? c.flows.filter((e) => e.metadata.id !== flowId)
-                : [];
+        contactStores.forEach((contact) => {
+          contact?.draft();
 
-              return c;
-            },
-            { mutate: false },
-          );
+          const foundFlow = contact?.value.flows.findIndex((f) => f === flowId);
+
+          contact?.value.flows.slice(foundFlow, 1);
+          contact?.commit({ syncOnly: true });
         });
         flowStores.forEach((c) => {
           c?.update(
@@ -157,14 +153,17 @@ export class FlowParticipantsStore implements GroupStore<FlowParticipant> {
       });
 
       runInAction(() => {
-        this.root.contacts.value.get(contactId)?.update(
-          (c) => {
-            c.flows = c.flows?.filter((f) => f.metadata.id !== flowId);
+        this.root.contacts.value.get(contactId)?.draft();
 
-            return c;
-          },
-          { mutate: false },
-        );
+        const foundFlow = this.root.contacts.value
+          .get(contactId)
+          ?.value.flows.findIndex((f) => f === flowId);
+
+        this.root.contacts.value
+          .get(contactId)
+          ?.value.flows.slice(foundFlow, 1);
+
+        this.root.contacts.value.get(contactId)?.commit({ syncOnly: true });
 
         this.root.ui.toastSuccess(
           `Contact removed from '${flowName}'`,

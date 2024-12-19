@@ -8,7 +8,6 @@ import { observer } from 'mobx-react-lite';
 import { useLocalStorage } from 'usehooks-ts';
 
 import { cn } from '@ui/utils/cn';
-import { DataSource } from '@graphql/types';
 import { Input } from '@ui/form/Input/Input';
 import { validateEmail } from '@utils/email';
 import { SelectOption } from '@ui/utils/types';
@@ -98,42 +97,71 @@ export const MultiValueWithActionMenu: FC<MultiValueWithActionMenuProps> =
           onSuccess: (newContactId) => {
             const contact = store.contacts.value.get(newContactId);
 
-            contact?.update((d) => {
-              d.name = name;
-              d.emails = [
-                {
-                  email: rest?.data?.value,
-                  appSource: '',
-                  contacts: [],
-                  createdAt: undefined,
-                  emailValidationDetails: {
-                    __typename: undefined,
-                    verified: false,
-                    verifyingCheckAll: false,
-                    isValidSyntax: undefined,
-                    isRisky: undefined,
-                    isFirewalled: undefined,
-                    provider: undefined,
-                    firewall: undefined,
-                    isCatchAll: undefined,
-                    canConnectSmtp: undefined,
-                    isDeliverable: undefined,
-                    isMailboxFull: undefined,
-                    isRoleAccount: undefined,
-                    isFreeAccount: undefined,
-                    smtpSuccess: undefined,
-                  },
-                  id: '',
-                  organizations: [],
-                  primary: false,
-                  source: DataSource.Openline,
-                  updatedAt: undefined,
-                  users: [],
-                },
-              ];
+            if (!contact) return;
+            // contact?.update((d) => {
+            //   d.name = name;
+            //   d.emails = [
+            //     {
+            //       email: rest?.data?.value,
+            //       appSource: '',
+            //       contacts: [],
+            //       createdAt: undefined,
+            //       emailValidationDetails: {
+            //         __typename: undefined,
+            //         verified: false,
+            //         verifyingCheckAll: false,
+            //         isValidSyntax: undefined,
+            //         isRisky: undefined,
+            //         isFirewalled: undefined,
+            //         provider: undefined,
+            //         firewall: undefined,
+            //         isCatchAll: undefined,
+            //         canConnectSmtp: undefined,
+            //         isDeliverable: undefined,
+            //         isMailboxFull: undefined,
+            //         isRoleAccount: undefined,
+            //         isFreeAccount: undefined,
+            //         smtpSuccess: undefined,
+            //       },
+            //       id: '',
+            //       organizations: [],
+            //       primary: false,
+            //       source: DataSource.Openline,
+            //       updatedAt: undefined,
+            //       users: [],
+            //     },
+            //   ];
 
-              return d;
-            });
+            //   return d;
+            // });
+            contact?.draft();
+            contact.value.name = name;
+            contact?.commit();
+            contact.draft();
+            contact.value.emails = [
+              {
+                email: rest?.data?.value,
+                emailValidationDetails: {
+                  __typename: undefined,
+                  verified: false,
+                  verifyingCheckAll: false,
+                  isValidSyntax: undefined,
+                  isRisky: undefined,
+                  isFirewalled: undefined,
+                  provider: undefined,
+                  firewall: undefined,
+                  isCatchAll: undefined,
+                  canConnectSmtp: undefined,
+                  isMailboxFull: undefined,
+                  isRoleAccount: undefined,
+                  isFreeAccount: undefined,
+                  smtpSuccess: undefined,
+                },
+                id: '',
+                primary: false,
+              },
+            ];
+            contact.commit();
           },
         });
       };

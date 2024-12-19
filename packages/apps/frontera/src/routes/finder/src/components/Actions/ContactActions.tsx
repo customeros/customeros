@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 
 import { observer } from 'mobx-react-lite';
 import { useKeys, useKeyBindings } from 'rooks';
-import { ContactStore } from '@store/Contacts/Contact.store';
+import { Contact } from '@store/Contacts/Contact.dto';
 import { CommandMenuType } from '@store/UI/CommandMenu.store.ts';
 
 import { useStore } from '@shared/hooks/useStore';
@@ -15,8 +15,8 @@ interface TableActionsProps {
   selection: string[];
   focusedId?: string | null;
   isCommandMenuOpen: boolean;
+  table: TableInstance<Contact>;
   enableKeyboardShortcuts?: boolean;
-  table: TableInstance<ContactStore>;
 }
 
 export const ContactTableActions = observer(

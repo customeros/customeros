@@ -77,8 +77,6 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
 
       await this.retrieve(ui_contacts_search.ids);
 
-      // const totalElements = ui_organizations_search.totalElements;
-
       runInAction(() => {
         this.size = this.value.size;
       });

@@ -56,7 +56,7 @@ export const EmailMenuActions = observer(
               store.ui.setSelectionId(idx);
               store.ui.commandMenu.setType('EditEmail');
               store.ui.commandMenu.setContext({
-                ids: [contactStore?.value.metadata.id ?? ''],
+                ids: [contactStore?.value.id ?? ''],
                 entity: 'Contact',
                 property: 'email',
               });

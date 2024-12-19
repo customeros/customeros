@@ -1,8 +1,9 @@
-import React, { useRef, useEffect } from 'react';
+import type { Contact } from '@store/Contacts/Contact.dto';
+
+import { useRef, useEffect } from 'react';
 
 import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
-import { ContactStore } from '@store/Contacts/Contact.store';
 import { FlowParticipantStore } from '@store/FlowParticipants/FlowParticipant.store';
 
 import { TableIdType } from '@graphql/types';
@@ -13,7 +14,6 @@ import {
   CommandCancelButton,
   CommandCancelIconButton,
 } from '@ui/overlay/CommandMenu';
-
 export const UnlinkContactFromFlow = observer(() => {
   const store = useStore();
   const context = store.ui.commandMenu.context;
@@ -22,8 +22,11 @@ export const UnlinkContactFromFlow = observer(() => {
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   const entity = match(context.entity)
-    .returnType<ContactStore[] | ContactStore | undefined>()
-    .with('Contact', () => store.contacts.value.get(context.ids?.[0]))
+    .returnType<Contact | undefined>()
+    .with(
+      'Contact',
+      () => store.contacts.value.get(context.ids?.[0] as string) as Contact,
+    )
     .otherwise(() => undefined);
 
   const handleClose = () => {
@@ -94,14 +97,14 @@ export const UnlinkContactFromFlow = observer(() => {
 
       return context.ids?.length > 1
         ? `Remove ${context.ids?.length} contacts from ${flowName}?`
-        : `Remove ${(entity as ContactStore)?.name} from ${flowName}?`;
+        : `Remove ${(entity as Contact)?.name} from ${flowName}?`;
     })
     .otherwise(() => {
       return context.ids?.length > 1
         ? `Remove ${context.ids?.length} contacts from all flows?`
-        : `Remove ${(entity as ContactStore)?.name} from ${
+        : `Remove ${(entity as Contact)?.name} from ${
             flowContactIds.length === 1
-              ? (entity as ContactStore)?.flows?.[0]?.value?.name
+              ? (entity as Contact)?.flows?.[0]?.value?.name
               : 'all their flows'
           }?`;
     });

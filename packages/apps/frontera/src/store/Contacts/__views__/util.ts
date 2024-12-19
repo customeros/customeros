@@ -1,6 +1,6 @@
 import Fuse from 'fuse.js';
 
-import type { ContactStore } from '../Contact.dto';
+import type { Contact } from '../Contact.dto';
 
 export function removeAccents(str: string) {
   return str
@@ -9,13 +9,13 @@ export function removeAccents(str: string) {
     .replace(/[\u0300-\u036f]/g, '');
 }
 
-export function indexAndSearch(arr: ContactStore[], term: string) {
+export function indexAndSearch(arr: Contact[], term: string) {
   return new Fuse(arr, {
     keys: [
       { name: 'name', getFn: (o) => o.name },
       {
         name: 'organization',
-        getFn: (o) => o.value?.organizations.content?.[0]?.name,
+        getFn: (o) => o.value.primaryOrganizationName!,
       },
       {
         name: 'email',

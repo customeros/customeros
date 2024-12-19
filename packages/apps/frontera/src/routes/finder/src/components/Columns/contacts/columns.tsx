@@ -11,7 +11,7 @@ import { DateTimeUtils } from '@utils/date.ts';
 import { createColumnHelper } from '@ui/presentation/Table';
 import { Skeleton } from '@ui/feedback/Skeleton/Skeleton.tsx';
 import THead, { getTHeadProps } from '@ui/presentation/Table/THead';
-import { User, Social, TableViewDef, ColumnViewType } from '@graphql/types';
+import { User, TableViewDef, ColumnViewType } from '@graphql/types';
 
 import { EmailCell } from './Cells/email';
 import { PhoneCell } from './Cells/phone';
@@ -383,11 +383,7 @@ const columns: Record<string, Column> = {
       enableSorting: false,
 
       cell: (props) => {
-        const value = props
-          .getValue()
-          ?.socials.find((e: Social) =>
-            e?.url?.includes('linkedin'),
-          )?.followersCount;
+        const value = props.row.original.value.linkedInFollowerCount;
 
         const isEnriching = props.row.original.isEnriching;
 

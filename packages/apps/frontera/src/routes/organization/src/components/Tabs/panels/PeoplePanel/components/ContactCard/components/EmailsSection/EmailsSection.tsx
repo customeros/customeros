@@ -1,6 +1,5 @@
 import { Fragment } from 'react';
 
-import { uniqBy } from 'lodash';
 import { observer } from 'mobx-react-lite';
 
 import { Spinner } from '@ui/feedback/Spinner';
@@ -24,29 +23,17 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
 
   const contactStore = store.contacts.value.get(String(contactId));
 
-  const activeCompany =
-    (contactStore?.value?.organizations?.content?.length ?? 1) - 1;
-  const company = contactStore?.value.organizations?.content?.[activeCompany];
+  const orgName = contactStore?.value.primaryOrganizationName;
 
-  const isPrimaryEmail = contactStore?.value?.primaryEmail;
+  const isPrimaryEmail = contactStore?.value.emails.some(
+    (email) => email.primary,
+  );
 
-  const allEmails = uniqBy(
-    contactStore
-      ? [
-          ...contactStore.value.emails,
-          ...(contactStore.value?.primaryEmail
-            ? [contactStore.value?.primaryEmail]
-            : []),
-        ]
-      : [],
-    'id',
-  ).sort((_a, b) => (b.primary ? 1 : -1));
-  const enrichedContact = contactStore?.value.enrichDetails;
-
-  const isEnrichingEmail =
-    !enrichedContact?.emailEnrichedAt &&
-    enrichedContact?.emailRequestedAt &&
-    !isPrimaryEmail;
+  const allEmails = (contactStore?.value.emails || []).sort((_a, b) =>
+    b.primary ? 1 : -1,
+  );
+  const enrichedContact = contactStore?.emailEnriching;
+  const isEnrichingEmail = enrichedContact && !isPrimaryEmail;
 
   return (
     <div>
@@ -88,12 +75,12 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
               >
                 {isEnrichingEmail
                   ? 'Finding email...'
-                  : enrichedContact?.emailFound
+                  : contactStore?.value.enrichedEmailEnrichedAt
                   ? 'Work email not found'
                   : 'Work email'}
               </p>
               {isEnrichingEmail ? (
-                <Tooltip label={`Finding email at ${company?.name}`}>
+                <Tooltip label={`Finding email at ${orgName}`}>
                   <Spinner
                     size='sm'
                     label='finding email'

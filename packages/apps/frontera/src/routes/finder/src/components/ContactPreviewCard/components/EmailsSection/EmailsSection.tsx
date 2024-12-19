@@ -1,6 +1,5 @@
 import { Fragment } from 'react';
 
-import { uniqBy } from 'lodash';
 import { observer } from 'mobx-react-lite';
 import { SetEmailCase } from '@domain/Contacts/SetEmail.usecase';
 
@@ -31,33 +30,15 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
 
   const contactStore = store.contacts.value.get(String(contactId));
 
-  const activeCompany =
-    (contactStore?.value?.organizations?.content?.length ?? 1) - 1;
-  const company = contactStore?.value.organizations?.content?.[activeCompany];
+  const activeCompanyName = contactStore?.value.primaryOrganizationName;
+  const activeCompanyId = contactStore?.value.primaryOrganizationId;
 
   const domains =
-    company?.metadata.id &&
-    store.organizations.getById(company.metadata.id)?.value?.domains;
+    contactStore?.value.primaryOrganizationId &&
+    store.organizations.getById(activeCompanyId ?? '')?.value?.domains;
 
-  const isPrimaryEmail = contactStore?.value.primaryEmail;
-
-  const allEmails = uniqBy(
-    contactStore
-      ? [
-          ...contactStore.value.emails,
-          ...(contactStore.value.primaryEmail
-            ? [contactStore.value.primaryEmail]
-            : []),
-        ]
-      : [],
-    'id',
-  );
-  const enrichedContact = contactStore?.value.enrichDetails;
-
-  const isEnrichingEmail =
-    !enrichedContact?.emailEnrichedAt &&
-    enrichedContact?.emailRequestedAt &&
-    !isPrimaryEmail;
+  const allEmails = contactStore?.value.emails;
+  const enrichedContact = contactStore?.isEnriching;
 
   const useCase = new SetEmailCase();
 
@@ -71,9 +52,9 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
           <Mail02 className='mt-[1px] text-gray-500' />
 
           <span className='text-gray-500'>Emails</span>
-          {allEmails.length === 0 && (
+          {allEmails!.length === 0 && (
             <span className='text-gray-400 ml-[57px]'>
-              {isEnrichingEmail ? 'Finding email' : 'No emails yet'}
+              {enrichedContact ? 'Finding email' : 'No emails yet'}
             </span>
           )}
         </div>
@@ -95,7 +76,7 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
               </div>
             </MenuButton>
             <MenuList>
-              {company?.name && domains && domains?.length > 0 && (
+              {activeCompanyName && domains && domains?.length > 0 && (
                 <MenuItem
                   className='group/find-email '
                   onClick={() => {
@@ -103,8 +84,8 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
                   }}
                 >
                   <div className='flex items-center gap-1'>
-                    {isEnrichingEmail ? (
-                      <Tooltip label={`Finding email at ${company?.name}`}>
+                    {enrichedContact ? (
+                      <Tooltip label={`Finding email at ${activeCompanyName}`}>
                         <Spinner
                           size='sm'
                           label='finding email'
@@ -116,9 +97,9 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
                     )}
 
                     <span className='max-w-[150px] text-ellipsis overflow-hidden whitespace-nowrap'>
-                      {isEnrichingEmail
-                        ? `Finding email at ${company?.name}`
-                        : `Find email at ${company?.name}`}
+                      {enrichedContact
+                        ? `Finding email at ${activeCompanyName}`
+                        : `Find email at ${activeCompanyName}`}
                     </span>
                   </div>
                 </MenuItem>
@@ -154,8 +135,8 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
               </MenuItem>
             </MenuList>
           </Menu>
-          {isEnrichingEmail && (
-            <Tooltip label={`Finding email at ${company} `}>
+          {enrichedContact && (
+            <Tooltip label={`Finding email at ${activeCompanyName} `}>
               <div>
                 <Spinner
                   size='sm'
