@@ -66,22 +66,22 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 
 		emailFilter := new(utils.CypherFilter)
 		emailFilter.Negate = false
-		emailFilter.LogicalOperator = utils.OR
+		emailFilter.LogicalOperator = utils.AND
 		emailFilter.Filters = make([]*utils.CypherFilter, 0)
 
 		locationFilter := new(utils.CypherFilter)
 		locationFilter.Negate = false
-		locationFilter.LogicalOperator = utils.OR
+		locationFilter.LogicalOperator = utils.AND
 		locationFilter.Filters = make([]*utils.CypherFilter, 0)
 
 		parentOrganizationFilter := new(utils.CypherFilter)
 		parentOrganizationFilter.Negate = false
-		parentOrganizationFilter.LogicalOperator = utils.OR
+		parentOrganizationFilter.LogicalOperator = utils.AND
 		parentOrganizationFilter.Filters = make([]*utils.CypherFilter, 0)
 
 		userFilter := new(utils.CypherFilter)
 		userFilter.Negate = false
-		userFilter.LogicalOperator = utils.OR
+		userFilter.LogicalOperator = utils.AND
 		userFilter.Filters = make([]*utils.CypherFilter, 0)
 
 		for _, filter := range where.And {
@@ -177,6 +177,18 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 			}
 			if filter.Filter.Property == model.ColumnViewTypeOrganizationsUpdatedDate.String() {
 				createTimeFilter(filter, organizationFilter, "updatedAt")
+			}
+		}
+
+		if len(where.And) == 0 {
+			for _, filter := range where.Or {
+				organizationFilter.LogicalOperator = utils.OR
+				if filter.Filter.Property == model.ColumnViewTypeOrganizationsName.String() {
+					organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateStringCypherFilter("name", filter.Filter.Value.Str, filter.Filter.Operation))
+				}
+				if filter.Filter.Property == model.ColumnViewTypeOrganizationsWebsite.String() {
+					organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateStringCypherFilter("website", filter.Filter.Value.Str, filter.Filter.Operation))
+				}
 			}
 		}
 
