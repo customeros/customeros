@@ -381,7 +381,8 @@ export class FlowStore implements Store<Flow> {
       sendToEmailAddress: string;
     },
     options?: {
-      onSuccess: () => void;
+      onSuccess?: () => void;
+      onFinally?: () => void;
     },
   ) => {
     this.isLoading = true;
@@ -391,7 +392,7 @@ export class FlowStore implements Store<Flow> {
 
       this.root.ui.toastSuccess('Test email sent', 'send-test-email-success');
       runInAction(() => {
-        options?.onSuccess();
+        options?.onSuccess?.();
       });
     } catch (e) {
       runInAction(() => {
@@ -402,6 +403,7 @@ export class FlowStore implements Store<Flow> {
       });
     } finally {
       runInAction(() => {
+        options?.onFinally?.();
         this.isLoading = false;
       });
     }
