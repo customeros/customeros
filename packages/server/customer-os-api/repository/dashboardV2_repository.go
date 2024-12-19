@@ -686,7 +686,7 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 	tracing.LogObjectAsJson(span, "sort", sort)
 
 	contactFilterCypher, contactFilterParams := "", make(map[string]interface{})
-	socialFilterCypher, socialFilterParams := "", make(map[string]interface{})
+	linkedInFilterCypher, linkedInFilterParams := "", make(map[string]interface{})
 	tagFilterCypher, tagFilterParams := "", make(map[string]interface{})
 	locationFilterCypher, locationFilterParams := "", make(map[string]interface{})
 	primaryEmailFilterCypher, primaryEmailFilterParams := "", make(map[string]interface{})
@@ -697,10 +697,10 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 		contactFilter.LogicalOperator = utils.AND
 		contactFilter.Filters = make([]*utils.CypherFilter, 0)
 
-		socialFilter := new(utils.CypherFilter)
-		socialFilter.Negate = false
-		socialFilter.LogicalOperator = utils.AND
-		socialFilter.Filters = make([]*utils.CypherFilter, 0)
+		linkedInFilter := new(utils.CypherFilter)
+		linkedInFilter.Negate = false
+		linkedInFilter.LogicalOperator = utils.AND
+		linkedInFilter.Filters = make([]*utils.CypherFilter, 0)
 
 		tagFilter := new(utils.CypherFilter)
 		tagFilter.Negate = false
@@ -724,7 +724,6 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 			//ColumnViewTypeContactsEmails                     ColumnViewType = "CONTACTS_EMAILS"
 			//ColumnViewTypeContactsPersonalEmails             ColumnViewType = "CONTACTS_PERSONAL_EMAILS"
 			//ColumnViewTypeContactsPhoneNumbers               ColumnViewType = "CONTACTS_PHONE_NUMBERS"
-			//ColumnViewTypeContactsLinkedin                   ColumnViewType = "CONTACTS_LINKEDIN"
 			//ColumnViewTypeContactsPersona                    ColumnViewType = "CONTACTS_PERSONA"
 			//ColumnViewTypeContactsLastInteraction            ColumnViewType = "CONTACTS_LAST_INTERACTION"
 			//ColumnViewTypeContactsSkills                     ColumnViewType = "CONTACTS_SKILLS"
@@ -797,13 +796,47 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 					createInOrEmptyStringFilter(filter, tagFilter, string(neo4jentity.TagPropertyName))
 				}
 			}
+			if filter.Filter.Property == model.ColumnViewTypeContactsLinkedin.String() {
+				logicalOperator := utils.AND
+				if filter.Filter.Operation == commonmodel.ComparisonOperatorContains || filter.Filter.Operation == commonmodel.ComparisonOperatorIsNotEmpty {
+					logicalOperator = utils.OR
+				} else if filter.Filter.Operation == commonmodel.ComparisonOperatorNotContains || filter.Filter.Operation == commonmodel.ComparisonOperatorIsEmpty {
+					logicalOperator = utils.AND
+				} else {
+					continue
+				}
+				parentInnerGroupFilter := new(utils.CypherFilter)
+				parentInnerGroupFilter.Negate = false
+				parentInnerGroupFilter.LogicalOperator = utils.OR
+				parentInnerGroupFilter.Filters = make([]*utils.CypherFilter, 0)
+
+				innerGroupFilter1 := new(utils.CypherFilter)
+				innerGroupFilter1.Negate = false
+				innerGroupFilter1.LogicalOperator = logicalOperator
+				innerGroupFilter1.Filters = make([]*utils.CypherFilter, 0)
+				innerGroupFilter1.Filters = append(innerGroupFilter1.Filters, utils.CreateStringCypherFilter(string(neo4jentity.SocialPropertyAlias), filter.Filter.Value.Str, filter.Filter.Operation))
+				innerGroupFilter1.Filters = append(innerGroupFilter1.Filters, utils.CreateStringCypherFilter(string(neo4jentity.SocialPropertyUrl), filter.Filter.Value.Str, filter.Filter.Operation))
+
+				parentInnerGroupFilter.Filters = append(parentInnerGroupFilter.Filters, innerGroupFilter1)
+
+				if filter.Filter.Operation == commonmodel.ComparisonOperatorNotContains {
+					innerGroupFilter2 := new(utils.CypherFilter)
+					innerGroupFilter2.Negate = false
+					innerGroupFilter2.LogicalOperator = utils.AND
+					innerGroupFilter2.Filters = make([]*utils.CypherFilter, 0)
+					innerGroupFilter2.Filters = append(innerGroupFilter2.Filters, utils.CreateStringCypherFilter(string(neo4jentity.SocialPropertyAlias), filter.Filter.Value.Str, commonmodel.ComparisonOperatorIsNull))
+					parentInnerGroupFilter.Filters = append(parentInnerGroupFilter.Filters, innerGroupFilter2)
+				}
+
+				linkedInFilter.Filters = append(linkedInFilter.Filters, parentInnerGroupFilter)
+			}
 		}
 
 		if len(contactFilter.Filters) > 0 {
 			contactFilterCypher, contactFilterParams = contactFilter.BuildCypherFilterFragmentWithParamName("c", "c_param_")
 		}
-		if len(socialFilter.Filters) > 0 {
-			socialFilterCypher, socialFilterParams = socialFilter.BuildCypherFilterFragmentWithParamName("s", "s_param_")
+		if len(linkedInFilter.Filters) > 0 {
+			linkedInFilterCypher, linkedInFilterParams = linkedInFilter.BuildCypherFilterFragmentWithParamName("sl", "sl_param_")
 		}
 		if len(tagFilter.Filters) > 0 {
 			tagFilterCypher, tagFilterParams = tagFilter.BuildCypherFilterFragmentWithParamName("t", "t_param_")
@@ -824,7 +857,7 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 	}
 
 	utils.MergeMapToMap(contactFilterParams, params)
-	utils.MergeMapToMap(socialFilterParams, params)
+	utils.MergeMapToMap(linkedInFilterParams, params)
 	utils.MergeMapToMap(tagFilterParams, params)
 	utils.MergeMapToMap(locationFilterParams, params)
 	utils.MergeMapToMap(primaryEmailFilterParams, params)
@@ -833,8 +866,8 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 	countQuery := ""
 	{
 		countQuery += fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact_%s) `, tenant)
-		if socialFilterCypher != "" {
-			countQuery += ` OPTIONAL MATCH (c)-[:HAS]->(s:Social) WITH *`
+		if linkedInFilterCypher != "" {
+			countQuery += ` OPTIONAL MATCH (c)-[:HAS]->(sl:Social) WHERE sl.url CONTAINS 'linkedin.com/in' WITH *`
 		}
 		if tagFilterCypher != "" {
 			countQuery += ` OPTIONAL MATCH (c)-[:TAGGED]->(t:Tag) WITH *`
@@ -848,7 +881,7 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 
 		countQuery += ` WHERE (c.hide = false OR c.hide IS NULL) `
 
-		if contactFilterCypher != "" || socialFilterCypher != "" || tagFilterCypher != "" || locationFilterCypher != "" || primaryEmailFilterCypher != "" {
+		if contactFilterCypher != "" || linkedInFilterCypher != "" || tagFilterCypher != "" || locationFilterCypher != "" || primaryEmailFilterCypher != "" {
 			countQuery += " AND "
 		}
 
@@ -856,8 +889,8 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 		if contactFilterCypher != "" {
 			countQueryParts = append(countQueryParts, contactFilterCypher)
 		}
-		if socialFilterCypher != "" {
-			countQueryParts = append(countQueryParts, socialFilterCypher)
+		if linkedInFilterCypher != "" {
+			countQueryParts = append(countQueryParts, linkedInFilterCypher)
 		}
 		if tagFilterCypher != "" {
 			countQueryParts = append(countQueryParts, tagFilterCypher)
@@ -877,8 +910,8 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 	//region selectQuery to fetch data
 	{
 		selectQuery += fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact_%s) `, tenant)
-		if socialFilterCypher != "" {
-			selectQuery += fmt.Sprintf(` OPTIONAL MATCH (c)-[:HAS]->(s:Social_%s) WITH *`, tenant)
+		if linkedInFilterCypher != "" || (sort != nil && (sort.By == model.ColumnViewTypeContactsLinkedin.String())) {
+			selectQuery += fmt.Sprintf(` OPTIONAL MATCH (c)-[:HAS]->(sl:Social_%s) WHERE sl.url CONTAINS 'linkedin.com/in'  WITH *`, tenant)
 		}
 		if tagFilterCypher != "" {
 			selectQuery += fmt.Sprintf(` OPTIONAL MATCH (c)-[:TAGGED]->(t:Tag_%s) WITH *`, tenant)
@@ -891,7 +924,7 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 		}
 		selectQuery += ` WHERE (c.hide = false OR c.hide IS NULL) `
 
-		if contactFilterCypher != "" || socialFilterCypher != "" || tagFilterCypher != "" || locationFilterCypher != "" || primaryEmailFilterCypher != "" {
+		if contactFilterCypher != "" || linkedInFilterCypher != "" || tagFilterCypher != "" || locationFilterCypher != "" || primaryEmailFilterCypher != "" {
 			selectQuery += " AND "
 		}
 
@@ -899,8 +932,8 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 		if contactFilterCypher != "" {
 			queryParts = append(queryParts, contactFilterCypher)
 		}
-		if socialFilterCypher != "" {
-			queryParts = append(queryParts, socialFilterCypher)
+		if linkedInFilterCypher != "" {
+			queryParts = append(queryParts, linkedInFilterCypher)
 		}
 		if tagFilterCypher != "" {
 			queryParts = append(queryParts, tagFilterCypher)
@@ -965,6 +998,13 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 			aliases += `CASE WHEN c.updatedAt IS NOT NULL THEN c.updatedAt ELSE datetime({year:2100}) END as SORT_BY `
 		} else {
 			aliases += `CASE WHEN c.updatedAt IS NOT NULL THEN c.updatedAt ELSE datetime({year:1900}) END as SORT_BY `
+		}
+	}
+	if sort != nil && sort.By == model.ColumnViewTypeContactsLinkedin.String() {
+		if sort.Direction == commonmodel.SortingDirectionAsc {
+			aliases += `CASE WHEN (COALESCE(sl.alias, '') + COALESCE(sl.url, '')) <> '' THEN toLower(COALESCE(sl.alias, '') + COALESCE(sl.url, '')) ELSE 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz' END as SORT_BY `
+		} else {
+			aliases += `CASE WHEN (COALESCE(sl.alias, '') + COALESCE(sl.url, '')) <> '' THEN toLower(COALESCE(sl.alias, '') + COALESCE(sl.url, '')) ELSE '' END as SORT_BY `
 		}
 	}
 
