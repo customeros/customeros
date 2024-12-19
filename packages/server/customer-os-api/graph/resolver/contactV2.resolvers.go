@@ -133,7 +133,7 @@ func (r *queryResolver) UIContacts(ctx context.Context, ids []string) ([]*model.
 		}
 
 		for _, o := range *primaryOrganizationsWithJobRole {
-			if (*resp)[o.DataloaderKey].PrimaryOrganizationID != nil {
+			if (*resp)[o.DataloaderKey].PrimaryOrganizationID == nil {
 				(*resp)[o.DataloaderKey].PrimaryOrganizationID = utils.StringPtr(o.Organization.ID)
 				(*resp)[o.DataloaderKey].PrimaryOrganizationName = utils.StringPtr(o.Organization.Name)
 				(*resp)[o.DataloaderKey].PrimaryOrganizationJobRoleID = utils.StringPtr(o.JobRole.Id)
