@@ -3,7 +3,6 @@ server_modules := "server/customer-os-postgres-repository server/customer-os-com
 
 runner_modules := "runner/customer-os-data-upkeeper runner/sync-gmail-raw runner/sync-gmail runner/sync-customer-os-data runner/sync-tracking runner/sync-slack runner/customer-os-dedup runner/integrity-checker"
 
-# Output directory for binaries
 bin_dir := "bin"
 
 # Build all services
@@ -68,7 +67,12 @@ ci: tidy-all build-all
 
 # Clean build artifacts
 clean:
-    rm -rf {{bin_dir}}
+	rm -rf {{bin_dir}}
+	rm -rf *.log
+	rm -rf *.pid
+
+logs:
+    tail -f admin-api.log api.log events-subscribers.log
 
 # Show outdated dependencies for all modules
 outdated:
@@ -81,6 +85,41 @@ outdated:
         echo -e "\n=== $module ==="
         (cd "$module" && go list -u -m all | grep -v "indirect" | grep "\[" || echo "All dependencies are up to date")
     done
+
+ps:
+	cd ../deployment && podman-compose ps
+
+restart-api:
+	pkill -f "customer-os-platform-admin-api" || true 
+	cd ./server/customer-os-platform-admin-api && go run . > ../../admin-api.log 2>&1 & echo $$! > admin-api.pid
+	pkill -f "customer-os-api" || true
+	cd ./server/customer-os-api && go run . > ../../api.log 2>&1 & echo $$! > api.pid
+	sleep 5
+	echo "CustomerOS API restarted"
+
+start:
+	cd ../deployment && podman-compose up rabbitmq jaeger postgres neo4j eventstore -d
+
+start-api:
+    cd ./server/customer-os-platform-admin-api && go run . > ../../admin-api.log 2>&1 & echo $$! > admin-api.pid
+    cd ./server/customer-os-api && go run . > ../../api.log 2>&1 & echo $$! > api.pid
+    echo "Services started."
+
+start-api-debug:
+    cd ./server/customer-os-api && dlv debug --headless --listen=:2345 --api-version=2 .
+
+start-events:
+    cd ./server/events-subscribers && go run . > ../../events-subscribers.log 2>&1 & echo $$! > events-subscribers.pid
+
+stop:
+	kill `cat admin-api.pid` 2>/dev/null || true
+	kill `cat api.pid` 2>/dev/null || true
+	kill `cat events-subscribers.pid` 2>/dev/null || true
+	rm -f *.pid
+	cd ../deployment && podman-compose down rabbitmq jaeger postgres neo4j eventstore
+
+test-flow SERVICE:
+	python3 server/customer-os-api/test/flows/{{SERVICE}}_test.py
 
 # Run tests for a specific service
 test SERVICE:

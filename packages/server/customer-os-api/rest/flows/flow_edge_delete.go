@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	commonEnum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 
@@ -51,14 +52,14 @@ func DeleteFlowEdge(s *service.Services) gin.HandlerFunc {
 			query := entity.FlowEdge{
 				ID:     edgeId,
 				FlowID: flowId,
-				Active: false,
+				Status: commonEnum.FlowNodeEdgeStatusArchived.String(),
 			}
 			deletedEdge, err := s.Repositories.PostgresRepositories.FlowEdgeRepository.Update(ctx, query)
 			if err != nil {
 				rest.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer)
 				return
 			}
-			if deletedEdge.Active != false {
+			if deletedEdge.Status != commonEnum.FlowNodeEdgeStatusArchived.String() {
 				rest.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer.WithMessage("edge deletion failed"))
 				return
 			}

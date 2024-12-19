@@ -44,8 +44,8 @@ type Repositories struct {
 	EventBufferRepository                        EventBufferRepository
 	ExternalAppKeysRepository                    ExternalAppKeysRepository
 	FlowRepository                               FlowRepository
-	FlowActionExecutionRepository                FlowActionExecutionRepository
-	FlowActionRegistryRepository                 FlowActionRegistryRepository
+	FlowAgentExecutionRepository                 FlowAgentExecutionRepository
+	FlowAgentRegistryRepository                  FlowAgentRegistryRepository
 	FlowDeadEventsRepository                     FlowDeadEventsRepository
 	FlowEdgeRepository                           FlowEdgeRepository
 	FlowExecutionRepository                      FlowExecutionRepository
@@ -124,8 +124,8 @@ func InitRepositories(postgresDB *config.PostgresDB) *Repositories {
 		EventBufferRepository:                        NewEventBufferRepository(postgresDB.GormDB),
 		ExternalAppKeysRepository:                    NewExternalAppKeysRepository(postgresDB.GormDB),
 		FlowRepository:                               NewFlowRepository(postgresDB.GormDB),
-		FlowActionExecutionRepository:                NewFlowActionExecutionRepository(postgresDB.GormDB),
-		FlowActionRegistryRepository:                 NewFlowActionRegistryRepository(postgresDB.GormDB),
+		FlowAgentExecutionRepository:                 NewFlowAgentExecutionRepository(postgresDB.GormDB),
+		FlowAgentRegistryRepository:                  NewFlowAgentRegistryRepository(postgresDB.GormDB),
 		FlowDeadEventsRepository:                     NewFlowDeadEventsRepository(postgresDB.GormDB),
 		FlowEdgeRepository:                           NewFlowEdgeRepository(postgresDB.GormDB),
 		FlowExecutionRepository:                      NewFlowExecutionRepository(postgresDB.GormDB),
@@ -191,8 +191,8 @@ func (r *Repositories) Migration(postgresDB *config.PostgresDB) {
 		&entity.EventBuffer{},
 		&entity.ExternalAppKeys{},
 		&entity.Flow{},
-		&entity.FlowActionRegistry{},
-		&entity.FlowActionExecution{},
+		&entity.FlowAgentRegistry{},
+		&entity.FlowAgentExecution{},
 		&entity.FlowDeadEvents{},
 		&entity.FlowEdge{},
 		&entity.FlowExecution{},
@@ -244,7 +244,7 @@ func (r *Repositories) Migration(postgresDB *config.PostgresDB) {
 }
 
 func (r *Repositories) InitData(ctx context.Context, postgresRepos *Repositories) {
-	err := r.FlowActionRegistryRepository.Initialize(ctx)
+	err := r.FlowAgentRegistryRepository.Initialize(ctx)
 	if err != nil {
 		panic(err)
 	}

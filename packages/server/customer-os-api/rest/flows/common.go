@@ -17,6 +17,10 @@ func validateFlowBelongsToTenant(c *gin.Context, s *service.Services) (string, b
 	tracing.TagComponentRest(span)
 
 	flowId := c.Param("flowId")
+	if flowId == "" {
+		return "", true, nil
+	}
+
 	flowPrefix := strings.HasPrefix(strings.ToLower(flowId), "flow_")
 	if !flowPrefix {
 		flowId = fmt.Sprintf("flow_%s", flowId)

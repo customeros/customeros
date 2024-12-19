@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	commonEnum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
@@ -71,7 +72,7 @@ func updateFlowNode(c *gin.Context, s *service.Services, updateRecord FlowNodeRe
 	query := entity.FlowNode{
 		ID:     updateRecord.ID,
 		FlowID: updateRecord.FlowID,
-		Active: true,
+		Status: commonEnum.FlowNodeEdgeStatusActive.String(),
 	}
 
 	node, err := s.Repositories.PostgresRepositories.FlowNodeRepository.Find(ctx, query)

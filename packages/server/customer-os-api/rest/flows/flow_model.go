@@ -7,15 +7,15 @@ import (
 )
 
 type FlowRecord struct {
-	ID            string    `json:"id"`
-	Name          string    `json:"name"`
-	Description   string    `json:"description,omitempty"`
-	Trigger       string    `json:"triggerOn,omitempty"`
-	TriggerNodeID string    `json:"triggerNodeId,omitempty"`
-	VisibleUI     *bool     `json:"visible"`
-	Status        string    `json:"status"`
-	CreatedAt     time.Time `json:"createdAt"`
-	UpdatedAt     time.Time `json:"UpadatedAt,omitempty"`
+	ID            string     `json:"id"`
+	Name          string     `json:"name"`
+	Description   string     `json:"description,omitempty"`
+	Trigger       string     `json:"triggerOn,omitempty"`
+	TriggerNodeID string     `json:"triggerNodeId,omitempty"`
+	VisibleUI     *bool      `json:"visible"`
+	Status        string     `json:"status"`
+	CreatedAt     time.Time  `json:"createdAt"`
+	UpdatedAt     *time.Time `json:"updatedAt,omitempty"`
 }
 
 type FlowResponse struct {

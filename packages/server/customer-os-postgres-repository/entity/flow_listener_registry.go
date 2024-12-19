@@ -6,7 +6,7 @@ type FlowListenerRegistry struct {
 	ListenerEvent  string `gorm:"column:listener_event;type:varchar(255);not null;index" json:"listenerEvent" binding:"required"`
 	FriendlyName   string `gorm:"column:friendly_name;type:varchar(255);not null;index" json:"friendlyName" binding:"required"`
 	Description    string `gorm:"column:description;type:varchar(255);not null" json:"description" binding:"required"`
-	Enabled        bool   `gorm:"column:enabled;type:boolean;default:true" json:"enabled"`
+	Status         string `gorm:"column:status;type:varchar(50)" json:"status"`
 }
 
 func (FlowListenerRegistry) TableName() string {

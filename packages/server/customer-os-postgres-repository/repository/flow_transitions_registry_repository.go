@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/opentracing/opentracing-go"
@@ -51,7 +52,8 @@ func (r *flowTransitionsRegistryRepository) FindAll(ctx context.Context, transit
 	tracing.TagComponentPostgresRepository(span)
 
 	var transitions []entity.FlowTransitionsRegistry
-	query := r.gormDb.WithContext(ctx).Where("enabled = ?", true)
+	query := r.gormDb.WithContext(ctx).
+		Where("status = ?", enum.FlowNodeEdgeStatusActive.String())
 
 	// Add additional filters if transition is not nil
 	if transition != nil {
@@ -75,7 +77,8 @@ func (r *flowTransitionsRegistryRepository) Find(ctx context.Context, transition
 	tracing.TagComponentPostgresRepository(span)
 
 	var foundTransition entity.FlowTransitionsRegistry
-	query := r.gormDb.WithContext(ctx).Where("enabled = ?", true)
+	query := r.gormDb.WithContext(ctx).
+		Where("status = ?", enum.FlowNodeEdgeStatusActive.String())
 
 	// Add additional filters based on non-zero fields in transition
 	if transition != (entity.FlowTransitionsRegistry{}) {
@@ -103,9 +106,16 @@ func (r *flowTransitionsRegistryRepository) Initialize(ctx context.Context) erro
 		{
 			FromNodeType: enum.NodeFlowListenerEvent.String(),
 			FromNode:     enum.EventFathomMeetingSummaryCreated.String(),
-			ToNodeType:   enum.NodeFlowAction.String(),
-			ToNode:       enum.ActionTimelineEventCreate.String(),
-			Enabled:      true,
+			ToNodeType:   enum.NodeFlowAgent.String(),
+			ToNode:       enum.AgentTimelineEventCreate.String(),
+			Status:       enum.FlowNodeEdgeStatusActive.String(),
+		},
+		{
+			FromNodeType: enum.NodeFlowListenerEvent.String(),
+			FromNode:     enum.EventGrainMeetingSummaryCreated.String(),
+			ToNodeType:   enum.NodeFlowAgent.String(),
+			ToNode:       enum.AgentTimelineEventCreate.String(),
+			Status:       enum.FlowNodeEdgeStatusActive.String(),
 		},
 		// ... add more here
 	}

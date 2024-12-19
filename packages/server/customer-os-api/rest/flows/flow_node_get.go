@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	commonEnum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
@@ -40,9 +41,12 @@ func GetFlowNodes(s *service.Services) gin.HandlerFunc {
 		}
 
 		nodeId := c.Param("nodeId")
-		nodePrefix := strings.HasPrefix(strings.ToLower(nodeId), "node_")
-		if !nodePrefix {
-			nodeId = fmt.Sprintf("node_%s", nodeId)
+
+		if nodeId != "" {
+			nodePrefix := strings.HasPrefix(strings.ToLower(nodeId), "node_")
+			if !nodePrefix {
+				nodeId = fmt.Sprintf("node_%s", nodeId)
+			}
 		}
 
 		switch nodeId {
@@ -62,7 +66,7 @@ func getFlowNode(c *gin.Context, s *service.Services, flowId, nodeId string) {
 	node, err := s.Repositories.PostgresRepositories.FlowNodeRepository.Find(ctx, entity.FlowNode{
 		ID:     nodeId,
 		FlowID: flowId,
-		Active: true,
+		Status: commonEnum.FlowNodeEdgeStatusActive.String(),
 	})
 	if err != nil {
 		rest.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer)
@@ -99,7 +103,7 @@ func getAllFlowNodes(c *gin.Context, s *service.Services, flowId string) {
 
 	nodes, err := s.Repositories.PostgresRepositories.FlowNodeRepository.FindAll(ctx, entity.FlowNode{
 		FlowID: flowId,
-		Active: true,
+		Status: commonEnum.FlowNodeEdgeStatusActive.String(),
 	})
 	if err != nil {
 		rest.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer)

@@ -87,11 +87,16 @@ func (f *flowNodeRepository) Update(ctx context.Context, flowNode entity.FlowNod
 	}
 
 	var updatedNode entity.FlowNode
-	err := f.gormDb.Model(&flowNode).Updates(&flowNode).First(&updatedNode).Error
+	err := f.gormDb.Model(&flowNode).
+		Updates(&flowNode).
+		Where("id = ?", flowNode.ID). // Ensure we get the same record
+		First(&updatedNode).Error
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
+
+	tracing.LogObjectAsJson(span, "payload", updatedNode)
 
 	return &updatedNode, nil
 }

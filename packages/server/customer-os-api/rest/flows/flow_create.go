@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
@@ -53,6 +54,11 @@ func CreateFlow(s *service.Services) gin.HandlerFunc {
 		flowRecord := buildFlowEntity(ctx, request)
 		result, err := s.Repositories.PostgresRepositories.FlowRepository.Create(ctx, flowRecord)
 		if err != nil {
+			if strings.Contains(err.Error(), "duplicate key") {
+				rest.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("flow with this name already exists"))
+				return
+			}
+
 			rest.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer.WithMessage("could not create flow"))
 			return
 		}
@@ -62,6 +68,7 @@ func CreateFlow(s *service.Services) gin.HandlerFunc {
 			FlowID: result.ID,
 			Type:   commonEnum.NodeFlowListenerEvent.String(),
 			Event:  &result.TriggerOn,
+			Status: commonEnum.FlowNodeEdgeStatusActive.String(),
 		}
 		nodeResult, err := s.Repositories.PostgresRepositories.FlowNodeRepository.Create(ctx, triggerNode)
 		if err != nil {
@@ -101,7 +108,7 @@ func buildFlowEntity(ctx context.Context, request FlowRecord) entity.Flow {
 		TriggerOn:     request.Trigger,
 		TriggerNodeID: request.TriggerNodeID,
 		VisibleInUI:   request.VisibleUI,
-		Status:        commonEnum.FlowStatusInactive.String(),
+		Status:        commonEnum.FlowStatusOff.String(),
 	}
 }
 

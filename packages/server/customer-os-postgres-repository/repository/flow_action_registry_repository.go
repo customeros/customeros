@@ -12,29 +12,29 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 )
 
-type FlowActionRegistryRepository interface {
+type FlowAgentRegistryRepository interface {
 	Initialize(ctx context.Context) error
-	Create(ctx context.Context, flowAction entity.FlowActionRegistry) (*entity.FlowActionRegistry, error)
-	Find(ctx context.Context, flowAction entity.FlowActionRegistry) (*entity.FlowActionRegistry, error)
-	FindAll(ctx context.Context) (*[]entity.FlowActionRegistry, error)
+	Create(ctx context.Context, flowAgent entity.FlowAgentRegistry) (*entity.FlowAgentRegistry, error)
+	Find(ctx context.Context, flowAgent entity.FlowAgentRegistry) (*entity.FlowAgentRegistry, error)
+	FindAll(ctx context.Context) (*[]entity.FlowAgentRegistry, error)
 }
 
-type flowActionRegistryRepository struct {
+type flowAgentRegistryRepository struct {
 	gormDb *gorm.DB
 }
 
-func NewFlowActionRegistryRepository(gormDb *gorm.DB) FlowActionRegistryRepository {
-	return &flowActionRegistryRepository{gormDb: gormDb}
+func NewFlowAgentRegistryRepository(gormDb *gorm.DB) FlowAgentRegistryRepository {
+	return &flowAgentRegistryRepository{gormDb: gormDb}
 }
 
-func (r *flowActionRegistryRepository) FindAll(ctx context.Context) (*[]entity.FlowActionRegistry, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionRegistryRepository.FindAll")
+func (r *flowAgentRegistryRepository) FindAll(ctx context.Context) (*[]entity.FlowAgentRegistry, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowAgentRegistryRepository.FindAll")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	var actions []entity.FlowActionRegistry
+	var actions []entity.FlowAgentRegistry
 	err := r.gormDb.WithContext(ctx).
-		Where("enabled = true").
+		Where("status = ?", enum.FlowNodeEdgeStatusActive.String()).
 		Order("action DESC").
 		Find(&actions).Error
 	if err != nil {
@@ -45,17 +45,18 @@ func (r *flowActionRegistryRepository) FindAll(ctx context.Context) (*[]entity.F
 	return &actions, nil
 }
 
-func (r *flowActionRegistryRepository) Find(ctx context.Context, flowAction entity.FlowActionRegistry) (*entity.FlowActionRegistry, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionRegistryRepository.Find")
+func (r *flowAgentRegistryRepository) Find(ctx context.Context, flowAgent entity.FlowAgentRegistry) (*entity.FlowAgentRegistry, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowAgentRegistryRepository.Find")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	var action entity.FlowActionRegistry
-	query := r.gormDb.WithContext(ctx).Where("enabled = ?", true)
+	var action entity.FlowAgentRegistry
+	query := r.gormDb.WithContext(ctx).
+		Where("status = ?", enum.FlowNodeEdgeStatusActive.String())
 
-	// Add additional filters based on non-zero fields in flowAction
-	if flowAction != (entity.FlowActionRegistry{}) {
-		query = query.Where(&flowAction)
+	// Add additional filters based on non-zero fields in flowAgent
+	if flowAgent != (entity.FlowAgentRegistry{}) {
+		query = query.Where(&flowAgent)
 	}
 
 	err := query.First(&action).Error
@@ -70,79 +71,79 @@ func (r *flowActionRegistryRepository) Find(ctx context.Context, flowAction enti
 	return &action, nil
 }
 
-func (r *flowActionRegistryRepository) Create(ctx context.Context, flowAction entity.FlowActionRegistry) (*entity.FlowActionRegistry, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionRegistryRepository.Create")
+func (r *flowAgentRegistryRepository) Create(ctx context.Context, flowAgent entity.FlowAgentRegistry) (*entity.FlowAgentRegistry, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowAgentRegistryRepository.Create")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	err := r.gormDb.WithContext(ctx).Create(&flowAction).Error
+	err := r.gormDb.WithContext(ctx).Create(&flowAgent).Error
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
-	return &flowAction, nil
+	return &flowAgent, nil
 }
 
-func (r *flowActionRegistryRepository) Initialize(ctx context.Context) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionRegistryRepository.Initialize")
+func (r *flowAgentRegistryRepository) Initialize(ctx context.Context) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowAgentRegistryRepository.Initialize")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	requiredActions := []entity.FlowActionRegistry{
+	requiredAgents := []entity.FlowAgentRegistry{
 		{
-			Action:       enum.ActionContactCreate.String(),
+			Agent:        enum.AgentContactCreate.String(),
 			FriendlyName: "Create a Contact",
 			Description:  "Creates a new Contact",
-			Enabled:      true,
+			Status:       enum.FlowNodeEdgeStatusActive.String(),
 		},
 		{
-			Action:       enum.ActionEmailSendNew.String(),
+			Agent:        enum.AgentEmailSendNew.String(),
 			FriendlyName: "Send an email",
 			Description:  "Begins a new email thread",
-			Enabled:      true,
+			Status:       enum.FlowNodeEdgeStatusActive.String(),
 		},
 		{
-			Action:       enum.ActionEmailSendReply.String(),
+			Agent:        enum.AgentEmailSendReply.String(),
 			FriendlyName: "Reply to an email thread",
 			Description:  "Sends a reply to an existing email thread",
-			Enabled:      true,
+			Status:       enum.FlowNodeEdgeStatusActive.String(),
 		},
 		{
-			Action:       enum.ActionLinkedinConnect.String(),
+			Agent:        enum.AgentLinkedinConnect.String(),
 			FriendlyName: "Send Linkedin Connection Request",
 			Description:  "Sends a connection request on LinkedIn",
-			Enabled:      true,
+			Status:       enum.FlowNodeEdgeStatusActive.String(),
 		},
 		{
-			Action:       enum.ActionLinkedinMessage.String(),
+			Agent:        enum.AgentLinkedinMessage.String(),
 			FriendlyName: "Send Linkedin Message",
 			Description:  "Sends a direct message to a LinkedIn connection",
-			Enabled:      true,
+			Status:       enum.FlowNodeEdgeStatusActive.String(),
 		},
 		{
-			Action:       enum.ActionOrganizationCreate.String(),
+			Agent:        enum.AgentOrganizationCreate.String(),
 			FriendlyName: "Create an Organization",
 			Description:  "Creates a new Organization",
-			Enabled:      true,
+			Status:       enum.FlowNodeEdgeStatusActive.String(),
 		},
 		{
-			Action:       enum.ActionTimelineEventCreate.String(),
+			Agent:        enum.AgentTimelineEventCreate.String(),
 			FriendlyName: "Add Event to Timeline",
 			Description:  "Adds a new event to the Organization Timeline",
-			Enabled:      true,
+			Status:       enum.FlowNodeEdgeStatusActive.String(),
 		},
 		// ... add more here
 	}
 
-	for _, action := range requiredActions {
-		existingAction, err := r.Find(ctx, action)
+	for _, action := range requiredAgents {
+		existingAgent, err := r.Find(ctx, action)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
 		}
 
-		if existingAction != nil && existingAction.Action != "" {
+		if existingAgent != nil && existingAgent.Agent != "" {
 			continue
 		}
 

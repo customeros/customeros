@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	commonEnum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 
@@ -37,9 +38,11 @@ func DeleteFlowNode(s *service.Services) gin.HandlerFunc {
 		}
 
 		nodeId := c.Param("nodeId")
-		nodePrefix := strings.HasPrefix(strings.ToLower(nodeId), "node_")
-		if !nodePrefix {
-			nodeId = fmt.Sprintf("node_%s", nodeId)
+		if nodeId != "" {
+			nodePrefix := strings.HasPrefix(strings.ToLower(nodeId), "node_")
+			if !nodePrefix {
+				nodeId = fmt.Sprintf("node_%s", nodeId)
+			}
 		}
 
 		switch nodeId {
@@ -50,14 +53,14 @@ func DeleteFlowNode(s *service.Services) gin.HandlerFunc {
 			deleteRecord := entity.FlowNode{
 				ID:     nodeId,
 				FlowID: flowId,
-				Active: false,
+				Status: commonEnum.FlowNodeEdgeStatusArchived.String(),
 			}
 			deletedNode, err := s.Repositories.PostgresRepositories.FlowNodeRepository.Update(ctx, deleteRecord)
 			if err != nil {
 				rest.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer)
 				return
 			}
-			if deletedNode.Active != false {
+			if deletedNode.Status != commonEnum.FlowNodeEdgeStatusArchived.String() {
 				rest.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer.WithMessage("node deletion failed"))
 				return
 			}

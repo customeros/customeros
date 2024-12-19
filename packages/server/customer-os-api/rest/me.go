@@ -22,10 +22,6 @@ func AuthorizeMe(s *service.Services) gin.HandlerFunc {
 		tracing.TagComponentRest(span)
 
 		tenant := ValidateTenant(c, ctx, span)
-		if tenant == "" {
-			SendError(c, span, http.StatusUnauthorized, enum.ErrInvalidAPIKey)
-			return
-		}
 
 		c.JSON(http.StatusOK, MeResponse{
 			BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),

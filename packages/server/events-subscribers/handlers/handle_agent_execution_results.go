@@ -13,8 +13,8 @@ import (
 	"github.com/opentracing/opentracing-go"
 )
 
-func HandleActionExecutionResults(c context.Context, s *service.Services, eventData *dto.FlowActionExecutionResultEvent) error {
-	span, ctx := opentracing.StartSpanFromContext(c, "EventHandlers.HandleActionExecutionResults")
+func HandleAgentExecutionResults(c context.Context, s *service.Services, eventData *dto.FlowAgentExecutionResultEvent) error {
+	span, ctx := opentracing.StartSpanFromContext(c, "EventHandlers.HandleAgentExecutionResults")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "eventData", eventData)
@@ -32,14 +32,14 @@ func HandleActionExecutionResults(c context.Context, s *service.Services, eventD
 
 	// update flow execution record based on results
 	switch eventData.Status {
-	case enum.FlowActionExecutionFail:
+	case enum.FlowAgentExecutionFail:
 		flowExecutionRecord.Status = enum.FlowExecutionError.String()
 		flowExecutionRecord.ErrorMessage = eventData.ErrorMessage
 
-	case enum.FlowActionExecutionPending:
+	case enum.FlowAgentExecutionPending:
 		flowExecutionRecord.Status = enum.FlowExecutionRunning.String()
 
-	case enum.FlowActionExecutionSuccess:
+	case enum.FlowAgentExecutionSuccess:
 		nextStepData, err := s.WorkflowService.GetNextStepInFlow(ctx, flowExecutionRecord.FlowID, flowExecutionRecord.CurrentStepNodeId)
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -60,13 +60,13 @@ func HandleActionExecutionResults(c context.Context, s *service.Services, eventD
 			return nil
 		}
 
-		flowExecutionRecord.CurrentStep = nextStepData.ToNodeAction.String()
+		flowExecutionRecord.CurrentStep = nextStepData.ToNodeAgent.String()
 		flowExecutionRecord.CurrentStepNodeId = nextStepData.ToNodeID
 		flowExecutionRecord.Status = enum.FlowExecutionRunning.String()
 		// todo - fire next event & handle waits
 
 	default:
-		err = errors.New("FlowActionExecutionStatus not valid")
+		err = errors.New("FlowAgentExecutionStatus not valid")
 		tracing.TraceErr(span, err)
 		return err
 	}

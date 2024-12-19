@@ -6,21 +6,21 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 )
 
-type FlowActionEvent struct {
+type FlowAgentEvent struct {
 	FlowExecutionId  string
 	ExternalSystemId neoEnum.ExternalSystemId
 	SourceEvent      enum.FlowListenerEvent
-	Name             enum.FlowAction
+	Name             enum.FlowAgent
 	DataType         string
 	Data             any
 }
 
-type FlowActionExecutionResultEvent struct {
-	FlowExecutionID       string
-	FlowActionExecutionID string
-	Tenant                string
-	Status                enum.FlowActionExecutionStatus
-	ErrorMessage          *string
-	Data                  any
-	DataType              string
+type FlowAgentExecutionResultEvent struct {
+	FlowExecutionID      string
+	FlowAgentExecutionID string
+	Tenant               string
+	Status               enum.FlowAgentExecutionStatus
+	ErrorMessage         *string
+	Data                 any
+	DataType             string
 }

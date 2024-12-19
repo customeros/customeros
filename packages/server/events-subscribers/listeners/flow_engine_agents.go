@@ -16,49 +16,49 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-subscribers/handlers"
 )
 
-func OnFlowActionEventCreated(ctx context.Context, s *service.Services, input any) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "Listeners.OnFlowActionEventCreated")
+func OnFlowAgentEventCreated(ctx context.Context, s *service.Services, input any) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "Listeners.OnFlowAgentEventCreated")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "input", input)
 
-	flowActionEvent, flowExecutionID, err := getFlowActionEvent(input)
+	flowAgentEvent, flowExecutionID, err := getFlowAgentEvent(input)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 
-	if flowActionEvent.Data == nil {
-		err := errors.New("flowActionEvent.Data is nil")
+	if flowAgentEvent.Data == nil {
+		err := errors.New("flowAgentEvent.Data is nil")
 		tracing.TraceErr(span, err)
 		return err
 	}
 
 	// determine event handler
-	switch flowActionEvent.DataType {
+	switch flowAgentEvent.DataType {
 
 	case "MarkdownEventFields":
-		eventData, ok := flowActionEvent.Data.(*data_fields.MarkdownEventFields)
+		eventData, ok := flowAgentEvent.Data.(*data_fields.MarkdownEventFields)
 		if !ok {
-			return fmt.Errorf("failed to cast to MarkdownEventFields, got type: %T", flowActionEvent.Data)
+			return fmt.Errorf("failed to cast to MarkdownEventFields, got type: %T", flowAgentEvent.Data)
 		}
 		return handlers.HandleCreateMarkdownEvent(ctx, s, eventData, flowExecutionID)
 
 	case "ContactCreateEvent":
-		eventData, ok := flowActionEvent.Data.(*data_fields.ContactCreateEvent)
+		eventData, ok := flowAgentEvent.Data.(*data_fields.ContactCreateEvent)
 		if !ok {
-			return fmt.Errorf("failed to cast to ContactCreateEvent, got type: %T", flowActionEvent.Data)
+			return fmt.Errorf("failed to cast to ContactCreateEvent, got type: %T", flowAgentEvent.Data)
 		}
 		return handlers.HandleCreateContact(ctx, s, eventData)
 
 	default:
-		err := fmt.Errorf("Unsupported flow action event %s", flowActionEvent.Name)
+		err := fmt.Errorf("Unsupported flow action event %s", flowAgentEvent.Name)
 		tracing.TraceErr(span, err)
 		return err
 	}
 }
 
-func getFlowActionEvent(input any) (*dto.FlowActionEvent, string, error) {
+func getFlowAgentEvent(input any) (*dto.FlowAgentEvent, string, error) {
 	message, ok := input.(*dto.Event)
 	if !ok {
 		return nil, "", fmt.Errorf("failed to cast to Event")
@@ -69,27 +69,27 @@ func getFlowActionEvent(input any) (*dto.FlowActionEvent, string, error) {
 		return nil, "", err
 	}
 
-	flowActionEvent, ok := message.Event.Data.(*dto.FlowActionEvent)
+	flowAgentEvent, ok := message.Event.Data.(*dto.FlowAgentEvent)
 	if !ok {
 		err := errors.New("event is not a flow action event")
 		return nil, "", err
 	}
 
-	flowExecutionID := flowActionEvent.FlowExecutionId
+	flowExecutionID := flowAgentEvent.FlowExecutionId
 
-	flowActionData, ok := flowActionEvent.Data.(map[string]interface{})
+	flowAgentData, ok := flowAgentEvent.Data.(map[string]interface{})
 	if !ok {
 		err := errors.New("event data is not a map")
 		return nil, flowExecutionID, err
 	}
 
-	flowActionDataPtr := reflect.New(eventDataTypes[flowActionEvent.DataType]).Interface()
-	err := utils.Decode(flowActionData, flowActionDataPtr)
+	flowAgentDataPtr := reflect.New(eventDataTypes[flowAgentEvent.DataType]).Interface()
+	err := utils.Decode(flowAgentData, flowAgentDataPtr)
 	if err != nil {
 		return nil, flowExecutionID, err
 	}
 
-	flowActionEvent.Data = flowActionDataPtr
+	flowAgentEvent.Data = flowAgentDataPtr
 
-	return flowActionEvent, flowExecutionID, nil
+	return flowAgentEvent, flowExecutionID, nil
 }

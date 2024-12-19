@@ -26,50 +26,50 @@ func HandleCreateMarkdownEvent(c context.Context, s *service.Services, eventData
 	id, err := s.MarkdownEventService.Save(ctx, nil, nil, *eventData)
 
 	// build execution record
-	executionRecord := entity.FlowActionExecution{
+	executionRecord := entity.FlowAgentExecution{
 		FlowExecutionID: flowExecutionID,
-		Action:          enum.ActionTimelineEventCreate.String(),
+		Agent:           enum.AgentTimelineEventCreate.String(),
 		FlowNodeID:      "",
 		StartedAt:       utils.NowPtr(),
 	}
 
 	if err != nil {
-		executionRecord.Status = enum.FlowActionExecutionFail.String()
+		executionRecord.Status = enum.FlowAgentExecutionFail.String()
 		errMessage := fmt.Sprintf("Unable to save markdown event: %v", err)
 		executionRecord.ErrorMessage = &errMessage
 		tracing.TraceErr(span, err)
 
 	} else {
-		executionRecord.Status = enum.FlowActionExecutionSuccess.String()
+		executionRecord.Status = enum.FlowAgentExecutionSuccess.String()
 		executionRecord.CompletedAt = utils.NowPtr()
 		result := fmt.Sprintf("Markdown Event ID: %s", id)
 		executionRecord.Result = &result
 	}
 
 	// write action execution to db
-	actionExecutionRecord, saveErr := s.PostgresRepositories.FlowActionExecutionRepository.Create(ctx, executionRecord)
+	actionExecutionRecord, saveErr := s.PostgresRepositories.FlowAgentExecutionRepository.Create(ctx, executionRecord)
 	if saveErr != nil {
 		tracing.TraceErr(span, saveErr)
 	}
 
 	// fire action completion event
-	pubErr := publishActionResultEvent(ctx, s, flowExecutionID, actionExecutionRecord.ID, enum.FlowActionExecutionStatus(executionRecord.Status), executionRecord.ErrorMessage)
+	pubErr := publishAgentResultEvent(ctx, s, flowExecutionID, actionExecutionRecord.ID, enum.FlowAgentExecutionStatus(executionRecord.Status), executionRecord.ErrorMessage)
 
 	return multierr.Combine(err, saveErr, pubErr)
 }
 
-func publishActionResultEvent(
-	ctx context.Context, s *service.Services, flowExecutionId, actionExecutionId string, actionExecutionStatus enum.FlowActionExecutionStatus, errorMessage *string,
+func publishAgentResultEvent(
+	ctx context.Context, s *service.Services, flowExecutionId, actionExecutionId string, actionExecutionStatus enum.FlowAgentExecutionStatus, errorMessage *string,
 ) error {
-	resultEvent := dto.FlowActionExecutionResultEvent{
-		FlowExecutionID:       flowExecutionId,
-		FlowActionExecutionID: actionExecutionId,
-		Tenant:                common.GetTenantFromContext(ctx),
-		Status:                actionExecutionStatus,
-		ErrorMessage:          errorMessage,
+	resultEvent := dto.FlowAgentExecutionResultEvent{
+		FlowExecutionID:      flowExecutionId,
+		FlowAgentExecutionID: actionExecutionId,
+		Tenant:               common.GetTenantFromContext(ctx),
+		Status:               actionExecutionStatus,
+		ErrorMessage:         errorMessage,
 	}
 
-	s.RabbitMQService.PublishFlowActionEventResult(ctx, resultEvent)
+	s.RabbitMQService.PublishFlowAgentEventResult(ctx, resultEvent)
 
 	return nil
 }

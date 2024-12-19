@@ -49,9 +49,9 @@ func GrainZapier(c *gin.Context, s *service.Services) {
 		rest.SendError(c, span, http.StatusForbidden, enum.ErrForbidden)
 	}
 
-	if !strings.EqualFold(c.Request.UserAgent(), "Zapier") {
-		rest.SendError(c, span, http.StatusForbidden, enum.ErrForbidden)
-	}
+	// if !strings.EqualFold(c.Request.UserAgent(), "Zapier") {
+	// 	rest.SendError(c, span, http.StatusForbidden, enum.ErrForbidden)
+	// }
 
 	handleGrainNewRecordingEventZapier(c, ctx, s)
 }

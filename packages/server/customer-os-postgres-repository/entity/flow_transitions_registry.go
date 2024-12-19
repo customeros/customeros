@@ -6,7 +6,7 @@ type FlowTransitionsRegistry struct {
 	FromNode     string `gorm:"column:from_node;type:varchar(255);not null;uniqueIndex:idx_from_to_nodes;index" json:"fromNode" binding:"required"`
 	ToNodeType   string `gorm:"column:to_node_type;type:varchar(255);not null;index" json:"toNodeType" binding:"required"`
 	ToNode       string `gorm:"column:to_node;type:varchar(255);not null;uniqueIndex:idx_from_to_nodes;index" json:"toNode" binding:"required"`
-	Enabled      bool   `gorm:"column:enabled;type:boolean;default:true" json:"enabled"`
+	Status       string `gorm:"column:status;type:varchar(50)" json:"status"`
 }
 
 func (FlowTransitionsRegistry) TableName() string {
