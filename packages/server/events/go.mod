@@ -21,7 +21,7 @@ require (
 	github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto v0.0.0-20241004122044-3a0040d9c64c
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pkg/errors v0.9.1
-	golang.org/x/net v0.32.0
+	golang.org/x/net v0.33.0
 )
 
 require (
