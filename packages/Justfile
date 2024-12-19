@@ -69,9 +69,10 @@ ci: tidy-all build-all
 clean:
 	rm -rf {{bin_dir}}
 	rm -rf *.log
+	rm -rf *.pid
 
 logs:
-    tail -f admin-api.log api.log
+    tail -f admin-api.log api.log events-subscribers.log
 
 # Show outdated dependencies for all modules
 outdated:
@@ -107,11 +108,18 @@ start-api:
 start-api-debug:
     cd ./server/customer-os-api && dlv debug --headless --listen=:2345 --api-version=2 .
 
+start-events:
+    cd ./server/events-subscribers && go run . > ../../events-subscribers.log 2>&1 & echo $$! > events-subscribers.pid
+
 stop:
 	kill `cat admin-api.pid` 2>/dev/null || true
 	kill `cat api.pid` 2>/dev/null || true
-	rm -f admin-api.pid api.pid
+	kill `cat events-subscribers.pid` 2>/dev/null || true
+	rm -f *.pid
 	cd ../deployment && podman-compose down rabbitmq jaeger postgres neo4j eventstore
+
+test-flow SERVICE:
+	python3 server/customer-os-api/test/flows/{{SERVICE}}_test.py
 
 # Run tests for a specific service
 test SERVICE:
