@@ -491,6 +491,8 @@ func (s *emailService) GetAllEmailsForEntityIds(ctx context.Context, tenant stri
 	for _, v := range emailNodes {
 		emailEntity := mapper.MapDbNodeToEmailEntity(v.Node)
 		emailEntity.DataloaderKey = v.LinkedNodeId
+		relationshipProps := utils.GetPropsFromRelationship(*v.Relationship)
+		emailEntity.Primary = utils.GetBoolPropOrFalse(relationshipProps, "primary")
 		emailEntities = append(emailEntities, *emailEntity)
 	}
 	return &emailEntities, nil
