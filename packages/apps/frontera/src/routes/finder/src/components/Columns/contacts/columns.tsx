@@ -14,7 +14,6 @@ import THead, { getTHeadProps } from '@ui/presentation/Table/THead';
 import { User, TableViewDef, ColumnViewType } from '@graphql/types';
 
 import { EmailCell } from './Cells/email';
-import { PhoneCell } from './Cells/phone';
 import { AvatarCell } from './Cells/avatar';
 import { ContactsTagsCell } from './Cells/tags';
 import { FlowStatusCell } from './Cells/flowStatus';
@@ -146,37 +145,37 @@ const columns: Record<string, Column> = {
     },
   ),
 
-  [ColumnViewType.ContactsPhoneNumbers]: columnHelper.accessor('value.phones', {
-    id: ColumnViewType.ContactsPhoneNumbers,
-    minSize: 138,
-    maxSize: 650,
-    enableResizing: true,
-    enableColumnFilter: false,
-    enableSorting: false,
+  // [ColumnViewType.ContactsPhoneNumbers]: columnHelper.accessor('value.phones', {
+  //   id: ColumnViewType.ContactsPhoneNumbers,
+  //   minSize: 138,
+  //   maxSize: 650,
+  //   enableResizing: true,
+  //   enableColumnFilter: false,
+  //   enableSorting: false,
 
-    header: (props) => (
-      <THead<HTMLInputElement>
-        title='Mobile Number'
-        id={ColumnViewType.ContactsPhoneNumbers}
-        {...getTHeadProps<Contact>(props)}
-      />
-    ),
-    cell: (props) => {
-      const phoneNumber = props.getValue()?.[0];
+  //   header: (props) => (
+  //     <THead<HTMLInputElement>
+  //       title='Mobile Number'
+  //       id={ColumnViewType.ContactsPhoneNumbers}
+  //       {...getTHeadProps<Contact>(props)}
+  //     />
+  //   ),
+  //   cell: (props) => {
+  //     const phoneNumber = props.getValue()?.[0];
 
-      const isEnriching = props.row.original.isEnriching;
+  //     const isEnriching = props.row.original.isEnriching;
 
-      if (!phoneNumber)
-        return (
-          <p className='text-gray-400'>
-            {isEnriching ? 'Enriching...' : 'Not set'}
-          </p>
-        );
+  //     if (!phoneNumber)
+  //       return (
+  //         <p className='text-gray-400'>
+  //           {isEnriching ? 'Enriching...' : 'Not set'}
+  //         </p>
+  //       );
 
-      return <PhoneCell phone={phoneNumber?.rawPhoneNumber} />;
-    },
-    skeleton: () => <Skeleton className='w-[100%] h-[14px]' />,
-  }),
+  //     return <PhoneCell phone={phoneNumber?.rawPhoneNumber} />;
+  //   },
+  //   skeleton: () => <Skeleton className='w-[100%] h-[14px]' />,
+  // }),
   [ColumnViewType.ContactsCity]: columnHelper.accessor('value.locations', {
     id: ColumnViewType.ContactsCity,
     minSize: 65,
@@ -519,7 +518,7 @@ const columns: Record<string, Column> = {
     enableColumnFilter: false,
     enableSorting: true,
     cell: (props) => {
-      const value = props.getValue()?.value.metadata.id;
+      const value = props.row.original.value.id;
 
       return <FlowStatusCell contactID={value} />;
     },
@@ -540,7 +539,7 @@ const columns: Record<string, Column> = {
     enableColumnFilter: false,
     enableSorting: true,
     cell: (props) => {
-      const value = props.getValue()?.value.metadata.id;
+      const value = props.row.original.value.id;
 
       return <NextFlowAction contactID={value} />;
     },

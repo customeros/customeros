@@ -321,70 +321,25 @@ class ContactService {
 
       return;
     }
-
     match(path)
-      .with(['latestOrganizationWithJobRole', ...P.array()], () => {
+      .with(['primaryOrganizationId', ...P.array()], () => {
         this.linkOrganization({
           input: {
             contactId: contactId!,
-            organizationId:
-              value.organization?.metadata?.id ||
-              store.value.primaryOrganizationId,
+            organizationId: value,
           },
         });
       })
-
-      // .with(['phoneNumbers', 0, ...P.array()], () => {
-      //   if (type === 'add') {
-      //     this.addPhoneNumber({
-      //       contactId: contactId!,
-      //       input: {
-      //         phoneNumber: value.rawPhoneNumber,
-      //       },
-      //     });
-      //   }
-
-      //   if (type === 'update') {
-      //     this.updatePhoneNumber({
-      //       input: {
-      //         id: store.value.phoneNumbers[0].id,
-      //         phoneNumber: store.value.phoneNumbers[0].rawPhoneNumber || '',
-      //       },
-      //     });
-      //   }
-      // })
-      .with(['socials', ...P.array()], async ([_]) => {
-        if (type === 'add') {
-          try {
-            await this.addSocial({
-              contactId: contactId!,
-              input: {
-                url: value.url,
-              },
-            });
-          } catch (e) {
-            // store..ui.toastError(
-            //   'This LinkedIn is already used by another contact',
-            //   'contact-social',
-            // );
-            // const foundIdx = store.value.socials.findIndex(
-            //   (social) => social.url === value.url,
-            // );
-            // store.value.socials[foundIdx].url = '';
-          }
-        }
-
-        if (type === 'update') {
-          this.updateSocial({
-            input: {
-              id: store.value.linkedInInternalId || '',
-              url: store.value.linkedInUrl || '',
-            },
-          });
-        }
+      .with(['linkedInUrl', ...P.array()], async ([_]) => {
+        this.addSocial({
+          contactId: contactId!,
+          input: {
+            url: value,
+          },
+        });
       })
-      .with(['jobRoles', 0, ...P.array()], () => {
-        if (type === 'add') {
+      .with(['primaryOrganizationJobRoleTitle', ...P.array()], () => {
+        if (store.value.primaryOrganizationJobRoleId?.length === 0) {
           this.addJobRole({
             contactId: contactId!,
             input: {
@@ -392,9 +347,7 @@ class ContactService {
               jobTitle: store.value.primaryOrganizationJobRoleTitle,
             },
           });
-        }
-
-        if (type === 'update') {
+        } else {
           this.updateJobRole({
             contactId: contactId!,
             input: {
@@ -405,11 +358,12 @@ class ContactService {
           });
         }
       })
-      .with(['primaryEmail', ...P.array()], () => {
+      .with([...P.array(), 'primary'], () => {
         if (type === 'update') {
           this.setPrimaryEmail({
             contactId: contactId!,
-            email: value.email ?? value,
+            email:
+              store.value.emails.find((email) => email.primary)?.email || '',
           });
         }
       })

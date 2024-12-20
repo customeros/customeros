@@ -20,6 +20,8 @@ import {
   ModalOverlay,
 } from '@ui/overlay/Modal/Modal';
 
+import { AddEmail } from './commands/contacts/AddEmail';
+import { AddLinkedinUrl } from './commands/contacts/AddLinkedin';
 import {
   FlowHub,
   EditName,
@@ -91,6 +93,7 @@ const Commands: Record<CommandMenuType, ReactElement> = {
   ChangeRelationship: <ChangeRelationship />,
   UpdateHealthStatus: <UpdateHealthStatus />,
   DeleteConfirmationModal: <DeleteConfirmationModal />,
+  AddLinkedin: <AddLinkedinUrl />,
 
   // Contact
   ContactHub: <ContactHub />,
@@ -106,6 +109,7 @@ const Commands: Record<CommandMenuType, ReactElement> = {
   ConfirmBulkFlowEdit: <ConfirmBulkFlowEdit />,
   ConfirmSingleFlowEdit: <ConfirmSingleFlowEdit />,
   AddContactsBulk: <AddContactsBulk />,
+  AddEmail: <AddEmail />,
 
   // Opportunity
   OpportunityHub: <OpportunityHub />,

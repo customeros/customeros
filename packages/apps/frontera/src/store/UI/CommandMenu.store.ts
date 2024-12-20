@@ -26,6 +26,8 @@ export type CommandMenuType =
   | 'EditPersonaTag'
   | 'ContactHub'
   | 'ContactCommands'
+  | 'AddEmail'
+  | 'AddLinkedin'
   | 'EditEmail'
   | 'EditName'
   | 'EditJobTitle'

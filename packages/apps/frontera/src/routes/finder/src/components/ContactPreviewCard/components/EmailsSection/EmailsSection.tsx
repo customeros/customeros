@@ -1,7 +1,7 @@
 import { Fragment } from 'react';
 
 import { observer } from 'mobx-react-lite';
-import { SetEmailCase } from '@domain/Contacts/SetEmail.usecase';
+import { EditEmailCase } from '@domain/usecases/command-menu/edit-email.usecase';
 
 import { Plus } from '@ui/media/icons/Plus';
 import { Spinner } from '@ui/feedback/Spinner';
@@ -38,12 +38,10 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
     store.organizations.getById(activeCompanyId ?? '')?.value?.domains;
 
   const allEmails = contactStore?.value.emails;
+
   const enrichedContact = contactStore?.isEnriching;
 
-  const useCase = new SetEmailCase();
-
   if (!contactStore) return;
-  useCase.setEntity(contactStore);
 
   return (
     <>
@@ -107,26 +105,12 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
               <MenuItem
                 className='group/add-email'
                 onClick={() => {
-                  store.ui.setSelectionId(
-                    contactStore?.value.emails.length || 1,
-                  );
-
-                  contactStore?.value.emails.push({
-                    id: crypto.randomUUID(),
-                    email: '',
-                    appSource: '',
-                    contacts: [],
-                    createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString(),
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  } as any);
-
                   store.ui.commandMenu.setContext({
                     ids: [contactStore?.id || ''],
                     entity: 'Contact',
                     property: 'email',
                   });
-                  store.ui.commandMenu.setType('EditEmail');
+                  store.ui.commandMenu.setType('AddEmail');
                   store.ui.commandMenu.setOpen(true);
                 }}
               >
@@ -186,8 +170,12 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
                       <MenuItem
                         className='group/edit-email'
                         onClick={() => {
-                          useCase.setEmail(email.email || '');
-                          useCase.setPrimaryEmailForContact();
+                          contactStore.value.emails.forEach((e) => {
+                            e.primary = false;
+                          });
+                          contactStore?.draft();
+                          contactStore.value.emails[idx].primary = true;
+                          contactStore?.commit();
                         }}
                       >
                         <div className='flex items-center gap-2'>
@@ -200,7 +188,7 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
                     <MenuItem
                       className='group/edit-email'
                       onClick={() => {
-                        store.ui.setSelectionId(idx);
+                        EditEmailCase.prototype.setEmail(email.email!);
                         store.ui.commandMenu.setType('EditEmail');
                         store.ui.commandMenu.setContext({
                           ids: [contactStore?.id ?? ''],
@@ -218,8 +206,8 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
                     <MenuItem
                       className='group/archive-email'
                       onClick={() => {
+                        contactStore.draft();
                         contactStore?.value.emails.splice(idx, 1);
-
                         contactStore?.commit();
                       }}
                     >

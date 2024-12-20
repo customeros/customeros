@@ -1,550 +1,621 @@
-// import { RootStore } from '@store/root';
-// import { Transport } from '@store/transport';
-// import { SyncableGroup } from '@store/syncable-group';
-// import {
-//   when,
-//   action,
-//   override,
-//   computed,
-//   observable,
-//   runInAction,
-//   makeObservable,
-// } from 'mobx';
-
-// import {
-//   Tag,
-//   Contact,
-//   DataSource,
-//   ContactInput,
-// } from '@shared/types/__generated__/graphql.types';
-
-// import mock from './mock.json';
-// import { ContactStore } from './Contact.store';
-// import { ContactService } from './__service__/Contacts.service';
-
-// export class ContactsStore extends SyncableGroup<Contact, ContactStore> {
-//   totalElements = 0;
-//   private service: ContactService;
-
-//   constructor(public root: RootStore, public transport: Transport) {
-//     super(root, transport, ContactStore);
-//     this.service = ContactService.getInstance(transport);
-
-//     makeObservable(this, {
-//       totalElements: observable,
-//       create: action.bound,
-//       channelName: override,
-//       isFullyLoaded: computed,
-//       archive: action.bound,
-//       delete: action.bound,
-//     });
-
-//     when(
-//       () =>
-//         this.isBootstrapped &&
-//         this.totalElements > 0 &&
-//         this.totalElements !== this.value.size &&
-//         !this.root.demoMode,
-//       async () => {
-//         await this.bootstrapRest();
-//       },
-//     );
-
-//     when(
-//       () => this.isBootstrapped && this.totalElements === this.value.size,
-//       () => {
-//         this.isFullyLoaded && (this.isLoading = false);
-//         this.isLoading = false;
-//       },
-//     );
-//   }
-
-//   get isFullyLoaded() {
-//     return this.totalElements === this.value.size;
-//   }
-
-//   get channelName() {
-//     return 'Contacts';
-//   }
-
-//   get persisterKey() {
-//     return 'Contacts';
-//   }
-
-//   toArray() {
-//     return Array.from(this.value.values());
-//   }
-
-//   toComputedArray(compute: (arr: ContactStore[]) => ContactStore[]) {
-//     const arr = this.toArray();
-
-//     return compute(arr);
-//   }
-
-//   delete = (ids: string[]) => {
-//     ids.forEach((id) => {
-//       this.delete([id]);
-//     });
-//   };
-
-//   archive = (ids: string[]) => {
-//     ids.forEach((id) => {
-//       this.softDelete(id);
-//     });
-//   };
-
-//   async bootstrap() {
-//     if (this.root.demoMode) {
-//       this.load(mock.data.contacts.content as unknown as Contact[], {
-//         getId: (data) => data.metadata.id,
-//       });
-//       this.isBootstrapped = true;
-//       this.totalElements = mock.data.contacts.totalElements;
-
-//       return;
-//     }
-
-//     if (this.isBootstrapped || this.isLoading) return;
-
-//     try {
-//       this.isLoading = true;
-
-//       const { contacts } = await this.service.getContacts({
-//         pagination: { limit: 1000, page: 0 },
-//       });
-
-//       this.load(contacts.content as Contact[], {
-//         getId: (data) => data.metadata.id,
-//       });
-//       runInAction(() => {
-//         this.totalElements = contacts.totalElements;
-//       });
-//     } catch (e) {
-//       runInAction(() => {
-//         this.error = (e as Error)?.message;
-//       });
-//     } finally {
-//       this.isBootstrapped = true;
-//     }
-//   }
-
-//   async bootstrapRest() {
-//     let page = 1;
-
-//     while (this.totalElements > this.value.size) {
-//       try {
-//         const { contacts } = await this.service.getContacts({
-//           pagination: { limit: 1000, page },
-//         });
-
-//         runInAction(() => {
-//           page++;
-//           this.load(contacts.content as Contact[], {
-//             getId: (data) => data.metadata.id,
-//           });
-//         });
-//       } catch (e) {
-//         runInAction(() => {
-//           this.error = (e as Error)?.message;
-//         });
-//         break;
-//       }
-//     }
-//   }
-
-//   async create(
-//     organizationId: string,
-//     options?: { onSuccess?: (serverId: string) => void },
-//     input?: ContactInput,
-//   ) {
-//     const newContact = new ContactStore(
-//       this.root,
-//       this.transport,
-//       ContactStore.getDefaultValue() as Contact,
-//     );
-//     const tempId = newContact.value.metadata?.id;
-//     let serverId: string | undefined;
-
-//     this.value.set(tempId, newContact);
-
-//     if (organizationId) {
-//       const organization = this.root.organizations.value.get(organizationId);
-
-//   organization?.draft();
-//   organization?.value.contacts.unshift(newContact.value?.metadata.id);
-//   organization?.commit({ syncOnly: true });
-// }
-
-//     try {
-//       const { contact_CreateForOrganization } =
-//         await this.service.createContactForOrganization({
-//           organizationId,
-//           input: input ?? {},
-//         });
-
-//       runInAction(() => {
-//         serverId = contact_CreateForOrganization.id;
-//         newContact.setId(serverId);
-//         newContact.commit({ syncOnly: true });
-
-//         this.value.set(serverId, newContact);
-//         this.value.delete(tempId);
-
-//         this.sync({ action: 'APPEND', ids: [serverId] });
-//       });
-//     } catch (e) {
-//       runInAction(() => {
-//         this.error = (e as Error)?.message;
-//       });
-//     } finally {
-//       serverId && options?.onSuccess?.(serverId);
-//       setTimeout(() => {
-//         if (serverId) {
-//           this.value.get(serverId)?.invalidate();
-//           this.root.organizations.value.get(organizationId)?.invalidate();
-//         }
-//       }, 1000);
-//     }
-//   }
-
-//   async createWithSocial({
-//     socialUrl,
-//     organizationId,
-//     options,
-//   }: {
-//     socialUrl: string;
-//     organizationId: string;
-//     options?: {
-//       onSuccess?: (serverId: string) => void;
-//     };
-//   }) {
-//     this.isLoading = true;
-
-//     const newContact = new ContactStore(
-//       this.root,
-//       this.transport,
-//       ContactStore.getDefaultValue(),
-//     );
-
-//     const tempId = newContact.value.id;
-//     const socialId = crypto.randomUUID();
-
-//     newContact.value.socials = [
-//       {
-//         metadata: {
-//           id: socialId,
-//           source: DataSource.Openline,
-//           sourceOfTruth: DataSource.Openline,
-//           appSource: 'organization',
-//           created: new Date().toISOString(),
-//           lastUpdated: new Date().toISOString(),
-//         },
-//         id: socialId,
-//         externalId: '',
-//         url: socialUrl,
-//         appSource: 'OPENLINE',
-//         createdAt: new Date().toISOString(),
-//         sourceOfTruth: DataSource.Openline,
-//         source: DataSource.Openline,
-//         alias: socialUrl,
-//         followersCount: 0,
-//         updatedAt: new Date().toISOString(),
-//       },
-//     ];
-
-//     let serverId: string | undefined;
-
-//     this.value.set(tempId, newContact);
-
-//     const organization = this.root.organizations.value.get(organizationId);
-
-//     if (organization) {
-//       organization?.value?.contacts.content.unshift(newContact.value);
-//       organization.commit({ syncOnly: true });
-//     }
-
-//     try {
-//       const { contact_CreateForOrganization } =
-//         await this.service.createContactForOrganization({
-//           organizationId,
-//           input: {
-//             socialUrl,
-//           },
-//         });
-
-//       runInAction(() => {
-//         serverId = contact_CreateForOrganization.id;
-//         newContact.value.id = serverId;
-//         this.value.set(serverId, newContact);
-//         this.value.delete(tempId);
-
-//         this.sync({ action: 'APPEND', ids: [serverId] });
-//         this.isLoading = false;
-//       });
-//       this.root.ui.toastSuccess(
-//         `Contact created for ${organization?.value?.name}`,
-//         'create-contract-error',
-//       );
-//     } catch (e) {
-//       this.root.ui.toastError(
-//         `We couldn't create this contact. Please try again.`,
-//         'create-contract-error',
-//       );
-//       runInAction(() => {
-//         this.error = (e as Error)?.message;
-//       });
-//     } finally {
-//       serverId && options?.onSuccess?.(serverId);
-//       setTimeout(() => {
-//         if (serverId) {
-//           this.value.get(serverId)?.invalidate();
-//         }
-//       }, 2000);
-//     }
-//   }
-
-//   async createWithoutOrg({
-//     socialUrl,
-//     options,
-//   }: {
-//     socialUrl: string;
-//     options?: {
-//       onSuccess?: (serverId: string) => void;
-//     };
-//   }) {
-//     this.isLoading = true;
-
-//     const foundIdx = organization?.value?.contacts.indexOf(id);
-
-//     if (foundIdx && foundIdx > -1) {
-//       organization?.draft();
-//       organization?.value?.contacts.splice(foundIdx, 1);
-//       organization?.commit({ syncOnly: true });
-//     }
-//   }
-//   this.value.delete(id);
-// });
-
-//     try {
-//       const { contact_Create } = await this.service.createContact({
-//         contactInput: {
-//           socialUrl,
-//         },
-//       });
-
-//       runInAction(() => {
-//         serverId = contact_Create;
-//         newContact.value.id = serverId;
-//         this.value.set(serverId, newContact);
-//         this.value.delete(tempId);
-
-//   if (organizationId) {
-//     const organization = this.root.organizations.getById(organizationId);
-
-//     const foundIdx = organization?.value?.contacts.indexOf(id);
-
-//     if (foundIdx && foundIdx > -1) {
-//       organization?.draft();
-//       organization?.value?.contacts.splice(foundIdx, 1);
-//       organization?.commit({ syncOnly: true });
-//     }
-//   }
-//   this.value.delete(id);
-// });
-
-//   async createBulkByEmail({
-//     emails,
-//     options,
-//   }: {
-//     flowId?: string;
-//     emails: string[];
-//     options?: {
-//       onSuccess?: () => void;
-//       onError?: (err: string) => void;
-//     };
-//   }) {
-//     this.isLoading = true;
-
-//     try {
-//       const { contact_CreateBulkByEmail } =
-//         await this.service.createContactBulkByEmail({
-//           emails,
-//         });
-
-//       runInAction(() => {
-//         this.sync({ action: 'APPEND', ids: contact_CreateBulkByEmail });
-//         options?.onSuccess?.();
-//         this.isLoading = false;
-//       });
-
-//       this.root.ui.toastSuccess(`Contacts created`, 'create-contact-success');
-//     } catch (e) {
-//       this.root.ui.toastError(
-//         `We couldn't create this contact. Please try again.`,
-//         'create-contact-error',
-//       );
-//       runInAction(() => {
-//         this.error = (e as Error)?.message;
-//         options?.onError?.(this.error);
-//       });
-//     } finally {
-//       setTimeout(() => {
-//         this.isBootstrapped = false;
-//         this.bootstrap();
-//       }, 300);
-//     }
-//   }
-
-//   async createBulkByLinkedIn({
-//     linkedInUrls,
-//     options,
-//   }: {
-//     flowId?: string;
-//     linkedInUrls: string[];
-//     options?: {
-//       onSuccess?: () => void;
-//       onError?: (err: string) => void;
-//     };
-//   }) {
-//     this.isLoading = true;
-
-//     try {
-//       const { contact_CreateBulkByLinkedIn } =
-//         await this.service.createContactBulkByLinkedIn({
-//           linkedInUrls,
-//         });
-
-//       runInAction(() => {
-//         this.sync({ action: 'APPEND', ids: contact_CreateBulkByLinkedIn });
-//         options?.onSuccess?.();
-//         this.isLoading = false;
-//       });
-
-//       this.root.ui.toastSuccess(`Contacts created`, 'create-contact-success');
-//     } catch (e) {
-//       this.root.ui.toastError(
-//         `We couldn't create this contact. Please try again.`,
-//         'create-contact-error',
-//       );
-//       runInAction(() => {
-//         this.error = (e as Error)?.message;
-//         options?.onError?.(this.error);
-//       });
-//     } finally {
-//       setTimeout(() => {
-//         this.isBootstrapped = false;
-//         this.bootstrap();
-//       }, 300);
-//     }
-//   }
-
-//   async remove(id: string) {
-//     try {
-//       runInAction(() => {
-//         const organizationId = this.value.get(id)?.organizationId;
-
-//         if (organizationId) {
-//           const organization =
-//             this.root.organizations.value.get(organizationId);
-
-//           const foundIdx = organization?.value?.contacts.content.findIndex(
-//             (c) => c?.id === id,
-//           );
-
-//           if (foundIdx && foundIdx > -1) {
-//             organization?.value?.contacts.content.splice(foundIdx, 1);
-//             organization?.commit({ syncOnly: true });
-//           }
-//         }
-//         this.value.delete(id);
-//       });
-
-//       await this.service.deleteContact({ contactId: id });
-//     } catch (e) {
-//       runInAction(() => {
-//         this.error = (e as Error)?.message;
-//       });
-//     } finally {
-//       runInAction(() => {
-//         this.sync({ action: 'DELETE', ids: [id] });
-//       });
-//     }
-//   }
-
-//   async softDelete(id: string) {
-//     try {
-//       runInAction(() => {
-//         const organizationId = this.value.get(id)?.organizationId;
-
-//         if (organizationId) {
-//           const organization =
-//             this.root.organizations.value.get(organizationId);
-
-//           const foundIdx = organization?.value?.contacts.content.findIndex(
-//             (c) => c?.id === id,
-//           );
-
-//           if (foundIdx && foundIdx > -1) {
-//             organization?.value?.contacts.content.splice(foundIdx, 1);
-//             organization?.commit({ syncOnly: true });
-//           }
-//         }
-//         this.value.delete(id);
-//       });
-
-//       await this.service.archiveContact({ contactId: id });
-//       this.totalElements--;
-//     } catch (e) {
-//       runInAction(() => {
-//         this.error = (e as Error)?.message;
-//       });
-//     } finally {
-//       runInAction(() => {
-//         this.sync({ action: 'DELETE', ids: [id] });
-//       });
-//     }
-//   }
-
-//   updateTags = (ids: string[], tags: Tag[]) => {
-//     const tagIdsToUpdate = new Set(tags?.map((tag) => tag.metadata.id));
-
-//     const shouldRemoveTags = ids.every((id) => {
-//       const contact = this.value.get(id);
-
-//       if (!contact) return false;
-
-//       const contactIdsTags = new Set(
-//         (contact.value.tags ?? []).map((tag) => tag.metadata.id),
-//       );
-
-//       return Array.from(tagIdsToUpdate).every((tagId) =>
-//         contactIdsTags.has(tagId),
-//       );
-//     });
-
-//     ids.forEach((id) => {
-//       const contact = this.value.get(id);
-
-//       if (!contact) return;
-
-//       if (shouldRemoveTags) {
-//         contact.value.tags = contact.value.tags?.filter(
-//           (t) => !tagIdsToUpdate.has(t.metadata.id),
-//         );
-//       } else {
-//         const existingIds = new Set(
-//           contact.value.tags?.map((t) => t.metadata.id) ?? [],
-//         );
-//         const newTags = tags.filter((t) => !existingIds.has(t.metadata.id));
-
-//         if (!Array.isArray(contact.value.tags)) {
-//           contact.value.tags = [];
-//         }
-
-//         contact.value.tags = [...(contact.value.tags ?? []), ...newTags];
-
-//         contact.commit();
-//       }
-//     });
-//   };
-// }
+import { Store } from '@store/_store';
+import { RootStore } from '@store/root';
+import { Transport } from '@store/transport';
+import { action, computed, observable, runInAction } from 'mobx';
+
+import {
+  Tag,
+  ContactInput,
+  SortingDirection,
+} from '@shared/types/__generated__/graphql.types';
+
+import { Contact, ContactDatum } from './Contact.dto';
+import { ContactsView } from './__views__/Contacts.view';
+import { ContactService } from './__service__/Contacts.service';
+import { FlowContactsView } from './__views__/FlowContacts.view';
+import { TargetsContactsView } from './__views__/TargetsContacts.view';
+
+export class ContactsStore extends Store<ContactDatum, Contact> {
+  private chunkSize = 50;
+  private service: ContactService;
+  @observable accessor searchResults: Map<string, string[]> = new Map();
+  @observable accessor cursors: Map<string, number> = new Map();
+  @observable accessor availableCounts: Map<string, number> = new Map();
+
+  constructor(public root: RootStore, public transport: Transport) {
+    super(root, transport, {
+      name: 'Contacts',
+      getId: (data) => data?.id,
+      factory: Contact,
+    });
+    this.service = ContactService.getInstance();
+
+    new ContactsView(this);
+    new FlowContactsView(this);
+    new TargetsContactsView(this);
+  }
+
+  canLoadNext(preset: string) {
+    const ids = this.searchResults.get(preset);
+    const cursor = this.cursors.get(preset) ?? 0;
+
+    if (!ids) return false;
+
+    return ids.length > this.chunkSize * (cursor + 1);
+  }
+
+  @computed
+  get isFullyLoaded() {
+    return this.totalElements === this.value.size;
+  }
+
+  delete = (ids: string[]) => {
+    ids.forEach((id) => {
+      this.delete([id]);
+    });
+  };
+
+  archive = (ids: string[]) => {
+    ids.forEach((id) => {
+      this.softDelete(id);
+    });
+  };
+
+  @action
+  async getAllData() {
+    runInAction(() => {
+      this.isBootstrapping = true;
+    });
+
+    try {
+      const { ui_contacts_search } = await this.service.searchContacts({
+        limit: this.chunkSize,
+        sort: {
+          by: 'CONTACTS_CREATED_AT',
+          caseSensitive: false,
+          direction: SortingDirection.Desc,
+        },
+      });
+
+      await this.retrieve(ui_contacts_search.ids);
+
+      runInAction(() => {
+        this.size = this.value.size;
+      });
+    } catch (e) {
+      runInAction(() => {
+        this.error = (e as Error)?.message;
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+        this.isBootstrapped = true;
+        this.isBootstrapping = false;
+      });
+    }
+  }
+
+  @action
+  async search(viewDefPrest: string) {
+    const viewDef = this.root.tableViewDefs.getById(viewDefPrest);
+    const cursor = (
+      this.cursors.has(viewDefPrest)
+        ? this.cursors.get(viewDefPrest)
+        : this.cursors.set(viewDefPrest, 0).get(viewDefPrest)
+    ) as number;
+
+    if (!viewDef) {
+      console.error(`viewDef with preset=${viewDefPrest} not found`);
+
+      return;
+    }
+
+    try {
+      runInAction(() => {
+        if (cursor > 0) {
+          // reset chunk if new search is performed
+          this.cursors.set(viewDefPrest, 0);
+        }
+        this.isLoading = true;
+      });
+
+      const payload = viewDef.toSearchPayload();
+
+      const { ui_contacts_search: searchResult } =
+        await this.service.searchContacts({ ...payload });
+
+      if (cursor === 0) {
+        const ids = (searchResult?.ids ?? []).slice(
+          this.chunkSize * cursor,
+          this.chunkSize * cursor + this.chunkSize,
+        );
+
+        // retrieve first chunk of data after new search is performed
+        await this.retrieve(ids);
+      }
+      runInAction(() => {
+        this.isLoading = false;
+        this.availableCounts.set(viewDefPrest, searchResult?.totalElements);
+        this.totalElements = searchResult?.totalAvailable ?? 0;
+        this.searchResults.set(viewDefPrest, searchResult?.ids ?? []);
+      });
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error)?.message;
+      });
+    }
+  }
+
+  @action
+  async retrieve(ids: string[]) {
+    try {
+      const { ui_contacts } = await this.service.getContactsByIds({
+        ids,
+      });
+
+      runInAction(() => {
+        ui_contacts.forEach((raw) => {
+          if (this.value.has(raw.id)) {
+            Object.assign(raw, this.value.get(raw.id)?.value);
+          } else {
+            const record = new Contact(this, raw);
+
+            this.value.set(record.id, record);
+          }
+        });
+
+        this.size = this.value.size;
+        this.version++;
+      });
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error)?.message;
+      });
+    }
+  }
+
+  @action
+  public async loadNext(preset: string) {
+    let cursor = this.cursors.get(preset) ?? 0;
+
+    runInAction(() => {
+      cursor++;
+      this.cursors.set(preset, cursor);
+    });
+
+    const ids = this.searchResults.get(preset);
+
+    const chunkedIds = (ids ?? []).slice(
+      this.chunkSize * cursor,
+      this.chunkSize * cursor + this.chunkSize,
+    );
+
+    try {
+      runInAction(() => {
+        this.isLoading = true;
+      });
+
+      await this.retrieve(chunkedIds);
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error)?.message;
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+      });
+    }
+  }
+
+  @action
+  public async invalidate(id: string) {
+    try {
+      const { ui_contacts } = await this.service.getContactsByIds({
+        ids: [id],
+      });
+
+      if (!ui_contacts) return;
+
+      const data = ui_contacts[0];
+
+      if (!data) return;
+
+      runInAction(() => {
+        const record = this.value.get(id);
+
+        if (record) {
+          Object.assign(record.value, data);
+        } else {
+          const record = new Contact(this, data);
+
+          this.value.set(record.id, record);
+        }
+      });
+    } catch (e) {
+      console.error('Failed invalidating Contact with ID: ' + id);
+    }
+  }
+
+  @action
+  async create(
+    organizationId: string,
+    options?: { onSuccess?: (serverId: string) => void },
+    input?: ContactInput,
+  ) {
+    let serverId: string | undefined;
+
+    // this.value.set(tempId, newContact);
+
+    try {
+      const { contact_CreateForOrganization } =
+        await this.service.createContactForOrganization({
+          organizationId,
+          input: input ?? {},
+        });
+
+      runInAction(() => {
+        serverId = contact_CreateForOrganization.id;
+
+        const newContact = new Contact(
+          this.root.contacts,
+          Contact.default({ name: input?.name || '', id: serverId }),
+        );
+
+        this.value.set(serverId, newContact);
+        this.sync({ action: 'APPEND', ids: [serverId] });
+      });
+    } catch (e) {
+      runInAction(() => {
+        this.error = (e as Error)?.message;
+      });
+    } finally {
+      serverId && options?.onSuccess?.(serverId);
+      await this.root.contacts.invalidate(serverId!);
+      await this.root.organizations.invalidate(organizationId);
+      this.root.contacts.value.get(serverId!)?.commit({ syncOnly: true });
+    }
+  }
+
+  @action
+  async createWithSocial({
+    socialUrl,
+    organizationId,
+    options,
+  }: {
+    socialUrl: string;
+    organizationId: string;
+    options?: {
+      onSuccess?: (serverId: string) => void;
+    };
+  }) {
+    this.isLoading = true;
+
+    const newContact = new Contact(this, Contact.default());
+
+    const tempId = newContact.id;
+
+    this.value.set(tempId, newContact);
+
+    let serverId: string | undefined;
+
+    const organization = this.root.organizations.value.get(organizationId);
+
+    try {
+      const { contact_CreateForOrganization } =
+        await this.service.createContactForOrganization({
+          organizationId,
+          input: {
+            socialUrl,
+          },
+        });
+
+      runInAction(() => {
+        serverId = contact_CreateForOrganization.id;
+
+        const newContact = new Contact(
+          this,
+          Contact.default({ id: serverId, linkedInUrl: socialUrl }),
+        );
+
+        this.value.set(serverId, newContact);
+        this.value.delete(tempId);
+
+        this.sync({ action: 'APPEND', ids: [serverId] });
+        this.isLoading = false;
+      });
+      this.root.ui.toastSuccess(
+        `Contact created for ${organization?.value?.name}`,
+        'create-contract-error',
+      );
+    } catch (e) {
+      this.root.ui.toastError(
+        `We couldn't create this contact. Please try again.`,
+        'create-contract-error',
+      );
+      runInAction(() => {
+        this.error = (e as Error)?.message;
+      });
+    } finally {
+      serverId && options?.onSuccess?.(serverId);
+      await this.root.contacts.invalidate(serverId!);
+      await this.root.organizations.invalidate(organizationId);
+      this.root.contacts.value.get(serverId!)?.commit({ syncOnly: true });
+    }
+  }
+
+  @action
+  async createWithoutOrg({
+    socialUrl,
+    options,
+  }: {
+    socialUrl: string;
+    options?: {
+      onSuccess?: (serverId: string) => void;
+    };
+  }) {
+    this.isLoading = true;
+
+    const newContact = new Contact(this, Contact.default());
+    const tempId = newContact.id;
+    const socialId = crypto.randomUUID();
+    let serverId: string | undefined = undefined;
+
+    (newContact.value = {
+      id: socialId,
+      firstName: '',
+      lastName: '',
+      name: '',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      flows: [],
+      locations: [],
+      emails: [],
+      connectedUsers: [],
+      tags: [],
+      enrichedEmailEnrichedAt: null,
+      enrichedEmailFound: null,
+      enrichedFailedAt: null,
+      enrichedAt: null,
+      description: '',
+      phones: [],
+      prefix: '',
+      timezone: '',
+      profilePhotoUrl: '',
+    }),
+      this.value.set(tempId, newContact);
+
+    try {
+      const { contact_Create } = await this.service.createContact({
+        contactInput: {
+          socialUrl,
+        },
+      });
+
+      runInAction(() => {
+        serverId = contact_Create;
+        newContact.id = serverId;
+        this.value.set(serverId, newContact);
+        this.value.delete(tempId);
+
+        this.sync({ action: 'APPEND', ids: [serverId] });
+        this.isLoading = false;
+      });
+
+      this.root.ui.toastSuccess(`Contact created`, 'create-contact-success');
+    } catch (e) {
+      this.root.ui.toastError(
+        `We couldn't create this contact. Please try again.`,
+        'create-contact-error',
+      );
+      runInAction(() => {
+        this.error = (e as Error)?.message;
+      });
+    } finally {
+      serverId && options?.onSuccess?.(serverId);
+
+      setTimeout(() => {
+        if (serverId) {
+          this.value.get(serverId)?.invalidate();
+        }
+      }, 2000);
+    }
+  }
+
+  @action
+  async createBulkByEmail({
+    emails,
+    options,
+  }: {
+    flowId?: string;
+    emails: string[];
+    options?: {
+      onSuccess?: () => void;
+      onError?: (err: string) => void;
+    };
+  }) {
+    this.isLoading = true;
+
+    try {
+      const { contact_CreateBulkByEmail } =
+        await this.service.createContactBulkByEmail({
+          emails,
+        });
+
+      runInAction(() => {
+        this.sync({ action: 'APPEND', ids: contact_CreateBulkByEmail });
+        options?.onSuccess?.();
+        this.isLoading = false;
+      });
+
+      this.root.ui.toastSuccess(`Contacts created`, 'create-contact-success');
+    } catch (e) {
+      this.root.ui.toastError(
+        `We couldn't create this contact. Please try again.`,
+        'create-contact-error',
+      );
+      runInAction(() => {
+        this.error = (e as Error)?.message;
+        options?.onError?.(this.error);
+      });
+    } finally {
+      setTimeout(() => {
+        this.isBootstrapped = false;
+        this.invalidate();
+      }, 300);
+    }
+  }
+
+  @action
+  async createBulkByLinkedIn({
+    linkedInUrls,
+    options,
+  }: {
+    flowId?: string;
+    linkedInUrls: string[];
+    options?: {
+      onSuccess?: () => void;
+      onError?: (err: string) => void;
+    };
+  }) {
+    this.isLoading = true;
+
+    try {
+      const { contact_CreateBulkByLinkedIn } =
+        await this.service.createContactBulkByLinkedIn({
+          linkedInUrls,
+        });
+
+      runInAction(() => {
+        this.sync({ action: 'APPEND', ids: contact_CreateBulkByLinkedIn });
+        options?.onSuccess?.();
+        this.isLoading = false;
+      });
+
+      this.root.ui.toastSuccess(`Contacts created`, 'create-contact-success');
+    } catch (e) {
+      this.root.ui.toastError(
+        `We couldn't create this contact. Please try again.`,
+        'create-contact-error',
+      );
+      runInAction(() => {
+        this.error = (e as Error)?.message;
+        options?.onError?.(this.error);
+      });
+    } finally {
+      setTimeout(() => {
+        this.isBootstrapped = false;
+        this.bootstrap();
+      }, 300);
+    }
+  }
+
+  async remove(id: string) {
+    try {
+      runInAction(() => {
+        const organizationId = this.value.get(id)?.organizationId;
+
+        if (organizationId) {
+          const organization =
+            this.root.organizations.value.get(organizationId);
+
+          const foundIdx = organization?.value?.contacts.findIndex(
+            (c) => c === id,
+          );
+
+          if (foundIdx && foundIdx > -1) {
+            organization?.value?.contacts.splice(foundIdx, 1);
+            organization?.commit({ syncOnly: true });
+          }
+        }
+        this.value.delete(id);
+      });
+
+      await this.service.deleteContact({ contactId: id });
+    } catch (e) {
+      runInAction(() => {
+        this.error = (e as Error)?.message;
+      });
+    } finally {
+      runInAction(() => {
+        this.sync({ action: 'DELETE', ids: [id] });
+      });
+    }
+  }
+
+  async softDelete(id: string) {
+    try {
+      runInAction(() => {
+        const organizationId = this.value.get(id)?.organizationId;
+
+        if (organizationId) {
+          const organization =
+            this.root.organizations.value.get(organizationId);
+
+          const foundIdx = organization?.value?.contacts.findIndex(
+            (c) => c === id,
+          );
+
+          if (foundIdx && foundIdx > -1) {
+            organization?.value?.contacts.splice(foundIdx, 1);
+            organization?.commit({ syncOnly: true });
+          }
+        }
+        this.value.delete(id);
+      });
+
+      await this.service.archiveContact({ contactId: id });
+      this.totalElements--;
+    } catch (e) {
+      runInAction(() => {
+        this.error = (e as Error)?.message;
+      });
+    } finally {
+      runInAction(() => {
+        this.sync({ action: 'DELETE', ids: [id] });
+      });
+    }
+  }
+
+  updateTags = (ids: string[], tags: Tag[]) => {
+    const tagIdsToUpdate = new Set(tags?.map((tag) => tag.metadata.id));
+
+    const shouldRemoveTags = ids.every((id) => {
+      const contact = this.value.get(id);
+
+      if (!contact) return false;
+
+      const contactIdsTags = new Set(
+        (contact.value.tags ?? []).map((tag) => tag.metadata.id),
+      );
+
+      return Array.from(tagIdsToUpdate).every((tagId) =>
+        contactIdsTags.has(tagId),
+      );
+    });
+
+    ids.forEach((id) => {
+      const contact = this.value.get(id);
+
+      if (!contact) return;
+
+      if (shouldRemoveTags) {
+        contact.value.tags = contact.value.tags?.filter(
+          (t) => !tagIdsToUpdate.has(t.metadata.id),
+        );
+      } else {
+        const existingIds = new Set(
+          contact.value.tags?.map((t) => t.metadata.id) ?? [],
+        );
+        const newTags = tags.filter((t) => !existingIds.has(t.metadata.id));
+
+        if (!Array.isArray(contact.value.tags)) {
+          contact.value.tags = [];
+        }
+
+        contact.value.tags = [...(contact.value.tags ?? []), ...newTags];
+
+        contact.commit();
+      }
+    });
+  };
+}

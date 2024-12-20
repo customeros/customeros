@@ -5,7 +5,7 @@ import { FlowStore } from '@store/Flows/Flow.store';
 import { countryMap } from '@assets/countries/countriesMap';
 import { action, computed, observable, runInAction } from 'mobx';
 
-import { ContactsStore } from './Contacts2.store';
+import { ContactsStore } from './Contacts.store';
 import { ContactService } from './__service__/Contacts.service';
 import { GetContactsByIdsQuery } from './__service__/getContactsById.generated';
 
@@ -61,8 +61,9 @@ export class Contact extends Entity<ContactDatum> {
 
   @computed
   get organization() {
-    return this.store.root.organizations.value.get(this.organizationId || '')
-      ?.value;
+    return this.store.root.organizations.value.get(
+      this.value.primaryOrganizationId || '',
+    )?.value;
   }
 
   @computed
@@ -213,7 +214,7 @@ export class Contact extends Entity<ContactDatum> {
     }
   }
 
-  static default(payload?: ContactDatum): ContactDatum {
+  static default(payload?: Partial<ContactDatum>): ContactDatum {
     return merge(
       {
         id: crypto.randomUUID(),

@@ -1,520 +1,295 @@
-// import { useRef, useEffect, MouseEvent } from 'react';
+import { useState } from 'react';
 
-// import set from 'lodash/set';
-// import { observer } from 'mobx-react-lite';
-// import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
-// import { differenceInCalendarMonths } from 'date-fns/differenceInCalendarMonths';
+import { set } from 'lodash';
+import { observer } from 'mobx-react-lite';
+import { TagDatum } from '@store/Tags/Tag.store';
 
-// import { cn } from '@ui/utils/cn';
-// import { Select } from '@ui/form/Select';
-// import { Input } from '@ui/form/Input/Input';
-// import { Clock } from '@ui/media/icons/Clock';
-// import { Check } from '@ui/media/icons/Check';
-// import { Mail01 } from '@ui/media/icons/Mail01';
-// import { User03 } from '@ui/media/icons/User03';
-// import { Avatar } from '@ui/media/Avatar/Avatar';
-// import { Share07 } from '@ui/media/icons/Share07';
-// import { Trash01 } from '@ui/media/icons/Trash01';
-// import { useStore } from '@shared/hooks/useStore';
-// import { Users01 } from '@ui/media/icons/Users01';
-// import { Calendar } from '@ui/media/icons/Calendar';
-// import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
-// import { Spinner } from '@ui/feedback/Spinner/Spinner';
-// import { SelectOption } from '@shared/types/SelectOptions';
-// import { IconButton } from '@ui/form/IconButton/IconButton';
-// import { Tags } from '@organization/components/Tabs/shared/';
-// import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
-// import { PhoneOutgoing02 } from '@ui/media/icons/PhoneOutgoing02';
-// import { useOutsideClick } from '@ui/utils/hooks/useOutsideClick';
-// import { Card, CardHeader, CardContent } from '@ui/presentation/Card/Card';
-// import { Tag, Social, Contact, DataSource, EntityType } from '@graphql/types';
-// import { useContactCardMeta } from '@organization/state/ContactCardMeta.atom';
-// import { SocialIconInput } from '@organization/components/Tabs/shared/SocialIconInput';
-// import {
-//   InputGroup,
-//   LeftElement,
-//   RightElement,
-// } from '@ui/form/InputGroup/InputGroup';
-// import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog/ConfirmDeleteDialog';
+import { cn } from '@ui/utils/cn';
+import { Input } from '@ui/form/Input';
+import { Avatar } from '@ui/media/Avatar';
+import { DateTimeUtils } from '@utils/date';
+import { Tag01 } from '@ui/media/icons/Tag01';
+import { User03 } from '@ui/media/icons/User03';
+import { Mail01 } from '@ui/media/icons/Mail01';
+import { IconButton } from '@ui/form/IconButton';
+import { useEvent } from '@shared/hooks/useEvent';
+import { useStore } from '@shared/hooks/useStore';
+import { Linkedin } from '@ui/media/icons/Linkedin';
+import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
+import { ChevronCollapse } from '@ui/media/icons/ChevronCollapse';
+import { LinkedInSolid02 } from '@ui/media/icons/LinkedInSolid02';
+import {
+  Tag,
+  DataSource,
+  EntityType,
+} from '@shared/types/__generated__/graphql.types';
+import {
+  Card,
+  CardHeader,
+  CardFooter,
+  CardContent,
+} from '@ui/presentation/Card/Card';
 
-// import { timezoneOptions } from '../../util';
-// import { TimezoneSelect } from './TimezoneSelect';
-// import { EmailValidationMessage } from './EmailValidationMessage';
+import { EmailsSection } from './components/EmailsSection';
+import { Tags } from '../../../AboutPanel/components/tags';
+import { ContactCardMenu, ContactLocation } from './components';
+import { ContactJobExperience } from './components/ContactJobExperience';
+import { AddLinkedInToContactModal } from './components/AddLinkedInToContactModal';
 
-// const roleOptions = [
-//   {
-//     value: 'Decision Maker',
-//     label: 'Decision Maker',
-//   },
-//   {
-//     value: 'Influencer',
-//     label: 'Influencer',
-//   },
-//   {
-//     value: 'User',
-//     label: 'User',
-//   },
-//   {
-//     value: 'Stakeholder',
-//     label: 'Stakeholder',
-//   },
-//   {
-//     value: 'Gatekeeper',
-//     label: 'Gatekeeper',
-//   },
-//   {
-//     value: 'Champion',
-//     label: 'Champion',
-//   },
-//   {
-//     value: 'Data Owner',
-//     label: 'Data Owner',
-//   },
-// ];
+interface ContactCardProps {
+  id: string;
+}
+export const ContactCard = observer(({ id }: ContactCardProps) => {
+  const store = useStore();
+  const { dispatchEvent } = useEvent('openEmailEditor');
+  const [isExpanded, setIsExpanded] = useState(false);
+  const { onOpen, onClose, open } = useDisclosure();
+  const contactStore = store.contacts.value.get(id);
 
-// interface ContactCardProps {
-//   id: string;
-//   contact: Contact;
-//   organizationName?: string;
-// }
+  const handleCreateOption = (value: string) => {
+    store.tags?.create(
+      { name: value },
+      {
+        onSucces: (id) => {
+          contactStore?.value.tags?.push({
+            name: value,
+            metadata: {
+              id,
+              source: DataSource.Openline,
+              sourceOfTruth: DataSource.Openline,
+              appSource: 'organization',
+              created: new Date().toISOString(),
+              lastUpdated: new Date().toISOString(),
+            },
+            entityType: EntityType.Contact,
+          } as Tag);
+          contactStore?.commit();
+        },
+      },
+    );
+  };
 
-// export const ContactCard = observer(
-//   ({ id, organizationName }: ContactCardProps) => {
-//     const store = useStore();
-//     const cardRef = useRef<HTMLDivElement>(null);
-//     const [{ expandedId, initialFocusedField }, setExpandedCardId] =
-//       useContactCardMeta();
-//     const isExpanded = expandedId === id;
-//     const { open: isOpen, onOpen, onClose } = useDisclosure();
+  const updatedDaysAgo =
+    DateTimeUtils.getDaysSinceDate(contactStore?.value.updatedAt) === 1
+      ? `Last changed ${DateTimeUtils.getDaysSinceDate(
+          contactStore?.value.updatedAt,
+        )} day ago`
+      : `Last changed ${DateTimeUtils.getDaysSinceDate(
+          contactStore?.value.updatedAt,
+        )} days ago`;
 
-//     useOutsideClick({
-//       ref: cardRef,
-//       handler: () => {
-//         if (expandedId === id) {
-//           setExpandedCardId({
-//             expandedId: undefined,
-//             initialFocusedField: null,
-//           });
-//         }
-//       },
-//     });
+  const linkedInProfile = contactStore?.value.linkedInUrl;
 
-//     const contactStore = store.contacts.value.get(id);
-//     const emailInputRef = useRef<HTMLInputElement | null>(null);
-//     const nameInputRef = useRef<HTMLInputElement | null>(null);
+  const email =
+    contactStore?.value.emails.find((e) => e.primary)?.email ??
+    contactStore?.value.emails[0]?.email;
 
-//     const toggle = (e: MouseEvent<HTMLDivElement>) => {
-//       if (
-//         ['name', 'role', 'title'].includes((e.target as HTMLDivElement)?.id)
-//       ) {
-//         setExpandedCardId({
-//           expandedId: id,
-//           initialFocusedField: null,
-//         });
+  const jobTitle = contactStore?.value.primaryOrganizationJobRoleTitle;
 
-//         return;
-//       }
+  if (!contactStore) return null;
 
-//       if (isExpanded) {
-//         setExpandedCardId({ expandedId: undefined, initialFocusedField: null });
-//       } else {
-//         setExpandedCardId({
-//           expandedId: id,
-//           initialFocusedField: null,
-//         });
-//       }
-//     };
+  return (
+    <>
+      <Card
+        style={{ paddingBottom: !isExpanded ? '0' : '10px' }}
+        className={cn(
+          isExpanded ? 'bg-white' : 'border-transparent',
+          'px-2 pb-2.5 pt-0.5 group-hover/card:border-gray-200 group-hover/card:bg-white',
+        )}
+      >
+        <CardHeader style={{ paddingBottom: !isExpanded ? '0' : '8px' }}>
+          <div className='flex items-center justify-between w-full'>
+            <div className='flex items-center w-full'>
+              <div>
+                <Avatar
+                  size='sm'
+                  variant='outlineCircle'
+                  name={contactStore?.value.name ?? ''}
+                  icon={<User03 className='text-gray-700 size-6' />}
+                  src={
+                    contactStore?.value?.profilePhotoUrl
+                      ? contactStore.value.profilePhotoUrl
+                      : undefined
+                  }
+                />
+              </div>
 
-//     useEffect(() => {
-//       if (expandedId === id && initialFocusedField) {
-//         if (initialFocusedField === 'name') {
-//           nameInputRef.current?.focus();
+              <div className='flex flex-col w-full ml-2'>
+                <div className='flex justify-between group/action-buttons min-w-max'>
+                  <div className='flex justify-start gap-4 h-full '>
+                    {!isExpanded ? (
+                      <span
+                        className={cn(
+                          'cursor-default font-medium text-sm',
+                          !contactStore.name && 'text-gray-400',
+                        )}
+                      >
+                        {contactStore?.name || 'First & last name'}
+                      </span>
+                    ) : (
+                      <Input
+                        size='xxs'
+                        variant='unstyled'
+                        placeholder='First & last name'
+                        value={contactStore?.name ?? ''}
+                        dataTest='org-people-contact-name'
+                        className='placeholder:font-medium font-medium min-w-[60px]'
+                        onChange={(e) => {
+                          contactStore.value.name = e.target.value;
+                        }}
+                        onBlur={() => {
+                          contactStore.draft();
+                          contactStore.commit();
+                        }}
+                      />
+                    )}
 
-//           return;
-//         }
+                    <div className='flex h-full gap-1'>
+                      {email && !isExpanded && (
+                        <IconButton
+                          size='xxs'
+                          variant='ghost'
+                          icon={<Mail01 />}
+                          aria-label='send-email'
+                          className='group-hover/action-buttons:opacity-100 opacity-0'
+                          onClick={() =>
+                            dispatchEvent({ email: email, openEditor: 'email' })
+                          }
+                        />
+                      )}
+                      {!isExpanded && linkedInProfile && (
+                        <IconButton
+                          size='xxs'
+                          variant='ghost'
+                          icon={<LinkedInSolid02 />}
+                          aria-label='navigate-to-linkedin'
+                          className='group-hover/action-buttons:opacity-100 opacity-0'
+                          onClick={() =>
+                            window.open(linkedInProfile, '_blank', 'noopener')
+                          }
+                        />
+                      )}
+                    </div>
+                  </div>
+                  <div
+                    className={cn(
+                      'group-hover/card:opacity-100 opacity-0',
+                      isExpanded && 'opacity-100',
+                    )}
+                  >
+                    <IconButton
+                      size='xxs'
+                      variant='ghost'
+                      aria-label='collapse'
+                      icon={<ChevronCollapse />}
+                      onClick={() => setIsExpanded(!isExpanded)}
+                    />
+                    <ContactCardMenu contactId={id} />
+                  </div>
+                </div>
+                {!isExpanded ? (
+                  <p
+                    className={cn(
+                      'text-sm line-clamp-1 cursor-default',
+                      !jobTitle && 'text-gray-400',
+                    )}
+                  >
+                    {jobTitle || 'Job title'}
+                  </p>
+                ) : (
+                  <Input
+                    size='xxs'
+                    variant='unstyled'
+                    placeholder='Job title'
+                    value={
+                      contactStore.value.primaryOrganizationJobRoleTitle || ''
+                    }
+                    onBlur={() => {
+                      contactStore.draft();
+                      contactStore.commit();
+                    }}
+                    onChange={(e) => {
+                      if (e.target.value !== '') {
+                        set(
+                          contactStore.value,
+                          'primaryOrganizationJobRoleTitle',
+                          e.target.value,
+                        );
+                      }
+                    }}
+                  />
+                )}
+              </div>
+            </div>
+          </div>
+        </CardHeader>
+        {isExpanded && (
+          <CardContent className='pl-2 pr-0 pb-0 gap-3 flex flex-col justify-center'>
+            {contactStore.value.locations?.length > 0 && (
+              <ContactLocation contactId={id} />
+            )}
+            {contactStore.value.primaryOrganizationJobRoleStartDate && (
+              <ContactJobExperience contactId={id} />
+            )}
+            <EmailsSection contactId={id} />
 
-//         if (initialFocusedField === 'email') {
-//           emailInputRef.current?.focus();
+            <div className='flex items-center max-h-6'>
+              <Linkedin className='text-gray-500 mr-4' />
+              <span
+                className={cn(
+                  'text-sm cursor-pointer',
+                  !linkedInProfile && 'text-gray-400',
+                )}
+                onClick={() => {
+                  if (!linkedInProfile) {
+                    onOpen();
+                  } else {
+                    window.open(linkedInProfile, '_blank', 'noopener');
+                  }
+                }}
+              >
+                {linkedInProfile || 'LinkedIn profile URL'}
+              </span>
+            </div>
 
-//           return;
-//         }
-//       }
-//     }, [expandedId, initialFocusedField, emailInputRef]);
+            <Tags
+              placeholder='Tags'
+              dataTest='org-about-tags'
+              className='min-h-4 text-sm'
+              inputPlaceholder='Search...'
+              onCreate={handleCreateOption}
+              leftAccessory={<Tag01 className='mr-4 text-gray-500 size-4' />}
+              value={
+                contactStore.value.tags?.map((t) => ({
+                  value: t.metadata.id,
+                  label: t.name,
+                })) ?? []
+              }
+              options={store.tags
+                .getByEntityType(EntityType.Contact)
+                .map((t) => ({
+                  value: t.id,
+                  label: t.value?.name,
+                }))}
+              onChange={(selection) => {
+                const tags = selection
+                  .map((o) => store.tags.getById(o.value)?.value)
+                  .filter(Boolean);
 
-//     const timeAt = (() => {
-//       const startedAt = contactStore?.value?.jobRoles?.[0]?.startedAt;
-
-//       if (!startedAt) return undefined;
-
-//       const months = Math.abs(
-//         differenceInCalendarMonths(new Date(startedAt), new Date()),
-//       );
-
-//       if (months < 0) return `Less than a month at ${organizationName}`;
-//       if (months === 1) return `${months} month at ${organizationName}`;
-//       if (months > 1 && months < 12)
-//         return `${months} months at ${organizationName}`;
-//       if (months === 12) return `1 year at ${organizationName}`;
-//       if (months > 12)
-//         return `${formatDistanceToNow(
-//           new Date(startedAt),
-//         )} at ${organizationName}`;
-//     })();
-
-//     const handleDelete = (e: MouseEvent) => {
-//       e.stopPropagation();
-//       e.preventDefault();
-//       store.contacts.softDelete(id);
-//       onClose();
-//     };
-
-//     const toggleConfirmDelete = (e: MouseEvent) => {
-//       e.stopPropagation();
-//       e.preventDefault();
-//       onOpen();
-//     };
-
-//     const handleFindEmail = () => {
-//       contactStore?.findEmail();
-//     };
-
-//     const handleCreateOption = (value: string) => {
-//       store.tags?.create(
-//         { name: value },
-//         {
-//           onSucces: (id) => {
-//             contactStore?.value.tags?.push({
-//               name: value,
-//               metadata: {
-//                 id,
-//                 source: DataSource.Openline,
-//                 sourceOfTruth: DataSource.Openline,
-//                 appSource: 'organization',
-//                 created: new Date().toISOString(),
-//                 lastUpdated: new Date().toISOString(),
-//               },
-//               entityType: EntityType.Contact,
-//             } as Tag);
-//             contactStore?.commit();
-//           },
-//         },
-//       );
-//     };
-
-//     const enrichedContact = contactStore?.value.enrichDetails;
-//     const enrichingStatus =
-//       !enrichedContact?.enrichedAt &&
-//       enrichedContact?.requestedAt &&
-//       !enrichedContact?.failedAt;
-
-//     const enrichedEmailStatus =
-//       !enrichedContact?.emailEnrichedAt &&
-//       enrichedContact?.emailRequestedAt &&
-//       !enrichedContact?.emailFound;
-
-//     if (!contactStore) return null;
-
-//     return (
-//       <>
-//         <Card
-//           ref={cardRef}
-//           key={contactStore?.id}
-//           className={cn(
-//             'bg-white w-full group rounded-lg border-[1px] border-gray-200 cursor-pointer hover:shadow-md ',
-//             isExpanded ? 'shadow-md' : 'shadow-xs',
-//             'ease-linear',
-//             'transition-all',
-//             'duration-1000',
-//           )}
-//         >
-//           <CardHeader onClick={toggle} className={cn('flex p-4 relative')}>
-//             <div className='flex flex-col'>
-//               {enrichingStatus && (
-//                 <div className='flex items-center justify-start gap-2 border-[1px] text-sm border-grayModern-100 bg-grayModern-50 rounded-[4px] py-1 px-2 mb-4 w-full'>
-//                   <Spinner
-//                     label='enriching org'
-//                     className='text-grayModern-300 fill-grayModern-500 size-4'
-//                   />
-//                   <span className='font-medium'>
-//                     We're enriching this contact's details...
-//                   </span>
-//                 </div>
-//               )}
-//               <div className='flex'>
-//                 <Avatar
-//                   variant='shadowed'
-//                   name={contactStore?.value.name ?? ''}
-//                   icon={<User03 className='text-primary-700 size-6' />}
-//                   src={
-//                     contactStore?.value?.profilePhotoUrl
-//                       ? contactStore.value.profilePhotoUrl
-//                       : undefined
-//                   }
-//                 />
-
-//                 <div className='ml-4 flex flex-col flex-1'>
-//                   <Input
-//                     size='xs'
-//                     name='name'
-//                     ref={nameInputRef}
-//                     placeholder='Name'
-//                     value={contactStore?.name ?? ''}
-//                     dataTest='org-people-contact-name'
-//                     onBlur={() => contactStore.commit()}
-//                     className='font-semibold text-gray-700'
-//                     onChange={(e) => {
-//                       contactStore.value.name = e.target.value;
-//                     }}
-//                   />
-//                   <Input
-//                     size='xs'
-//                     name='prefix'
-//                     placeholder='Title'
-//                     className='text-gray-500'
-//                     dataTest='org-people-contact-title'
-//                     onBlur={() => contactStore.commit()}
-//                     value={contactStore?.value?.jobRoles?.[0]?.jobTitle ?? ''}
-//                     onChange={(e) => {
-//                       contactStore.value.jobRoles[0].jobTitle = e.target.value;
-//                     }}
-//                   />
-//                   <Select
-//                     isMulti
-//                     size='xs'
-//                     name='role'
-//                     options={roleOptions}
-//                     placeholder='Choose job roles'
-//                     dataTest='org-people-contact-job-roles'
-//                     value={
-//                       contactStore?.value?.jobRoles?.[0]?.description
-//                         ?.split(',')
-//                         .filter(Boolean)
-//                         .map((v) => ({ value: v, label: v })) ?? []
-//                     }
-//                     onChange={(opt) => {
-//                       contactStore.value.jobRoles[0].description = opt
-//                         .map((v: SelectOption) => v.value)
-//                         .join(',');
-
-//                       contactStore.commit();
-//                     }}
-//                   />
-//                 </div>
-//               </div>
-//             </div>
-//             {isExpanded && (
-//               <IconButton
-//                 size='xs'
-//                 variant='ghost'
-//                 onClick={onClose}
-//                 colorScheme='gray'
-//                 aria-label='Close'
-//                 id='collapse-button'
-//                 dataTest='org-people-contact-close'
-//                 icon={<Check className='text-gray-500' />}
-//                 className='absolute z-50 top-2 right-2 p-1 opacity-0 pointer-events-auto transition-opacity duration-300 group-hover:opacity-100 "'
-//               />
-//             )}
-
-//             {!isExpanded && (
-//               <IconButton
-//                 size='sm'
-//                 variant='ghost'
-//                 colorScheme='gray'
-//                 id='confirm-button'
-//                 aria-label='Delete contact'
-//                 onClick={toggleConfirmDelete}
-//                 dataTest='org-people-contact-delete'
-//                 icon={<Trash01 className='text-gray-400' />}
-//                 className='hover:bg-error-100 *:hover:text-error-500 absolute z-50 top-2 right-2 p-1 opacity-0 pointer-events-auto transition-opacity duration-300 group-hover:opacity-100 "'
-//               />
-//             )}
-//           </CardHeader>
-//           {isExpanded && (
-//             <CardContent
-//               className={cn('flex flex-col', isExpanded ? 'h-auto' : 'h-0')}
-//             >
-//               <InputGroup>
-//                 <LeftElement>
-//                   <span>
-//                     {enrichedEmailStatus ? (
-//                       <Tooltip hasArrow label='Click to autopopulate'>
-//                         <Spinner
-//                           size='sm'
-//                           label='Finding email'
-//                           className='text-gray-300 fill-gray-500'
-//                         />
-//                       </Tooltip>
-//                     ) : (
-//                       <Tooltip
-//                         side='right'
-//                         label={`Find email for ${organizationName}`}
-//                       >
-//                         <div>
-//                           <Mail01
-//                             onClick={handleFindEmail}
-//                             className='text-gray-500 hover:text-gray-700 transition-colors'
-//                           />
-//                         </div>
-//                       </Tooltip>
-//                     )}
-//                   </span>
-//                 </LeftElement>
-//                 <Input
-//                   variant='unstyled'
-//                   ref={emailInputRef}
-//                   placeholder='Email'
-//                   dataTest='org-people-contact-email'
-//                   value={contactStore?.value?.emails?.[0]?.email ?? ''}
-//                   onBlur={() => {
-//                     contactStore.commit();
-//                   }}
-//                   onChange={(e) => {
-//                     set(
-//                       contactStore.value,
-//                       ['emails', 0, 'email'],
-//                       e.target.value,
-//                     );
-//                     set(contactStore.value, ['emails', 0, 'primary'], true);
-//                   }}
-//                 />
-//                 <RightElement>
-//                   <EmailValidationMessage
-//                     email={contactStore?.value?.emails?.[0]?.email ?? ''}
-//                     validationDetails={
-//                       contactStore?.value?.emails?.[0]?.emailValidationDetails
-//                     }
-//                   />
-//                 </RightElement>
-//               </InputGroup>
-
-//               <InputGroup>
-//                 <LeftElement>
-//                   <PhoneOutgoing02 className='text-gray-500' />
-//                 </LeftElement>
-//                 <Input
-//                   variant='unstyled'
-//                   placeholder='Phone number'
-//                   dataTest='org-people-contact-phone-number'
-//                   onBlur={() => {
-//                     contactStore.commit();
-//                   }}
-//                   value={
-//                     contactStore?.value.phoneNumbers?.[0]?.rawPhoneNumber ?? ''
-//                   }
-//                   onChange={(e) => {
-//                     set(
-//                       contactStore.value,
-//                       ['phoneNumbers', 0, 'rawPhoneNumber'],
-//                       e.target.value,
-//                     );
-//                   }}
-//                 />
-//               </InputGroup>
-
-//               {/* TODO: replace with FormInput. currently displayed as a text just for demoing purposes */}
-//               {timeAt && (
-//                 <div className='flex items-center h-[39px]'>
-//                   <Calendar className='text-gray-500' />
-//                   <p className='ml-[14px] cursor-text capitalize'>{timeAt}</p>
-//                 </div>
-//               )}
-//               {/* END TODO */}
-
-//               <Tags
-//                 placeholder='Personas'
-//                 onCreateOption={handleCreateOption}
-//                 dataTest='org-people-contact-personas'
-//                 icon={
-//                   <Users01 className='text-gray-500 w-[18px] h-4 mr-[10px] mt-[6px] ' />
-//                 }
-//                 value={
-//                   contactStore?.value?.tags?.map((t) => ({
-//                     label: t.name,
-//                     value: t.metadata.id,
-//                   })) ?? []
-//                 }
-//                 onChange={(e) => {
-//                   contactStore.value.tags = e
-//                     .map(
-//                       (tag) => store.tags?.value.get(tag.value)?.value as Tag,
-//                     )
-//                     .filter(Boolean) as Tag[];
-
-//                   contactStore.commit();
-//                 }}
-//               />
-
-//               <SocialIconInput
-//                 placeholder='Social link'
-//                 dataTest='org-people-contact-social-link'
-//                 leftElement={<Share07 className='text-gray-500' />}
-//                 value={
-//                   contactStore?.value?.socials?.map((s) => ({
-//                     label: s?.alias ? `linkedin.com/in/${s.alias}` : s.url,
-//                     value: s.id,
-//                   })) ?? []
-//                 }
-//                 onCreate={(value) => {
-//                   contactStore.value.socials.push({
-//                     id: crypto.randomUUID(),
-//                     url: value,
-//                   } as Social);
-//                   contactStore.commit();
-//                 }}
-//                 onChange={(e) => {
-//                   const id = e.target.id;
-
-//                   const foundIndex = contactStore.value.socials.findIndex(
-//                     (s) => s.id === id,
-//                   );
-
-//                   if (foundIndex !== -1) {
-//                     contactStore.value.socials[foundIndex].url = e.target.value;
-
-//                     set(
-//                       contactStore.value,
-//                       ['socials', foundIndex, 'url'],
-//                       e.target.value,
-//                     );
-//                   }
-//                   contactStore.commit();
-//                 }}
-//               />
-//               <TimezoneSelect
-//                 isClearable
-//                 placeholder='Timezone'
-//                 options={timezoneOptions}
-//                 dataTest='org-people-contact-timezone'
-//                 leftElement={<Clock className='text-gray-500 mr-3' />}
-//                 value={timezoneOptions.find(
-//                   (v) => v.value === contactStore?.value?.timezone,
-//                 )}
-//                 onChange={(opt) => {
-//                   contactStore.value.timezone = opt?.value;
-//                   contactStore.commit();
-//                 }}
-//               />
-//               {/* <AutoresizeTextarea
-//                 className='items-start'
-//                 name='description'
-//                 placeholder='Notes'
-//                 onChange={handleChange}
-//                 value={contactStore?.value?.description ?? ''}
-//                 leftElement={<File02 className='text-gray-500 mt-1 mr-1' />}
-//               /> */}
-//             </CardContent>
-//           )}
-//         </Card>
-//         <ConfirmDeleteDialog
-//           isOpen={isOpen}
-//           hideCloseButton
-//           onClose={onClose}
-//           onConfirm={handleDelete}
-//           label='Delete this contact?'
-//           confirmButtonLabel='Delete contact'
-//         />
-//       </>
-//     );
-//   },
-// );
+                contactStore.value.tags = tags as TagDatum[];
+                contactStore.draft();
+                contactStore.commit();
+              }}
+            />
+            <CardFooter className='pt-0.5 pb-0.5 px-0 max-h-5'>
+              <span className='text-[12px] text-grayModern-500'>
+                {contactStore?.value?.updatedAt && updatedDaysAgo}
+              </span>
+            </CardFooter>
+          </CardContent>
+        )}
+      </Card>
+      <AddLinkedInToContactModal open={open} contactId={id} onClose={onClose} />
+    </>
+  );
+});

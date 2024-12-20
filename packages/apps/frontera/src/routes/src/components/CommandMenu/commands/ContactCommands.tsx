@@ -15,6 +15,7 @@ import { EyeOff } from '@ui/media/icons/EyeOff.tsx';
 import { Shuffle01 } from '@ui/media/icons/Shuffle01.tsx';
 import { Certificate02 } from '@ui/media/icons/Certificate02';
 import { ArrowBlockUp } from '@ui/media/icons/ArrowBlockUp.tsx';
+import { LinkedinOutline } from '@ui/media/icons/LinkedinOutline.tsx';
 import { Kbd, CommandKbd, CommandItem } from '@ui/overlay/CommandMenu';
 import { CommandsContainer } from '@shared/components/CommandMenu/commands/shared';
 
@@ -99,23 +100,54 @@ export const ContactCommands = observer(() => {
           </CommandItem>
         )}
 
+        {contact && contact?.value.emails.length > 0 && (
+          <CommandItem
+            leftAccessory={<Mail01 />}
+            keywords={contactKeywords.edit_email}
+            onSelect={() => {
+              store.ui.commandMenu.setType('EditEmail');
+            }}
+            rightAccessory={
+              <>
+                <Kbd>
+                  <ArrowBlockUp className='text-inherit size-3' />
+                </Kbd>
+                <Kbd>E</Kbd>
+              </>
+            }
+          >
+            Edit email
+          </CommandItem>
+        )}
+
         <CommandItem
           leftAccessory={<Mail01 />}
           keywords={contactKeywords.edit_email}
           onSelect={() => {
-            store.ui.commandMenu.setType('EditEmail');
+            store.ui.commandMenu.setType('AddEmail');
           }}
           rightAccessory={
             <>
               <Kbd>
                 <ArrowBlockUp className='text-inherit size-3' />
               </Kbd>
-              <Kbd>E</Kbd>
+              <Kbd>A</Kbd>
             </>
           }
         >
-          Edit email
+          Add Email
         </CommandItem>
+
+        {contact && !contact.value.linkedInUrl && (
+          <CommandItem
+            leftAccessory={<LinkedinOutline />}
+            onSelect={() => {
+              store.ui.commandMenu.setType('AddLinkedin');
+            }}
+          >
+            Add LinkedIn URL
+          </CommandItem>
+        )}
 
         <CommandItem
           rightAccessory={<Kbd className='size-auto h-5 px-1.5'>Space</Kbd>}

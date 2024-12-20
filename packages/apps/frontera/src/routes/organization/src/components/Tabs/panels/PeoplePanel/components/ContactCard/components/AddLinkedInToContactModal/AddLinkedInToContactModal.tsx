@@ -1,7 +1,11 @@
+import { useEffect } from 'react';
+
 import { observer } from 'mobx-react-lite';
+import { LinkedIn } from '@domain/usecases/people-contact-card/add-linkedin.useCase';
 
 import { Input } from '@ui/form/Input';
 import { Button } from '@ui/form/Button/Button';
+import { useStore } from '@shared/hooks/useStore';
 import {
   Modal,
   ModalBody,
@@ -14,11 +18,23 @@ import {
 
 interface AddLinkedInToContactModalProps {
   open: boolean;
+  contactId: string;
   onClose: () => void;
 }
 
+const linkedInUseCase = new LinkedIn();
+
 export const AddLinkedInToContactModal = observer(
-  ({ onClose, open }: AddLinkedInToContactModalProps) => {
+  ({ onClose, open, contactId }: AddLinkedInToContactModalProps) => {
+    const store = useStore();
+    const contactStore = store.contacts.value.get(contactId);
+
+    useEffect(() => {
+      if (contactStore) {
+        linkedInUseCase.setEntity(contactStore);
+      }
+    }, [contactId]);
+
     return (
       <Modal open={open}>
         <ModalOverlay />
@@ -31,14 +47,23 @@ export const AddLinkedInToContactModal = observer(
             <p>We'll auto-enrich this contact using their LinkedIn profile</p>
             <Input
               variant='unstyled'
+              value={linkedInUseCase.inputValue}
               placeholder='linkedin.com/in/john-lemon'
+              onChange={(e) => linkedInUseCase.setInputValue(e.target.value)}
             />
           </ModalBody>
           <ModalFooter className='flex w-full gap-4'>
             <Button className='w-full' onClick={() => onClose()}>
               Cancel
             </Button>
-            <Button className='w-full' colorScheme='primary'>
+            <Button
+              className='w-full'
+              colorScheme='primary'
+              onClick={() => {
+                linkedInUseCase.setLinkedInUrl();
+                onClose();
+              }}
+            >
               Add & enrich
             </Button>
           </ModalFooter>

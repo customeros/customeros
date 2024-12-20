@@ -1,7 +1,6 @@
 import { useRef, useEffect, KeyboardEvent } from 'react';
 
 import { Input } from '@ui/form/Input';
-import { Edit03 } from '@ui/media/icons/Edit03';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip.tsx';
 import { IconButton } from '@ui/form/IconButton/IconButton';
 import { LinkExternal02 } from '@ui/media/icons/LinkExternal02';
@@ -105,14 +104,6 @@ export const LinkedInDisplay = ({
       )}
       {isHovered && !isEdit && (
         <>
-          <IconButton
-            size='xxs'
-            variant='ghost'
-            aria-label='edit'
-            onClick={toggleEditMode}
-            className='ml-3 rounded-[5px]'
-            icon={<Edit03 className='text-gray-500' />}
-          />
           <IconButton
             size='xxs'
             variant='ghost'

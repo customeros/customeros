@@ -8,7 +8,7 @@ import type { Contact } from '../Contact.dto';
 import { indexAndSearch } from './util';
 import { getContactSortFn } from './sortFns';
 import { getContactFilterFns } from './filterFns';
-import { ContactsStore } from '../Contacts2.store';
+import { ContactsStore } from '../Contacts.store';
 
 export class ContactsView {
   constructor(private store: ContactsStore) {

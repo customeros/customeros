@@ -2,16 +2,13 @@ import type { Contact } from '@store/Contacts/Contact.dto';
 
 import { action, observable } from 'mobx';
 
-export class CreateContact {
-  @observable accessor name: string = '';
+export class LinkedIn {
+  @observable accessor linkedInUrl: string = '';
   @observable accessor inputValue: string = '';
   @observable accessor entity: Contact | null = null;
 
-  constructor() {}
-
-  @action
-  setName(name: string) {
-    this.name = name;
+  constructor() {
+    this.setInputValue = this.setInputValue.bind(this);
   }
 
   @action
@@ -20,17 +17,27 @@ export class CreateContact {
   }
 
   @action
-  getName() {
-    return this.name;
+  getLinkdInUrl() {
+    return this.linkedInUrl;
   }
 
   @action
   setInputValue(inputValue: string) {
     this.inputValue = inputValue;
+    this.linkedInUrl = inputValue;
   }
 
   @action
   getInputValue() {
     return this.inputValue;
+  }
+
+  @action
+  setLinkedInUrl() {
+    if (!this.entity) return;
+
+    this.entity.draft();
+    this.entity.value.linkedInUrl = this.linkedInUrl;
+    this.entity.commit();
   }
 }

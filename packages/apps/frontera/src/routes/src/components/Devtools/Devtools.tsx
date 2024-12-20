@@ -82,10 +82,14 @@ export const Devtools = observer(() => {
   );
   const detailedStore = match(devTools.detailedStore)
     .returnType<
-      (typeof store)['organizations'] | (typeof store)['tableViewDefs'] | null
+      | (typeof store)['organizations']
+      | (typeof store)['tableViewDefs']
+      | (typeof store)['contacts']
+      | null
     >()
     .with('tableViewDefs', () => store.tableViewDefs)
     .with('organizations', () => store.organizations)
+    .with('contacts', () => store.contacts)
     .otherwise(() => null);
 
   return createPortal(

@@ -387,6 +387,17 @@ export const FinderTable = observer(() => {
     return <EmptyState />;
   }
 
+  const canFetchMore = match(tableType)
+    .with(
+      TableViewType.Organizations,
+      () => !!preset && store.organizations.canLoadNext(preset),
+    )
+    .with(
+      TableViewType.Contacts,
+      () => !!preset && store.contacts.canLoadNext(preset),
+    )
+    .otherwise(() => false);
+
   return (
     <div className='flex'>
       {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
@@ -400,6 +411,7 @@ export const FinderTable = observer(() => {
         totalItems={totalItems}
         getRowId={(row) => row.id}
         enableColumnResizing={true}
+        canFetchMore={canFetchMore}
         onSortingChange={handleSortChange}
         onResizeColumn={handleColumnSizing}
         onSelectionChange={onSelectionChange}
@@ -408,13 +420,13 @@ export const FinderTable = observer(() => {
         dataTest={`finder-table-${tableType}`}
         isLoading={store.organizations.isLoading}
         fullRowSelection={tableType === TableViewType.Invoices}
-        canFetchMore={!!preset && store.organizations.canLoadNext(preset)}
-        onFetchMore={() => {
-          store.organizations.loadNext(preset!);
-        }}
         enableKeyboardShortcuts={
           !isEditing && !isFiltering && !isCommandMenuPrompted
         }
+        onFetchMore={() => {
+          store.organizations.loadNext(preset!);
+          store.contacts.loadNext(preset!);
+        }}
         enableTableActions={
           tableType &&
           [TableViewType.Invoices, TableViewType.Contracts].includes(tableType)

@@ -93,6 +93,17 @@ export const OrganizationNameCell = observer(
                 }
 
                 contactStore?.commit();
+
+                if (contactStore) {
+                  contactStore?.draft();
+                  contactStore.value.primaryOrganizationName = value.label;
+                  contactStore?.commit({ syncOnly: true });
+                }
+                const orgStore = store.organizations.getById(value.value);
+
+                orgStore?.draft();
+                orgStore?.value.contacts.push(contactId);
+                orgStore?.commit({ syncOnly: true });
                 setIsOpen(false);
               }}
             />

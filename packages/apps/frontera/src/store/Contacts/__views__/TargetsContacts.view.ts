@@ -11,10 +11,10 @@ import { getContactFilterFns } from './filterFns';
 import { ContactsStore } from '../Contacts.store';
 
 // TODO: Cache filtered and sorted results for faster subsequent access
-export class FlowContactsView {
+export class TargetsContactsView {
   constructor(private store: ContactsStore) {
     reaction(() => {
-      const preset = this.store.root.tableViewDefs?.flowContactsPreset;
+      const preset = this.store.root.tableViewDefs?.contactsTargetPreset;
 
       return preset ? this.store.getSearchTermByView(preset) : '';
     }, this.update);
@@ -22,7 +22,7 @@ export class FlowContactsView {
     reaction(() => this.store.version, this.update);
 
     reaction(() => {
-      const preset = this.store.root.tableViewDefs?.flowContactsPreset;
+      const preset = this.store.root.tableViewDefs?.contactsTargetPreset;
 
       if (!preset) return '';
 
@@ -37,7 +37,7 @@ export class FlowContactsView {
 
   @action
   public update = () => {
-    const preset = this.store.root.tableViewDefs.flowContactsPreset;
+    const preset = this.store.root.tableViewDefs.contactsTargetPreset;
     const tableId = this.store.root.tableViewDefs.getById(preset || '')?.value
       .tableId;
 

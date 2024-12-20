@@ -1,30 +1,24 @@
 import { useEffect } from 'react';
 
 import { observer } from 'mobx-react-lite';
-import { EditEmailCase } from '@domain/usecases/command-menu/edit-email.usecase';
+import { AddEmailCase } from '@domain/usecases/command-menu/add-email.usecase';
 
-import { Edit03 } from '@ui/media/icons/Edit03';
+import { Mail02 } from '@ui/media/icons/Mail02';
 import { useStore } from '@shared/hooks/useStore';
 import { Command, CommandItem, CommandInput } from '@ui/overlay/CommandMenu';
 
-export const EditEmail = observer(() => {
+const addNewEmailCase = new AddEmailCase();
+
+export const AddEmail = observer(() => {
   const store = useStore();
   const context = store.ui.commandMenu.context;
-
   const contact = store.contacts.value.get(context.ids?.[0] as string);
+
   const label = `Contact - ${contact?.name}`;
 
   useEffect(() => {
     if (contact) {
-      EditEmailCase.prototype.setEntity(contact);
-    }
-  }, [contact?.id]);
-
-  if (!contact) return;
-
-  useEffect(() => {
-    if (contact.id) {
-      EditEmailCase.prototype.setOldEmail(EditEmailCase.prototype.email);
+      addNewEmailCase.setEntity(contact);
     }
   }, [contact?.id]);
 
@@ -32,28 +26,27 @@ export const EditEmail = observer(() => {
     <Command shouldFilter={false}>
       <CommandInput
         label={label}
-        placeholder={'Edit email'}
-        value={EditEmailCase.prototype.email}
-        onValueChange={(newValue) => {
-          EditEmailCase.prototype.setEmail(newValue);
+        placeholder='Add new email'
+        value={addNewEmailCase.inputValue}
+        onValueChange={(value) => {
+          addNewEmailCase.setInputValue(value);
         }}
         onKeyDownCapture={(e) => {
-          if (e.key === ' ') {
+          if (e.key === '') {
             e.stopPropagation();
           }
         }}
       />
-
       <Command.List>
         <CommandItem
-          leftAccessory={<Edit03 />}
+          leftAccessory={<Mail02 />}
           onSelect={() => {
-            EditEmailCase.prototype.submit();
+            addNewEmailCase.submit();
             store.ui.commandMenu.setOpen(false);
             store.ui.commandMenu.setType('ContactCommands');
           }}
         >
-          {`Rename email to "${EditEmailCase.prototype.email}"`}
+          {`Add new email ${addNewEmailCase.inputValue}`}
         </CommandItem>
       </Command.List>
     </Command>

@@ -1,5 +1,5 @@
 import { observer } from 'mobx-react-lite';
-import { SetEmailCase } from '@domain/Contacts/SetEmail.usecase';
+import { EditEmailCase } from '@domain/usecases/command-menu/edit-email.usecase';
 
 import { Copy01 } from '@ui/media/icons/Copy01';
 import { Star01 } from '@ui/media/icons/Star01';
@@ -34,10 +34,8 @@ export const EmailMenuActions = observer(
     const contactStore = store.contacts.value.get(contactId);
 
     const isPrimaryEmail = contactStore?.value.emails[idx]?.primary;
-    const useCase = new SetEmailCase();
 
     if (!contactStore) return;
-    useCase.setEntity(contactStore);
 
     return (
       <Menu>
@@ -53,7 +51,7 @@ export const EmailMenuActions = observer(
           <MenuItem
             className='group/edit-email'
             onClick={() => {
-              store.ui.setSelectionId(idx);
+              EditEmailCase.prototype.setEmail(email);
               store.ui.commandMenu.setType('EditEmail');
               store.ui.commandMenu.setContext({
                 ids: [contactStore?.value.id ?? ''],
@@ -70,14 +68,16 @@ export const EmailMenuActions = observer(
           </MenuItem>
           {!isPrimaryEmail && (
             <MenuItem
-              className='group/edit-email'
+              className='group/primary-email'
               onClick={() => {
-                useCase.setEmail(email || '');
-                useCase.setPrimaryEmailForContact();
+                contactStore.value.emails.forEach((e) => (e.primary = false));
+                contactStore?.draft();
+                contactStore.value.emails[idx].primary = true;
+                contactStore?.commit();
               }}
             >
               <div className='flex items-center gap-2'>
-                <Star01 className='group-hover/edit-email:text-gray-700 text-gray-500' />
+                <Star01 className='group-hover/primary-email:text-gray-700 text-gray-500' />
                 <span>Make primary</span>
               </div>
             </MenuItem>
@@ -94,24 +94,12 @@ export const EmailMenuActions = observer(
           <MenuItem
             className='group/add-email'
             onClick={() => {
-              store.ui.setSelectionId(contactStore?.value.emails.length || 1);
-
-              contactStore?.value.emails.push({
-                id: crypto.randomUUID(),
-                email: '',
-                appSource: '',
-                contacts: [],
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              } as any);
-
               store.ui.commandMenu.setContext({
                 ids: [contactStore?.id || ''],
                 entity: 'Contact',
                 property: 'email',
               });
-              store.ui.commandMenu.setType('EditEmail');
+              store.ui.commandMenu.setType('AddEmail');
               store.ui.commandMenu.setOpen(true);
             }}
           >
@@ -132,7 +120,6 @@ export const EmailMenuActions = observer(
             onClick={() => {
               contactStore.draft();
               contactStore?.value.emails.splice(idx, 1);
-
               contactStore?.commit();
             }}
           >

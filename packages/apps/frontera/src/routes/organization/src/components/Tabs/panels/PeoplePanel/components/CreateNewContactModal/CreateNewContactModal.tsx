@@ -1,11 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 
 import { observer } from 'mobx-react-lite';
-import { CreateContact } from '@domain/Contacts/CreateContact.useCase';
+import { CreateContact } from '@domain/usecases/people-contact-card/create-contact.usecase';
 
 import { Input } from '@ui/form/Input';
 import { Button } from '@ui/form/Button/Button';
-import { Mail01 } from '@ui/media/icons/Mail01';
 import { useStore } from '@shared/hooks/useStore';
 import { ButtonGroup } from '@ui/form/ButtonGroup';
 import { Signature } from '@ui/media/icons/Signature';
@@ -22,31 +21,33 @@ import {
 } from '@ui/overlay/Modal';
 
 interface CreateNewContactModalProps {
+  open: boolean;
   orgId: string;
+  onClose: () => void;
 }
-const nameUseCase = new CreateContact();
+const contactCreate = new CreateContact();
 
 export const CreateNewContactModal = observer(
-  ({ orgId }: CreateNewContactModalProps) => {
+  ({ orgId, open, onClose }: CreateNewContactModalProps) => {
     const store = useStore();
-    const [createType, setCreateType] = useState<'linkedin' | 'email' | 'name'>(
-      'linkedin',
-    );
-
     const inputPlaceholder =
-      createType === 'linkedin'
+      contactCreate.getType === 'linkedin'
         ? 'linkedin.com/in/johnlemon'
-        : createType === 'email'
+        : contactCreate.getType === 'email'
         ? 'john@heyjude.band'
         : 'First and last name';
-
+    const org = store.organizations.getById(orgId);
     const confirmButtonPlaceholder =
-      createType === 'name' ? 'Add contact' : 'Add & enrich';
+      contactCreate.getType === 'name' ? 'Add contact' : 'Add & enrich';
 
-    console.log(nameUseCase.inputValue);
+    useEffect(() => {
+      if (orgId) {
+        contactCreate.setEntity(org);
+      }
+    }, [orgId]);
 
     return (
-      <Modal open={false}>
+      <Modal open={open}>
         <ModalPortal>
           <ModalOverlay />
           <ModalContent>
@@ -59,26 +60,26 @@ export const CreateNewContactModal = observer(
                 <Button
                   size='xs'
                   leftIcon={<LinkedinOutline />}
-                  data-inactive={createType !== 'linkedin'}
-                  onClick={() => setCreateType('linkedin')}
-                  className='w-full data-[inactive=true]:bg-gray-50 focus:bg-white'
+                  onClick={() => contactCreate.setType('linkedin')}
+                  data-inactive={contactCreate.getType !== 'linkedin'}
+                  className='w-full data-[inactive=true]:bg-gray-50 focus:bg-white !border-r-[1px] border-gray-300 !border-r-gray-300'
                 >
                   LinkedIn
                 </Button>
-                <Button
+                {/* <Button
                   size='xs'
                   leftIcon={<Mail01 />}
-                  data-inactive={createType !== 'email'}
-                  onClick={() => setCreateType('email')}
+                  onClick={() => contactCreate.setType('email')}
+                  data-inactive={contactCreate.getType !== 'email'}
                   className='w-full data-[inactive=true]:bg-gray-50 focus:bg-white'
                 >
                   Email
-                </Button>
+                </Button> */}
                 <Button
                   size='xs'
                   leftIcon={<Signature />}
-                  data-inactive={createType !== 'name'}
-                  onClick={() => setCreateType('name')}
+                  onClick={() => contactCreate.setType('name')}
+                  data-inactive={contactCreate.getType !== 'name'}
                   className='w-full data-[inactive=true]:bg-gray-50 focus:bg-white'
                 >
                   Name
@@ -88,12 +89,12 @@ export const CreateNewContactModal = observer(
               <Input
                 variant='unstyled'
                 placeholder={inputPlaceholder}
-                onChange={(e) => nameUseCase.setInputValue(e.target.value)}
+                onChange={(e) => contactCreate.setInputValue(e.target.value)}
               />
             </ModalBody>
             <ModalFooter className='w-full flex gap-3'>
               <ModalCloseButton asChild>
-                <Button size='sm' className='w-full'>
+                <Button size='sm' className='w-full' onClick={() => onClose()}>
                   Cancel
                 </Button>
               </ModalCloseButton>
@@ -102,13 +103,9 @@ export const CreateNewContactModal = observer(
                 className='w-full'
                 colorScheme='primary'
                 onClick={() => {
-                  if (createType === 'name') {
-                    store.contacts.create(
-                      orgId,
-                      {},
-                      { name: nameUseCase.inputValue },
-                    );
-                  }
+                  contactCreate.setOrganizationId(orgId);
+                  contactCreate.submit();
+                  onClose();
                 }}
               >
                 {confirmButtonPlaceholder}

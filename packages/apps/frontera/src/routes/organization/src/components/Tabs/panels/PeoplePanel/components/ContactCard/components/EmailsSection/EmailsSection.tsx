@@ -21,7 +21,7 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
   const store = useStore();
   const [_, copyToClipboard] = useCopyToClipboard();
 
-  const contactStore = store.contacts.value.get(String(contactId));
+  const contactStore = store.contacts.value.get(contactId);
 
   const orgName = contactStore?.value.primaryOrganizationName;
 
@@ -29,9 +29,7 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
     (email) => email.primary,
   );
 
-  const allEmails = (contactStore?.value.emails || []).sort((_a, b) =>
-    b.primary ? 1 : -1,
-  );
+  const allEmails = contactStore?.value.emails || [];
   const enrichedContact = contactStore?.emailEnriching;
   const isEnrichingEmail = enrichedContact && !isPrimaryEmail;
 
@@ -48,28 +46,12 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
               <p
                 className='text-gray-400 cursor-pointer text-sm'
                 onClick={() => {
-                  store.ui.setSelectionId(
-                    contactStore?.value.emails.length || 1,
-                  );
-
-                  if (contactStore?.value.emails[0]?.email !== undefined) {
-                    contactStore?.value.emails.push({
-                      id: crypto.randomUUID(),
-                      email: '',
-                      appSource: '',
-                      contacts: [],
-                      createdAt: new Date().toISOString(),
-                      updatedAt: new Date().toISOString(),
-                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    } as any);
-                  }
-
                   store.ui.commandMenu.setContext({
                     ids: [contactStore?.id || ''],
                     entity: 'Contact',
                     property: 'email',
                   });
-                  store.ui.commandMenu.setType('EditEmail');
+                  store.ui.commandMenu.setType('AddEmail');
                   store.ui.commandMenu.setOpen(true);
                 }}
               >

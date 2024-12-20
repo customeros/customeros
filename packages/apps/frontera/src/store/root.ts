@@ -13,7 +13,7 @@ import { TransactionService } from './transaction';
 import { SessionStore } from './Session/Session.store';
 import { SettingsStore } from './Settings/Settings.store';
 import { InvoicesStore } from './Invoices/Invoices.store';
-import { ContactsStore } from './Contacts/Contacts2.store';
+import { ContactsStore } from './Contacts/Contacts.store';
 import { MailboxesStore } from './Settings/Mailboxes.store';
 import { ContractsStore } from './Contracts/Contracts.store';
 import { RemindersStore } from './Reminders/Reminders.store';
@@ -67,9 +67,9 @@ export class RootStore {
 
     this.transactions = new TransactionService(this, this.transport);
 
-    this.tableViewDefs = new TableViewDefsStore(this, this.transport);
     this.ui = new UIStore(this, this.transport);
     this.windowManager = new WindowManager(this);
+    this.tableViewDefs = new TableViewDefsStore(this, this.transport);
     this.mail = new MailStore(this, this.transport);
     this.tags = new TagsStore(this, this.transport);
     this.files = new FilesStore(this, this.transport);
@@ -97,13 +97,12 @@ export class RootStore {
       this.transport,
     );
 
-    this.transactions.startRunners(),
-      when(
-        () => this.demoMode,
-        () => {
-          console.info('Demo mode enabled');
-        },
-      );
+    when(
+      () => this.demoMode,
+      () => {
+        console.info('Demo mode enabled');
+      },
+    );
 
     when(
       () => this.isAuthenticated && !this.isHydrated,
@@ -111,6 +110,11 @@ export class RootStore {
         await Persister.attemptPurge();
         await this.bootstrap();
       },
+    );
+
+    when(
+      () => this.isBootstrapped,
+      () => this.transactions.startRunners(),
     );
   }
 
@@ -127,6 +131,7 @@ export class RootStore {
       this.contracts.bootstrap(),
       this.externalSystemInstances.bootstrap(),
       this.users.bootstrap(),
+      this.contacts.bootstrap(),
       this.flows.bootstrap(),
       this.flowEmailVariables.bootstrap(),
     ]);

@@ -2,12 +2,12 @@ import type { UserStore } from '@store/Users/User.store';
 
 import merge from 'lodash/merge';
 import { Entity } from '@store/record';
+import { ContactDatum } from '@store/Contacts/Contact.dto';
 import { countryMap } from '@assets/countries/countriesMap';
 import { action, computed, observable, runInAction } from 'mobx';
 
 import {
   FundingRound,
-  type Contact,
   type Contract,
   OnboardingStatus,
   OrganizationStage,
@@ -70,12 +70,12 @@ export class Organization extends Entity<OrganizationDatum> {
   @computed
   get contacts() {
     return this.value.contacts.reduce((acc, id) => {
-      const store = this.store.root.contacts.value.get(id);
+      const record = this.store.root.contacts.value.get(id);
 
-      if (store) acc.push(store.value as unknown as Contact);
+      if (record) acc.push(record.value);
 
       return acc;
-    }, [] as Contact[]);
+    }, [] as ContactDatum[]);
   }
 
   @computed
