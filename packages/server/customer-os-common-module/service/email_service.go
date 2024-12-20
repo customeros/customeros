@@ -2,7 +2,9 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/coserrors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
@@ -168,7 +170,8 @@ func (s *emailService) ReplaceEmail(ctx context.Context, txWithPostCommit *utils
 			return nil, err
 		}
 		if emailUsed && existingContactId != linkWith.Id {
-			err = errors.Errorf("email %s already used by contact %s", emailFields.Email, existingContactId)
+			span.LogFields(log.String("result.error", fmt.Sprintf("email %s already used by contact %s", emailFields.Email, existingContactId)))
+			err = coserrors.ErrEmailUsed
 			return nil, err
 		}
 	} else if linkWith.Type == commonmodel.ORGANIZATION {
@@ -259,7 +262,8 @@ func (s *emailService) linkEmail(ctx context.Context, txWithPostCommit *utils.Tx
 				return nil, err
 			}
 			if emailUsed && existingContactId != linkWith.Id {
-				return nil, errors.Errorf("email %s already used by contact %s", email, existingContactId)
+				span.LogFields(log.String("result.error", fmt.Sprintf("email %s already used by contact %s", email, existingContactId)))
+				return nil, coserrors.ErrEmailUsed
 			}
 		} else if linkWith.Type == commonmodel.ORGANIZATION {
 			emailUsed, existingOrganizationId, err := s.services.OrganizationService.CheckOrganizationExistsWithEmail(ctx, email)
