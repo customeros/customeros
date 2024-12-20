@@ -79,7 +79,8 @@ export class FlowParticipantsStore implements GroupStore<FlowParticipant> {
 
           const foundFlow = contact?.value.flows.findIndex((f) => f === flowId);
 
-          contact?.value.flows.slice(foundFlow, 1);
+          if (!foundFlow) return;
+          contact?.value.flows.splice(foundFlow, 1);
           contact?.commit({ syncOnly: true });
         });
         flowStores.forEach((c) => {
@@ -159,9 +160,10 @@ export class FlowParticipantsStore implements GroupStore<FlowParticipant> {
           .get(contactId)
           ?.value.flows.findIndex((f) => f === flowId);
 
+        if (!foundFlow) return;
         this.root.contacts.value
           .get(contactId)
-          ?.value.flows.slice(foundFlow, 1);
+          ?.value.flows.splice(foundFlow, 1);
 
         this.root.contacts.value.get(contactId)?.commit({ syncOnly: true });
 

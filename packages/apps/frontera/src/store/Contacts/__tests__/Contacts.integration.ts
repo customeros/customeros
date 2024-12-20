@@ -32,7 +32,7 @@ describe('ContactsService - Integration Tests', () => {
     expect(contact?.id).toBe(contact_Create);
     expect(contact?.tags).toBeNull();
     expect(contact?.flows.length).toBe(0);
-    expect(contact?.primaryOrganizationName).toBe(0);
+    expect(contact?.primaryOrganizationName).toBe('');
     expect(contact?.primaryOrganizationJobRoleTitle).toBe(0);
     expect(contact?.emails.find((e) => e.primary)).toBeNull();
     expect(contact?.locations.length).toBe(0);
