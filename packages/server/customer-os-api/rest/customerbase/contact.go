@@ -40,6 +40,7 @@ func CreateContact(s *service.Services) gin.HandlerFunc {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "Customerbase.CreateContact", c.Request.Header)
 		defer span.Finish()
 		tracing.TagComponentRest(span)
+		tracing.TagTenant(span, common.GetTenantFromContext(ctx))
 
 		tenant := rest.ValidateTenant(c, ctx, span)
 		if tenant == "" {
@@ -51,19 +52,19 @@ func CreateContact(s *service.Services) gin.HandlerFunc {
 }
 
 func handleJSONRequest(c *gin.Context, s *service.Services) {
-	_, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "Customerbase.handleJSONRequest", c.Request.Header)
+	ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "Customerbase.handleJSONRequest", c.Request.Header)
 	defer span.Finish()
 	tracing.TagComponentRest(span)
+	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
 
 	var contact ContactRecord
-	if err := c.BindJSON(&contact); err == nil && (contact.Email != "" || contact.LinkedInURL != "") {
+	if err := c.BindJSON(&contact); err == nil && (strings.TrimSpace(contact.Email) != "" || strings.TrimSpace(contact.LinkedInURL) != "") {
 		err, errValue := validateContact(&contact)
 		if err != nil {
 			errMessage := fmt.Sprintf("%s | %s", errValue, err)
 			tracing.TraceErr(span, err)
 			rest.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage(errMessage))
 			return
-
 		}
 		contact.ContactId = processContact(c, s, contact)
 		c.JSON(http.StatusOK, SingleContactResponse{
