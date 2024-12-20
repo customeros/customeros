@@ -50,7 +50,7 @@ func RedirectToPayInvoice(services *service.Services) gin.HandlerFunc {
 			return
 		}
 		tracing.TagTenant(span, tenant)
-		span.LogKV(log.String("invoiceStatus", invoice.Status.String()))
+		span.LogKV("invoiceStatus", invoice.Status.String())
 
 		innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
 			Tenant:    tenant,
@@ -146,7 +146,7 @@ func GetInvoicePaymentLink(services *service.Services) gin.HandlerFunc {
 			return
 		}
 		tracing.TagTenant(span, tenant)
-		span.LogKV(log.String("invoiceStatus", invoice.Status.String()))
+		span.LogKV("invoiceStatus", invoice.Status.String())
 
 		// Check invoice status
 		switch invoice.Status {
