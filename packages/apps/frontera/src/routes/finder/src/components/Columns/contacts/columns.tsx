@@ -239,7 +239,7 @@ const columns: Record<string, Column> = {
     },
     header: (props) => (
       <THead<HTMLInputElement>
-        title='Persona'
+        title='Tags'
         filterWidth='14rem'
         id={ColumnViewType.ContactsPersona}
         {...getTHeadProps<ContactStore>(props)}
