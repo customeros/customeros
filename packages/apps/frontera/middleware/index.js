@@ -450,8 +450,12 @@ async function createServer() {
 
       const { id_token, access_token, refresh_token, scope } = tokenRes;
 
+      console.error('tokenRes', tokenRes);
+
       const profileReq = await fetchMicrosoftProfile(access_token);
       const profileRes = await profileReq.json();
+
+      console.error('profileRes', profileRes);
 
       const loggedInEmail = stateParsed?.email ?? profileRes?.userPrincipalName;
 
