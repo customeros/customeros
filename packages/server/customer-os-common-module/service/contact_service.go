@@ -639,23 +639,23 @@ func (s *contactService) CreateContactByEmail(ctx context.Context, txWithPostCom
 	// check email is valid
 	if email == "" {
 		err = errors.New("email is required")
-		tracing.TraceErr(span, err)
+		span.LogKV("response.error", err.Error())
 		return "", err
 	}
 	mailvalidate := mailsherpa.ValidateEmailSyntax(email)
 	if !mailvalidate.IsValid {
 		err = errors.New("email is not valid")
-		tracing.TraceErr(span, err)
+		span.LogKV("response.error", err.Error())
 		return "", err
 	}
 	if mailvalidate.IsRoleAccount {
 		err = errors.New("email is role account")
-		tracing.TraceErr(span, err)
+		span.LogKV("response.error", err.Error())
 		return "", err
 	}
 	if mailvalidate.IsSystemGenerated {
 		err = errors.New("email is system generated")
-		tracing.TraceErr(span, err)
+		span.LogKV("response.error", err.Error())
 		return "", err
 	}
 
