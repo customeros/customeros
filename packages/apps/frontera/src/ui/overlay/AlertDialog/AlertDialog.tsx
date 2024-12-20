@@ -170,7 +170,7 @@ export const AlertDialogCloseIconButton = forwardRef<
       {...props}
     >
       <IconButton
-        size='xxs'
+        size='xs'
         variant='ghost'
         icon={<XClose />}
         colorScheme='gray'

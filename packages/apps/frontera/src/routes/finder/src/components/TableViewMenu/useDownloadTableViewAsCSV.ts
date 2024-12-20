@@ -1,12 +1,17 @@
 import { useSearchParams } from 'react-router-dom';
 
+import { match } from 'ts-pattern';
 import { ContactStore } from '@store/Contacts/Contact.store.ts';
+import { ContractStore } from '@store/Contracts/Contract.store.ts';
 import { Organization } from '@store/Organizations/Organization.dto';
+import { OpportunityStore } from '@store/Opportunities/Opportunity.store.ts';
 import { csvDataMapper as contactCsvDataMapper } from '@finder/components/Columns/contacts';
 import { csvDataMapper as orgCsvDataMapper } from '@finder/components/Columns/organizations';
+import { csvDataMapper as contractsCsvDataMapper } from '@finder/components/Columns/contracts';
+import { csvDataMapper as opportunitiesCsvDataMapper } from '@finder/components/Columns/opportunities';
 
 import { useStore } from '@shared/hooks/useStore';
-import { ColumnView, ColumnViewType } from '@graphql/types';
+import { ColumnView, TableViewType, ColumnViewType } from '@graphql/types';
 
 enum AdditionalColumnViewType {
   ContactsFirstName = 'CONTACTS_FIRST_NAME',
@@ -59,10 +64,12 @@ export const useDownloadCsv = () => {
   const handleGetData = (): Array<Array<string>> => {
     const preset = searchParams.get('preset');
     const tableViewDef = store.tableViewDefs.getById(preset ?? '1');
-    const csvDataMapper =
-      tableViewDef?.value.tableType === 'CONTACTS'
-        ? contactCsvDataMapper
-        : orgCsvDataMapper;
+    const csvDataMapper = match(tableViewDef?.value.tableType)
+      .with(TableViewType.Contacts, () => contactCsvDataMapper)
+      .with(TableViewType.Organizations, () => orgCsvDataMapper)
+      .with(TableViewType.Contracts, () => contractsCsvDataMapper)
+      .with(TableViewType.Opportunities, () => opportunitiesCsvDataMapper)
+      .otherwise(() => {});
 
     const visibleColumns = tableViewDef?.value.columns?.filter(
       (column) =>
@@ -110,9 +117,14 @@ export const useDownloadCsv = () => {
     const data =
       store.ui.filteredTable?.map((row) => {
         return visibleColumns?.map((column) => {
-          const mapper: (d: Organization | ContactStore) => string =
-            csvDataMapper?.[column.columnType as keyof typeof csvDataMapper];
-          const rowData = row as ContactStore | Organization;
+          const mapper: MapperFunction | undefined = csvDataMapper?.[
+            column.columnType as keyof typeof csvDataMapper
+          ] as MapperFunction | undefined;
+          const rowData = row as
+            | ContactStore
+            | Organization
+            | ContractStore
+            | OpportunityStore;
 
           return mapper ? mapper?.(rowData) : '';
         }) as Array<string>;
@@ -141,3 +153,6 @@ export const useDownloadCsv = () => {
 
   return { downloadCSV };
 };
+type MapperFunction = (
+  d: Organization | ContactStore | ContractStore | OpportunityStore,
+) => string;

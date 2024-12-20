@@ -9,6 +9,12 @@ export const csvDataMapper = {
   [ColumnViewType.OrganizationsWebsite]: (d: Organization) => d.value?.website,
   [ColumnViewType.OrganizationsRelationship]: (d: Organization) =>
     d.value?.relationship,
+  [ColumnViewType.OrganizationsUpdatedDate]: (d: Organization) =>
+    d?.value?.updatedAt
+      ? DateTimeUtils.format(d.value?.updatedAt, DateTimeUtils.iso8601)
+      : 'Unknown',
+  [ColumnViewType.OrganizationsLeadSource]: (d: Organization) =>
+    d?.value?.leadSource || 'Unknown',
 
   [ColumnViewType.OrganizationsOnboardingStatus]: (d: Organization) =>
     d?.value?.onboardingStatus,
@@ -25,8 +31,7 @@ export const csvDataMapper = {
   [ColumnViewType.OrganizationsOwner]: (d: Organization) => {
     return d.owner?.name ?? 'No owner';
   },
-  [ColumnViewType.OrganizationsLeadSource]: (d: Organization) =>
-    d.value?.leadSource,
+
   [ColumnViewType.OrganizationsCreatedDate]: (d: Organization) =>
     DateTimeUtils.format(d.value?.createdAt, DateTimeUtils.iso8601),
   [ColumnViewType.OrganizationsYearFounded]: (d: Organization) =>

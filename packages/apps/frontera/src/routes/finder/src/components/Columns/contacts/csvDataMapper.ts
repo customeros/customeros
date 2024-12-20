@@ -7,11 +7,17 @@ export const csvDataMapper = {
   [ColumnViewType.ContactsAvatar]: (d: ContactStore) =>
     d?.value?.profilePhotoUrl,
   [ColumnViewType.ContactsName]: (d: ContactStore) => d.name,
+  [ColumnViewType.ContactsUpdatedAt]: (d: ContactStore) =>
+    DateTimeUtils.format(d.value.updatedAt, DateTimeUtils.iso8601),
   CONTACTS_FIRST_NAME: (d: ContactStore) => d.value.firstName,
   CONTACTS_LAST_NAME: (d: ContactStore) => d.value.lastName,
   [ColumnViewType.ContactsCity]: (d: ContactStore) =>
     d?.value?.locations?.[0]?.locality,
   [ColumnViewType.ContactsCountry]: (d: ContactStore) => d?.country,
+  [ColumnViewType.ContactsPrimaryEmail]: (d: ContactStore) =>
+    d?.primaryEmail?.email,
+  [ColumnViewType.ContactsFlows]: (d: ContactStore) =>
+    d?.flows?.map((e) => e.value.name).join('; '),
   [ColumnViewType.ContactsEmails]: (d: ContactStore) =>
     d?.value?.emails
       ?.filter((e) => e.work)

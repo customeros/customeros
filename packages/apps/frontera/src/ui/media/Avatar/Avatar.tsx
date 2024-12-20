@@ -228,7 +228,7 @@ export const Avatar = ({
         <RadixAvatar.Fallback
           {...props}
           className={twMerge(
-            'leading-1 flex h-full w-full items-center justify-center font-semibold',
+            'leading-1 flex h-full w-full items-center justify-center font-medium',
             textSizeVariant({ textSize }),
           )}
         >

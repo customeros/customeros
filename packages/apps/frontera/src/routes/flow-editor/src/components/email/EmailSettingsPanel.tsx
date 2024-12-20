@@ -249,7 +249,7 @@ export const EmailSettingsPanel = observer(() => {
                     variant='ghost'
                     onClick={handleCancelChanges}
                   >
-                    Discard changes
+                    Discard
                   </Button>
                 )}
               </div>

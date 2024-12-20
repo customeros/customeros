@@ -34,7 +34,7 @@ export const BillingCycleCell = observer(({ id }: { id: string }) => {
     .contract.billingDetails?.billingCycleInMonths;
 
   return (
-    <div className={cn(billingCycle ? 'text-gray-700' : 'text-gray-500')}>
+    <div className={cn(billingCycle ? 'text-gray-700' : 'text-gray-400')}>
       {billingCycle ? getBillingCycleLabel(billingCycle) : 'Unknown'}
     </div>
   );

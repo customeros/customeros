@@ -2,10 +2,10 @@ import { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
-import { ContractStore } from '@store/Contracts/Contract.store.ts';
+import { ContractStore } from '@store/Contracts/Contract.store';
 
+import { cn } from '@ui/utils/cn.ts';
 import { useStore } from '@shared/hooks/useStore';
-import { TableCellTooltip } from '@ui/presentation/Table';
 
 interface ContractCellProps {
   contractId: string;
@@ -31,25 +31,20 @@ export const ContractCell = observer(({ contractId }: ContractCellProps) => {
   };
 
   return (
-    <TableCellTooltip
-      hasArrow
-      align='start'
-      side='bottom'
-      targetRef={linkRef}
-      label={contract?.value?.contractName ?? ''}
+    <div
+      role='button'
+      ref={linkRef}
+      onClick={handleNavigate}
+      data-test='Contract-name-in-all-orgs-table'
+      className={cn(
+        'overflow-ellipsis overflow-hidden font-medium no-underline hover:no-underline cursor-pointer pr-7',
+        {
+          'text-gray-400 cursor-not-allowed': !org?.id,
+        },
+      )}
     >
-      <span className='inline'>
-        <p
-          role='button'
-          ref={linkRef}
-          onClick={handleNavigate}
-          data-test='Contract-name-in-all-orgs-table'
-          className='overflow-ellipsis overflow-hidden font-medium no-underline hover:no-underline cursor-pointer pr-7'
-        >
-          {contract?.value?.contractName || `${org?.value?.name}`}
-        </p>
-      </span>
-    </TableCellTooltip>
+      {contract?.value?.contractName || `${org?.value?.name}`}
+    </div>
   );
 });
 

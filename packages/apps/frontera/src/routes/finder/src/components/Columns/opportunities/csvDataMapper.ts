@@ -7,9 +7,13 @@ export const csvDataMapper = {
   [ColumnViewType.OpportunitiesName]: (d: OpportunityStore) => d?.value?.name,
   [ColumnViewType.OpportunitiesOrganization]: (d: OpportunityStore) =>
     d.organization?.value.name,
-  [ColumnViewType.OpportunitiesStage]: (d: OpportunityStore) => d.externalStage,
+  [ColumnViewType.OpportunitiesStage]: (d: OpportunityStore) =>
+    d.externalStage?.label,
   [ColumnViewType.OpportunitiesEstimatedArr]: (d: OpportunityStore) =>
     d.value?.maxAmount,
+  [ColumnViewType.OpportunitiesNextStep]: (d: OpportunityStore) =>
+    d.value?.nextSteps,
+
   [ColumnViewType.OpportunitiesOwner]: (d: OpportunityStore) =>
     d?.owner?.value.name,
   [ColumnViewType.OpportunitiesTimeInStage]: (d: OpportunityStore) =>
