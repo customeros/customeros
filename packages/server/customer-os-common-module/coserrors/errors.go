@@ -24,6 +24,7 @@ var (
 
 	// validation errors
 	ErrLinkedInUsed = errors.New("linkedin url is already used")
+	ErrEmailUsed    = errors.New("Email is already used")
 )
 
 func SkipTracing(err error) bool {
@@ -34,6 +35,7 @@ func SkipTracing(err error) bool {
 	// List of errors to be skipped from tracing
 	errs := []error{
 		ErrLinkedInUsed,
+		ErrEmailUsed,
 	}
 
 	for _, e := range errs {
