@@ -12,6 +12,7 @@ type OAuthToken struct {
 }
 
 type SignInRequest struct {
+	Code               string     `json:"code"`
 	Provider           string     `json:"provider"`
 	Tenant             string     `json:"tenant"`
 	LoggedInEmail      string     `json:"loggedInEmail"`

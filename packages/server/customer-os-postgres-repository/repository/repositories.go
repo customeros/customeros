@@ -57,6 +57,7 @@ type Repositories struct {
 	IndustryMappingRepository                    IndustryMappingRepository
 	MailStackDomainRepository                    MailStackDomainRepository
 	MailstackBuyRequestRepository                MailstackBuyRequestRepository
+	MagicLinkRepository                          MagicLinkRepository
 	OAuthTokenRepository                         OAuthTokenRepository
 	OranizationWebsiteHostingPlatformRepository  OrganizationWebsiteHostingPlatformRepository
 	PersonalEmailProviderRepository              PersonalEmailProviderRepository
@@ -136,6 +137,7 @@ func InitRepositories(postgresDB *config.PostgresDB) *Repositories {
 		IndustryMappingRepository:                    NewIndustryMappingRepository(postgresDB.GormDB),
 		MailStackDomainRepository:                    NewMailStackDomainRepository(postgresDB.GormDB),
 		MailstackBuyRequestRepository:                NewMailstackBuyRequestRepository(postgresDB.GormDB),
+		MagicLinkRepository:                          NewMagicLinkRepository(postgresDB.GormDB),
 		OranizationWebsiteHostingPlatformRepository:  NewOrganizationWebsiteHostingPlatformRepository(postgresDB.GormDB),
 		PersonalEmailProviderRepository:              NewPersonalEmailProviderRepository(postgresDB.GormDB),
 		PersonalIntegrationRepository:                NewPersonalIntegrationsRepo(postgresDB.GormDB),
@@ -205,6 +207,7 @@ func (r *Repositories) Migration(postgresDB *config.PostgresDB) {
 		&entity.MailstackBuyRequest{},
 		&entity.MailstackBuyRequestDomain{},
 		&entity.MailstackReputationEntity{},
+		&entity.MagicLink{},
 		&entity.OrganizationWebsiteHostingPlatform{},
 		&entity.PersonalEmailProvider{},
 		&entity.PersonalIntegration{},
