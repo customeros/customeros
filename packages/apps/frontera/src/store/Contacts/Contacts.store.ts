@@ -460,7 +460,7 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
     } finally {
       setTimeout(() => {
         this.isBootstrapped = false;
-        this.invalidate();
+        this.bootstrap();
       }, 300);
     }
   }

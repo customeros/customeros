@@ -2,10 +2,10 @@ import { useParams } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
 
 import { observer } from 'mobx-react-lite';
+import { ContactDatum } from '@store/Contacts/Contact.dto';
 import { ContractStore } from '@store/Contracts/Contract.store';
 
 import { cn } from '@ui/utils/cn';
-import { Contact } from '@graphql/types';
 import { InputProps } from '@ui/form/Input';
 import { validateEmail } from '@utils/email';
 import { Button } from '@ui/form/Button/Button';
@@ -70,7 +70,7 @@ export const EmailsInputGroup = observer(
       label: string;
       value: string;
     }[] = (store.organizations.value.get(organizationId)?.contacts ?? [])
-      .map((e: Contact) => {
+      .map((e: ContactDatum) => {
         const contactName = store.contacts.value.get(e.id)?.name;
 
         if (e.emails.some((e) => !!e.email)) {

@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 
 import { observer } from 'mobx-react-lite';
-import { LinkedIn } from '@domain/usecases/people-contact-card/add-linkedin.useCase';
+import { LinkedIn } from '@domain/usecases/people-contact-card/add-linkedin.usecase';
 
 import { Input } from '@ui/form/Input';
 import { Button } from '@ui/form/Button/Button';
