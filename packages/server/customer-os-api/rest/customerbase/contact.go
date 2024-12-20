@@ -107,30 +107,36 @@ func processContact(c *gin.Context, s *service.Services, record ContactRecord) s
 	span, ctx := tracing.StartTracerSpan(c.Request.Context(), "Customerbase.processContact")
 	defer span.Finish()
 	tracing.TagComponentRest(span)
+	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+	span.LogFields(log.String("email", record.Email), log.String("linkedin", record.LinkedInURL))
 
-	if record.LinkedInURL == "" && record.Email == "" {
+	linkedInUrl := strings.TrimSpace(record.LinkedInURL)
+	email := strings.TrimSpace(record.Email)
+
+	if linkedInUrl == "" && strings.TrimSpace(record.Email) == "" {
+		span.LogFields(log.String("result", "No email or LinkedIn URL provided"))
 		return ""
 	}
 
 	createdContactId := ""
 	var err error
-	if record.LinkedInURL != "" {
-		createdContactId, err = s.CommonServices.ContactService.CreateContactByLinkedIn(ctx, nil, record.LinkedInURL)
+	if linkedInUrl != "" {
+		createdContactId, err = s.CommonServices.ContactService.CreateContactByLinkedIn(ctx, nil, linkedInUrl)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to save contact"))
 			return ""
 		}
 	}
 
-	if record.Email != "" {
+	if email != "" {
 		if createdContactId == "" {
-			createdContactId, err = s.CommonServices.ContactService.CreateContactByEmail(ctx, nil, record.Email)
+			createdContactId, err = s.CommonServices.ContactService.CreateContactByEmail(ctx, nil, email)
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "failed to save contact"))
 				return ""
 			}
 		} else {
-			associateEmailWithContact(c, s, record.Email, createdContactId)
+			associateEmailWithContact(c, s, email, createdContactId)
 		}
 	}
 	return createdContactId
