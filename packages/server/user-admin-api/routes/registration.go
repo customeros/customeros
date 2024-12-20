@@ -123,13 +123,25 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 				}
 			}
 
+			link := "https://app.customeros.ai/?mg=" + code
 			err = services.CommonServices.PostgresRepositories.MagicLinkRepository.Create(ctx, &entity.MagicLink{
 				Email: request.Email,
 				Code:  code,
-				Url:   "https://app.customeros.ai/?mg=" + code,
+				Url:   link,
 			})
 
+			err = services.CommonServices.PostmarkService.SendNotification(ctx, commonservice.PostmarkEmail{
+				MessageStream: commonservice.PostmarkMessageStreamMagicLink,
+				WorkflowId:    commonservice.WorkflowMagicLink,
+				Subject:       commonservice.WorkflowMagicLinkSubject,
+				From:          "notification@app.customeros.ai",
+				To:            request.Email,
+				TemplateData: map[string]string{
+					"{{magicLink}}": link,
+				},
+			}, "openlineai")
 			if err != nil {
+				tracing.TraceErr(span, err)
 				ginContext.JSON(http.StatusInternalServerError, gin.H{
 					"result": fmt.Sprintf("INTERNAL_SERVER_ERROR"),
 				})

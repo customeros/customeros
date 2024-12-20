@@ -19,11 +19,14 @@ import (
 )
 
 const (
-	PostmarkMessageStreamInvoice = "invoices"
+	PostmarkMessageStreamMagicLink = "magic-link"
+	PostmarkMessageStreamInvoice   = "invoices"
 )
 
 const (
-	WorkflowIdTestFlow                   = "test-workflow"
+	WorkflowMagicLinkSubject = "One click away from CustomerOS"
+	WorkflowMagicLink        = "magic-link"
+
 	WorkflowInvoicePaid                  = "invoice-paid"
 	WorkflowInvoicePaymentReceived       = "invoice-payment-received"
 	WorkflowInvoiceReadyWithPaymentLink  = "invoice-ready"
@@ -187,6 +190,8 @@ func (s *postmarkService) LoadEmailContent(ctx context.Context, workflowId, file
 func (s *postmarkService) getFileName(workflowId, fileExtension string) string {
 	var fileName string
 	switch workflowId {
+	case WorkflowMagicLink:
+		fileName = "magic-link." + fileExtension
 	case WorkflowInvoicePaid:
 		fileName = "invoice.paid." + fileExtension
 	case WorkflowInvoicePaymentReceived:
