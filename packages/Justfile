@@ -108,8 +108,14 @@ start-api:
 start-api-debug:
     cd ./server/customer-os-api && dlv debug --headless --listen=:2345 --api-version=2 .
 
+start-be:
+	cd ../deployment && podman-compose up -d
+
 start-events:
     cd ./server/events-subscribers && go run . > ../../events-subscribers.log 2>&1 & echo $$! > events-subscribers.pid
+
+start-fe:
+	cd ./apps/frontera && npm run dev
 
 stop:
 	kill `cat admin-api.pid` 2>/dev/null || true

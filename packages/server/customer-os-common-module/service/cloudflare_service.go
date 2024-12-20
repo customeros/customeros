@@ -10,16 +10,18 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
+	"io"
+	"net/http"
+	"strings"
+
+	"github.com/opentracing/opentracing-go"
+	tracingLog "github.com/opentracing/opentracing-go/log"
+	"github.com/pkg/errors"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/opentracing/opentracing-go"
-	tracingLog "github.com/opentracing/opentracing-go/log"
-	"github.com/pkg/errors"
-	"io"
-	"net/http"
-	"strings"
 )
 
 type DNSConfig struct {
@@ -33,12 +35,26 @@ type DNSConfig struct {
 
 type CloudflareService interface {
 	SetupDomainForMailStack(ctx context.Context, tenant, domain, destinationUrl string) ([]string, error)
+	GetDNSRecords(ctx context.Context, domain string) (*[]DNSRecord, error)
 }
 
 type cloudflareService struct {
 	log      logger.Logger
 	services *Services
 	cfg      *config.GlobalConfig
+}
+
+type DNSRecord struct {
+	ID      string `json:"id"`
+	ZoneID  string `json:"zone_id"`
+	Name    string `json:"zone_name"`
+	Type    string `json:"type"`
+	Content string `json:"content"`
+}
+
+type DNSResponse struct {
+	Success bool        `json:"success"`
+	Result  []DNSRecord `json:"result"`
 }
 
 // NewCloudflareService initializes the CloudflareService
@@ -120,21 +136,24 @@ func (s *cloudflareService) SetupDomainForMailStack(ctx context.Context, tenant,
 	return nameservers, nil
 }
 
-func (s *cloudflareService) deleteAllDNSRecords(ctx context.Context, domain string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CloudflareService.deleteAllDNSRecords")
+func (s *cloudflareService) GetDNSRecords(ctx context.Context, domain string) (*[]DNSRecord, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CloudflareService.GetDNSRecords")
 	defer span.Finish()
 	span.LogKV("domain", domain)
+
+	var recordsResponse DNSResponse
+	var dnsRecords []DNSRecord
 
 	domainExists, zoneID, err := s.checkDomain(ctx, domain)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to check domain existence"))
 		s.log.Error("failed to check domain existence")
-		return err
+		return nil, err
 	}
 
 	if !domainExists {
 		span.LogFields(tracingLog.String("result", "Domain does not exist"))
-		return nil
+		return nil, err
 	}
 
 	cloudflareUrl := fmt.Sprintf("%s/zones/%s/dns_records", s.cfg.ExternalServices.CloudflareConfig.Url, zoneID)
@@ -142,7 +161,7 @@ func (s *cloudflareService) deleteAllDNSRecords(ctx context.Context, domain stri
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to create request"))
 		s.log.Error("failed to create request")
-		return err
+		return nil, err
 	}
 
 	req.Header.Set("X-Auth-Email", s.cfg.ExternalServices.CloudflareConfig.Email)
@@ -153,7 +172,7 @@ func (s *cloudflareService) deleteAllDNSRecords(ctx context.Context, domain stri
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to get DNS records"))
 		s.log.Error("failed to get DNS records")
-		return err
+		return nil, err
 	}
 	defer resp.Body.Close()
 
@@ -161,57 +180,68 @@ func (s *cloudflareService) deleteAllDNSRecords(ctx context.Context, domain stri
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to read response body"))
 		s.log.Error("failed to read response body")
-		return err
-	}
-
-	var recordsResponse struct {
-		Success bool `json:"success"`
-		Result  []struct {
-			ID   string `json:"id"`
-			Name string `json:"name"`
-		} `json:"result"`
+		return nil, err
 	}
 
 	if err = json.Unmarshal(body, &recordsResponse); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal response body"))
 		s.log.Error("failed to unmarshal response body")
-		return err
+		return nil, err
 	}
 
 	if !recordsResponse.Success {
 		err := fmt.Errorf("failed to fetch DNS records from Cloudflare")
 		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	for _, record := range recordsResponse.Result {
+		fmt.Println(record)
+		if record.Name != domain && !strings.HasSuffix(record.Name, "."+domain) {
+			continue
+		}
+
+		dnsRecords = append(dnsRecords, record)
+	}
+
+	return &dnsRecords, nil
+}
+
+func (s *cloudflareService) deleteAllDNSRecords(ctx context.Context, domain string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CloudflareService.deleteAllDNSRecords")
+	defer span.Finish()
+	span.LogKV("domain", domain)
+
+	dnsRecords, err := s.GetDNSRecords(ctx, domain)
+	if err != nil {
 		return err
 	}
 
-	// Step 3: Delete DNS records that match the given domain or its subdomains
-	for _, record := range recordsResponse.Result {
-		if record.Name == domain || strings.HasSuffix(record.Name, "."+domain) {
-			delURL := fmt.Sprintf("%s/zones/%s/dns_records/%s", s.cfg.ExternalServices.CloudflareConfig.Url, zoneID, record.ID)
-			deleteReq, err := http.NewRequestWithContext(ctx, "DELETE", delURL, nil)
-			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "failed to create delete request"))
-				return err
-			}
+	for _, record := range *dnsRecords {
+		delURL := fmt.Sprintf("%s/zones/%s/dns_records/%s", s.cfg.ExternalServices.CloudflareConfig.Url, record.ZoneID, record.ID)
+		deleteReq, err := http.NewRequestWithContext(ctx, "DELETE", delURL, nil)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to create delete request"))
+			return err
+		}
 
-			deleteReq.Header.Set("X-Auth-Email", s.cfg.ExternalServices.CloudflareConfig.Email)
-			deleteReq.Header.Set("X-Auth-Key", s.cfg.ExternalServices.CloudflareConfig.ApiKey)
-			deleteReq.Header.Set("Content-Type", "application/json")
+		deleteReq.Header.Set("X-Auth-Email", s.cfg.ExternalServices.CloudflareConfig.Email)
+		deleteReq.Header.Set("X-Auth-Key", s.cfg.ExternalServices.CloudflareConfig.ApiKey)
+		deleteReq.Header.Set("Content-Type", "application/json")
 
-			delResp, err := http.DefaultClient.Do(deleteReq)
-			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "failed to delete DNS record"))
-				return err
-			}
-			defer delResp.Body.Close()
+		delResp, err := http.DefaultClient.Do(deleteReq)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to delete DNS record"))
+			return err
+		}
+		defer delResp.Body.Close()
 
-			// Check if the deletion was successful
-			if delResp.StatusCode != http.StatusOK {
-				delBody, _ := io.ReadAll(delResp.Body)
-				err := fmt.Errorf("failed to delete DNS record: %s", string(delBody))
-				tracing.TraceErr(span, err)
-				return err
-			}
+		// Check if the deletion was successful
+		if delResp.StatusCode != http.StatusOK {
+			delBody, _ := io.ReadAll(delResp.Body)
+			err := fmt.Errorf("failed to delete DNS record: %s", string(delBody))
+			tracing.TraceErr(span, err)
+			return err
 		}
 	}
 
