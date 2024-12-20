@@ -58,7 +58,7 @@ func RedirectToPayInvoice(services *service.Services) gin.HandlerFunc {
 		})
 
 		// Save Client IP
-		saveErr := saveIP(ctx, services, clientIP, invoiceID, tenant)
+		saveErr := saveIP(innerCtx, services, clientIP, invoiceID, tenant)
 		if saveErr != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "Error saving clientIP"))
 		}
@@ -193,7 +193,9 @@ func getClientIP(c *gin.Context) string {
 func saveIP(ctx context.Context, s *service.Services, clientIP, invoiceID, tenant string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "Rest.SaveIP")
 	defer span.Finish()
-	span.LogKV("clientIP", clientIP)
+	tracing.TagComponentRest(span)
+	tracing.TagTenant(span, tenant)
+	span.LogKV("clientIP", clientIP, "invoiceID", invoiceID)
 
 	if clientIP == "" {
 		return nil

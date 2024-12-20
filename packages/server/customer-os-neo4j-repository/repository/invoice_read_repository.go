@@ -189,7 +189,7 @@ func (r *invoiceReadRepository) GetInvoiceById(ctx context.Context, tenant, invo
 }
 
 func (r *invoiceReadRepository) GetInvoiceByIdAcrossAllTenants(ctx context.Context, invoiceId string) (*dbtype.Node, string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceReadRepository.GetInvoiceById")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceReadRepository.GetInvoiceByIdAcrossAllTenants")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
 	span.SetTag(tracing.SpanTagEntityId, invoiceId)
@@ -220,6 +220,7 @@ func (r *invoiceReadRepository) GetInvoiceByIdAcrossAllTenants(ctx context.Conte
 		return nil, "", nil
 	}
 	span.LogFields(log.Bool("result.found", true))
+	span.LogFields(log.String("result.tenant", convertedResult[0].Tenant))
 	return convertedResult[0].Node, convertedResult[0].Tenant, err
 }
 
