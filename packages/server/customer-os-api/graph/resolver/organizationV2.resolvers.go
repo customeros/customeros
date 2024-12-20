@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"github.com/opentracing/opentracing-go/log"
 	"sync"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -266,6 +267,11 @@ func (r *queryResolver) UIOrganizationsSearch(ctx context.Context, limit *int, w
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.UIOrganizationsSearch", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "where", where)
+	tracing.LogObjectAsJson(span, "sort", sort)
+	if limit != nil {
+		span.LogFields(log.Int("limit", *limit))
+	}
 
 	tenant := common.GetTenantFromContext(ctx)
 

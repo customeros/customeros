@@ -123,6 +123,25 @@ func OnRequestedEnrichContact(ctx context.Context, services *service.Services, i
 	return nil
 }
 
+func OnContactHidden(ctx context.Context, services *service.Services, input any) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "Listeners.OnContactHidden")
+	defer span.Finish()
+	tracing.SetDefaultListenerSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "input", input)
+
+	message := input.(*dto.Event)
+	contactId := message.Event.EntityId
+
+	span.SetTag(tracing.SpanTagEntityId, contactId)
+
+	// recalculate contacts for organization
+	err := services.Neo4jRepositories.OrganizationWriteRepository.RefreshContactCountByContactId(ctx, nil, common.GetTenantFromContext(ctx), contactId)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "OrganizationWriteRepository.RefreshContactCountByContactId"))
+	}
+	return nil
+}
+
 func (c *contactListenerImpl) enrichContact(ctx context.Context, contactId, linkedInUrl string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactListener.enrichContact")
 	defer span.Finish()

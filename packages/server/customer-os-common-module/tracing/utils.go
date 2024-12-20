@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/coserrors"
 	"io"
 	"net/http"
 
@@ -214,10 +215,10 @@ func SetDefaultPostgresRepositorySpanTags(ctx context.Context, span opentracing.
 }
 
 func TraceErr(span opentracing.Span, err error, fields ...log.Field) {
-	// Log the error with the fields
-	if span == nil {
+	if span == nil || err == nil || !coserrors.SkipTracing(err) {
 		return
 	}
+	// Log the error with the fields
 	ext.LogError(span, err, fields...)
 }
 

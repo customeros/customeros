@@ -21,4 +21,26 @@ var (
 
 	// mailbox errors
 	ErrMailboxExists = errors.New("mailbox already exists")
+
+	// validation errors
+	ErrLinkedInUsed = errors.New("linkedin url is already used")
 )
+
+func SkipTracing(err error) bool {
+	if err != nil {
+		return false
+	}
+
+	// List of errors to be skipped from tracing
+	errs := []error{
+		ErrLinkedInUsed,
+	}
+
+	for _, e := range errs {
+		if errors.Is(err, e) {
+			return true
+		}
+	}
+
+	return false
+}
