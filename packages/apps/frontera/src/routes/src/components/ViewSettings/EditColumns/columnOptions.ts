@@ -29,7 +29,7 @@ export const contactsOptionsMap: Record<InvoicesColumnType | string, string> = {
   [ColumnViewType.ContactsName]: 'Name',
   [ColumnViewType.ContactsLinkedin]: 'LinkedIn',
   [ColumnViewType.ContactsCity]: 'City',
-  [ColumnViewType.ContactsPersona]: 'Persona',
+  [ColumnViewType.ContactsPersona]: 'Tags',
   [ColumnViewType.ContactsLastInteraction]: 'Last Interaction',
   [ColumnViewType.ContactsPhoneNumbers]: 'Mobile Number',
   [ColumnViewType.ContactsAvatar]: 'Avatar',

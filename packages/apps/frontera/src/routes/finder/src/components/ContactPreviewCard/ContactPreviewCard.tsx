@@ -271,9 +271,9 @@ export const ContactPreviewCard = observer(() => {
           </div>
 
           <div className='flex justify-between gap-1 w-full mb-4'>
-            <div className='flex items-center gap-2 mr-[52px] text-sm text-gray-500'>
+            <div className='flex items-center gap-2 mr-[75px] text-sm text-gray-500'>
               <Tag01 className='mt-[1px] text-gray-500' />
-              Persona
+              Tags
             </div>
             <Tags
               placeholder='No tags yet'
