@@ -215,7 +215,7 @@ func SetDefaultPostgresRepositorySpanTags(ctx context.Context, span opentracing.
 }
 
 func TraceErr(span opentracing.Span, err error, fields ...log.Field) {
-	if span == nil || err == nil || !coserrors.SkipTracing(err) {
+	if span == nil || err == nil || coserrors.SkipTracing(err) {
 		return
 	}
 	// Log the error with the fields
