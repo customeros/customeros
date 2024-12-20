@@ -302,6 +302,7 @@ export const Filters = ({
               variant='ghost'
               colorScheme='grayModern'
               leftIcon={<FilterLines />}
+              className='border-solid border border-transparent'
             >
               Filters
             </Button>

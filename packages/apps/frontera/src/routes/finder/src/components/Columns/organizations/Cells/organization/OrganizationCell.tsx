@@ -14,8 +14,6 @@ export const OrganizationCell = observer(({ id }: OrganizationCellProps) => {
   const org = store.organizations.getById(id);
 
   const name = org?.value?.name;
-  const isSubsidiary = org?.value?.subsidiaries?.length > 0;
-  const parentOrganizationName = org?.value?.parentName;
   const isEnriching = org?.isEnriching;
 
   const [tabs] = useLocalStorage<{
@@ -42,9 +40,6 @@ export const OrganizationCell = observer(({ id }: OrganizationCellProps) => {
 
   return (
     <span className='inline'>
-      {isSubsidiary && (
-        <span className='text-xs text-gray-500'>{parentOrganizationName}</span>
-      )}
       <p
         role='button'
         onClick={handleNavigate}

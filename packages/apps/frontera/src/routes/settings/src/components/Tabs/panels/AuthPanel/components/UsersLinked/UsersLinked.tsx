@@ -74,6 +74,7 @@ export const UsersLinked = observer(
                 <Avatar
                   src={''}
                   size='xs'
+                  textSize='sm'
                   name={token.email}
                   variant={'outlineCircle'}
                 />
