@@ -6,9 +6,9 @@ package resolver
 
 import (
 	"context"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
@@ -31,7 +31,7 @@ func (r *mutationResolver) PhoneNumberMergeToContact(ctx context.Context, contac
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	phoneNumberId, err := r.Services.CommonServices.PhoneNumberService.Merge(ctx, input.PhoneNumber, constants.AppSourceCustomerOsApi)
+	phoneNumberId, err := r.Services.CommonServices.PhoneNumberService.Merge(ctx, input.PhoneNumber, neo4jentity.DataSourceOpenline)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to merge phone number %s", input.PhoneNumber)
@@ -132,7 +132,7 @@ func (r *mutationResolver) PhoneNumberMergeToOrganization(ctx context.Context, o
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	phoneNumberId, err := r.Services.CommonServices.PhoneNumberService.Merge(ctx, input.PhoneNumber, constants.AppSourceCustomerOsApi)
+	phoneNumberId, err := r.Services.CommonServices.PhoneNumberService.Merge(ctx, input.PhoneNumber, neo4jentity.DataSourceOpenline)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to merge phone number %s", input.PhoneNumber)
@@ -230,7 +230,7 @@ func (r *mutationResolver) PhoneNumberUpdate(ctx context.Context, input model.Ph
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "request.input", input)
 
-	phoneNumberId, err := r.Services.CommonServices.PhoneNumberService.Merge(ctx, input.PhoneNumber, constants.AppSourceCustomerOsApi)
+	phoneNumberId, err := r.Services.CommonServices.PhoneNumberService.Merge(ctx, input.PhoneNumber, neo4jentity.DataSourceOpenline)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to merge phone number %s", input.PhoneNumber)

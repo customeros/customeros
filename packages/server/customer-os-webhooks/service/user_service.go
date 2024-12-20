@@ -216,7 +216,7 @@ func (s *userService) syncUser(ctx context.Context, syncMutex *sync.Mutex, userI
 	if !failedSync && userInput.HasPhoneNumbers() {
 		for _, phoneNumberDtls := range userInput.PhoneNumbers {
 			// Create or update phone number
-			phoneNumberId, err := s.services.CommonServices.PhoneNumberService.Merge(ctx, phoneNumberDtls.Number, userInput.AppSource)
+			phoneNumberId, err := s.services.CommonServices.PhoneNumberService.Merge(ctx, phoneNumberDtls.Number, neo4jentity.DecodeDataSource(userInput.ExternalSystem))
 			if err != nil {
 				failedSync = true
 				tracing.TraceErr(span, err)

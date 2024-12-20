@@ -6,7 +6,6 @@ import (
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -66,7 +65,6 @@ func (r *phoneNumberWriteRepository) CreatePhoneNumber(ctx context.Context, tena
 		 ON CREATE SET p.rawPhoneNumber = $rawPhoneNumber, 
 						p.validated = null,
 						p.source = $source,
-						p.sourceOfTruth = $sourceOfTruth,
 						p.appSource = $appSource,
 						p.createdAt = $createdAt,
 						p.updatedAt = datetime()`, tenant)
@@ -75,7 +73,6 @@ func (r *phoneNumberWriteRepository) CreatePhoneNumber(ctx context.Context, tena
 		"rawPhoneNumber": data.RawPhoneNumber,
 		"tenant":         tenant,
 		"source":         data.SourceFields.Source,
-		"sourceOfTruth":  data.SourceFields.SourceOfTruth,
 		"appSource":      data.SourceFields.AppSource,
 		"createdAt":      data.CreatedAt,
 	}
@@ -99,15 +96,12 @@ func (r *phoneNumberWriteRepository) UpdatePhoneNumber(ctx context.Context, tena
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:PHONE_NUMBER_BELONGS_TO_TENANT]-(p:PhoneNumber {id:$id})
 				WHERE p:PhoneNumber_%s
-		 SET 	p.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE p.sourceOfTruth END,
-				p.updatedAt = datetime(),
+		 SET 	p.updatedAt = datetime(),
 				p.rawPhoneNumber = $rawPhoneNumber`, tenant)
 	params := map[string]any{
 		"id":             phoneNumberId,
 		"tenant":         tenant,
-		"sourceOfTruth":  source,
 		"rawPhoneNumber": rawPhoneNumber,
-		"overwrite":      source == constants.SourceOpenline,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -173,8 +167,7 @@ func (r *phoneNumberWriteRepository) PhoneNumberValidated(ctx context.Context, t
 					ON CREATE SET 	c.createdAt = $now, 
 									c.updatedAt = datetime(), 
 									c.appSource = $appSource,
-									c.source = $source,
-									c.sourceOfTruth = $source
+									c.source = $source
 				MERGE (p)-[:LINKED_TO]->(c)
 				`, tenant)
 	params := map[string]any{

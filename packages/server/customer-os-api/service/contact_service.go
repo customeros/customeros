@@ -148,7 +148,7 @@ func (s *contactService) Create(ctx context.Context, contactDetails *ContactCrea
 	}
 
 	if contactDetails.PhoneNumberEntity != nil {
-		phoneNumberId, err := s.services.CommonServices.PhoneNumberService.Merge(ctx, contactDetails.PhoneNumberEntity.RawPhoneNumber, constants.AppSourceCustomerOsApi)
+		phoneNumberId, err := s.services.CommonServices.PhoneNumberService.Merge(ctx, contactDetails.PhoneNumberEntity.RawPhoneNumber, neo4jentity.DataSourceOpenline)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return contactId, err
