@@ -983,13 +983,13 @@ func (s *contactService) EnrichWithWorkEmailFromBetterContact() {
 						phoneLinked = true
 						// create phone number
 
-						phoneNumberId, err := s.commonServices.PhoneNumberService.Merge(ctx, phoneNumber, constants.AppSourceDataUpkeeper)
+						phoneNumberId, err := s.commonServices.PhoneNumberService.Merge(innerCtx, phoneNumber, neo4jentity.DataSourceOpenline)
 						if err != nil {
 							tracing.TraceErr(span, err)
 							continue
 						}
 
-						err = s.commonServices.Neo4jRepositories.PhoneNumberWriteRepository.LinkWithContact(ctx, record.Tenant, record.ContactId, phoneNumberId, "WORK", false)
+						err = s.commonServices.Neo4jRepositories.PhoneNumberWriteRepository.LinkWithContact(innerCtx, record.Tenant, record.ContactId, phoneNumberId, "WORK", false)
 						if err != nil {
 							tracing.TraceErr(span, err)
 							s.log.Errorf("Error from events processing %s", err.Error())

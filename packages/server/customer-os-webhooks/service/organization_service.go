@@ -356,7 +356,7 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 		if orgInput.HasPhoneNumbers() {
 			for _, phoneNumberDtls := range orgInput.PhoneNumbers {
 				// Create or update phone number
-				phoneNumberId, err := s.services.CommonServices.PhoneNumberService.Merge(ctx, phoneNumberDtls.Number, orgInput.AppSource)
+				phoneNumberId, err := s.services.CommonServices.PhoneNumberService.Merge(ctx, phoneNumberDtls.Number, neo4jentity.DecodeDataSource(orgInput.ExternalSystem))
 				if err != nil {
 					failedSync = true
 					tracing.TraceErr(span, err)

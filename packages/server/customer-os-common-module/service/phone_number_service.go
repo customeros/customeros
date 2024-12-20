@@ -18,7 +18,7 @@ import (
 )
 
 type PhoneNumberService interface {
-	Merge(ctx context.Context, phoneNumber, appSource string) (string, error)
+	Merge(ctx context.Context, phoneNumber string, source neo4jentity.DataSource) (string, error)
 	UpdatePhoneNumberFor(ctx context.Context, entityType commonModel.EntityType, entityId string, phoneId string, label *string, primary *bool) error
 	DetachFromEntityByPhoneNumber(ctx context.Context, entityType commonModel.EntityType, entityId, phoneNumber string) (bool, error)
 	DetachFromEntityById(ctx context.Context, entityType commonModel.EntityType, entityId, phoneNumberId string) (bool, error)
@@ -37,11 +37,11 @@ func NewPhoneNumberService(services *Services) PhoneNumberService {
 	}
 }
 
-func (s *phoneNumberService) Merge(ctx context.Context, phoneNumber, appSource string) (string, error) {
+func (s *phoneNumberService) Merge(ctx context.Context, phoneNumber string, source neo4jentity.DataSource) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberService.CreatePhoneNumber")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("phoneNumber", phoneNumber), log.String("appSource", appSource))
+	span.LogFields(log.String("phoneNumber", phoneNumber))
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -64,7 +64,8 @@ func (s *phoneNumberService) Merge(ctx context.Context, phoneNumber, appSource s
 		data := neo4jrepository.PhoneNumberCreateFields{
 			RawPhoneNumber: phoneNumber,
 			SourceFields: neo4jmodel.SourceFields{
-				AppSource: appSource,
+				AppSource: common.GetAppSourceFromContext(ctx),
+				Source:    source.String(),
 			},
 			CreatedAt: utils.Now(),
 		}
