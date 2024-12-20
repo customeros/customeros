@@ -94,6 +94,7 @@ func main() {
 	// contact
 	commonServices.RabbitMQService.RegisterHandler(dto.AddSocialToContact{}, listeners.OnSocialAddedToContact)
 	commonServices.RabbitMQService.RegisterHandler(dto.RequestEnrichContact{}, listeners.OnRequestedEnrichContact)
+	commonServices.RabbitMQService.RegisterHandler(dto.HideContact{}, listeners.OnContactHidden)
 
 	// organization
 	commonServices.RabbitMQService.RegisterHandler(dto.RequestRefreshLastTouchpoint{}, listeners.OnRequestLastTouchpointRefresh)

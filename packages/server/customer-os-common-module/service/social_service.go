@@ -2,8 +2,10 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/coserrors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
@@ -253,7 +255,8 @@ func (s *socialService) AddSocialToEntity(ctx context.Context, txWithPostCommit 
 						span.LogFields(log.Bool("result.alreadyLinked", true))
 						return "", nil
 					} else {
-						err = errors.Errorf("linkedin url %s already used by organization %s", socialUrl, orgsDbNodes[0].Props["id"])
+						span.LogFields(log.String("result.error", fmt.Sprintf("linkedin url %s already used by organization %s", socialUrl, orgsDbNodes[0].Props["id"])))
+						err = coserrors.ErrLinkedInUsed
 						return "", err
 					}
 				}
@@ -269,7 +272,8 @@ func (s *socialService) AddSocialToEntity(ctx context.Context, txWithPostCommit 
 						span.LogFields(log.Bool("result.alreadyLinked", true))
 						return "", nil
 					} else {
-						err = errors.Errorf("linkedin url %s already used by contact %s", socialUrl, existingContactId)
+						span.LogFields(log.String("result.error", fmt.Sprintf("linkedin url %s already used by contact %s", socialUrl, existingContactId)))
+						err = coserrors.ErrLinkedInUsed
 						return "", err
 					}
 				}
