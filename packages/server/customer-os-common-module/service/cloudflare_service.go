@@ -153,6 +153,7 @@ func (s *cloudflareService) GetDNSRecords(ctx context.Context, domain string) (*
 
 	if !domainExists {
 		span.LogFields(tracingLog.String("result", "Domain does not exist"))
+		err = errors.New("Domain does not exist")
 		return nil, err
 	}
 
