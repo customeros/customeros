@@ -58,9 +58,9 @@ func GetTransitions(s *service.Services) gin.HandlerFunc {
 		var err error
 
 		if from == "" {
-			transitions, err = s.Repositories.PostgresRepositories.FlowTransitionsRegistryRepository.FindAll(ctx, nil)
+			transitions, err = s.Repositories.PostgresRepositories.FlowTransitionsRegistryRepository.GetAllActive(ctx, nil)
 		} else {
-			transitions, err = s.Repositories.PostgresRepositories.FlowTransitionsRegistryRepository.FindAll(ctx, &query)
+			transitions, err = s.Repositories.PostgresRepositories.FlowTransitionsRegistryRepository.GetAllActive(ctx, &query)
 		}
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -107,7 +107,7 @@ func buildTransitionRecords(ctx context.Context, span opentracing.Span, s *servi
 			return results, err
 		}
 
-		allNextSteps, err := s.Repositories.PostgresRepositories.FlowTransitionsRegistryRepository.FindAll(ctx, &entity.FlowTransitionsRegistry{
+		allNextSteps, err := s.Repositories.PostgresRepositories.FlowTransitionsRegistryRepository.GetAllActive(ctx, &entity.FlowTransitionsRegistry{
 			FromNodeType: enumType.String(),
 		})
 		if err != nil {
