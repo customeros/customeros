@@ -126,7 +126,7 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 			err = services.CommonServices.PostgresRepositories.MagicLinkRepository.Create(ctx, &entity.MagicLink{
 				Email: request.Email,
 				Code:  code,
-				Url:   "https://app.customeros.ai/mg?" + code,
+				Url:   "https://app.customeros.ai/?mg=" + code,
 			})
 
 			if err != nil {
