@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/google/uuid"
 	"log"
 	"net/http"
 	"strings"
@@ -43,6 +44,153 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 		panic(err)
 	}
 
+	rg.POST("/rml",
+		func(ginContext *gin.Context) {
+			contextWithTimeout, cancel := commonUtils.GetContextWithTimeout(context.Background(), 30*time.Second)
+			defer cancel()
+
+			ctx, span := tracing.StartHttpServerTracerSpanWithHeader(contextWithTimeout, "/rml", ginContext.Request.Header)
+			defer span.Finish()
+
+			var request model.RequestMagicLinkRequest
+			if err := ginContext.BindJSON(&request); err != nil {
+				tracing.TraceErr(span, err)
+				ginContext.JSON(http.StatusInternalServerError, gin.H{
+					"result": fmt.Sprintf("INVALID_REQUEST"),
+				})
+				return
+			}
+
+			if request.Email == "" {
+				ginContext.JSON(http.StatusBadRequest, gin.H{
+					"result": fmt.Sprintf("EMAIL_EMPTY"),
+				})
+				return
+			}
+
+			saveErr := saveIP(ctx, ginContext, services, request.Email)
+			if saveErr != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "unable to save IP address"))
+			}
+
+			emailValidation := mailvalidate.ValidateEmailSyntax(request.Email)
+
+			if emailValidation.IsValid == false {
+				ginContext.JSON(http.StatusBadRequest, gin.H{
+					"result": fmt.Sprintf("EMAIL_INVALID"),
+				})
+				return
+			}
+
+			var code string
+
+			for {
+				code = uuid.New().String() + uuid.New().String() + uuid.New().String()
+				code = strings.ReplaceAll(code, "-", "")
+
+				// Check if the code already exists
+				magicLink, err := services.CommonServices.PostgresRepositories.MagicLinkRepository.GetByCode(ctx, code)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					ginContext.JSON(http.StatusInternalServerError, gin.H{
+						"result": fmt.Sprintf("INTERNAL_SERVER_ERROR"),
+					})
+					return
+				}
+
+				if magicLink == nil {
+					break
+				}
+			}
+
+			byEmail, err := services.CommonServices.PostgresRepositories.MagicLinkRepository.GetByEmail(ctx, request.Email)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				ginContext.JSON(http.StatusInternalServerError, gin.H{
+					"result": fmt.Sprintf("INTERNAL_SERVER_ERROR"),
+				})
+				return
+			}
+
+			if byEmail != nil {
+				err := services.CommonServices.PostgresRepositories.MagicLinkRepository.Delete(ctx, byEmail.ID)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					ginContext.JSON(http.StatusInternalServerError, gin.H{
+						"result": fmt.Sprintf("INTERNAL_SERVER_ERROR"),
+					})
+					return
+				}
+			}
+
+			err = services.CommonServices.PostgresRepositories.MagicLinkRepository.Create(ctx, &entity.MagicLink{
+				Email: request.Email,
+				Code:  code,
+				Url:   "https://app.customeros.ai/mg?" + code,
+			})
+
+			if err != nil {
+				ginContext.JSON(http.StatusInternalServerError, gin.H{
+					"result": fmt.Sprintf("INTERNAL_SERVER_ERROR"),
+				})
+				return
+			}
+		},
+	)
+
+	rg.POST("/pml",
+		func(ginContext *gin.Context) {
+			contextWithTimeout, cancel := commonUtils.GetContextWithTimeout(context.Background(), 30*time.Second)
+			defer cancel()
+
+			ctx, span := tracing.StartHttpServerTracerSpanWithHeader(contextWithTimeout, "/pml", ginContext.Request.Header)
+			defer span.Finish()
+
+			var magicLink *postgresEntity.MagicLink
+			var signInRequest model.SignInRequest
+			if err := ginContext.BindJSON(&signInRequest); err != nil {
+				tracing.TraceErr(span, err)
+				ginContext.JSON(http.StatusInternalServerError, gin.H{
+					"result": fmt.Sprintf("unable to parse json: %v", err.Error()),
+				})
+				return
+			}
+
+			if signInRequest.Code != "" {
+				magicLink, err = services.CommonServices.PostgresRepositories.MagicLinkRepository.GetByCode(ctx, signInRequest.Code)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					ginContext.JSON(http.StatusInternalServerError, gin.H{
+						"result": fmt.Sprintf("unable to get magic link: %v", err.Error()),
+					})
+					return
+				}
+
+				if magicLink == nil {
+					ginContext.JSON(http.StatusUnauthorized, gin.H{
+						"result": fmt.Sprintf("magic link not found"),
+					})
+					return
+				}
+
+				signInRequest.Provider = "magic-link"
+				signInRequest.LoggedInEmail = magicLink.Email
+			} else {
+				ginContext.JSON(http.StatusBadRequest, gin.H{
+					"result": fmt.Sprintf("code is required"),
+				})
+			}
+
+			signIn(ctx, services, ginContext, signInRequest, personalEmailProviders, config)
+
+			err := services.CommonServices.PostgresRepositories.MagicLinkRepository.Delete(ctx, magicLink.ID)
+			if err != nil {
+				tracing.TraceErr(span, err)
+			}
+
+			return
+		},
+	)
 	rg.POST("/signin",
 		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.USER_ADMIN_API, security.WithCache(services.CommonServices.Cache)),
 		func(ginContext *gin.Context) {
@@ -61,208 +209,7 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 				return
 			}
 
-			saveErr := saveIP(ctx, ginContext, services, signInRequest.LoggedInEmail)
-			if saveErr != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "unable to save IP address"))
-			}
-
-			span.LogFields(tracingLog.Object("request", signInRequest))
-
-			firstName, lastName, err := validateRequestAtProvider(ctx, config, signInRequest)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				ginContext.JSON(http.StatusInternalServerError, gin.H{
-					"result": fmt.Sprintf("unable to validate request at provider: %v", err.Error()),
-				})
-				return
-			}
-
-			if firstName == nil {
-				s := ""
-				firstName = &s
-			}
-
-			if lastName == nil {
-				s := ""
-				lastName = &s
-			}
-
-			var tenantName *string
-
-			if signInRequest.Tenant == "" {
-				span.LogFields(tracingLog.String("flow", "authentication"))
-
-				tn, isNewTenant, err := getTenant(ctx, services, personalEmailProviders, signInRequest, config)
-				if err != nil {
-					tracing.TraceErr(span, err)
-					ginContext.JSON(http.StatusInternalServerError, gin.H{
-						"result": fmt.Sprintf("unable to get tenant: %v", err.Error()),
-					})
-					return
-				}
-				tenantName = tn
-
-				ctx = common.WithCustomContext(ctx, &common.CustomContext{
-					Tenant:    *tenantName,
-					AppSource: constants.AppSourceUserAdminApi,
-				})
-
-				err = initializeUser(ctx, services, signInRequest.Provider, signInRequest.OAuthToken.ProviderAccountId, *tenantName, signInRequest.LoggedInEmail, firstName, lastName)
-				if err != nil {
-					tracing.TraceErr(span, err)
-					ginContext.JSON(http.StatusInternalServerError, gin.H{
-						"result": fmt.Sprintf("unable to initialize user: %v", err.Error()),
-					})
-					return
-				}
-
-				if isNewTenant {
-					domain := commonUtils.ExtractDomain(signInRequest.LoggedInEmail)
-					isPersonalEmail := false
-					// check if the user is using a personal email provider
-					for _, personalEmailProviderItem := range personalEmailProviders {
-						domainLowercase := strings.ToLower(strings.TrimSpace(domain))
-						personalEmailProviderDomainLowercase := strings.ToLower(strings.TrimSpace(personalEmailProviderItem.ProviderDomain))
-						if domainLowercase == personalEmailProviderDomainLowercase {
-							isPersonalEmail = true
-							break
-						}
-					}
-
-					if !isPersonalEmail {
-						err = services.CommonServices.RegistrationService.PrepareDefaultTenantSetup(ctx, signInRequest.LoggedInEmail)
-						if err != nil {
-							tracing.TraceErr(span, err)
-						}
-					}
-
-					go func() {
-						c, cancelFunc := context.WithTimeout(context.Background(), 300*time.Second)
-						defer cancelFunc()
-
-						ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c, "/signin - register new tenant", ginContext.Request.Header)
-						defer span.Finish()
-
-						err = registerNewTenantAsLeadInProviderTenant(ctx, config, services, signInRequest.LoggedInEmail)
-						if err != nil {
-							tracing.TraceErr(span, err)
-							return
-						}
-
-						span.LogFields(tracingLog.String("result", "ok"))
-					}()
-				} else {
-
-					domain := commonUtils.ExtractDomain(signInRequest.LoggedInEmail)
-
-					isPersonalEmail := false
-					// check if the user is using a personal email provider
-					for _, personalEmailProviderItem := range personalEmailProviders {
-						domainLowercase := strings.ToLower(strings.TrimSpace(domain))
-						personalEmailProviderDomainLowercase := strings.ToLower(strings.TrimSpace(personalEmailProviderItem.ProviderDomain))
-						if domainLowercase == personalEmailProviderDomainLowercase {
-							isPersonalEmail = true
-							break
-						}
-					}
-
-					if !isPersonalEmail {
-						err = services.CommonServices.RegistrationService.PrepareDefaultTenantSetup(ctx, signInRequest.LoggedInEmail)
-						if err != nil {
-							tracing.TraceErr(span, err)
-						}
-					}
-				}
-			} else {
-				span.LogFields(tracingLog.String("flow", "authorization"))
-
-				userDbNode, err := services.CommonServices.Neo4jRepositories.UserReadRepository.GetFirstUserByEmail(ctx, signInRequest.Tenant, signInRequest.LoggedInEmail)
-				if err != nil {
-					tracing.TraceErr(span, err)
-					ginContext.JSON(http.StatusInternalServerError, gin.H{
-						"result": fmt.Sprintf("unable to get email id: %v", err.Error()),
-					})
-					return
-				}
-
-				if userDbNode == nil {
-					ginContext.JSON(http.StatusUnauthorized, gin.H{
-						"result": fmt.Sprintf("email not found"),
-					})
-					return
-				}
-
-				tenantName = &signInRequest.Tenant
-			}
-
-			span.SetTag(tracing.SpanTagTenant, *tenantName)
-
-			// Handle Google provider
-			if signInRequest.Provider == "google" {
-				if isRequestEnablingOAuthSync(signInRequest) {
-					oauthToken, _ := services.CommonServices.PostgresRepositories.OAuthTokenRepository.GetByEmail(ctx, *tenantName, signInRequest.Provider, signInRequest.OAuthTokenForEmail)
-					if oauthToken == nil {
-						oauthToken = &postgresEntity.OAuthTokenEntity{}
-					}
-					oauthToken.Provider = signInRequest.Provider
-					oauthToken.TenantName = *tenantName
-					oauthToken.PlayerIdentityId = signInRequest.OAuthToken.ProviderAccountId
-					oauthToken.EmailAddress = signInRequest.OAuthTokenForEmail
-					oauthToken.Type = signInRequest.OAuthTokenType
-					oauthToken.AccessToken = signInRequest.OAuthToken.AccessToken
-					oauthToken.RefreshToken = signInRequest.OAuthToken.RefreshToken
-					oauthToken.IdToken = signInRequest.OAuthToken.IdToken
-					oauthToken.ExpiresAt = signInRequest.OAuthToken.ExpiresAt
-					oauthToken.Scope = signInRequest.OAuthToken.Scope
-					oauthToken.NeedsManualRefresh = false
-					if isRequestEnablingGmailSync(signInRequest) {
-						oauthToken.GmailSyncEnabled = true
-					}
-					if isRequestEnablingGoogleCalendarSync(signInRequest) {
-						oauthToken.GoogleCalendarSyncEnabled = true
-					}
-					_, err := services.CommonServices.PostgresRepositories.OAuthTokenRepository.Save(ctx, *oauthToken)
-					if err != nil {
-						log.Printf("unable to save oauth token: %v", err.Error())
-						ginContext.JSON(http.StatusInternalServerError, gin.H{
-							"result": fmt.Sprintf("unable to save oauth token: %v", err.Error()),
-						})
-						return
-					}
-				}
-			} else if signInRequest.Provider == "azure-ad" {
-				oauthToken, _ := services.CommonServices.PostgresRepositories.OAuthTokenRepository.GetByEmail(ctx, *tenantName, signInRequest.Provider, signInRequest.OAuthTokenForEmail)
-				if oauthToken == nil {
-					oauthToken = &postgresEntity.OAuthTokenEntity{}
-				}
-				oauthToken.Provider = signInRequest.Provider
-				oauthToken.TenantName = *tenantName
-				oauthToken.PlayerIdentityId = signInRequest.OAuthToken.ProviderAccountId
-				oauthToken.EmailAddress = signInRequest.OAuthTokenForEmail
-				oauthToken.Type = signInRequest.OAuthTokenType
-				oauthToken.AccessToken = signInRequest.OAuthToken.AccessToken
-				oauthToken.RefreshToken = signInRequest.OAuthToken.RefreshToken
-				oauthToken.IdToken = signInRequest.OAuthToken.IdToken
-				oauthToken.ExpiresAt = signInRequest.OAuthToken.ExpiresAt
-				oauthToken.Scope = signInRequest.OAuthToken.Scope
-				oauthToken.NeedsManualRefresh = false
-				_, err := services.CommonServices.PostgresRepositories.OAuthTokenRepository.Save(ctx, *oauthToken)
-				if err != nil {
-					log.Printf("unable to save oauth token: %v", err.Error())
-					ginContext.JSON(http.StatusInternalServerError, gin.H{
-						"result": fmt.Sprintf("unable to save oauth token: %v", err.Error()),
-					})
-					return
-				}
-			} else {
-				log.Printf("Unsupported provider: %s", signInRequest.Provider)
-				ginContext.JSON(http.StatusBadRequest, gin.H{
-					"result": fmt.Sprintf("Unsupported provider: %s", signInRequest.Provider),
-				})
-				return
-			}
-
-			ginContext.JSON(http.StatusOK, gin.H{"status": "ok"})
+			signIn(ctx, services, ginContext, signInRequest, personalEmailProviders, config)
 		})
 
 	rg.POST("/revoke",
@@ -317,6 +264,217 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 
 			ginContext.JSON(http.StatusOK, gin.H{})
 		})
+}
+
+func signIn(ctx context.Context, services *service.Services, ginContext *gin.Context, signInRequest model.SignInRequest, personalEmailProviders []postgresEntity.PersonalEmailProvider, config *config.Config) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "getTenant")
+	defer span.Finish()
+
+	var err error
+
+	saveErr := saveIP(ctx, ginContext, services, signInRequest.LoggedInEmail)
+	if saveErr != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "unable to save IP address"))
+	}
+
+	span.LogFields(tracingLog.Object("request", signInRequest))
+
+	firstName, lastName, err := validateRequestAtProvider(ctx, config, signInRequest)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		ginContext.JSON(http.StatusInternalServerError, gin.H{
+			"result": fmt.Sprintf("unable to validate request at provider: %v", err.Error()),
+		})
+		return
+	}
+
+	if firstName == nil {
+		s := ""
+		firstName = &s
+	}
+
+	if lastName == nil {
+		s := ""
+		lastName = &s
+	}
+
+	var tenantName *string
+
+	if signInRequest.Tenant == "" {
+		span.LogFields(tracingLog.String("flow", "authentication"))
+
+		tn, isNewTenant, err := getTenant(ctx, services, personalEmailProviders, signInRequest, config)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			ginContext.JSON(http.StatusInternalServerError, gin.H{
+				"result": fmt.Sprintf("unable to get tenant: %v", err.Error()),
+			})
+			return
+		}
+		tenantName = tn
+
+		ctx = common.WithCustomContext(ctx, &common.CustomContext{
+			Tenant:    *tenantName,
+			AppSource: constants.AppSourceUserAdminApi,
+		})
+
+		err = initializeUser(ctx, services, signInRequest.Provider, signInRequest.OAuthToken.ProviderAccountId, *tenantName, signInRequest.LoggedInEmail, firstName, lastName)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			ginContext.JSON(http.StatusInternalServerError, gin.H{
+				"result": fmt.Sprintf("unable to initialize user: %v", err.Error()),
+			})
+			return
+		}
+
+		if isNewTenant {
+			domain := commonUtils.ExtractDomain(signInRequest.LoggedInEmail)
+			isPersonalEmail := false
+			// check if the user is using a personal email provider
+			for _, personalEmailProviderItem := range personalEmailProviders {
+				domainLowercase := strings.ToLower(strings.TrimSpace(domain))
+				personalEmailProviderDomainLowercase := strings.ToLower(strings.TrimSpace(personalEmailProviderItem.ProviderDomain))
+				if domainLowercase == personalEmailProviderDomainLowercase {
+					isPersonalEmail = true
+					break
+				}
+			}
+
+			if !isPersonalEmail {
+				err = services.CommonServices.RegistrationService.PrepareDefaultTenantSetup(ctx, signInRequest.LoggedInEmail)
+				if err != nil {
+					tracing.TraceErr(span, err)
+				}
+			}
+
+			go func() {
+				c, cancelFunc := context.WithTimeout(context.Background(), 300*time.Second)
+				defer cancelFunc()
+
+				ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c, "/signin - register new tenant", ginContext.Request.Header)
+				defer span.Finish()
+
+				err = registerNewTenantAsLeadInProviderTenant(ctx, config, services, signInRequest.LoggedInEmail)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					return
+				}
+
+				span.LogFields(tracingLog.String("result", "ok"))
+			}()
+		} else {
+
+			domain := commonUtils.ExtractDomain(signInRequest.LoggedInEmail)
+
+			isPersonalEmail := false
+			// check if the user is using a personal email provider
+			for _, personalEmailProviderItem := range personalEmailProviders {
+				domainLowercase := strings.ToLower(strings.TrimSpace(domain))
+				personalEmailProviderDomainLowercase := strings.ToLower(strings.TrimSpace(personalEmailProviderItem.ProviderDomain))
+				if domainLowercase == personalEmailProviderDomainLowercase {
+					isPersonalEmail = true
+					break
+				}
+			}
+
+			if !isPersonalEmail {
+				err = services.CommonServices.RegistrationService.PrepareDefaultTenantSetup(ctx, signInRequest.LoggedInEmail)
+				if err != nil {
+					tracing.TraceErr(span, err)
+				}
+			}
+		}
+	} else {
+		span.LogFields(tracingLog.String("flow", "authorization"))
+
+		userDbNode, err := services.CommonServices.Neo4jRepositories.UserReadRepository.GetFirstUserByEmail(ctx, signInRequest.Tenant, signInRequest.LoggedInEmail)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			ginContext.JSON(http.StatusInternalServerError, gin.H{
+				"result": fmt.Sprintf("unable to get email id: %v", err.Error()),
+			})
+			return
+		}
+
+		if userDbNode == nil {
+			ginContext.JSON(http.StatusUnauthorized, gin.H{
+				"result": fmt.Sprintf("email not found"),
+			})
+			return
+		}
+
+		tenantName = &signInRequest.Tenant
+	}
+
+	span.SetTag(tracing.SpanTagTenant, *tenantName)
+
+	// Handle Google provider
+	if signInRequest.Provider == "google" {
+		if isRequestEnablingOAuthSync(signInRequest) {
+			oauthToken, _ := services.CommonServices.PostgresRepositories.OAuthTokenRepository.GetByEmail(ctx, *tenantName, signInRequest.Provider, signInRequest.OAuthTokenForEmail)
+			if oauthToken == nil {
+				oauthToken = &postgresEntity.OAuthTokenEntity{}
+			}
+			oauthToken.Provider = signInRequest.Provider
+			oauthToken.TenantName = *tenantName
+			oauthToken.PlayerIdentityId = signInRequest.OAuthToken.ProviderAccountId
+			oauthToken.EmailAddress = signInRequest.OAuthTokenForEmail
+			oauthToken.Type = signInRequest.OAuthTokenType
+			oauthToken.AccessToken = signInRequest.OAuthToken.AccessToken
+			oauthToken.RefreshToken = signInRequest.OAuthToken.RefreshToken
+			oauthToken.IdToken = signInRequest.OAuthToken.IdToken
+			oauthToken.ExpiresAt = signInRequest.OAuthToken.ExpiresAt
+			oauthToken.Scope = signInRequest.OAuthToken.Scope
+			oauthToken.NeedsManualRefresh = false
+			if isRequestEnablingGmailSync(signInRequest) {
+				oauthToken.GmailSyncEnabled = true
+			}
+			if isRequestEnablingGoogleCalendarSync(signInRequest) {
+				oauthToken.GoogleCalendarSyncEnabled = true
+			}
+			_, err := services.CommonServices.PostgresRepositories.OAuthTokenRepository.Save(ctx, *oauthToken)
+			if err != nil {
+				log.Printf("unable to save oauth token: %v", err.Error())
+				ginContext.JSON(http.StatusInternalServerError, gin.H{
+					"result": fmt.Sprintf("unable to save oauth token: %v", err.Error()),
+				})
+				return
+			}
+		}
+	} else if signInRequest.Provider == "azure-ad" {
+		oauthToken, _ := services.CommonServices.PostgresRepositories.OAuthTokenRepository.GetByEmail(ctx, *tenantName, signInRequest.Provider, signInRequest.OAuthTokenForEmail)
+		if oauthToken == nil {
+			oauthToken = &postgresEntity.OAuthTokenEntity{}
+		}
+		oauthToken.Provider = signInRequest.Provider
+		oauthToken.TenantName = *tenantName
+		oauthToken.PlayerIdentityId = signInRequest.OAuthToken.ProviderAccountId
+		oauthToken.EmailAddress = signInRequest.OAuthTokenForEmail
+		oauthToken.Type = signInRequest.OAuthTokenType
+		oauthToken.AccessToken = signInRequest.OAuthToken.AccessToken
+		oauthToken.RefreshToken = signInRequest.OAuthToken.RefreshToken
+		oauthToken.IdToken = signInRequest.OAuthToken.IdToken
+		oauthToken.ExpiresAt = signInRequest.OAuthToken.ExpiresAt
+		oauthToken.Scope = signInRequest.OAuthToken.Scope
+		oauthToken.NeedsManualRefresh = false
+		_, err := services.CommonServices.PostgresRepositories.OAuthTokenRepository.Save(ctx, *oauthToken)
+		if err != nil {
+			log.Printf("unable to save oauth token: %v", err.Error())
+			ginContext.JSON(http.StatusInternalServerError, gin.H{
+				"result": fmt.Sprintf("unable to save oauth token: %v", err.Error()),
+			})
+			return
+		}
+	} else if signInRequest.Provider == "magic-link" {
+	} else {
+		log.Printf("Unsupported provider: %s", signInRequest.Provider)
+		ginContext.JSON(http.StatusBadRequest, gin.H{
+			"result": fmt.Sprintf("Unsupported provider: %s", signInRequest.Provider),
+		})
+		return
+	}
+
+	ginContext.JSON(http.StatusOK, gin.H{"status": "ok"})
 }
 
 func getTenant(c context.Context, services *service.Services, personalEmailProvider []postgresEntity.PersonalEmailProvider, signInRequest model.SignInRequest, config *config.Config) (*string, bool, error) {
@@ -455,7 +613,9 @@ func validateRequestAtProvider(c context.Context, config *config.Config, signInR
 	span, ctx := opentracing.StartSpanFromContext(c, "Registration.getUserInfoFromGoogle")
 	defer span.Finish()
 
-	if signInRequest.Provider == "google" {
+	if signInRequest.Provider == "magic-link" {
+		return nil, nil, nil
+	} else if signInRequest.Provider == "google" {
 		userInfo, err := getUserInfoFromGoogle(ctx, config, signInRequest)
 		if err != nil {
 			tracing.TraceErr(nil, err)
