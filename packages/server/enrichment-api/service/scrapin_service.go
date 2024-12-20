@@ -328,8 +328,7 @@ func (s *scrapinService) ScrapInSearchPerson(ctx context.Context, email, firstNa
 		}
 		if !matchFound {
 			span.LogFields(log.String("inputPrimaryDomains", fmt.Sprintf("%v", inputPrimaryDomains)), log.String("outputPrimaryDomains", fmt.Sprintf("%v", outputPrimaryDomains)))
-			err = errors.New("Person identified does not match with input params")
-			tracing.TraceErr(span, err)
+			span.LogKV("result.error", "Person identified does not match with input params")
 			return 0, nil, nil
 		}
 	}
