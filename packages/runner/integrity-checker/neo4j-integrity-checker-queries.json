@@ -98,6 +98,10 @@
         {
           "name": "Contracts with renewals with wrong live status",
           "query": "MATCH (:Organization {hide:false})--(c:Contract)-[:ACTIVE_RENEWAL]->(op:RenewalOpportunity) WhERE c.status = 'LIVE' AND (c.approved = false OR c.approved IS NULL OR date(op.renewedAt) < date()) RETURN count(c)"
+        },
+        {
+          "name": "Contacts with multiple primary emails",
+          "query": "match (t:Tenant {active:true})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)-[r:HAS {primary:true}]->(e:Email) WHERE (c.hide = false OR c.hide IS NULL) with c, count(r) as primaryEmails WHERE primaryEmails > 1 return count(c);"
         }
       ]
     },
