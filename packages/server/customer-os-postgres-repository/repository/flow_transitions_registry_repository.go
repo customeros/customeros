@@ -14,7 +14,8 @@ import (
 
 type FlowTransitionsRegistryRepository interface {
 	Initialize(ctx context.Context) error
-	FindAll(ctx context.Context, transition *entity.FlowTransitionsRegistry) (*[]entity.FlowTransitionsRegistry, error)
+	GetAll(ctx context.Context, transition *entity.FlowTransitionsRegistry) (*[]entity.FlowTransitionsRegistry, error)
+	GetAllActive(ctx context.Context, transition *entity.FlowTransitionsRegistry) (*[]entity.FlowTransitionsRegistry, error)
 	Find(ctx context.Context, transition entity.FlowTransitionsRegistry) (*entity.FlowTransitionsRegistry, error)
 	Create(ctx context.Context, transition *entity.FlowTransitionsRegistry) (*entity.FlowTransitionsRegistry, error)
 }
@@ -46,8 +47,32 @@ func (r *flowTransitionsRegistryRepository) Create(ctx context.Context, transiti
 	return transition, nil
 }
 
-func (r *flowTransitionsRegistryRepository) FindAll(ctx context.Context, transition *entity.FlowTransitionsRegistry) (*[]entity.FlowTransitionsRegistry, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowTransitionsRegistryRepository.FindAll")
+func (r *flowTransitionsRegistryRepository) GetAll(ctx context.Context, transition *entity.FlowTransitionsRegistry) (*[]entity.FlowTransitionsRegistry, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowTransitionsRegistryRepository.GetAll")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	var transitions []entity.FlowTransitionsRegistry
+	query := r.gormDb.WithContext(ctx)
+
+	// Add additional filters if transition is not nil
+	if transition != nil {
+		query = query.Where(transition)
+	}
+
+	err := query.
+		Order("from_node DESC").
+		Find(&transitions).Error
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return &transitions, nil
+}
+
+func (r *flowTransitionsRegistryRepository) GetAllActive(ctx context.Context, transition *entity.FlowTransitionsRegistry) (*[]entity.FlowTransitionsRegistry, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowTransitionsRegistryRepository.GetAllActive")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
@@ -120,7 +145,7 @@ func (r *flowTransitionsRegistryRepository) Initialize(ctx context.Context) erro
 		// ... add more here
 	}
 
-	dbTransitions, err := r.FindAll(ctx, nil)
+	dbTransitions, err := r.GetAll(ctx, nil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
