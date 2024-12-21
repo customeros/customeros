@@ -28,16 +28,9 @@ export class AddEmailCase {
     this.entity?.draft();
     this.entity?.value.emails.push({
       email: this.inputValue,
-      primary: false,
+      primary: noEmails,
     } as Email);
     this.entity?.commit();
-
-    if (noEmails) {
-      this.entity?.draft();
-      this.entity!.value.emails[0].primary = true;
-      this.entity?.commit({ syncOnly: true });
-    }
-
     this.inputValue = '';
   }
 }
