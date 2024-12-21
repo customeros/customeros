@@ -33,6 +33,15 @@ export class Transport {
   channels: Map<string, Channel> = new Map();
   channelMeta: Record<string, unknown> = {};
   stream: ReturnType<typeof createStreamClient>;
+  static instance: Transport;
+
+  static getInstance() {
+    if (!Transport.instance) {
+      Transport.instance = new Transport();
+    }
+
+    return Transport.instance;
+  }
 
   constructor() {
     this.http = createHttpClient({});

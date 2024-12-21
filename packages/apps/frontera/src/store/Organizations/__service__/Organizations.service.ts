@@ -1,10 +1,10 @@
 import type { Operation } from '@store/types';
-import type { Transport } from '@store/transport';
 import type { rdiffResult } from 'recursive-diff';
 
 import get from 'lodash/get';
 import { P, match } from 'ts-pattern';
 import { makePayload } from '@store/util';
+import { Transport } from '@store/transport';
 
 import {
   type Tag,
@@ -20,11 +20,13 @@ import AddSocialDocument from './addSocial.graphql';
 import RemoveTagDocument from './removeTag.graphql';
 import UpdateSocialDocument from './updateSocial.graphql';
 import RemoveSocialDocument from './removeSocial.graphql';
+import CheckWebsiteDocument from './checkWebsite.graphql';
 import AddSubsidiaryDocument from './addSubsidiary.graphql';
 import GetOrganizationsDocument from './getOrganizations.graphql';
 import SaveOrganizationDocument from './saveOrganization.graphql';
 import RemoveSubsidiaryDocument from './removeSubsidiary.graphql';
 import HideOrganizationsDocument from './hideOrganizations.graphql';
+import ImportOrganizationDocument from './importOrganization.graphql';
 import MergeOrganizationsDocument from './mergeOrganizations.graphql';
 import UpdateOrganizationDocument from './updateOrganization.graphql';
 import SearchOrganizationsDocument from './searchOrganizations.graphql';
@@ -38,6 +40,10 @@ import {
   AddSocialMutationVariables,
 } from './addSocial.generated';
 import {
+  CheckWebsiteQuery,
+  CheckWebsiteQueryVariables,
+} from './checkWebsite.generated.ts';
+import {
   UpdateSocialMutation,
   UpdateSocialMutationVariables,
 } from './updateSocial.generated';
@@ -49,7 +55,6 @@ import {
   GetOrganizationsQuery,
   GetOrganizationsQueryVariables,
 } from './getOrganizations.generated';
-import AddOrganizationByGlobalOrganizationIdDocument from './addOrganizationByGlobalOrganizationId.graphql';
 import {
   SaveOrganizationMutation,
   SaveOrganizationMutationVariables,
@@ -79,6 +84,10 @@ import {
   GetOrganizationsByIdsQueryVariables,
 } from './getOrganizationsByIds.generated';
 import {
+  ImportOrganizationMutation,
+  ImportOrganizationMutationVariables,
+} from './importOrganization.generated.ts';
+import {
   RemoveTagFromOrganizationMutation,
   RemoveTagFromOrganizationMutationVariables,
 } from './removeTag.generated';
@@ -106,22 +115,16 @@ import {
   BulkUpdateOpportunityRenewalMutation,
   BulkUpdateOpportunityRenewalMutationVariables,
 } from './updateAllOpportunityRenewals.generated';
-import {
-  AddOrganizationByGlobalOrganizationIdMutation,
-  AddOrganizationByGlobalOrganizationIdMutationVariables,
-} from './addOrganizationByGlobalOrganizationId.generated.ts';
 
 export class OrganizationsService {
   private static instance: OrganizationsService | null = null;
-  private transport: Transport;
+  private transport = Transport.getInstance();
 
-  constructor(transport: Transport) {
-    this.transport = transport;
-  }
+  constructor() {}
 
-  public static getInstance(transport: Transport): OrganizationsService {
+  public static getInstance(): OrganizationsService {
     if (!OrganizationsService.instance) {
-      OrganizationsService.instance = new OrganizationsService(transport);
+      OrganizationsService.instance = new OrganizationsService();
     }
 
     return OrganizationsService.instance;
@@ -134,13 +137,11 @@ export class OrganizationsService {
     >(SearchOrganizationsDocument, payload);
   }
 
-  async addOrganizationByGlobalOrgId(
-    payload: AddOrganizationByGlobalOrganizationIdMutationVariables,
-  ) {
+  async importOrganization(payload: ImportOrganizationMutationVariables) {
     return this.transport.graphql.request<
-      AddOrganizationByGlobalOrganizationIdMutation,
-      AddOrganizationByGlobalOrganizationIdMutationVariables
-    >(AddOrganizationByGlobalOrganizationIdDocument, payload);
+      ImportOrganizationMutation,
+      ImportOrganizationMutationVariables
+    >(ImportOrganizationDocument, payload);
   }
 
   async searchGlobalOrganizations(
@@ -172,6 +173,13 @@ export class OrganizationsService {
     });
 
     return ui_organizations[0];
+  }
+
+  async checkWebsite(payload: CheckWebsiteQueryVariables) {
+    return this.transport.graphql.request<
+      CheckWebsiteQuery,
+      CheckWebsiteQueryVariables
+    >(CheckWebsiteDocument, payload);
   }
 
   async getArchivedOrganizationsAfter(

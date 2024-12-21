@@ -16,7 +16,7 @@ import { OrganizationsService } from '../__service__/Organizations.service';
 import { ContractLineItemService } from '../../ContractLineItems/ContractLineItem.service';
 
 const transport = new Transport();
-const organizationsService = OrganizationsService.getInstance(transport);
+const organizationsService = OrganizationsService.getInstance();
 const contractService = ContractService.getInstance(transport);
 const contractLineItemsService = ContractLineItemService.getInstance(transport);
 const userService = UserService.getInstance(transport);

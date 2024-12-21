@@ -36,7 +36,8 @@
       "@utils/*": ["src/utils/*"],
       "@settings/*": ["src/routes/settings/src/*"],
       "@invoices/*": ["src/routes/invoices/src/*"],
-      "@opportunities/*": ["src/routes/prospects/src/*"]
+      "@opportunities/*": ["src/routes/prospects/src/*"],
+      "@domain/*": ["src/domain/*"]
     }
   },
   "include": ["src"],

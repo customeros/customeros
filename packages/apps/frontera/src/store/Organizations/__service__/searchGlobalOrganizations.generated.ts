@@ -15,5 +15,6 @@ export type SearchGlobalOrganizationsQuery = {
     website: string;
     logoUrl: string;
     iconUrl: string;
+    organizationId?: string | null;
   }>;
 };

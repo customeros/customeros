@@ -127,13 +127,13 @@ const avatarStyle = cva(
       },
 
       size: {
-        xxs: ['w-4 h-4'],
-        xs: ['w-6 h-6'],
-        sm: ['w-8 h-8'],
-        md: ['w-10 h-10'],
-        lg: ['w-12 h-12'],
-        xl: ['w-14 h-14'],
-        '2xl': ['w-16 h-16'],
+        xxs: ['w-4 h-4 min-w-4 min-h-4'],
+        xs: ['w-6 h-6 min-w-6 min-h-6'],
+        sm: ['w-8 h-8 min-w-8 min-h-8'],
+        md: ['w-10 h-10 min-w-10 min-h-10'],
+        lg: ['w-12 h-12 min-w-12 min-h-12'],
+        xl: ['w-14 h-14 min-w-14 min-h-14'],
+        '2xl': ['w-16 h-16 min-w-16 min-h-16'],
       },
     },
 

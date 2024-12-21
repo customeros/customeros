@@ -1,235 +1,151 @@
-import { useSearchParams } from 'react-router-dom';
-import React, { useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-import { debounce } from 'lodash';
+import { useKeyBindings } from 'rooks';
 import { observer } from 'mobx-react-lite';
-import { useDidMount, useKeyBindings } from 'rooks';
+import { AddSearchOrganizationsUsecase } from '@domain/usecases/command-menu/add-search-organizations.usecase';
 
-import { Input } from '@ui/form/Input';
+import { cn } from '@ui/utils/cn';
 import { Avatar } from '@ui/media/Avatar';
 import { Spinner } from '@ui/feedback/Spinner';
 import { useStore } from '@shared/hooks/useStore';
 import { User03 } from '@ui/media/icons/User03.tsx';
 import { PlusCircle } from '@ui/media/icons/PlusCircle.tsx';
-import { Command, CommandCancelIconButton } from '@ui/overlay/CommandMenu';
+import { ArrowNarrowRight } from '@ui/media/icons/ArrowNarrowRight';
 import {
-  ColumnViewType,
-  OrganizationStage,
-  OrganizationRelationship,
-} from '@graphql/types';
+  Command,
+  CommandItem,
+  CommandInput,
+  CommandCancelIconButton,
+} from '@ui/overlay/CommandMenu';
+
+const usecase = new AddSearchOrganizationsUsecase();
 
 export const AddNewOrganization = observer(() => {
   const store = useStore();
-  const [allowSubmit, _setAllowSubmit] = useState(false);
-  const { organizations, tableViewDefs } = useStore();
-  const [searchParams] = useSearchParams();
-
-  const [search, setSearch] = useState('');
-  const [options, setOptions] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const preset = searchParams?.get('preset');
-
-  const tableViewName = tableViewDefs.getById(`${preset}`)?.value.name;
-
-  useDidMount(async () => {
-    const result = await store.organizations.getGlobalOrganizationOptions(
-      '',
-      30,
-    );
-
-    const safeOptions = Array.isArray(result) ? result : [];
-
-    setOptions(safeOptions);
-  });
-
-  const debouncedSearch = useCallback(
-    debounce(async (searchTerm: string) => {
-      try {
-        setIsLoading(true);
-
-        const result = await store.organizations.getGlobalOrganizationOptions(
-          searchTerm,
-          30,
-        );
-
-        const safeOptions = Array.isArray(result) ? result : [];
-
-        setOptions(safeOptions);
-      } catch (error) {
-        console.error('Error fetching organization options:', error);
-        setOptions([]);
-      } finally {
-        setIsLoading(false);
-      }
-    }, 300),
-    [],
-  );
-
-  const handleSearchChange = (value: string) => {
-    setSearch(value);
-    debouncedSearch.cancel();
-    debouncedSearch(value);
-  };
+  const navigate = useNavigate();
 
   const handleClose = () => {
     store.ui.commandMenu.clearContext();
-    store.ui.commandMenu.setOpen(false);
+    store.ui.commandMenu.toggle('AddNewOrganization');
     store.ui.commandMenu.clearCallback();
   };
 
-  const handleAddNewOrganization = () => {
-    if (!allowSubmit) return;
-
-    const payload = defaultValuesNewOrganization(tableViewName ?? '');
-
-    organizations.create({
-      ...payload,
-      name: search || 'Unnamed',
-    });
-
-    store.ui.commandMenu.toggle('AddNewOrganization');
-  };
-
-  useKeyBindings(
-    {
-      // Enter: handleConfirm,
-      Escape: () => (store.ui.commandMenu.isOpen = false),
-    },
-    { when: allowSubmit },
-  );
+  useKeyBindings({
+    Escape: handleClose,
+  });
 
   return (
-    <Command label={`Rename `} shouldFilter={false}>
-      <div className='p-6 pt-4 pb-4 flex justify-between items-center gap-1 '>
-        <p className='font-semibold'>Search 300,000+ organizations</p>
-        <CommandCancelIconButton onClose={handleClose} />
-      </div>
+    <Command shouldFilter={false}>
+      <CommandInput
+        value={usecase.searchTerm}
+        onValueChange={usecase.setSearchTerm}
+        placeholder='Search by name or website'
+        label={<p className='font-medium'>Search 300,000+ organizations</p>}
+        rightElement={
+          usecase.isValidatingDomain && (
+            <Spinner
+              size='sm'
+              label='validating...'
+              className='text-gray-300 fill-gray-500 size-3'
+            />
+          )
+        }
+        bottomAccessory={
+          (usecase.domainValidationError ||
+            usecase.domainValidationMessage) && (
+            <p
+              className={cn(
+                'text-xs text-gray-500',
+                usecase.domainValidationError.length > 0 && 'text-error-500',
+              )}
+            >
+              {usecase.domainValidationError || usecase.domainValidationMessage}
+            </p>
+          )
+        }
+      />
 
-      <div className='p-6 pt-0 pb-4 flex flex-col gap-3'>
-        <div className='flex items-center'>
-          <Input
-            value={search}
-            className='text-base p-0 !border-none '
-            placeholder='Search by name, website or LinkedIn...'
-            onChange={(e) => handleSearchChange(e.target.value)}
-          />
+      <CommandCancelIconButton onClose={handleClose} />
 
-          <Spinner
-            size='sm'
-            label='Loading...'
-            className='text-gray-300 fill-gray-500'
-          />
-        </div>
-
-        <Command.List className='!px-0 !pb-0 border-t border-gray-200'>
-          {isLoading && (
-            <div className='text-gray-400 flex gap-2 mb-2 ml-4'>
-              <Spinner
-                size='sm'
-                label='Loading...'
-                className='text-gray-300 fill-gray-500 size-3'
-              />
-              Searching...
-            </div>
-          )}
-
-          {options.length === 0 && !isLoading && search.length && (
-            <Command.Item
+      <Command.List>
+        {usecase.mixedOptions.length === 0 &&
+          !usecase.isLoading &&
+          !usecase.isValidatingDomain &&
+          !usecase.domainValidationError &&
+          usecase.searchTerm.length > 0 && (
+            <CommandItem
+              leftAccessory={<PlusCircle className='text-primary-700' />}
               onSelect={() => {
-                const tableViewDef = store.tableViewDefs.getById(preset ?? '');
-
-                handleAddNewOrganization();
-                tableViewDef?.setSorting(
-                  ColumnViewType.OrganizationsUpdatedDate,
-                  true,
-                );
+                usecase.addNewOrganization();
               }}
             >
-              <div className='flex items-center gap-2 overflow-hidden'>
-                <PlusCircle className='text-primary-700  ' />
-
-                <span className='truncate '>Add {search}</span>
-              </div>
-            </Command.Item>
+              Add {usecase.searchTerm}
+            </CommandItem>
           )}
 
-          {options.length > 0 &&
-            options.map((option, index) => (
-              <Command.Item
+        {usecase.mixedOptions.length > 0 &&
+          usecase.mixedOptions.map((option, index) => {
+            const isBeingAdded =
+              usecase.isAddingOrganization &&
+              usecase.addingOrganizationId === option.id;
+
+            return (
+              <CommandItem
+                className='group'
                 key={option?.id || `option-${index}`}
                 onSelect={() => {
-                  const tableViewDef = store.tableViewDefs.getById(
-                    preset ?? '',
-                  );
+                  if (option.source === 'tenant') {
+                    navigate('/organization/' + option.id);
+                    store.ui.commandMenu.toggle('AddNewOrganization');
+                    usecase.reset();
 
-                  organizations.addOrganizationByGlobalOrgId(option.id);
-                  tableViewDef?.setSorting(
-                    ColumnViewType.OrganizationsUpdatedDate,
-                    true,
-                  );
+                    return;
+                  }
+                  usecase.addNewOrganization(option);
                 }}
-              >
-                <div className='flex items-center gap-2 overflow-hidden'>
+                leftAccessory={
                   <Avatar
                     size='xxs'
                     textSize='xxs'
                     name={option.name}
-                    className='ml-[1px]'
                     variant='outlineSquare'
-                    icon={<User03 className='text-primary-700  ' />}
+                    icon={<User03 className='text-primary-700' />}
                     src={
-                      option?.logoUrl
-                        ? option.logoUrl
-                        : option?.iconUrl || undefined
+                      (option?.iconUrl ? option.iconUrl : option?.logoUrl) ||
+                      undefined
                     }
                   />
-
-                  <span className='truncate '>{option?.name || 'Unnamed'}</span>
-                  <span className='whitespace-nowrap truncate'>•</span>
-                  <span className='whitespace-nowrap truncate'>
-                    {getFormattedLink(option.website)}
-                  </span>
+                }
+                rightAccessory={
+                  option.source === 'tenant' ? (
+                    <ArrowNarrowRight className='invisible !text-gray-500 group-hover:visible group-data-[selected="true"]:visible' />
+                  ) : isBeingAdded ? (
+                    <Spinner
+                      size='sm'
+                      label='adding...'
+                      className='!text-gray-300 !fill-gray-500 size-3'
+                    />
+                  ) : (
+                    <PlusCircle className='invisible !text-gray-500 group-hover:visible group-data-[selected="true"]:visible' />
+                  )
+                }
+              >
+                <div className='flex items-center gap-2 truncate'>
+                  <span className='truncate'>{option?.name || 'Unnamed'}</span>
+                  <span>•</span>
+                  {option.website && (
+                    <span className='truncate'>
+                      {getFormattedLink(option.website)}
+                    </span>
+                  )}
                 </div>
-              </Command.Item>
-            ))}
-        </Command.List>
-      </div>
+              </CommandItem>
+            );
+          })}
+      </Command.List>
     </Command>
   );
 });
-
-const defaultValuesNewOrganization = (organizationName: string) => {
-  switch (organizationName) {
-    case 'Customers':
-      return {
-        relationship: OrganizationRelationship.Customer,
-        stage: OrganizationStage.Onboarding,
-      };
-    case 'Leads':
-      return {
-        relationship: OrganizationRelationship.Prospect,
-        stage: OrganizationStage.Lead,
-      };
-    case 'Nurture':
-      return {
-        relationship: OrganizationRelationship.Prospect,
-        stage: OrganizationStage.Target,
-      };
-    case 'All orgs':
-      return {
-        relationship: OrganizationRelationship.Prospect,
-        stage: OrganizationStage.Target,
-      };
-
-    case 'Churn':
-      return {
-        relationship: OrganizationRelationship.FormerCustomer,
-        stage: OrganizationStage.PendingChurn,
-      };
-    default:
-      return {};
-  }
-};
 
 const getFormattedLink = (url: string): string => {
   return url.replace(/^(https?:\/\/)?(www\.)?([^/?#]+).*/i, '$3');

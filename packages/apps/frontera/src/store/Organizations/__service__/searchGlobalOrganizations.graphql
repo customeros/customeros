@@ -6,5 +6,6 @@ query searchGlobalOrganizations($searchTerm: String!, $limit: Int!) {
     website
     logoUrl
     iconUrl
+    organizationId
   }
 }
