@@ -12,7 +12,7 @@ extend type Query {
 
 extend type Mutation {
     organization_Save(input: OrganizationSaveInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    organization_SaveByGlobalOrganization(globalOrganizationId: Int64!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organization_SaveByGlobalOrganization(globalOrganizationId: Int64!): OrganizationUiDetails! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
     organization_Hide(id: ID!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_HideAll(ids: [ID!]!): Result @hasRole(roles: [ADMIN, USER]) @hasTenant
