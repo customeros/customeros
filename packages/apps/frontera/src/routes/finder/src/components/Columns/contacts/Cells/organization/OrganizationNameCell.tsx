@@ -14,11 +14,6 @@ import {
   PopoverTrigger,
   PopoverContent,
 } from '@ui/overlay/Popover/Popover';
-import {
-  JobRole,
-  Metadata,
-  Organization,
-} from '@shared/types/__generated__/graphql.types';
 
 interface OrganizationNameCellProps {
   org: string;
@@ -70,10 +65,7 @@ export const OrganizationNameCell = observer(
               ref={linkRef}
               className='inline text-gray-700 no-underline hover:no-underline font-normal'
             >
-              {
-                contactStore?.value.latestOrganizationWithJobRole?.organization
-                  .name
-              }
+              {contactStore?.value.primaryOrganizationName}
             </Link>
           ) : (
             <span className='text-gray-400'>None</span>
@@ -94,32 +86,24 @@ export const OrganizationNameCell = observer(
             <Combobox
               options={options}
               onChange={(value) => {
-                contactStore?.value.organizations.content.push({
-                  metadata: {
-                    id: value.value,
-                  } as Metadata,
-                  id: value.value,
-                  name: value.label,
-                } as Organization);
-
-                contactStore?.commit({ syncOnly: true });
+                contactStore?.draft();
 
                 if (contactStore) {
-                  contactStore.value.latestOrganizationWithJobRole = {
-                    organization: {
-                      metadata: {
-                        id: value.value,
-                      } as Metadata,
-                      id: value.value,
-                      name: value.label,
-                    } as Organization,
-                    jobRole: {
-                      id: '',
-                    } as JobRole,
-                  };
+                  contactStore.value.primaryOrganizationId = value.value;
                 }
 
                 contactStore?.commit();
+
+                if (contactStore) {
+                  contactStore?.draft();
+                  contactStore.value.primaryOrganizationName = value.label;
+                  contactStore?.commit({ syncOnly: true });
+                }
+                const orgStore = store.organizations.getById(value.value);
+
+                orgStore?.draft();
+                orgStore?.value.contacts.push(contactId);
+                orgStore?.commit({ syncOnly: true });
                 setIsOpen(false);
               }}
             />

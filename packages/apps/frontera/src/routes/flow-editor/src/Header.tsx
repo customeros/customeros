@@ -171,7 +171,7 @@ export const Header = observer(
                     colorScheme='gray'
                     leftIcon={<User01 />}
                     dataTest='flow-contacts'
-                    isLoading={contactsStore.isLoading || store.flows.isLoading}
+                    isLoading={store.flows.isLoading}
                     onClick={() => {
                       navigate(`?show=finder&preset=${flowContactsPreset}`);
                     }}

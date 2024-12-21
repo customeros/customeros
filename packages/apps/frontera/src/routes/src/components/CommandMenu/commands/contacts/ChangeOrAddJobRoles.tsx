@@ -36,17 +36,17 @@ export const ChangeOrAddJobRoles = observer(() => {
     if (!context.ids?.[0] || !contact) return;
 
     if (selectedIds?.length === 1) {
-      contact.value.jobRoles.map((jobRole) => {
-        jobRole.description = opt.map((v) => v.value).join(',');
-      });
+      contact.value.primaryOrganizationJobRoleDescription = opt
+        .map((v) => v.value)
+        .join(',');
     } else {
       selectedIds.forEach((id) => {
         const contact = store.contacts.value.get(id);
 
         if (contact) {
-          contact.value.jobRoles.map((jobRole) => {
-            jobRole.description = opt.map((v) => v.value).join(',');
-          });
+          contact.value.primaryOrganizationJobRoleDescription = opt
+            .map((v) => v.value)
+            .join(',');
         }
       });
     }
@@ -80,7 +80,8 @@ export const ChangeOrAddJobRoles = observer(() => {
       <Command.List>
         {roleOptions.map((role, idx) => {
           const selectedDescriptions =
-            contact?.value?.jobRoles?.[0]?.description?.split(',') || [];
+            contact?.value?.primaryOrganizationJobRoleDescription?.split(',') ??
+            [];
 
           const isSelected = selectedDescriptions.includes(role.value);
 

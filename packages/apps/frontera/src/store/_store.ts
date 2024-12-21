@@ -340,7 +340,6 @@ export class Store<T extends object, E extends Entity<T> = Entity<T>> {
       const persisted = await this.persister?.getItem<Map<string, T>>('data');
 
       persisted?.set(id, data);
-
       await this.persister?.setItem('data', persisted);
     } catch (e) {
       console.error('Failed to persist', e);

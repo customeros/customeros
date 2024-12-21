@@ -1,38 +1,28 @@
-import { MouseEvent } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
 
-import { Contact } from '@graphql/types';
 import { Button } from '@ui/form/Button/Button';
 import { IconButton } from '@ui/form/IconButton';
 import { Users03 } from '@ui/media/icons/Users03';
 import { useStore } from '@shared/hooks/useStore';
 import { UsersPlus } from '@ui/media/icons/UsersPlus';
 import { Spinner } from '@ui/feedback/Spinner/Spinner';
-import { ContactCard } from '@organization/components/Tabs/panels/PeoplePanel/ContactCard/ContactCard';
+import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
 import { OrganizationPanel } from '@organization/components/Tabs/shared/OrganizationPanel/OrganizationPanel';
+
+import { ContactCard } from './components/ContactCard/ContactCard';
+import { CreateNewContactModal } from './components/CreateNewContactModal';
 
 export const PeoplePanel = observer(() => {
   const store = useStore();
+  const { open, onOpen, onClose } = useDisclosure();
   const id = useParams()?.id as string;
-  const organization = store.organizations.value.get(id);
+  const organization = store.organizations.getById(id);
 
-  const contacts =
-    organization?.contacts.slice().sort((a, b) => {
-      return a?.createdAt > b?.createdAt ? -1 : 1;
-    }) ?? [];
+  const contacts = store.organizations.getById(id)?.contacts;
 
-  const handleAddContact = (e: MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    const organizationId = organization?.id;
-
-    if (!organizationId) return;
-
-    store.contacts.create(organizationId);
-  };
+  if (!contacts) return null;
 
   return (
     <OrganizationPanel
@@ -49,9 +39,9 @@ export const PeoplePanel = observer(() => {
           <IconButton
             size='xs'
             variant='outline'
+            onClick={() => onOpen()}
             aria-label='Add contact'
             className='text-gray-500'
-            onClick={handleAddContact}
             dataTest={'org-people-add-contact'}
             icon={<UsersPlus className='text-gray-500' />}
             spinner={
@@ -84,32 +74,22 @@ export const PeoplePanel = observer(() => {
             <Button
               variant='outline'
               loadingText='Adding'
-              onClick={handleAddContact}
+              onClick={() => onOpen()}
               dataTest='org-people-add-someone'
               isDisabled={store.contacts.isLoading}
-              rightSpinner={
-                <Spinner
-                  size='sm'
-                  label='adding'
-                  className='text-gray-300 fill-gray-400'
-                />
-              }
             >
               Add someone
             </Button>
           </div>
         </div>
       )}
-      {!!contacts.length &&
-        contacts.map((contact) => (
-          <div style={{ width: '100%' }} key={contact?.metadata?.id}>
-            <ContactCard
-              id={contact?.metadata?.id}
-              contact={contact as Contact}
-              organizationName={organization?.value.name}
-            />
-          </div>
-        ))}
+      {contacts.map((contact) => (
+        <div key={contact?.id} className='group/card' style={{ width: '100%' }}>
+          <ContactCard id={contact?.id} />
+        </div>
+      ))}
+
+      <CreateNewContactModal orgId={id} open={open} onClose={onClose} />
     </OrganizationPanel>
   );
 });

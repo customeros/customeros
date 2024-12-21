@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 
 import { useKeys, useKeyBindings } from 'rooks';
-import { ContactStore } from '@store/Contacts/Contact.store';
+import { Contact } from '@store/Contacts/Contact.dto';
 import { CommandMenuType } from '@store/UI/CommandMenu.store.ts';
 import { SharedTableActions } from '@finder/components/Actions/components/SharedActions.tsx';
 
@@ -12,8 +12,8 @@ import { TableInstance } from '@ui/presentation/Table';
 interface TableActionsProps {
   selection: string[];
   focusedId?: string | null;
+  table: TableInstance<Contact>;
   enableKeyboardShortcuts?: boolean;
-  table: TableInstance<ContactStore>;
 }
 
 export const FlowSequencesTableActions = ({

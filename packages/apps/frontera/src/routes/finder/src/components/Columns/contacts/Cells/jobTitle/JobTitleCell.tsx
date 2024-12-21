@@ -16,15 +16,9 @@ export const JobTitleCell = observer(({ contactId }: JobTitleCellProps) => {
   const ref = useRef(null);
 
   const contactStore = store.contacts.value.get(contactId);
-  const jobTitle =
-    contactStore?.value.latestOrganizationWithJobRole?.jobRole.jobTitle;
+  const jobTitle = contactStore?.value.primaryOrganizationJobRoleTitle;
 
-  const enrichedContact = contactStore?.value.enrichDetails;
-
-  const enrichingStatus =
-    !enrichedContact?.enrichedAt &&
-    enrichedContact?.requestedAt &&
-    !enrichedContact?.failedAt;
+  const enrichingStatus = contactStore?.isEnriching;
 
   // useOutsideClick({
   //   ref: ref,

@@ -1,7 +1,7 @@
 import { useSearchParams } from 'react-router-dom';
 
 import { match } from 'ts-pattern';
-import { ContactStore } from '@store/Contacts/Contact.store.ts';
+import { Contact } from '@store/Contacts/Contact.dto';
 import { ContractStore } from '@store/Contracts/Contract.store.ts';
 import { Organization } from '@store/Organizations/Organization.dto';
 import { OpportunityStore } from '@store/Opportunities/Opportunity.store.ts';
@@ -121,7 +121,7 @@ export const useDownloadCsv = () => {
             column.columnType as keyof typeof csvDataMapper
           ] as MapperFunction | undefined;
           const rowData = row as
-            | ContactStore
+            | Contact
             | Organization
             | ContractStore
             | OpportunityStore;
@@ -154,5 +154,5 @@ export const useDownloadCsv = () => {
   return { downloadCSV };
 };
 type MapperFunction = (
-  d: Organization | ContactStore | ContractStore | OpportunityStore,
+  d: Organization | Contact | ContractStore | OpportunityStore,
 ) => string;

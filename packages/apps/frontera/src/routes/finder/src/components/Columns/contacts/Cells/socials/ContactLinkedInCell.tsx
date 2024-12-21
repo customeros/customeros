@@ -1,15 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 import { observer } from 'mobx-react-lite';
 
 import { useStore } from '@shared/hooks/useStore';
-import { getFormattedLink } from '@utils/getExternalLink';
-import { Social } from '@shared/types/__generated__/graphql.types';
 
-import {
-  LinkedInInput,
-  LinkedInDisplay,
-} from '../../../shared/Filters/abstract/LinkedIn';
+import { LinkedInDisplay } from '../../../shared/Filters/abstract/LinkedIn';
 
 interface SocialsCellProps {
   contactId: string;
@@ -23,77 +18,23 @@ export const ContactLinkedInCell = observer(
     const contact = store.contacts.value.get(contactId);
     const [metaKey, setMetaKey] = useState(false);
 
-    const enrichedContact = contact?.value.enrichDetails;
-    const enrichingStatus =
-      enrichedContact?.requestedAt &&
-      !enrichedContact?.failedAt &&
-      !enrichedContact?.enrichedAt;
-
-    useEffect(() => {
-      store.ui.setIsEditingTableCell(isEdit);
-    }, [isEdit, store.ui]);
-
-    const handleAddSocial = (url: string) => {
-      if (!contact || url === 'Unknown' || url === '') return;
-      const formattedValue =
-        url.includes('https://www') || url.includes('linkedin.com')
-          ? getFormattedLink(url).replace(/^linkedin\.com\//, '')
-          : `company/${url}`;
-
-      contact.value.socials.push({
-        id: crypto.randomUUID(),
-        url: `linkedin.com/${formattedValue}`,
-      } as Social);
-
-      contact.commit();
-      setIsEdit(false);
-    };
-
-    const handleUpdateSocial = (url: string) => {
-      const linkedinId = contact?.value.socials.find((social) =>
-        social.url.includes('linkedin'),
-      )?.id;
-
-      if (!linkedinId) return;
-
-      contact.value.socials.forEach((social) => {
-        const idx = contact.value.socials.findIndex((s) => s.id === linkedinId);
-
-        if (idx !== -1) {
-          const formattedValue =
-            url.includes('https://www') || url.includes('linkedin.com')
-              ? getFormattedLink(url).replace(/^linkedin\.com\//, '')
-              : `in/${url}`;
-
-          social.url = `linkedin.com/${formattedValue}`;
-        }
-
-        if (url === '') {
-          contact.value.socials.splice(idx, 1);
-        }
-        contact.commit();
-      });
-    };
+    if (!contact) return null;
 
     const toggleEditMode = () => setIsEdit(!isEdit);
 
-    const linkedIn = contact?.value.socials.find((social) =>
-      social.url.includes('linkedin'),
-    );
+    const linkedIn = contact?.value.linkedInUrl;
 
-    if (!contact?.value.socials?.length || !linkedIn) {
+    if (!linkedIn) {
       return (
-        <LinkedInInput
-          type='in'
-          isEdit={isEdit}
-          metaKey={metaKey}
-          isHovered={isHovered}
-          setIsEdit={setIsEdit}
-          setMetaKey={setMetaKey}
-          setIsHovered={setIsHovered}
-          enrichedStatus={enrichingStatus}
-          handleAddSocial={handleAddSocial}
-        />
+        <p
+          className='text-sm text-gray-400 cursor-pointer'
+          onClick={() => {
+            store.ui.commandMenu.setType('AddLinkedin');
+            store.ui.commandMenu.setOpen(true);
+          }}
+        >
+          Not set
+        </p>
       );
     }
 
@@ -102,14 +43,13 @@ export const ContactLinkedInCell = observer(
         type={'in'}
         isEdit={isEdit}
         metaKey={metaKey}
-        link={linkedIn.url}
+        link={linkedIn || ''}
         isHovered={isHovered}
         setIsEdit={setIsEdit}
-        alias={linkedIn.alias}
         setMetaKey={setMetaKey}
         setIsHovered={setIsHovered}
         toggleEditMode={toggleEditMode}
-        handleUpdateSocial={handleUpdateSocial}
+        alias={contact.value.linkedInAlias || ''}
       />
     );
   },

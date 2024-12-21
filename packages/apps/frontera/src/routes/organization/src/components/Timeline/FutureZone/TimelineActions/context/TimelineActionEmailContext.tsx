@@ -11,6 +11,7 @@ import {
 import { observer } from 'mobx-react-lite';
 import { render } from '@react-email/render';
 
+import { useEvent } from '@shared/hooks/useEvent';
 import { useStore } from '@shared/hooks/useStore';
 import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
 import { useTimelineMeta } from '@organization/components/Timeline/state';
@@ -65,6 +66,10 @@ export const TimelineActionEmailContextContextProvider = observer(
     invalidateQuery: () => void;
   }>) => {
     const { open: isOpen, onOpen, onClose } = useDisclosure();
+    const [defaultEmailAdress, setDefaultEmailAdress] = useState<{
+      value: string;
+      label: string;
+    }>({ value: '', label: '' });
     const [searchParams] = useSearchParams();
     const store = useStore();
 
@@ -75,19 +80,24 @@ export const TimelineActionEmailContextContextProvider = observer(
     const queryKey = useInfiniteGetTimelineQuery.getKey(
       timelineMeta.getTimelineVariables,
     );
+
+    useEvent<{ email: string }>('openEmailEditor', (payload) => {
+      setDefaultEmailAdress({ value: payload.email, label: payload.email });
+    });
+
     const { virtuosoRef } = useTimelineRefContext();
     const updateTimelineCache = useUpdateCacheWithNewEvent(virtuosoRef);
     const formId = 'compose-email-timeline-footer';
-
     const defaultValues: ComposeEmailDtoI = new ComposeEmailDto({
       from: '',
       fromProvider: '',
-      to: [],
+      to: defaultEmailAdress.label !== '' ? [defaultEmailAdress] : [],
       cc: [],
       bcc: [],
       subject: '',
       content: '',
     });
+
     const { state, reset, setDefaultValues } = useForm<ComposeEmailDtoI>({
       formId,
       defaultValues,
@@ -97,6 +107,22 @@ export const TimelineActionEmailContextContextProvider = observer(
       },
     });
 
+    useEffect(() => {
+      if (defaultEmailAdress.label !== '') {
+        setDefaultValues({
+          ...state.values,
+          to: [defaultEmailAdress],
+        });
+      } else {
+        setDefaultEmailAdress({ value: '', label: '' });
+        setDefaultValues({
+          ...state.values,
+          to: [],
+        });
+      }
+      reset();
+    }, [defaultValues.to.length]);
+
     const handleResetEditor = () => {
       setDefaultValues(defaultValues);
       reset();
@@ -105,7 +131,6 @@ export const TimelineActionEmailContextContextProvider = observer(
     const handleEmailSendSuccess = (response: unknown) => {
       updateTimelineCache(response, queryKey);
 
-      // no timeout needed is this case as the event id is created when this is called
       invalidateQuery();
       setIsSending(false);
       handleResetEditor();
@@ -177,10 +202,10 @@ export const TimelineActionEmailContextContextProvider = observer(
     };
 
     const handleExitEditorAndCleanData = () => {
-      handleResetEditor();
-
       onClose();
+      handleResetEditor();
       closeEditor();
+      setDefaultEmailAdress({ value: '', label: '' });
     };
 
     const handleCheckCanExitSafely = () => {
@@ -199,8 +224,10 @@ export const TimelineActionEmailContextContextProvider = observer(
 
         return false;
       } else {
-        handleResetEditor();
         onClose();
+        setDefaultEmailAdress({ value: '', label: '' });
+
+        handleResetEditor();
 
         return true;
       }

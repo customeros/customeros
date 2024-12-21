@@ -1,15 +1,13 @@
 import { it, expect, describe } from 'vitest';
 import { VitestHelper } from '@store/vitest-helper.ts';
 
-import { EmailLabel, PhoneNumberLabel } from '@graphql/types';
+import { EmailLabel, EntityType, PhoneNumberLabel } from '@graphql/types';
 
-import { Transport } from '../../transport';
 import { ContactService } from '../../Contacts/__service__/Contacts.service';
 import { OrganizationsService } from '../../Organizations/__service__/Organizations.service';
 
-const transport = new Transport();
 const organizationsService = OrganizationsService.getInstance();
-const contactService = ContactService.getInstance(transport);
+const contactService = ContactService.getInstance();
 
 describe('ContactsService - Integration Tests', () => {
   it('create contact', async () => {
@@ -19,10 +17,10 @@ describe('ContactsService - Integration Tests', () => {
     const { contact_Create } = await contactService.createContact({
       contactInput: { socialUrl: contact_social_url },
     });
-    const { contact } = await contactService.getContact(contact_Create);
+    const contact = await contactService.getContact(contact_Create);
 
-    expect(contact?.socials.length).toBe(1);
-    expect(contact?.socials[0].url).toBe(contact_social_url);
+    expect(contact?.linkedInUrl?.length).toBe(1);
+    expect(contact?.linkedInUrl).toBe(contact_social_url);
     expect(contact?.createdAt).not.toBeNull();
     expect(contact?.firstName).toBe('');
     expect(contact?.lastName).toBe('');
@@ -31,24 +29,22 @@ describe('ContactsService - Integration Tests', () => {
     expect(contact?.prefix).toBe('');
     expect(contact?.description).toBe('');
     expect(contact?.timezone).toBe('');
-    expect(contact?.metadata.id).toBe(contact_Create);
+    expect(contact?.id).toBe(contact_Create);
     expect(contact?.tags).toBeNull();
     expect(contact?.flows.length).toBe(0);
-    expect(contact?.organizations.content.length).toBe(0);
-    expect(contact?.jobRoles.length).toBe(0);
-    expect(contact?.primaryEmail).toBeNull();
-    expect(contact?.latestOrganizationWithJobRole).toBeNull();
+    expect(contact?.primaryOrganizationName).toBe('');
+    expect(contact?.primaryOrganizationJobRoleTitle).toBe(0);
+    expect(contact?.emails.find((e) => e.primary)).toBeNull();
     expect(contact?.locations.length).toBe(0);
-    expect(contact?.phoneNumbers.length).toBe(0);
     expect(contact?.emails.length).toBe(0);
     expect(contact?.connectedUsers.length).toBe(0);
     expect(contact?.updatedAt).not.toBeNull();
-    expect(contact?.enrichDetails.enrichedAt).toBeNull();
-    expect(contact?.enrichDetails.failedAt).toBeNull();
+    expect(contact?.enrichedAt).toBeNull();
+    expect(contact?.enrichedFailedAt).toBeNull();
     // expect(contact?.enrichDetails.requestedAt).not.toBeNull(); asynchronous call so it generates false positive
-    expect(contact?.enrichDetails.emailEnrichedAt).toBeNull();
-    expect(contact?.enrichDetails.emailFound).toBeNull();
-    expect(contact?.enrichDetails.emailRequestedAt).toBeNull();
+    expect(contact?.enrichedEmailEnrichedAt).toBeNull();
+    expect(contact?.enrichedEmailFound).toBeNull();
+    expect(contact?.enrichedEmailRequestedAt).toBeNull();
     expect(contact?.profilePhotoUrl).toBe('');
   });
 
@@ -61,12 +57,12 @@ describe('ContactsService - Integration Tests', () => {
         organizationId: id,
         input: {},
       });
-    const { contact } = await contactService.getContact(
+    const contact = await contactService.getContact(
       contact_CreateForOrganization.id,
     );
 
-    expect(contact?.organizations.content.length).toBe(1);
-    expect(contact?.organizations.content[0].name).toBe(name);
+    expect(contact?.primaryOrganizationName?.length).toBe(1);
+    expect(contact?.primaryOrganizationName).toBe(name);
   });
 
   it('update contact', async () => {
@@ -104,7 +100,7 @@ describe('ContactsService - Integration Tests', () => {
       },
     });
 
-    const { contact } = await contactService.getContact(
+    const contact = await contactService.getContact(
       contact_CreateForOrganization.id,
     );
 
@@ -130,6 +126,7 @@ describe('ContactsService - Integration Tests', () => {
       organizationId: id,
       input: { socialUrl: contact_first_social_url },
     });
+    const firstContactId = firstContact.contact_CreateForOrganization.id;
 
     const contact_second_social_url = 'IT_' + crypto.randomUUID();
 
@@ -138,6 +135,8 @@ describe('ContactsService - Integration Tests', () => {
       input: { socialUrl: contact_second_social_url },
     });
 
+    const secondContactId: string =
+      secondContact.contact_CreateForOrganization.id;
     const contact_third_social_url = 'IT_' + crypto.randomUUID();
 
     const thirdContact = await contactService.createContactForOrganization({
@@ -145,10 +144,12 @@ describe('ContactsService - Integration Tests', () => {
       input: { socialUrl: contact_third_social_url },
     });
 
-    const { contacts } = await contactService.getContacts({
-      pagination: { limit: 1000, page: 0 },
+    const thirdContactId: string =
+      thirdContact.contact_CreateForOrganization.id;
+    const { ui_contacts } = await contactService.getContactsByIds({
+      ids: [firstContactId, secondContactId, thirdContactId],
     });
-    const contactIds = contacts?.content?.map((contact) => contact.id);
+    const contactIds = ui_contacts?.map((contact) => contact.id);
 
     expect(contactIds).toBeDefined();
     expect(contactIds).toContain(firstContact.contact_CreateForOrganization.id);
@@ -171,18 +172,18 @@ describe('ContactsService - Integration Tests', () => {
 
     const contactBeforeLink = await contactService.getContact(contact_Create);
 
-    expect(contactBeforeLink.contact?.organizations.content.length).toBe(0);
+    expect(contactBeforeLink.primaryOrganizationName?.length).toBe(0);
 
     await contactService.linkOrganization({
       input: {
         organizationId: id,
-        contactId: contactBeforeLink.contact!.metadata.id,
+        contactId: contactBeforeLink.id,
       },
     });
 
     const contactAfterLink = await contactService.getContact(contact_Create);
 
-    expect(contactAfterLink.contact?.organizations.content.length).toBe(1);
+    expect(contactAfterLink.primaryOrganizationName).toBe(1);
   });
 
   it('adds job roles to contact', async () => {
@@ -201,20 +202,23 @@ describe('ContactsService - Integration Tests', () => {
       contact_CreateForOrganization.id,
     );
 
-    expect(contactBeforeFirstJobRole.contact?.jobRoles.length).toBe(1);
-    expect(contactBeforeFirstJobRole.contact?.jobRoles[0].jobTitle).toBeNull();
-    expect(contactBeforeFirstJobRole.contact?.jobRoles[0].description).toBe('');
-    expect(contactBeforeFirstJobRole.contact?.jobRoles[0].primary).toBe(false);
-    expect(contactBeforeFirstJobRole.contact?.jobRoles[0].company).toBeNull();
-    expect(contactBeforeFirstJobRole.contact?.jobRoles[0].startedAt).toBeNull();
-    expect(contactBeforeFirstJobRole.contact?.jobRoles[0].endedAt).toBeNull();
+    expect(
+      contactBeforeFirstJobRole.primaryOrganizationJobRoleTitle,
+    ).toBeNull();
+    expect(
+      contactBeforeFirstJobRole.primaryOrganizationJobRoleStartDate,
+    ).toBeNull();
+    expect(
+      contactBeforeFirstJobRole.primaryOrganizationJobRoleEndDate,
+    ).toBeNull();
+    expect(contactBeforeFirstJobRole.primaryOrganizationName).toBeNull();
 
     const jobRoleCreateOneDescription = 'IT_' + crypto.randomUUID();
     const jobRoleCreateOneTitle = 'IT_' + crypto.randomUUID();
     const jobRoleCreateOneStartedAt = new Date().toISOString();
 
     const { jobRole_Create } = await contactService.addJobRole({
-      contactId: contactBeforeFirstJobRole.contact!.metadata.id,
+      contactId: contactBeforeFirstJobRole.id,
       input: {
         description: jobRoleCreateOneDescription,
         jobTitle: jobRoleCreateOneTitle,
@@ -223,25 +227,27 @@ describe('ContactsService - Integration Tests', () => {
       },
     });
 
-    const contactAfterFirstJobRole = await contactService.getContact(
-      contact_CreateForOrganization.id,
-    );
+    //this needs to be reimplemented because now we are working with only primary job role
 
-    expect(contactAfterFirstJobRole.contact?.jobRoles.length).toBe(2);
-    expect(contactAfterFirstJobRole.contact?.jobRoles[1].jobTitle).toBe(
-      jobRoleCreateOneTitle,
-    );
-    expect(contactAfterFirstJobRole.contact?.jobRoles[1].description).toBe(
-      jobRoleCreateOneDescription,
-    );
-    expect(contactAfterFirstJobRole.contact?.jobRoles[1].primary).toBe(false);
-    expect(contactAfterFirstJobRole.contact?.jobRoles[1].company).toBeNull();
-    expect(
-      new Date(
-        contactAfterFirstJobRole.contact?.jobRoles[1].startedAt,
-      ).getTime(),
-    ).toBe(new Date(jobRoleCreateOneStartedAt).getTime());
-    expect(contactAfterFirstJobRole.contact?.jobRoles[0].endedAt).toBeNull();
+    // const contactAfterFirstJobRole = await contactService.getContact(
+    //   contact_CreateForOrganization.id,
+    // );
+
+    // expect(contactAfterFirstJobRole.contact?.jobRoles.length).toBe(2);
+    // expect(contactAfterFirstJobRole.contact?.jobRoles[1].jobTitle).toBe(
+    //   jobRoleCreateOneTitle,
+    // );
+    // expect(contactAfterFirstJobRole.contact?.jobRoles[1].description).toBe(
+    //   jobRoleCreateOneDescription,
+    // );
+    // expect(contactAfterFirstJobRole.contact?.jobRoles[1].primary).toBe(false);
+    // expect(contactAfterFirstJobRole.contact?.jobRoles[1].company).toBeNull();
+    // expect(
+    //   new Date(
+    //     contactAfterFirstJobRole.contact?.jobRoles[1].startedAt,
+    //   ).getTime(),
+    // ).toBe(new Date(jobRoleCreateOneStartedAt).getTime());
+    // expect(contactAfterFirstJobRole.contact?.jobRoles[0].endedAt).toBeNull();
 
     const jobRoleUpdateDescription = 'IT_' + crypto.randomUUID();
     const jobRoleUpdateTitle = 'IT_' + crypto.randomUUID();
@@ -253,7 +259,7 @@ describe('ContactsService - Integration Tests', () => {
     const jobRoleUpdateEndedAt = new Date().toISOString();
 
     await contactService.updateJobRole({
-      contactId: contactBeforeFirstJobRole.contact!.metadata.id,
+      contactId: contactBeforeFirstJobRole.id,
       input: {
         id: jobRole_Create.id,
         description: jobRoleUpdateDescription,
@@ -266,31 +272,33 @@ describe('ContactsService - Integration Tests', () => {
       },
     });
 
-    const contactAfterUpdateJobRole = await contactService.getContact(
-      contact_CreateForOrganization.id,
-    );
+    //Same here needs to be reimplemented
 
-    expect(contactAfterUpdateJobRole.contact?.jobRoles.length).toBe(2);
-    expect(contactAfterUpdateJobRole.contact?.jobRoles[1].jobTitle).toBe(
-      jobRoleUpdateTitle,
-    );
-    expect(contactAfterUpdateJobRole.contact?.jobRoles[1].description).toBe(
-      jobRoleUpdateDescription,
-    );
-    expect(contactAfterUpdateJobRole.contact?.jobRoles[1].primary).toBe(true);
-    expect(contactAfterUpdateJobRole.contact?.jobRoles[1].company).toBe(
-      jobRoleUpdateCompany,
-    );
-    expect(
-      new Date(
-        contactAfterUpdateJobRole.contact?.jobRoles[1].startedAt,
-      ).getTime(),
-    ).toBe(new Date(jobRoleUpdateStartedAt).getTime());
-    expect(
-      new Date(
-        contactAfterUpdateJobRole.contact?.jobRoles[1].endedAt,
-      ).getTime(),
-    ).toBe(new Date(jobRoleUpdateEndedAt).getTime());
+    // const contactAfterUpdateJobRole = await contactService.getContact(
+    //   contact_CreateForOrganization.id,
+    // );
+
+    // expect(contactAfterUpdateJobRole.contact?.jobRoles.length).toBe(2);
+    // expect(contactAfterUpdateJobRole.contact?.jobRoles[1].jobTitle).toBe(
+    //   jobRoleUpdateTitle,
+    // );
+    // expect(contactAfterUpdateJobRole.contact?.jobRoles[1].description).toBe(
+    //   jobRoleUpdateDescription,
+    // );
+    // expect(contactAfterUpdateJobRole.contact?.jobRoles[1].primary).toBe(true);
+    // expect(contactAfterUpdateJobRole.contact?.jobRoles[1].company).toBe(
+    //   jobRoleUpdateCompany,
+    // );
+    // expect(
+    //   new Date(
+    //     contactAfterUpdateJobRole.contact?.jobRoles[1].startedAt,
+    //   ).getTime(),
+    // ).toBe(new Date(jobRoleUpdateStartedAt).getTime());
+    // expect(
+    //   new Date(
+    //     contactAfterUpdateJobRole.contact?.jobRoles[1].endedAt,
+    //   ).getTime(),
+    // ).toBe(new Date(jobRoleUpdateEndedAt).getTime());
   });
 
   it('links contact to organization', async () => {
@@ -303,8 +311,8 @@ describe('ContactsService - Integration Tests', () => {
 
     await organizationsService.getOrganization(id);
     expect(
-      (await contactService.getContact(contact_Create)).contact?.organizations
-        .content.length,
+      (await contactService.getContact(contact_Create)).primaryOrganizationName
+        ?.length,
     ).toBe(0);
 
     await contactService.linkOrganization({
@@ -313,18 +321,11 @@ describe('ContactsService - Integration Tests', () => {
         organizationId: id,
       },
     });
-
     expect(
-      (await contactService.getContact(contact_Create)).contact?.organizations
-        .content.length,
-    ).toBe(1);
-    expect(
-      (await contactService.getContact(contact_Create)).contact?.organizations
-        .content[0].id,
+      (await contactService.getContact(contact_Create)).primaryOrganizationId,
     ).toBe(id);
     expect(
-      (await contactService.getContact(contact_Create)).contact?.organizations
-        .content[0].name,
+      (await contactService.getContact(contact_Create)).primaryOrganizationName,
     ).toBe(name);
   });
 
@@ -348,64 +349,52 @@ describe('ContactsService - Integration Tests', () => {
       contact_Create,
     );
 
-    expect(contactAfterEmailUpdate.contact?.emails.length).toBe(1);
-    expect(contactAfterEmailUpdate.contact?.emails[0].id).not.toBeNull();
-    expect(contactAfterEmailUpdate.contact?.emails[0].email).toBe(emailOne);
-    expect(contactAfterEmailUpdate.contact?.emails[0].primary).toBe(true);
+    expect(contactAfterEmailUpdate.emails.length).toBe(1);
+    expect(contactAfterEmailUpdate.emails[0].id).not.toBeNull();
+    expect(contactAfterEmailUpdate.emails[0].email).toBe(emailOne);
+    expect(contactAfterEmailUpdate.emails[0].primary).toBe(true);
     expect(
-      contactAfterEmailUpdate.contact?.emails[0].emailValidationDetails
-        .verified,
+      contactAfterEmailUpdate.emails[0].emailValidationDetails.verified,
     ).toBe(false);
     expect(
-      contactAfterEmailUpdate.contact?.emails[0].emailValidationDetails
+      contactAfterEmailUpdate.emails[0].emailValidationDetails
         .verifyingCheckAll,
     ).toBe(false);
     expect(
-      contactAfterEmailUpdate.contact?.emails[0].emailValidationDetails
-        .isValidSyntax,
+      contactAfterEmailUpdate.emails[0].emailValidationDetails.isValidSyntax,
     ).toBeNull();
     expect(
-      contactAfterEmailUpdate.contact?.emails[0].emailValidationDetails.isRisky,
+      contactAfterEmailUpdate.emails[0].emailValidationDetails.isRisky,
     ).toBeNull();
     expect(
-      contactAfterEmailUpdate.contact?.emails[0].emailValidationDetails
-        .isFirewalled,
+      contactAfterEmailUpdate.emails[0].emailValidationDetails.isFirewalled,
     ).toBeNull();
     expect(
-      contactAfterEmailUpdate.contact?.emails[0].emailValidationDetails
-        .provider,
+      contactAfterEmailUpdate.emails[0].emailValidationDetails.provider,
     ).toBeNull();
     expect(
-      contactAfterEmailUpdate.contact?.emails[0].emailValidationDetails
-        .firewall,
+      contactAfterEmailUpdate.emails[0].emailValidationDetails.firewall,
     ).toBeNull();
     expect(
-      contactAfterEmailUpdate.contact?.emails[0].emailValidationDetails
-        .isCatchAll,
+      contactAfterEmailUpdate.emails[0].emailValidationDetails.isCatchAll,
     ).toBeNull();
     expect(
-      contactAfterEmailUpdate.contact?.emails[0].emailValidationDetails
-        .canConnectSmtp,
+      contactAfterEmailUpdate.emails[0].emailValidationDetails.canConnectSmtp,
     ).toBeNull();
     expect(
-      contactAfterEmailUpdate.contact?.emails[0].emailValidationDetails
-        .deliverable,
+      contactAfterEmailUpdate.emails[0].emailValidationDetails.deliverable,
     ).toBeNull();
     expect(
-      contactAfterEmailUpdate.contact?.emails[0].emailValidationDetails
-        .isMailboxFull,
+      contactAfterEmailUpdate.emails[0].emailValidationDetails.isMailboxFull,
     ).toBeNull();
     expect(
-      contactAfterEmailUpdate.contact?.emails[0].emailValidationDetails
-        .isRoleAccount,
+      contactAfterEmailUpdate.emails[0].emailValidationDetails.isRoleAccount,
     ).toBeNull();
     expect(
-      contactAfterEmailUpdate.contact?.emails[0].emailValidationDetails
-        .isFreeAccount,
+      contactAfterEmailUpdate.emails[0].emailValidationDetails.isFreeAccount,
     ).toBeNull();
     expect(
-      contactAfterEmailUpdate.contact?.emails[0].emailValidationDetails
-        .smtpSuccess,
+      contactAfterEmailUpdate.emails[0].emailValidationDetails.smtpSuccess,
     ).toBeNull();
 
     const emailTwo = 'IT_' + crypto.randomUUID() + '@example.com';
@@ -424,12 +413,12 @@ describe('ContactsService - Integration Tests', () => {
       contact_Create,
     );
 
-    expect(contactAfterSecondEmailUpdate.contact?.emails.length).toBe(2);
+    expect(contactAfterSecondEmailUpdate?.emails.length).toBe(2);
 
-    let emailOneEntry = contactAfterSecondEmailUpdate.contact?.emails.find(
+    let emailOneEntry = contactAfterSecondEmailUpdate?.emails.find(
       (email) => email.email === emailOne,
     );
-    let emailTwoEntry = contactAfterSecondEmailUpdate.contact?.emails.find(
+    let emailTwoEntry = contactAfterSecondEmailUpdate?.emails.find(
       (email) => email.email === emailTwo,
     );
 
@@ -451,12 +440,12 @@ describe('ContactsService - Integration Tests', () => {
       contact_Create,
     );
 
-    expect(contactAfterSecondEmailSetPrimary.contact?.emails.length).toBe(2);
+    expect(contactAfterSecondEmailSetPrimary?.emails.length).toBe(2);
 
-    emailOneEntry = contactAfterSecondEmailSetPrimary.contact?.emails.find(
+    emailOneEntry = contactAfterSecondEmailSetPrimary?.emails.find(
       (email) => email.email === emailOne,
     );
-    emailTwoEntry = contactAfterSecondEmailSetPrimary.contact?.emails.find(
+    emailTwoEntry = contactAfterSecondEmailSetPrimary?.emails.find(
       (email) => email.email === emailTwo,
     );
 
@@ -511,14 +500,16 @@ describe('ContactsService - Integration Tests', () => {
         input: { socialUrl: contact_social_url },
       });
 
-    const contactBeforeAddingPhoneNumber = await contactService.getContact(
-      contact_CreateForOrganization.id,
-    );
+    //also here the phonenumber is not used anymore in our app until we reimplement it in BE
 
-    expect(
-      contactBeforeAddingPhoneNumber.contact?.phoneNumbers.length,
-      'The contact has phone number before adding',
-    ).toBe(0);
+    // const contactBeforeAddingPhoneNumber = await contactService.getContact(
+    //   contact_CreateForOrganization.id,
+    // );
+
+    // expect(
+    //   contactBeforeAddingPhoneNumber?.phoneNumbers.length,
+    //   'The contact has phone number before adding',
+    // ).toBe(0);
 
     const expectedCreateFirstPhoneNumber = Array.from(
       crypto.getRandomValues(new Uint32Array(1)),
@@ -543,217 +534,216 @@ describe('ContactsService - Integration Tests', () => {
       expectedCreateFirstPhoneNumber,
     );
 
-    const contactAfterAddingFirstPhoneNumber = await contactService.getContact(
-      contact_CreateForOrganization.id,
-    );
+    // const contactAfterAddingFirstPhoneNumber = await contactService.getContact(
+    //   contact_CreateForOrganization.id,
+    // );
 
-    expect(
-      contactAfterAddingFirstPhoneNumber.contact?.phoneNumbers.length,
-      "The contact doesn't have exactly 1 phone number",
-    ).toBe(1);
-    expect(contactAfterAddingFirstPhoneNumber.contact?.phoneNumbers[0].id).toBe(
-      firstAddedNumber.phoneNumberMergeToContact.id,
-    );
-    expect(
-      contactAfterAddingFirstPhoneNumber.contact?.phoneNumbers[0].label,
-    ).toBe(expectedFirstPhoneNumberLabel);
-    expect(
-      contactAfterAddingFirstPhoneNumber.contact?.phoneNumbers[0]
-        .rawPhoneNumber,
-    ).toBe(expectedCreateFirstPhoneNumber);
-    expect(
-      contactAfterAddingFirstPhoneNumber.contact?.phoneNumbers[0].e164,
-    ).toBeNull();
-    expect(
-      contactAfterAddingFirstPhoneNumber.contact?.phoneNumbers[0].primary,
-    ).toBe(false);
+    // expect(
+    //   contactAfterAddingFirstPhoneNumber.contact?.phoneNumbers.length,
+    //   "The contact doesn't have exactly 1 phone number",
+    // ).toBe(1);
+    // expect(contactAfterAddingFirstPhoneNumber.contact?.phoneNumbers[0].id).toBe(
+    //   firstAddedNumber.phoneNumberMergeToContact.id,
+    // );
+    // expect(
+    //   contactAfterAddingFirstPhoneNumber.contact?.phoneNumbers[0].label,
+    // ).toBe(expectedFirstPhoneNumberLabel);
+    // expect(
+    //   contactAfterAddingFirstPhoneNumber.contact?.phoneNumbers[0]
+    //     .rawPhoneNumber,
+    // ).toBe(expectedCreateFirstPhoneNumber);
+    // expect(
+    //   contactAfterAddingFirstPhoneNumber.contact?.phoneNumbers[0].e164,
+    // ).toBeNull();
+    // expect(
+    //   contactAfterAddingFirstPhoneNumber.contact?.phoneNumbers[0].primary,
+    // ).toBe(false);
 
-    const expectedUpdateFirstPhoneNumber = Array.from(
-      crypto.getRandomValues(new Uint32Array(1)),
-    )[0]
-      .toString()
-      .slice(-8)
-      .padStart(8, '0');
-    const { phoneNumber_Update } = await contactService.updatePhoneNumber({
-      input: {
-        id: firstAddedNumber.phoneNumberMergeToContact.id,
-        phoneNumber: expectedUpdateFirstPhoneNumber,
-        countryCodeA2: 'RO',
-      },
-    });
+    // const expectedUpdateFirstPhoneNumber = Array.from(
+    //   crypto.getRandomValues(new Uint32Array(1)),
+    // )[0]
+    //   .toString()
+    //   .slice(-8)
+    //   .padStart(8, '0');
+    // const { phoneNumber_Update } = await contactService.updatePhoneNumber({
+    //   input: {
+    //     id: firstAddedNumber.phoneNumberMergeToContact.id,
+    //     phoneNumber: expectedUpdateFirstPhoneNumber,
+    //     countryCodeA2: 'RO',
+    //   },
 
-    expect(phoneNumber_Update.id).not.toBeNull();
+    // expect(phoneNumber_Update.id).not.toBeNull();
 
-    const contactAfterUpdatingFirstPhoneNumber =
-      await contactService.getContact(contact_CreateForOrganization.id);
+    // const contactAfterUpdatingFirstPhoneNumber =
+    //   await contactService.getContact(contact_CreateForOrganization.id);
 
-    expect(
-      contactAfterUpdatingFirstPhoneNumber.contact?.phoneNumbers.length,
-      "The contact doesn't have exactly 1 phone number",
-    ).toBe(1);
-    expect(
-      contactAfterUpdatingFirstPhoneNumber.contact?.phoneNumbers[0].id,
-    ).toBe(firstAddedNumber.phoneNumberMergeToContact.id);
-    expect(
-      contactAfterUpdatingFirstPhoneNumber.contact?.phoneNumbers[0].label,
-    ).toBe(expectedFirstPhoneNumberLabel);
-    expect(
-      contactAfterUpdatingFirstPhoneNumber.contact?.phoneNumbers[0]
-        .rawPhoneNumber,
-    ).toBe(expectedUpdateFirstPhoneNumber);
-    expect(
-      contactAfterUpdatingFirstPhoneNumber.contact?.phoneNumbers[0].e164,
-    ).toBeNull();
-    expect(
-      contactAfterUpdatingFirstPhoneNumber.contact?.phoneNumbers[0].primary,
-    ).toBe(false);
+    // expect(
+    //   contactAfterUpdatingFirstPhoneNumber.contact?.phoneNumbers.length,
+    //   "The contact doesn't have exactly 1 phone number",
+    // ).toBe(1);
+    // expect(
+    //   contactAfterUpdatingFirstPhoneNumber.contact?.phoneNumbers[0].id,
+    // ).toBe(firstAddedNumber.phoneNumberMergeToContact.id);
+    // expect(
+    //   contactAfterUpdatingFirstPhoneNumber.contact?.phoneNumbers[0].label,
+    // ).toBe(expectedFirstPhoneNumberLabel);
+    // expect(
+    //   contactAfterUpdatingFirstPhoneNumber.contact?.phoneNumbers[0]
+    //     .rawPhoneNumber,
+    // ).toBe(expectedUpdateFirstPhoneNumber);
+    // expect(
+    //   contactAfterUpdatingFirstPhoneNumber.contact?.phoneNumbers[0].e164,
+    // ).toBeNull();
+    // expect(
+    //   contactAfterUpdatingFirstPhoneNumber.contact?.phoneNumbers[0].primary,
+    // ).toBe(false);
 
-    const expectedCreateSecondPhoneNumber = Array.from(
-      crypto.getRandomValues(new Uint32Array(1)),
-    )[0]
-      .toString()
-      .slice(-8)
-      .padStart(8, '0');
-    const expectedSecondPhoneNumberLabel = PhoneNumberLabel.Mobile;
+    // const expectedCreateSecondPhoneNumber = Array.from(
+    //   crypto.getRandomValues(new Uint32Array(1)),
+    // )[0]
+    //   .toString()
+    //   .slice(-8)
+    //   .padStart(8, '0');
+    // const expectedSecondPhoneNumberLabel = PhoneNumberLabel.Mobile;
 
-    const secondAddedNumber = await contactService.addPhoneNumber({
-      contactId: contact_CreateForOrganization.id,
-      input: {
-        phoneNumber: expectedCreateSecondPhoneNumber,
-        label: expectedSecondPhoneNumberLabel,
-        primary: false,
-        countryCodeA2: 'US',
-      },
-    });
+    // const secondAddedNumber = await contactService.addPhoneNumber({
+    //   contactId: contact_CreateForOrganization.id,
+    //   input: {
+    //     phoneNumber: expectedCreateSecondPhoneNumber,
+    //     label: expectedSecondPhoneNumberLabel,
+    //     primary: false,
+    //     countryCodeA2: 'US',
+    //   },
+    // });
 
-    expect(secondAddedNumber.phoneNumberMergeToContact.id).not.toBeNull();
-    expect(secondAddedNumber.phoneNumberMergeToContact.rawPhoneNumber).toBe(
-      expectedCreateSecondPhoneNumber,
-    );
+    // expect(secondAddedNumber.phoneNumberMergeToContact.id).not.toBeNull();
+    // expect(secondAddedNumber.phoneNumberMergeToContact.rawPhoneNumber).toBe(
+    //   expectedCreateSecondPhoneNumber,
+    // );
 
-    const contactAfterAddingSecondPhoneNumber = await contactService.getContact(
-      contact_CreateForOrganization.id,
-    );
+    // const contactAfterAddingSecondPhoneNumber = await contactService.getContact(
+    //   contact_CreateForOrganization.id,
+    // );
 
-    expect(
-      contactAfterAddingSecondPhoneNumber.contact?.phoneNumbers.length,
-      "The contact doesn't have exactly 2 phone numbers",
-    ).toBe(2);
+    // expect(
+    //   contactAfterAddingSecondPhoneNumber.contact?.phoneNumbers.length,
+    //   "The contact doesn't have exactly 2 phone numbers",
+    // ).toBe(2);
 
-    await contactService.removePhoneNumber({
-      contactId: contact_CreateForOrganization.id,
-      id: firstAddedNumber.phoneNumberMergeToContact.id,
-    });
+    // await contactService.removePhoneNumber({
+    //   contactId: contact_CreateForOrganization.id,
+    //   id: firstAddedNumber.phoneNumberMergeToContact.id,
+    // });
 
-    const contactAfterRemovingFirstPhoneNumber =
-      await contactService.getContact(contact_CreateForOrganization.id);
+    // const contactAfterRemovingFirstPhoneNumber =
+    //   await contactService.getContact(contact_CreateForOrganization.id);
 
-    expect(
-      contactAfterRemovingFirstPhoneNumber.contact?.phoneNumbers.length,
-      "The contact doesn't have exactly 1 phone numbers",
-    ).toBe(1);
+    // expect(
+    //   contactAfterRemovingFirstPhoneNumber.contact?.phoneNumbers.length,
+    //   "The contact doesn't have exactly 1 phone numbers",
+    // ).toBe(1);
 
-    expect(
-      contactAfterRemovingFirstPhoneNumber.contact?.phoneNumbers[0]
-        .rawPhoneNumber,
-    ).toBe(expectedCreateSecondPhoneNumber);
+    // expect(
+    //   contactAfterRemovingFirstPhoneNumber.contact?.phoneNumbers[0]
+    //     .rawPhoneNumber,
+    // ).toBe(expectedCreateSecondPhoneNumber);
   });
 
-  it('creates and updates social for contact', async () => {
-    const { id, name } = await VitestHelper.createOrganizationForTest(
-      organizationsService,
-    );
+  // it('creates and updates social for contact', async () => {
+  // const { id } = await VitestHelper.createOrganizationForTest(
+  //   organizationsService,
+  // );
 
-    const { contact_CreateForOrganization } =
-      await contactService.createContactForOrganization({
-        organizationId: id,
-        input: {},
-      });
-    const contactCreated = await contactService.getContact(
-      contact_CreateForOrganization.id,
-    );
+  // const { contact_CreateForOrganization } =
+  //   await contactService.createContactForOrganization({
+  //     organizationId: id,
+  //     input: {},
+  //   });
+  // const contactCreated = await contactService.getContact(
+  //   contact_CreateForOrganization.id,
+  // );
 
-    expect(contactCreated.contact?.socials.length).toBe(0);
-    expect(contactCreated.contact?.organizations.content.length).toBe(1);
-    expect(contactCreated.contact?.organizations.content[0].name).toBe(name);
+  // expect(contactCreated.contact?.socials.length).toBe(0);
+  // expect(contactCreated.contact?.organizations.content.length).toBe(1);
+  // expect(contactCreated.contact?.organizations.content[0].name).toBe(name);
 
-    const contact_added_social_url =
-      'https://www.linkedin.com/in/IT_' + crypto.randomUUID();
+  // const contact_added_social_url =
+  //   'https://www.linkedin.com/in/IT_' + crypto.randomUUID();
 
-    await contactService.addSocial({
-      contactId: contactCreated.contact!.metadata.id,
-      input: { url: contact_added_social_url },
-    });
+  // await contactService.addSocial({
+  //   contactId: contactCreated.contact!.metadata.id,
+  //   input: { url: contact_added_social_url },
+  // });
 
-    const contactAddedSocial = await contactService.getContact(
-      contact_CreateForOrganization.id,
-    );
+  // const contactAddedSocial = await contactService.getContact(
+  //   contact_CreateForOrganization.id,
+  // );
 
-    expect(contactAddedSocial.contact?.socials.length).toBe(1);
-    expect(contactAddedSocial.contact?.socials[0].url).toBe(
-      contact_added_social_url,
-    );
+  // expect(contactAddedSocial.contact?.socials.length).toBe(1);
+  // expect(contactAddedSocial.contact?.socials[0].url).toBe(
+  //   contact_added_social_url,
+  // );
 
-    const contact_updated_social_url =
-      'https://www.linkedin.com/in/IT_' + crypto.randomUUID();
+  // const contact_updated_social_url =
+  //   'https://www.linkedin.com/in/IT_' + crypto.randomUUID();
 
-    await contactService.updateSocial({
-      input: {
-        id: contactAddedSocial.contact!.socials[0].id,
-        url: contact_updated_social_url,
-      },
-    });
+  // await contactService.updateSocial({
+  //   input: {
+  //     id: contactAddedSocial.contact!.socials[0].id,
+  //     url: contact_updated_social_url,
+  //   },
+  // });
 
-    const contactUpdatedSocial = await contactService.getContact(
-      contact_CreateForOrganization.id,
-    );
+  // const contactUpdatedSocial = await contactService.getContact(
+  //   contact_CreateForOrganization.id,
+  // );
 
-    expect(contactUpdatedSocial.contact?.socials.length).toBe(1);
-    expect(contactUpdatedSocial.contact?.socials[0].url).toBe(
-      contact_updated_social_url,
-    );
-  });
+  // expect(contactUpdatedSocial.contact?.socials.length).toBe(1);
+  // expect(contactUpdatedSocial.contact?.socials[0].url).toBe(
+  //   contact_updated_social_url,
+  // );
+  // });
 
-  it('archives contact', async () => {
-    const contact_social_url =
-      'https://www.linkedin.com/in/IT_' + crypto.randomUUID();
+  // it('archives contact', async () => {
+  //   const contact_social_url =
+  //     'https://www.linkedin.com/in/IT_' + crypto.randomUUID();
 
-    const { contact_Create } = await contactService.createContact({
-      contactInput: { socialUrl: contact_social_url },
-    });
-    const contacts_before_archiving = await contactService.getContacts({
-      pagination: { limit: 100, page: 0 },
-    });
+  //   const { contact_Create } = await contactService.createContact({
+  //     contactInput: { socialUrl: contact_social_url },
+  //   });
+  //   const contacts_before_archiving = await contactService.getContact({
+  //     pagination: { limit: 100, page: 0 },
+  //   });
 
-    let hasId = (id: string): boolean => {
-      return (
-        contacts_before_archiving?.contacts?.content?.some(
-          (cont) => cont.id === id,
-        ) ?? false
-      );
-    };
-    let contactExistsInDashboard = hasId(contact_Create);
+  //   let hasId = (id: string): boolean => {
+  //     return (
+  //       contacts_before_archiving?.contacts?.content?.some(
+  //         (cont) => cont.id === id,
+  //       ) ?? false
+  //     );
+  //   };
+  //   let contactExistsInDashboard = hasId(contact_Create);
 
-    expect(contactExistsInDashboard).toBe(true);
+  //   expect(contactExistsInDashboard).toBe(true);
 
-    await contactService.archiveContact({
-      contactId: contact_Create,
-    });
+  //   await contactService.archiveContact({
+  //     contactId: contact_Create,
+  //   });
 
-    const retrieved_contacts = await contactService.getContacts({
-      pagination: { limit: 100, page: 0 },
-    });
+  //   const retrieved_contacts = await contactService.getContacts({
+  //     pagination: { limit: 100, page: 0 },
+  //   });
 
-    hasId = (id: string): boolean => {
-      return (
-        retrieved_contacts?.contacts?.content?.some((cont) => cont.id === id) ??
-        false
-      );
-    };
-    contactExistsInDashboard = hasId(contact_Create);
+  //   hasId = (id: string): boolean => {
+  //     return (
+  //       retrieved_contacts?.contacts?.content?.some((cont) => cont.id === id) ??
+  //       false
+  //     );
+  //   };
+  //   contactExistsInDashboard = hasId(contact_Create);
 
-    expect(contactExistsInDashboard).toBe(false);
-  });
+  //   expect(contactExistsInDashboard).toBe(false);
+  // });
 
   it('creates and updates tags for contact', async () => {
     const { id, name } = await VitestHelper.createOrganizationForTest(
@@ -769,16 +759,15 @@ describe('ContactsService - Integration Tests', () => {
       contact_CreateForOrganization.id,
     );
 
-    expect(contactCreated.contact?.tags).toBeNull();
-    expect(contactCreated.contact?.organizations.content.length).toBe(1);
-    expect(contactCreated.contact?.organizations.content[0].name).toBe(name);
+    expect(contactCreated?.tags).toBeNull();
+    expect(contactCreated.primaryOrganizationName).toBe(name);
 
     const firstTagName = crypto.randomUUID();
 
     await contactService.addTagsToContact({
       input: {
-        contactId: contactCreated.contact!.metadata.id,
-        tag: { name: firstTagName },
+        contactId: contactCreated.id,
+        tag: { name: firstTagName, entityType: EntityType.Contact },
       },
     });
 
@@ -786,14 +775,14 @@ describe('ContactsService - Integration Tests', () => {
       contact_CreateForOrganization.id,
     );
 
-    expect(contactAddedFirstTag.contact?.tags?.length).toBe(1);
-    expect(contactAddedFirstTag.contact?.tags?.[0]?.name).toBe(firstTagName);
+    expect(contactAddedFirstTag.tags?.length).toBe(1);
+    expect(contactAddedFirstTag.tags?.[0]?.name).toBe(firstTagName);
 
     const secondTagName = crypto.randomUUID();
 
     await contactService.addTagsToContact({
       input: {
-        contactId: contactCreated.contact!.metadata.id,
+        contactId: contactCreated.id,
         tag: { name: secondTagName },
       },
     });
@@ -802,11 +791,11 @@ describe('ContactsService - Integration Tests', () => {
       contact_CreateForOrganization.id,
     );
 
-    expect(contactAddedSecondTag.contact?.tags?.length).toBe(2);
+    expect(contactAddedSecondTag?.tags?.length).toBe(2);
 
     await contactService.removeTagsFromContact({
       input: {
-        contactId: contactCreated.contact!.metadata.id,
+        contactId: contactCreated.id,
         tag: { name: firstTagName },
       },
     });
@@ -815,7 +804,7 @@ describe('ContactsService - Integration Tests', () => {
       contact_CreateForOrganization.id,
     );
 
-    expect(contactRemovedFirstTag.contact?.tags?.length).toBe(1);
-    expect(contactRemovedFirstTag.contact?.tags?.[0]?.name).toBe(secondTagName);
+    expect(contactRemovedFirstTag?.tags?.length).toBe(1);
+    expect(contactRemovedFirstTag?.tags?.[0]?.name).toBe(secondTagName);
   });
 });

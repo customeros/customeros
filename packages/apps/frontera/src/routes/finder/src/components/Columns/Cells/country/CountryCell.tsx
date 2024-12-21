@@ -14,7 +14,7 @@ export const CountryCell = observer(({ id, type }: ContactNameCellProps) => {
 
   const entity = match(type)
     .with('organization', () => store.organizations.getById(id))
-    .with('contact', () => store.contacts.value.get(id))
+    .with('contact', () => store.contacts.getById(id))
     .otherwise(() => null);
 
   const country = entity?.country;

@@ -12,8 +12,7 @@ export const EditJobTitle = observer(() => {
   const selectedIds = context.ids;
   const contact = store.contacts.value.get(context.ids?.[0] as string);
 
-  const contactJobTitle =
-    contact?.value?.jobRoles?.map((jobRole) => jobRole.jobTitle)?.[0] ?? '';
+  const contactJobTitle = contact?.value.primaryOrganizationJobRoleTitle;
   const [name, setName] = useState(() => contactJobTitle);
 
   const label =
@@ -25,17 +24,13 @@ export const EditJobTitle = observer(() => {
     if (!contact) return;
 
     if (selectedIds?.length === 1) {
-      contact.value.jobRoles.map((jobRole) => {
-        jobRole.jobTitle = name;
-      });
+      contact.value.primaryOrganizationJobRoleTitle = name;
     } else {
       selectedIds.forEach((id) => {
         const contact = store.contacts.value.get(id);
 
         if (contact) {
-          contact.value.jobRoles.map((jobRole) => {
-            jobRole.jobTitle = name;
-          });
+          contact.value.primaryOrganizationJobRoleTitle = name;
         }
       });
     }

@@ -1,4 +1,4 @@
-import { ContactStore } from '@store/Contacts/Contact.store';
+import { Contact } from '@store/Contacts/Contact.dto';
 import { ColumnDef as ColumnDefinition } from '@tanstack/react-table';
 import { CountryCell } from '@finder/components/Columns/Cells/country';
 import { DateCell } from '@finder/components/Columns/shared/Cells/DateCell';
@@ -11,10 +11,9 @@ import { DateTimeUtils } from '@utils/date.ts';
 import { createColumnHelper } from '@ui/presentation/Table';
 import { Skeleton } from '@ui/feedback/Skeleton/Skeleton.tsx';
 import THead, { getTHeadProps } from '@ui/presentation/Table/THead';
-import { User, Social, TableViewDef, ColumnViewType } from '@graphql/types';
+import { User, TableViewDef, ColumnViewType } from '@graphql/types';
 
 import { EmailCell } from './Cells/email';
-import { PhoneCell } from './Cells/phone';
 import { AvatarCell } from './Cells/avatar';
 import { ContactsTagsCell } from './Cells/tags';
 import { FlowStatusCell } from './Cells/flowStatus';
@@ -25,7 +24,7 @@ import { ConnectedUsers } from './Cells/connectedUsers';
 import { OrganizationNameCell } from './Cells/organization';
 import { getColumnConfig } from '../shared/util/getColumnConfig';
 
-type ColumnDatum = ContactStore;
+type ColumnDatum = Contact;
 
 // REASON: we do not care about exhaustively typing this TValue type
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -77,7 +76,7 @@ const columns: Record<string, Column> = {
       <THead<HTMLInputElement>
         title='Name'
         id={ColumnViewType.ContactsName}
-        {...getTHeadProps<ContactStore>(props)}
+        {...getTHeadProps<Contact>(props)}
       />
     ),
     skeleton: () => <Skeleton className='w-[100px] h-[14px]' />,
@@ -90,14 +89,10 @@ const columns: Record<string, Column> = {
     enableColumnFilter: false,
     enableSorting: true,
     cell: (props) => {
-      const lasOrganizationId =
-        props.row.original.value.latestOrganizationWithJobRole?.organization
-          ?.metadata?.id;
-      const contactId = props.row.original.value.metadata.id;
+      const lasOrganizationId = props.row.original.value.primaryOrganizationId;
+      const contactId = props.row.original.value.id;
 
-      const org =
-        props.row.original.value.latestOrganizationWithJobRole?.organization
-          ?.name;
+      const org = props.row.original.value.primaryOrganizationName;
 
       return (
         <OrganizationNameCell
@@ -111,14 +106,14 @@ const columns: Record<string, Column> = {
       <THead<HTMLInputElement>
         title='Organization'
         id={ColumnViewType.ContactsOrganization}
-        {...getTHeadProps<ContactStore>(props)}
+        {...getTHeadProps<Contact>(props)}
       />
     ),
     skeleton: () => <Skeleton className='w-[100px] h-[14px]' />,
   }),
 
   [ColumnViewType.ContactsPrimaryEmail]: columnHelper.accessor(
-    'value.primaryEmail',
+    'value.emails.primary',
     {
       id: ColumnViewType.ContactsPrimaryEmail,
       minSize: 128,
@@ -127,8 +122,9 @@ const columns: Record<string, Column> = {
       enableColumnFilter: false,
       enableSorting: false,
       cell: (props) => {
-        const validationDetails =
-          props.row.original.value.primaryEmail?.emailValidationDetails;
+        const validationDetails = props.row.original.value.emails.find(
+          (e) => e.primary === true,
+        )?.emailValidationDetails;
 
         return (
           <EmailCell
@@ -142,47 +138,44 @@ const columns: Record<string, Column> = {
           filterWidth='15rem'
           title='Primary Email'
           id={ColumnViewType.ContactsPrimaryEmail}
-          {...getTHeadProps<ContactStore>(props)}
+          {...getTHeadProps<Contact>(props)}
         />
       ),
       skeleton: () => <Skeleton className='w-[50%] h-[14px]' />,
     },
   ),
 
-  [ColumnViewType.ContactsPhoneNumbers]: columnHelper.accessor(
-    'value.phoneNumbers',
-    {
-      id: ColumnViewType.ContactsPhoneNumbers,
-      minSize: 138,
-      maxSize: 650,
-      enableResizing: true,
-      enableColumnFilter: false,
-      enableSorting: false,
+  // [ColumnViewType.ContactsPhoneNumbers]: columnHelper.accessor('value.phones', {
+  //   id: ColumnViewType.ContactsPhoneNumbers,
+  //   minSize: 138,
+  //   maxSize: 650,
+  //   enableResizing: true,
+  //   enableColumnFilter: false,
+  //   enableSorting: false,
 
-      header: (props) => (
-        <THead<HTMLInputElement>
-          title='Mobile Number'
-          id={ColumnViewType.ContactsPhoneNumbers}
-          {...getTHeadProps<ContactStore>(props)}
-        />
-      ),
-      cell: (props) => {
-        const phoneNumber = props.getValue()?.[0];
+  //   header: (props) => (
+  //     <THead<HTMLInputElement>
+  //       title='Mobile Number'
+  //       id={ColumnViewType.ContactsPhoneNumbers}
+  //       {...getTHeadProps<Contact>(props)}
+  //     />
+  //   ),
+  //   cell: (props) => {
+  //     const phoneNumber = props.getValue()?.[0];
 
-        const isEnriching = props.row.original.isEnriching;
+  //     const isEnriching = props.row.original.isEnriching;
 
-        if (!phoneNumber)
-          return (
-            <p className='text-gray-400'>
-              {isEnriching ? 'Enriching...' : 'Not set'}
-            </p>
-          );
+  //     if (!phoneNumber)
+  //       return (
+  //         <p className='text-gray-400'>
+  //           {isEnriching ? 'Enriching...' : 'Not set'}
+  //         </p>
+  //       );
 
-        return <PhoneCell phone={phoneNumber?.rawPhoneNumber} />;
-      },
-      skeleton: () => <Skeleton className='w-[100%] h-[14px]' />,
-    },
-  ),
+  //     return <PhoneCell phone={phoneNumber?.rawPhoneNumber} />;
+  //   },
+  //   skeleton: () => <Skeleton className='w-[100%] h-[14px]' />,
+  // }),
   [ColumnViewType.ContactsCity]: columnHelper.accessor('value.locations', {
     id: ColumnViewType.ContactsCity,
     minSize: 65,
@@ -200,7 +193,7 @@ const columns: Record<string, Column> = {
       <THead<HTMLInputElement>
         title='City'
         id={ColumnViewType.ContactsCity}
-        {...getTHeadProps<ContactStore>(props)}
+        {...getTHeadProps<Contact>(props)}
       />
     ),
     skeleton: () => (
@@ -209,24 +202,29 @@ const columns: Record<string, Column> = {
       </div>
     ),
   }),
-  [ColumnViewType.ContactsLinkedin]: columnHelper.accessor('value.socials', {
-    id: ColumnViewType.ContactsLinkedin,
-    minSize: 96,
-    maxSize: 650,
-    enableResizing: true,
-    enableColumnFilter: false,
-    enableSorting: false,
-    cell: (props) => <ContactLinkedInCell contactId={props.row.original.id} />,
-    header: (props) => (
-      <THead<HTMLInputElement>
-        title='LinkedIn'
-        filterWidth='14rem'
-        id={ColumnViewType.ContactsLinkedin}
-        {...getTHeadProps<ContactStore>(props)}
-      />
-    ),
-    skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
-  }),
+  [ColumnViewType.ContactsLinkedin]: columnHelper.accessor(
+    'value.linkedInUrl',
+    {
+      id: ColumnViewType.ContactsLinkedin,
+      minSize: 96,
+      maxSize: 650,
+      enableResizing: true,
+      enableColumnFilter: false,
+      enableSorting: false,
+      cell: (props) => (
+        <ContactLinkedInCell contactId={props.row.original.id} />
+      ),
+      header: (props) => (
+        <THead<HTMLInputElement>
+          title='LinkedIn'
+          filterWidth='14rem'
+          id={ColumnViewType.ContactsLinkedin}
+          {...getTHeadProps<Contact>(props)}
+        />
+      ),
+      skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
+    },
+  ),
   [ColumnViewType.ContactsPersona]: columnHelper.accessor('value.tags', {
     id: ColumnViewType.ContactsPersona,
     minSize: 92,
@@ -242,7 +240,7 @@ const columns: Record<string, Column> = {
         title='Tags'
         filterWidth='14rem'
         id={ColumnViewType.ContactsPersona}
-        {...getTHeadProps<ContactStore>(props)}
+        {...getTHeadProps<Contact>(props)}
       />
     ),
     skeleton: () => (
@@ -267,7 +265,7 @@ const columns: Record<string, Column> = {
       <THead<HTMLInputElement>
         title='Job Title'
         id={ColumnViewType.ContactsJobTitle}
-        {...getTHeadProps<ContactStore>(props)}
+        {...getTHeadProps<Contact>(props)}
       />
     ),
     skeleton: () => (
@@ -296,7 +294,7 @@ const columns: Record<string, Column> = {
   //           placeholder={'e.g. CTO'}
   //         />
   //       )}
-  //       {...getTHeadProps<ContactStore>(props)}
+  //       {...getTHeadProps<Contact>(props)}
   //     />
   //   ),
   //   skeleton: () => (
@@ -306,7 +304,7 @@ const columns: Record<string, Column> = {
   //   ),
   // }),
   [ColumnViewType.ContactsTimeInCurrentRole]: columnHelper.accessor(
-    'value.jobRoles',
+    'value.primaryOrganizationJobRoleStartDate',
     {
       id: ColumnViewType.ContactsTimeInCurrentRole,
       minSize: 171,
@@ -315,26 +313,25 @@ const columns: Record<string, Column> = {
       enableColumnFilter: false,
       enableSorting: false,
       cell: (props) => {
-        const jobRole =
-          props.row.original.value.latestOrganizationWithJobRole?.jobRole;
-
+        const startedAt =
+          props.row.original.value.primaryOrganizationJobRoleStartDate;
         const isEnriching = props.row.original.isEnriching;
 
-        if (!jobRole?.startedAt)
+        if (!startedAt)
           return (
             <p className='text-gray-400'>
               {isEnriching ? 'Enriching...' : 'Not set'}
             </p>
           );
 
-        return <p>{DateTimeUtils.timeAgo(jobRole.startedAt)}</p>;
+        return <p>{DateTimeUtils.timeAgo(startedAt)}</p>;
       },
       header: (props) => (
         <THead<HTMLInputElement>
           filterWidth='21rem'
           title='Time In Current Role'
           id={ColumnViewType.ContactsTimeInCurrentRole}
-          {...getTHeadProps<ContactStore>(props)}
+          {...getTHeadProps<Contact>(props)}
         />
       ),
       skeleton: () => (
@@ -344,7 +341,7 @@ const columns: Record<string, Column> = {
       ),
     },
   ),
-  [ColumnViewType.ContactsCountry]: columnHelper.accessor('value.metadata', {
+  [ColumnViewType.ContactsCountry]: columnHelper.accessor('value.locations', {
     id: ColumnViewType.ContactsCountry,
     minSize: 91,
     maxSize: 650,
@@ -352,7 +349,7 @@ const columns: Record<string, Column> = {
     enableColumnFilter: false,
     enableSorting: false,
     cell: (props) => {
-      const value = props.getValue()?.id;
+      const value = props.row.original.value.id;
 
       return <CountryCell id={value} type='contact' />;
     },
@@ -360,7 +357,7 @@ const columns: Record<string, Column> = {
       <THead<HTMLInputElement>
         title='Country'
         id={ColumnViewType.ContactsCountry}
-        {...getTHeadProps<ContactStore>(props)}
+        {...getTHeadProps<Contact>(props)}
       />
     ),
     skeleton: () => (
@@ -371,7 +368,7 @@ const columns: Record<string, Column> = {
   }),
 
   [ColumnViewType.ContactsLinkedinFollowerCount]: columnHelper.accessor(
-    'value',
+    'value.linkedInFollowerCount',
     {
       id: ColumnViewType.ContactsLinkedinFollowerCount,
 
@@ -382,11 +379,7 @@ const columns: Record<string, Column> = {
       enableSorting: false,
 
       cell: (props) => {
-        const value = props
-          .getValue()
-          ?.socials.find((e: Social) =>
-            e?.url?.includes('linkedin'),
-          )?.followersCount;
+        const value = props.row.original.value.linkedInFollowerCount;
 
         const isEnriching = props.row.original.isEnriching;
 
@@ -404,7 +397,7 @@ const columns: Record<string, Column> = {
           filterWidth='17.5rem'
           title='LinkedIn Followers'
           id={ColumnViewType.ContactsLinkedinFollowerCount}
-          {...getTHeadProps<ContactStore>(props)}
+          {...getTHeadProps<Contact>(props)}
         />
       ),
       skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
@@ -423,7 +416,7 @@ const columns: Record<string, Column> = {
         filterWidth='17.5rem'
         title='Last Interaction'
         id={ColumnViewType.ContactsLastInteraction}
-        {...getTHeadProps<ContactStore>(props)}
+        {...getTHeadProps<Contact>(props)}
       />
     ),
     skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
@@ -445,7 +438,7 @@ const columns: Record<string, Column> = {
         <THead<HTMLInputElement>
           title='LinkedIn Connections'
           id={ColumnViewType.ContactsConnections}
-          {...getTHeadProps<ContactStore>(props)}
+          {...getTHeadProps<Contact>(props)}
         />
       ),
       skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
@@ -468,7 +461,7 @@ const columns: Record<string, Column> = {
       <THead<HTMLInputElement>
         title='Region'
         id={ColumnViewType.ContactsRegion}
-        {...getTHeadProps<ContactStore>(props)}
+        {...getTHeadProps<Contact>(props)}
       />
     ),
     skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
@@ -489,7 +482,7 @@ const columns: Record<string, Column> = {
       <THead<HTMLInputElement>
         title='Last Updated'
         id={ColumnViewType.ContactsUpdatedAt}
-        {...getTHeadProps<ContactStore>(props)}
+        {...getTHeadProps<Contact>(props)}
       />
     ),
     skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
@@ -502,16 +495,14 @@ const columns: Record<string, Column> = {
     enableColumnFilter: false,
     enableSorting: true,
     cell: (props) => {
-      return (
-        <ContactFlowCell contactId={props.row.original.value.metadata.id} />
-      );
+      return <ContactFlowCell contactId={props.row.original.value.id} />;
     },
     header: (props) => (
       <THead<HTMLInputElement>
         title='Current Flows'
         filterWidth='17.5rem'
         id={ColumnViewType.ContactsFlows}
-        {...getTHeadProps<ContactStore>(props)}
+        {...getTHeadProps<Contact>(props)}
       />
     ),
     skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
@@ -524,7 +515,7 @@ const columns: Record<string, Column> = {
     enableColumnFilter: false,
     enableSorting: true,
     cell: (props) => {
-      const value = props.getValue()?.value.metadata.id;
+      const value = props.row.original.value.id;
 
       return <FlowStatusCell contactID={value} />;
     },
@@ -532,7 +523,7 @@ const columns: Record<string, Column> = {
       <THead<HTMLInputElement>
         title='Status in Flow'
         id={ColumnViewType.ContactsFlowStatus}
-        {...getTHeadProps<ContactStore>(props)}
+        {...getTHeadProps<Contact>(props)}
       />
     ),
     skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
@@ -545,7 +536,7 @@ const columns: Record<string, Column> = {
     enableColumnFilter: false,
     enableSorting: true,
     cell: (props) => {
-      const value = props.getValue()?.value.metadata.id;
+      const value = props.row.original.value.id;
 
       return <NextFlowAction contactID={value} />;
     },
@@ -553,7 +544,7 @@ const columns: Record<string, Column> = {
       <THead<HTMLInputElement>
         title='Next Flow Action'
         id={ColumnViewType.ContactsFlowNextAction}
-        {...getTHeadProps<ContactStore>(props)}
+        {...getTHeadProps<Contact>(props)}
       />
     ),
     skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,

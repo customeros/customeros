@@ -250,14 +250,12 @@ export class FlowStore implements Store<Flow> {
         await this.root.flowParticipants.addFlowParticipant(contactId, this.id);
 
       runInAction(() => {
-        contactStore?.update(
-          (c) => {
-            c.flows = [...(c.flows ?? []), { ...this.value }];
-
-            return c;
-          },
-          { mutate: false },
-        );
+        contactStore?.draft();
+        contactStore!.value.flows = [
+          ...(contactStore?.value.flows ?? []),
+          this.value.name,
+        ];
+        contactStore?.commit({ syncOnly: true });
 
         const newFLowContact = new FlowParticipantStore(
           this.root,
@@ -324,17 +322,13 @@ export class FlowStore implements Store<Flow> {
       await this.root.flowParticipants.addFlowParticipants(contactIds, this.id);
 
       runInAction(() => {
-        contactStores.map((e) => {
-          e?.update(
-            (c) => {
-              c.flows = [...(c.flows ?? []), { ...this.value }];
-
-              return c;
-            },
-            { mutate: false },
-          );
-
-          return e;
+        contactStores.forEach((contactStore) => {
+          contactStore?.draft();
+          contactStore!.value.flows = [
+            ...(contactStore?.value.flows ?? []),
+            this.value.name,
+          ];
+          contactStore?.commit({ syncOnly: true });
         });
 
         this.value.participants = [

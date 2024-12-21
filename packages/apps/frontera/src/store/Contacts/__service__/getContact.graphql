@@ -13,13 +13,9 @@ query contact($id: ID!) {
     tags {
       metadata {
         id
-        source
-        sourceOfTruth
-        appSource
-        created
-        lastUpdated
       }
       name
+      entityType
     }
     flows {
       metadata {
@@ -42,6 +38,7 @@ query contact($id: ID!) {
         id
       }
       name
+      entityType
     }
     jobRoles {
       id
@@ -138,6 +135,7 @@ query contact($id: ID!) {
     }
     connectedUsers {
       id
+      name
     }
     updatedAt
     enrichDetails {

@@ -1,5 +1,9 @@
 import { useState, useContext, createContext, PropsWithChildren } from 'react';
 
+import { observer } from 'mobx-react-lite';
+
+import { useEvent } from '@shared/hooks/useEvent';
+
 export const noop = () => undefined;
 export type EditorType = 'email' | 'log-entry' | 'reminder' | null;
 interface TimelineActionContextContextMethods {
@@ -19,20 +23,24 @@ export const useTimelineActionContext = () => {
   return useContext(TimelineActionContextContext);
 };
 
-export const TimelineActionContextContextProvider = ({
-  children,
-}: PropsWithChildren) => {
-  const [openedEditor, setOpenedEditor] = useState<EditorType>(null);
+export const TimelineActionContextContextProvider = observer(
+  ({ children }: PropsWithChildren) => {
+    useEvent<{ openEditor: EditorType }>('openEmailEditor', (payload) => {
+      setOpenedEditor(payload.openEditor);
+    });
 
-  return (
-    <TimelineActionContextContext.Provider
-      value={{
-        showEditor: setOpenedEditor,
-        closeEditor: () => setOpenedEditor(null),
-        openedEditor,
-      }}
-    >
-      {children}
-    </TimelineActionContextContext.Provider>
-  );
-};
+    const [openedEditor, setOpenedEditor] = useState<EditorType>(null);
+
+    return (
+      <TimelineActionContextContext.Provider
+        value={{
+          showEditor: setOpenedEditor,
+          closeEditor: () => setOpenedEditor(null),
+          openedEditor,
+        }}
+      >
+        {children}
+      </TimelineActionContextContext.Provider>
+    );
+  },
+);

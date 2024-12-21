@@ -369,13 +369,13 @@ export const FinderTable = observer(() => {
         preset ? store.organizations?.totalElements === 0 : true,
       )
       .with(TableViewType.Contacts, () => {
-        if (tableId === TableIdType.FlowContacts && params.id) {
-          return (
-            store.flows.value.get(params.id)?.value.participants.length === 0
-          );
-        }
+        // if (tableId === TableIdType.FlowContacts && params.id) {
+        //   return (
+        //     store.flows.value.get(params.id)?.value.participants.length === 0
+        //   );
+        // }
 
-        return store.contacts?.totalElements === 0;
+        return preset ? store.contacts.totalElements === 0 : true;
       })
       .with(TableViewType.Invoices, () => store.invoices?.totalElements === 0)
       .with(TableViewType.Contracts, () => store.contracts?.totalElements === 0)
@@ -386,6 +386,17 @@ export const FinderTable = observer(() => {
   if (checkIfEmpty()) {
     return <EmptyState />;
   }
+
+  const canFetchMore = match(tableType)
+    .with(
+      TableViewType.Organizations,
+      () => !!preset && store.organizations.canLoadNext(preset),
+    )
+    .with(
+      TableViewType.Contacts,
+      () => !!preset && store.contacts.canLoadNext(preset),
+    )
+    .otherwise(() => false);
 
   return (
     <div className='flex'>
@@ -400,6 +411,7 @@ export const FinderTable = observer(() => {
         totalItems={totalItems}
         getRowId={(row) => row.id}
         enableColumnResizing={true}
+        canFetchMore={canFetchMore}
         onSortingChange={handleSortChange}
         onResizeColumn={handleColumnSizing}
         onSelectionChange={onSelectionChange}
@@ -408,13 +420,13 @@ export const FinderTable = observer(() => {
         dataTest={`finder-table-${tableType}`}
         isLoading={store.organizations.isLoading}
         fullRowSelection={tableType === TableViewType.Invoices}
-        canFetchMore={!!preset && store.organizations.canLoadNext(preset)}
-        onFetchMore={() => {
-          store.organizations.loadNext(preset!);
-        }}
         enableKeyboardShortcuts={
           !isEditing && !isFiltering && !isCommandMenuPrompted
         }
+        onFetchMore={() => {
+          store.organizations.loadNext(preset!);
+          store.contacts.loadNext(preset!);
+        }}
         enableTableActions={
           tableType &&
           [TableViewType.Invoices, TableViewType.Contracts].includes(tableType)

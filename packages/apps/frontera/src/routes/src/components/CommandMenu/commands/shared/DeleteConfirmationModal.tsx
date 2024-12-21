@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
 import { FlowStore } from '@store/Flows/Flow.store';
-import { ContactStore } from '@store/Contacts/Contact.store';
+import { Contact } from '@store/Contacts/Contact.dto';
 import { Organization } from '@store/Organizations/Organization.dto';
 import { OpportunityStore } from '@store/Opportunities/Opportunity.store';
 import { TableViewDefStore } from '@store/TableViewDefs/TableViewDef.store';
@@ -31,7 +31,7 @@ export const DeleteConfirmationModal = observer(() => {
       | OpportunityStore
       | Organization
       | TableViewDefStore
-      | ContactStore
+      | Contact
       | FlowStore
       | undefined
     >()
@@ -185,7 +185,7 @@ export const DeleteConfirmationModal = observer(() => {
     .with('Contact', () =>
       context.ids?.length > 1
         ? `Archive ${context.ids?.length} contacts?`
-        : `Archive ${(entity as ContactStore)?.name}?`,
+        : `Archive ${(entity as Contact)?.name}?`,
     )
     .with(
       'TableViewDef',

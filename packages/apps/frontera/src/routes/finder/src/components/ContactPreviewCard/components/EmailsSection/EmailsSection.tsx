@@ -1,7 +1,7 @@
 import { Fragment } from 'react';
 
-import { uniqBy } from 'lodash';
 import { observer } from 'mobx-react-lite';
+import { EditEmailCase } from '@domain/usecases/command-menu/edit-email.usecase';
 
 import { Plus } from '@ui/media/icons/Plus';
 import { Spinner } from '@ui/feedback/Spinner';
@@ -18,7 +18,7 @@ import { PlusCircle } from '@ui/media/icons/PlusCircle';
 import { DotsVertical } from '@ui/media/icons/DotsVertical';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
-import { EmailValidationMessage } from '@organization/components/Tabs/panels/PeoplePanel/ContactCard/EmailValidationMessage';
+import { EmailValidationMessage } from '@organization/components/Tabs/panels/PeoplePanel/components/ContactCard/EmailValidationMessage';
 
 interface EmailsSectionProps {
   contactId: string | number;
@@ -30,33 +30,18 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
 
   const contactStore = store.contacts.value.get(String(contactId));
 
-  const activeCompany =
-    (contactStore?.value?.organizations?.content?.length ?? 1) - 1;
-  const company = contactStore?.value.organizations?.content?.[activeCompany];
+  const activeCompanyName = contactStore?.value.primaryOrganizationName;
+  const activeCompanyId = contactStore?.value.primaryOrganizationId;
 
   const domains =
-    company?.metadata.id &&
-    store.organizations.getById(company.metadata.id)?.value?.domains;
+    contactStore?.value.primaryOrganizationId &&
+    store.organizations.getById(activeCompanyId ?? '')?.value?.domains;
 
-  const isPrimaryEmail = contactStore?.value.primaryEmail;
+  const allEmails = contactStore?.value.emails;
 
-  const allEmails = uniqBy(
-    contactStore
-      ? [
-          ...contactStore.value.emails,
-          ...(contactStore.value.primaryEmail
-            ? [contactStore.value.primaryEmail]
-            : []),
-        ]
-      : [],
-    'id',
-  );
-  const enrichedContact = contactStore?.value.enrichDetails;
+  const enrichedContact = contactStore?.isEnriching;
 
-  const isEnrichingEmail =
-    !enrichedContact?.emailEnrichedAt &&
-    enrichedContact?.emailRequestedAt &&
-    !isPrimaryEmail;
+  if (!contactStore) return;
 
   return (
     <>
@@ -65,9 +50,9 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
           <Mail02 className='mt-[1px] text-gray-500' />
 
           <span className='text-gray-500'>Emails</span>
-          {allEmails.length === 0 && (
+          {allEmails!.length === 0 && (
             <span className='text-gray-400 ml-[57px]'>
-              {isEnrichingEmail ? 'Finding email' : 'No emails yet'}
+              {enrichedContact ? 'Finding email' : 'No emails yet'}
             </span>
           )}
         </div>
@@ -89,16 +74,16 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
               </div>
             </MenuButton>
             <MenuList>
-              {company?.name && domains?.length && (
+              {activeCompanyName && domains && domains?.length > 0 && (
                 <MenuItem
                   className='group/find-email '
                   onClick={() => {
-                    contactStore?.findEmail();
+                    contactStore.findEmail();
                   }}
                 >
                   <div className='flex items-center gap-1'>
-                    {isEnrichingEmail ? (
-                      <Tooltip label={`Finding email at ${company?.name}`}>
+                    {enrichedContact ? (
+                      <Tooltip label={`Finding email at ${activeCompanyName}`}>
                         <Spinner
                           size='sm'
                           label='finding email'
@@ -110,9 +95,9 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
                     )}
 
                     <span className='max-w-[150px] text-ellipsis overflow-hidden whitespace-nowrap'>
-                      {isEnrichingEmail
-                        ? `Finding email at ${company?.name}`
-                        : `Find email at ${company?.name}`}
+                      {enrichedContact
+                        ? `Finding email at ${activeCompanyName}`
+                        : `Find email at ${activeCompanyName}`}
                     </span>
                   </div>
                 </MenuItem>
@@ -120,26 +105,12 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
               <MenuItem
                 className='group/add-email'
                 onClick={() => {
-                  store.ui.setSelectionId(
-                    contactStore?.value.emails.length || 1,
-                  );
-
-                  contactStore?.value.emails.push({
-                    id: crypto.randomUUID(),
-                    email: '',
-                    appSource: '',
-                    contacts: [],
-                    createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString(),
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  } as any);
-
                   store.ui.commandMenu.setContext({
-                    ids: [contactStore?.value.id || ''],
+                    ids: [contactStore?.id || ''],
                     entity: 'Contact',
                     property: 'email',
                   });
-                  store.ui.commandMenu.setType('EditEmail');
+                  store.ui.commandMenu.setType('AddEmail');
                   store.ui.commandMenu.setOpen(true);
                 }}
               >
@@ -148,8 +119,8 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
               </MenuItem>
             </MenuList>
           </Menu>
-          {isEnrichingEmail && (
-            <Tooltip label={`Finding email at ${company} `}>
+          {enrichedContact && (
+            <Tooltip label={`Finding email at ${activeCompanyName} `}>
               <div>
                 <Spinner
                   size='sm'
@@ -174,7 +145,7 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
                 >
                   {email.email || 'Not set'}
                 </span>
-                {isPrimaryEmail?.id === email.id && (
+                {email.primary === true && (
                   <span className='text-gray-500 text-sm'> • Primary</span>
                 )}
               </div>
@@ -195,11 +166,16 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
                     />
                   </MenuButton>
                   <MenuList>
-                    {isPrimaryEmail?.id !== email.id && (
+                    {email.primary === false && (
                       <MenuItem
                         className='group/edit-email'
                         onClick={() => {
-                          contactStore?.setPrimaryEmail(email.id);
+                          contactStore.value.emails.forEach((e) => {
+                            e.primary = false;
+                          });
+                          contactStore?.draft();
+                          contactStore.value.emails[idx].primary = true;
+                          contactStore?.commit();
                         }}
                       >
                         <div className='flex items-center gap-2'>
@@ -212,10 +188,10 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
                     <MenuItem
                       className='group/edit-email'
                       onClick={() => {
-                        store.ui.setSelectionId(idx);
+                        EditEmailCase.prototype.setEmail(email.email!);
                         store.ui.commandMenu.setType('EditEmail');
                         store.ui.commandMenu.setContext({
-                          ids: [contactStore?.value.id ?? ''],
+                          ids: [contactStore?.id ?? ''],
                           entity: 'Contact',
                           property: 'email',
                         });
@@ -230,8 +206,8 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
                     <MenuItem
                       className='group/archive-email'
                       onClick={() => {
+                        contactStore.draft();
                         contactStore?.value.emails.splice(idx, 1);
-
                         contactStore?.commit();
                       }}
                     >

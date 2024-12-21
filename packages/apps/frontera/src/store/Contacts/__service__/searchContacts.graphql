@@ -1,0 +1,7 @@
+query searchContacts($limit: Int, $where: Filter, $sort: SortBy) {
+  ui_contacts_search(limit: $limit, where: $where, sort: $sort) {
+    ids
+    totalElements
+    totalAvailable
+  }
+}

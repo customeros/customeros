@@ -24,6 +24,7 @@ export class UIStore {
   contactPreviewCardOpen: boolean = false;
   movedIcpOrganization: number = 0;
   focusRow: number | string | null = null;
+  emailAdress: string = '';
   commandMenu = new CommandMenuStore();
   selectionId: number | null = null;
   flowCommandMenu = new FlowStepCommandMenuStore();
@@ -115,6 +116,10 @@ export class UIStore {
 
   setSelectionId(value: number | null) {
     this.selectionId = value;
+  }
+
+  setEmailAdress(value: string) {
+    this.emailAdress = value;
   }
 
   purgeLocalData() {

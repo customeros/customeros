@@ -24,7 +24,7 @@ export const LinkedInInput = ({
   setIsEdit,
   handleAddSocial,
   metaKey,
-  enrichedStatus,
+  enrichedStatus = false,
   setMetaKey,
   type,
 }: LinkedInInputProps) => {

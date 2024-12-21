@@ -1,7 +1,6 @@
 import { useRef, useEffect, KeyboardEvent } from 'react';
 
 import { Input } from '@ui/form/Input';
-import { Edit03 } from '@ui/media/icons/Edit03';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip.tsx';
 import { IconButton } from '@ui/form/IconButton/IconButton';
 import { LinkExternal02 } from '@ui/media/icons/LinkExternal02';
@@ -19,7 +18,6 @@ interface LinkedInDisplayProps {
   setIsEdit: (value: boolean) => void;
   setMetaKey: (value: boolean) => void;
   setIsHovered: (value: boolean) => void;
-  handleUpdateSocial: (url: string) => void;
 }
 
 export const LinkedInDisplay = ({
@@ -28,7 +26,6 @@ export const LinkedInDisplay = ({
   isEdit,
   setIsHovered,
   setIsEdit,
-  handleUpdateSocial,
   metaKey,
   link,
   setMetaKey,
@@ -61,9 +58,6 @@ export const LinkedInDisplay = ({
     }
   }, [isEdit]);
 
-  const handleBlur = (e: React.ChangeEvent<HTMLInputElement>) => {
-    handleUpdateSocial(e.target.value);
-  };
   const formattedLink = getFormattedLink(link).replace(
     /^linkedin\.com\/(?:in\/|company\/)?/,
     '/',
@@ -88,13 +82,9 @@ export const LinkedInDisplay = ({
           ref={inputRef}
           variant='unstyled'
           value={link || ''}
-          onChange={handleBlur}
           onKeyDown={handleKeyEvents}
           onBlur={() => setIsEdit(false)}
           onFocus={(e) => {
-            displayLink
-              ? handleUpdateSocial(`linkedin.com/${type}${displayLink}`)
-              : handleUpdateSocial('');
             e.target.focus();
             setTimeout(() => e.target.select(), 0);
           }}
@@ -114,14 +104,6 @@ export const LinkedInDisplay = ({
       )}
       {isHovered && !isEdit && (
         <>
-          <IconButton
-            size='xxs'
-            variant='ghost'
-            aria-label='edit'
-            onClick={toggleEditMode}
-            className='ml-3 rounded-[5px]'
-            icon={<Edit03 className='text-gray-500' />}
-          />
           <IconButton
             size='xxs'
             variant='ghost'

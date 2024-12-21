@@ -4,7 +4,6 @@ import { observer } from 'mobx-react-lite';
 
 import { Eye } from '@ui/media/icons/Eye.tsx';
 import { Tag01 } from '@ui/media/icons/Tag01';
-import { Phone } from '@ui/media/icons/Phone';
 import { Clock } from '@ui/media/icons/Clock';
 import { Mail01 } from '@ui/media/icons/Mail01';
 import { Edit03 } from '@ui/media/icons/Edit03';
@@ -16,6 +15,7 @@ import { EyeOff } from '@ui/media/icons/EyeOff.tsx';
 import { Shuffle01 } from '@ui/media/icons/Shuffle01.tsx';
 import { Certificate02 } from '@ui/media/icons/Certificate02';
 import { ArrowBlockUp } from '@ui/media/icons/ArrowBlockUp.tsx';
+import { LinkedinOutline } from '@ui/media/icons/LinkedinOutline.tsx';
 import { Kbd, CommandKbd, CommandItem } from '@ui/overlay/CommandMenu';
 import { CommandsContainer } from '@shared/components/CommandMenu/commands/shared';
 
@@ -100,23 +100,54 @@ export const ContactCommands = observer(() => {
           </CommandItem>
         )}
 
+        {contact && contact?.value.emails.length > 0 && (
+          <CommandItem
+            leftAccessory={<Mail01 />}
+            keywords={contactKeywords.edit_email}
+            onSelect={() => {
+              store.ui.commandMenu.setType('EditEmail');
+            }}
+            rightAccessory={
+              <>
+                <Kbd>
+                  <ArrowBlockUp className='text-inherit size-3' />
+                </Kbd>
+                <Kbd>E</Kbd>
+              </>
+            }
+          >
+            Edit email
+          </CommandItem>
+        )}
+
         <CommandItem
           leftAccessory={<Mail01 />}
           keywords={contactKeywords.edit_email}
           onSelect={() => {
-            store.ui.commandMenu.setType('EditEmail');
+            store.ui.commandMenu.setType('AddEmail');
           }}
           rightAccessory={
             <>
               <Kbd>
                 <ArrowBlockUp className='text-inherit size-3' />
               </Kbd>
-              <Kbd>E</Kbd>
+              <Kbd>A</Kbd>
             </>
           }
         >
-          Edit email
+          Add Email
         </CommandItem>
+
+        {contact && !contact.value.linkedInUrl && (
+          <CommandItem
+            leftAccessory={<LinkedinOutline />}
+            onSelect={() => {
+              store.ui.commandMenu.setType('AddLinkedin');
+            }}
+          >
+            Add LinkedIn URL
+          </CommandItem>
+        )}
 
         <CommandItem
           rightAccessory={<Kbd className='size-auto h-5 px-1.5'>Space</Kbd>}
@@ -150,7 +181,7 @@ export const ContactCommands = observer(() => {
         >
           Edit name
         </CommandItem>
-        <CommandItem
+        {/* <CommandItem
           leftAccessory={<Phone />}
           keywords={contactKeywords.edit_phone_number}
           onSelect={() => {
@@ -158,7 +189,7 @@ export const ContactCommands = observer(() => {
           }}
         >
           Edit phone number
-        </CommandItem>
+        </CommandItem> */}
         <CommandItem
           leftAccessory={<Certificate02 />}
           keywords={contactKeywords.edit_job_title}

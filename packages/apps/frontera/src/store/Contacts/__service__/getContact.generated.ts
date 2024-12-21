@@ -21,15 +21,8 @@ export type ContactQuery = {
     tags?: Array<{
       __typename?: 'Tag';
       name: string;
-      metadata: {
-        __typename?: 'Metadata';
-        id: string;
-        source: Types.DataSource;
-        sourceOfTruth: Types.DataSource;
-        appSource: string;
-        created: any;
-        lastUpdated: any;
-      };
+      entityType: Types.EntityType;
+      metadata: { __typename?: 'Metadata'; id: string };
     }> | null;
     flows: Array<{
       __typename?: 'Flow';
@@ -146,7 +139,11 @@ export type ContactQuery = {
       alias: string;
       followersCount: any;
     }>;
-    connectedUsers: Array<{ __typename?: 'User'; id: string }>;
+    connectedUsers: Array<{
+      __typename?: 'User';
+      id: string;
+      name?: string | null;
+    }>;
     enrichDetails: {
       __typename?: 'EnrichDetails';
       enrichedAt?: any | null;

@@ -69,6 +69,7 @@ export class RootStore {
 
     this.ui = new UIStore(this, this.transport);
     this.windowManager = new WindowManager(this);
+    this.tableViewDefs = new TableViewDefsStore(this, this.transport);
     this.mail = new MailStore(this, this.transport);
     this.tags = new TagsStore(this, this.transport);
     this.files = new FilesStore(this, this.transport);
@@ -85,7 +86,6 @@ export class RootStore {
     this.globalCache = new GlobalCacheStore(this, this.transport);
     this.flowSenders = new FlowSendersStore(this, this.transport);
     this.flowParticipants = new FlowParticipantsStore(this, this.transport);
-    this.tableViewDefs = new TableViewDefsStore(this, this.transport);
     this.organizations = new OrganizationsStore(this, this.transport);
     this.opportunities = new OpportunitiesStore(this, this.transport);
     this.timelineEvents = new TimelineEventsStore(this, this.transport);
