@@ -18,9 +18,7 @@ export class GraphqlService {
   private mailboxService: MailboxesService;
 
   constructor(private root: RootStore, private transport: Transport) {
-    this.organizationsService = OrganizationsService.getInstance(
-      this.transport,
-    );
+    this.organizationsService = OrganizationsService.getInstance();
     this.customFieldsService = CustomFieldsService.getInstance(this.transport);
     this.invoiceService = InvoicesService.getInstance(this.transport);
     this.contactService = ContactService.getInstance(this.transport);

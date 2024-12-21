@@ -6,7 +6,7 @@ import { Transport } from './transport';
 import { TagService } from './Tags/__service__/Tag.service';
 
 const transport = new Transport();
-const organizationsService = OrganizationsService.getInstance(transport);
+const organizationsService = OrganizationsService.getInstance();
 const tagService = TagService.getInstance(transport);
 
 afterAll(async () => {

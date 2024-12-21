@@ -8,7 +8,7 @@ import { ContactService } from '../../Contacts/__service__/Contacts.service';
 import { OrganizationsService } from '../../Organizations/__service__/Organizations.service';
 
 const transport = new Transport();
-const organizationsService = OrganizationsService.getInstance(transport);
+const organizationsService = OrganizationsService.getInstance();
 const contactService = ContactService.getInstance(transport);
 
 describe('ContactsService - Integration Tests', () => {
