@@ -28,7 +28,7 @@ export class AddEmailCase {
     this.entity?.draft();
     this.entity?.value.emails.push({
       email: this.inputValue,
-      primary: noEmails ? true : false,
+      primary: noEmails,
     } as Email);
     this.entity?.commit();
     this.inputValue = '';
