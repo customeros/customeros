@@ -1,5 +1,5 @@
 import path from 'path';
-import { cpus } from 'node:os';
+// import { cpus } from 'node:os';
 import react from '@vitejs/plugin-react';
 import { Plugin, defineConfig } from 'vite';
 import graphqlLoader from 'vite-plugin-graphql-loader';
@@ -23,7 +23,7 @@ export function sourcemapExclude(opts?: SourcemapExclude): Plugin {
   };
 }
 
-const allowedSourcemapPackages = [
+const _allowedSourcemapPackages = [
   'mobx',
   'mobx-react-lite',
   'lodash',
@@ -35,38 +35,38 @@ const allowedSourcemapPackages = [
 export default defineConfig({
   // uncommenting the build underneath to produce sourcmaps will cause the build process to fail due to a bug in vite
   // check this issue: https://github.com/vitejs/vite/issues/2433
-  build: {
-    sourcemap: true,
-    rollupOptions: {
-      maxParallelFileOps: Math.max(1, cpus().length - 1),
-      output: {
-        manualChunks: (id) => {
-          if (id.includes('node_modules')) {
-            return 'vendor';
-          }
-        },
-        sourcemapIgnoreList: (relativeSourcePath) => {
-          const normalizedPath = path.normalize(relativeSourcePath);
+  // build: {
+  //   sourcemap: true,
+  //   rollupOptions: {
+  //     maxParallelFileOps: Math.max(1, cpus().length - 1),
+  //     output: {
+  //       manualChunks: (id) => {
+  //         if (id.includes('node_modules')) {
+  //           return 'vendor';
+  //         }
+  //       },
+  //       sourcemapIgnoreList: (relativeSourcePath) => {
+  //         const normalizedPath = path.normalize(relativeSourcePath);
 
-          // Check if the path is in node_modules but exclude packages in the allowed list
-          if (normalizedPath.includes('node_modules')) {
-            return !allowedSourcemapPackages.some((pkg) =>
-              normalizedPath.includes(pkg),
-            );
-          }
+  //         // Check if the path is in node_modules but exclude packages in the allowed list
+  //         if (normalizedPath.includes('node_modules')) {
+  //           return !allowedSourcemapPackages.some((pkg) =>
+  //             normalizedPath.includes(pkg),
+  //           );
+  //         }
 
-          return false; // Do not ignore other paths
-        },
-      },
-      onwarn(warning, defaultHandler) {
-        if (warning.code === 'SOURCEMAP_ERROR') {
-          return;
-        }
+  //         return false; // Do not ignore other paths
+  //       },
+  //     },
+  //     onwarn(warning, defaultHandler) {
+  //       if (warning.code === 'SOURCEMAP_ERROR') {
+  //         return;
+  //       }
 
-        defaultHandler(warning);
-      },
-    },
-  },
+  //       defaultHandler(warning);
+  //     },
+  //   },
+  // },
   plugins: [
     react({
       babel: {
