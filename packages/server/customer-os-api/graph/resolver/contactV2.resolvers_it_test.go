@@ -540,6 +540,29 @@ func TestQueryResolver_UIContactsSearch_SortByJobTitle(t *testing.T) {
 	verifyContactSortOrder(t, model.ColumnViewTypeContactsJobTitle, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
+func TestQueryResolver_UIContactsSearch_SortByLinkedInFollowerCount(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "1"})
+	neo4jtest.CreateSocial(ctx, driver, tenantName, neo4jentity.SocialEntity{Id: "l1", Url: "linkedin.com/in/aaa", FollowersCount: 10})
+	neo4jtest.LinkNodes(ctx, driver, "1", "l1", "HAS")
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "2"})
+	neo4jtest.CreateSocial(ctx, driver, tenantName, neo4jentity.SocialEntity{Id: "l2", Url: "linkedin.com/in/aaa", FollowersCount: 20})
+	neo4jtest.LinkNodes(ctx, driver, "2", "l2", "HAS")
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "empty"})
+
+	expectedAsc := []string{"1", "2", "empty"}
+	expectedDesc := []string{"2", "1", "empty"}
+
+	verifyContactSortOrder(t, model.ColumnViewTypeContactsLinkedinFollowerCount, commonModel.SortingDirectionAsc, expectedAsc)
+	verifyContactSortOrder(t, model.ColumnViewTypeContactsLinkedinFollowerCount, commonModel.SortingDirectionDesc, expectedDesc)
+}
+
 func assertContactSearch(t *testing.T, filterName model.ColumnViewType, searchValue any, operator commonModel.ComparisonOperator, totalAvailable int64, totalElements int64) {
 	rawResponse, err := c.RawPost(getQuery("contact/ui_contacts_search"),
 		client.Var("limit", 10),
