@@ -188,7 +188,11 @@ func (r *emailWriteRepository) LinkWithContact(ctx context.Context, tx *neo4j.Ma
 				(t)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {id:$emailId})
 		MERGE (c)-[rel:HAS]->(e)
 		SET	rel.primary = $primary,
-			c.updatedAt = datetime()`
+			c.updatedAt = datetime()
+		WITH c, e WHERE $primary = true
+		MATCH (c)-[r:HAS]->(oe:Email)
+			WHERE oe.id <> e.id 
+			SET r.primary = false`
 	params := map[string]any{
 		"tenant":    tenant,
 		"contactId": contactId,
