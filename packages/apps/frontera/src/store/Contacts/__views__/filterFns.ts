@@ -201,16 +201,19 @@ const getFilterFn = (
         { property: ColumnViewType.ContactsCountry },
         (filter) => (row: Contact) => {
           if (!filter.active) return true;
+          const locations = row.value.locations;
+          const country = locations?.[0]?.countryCodeA2;
 
-          const countries = row.value.locations?.map((l) => l.countryCodeA2);
-
-          if (!countries)
+          if (!country)
             return (
               filter.operation === ComparisonOperator.IsEmpty ||
               filter.operation === ComparisonOperator.NotContains
             );
 
-          return filterTypeList(filter, countries as string[]);
+          return filterTypeList(
+            filter,
+            Array.isArray(country) ? country : [country],
+          );
         },
       )
       .with({ property: ColumnViewType.ContactsRegion }, (filter) => {
@@ -400,12 +403,12 @@ const filterTypeList = (filter: FilterItem, value: string[] | undefined) => {
     .with(ComparisonOperator.IsEmpty, () => !value?.length)
     .with(ComparisonOperator.IsNotEmpty, () => value?.length)
     .with(
-      ComparisonOperator.NotContains,
+      ComparisonOperator.NotIn,
       () =>
         !value?.length ||
         (value?.length && !value.some((v) => filterValue?.includes(v))),
     )
-    .with(ComparisonOperator.Contains, () => {
+    .with(ComparisonOperator.In, () => {
       return value?.length && value?.some((v) => filterValue?.includes(v));
     })
 

@@ -341,34 +341,31 @@ const columns: Record<string, Column> = {
       ),
     },
   ),
-  [ColumnViewType.ContactsCountry]: columnHelper.accessor(
-    'value.locations.country',
-    {
-      id: ColumnViewType.ContactsCountry,
-      minSize: 91,
-      maxSize: 650,
-      enableResizing: true,
-      enableColumnFilter: false,
-      enableSorting: false,
-      cell: (props) => {
-        const value = props.getValue()?.id;
+  [ColumnViewType.ContactsCountry]: columnHelper.accessor('value.locations', {
+    id: ColumnViewType.ContactsCountry,
+    minSize: 91,
+    maxSize: 650,
+    enableResizing: true,
+    enableColumnFilter: false,
+    enableSorting: false,
+    cell: (props) => {
+      const value = props.row.original.value.id;
 
-        return <CountryCell id={value} type='contact' />;
-      },
-      header: (props) => (
-        <THead<HTMLInputElement>
-          title='Country'
-          id={ColumnViewType.ContactsCountry}
-          {...getTHeadProps<Contact>(props)}
-        />
-      ),
-      skeleton: () => (
-        <div className='flex flex-col gap-1'>
-          <Skeleton className='w-[25%] h-[14px]' />
-        </div>
-      ),
+      return <CountryCell id={value} type='contact' />;
     },
-  ),
+    header: (props) => (
+      <THead<HTMLInputElement>
+        title='Country'
+        id={ColumnViewType.ContactsCountry}
+        {...getTHeadProps<Contact>(props)}
+      />
+    ),
+    skeleton: () => (
+      <div className='flex flex-col gap-1'>
+        <Skeleton className='w-[25%] h-[14px]' />
+      </div>
+    ),
+  }),
 
   [ColumnViewType.ContactsLinkedinFollowerCount]: columnHelper.accessor(
     'value.linkedInFollowerCount',
