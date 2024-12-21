@@ -753,7 +753,6 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 			//ColumnViewTypeContactsLanguages                  ColumnViewType = "CONTACTS_LANGUAGES"
 			//ColumnViewTypeContactsTimeInCurrentRole          ColumnViewType = "CONTACTS_TIME_IN_CURRENT_ROLE"
 			//ColumnViewTypeContactsExperience                 ColumnViewType = "CONTACTS_EXPERIENCE"
-			//ColumnViewTypeContactsLinkedinFollowerCount      ColumnViewType = "CONTACTS_LINKEDIN_FOLLOWER_COUNT"
 			//ColumnViewTypeContactsConnections                ColumnViewType = "CONTACTS_CONNECTIONS"
 			//ColumnViewTypeContactsFlows                      ColumnViewType = "CONTACTS_FLOWS"
 			//ColumnViewTypeContactsFlowStatus                 ColumnViewType = "CONTACTS_FLOW_STATUS"
@@ -850,6 +849,9 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 				}
 
 				linkedInFilter.Filters = append(linkedInFilter.Filters, parentInnerGroupFilter)
+			}
+			if filter.Filter.Property == model.ColumnViewTypeContactsLinkedinFollowerCount.String() {
+				createNumberCypherFilter(filter, linkedInFilter, string(neo4jentity.SocialPropertyFollowersCount))
 			}
 			if filter.Filter.Property == model.ColumnViewTypeContactsOrganization.String() {
 				if filter.Filter.Operation == commonmodel.ComparisonOperatorNotContains {
@@ -974,7 +976,7 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 	//region selectQuery to fetch data
 	{
 		selectQuery += fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact_%s) `, tenant)
-		if linkedInFilterCypher != "" || (sort != nil && (sort.By == model.ColumnViewTypeContactsLinkedin.String())) {
+		if linkedInFilterCypher != "" || (sort != nil && (sort.By == model.ColumnViewTypeContactsLinkedin.String() || sort.By == model.ColumnViewTypeContactsLinkedinFollowerCount.String())) {
 			selectQuery += fmt.Sprintf(` OPTIONAL MATCH (c)-[:HAS]->(sl:Social_%s) WHERE sl.url CONTAINS 'linkedin.com/in'  WITH *`, tenant)
 		}
 		if tagFilterCypher != "" {
@@ -1079,6 +1081,14 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 		} else {
 			aliases += `CASE WHEN (COALESCE(sl.alias, '') + COALESCE(sl.url, '')) <> '' THEN toLower(COALESCE(sl.alias, '') + COALESCE(sl.url, '')) ELSE '' END as SORT_BY `
 		}
+	}
+	if sort != nil && sort.By == model.ColumnViewTypeContactsLinkedinFollowerCount.String() {
+		if sort.Direction == commonmodel.SortingDirectionAsc {
+			aliases += `CASE WHEN sl.followersCount IS NULL THEN 999999999 ELSE sl.followersCount END as SORT_BY `
+		} else {
+			aliases += `CASE WHEN sl.followersCount IS NULL THEN -999999999 ELSE sl.followersCount END as SORT_BY `
+		}
+
 	}
 	if sort != nil && sort.By == model.ColumnViewTypeContactsOrganization.String() {
 		if sort.Direction == commonmodel.SortingDirectionAsc {
