@@ -29,9 +29,11 @@ import { AllOrganizationsView } from './__views__/AllOrganizations.view';
 import { Organization, type OrganizationDatum } from './Organization.dto';
 import { OrganizationsService } from './__service__/Organizations.service';
 
+type SaveOrganizationPayload = SaveOrganizationMutationVariables['input'];
+
 export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
   chunkSize = 50;
-  private service: OrganizationsService;
+  private service = OrganizationsService.getInstance();
   @observable accessor searchResults: Map<string, string[]> = new Map();
   @observable accessor cursors: Map<string, number> = new Map();
   @observable accessor availableCounts: Map<string, number> = new Map();
@@ -42,8 +44,6 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
       getId: (data) => data?.id,
       factory: Organization,
     });
-
-    this.service = OrganizationsService.getInstance(this.transport);
 
     new ProfileView(this);
     new CustomersView(this);
@@ -187,8 +187,10 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
 
       runInAction(() => {
         ui_organizations.forEach((raw) => {
-          if (this.value.has(raw.id)) {
-            Object.assign(raw, this.value.get(raw.id)?.value);
+          const foundRecord = this.value.get(raw.id);
+
+          if (foundRecord) {
+            Object.assign(foundRecord.value, raw);
           } else {
             const record = new Organization(this, raw);
 
@@ -257,6 +259,7 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
 
         if (record) {
           Object.assign(record.value, data);
+          record.version++;
         } else {
           const record = new Organization(this, data);
 
@@ -270,7 +273,7 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
 
   @action
   public async create(
-    payload: SaveOrganizationMutationVariables['input'],
+    payload: SaveOrganizationPayload,
     opts?: { onSucces?: (serverId: string) => void },
   ) {
     let tempId = '';
@@ -313,6 +316,54 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
           'Failed to create organization.',
           'create-org-faillure',
         );
+      });
+    }
+  }
+
+  @action
+  public async import(globalId: number, payload?: SaveOrganizationPayload) {
+    let serverId = '';
+
+    try {
+      const { organization_SaveByGlobalOrganization } =
+        await this.service.importOrganization({
+          globalOrganizationId: globalId,
+        });
+
+      serverId = organization_SaveByGlobalOrganization?.id;
+
+      runInAction(() => {
+        if (!serverId) return;
+
+        const record = new Organization(
+          this,
+          Organization.default({ id: serverId, ...(payload ?? {}) }),
+        );
+
+        this.value.set(record.id, record);
+        this.version++;
+
+        this.sync({
+          action: 'APPEND',
+          ids: [record.id],
+        });
+
+        this.root.ui.toastSuccess(
+          'Organization added successfully!',
+          record.id,
+        );
+      });
+    } catch (error) {
+      runInAction(() => {
+        this.root.ui.toastError(
+          'Failed to add organization.',
+          'create-org-faillure',
+        );
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+        this.invalidate(serverId);
       });
     }
   }

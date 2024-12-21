@@ -100,6 +100,7 @@ export default defineConfig({
       '@utils': path.resolve(__dirname, './src/utils'),
       '@invoices': path.resolve(__dirname, './src/routes/invoices/src'),
       '@opportunities': path.resolve(__dirname, './src/routes/prospects/src'),
+      '@domain': path.resolve(__dirname, './src/domain'),
     },
   },
 });

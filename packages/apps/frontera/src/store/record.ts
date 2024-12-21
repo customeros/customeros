@@ -4,6 +4,7 @@ import type { Store } from './_store';
 
 export class Entity<T extends object> {
   @observable.deep accessor value: T;
+  @observable accessor version: number = 0;
 
   constructor(public store: Store<T, Entity<T>>, data: T) {
     this.value = data;

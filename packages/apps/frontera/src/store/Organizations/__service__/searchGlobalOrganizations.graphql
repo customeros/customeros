@@ -1,0 +1,11 @@
+query searchGlobalOrganizations($searchTerm: String!, $limit: Int!) {
+  globalOrganizations_Search(searchTerm: $searchTerm, limit: $limit) {
+    id
+    name
+    primaryDomain
+    website
+    logoUrl
+    iconUrl
+    organizationId
+  }
+}

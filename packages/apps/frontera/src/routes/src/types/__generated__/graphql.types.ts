@@ -2478,9 +2478,9 @@ export type Mutation = {
   emailRemoveFromContact: Result;
   emailRemoveFromOrganization: Result;
   emailRemoveFromUser: Result;
-  emailReplaceForContact: Email;
-  emailReplaceForOrganization: Email;
-  emailReplaceForUser: Email;
+  emailReplaceForContact?: Maybe<Email>;
+  emailReplaceForOrganization?: Maybe<Email>;
+  emailReplaceForUser?: Maybe<Email>;
   emailSetPrimaryForContact: Result;
   email_Validate: ActionResponse;
   externalSystem_Create: Scalars['ID']['output'];
@@ -2548,7 +2548,7 @@ export type Mutation = {
   /** @deprecated No longer supported */
   organization_RemoveTag: ActionResponse;
   organization_Save: Organization;
-  organization_SaveByGlobalOrganization: Organization;
+  organization_SaveByGlobalOrganization: OrganizationUiDetails;
   /** @deprecated No longer supported */
   organization_SetOwner: Organization;
   organization_Show: Scalars['ID']['output'];
@@ -2561,16 +2561,12 @@ export type Mutation = {
   organization_UpdateOnboardingStatus: Organization;
   phoneNumberMergeToContact: PhoneNumber;
   phoneNumberMergeToOrganization: PhoneNumber;
-  phoneNumberMergeToUser: PhoneNumber;
   phoneNumberRemoveFromContactByE164: Result;
   phoneNumberRemoveFromContactById: Result;
   phoneNumberRemoveFromOrganizationByE164: Result;
   phoneNumberRemoveFromOrganizationById: Result;
-  phoneNumberRemoveFromUserByE164: Result;
-  phoneNumberRemoveFromUserById: Result;
   phoneNumberUpdateInContact: PhoneNumber;
   phoneNumberUpdateInOrganization: PhoneNumber;
-  phoneNumberUpdateInUser: PhoneNumber;
   phoneNumber_Update: PhoneNumber;
   reminder_Create?: Maybe<Scalars['ID']['output']>;
   reminder_Update?: Maybe<Scalars['ID']['output']>;
@@ -3189,11 +3185,6 @@ export type MutationPhoneNumberMergeToOrganizationArgs = {
   organizationId: Scalars['ID']['input'];
 };
 
-export type MutationPhoneNumberMergeToUserArgs = {
-  input: PhoneNumberInput;
-  userId: Scalars['ID']['input'];
-};
-
 export type MutationPhoneNumberRemoveFromContactByE164Args = {
   contactId: Scalars['ID']['input'];
   e164: Scalars['String']['input'];
@@ -3214,16 +3205,6 @@ export type MutationPhoneNumberRemoveFromOrganizationByIdArgs = {
   organizationId: Scalars['ID']['input'];
 };
 
-export type MutationPhoneNumberRemoveFromUserByE164Args = {
-  e164: Scalars['String']['input'];
-  userId: Scalars['ID']['input'];
-};
-
-export type MutationPhoneNumberRemoveFromUserByIdArgs = {
-  id: Scalars['ID']['input'];
-  userId: Scalars['ID']['input'];
-};
-
 export type MutationPhoneNumberUpdateInContactArgs = {
   contactId: Scalars['ID']['input'];
   input: PhoneNumberRelationUpdateInput;
@@ -3232,11 +3213,6 @@ export type MutationPhoneNumberUpdateInContactArgs = {
 export type MutationPhoneNumberUpdateInOrganizationArgs = {
   input: PhoneNumberRelationUpdateInput;
   organizationId: Scalars['ID']['input'];
-};
-
-export type MutationPhoneNumberUpdateInUserArgs = {
-  input: PhoneNumberRelationUpdateInput;
-  userId: Scalars['ID']['input'];
 };
 
 export type MutationPhoneNumber_UpdateArgs = {
@@ -3953,10 +3929,6 @@ export enum PersonTitle {
   Ms = 'MS',
 }
 
-/**
- * Describes a phone number associated with a `Contact` in customerOS.
- * **A `return` object.**
- */
 export type PhoneNumber = {
   __typename?: 'PhoneNumber';
   appSource?: Maybe<Scalars['String']['output']>;
@@ -3965,18 +3937,9 @@ export type PhoneNumber = {
   createdAt: Scalars['Time']['output'];
   /** The phone number in e164 format. */
   e164?: Maybe<Scalars['String']['output']>;
-  /**
-   * The unique ID associated with the phone number.
-   * **Required**
-   */
   id: Scalars['ID']['output'];
-  /** Defines the type of phone number. */
   label?: Maybe<PhoneNumberLabel>;
   organizations: Array<Organization>;
-  /**
-   * Determines if the phone number is primary or not.
-   * **Required**
-   */
   primary: Scalars['Boolean']['output'];
   rawPhoneNumber?: Maybe<Scalars['String']['output']>;
   source: DataSource;
@@ -3985,30 +3948,13 @@ export type PhoneNumber = {
   validated?: Maybe<Scalars['Boolean']['output']>;
 };
 
-/**
- * Describes a phone number associated with a `Contact` in customerOS.
- * **A `create` object.**
- */
 export type PhoneNumberInput = {
   countryCodeA2?: InputMaybe<Scalars['String']['input']>;
-  /** Defines the type of phone number. */
   label?: InputMaybe<PhoneNumberLabel>;
-  /**
-   * The phone number in e164 format.
-   * **Required**
-   */
   phoneNumber: Scalars['String']['input'];
-  /**
-   * Determines if the phone number is primary or not.
-   * **Required**
-   */
   primary?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
-/**
- * Defines the type of phone number.
- * **A `response` object. **
- */
 export enum PhoneNumberLabel {
   Home = 'HOME',
   Main = 'MAIN',
@@ -4023,33 +3969,12 @@ export type PhoneNumberParticipant = {
   type?: Maybe<Scalars['String']['output']>;
 };
 
-/**
- * Describes a phone number associated with a `Contact` in customerOS.
- * **An `update` object.**
- */
 export type PhoneNumberRelationUpdateInput = {
-  /** Deprecated */
-  countryCodeA2?: InputMaybe<Scalars['String']['input']>;
-  /**
-   * The unique ID associated with the phone number.
-   * **Required**
-   */
   id: Scalars['ID']['input'];
-  /** Defines the type of phone number. */
   label?: InputMaybe<PhoneNumberLabel>;
-  /** Deprecated */
-  phoneNumber?: InputMaybe<Scalars['String']['input']>;
-  /**
-   * Determines if the phone number is primary or not.
-   * **Required**
-   */
   primary?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
-/**
- * Describes a phone number associated with a `Contact` in customerOS.
- * **An `update` object.**
- */
 export type PhoneNumberUpdateInput = {
   countryCodeA2?: InputMaybe<Scalars['String']['input']>;
   id: Scalars['ID']['input'];

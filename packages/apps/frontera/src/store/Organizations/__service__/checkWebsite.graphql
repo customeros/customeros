@@ -1,0 +1,18 @@
+query checkWebsite($website: String!) {
+  organization_CheckWebsite(website: $website) {
+    accepted
+    primary
+    domain
+    primaryDomain
+    globalOrganization {
+      id
+      name
+      logoUrl
+      iconUrl
+      domains
+      website
+      primaryDomain
+      organizationId
+    }
+  }
+}

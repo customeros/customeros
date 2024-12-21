@@ -200,7 +200,7 @@ export class ContactStore extends Syncable<Contact> {
 
       runInAction(() => {
         this.isLoading = false;
-        serverId = emailReplaceForContact.id;
+        serverId = emailReplaceForContact?.id;
       });
     } catch (e) {
       runInAction(() => {

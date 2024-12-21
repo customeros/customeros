@@ -13,14 +13,16 @@ import { Command as CommandIcon } from '@ui/media/icons/Command';
 
 interface CommandInputProps
   extends React.InputHTMLAttributes<HTMLInputElement> {
-  label?: string;
   value?: string;
   asChild?: boolean;
   dataTest?: string;
   placeholder: string;
+  label?: React.ReactNode;
   wrapperClassName?: string;
   children?: React.ReactNode;
+  rightElement?: React.ReactNode;
   inputWrapperClassName?: string;
+  bottomAccessory?: React.ReactNode;
   onValueChange?: (value: string) => void;
   onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
 }
@@ -30,9 +32,11 @@ export const CommandInput = ({
   asChild,
   children,
   dataTest,
-  placeholder,
-  onValueChange,
   onKeyDown,
+  placeholder,
+  rightElement,
+  onValueChange,
+  bottomAccessory,
   wrapperClassName,
   inputWrapperClassName,
   ...rest
@@ -44,11 +48,15 @@ export const CommandInput = ({
         wrapperClassName,
       )}
     >
-      {label && (
-        <Tag size='md' variant='subtle' colorScheme='gray'>
-          <TagLabel>{label}</TagLabel>
-        </Tag>
-      )}
+      {label ? (
+        typeof label === 'string' ? (
+          <Tag size='md' variant='subtle' colorScheme='gray'>
+            <TagLabel>{label}</TagLabel>
+          </Tag>
+        ) : (
+          label
+        )
+      ) : null}
       <div
         className={cn(
           'w-full min-h-10 flex items-center',
@@ -64,7 +72,9 @@ export const CommandInput = ({
           onValueChange={onValueChange}
           {...rest}
         />
+        {rightElement}
       </div>
+      {bottomAccessory}
     </div>
   );
 };
@@ -215,6 +225,7 @@ export const CommandCancelIconButton = ({
       icon={<XClose />}
       onClick={onClose}
       aria-label='cancel'
+      className='absolute top-6 right-6'
       onKeyDown={(e) => {
         if (e.key === 'Enter') {
           e.stopPropagation();

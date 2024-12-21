@@ -91,7 +91,11 @@ export const Search = observer(() => {
     {
       '/': () => {
         setTimeout(() => {
-          inputRef.current?.focus();
+          if (tableType === TableViewType.Organizations) {
+            store.ui.commandMenu.toggle('AddNewOrganization');
+          } else {
+            inputRef.current?.focus();
+          }
         }, 0);
       },
     },

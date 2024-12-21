@@ -1,9 +1,6 @@
 import { when, makeAutoObservable } from 'mobx';
-import { FlowSendersStore } from '@store/FlowSenders/FlowSenders.store.ts';
-import { FlowParticipantsStore } from '@store/FlowParticipants/FlowParticipants.store.ts';
 
-import type { Transport } from './transport';
-
+import { Transport } from './transport';
 import { Persister } from './persister';
 import { UIStore } from './UI/UI.store';
 import { MailStore } from './Mail/Mail.store';
@@ -22,10 +19,12 @@ import { ContractsStore } from './Contracts/Contracts.store';
 import { RemindersStore } from './Reminders/Reminders.store';
 import { CustomFieldsStore } from './Settings/CustomFields.store';
 import { GlobalCacheStore } from './GlobalCache/GlobalCache.store';
+import { FlowSendersStore } from './FlowSenders/FlowSenders.store.ts';
 import { TableViewDefsStore } from './TableViewDefs/TableViewDefs.store';
 import { OpportunitiesStore } from './Opportunities/Opportunities.store';
 import { OrganizationsStore } from './Organizations/Organizations.store';
 import { TimelineEventsStore } from './TimelineEvents/TimelineEvents.store';
+import { FlowParticipantsStore } from './FlowParticipants/FlowParticipants.store.ts';
 import { ContractLineItemsStore } from './ContractLineItems/ContractLineItems.store';
 import { FlowEmailVariablesStore } from './FlowEmailVariables/FlowEmailVariables.store';
 import { ExternalSystemInstancesStore } from './ExternalSystemInstances/ExternalSystemInstances.store';
@@ -33,6 +32,7 @@ import { ExternalSystemInstancesStore } from './ExternalSystemInstances/External
 export class RootStore {
   demoMode = false;
   transactions: TransactionService;
+  private transport = Transport.getInstance();
 
   ui: UIStore;
   mail: MailStore;
@@ -60,10 +60,11 @@ export class RootStore {
   mailboxes: MailboxesStore;
   externalSystemInstances: ExternalSystemInstancesStore;
 
-  constructor(private transport: Transport, demoMode: boolean = false) {
+  static instance: RootStore;
+
+  constructor() {
     makeAutoObservable(this);
 
-    this.demoMode = demoMode;
     this.transactions = new TransactionService(this, this.transport);
 
     this.ui = new UIStore(this, this.transport);
@@ -134,6 +135,14 @@ export class RootStore {
       this.flows.bootstrap(),
       this.flowEmailVariables.bootstrap(),
     ]);
+  }
+
+  public static getInstance() {
+    if (!RootStore.instance) {
+      RootStore.instance = new RootStore();
+    }
+
+    return RootStore.instance;
   }
 
   get isAuthenticating() {

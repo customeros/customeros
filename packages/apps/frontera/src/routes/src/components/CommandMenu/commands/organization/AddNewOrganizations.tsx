@@ -1,189 +1,152 @@
-import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
+import { useKeyBindings } from 'rooks';
 import { observer } from 'mobx-react-lite';
-import { useDidMount, useKeyBindings } from 'rooks';
+import { AddSearchOrganizationsUsecase } from '@domain/usecases/command-menu/add-search-organizations.usecase';
 
-import { Input } from '@ui/form/Input';
-import { Button } from '@ui/form/Button/Button';
-import { isValidUrl } from '@utils/urlValidation';
+import { cn } from '@ui/utils/cn';
+import { Avatar } from '@ui/media/Avatar';
+import { Spinner } from '@ui/feedback/Spinner';
 import { useStore } from '@shared/hooks/useStore';
-import { Command, CommandCancelButton } from '@ui/overlay/CommandMenu';
-import { OrganizationStage, OrganizationRelationship } from '@graphql/types';
+import { User03 } from '@ui/media/icons/User03.tsx';
+import { PlusCircle } from '@ui/media/icons/PlusCircle.tsx';
+import { ArrowNarrowRight } from '@ui/media/icons/ArrowNarrowRight';
+import {
+  Command,
+  CommandItem,
+  CommandInput,
+  CommandCancelIconButton,
+} from '@ui/overlay/CommandMenu';
+
+const usecase = new AddSearchOrganizationsUsecase();
 
 export const AddNewOrganization = observer(() => {
   const store = useStore();
-  const [allowSubmit, setAllowSubmit] = useState(false);
-  const { organizations, tableViewDefs, ui } = useStore();
-  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
 
-  const [website, setWebsite] = useState('');
-  const [name, setName] = useState<string>('');
-  const [validation, setValidation] = useState<boolean>(false);
-
-  const preset = searchParams?.get('preset');
-
-  const tableViewName = tableViewDefs.getById(`${preset}`)?.value.name;
-
-  useEffect(() => {
-    if (ui.searchCount === 0) {
-      setName(searchParams.get('search') ?? '');
-    }
-  }, []);
-
-  useDidMount(() => {
-    setTimeout(() => {
-      setAllowSubmit(true);
-    }, 100);
-  });
-
-  const handleConfirm = () => {
-    if (!allowSubmit) return;
-    setAllowSubmit(false);
-
-    setValidation(false);
-
-    if (website && !isValidUrl(website)) {
-      setValidation(true);
-      setAllowSubmit(true);
-
-      return;
-    }
-    const payload = defaultValuesNewOrganization(tableViewName ?? '');
-
-    organizations.create({
-      ...payload,
-      website,
-      name: name || 'Unnamed',
-    });
-
+  const handleClose = () => {
+    store.ui.commandMenu.clearContext();
     store.ui.commandMenu.toggle('AddNewOrganization');
+    store.ui.commandMenu.clearCallback();
   };
 
-  useKeyBindings(
-    {
-      Enter: handleConfirm,
-      Escape: () => (store.ui.commandMenu.isOpen = false),
-    },
-    { when: allowSubmit },
-  );
+  useKeyBindings({
+    Escape: handleClose,
+  });
 
   return (
-    <Command label={`Rename `}>
-      <div className='p-6 pb-4 flex flex-col gap-1 '>
-        <p className='font-semibold'>Create new organization</p>
-        <p className='text-sm'>
-          We’ll auto-enrich this organization using its website
-        </p>
-      </div>
-
-      <div className='pr-6 pl-6 pb-6 flex flex-col gap-2 '>
-        <div className='flex flex-col mb-0'>
-          <label htmlFor='website' className='text-sm font-semibold'>
-            Organization's website (optional)
-          </label>
-          <Input
-            autoFocus
-            id='website'
-            value={website}
-            variant='unstyled'
-            placeholder='Website link'
-            onChange={(e) => {
-              setWebsite(e.target.value);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Escape') {
-                store.ui.commandMenu.setOpen(false);
-              }
-            }}
-            onKeyUp={(e) => {
-              if (e.key === 'Backspace' && website.length === 0) {
-                setValidation(false);
-              }
-            }}
-          />
-          {validation && (
-            <p className='text-sm text-error-500 mt-1'>
-              Please insert a valid URL
+    <Command shouldFilter={false}>
+      <CommandInput
+        value={usecase.searchTerm}
+        onValueChange={usecase.setSearchTerm}
+        placeholder='Search by name or website'
+        label={<p className='font-medium'>Search 300,000+ organizations</p>}
+        rightElement={
+          usecase.isValidatingDomain && (
+            <Spinner
+              size='sm'
+              label='validating...'
+              className='text-gray-300 fill-gray-500 size-3'
+            />
+          )
+        }
+        bottomAccessory={
+          (usecase.domainValidationError ||
+            usecase.domainValidationMessage) && (
+            <p
+              className={cn(
+                'text-xs text-gray-500',
+                usecase.domainValidationError.length > 0 && 'text-error-500',
+              )}
+            >
+              {usecase.domainValidationError || usecase.domainValidationMessage}
             </p>
+          )
+        }
+      />
+
+      <CommandCancelIconButton onClose={handleClose} />
+
+      <Command.List>
+        {usecase.mixedOptions.length === 0 &&
+          !usecase.isLoading &&
+          !usecase.isValidatingDomain &&
+          !usecase.domainValidationError &&
+          usecase.searchTerm.length > 0 && (
+            <CommandItem
+              leftAccessory={<PlusCircle className='text-primary-700' />}
+              onSelect={() => {
+                usecase.addNewOrganization();
+              }}
+            >
+              Add {usecase.searchTerm}
+            </CommandItem>
           )}
-        </div>
-        <div className='flex flex-col'>
-          <label htmlFor='name' className='text-sm font-semibold'>
-            Organization name
-          </label>
-          <Input
-            id='name'
-            value={name}
-            variant='unstyled'
-            placeholder='Organization name'
-            defaultValue={searchParams.get('name') ?? ''}
-            dataTest='organizations-create-new-org-org-name'
-            onChange={(e) => {
-              setName(e.target.value);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                handleConfirm();
-              }
 
-              if (e.key === 'Escape') {
-                store.ui.commandMenu.setOpen(false);
-              }
-            }}
-          />
-        </div>
-      </div>
+        {usecase.mixedOptions.length > 0 &&
+          usecase.mixedOptions.map((option, index) => {
+            const isBeingAdded =
+              usecase.isAddingOrganization &&
+              usecase.addingOrganizationId === option.id;
 
-      <div className='flex w-full gap-2 pl-6 pr-6 pb-6'>
-        <CommandCancelButton
-          onClose={() => {
-            store.ui.commandMenu.setOpen(false);
-            store.ui.commandMenu.setType('OrganizationCommands');
-          }}
-        />
+            return (
+              <CommandItem
+                className='group'
+                key={option?.id || `option-${index}`}
+                onSelect={() => {
+                  if (option.source === 'tenant') {
+                    navigate('/organization/' + option.id);
+                    store.ui.commandMenu.toggle('AddNewOrganization');
+                    usecase.reset();
 
-        <Button
-          className='w-full'
-          colorScheme='primary'
-          onClick={handleConfirm}
-        >
-          Create
-        </Button>
-      </div>
+                    return;
+                  }
+                  usecase.addNewOrganization(option);
+                }}
+                leftAccessory={
+                  <Avatar
+                    size='xxs'
+                    textSize='xxs'
+                    name={option.name}
+                    variant='outlineSquare'
+                    icon={<User03 className='text-primary-700' />}
+                    src={
+                      (option?.iconUrl ? option.iconUrl : option?.logoUrl) ||
+                      undefined
+                    }
+                  />
+                }
+                rightAccessory={
+                  option.source === 'tenant' ? (
+                    <ArrowNarrowRight className='invisible !text-gray-500 group-hover:visible group-data-[selected="true"]:visible' />
+                  ) : isBeingAdded ? (
+                    <Spinner
+                      size='sm'
+                      label='adding...'
+                      className='!text-gray-300 !fill-gray-500 size-3'
+                    />
+                  ) : (
+                    <PlusCircle className='invisible !text-gray-500 group-hover:visible group-data-[selected="true"]:visible' />
+                  )
+                }
+              >
+                <div className='flex items-center gap-2 truncate'>
+                  <span className='truncate'>{option?.name || 'Unnamed'}</span>
+                  <span>•</span>
+                  {option.website && (
+                    <span className='truncate'>
+                      {getFormattedLink(option.website)}
+                    </span>
+                  )}
+                </div>
+              </CommandItem>
+            );
+          })}
+      </Command.List>
     </Command>
   );
 });
 
-const defaultValuesNewOrganization = (organizationName: string) => {
-  switch (organizationName) {
-    case 'Customers':
-      return {
-        relationship: OrganizationRelationship.Customer,
-        stage: OrganizationStage.Onboarding,
-      };
-    case 'Leads':
-      return {
-        relationship: OrganizationRelationship.Prospect,
-        stage: OrganizationStage.Lead,
-      };
-    case 'Nurture':
-      return {
-        relationship: OrganizationRelationship.Prospect,
-        stage: OrganizationStage.Target,
-      };
-    case 'All orgs':
-      return {
-        relationship: OrganizationRelationship.Prospect,
-        stage: OrganizationStage.Target,
-      };
-
-    case 'Churn':
-      return {
-        relationship: OrganizationRelationship.FormerCustomer,
-        stage: OrganizationStage.PendingChurn,
-      };
-    default:
-      return {};
-  }
+const getFormattedLink = (url: string): string => {
+  return url.replace(/^(https?:\/\/)?(www\.)?([^/?#]+).*/i, '$3');
 };
