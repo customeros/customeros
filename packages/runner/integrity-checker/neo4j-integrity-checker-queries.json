@@ -141,7 +141,7 @@
         },
         {
           "name": "Duplicated organizations by socials",
-          "query": "MATCH (t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)--(s:Social) WHERE s.url is not null and s.url <> '' WITH t, s.url AS sharedUrl, COUNT(o) AS orgCount WHERE orgCount > 1 RETURN count(sharedUrl)"
+          "query": "MATCH (t:Tenant {active:true})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)--(s:Social) WHERE s.url contains 'linkedin.com/company' WITH t, s.url AS sharedUrl, COUNT(o) AS orgCount WHERE orgCount > 1 RETURN count(sharedUrl)"
         },
         {
           "name": "Organizations with wrong renewal likelihood",
@@ -279,7 +279,7 @@
         },
         {
           "name": "Duplicated contacts by socials",
-          "query": "MATCH (t:Tenant)<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)--(s:Social) WHERE s.url is not null and s.url <> '' WITH t, s.url AS sharedUrl, COUNT(c) AS contactCount WHERE contactCount > 1 RETURN count(sharedUrl)"
+          "query": "MATCH (t:Tenant {active:true})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)--(s:Social) WHERE s.url contains 'linkedin.com/in' WITH t, s.url AS sharedUrl, COUNT(c) AS contactCount WHERE contactCount > 1 RETURN count(sharedUrl)"
         },
         {
           "name": "Percentage of contacts without primary email",
