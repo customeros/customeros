@@ -159,14 +159,15 @@ func registerOutreachRoutes(ctx context.Context, r *gin.Engine, s *service.Servi
 func registerMailStackRoutes(ctx context.Context, r *gin.Engine, s *service.Services, cache *commoncaches.Cache) {
 	setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/domains", mailStackV1Path), s, cache, restmailstack.RegisterNewDomain(s))
 	setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/domains", mailStackV1Path), s, cache, restmailstack.GetDomains(s))
-	// setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/domains/recommendations", mailStackV1Path), s, cache, restmailstack.GetDomainRecommendations(s))
+	setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/domains/recommendations", mailStackV1Path), s, cache, restmailstack.RecommendDomain(s))
 	setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/domains/configure", mailStackV1Path), s, cache, restmailstack.ConfigureDomain(s))
 
 	setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/domains/:domain/mailboxes", mailStackV1Path), s, cache, restmailstack.RegisterNewMailbox(s))
 	setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/domains/:domain/mailboxes", mailStackV1Path), s, cache, restmailstack.GetMailboxes(s))
 
 	setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/domains/:domain/dns", mailStackV1Path), s, cache, restmailstack.DNS(s))
-	// setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/domains/:domain/dns", mailStackV1Path), s, cache, restmailstack.CreateDNSRecord(s))
+	setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/domains/:domain/dns", mailStackV1Path), s, cache, restmailstack.AddDNSRecord(s))
+	setupRestRoute(ctx, r, "DELETE", fmt.Sprintf("%s/domains/:domain/dns/:dnsRecordId", mailStackV1Path), s, cache, restmailstack.DeleteDNSRecord(s))
 }
 
 func setupRestRoute(ctx context.Context, r *gin.Engine, method, path string, s *service.Services, cache *commoncaches.Cache, handler gin.HandlerFunc) {

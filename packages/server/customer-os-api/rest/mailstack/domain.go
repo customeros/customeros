@@ -322,3 +322,35 @@ func GetDomains(services *service.Services) gin.HandlerFunc {
 		c.JSON(http.StatusOK, response)
 	}
 }
+
+func RecommendDomain(s *service.Services) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "RecommendDomain", c.Request.Header)
+		defer span.Finish()
+		tracing.TagComponentRest(span)
+		tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+
+		tenant := common.GetTenantFromContext(ctx)
+		// if tenant missing return auth error
+		if tenant == "" {
+			rest.SendError(c, span, http.StatusUnauthorized, enum.ErrUnauthorized)
+			span.LogFields(tracingLog.String("result", "Missing tenant in context"))
+			return
+		}
+
+		// get root domain
+		baseName, exists := c.GetQuery("baseName")
+		if !exists {
+			rest.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("must provide baseName parameter"))
+			return
+		}
+
+		// get domain recommendations
+		recommendations := s.CommonServices.MailboxService.RecommendOutboundDomains(ctx, baseName, 20)
+
+		c.JSON(http.StatusCreated, DomainRecommendationResponse{
+			BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
+			Domains:      recommendations,
+		})
+	}
+}
