@@ -20,7 +20,6 @@ import (
 	contractevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/event"
 	invoiceevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoice"
 	issueevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/issue/event"
-	jobroleevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/events"
 	locationevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/events"
 	servicelineitemevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/event"
 	opportunityevent "github.com/openline-ai/openline-customer-os/packages/server/events/event/opportunity"
@@ -36,7 +35,6 @@ type GraphSubscriber struct {
 	cfg                         *config.Config
 	organizationEventHandler    *OrganizationEventHandler
 	locationEventHandler        *LocationEventHandler
-	jobRoleEventHandler         *JobRoleEventHandler
 	issueEventHandler           *IssueEventHandler
 	commentEventHandler         *CommentEventHandler
 	opportunityEventHandler     *OpportunityEventHandler
@@ -52,7 +50,6 @@ func NewGraphSubscriber(log logger.Logger, db *esdb.Client, services *service.Se
 		cfg:                         cfg,
 		organizationEventHandler:    NewOrganizationEventHandler(log, services, grpcClients, cache),
 		locationEventHandler:        NewLocationEventHandler(services),
-		jobRoleEventHandler:         NewJobRoleEventHandler(services),
 		issueEventHandler:           NewIssueEventHandler(log, services, grpcClients),
 		commentEventHandler:         NewCommentEventHandler(log, services),
 		opportunityEventHandler:     NewOpportunityEventHandler(log, services, grpcClients),
@@ -219,9 +216,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return nil
 	case locationevents.LocationValidatedV1:
 		_ = s.locationEventHandler.OnLocationValidated(ctx, evt)
-		return nil
-	case jobroleevents.JobRoleCreateV1:
-		_ = s.jobRoleEventHandler.OnJobRoleCreate(ctx, evt)
 		return nil
 
 	case commentevent.CommentCreateV1:
