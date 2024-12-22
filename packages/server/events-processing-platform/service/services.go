@@ -25,7 +25,6 @@ type Services struct {
 	//GRPC services
 	OrganizationService    *organizationService
 	LocationService        *locationService
-	JobRoleService         *jobRoleService
 	IssueService           *issueService
 	CommentService         *commentService
 	OpportunityService     *opportunityService
@@ -48,7 +47,6 @@ func InitServices(cfg *config.Config, repositories *repository.Repositories, agg
 	//GRPC services
 	services.OrganizationService = NewOrganizationService(log, commandHandlers.Organization, aggregateStore, cfg, &services)
 	services.LocationService = NewLocationService(log, commandHandlers.Location)
-	services.JobRoleService = NewJobRoleService(log, commandHandlers.JobRole)
 	services.IssueService = NewIssueService(log, commandHandlers.Issue)
 	services.CommentService = NewCommentService(&services, log, aggregateStore, cfg)
 	services.OpportunityService = NewOpportunityService(log, commandHandlers.Opportunity, aggregateStore, &services)
