@@ -348,7 +348,7 @@ func RecommendDomain(s *service.Services) gin.HandlerFunc {
 		// get domain recommendations
 		recommendations := s.CommonServices.MailboxService.RecommendOutboundDomains(ctx, baseName, 20)
 
-		c.JSON(http.StatusCreated, DomainRecommendationResponse{
+		c.JSON(http.StatusOK, DomainRecommendationResponse{
 			BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
 			Domains:      recommendations,
 		})
