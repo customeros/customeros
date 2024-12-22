@@ -165,9 +165,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 	case orgevents.OrganizationLocationLinkV1:
 		_ = s.organizationEventHandler.OnLocationLinkedToOrganization(ctx, evt)
 		return nil
-	case orgevents.OrganizationUnlinkDomainV1:
-		_ = s.organizationEventHandler.OnDomainUnlinkedFromOrganization(ctx, evt)
-		return nil
 	case orgevents.OrganizationRefreshArrV1:
 		_ = s.organizationEventHandler.OnRefreshArr(ctx, evt)
 		return nil

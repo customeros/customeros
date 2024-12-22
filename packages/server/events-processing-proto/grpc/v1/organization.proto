@@ -79,14 +79,6 @@ message UnlinkLocationFromBillingProfileGrpcRequest {
   string appSource = 6;
 }
 
-message UnLinkDomainFromOrganizationGrpcRequest {
-  string tenant = 1;
-  string organizationId = 2;
-  string domain = 3;
-  string loggedInUserId = 4;
-  string appSource = 5;
-}
-
 enum CustomFieldDataType {
   TEXT = 0;
   BOOL = 1;
@@ -228,7 +220,6 @@ message BillingProfileIdGrpcResponse {
 
 service organizationGrpcService {
   rpc LinkLocationToOrganization(LinkLocationToOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
-  rpc UnlinkDomainFromOrganization(UnLinkDomainFromOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc UpsertCustomFieldToOrganization(CustomFieldForOrganizationGrpcRequest) returns (CustomFieldIdGrpcResponse);
   rpc RefreshRenewalSummary(RefreshRenewalSummaryGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc RefreshDerivedData(RefreshDerivedDataGrpcRequest) returns (OrganizationIdGrpcResponse);

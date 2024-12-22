@@ -13,42 +13,9 @@ import (
 )
 
 const (
-	// Deprecated
-	OrganizationCreateV1 = "V1_ORGANIZATION_CREATE"
-	// Deprecated
-	OrganizationUpdateV1          = "V1_ORGANIZATION_UPDATE"
 	OrganizationPhoneNumberLinkV1 = "V1_ORGANIZATION_PHONE_NUMBER_LINK"
-	// Deprecated
-	OrganizationEmailLinkV1 = "V1_ORGANIZATION_EMAIL_LINK"
-	// Deprecated
-	OrganizationEmailUnlinkV1 = "V1_ORGANIZATION_EMAIL_UNLINK"
 	//Deprecated
-	OrganizationLocationLinkV1 = "V1_ORGANIZATION_LOCATION_LINK"
-	//Deprecated
-	OrganizationLinkDomainV1   = "V1_ORGANIZATION_LINK_DOMAIN"
-	OrganizationUnlinkDomainV1 = "V1_ORGANIZATION_UNLINK_DOMAIN"
-	//Deprecated
-	OrganizationAddSocialV1 = "V1_ORGANIZATION_ADD_SOCIAL"
-	//Deprecated
-	OrganizationRemoveSocialV1 = "V1_ORGANIZATION_REMOVE_SOCIAL"
-	//Deprecated
-	OrganizationUpdateRenewalLikelihoodV1 = "V1_ORGANIZATION_UPDATE_RENEWAL_LIKELIHOOD"
-	//Deprecated
-	OrganizationUpdateRenewalForecastV1 = "V1_ORGANIZATION_UPDATE_RENEWAL_FORECAST"
-	//Deprecated
-	OrganizationUpdateBillingDetailsV1 = "V1_ORGANIZATION_UPDATE_BILLING_DETAILS"
-	//Deprecated
-	OrganizationRequestRenewalForecastV1 = "V1_ORGANIZATION_RECALCULATE_RENEWAL_FORECAST_REQUEST"
-	//Deprecated
-	OrganizationRequestNextCycleDateV1 = "V1_ORGANIZATION_RECALCULATE_NEXT_CYCLE_DATE_REQUEST"
-	//Deprecated
-	OrganizationRequestScrapeByWebsiteV1 = "V1_ORGANIZATION_SCRAPE_BY_WEBSITE_REQUEST"
-	//Deprecated
-	OrganizationHideV1 = "V1_ORGANIZATION_HIDE"
-	//Deprecated
-	OrganizationShowV1 = "V1_ORGANIZATION_SHOW"
-	//Deprecated
-	OrganizationRefreshLastTouchpointV1            = "V1_ORGANIZATION_REFRESH_LAST_TOUCHPOINT"
+	OrganizationLocationLinkV1                     = "V1_ORGANIZATION_LOCATION_LINK"
 	OrganizationUpsertCustomFieldV1                = "V1_ORGANIZATION_UPSERT_CUSTOM_FIELD"
 	OrganizationAddParentV1                        = "V1_ORGANIZATION_ADD_PARENT"
 	OrganizationRemoveParentV1                     = "V1_ORGANIZATION_REMOVE_PARENT"
@@ -66,12 +33,8 @@ const (
 	// Deprecated
 	OrganizationRequestEnrichV1      = "V1_ORGANIZATION_ENRICH"
 	OrganizationRefreshDerivedDataV1 = "V1_ORGANIZATION_REFRESH_DERIVED_DATA"
-	//Deprecated
-	OrganizationAddTagV1 = "V1_ORGANIZATION_ADD_TAG"
-	//Deprecated
-	OrganizationRemoveTagV1      = "V1_ORGANIZATION_REMOVE_TAG"
-	OrganizationAddLocationV1    = "V1_ORGANIZATION_ADD_LOCATION"
-	OrganizationAdjustIndustryV1 = "V1_ORGANIZATION_ADJUST_INDUSTRY"
+	OrganizationAddLocationV1        = "V1_ORGANIZATION_ADD_LOCATION"
+	OrganizationAdjustIndustryV1     = "V1_ORGANIZATION_ADJUST_INDUSTRY"
 )
 
 type OrganizationLinkPhoneNumberEvent struct {

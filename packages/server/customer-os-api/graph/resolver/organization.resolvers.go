@@ -400,14 +400,7 @@ func (r *mutationResolver) OrganizationUnlinkAllDomains(ctx context.Context, org
 	}
 	if domainEntities != nil {
 		for _, domainEntity := range *domainEntities {
-			_, err := utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-				return r.Clients.OrganizationClient.UnlinkDomainFromOrganization(ctx, &organizationpb.UnLinkDomainFromOrganizationGrpcRequest{
-					Tenant:         common.GetTenantFromContext(ctx),
-					OrganizationId: organizationID,
-					LoggedInUserId: common.GetUserIdFromContext(ctx),
-					Domain:         domainEntity.Domain,
-				})
-			})
+			err = r.Services.CommonServices.OrganizationService.UnlinkDomain(ctx, nil, organizationID, domainEntity.Domain)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				graphql.AddErrorf(ctx, "Failed to unlink domain %s from organization %s", domainEntity.Domain, organizationID)

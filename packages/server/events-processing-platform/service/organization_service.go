@@ -56,34 +56,6 @@ func (s *organizationService) LinkLocationToOrganization(ctx context.Context, re
 	return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
 }
 
-func (s *organizationService) UnlinkDomainFromOrganization(ctx context.Context, request *organizationpb.UnLinkDomainFromOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
-	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.UnlinkDomainFromOrganization")
-	defer span.Finish()
-	tracing.SetServiceSpanTags(ctx, span, request.Tenant, utils.StringFirstNonEmpty(request.LoggedInUserId, request.LoggedInUserId))
-	tracing.LogObjectAsJson(span, "request", request)
-
-	// handle deadlines
-	if err := ctx.Err(); err != nil {
-		return nil, status.Error(codes.Canceled, "Context canceled")
-	}
-
-	// Check if the contract ID is valid
-	if request.OrganizationId == "" {
-		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("id"))
-	}
-
-	initAggregateFunc := func() eventstore.Aggregate {
-		return aggregate.NewOrganizationAggregateWithTenantAndID(request.Tenant, request.OrganizationId)
-	}
-	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{SkipLoadEvents: true}, request); err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("(UnlinkDomainFromOrganization.Handle) tenant:{%s}, err: %s", request.Tenant, err.Error())
-		return nil, grpcerr.ErrResponse(err)
-	}
-
-	return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
-}
-
 func (s *organizationService) RefreshRenewalSummary(ctx context.Context, request *organizationpb.RefreshRenewalSummaryGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.RefreshRenewalSummary")
 	defer span.Finish()
