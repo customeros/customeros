@@ -18,7 +18,7 @@ import (
 type OrganizationWriteRepository interface {
 	Save(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId string, data data_fields.OrganizationFields) error
 	LinkWithDomain(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId, domain string) (bool, error)
-	UnlinkFromDomain(ctx context.Context, tenant, organizationId, domain string) error
+	UnlinkDomain(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId, domain string) error
 	ReplaceOwner(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId, userId string) error
 	// Deprecated -> use Save with Hide property
 	SetVisibility(ctx context.Context, tenant, organizationId string, hide bool) error
@@ -274,8 +274,8 @@ func (r *organizationWriteRepository) LinkWithDomain(ctx context.Context, tx *ne
 	return result.(bool), err
 }
 
-func (r *organizationWriteRepository) UnlinkFromDomain(ctx context.Context, tenant, organizationId, domain string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.UnlinkFromDomain")
+func (r *organizationWriteRepository) UnlinkDomain(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId, domain string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.UnlinkDomain")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
 	tracing.TagTenant(span, tenant)
@@ -293,11 +293,14 @@ func (r *organizationWriteRepository) UnlinkFromDomain(ctx context.Context, tena
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		return tx.Run(ctx, cypher, params)
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
+		return err
 	}
-	return err
+	return nil
 }
 
 func (r *organizationWriteRepository) ReplaceOwner(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId, userId string) error {

@@ -30,6 +30,7 @@ type OrganizationService interface {
 	CreateFromGlobalOrganization(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, globalOrgId uint64) (string, error)
 	Save(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, id *string, dataFields data_fields.OrganizationFields) (string, error)
 	LinkWithDomain(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, organizationId, domain string) error
+	UnlinkDomain(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, organizationId, domain string) error
 
 	Hide(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, organizationId string) error
 	Show(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, organizationId string) error
@@ -711,6 +712,47 @@ func (s *organizationService) LinkWithDomain(ctx context.Context, txWithPostComm
 				return nil
 			})
 		}
+
+		return nil, nil
+	})
+
+	return err
+}
+
+func (s *organizationService) UnlinkDomain(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, organizationId, domain string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.UnlinkDomain")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.TagEntity(span, organizationId)
+	span.LogKV("domain", domain)
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+
+	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
+		err := s.services.Neo4jRepositories.OrganizationWriteRepository.UnlinkDomain(ctx, txWithPostCommit.Tx, tenant, organizationId, domain)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to unlink domain in neo4j"))
+			return nil, err
+		}
+
+		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
+			// send event to rabbitmq
+			err = s.services.RabbitMQService.PublishEvent(ctx, organizationId, model.ORGANIZATION, dto.RemoveDomain{Domain: domain})
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "failed to publish event RemoveDomain"))
+			}
+
+			// send event to events platform
+			s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, organizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
+
+			return nil
+		})
 
 		return nil, nil
 	})
