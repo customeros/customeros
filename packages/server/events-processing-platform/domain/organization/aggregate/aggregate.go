@@ -38,8 +38,6 @@ func (a *OrganizationAggregate) HandleGRPCRequest(ctx context.Context, request a
 	defer span.Finish()
 
 	switch r := request.(type) {
-	case *organizationpb.UnLinkDomainFromOrganizationGrpcRequest:
-		return nil, a.unlinkDomain(ctx, r)
 	case *organizationpb.OrganizationAddLocationGrpcRequest:
 		return a.addLocation(ctx, r)
 	default:
@@ -106,28 +104,6 @@ func (a *OrganizationAggregate) addLocation(ctx context.Context, request *organi
 	})
 
 	return locationId, a.Apply(event)
-}
-
-func (a *OrganizationAggregate) unlinkDomain(ctx context.Context, request *organizationpb.UnLinkDomainFromOrganizationGrpcRequest) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.unlinkDomain")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
-	tracing.LogObjectAsJson(span, "request", request)
-
-	unlinkDomainEvent, err := organizationEvents.NewOrganizationUnlinkDomainEvent(a, request.Domain)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewOrganizationUnlinkDomainEvent")
-	}
-	eventstore.EnrichEventWithMetadataExtended(&unlinkDomainEvent, span, eventstore.EventMetadata{
-		Tenant: a.Tenant,
-		UserId: request.LoggedInUserId,
-		App:    request.AppSource,
-	})
-
-	return a.Apply(unlinkDomainEvent)
 }
 
 func (a *OrganizationAggregate) When(event eventstore.Event) error {
