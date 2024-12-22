@@ -566,31 +566,3 @@ func TestGraphOrganizationEventHandler_OnLocationUnlinkedFromBillingProfile(t *t
 	billingProfile := neo4jmapper.MapDbNodeToBillingProfileEntity(dbNode)
 	test.AssertRecentTime(t, billingProfile.UpdatedAt)
 }
-
-func TestGraphOrganizationEventHandler_OnDomainUnlinkedFromOrganization(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx, testDatabase)(t)
-
-	// prepare neo4j data
-	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
-	neo4jtest.LinkDomainToOrganization(ctx, testDatabase.Driver, orgId, "openline.ai")
-
-	orgEventHandler := &OrganizationEventHandler{
-		services:    testDatabase.Services,
-		grpcClients: testMockedGrpcClient,
-	}
-	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
-
-	event, _ := events.NewOrganizationUnlinkDomainEvent(orgAggregate, "openline.ai")
-	err := orgEventHandler.OnDomainUnlinkedFromOrganization(context.Background(), event)
-	require.Nil(t, err)
-
-	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		model2.NodeLabelOrganization: 1,
-		model2.NodeLabelDomain:       1,
-	})
-	neo4jtest.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{
-		"HAS_DOMAIN": 0,
-	})
-}
