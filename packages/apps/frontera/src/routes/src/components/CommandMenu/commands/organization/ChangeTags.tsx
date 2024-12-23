@@ -20,7 +20,7 @@ export const ChangeTags = observer(() => {
   const [newTags, setNewTags] = useState<TagDatum[]>([]);
 
   const entity = match(context.entity)
-    .returnType<Organization | Organization[] | undefined>()
+    .returnType<Organization | Organization[] | undefined | null>()
     .with('Organization', () =>
       store.organizations.getById(context.ids?.[0] as string),
     )

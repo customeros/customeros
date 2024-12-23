@@ -2,6 +2,7 @@ import cors from 'cors';
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import { google } from 'googleapis';
+import bodyParser from 'body-parser';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 
 import 'dotenv/config';
@@ -10,6 +11,8 @@ const PUBLIC_PATHS = [
   '/google-auth',
   '/callback/google-auth',
   '/azure-ad-auth',
+  '/magic-link-auth',
+  '/validate-magic-code',
   '/callback/azure-ad-auth',
 ];
 
@@ -88,6 +91,32 @@ function fetchTenant(email) {
       query: `query tenant {
         tenant
       }`,
+    }),
+  });
+}
+
+function fetchMagicLink(email) {
+  return fetch(`${process.env.USER_ADMIN_API_URL + '/rml'}`, {
+    method: 'POST',
+    headers: {
+      'X-Openline-API-KEY': process.env.USER_ADMIN_API_KEY,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      email,
+    }),
+  });
+}
+
+function verifyMagicLink(code) {
+  return fetch(`${process.env.USER_ADMIN_API_URL + '/pml'}`, {
+    method: 'POST',
+    headers: {
+      'X-Openline-API-KEY': process.env.USER_ADMIN_API_KEY,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      code,
     }),
   });
 }
@@ -267,6 +296,59 @@ async function createServer() {
     );
 
     res.json({ url: url.toString() });
+  });
+  app.post('/magic-link-auth', bodyParser.json(), async (req, res) => {
+    const body = req.body;
+
+    try {
+      await fetchMagicLink(body.email);
+
+      res.sendStatus(200);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: err.message });
+    }
+  });
+
+  app.post('/validate-magic-code', bodyParser.json(), async (req, res) => {
+    const body = req.body;
+
+    try {
+      const magicLinkReq = await verifyMagicLink(body.code);
+      const magicLinkRes = await magicLinkReq.json();
+
+      if (magicLinkRes?.status !== 'OK') {
+        throw new Error(magicLinkRes?.result);
+      }
+
+      const integrations_token = createIntegrationAppToken(
+        magicLinkRes?.tenant,
+      );
+
+      const sessionToken = jwt.sign(
+        {
+          tenant: magicLinkRes?.tenant,
+          access_token: '',
+          refresh_token: '',
+          integrations_token,
+          profile: {
+            id: magicLinkRes?.userId,
+            email: magicLinkRes?.email,
+          },
+        },
+        process.env.JWT_SECRET,
+        {
+          expiresIn: '30d',
+        },
+      );
+
+      res.json({
+        sessionToken,
+      });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json(err.message);
+    }
   });
 
   //add email account for sync
