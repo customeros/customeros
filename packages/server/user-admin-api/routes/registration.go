@@ -315,6 +315,7 @@ func signIn(ctx context.Context, services *service.Services, ginContext *gin.Con
 	}
 
 	var tenantName *string
+	var userId *string
 
 	if signInRequest.Tenant == "" {
 		span.LogFields(tracingLog.String("flow", "authentication"))
@@ -334,7 +335,7 @@ func signIn(ctx context.Context, services *service.Services, ginContext *gin.Con
 			AppSource: constants.AppSourceUserAdminApi,
 		})
 
-		err = initializeUser(ctx, services, signInRequest.Provider, signInRequest.OAuthToken.ProviderAccountId, *tenantName, signInRequest.LoggedInEmail, firstName, lastName)
+		userId, err = initializeUser(ctx, services, signInRequest.Provider, signInRequest.OAuthToken.ProviderAccountId, *tenantName, signInRequest.LoggedInEmail, firstName, lastName)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			ginContext.JSON(http.StatusInternalServerError, gin.H{
@@ -494,6 +495,7 @@ func signIn(ctx context.Context, services *service.Services, ginContext *gin.Con
 		"status": "OK",
 		"email":  signInRequest.LoggedInEmail,
 		"tenant": *tenantName,
+		"userId": userId,
 	})
 }
 
@@ -713,7 +715,7 @@ func getUserInfoFromGoogle(c context.Context, config *config.Config, signInReque
 	return userInfo, nil
 }
 
-func initializeUser(c context.Context, services *service.Services, provider, providerAccountId, tenant, email string, firstName, lastName *string) error {
+func initializeUser(c context.Context, services *service.Services, provider, providerAccountId, tenant, email string, firstName, lastName *string) (*string, error) {
 	span, ctx := opentracing.StartSpanFromContext(c, "Registration.initializeUser")
 	defer span.Finish()
 
@@ -728,7 +730,7 @@ func initializeUser(c context.Context, services *service.Services, provider, pro
 	userNode, err := services.CommonServices.Neo4jRepositories.UserReadRepository.GetFirstUserByEmail(ctx, tenant, email)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return err
+		return nil, err
 	}
 	if userNode != nil {
 		userId = neo4jmapper.MapDbNodeToUserEntity(userNode).Id
@@ -740,7 +742,7 @@ func initializeUser(c context.Context, services *service.Services, provider, pro
 	playerNode, err := services.CommonServices.Neo4jRepositories.PlayerReadRepository.GetPlayerByAuthIdProvider(ctx, email, provider)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return err
+		return nil, err
 	}
 	if playerNode != nil {
 		playerId = neo4jmapper.MapDbNodeToPlayerEntity(playerNode).Id
@@ -774,32 +776,32 @@ func initializeUser(c context.Context, services *service.Services, provider, pro
 		})
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "unable to link user to email"))
-			return err
+			return nil, err
 		}
 
 		err = services.CommonServices.PostgresRepositories.UserWorkingScheduleRepository.Store(innerCtx, tenant, &defaultWorkSchedule)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			return err
+			return nil, err
 		}
 	} else {
 		err = addDefaultMissingRoles(ctx, services, tenant, userId)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			return err
+			return nil, err
 		}
 
 		workingSchedule, err := services.CommonServices.PostgresRepositories.UserWorkingScheduleRepository.GetForUser(ctx, tenant, userId)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			return err
+			return nil, err
 		}
 
 		if len(workingSchedule) == 0 {
 			err = services.CommonServices.PostgresRepositories.UserWorkingScheduleRepository.Store(innerCtx, tenant, &defaultWorkSchedule)
 			if err != nil {
 				tracing.TraceErr(span, err)
-				return err
+				return nil, err
 			}
 		}
 	}
@@ -813,7 +815,7 @@ func initializeUser(c context.Context, services *service.Services, provider, pro
 		})
 		if err != nil {
 			tracing.TraceErr(span, err)
-			return err
+			return nil, err
 		}
 	}
 
@@ -833,7 +835,7 @@ func initializeUser(c context.Context, services *service.Services, provider, pro
 		}
 	}
 
-	return nil
+	return &userId, nil
 }
 
 func addDefaultMissingRoles(c context.Context, services *service.Services, tenant, userId string) error {
