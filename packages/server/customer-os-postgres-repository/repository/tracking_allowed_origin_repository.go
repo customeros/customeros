@@ -3,14 +3,19 @@ package repository
 import (
 	"context"
 	"errors"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"gorm.io/gorm"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 )
 
 type TrackingAllowedOriginRepository interface {
 	GetTenantForOrigin(ctx context.Context, origin string) (*string, error)
+	Create(ctx context.Context, whitelist entity.TrackingAllowedOrigin) (*entity.TrackingAllowedOrigin, error)
+	Update(ctx context.Context, whitelist entity.TrackingAllowedOrigin) (*entity.TrackingAllowedOrigin, error)
+	FindAll(ctx context.Context, whitelist entity.TrackingAllowedOrigin) (*[]entity.TrackingAllowedOrigin, error)
 }
 
 type trackingAllowedOriginRepositoryImpl struct {
@@ -19,6 +24,53 @@ type trackingAllowedOriginRepositoryImpl struct {
 
 func NewTrackingAllowedOriginRepository(gormDb *gorm.DB) TrackingAllowedOriginRepository {
 	return &trackingAllowedOriginRepositoryImpl{gormDb: gormDb}
+}
+
+func (repo *trackingAllowedOriginRepositoryImpl) Create(ctx context.Context, whitelist entity.TrackingAllowedOrigin) (*entity.TrackingAllowedOrigin, error) {
+	span, ctx := tracing.StartTracerSpan(ctx, "TrackingAllowedOriginRepository.Create")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	var created entity.TrackingAllowedOrigin
+	err := repo.gormDb.Create(&whitelist).Scan(&created).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &created, nil
+}
+
+func (repo *trackingAllowedOriginRepositoryImpl) FindAll(ctx context.Context, whitelist entity.TrackingAllowedOrigin) (*[]entity.TrackingAllowedOrigin, error) {
+	span, ctx := tracing.StartTracerSpan(ctx, "TrackingAllowedOriginRepository.FindAll")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	var results []entity.TrackingAllowedOrigin
+	err := repo.gormDb.
+		Where(&whitelist).
+		Find(&results).Error
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	return &results, nil
+}
+
+func (repo *trackingAllowedOriginRepositoryImpl) Update(ctx context.Context, whitelist entity.TrackingAllowedOrigin) (*entity.TrackingAllowedOrigin, error) {
+	span, ctx := tracing.StartTracerSpan(ctx, "TrackingAllowedOriginRepository.Update")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	var updated entity.TrackingAllowedOrigin
+	err := repo.gormDb.Model(&whitelist).
+		Updates(&whitelist).
+		First(&updated).Error
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return &updated, nil
 }
 
 func (repo *trackingAllowedOriginRepositoryImpl) GetTenantForOrigin(ctx context.Context, origin string) (*string, error) {

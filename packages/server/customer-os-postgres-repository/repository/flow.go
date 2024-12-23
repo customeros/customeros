@@ -44,7 +44,8 @@ func (f *flowRepository) Create(ctx context.Context, flowRecord entity.Flow) (*e
 
 	flowRecord.ID = utils.GenerateNanoIdWithPrefix("flow", 16)
 
-	err := f.gormDb.Create(&flowRecord).Error
+	var created entity.Flow
+	err := f.gormDb.Create(&flowRecord).Scan(&created).Error
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err

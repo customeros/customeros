@@ -33,7 +33,8 @@ func (f *flowNodeRepository) Create(ctx context.Context, flowNode entity.FlowNod
 
 	flowNode.ID = utils.GenerateNanoIdWithPrefix("node", 16)
 
-	err := f.gormDb.Create(&flowNode).Error
+	var created entity.FlowNode
+	err := f.gormDb.Create(&flowNode).Scan(&created).Error
 	if err != nil {
 		return nil, err
 	}

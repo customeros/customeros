@@ -32,7 +32,8 @@ func (r *flowWebhooksRepository) Create(ctx context.Context, webhook entity.Flow
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	err := r.gormDb.Create(&webhook).Error
+	var created entity.FlowWebhooks
+	err := r.gormDb.Create(&webhook).Scan(&created).Error
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err

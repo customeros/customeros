@@ -26,13 +26,14 @@ import (
 )
 
 const (
-	outreachV1Path     = "/outreach/v1"
-	customerBaseV1Path = "/customerbase/v1"
 	billingV1Path      = "/billing/v1"
-	verifyV1Path       = "/verify/v1"
+	customerBaseV1Path = "/customerbase/v1"
 	enrichV1Path       = "/enrich/v1"
-	mailStackV1Path    = "/mailstack/v1"
 	flowsV1Path        = "/flows/v1"
+	mailStackV1Path    = "/mailstack/v1"
+	outreachV1Path     = "/outreach/v1"
+	revealV1Path       = "/reveal/v1"
+	verifyV1Path       = "/verify/v1"
 	webhooksV1Path     = "/webhooks/v1"
 )
 
@@ -86,6 +87,11 @@ func registerVerifyRoutes(ctx context.Context, r *gin.Engine, s *service.Service
 func registerCustomerBaseRoutes(ctx context.Context, r *gin.Engine, s *service.Services, grpcClients *grpc_client.Clients, cache *commoncaches.Cache) {
 	registerOrganizationRoutes(ctx, r, s, grpcClients, cache)
 	registerContactRoutes(ctx, r, s, grpcClients, cache)
+}
+
+func registerRevealRoutes(ctx context.Context, r *gin.Engine, s *service.Services) {
+    setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/trackers", revealV1Path), s, reveal.ProvisionTracker(s))
+    setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/verify", revealV1Path), s, ...)
 }
 
 func registerFlowRoutes(ctx context.Context, r *gin.Engine, s *service.Services, cache *commoncaches.Cache) {
