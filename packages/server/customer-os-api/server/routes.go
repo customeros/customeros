@@ -20,31 +20,34 @@ import (
 	integrations "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/flows_integrations"
 	restmailstack "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/mailstack"
 	restoutreach "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/outreach"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/reveal"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/tracking"
 	restverify "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/verify"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
 
 const (
-	outreachV1Path     = "/outreach/v1"
-	customerBaseV1Path = "/customerbase/v1"
 	billingV1Path      = "/billing/v1"
-	verifyV1Path       = "/verify/v1"
+	customerBaseV1Path = "/customerbase/v1"
 	enrichV1Path       = "/enrich/v1"
-	mailStackV1Path    = "/mailstack/v1"
 	flowsV1Path        = "/flows/v1"
+	mailStackV1Path    = "/mailstack/v1"
+	outreachV1Path     = "/outreach/v1"
+	revealV1Path       = "/reveal/v1"
+	verifyV1Path       = "/verify/v1"
 	webhooksV1Path     = "/webhooks/v1"
 )
 
 func RegisterRestRoutes(ctx context.Context, r *gin.Engine, grpcClients *grpc_client.Clients, s *service.Services, cache *commoncaches.Cache) {
-	registerPublicRoutes(ctx, r, s)
 	registerHealthRoutes(ctx, r, s, cache)
+	registerPublicRoutes(ctx, r, s)
 	registerBillingRoutes(ctx, r, s, grpcClients, cache)
 	registerCustomerBaseRoutes(ctx, r, s, grpcClients, cache)
 	registerEnrichRoutes(ctx, r, s, cache)
 	registerFlowRoutes(ctx, r, s, cache)
 	registerMailStackRoutes(ctx, r, s, cache)
 	registerOutreachRoutes(ctx, r, s, cache)
+	registerRevealRoutes(ctx, r, s, cache)
 	registerVerifyRoutes(ctx, r, s, cache)
 }
 
@@ -86,6 +89,11 @@ func registerVerifyRoutes(ctx context.Context, r *gin.Engine, s *service.Service
 func registerCustomerBaseRoutes(ctx context.Context, r *gin.Engine, s *service.Services, grpcClients *grpc_client.Clients, cache *commoncaches.Cache) {
 	registerOrganizationRoutes(ctx, r, s, grpcClients, cache)
 	registerContactRoutes(ctx, r, s, grpcClients, cache)
+}
+
+func registerRevealRoutes(ctx context.Context, r *gin.Engine, s *service.Services, cache *commoncaches.Cache) {
+	setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/trackers", revealV1Path), s, cache, reveal.ProvisionTracker(s))
+	setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/verify", revealV1Path), s, cache, reveal.VerifyTracker(s))
 }
 
 func registerFlowRoutes(ctx context.Context, r *gin.Engine, s *service.Services, cache *commoncaches.Cache) {
