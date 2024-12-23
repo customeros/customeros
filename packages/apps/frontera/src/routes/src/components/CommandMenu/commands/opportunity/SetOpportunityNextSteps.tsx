@@ -1,5 +1,6 @@
 import { useState } from 'react';
 
+import { useKey } from 'rooks';
 import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
 
@@ -39,6 +40,8 @@ export const SetOpportunityNextSteps = observer(() => {
     }
   };
 
+  useKey('Escape', () => (store.ui.commandMenu.isOpen = false));
+
   return (
     <Command shouldFilter={false} onKeyDown={handleEnterKey}>
       <CommandInput asChild label={label} placeholder='Set next steps'>
@@ -46,13 +49,21 @@ export const SetOpportunityNextSteps = observer(() => {
           size='md'
           usePlainText
           className='cursor-text'
-          onKeyDown={handleEnterKey}
           namespace='opportunity-next-step'
-          placeholderClassName='cursor-text'
+          placeholderClassName='cursor-text py-3'
           onChange={(html) => setValue(extractPlainText(html))}
           defaultHtmlValue={convertPlainTextToHtml(
             opportunity?.value?.nextSteps ?? '',
           )}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              handleEnterKey(e);
+            }
+
+            if (e.key === 'Escape') {
+              store.ui.commandMenu.setOpen(false);
+            }
+          }}
         />
       </CommandInput>
 
