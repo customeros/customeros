@@ -16,6 +16,7 @@ type TrackingAllowedOriginRepository interface {
 	Create(ctx context.Context, whitelist entity.TrackingAllowedOrigin) (*entity.TrackingAllowedOrigin, error)
 	Update(ctx context.Context, whitelist entity.TrackingAllowedOrigin) (*entity.TrackingAllowedOrigin, error)
 	FindAll(ctx context.Context, whitelist entity.TrackingAllowedOrigin) (*[]entity.TrackingAllowedOrigin, error)
+	Find(ctx context.Context, whitelist entity.TrackingAllowedOrigin) (*entity.TrackingAllowedOrigin, error)
 }
 
 type trackingAllowedOriginRepositoryImpl struct {
@@ -54,6 +55,23 @@ func (repo *trackingAllowedOriginRepositoryImpl) FindAll(ctx context.Context, wh
 		return nil, err
 	}
 	return &results, nil
+}
+
+func (repo *trackingAllowedOriginRepositoryImpl) Find(ctx context.Context, whitelist entity.TrackingAllowedOrigin) (*entity.TrackingAllowedOrigin, error) {
+	span, ctx := tracing.StartTracerSpan(ctx, "TrackingAllowedOriginRepository.Find")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	var result entity.TrackingAllowedOrigin
+	if err := repo.gormDb.Where(&whitelist).First(&result).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return &result, nil
 }
 
 func (repo *trackingAllowedOriginRepositoryImpl) Update(ctx context.Context, whitelist entity.TrackingAllowedOrigin) (*entity.TrackingAllowedOrigin, error) {

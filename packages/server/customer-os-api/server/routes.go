@@ -20,6 +20,7 @@ import (
 	integrations "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/flows_integrations"
 	restmailstack "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/mailstack"
 	restoutreach "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/outreach"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/reveal"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/tracking"
 	restverify "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/verify"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
@@ -38,14 +39,15 @@ const (
 )
 
 func RegisterRestRoutes(ctx context.Context, r *gin.Engine, grpcClients *grpc_client.Clients, s *service.Services, cache *commoncaches.Cache) {
-	registerPublicRoutes(ctx, r, s)
 	registerHealthRoutes(ctx, r, s, cache)
+	registerPublicRoutes(ctx, r, s)
 	registerBillingRoutes(ctx, r, s, grpcClients, cache)
 	registerCustomerBaseRoutes(ctx, r, s, grpcClients, cache)
 	registerEnrichRoutes(ctx, r, s, cache)
 	registerFlowRoutes(ctx, r, s, cache)
 	registerMailStackRoutes(ctx, r, s, cache)
 	registerOutreachRoutes(ctx, r, s, cache)
+	registerRevealRoutes(ctx, r, s, cache)
 	registerVerifyRoutes(ctx, r, s, cache)
 }
 
@@ -89,9 +91,9 @@ func registerCustomerBaseRoutes(ctx context.Context, r *gin.Engine, s *service.S
 	registerContactRoutes(ctx, r, s, grpcClients, cache)
 }
 
-func registerRevealRoutes(ctx context.Context, r *gin.Engine, s *service.Services) {
-    setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/trackers", revealV1Path), s, reveal.ProvisionTracker(s))
-    setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/verify", revealV1Path), s, ...)
+func registerRevealRoutes(ctx context.Context, r *gin.Engine, s *service.Services, cache *commoncaches.Cache) {
+	setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/trackers", revealV1Path), s, cache, reveal.ProvisionTracker(s))
+	setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/verify", revealV1Path), s, cache, reveal.VerifyTracker(s))
 }
 
 func registerFlowRoutes(ctx context.Context, r *gin.Engine, s *service.Services, cache *commoncaches.Cache) {

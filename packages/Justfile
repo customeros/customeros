@@ -90,16 +90,17 @@ ps:
 	cd ../deployment && podman-compose ps
 
 restart-api:
-    podman-compose restart customes-os-platform-admin-api
+    pkill -f "customer-os-platform-admin-api" || true
+    cd ./server/customer-os-platform-admin-api && go run . > ../../admin-api.log 2>&1 & echo $$! > admin-api.pid
     pkill -f "customer-os-api" || true
     cd ./server/customer-os-api && go run . > ../../api.log 2>&1 & echo $$! > api.pid
-    sleep 5
     echo "CustomerOS API restarted"
 
 start:
 	cd ../deployment && podman-compose up rabbitmq jaeger postgres postgres-sidecar neo4j eventstore customer-os-platform-admin-api -d
 
 start-api:
+    cd ./server/customer-os-platform-admin-api && go run . > ../../admin-api.log 2>&1 & echo $$! > admin-api.pid
     cd ./server/customer-os-api && go run . > ../../api.log 2>&1 & echo $$! > api.pid
     echo "Services started."
 

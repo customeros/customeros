@@ -41,7 +41,7 @@ func DNS(services *service.Services) gin.HandlerFunc {
 			return
 		}
 
-		// validate domain belongs to tenant
+		// todo validate domain belongs to tenant
 
 		domain := c.Param("domain")
 		dns, err := services.CommonServices.CloudflareService.GetDNSRecords(ctx, domain)

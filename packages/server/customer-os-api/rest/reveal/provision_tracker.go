@@ -1,10 +1,13 @@
 package reveal
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -25,10 +28,11 @@ type TrackerResponse struct {
 }
 
 type TrackerRecord struct {
-	ID        string `json:"id"`
-	Domain    string `json:"domain"`
-	CreatedAt string `json:"createdAt"`
-	Code      string `json:"code"`
+	ID        string    `json:"id"`
+	Domain    string    `json:"domain"`
+	CreatedAt time.Time `json:"createdAt"`
+	Code      string    `json:"code,omitempty"`
+	Status    string    `json:"status,omitempty"`
 }
 
 const TrackerScript = `<!-- CustomerOS Visitor Reveal --> 
@@ -59,6 +63,9 @@ func ProvisionTracker(s *service.Services) gin.HandlerFunc {
 			case err.Error() == "No domain":
 				rest.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("domain not provided"))
 				return
+			case err.Error() == "Invalid domain":
+				rest.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("domain is not valid"))
+				return
 			default:
 				rest.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("Could not parse request"))
 				return
@@ -84,7 +91,7 @@ func ProvisionTracker(s *service.Services) gin.HandlerFunc {
 			BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
 			Tracker: TrackerRecord{
 				ID:        record.ID,
-				Domain:    record.Domain,
+				Domain:    record.Origin,
 				CreatedAt: record.CreatedAt,
 				Code:      TrackerScript,
 			},
@@ -107,12 +114,33 @@ func getTrackerRequestPayload(c *gin.Context) (TrackerRequest, error) {
 		return req, errors.New("No domain")
 	}
 
-	domain := strings.TrimPrefix(req.Domain, "https://")
+	req.Domain = cleanDomain(req.Domain)
+
+	// if !isValidDomain(ctx, req.Domain) {
+	// 	return req, errors.New("Invalid domain")
+	// }
+
+	return req, nil
+}
+
+func isValidDomain(ctx context.Context, domain string) bool {
+	span, ctx := tracing.StartTracerSpan(ctx, "Reveal.isValidDomain")
+	defer span.Finish()
+	tracing.TagComponentRest(span)
+
+	_, err := net.LookupHost(domain)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return false
+	}
+	return true
+}
+
+func cleanDomain(domain string) string {
+	domain = strings.TrimPrefix(domain, "https://")
 	domain = strings.TrimPrefix(domain, "http://")
 	domain = strings.TrimPrefix(domain, "www.")
 	domain = strings.Trim(domain, "/")
 
-	req.Domain = fmt.Sprintf("https://%s", domain)
-
-	return req, nil
+	return fmt.Sprintf("https://%s", domain)
 }
