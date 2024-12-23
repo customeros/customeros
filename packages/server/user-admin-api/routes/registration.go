@@ -123,7 +123,7 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 				}
 			}
 
-			link := "https://app.customeros.ai/?mg=" + code
+			link := "https://app.customeros.ai/auth/success?mg=" + code
 			err = services.CommonServices.PostgresRepositories.MagicLinkRepository.Create(ctx, &entity.MagicLink{
 				Email: request.Email,
 				Code:  code,
@@ -147,6 +147,10 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 				})
 				return
 			}
+
+			ginContext.JSON(http.StatusOK, gin.H{
+				"result": "OK",
+			})
 		},
 	)
 
@@ -163,7 +167,7 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 			if err := ginContext.BindJSON(&signInRequest); err != nil {
 				tracing.TraceErr(span, err)
 				ginContext.JSON(http.StatusInternalServerError, gin.H{
-					"result": fmt.Sprintf("unable to parse json: %v", err.Error()),
+					"result": fmt.Sprintf("INVALID_REQUEST"),
 				})
 				return
 			}
@@ -173,14 +177,14 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 				if err != nil {
 					tracing.TraceErr(span, err)
 					ginContext.JSON(http.StatusInternalServerError, gin.H{
-						"result": fmt.Sprintf("unable to get magic link: %v", err.Error()),
+						"result": fmt.Sprintf("INTERNAL_SERVER_ERROR"),
 					})
 					return
 				}
 
 				if magicLink == nil {
 					ginContext.JSON(http.StatusUnauthorized, gin.H{
-						"result": fmt.Sprintf("magic link not found"),
+						"result": "MAGIC_LINK_NOT_FOUND",
 					})
 					return
 				}
@@ -189,7 +193,7 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 				signInRequest.LoggedInEmail = magicLink.Email
 			} else {
 				ginContext.JSON(http.StatusBadRequest, gin.H{
-					"result": fmt.Sprintf("code is required"),
+					"result": "MAGIC_LINK_NOT_FOUND",
 				})
 			}
 
@@ -486,7 +490,11 @@ func signIn(ctx context.Context, services *service.Services, ginContext *gin.Con
 		return
 	}
 
-	ginContext.JSON(http.StatusOK, gin.H{"status": "ok"})
+	ginContext.JSON(http.StatusOK, gin.H{
+		"status": "OK",
+		"email":  signInRequest.LoggedInEmail,
+		"tenant": *tenantName,
+	})
 }
 
 func getTenant(c context.Context, services *service.Services, personalEmailProvider []postgresEntity.PersonalEmailProvider, signInRequest model.SignInRequest, config *config.Config) (*string, bool, error) {
