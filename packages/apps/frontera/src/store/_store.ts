@@ -275,7 +275,8 @@ export class Store<T extends object, E extends Entity<T> = Entity<T>> {
     return arr;
   }
 
-  public getById(id: string) {
+  public getById(id: string): E | null {
+    if (!this.value || typeof id !== 'string') return null;
     const data = this.value.get(id);
 
     return data as E;

@@ -59,7 +59,7 @@ export const EditCompanyLinkedin = observer(() => {
 
     if (!url) return;
 
-    if (!organization.value) return;
+    if (!organization?.value) return;
     const linkedinId = organization?.value?.socialMedia.find((social) =>
       social.url.includes('linkedin'),
     )?.id;

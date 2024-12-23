@@ -1,11 +1,10 @@
 import type { RootStore } from '@store/root';
 
+import { match } from 'ts-pattern';
 import { AxiosError } from 'axios';
 import { Transport } from '@store/transport';
 import { Persister } from '@store/persister';
 import { toJS, autorun, runInAction, makeAutoObservable } from 'mobx';
-
-import mock from './mock.json';
 
 // temporary - will be removed once we drop react-query and getGraphQLClient
 declare global {
@@ -63,7 +62,7 @@ export class SessionStore {
   error: string | null = null;
   isBootstrapping = true;
   isHydrated = false;
-  isLoading: 'google' | 'azure-ad' | null = null;
+  isLoading: 'google' | 'azure-ad' | 'magic-link' | null = null;
   private persister = Persister.getSharedInstance('Session');
 
   constructor(public root: RootStore, public transport: Transport) {
@@ -101,14 +100,6 @@ export class SessionStore {
   }
 
   async loadSession() {
-    if (this.root.demoMode) {
-      this.value = mock.session as Session;
-      this.isBootstrapping = false;
-      this.isLoading = null;
-
-      return;
-    }
-
     // Check if the user is already authenticated
     this.isLoading = null;
 
@@ -119,18 +110,15 @@ export class SessionStore {
       return;
     }
 
-    const parseJwt = (token: string) => {
-      try {
-        return JSON.parse(atob(token.split('.')[1]));
-      } catch (e) {
-        return null;
-      }
-    };
-
     // Get the session token from the URL
     const urlParams = new URLSearchParams(window.location.search);
     const sessionToken = urlParams.get('sessionToken') as string;
-    const jwtParsed = parseJwt(sessionToken);
+    const magicLinkToken = urlParams.get('mg') as string;
+    const jwtParsed = this.parseJwt(sessionToken);
+
+    if (magicLinkToken) {
+      await this.validateMagicLinkCode(magicLinkToken);
+    }
 
     if (sessionToken) {
       // Save the session token & other required data to the store
@@ -181,23 +169,78 @@ export class SessionStore {
     }
   }
 
-  async authenticate(provider: 'google' | 'azure-ad') {
+  async authenticate(
+    provider: 'google' | 'azure-ad' | 'magic-link',
+    payload?: Record<string, unknown>,
+    opts?: { onSuccess?: (data?: unknown) => void },
+  ) {
     try {
-      // initiate the google auth flow
-      this.isLoading = provider;
+      runInAction(() => {
+        this.isLoading = provider;
+      });
 
       const params = new URLSearchParams(window.location.search);
       const from = params.get('from');
 
+      const endpointPath = match(provider)
+        .with('google', () => '/google-auth')
+        .with('azure-ad', () => '/azure-ad-auth')
+        .with('magic-link', () => '/magic-link-auth')
+        .otherwise(() => '');
+
       const endpoint =
-        (provider === 'google' ? '/google-auth' : '/azure-ad-auth') +
-        (from ? `?from=${encodeURIComponent(from)}` : '');
+        endpointPath + (from ? `?from=${encodeURIComponent(from)}` : '');
 
-      const { data } = await this.transport.http.get<{ url: string }>(endpoint);
+      if (provider === 'magic-link') {
+        const res = await this.transport.http.post(endpoint, payload);
 
-      window.location.href = data.url;
+        opts?.onSuccess?.(res?.data);
+      } else {
+        const { data } = await this.transport.http.get<{ url: string }>(
+          endpoint,
+        );
+
+        window.location.href = data.url;
+      }
     } catch (err) {
-      this.error = (err as Error)?.message;
+      runInAction(() => {
+        this.error = (err as Error)?.message;
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = null;
+      });
+    }
+  }
+
+  private async validateMagicLinkCode(code: string) {
+    try {
+      const {
+        data: { sessionToken },
+      } = await this.transport.http.post<{ sessionToken: string }>(
+        '/validate-magic-code',
+        { code },
+      );
+
+      const jwtParsed = this.parseJwt(sessionToken);
+
+      runInAction(() => {
+        this.sessionToken = sessionToken;
+        this.value.tenant = jwtParsed?.tenant ?? '';
+        this.value.profile.email = jwtParsed?.profile?.email ?? '';
+        this.value.profile.id = jwtParsed?.profile?.id ?? '';
+        this.value.campaign = jwtParsed?.campaign ?? '';
+
+        this.sessionToken = sessionToken;
+      });
+    } catch (err) {
+      runInAction(() => {
+        if (err instanceof AxiosError) {
+          this.error = err?.response?.data;
+        } else {
+          this.error = (err as Error)?.message;
+        }
+      });
     }
   }
 
@@ -284,6 +327,14 @@ export class SessionStore {
       });
     } catch (e) {
       console.error('Failed to hydrate', e);
+    }
+  }
+
+  private parseJwt(token: string) {
+    try {
+      return JSON.parse(atob(token.split('.')[1]));
+    } catch (e) {
+      return null;
     }
   }
 }

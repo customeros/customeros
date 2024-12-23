@@ -67,6 +67,16 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
     return this.totalElements === this.value.size;
   }
 
+  public getById(id: string): Organization | null {
+    if (!this.value || typeof id !== 'string') return null;
+
+    if (!this?.value.has(id)) {
+      this.retrieve([id]);
+    }
+
+    return this.value.get(id) as Organization;
+  }
+
   // temporary unused
   @action
   private async _getRecentChanges() {

@@ -156,9 +156,15 @@ export class ContractsStore implements GroupStore<Contract> {
 
     const record = this.root.organizations.getById(payload.organizationId);
 
-    record.draft();
-    record.value.contracts?.unshift(newContract.value.metadata.id);
-    record.commit({ syncOnly: true });
+    if (!record) {
+      console.error(
+        `Organization with id=${payload.organizationId} was not found`,
+      );
+    }
+
+    record?.draft();
+    record?.value.contracts?.unshift(newContract.value.metadata.id);
+    record?.commit({ syncOnly: true });
 
     try {
       const { contract_Create } = await this.service.createContract({
@@ -209,7 +215,7 @@ export class ContractsStore implements GroupStore<Contract> {
   delete = async (contractId: string, organizationId: string) => {
     const record = this.root.organizations.getById(organizationId);
 
-    record.draft();
+    record?.draft();
 
     const idx = record?.contracts?.findIndex(
       (c) => c.metadata.id === contractId,
@@ -218,7 +224,7 @@ export class ContractsStore implements GroupStore<Contract> {
     if (typeof idx === 'undefined' || idx < 0) return;
 
     record?.value.contracts?.splice(idx, 1);
-    record.commit({ syncOnly: true });
+    record?.commit({ syncOnly: true });
 
     this.value.delete(contractId);
 

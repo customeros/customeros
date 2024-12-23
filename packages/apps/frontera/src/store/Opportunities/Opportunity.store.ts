@@ -57,7 +57,7 @@ export class OpportunityStore implements Store<Opportunity> {
 
     if (!organizationId) return null;
 
-    return this.root.organizations.value.get(organizationId);
+    return this.root.organizations.getById(organizationId);
   }
 
   get externalStage() {
