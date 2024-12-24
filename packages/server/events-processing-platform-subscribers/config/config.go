@@ -101,8 +101,7 @@ type Services struct {
 		ApiKey string `env:"VALIDATION_API_KEY" validate:"required"`
 	}
 	Ai struct {
-		ApiPath string `env:"AI_API_PATH,required" envDefault:"N/A"`
-		ApiKey  string `env:"AI_API_KEY,required" envDefault:"N/A"`
+		ApiKey string `env:"AI_API_KEY,required" envDefault:"N/A"`
 	}
 	OpenAi struct {
 		Organization string `env:"OPENAI_ORGANIZATION,required" envDefault:""`

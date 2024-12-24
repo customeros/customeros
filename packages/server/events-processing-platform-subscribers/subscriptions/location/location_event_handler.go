@@ -5,7 +5,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"strings"
+
 	aiConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai/config"
+	aiEnum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai/enum"
 	ai "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
@@ -13,13 +17,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
 	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
-
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/events"
 	locationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/location"
@@ -27,8 +24,13 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-	"net/http"
-	"strings"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 )
 
 type LocationValidateRequest struct {
@@ -69,7 +71,7 @@ type LocationEventHandler struct {
 	log         logger.Logger
 	cfg         *config.Config
 	grpcClients *grpc_client.Clients
-	aiModel     ai.AiModel
+	aiModel     ai.AIModel
 }
 
 func NewLocationEventHandler(services *service.Services, log logger.Logger, cfg *config.Config, grpcClients *grpc_client.Clients) *LocationEventHandler {
@@ -78,13 +80,7 @@ func NewLocationEventHandler(services *service.Services, log logger.Logger, cfg 
 		log:         log,
 		cfg:         cfg,
 		grpcClients: grpcClients,
-		aiModel: ai.NewAiModel(ai.AnthropicModelType, aiConfig.Config{
-			Anthropic: aiConfig.AiModelConfigAnthropic{
-				ApiPath: cfg.Services.Ai.ApiPath,
-				ApiKey:  cfg.Services.Ai.ApiKey,
-				Model:   constants.AnthropicApiModel,
-			},
-		}),
+		aiModel:     ai.NewAIModel(aiEnum.AIModelAnthropicSonnet, cfg.Services.Ai.ApiKey),
 	}
 }
 
@@ -249,13 +245,12 @@ func (h *LocationEventHandler) prepareCountry(ctx context.Context, tenant, event
 }
 
 func constructRawAddressForValidationFromLocationAddressFields(eventData events.LocationCreateEvent) string {
-	rawAddress :=
-		eventData.LocationAddress.HouseNumber + " " +
-			eventData.LocationAddress.Street + " " +
-			eventData.LocationAddress.Address1 + " " +
-			eventData.LocationAddress.Address2 + " " +
-			utils.StringFirstNonEmpty(eventData.LocationAddress.Zip, eventData.LocationAddress.PostalCode) + ", " +
-			eventData.LocationAddress.Locality
+	rawAddress := eventData.LocationAddress.HouseNumber + " " +
+		eventData.LocationAddress.Street + " " +
+		eventData.LocationAddress.Address1 + " " +
+		eventData.LocationAddress.Address2 + " " +
+		utils.StringFirstNonEmpty(eventData.LocationAddress.Zip, eventData.LocationAddress.PostalCode) + ", " +
+		eventData.LocationAddress.Locality
 	if eventData.LocationAddress.Locality != "" {
 		rawAddress += ","
 	}
