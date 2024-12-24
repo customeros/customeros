@@ -1,5 +1,5 @@
 # Common module paths
-server_modules := "server/customer-os-postgres-repository server/customer-os-common-module server/events-subscribers server/ai-api server/customer-os-api server/customer-os-neo4j-repository server/customer-os-platform-admin-api server/customer-os-webhooks server/events server/events-processing-platform server/events-processing-platform-subscribers server/file-store-api server/settings-api server/user-admin-api server/validation-api server/enrichment-api"
+server_modules := "server/customer-os-postgres-repository server/customer-os-common-module server/events-subscribers server/customer-os-api server/customer-os-neo4j-repository server/customer-os-platform-admin-api server/customer-os-webhooks server/events server/events-processing-platform server/events-processing-platform-subscribers server/file-store-api server/settings-api server/user-admin-api server/validation-api server/enrichment-api"
 
 runner_modules := "runner/customer-os-data-upkeeper runner/sync-gmail-raw runner/sync-gmail runner/sync-customer-os-data runner/sync-tracking runner/sync-slack runner/customer-os-dedup runner/integrity-checker"
 

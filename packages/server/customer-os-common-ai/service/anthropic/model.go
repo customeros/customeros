@@ -6,6 +6,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai/config"
 )
 
+type AnthropicModel struct {
+	Client *AnthropicClient
+}
+
 func NewModel(apiKey, apiPath, model string) *AnthropicModel {
 	cfg := &config.AiModelConfigAnthropic{
 		ApiKey:  apiKey,
@@ -17,10 +21,6 @@ func NewModel(apiKey, apiPath, model string) *AnthropicModel {
 	}
 }
 
-type AnthropicModel struct {
-	Client *AnthropicClient
-}
-
 func (m *AnthropicModel) Inference(ctx context.Context, input string) (string, error) {
-	return InvokeAnthropic(ctx, m.Client.cfg, input)
+	return m.Client.Invoke(ctx, input)
 }
