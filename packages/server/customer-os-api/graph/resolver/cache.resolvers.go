@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	commonenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
@@ -61,7 +62,7 @@ func (r *queryResolver) GlobalCache(ctx context.Context) (*model.GlobalCache, er
 		if privateKey != "" && serviceEmail != "" {
 			response.ActiveEmailTokens = append(response.ActiveEmailTokens, &model.GlobalCacheEmailToken{
 				Email:    userEmail,
-				Provider: "google",
+				Provider: commonenum.WorkspaceProviderGoogle.String(),
 			})
 		}
 

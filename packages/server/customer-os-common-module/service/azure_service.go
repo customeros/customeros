@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	commonenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"io"
 	"net/http"
 	"net/url"
@@ -263,7 +264,7 @@ func (s *azureService) sendDraft(ctx context.Context, span opentracing.Span, dra
 }
 
 func (s *azureService) getValidToken(ctx context.Context, span opentracing.Span, tenant, email string) (string, error) {
-	token, err := s.repositories.OAuthTokenRepository.GetByEmail(ctx, tenant, "azure-ad", email)
+	token, err := s.repositories.OAuthTokenRepository.GetByEmail(ctx, tenant, commonenum.WorkspaceProviderAzure.String(), email)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "error getting oauth token"))
 		return "", fmt.Errorf("get token error: %w", err)

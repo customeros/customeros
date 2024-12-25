@@ -16,7 +16,6 @@ import (
 
 type TenantService interface {
 	GetAllTenants(ctx context.Context) ([]*neo4jentity.TenantEntity, error)
-	GetTenantForWorkspace(ctx context.Context, workspaceEntity neo4jentity.WorkspaceEntity) (*neo4jentity.TenantEntity, error)
 	GetTenantForUserEmail(ctx context.Context, email string) (*neo4jentity.TenantEntity, error)
 	Merge(ctx context.Context, tenantEntity neo4jentity.TenantEntity) (*neo4jentity.TenantEntity, error)
 	HardDelete(ctx context.Context, tenant string) error
@@ -52,21 +51,6 @@ func (s *tenantService) GetAllTenants(ctx context.Context) ([]*neo4jentity.Tenan
 	}
 
 	return tenants, nil
-}
-
-func (s *tenantService) GetTenantForWorkspace(ctx context.Context, workspaceEntity neo4jentity.WorkspaceEntity) (*neo4jentity.TenantEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantService.GetTenantForWorkspace")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("workspace", workspaceEntity))
-
-	tenant, err := s.services.Neo4jRepositories.TenantReadRepository.GetTenantForWorkspaceProvider(ctx, workspaceEntity.Name, workspaceEntity.Provider)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, fmt.Errorf("GetTenantForWorkspace: %w", err)
-	}
-
-	return neo4jmapper.MapDbNodeToTenantEntity(tenant), nil
 }
 
 func (s *tenantService) GetTenantForUserEmail(ctx context.Context, email string) (*neo4jentity.TenantEntity, error) {
