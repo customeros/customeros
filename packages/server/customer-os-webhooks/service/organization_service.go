@@ -149,6 +149,7 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.SetTag(tracing.SpanTagExternalSystem, orgInput.ExternalSystem)
+	span.SetTag(tracing.SpanTagExternalId, orgInput.ExternalId)
 	span.LogFields(log.Object("syncDate", syncDate))
 	tracing.LogObjectAsJson(span, "orgInput", orgInput)
 

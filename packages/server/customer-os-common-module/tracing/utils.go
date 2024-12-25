@@ -27,7 +27,9 @@ const (
 	SpanTagEntityId       = "entity-id"
 	SpanTagComponent      = "component"
 	SpanTagExternalSystem = "external-system"
-	SpanTagAggregateId    = "aggregateID"
+	SpanTagExternalId     = "external-id"
+	//Deprecated
+	SpanTagAggregateId = "aggregateID"
 )
 
 const (
