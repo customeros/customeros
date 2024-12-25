@@ -122,6 +122,7 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.SetTag(tracing.SpanTagExternalSystem, contactInput.ExternalSystem)
+	span.SetTag(tracing.SpanTagExternalId, contactInput.ExternalId)
 	span.LogFields(log.Object("syncDate", syncDate))
 	tracing.LogObjectAsJson(span, "contactInput", contactInput)
 

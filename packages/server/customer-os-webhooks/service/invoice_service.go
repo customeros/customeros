@@ -122,6 +122,7 @@ func (s *invoiceService) syncInvoice(ctx context.Context, syncMutex *sync.Mutex,
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.SetTag(tracing.SpanTagExternalSystem, invoiceInput.ExternalSystem)
+	span.SetTag(tracing.SpanTagExternalId, invoiceInput.ExternalId)
 	span.LogFields(log.Object("syncDate", syncDate))
 	tracing.LogObjectAsJson(span, "invoiceInput", invoiceInput)
 

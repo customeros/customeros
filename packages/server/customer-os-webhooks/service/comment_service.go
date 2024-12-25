@@ -119,6 +119,7 @@ func (s *commentService) syncComment(ctx context.Context, syncMutex *sync.Mutex,
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.SetTag(tracing.SpanTagExternalSystem, commentInput.ExternalSystem)
+	span.SetTag(tracing.SpanTagExternalId, commentInput.ExternalId)
 	span.LogFields(log.Object("syncDate", syncDate))
 	tracing.LogObjectAsJson(span, "commentInput", commentInput)
 

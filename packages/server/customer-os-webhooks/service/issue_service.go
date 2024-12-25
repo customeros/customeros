@@ -120,6 +120,7 @@ func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, iss
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.SetTag(tracing.SpanTagExternalSystem, issueInput.ExternalSystem)
+	span.SetTag(tracing.SpanTagExternalId, issueInput.ExternalId)
 	span.LogFields(log.Object("syncDate", syncDate))
 	tracing.LogObjectAsJson(span, "issueInput", issueInput)
 
