@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail-raw/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail-raw/repository"
+	commonenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"time"
@@ -30,13 +31,13 @@ func (s *emailService) SyncEmailsForState(ctx context.Context, importState *post
 	var next string
 	var err error
 
-	if importState.Provider == "google" {
+	if importState.Provider == commonenum.WorkspaceProviderGoogle.String() {
 		externalSystem = neo4jenum.GMail.String()
 		rawEmails, next, err = s.services.CommonServices.GoogleService.ReadEmails(ctx, s.cfg.SyncData.BatchSize, importState)
 		if err != nil {
 			return nil, fmt.Errorf("unable to read emails from google: %v", err)
 		}
-	} else if importState.Provider == "azure-ad" {
+	} else if importState.Provider == commonenum.WorkspaceProviderAzure.String() {
 		externalSystem = neo4jenum.Outlook.String()
 		rawEmails, next, err = s.services.CommonServices.AzureService.ReadEmailsFromAzureAd(ctx, importState)
 		if err != nil {

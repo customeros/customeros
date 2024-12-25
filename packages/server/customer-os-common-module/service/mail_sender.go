@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	commonenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
@@ -174,9 +175,9 @@ func (s *mailService) sendEmailViaOAuth(
 	}
 
 	switch oauthToken.Provider {
-	case "google":
+	case commonenum.WorkspaceProviderGoogle.String():
 		return s.services.GoogleService.SendEmail(ctx, emailMessage)
-	case "azure-ad":
+	case commonenum.WorkspaceProviderAzure.String():
 		return s.services.AzureService.SendEmail(ctx, emailMessage)
 	default:
 		return fmt.Errorf("provider %s not supported", oauthToken.Provider)

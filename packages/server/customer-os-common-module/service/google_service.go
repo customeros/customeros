@@ -10,6 +10,7 @@ import (
 	mimemail "github.com/emersion/go-message/mail"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
+	commonenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
@@ -106,7 +107,7 @@ func (s *googleService) GetGmailService(ctx context.Context, username, tenant st
 
 		return gmailService, nil
 	} else {
-		tokenEntity, err := s.postgresRepositories.OAuthTokenRepository.GetByEmail(ctx, tenant, "google", username)
+		tokenEntity, err := s.postgresRepositories.OAuthTokenRepository.GetByEmail(ctx, tenant, commonenum.WorkspaceProviderGoogle.String(), username)
 		if err != nil {
 			return nil, err
 		}
