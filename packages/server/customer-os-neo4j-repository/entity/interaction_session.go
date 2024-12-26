@@ -1,6 +1,7 @@
 package entity
 
 import (
+	commonenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"time"
 )
@@ -12,7 +13,7 @@ type InteractionSessionEntity struct {
 	UpdatedAt     time.Time
 	Identifier    string
 	Name          string
-	Status        string
+	Status        commonenum.InteractionSessionStatus
 	Type          string
 	Channel       string
 	ChannelData   string

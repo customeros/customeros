@@ -14,7 +14,6 @@ import (
 type InteractionEventRepository interface {
 	GetInteractionEventIdByExternalId(ctx context.Context, tenant, externalSystemId, externalId string) (string, error)
 
-	MergeInteractionSession(ctx context.Context, tx neo4j.ManagedTransaction, tenant, identifier string, syncDate time.Time, message commonmodel.SaveEmailMessage, source, appSource string) (string, error)
 	MergeEmailInteractionEvent(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, syncDate time.Time, message commonmodel.SaveEmailMessage, source, appSource string) (string, error)
 	LinkInteractionEventToSession(ctx context.Context, tx neo4j.ManagedTransaction, tenant, interactionEventId, interactionSessionId string) error
 
@@ -61,54 +60,6 @@ func (r *interactionEventRepository) GetInteractionEventIdByExternalId(ctx conte
 		return "", err
 	}
 	return dbRecord.(*db.Record).Values[0].(string), nil
-}
-
-func (r *interactionEventRepository) MergeInteractionSession(ctx context.Context, tx neo4j.ManagedTransaction, tenant, identifier string, syncDate time.Time, message commonmodel.SaveEmailMessage, source, appSource string) (string, error) {
-	cypher := ""
-	if identifier == "" {
-		cypher += `MATCH (:Tenant {name:$tenant}) 
-			 	CREATE (is:InteractionSession_%s {identifier:$identifier, channel:$channel})
-				SET `
-	} else {
-		cypher += `MATCH (:Tenant {name:$tenant}) 
-			 	MERGE (is:InteractionSession_%s {identifier:$identifier, channel:$channel}) 
-			 	ON CREATE SET `
-	}
-
-	cypher += ` is:InteractionSession,
-			is.id=randomUUID(),
-			is.syncDate=$syncDate,
-			is.createdAt=$createdAt,
-			is.name=$name,
-			is.status=$status,
-			is.type=$type,
-			is.sourceOfTruth=$sourceOfTruth,
-			is.appSource=$appSource
-		WITH is
-		RETURN is.id`
-
-	queryResult, err := tx.Run(ctx, fmt.Sprintf(cypher, tenant),
-		map[string]interface{}{
-			"tenant":        tenant,
-			"source":        source,
-			"sourceOfTruth": "openline",
-			"appSource":     appSource,
-			"identifier":    identifier,
-			"name":          message.Subject,
-			"syncDate":      syncDate,
-			"createdAt":     message.CreatedAt,
-			"status":        "ACTIVE",
-			"type":          "THREAD",
-			"channel":       "EMAIL",
-		})
-	if err != nil {
-		return "", err
-	}
-	record, err := queryResult.Single(ctx)
-	if err != nil {
-		return "", err
-	}
-	return record.Values[0].(string), nil
 }
 
 func (r *interactionEventRepository) MergeEmailInteractionEvent(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, syncDate time.Time, message commonmodel.SaveEmailMessage, source, appSource string) (string, error) {

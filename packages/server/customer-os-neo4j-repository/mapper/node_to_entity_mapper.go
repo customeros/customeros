@@ -3,6 +3,7 @@ package mapper
 import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	commonenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
@@ -921,7 +922,7 @@ func MapDbNodeToInteractionSessionEntity(node *dbtype.Node) *entity.InteractionS
 		Identifier:    utils.GetStringPropOrEmpty(props, "identifier"),
 		Type:          utils.GetStringPropOrEmpty(props, "type"),
 		Name:          utils.GetStringPropOrEmpty(props, "name"),
-		Status:        utils.GetStringPropOrEmpty(props, "status"),
+		Status:        commonenum.DecodeInteractionSessionStatus(utils.GetStringPropOrEmpty(props, "status")),
 		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),

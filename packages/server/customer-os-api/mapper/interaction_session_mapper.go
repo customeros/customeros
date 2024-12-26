@@ -15,7 +15,7 @@ func MapEntityToInteractionSession(entity *neo4jentity.InteractionSessionEntity)
 		UpdatedAt:     entity.UpdatedAt,
 		Identifier:    entity.Identifier,
 		Name:          entity.Name,
-		Status:        entity.Status,
+		Status:        entity.Status.String(),
 		Type:          &entity.Type,
 		Channel:       &entity.Channel,
 		ChannelData:   &entity.ChannelData,
