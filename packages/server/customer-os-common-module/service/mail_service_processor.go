@@ -218,6 +218,7 @@ func (s *mailService) processRawEmails(ctx context.Context, tenant string, rawEm
 func (s *mailService) processInboundEmail(ctx context.Context, tenant string, email *EmailMessageData, rawEmail *postgresentity.RawEmail) entity.UpdateRawEmailTable {
 	span, ctx := s.initializeTracing(ctx, "MailService.processInboundEmail")
 	defer span.Finish()
+	tracing.TagTenant(span, tenant)
 
 	var db entity.UpdateRawEmailTable
 	var txWithPostCommit *utils.TxWithPostCommit
@@ -239,6 +240,7 @@ func (s *mailService) processInboundEmail(ctx context.Context, tenant string, em
 func (s *mailService) processSessionAndEvents(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, tenant string, emailMessageData *EmailMessageData, rawEmail *postgresentity.RawEmail) error {
 	span, ctx := s.initializeTracing(ctx, "MailService.processSessionAndEvents")
 	defer span.Finish()
+	tracing.TagTenant(span, tenant)
 
 	now := utils.Now()
 
