@@ -245,7 +245,7 @@ func (s *mailService) getOrCreateInteractionSession(ctx context.Context, tx neo4
 	sessionID, err := s.services.InteractionSessionService.CreateInTx(ctx, tx, &neo4jentity.InteractionSessionEntity{
 		Status:     commonenum.InteractionSessionStatusActive,
 		Type:       "THREAD",
-		Channel:    "EMAIL",
+		Channel:    commonenum.InteractionSessionChannelEmail,
 		Identifier: emailMessage.ProviderThreadId,
 		Name:       emailMessage.Subject,
 	})
