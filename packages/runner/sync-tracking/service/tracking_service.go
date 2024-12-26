@@ -177,7 +177,7 @@ func (s *trackingService) CreateOrganizationsFromTrackedData(ctx context.Context
 		span.LogFields(log.String("company_domain", *snitcherData.CompanyDomain))
 		span.LogFields(log.String("company_website", utils.StringOrEmpty(snitcherData.CompanyWebsite)))
 
-		organizationByDomainNode, err := s.services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByDomain(innerCtx, record.Tenant, *snitcherData.CompanyDomain)
+		organizationByDomainNode, err := s.services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByDomain(innerCtx, nil, record.Tenant, *snitcherData.CompanyDomain)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err

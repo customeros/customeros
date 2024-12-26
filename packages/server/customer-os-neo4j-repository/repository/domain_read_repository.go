@@ -12,7 +12,7 @@ import (
 )
 
 type DomainReadRepository interface {
-	GetDomain(ctx context.Context, domain string) (*dbtype.Node, error)
+	GetDomain(ctx context.Context, tx *neo4j.ManagedTransaction, domain string) (*dbtype.Node, error)
 	GetForOrganizations(ctx context.Context, tenant string, organizationIds []string) ([]*utils.DbNodeAndId, error)
 	GetDomainsForPrimaryCheck(ctx context.Context, delayFromPreviousCheckInDays, limit int) ([]string, error)
 }
@@ -66,7 +66,7 @@ func (r *domainReadRepository) prepareReadSession(ctx context.Context) neo4j.Ses
 	return utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 }
 
-func (r *domainReadRepository) GetDomain(ctx context.Context, domain string) (*dbtype.Node, error) {
+func (r *domainReadRepository) GetDomain(ctx context.Context, tx *neo4j.ManagedTransaction, domain string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "DomainReadRepository.GetDomain")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
@@ -81,18 +81,23 @@ func (r *domainReadRepository) GetDomain(ctx context.Context, domain string) (*d
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
 
-	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+	result, err := utils.ExecuteReadInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
 			return nil, err
 		} else {
-			return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+			return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
 		}
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
-	return result.(*dbtype.Node), nil
+	if len(result.([]*dbtype.Node)) == 0 {
+		span.LogFields(log.Bool("result.found", false))
+		return nil, nil
+	}
+	span.LogFields(log.Bool("result.found", true))
+	return result.([]*dbtype.Node)[0], nil
 }
 
 func (r *domainReadRepository) GetForOrganizations(ctx context.Context, tenant string, organizationIds []string) ([]*utils.DbNodeAndId, error) {

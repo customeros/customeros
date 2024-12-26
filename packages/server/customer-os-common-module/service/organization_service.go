@@ -178,7 +178,7 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 			// for each domain check that no org exists with that domain
 			// if exist reject creation and return existing org id
 			for _, domain := range domains {
-				orgByDomainDbNode, err := s.services.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByDomain(ctx, tenant, domain)
+				orgByDomainDbNode, err := s.services.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByDomain(ctx, nil, tenant, domain)
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "Error fetching organization by domain"))
 					return "", err

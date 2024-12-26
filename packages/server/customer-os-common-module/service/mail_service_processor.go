@@ -3,6 +3,8 @@ package service
 import (
 	"context"
 	"fmt"
+	mailsherpa "github.com/customeros/mailsherpa/mailvalidate"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	commonenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"strings"
@@ -314,32 +316,31 @@ func (s *mailService) linkParticipants(ctx context.Context, txWithPostCommit *ut
 
 	_, err := utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
 		// Link From participant
-		fromId, err := s.getOrCreateEmailId(ctx, *txWithPostCommit.Tx, tenant, participants.From.Email, syncDate, externalSystem, emailIds, span)
+		fromId, err := s.getOrCreateEmailId(ctx, txWithPostCommit, tenant, participants.From.Email, syncDate, externalSystem, emailIds)
 		if err != nil {
 			err = fmt.Errorf("failed to get or create email id: %w", err)
 			return nil, err
 		}
-		if err := s.services.Neo4jRepositories.InteractionEventWriteRepository.InteractionEventSentByEmail(ctx, txWithPostCommit.Tx, tenant, interactionEventId, fromId); err != nil {
+		if err = s.services.Neo4jRepositories.InteractionEventWriteRepository.InteractionEventSentByEmail(ctx, txWithPostCommit.Tx, tenant, interactionEventId, fromId); err != nil {
 			err = fmt.Errorf("failed to create interaction event sent by email: %w", err)
 			return nil, err
 		}
 
 		// Link To participants
-		if err := s.linkEmailGroup(ctx, *txWithPostCommit.Tx, tenant, interactionEventId, "TO", participants.GetToEmailAddresses(), syncDate, externalSystem, emailIds, span); err != nil {
+		if err = s.linkEmailGroup(ctx, txWithPostCommit, tenant, interactionEventId, "TO", participants.GetToEmailAddresses(), syncDate, externalSystem, emailIds); err != nil {
 			err = fmt.Errorf("failed to link email group for TO: %w", err)
 			return nil, err
 		}
 
 		// Link CC participants
-		if err := s.linkEmailGroup(ctx, *txWithPostCommit.Tx, tenant, interactionEventId, "CC", participants.GetCcEmailAddresses(), syncDate, externalSystem, emailIds, span); err != nil {
+		if err = s.linkEmailGroup(ctx, txWithPostCommit, tenant, interactionEventId, "CC", participants.GetCcEmailAddresses(), syncDate, externalSystem, emailIds); err != nil {
 			err = fmt.Errorf("failed to link email group for CC: %w", err)
 			return nil, err
 		}
 
 		// Link BCC participants
-		if err = s.linkEmailGroup(ctx, *txWithPostCommit.Tx, tenant, interactionEventId, "BCC", participants.GetBccEmailAddresses(), syncDate, externalSystem, emailIds, span); err != nil {
+		if err = s.linkEmailGroup(ctx, txWithPostCommit, tenant, interactionEventId, "BCC", participants.GetBccEmailAddresses(), syncDate, externalSystem, emailIds); err != nil {
 			err = fmt.Errorf("failed to link email group for BCC: %w", err)
-			tracing.TraceErr(span, err)
 			return nil, err
 		}
 
@@ -353,61 +354,58 @@ func (s *mailService) linkParticipants(ctx context.Context, txWithPostCommit *ut
 	return nil
 }
 
-func (s *mailService) linkEmailGroup(
-	ctx context.Context,
-	tx neo4j.ManagedTransaction,
-	tenant string,
-	eventId string,
-	groupType string,
-	emails []string,
-	now time.Time,
-	externalSystem string,
-	emailIds map[string]string,
-	span opentracing.Span,
-) error {
-	var groupEmailIds []string
+func (s *mailService) linkEmailGroup(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, tenant string, interactionEventId string, groupType string, emails []string,
+	syncDate time.Time, externalSystem string, emailIds map[string]string) error {
 
-	for _, email := range emails {
-		if email == "" {
-			continue
+	span, ctx := tracing.StartTracerSpan(ctx, "MailService.linkEmailGroup")
+	defer span.Finish()
+	tracing.TagTenant(span, tenant)
+	tracing.TagEntity(span, interactionEventId)
+	span.LogFields(log.String("groupType", groupType), log.String("emails", strings.Join(emails, ",")), log.String("externalSystem", externalSystem))
+
+	_, err := utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
+		var groupEmailIds []string
+		for _, email := range emails {
+			if email == "" {
+				continue
+			}
+
+			emailId, err := s.getOrCreateEmailId(ctx, txWithPostCommit, tenant, email, syncDate, externalSystem, emailIds)
+			if err != nil {
+				err = fmt.Errorf("failed to get or create email ID: %w", err)
+				return nil, err
+			}
+
+			if !utils.Contains(groupEmailIds, emailId) {
+				groupEmailIds = append(groupEmailIds, emailId)
+			}
 		}
 
-		emailId, err := s.getOrCreateEmailId(ctx, tx, tenant, email, now, externalSystem, emailIds, span)
-		if err != nil {
-			err = fmt.Errorf("failed to get or create email ID: %v", err)
-			tracing.TraceErr(span, err)
-			return err
+		if len(groupEmailIds) > 0 {
+			return nil, s.services.Neo4jRepositories.InteractionEventWriteRepository.InteractionEventSentToEmails(
+				ctx, txWithPostCommit.Tx, tenant, interactionEventId, groupType, groupEmailIds,
+			)
 		}
-
-		if !utils.Contains(groupEmailIds, emailId) {
-			groupEmailIds = append(groupEmailIds, emailId)
-		}
-	}
-
-	if len(groupEmailIds) > 0 {
-		return s.services.Neo4jRepositories.InteractionEventWriteRepository.InteractionEventSentToEmails(
-			ctx, &tx, tenant, eventId, groupType, groupEmailIds,
-		)
+		return nil, nil
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
 	}
 
 	return nil
 }
 
-func (s *mailService) getOrCreateEmailId(
-	ctx context.Context,
-	tx neo4j.ManagedTransaction,
-	tenant string,
-	email string,
-	now time.Time,
-	externalSystem string,
-	emailIds map[string]string,
-	span opentracing.Span,
-) (string, error) {
+func (s *mailService) getOrCreateEmailId(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, tenant string, email string, syncDate time.Time, externalSystem string, emailIds map[string]string) (string, error) {
+	span, ctx := tracing.StartTracerSpan(ctx, "MailService.getOrCreateEmailId")
+	defer span.Finish()
+	tracing.TagTenant(span, tenant)
+
 	if id, exists := emailIds[email]; exists {
 		return id, nil
 	}
 
-	id, err := s.GetEmailIdForEmail(ctx, tx, tenant, email, now, externalSystem)
+	id, err := s.GetEmailIdForEmail(ctx, txWithPostCommit, tenant, email, externalSystem)
 	if err != nil {
 		err = fmt.Errorf("failed to get email ID for %s: %v", email, err)
 		tracing.TraceErr(span, err)
@@ -467,134 +465,112 @@ func (s *mailService) mapDbNodeToEmailEntity(node dbtype.Node) *neo4jentity.Emai
 	return &result
 }
 
-func (s *mailService) GetEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTransaction, tenant, email string, now time.Time, source string) (string, error) {
+func (s *mailService) GetEmailIdForEmail(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, tenant, email string, source string) (string, error) {
 	span, ctx := tracing.StartTracerSpan(ctx, "MailService.GetEmailIdForEmail")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
+	tracing.TagTenant(span, tenant)
 	span.LogKV("email", email)
 
 	if email == "" {
 		return "", nil
 	}
-	if !strings.Contains(email, "@") {
+	emailSyntax := mailsherpa.ValidateEmailSyntax(email)
+	if !emailSyntax.IsValid {
 		return "", nil
 	}
 
-	emailId, err := s.services.Neo4jRepositories.EmailReadRepository.GetEmailIdIfExists(ctx, tenant, email)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "unable to retrieve email id"))
-		return "", fmt.Errorf("unable to retrieve email id for tenant: %v", err)
-	}
-	if emailId != "" {
-		return emailId, nil
-	}
-
-	//if it's a personal email, we create just the email node in tenant
-	domain := utils.ExtractDomainFromEmail(email)
-	if domain == "" {
-		err = errors.New("unable to extract domain from email: " + email)
-		tracing.TraceErr(span, errors.Wrap(err, "unable to extract domain from email"))
-		return "", err
-	}
-	if utils.Contains(s.services.Cache.GetPersonalEmailProviders(), domain) {
-		emailIdPtr, err := s.services.EmailService.Merge(ctx, nil, tenant, EmailFields{
-			Email:     email,
-			Source:    neo4jentity.DecodeDataSource(source),
-			AppSource: constants.AppSourceSyncEmail,
-		}, nil)
+	output, err := utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
+		emailId, err := s.services.Neo4jRepositories.EmailReadRepository.GetEmailIdIfExists(ctx, tenant, email)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "unable to create email"))
+			return "", fmt.Errorf("unable to retrieve email id for tenant: %w", err)
+		}
+		if emailId != "" {
+			return emailId, nil
+		}
+
+		//if it's a personal email, we create just the email node in tenant
+		domain := utils.ExtractDomainFromEmail(email)
+		if domain == "" {
+			err = errors.New("unable to extract domain from email: " + email)
 			return "", err
 		}
-		emailId = utils.IfNotNilString(emailIdPtr)
-		return emailId, nil
-	}
+		if utils.Contains(s.services.Cache.GetPersonalEmailProviders(), domain) {
+			emailIdPtr, err := s.services.EmailService.Merge(ctx, txWithPostCommit, tenant, EmailFields{
+				Email:     email,
+				Source:    neo4jentity.DecodeDataSource(source),
+				AppSource: constants.AppSourceSyncEmail,
+			}, nil)
+			if err != nil {
+				return "", err
+			}
+			emailId = utils.IfNotNilString(emailIdPtr)
+			return emailId, nil
+		}
 
-	var domainNode *neo4j.Node
-	var organizationNode *neo4j.Node
-	var organizationId string
+		var domainNode *neo4j.Node
+		var organizationNode *neo4j.Node
+		var organizationId string
 
-	domainNode, err = s.services.Neo4jRepositories.DomainRepository.GetDomainInTx(ctx, tx, domain)
-	if err != nil {
-		return "", fmt.Errorf("unable to retrieve domain for tenant: %v", err)
-	}
-
-	if domainNode == nil {
-		domainNode, err = s.services.Neo4jRepositories.DomainRepository.CreateDomainInTx(ctx, tx, domain, source, constants.AppSourceSyncEmail, now)
+		domainNode, err = s.services.Neo4jRepositories.DomainReadRepository.GetDomain(ctx, txWithPostCommit.Tx, domain)
 		if err != nil {
-			return "", fmt.Errorf("unable to create domain: %v", err)
-		}
-	}
-	organizationNode, err = s.services.Neo4jRepositories.OrganizationRepository.GetOrganizationWithDomain(ctx, tx, tenant, utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*domainNode), "domain"))
-	if err != nil {
-		return "", fmt.Errorf("unable to retrieve organization for tenant: %v", err)
-	}
-
-	if organizationNode == nil {
-
-		organizationName := domain
-		hide := false
-		relationship := neo4jenum.OrganizationRelationshipProspect.String()
-		stage := neo4jenum.Lead.String()
-		leadSource := ""
-
-		if source == neo4jentity.DataSourceGmail.String() {
-			leadSource = "Gmail"
-		} else if source == neo4jentity.DataSourceOutlook.String() {
-			leadSource = "Outlook"
-		} else if source == neo4jentity.DataSourceMailstack.String() {
-			leadSource = "Mailstack"
-			stage = neo4jenum.Target.String()
-		} else {
-			leadSource = "Email"
+			return "", fmt.Errorf("unable to retrieve domain for tenant: %w", err)
 		}
 
-		organizationNode, err = s.services.Neo4jRepositories.OrganizationRepository.CreateOrganization(ctx, tx, tenant, organizationName, relationship, stage, leadSource, source, "openline", constants.AppSourceSyncEmail, now, hide)
-		if err != nil {
-			return "", fmt.Errorf("unable to create organization for tenant: %v", err)
-		}
-
-		organizationId = utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*organizationNode), "id")
-		domainName := utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*domainNode), "domain")
-		err = s.services.Neo4jRepositories.OrganizationRepository.LinkDomainToOrganization(ctx, tx, tenant, domainName, organizationId)
-		if err != nil {
-			return "", fmt.Errorf("unable to link domain to organization: %v", err)
-		}
-
-		_, err := s.services.Neo4jRepositories.ActionRepository.Create(ctx, tx, tenant, organizationId, model.ORGANIZATION, neo4jenum.ActionCreated, source, constants.AppSourceSyncEmail)
-		if err != nil {
-			return "", fmt.Errorf("unable to create action: %v", err)
-		}
-	} else {
-		organizationId = utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*organizationNode), "id")
-	}
-
-	firstName := ""
-	lastname := ""
-
-	//split email address by @ and take the first part to determine first name and last name
-	emailParts := strings.Split(email, "@")
-	if len(emailParts) > 0 {
-		firstPart := emailParts[0]
-		nameParts := strings.Split(firstPart, ".")
-		if len(nameParts) > 0 {
-			firstName = nameParts[0]
-			if len(nameParts) > 1 {
-				lastname = nameParts[1]
+		if domainNode == nil {
+			err = s.services.Neo4jRepositories.DomainWriteRepository.MergeDomain(ctx, txWithPostCommit.Tx, domain, source, constants.AppSourceSyncEmail)
+			if err != nil {
+				return "", fmt.Errorf("unable to create domain: %v", err)
 			}
 		}
-	}
+		organizationNode, err = s.services.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByDomain(ctx, txWithPostCommit.Tx, tenant, domain)
+		if err != nil {
+			return "", fmt.Errorf("unable to retrieve organization for tenant: %v", err)
+		}
 
-	emailId, err = s.services.Neo4jRepositories.EmailRepository.CreateContactWithEmailLinkedToOrganization(ctx, tx, tenant, organizationId, email, firstName, lastname, source, constants.AppSourceSyncEmail)
+		if organizationNode == nil {
+			stage := neo4jenum.Lead
+			leadSource := ""
+
+			if source == neo4jentity.DataSourceGmail.String() {
+				leadSource = "Gmail"
+			} else if source == neo4jentity.DataSourceOutlook.String() {
+				leadSource = "Outlook"
+			} else if source == neo4jentity.DataSourceMailstack.String() {
+				leadSource = "Mailstack"
+				stage = neo4jenum.Target
+			} else {
+				leadSource = "Email"
+			}
+
+			organizationFields := data_fields.OrganizationFields{
+				LeadSource:   utils.StringPtr(leadSource),
+				Stage:        utils.ToPtr(stage),
+				Relationship: utils.ToPtr(neo4jenum.OrganizationRelationshipProspect),
+				Domains:      []string{domain},
+				Source:       utils.StringPtr(source),
+			}
+
+			organizationId, err = s.services.OrganizationService.Save(ctx, txWithPostCommit, nil, organizationFields)
+			if err != nil {
+				return "", fmt.Errorf("failed to create organization: %w", err)
+			}
+		} else {
+			organizationId = utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*organizationNode), "id")
+		}
+
+		contactId, err := s.services.ContactService.CreateContactByEmail(ctx, txWithPostCommit, email)
+		if err != nil {
+			return "", fmt.Errorf("unable to create contact: %w", err)
+		}
+
+		err = s.services.ContactService.LinkContactWithOrganization(ctx, txWithPostCommit, contactId, organizationId, "", "", source, false, nil, nil)
+
+		return emailId, nil
+	})
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "unable to create contact linked to organization"))
-		return "", fmt.Errorf("unable to create contact linked to organization: %s", err.Error())
+		tracing.TraceErr(span, errors.Wrap(err, "failed to get email id for email"))
+		return "", err
 	}
 
-	err = s.services.Neo4jRepositories.OrganizationWriteRepository.RefreshContactCountByOrgId(ctx, &tx, tenant, organizationId)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "unable to refresh contact count by org id"))
-	}
-
-	return emailId, nil
+	return output.(string), nil
 }
