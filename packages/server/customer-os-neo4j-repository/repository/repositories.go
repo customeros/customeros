@@ -92,11 +92,10 @@ type Repositories struct {
 	WorkspaceReadRepository                  WorkspaceReadRepository
 	WorkspaceWriteRepository                 WorkspaceWriteRepository
 	// TODO delete below
-	EmailRepository            EmailRepository
-	DomainRepository           DomainRepository
-	OrganizationRepository     OrganizationRepository
-	ActionRepository           ActionRepository
-	InteractionEventRepository InteractionEventRepository
+	EmailRepository        EmailRepository
+	DomainRepository       DomainRepository
+	OrganizationRepository OrganizationRepository
+	ActionRepository       ActionRepository
 }
 
 func InitNeo4jRepositories(driver *neo4j.DriverWithContext, neo4jDatabase string) *Repositories {
@@ -190,7 +189,6 @@ func InitNeo4jRepositories(driver *neo4j.DriverWithContext, neo4jDatabase string
 		DomainRepository:                         NewDomainRepository(driver),
 		OrganizationRepository:                   NewOrganizationRepository(driver),
 		ActionRepository:                         NewActionRepository(driver),
-		InteractionEventRepository:               NewInteractionEventRepository(driver),
 	}
 	return &repositories
 }
