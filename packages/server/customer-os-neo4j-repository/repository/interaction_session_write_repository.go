@@ -58,11 +58,11 @@ func (r *interactionSessionWriteRepository) CreateInTx(ctx context.Context, tx n
 		"createdAt":            utils.NowIfZero(data.CreatedAt),
 		"source":               data.Source,
 		"appSource":            data.AppSource,
-		"channel":              data.Channel,
+		"channel":              data.Channel.String(),
 		"channelData":          data.ChannelData,
 		"identifier":           data.Identifier,
 		"type":                 data.Type,
-		"status":               data.Status,
+		"status":               data.Status.String(),
 		"name":                 data.Name,
 	}
 	span.LogFields(log.String("cypher", cypher))

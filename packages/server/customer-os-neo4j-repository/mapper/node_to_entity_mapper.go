@@ -917,7 +917,7 @@ func MapDbNodeToInteractionSessionEntity(node *dbtype.Node) *entity.InteractionS
 	props := utils.GetPropsFromNode(*node)
 	interactionSession := entity.InteractionSessionEntity{
 		Id:            utils.GetStringPropOrEmpty(props, "id"),
-		Channel:       utils.GetStringPropOrEmpty(props, "channel"),
+		Channel:       commonenum.DecodeInteractionSessionChannel(utils.GetStringPropOrEmpty(props, "channel")),
 		ChannelData:   utils.GetStringPropOrEmpty(props, "channelData"),
 		Identifier:    utils.GetStringPropOrEmpty(props, "identifier"),
 		Type:          utils.GetStringPropOrEmpty(props, "type"),
