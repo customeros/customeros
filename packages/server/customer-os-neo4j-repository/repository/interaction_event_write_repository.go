@@ -45,6 +45,8 @@ type InteractionEventWriteRepository interface {
 	Update(ctx context.Context, tenant, interactionEventId string, data InteractionEventUpdateFields) error
 	MergeByExternalSystem(ctx context.Context, tx *neo4j.ManagedTransaction, tenant string, syncDate time.Time, message commonmodel.SaveEmailMessage, source, appSource string) (string, error)
 	LinkInteractionEventToSession(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, interactionEventId, interactionSessionId string) error
+	InteractionEventSentByEmail(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, interactionEventId, emailId string) error
+	InteractionEventSentToEmails(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, interactionEventId, sentType string, emailIds []string) error
 }
 
 type interactionEventWriteRepository struct {
@@ -245,6 +247,75 @@ func (r *interactionEventWriteRepository) LinkInteractionEventToSession(ctx cont
 		"tenant":               tenant,
 		"interactionEventId":   interactionEventId,
 		"interactionSessionId": interactionSessionId,
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+
+	return err
+}
+
+func (r *interactionEventWriteRepository) InteractionEventSentByEmail(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, interactionEventId, emailId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventWriteRepository.InteractionEventSentByEmail")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
+	tracing.TagEntity(span, interactionEventId)
+
+	cypher := fmt.Sprintf(`MATCH (ie:InteractionEvent_%s {id:$interactionEventId})
+		 MATCH (e:Email_%s {id: $emailId})
+		 MERGE (ie)-[:SENT_BY]->(e)`, tenant, tenant)
+
+	params := map[string]interface{}{
+		"tenant":             tenant,
+		"interactionEventId": interactionEventId,
+		"emailId":            emailId,
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+
+	return err
+}
+
+func (r *interactionEventWriteRepository) InteractionEventSentToEmails(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, interactionEventId, sentType string, emailIds []string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventWriteRepository.InteractionEventSentToEmails")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
+	tracing.TagEntity(span, interactionEventId)
+
+	cypher := fmt.Sprintf(`MATCH (ie:InteractionEvent_%s {id:$interactionEventId})
+		 MATCH (e:Email_%s) WHERE e.id in $emailIds
+		 MERGE (ie)-[:SENT_TO {type: $sentType}]->(e)`, tenant, tenant)
+
+	params := map[string]interface{}{
+		"tenant":             tenant,
+		"interactionEventId": interactionEventId,
+		"sentType":           sentType,
+		"emailIds":           emailIds,
 	}
 
 	span.LogFields(log.String("cypher", cypher))
