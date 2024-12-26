@@ -27,6 +27,15 @@ func (a *mailService) ProcessEmailCheck(ctx context.Context, tenant string, emai
 		ProcessEmail: true, // Default to processing
 	}
 
+	// Check valid from email address
+	if emailData.Participants.From.Email != "" {
+		if !mailvalidate.ValidateEmailSyntax(emailData.Participants.From.Email).IsValid {
+			analysis.ProcessEmail = false
+			analysis.SkipReason = "INVALID FROM EMAIL ADDRESS FORMAT"
+			return analysis
+		}
+	}
+
 	// Check bounce
 	bounce, reason := a.isBounce(emailData.Headers, emailData.Content.Subject, emailData.Participants.From.Email)
 	if bounce {
