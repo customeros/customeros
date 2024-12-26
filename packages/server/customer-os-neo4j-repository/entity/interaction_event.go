@@ -3,6 +3,7 @@ package entity
 import (
 	"encoding/json"
 	"fmt"
+	commonenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"time"
 )
@@ -14,7 +15,7 @@ type InteractionEventEntity struct {
 	UpdatedAt                    time.Time
 	Content                      string
 	ContentType                  string
-	Channel                      string
+	Channel                      commonenum.InteractionEventChannel
 	ChannelData                  string
 	Identifier                   string
 	CustomerOSInternalIdentifier string

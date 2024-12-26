@@ -2,6 +2,7 @@ package resolver
 
 import (
 	"context"
+	commonenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	model2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
@@ -647,10 +648,10 @@ func TestQueryResolver_Organization_WithTimelineEventsTotalCount(t *testing.T) {
 	neo4jt.CreateNoteForOrganization(ctx, driver, tenantName, organizationId, "org note 1", now)
 
 	// prepare contact and org interaction events
-	channel := "EMAIL"
-	interactionEventId1 := neo4jtest.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 1", "application/json", channel, now)
-	interactionEventId2 := neo4jtest.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 2", "application/json", channel, now)
-	interactionEventId3 := neo4jtest.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 3", "application/json", channel, now)
+	channel := commonenum.InteractionEventChannelEmail
+	interactionEventId1 := neo4jtest.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 1", "application/json", channel.String(), now)
+	interactionEventId2 := neo4jtest.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 2", "application/json", channel.String(), now)
+	interactionEventId3 := neo4jtest.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 3", "application/json", channel.String(), now)
 	interactionEventId4Hidden := neo4jtest.CreateInteractionEventFromEntity(ctx, driver, tenantName, neo4jentity.InteractionEventEntity{
 		Identifier:  "myExternalId",
 		Content:     "IE text 4",
