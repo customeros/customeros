@@ -67,8 +67,6 @@ type Services struct {
 	PostmarkService  PostmarkService
 	NovuService      NovuService
 	NamecheapService NamecheapService
-
-	SyncService SyncService
 }
 
 func InitServices(globalConfig *config.GlobalConfig, postgresDB *config.PostgresDB, driver *neo4j.DriverWithContext, neo4jDatabase string, grpcClients *grpc_client.Clients, log logger.Logger) *Services {
@@ -131,9 +129,6 @@ func InitServices(globalConfig *config.GlobalConfig, postgresDB *config.Postgres
 	services.MailstackService = NewMailstackService(globalConfig, services)
 	services.NamecheapService = NewNamecheapService(globalConfig, services)
 	services.CloudflareService = NewCloudflareService(log, services, globalConfig)
-
-	// TODO remove, and refactor
-	services.SyncService = NewSyncService(services)
 
 	// init app cache
 	personalEmailProviderEntities, err := services.PostgresRepositories.PersonalEmailProviderRepository.GetPersonalEmailProviders()
