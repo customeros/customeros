@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	commonenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"strings"
 	"time"
@@ -247,7 +248,7 @@ func (s *mailService) processSessionAndEvents(ctx context.Context, txWithPostCom
 	_, err := utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
 		// step 1: Get or create session
 		sessionId, err := s.services.Neo4jRepositories.InteractionSessionWriteRepository.MergeByIdentifierAndChannel(
-			ctx, txWithPostCommit.Tx, tenant, emailMessageData.Identifiers.EmailThreadId, now, cosEmail, "THREAD", "EMAIL", rawEmail.ExternalSystem, AppSource,
+			ctx, txWithPostCommit.Tx, tenant, emailMessageData.Identifiers.EmailThreadId, now, cosEmail, commonenum.InteractionSessionTypeThread, commonenum.InteractionSessionChannelEmail, rawEmail.ExternalSystem, AppSource,
 		)
 		if err != nil {
 			err = fmt.Errorf("failed merge interaction session: %w", err)

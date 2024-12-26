@@ -920,7 +920,7 @@ func MapDbNodeToInteractionSessionEntity(node *dbtype.Node) *entity.InteractionS
 		Channel:       commonenum.DecodeInteractionSessionChannel(utils.GetStringPropOrEmpty(props, "channel")),
 		ChannelData:   utils.GetStringPropOrEmpty(props, "channelData"),
 		Identifier:    utils.GetStringPropOrEmpty(props, "identifier"),
-		Type:          utils.GetStringPropOrEmpty(props, "type"),
+		Type:          commonenum.DecodeInteractionSessionType(utils.GetStringPropOrEmpty(props, "type")),
 		Name:          utils.GetStringPropOrEmpty(props, "name"),
 		Status:        commonenum.DecodeInteractionSessionStatus(utils.GetStringPropOrEmpty(props, "status")),
 		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
