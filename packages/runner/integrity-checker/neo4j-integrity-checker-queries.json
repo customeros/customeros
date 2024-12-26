@@ -186,6 +186,10 @@
         {
           "name": "Domains without primary flag",
           "query": "MATCH (d:Domain) WHERE d.primary IS NULL RETURN count(d)"
+        },
+        {
+          "name": "Domains with wrong format",
+          "query": "MATCH (d:Domain) WHERE d.domain STARTS WITH 'www.' OR d.domain STARTS WITH 'http://' OR d.domain STARTS WITH 'https://' OR d.domain ENDS WITH '/' RETURN count(d)"
         }
       ]
     },
