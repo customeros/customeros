@@ -168,7 +168,7 @@ func (s *mailService) ProcessEmail(ctx context.Context, tenant string, rawEmailI
 		return db
 	}
 
-	return s.processInboundEmail(ctx, tenant, &emailMessageData, rawEmail, utils.Now(), span)
+	return s.processInboundEmail(ctx, tenant, &emailMessageData, rawEmail)
 }
 
 func (s *mailService) ProcessEmailByMessageId(ctx context.Context, tenant, usernameSource, messageId string) entity.UpdateRawEmailTable {
@@ -213,43 +213,20 @@ func (s *mailService) processRawEmails(ctx context.Context, tenant string, rawEm
 	}
 }
 
-func (s *mailService) processInboundEmail(
-	ctx context.Context,
-	tenant string,
-	email *EmailMessageData,
-	rawEmail *postgresentity.RawEmail,
-	ts time.Time,
-	span opentracing.Span,
-) entity.UpdateRawEmailTable {
+func (s *mailService) processInboundEmail(ctx context.Context, tenant string, email *EmailMessageData, rawEmail *postgresentity.RawEmail) entity.UpdateRawEmailTable {
+	span, ctx := s.initializeTracing(ctx, "MailService.processInboundEmail")
+	defer span.Finish()
+
 	var db entity.UpdateRawEmailTable
+	var txWithPostCommit *utils.TxWithPostCommit
 
-	session := utils.NewNeo4jWriteSession(ctx, *s.services.Neo4jRepositories.Neo4jDriver)
-	defer session.Close(ctx)
-
-	tx, err := session.BeginTransaction(ctx)
+	_, err := utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
+		return nil, s.processSessionAndEvents(ctx, txWithPostCommit, tenant, email, rawEmail)
+	})
 	if err != nil {
-		err = fmt.Errorf("failed to start transaction: %v", err)
 		tracing.TraceErr(span, err)
 		db.EmailProcessingStatus = postgresentity.ERROR
-		db.Error = fmt.Errorf("email with message id %v not found", email.Identifiers.MessageId)
-		return db
-	}
-	defer tx.Close(ctx)
-
-	// Process session and events
-	if err := s.processSessionAndEvents(ctx, tx, tenant, email, rawEmail, ts, span); err != nil {
-		err = fmt.Errorf("failed to process session and events: %v", err)
-		tracing.TraceErr(span, err)
-		db.EmailProcessingStatus = postgresentity.ERROR
-		db.Error = fmt.Errorf("email with message id %v not found", email.Identifiers.MessageId)
-		return db
-	}
-
-	if err := tx.Commit(ctx); err != nil {
-		err = fmt.Errorf("failed to commit transaction: %v", err)
-		tracing.TraceErr(span, err)
-		db.EmailProcessingStatus = postgresentity.ERROR
-		db.Error = fmt.Errorf("email with message id %v not found", email.Identifiers.MessageId)
+		db.Error = fmt.Errorf("mail with message id %s failed processing", email.Identifiers.MessageId)
 		return db
 	}
 
@@ -259,48 +236,54 @@ func (s *mailService) processInboundEmail(
 
 func (s *mailService) processSessionAndEvents(
 	ctx context.Context,
-	tx neo4j.ManagedTransaction,
+	txWithPostCommit *utils.TxWithPostCommit,
 	tenant string,
 	emailMessageData *EmailMessageData,
 	rawEmail *postgresentity.RawEmail,
-	ts time.Time,
-	span opentracing.Span,
 ) error {
+	span, ctx := s.initializeTracing(ctx, "MailService.processSessionAndEvents")
+	defer span.Finish()
+
+	now := utils.Now()
+
 	// get EmailForCustomerOS
 	cosEmail := s.buildEmailForCustomerOS(emailMessageData, rawEmail.ExternalSystem)
 
-	// Create session
-	sessionId, err := s.services.Neo4jRepositories.InteractionEventRepository.MergeInteractionSession(
-		ctx, tx, tenant, emailMessageData.Identifiers.EmailThreadId, ts, cosEmail, rawEmail.ExternalSystem, AppSource,
-	)
+	_, err := utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
+		// Create session
+		sessionId, err := s.services.Neo4jRepositories.InteractionEventRepository.MergeInteractionSession(
+			ctx, *txWithPostCommit.Tx, tenant, emailMessageData.Identifiers.EmailThreadId, now, cosEmail, rawEmail.ExternalSystem, AppSource,
+		)
+		if err != nil {
+			err = fmt.Errorf("failed merge interaction session: %v", err)
+			return nil, err
+		}
+
+		// Create event
+		eventId, err := s.services.Neo4jRepositories.InteractionEventRepository.MergeEmailInteractionEvent(
+			ctx, *txWithPostCommit.Tx, tenant, now, cosEmail, rawEmail.ExternalSystem, AppSource,
+		)
+		if err != nil {
+			err = fmt.Errorf("failed merge interaction event: %v", err)
+			return nil, err
+		}
+
+		// Link event to session
+		if err = s.services.Neo4jRepositories.InteractionEventRepository.LinkInteractionEventToSession(
+			ctx, *txWithPostCommit.Tx, tenant, eventId, sessionId,
+		); err != nil {
+			err = fmt.Errorf("failed to link event to session: %v", err)
+			return nil, err
+		}
+
+		// Process participants
+		if err = s.linkParticipants(ctx, *txWithPostCommit.Tx, tenant, eventId, &emailMessageData.Participants, now, rawEmail.ExternalSystem, span); err != nil {
+			err = fmt.Errorf("failed to link participants: %v", err)
+			return nil, err
+		}
+		return nil, nil
+	})
 	if err != nil {
-		err = fmt.Errorf("failed merge interaction session: %v", err)
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	// Create event
-	eventId, err := s.services.Neo4jRepositories.InteractionEventRepository.MergeEmailInteractionEvent(
-		ctx, tx, tenant, ts, cosEmail, rawEmail.ExternalSystem, AppSource,
-	)
-	if err != nil {
-		err = fmt.Errorf("failed merge interaction event: %v", err)
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	// Link event to session
-	if err := s.services.Neo4jRepositories.InteractionEventRepository.LinkInteractionEventToSession(
-		ctx, tx, tenant, eventId, sessionId,
-	); err != nil {
-		err = fmt.Errorf("failed to link event to session: %v", err)
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	// Process participants
-	if err := s.linkParticipants(ctx, tx, tenant, eventId, &emailMessageData.Participants, ts, rawEmail.ExternalSystem, span); err != nil {
-		err = fmt.Errorf("failed to link participants: %v", err)
 		tracing.TraceErr(span, err)
 		return err
 	}
