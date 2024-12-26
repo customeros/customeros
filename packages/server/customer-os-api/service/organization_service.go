@@ -256,6 +256,8 @@ func (s *organizationService) Merge(ctx context.Context, primaryOrganizationId, 
 			return nil, err
 		}
 
+		err = s.repositories.Neo4jRepositories.OrganizationWriteRepository.RefreshContactCountByOrgId(ctx, &tx, tenant, primaryOrganizationId)
+
 		return nil, nil
 	})
 
