@@ -46,7 +46,7 @@ type OrganizationReadRepository interface {
 	GetOrganizationByCustomerOsId(ctx context.Context, tenant, customerOsId string) (*dbtype.Node, error)
 	GetOrganizationByReferenceId(ctx context.Context, tenant, referenceId string) (*dbtype.Node, error)
 	GetOrganizationByIdOrCustomerOsId(ctx context.Context, tenant, id string) (*dbtype.Node, error)
-	GetOrganizationByDomain(ctx context.Context, tenant, domain string) (*dbtype.Node, error)
+	GetOrganizationByDomain(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, domain string) (*dbtype.Node, error)
 	GetOrganizationBySocialUrl(ctx context.Context, tenant, socialUrl string) (*dbtype.Node, error)
 	GetOrganizationsByLinkedIn(ctx context.Context, tenant, url, alias, externalId string) ([]*dbtype.Node, error)
 	GetForApiCache(ctx context.Context, tenant string, skip, limit int) ([]map[string]interface{}, error)
@@ -474,7 +474,7 @@ func (r *organizationReadRepository) GetOrganizationByReferenceId(ctx context.Co
 	return result.(*dbtype.Node), nil
 }
 
-func (r *organizationReadRepository) GetOrganizationByDomain(ctx context.Context, tenant, domain string) (*dbtype.Node, error) {
+func (r *organizationReadRepository) GetOrganizationByDomain(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, domain string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganizationByDomain")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
@@ -486,7 +486,7 @@ func (r *organizationReadRepository) GetOrganizationByDomain(ctx context.Context
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
 
-	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+	result, err := utils.ExecuteReadInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, cypher, map[string]any{
 			"tenant": tenant,
 			"domain": domain,

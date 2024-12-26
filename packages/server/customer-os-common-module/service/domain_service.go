@@ -195,7 +195,7 @@ func (s *domainService) MergeDomain(ctx context.Context, domain string) error {
 	}
 
 	// create domain db node in neo4j if missing
-	err := s.services.Neo4jRepositories.DomainWriteRepository.MergeDomain(ctx, domain, neo4jentity.DataSourceOpenline.String(), common.GetAppSourceFromContext(ctx))
+	err := s.services.Neo4jRepositories.DomainWriteRepository.MergeDomain(ctx, nil, domain, neo4jentity.DataSourceOpenline.String(), common.GetAppSourceFromContext(ctx))
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Error while merging domain"))
 		return err
@@ -225,7 +225,7 @@ func (s *domainService) GetDomain(ctx context.Context, domain string) (*neo4jent
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	tracing.TagEntity(span, domain)
 
-	domainDbNode, err := s.services.Neo4jRepositories.DomainReadRepository.GetDomain(ctx, domain)
+	domainDbNode, err := s.services.Neo4jRepositories.DomainReadRepository.GetDomain(ctx, nil, domain)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err

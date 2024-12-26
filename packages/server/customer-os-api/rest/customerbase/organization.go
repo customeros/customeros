@@ -349,7 +349,7 @@ func handleExternalSystemUpdate(c *gin.Context, s *service.Services) (ExternalSy
 
 // Helper functions for checking existence
 func checkOrganizationExistsByDomain(ctx context.Context, services *service.Services, domain string) (bool, error) {
-	orgDbNode, err := services.Repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByDomain(ctx, common.GetTenantFromContext(ctx), domain)
+	orgDbNode, err := services.Repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByDomain(ctx, nil, common.GetTenantFromContext(ctx), domain)
 	return orgDbNode != nil, err
 }
 
