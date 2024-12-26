@@ -44,6 +44,7 @@ type InteractionEventWriteRepository interface {
 	CreateInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, interactionEventId string, data neo4jentity.InteractionEventEntity) error
 	Update(ctx context.Context, tenant, interactionEventId string, data InteractionEventUpdateFields) error
 	MergeByExternalSystem(ctx context.Context, tx *neo4j.ManagedTransaction, tenant string, syncDate time.Time, message commonmodel.SaveEmailMessage, source, appSource string) (string, error)
+	LinkInteractionEventToSession(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, interactionEventId, interactionSessionId string) error
 }
 
 type interactionEventWriteRepository struct {
@@ -226,4 +227,39 @@ func (r *interactionEventWriteRepository) MergeByExternalSystem(ctx context.Cont
 	}
 
 	return queryResult.(string), nil
+}
+
+func (r *interactionEventWriteRepository) LinkInteractionEventToSession(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, interactionEventId, interactionSessionId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventWriteRepository.LinkInteractionEventToSession")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
+	tracing.TagEntity(span, interactionEventId)
+	span.LogKV("interactionSessionId", interactionSessionId)
+
+	cypher := fmt.Sprintf(`MATCH (ie:InteractionEvent_%s {id:$interactionEventId}) 
+		 MATCH (is:InteractionSession_%s {id:$interactionSessionId}) 
+		 MERGE (ie)-[:PART_OF]->(is)`, tenant, tenant)
+
+	params := map[string]interface{}{
+		"tenant":               tenant,
+		"interactionEventId":   interactionEventId,
+		"interactionSessionId": interactionSessionId,
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+
+	return err
 }

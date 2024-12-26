@@ -257,7 +257,7 @@ func (s *mailService) processSessionAndEvents(ctx context.Context, txWithPostCom
 			return nil, err
 		}
 
-		// Create event
+		// step 2: Get or create interaction event
 		eventId, err := s.services.Neo4jRepositories.InteractionEventWriteRepository.MergeByExternalSystem(
 			ctx, txWithPostCommit.Tx, tenant, syncDate, cosEmail, rawEmail.ExternalSystem, AppSource,
 		)
@@ -266,16 +266,16 @@ func (s *mailService) processSessionAndEvents(ctx context.Context, txWithPostCom
 			return nil, err
 		}
 
-		// Link event to session
-		if err = s.services.Neo4jRepositories.InteractionEventRepository.LinkInteractionEventToSession(
-			ctx, *txWithPostCommit.Tx, tenant, eventId, sessionId,
+		// step 3: Link event to session
+		if err = s.services.Neo4jRepositories.InteractionEventWriteRepository.LinkInteractionEventToSession(
+			ctx, txWithPostCommit.Tx, tenant, eventId, sessionId,
 		); err != nil {
-			err = fmt.Errorf("failed to link event to session: %v", err)
+			err = fmt.Errorf("failed to link event to session: %w", err)
 			return nil, err
 		}
 
-		// Process participants
-		if err = s.linkParticipants(ctx, *txWithPostCommit.Tx, tenant, eventId, &emailMessageData.Participants, syncDate, rawEmail.ExternalSystem, span); err != nil {
+		// step 4: Process participants
+		if err = s.linkParticipants(ctx, txWithPostCommit, tenant, eventId, &emailMessageData.Participants, syncDate, rawEmail.ExternalSystem); err != nil {
 			err = fmt.Errorf("failed to link participants: %v", err)
 			return nil, err
 		}
@@ -304,48 +304,47 @@ func (s *mailService) buildEmailForCustomerOS(email *EmailMessageData, externalS
 	return save
 }
 
-func (s *mailService) linkParticipants(
-	ctx context.Context,
-	tx neo4j.ManagedTransaction,
-	tenant string,
-	eventId string,
-	participants *EmailParticipants,
-	now time.Time,
-	externalSystem string,
-	span opentracing.Span,
-) error {
+func (s *mailService) linkParticipants(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, tenant string, eventId string, participants *EmailParticipants, syncDate time.Time, externalSystem string) error {
+	span, ctx := tracing.StartTracerSpan(ctx, "MailService.linkParticipants")
+	defer span.Finish()
+	tracing.TagTenant(span, tenant)
+
 	emailIds := make(map[string]string)
 
-	// Link From participant
-	fromId, err := s.getOrCreateEmailId(ctx, tx, tenant, participants.From.Email, now, externalSystem, emailIds, span)
+	_, err := utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
+		// Link From participant
+		fromId, err := s.getOrCreateEmailId(ctx, *txWithPostCommit.Tx, tenant, participants.From.Email, syncDate, externalSystem, emailIds, span)
+		if err != nil {
+			err = fmt.Errorf("failed to get or create email id: %w", err)
+			return nil, err
+		}
+		if err := s.services.Neo4jRepositories.InteractionEventRepository.InteractionEventSentByEmail(ctx, *txWithPostCommit.Tx, tenant, eventId, fromId); err != nil {
+			err = fmt.Errorf("failed to create interaction event sent by email: %w", err)
+			return nil, err
+		}
+
+		// Link To participants
+		if err := s.linkEmailGroup(ctx, *txWithPostCommit.Tx, tenant, eventId, "TO", participants.GetToEmailAddresses(), syncDate, externalSystem, emailIds, span); err != nil {
+			err = fmt.Errorf("failed to link email group for TO: %w", err)
+			return nil, err
+		}
+
+		// Link CC participants
+		if err := s.linkEmailGroup(ctx, *txWithPostCommit.Tx, tenant, eventId, "CC", participants.GetCcEmailAddresses(), syncDate, externalSystem, emailIds, span); err != nil {
+			err = fmt.Errorf("failed to link email group for CC: %w", err)
+			return nil, err
+		}
+
+		// Link BCC participants
+		if err = s.linkEmailGroup(ctx, *txWithPostCommit.Tx, tenant, eventId, "BCC", participants.GetBccEmailAddresses(), syncDate, externalSystem, emailIds, span); err != nil {
+			err = fmt.Errorf("failed to link email group for BCC: %w", err)
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+
+		return nil, nil
+	})
 	if err != nil {
-		err = fmt.Errorf("failed to get or create email id: %v", err)
-		tracing.TraceErr(span, err)
-		return err
-	}
-	if err := s.services.Neo4jRepositories.InteractionEventRepository.InteractionEventSentByEmail(ctx, tx, tenant, eventId, fromId); err != nil {
-		err = fmt.Errorf("failed to create interaction event sent by email: %v", err)
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	// Link To participants
-	if err := s.linkEmailGroup(ctx, tx, tenant, eventId, "TO", participants.GetToEmailAddresses(), now, externalSystem, emailIds, span); err != nil {
-		err = fmt.Errorf("failed to link email group for TO: %v", err)
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	// Link CC participants
-	if err := s.linkEmailGroup(ctx, tx, tenant, eventId, "CC", participants.GetCcEmailAddresses(), now, externalSystem, emailIds, span); err != nil {
-		err = fmt.Errorf("failed to link email group for CC: %v", err)
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	// Link BCC participants
-	if err := s.linkEmailGroup(ctx, tx, tenant, eventId, "BCC", participants.GetBccEmailAddresses(), now, externalSystem, emailIds, span); err != nil {
-		err = fmt.Errorf("failed to link email group for BCC: %v", err)
 		tracing.TraceErr(span, err)
 		return err
 	}
