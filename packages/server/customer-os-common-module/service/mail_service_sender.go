@@ -198,7 +198,7 @@ func (s *mailService) storeEmailMessage(ctx context.Context, span opentracing.Sp
 func (s *mailService) saveEmailInTx(ctx context.Context, tx neo4j.ManagedTransaction, emailMessage *postgresentity.EmailMessage, span opentracing.Span) (any, error) {
 	tenant := common.GetTenantFromContext(ctx)
 
-	sessionID, err := s.getOrCreateInteractionSession(ctx, tx, span, tenant, emailMessage)
+	sessionID, err := s.getOrCreateInteractionSession(ctx, tx, tenant, emailMessage)
 	if err != nil {
 		err = fmt.Errorf("failed to get or create interaction session: %v", err)
 		tracing.TraceErr(span, err)
