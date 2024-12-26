@@ -29,7 +29,7 @@ func (r *domainReadRepository) GetDomainsForPrimaryCheck(ctx context.Context, de
 	span.LogFields(log.Int("delayFromPreviousCheckInDays", delayFromPreviousCheckInDays), log.Int("limit", limit))
 
 	cypher := `MATCH (d:Domain)
-		WHERE d.lastPrimaryCheckAt IS NULL OR d.techPrimaryDomainCheckRequestedAt < datetime() - duration({days:$delayFromPreviousCheckInDays})
+		WHERE d.techPrimaryDomainCheckRequestedAt IS NULL OR d.techPrimaryDomainCheckRequestedAt < datetime() - duration({days:$delayFromPreviousCheckInDays})
 		RETURN d.domain AS domain
 		ORDER BY CASE WHEN d.techPrimaryDomainCheckRequestedAt IS NULL THEN 0 ELSE 1 END, d.techPrimaryDomainCheckRequestedAt ASC
 				LIMIT $limit`
