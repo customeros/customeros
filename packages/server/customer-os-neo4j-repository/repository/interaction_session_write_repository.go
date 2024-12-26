@@ -16,7 +16,7 @@ import (
 
 type InteractionSessionWriteRepository interface {
 	CreateInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, interactionSessionId string, data entity.InteractionSessionEntity) error
-	MergeByIdentifierAndChannel(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, identifier string, syncDate time.Time, message commonmodel.SaveEmailMessage, sessionType, channel, source, appSource string) (string, error)
+	MergeByIdentifierAndChannel(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, identifier string, syncDate time.Time, message commonmodel.SaveEmailMessage, sessionType commonenum.InteractionSessionType, channel commonenum.InteractionSessionChannel, source, appSource string) (string, error)
 }
 
 type interactionSessionWriteRepository struct {
@@ -61,7 +61,7 @@ func (r *interactionSessionWriteRepository) CreateInTx(ctx context.Context, tx n
 		"channel":              data.Channel.String(),
 		"channelData":          data.ChannelData,
 		"identifier":           data.Identifier,
-		"type":                 data.Type,
+		"type":                 data.Type.String(),
 		"status":               data.Status.String(),
 		"name":                 data.Name,
 	}
@@ -77,7 +77,7 @@ func (r *interactionSessionWriteRepository) CreateInTx(ctx context.Context, tx n
 	return nil
 }
 
-func (r *interactionSessionWriteRepository) MergeByIdentifierAndChannel(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, identifier string, syncDate time.Time, message commonmodel.SaveEmailMessage, sessionType, channel, source, appSource string) (string, error) {
+func (r *interactionSessionWriteRepository) MergeByIdentifierAndChannel(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, identifier string, syncDate time.Time, message commonmodel.SaveEmailMessage, sessionType commonenum.InteractionSessionType, channel commonenum.InteractionSessionChannel, source, appSource string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionSessionWriteRepository.MergeByIdentifierAndChannel")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)

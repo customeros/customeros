@@ -14,7 +14,7 @@ type InteractionSessionEntity struct {
 	Identifier    string
 	Name          string
 	Status        commonenum.InteractionSessionStatus
-	Type          string
+	Type          commonenum.InteractionSessionType
 	Channel       commonenum.InteractionSessionChannel
 	ChannelData   string
 	AppSource     string

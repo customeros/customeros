@@ -244,7 +244,7 @@ func (s *mailService) getOrCreateInteractionSession(ctx context.Context, tx neo4
 	// Create new session if none exists
 	sessionID, err := s.services.InteractionSessionService.CreateInTx(ctx, tx, &neo4jentity.InteractionSessionEntity{
 		Status:     commonenum.InteractionSessionStatusActive,
-		Type:       "THREAD",
+		Type:       commonenum.InteractionSessionTypeThread,
 		Channel:    commonenum.InteractionSessionChannelEmail,
 		Identifier: emailMessage.ProviderThreadId,
 		Name:       emailMessage.Subject,
@@ -341,7 +341,6 @@ func (s *mailService) createInteractionEvent(
 			CustomerOSInternalIdentifier: *emailMessage.UniqueInternalIdentifier,
 			Hide:                         false,
 			Source:                       "openline", // TODO
-			SourceOfTruth:                "openline", // TODO
 			AppSource:                    "TODO",     // TODO
 		},
 		SentBy:            participants.sentBy,
