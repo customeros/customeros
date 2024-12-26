@@ -144,7 +144,7 @@ func (s *mailService) ProcessEmail(ctx context.Context, tenant string, rawEmailI
 		return db
 	}
 
-	interactionEventId, err := s.services.Neo4jRepositories.InteractionEventRepository.GetInteractionEventIdByExternalId(
+	interactionEventId, err := s.services.Neo4jRepositories.InteractionEventReadRepository.GetInteractionEventIdByExternalId(
 		ctx, tenant, rawEmail.ExternalSystem, rawEmail.MessageId,
 	)
 	if err != nil {
@@ -242,7 +242,7 @@ func (s *mailService) processSessionAndEvents(ctx context.Context, txWithPostCom
 	defer span.Finish()
 	tracing.TagTenant(span, tenant)
 
-	now := utils.Now()
+	syncDate := utils.Now()
 
 	// get EmailForCustomerOS
 	cosEmail := s.buildEmailForCustomerOS(emailMessageData, rawEmail.ExternalSystem)
@@ -250,7 +250,7 @@ func (s *mailService) processSessionAndEvents(ctx context.Context, txWithPostCom
 	_, err := utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
 		// step 1: Get or create session
 		sessionId, err := s.services.Neo4jRepositories.InteractionSessionWriteRepository.MergeByIdentifierAndChannel(
-			ctx, txWithPostCommit.Tx, tenant, emailMessageData.Identifiers.EmailThreadId, now, cosEmail, commonenum.InteractionSessionTypeThread, commonenum.InteractionSessionChannelEmail, rawEmail.ExternalSystem, AppSource,
+			ctx, txWithPostCommit.Tx, tenant, emailMessageData.Identifiers.EmailThreadId, syncDate, cosEmail, commonenum.InteractionSessionTypeThread, commonenum.InteractionSessionChannelEmail, rawEmail.ExternalSystem, AppSource,
 		)
 		if err != nil {
 			err = fmt.Errorf("failed merge interaction session: %w", err)
@@ -258,8 +258,8 @@ func (s *mailService) processSessionAndEvents(ctx context.Context, txWithPostCom
 		}
 
 		// Create event
-		eventId, err := s.services.Neo4jRepositories.InteractionEventRepository.MergeEmailInteractionEvent(
-			ctx, *txWithPostCommit.Tx, tenant, now, cosEmail, rawEmail.ExternalSystem, AppSource,
+		eventId, err := s.services.Neo4jRepositories.InteractionEventWriteRepository.MergeByExternalSystem(
+			ctx, txWithPostCommit.Tx, tenant, syncDate, cosEmail, rawEmail.ExternalSystem, AppSource,
 		)
 		if err != nil {
 			err = fmt.Errorf("failed merge interaction event: %w", err)
@@ -275,7 +275,7 @@ func (s *mailService) processSessionAndEvents(ctx context.Context, txWithPostCom
 		}
 
 		// Process participants
-		if err = s.linkParticipants(ctx, *txWithPostCommit.Tx, tenant, eventId, &emailMessageData.Participants, now, rawEmail.ExternalSystem, span); err != nil {
+		if err = s.linkParticipants(ctx, *txWithPostCommit.Tx, tenant, eventId, &emailMessageData.Participants, syncDate, rawEmail.ExternalSystem, span); err != nil {
 			err = fmt.Errorf("failed to link participants: %v", err)
 			return nil, err
 		}
