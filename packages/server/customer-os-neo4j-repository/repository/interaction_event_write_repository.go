@@ -100,7 +100,7 @@ func (r *interactionEventWriteRepository) CreateInTx(ctx context.Context, tx neo
 		"appSource":          data.AppSource,
 		"content":            data.Content,
 		"contentType":        data.ContentType,
-		"channel":            data.Channel,
+		"channel":            data.Channel.String(),
 		"channelData":        data.ChannelData,
 		"identifier":         data.Identifier,
 		"eventType":          data.EventType,

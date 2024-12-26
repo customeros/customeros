@@ -305,7 +305,7 @@ func (r *interactionEventReadRepository) GetInteractionEventIdByExternalId(ctx c
 	tracing.TagComponentNeo4jRepository(span)
 	tracing.TagTenant(span, tenant)
 
-	cypher := `MATCH (ie:InteractionEvent_%s)-[IS_LINKED_WITH{externalId:$externalId}]-(e:ExternalSystem{id:$externalSystemId}) RETURN ie.id`
+	cypher := fmt.Sprintf(`MATCH (ie:InteractionEvent_%s)-[IS_LINKED_WITH{externalId:$externalId}]-(e:ExternalSystem{id:$externalSystemId}) RETURN ie.id`, tenant)
 	params := map[string]any{
 		"externalId":       externalId,
 		"externalSystemId": externalSystemId,

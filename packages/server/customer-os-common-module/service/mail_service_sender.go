@@ -335,7 +335,7 @@ func (s *mailService) createInteractionEvent(
 		InteractionEventEntity: &neo4jentity.InteractionEventEntity{
 			Content:                      emailMessage.Content,
 			ContentType:                  "text/html",
-			Channel:                      "EMAIL",
+			Channel:                      commonenum.InteractionEventChannelEmail,
 			ChannelData:                  *emailChannelData,
 			Identifier:                   emailMessage.ProviderMessageId,
 			CustomerOSInternalIdentifier: *emailMessage.UniqueInternalIdentifier,

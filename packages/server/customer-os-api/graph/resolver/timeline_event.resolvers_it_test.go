@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
+	commonenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
@@ -16,7 +17,7 @@ func TestQueryResolver_TimelineEvents(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	channel := "EMAIL"
+	channel := commonenum.InteractionEventChannelEmail
 	interactionEventId1 := neo4jtest.CreateInteractionEventFromEntity(ctx, driver, tenantName, neo4jentity.InteractionEventEntity{
 		Identifier:  "myExternalId",
 		Content:     "IE text 1",

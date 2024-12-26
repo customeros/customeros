@@ -897,7 +897,7 @@ func MapDbPropsToInteractionEventEntity(props map[string]interface{}) *entity.In
 		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		Identifier:    utils.GetStringPropOrEmpty(props, "identifier"),
-		Channel:       utils.GetStringPropOrEmpty(props, "channel"),
+		Channel:       commonenum.DecodeInteractionEventChannel(utils.GetStringPropOrEmpty(props, "channel")),
 		ChannelData:   utils.GetStringPropOrEmpty(props, "channelData"),
 		EventType:     utils.GetStringPropOrEmpty(props, "eventType"),
 		Hide:          utils.GetBoolPropOrFalse(props, "hide"),

@@ -3,25 +3,11 @@ package neo4j
 import (
 	"context"
 	"fmt"
-	"github.com/google/uuid"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 )
-
-func CreateJobRole(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, jobRole neo4jentity.JobRoleEntity) string {
-	jobRoleId := jobRole.Id
-	if jobRoleId == "" {
-		jobRoleId = uuid.New().String()
-	}
-	query := fmt.Sprintf(`CREATE (jobRole:JobRole:JobRole_%s {id:$jobRoleId})`, tenant)
-
-	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"jobRoleId": jobRoleId,
-	})
-	return jobRoleId
-}
 
 func CreateIssue(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, issue neo4jentity.IssueEntity) string {
 	issueId := utils.NewUUIDIfEmpty(issue.Id)
@@ -103,61 +89,6 @@ func LinkIssueFollowedBy(ctx context.Context, driver *neo4j.DriverWithContext, i
 	})
 }
 
-func CreateInteractionEvent(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, interactionEvent neo4jentity.InteractionEventEntity) string {
-	interactionEventId := utils.NewUUIDIfEmpty(interactionEvent.Id)
-	query := fmt.Sprintf(`MERGE (i:InteractionEvent {id:$id})
-				SET i:InteractionEvent_%s,
-					i:TimelineEvent,
-					i:TimelineEvent_%s,
-					i.content=$content,
-					i.contentType=$contentType,
-					i.channel=$channel,
-					i.channelData=$channelData,
-					i.identifier=$identifier,
-					i.eventType=$eventType,
-					i.source=$source,
-					i.sourceOfTruth=$sourceOfTruth
-				`, tenant, tenant)
-
-	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"id":            interactionEventId,
-		"content":       interactionEvent.Content,
-		"contentType":   interactionEvent.ContentType,
-		"channel":       interactionEvent.Channel,
-		"channelData":   interactionEvent.ChannelData,
-		"identifier":    interactionEvent.Identifier,
-		"eventType":     interactionEvent.EventType,
-		"source":        interactionEvent.Source,
-		"sourceOfTruth": interactionEvent.SourceOfTruth,
-	})
-	return interactionEventId
-}
-
-func LinkTag(ctx context.Context, driver *neo4j.DriverWithContext, tagId, entityId string) {
-
-	query := `MATCH (e {id:$entityId})
-				MATCH (t:Tag {id:$tagId})
-				MERGE (e)-[rel:TAGGED]->(t)
-				SET rel.taggedAt=$now`
-
-	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"tagId":    tagId,
-		"entityId": entityId,
-		"now":      utils.Now(),
-	})
-}
-
-func LinkSocial(ctx context.Context, driver *neo4j.DriverWithContext, socialId, entityId string) {
-	query := `MATCH (e {id:$entityId})
-				MATCH (s:Social {id:$socialId})
-				MERGE (e)-[:HAS]->(s)`
-
-	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"socialId": socialId,
-		"entityId": entityId,
-	})
-}
-
 func CreateExternalSystem(ctx context.Context, driver *neo4j.DriverWithContext, tenant, externalSystem string) {
 	query := fmt.Sprintf(`MATCH (t:Tenant {name: $tenant})
 			  MERGE (t)<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(ext:ExternalSystem {id:$externalSystemId})
@@ -166,17 +97,6 @@ func CreateExternalSystem(ctx context.Context, driver *neo4j.DriverWithContext, 
 	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"tenant":           tenant,
 		"externalSystemId": externalSystem,
-	})
-}
-
-func CreateWorkspace(ctx context.Context, driver *neo4j.DriverWithContext, workspace string, provider string, tenant string) {
-	query := `MATCH (t:Tenant {name: $tenant})
-			  MERGE (t)-[:HAS_WORKSPACE]->(w:Workspace {name:$workspace, provider:$provider})`
-
-	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"tenant":    tenant,
-		"provider":  provider,
-		"workspace": workspace,
 	})
 }
 

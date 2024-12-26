@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	commonenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"time"
 
 	mailsherpa "github.com/customeros/mailsherpa/mailvalidate"
@@ -903,7 +904,7 @@ func (s *organizationService) RefreshLastTouchpoint(ctx context.Context, organiz
 		timelineEventType = neo4jenum.TouchpointTypeNote.String()
 	case model.NodeLabelInteractionEvent:
 		timelineEventInteractionEvent := timelineEvent.(*neo4jentity.InteractionEventEntity)
-		if timelineEventInteractionEvent.Channel == "EMAIL" {
+		if timelineEventInteractionEvent.Channel == commonenum.InteractionEventChannelEmail {
 			interactionEventSentByUser, err := s.services.Neo4jRepositories.InteractionEventReadRepository.InteractionEventSentByUser(ctx, tenant, timelineEventInteractionEvent.Id)
 			if err != nil {
 				tracing.TraceErr(span, err)
@@ -914,9 +915,9 @@ func (s *organizationService) RefreshLastTouchpoint(ctx context.Context, organiz
 			} else {
 				timelineEventType = neo4jenum.TouchpointTypeInteractionEventEmailReceived.String()
 			}
-		} else if timelineEventInteractionEvent.Channel == "VOICE" {
+		} else if timelineEventInteractionEvent.Channel == commonenum.InteractionEventChannelVoice {
 			timelineEventType = neo4jenum.TouchpointTypeInteractionEventPhoneCall.String()
-		} else if timelineEventInteractionEvent.Channel == "CHAT" {
+		} else if timelineEventInteractionEvent.Channel == commonenum.InteractionEventChannelChat {
 			timelineEventType = neo4jenum.TouchpointTypeInteractionEventChat.String()
 		} else if timelineEventInteractionEvent.EventType == "meeting" {
 			timelineEventType = neo4jenum.TouchpointTypeMeeting.String()
