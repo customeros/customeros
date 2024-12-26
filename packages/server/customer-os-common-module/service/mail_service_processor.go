@@ -235,13 +235,7 @@ func (s *mailService) processInboundEmail(ctx context.Context, tenant string, em
 	return db
 }
 
-func (s *mailService) processSessionAndEvents(
-	ctx context.Context,
-	txWithPostCommit *utils.TxWithPostCommit,
-	tenant string,
-	emailMessageData *EmailMessageData,
-	rawEmail *postgresentity.RawEmail,
-) error {
+func (s *mailService) processSessionAndEvents(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, tenant string, emailMessageData *EmailMessageData, rawEmail *postgresentity.RawEmail) error {
 	span, ctx := s.initializeTracing(ctx, "MailService.processSessionAndEvents")
 	defer span.Finish()
 
@@ -251,12 +245,12 @@ func (s *mailService) processSessionAndEvents(
 	cosEmail := s.buildEmailForCustomerOS(emailMessageData, rawEmail.ExternalSystem)
 
 	_, err := utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
-		// Create session
-		sessionId, err := s.services.Neo4jRepositories.InteractionEventRepository.MergeInteractionSession(
-			ctx, *txWithPostCommit.Tx, tenant, emailMessageData.Identifiers.EmailThreadId, now, cosEmail, rawEmail.ExternalSystem, AppSource,
+		// step 1: Get or create session
+		sessionId, err := s.services.Neo4jRepositories.InteractionSessionWriteRepository.MergeByIdentifierAndChannel(
+			ctx, txWithPostCommit.Tx, tenant, emailMessageData.Identifiers.EmailThreadId, now, cosEmail, "THREAD", "EMAIL", rawEmail.ExternalSystem, AppSource,
 		)
 		if err != nil {
-			err = fmt.Errorf("failed merge interaction session: %v", err)
+			err = fmt.Errorf("failed merge interaction session: %w", err)
 			return nil, err
 		}
 
@@ -265,7 +259,7 @@ func (s *mailService) processSessionAndEvents(
 			ctx, *txWithPostCommit.Tx, tenant, now, cosEmail, rawEmail.ExternalSystem, AppSource,
 		)
 		if err != nil {
-			err = fmt.Errorf("failed merge interaction event: %v", err)
+			err = fmt.Errorf("failed merge interaction event: %w", err)
 			return nil, err
 		}
 

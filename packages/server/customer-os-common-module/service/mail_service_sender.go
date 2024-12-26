@@ -223,13 +223,10 @@ func (s *mailService) saveEmailInTx(ctx context.Context, tx neo4j.ManagedTransac
 	return eventID, nil
 }
 
-func (s *mailService) getOrCreateInteractionSession(
-	ctx context.Context,
-	tx neo4j.ManagedTransaction,
-	span opentracing.Span,
-	tenant string,
-	emailMessage *postgresentity.EmailMessage,
-) (string, error) {
+func (s *mailService) getOrCreateInteractionSession(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, emailMessage *postgresentity.EmailMessage) (string, error) {
+	span, ctx := s.initializeTracing(ctx, "MailService.getOrCreateInteractionSession")
+	defer span.Finish()
+
 	// Try to get existing session
 	sessionNode, err := s.services.Neo4jRepositories.InteractionSessionReadRepository.GetByIdentifierAndChannel(
 		ctx, tenant, emailMessage.ProviderThreadId, "EMAIL",
@@ -246,7 +243,7 @@ func (s *mailService) getOrCreateInteractionSession(
 
 	// Create new session if none exists
 	sessionID, err := s.services.InteractionSessionService.CreateInTx(ctx, tx, &neo4jentity.InteractionSessionEntity{
-		Status:     "ACTIVE",
+		Status:     commonenum.InteractionSessionStatusActive,
 		Type:       "THREAD",
 		Channel:    "EMAIL",
 		Identifier: emailMessage.ProviderThreadId,
