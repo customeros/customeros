@@ -400,7 +400,7 @@ func (s *interactionEventService) linkInteractionEventParticipantInTx(ctx contex
 	} else if linkWIthData.Email != nil {
 		linkWithLabel = commonModel.EMAIL
 
-		emailId, err := s.services.Neo4jRepositories.EmailReadRepository.GetEmailIdIfExists(ctx, tenant, *linkWIthData.Email)
+		emailId, err := s.services.Neo4jRepositories.EmailReadRepository.GetEmailIdIfExists(ctx, &tx, tenant, *linkWIthData.Email)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err

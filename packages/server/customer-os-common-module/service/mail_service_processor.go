@@ -307,7 +307,7 @@ func (s *mailService) buildEmailForCustomerOS(email *EmailMessageData, externalS
 }
 
 func (s *mailService) linkParticipants(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, tenant string, interactionEventId string, participants *EmailParticipants, syncDate time.Time, externalSystem string) error {
-	span, ctx := tracing.StartTracerSpan(ctx, "MailService.linkParticipants")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MailService.linkParticipants")
 	defer span.Finish()
 	tracing.TagTenant(span, tenant)
 	span.LogKV("interactionEventId", interactionEventId)
@@ -357,7 +357,7 @@ func (s *mailService) linkParticipants(ctx context.Context, txWithPostCommit *ut
 func (s *mailService) linkEmailGroup(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, tenant string, interactionEventId string, groupType string, emails []string,
 	syncDate time.Time, externalSystem string, emailIds map[string]string) error {
 
-	span, ctx := tracing.StartTracerSpan(ctx, "MailService.linkEmailGroup")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MailService.linkEmailGroup")
 	defer span.Finish()
 	tracing.TagTenant(span, tenant)
 	tracing.TagEntity(span, interactionEventId)
@@ -397,7 +397,7 @@ func (s *mailService) linkEmailGroup(ctx context.Context, txWithPostCommit *util
 }
 
 func (s *mailService) getOrCreateEmailId(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, tenant string, email string, syncDate time.Time, externalSystem string, emailIds map[string]string) (string, error) {
-	span, ctx := tracing.StartTracerSpan(ctx, "MailService.getOrCreateEmailId")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MailService.getOrCreateEmailId")
 	defer span.Finish()
 	tracing.TagTenant(span, tenant)
 
@@ -466,7 +466,7 @@ func (s *mailService) mapDbNodeToEmailEntity(node dbtype.Node) *neo4jentity.Emai
 }
 
 func (s *mailService) GetEmailIdForEmail(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, tenant, email string, source string) (string, error) {
-	span, ctx := tracing.StartTracerSpan(ctx, "MailService.GetEmailIdForEmail")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MailService.GetEmailIdForEmail")
 	defer span.Finish()
 	tracing.TagTenant(span, tenant)
 	span.LogKV("email", email)
@@ -480,7 +480,7 @@ func (s *mailService) GetEmailIdForEmail(ctx context.Context, txWithPostCommit *
 	}
 
 	output, err := utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
-		emailId, err := s.services.Neo4jRepositories.EmailReadRepository.GetEmailIdIfExists(ctx, tenant, email)
+		emailId, err := s.services.Neo4jRepositories.EmailReadRepository.GetEmailIdIfExists(ctx, txWithPostCommit.Tx, tenant, email)
 		if err != nil {
 			return "", fmt.Errorf("unable to retrieve email id for tenant: %w", err)
 		}
@@ -507,21 +507,9 @@ func (s *mailService) GetEmailIdForEmail(ctx context.Context, txWithPostCommit *
 			return emailId, nil
 		}
 
-		var domainNode *neo4j.Node
 		var organizationNode *neo4j.Node
 		var organizationId string
 
-		domainNode, err = s.services.Neo4jRepositories.DomainReadRepository.GetDomain(ctx, txWithPostCommit.Tx, domain)
-		if err != nil {
-			return "", fmt.Errorf("unable to retrieve domain for tenant: %w", err)
-		}
-
-		if domainNode == nil {
-			err = s.services.Neo4jRepositories.DomainWriteRepository.MergeDomain(ctx, txWithPostCommit.Tx, domain, source, constants.AppSourceSyncEmail)
-			if err != nil {
-				return "", fmt.Errorf("unable to create domain: %v", err)
-			}
-		}
 		organizationNode, err = s.services.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByDomain(ctx, txWithPostCommit.Tx, tenant, domain)
 		if err != nil {
 			return "", fmt.Errorf("unable to retrieve organization for tenant: %v", err)
@@ -564,6 +552,11 @@ func (s *mailService) GetEmailIdForEmail(ctx context.Context, txWithPostCommit *
 		}
 
 		err = s.services.ContactService.LinkContactWithOrganization(ctx, txWithPostCommit, contactId, organizationId, "", "", source, false, nil, nil)
+
+		emailId, err = s.services.Neo4jRepositories.EmailReadRepository.GetEmailIdIfExists(ctx, txWithPostCommit.Tx, tenant, email)
+		if err != nil {
+			return "", fmt.Errorf("unable to retrieve email id for tenant: %w", err)
+		}
 
 		return emailId, nil
 	})

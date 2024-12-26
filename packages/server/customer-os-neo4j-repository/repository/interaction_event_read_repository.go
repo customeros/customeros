@@ -320,7 +320,7 @@ func (r *interactionEventReadRepository) GetInteractionEventIdByExternalId(ctx c
 		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
 			return nil, err
 		} else {
-			return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+			return utils.ExtractSingleRecordFirstValueAsString(ctx, queryResult, err)
 		}
 	})
 	if err != nil && err.Error() == "Result contains no more records" {
