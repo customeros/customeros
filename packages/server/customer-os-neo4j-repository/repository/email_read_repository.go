@@ -19,7 +19,7 @@ type TenantAndEmailId struct {
 }
 
 type EmailReadRepository interface {
-	GetEmailIdIfExists(ctx context.Context, tenant, email string) (string, error)
+	GetEmailIdIfExists(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, email string) (string, error)
 	GetEmailForUser(ctx context.Context, tenant string, userId string) (*dbtype.Node, error)
 	GetById(ctx context.Context, tenant, emailId string) (*dbtype.Node, error)
 	GetFirstByEmail(ctx context.Context, tenant, email string) (*dbtype.Node, error)
@@ -48,7 +48,7 @@ func (r *emailReadRepository) prepareReadSession(ctx context.Context) neo4j.Sess
 	return utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 }
 
-func (r *emailReadRepository) GetEmailIdIfExists(ctx context.Context, tenant, email string) (string, error) {
+func (r *emailReadRepository) GetEmailIdIfExists(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, email string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailReadRepository.GetEmailIdIfExists")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
@@ -65,7 +65,7 @@ func (r *emailReadRepository) GetEmailIdIfExists(ctx context.Context, tenant, em
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
 
-	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+	result, err := utils.ExecuteReadInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
 			return nil, err
 		} else {
