@@ -74,8 +74,6 @@ func main() {
 	//testOrganizationLinkWithEmail()
 	//testOrganizationLinkWithPhoneNumber()
 	//testOrganizationLinkWithLocation()
-	//testCreateIssue()
-	//testUpdateIssue()
 	//testCreateComment()
 	//testAddContractService()
 	//testCloseLooseOpportunity()
@@ -211,65 +209,6 @@ func testOrganizationLinkWithLocation() {
 		LocationId:     locationId,
 	})
 	print(result)
-}
-
-func testCreateIssue() {
-
-	userId := "05f382ba-0fa9-4828-940c-efb4e2e6b84c"
-	subject := "test issue"
-	description := "nice issue"
-	status := "open"
-	priority := "high"
-	orgId := "05f382ba-0fa9-4828-940c-efb4e2e6b84c"
-
-	result, err := clients.IssueClient.UpsertIssue(context.Background(), &issuepb.UpsertIssueGrpcRequest{
-		Tenant:                   tenant,
-		Subject:                  subject,
-		Description:              description,
-		Status:                   status,
-		Priority:                 priority,
-		LoggedInUserId:           userId,
-		ReportedByOrganizationId: utils.StringPtr(orgId),
-		SourceFields: &commonpb.SourceFields{
-			AppSource: appSource,
-		},
-		ExternalSystemFields: &commonpb.ExternalSystemFields{
-			ExternalSystemId: "hubspot",
-			ExternalId:       "123",
-		},
-	})
-	if err != nil {
-		log.Fatalf("Failed: %v", err.Error())
-	}
-	log.Printf("Created issue id: %v", result.Id)
-}
-
-func testUpdateIssue() {
-
-	userId := "697563a8-171c-4950-a067-1aaaaf2de1d8"
-	issueId := "ed17dbab-e79b-4e87-8914-2d93ed55324b"
-	desription := "updated description"
-
-	result, err := clients.IssueClient.UpsertIssue(context.Background(), &issuepb.UpsertIssueGrpcRequest{
-		Tenant:         tenant,
-		Id:             issueId,
-		LoggedInUserId: userId,
-		Description:    desription,
-		SourceFields: &commonpb.SourceFields{
-			AppSource: appSource,
-		},
-		ExternalSystemFields: &commonpb.ExternalSystemFields{
-			ExternalSystemId: "hubspot",
-			ExternalId:       "456",
-		},
-	})
-	if err != nil {
-		log.Fatalf("Failed: %v", err.Error())
-	}
-	if issueId != result.Id {
-		log.Fatalf("Result is not expected")
-	}
-	log.Printf("Updated issue id: %v", result.Id)
 }
 
 func testCreateComment() {

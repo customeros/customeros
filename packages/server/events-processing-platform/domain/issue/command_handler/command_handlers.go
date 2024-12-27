@@ -6,7 +6,6 @@ import (
 )
 
 type CommandHandlers struct {
-	UpsertIssue        UpsertIssueCommandHandler
 	AddUserAssignee    AddUserAssigneeCommandHandler
 	RemoveUserAssignee RemoveUserAssigneeCommandHandler
 	AddUserFollower    AddUserFollowerCommandHandler
@@ -15,7 +14,6 @@ type CommandHandlers struct {
 
 func NewCommandHandlers(log logger.Logger, es eventstore.AggregateStore) *CommandHandlers {
 	return &CommandHandlers{
-		UpsertIssue:        NewUpsertIssueCommandHandler(log, es),
 		AddUserAssignee:    NewAddUserAssigneeCommandHandler(log, es),
 		RemoveUserAssignee: NewRemoveUserAssigneeCommandHandler(log, es),
 		AddUserFollower:    NewAddUserFollowerCommandHandler(log, es),
