@@ -8,8 +8,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	commonconstants "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/robfig/cron"
 	"github.com/sirupsen/logrus"
 
@@ -81,19 +81,19 @@ func syncEmails(services *service.Services) {
 
 	for _, dt := range distinctUsersForImport {
 		// TODO alexb add local caching per tenant for external systems
-		err = services.Repositories.Neo4jRepositories.ExternalSystemWriteRepository.CreateIfNotExists(ctx, dt.Tenant, neo4jenum.GMail.String(), neo4jenum.GMail.String())
+		err = services.Repositories.Neo4jRepositories.ExternalSystemWriteRepository.CreateIfNotExists(ctx, dt.Tenant, enum.SourceGmail.String(), enum.SourceGmail.String())
 		if err != nil {
 			logrus.Errorf("failed to merge external system: %s", err.Error())
 			return
 		}
 
-		err = services.Repositories.Neo4jRepositories.ExternalSystemWriteRepository.CreateIfNotExists(ctx, dt.Tenant, neo4jenum.Outlook.String(), neo4jenum.Outlook.String())
+		err = services.Repositories.Neo4jRepositories.ExternalSystemWriteRepository.CreateIfNotExists(ctx, dt.Tenant, enum.SourceOutlook.String(), enum.SourceOutlook.String())
 		if err != nil {
 			logrus.Errorf("failed to merge external system: %s", err.Error())
 			return
 		}
 
-		err = services.Repositories.Neo4jRepositories.ExternalSystemWriteRepository.CreateIfNotExists(ctx, dt.Tenant, neo4jenum.Mailstack.String(), neo4jenum.Mailstack.String())
+		err = services.Repositories.Neo4jRepositories.ExternalSystemWriteRepository.CreateIfNotExists(ctx, dt.Tenant, enum.SourceMailstack.String(), enum.SourceMailstack.String())
 		if err != nil {
 			logrus.Errorf("failed to merge external system: %s", err.Error())
 			return

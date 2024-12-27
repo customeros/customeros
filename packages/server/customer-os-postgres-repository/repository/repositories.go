@@ -27,6 +27,7 @@ type Repositories struct {
 	CacheEmailValidationRepository               CacheEmailValidationRepository
 	CacheIpDataRepository                        CacheIpDataRepository
 	CacheIpHunterRepository                      CacheIpHunterRepository
+	CacheIPIdentifyRepository                    CacheIPIdentifyRepository
 	CommonRepository                             CommonRepository
 	CosApiEnrichPersonTempResultRepository       CosApiEnrichPersonTempResultRepository
 	CurrencyRateRepository                       CurrencyRateRepository
@@ -66,6 +67,7 @@ type Repositories struct {
 	RawEmailRepository                           RawEmailRepository
 	SlackChannelNotificationRepository           SlackChannelNotificationRepository
 	SlackChannelRepository                       SlackChannelRepository
+	SlackNotificationEventsRepository            SlackNotificationEventsRepository
 	SlackSettingsRepository                      SlackSettingsRepository
 	StatsApiCallsRepository                      StatsApiCallsRepository
 	TableViewDefinitionRepository                TableViewDefinitionRepository
@@ -76,8 +78,8 @@ type Repositories struct {
 	TenantSettingsRepository                     TenantSettingsRepository
 	TenantWebhookApiKeyRepository                TenantWebhookApiKeyRepository
 	TenantWebhookRepository                      TenantWebhookRepository
+	TrackerEventsRepository                      TrackerEventsRepository
 	TrackingAllowedOriginRepository              TrackingAllowedOriginRepository
-	TrackingRepository                           TrackingRepository
 	UserEmailImportPageTokenRepository           UserEmailImportStateRepository
 	UserWorkingScheduleRepository                UserWorkingScheduleRepository
 	GlobalOrganizationRepository                 GlobalOrganizationRepository
@@ -108,6 +110,7 @@ func InitRepositories(postgresDB *config.PostgresDB) *Repositories {
 		CacheEmailValidationRepository:               NewCacheEmailValidationRepository(postgresDB.GormDB),
 		CacheIpDataRepository:                        NewCacheIpDataRepository(postgresDB.GormDB),
 		CacheIpHunterRepository:                      NewCacheIpHunterRepository(postgresDB.GormDB),
+		CacheIPIdentifyRepository:                    NewCacheIPIdentifyRepository(postgresDB.GormDB),
 		CommonRepository:                             NewCommonRepository(postgresDB),
 		CosApiEnrichPersonTempResultRepository:       NewCosApiEnrichPersonTempResultRepository(postgresDB.GormDB),
 		CurrencyRateRepository:                       NewCurrencyRateRepository(postgresDB.GormDB),
@@ -144,6 +147,7 @@ func InitRepositories(postgresDB *config.PostgresDB) *Repositories {
 		PostmarkApiKeyRepository:                     NewPostmarkApiKeyRepo(postgresDB.GormDB),
 		SlackChannelNotificationRepository:           NewSlackChannelNotificationRepository(postgresDB.GormDB),
 		SlackChannelRepository:                       NewSlackChannelRepository(postgresDB.GormDB),
+		SlackNotificationEventsRepository:            NewSlackNotificationEventsRepository(postgresDB.GormDB),
 		SlackSettingsRepository:                      NewSlackSettingsRepository(postgresDB.GormDB),
 		StatsApiCallsRepository:                      NewStatsApiCallsRepository(postgresDB.GormDB),
 		TableViewDefinitionRepository:                NewTableViewDefinitionRepository(postgresDB.GormDB),
@@ -154,8 +158,8 @@ func InitRepositories(postgresDB *config.PostgresDB) *Repositories {
 		TenantSettingsRepository:                     NewTenantSettingsRepository(postgresDB.GormDB),
 		TenantWebhookApiKeyRepository:                NewTenantWebhookApiKeyRepository(postgresDB.GormDB),
 		TenantWebhookRepository:                      NewTenantWebhookRepo(postgresDB.GormDB),
+		TrackerEventsRepository:                      NewTrackerEventsRepository(postgresDB.GormDB),
 		TrackingAllowedOriginRepository:              NewTrackingAllowedOriginRepository(postgresDB.GormDB),
-		TrackingRepository:                           NewTrackingRepository(postgresDB.GormDB),
 		UserWorkingScheduleRepository:                NewUserWorkingScheduleRepository(postgresDB.GormDB),
 		GlobalOrganizationRepository:                 NewGlobalOrganizationRepository(postgresDB.GormDB),
 		GlobalOrganizationWebsiteToProcessRepository: NewGlobalOrganizationWebsiteToProcessRepository(postgresDB.GormDB),
@@ -176,6 +180,7 @@ func (r *Repositories) Migration(postgresDB *config.PostgresDB) {
 		&entity.CacheEmailValidationDomain{},
 		&entity.CacheIpData{},
 		&entity.CacheIpHunter{},
+		&entity.CacheIPIdentify{},
 		&entity.CosApiEnrichPersonTempResult{},
 		&entity.CurrencyRate{},
 		&entity.CustomerOsIds{},
@@ -214,6 +219,7 @@ func (r *Repositories) Migration(postgresDB *config.PostgresDB) {
 		&entity.PostmarkApiKey{},
 		&entity.SlackChannel{},
 		&entity.SlackChannelNotification{},
+		&entity.SlackNotificationEvents{},
 		&entity.SlackSettingsEntity{},
 		&entity.StatsApiCalls{},
 		&entity.TableViewDefinition{},
@@ -224,7 +230,7 @@ func (r *Repositories) Migration(postgresDB *config.PostgresDB) {
 		&entity.TenantSettingsOpportunityStage{},
 		&entity.TenantWebhook{},
 		&entity.TenantWebhookApiKey{},
-		&entity.Tracking{},
+		&entity.TrackerEvents{},
 		&entity.TrackingAllowedOrigin{},
 		&entity.UserWorkingSchedule{},
 		&entity.GlobalOrganization{},

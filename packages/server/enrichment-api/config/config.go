@@ -1,14 +1,16 @@
 package config
 
 import (
+	"log"
+
 	"github.com/caarlos0/env/v6"
 	"github.com/joho/godotenv"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/enrichment-api/metrics"
-	"log"
 )
 
 type Config struct {
@@ -20,9 +22,10 @@ type Config struct {
 	Neo4j               config.Neo4jConfig
 	Jaeger              tracing.JaegerConfig
 	Metrics             metrics.Config
-	ScrapinConfig       ScrapinConfig
 	BetterContactConfig BetterContactConfig
 	BrandfetchConfig    BrandfetchConfig
+	ScrapinConfig       ScrapinConfig
+	SnitcherConfig      SnitcherConfig
 }
 
 type ScrapinConfig struct {
@@ -41,6 +44,11 @@ type BetterContactConfig struct {
 	Url         string `env:"BETTER_CONTACT_API_URL" required:"true"`
 	ApiKey      string `env:"BETTER_CONTACT_API_KEY" required:"true"`
 	CallbackUrl string `env:"BETTER_CONTACT_CALLBACK_URL" required:"true"`
+}
+
+type SnitcherConfig struct {
+	Url    string `env:"SNITCHER_API_URL" required:"true"`
+	ApiKey string `env:"SNITCHER_API_KEY" required:"true"`
 }
 
 func InitConfig() (*Config, error) {

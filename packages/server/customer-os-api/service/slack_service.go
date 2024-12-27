@@ -38,7 +38,7 @@ func (s *slackService) GetPaginatedSlackChannels(ctx context.Context, tenant str
 	span.LogFields(log.Object("page", page))
 	span.LogFields(log.Object("limit", limit))
 
-	channels, totalCount, err := s.services.CommonServices.SlackChannelService.GetPaginatedSlackChannels(ctx, tenant, page, limit)
+	channels, totalCount, err := s.services.CommonServices.SlackService.GetPaginatedSlackChannels(ctx, tenant, page, limit)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err

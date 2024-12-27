@@ -11,10 +11,9 @@ import (
 	"github.com/customeros/mailsherpa/mailvalidate"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -26,6 +25,9 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
 
 func RedirectToPayInvoice(services *service.Services) gin.HandlerFunc {
@@ -103,7 +105,7 @@ func RedirectToPayInvoice(services *service.Services) gin.HandlerFunc {
 		if generateNewLink {
 			paymentLink = ""
 
-			primaryStripeCustomerId, err := services.CommonServices.ExternalSystemService.GetPrimaryExternalId(innerCtx, neo4jenum.Stripe.String(), organizationEntity.ID, model.ORGANIZATION)
+			primaryStripeCustomerId, err := services.CommonServices.ExternalSystemService.GetPrimaryExternalId(innerCtx, enum.SourceStripe.String(), organizationEntity.ID, model.ORGANIZATION)
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "Error fetching primary stripe customer ID"))
 			}
@@ -235,7 +237,6 @@ func saveIP(ctx context.Context, s *service.Services, clientIP, invoiceID, tenan
 		return createErr
 	}
 	return nil
-
 }
 
 type ApiRequestCreatePaymentLinks struct {
@@ -258,7 +259,7 @@ func callIntegrationAppWithApiRequestForNewPaymentLink(ctx context.Context, key,
 	span.LogKV("primaryStripeCustomerId", primaryStripeCustomerId)
 	span.SetTag(tracing.SpanTagTenant, tenant)
 
-	var SigningKey = []byte(secret)
+	SigningKey := []byte(secret)
 
 	claims := jwt.MapClaims{
 		"id":   tenant,

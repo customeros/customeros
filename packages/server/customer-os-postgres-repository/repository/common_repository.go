@@ -3,13 +3,15 @@ package repository
 import (
 	"context"
 	"fmt"
+	"reflect"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"gorm.io/gorm"
-	"reflect"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 )
 
 type CommonRepository interface {
@@ -122,7 +124,7 @@ func (r *commonRepository) PermanentlyDelete(ctx context.Context, tenant string)
 		entity.TenantSettingsEmailExclusion{}.TableName(),
 		entity.TenantSettingsMailbox{}.TableName(),
 		entity.TenantSettingsOpportunityStage{}.TableName(),
-		entity.Tracking{}.TableName(),
+		entity.TrackerEvents{}.TableName(),
 		entity.TrackingAllowedOrigin{}.TableName(),
 		entity.UserWorkingSchedule{}.TableName(),
 	}

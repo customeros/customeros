@@ -13,7 +13,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	commontracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	neoEnum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/pkg/errors"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
@@ -107,6 +106,7 @@ func publishFathomMeetingSummaryCreatedEvent(c *gin.Context, ctx context.Context
 	}
 
 	// build meeting summary
+	meetingSummary.Tenant = common.GetTenantFromContext(ctx)
 	meetingSummary.MeetingID = aiSummaryData.ID
 	meetingSummary.Content = &content
 	participants := aiSummaryData.Meeting.participantEmails()
@@ -119,7 +119,7 @@ func publishFathomMeetingSummaryCreatedEvent(c *gin.Context, ctx context.Context
 	}
 
 	event := dto.WebhookEvent{
-		ExternalSystemId: neoEnum.Fathom,
+		ExternalSystemId: commonenum.SourceFathom,
 		Name:             commonenum.EventFathomMeetingSummaryCreated,
 		DataType:         data_fields.MeetingSummaryEvent{}.Type(),
 		Data:             meetingSummary,

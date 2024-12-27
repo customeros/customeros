@@ -1,12 +1,14 @@
 package routes
 
 import (
-	"github.com/gin-contrib/cors"
-	"github.com/gin-gonic/gin"
-	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/service"
 	"log"
 	"strings"
+
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/service"
 )
 
 // Run will start the server
@@ -21,7 +23,7 @@ func getRouter(config *config.Config, services *service.Services) *gin.Engine {
 	router := gin.New()
 	corsConfig := cors.DefaultConfig()
 
-	corsConfig.AllowOrigins = strings.Split(config.Service.CorsUrl, " ")
+	corsConfig.AllowOrigins = strings.Split(config.Service.CorsURL, " ")
 	// To be able to send tokens to the server.
 	corsConfig.AllowCredentials = true
 
@@ -41,8 +43,8 @@ func getRouter(config *config.Config, services *service.Services) *gin.Engine {
 
 	addHealthRoutes(route)
 
-	//tracking configuration
-	//all all sources and filter down by tenant information in database
+	// tracking configuration
+	// all all sources and filter down by tenant information in database
 	trackingRoute := router.Group("/tracking")
 
 	trackingCorsConfig := cors.DefaultConfig()
@@ -53,7 +55,7 @@ func getRouter(config *config.Config, services *service.Services) *gin.Engine {
 
 	trackingRoute.Use(cors.New(trackingCorsConfig))
 
-	addTrackingRoutes(trackingRoute, services)
+	addTrackingRoutes(trackingRoute, services, config)
 
 	return router
 }

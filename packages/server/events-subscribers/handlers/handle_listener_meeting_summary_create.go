@@ -12,11 +12,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
-	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	neoEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
-	"github.com/pkg/errors"
 	"go.uber.org/multierr"
 )
 
@@ -26,50 +24,35 @@ func HandleMeetingSummaryEvent(ctx context.Context, s *service.Services, sourceE
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "eventData", eventData)
 
-	// check to see if tenant has flows configured for this event
-	flows, err := s.WorkflowService.GetFlowsByTrigger(ctx, sourceEvent)
-	// send to dead events if no flows configured to receive event
-	if err != nil || len(*flows) == 0 {
-		err := sendToDeadEvents(ctx, s, sourceEvent, eventData)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
+	ctx = common.WithCustomContext(ctx, &common.CustomContext{
+		Tenant: eventData.Tenant,
+	})
+
+	flows, err := s.WorkflowService.GetFlowsForListenerEvent(ctx, sourceEvent, eventData.Type(), eventData)
+	if err != nil {
+		tracing.TraceErr(span, err)
 		return err
 	}
 
 	var errs error
 	for _, flow := range *flows {
 		// get next action on the flow
-		nextStep, err := s.WorkflowService.GetNextStepInFlow(ctx, flow.ID, flow.TriggerNodeID)
+		nextStep, err := s.WorkflowService.GetNextStepInFlow(ctx, flow.ID, &flow.TriggerNodeID)
 		if err != nil {
-			tracing.TraceErr(span, err)
-			errs = multierr.Append(errs, fmt.Errorf("failed to get next step for flow %s: %w", flow.ID, err))
-			continue
-		}
-
-		// validate the transition to next action
-		validAgent, err := s.WorkflowService.ValidateTransition(ctx, flow.TriggerNodeID, nextStep.ToNodeID)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			errs = multierr.Append(errs, fmt.Errorf("failed to validate transition for flow %s: %w", flow.ID, err))
-			continue
-		}
-		if !validAgent {
-			err = fmt.Errorf("not a valid action transition for flow %s", flow.ID)
 			tracing.TraceErr(span, err)
 			errs = multierr.Append(errs, err)
 			continue
 		}
 
-		// prepare and send event to action executioner
-		switch nextStep.ToNodeAgent {
-		case commonEnum.AgentTimelineEventCreate:
-			if err := publishTimelineEventCreateEvent(ctx, s, flow.Status, flow.ID,
-				nextStep.ToNodeID, eventData, sourceEvent); err != nil {
+		// send event to agent executioner
+		switch nextStep.ToNodeAgent.Agent() {
+		case "timeline_event":
+			err := publishCreateTimelineEvent(ctx, s, &flow, eventData, sourceEvent)
+			if err != nil {
 				tracing.TraceErr(span, err)
-				errs = multierr.Append(errs, fmt.Errorf("failed to send timeline event for flow %s: %w", flow.ID, err))
+				errs = multierr.Append(errs, err)
 			}
+
 		default:
 			err = fmt.Errorf("next flow action not handled for flow %s", flow.ID)
 			tracing.TraceErr(span, err)
@@ -80,152 +63,100 @@ func HandleMeetingSummaryEvent(ctx context.Context, s *service.Services, sourceE
 	return errs
 }
 
-func publishTimelineEventCreateEvent(
-	ctx context.Context, s *service.Services, flowStatus, flowId, flowNodeId string,
-	eventData *data_fields.MeetingSummaryEvent, sourceEvent commonEnum.FlowListenerEvent,
-) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EventHandlers.handleTimelineEventCreateAgent")
+func publishCreateTimelineEvent(ctx context.Context, s *service.Services, flow *entity.Flow, eventData *data_fields.MeetingSummaryEvent, sourceEvent commonEnum.FlowListenerEvent) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EventHandlers.publishCreateTimelineEvent")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 
-	record, err := buildFlowExecutionRecord(ctx, flowStatus, flowId, flowNodeId, eventData)
+	// create contacts and org if they do not exist for all unique, non-tenant orgs
+	allOrgIds, err := createContactsAndOrganizations(ctx, s, eventData.ParticipantEmails)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 
-	// save flow execution record
-	flowExecutionRecord, err := s.WorkflowService.SaveFlowExecutionRecord(ctx, record)
+	// build mdEvent
+	source, err := sourceEvent.ExternalSystem()
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 
-	executionStatus, err := commonEnum.GetFlowExecutionStatus(flowExecutionRecord.Status)
+	mdEvent, err := createMarkdownEvent(source, eventData)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 
-	// if flow is configured but not running
-	if executionStatus != commonEnum.FlowExecutionRunning {
+	// create flow execution record
+	flowExecutionRecord, err := createFlowExecutionRecordForMeetingSummary(ctx, s, flow, eventData)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	// do not publish if flow is configured but not running
+	flowExecutionStatus, err := commonEnum.GetFlowExecutionStatus(flowExecutionRecord.Status)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	if flowExecutionStatus != commonEnum.FlowExecutionRunning {
 		return nil
 	}
 
-	// process action execution event
-	if err := processAgentExecutionEvent(ctx, s, sourceEvent, flowExecutionRecord.ID, eventData); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to publish markdown event"))
-		return err
+	// publish
+	var allErr error
+	for _, orgId := range *allOrgIds {
+		err := handleMarkdownEventPublishing(ctx, s, source, sourceEvent, orgId, &mdEvent, flowExecutionRecord.ID)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			allErr = multierr.Append(allErr, err)
+		}
 	}
 
-	return nil
+	return allErr
 }
 
-func buildFlowExecutionRecord(ctx context.Context, flowStatus, flowId, flowNodeId string, eventData *data_fields.MeetingSummaryEvent) (postgresEntity.FlowExecution, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EventHandlers.buildFlowExecutionRecord")
+func createFlowExecutionRecordForMeetingSummary(ctx context.Context, s *service.Services, flow *entity.Flow, eventData *data_fields.MeetingSummaryEvent) (*entity.FlowExecution, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EventHandlers.createFlowExecutionRecordForMeetingSummary")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 
-	data, err := eventData.ToString()
+	flowExecutionRecord, err := s.WorkflowService.BuildAndSaveFlowExecutionRecord(
+		ctx, flow.Status, flow.ID, flow.TriggerNodeID, eventData.MeetingID, eventData.Type(),
+		commonEnum.AgentTimelineEventCreate.String(), eventData,
+	)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return postgresEntity.FlowExecution{}, err
+		return nil, err
 	}
 
-	record := postgresEntity.FlowExecution{
-		Tenant:            common.GetTenantFromContext(ctx),
-		FlowID:            flowId,
-		EntityID:          eventData.MeetingID,
-		EntityType:        commonEnum.EntityMeeting.String(),
-		Status:            commonEnum.FlowExecutionRunning.String(),
-		StartedAt:         utils.NowPtr(),
-		CurrentStep:       commonEnum.AgentTimelineEventCreate.String(),
-		CurrentStepNodeId: flowNodeId,
-		CreatedAt:         utils.Now(),
-		Context:           &data,
-	}
-
-	switch flowStatus {
-	case "INACTIVE":
-		reason := commonEnum.FlowBlockedNotActive.String()
-		record.Status = commonEnum.FlowExecutionBlocked.String()
-		record.BlockedReason = &reason
-
-	case "ARCHIVED":
-		reason := commonEnum.FlowBlockedArchived.String()
-		record.Status = commonEnum.FlowExecutionBlocked.String()
-		record.BlockedReason = &reason
-
-	default:
-		record.Status = commonEnum.FlowExecutionRunning.String()
-	}
-	return record, nil
+	return flowExecutionRecord, nil
 }
 
-func sendToDeadEvents(ctx context.Context, s *service.Services, sourceEvent commonEnum.FlowListenerEvent, eventData *data_fields.MeetingSummaryEvent) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EventHandlers.sendToDeadEvents")
+func createContactsAndOrganizations(ctx context.Context, s *service.Services, participantEmails *[]string) (*[]string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EventHandlers.createContactsAndOrganizations")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
-
-	deadEvent, err := buildDeadEventFromMeetingSummary(ctx, sourceEvent, eventData)
-	if err != nil {
-		return err
-	}
-
-	_, err = s.PostgresRepositories.FlowDeadEventsRepository.Create(ctx, deadEvent)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-	return nil
-}
-
-func buildDeadEventFromMeetingSummary(ctx context.Context, sourceEvent commonEnum.FlowListenerEvent, eventData *data_fields.MeetingSummaryEvent) (postgresEntity.FlowDeadEvents, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EventHandlers.buildDeadEventFromMeetingSummary")
-	defer span.Finish()
-	tracing.SetDefaultListenerSpanTags(ctx, span)
-
-	data, err := eventData.ToString()
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return postgresEntity.FlowDeadEvents{}, err
-	}
-
-	return postgresEntity.FlowDeadEvents{
-		Tenant:    common.GetTenantFromContext(ctx),
-		NodeType:  commonEnum.NodeFlowListenerEvent.String(),
-		EventType: eventData.Type(),
-		Event:     sourceEvent.String(),
-		CreatedAt: utils.Now(),
-		Data:      &data,
-	}, nil
-}
-
-func processAgentExecutionEvent(ctx context.Context, s *service.Services, sourceEvent commonEnum.FlowListenerEvent, flowExecutionId string, eventData *data_fields.MeetingSummaryEvent) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EventHandlers.processAgentExecutionEvent")
-	defer span.Finish()
-	tracing.SetDefaultListenerSpanTags(ctx, span)
-
-	system, err := sourceEvent.ExternalSystem()
-	if err != nil {
-		return err
-	}
 
 	tenantDomains, err := s.WorkspaceService.GetWorkspaceDomainsForTenant(ctx)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return err
-	}
-
-	mdEvent, err := createMarkdownEvent(system, eventData)
-	if err != nil {
-		return err
+		return nil, err
 	}
 
 	var allErr error
 	allOrgIds := make([]string, 0)
 
-	for _, email := range *eventData.ParticipantEmails {
+	for _, email := range *participantEmails {
+
+		// check that email does not belong to tenant
+		vaildate := mailvalidate.ValidateEmailSyntax(email)
+		if utils.IsStringInSlice(vaildate.Domain, tenantDomains) || !vaildate.IsValid {
+			continue
+		}
 
 		// create the org if if doesn't exist
 		organizationId, err := createOrgFromEmail(ctx, s, email, tenantDomains)
@@ -248,16 +179,7 @@ func processAgentExecutionEvent(ctx context.Context, s *service.Services, source
 		}
 	}
 
-	// publish event for all unique non-tenant orgs
-	for _, orgId := range allOrgIds {
-		err := handleMarkdownEventPublishing(ctx, s, system, sourceEvent, orgId, &mdEvent, flowExecutionId)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			allErr = multierr.Append(allErr, err)
-		}
-	}
-
-	return allErr
+	return &allOrgIds, nil
 }
 
 func createOrgFromEmail(ctx context.Context, s *service.Services, email string, tenantDomains []string) (string, error) {
@@ -288,13 +210,13 @@ func createOrgFromEmail(ctx context.Context, s *service.Services, email string, 
 	return id, nil
 }
 
-func createMarkdownEvent(system enum.ExternalSystemId, eventData *data_fields.MeetingSummaryEvent) (data_fields.MarkdownEventFields, error) {
-	var sourceId entity.DataSource
+func createMarkdownEvent(system commonEnum.Source, eventData *data_fields.MeetingSummaryEvent) (data_fields.MarkdownEventFields, error) {
+	var sourceId neoEntity.DataSource
 	switch system {
-	case enum.Fathom:
-		sourceId = entity.DataSourceFathom
-	case enum.Grain:
-		sourceId = entity.DataSourceGrain
+	case commonEnum.SourceFathom:
+		sourceId = neoEntity.DataSourceFathom
+	case commonEnum.SourceGrain:
+		sourceId = neoEntity.DataSourceGrain
 	default:
 		return data_fields.MarkdownEventFields{}, fmt.Errorf("unsupported source: %v", system)
 	}
@@ -307,7 +229,7 @@ func createMarkdownEvent(system enum.ExternalSystemId, eventData *data_fields.Me
 }
 
 func handleMarkdownEventPublishing(ctx context.Context, s *service.Services,
-	system enum.ExternalSystemId, sourceEvent commonEnum.FlowListenerEvent, orgId string,
+	system commonEnum.Source, sourceEvent commonEnum.FlowListenerEvent, orgId string,
 	mdEvent *data_fields.MarkdownEventFields, flowExecutionId string,
 ) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EventHandlers.handleMarkdownEventPublishing")
@@ -319,6 +241,7 @@ func handleMarkdownEventPublishing(ctx context.Context, s *service.Services,
 	// build flow action event
 	flowAgentEvent := dto.FlowAgentEvent{
 		FlowExecutionId:  flowExecutionId,
+		Tenant:           "",
 		ExternalSystemId: system,
 		SourceEvent:      sourceEvent,
 		Name:             commonEnum.AgentTimelineEventCreate,

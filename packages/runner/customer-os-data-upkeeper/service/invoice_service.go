@@ -5,13 +5,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/config"
-	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/constants"
-	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/logger"
-	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/repository"
+	"net/http"
+	"time"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
@@ -26,8 +26,11 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-	"net/http"
-	"time"
+
+	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/config"
+	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/constants"
+	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/logger"
+	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/repository"
 )
 
 type GeneratePaymentLinkEventBody struct {
@@ -135,7 +138,7 @@ func (s *invoiceService) GenerateCycleInvoices() {
 			return
 		}
 
-		//process records
+		// process records
 		for _, record := range records {
 			innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
 				Tenant:    record.Tenant,
@@ -219,7 +222,7 @@ func (s *invoiceService) GenerateCycleInvoices() {
 			return
 		}
 
-		//sleep for async processing, then check again
+		// sleep for async processing, then check again
 		time.Sleep(10 * time.Second)
 	}
 }
@@ -307,7 +310,7 @@ func (s *invoiceService) SendPayNotifications() {
 			return
 		}
 
-		//process records
+		// process records
 		for _, record := range records {
 			invoice := neo4jmapper.MapDbNodeToInvoiceEntity(record.Node)
 			tenant := record.Tenant
@@ -332,7 +335,7 @@ func (s *invoiceService) SendPayNotifications() {
 				s.log.Errorf("Error marking pay notification requested for invoice %s: %s", invoice.Id, err.Error())
 			}
 		}
-		//sleep for async processing, then check again
+		// sleep for async processing, then check again
 		time.Sleep(5 * time.Second)
 	}
 }
@@ -377,7 +380,7 @@ func (s *invoiceService) SendRemindNotifications() {
 			return
 		}
 
-		//process records
+		// process records
 		for _, record := range records {
 			invoice := neo4jmapper.MapDbNodeToInvoiceEntity(record.Node)
 
@@ -401,7 +404,7 @@ func (s *invoiceService) SendRemindNotifications() {
 				s.log.Errorf("Error marking remind notification requested for invoice %s: %s", invoice.Id, err.Error())
 			}
 		}
-		//sleep for async processing, then check again
+		// sleep for async processing, then check again
 		time.Sleep(1 * time.Second)
 	}
 }
@@ -454,7 +457,7 @@ func (s *invoiceService) GenerateOffCycleInvoices() {
 			return
 		}
 
-		//process records
+		// process records
 		for _, record := range records {
 			contract := neo4jmapper.MapDbNodeToContractEntity(record.Node)
 			tenant := record.Tenant
@@ -485,7 +488,6 @@ func (s *invoiceService) GenerateOffCycleInvoices() {
 				_, err = CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
 					return s.eventsProcessingClient.InvoiceClient.NewInvoiceForContract(ctx, &newInvoiceRequest)
 				})
-
 				if err != nil {
 					tracing.TraceErr(span, err)
 					s.log.Errorf("Error generating off-cycle invoice for contract %s: %s", contract.Id, err.Error())
@@ -498,7 +500,7 @@ func (s *invoiceService) GenerateOffCycleInvoices() {
 				s.log.Errorf("Error marking invoicing started for contract %s: %s", contract.Id, err.Error())
 			}
 		}
-		//sleep for async processing, then check again
+		// sleep for async processing, then check again
 		if len(records) < limit {
 			return
 		}
@@ -553,7 +555,7 @@ func (s *invoiceService) GenerateInvoicePaymentLinks() {
 			return
 		}
 
-		//process records
+		// process records
 		for _, record := range records {
 			innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
 				Tenant:    record.Tenant,
@@ -597,7 +599,7 @@ func (s *invoiceService) GenerateInvoicePaymentLinks() {
 				s.log.Errorf("Error marking payment link requested for invoice %s: %s", invoice.Id, err.Error())
 			}
 
-			primaryStripeCustomerId, err := s.commonServices.ExternalSystemService.GetPrimaryExternalId(innerCtx, neo4jenum.Stripe.String(), organizationEntity.ID, model.ORGANIZATION)
+			primaryStripeCustomerId, err := s.commonServices.ExternalSystemService.GetPrimaryExternalId(innerCtx, enum.SourceStripe.String(), organizationEntity.ID, model.ORGANIZATION)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error getting primary stripe customer id for contract %s: %s", contractEntity.Id, err.Error())
@@ -681,7 +683,7 @@ func (s *invoiceService) CleanupInvoices() {
 			return
 		}
 
-		//process records
+		// process records
 		for _, record := range records {
 			invoice := neo4jmapper.MapDbNodeToInvoiceEntity(record.Node)
 			tenant := record.Tenant
@@ -734,7 +736,7 @@ func (s *invoiceService) GenerateNextPreviewInvoices() {
 			return
 		}
 
-		//process records
+		// process records
 		for _, record := range records {
 			contract := neo4jmapper.MapDbNodeToContractEntity(record.Node)
 			tenant := record.Tenant
@@ -773,7 +775,7 @@ func (s *invoiceService) GenerateNextPreviewInvoices() {
 				return
 			}
 		}
-		//sleep for async processing, then check again
+		// sleep for async processing, then check again
 		time.Sleep(10 * time.Second)
 	}
 }
@@ -931,7 +933,7 @@ func (s *invoiceService) SendInvoiceFinalizedEvent() {
 			return
 		}
 
-		//process records
+		// process records
 		for _, record := range records {
 			invoiceEntity := neo4jmapper.MapDbNodeToInvoiceEntity(record.Node)
 			tenant := record.Tenant
@@ -1000,7 +1002,7 @@ func (s *invoiceService) integrationAppInvoiceFinalizedWebhook(ctx context.Conte
 		return fmt.Errorf("error converting amount to smallest currency unit: %v", err.Error())
 	}
 
-	primaryStripeCustomerId, err := s.commonServices.ExternalSystemService.GetPrimaryExternalId(innerCtx, neo4jenum.Stripe.String(), organizationEntity.ID, model.ORGANIZATION)
+	primaryStripeCustomerId, err := s.commonServices.ExternalSystemService.GetPrimaryExternalId(innerCtx, enum.SourceStripe.String(), organizationEntity.ID, model.ORGANIZATION)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error getting primary stripe customer id for contract %s: %s", contractEntity.Id, err.Error())

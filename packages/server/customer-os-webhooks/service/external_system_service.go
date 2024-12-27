@@ -3,18 +3,20 @@ package service
 import (
 	"context"
 	"fmt"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/repository"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 type ExternalSystemService interface {
@@ -77,7 +79,7 @@ func (s *externalSystemService) SyncExternalSystem(ctx context.Context, external
 
 	syncDate := utils.Now()
 	var statuses []SyncStatus
-	var tenant = common.GetTenantFromContext(ctx)
+	tenant := common.GetTenantFromContext(ctx)
 	reason := ""
 	failedSync := false
 
@@ -92,8 +94,8 @@ func (s *externalSystemService) SyncExternalSystem(ctx context.Context, external
 		statuses = append(statuses, NewFailedSyncStatus(reason))
 	}
 	if !failedSync {
-		switch neo4jenum.DecodeExternalSystemId(externalSystemInput.ExternalSystem) {
-		case neo4jenum.Stripe:
+		switch enum.DecodeSource(externalSystemInput.ExternalSystem) {
+		case enum.SourceStripe:
 			err = s.repositories.Neo4jRepositories.ExternalSystemWriteRepository.SetProperty(ctx, tenant, externalSystemInput.ExternalSystem, neo4jentity.PropertyExternalSystemStripePaymentMethodTypes, externalSystemInput.PaymentMethodTypes)
 			if err != nil {
 				failedSync = true

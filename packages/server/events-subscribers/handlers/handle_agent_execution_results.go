@@ -40,7 +40,7 @@ func HandleAgentExecutionResults(c context.Context, s *service.Services, eventDa
 		flowExecutionRecord.Status = enum.FlowExecutionRunning.String()
 
 	case enum.FlowAgentExecutionSuccess:
-		nextStepData, err := s.WorkflowService.GetNextStepInFlow(ctx, flowExecutionRecord.FlowID, flowExecutionRecord.CurrentStepNodeId)
+		nextStepData, err := s.WorkflowService.GetNextStepInFlow(ctx, flowExecutionRecord.FlowID, nil)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err

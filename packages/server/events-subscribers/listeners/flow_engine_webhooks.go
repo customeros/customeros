@@ -21,6 +21,7 @@ var eventDataTypes = map[string]reflect.Type{
 	data_fields.MeetingSummaryEvent{}.Type(): reflect.TypeOf(data_fields.MeetingSummaryEvent{}),
 	data_fields.ContactCreateEvent{}.Type():  reflect.TypeOf(data_fields.ContactCreateEvent{}),
 	data_fields.MarkdownEventFields{}.Type(): reflect.TypeOf(data_fields.MarkdownEventFields{}),
+	data_fields.WebsiteVisitEvent{}.Type():   reflect.TypeOf(data_fields.WebsiteVisitEvent{}),
 }
 
 func OnWebhookEventCreated(ctx context.Context, s *service.Services, input any) error {
@@ -50,6 +51,17 @@ func OnWebhookEventCreated(ctx context.Context, s *service.Services, input any) 
 			return fmt.Errorf("failed to cast to MeetingSummaryEvent, got type: %T", webhookEvent.Data)
 		}
 		err = handlers.HandleMeetingSummaryEvent(ctx, s, eventName, eventData)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+
+	case data_fields.WebsiteVisitEvent{}.Type():
+		eventData, ok := webhookEvent.Data.(*data_fields.WebsiteVisitEvent)
+		if !ok {
+			return fmt.Errorf("failed to cast to WebsiteVisitEvent, got type: %T", webhookEvent.Data)
+		}
+		err = handlers.HandleWebsiteVisitorEvent(ctx, s, eventName, eventData)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err

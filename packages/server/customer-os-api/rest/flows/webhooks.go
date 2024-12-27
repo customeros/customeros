@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	commonEnum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	neoEnum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/pkg/errors"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/enum"
@@ -179,7 +179,7 @@ func RotateWebhook(s *service.Services, baseURL, flowsPath string) gin.HandlerFu
 		webhookPath := strings.TrimSuffix(c.Request.URL.Path, "/rotate")
 		webhookPath = strings.TrimPrefix(webhookPath, flowsPath)
 		integration, err := s.WebhookService.GetIntegrationFromWebhookPath(ctx, tenant, webhookPath)
-		if err != nil || integration == neoEnum.NotSet {
+		if err != nil || integration == commonEnum.SourceUnknown {
 			rest.SendError(c, span, http.StatusNotFound, enum.ErrNotFound.WithMessage("Unable to identify webhook"))
 			return
 		}
@@ -263,14 +263,14 @@ func HandleWebhook(s *service.Services, flowsPath string) gin.HandlerFunc {
 		}
 
 		switch integration {
-		case neoEnum.CalCom:
+		case commonEnum.SourceCalCom:
 			integrations.CalDotCom(c, s)
 		// todo
-		case neoEnum.Fathom:
+		case commonEnum.SourceFathom:
 			integrations.FathomZapier(c, s)
-		case neoEnum.Grain:
+		case commonEnum.SourceGrain:
 			integrations.GrainZapier(c, s)
-		case neoEnum.Postmark:
+		case commonEnum.SourcePostmark:
 			integrations.PostmarkInboundEmail(c, s)
 		// todo
 		default:

@@ -3,6 +3,11 @@ package server
 import (
 	"bytes"
 	"context"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
 	"github.com/gin-contrib/cors"
 	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
@@ -10,18 +15,15 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
-	"github.com/openline-ai/openline-customer-os/packages/server/enrichment-api/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/enrichment-api/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/enrichment-api/route"
-	"github.com/openline-ai/openline-customer-os/packages/server/enrichment-api/service"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/enrichment-api/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/enrichment-api/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/enrichment-api/routes"
+	"github.com/openline-ai/openline-customer-os/packages/server/enrichment-api/service"
 )
 
 type server struct {
@@ -91,7 +93,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	r.Use(bodyLoggerMiddleware)
 
 	// set routes
-	route.RegisterRoutes(ctx, r, services)
+	routes.RegisterRoutes(ctx, r, services)
 
 	r.GET("/health", HealthCheckHandler)
 	r.GET("/", RootHandler)
@@ -136,7 +138,7 @@ func registerPrometheusMetrics() {
 func prometheusMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer func(start time.Time) {
-			//TODO implement custom metrics
+			// TODO implement custom metrics
 		}(time.Now())
 		c.Next()
 	}

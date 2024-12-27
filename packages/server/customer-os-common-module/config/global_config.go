@@ -24,9 +24,10 @@ type InternalServices struct {
 }
 
 type ExternalServices struct {
+	CloudflareConfig CloudflareConfig
+	NamecheapConfig  NamecheapConfig
 	OpenSRSConfig    OpenSRSConfig
 	PostmarkConfig   PostmarkConfig
-	NamecheapConfig  NamecheapConfig
+	SlackConfig      SlackConfig
 	StripeConfig     StripeConfig
-	CloudflareConfig CloudflareConfig
 }

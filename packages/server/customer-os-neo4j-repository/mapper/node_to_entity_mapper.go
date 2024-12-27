@@ -6,9 +6,10 @@ import (
 	commonenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"golang.org/x/exp/slices"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
-	"golang.org/x/exp/slices"
 )
 
 func MapDbNodeToJobRoleEntity(dbNode *dbtype.Node) *entity.JobRoleEntity {
@@ -681,10 +682,10 @@ func MapDbNodeToExternalSystem(node *dbtype.Node) *entity.ExternalSystemEntity {
 	}
 	props := utils.GetPropsFromNode(*node)
 	externalSystemEntity := entity.ExternalSystemEntity{
-		ExternalSystemId: enum.DecodeExternalSystemId(utils.GetStringPropOrEmpty(props, "id")),
+		ExternalSystemId: commonenum.DecodeSource(utils.GetStringPropOrEmpty(props, "id")),
 		Name:             utils.GetStringPropOrEmpty(props, "name"),
 	}
-	if externalSystemEntity.ExternalSystemId == enum.Stripe {
+	if externalSystemEntity.ExternalSystemId == commonenum.SourceStripe {
 		externalSystemEntity.Stripe.PaymentMethodTypes = utils.GetListStringPropOrEmpty(props, entity.PropertyExternalSystemStripePaymentMethodTypes)
 	}
 	return &externalSystemEntity
