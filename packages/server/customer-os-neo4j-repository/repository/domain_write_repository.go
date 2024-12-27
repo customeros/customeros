@@ -11,7 +11,7 @@ import (
 )
 
 type DomainWriteRepository interface {
-	MergeDomain(ctx context.Context, tx *neo4j.ManagedTransaction, domain, source, appSource string) error
+	MergeDomain(ctx context.Context, tx *neo4j.ManagedTransaction, domain, source, appSource string) (bool, error)
 	SetPrimaryDetails(ctx context.Context, domain, primaryDomain string, primary bool) error
 }
 
@@ -27,7 +27,7 @@ func NewDomainWriteRepository(driver *neo4j.DriverWithContext, database string) 
 	}
 }
 
-func (r domainWriteRepository) MergeDomain(ctx context.Context, tx *neo4j.ManagedTransaction, domain, source, appSource string) error {
+func (r domainWriteRepository) MergeDomain(ctx context.Context, tx *neo4j.ManagedTransaction, domain, source, appSource string) (bool, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "DomainWriteRepository.MergeDomain")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
@@ -39,7 +39,8 @@ func (r domainWriteRepository) MergeDomain(ctx context.Context, tx *neo4j.Manage
 		d.createdAt=datetime(),
 		d.updatedAt=datetime(),
 		d.source=$source,
-		d.appSource=$appSource`)
+		d.appSource=$appSource
+	RETURN d.createdAt = datetime() AS justCreated`)
 
 	params := map[string]interface{}{
 		"domain":    domain,
@@ -49,18 +50,16 @@ func (r domainWriteRepository) MergeDomain(ctx context.Context, tx *neo4j.Manage
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
-		_, err := tx.Run(ctx, cypher, params)
-		if err != nil {
-			return nil, err
-		}
-		return nil, nil
+	result, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		return utils.ExtractSingleRecordFirstValueAsType[bool](ctx, queryResult, err)
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
+		return false, err
 	}
-
-	return err
+	span.LogFields(log.Bool("result.justCreated", result.(bool)))
+	return result.(bool), nil
 }
 
 func (r domainWriteRepository) SetPrimaryDetails(ctx context.Context, domain, primaryDomain string, primary bool) error {

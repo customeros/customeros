@@ -107,8 +107,8 @@ func (s *globalOrganizationService) syncScrapinToGlobalOrganization() {
 		}
 
 		// check if website is accepted
-		if !s.commonServices.DomainService.AcceptedDomainForOrganization(ctx, data.Company.WebsiteUrl) ||
-			!s.commonServices.DomainService.AcceptedDomainForOrganization(ctx, primaryDomain) {
+		if !s.commonServices.DomainService.IsAcceptedDomainForOrganization(ctx, data.Company.WebsiteUrl) ||
+			!s.commonServices.DomainService.IsAcceptedDomainForOrganization(ctx, primaryDomain) {
 			continue
 		}
 
@@ -254,8 +254,8 @@ func (s *globalOrganizationService) syncBrandfetchToGlobalOrganization() {
 		}
 
 		// check if website is accepted
-		if !s.commonServices.DomainService.AcceptedDomainForOrganization(ctx, data.Domain) ||
-			!s.commonServices.DomainService.AcceptedDomainForOrganization(ctx, primaryDomain) {
+		if !s.commonServices.DomainService.IsAcceptedDomainForOrganization(ctx, data.Domain) ||
+			!s.commonServices.DomainService.IsAcceptedDomainForOrganization(ctx, primaryDomain) {
 			continue
 		}
 

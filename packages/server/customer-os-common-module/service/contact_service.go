@@ -67,7 +67,7 @@ func (s *contactService) CreateContactWithOrganizationByEmail(ctx context.Contex
 		}
 
 		mailValidation := mailsherpa.ValidateEmailSyntax(email)
-		validDomainForOrganization := s.services.DomainService.AcceptedDomainForOrganization(ctx, mailValidation.Domain)
+		validDomainForOrganization := s.services.DomainService.IsAcceptedDomainForOrganization(ctx, mailValidation.Domain)
 
 		if validDomainForOrganization {
 			organizationId, innerErr := s.services.OrganizationService.Save(ctx, txWithPostCommit, nil, data_fields.OrganizationFields{
