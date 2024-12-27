@@ -4,21 +4,19 @@ import (
 	"context"
 	"fmt"
 	mailsherpa "github.com/customeros/mailsherpa/mailvalidate"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
-	commonenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
-	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
-	"strings"
-	"time"
-
 	"github.com/google/uuid"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
+	commonenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
+	"strings"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
@@ -277,7 +275,7 @@ func (s *mailService) processSessionAndEvents(ctx context.Context, txWithPostCom
 		}
 
 		// step 4: Process participants
-		if err = s.linkParticipants(ctx, txWithPostCommit, tenant, interactionEventId, &emailMessageData.Participants, syncDate, rawEmail.ExternalSystem); err != nil {
+		if err = s.linkParticipants(ctx, txWithPostCommit, tenant, interactionEventId, &emailMessageData.Participants, rawEmail.ExternalSystem); err != nil {
 			err = fmt.Errorf("failed to link participants: %v", err)
 			return nil, err
 		}
@@ -306,7 +304,7 @@ func (s *mailService) buildEmailForCustomerOS(email *EmailMessageData, externalS
 	return save
 }
 
-func (s *mailService) linkParticipants(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, tenant string, interactionEventId string, participants *EmailParticipants, syncDate time.Time, externalSystem string) error {
+func (s *mailService) linkParticipants(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, tenant string, interactionEventId string, participants *EmailParticipants, externalSystem string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "MailService.linkParticipants")
 	defer span.Finish()
 	tracing.TagTenant(span, tenant)
@@ -316,30 +314,32 @@ func (s *mailService) linkParticipants(ctx context.Context, txWithPostCommit *ut
 
 	_, err := utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
 		// Link From participant
-		fromId, err := s.getOrCreateEmailId(ctx, txWithPostCommit, tenant, participants.From.Email, syncDate, externalSystem, emailIds)
+		fromEmailId, err := s.getOrCreateEmailId(ctx, txWithPostCommit, tenant, participants.From.Email, externalSystem, emailIds)
 		if err != nil {
 			err = fmt.Errorf("failed to get or create email id: %w", err)
 			return nil, err
 		}
-		if err = s.services.Neo4jRepositories.InteractionEventWriteRepository.InteractionEventSentByEmail(ctx, txWithPostCommit.Tx, tenant, interactionEventId, fromId); err != nil {
-			err = fmt.Errorf("failed to create interaction event sent by email: %w", err)
-			return nil, err
+		if fromEmailId != "" {
+			if err = s.services.Neo4jRepositories.InteractionEventWriteRepository.InteractionEventSentByEmail(ctx, txWithPostCommit.Tx, tenant, interactionEventId, fromEmailId); err != nil {
+				err = fmt.Errorf("failed to create interaction event sent by email: %w", err)
+				return nil, err
+			}
 		}
 
 		// Link To participants
-		if err = s.linkEmailGroup(ctx, txWithPostCommit, tenant, interactionEventId, "TO", participants.GetToEmailAddresses(), syncDate, externalSystem, emailIds); err != nil {
+		if err = s.linkEmailGroup(ctx, txWithPostCommit, tenant, interactionEventId, "TO", participants.GetToEmailAddresses(), externalSystem, emailIds); err != nil {
 			err = fmt.Errorf("failed to link email group for TO: %w", err)
 			return nil, err
 		}
 
 		// Link CC participants
-		if err = s.linkEmailGroup(ctx, txWithPostCommit, tenant, interactionEventId, "CC", participants.GetCcEmailAddresses(), syncDate, externalSystem, emailIds); err != nil {
+		if err = s.linkEmailGroup(ctx, txWithPostCommit, tenant, interactionEventId, "CC", participants.GetCcEmailAddresses(), externalSystem, emailIds); err != nil {
 			err = fmt.Errorf("failed to link email group for CC: %w", err)
 			return nil, err
 		}
 
 		// Link BCC participants
-		if err = s.linkEmailGroup(ctx, txWithPostCommit, tenant, interactionEventId, "BCC", participants.GetBccEmailAddresses(), syncDate, externalSystem, emailIds); err != nil {
+		if err = s.linkEmailGroup(ctx, txWithPostCommit, tenant, interactionEventId, "BCC", participants.GetBccEmailAddresses(), externalSystem, emailIds); err != nil {
 			err = fmt.Errorf("failed to link email group for BCC: %w", err)
 			return nil, err
 		}
@@ -354,8 +354,7 @@ func (s *mailService) linkParticipants(ctx context.Context, txWithPostCommit *ut
 	return nil
 }
 
-func (s *mailService) linkEmailGroup(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, tenant string, interactionEventId string, groupType string, emails []string,
-	syncDate time.Time, externalSystem string, emailIds map[string]string) error {
+func (s *mailService) linkEmailGroup(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, tenant string, interactionEventId string, groupType string, emails []string, externalSystem string, emailIds map[string]string) error {
 
 	span, ctx := opentracing.StartSpanFromContext(ctx, "MailService.linkEmailGroup")
 	defer span.Finish()
@@ -366,17 +365,13 @@ func (s *mailService) linkEmailGroup(ctx context.Context, txWithPostCommit *util
 	_, err := utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
 		var groupEmailIds []string
 		for _, email := range emails {
-			if email == "" {
-				continue
-			}
-
-			emailId, err := s.getOrCreateEmailId(ctx, txWithPostCommit, tenant, email, syncDate, externalSystem, emailIds)
+			emailId, err := s.getOrCreateEmailId(ctx, txWithPostCommit, tenant, email, externalSystem, emailIds)
 			if err != nil {
 				err = fmt.Errorf("failed to get or create email ID: %w", err)
 				return nil, err
 			}
 
-			if !utils.Contains(groupEmailIds, emailId) {
+			if emailId != "" && !utils.Contains(groupEmailIds, emailId) {
 				groupEmailIds = append(groupEmailIds, emailId)
 			}
 		}
@@ -396,10 +391,25 @@ func (s *mailService) linkEmailGroup(ctx context.Context, txWithPostCommit *util
 	return nil
 }
 
-func (s *mailService) getOrCreateEmailId(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, tenant string, email string, syncDate time.Time, externalSystem string, emailIds map[string]string) (string, error) {
+func (s *mailService) getOrCreateEmailId(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, tenant string, email string, externalSystem string, emailIds map[string]string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "MailService.getOrCreateEmailId")
 	defer span.Finish()
 	tracing.TagTenant(span, tenant)
+	span.LogFields(log.String("email", email), log.String("externalSystem", externalSystem))
+
+	if email == "" {
+		return "", nil
+	}
+	// skip if email is system generated
+	mailSyntax := mailsherpa.ValidateEmailSyntax(email)
+	if !mailSyntax.IsValid {
+		span.LogFields(log.String("reason", "invalid email syntax"))
+		return "", nil
+	}
+	if mailSyntax.IsSystemGenerated {
+		span.LogFields(log.String("reason", "system generated email"))
+		return "", nil
+	}
 
 	if id, exists := emailIds[email]; exists {
 		return id, nil
