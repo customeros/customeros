@@ -9,6 +9,7 @@ const (
 	CONTRACT                 EntityType = "CONTRACT"
 	CUSTOM_FIELD             EntityType = "CUSTOM_FIELD"
 	CUSTOM_FIELD_TEMPLATE    EntityType = "CUSTOM_FIELD_TEMPLATE"
+	DOMAIN                   EntityType = "DOMAIN"
 	EMAIL                    EntityType = "EMAIL"
 	FLOW                     EntityType = "FLOW"
 	FLOW_ACTION              EntityType = "FLOW_ACTION"
@@ -56,6 +57,8 @@ func (entityType EntityType) Neo4jLabel() string {
 		return NodeLabelOrganization
 	case OPPORTUNITY:
 		return NodeLabelOpportunity
+	case DOMAIN:
+		return NodeLabelDomain
 	case EMAIL:
 		return NodeLabelEmail
 	case PHONE_NUMBER:

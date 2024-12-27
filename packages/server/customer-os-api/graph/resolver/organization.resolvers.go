@@ -1129,7 +1129,7 @@ func (r *queryResolver) OrganizationCheckWebsite(ctx context.Context, website st
 	isPrimary, primaryDomain := domaincheck.PrimaryDomainCheck(website)
 
 	if primaryDomain != "" {
-		isAcceptedDomain := r.Services.CommonServices.DomainService.AcceptedDomainForOrganization(ctx, primaryDomain)
+		isAcceptedDomain := r.Services.CommonServices.DomainService.IsAcceptedDomainForOrganization(ctx, primaryDomain)
 		if !isAcceptedDomain {
 			return &model.WebsiteCheckDetails{
 				Accepted:      false,
