@@ -4,10 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
-	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
-	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
@@ -31,120 +27,6 @@ func NewIssueEventHandler(log logger.Logger, services *service.Services, grpcCli
 		services:    services,
 		grpcClients: grpcClients,
 	}
-}
-
-func (h *IssueEventHandler) OnCreate(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueEventHandler.OnCreate")
-	defer span.Finish()
-	setEventSpanTagsAndLogFields(span, evt)
-
-	var eventData event.IssueCreateEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "evt.GetJsonData")
-	}
-	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
-	span.LogFields(log.String("eventData", fmt.Sprintf("%+v", evt)))
-
-	issueId := aggregate.GetIssueObjectID(evt.AggregateID, eventData.Tenant)
-	data := neo4jrepository.IssueCreateFields{
-		CreatedAt: eventData.CreatedAt,
-		SourceFields: neo4jmodel.SourceFields{
-			Source:        helper.GetSource(eventData.Source),
-			AppSource:     helper.GetAppSource(eventData.AppSource),
-			SourceOfTruth: helper.GetSourceOfTruth(eventData.Source),
-		},
-		GroupId:                   eventData.GroupId,
-		Subject:                   eventData.Subject,
-		Description:               eventData.Description,
-		Status:                    eventData.Status,
-		Priority:                  eventData.Priority,
-		ReportedByOrganizationId:  eventData.ReportedByOrganizationId,
-		SubmittedByOrganizationId: eventData.SubmittedByOrganizationId,
-		SubmittedByUserId:         eventData.SubmittedByUserId,
-	}
-	err := h.services.CommonServices.Neo4jRepositories.IssueWriteRepository.Create(ctx, eventData.Tenant, issueId, data)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Error while saving issue %s: %s", issueId, err.Error())
-		return err
-	}
-
-	if eventData.ExternalSystem.Available() {
-		externalSystemData := neo4jmodel.ExternalSystem{
-			ExternalSystemId: eventData.ExternalSystem.ExternalSystemId,
-			ExternalUrl:      eventData.ExternalSystem.ExternalUrl,
-			ExternalId:       eventData.ExternalSystem.ExternalId,
-			ExternalIdSecond: eventData.ExternalSystem.ExternalIdSecond,
-			ExternalSource:   eventData.ExternalSystem.ExternalSource,
-			SyncDate:         eventData.ExternalSystem.SyncDate,
-		}
-		err = h.services.CommonServices.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntity(ctx, eventData.Tenant, issueId, model.NodeLabelIssue, externalSystemData)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			h.log.Errorf("Error while link issue %s with external system %s: %s", issueId, eventData.ExternalSystem.ExternalSystemId, err.Error())
-			return err
-		}
-	}
-
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	if eventData.ReportedByOrganizationId != "" {
-		err = h.services.CommonServices.OrganizationService.RequestRefreshLastTouchpoint(ctx, eventData.ReportedByOrganizationId)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			h.log.Errorf("Error while refreshing last touchpoint for organization %s: %s", eventData.ReportedByOrganizationId, err.Error())
-		}
-	}
-
-	return nil
-}
-
-func (h *IssueEventHandler) OnUpdate(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueEventHandler.OnUpdate")
-	defer span.Finish()
-	setEventSpanTagsAndLogFields(span, evt)
-
-	var eventData event.IssueUpdateEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "evt.GetJsonData")
-	}
-	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
-	span.LogFields(log.String("eventData", fmt.Sprintf("%+v", evt)))
-
-	issueId := aggregate.GetIssueObjectID(evt.AggregateID, eventData.Tenant)
-	data := neo4jrepository.IssueUpdateFields{
-		GroupId:     eventData.GroupId,
-		Subject:     eventData.Subject,
-		Description: eventData.Description,
-		Status:      eventData.Status,
-		Priority:    eventData.Priority,
-		Source:      helper.GetSource(eventData.Source),
-	}
-	err := h.services.CommonServices.Neo4jRepositories.IssueWriteRepository.Update(ctx, eventData.Tenant, issueId, data)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Error while saving issue %s: %s", issueId, err.Error())
-	}
-
-	if eventData.ExternalSystem.Available() {
-		externalSystemData := neo4jmodel.ExternalSystem{
-			ExternalSystemId: eventData.ExternalSystem.ExternalSystemId,
-			ExternalUrl:      eventData.ExternalSystem.ExternalUrl,
-			ExternalId:       eventData.ExternalSystem.ExternalId,
-			ExternalIdSecond: eventData.ExternalSystem.ExternalIdSecond,
-			ExternalSource:   eventData.ExternalSystem.ExternalSource,
-			SyncDate:         eventData.ExternalSystem.SyncDate,
-		}
-		err = h.services.CommonServices.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntity(ctx, eventData.Tenant, issueId, model.NodeLabelIssue, externalSystemData)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			h.log.Errorf("Error while link issue %s with external system %s: %s", issueId, eventData.ExternalSystem.ExternalSystemId, err.Error())
-			return err
-		}
-	}
-
-	return err
 }
 
 func (h *IssueEventHandler) OnAddUserAssignee(ctx context.Context, evt eventstore.Event) error {
