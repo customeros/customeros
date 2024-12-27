@@ -362,8 +362,8 @@ github.com/smarty/assertions v1.16.0 h1:EvHNkdRA4QHMrn75NZSoUQ/mAUXAYWfatfB01yTC
 github.com/smarty/assertions v1.16.0/go.mod h1:duaaFdCS0K9dnoM50iyek/eYINOZ64gbh1Xlf6LG7AI=
 github.com/smarty/gunit v1.5.0 h1:OmG6a/rgi7qCjlQis6VjXbvx/WqZ8I6xSlbfN4YB5MY=
 github.com/smarty/gunit v1.5.0/go.mod h1:uAeNibUD292KZRcg5OTy7lb6WR5++UC0BQOzNuiRzpU=
-github.com/smartystreets/smartystreets-go-sdk v1.20.1 h1:XBa35vv1egzXqo3VE7wjjJxnZuzxb+5QasamCtf0uH0=
-github.com/smartystreets/smartystreets-go-sdk v1.20.1/go.mod h1:x5VhKfBjfsOBL1ye1/Cq5u7yEEMcZS2l2JgKS0VCjlg=
+github.com/smartystreets/smartystreets-go-sdk v1.21.1 h1:4X6DF6eU8xA7/XapgzHWYVXB6nWgTbyE++LKghnfWcw=
+github.com/smartystreets/smartystreets-go-sdk v1.21.1/go.mod h1:x5VhKfBjfsOBL1ye1/Cq5u7yEEMcZS2l2JgKS0VCjlg=
 github.com/sosodev/duration v1.3.1 h1:qtHBDMQ6lvMQsL15g4aopM4HEfOaYuhWBw3NPTtlqq4=
 github.com/sosodev/duration v1.3.1/go.mod h1:RQIBBX0+fMLc/D9+Jb/fwvVmo0eZvDDEERAikUR6SDg=
 github.com/spf13/pflag v1.0.5 h1:iy+VFUOCP1a+8yFto/drg2CJ5u0yRoB7fZw3DKv/JXA=
