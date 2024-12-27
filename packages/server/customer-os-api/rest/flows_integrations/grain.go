@@ -13,7 +13,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	commontracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	neoEnum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/pkg/errors"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
@@ -98,6 +97,7 @@ func publishGrainMeetingSummaryCreatedEvent(c *gin.Context, ctx context.Context,
 
 	content := grainData.MeetingNoteContent()
 	meeting.Content = &content
+	meeting.Tenant = common.GetTenantFromContext(ctx)
 	meeting.MeetingID = grainData.RecordingData.ID
 	participants := grainData.RecordingData.participantEmails()
 	meeting.ParticipantEmails = &participants
@@ -110,7 +110,7 @@ func publishGrainMeetingSummaryCreatedEvent(c *gin.Context, ctx context.Context,
 
 	// build webhook event
 	event := dto.WebhookEvent{
-		ExternalSystemId: neoEnum.Grain,
+		ExternalSystemId: commonenum.SourceGrain,
 		Name:             commonenum.EventGrainMeetingSummaryCreated,
 		DataType:         "MeetingSummaryEvent",
 		Data:             &meeting,

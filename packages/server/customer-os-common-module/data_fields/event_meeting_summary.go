@@ -6,6 +6,7 @@ import (
 )
 
 type MeetingSummaryEvent struct {
+	Tenant            string     `json:"tenant"`
 	MeetingID         string     `json:"meetingId"`
 	ParticipantEmails *[]string  `json:"participantEmails,omitempty"`
 	Content           *string    `json:"content,omitempty"`

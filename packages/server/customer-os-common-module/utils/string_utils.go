@@ -3,14 +3,16 @@ package utils
 import (
 	"bytes"
 	"crypto/rand"
-	"github.com/forPelevin/gomoji"
-	"github.com/google/uuid"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
+	"encoding/json"
 	"math/big"
 	"strings"
 	"unicode"
 	"unicode/utf8"
+
+	"github.com/forPelevin/gomoji"
+	"github.com/google/uuid"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 const (
@@ -270,4 +272,12 @@ func CleanName(input string) string {
 	output = CapitalizeAllParts(output, []string{" "})
 
 	return output
+}
+
+func ObjectToString(o any) (string, error) {
+	bytes, err := json.Marshal(o)
+	if err != nil {
+		return "", err
+	}
+	return string(bytes), nil
 }

@@ -38,7 +38,7 @@
       keepalive: true,
       body: JSON.stringify({
         ip: window.cosUserIp,
-        userId: window.cosUserId,
+        visitorId: window.cosUserId,
         eventType: eventType,
         eventData: JSON.stringify(eventData),
         timestamp: new Date().valueOf(),

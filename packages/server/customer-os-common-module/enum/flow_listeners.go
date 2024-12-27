@@ -3,8 +3,6 @@ package enum
 import (
 	"fmt"
 	"strings"
-
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 )
 
 type FlowListenerEvent string
@@ -13,6 +11,8 @@ const (
 	EventFathomMeetingSummaryCreated FlowListenerEvent = "fathom.meeting_summary.created"
 	EventFlowContactAdded            FlowListenerEvent = "flow.contact.added"
 	EventGrainMeetingSummaryCreated  FlowListenerEvent = "grain.meeting_summary.created"
+	EventRevealWebsiteVisitNew       FlowListenerEvent = "reveal.website_visit.new"
+	EventRevealWebsiteVisitRepeat    FlowListenerEvent = "reveal.website_visit.repeat"
 	NotSet                           FlowListenerEvent = ""
 )
 
@@ -29,18 +29,24 @@ func (e FlowListenerEvent) Parse() (system, resource, action string, err error) 
 	return parts[0], parts[1], parts[2], nil
 }
 
-func (e FlowListenerEvent) ExternalSystem() (system enum.ExternalSystemId, err error) {
+func (e FlowListenerEvent) ExternalSystem() (system Source, err error) {
 	systemId, _, _, err := e.Parse()
 	if err != nil {
-		return enum.ExternalSystemId(NotSet), fmt.Errorf("invalid event name")
+		return SourceUnknown, fmt.Errorf("invalid event name")
 	}
 
-	return enum.DecodeExternalSystemId(systemId), nil
+	return DecodeSource(systemId), nil
 }
 
 func GetFlowListenerEvent(s string) (FlowListenerEvent, error) {
 	switch FlowListenerEvent(s) {
-	case EventFathomMeetingSummaryCreated, EventGrainMeetingSummaryCreated:
+	case
+		EventFathomMeetingSummaryCreated,
+		EventFlowContactAdded,
+		EventGrainMeetingSummaryCreated,
+		EventRevealWebsiteVisitNew,
+		EventRevealWebsiteVisitRepeat:
+
 		return FlowListenerEvent(s), nil
 	default:
 		return "", fmt.Errorf("invalid FlowListenerEvent: %s", s)

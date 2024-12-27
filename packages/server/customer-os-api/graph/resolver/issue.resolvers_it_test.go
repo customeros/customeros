@@ -2,17 +2,19 @@ package resolver
 
 import (
 	"context"
+	"testing"
+
 	"github.com/99designs/gqlgen/client"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
+	"github.com/stretchr/testify/require"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
-	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
-	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestQueryResolver_Issue(t *testing.T) {
@@ -58,7 +60,7 @@ func TestQueryResolver_Issue(t *testing.T) {
 		"ExternalSystem":   1,
 		"Comment":          2,
 	})
-	neo4jtest.AssertRelationship(ctx, t, driver, issueId, "IS_LINKED_WITH", string(neo4jenum.Hubspot))
+	neo4jtest.AssertRelationship(ctx, t, driver, issueId, "IS_LINKED_WITH", string(enum.SourceHubspot))
 
 	rawResponse, err := c.RawPost(getQuery("issue/get_issue"),
 		client.Var("issueId", issueId))
@@ -84,7 +86,7 @@ func TestQueryResolver_Issue(t *testing.T) {
 	// check interaction events
 	require.Equal(t, 1, len(issue.InteractionEvents))
 	require.Equal(t, interactionEventId, issue.InteractionEvents[0].ID)
-	//check comments
+	// check comments
 	require.Equal(t, 2, len(issue.Comments))
 	require.Equal(t, yesterdayCommentId, issue.Comments[0].ID)
 	require.Equal(t, todayCommentId, issue.Comments[1].ID)

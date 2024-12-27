@@ -5,12 +5,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
+
+	commonenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
+	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail-raw/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail-raw/repository"
-	commonenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
-	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
-	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
-	"time"
 )
 
 type emailService struct {
@@ -32,13 +33,13 @@ func (s *emailService) SyncEmailsForState(ctx context.Context, importState *post
 	var err error
 
 	if importState.Provider == commonenum.WorkspaceProviderGoogle.String() {
-		externalSystem = neo4jenum.GMail.String()
+		externalSystem = commonenum.SourceGmail.String()
 		rawEmails, next, err = s.services.CommonServices.GoogleService.ReadEmails(ctx, s.cfg.SyncData.BatchSize, importState)
 		if err != nil {
 			return nil, fmt.Errorf("unable to read emails from google: %v", err)
 		}
 	} else if importState.Provider == commonenum.WorkspaceProviderAzure.String() {
-		externalSystem = neo4jenum.Outlook.String()
+		externalSystem = commonenum.SourceOutlook.String()
 		rawEmails, next, err = s.services.CommonServices.AzureService.ReadEmailsFromAzureAd(ctx, importState)
 		if err != nil {
 			return nil, fmt.Errorf("unable to read emails from azure ad: %v", err)
@@ -52,9 +53,9 @@ func (s *emailService) SyncEmailsForState(ctx context.Context, importState *post
 			return nil, fmt.Errorf("unable to check if email exists: %v", err)
 		}
 
-		//counting emails that are already imported based on the batch size
-		//if the job is stopped in the middle of execution and we haven't saved the latest token
-		//we are going to lose the history
+		// counting emails that are already imported based on the batch size
+		// if the job is stopped in the middle of execution and we haven't saved the latest token
+		// we are going to lose the history
 		if emailExists {
 
 			if importState.State == postgresEntity.REAL_TIME {

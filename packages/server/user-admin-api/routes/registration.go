@@ -4,8 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/google/uuid"
-	commonenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"log"
 	"net/http"
 	"strings"
@@ -13,10 +11,12 @@ import (
 
 	"github.com/customeros/mailsherpa/mailvalidate"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
+	commonenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
@@ -618,8 +618,8 @@ func getTenant(c context.Context, services *service.Services, personalEmailProvi
 		}
 	}
 
-	if config.Slack.NotifyNewTenantRegisteredWebhook != "" {
-		commonUtils.SendSlackMessage(ctx, config.Slack.NotifyNewTenantRegisteredWebhook, tenantStr+" tenant registered by "+signInRequest.LoggedInEmail)
+	if config.Slack.NotifyNewTenantRegisteredHook != "" {
+		commonUtils.SendSlackMessage(ctx, config.Slack.NotifyNewTenantRegisteredHook, tenantStr+" tenant registered by "+signInRequest.LoggedInEmail)
 	}
 
 	return &tenantEntity.Name, true, nil

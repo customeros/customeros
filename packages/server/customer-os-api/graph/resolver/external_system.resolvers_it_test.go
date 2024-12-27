@@ -2,13 +2,15 @@ package resolver
 
 import (
 	"context"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
+	"testing"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/stretchr/testify/require"
-	"testing"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 )
 
 func TestQueryResolver_ExternalSystemInstances(t *testing.T) {
@@ -17,7 +19,7 @@ func TestQueryResolver_ExternalSystemInstances(t *testing.T) {
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jtest.CreateExternalSystem(ctx, driver, tenantName, neo4jentity.ExternalSystemEntity{
-		ExternalSystemId: neo4jenum.Stripe,
+		ExternalSystemId: enum.SourceStripe,
 		Stripe: struct {
 			PaymentMethodTypes []string
 		}{
@@ -25,7 +27,7 @@ func TestQueryResolver_ExternalSystemInstances(t *testing.T) {
 		},
 	})
 	neo4jtest.CreateExternalSystem(ctx, driver, tenantName, neo4jentity.ExternalSystemEntity{
-		ExternalSystemId: neo4jenum.Hubspot,
+		ExternalSystemId: enum.SourceHubspot,
 	})
 
 	rawResponse, err := c.RawPost(getQuery("external_system/get_external_system_instances"))
@@ -48,5 +50,4 @@ func TestQueryResolver_ExternalSystemInstances(t *testing.T) {
 			require.Nil(t, instance.StripeDetails)
 		}
 	}
-
 }

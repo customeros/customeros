@@ -3,17 +3,19 @@ package neo4j
 import (
 	"context"
 	"fmt"
-	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
-	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
-	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
+	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
+	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
 
 // Deprecated
@@ -34,7 +36,7 @@ func CreateHubspotExternalSystem(ctx context.Context, driver *neo4j.DriverWithCo
 			MERGE (e:ExternalSystem {id:$externalSystemId})-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]->(t)`
 	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"tenant":           tenant,
-		"externalSystemId": string(neo4jenum.Hubspot),
+		"externalSystemId": string(enum.SourceHubspot),
 	})
 }
 
@@ -45,7 +47,7 @@ func CreateSlackExternalSystem(ctx context.Context, driver *neo4j.DriverWithCont
 			SET e.externalSource=$externalSource`
 	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"tenant":           tenant,
-		"externalSystemId": string(neo4jenum.Slack),
+		"externalSystemId": string(enum.SourceSlack),
 		"externalSource":   "Slack",
 	})
 }
@@ -62,12 +64,12 @@ func CreateCalComExternalSystem(ctx context.Context, driver *neo4j.DriverWithCon
 
 // Deprecated
 func LinkWithHubspotExternalSystem(ctx context.Context, driver *neo4j.DriverWithContext, entityId, externalId string, externalUrl, externalSource *string, syncDate time.Time) {
-	LinkWithExternalSystem(ctx, driver, entityId, externalId, string(neo4jenum.Hubspot), externalUrl, externalSource, syncDate)
+	LinkWithExternalSystem(ctx, driver, entityId, externalId, string(enum.SourceHubspot), externalUrl, externalSource, syncDate)
 }
 
 // Deprecated
 func LinkWithSlackExternalSystem(ctx context.Context, driver *neo4j.DriverWithContext, entityId, externalId string, externalUrl, externalSource *string, syncDate time.Time) {
-	LinkWithExternalSystem(ctx, driver, entityId, externalId, string(neo4jenum.Slack), externalUrl, externalSource, syncDate)
+	LinkWithExternalSystem(ctx, driver, entityId, externalId, string(enum.SourceSlack), externalUrl, externalSource, syncDate)
 }
 
 // Deprecated
@@ -146,7 +148,7 @@ func AddEmailTo(ctx context.Context, driver *neo4j.DriverWithContext, entityType
 		query = "MATCH (entity:Organization {id:$entityId})--(t:Tenant) "
 	}
 
-	var emailId, _ = uuid.NewRandom()
+	emailId, _ := uuid.NewRandom()
 	query = query +
 		" MERGE (e:Email {rawEmail: $email})-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t)" +
 		" ON CREATE SET " +
@@ -169,17 +171,16 @@ func AddEmailTo(ctx context.Context, driver *neo4j.DriverWithContext, entityType
 
 // Deprecated
 func AddPhoneNumberTo(ctx context.Context, driver *neo4j.DriverWithContext, tenant, id, phoneNumber string, primary bool, label string) string {
-	var phoneNumberId, _ = uuid.NewRandom()
-	query :=
-		" MATCH (n {id:$entityId})--(t:Tenant) " +
-			" MERGE (p:PhoneNumber {rawPhoneNumber:$phoneNumber})-[:PHONE_NUMBER_BELONGS_TO_TENANT]->(t) " +
-			" ON CREATE SET " +
-			" 	p.e164=$phoneNumber," +
-			" 	p.validated=true," +
-			"	p.id=$phoneNumberId, " +
-			"	p:%s " +
-			" WITH p, n MERGE (p)<-[rel:HAS]-(n) " +
-			" ON CREATE SET rel.label=$label, rel.primary=$primary "
+	phoneNumberId, _ := uuid.NewRandom()
+	query := " MATCH (n {id:$entityId})--(t:Tenant) " +
+		" MERGE (p:PhoneNumber {rawPhoneNumber:$phoneNumber})-[:PHONE_NUMBER_BELONGS_TO_TENANT]->(t) " +
+		" ON CREATE SET " +
+		" 	p.e164=$phoneNumber," +
+		" 	p.validated=true," +
+		"	p.id=$phoneNumberId, " +
+		"	p:%s " +
+		" WITH p, n MERGE (p)<-[rel:HAS]-(n) " +
+		" ON CREATE SET rel.label=$label, rel.primary=$primary "
 	neo4jtest.ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, "PhoneNumber_"+tenant), map[string]any{
 		"phoneNumberId": phoneNumberId.String(),
 		"entityId":      id,
@@ -192,7 +193,7 @@ func AddPhoneNumberTo(ctx context.Context, driver *neo4j.DriverWithContext, tena
 
 // Deprecated
 func CreateEntityTemplate(ctx context.Context, driver *neo4j.DriverWithContext, tenant, extends string) string {
-	var templateId, _ = uuid.NewRandom()
+	templateId, _ := uuid.NewRandom()
 	query := `MATCH (t:Tenant {name:$tenant})
 			MERGE (e:EntityTemplate {id:$templateId})-[:ENTITY_TEMPLATE_BELONGS_TO_TENANT]->(t)
 			ON CREATE SET e.extends=$extends, e.name=$name`
@@ -207,7 +208,7 @@ func CreateEntityTemplate(ctx context.Context, driver *neo4j.DriverWithContext, 
 
 // Deprecated
 func CreateIssue(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, issue entity.IssueEntity) string {
-	var issueId, _ = uuid.NewRandom()
+	issueId, _ := uuid.NewRandom()
 	query := `MATCH (t:Tenant {name:$tenant})
 			MERGE (t)<-[:ISSUE_BELONGS_TO_TENANT]-(i:Issue {id:$id})
 			ON CREATE SET 
@@ -399,7 +400,7 @@ func AddDomainToOrg(ctx context.Context, driver *neo4j.DriverWithContext, organi
 
 // Deprecated
 func ContactWorksForOrganization(ctx context.Context, driver *neo4j.DriverWithContext, contactId, organizationId, jobTitle string, primary bool) string {
-	var roleId, _ = uuid.NewRandom()
+	roleId, _ := uuid.NewRandom()
 	query := `MATCH (c:Contact {id:$contactId}),
 			        (org:Organization {id:$organizationId})
 			MERGE (c)-[:WORKS_AS]->(r:JobRole)-[:ROLE_IN]->(org)
@@ -418,7 +419,7 @@ func ContactWorksForOrganization(ctx context.Context, driver *neo4j.DriverWithCo
 
 // Deprecated
 func UserWorksAs(ctx context.Context, driver *neo4j.DriverWithContext, userId, jobTitle string, description string, primary bool) string {
-	var roleId, _ = uuid.NewRandom()
+	roleId, _ := uuid.NewRandom()
 	query := `MATCH (u:User {id:$userId})
 			MERGE (u)-[:WORKS_AS]->(r:JobRole)
 			ON CREATE SET r.id=$id, r.description=$description, r.jobTitle=$jobTitle, r.primary=$primary,
@@ -446,7 +447,7 @@ func DeleteUserOwnsOrganization(ctx context.Context, driver *neo4j.DriverWithCon
 
 // Deprecated
 func UserHasCalendar(ctx context.Context, driver *neo4j.DriverWithContext, userId, link, calType string, primary bool) string {
-	var calId, _ = uuid.NewRandom()
+	calId, _ := uuid.NewRandom()
 	query := `MATCH (u:User {id:$userId})
 			MERGE (u)-[:HAS_CALENDAR]->(c:Calendar)
 			ON CREATE SET c.id=$id, c.link=$link, c.calType=$calType, c.primary=$primary, c.createdAt=datetime({timezone: 'UTC'}), c.appSource=$appSource`
@@ -463,7 +464,7 @@ func UserHasCalendar(ctx context.Context, driver *neo4j.DriverWithContext, userI
 
 // Deprecated
 func CreatePageView(ctx context.Context, driver *neo4j.DriverWithContext, contactId string, pageViewEntity entity.PageViewEntity) string {
-	var actionId, _ = uuid.NewRandom()
+	actionId, _ := uuid.NewRandom()
 	query := `MATCH (c:Contact {id:$contactId})
 			MERGE (c)-[:HAS_ACTION]->(a:TimelineEvent:PageView {id:$actionId})
 			ON CREATE SET
@@ -500,7 +501,7 @@ func CreatePageView(ctx context.Context, driver *neo4j.DriverWithContext, contac
 
 // Deprecated
 func CreateLocation(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, location neo4jentity.LocationEntity) string {
-	var locationId, _ = uuid.NewRandom()
+	locationId, _ := uuid.NewRandom()
 	query := "MATCH (t:Tenant {name:$tenant}) " +
 		" MERGE (l:Location {id:$locationId})-[:LOCATION_BELONGS_TO_TENANT]->(t) " +
 		" ON CREATE SET l.name=$name, " +
@@ -583,7 +584,7 @@ func OrganizationAssociatedWithLocation(ctx context.Context, driver *neo4j.Drive
 
 // Deprecated
 func CreateNoteForContact(ctx context.Context, driver *neo4j.DriverWithContext, tenant, contactId, content, contentType string, createdAt time.Time) string {
-	var noteId, _ = uuid.NewRandom()
+	noteId, _ := uuid.NewRandom()
 
 	query := "MATCH (c:Contact {id:$contactId}) " +
 		"		MERGE (c)-[:NOTED]->(n:Note {id:$id}) " +
@@ -612,7 +613,7 @@ func CreateNoteForContact(ctx context.Context, driver *neo4j.DriverWithContext, 
 
 // Deprecated
 func CreateNoteForOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationId, content string, createdAt time.Time) string {
-	var noteId, _ = uuid.NewRandom()
+	noteId, _ := uuid.NewRandom()
 
 	query := "MATCH (org:Organization {id:$organizationId}) " +
 		"		MERGE (org)-[:NOTED]->(n:Note {id:$id}) " +
@@ -648,7 +649,7 @@ func LogEntryCreatedByUser(ctx context.Context, driver *neo4j.DriverWithContext,
 
 // Deprecated
 func LinkContactWithOrganization(ctx context.Context, driver *neo4j.DriverWithContext, contactId, organizationId string) string {
-	var jobId, _ = uuid.NewRandom()
+	jobId, _ := uuid.NewRandom()
 	query := `MATCH (c:Contact {id:$contactId}),
 			(org:Organization {id:$organizationId})
 			MERGE (c)-[:WORKS_AS]->(j:JobRole)-[:ROLE_IN]->(org)
@@ -670,7 +671,7 @@ func LinkContactWithOrganization(ctx context.Context, driver *neo4j.DriverWithCo
 
 // Deprecated
 func CreateActionItemLinkedWith(ctx context.Context, driver *neo4j.DriverWithContext, tenant, linkedWith string, linkedWithId, content string, createdAt time.Time) string {
-	var actionItemId, _ = uuid.NewRandom()
+	actionItemId, _ := uuid.NewRandom()
 
 	session := utils.NewNeo4jWriteSession(ctx, *driver)
 	defer session.Close(ctx)
@@ -699,7 +700,7 @@ func CreateActionItemLinkedWith(ctx context.Context, driver *neo4j.DriverWithCon
 
 // Deprecated
 func CreateMeeting(ctx context.Context, driver *neo4j.DriverWithContext, tenant, name string, createdAt time.Time) string {
-	var meetingId, _ = uuid.NewRandom()
+	meetingId, _ := uuid.NewRandom()
 
 	query := "MERGE (m:Meeting_%s {id:$id}) " +
 		" ON CREATE SET m:Meeting, " +
@@ -850,7 +851,7 @@ func LinkSocialWithEntity(ctx context.Context, driver *neo4j.DriverWithContext, 
 
 // Deprecated
 func CreateActionForOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationId string, actionType neo4jenum.ActionType, createdAt time.Time) string {
-	var actionId, _ = uuid.NewRandom()
+	actionId, _ := uuid.NewRandom()
 
 	query := "MATCH (o:Organization {id:$organizationId}) " +
 		"		MERGE (o)<-[:ACTION_ON]-(a:Action {id:$id}) " +
@@ -875,7 +876,7 @@ func CreateActionForOrganization(ctx context.Context, driver *neo4j.DriverWithCo
 
 // Deprecated
 func CreateActionForInteractionEvent(ctx context.Context, driver *neo4j.DriverWithContext, tenant, interactionEventId string, actionType neo4jenum.ActionType, createdAt time.Time) string {
-	var actionId, _ = uuid.NewRandom()
+	actionId, _ := uuid.NewRandom()
 
 	query := "MATCH (i:InteractionEvent {id:$interactionEventId}) " +
 		"		MERGE (i)<-[:ACTION_ON]-(a:Action {id:$id}) " +
@@ -900,7 +901,7 @@ func CreateActionForInteractionEvent(ctx context.Context, driver *neo4j.DriverWi
 
 // Deprecated
 func CreateActionForOrganizationWithProperties(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationId string, actionType neo4jenum.ActionType, createdAt time.Time, extraProperties map[string]string) string {
-	var actionId, _ = uuid.NewRandom()
+	actionId, _ := uuid.NewRandom()
 
 	query := `MATCH (o:Organization {id:$organizationId}) 
 				MERGE (o)<-[:ACTION_ON]-(a:Action {id:$id}) 

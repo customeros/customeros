@@ -35,9 +35,9 @@ require (
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240925071556-618778a7336e
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository v0.0.0-20241202190357-68898897475c
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository v0.0.0-20240920114849-ff5ab459a427
-	github.com/openline-ai/openline-customer-os/packages/server/enrichment-api v0.0.0-20240809100739-f28b7cd9aa2e
+	github.com/openline-ai/openline-customer-os/packages/server/enrichment-api v0.0.0-20250104110723-0d16bf7e7931
 	github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto v0.0.0-20241004122044-3a0040d9c64c
-	github.com/openline-ai/openline-customer-os/packages/server/validation-api v0.0.0-20240808154624-eddfcb0715b5
+	github.com/openline-ai/openline-customer-os/packages/server/validation-api v0.0.0-20241227133740-5fd01d93a97a
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.20.5
