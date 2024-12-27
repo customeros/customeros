@@ -4,17 +4,18 @@ import (
 	"context"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
-	model2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/repository"
-	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	issuepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/issue"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -169,7 +170,7 @@ func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, iss
 		return NewFailedSyncStatus(reason)
 	}
 
-	if issueInput.OrganizationRequired && reporterLabel != model2.NodeLabelOrganization {
+	if issueInput.OrganizationRequired && reporterLabel != commonmodel.NodeLabelOrganization {
 		reason = fmt.Sprintf("organization(s) not found for issue %s for tenant %s", issueInput.ExternalId, tenant)
 		s.log.Warnf("Skip issue sync: %v", reason)
 		span.LogFields(log.String("output", "skipped"))
@@ -188,71 +189,56 @@ func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, iss
 		s.log.Error(reason)
 	}
 	if !failedSync {
-		matchingIssueExists := issueId != ""
-		span.LogFields(log.Bool("found matching issue", matchingIssueExists))
+		span.LogFields(log.Bool("found matching issue", issueId != ""))
 
-		// Create new issue id if not found
-		issueId = utils.NewUUIDIfEmpty(issueId)
-		issueInput.Id = issueId
-		span.LogFields(log.String("issueId", issueId))
-
-		// Create or update issue
-		issueGrpcRequest := issuepb.UpsertIssueGrpcRequest{
-			Tenant:      tenant,
-			Id:          issueId,
-			Subject:     issueInput.Subject,
-			Status:      issueInput.Status,
-			Priority:    issueInput.Priority,
-			Description: issueInput.Description,
-			CreatedAt:   utils.ConvertTimeToTimestampPtr(issueInput.CreatedAt),
-			UpdatedAt:   utils.ConvertTimeToTimestampPtr(issueInput.UpdatedAt),
-			SourceFields: &commonpb.SourceFields{
-				Source:    issueInput.ExternalSystem,
-				AppSource: utils.StringFirstNonEmpty(issueInput.AppSource, constants.AppSourceCustomerOsWebhooks),
-			},
-			ExternalSystemFields: &commonpb.ExternalSystemFields{
+		issueFields := data_fields.IssueFields{
+			Source:    utils.StringPtr(issueInput.ExternalSystem),
+			CreatedAt: issueInput.CreatedAt,
+			ExternalSystem: &neo4jmodel.ExternalSystem{
 				ExternalSystemId: issueInput.ExternalSystem,
 				ExternalId:       issueInput.ExternalId,
-				ExternalUrl:      issueInput.ExternalUrl,
 				ExternalIdSecond: issueInput.ExternalIdSecond,
 				ExternalSource:   issueInput.ExternalSourceEntity,
-				SyncDate:         utils.ConvertTimeToTimestampPtr(&syncDate),
+				ExternalUrl:      issueInput.ExternalUrl,
+				SyncDate:         &syncDate,
 			},
 		}
-		if issueInput.GroupId != "" {
-			issueGrpcRequest.GroupId = &issueInput.GroupId
+		if issueInput.Subject != "" {
+			issueFields.Subject = &issueInput.Subject
 		}
-		if reporterId != "" && reporterLabel == model2.NodeLabelOrganization {
-			issueGrpcRequest.ReportedByOrganizationId = &reporterId
+		if issueInput.Status != "" {
+			issueFields.Status = &issueInput.Status
+		}
+		if issueInput.Priority != "" {
+			issueFields.Priority = &issueInput.Priority
+		}
+		if issueInput.Description != "" {
+			issueFields.Description = &issueInput.Description
+		}
+		if issueInput.GroupId != "" {
+			issueFields.GroupId = &issueInput.GroupId
+		}
+		if reporterId != "" && reporterLabel == commonmodel.NodeLabelOrganization {
+			issueFields.ReportedByOrganizationId = &reporterId
 		}
 		if submitterId != "" {
 			switch submitterLabel {
-			case model2.NodeLabelOrganization:
-				issueGrpcRequest.SubmittedByOrganizationId = &submitterId
-			case model2.NodeLabelUser:
-				issueGrpcRequest.SubmittedByUserId = &submitterId
+			case commonmodel.NodeLabelOrganization:
+				issueFields.SubmittedByOrganizationId = &submitterId
+			case commonmodel.NodeLabelUser:
+				issueFields.SubmittedByUserId = &submitterId
 			}
 		}
-		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = CallEventsPlatformGRPCWithRetry[*issuepb.IssueIdGrpcResponse](func() (*issuepb.IssueIdGrpcResponse, error) {
-			return s.grpcClients.IssueClient.UpsertIssue(ctx, &issueGrpcRequest)
-		})
+
+		issueId, err = s.services.CommonServices.IssueService.Save(ctx, nil, &issueId, issueFields)
 		if err != nil {
 			failedSync = true
-			tracing.TraceErr(span, err, log.String("grpcMethod", "UpsertIssue"))
-			reason = fmt.Sprintf("failed sending event to upsert issue with external reference %s for tenant %s :%s", issueInput.ExternalId, tenant, err)
+			tracing.TraceErr(span, err)
 			s.log.Error(reason)
+			reason = fmt.Sprintf("error saving issue with external reference %s for tenant %s :%s", issueInput.ExternalId, common.GetTenantFromContext(ctx), err.Error())
 		}
-		// Wait for issue to be created in neo4j
-		if !failedSync && !matchingIssueExists {
-			for i := 1; i <= constants.MaxRetryCheckDataInNeo4jAfterEventRequest; i++ {
-				issue, findErr := s.repositories.Neo4jRepositories.IssueReadRepository.GetById(ctx, tenant, issueId)
-				if issue != nil && findErr == nil {
-					break
-				}
-				time.Sleep(utils.BackOffExponentialDelay(i))
-			}
-		}
+		issueInput.Id = issueId
+		span.LogFields(log.String("issueId", issueId))
 	}
 
 	processedFollowerUserIds := make([]string, 0)
@@ -266,7 +252,7 @@ func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, iss
 				reason = fmt.Sprintf("failed finding follower for issue %s for tenant %s :%s", issueInput.ExternalId, tenant, err.Error())
 				s.log.Error(reason)
 			}
-			if followerId != "" && followerLabel == model2.NodeLabelUser && !utils.Contains(processedFollowerUserIds, followerId) {
+			if followerId != "" && followerLabel == commonmodel.NodeLabelUser && !utils.Contains(processedFollowerUserIds, followerId) {
 				_, err = CallEventsPlatformGRPCWithRetry[*issuepb.IssueIdGrpcResponse](func() (*issuepb.IssueIdGrpcResponse, error) {
 					return s.grpcClients.IssueClient.AddUserFollower(ctx, &issuepb.AddUserFollowerToIssueGrpcRequest{
 						Tenant:    common.GetTenantFromContext(ctx),
@@ -295,7 +281,7 @@ func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, iss
 				reason = fmt.Sprintf("failed finding collaborator for issue %s for tenant %s :%s", issueInput.ExternalId, tenant, err.Error())
 				s.log.Error(reason)
 			}
-			if collaboratorId != "" && collaboratorLabel == model2.NodeLabelUser && !utils.Contains(processedFollowerUserIds, collaboratorId) {
+			if collaboratorId != "" && collaboratorLabel == commonmodel.NodeLabelUser && !utils.Contains(processedFollowerUserIds, collaboratorId) {
 				_, err = CallEventsPlatformGRPCWithRetry[*issuepb.IssueIdGrpcResponse](func() (*issuepb.IssueIdGrpcResponse, error) {
 					return s.grpcClients.IssueClient.AddUserFollower(ctx, &issuepb.AddUserFollowerToIssueGrpcRequest{
 						Tenant:    common.GetTenantFromContext(ctx),
