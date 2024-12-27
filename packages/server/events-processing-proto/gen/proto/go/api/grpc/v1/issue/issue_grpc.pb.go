@@ -22,7 +22,6 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type IssueGrpcServiceClient interface {
-	UpsertIssue(ctx context.Context, in *UpsertIssueGrpcRequest, opts ...grpc.CallOption) (*IssueIdGrpcResponse, error)
 	AddUserAssignee(ctx context.Context, in *AddUserAssigneeToIssueGrpcRequest, opts ...grpc.CallOption) (*IssueIdGrpcResponse, error)
 	RemoveUserAssignee(ctx context.Context, in *RemoveUserAssigneeFromIssueGrpcRequest, opts ...grpc.CallOption) (*IssueIdGrpcResponse, error)
 	AddUserFollower(ctx context.Context, in *AddUserFollowerToIssueGrpcRequest, opts ...grpc.CallOption) (*IssueIdGrpcResponse, error)
@@ -35,15 +34,6 @@ type issueGrpcServiceClient struct {
 
 func NewIssueGrpcServiceClient(cc grpc.ClientConnInterface) IssueGrpcServiceClient {
 	return &issueGrpcServiceClient{cc}
-}
-
-func (c *issueGrpcServiceClient) UpsertIssue(ctx context.Context, in *UpsertIssueGrpcRequest, opts ...grpc.CallOption) (*IssueIdGrpcResponse, error) {
-	out := new(IssueIdGrpcResponse)
-	err := c.cc.Invoke(ctx, "/issueGrpcService/UpsertIssue", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
 }
 
 func (c *issueGrpcServiceClient) AddUserAssignee(ctx context.Context, in *AddUserAssigneeToIssueGrpcRequest, opts ...grpc.CallOption) (*IssueIdGrpcResponse, error) {
@@ -86,7 +76,6 @@ func (c *issueGrpcServiceClient) RemoveUserFollower(ctx context.Context, in *Rem
 // All implementations should embed UnimplementedIssueGrpcServiceServer
 // for forward compatibility
 type IssueGrpcServiceServer interface {
-	UpsertIssue(context.Context, *UpsertIssueGrpcRequest) (*IssueIdGrpcResponse, error)
 	AddUserAssignee(context.Context, *AddUserAssigneeToIssueGrpcRequest) (*IssueIdGrpcResponse, error)
 	RemoveUserAssignee(context.Context, *RemoveUserAssigneeFromIssueGrpcRequest) (*IssueIdGrpcResponse, error)
 	AddUserFollower(context.Context, *AddUserFollowerToIssueGrpcRequest) (*IssueIdGrpcResponse, error)
@@ -97,9 +86,6 @@ type IssueGrpcServiceServer interface {
 type UnimplementedIssueGrpcServiceServer struct {
 }
 
-func (UnimplementedIssueGrpcServiceServer) UpsertIssue(context.Context, *UpsertIssueGrpcRequest) (*IssueIdGrpcResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpsertIssue not implemented")
-}
 func (UnimplementedIssueGrpcServiceServer) AddUserAssignee(context.Context, *AddUserAssigneeToIssueGrpcRequest) (*IssueIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddUserAssignee not implemented")
 }
@@ -122,24 +108,6 @@ type UnsafeIssueGrpcServiceServer interface {
 
 func RegisterIssueGrpcServiceServer(s grpc.ServiceRegistrar, srv IssueGrpcServiceServer) {
 	s.RegisterService(&IssueGrpcService_ServiceDesc, srv)
-}
-
-func _IssueGrpcService_UpsertIssue_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpsertIssueGrpcRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(IssueGrpcServiceServer).UpsertIssue(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/issueGrpcService/UpsertIssue",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(IssueGrpcServiceServer).UpsertIssue(ctx, req.(*UpsertIssueGrpcRequest))
-	}
-	return interceptor(ctx, in, info, handler)
 }
 
 func _IssueGrpcService_AddUserAssignee_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -221,10 +189,6 @@ var IssueGrpcService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "issueGrpcService",
 	HandlerType: (*IssueGrpcServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "UpsertIssue",
-			Handler:    _IssueGrpcService_UpsertIssue_Handler,
-		},
 		{
 			MethodName: "AddUserAssignee",
 			Handler:    _IssueGrpcService_AddUserAssignee_Handler,

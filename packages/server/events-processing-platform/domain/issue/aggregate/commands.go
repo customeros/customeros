@@ -18,12 +18,6 @@ func (a *IssueAggregate) HandleCommand(ctx context.Context, cmd eventstore.Comma
 	defer span.Finish()
 
 	switch c := cmd.(type) {
-	case *command.UpsertIssueCommand:
-		if c.IsCreateCommand {
-			return a.createIssue(ctx, c)
-		} else {
-			return a.updateIssue(ctx, c)
-		}
 	case *command.AddUserAssigneeCommand:
 		return a.addUserAssignee(ctx, c)
 	case *command.RemoveUserAssigneeCommand:
@@ -36,66 +30,6 @@ func (a *IssueAggregate) HandleCommand(ctx context.Context, cmd eventstore.Comma
 		tracing.TraceErr(span, eventstore.ErrInvalidCommandType)
 		return eventstore.ErrInvalidCommandType
 	}
-}
-
-func (a *IssueAggregate) createIssue(ctx context.Context, cmd *command.UpsertIssueCommand) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "IssueAggregate.createIssue")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.String("command", fmt.Sprintf("%+v", cmd)))
-
-	createdAtNotNil := utils.IfNotNilTimeWithDefault(cmd.CreatedAt, utils.Now())
-	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, createdAtNotNil)
-	cmd.Source.SetDefaultValues()
-
-	createEvent, err := event.NewIssueCreateEvent(a, cmd.DataFields, cmd.Source, cmd.ExternalSystem, createdAtNotNil, updatedAtNotNil)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewIssueCreateEvent")
-	}
-	eventstore.EnrichEventWithMetadataExtended(&createEvent, span, eventstore.EventMetadata{
-		Tenant: a.Tenant,
-		UserId: cmd.LoggedInUserId,
-		App:    cmd.Source.AppSource,
-	})
-
-	return a.Apply(createEvent)
-}
-
-func (a *IssueAggregate) updateIssue(ctx context.Context, cmd *command.UpsertIssueCommand) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "IssueAggregate.updateIssue")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
-	tracing.LogObjectAsJson(span, "command", cmd)
-
-	if eventstore.AllowCheckForNoChanges(cmd.Source.AppSource, cmd.LoggedInUserId) {
-		if a.Issue.SameData(cmd.DataFields, cmd.ExternalSystem) {
-			span.SetTag(tracing.SpanTagRedundantEventSkipped, true)
-			return nil
-		}
-	}
-
-	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, utils.Now())
-	source := cmd.Source.Source
-	if source == "" {
-		source = a.Issue.Source.SourceOfTruth
-	}
-
-	updateEvent, err := event.NewIssueUpdateEvent(a, cmd.DataFields, cmd.Source.Source, cmd.ExternalSystem, updatedAtNotNil)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewIssueUpdateEvent")
-	}
-	eventstore.EnrichEventWithMetadataExtended(&updateEvent, span, eventstore.EventMetadata{
-		Tenant: a.Tenant,
-		UserId: cmd.LoggedInUserId,
-		App:    cmd.Source.AppSource,
-	})
-
-	return a.Apply(updateEvent)
 }
 
 func (a *IssueAggregate) addUserAssignee(ctx context.Context, cmd *command.AddUserAssigneeCommand) error {
