@@ -400,16 +400,6 @@ func (s *mailService) getOrCreateEmailId(ctx context.Context, txWithPostCommit *
 	if email == "" {
 		return "", nil
 	}
-	// skip if email is system generated
-	mailSyntax := mailsherpa.ValidateEmailSyntax(email)
-	if !mailSyntax.IsValid {
-		span.LogFields(log.String("reason", "invalid email syntax"))
-		return "", nil
-	}
-	if mailSyntax.IsSystemGenerated {
-		span.LogFields(log.String("reason", "system generated email"))
-		return "", nil
-	}
 
 	if id, exists := emailIds[email]; exists {
 		return id, nil
@@ -498,13 +488,15 @@ func (s *mailService) GetEmailIdForEmail(ctx context.Context, txWithPostCommit *
 			return emailId, nil
 		}
 
-		//if it's a personal email, we create just the email node in tenant
+		//if it's a personal email or system generated email or role account eamil, we create just the email node in tenant
 		domain := utils.ExtractDomainFromEmail(email)
 		if domain == "" {
 			err = errors.New("unable to extract domain from email: " + email)
 			return "", err
 		}
-		if utils.Contains(s.services.Cache.GetPersonalEmailProviders(), domain) {
+		if utils.Contains(s.services.Cache.GetPersonalEmailProviders(), domain) ||
+			emailSyntax.IsSystemGenerated ||
+			emailSyntax.IsRoleAccount {
 			emailIdPtr, err := s.services.EmailService.Merge(ctx, txWithPostCommit, tenant, EmailFields{
 				Email:     email,
 				Source:    neo4jentity.DecodeDataSource(source),
