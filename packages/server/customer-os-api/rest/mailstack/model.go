@@ -170,3 +170,8 @@ type MailboxRecord struct {
 	// default: false
 	WebmailEnabled bool `json:"webmailEnabled"`
 }
+
+type DomainRecommendationResponse struct {
+	enum.BaseResponse
+	Domains []string `json:"domains"`
+}
