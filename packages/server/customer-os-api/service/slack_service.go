@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
@@ -53,8 +52,4 @@ func (s *slackService) GetPaginatedSlackChannels(ctx context.Context, tenant str
 	}
 
 	return &paginatedResult, nil
-}
-
-func (s *slackService) getNeo4jDriver() neo4j.DriverWithContext {
-	return *s.repositories.Drivers.Neo4jDriver
 }
