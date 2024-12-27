@@ -10,7 +10,7 @@ replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-
 
 replace github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto => ./../events-processing-proto
 
-go 1.22.7
+go 1.23
 
 toolchain go1.23.1
 
@@ -31,9 +31,9 @@ require (
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/Boostport/mjml-go v0.15.0 // indirect
 	github.com/BurntSushi/toml v1.4.0 // indirect
-	github.com/PuerkitoBio/goquery v1.9.3 // indirect
+	github.com/PuerkitoBio/goquery v1.10.1 // indirect
 	github.com/andybalholm/brotli v1.1.0 // indirect
-	github.com/andybalholm/cascadia v1.3.2 // indirect
+	github.com/andybalholm/cascadia v1.3.3 // indirect
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de // indirect
 	github.com/aws/aws-sdk-go v1.55.3 // indirect
 	github.com/bytedance/sonic v1.12.2 // indirect
