@@ -225,12 +225,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		_ = s.commentEventHandler.OnUpdate(ctx, evt)
 		return nil
 
-	case issueevent.IssueCreateV1:
-		_ = s.issueEventHandler.OnCreate(ctx, evt)
-		return nil
-	case issueevent.IssueUpdateV1:
-		_ = s.issueEventHandler.OnUpdate(ctx, evt)
-		return nil
 	case issueevent.IssueAddUserAssigneeV1:
 		_ = s.issueEventHandler.OnAddUserAssignee(ctx, evt)
 		return nil
