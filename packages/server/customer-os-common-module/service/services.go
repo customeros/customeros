@@ -39,6 +39,7 @@ type Services struct {
 	InvoiceService             InvoiceService
 	InteractionSessionService  InteractionSessionService
 	InteractionEventService    InteractionEventService
+	IssueService               IssueService
 	LocationService            LocationService
 	LogEntryService            LogEntryService
 	MarkdownEventService       MarkdownEventService
@@ -102,6 +103,7 @@ func InitServices(globalConfig *config.GlobalConfig, postgresDB *config.Postgres
 	services.JobRoleService = NewJobRoleService(services)
 	services.InteractionSessionService = NewInteractionSessionService(services)
 	services.InteractionEventService = NewInteractionEventService(services)
+	services.IssueService = NewIssueService(log, services)
 	services.LocationService = NewLocationService(log, services)
 	services.LogEntryService = NewLogEntryService(log, services)
 	services.MarkdownEventService = NewMarkdownEventService(log, services)
